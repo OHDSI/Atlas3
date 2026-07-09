@@ -1,0 +1,34 @@
+import { describe, it, expect } from 'vitest'
+import original from './__fixtures__/original-schemas.json'
+import { CAPABILITIES, capabilityNames, getCapability } from '@/plugins/host/capabilities/registry'
+
+const EXPECTED_NAMES = [
+  'add_criterion', 'add_criteria', 'set_entry_event', 'set_observation_window',
+  'add_exit_criterion', 'set_censor_event', 'create_standalone_concept_set',
+  'navigate_to', 'add_inclusion_rule', 'create_feature_analysis',
+  'create_characterization', 'create_pathway', 'update_concept_set',
+  'update_feature_analysis', 'update_characterization', 'update_pathway',
+  'update_incidence_rate', 'create_incidence_rate', 'save_cohort',
+]
+
+describe('capability registry', () => {
+  it('exposes exactly the 19 artifact-editing capabilities', () => {
+    expect(new Set(capabilityNames())).toEqual(new Set(EXPECTED_NAMES))
+  })
+  it('every capability has an object schema and a description', () => {
+    for (const c of CAPABILITIES) {
+      expect(c.schema.type).toBe('object')
+      expect(c.description.length).toBeGreaterThan(0)
+    }
+  })
+  it('schemas are byte-identical to the original client.cljs schemas', () => {
+    for (const name of EXPECTED_NAMES) {
+      expect(getCapability(name)?.schema).toEqual((original as Record<string, unknown>)[name])
+    }
+  })
+  it('navigate_to view enum matches the agent-visible route manifest', () => {
+    const viewEnum = (getCapability('navigate_to')!.schema.properties as any).view.enum as string[]
+    expect(viewEnum).toContain('cohort-edit')
+    expect(viewEnum).not.toContain('login')
+  })
+})

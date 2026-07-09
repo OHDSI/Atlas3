@@ -29,7 +29,7 @@ import router from '@/router'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
 import { createCharacterization } from '@/services/characterization.service'
 import { createPathway, createIncidenceRate } from '@/services/webapi'
-import { setupPythiaBridge } from '@/plugins/host/pythiaBridge'
+import { setupPythiaBridge, applyProposalDirect } from '@/plugins/host/pythiaBridge'
 import { useCohortStore } from '@/stores/cohort'
 import { createHostMessageBus, getHostMessageBus } from '@/plugins/messaging/HostMessageBus'
 
@@ -390,5 +390,52 @@ describe('pythiaBridge', () => {
     // handleSaveCohort returns void → bridge still resolves caller with {} so
     // the agent isn't left hanging.
     expect(handleResponseSpy).toHaveBeenCalledWith('cb-resolve-empty', {})
+  })
+
+  it('applyProposalDirect applies a proposal into the cohort store', async () => {
+    await applyProposalDirect({
+      kind: 'setObservationPeriod',
+      observationPeriod: { priorDays: 180, postDays: 60 },
+    } as never)
+
+    const store = useCohortStore()
+    expect(store.currentCohort?.observationPeriod).toEqual({ priorDays: 180, postDays: 60 })
+  })
+
+  it('routes capability.apply through translate + apply and responds via the bus', async () => {
+    const bus = getHostMessageBus('pythia-plugin')
+    const handleResponseSpy = vi.spyOn(bus!, 'handleResponse')
+
+    dispatchPluginMessage({
+      type: 'capability.apply',
+      sourcePluginId: 'pythia-plugin',
+      payload: { name: 'set_observation_window', args: { priorDays: 90, postDays: 45 } },
+      callbackId: 'cap-cb-1',
+      timestamp: new Date(),
+    })
+
+    await flush()
+    const store = useCohortStore()
+    expect(store.currentCohort?.observationPeriod).toEqual({ priorDays: 90, postDays: 45 })
+    expect(handleResponseSpy).toHaveBeenCalledWith(
+      'cap-cb-1',
+      expect.objectContaining({ applied: true, kind: 'setObservationPeriod' })
+    )
+  })
+
+  it('capability.apply reports applied:false for an unknown capability', async () => {
+    const bus = getHostMessageBus('pythia-plugin')
+    const handleResponseSpy = vi.spyOn(bus!, 'handleResponse')
+
+    dispatchPluginMessage({
+      type: 'capability.apply',
+      sourcePluginId: 'pythia-plugin',
+      payload: { name: 'not_a_real_capability', args: {} },
+      callbackId: 'cap-cb-2',
+      timestamp: new Date(),
+    })
+
+    await flush()
+    expect(handleResponseSpy).toHaveBeenCalledWith('cap-cb-2', { applied: false })
   })
 })

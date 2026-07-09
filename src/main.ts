@@ -14,6 +14,7 @@ import { useLocaleStore } from './stores/locale'
 import { initializePluginFramework } from './plugins/index.ts'
 import { setupGlobalMessageHandler } from './plugins/messaging/HostMessageBus.ts'
 import { setupPythiaBridge } from './plugins/host/pythiaBridge.ts'
+import { initWebMcp } from './plugins/host/webmcp'
 import { tokenExpiryService } from './services/auth/tokenExpiry'
 import { configLoaderService } from './services/config-loader.service'
 import { loadAppConfig } from './config/app-config.loader'
@@ -126,6 +127,7 @@ setupAuthInterceptor()
 // Setup plugin message handler
 setupGlobalMessageHandler(router)
 setupPythiaBridge()
+initWebMcp()
 
 // Initialize and mount the app
 loadAppConfig()

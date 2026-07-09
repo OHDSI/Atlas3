@@ -1,0 +1,1284 @@
+{
+  "add_criterion": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "type": "number",
+        "description": "OMOP concept ID"
+      },
+      "conceptName": {
+        "type": "string",
+        "description": "Human-readable concept name"
+      },
+      "domain": {
+        "type": "string",
+        "enum": [
+          "Condition",
+          "Drug",
+          "Procedure",
+          "Measurement",
+          "Observation",
+          "Visit",
+          "Device",
+          "Specimen"
+        ],
+        "description": "OMOP domain"
+      },
+      "group": {
+        "type": "string",
+        "enum": [
+          "inclusion",
+          "exclusion"
+        ]
+      },
+      "includeDescendants": {
+        "type": "boolean"
+      },
+      "operator": {
+        "type": "string",
+        "enum": [
+          "gt",
+          "gte",
+          "lt",
+          "lte",
+          "eq",
+          "between"
+        ],
+        "description": "Measurement value operator (only for Measurement domain)"
+      },
+      "value": {
+        "type": "number",
+        "description": "Threshold value (only for Measurement domain)"
+      },
+      "value2": {
+        "type": "number",
+        "description": "Upper bound for between operator"
+      }
+    },
+    "required": [
+      "conceptId",
+      "conceptName",
+      "domain",
+      "group",
+      "includeDescendants"
+    ]
+  },
+  "add_criteria": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Short, human-readable label for this group (REQUIRED). E.g. 'Confirmatory T2DM treatment', 'Exclude Type 1 DM'."
+      },
+      "group": {
+        "type": "string",
+        "enum": [
+          "inclusion",
+          "exclusion"
+        ]
+      },
+      "logic": {
+        "type": "string",
+        "enum": [
+          "AND",
+          "OR"
+        ]
+      },
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "conceptId": {
+              "type": "number",
+              "description": "OMOP concept ID"
+            },
+            "conceptName": {
+              "type": "string",
+              "description": "Human-readable concept name"
+            },
+            "domain": {
+              "type": "string",
+              "enum": [
+                "Condition",
+                "Drug",
+                "Procedure",
+                "Measurement",
+                "Observation",
+                "Visit",
+                "Device",
+                "Specimen"
+              ],
+              "description": "OMOP domain"
+            },
+            "group": {
+              "type": "string",
+              "enum": [
+                "inclusion",
+                "exclusion"
+              ]
+            },
+            "includeDescendants": {
+              "type": "boolean"
+            },
+            "operator": {
+              "type": "string",
+              "enum": [
+                "gt",
+                "gte",
+                "lt",
+                "lte",
+                "eq",
+                "between"
+              ],
+              "description": "Measurement value operator (only for Measurement domain)"
+            },
+            "value": {
+              "type": "number",
+              "description": "Threshold value (only for Measurement domain)"
+            },
+            "value2": {
+              "type": "number",
+              "description": "Upper bound for between operator"
+            }
+          },
+          "required": [
+            "conceptId",
+            "conceptName",
+            "domain",
+            "group",
+            "includeDescendants"
+          ]
+        }
+      }
+    },
+    "required": [
+      "name",
+      "group",
+      "logic",
+      "items"
+    ]
+  },
+  "set_entry_event": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "type": "number"
+      },
+      "conceptName": {
+        "type": "string"
+      },
+      "domain": {
+        "type": "string",
+        "enum": [
+          "Condition",
+          "Drug",
+          "Procedure",
+          "Measurement",
+          "Observation",
+          "Visit",
+          "Device",
+          "Specimen"
+        ]
+      },
+      "includeDescendants": {
+        "type": "boolean"
+      },
+      "isExcluded": {
+        "type": "boolean",
+        "description": "Optional exclusion flag for concept-set items"
+      }
+    },
+    "required": [
+      "conceptId",
+      "conceptName",
+      "domain"
+    ]
+  },
+  "set_observation_window": {
+    "type": "object",
+    "properties": {
+      "priorDays": {
+        "type": "number"
+      },
+      "postDays": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "priorDays",
+      "postDays"
+    ]
+  },
+  "add_exit_criterion": {
+    "type": "object",
+    "properties": {
+      "strategy": {
+        "type": "string",
+        "enum": [
+          "end_of_observation",
+          "fixed_duration",
+          "continuous_drug",
+          "custom_event"
+        ]
+      },
+      "offset": {
+        "type": "number",
+        "description": "Days offset (for fixed_duration and continuous_drug)"
+      },
+      "dateField": {
+        "type": "string",
+        "enum": [
+          "START_DATE",
+          "END_DATE"
+        ],
+        "description": "Anchor for offset"
+      },
+      "persistenceWindow": {
+        "type": "number",
+        "description": "Gap days between exposures for continuous_drug"
+      },
+      "surveillanceWindow": {
+        "type": "number",
+        "description": "Trailing days after final exposure for continuous_drug"
+      },
+      "concept": {
+        "type": "object",
+        "properties": {
+          "conceptId": {
+            "type": "number"
+          },
+          "conceptName": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string",
+            "enum": [
+              "Condition",
+              "Drug",
+              "Procedure",
+              "Measurement",
+              "Observation",
+              "Visit",
+              "Device",
+              "Specimen"
+            ]
+          },
+          "includeDescendants": {
+            "type": "boolean"
+          },
+          "isExcluded": {
+            "type": "boolean",
+            "description": "Optional exclusion flag for concept-set items"
+          }
+        },
+        "required": [
+          "conceptId",
+          "conceptName",
+          "domain"
+        ],
+        "description": "Concept defining the exit event (for continuous_drug or custom_event)"
+      }
+    },
+    "required": [
+      "strategy"
+    ]
+  },
+  "set_censor_event": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "type": "number"
+      },
+      "conceptName": {
+        "type": "string"
+      },
+      "domain": {
+        "type": "string",
+        "enum": [
+          "Condition",
+          "Drug",
+          "Procedure",
+          "Measurement",
+          "Observation",
+          "Visit",
+          "Device",
+          "Specimen"
+        ]
+      },
+      "includeDescendants": {
+        "type": "boolean"
+      },
+      "isExcluded": {
+        "type": "boolean",
+        "description": "Optional exclusion flag for concept-set items"
+      }
+    },
+    "required": [
+      "conceptId",
+      "conceptName",
+      "domain"
+    ]
+  },
+  "create_standalone_concept_set": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Concept set name (REQUIRED). Clinical and descriptive."
+      },
+      "description": {
+        "type": "string",
+        "description": "Optional one-line description"
+      },
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "conceptId": {
+              "type": "number"
+            },
+            "conceptName": {
+              "type": "string"
+            },
+            "domain": {
+              "type": "string",
+              "enum": [
+                "Condition",
+                "Drug",
+                "Procedure",
+                "Measurement",
+                "Observation",
+                "Visit",
+                "Device",
+                "Specimen"
+              ]
+            },
+            "includeDescendants": {
+              "type": "boolean"
+            },
+            "isExcluded": {
+              "type": "boolean",
+              "description": "Optional exclusion flag for concept-set items"
+            }
+          },
+          "required": [
+            "conceptId",
+            "conceptName",
+            "domain"
+          ]
+        }
+      }
+    },
+    "required": [
+      "name",
+      "items"
+    ]
+  },
+  "navigate_to": {
+    "type": "object",
+    "properties": {
+      "view": {
+        "type": "string",
+        "enum": [
+          "home",
+          "cohorts",
+          "cohort-new",
+          "cohort-edit",
+          "profiles",
+          "profiles-source",
+          "profile-view",
+          "profile-view-cohort",
+          "feature-analyses",
+          "characterizations",
+          "pathways",
+          "incidence-rates",
+          "feature-analysis-new",
+          "feature-analysis-edit",
+          "characterization-new",
+          "characterization-edit",
+          "characterization-results",
+          "characterization-version-preview",
+          "cohort-version-preview",
+          "conceptset-version-preview",
+          "concepts",
+          "concept-detail",
+          "pathway-new",
+          "pathway-edit",
+          "pathway-version-preview",
+          "pathway-results",
+          "incidence-rate-new",
+          "incidence-rate-edit",
+          "incidence-rate-version-preview",
+          "datasources",
+          "docs"
+        ],
+        "description": "Route name from the Atlas3 route manifest (resources/routes.manifest.json — generated by Atlas3/scripts/emit-route-manifest.mjs). Edit the manifest to add a new view."
+      },
+      "id": {
+        "type": "number"
+      },
+      "sourceKey": {
+        "type": "string"
+      },
+      "conceptId": {
+        "type": "number"
+      },
+      "personId": {
+        "type": "number"
+      },
+      "executionId": {
+        "type": "number"
+      },
+      "reason": {
+        "type": "string",
+        "description": "One short sentence; surfaced in the undo toast."
+      }
+    },
+    "required": [
+      "view"
+    ]
+  },
+  "add_inclusion_rule": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "logicType": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "AT_LEAST",
+          "AT_MOST"
+        ]
+      },
+      "count": {
+        "type": "number",
+        "description": "Required for AT_LEAST and AT_MOST"
+      },
+      "temporalWindow": {
+        "type": "object",
+        "description": "Optional temporal window for the criteria, relative to the index (cohort entry) start date.",
+        "properties": {
+          "startDays": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Window start in days vs index start: negative = before index, 0 = at index, null = all time prior."
+          },
+          "endDays": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Window end in days vs index start: positive = after index, null = all time after. Default 0 (index date)."
+          }
+        }
+      },
+      "events": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "conceptId": {
+              "type": "number",
+              "description": "OMOP concept ID"
+            },
+            "conceptName": {
+              "type": "string",
+              "description": "Human-readable concept name"
+            },
+            "domain": {
+              "type": "string",
+              "enum": [
+                "Condition",
+                "Drug",
+                "Procedure",
+                "Measurement",
+                "Observation",
+                "Visit",
+                "Device",
+                "Specimen"
+              ],
+              "description": "OMOP domain"
+            },
+            "group": {
+              "type": "string",
+              "enum": [
+                "inclusion",
+                "exclusion"
+              ]
+            },
+            "includeDescendants": {
+              "type": "boolean"
+            },
+            "operator": {
+              "type": "string",
+              "enum": [
+                "gt",
+                "gte",
+                "lt",
+                "lte",
+                "eq",
+                "between"
+              ],
+              "description": "Measurement value operator (only for Measurement domain)"
+            },
+            "value": {
+              "type": "number",
+              "description": "Threshold value (only for Measurement domain)"
+            },
+            "value2": {
+              "type": "number",
+              "description": "Upper bound for between operator"
+            }
+          },
+          "required": [
+            "conceptId",
+            "conceptName",
+            "domain",
+            "group",
+            "includeDescendants"
+          ]
+        }
+      }
+    },
+    "required": [
+      "name",
+      "logicType",
+      "events"
+    ]
+  },
+  "create_feature_analysis": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Clinical, descriptive name. REQUIRED."
+      },
+      "description": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "PRESET",
+          "CRITERIA_SET",
+          "CUSTOM_FE"
+        ],
+        "description": "PRESET for built-in feature library entries; CRITERIA_SET for custom criteria sets; CUSTOM_FE for raw SQL."
+      },
+      "domain": {
+        "type": "string"
+      },
+      "statType": {
+        "type": "string",
+        "enum": [
+          "PREVALENCE",
+          "DISTRIBUTION"
+        ]
+      },
+      "design": {
+        "description": "Type-dependent: string for PRESET/CUSTOM_FE; object for CRITERIA_SET."
+      }
+    },
+    "required": [
+      "name",
+      "type"
+    ]
+  },
+  "create_characterization": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Clinical, descriptive name. REQUIRED."
+      },
+      "description": {
+        "type": "string"
+      },
+      "cohorts": {
+        "type": "array",
+        "description": "REQUIRED. One or more cohorts to characterize. Each item is {id, name} pulled from search_existing_cohorts results.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ]
+        }
+      },
+      "featureAnalyses": {
+        "type": "array",
+        "description": "REQUIRED. One or more feature analyses to apply. Each item is {id, name} pulled from search_existing_feature_analyses results.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        }
+      }
+    },
+    "required": [
+      "name",
+      "cohorts",
+      "featureAnalyses"
+    ]
+  },
+  "create_pathway": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Clinical, descriptive name. REQUIRED."
+      },
+      "description": {
+        "type": "string"
+      },
+      "targetCohorts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ]
+        }
+      },
+      "eventCohorts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ]
+        }
+      },
+      "combinationWindow": {
+        "type": "number",
+        "description": "Days for collapsing concurrent events (default 30)"
+      },
+      "minCellCount": {
+        "type": "number",
+        "description": "Minimum cell count to display (default 5)"
+      },
+      "maxDepth": {
+        "type": "number",
+        "description": "Max pathway depth, 1-10 (default 5)"
+      },
+      "allowRepeats": {
+        "type": "boolean",
+        "description": "Whether the same event can repeat in a pathway (default false)"
+      }
+    },
+    "required": [
+      "name"
+    ]
+  },
+  "update_concept_set": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "number",
+        "description": "Concept set id (REQUIRED)."
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "conceptId": {
+              "type": "number"
+            },
+            "conceptName": {
+              "type": "string"
+            },
+            "domain": {
+              "type": "string",
+              "enum": [
+                "Condition",
+                "Drug",
+                "Procedure",
+                "Measurement",
+                "Observation",
+                "Visit",
+                "Device",
+                "Specimen"
+              ]
+            },
+            "includeDescendants": {
+              "type": "boolean"
+            },
+            "isExcluded": {
+              "type": "boolean",
+              "description": "Optional exclusion flag for concept-set items"
+            }
+          },
+          "required": [
+            "conceptId",
+            "conceptName",
+            "domain"
+          ]
+        },
+        "description": "Full replace — overwrites the existing items array."
+      },
+      "itemsToAdd": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "conceptId": {
+              "type": "number"
+            },
+            "conceptName": {
+              "type": "string"
+            },
+            "domain": {
+              "type": "string",
+              "enum": [
+                "Condition",
+                "Drug",
+                "Procedure",
+                "Measurement",
+                "Observation",
+                "Visit",
+                "Device",
+                "Specimen"
+              ]
+            },
+            "includeDescendants": {
+              "type": "boolean"
+            },
+            "isExcluded": {
+              "type": "boolean",
+              "description": "Optional exclusion flag for concept-set items"
+            }
+          },
+          "required": [
+            "conceptId",
+            "conceptName",
+            "domain"
+          ]
+        },
+        "description": "Append-only — skips items whose conceptId already exists."
+      }
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "update_feature_analysis": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "number",
+        "description": "Feature analysis id (REQUIRED)."
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "PRESET",
+          "CRITERIA_SET",
+          "CUSTOM_FE"
+        ]
+      },
+      "domain": {
+        "type": "string"
+      },
+      "statType": {
+        "type": "string",
+        "enum": [
+          "PREVALENCE",
+          "DISTRIBUTION"
+        ]
+      },
+      "design": {
+        "description": "Type-dependent: string for PRESET/CUSTOM_FE; object for CRITERIA_SET. Replaces the existing design entirely."
+      }
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "update_characterization": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "number",
+        "description": "Characterization id (REQUIRED)."
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "cohorts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ]
+        },
+        "description": "Full replace."
+      },
+      "cohortsToAdd": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ]
+        },
+        "description": "Append-only."
+      },
+      "featureAnalyses": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ]
+        },
+        "description": "Full replace."
+      },
+      "featureAnalysesToAdd": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ]
+        },
+        "description": "Append-only."
+      }
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "update_pathway": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "number",
+        "description": "Pathway id (REQUIRED)."
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "targetCohorts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ]
+        },
+        "description": "Full replace."
+      },
+      "targetCohortsToAdd": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ]
+        },
+        "description": "Append-only."
+      },
+      "eventCohorts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ]
+        },
+        "description": "Full replace."
+      },
+      "eventCohortsToAdd": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ]
+        },
+        "description": "Append-only."
+      },
+      "combinationWindow": {
+        "type": "number"
+      },
+      "minCellCount": {
+        "type": "number"
+      },
+      "maxDepth": {
+        "type": "number"
+      },
+      "allowRepeats": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "update_incidence_rate": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "number",
+        "description": "Incidence-rate id (REQUIRED)."
+      },
+      "name": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "targetIds": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "description": "Full replace."
+      },
+      "targetIdsToAdd": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "description": "Append-only with optional display names."
+      },
+      "outcomeIds": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "description": "Full replace."
+      },
+      "outcomeIdsToAdd": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "description": "Append-only with optional display names."
+      },
+      "timeAtRisk": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "object",
+            "properties": {
+              "DateField": {
+                "type": "string",
+                "enum": [
+                  "StartDate",
+                  "EndDate"
+                ]
+              },
+              "Offset": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "DateField",
+              "Offset"
+            ]
+          },
+          "end": {
+            "type": "object",
+            "properties": {
+              "DateField": {
+                "type": "string",
+                "enum": [
+                  "StartDate",
+                  "EndDate"
+                ]
+              },
+              "Offset": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "DateField",
+              "Offset"
+            ]
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ]
+      },
+      "studyWindow": {
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "create_incidence_rate": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Clinical, descriptive name. REQUIRED."
+      },
+      "description": {
+        "type": "string"
+      },
+      "targetIds": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "description": "Target cohort IDs (denominator)"
+      },
+      "outcomeIds": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "description": "Outcome cohort IDs (numerator)"
+      },
+      "timeAtRisk": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "object",
+            "properties": {
+              "DateField": {
+                "type": "string",
+                "enum": [
+                  "StartDate",
+                  "EndDate"
+                ]
+              },
+              "Offset": {
+                "type": "number",
+                "description": "Days from the anchor date"
+              }
+            },
+            "required": [
+              "DateField",
+              "Offset"
+            ]
+          },
+          "end": {
+            "type": "object",
+            "properties": {
+              "DateField": {
+                "type": "string",
+                "enum": [
+                  "StartDate",
+                  "EndDate"
+                ]
+              },
+              "Offset": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "DateField",
+              "Offset"
+            ]
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ]
+      },
+      "studyWindow": {
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string",
+            "description": "ISO date YYYY-MM-DD"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "ISO date YYYY-MM-DD"
+          }
+        }
+      }
+    },
+    "required": [
+      "name"
+    ]
+  },
+  "save_cohort": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Optional clinical name to save under (defaults to the open cohort's name)."
+      },
+      "description": {
+        "type": "string",
+        "description": "Optional description."
+      }
+    }
+  }
+}
