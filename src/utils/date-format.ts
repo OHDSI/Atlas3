@@ -46,11 +46,18 @@ export function formatRelativeTime(isoDate: string | number | undefined | null):
 
   try {
     const date = new Date(isoDate)
+
+    if (isNaN(date.getTime())) {
+      return 'Unknown'
+    }
+
     const now = new Date()
     const diffMs = now.getTime() - date.getTime()
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-    if (diffDays === 0) {
+    // Timestamps in the future (client/server clock skew) clamp to Today
+    // rather than falling through to a negative "-1 days ago".
+    if (diffDays <= 0) {
       return 'Today'
     } else if (diffDays === 1) {
       return 'Yesterday'
