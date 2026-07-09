@@ -93,10 +93,21 @@
       @close="dialogOpen = false"
     >
       <div class="linked-fa-picker__dialog-body">
+        <AtlasTextField
+          v-model="search"
+          :label="t('common.search', 'Search').value"
+          prepend-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          clearable
+          class="mb-3"
+          data-testid="linked-fa-picker-search"
+        />
         <AtlasDataTable
           v-model="selectedIds"
           :headers="dialogHeaders"
           :items="selectableItems"
+          :search="search"
           item-value="id"
           show-select
           data-testid="linked-fa-picker-table"
@@ -123,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasCheckbox, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasTextField } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
@@ -143,6 +154,7 @@ const { t, tv } = useI18n()
 
 const dialogOpen = ref(false)
 const selectedIds = ref<number[]>([])
+const search = ref('')
 
 const dialogHeaders = computed(() => [
   { title: t('columns.name', 'Name').value, key: 'name' },
@@ -182,6 +194,7 @@ function displaySubtitle(fa: LinkedFeatureAnalysis): string {
 
 function openDialog() {
   selectedIds.value = []
+  search.value = ''
   dialogOpen.value = true
 }
 

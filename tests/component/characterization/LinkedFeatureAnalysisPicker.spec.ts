@@ -106,4 +106,34 @@ describe('LinkedFeatureAnalysisPicker', () => {
     expect(dialogTable).not.toBeNull()
     wrapper.unmount()
   })
+
+  // Discussion #123: no way to filter the feature-analysis picker either.
+  describe('search (discussion #123)', () => {
+    it('renders a search field in the picker dialog', async () => {
+      const wrapper = mountPicker([])
+
+      await wrapper.get('[data-testid="linked-fa-picker-add"]').trigger('click')
+      await flushPromises()
+
+      const search = document.querySelector('[data-testid="linked-fa-picker-search"]')
+      expect(search).not.toBeNull()
+      wrapper.unmount()
+    })
+
+    it('filters the selectable feature analyses as the user types', async () => {
+      const wrapper = mountPicker([])
+
+      await wrapper.get('[data-testid="linked-fa-picker-add"]').trigger('click')
+      await flushPromises()
+
+      wrapper.vm.search = 'comorbid'
+      await flushPromises()
+
+      const rows = document.querySelectorAll('[data-testid="linked-fa-picker-table"] tbody tr')
+      const rowText = Array.from(rows).map(r => r.textContent)
+      expect(rowText.some(text => text?.includes('Comorbidities'))).toBe(true)
+      expect(rowText.some(text => text?.includes('Demographics'))).toBe(false)
+      wrapper.unmount()
+    })
+  })
 })
