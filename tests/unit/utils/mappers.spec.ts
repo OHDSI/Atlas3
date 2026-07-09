@@ -17,7 +17,9 @@ import {
   attributeKeyToAtlas,
   atlasToAttributeKey,
 } from '@/utils/mappers'
+import { convertInternalToAtlas } from '@/services/atlas-converter'
 import type { CardinalityType, NumericOperator, DateOperator } from '@/models/event.types'
+import type { CohortDefinition } from '@/models/cohort.types'
 
 describe('Operator Mappers', () => {
   describe('OPERATOR_TO_ATLAS', () => {
@@ -96,10 +98,10 @@ describe('Operator Mappers', () => {
 
 describe('Cardinality Mappers', () => {
   describe('CARDINALITY_TO_ATLAS', () => {
-    it('should map all cardinality types to Atlas format', () => {
-      expect(CARDINALITY_TO_ATLAS['AT_LEAST']).toBe(0)
+    it('should map all cardinality types to Atlas format per the CIRCE Occurrence.Type enum', () => {
+      expect(CARDINALITY_TO_ATLAS['EXACTLY']).toBe(0)
       expect(CARDINALITY_TO_ATLAS['AT_MOST']).toBe(1)
-      expect(CARDINALITY_TO_ATLAS['EXACTLY']).toBe(2)
+      expect(CARDINALITY_TO_ATLAS['AT_LEAST']).toBe(2)
     })
 
     it('should contain exactly 3 cardinality mappings', () => {
@@ -109,9 +111,9 @@ describe('Cardinality Mappers', () => {
 
   describe('ATLAS_TO_CARDINALITY', () => {
     it('should map all Atlas cardinality types to internal format', () => {
-      expect(ATLAS_TO_CARDINALITY[0]).toBe('AT_LEAST')
+      expect(ATLAS_TO_CARDINALITY[0]).toBe('EXACTLY')
       expect(ATLAS_TO_CARDINALITY[1]).toBe('AT_MOST')
-      expect(ATLAS_TO_CARDINALITY[2]).toBe('EXACTLY')
+      expect(ATLAS_TO_CARDINALITY[2]).toBe('AT_LEAST')
     })
 
     it('should contain exactly 3 cardinality mappings', () => {
@@ -121,17 +123,45 @@ describe('Cardinality Mappers', () => {
 
   describe('cardinalityToAtlas', () => {
     it('should convert internal cardinality types to Atlas format', () => {
-      expect(cardinalityToAtlas('AT_LEAST' as CardinalityType)).toBe(0)
+      expect(cardinalityToAtlas('EXACTLY' as CardinalityType)).toBe(0)
       expect(cardinalityToAtlas('AT_MOST' as CardinalityType)).toBe(1)
-      expect(cardinalityToAtlas('EXACTLY' as CardinalityType)).toBe(2)
+      expect(cardinalityToAtlas('AT_LEAST' as CardinalityType)).toBe(2)
     })
   })
 
   describe('atlasToCardinality', () => {
     it('should convert Atlas cardinality types to internal format', () => {
-      expect(atlasToCardinality(0)).toBe('AT_LEAST')
+      expect(atlasToCardinality(0)).toBe('EXACTLY')
       expect(atlasToCardinality(1)).toBe('AT_MOST')
-      expect(atlasToCardinality(2)).toBe('EXACTLY')
+      expect(atlasToCardinality(2)).toBe('AT_LEAST')
+    })
+  })
+
+  describe('agreement with atlas-converter', () => {
+    // Regression: the mappers previously transposed AT_LEAST (0) and EXACTLY (2)
+    // relative to the CIRCE Occurrence.Type enum, inverting "at least" and
+    // "exactly" for any caller while the converter's inline mapping was correct.
+    it('should produce the same Occurrence.Type as convertInternalToAtlas for every cardinality type', () => {
+      const types: CardinalityType[] = ['EXACTLY', 'AT_MOST', 'AT_LEAST']
+      for (const type of types) {
+        const cohort: CohortDefinition = {
+          name: 'Cardinality mapping check',
+          entryEvents: [
+            {
+              id: 'event-1',
+              criteriaType: 'ConditionOccurrence',
+              cardinality: { type, count: 1, countingMethod: 'ALL' },
+            },
+          ],
+          qualifyingLimit: 'ALL',
+          inclusionRules: [],
+          conceptSets: [],
+        }
+        const atlas = convertInternalToAtlas(cohort)
+        const occurrence = atlas.PrimaryCriteria.CriteriaList[0]?.Occurrence
+        expect(occurrence?.Type).toBe(cardinalityToAtlas(type))
+        expect(atlasToCardinality(occurrence!.Type)).toBe(type)
+      }
     })
   })
 })
