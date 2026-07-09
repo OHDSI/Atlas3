@@ -32,6 +32,8 @@ const {
   openTagsDialog,
   handleCancel,
   handleSave,
+  handleExportDownload,
+  handleExportCopy,
 } = vi.hoisted(() => ({
   openConceptSetsDialog: vi.fn(),
   openValidationDialog: vi.fn(),
@@ -39,6 +41,8 @@ const {
   openTagsDialog: vi.fn(),
   handleCancel: vi.fn(),
   handleSave: vi.fn(),
+  handleExportDownload: vi.fn(),
+  handleExportCopy: vi.fn(),
 }))
 
 // Stub the CohortBuilder child so we don't need its store wiring.
@@ -68,6 +72,8 @@ vi.mock('@/components/cohort/CohortBuilder.vue', () => ({
       'openTagsDialog',
       'handleCancel',
       'handleSave',
+      'handleExportDownload',
+      'handleExportCopy',
     ],
     data() {
       return {
@@ -89,6 +95,8 @@ vi.mock('@/components/cohort/CohortBuilder.vue', () => ({
       openTagsDialog,
       handleCancel,
       handleSave,
+      handleExportDownload,
+      handleExportCopy,
     },
   },
 }))
@@ -112,11 +120,13 @@ vi.mock('@/components/cohort/CohortToolbarActions.vue', () => ({
   default: {
     name: 'CohortToolbarActions',
     props: ['canSave', 'isPreviewingVersion'],
-    emits: ['cancel', 'save'],
+    emits: ['cancel', 'save', 'export-download', 'export-copy'],
     template:
       '<div class="stub-toolbar-actions">' +
       '<button class="actions-cancel" @click="$emit(\'cancel\')" />' +
       '<button class="actions-save" @click="$emit(\'save\')" />' +
+      '<button class="actions-export-download" @click="$emit(\'export-download\')" />' +
+      '<button class="actions-export-copy" @click="$emit(\'export-copy\')" />' +
       '</div>',
   },
 }))
@@ -209,6 +219,19 @@ describe('CohortBuilderView interactions', () => {
     await wrapper.find('.actions-save').trigger('click')
     expect(handleCancel).toHaveBeenCalled()
     expect(handleSave).toHaveBeenCalled()
+  })
+
+  // Regression: the hero-header toolbar (rendered here, not inside
+  // CohortBuilder) didn't wire export-download/export-copy at all, so
+  // clicking "Download" or "Copy to clipboard" in the real app silently
+  // did nothing — the events were emitted into the void.
+  it('forwards toolbar export-download/export-copy to the builder ref handles', async () => {
+    const wrapper = mountIt()
+    await wrapper.vm.$nextTick()
+    await wrapper.find('.actions-export-download').trigger('click')
+    await wrapper.find('.actions-export-copy').trigger('click')
+    expect(handleExportDownload).toHaveBeenCalled()
+    expect(handleExportCopy).toHaveBeenCalled()
   })
 
   it('passes the id prop through to CohortBuilder and surfaces it in the eyebrow', async () => {

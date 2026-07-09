@@ -2341,6 +2341,8 @@ defineExpose({
   },
   handleCancel,
   handleSave,
+  handleExportDownload,
+  handleExportCopy,
   // Existing expose (criteria editor / inclusion panel) is
   // re-declared here because defineExpose may only be called
   // once per component.
