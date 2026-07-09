@@ -37,7 +37,8 @@ vi.mock('@/composables/usePagination', () => ({
 vi.mock('@/services/webapi', () => ({
   deleteCohort: vi.fn(),
   getCohortDefinition: vi.fn(),
-  getCohortPrintFriendly: vi.fn()
+  getCohortPrintFriendly: vi.fn(),
+  saveCohortDefinition: vi.fn()
 }))
 
 // Mock logger
@@ -67,7 +68,7 @@ vi.mock('@/components/cohort/CohortGrid.vue', () => ({
   default: {
     name: 'CohortGrid',
     template: '<div class="cohort-grid-mock"></div>',
-    props: ['cohorts', 'loading', 'error', 'searchQuery', 'selectedTags']
+    props: ['cohorts', 'loading', 'error', 'searchQuery', 'selectedTags', 'canCopy', 'copyingId']
   }
 }))
 
@@ -75,7 +76,7 @@ vi.mock('@/components/cohort/CohortTable.vue', () => ({
   default: {
     name: 'CohortTable',
     template: '<div class="cohort-table-mock"></div>',
-    props: ['cohorts', 'loading', 'error', 'searchQuery', 'selectedTags']
+    props: ['cohorts', 'loading', 'error', 'searchQuery', 'selectedTags', 'canCopy', 'copyingId']
   }
 }))
 
@@ -103,7 +104,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
-import { deleteCohort, getCohortDefinition, getCohortPrintFriendly } from '@/services/webapi'
+import { deleteCohort, getCohortDefinition, getCohortPrintFriendly, saveCohortDefinition } from '@/services/webapi'
 
 // Create mock implementations
 const mockPush = vi.fn()
@@ -201,6 +202,7 @@ describe('CohortsView.vue', () => {
     vi.mocked(deleteCohort).mockClear()
     vi.mocked(getCohortDefinition).mockClear()
     vi.mocked(getCohortPrintFriendly).mockClear()
+    vi.mocked(saveCohortDefinition).mockClear()
 
     // Reset ref values
     mockCohorts.value = []
@@ -549,6 +551,122 @@ describe('CohortsView.vue', () => {
       await wrapper.vm.confirmDelete()
 
       expect(wrapper.vm.deleting).toBe(false)
+    })
+  })
+
+  describe('Copy Cohort (discussion #124)', () => {
+    const mockCohort = createMockCohort(1, { name: 'Diabetes Cohort' })
+    const mockDefinition = {
+      id: 1,
+      name: 'Diabetes Cohort',
+      description: 'Original description',
+      createdBy: 'someone',
+      createdDate: 1700000000000,
+      modifiedBy: 'someone',
+      modifiedDate: 1700000000000,
+      tags: [{ id: 1, name: 'chronic' }],
+      ConceptSets: [{ id: 0, name: 'Diabetes' }],
+      PrimaryCriteria: { CriteriaList: [], ObservationWindow: { PriorDays: 0, PostDays: 0 }, PrimaryCriteriaLimit: { Type: 'First' } }
+    }
+
+    beforeEach(() => {
+      wrapper = mount(CohortsView, {
+        global: {
+          plugins: [vuetify]
+        }
+      })
+    })
+
+    it('fetches the full definition and saves a copy with a "(copy)" name', async () => {
+      vi.mocked(getCohortDefinition).mockResolvedValue(mockDefinition as any)
+      vi.mocked(saveCohortDefinition).mockResolvedValue({ id: 99, name: 'Diabetes Cohort (copy)' } as any)
+
+      await wrapper.vm.handleCopyClick(mockCohort)
+
+      expect(getCohortDefinition).toHaveBeenCalledWith(mockCohort.id)
+      expect(saveCohortDefinition).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Diabetes Cohort (copy)',
+          description: 'Original description',
+          expressionType: 'SIMPLE_EXPRESSION',
+        })
+      )
+      // Metadata (id/name/description/tags/audit fields) must not leak into
+      // the expression payload — only the expression-shaped fields remain.
+      const savedPayload = vi.mocked(saveCohortDefinition).mock.calls[0]![0] as any
+      expect(savedPayload.expression).toEqual({
+        ConceptSets: mockDefinition.ConceptSets,
+        PrimaryCriteria: mockDefinition.PrimaryCriteria,
+      })
+    })
+
+    it('navigates to the new cohort and refreshes the list on success', async () => {
+      vi.mocked(getCohortDefinition).mockResolvedValue(mockDefinition as any)
+      vi.mocked(saveCohortDefinition).mockResolvedValue({ id: 99, name: 'Diabetes Cohort (copy)' } as any)
+
+      await wrapper.vm.handleCopyClick(mockCohort)
+
+      expect(mockFetchCohorts).toHaveBeenCalled()
+      expect(mockPush).toHaveBeenCalledWith('/cohorts/99')
+    })
+
+    it('avoids name collisions by numbering repeat copies', async () => {
+      mockCohorts.value = [
+        mockCohort,
+        createMockCohort(2, { name: 'Diabetes Cohort (copy)' }),
+      ]
+      vi.mocked(getCohortDefinition).mockResolvedValue(mockDefinition as any)
+      vi.mocked(saveCohortDefinition).mockResolvedValue({ id: 99, name: 'Diabetes Cohort (copy 2)' } as any)
+
+      await wrapper.vm.handleCopyClick(mockCohort)
+
+      expect(saveCohortDefinition).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Diabetes Cohort (copy 2)' })
+      )
+    })
+
+    it('tracks copyingId while the copy is in flight and clears it after', async () => {
+      let resolveFetch: (value: unknown) => void = () => {}
+      vi.mocked(getCohortDefinition).mockImplementation(
+        () => new Promise(resolve => { resolveFetch = resolve })
+      )
+      vi.mocked(saveCohortDefinition).mockResolvedValue({ id: 99, name: 'copy' } as any)
+
+      const copyPromise = wrapper.vm.handleCopyClick(mockCohort)
+      await wrapper.vm.$nextTick()
+      expect(wrapper.vm.copyingId).toBe(mockCohort.id)
+
+      resolveFetch(mockDefinition)
+      await copyPromise
+
+      expect(wrapper.vm.copyingId).toBeNull()
+    })
+
+    it('does not call saveCohortDefinition when the definition fails to load', async () => {
+      vi.mocked(getCohortDefinition).mockResolvedValue(null)
+
+      await wrapper.vm.handleCopyClick(mockCohort)
+
+      expect(saveCohortDefinition).not.toHaveBeenCalled()
+      expect(mockPush).not.toHaveBeenCalled()
+    })
+
+    it('does not navigate when the save fails', async () => {
+      vi.mocked(getCohortDefinition).mockResolvedValue(mockDefinition as any)
+      vi.mocked(saveCohortDefinition).mockResolvedValue(null as any)
+
+      await wrapper.vm.handleCopyClick(mockCohort)
+
+      expect(mockPush).not.toHaveBeenCalled()
+    })
+
+    it('handles a thrown error gracefully and clears copyingId', async () => {
+      vi.mocked(getCohortDefinition).mockRejectedValue(new Error('network down'))
+
+      await wrapper.vm.handleCopyClick(mockCohort)
+
+      expect(wrapper.vm.copyingId).toBeNull()
+      expect(mockPush).not.toHaveBeenCalled()
     })
   })
 

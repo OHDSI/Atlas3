@@ -94,6 +94,25 @@
       </AtlasTooltip>
 
       <AtlasTooltip
+        :text="copyTooltip"
+        location="top"
+      >
+        <template #activator="{ props: tooltipProps }">
+          <AtlasIconButton
+            v-bind="{ ...tooltipProps, ariaLabel: copyTooltip }"
+            icon="mdi-content-copy"
+            variant="text"
+            size="sm"
+            class="cohort-card__action-btn"
+            :disabled="!canCopy || copying"
+            :loading="copying"
+            data-testid="cohort-card-copy"
+            @click.stop="$emit('copy', cohort)"
+          />
+        </template>
+      </AtlasTooltip>
+
+      <AtlasTooltip
         :text="deleteTooltipText"
         location="top"
       >
@@ -125,16 +144,21 @@ import { tagColor, tagContrastColor } from '@/utils/tag-color'
 interface Props {
   cohort: CohortDefinitionSummary
   selectedTags?: string[]
+  canCopy?: boolean
+  copying?: boolean
 }
 
 interface Emits {
   (e: 'delete', cohort: CohortDefinitionSummary): void
+  (e: 'copy', cohort: CohortDefinitionSummary): void
   (e: 'tag-click', tagName: string): void
   (e: 'show-info', cohort: CohortDefinitionSummary): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
   selectedTags: () => [],
+  canCopy: false,
+  copying: false,
 })
 defineEmits<Emits>()
 const router = useRouter()
@@ -145,6 +169,7 @@ const byLabel = t('columns.author', 'Author')
 const createdLabel = t('columns.created', 'Created')
 const updatedOnLabel = t('columns.modified', 'Modified')
 const infoTooltip = t('common.cohortInformation', 'Cohort information')
+const copyTooltip = t('common.duplicate', 'Duplicate')
 const deleteTooltip = t('common.delete', 'Delete')
 const noPermissionTooltip = t('common.noPermission', 'You do not have permission for this action')
 const unknownLabel = t('common.anonymous', 'Unknown')

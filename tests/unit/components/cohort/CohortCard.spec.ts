@@ -205,4 +205,38 @@ describe('CohortCard', () => {
 
     expect(wrapper.find('.atlas-card.atlas-card--interactive').exists()).toBe(true)
   })
+
+  // Discussion #124: one-click cohort duplication.
+  describe('copy action', () => {
+    it('emits copy with the cohort when the duplicate button is clicked', async () => {
+      const wrapper = mountComponent({ canCopy: true })
+
+      await wrapper.get('[data-testid="cohort-card-copy"]').trigger('click')
+
+      expect(wrapper.emitted('copy')).toBeTruthy()
+      expect(wrapper.emitted('copy')![0]).toEqual([mockCohort])
+    })
+
+    it('does not bubble the click to the card navigation handler', async () => {
+      const wrapper = mountComponent({ canCopy: true })
+
+      await wrapper.get('[data-testid="cohort-card-copy"]').trigger('click')
+
+      expect(mockPush).not.toHaveBeenCalled()
+    })
+
+    it('disables the duplicate button when the user lacks create permission', () => {
+      const wrapper = mountComponent({ canCopy: false })
+
+      const btn = wrapper.get('[data-testid="cohort-card-copy"]')
+      expect(btn.attributes('disabled')).not.toBeUndefined()
+    })
+
+    it('disables the duplicate button while a copy is in flight', () => {
+      const wrapper = mountComponent({ canCopy: true, copying: true })
+
+      const btn = wrapper.get('[data-testid="cohort-card-copy"]')
+      expect(btn.attributes('disabled')).not.toBeUndefined()
+    })
+  })
 })

@@ -25,6 +25,8 @@ function makeWrapper(props: Partial<{
   error: Error | null
   searchQuery: string
   selectedTags: string[]
+  canCopy: boolean
+  copyingId: number | null
 }> = {}) {
   // Per-test pinia + a permitted user so the row action buttons aren't
   // disabled by the new permission gating.
@@ -104,15 +106,30 @@ describe('CohortTable', () => {
 
   it('emits action events from the row buttons without bubbling row click', async () => {
     // Refresh: removed the row-level Generate button. Action column
-    // now contains only Info and Delete.
-    const wrapper = makeWrapper({ cohorts: [sampleCohorts[0]!] })
+    // now contains Copy, Info and Delete.
+    const wrapper = makeWrapper({ cohorts: [sampleCohorts[0]!], canCopy: true })
 
     await wrapper.find('[data-testid=cohort-table-info]').trigger('click')
+    await wrapper.find('[data-testid=cohort-table-copy]').trigger('click')
     await wrapper.find('[data-testid=cohort-table-delete]').trigger('click')
 
     expect(wrapper.emitted('show-info')).toHaveLength(1)
+    expect(wrapper.emitted('copy')).toHaveLength(1)
+    expect(wrapper.emitted('copy')![0]).toEqual([sampleCohorts[0]])
     expect(wrapper.emitted('delete')).toHaveLength(1)
     expect(wrapper.emitted('generate')).toBeFalsy()
+  })
+
+  it('disables the copy button when the user cannot create cohorts', () => {
+    const wrapper = makeWrapper({ cohorts: [sampleCohorts[0]!], canCopy: false })
+    const copyBtn = wrapper.get('[data-testid=cohort-table-copy]')
+    expect(copyBtn.attributes('disabled')).not.toBeUndefined()
+  })
+
+  it('disables the copy button for the row currently being copied', () => {
+    const wrapper = makeWrapper({ cohorts: [sampleCohorts[0]!], canCopy: true, copyingId: 1 })
+    const copyBtn = wrapper.get('[data-testid=cohort-table-copy]')
+    expect(copyBtn.attributes('disabled')).not.toBeUndefined()
   })
 
   it('emits tag-click when a tag chip is clicked', async () => {
