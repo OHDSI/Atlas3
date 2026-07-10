@@ -69,6 +69,7 @@
             @save="handleSave"
             @export-download="handleExportDownload"
             @export-copy="handleExportCopy"
+            @edit-json="handleOpenJsonEditor"
           />
         </template>
       </AtlasActionToolbar>
@@ -575,11 +576,64 @@
       :selected-tags="cohortTags"
       @update:selected-tags="handleTagsUpdate"
     />
+
+    <!-- Edit JSON Dialog (#130): overwrite the open cohort's expression -->
+    <AtlasDialog
+      v-model="showJsonEditorDialog"
+      eyebrow="JSON"
+      :title="t('components.cohortBuilder.editJsonDialogTitle', 'Edit cohort JSON').value"
+      max-width="720"
+      @close="closeJsonEditor"
+    >
+      <p class="cohort-json-editor__hint">
+        {{
+          t(
+            'components.cohortBuilder.editJsonHint',
+            "Edit the Atlas expression JSON below, then click Apply to overwrite the current cohort definition in the editor. Click Save afterwards to persist the change."
+          ).value
+        }}
+      </p>
+      <AtlasTextField
+        v-model="jsonEditorText"
+        :rows="16"
+        multiline
+        variant="outlined"
+        hide-details
+        class="cohort-json-editor__textarea"
+        data-testid="json-editor-textarea"
+      />
+      <div
+        v-if="jsonEditorError"
+        class="cohort-json-editor__error"
+        data-testid="json-editor-error"
+      >
+        <AtlasIcon
+          icon="mdi-alert-circle-outline"
+          size="18"
+        />
+        <span>{{ jsonEditorError }}</span>
+      </div>
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="closeJsonEditor"
+        >
+          {{ t('common.cancel', 'Cancel').value }}
+        </AtlasButton>
+        <AtlasButton
+          data-testid="json-editor-apply"
+          :disabled="!jsonEditorText.trim()"
+          @click="handleApplyJsonEdit"
+        >
+          {{ t('components.cohortBuilder.editJsonApply', 'Apply').value }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount, watch, toRef } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
@@ -678,7 +732,8 @@ const route = useRoute()
 const cohortStore = useCohortStore()
 const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
-const { importFromFile, downloadAtlasJSON, exportToAtlas, conversionError } = useAtlasConverter()
+const { importFromFile, importFromAtlas, downloadAtlasJSON, exportToAtlas, conversionError } =
+  useAtlasConverter()
 const { t, tv } = useI18n()
 
 // Core cohort state
@@ -702,6 +757,9 @@ const showConceptSetsDialog = ref(false)
 const showVersionsDialog = ref(false)
 const showTagsDialog = ref(false)
 const showUnsavedDialog = ref(false)
+const showJsonEditorDialog = ref(false)
+const jsonEditorText = ref('')
+const jsonEditorError = ref('')
 let pendingNavigation: (() => void) | null = null
 
 // UI state
@@ -2234,6 +2292,65 @@ async function handleExportCopy() {
   }
 }
 
+/**
+ * Open the JSON editor pre-filled with the currently open cohort's
+ * expression, so the user can edit or paste a full replacement (#130).
+ */
+function handleOpenJsonEditor() {
+  jsonEditorError.value = ''
+  jsonEditorText.value = exportToAtlas(buildExportCohort())
+  showJsonEditorDialog.value = true
+}
+
+function closeJsonEditor() {
+  showJsonEditorDialog.value = false
+  jsonEditorError.value = ''
+}
+
+/**
+ * Apply the edited/pasted Atlas JSON onto the currently open cohort (#130).
+ * This only overwrites the in-editor state — name/description/tags/id are
+ * left untouched and the change stays unsaved until the user hits Save,
+ * same as any other edit made through the builder UI.
+ */
+async function handleApplyJsonEdit() {
+  jsonEditorError.value = ''
+
+  const imported = await importFromAtlas(jsonEditorText.value)
+  if (!imported || conversionError.value) {
+    jsonEditorError.value =
+      conversionError.value ||
+      tv('components.cohortBuilder.editJsonInvalid', 'Expression JSON is not valid Atlas cohort JSON.')
+    return
+  }
+
+  // Cancel any pending validation during batch state update
+  cancelValidation()
+
+  entryEvents.value = imported.entryEvents || []
+  additionalCriteria.value = imported.additionalCriteria
+  inclusionRules.value = imported.inclusionRules || []
+  exitCriteria.value = imported.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
+  censorWindow.value = imported.censorWindow ?? null
+  collapseSettings.value = imported.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
+  censoringCriteria.value = imported.censoringCriteria ?? []
+  observationPeriod.value = imported.observationPeriod ?? { priorDays: 0, postDays: 0 }
+  qualifyingLimit.value = imported.qualifyingLimit || 'ALL'
+  primaryCriteriaLimit.value = imported.primaryCriteriaLimit
+  inclusionQualifyingLimit.value = imported.inclusionQualifyingLimit || 'ALL'
+
+  showJsonEditorDialog.value = false
+
+  triggerValidation()
+  buildCohortExpression()
+
+  successMessage.value = tv(
+    'components.cohortBuilder.editJsonApplied',
+    'Cohort expression updated from JSON. Review and click Save to persist.'
+  )
+  showSuccess.value = true
+}
+
 // Generation functions
 // @ts-expect-error - Planned feature, not yet implemented in UI
 async function _handleGenerate() {
@@ -2838,6 +2955,27 @@ defineExpose({
 .cohort-builder__preview-banner-icon {
   color: rgb(var(--v-theme-primary));
   opacity: 0.8;
+}
+
+.cohort-json-editor__hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+.cohort-json-editor__textarea :deep(textarea) {
+  font-family: var(--v-font-family-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 13px;
+}
+
+.cohort-json-editor__error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: rgb(var(--v-theme-error));
+  word-break: break-word;
 }
 
 </style>

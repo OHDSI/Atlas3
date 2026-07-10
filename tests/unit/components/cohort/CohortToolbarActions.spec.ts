@@ -245,5 +245,15 @@ describe('CohortToolbarActions', () => {
       expect(wrapper.emitted('export-copy')).toBeTruthy()
       wrapper.unmount()
     })
+
+    it('emits edit-json when the Edit JSON item is clicked (#130)', async () => {
+      const wrapper = mountComponent({}, { attachTo: document.body })
+      await wrapper.find('[data-testid="export-btn"]').trigger('click')
+      const editItem = document.querySelector('[data-testid="edit-json"]') as HTMLElement | null
+      expect(editItem).not.toBeNull()
+      editItem!.click()
+      expect(wrapper.emitted('edit-json')).toBeTruthy()
+      wrapper.unmount()
+    })
   })
 })

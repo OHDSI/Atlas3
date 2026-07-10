@@ -23,11 +23,12 @@ vi.mock('@/composables/useI18n', async () => {
 
 // downloadAtlasJSON spy lifted out via hoisted so test bodies can assert on
 // the call site without re-importing the composable internals.
-const { downloadAtlasJSONSpy, exportToAtlasSpy, importFromFileSpy, conversionErrorRef } =
+const { downloadAtlasJSONSpy, exportToAtlasSpy, importFromFileSpy, importFromAtlasSpy, conversionErrorRef } =
   vi.hoisted(() => ({
     downloadAtlasJSONSpy: vi.fn(),
     exportToAtlasSpy: vi.fn(() => '{"mocked":true}'),
     importFromFileSpy: vi.fn(),
+    importFromAtlasSpy: vi.fn(),
     conversionErrorRef: { value: null as string | null },
   }))
 
@@ -35,6 +36,7 @@ vi.mock('@/composables/useAtlasConverter', () => {
   return {
     useAtlasConverter: () => ({
       importFromFile: importFromFileSpy,
+      importFromAtlas: importFromAtlasSpy,
       downloadAtlasJSON: downloadAtlasJSONSpy,
       exportToAtlas: exportToAtlasSpy,
       conversionError: conversionErrorRef,
@@ -1161,6 +1163,72 @@ describe('CohortBuilder', () => {
     })
     await setup.handleExportCopy()
     expect(setup.showError).toBe(true)
+  })
+
+  // ---------------------------------------------------------------------------
+  // handleOpenJsonEditor / handleApplyJsonEdit (#130)
+  // ---------------------------------------------------------------------------
+
+  it('handleOpenJsonEditor pre-fills the textarea with the current export and opens the dialog', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Existing'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+
+    setup.handleOpenJsonEditor()
+
+    expect(setup.showJsonEditorDialog).toBe(true)
+    expect(setup.jsonEditorText).toBe('{"mocked":true}')
+    expect(setup.jsonEditorError).toBe('')
+  })
+
+  it('handleApplyJsonEdit overwrites the open cohort and leaves it dirty, without touching name/description', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Keep This Name'
+    setup.cohortDescription = 'Keep this description'
+    setup.entryEvents = [{ id: 'old', criteriaType: 'ConditionOccurrence', attributes: [] }]
+
+    importFromAtlasSpy.mockResolvedValueOnce({
+      entryEvents: [{ id: 'new', criteriaType: 'DrugExposure', attributes: [] }],
+      inclusionRules: [],
+      exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' },
+      observationPeriod: { priorDays: 0, postDays: 0 },
+      qualifyingLimit: 'ALL',
+      inclusionQualifyingLimit: 'ALL',
+    })
+
+    setup.jsonEditorText = '{"PrimaryCriteria":{"CriteriaList":[{"DrugExposure":{}}]}}'
+    await setup.handleApplyJsonEdit()
+
+    expect(importFromAtlasSpy).toHaveBeenCalledWith(setup.jsonEditorText)
+    expect(setup.entryEvents).toEqual([{ id: 'new', criteriaType: 'DrugExposure', attributes: [] }])
+    expect(setup.cohortName).toBe('Keep This Name')
+    expect(setup.cohortDescription).toBe('Keep this description')
+    expect(setup.showJsonEditorDialog).toBe(false)
+    expect(setup.hasUnsavedChanges).toBe(true)
+    expect(setup.showSuccess).toBe(true)
+  })
+
+  it('handleApplyJsonEdit surfaces an error and keeps the dialog open when the JSON is invalid', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.entryEvents = [{ id: 'old', criteriaType: 'ConditionOccurrence', attributes: [] }]
+
+    importFromAtlasSpy.mockResolvedValueOnce(null)
+    conversionErrorRef.value = 'Unexpected token'
+
+    setup.jsonEditorText = 'not json'
+    setup.showJsonEditorDialog = true
+    await setup.handleApplyJsonEdit()
+
+    expect(setup.jsonEditorError).toBe('Unexpected token')
+    expect(setup.showJsonEditorDialog).toBe(true)
+    // Entry events are untouched when the import fails.
+    expect(setup.entryEvents).toEqual([{ id: 'old', criteriaType: 'ConditionOccurrence', attributes: [] }])
   })
 
   // ---------------------------------------------------------------------------

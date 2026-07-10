@@ -1685,7 +1685,12 @@
       "exportDownloaded": "Cohort JSON downloaded",
       "copiedToClipboard": "Cohort JSON copied to clipboard",
       "copyFailed": "Could not copy to clipboard",
-      "emptyCohort": "Empty cohort"
+      "emptyCohort": "Empty cohort",
+      "editJsonDialogTitle": "Edit cohort JSON",
+      "editJsonHint": "Edit the Atlas expression JSON below, then click Apply to overwrite the current cohort definition in the editor. Click Save afterwards to persist the change.",
+      "editJsonApply": "Apply",
+      "editJsonInvalid": "Expression JSON is not valid Atlas cohort JSON.",
+      "editJsonApplied": "Cohort expression updated from JSON. Review and click Save to persist."
     },
     "conceptDetail": {
       "closeDetails": "Close concept details",
@@ -3907,6 +3912,8 @@
       "panels": {
         "appendix_1": "Appendix 1: Concept Set Definitions",
         "availableCDMSources": "Available CDM Sources",
+        "editJson": "Edit JSON",
+        "editJsonSubtitle": "Overwrite from JSON",
         "fullAnalysis": "Full Analysis",
         "generate": "Generate",
         "generated": "Generated",
