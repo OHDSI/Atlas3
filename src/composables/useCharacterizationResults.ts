@@ -17,6 +17,7 @@ export function useCharacterizationResults() {
   const resultCount = ref<number>(0)
   const prevalence = ref<PrevalenceStat[]>([])
   const distribution = ref<DistributionStat[]>([])
+  const unmapped = ref<Record<string, unknown>[]>([])
   const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
 
@@ -25,6 +26,7 @@ export function useCharacterizationResults() {
     resultCount.value = 0
     prevalence.value = []
     distribution.value = []
+    unmapped.value = []
     error.value = null
     loading.value = true
     try {
@@ -38,6 +40,7 @@ export function useCharacterizationResults() {
       resultCount.value = count
       prevalence.value = mapped.prevalence
       distribution.value = mapped.distribution
+      unmapped.value = mapped.unmapped
       return true
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to load results'
@@ -53,9 +56,10 @@ export function useCharacterizationResults() {
     resultCount.value = 0
     prevalence.value = []
     distribution.value = []
+    unmapped.value = []
     error.value = null
     loading.value = false
   }
 
-  return { execution, resultCount, prevalence, distribution, loading, error, load, reset }
+  return { execution, resultCount, prevalence, distribution, unmapped, loading, error, load, reset }
 }

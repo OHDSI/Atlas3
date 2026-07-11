@@ -97,6 +97,7 @@
             v-else
             :prevalence="prevalence"
             :distribution="distribution"
+            :unmapped="unmapped"
             :cohorts="cohorts"
             :threshold="filters.threshold"
             :selected-analysis-ids="filters.selectedAnalysisIds"
@@ -195,7 +196,7 @@ const { tv } = useI18n()
 const store = useCharacterizationStore()
 const sourcesStore = useDataSourcesStore()
 const cohortSizes = ref<Record<string, number>>({})
-const { execution, prevalence, distribution, resultCount, error, load, reset } = useCharacterizationResults()
+const { execution, prevalence, distribution, unmapped, resultCount, error, load, reset } = useCharacterizationResults()
 
 const railOpen = ref(!route.params.id)
 const viewMode = ref<ViewMode>('perAnalysis')
