@@ -1162,8 +1162,11 @@ function convertAtlasToEvent(
 
   // CIRCE nests CorrelatedCriteria inside the criteria-type object itself
   // (e.g. Measurement.CorrelatedCriteria), not as a sibling of it — see #131.
-  const criteriaObjWithCorrelatedCriteria = criteriaObj as { CorrelatedCriteria?: AtlasGroupShape }
-  const correlatedCriteria = criteriaObjWithCorrelatedCriteria.CorrelatedCriteria
+  // The sibling position is still read as a fallback, so cohorts saved while
+  // the converter wrote it there keep loading.
+  const correlatedCriteria =
+    (criteriaObj.CorrelatedCriteria as AtlasGroupShape | undefined) ??
+    (atlasEvent as { CorrelatedCriteria?: AtlasGroupShape }).CorrelatedCriteria
   if (correlatedCriteria) {
     event.nestedCriteria = convertAtlasGroupToGroup(correlatedCriteria, conceptSets)
   }
