@@ -1685,7 +1685,20 @@
       "exportDownloaded": "Cohort JSON downloaded",
       "copiedToClipboard": "Cohort JSON copied to clipboard",
       "copyFailed": "Could not copy to clipboard",
-      "emptyCohort": "Empty cohort"
+      "emptyCohort": "Empty cohort",
+      "jsonViewEdit": "View / Edit",
+      "jsonViewEditSubtitle": "Overwrite the cohort from JSON",
+      "jsonDialogTitle": "Cohort JSON",
+      "jsonDialogSubtitle": "Edit the Atlas expression directly. Applying replaces the cohort logic — the name and description are kept.",
+      "jsonPlaceholder": "Paste an Atlas cohort expression, or load one from a file…",
+      "jsonLoadFile": "Load file",
+      "jsonCopied": "Copied",
+      "jsonApply": "Apply to builder",
+      "jsonApplied": "Cohort JSON applied — review the builder, then save",
+      "jsonInvalid": "Invalid JSON: {error}",
+      "jsonInvalidExpression": "Not a valid Atlas cohort expression",
+      "jsonImportFailed": "Import failed: {error}",
+      "jsonReadFailed": "Could not read file"
     },
     "conceptDetail": {
       "closeDetails": "Close concept details",

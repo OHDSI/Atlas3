@@ -38,6 +38,13 @@
           :subtitle="t('cohortDefinitions.cohortDefinitionManager.panels.json', 'JSON').value"
           @click="$emit('export-copy')"
         />
+        <AtlasListItem
+          data-testid="view-json"
+          prepend-icon="mdi-code-json"
+          :title="t('components.cohortBuilder.jsonViewEdit', 'View / Edit').value"
+          :subtitle="t('components.cohortBuilder.jsonViewEditSubtitle', 'Overwrite the cohort from JSON').value"
+          @click="$emit('view-json')"
+        />
       </AtlasList>
     </AtlasMenu>
 
@@ -76,6 +83,7 @@ defineEmits<{
   (e: 'save'): void
   (e: 'export-download'): void
   (e: 'export-copy'): void
+  (e: 'view-json'): void
 }>()
 
 const { t } = useI18n()

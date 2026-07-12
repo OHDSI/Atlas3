@@ -60,6 +60,7 @@
           @save="builderRef.handleSave()"
           @export-download="builderRef.handleExportDownload()"
           @export-copy="builderRef.handleExportCopy()"
+          @view-json="builderRef.openJsonDialog()"
         />
       </div>
     </template>

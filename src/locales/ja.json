@@ -1685,7 +1685,20 @@
       "exportDownloaded": "コホート JSON をダウンロードしました",
       "copiedToClipboard": "コホート JSON をクリップボードにコピーしました",
       "copyFailed": "クリップボードにコピーできませんでした",
-      "emptyCohort": "空のコホート"
+      "emptyCohort": "空のコホート",
+      "jsonViewEdit": "表示 / 編集",
+      "jsonViewEditSubtitle": "JSON でコホートを上書きします",
+      "jsonDialogTitle": "コホート JSON",
+      "jsonDialogSubtitle": "Atlas 式を直接編集します。適用するとコホートのロジックが置き換えられます（名前と説明は保持されます）。",
+      "jsonPlaceholder": "Atlas のコホート式を貼り付けるか、ファイルから読み込んでください…",
+      "jsonLoadFile": "ファイルを読み込む",
+      "jsonCopied": "コピーしました",
+      "jsonApply": "ビルダーに適用",
+      "jsonApplied": "コホート JSON を適用しました。内容を確認して保存してください",
+      "jsonInvalid": "JSON が不正です: {error}",
+      "jsonInvalidExpression": "有効な Atlas コホート式ではありません",
+      "jsonImportFailed": "インポートに失敗しました: {error}",
+      "jsonReadFailed": "ファイルを読み込めませんでした"
     },
     "conceptDetail": {
       "closeDetails": "コンセプトの詳細を閉じる",
