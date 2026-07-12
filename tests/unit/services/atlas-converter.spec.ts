@@ -1684,7 +1684,10 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       })
 
       const atlasJSON = convertInternalToAtlas(cohort)
-      const correlated = atlasJSON.PrimaryCriteria.CriteriaList[0]?.CorrelatedCriteria
+      // CIRCE nests CorrelatedCriteria inside the criteria-type object
+      // (ConditionOccurrence), not as a sibling of it — see #131.
+      const entry = atlasJSON.PrimaryCriteria.CriteriaList[0] as Record<string, any>
+      const correlated = entry.ConditionOccurrence?.CorrelatedCriteria
 
       expect(correlated).toBeDefined()
       expect(correlated?.Type).toBe('ALL')
@@ -1725,7 +1728,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       })
 
       const atlasJSON = convertInternalToAtlas(cohort)
-      const correlated = atlasJSON.PrimaryCriteria.CriteriaList[0]?.CorrelatedCriteria
+      const entry = atlasJSON.PrimaryCriteria.CriteriaList[0] as Record<string, any>
+      const correlated = entry.ConditionOccurrence?.CorrelatedCriteria
 
       expect(correlated?.Type).toBe('AT_LEAST')
       expect(correlated?.Count).toBe(2)
@@ -4810,8 +4814,10 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
         PrimaryCriteria: {
           CriteriaList: [
             {
-              ConditionOccurrence: { CodesetId: null },
-              CorrelatedCriteria: { Count: 2 }, // no Type, no CriteriaList
+              ConditionOccurrence: {
+                CodesetId: null,
+                CorrelatedCriteria: { Count: 2 }, // no Type, no CriteriaList
+              },
             },
           ],
         },
