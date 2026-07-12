@@ -197,6 +197,24 @@ describe('mapCharacterizationResults', () => {
     })
   })
 
+  it('surfaces a classifiable row with no cohortId as unmapped', () => {
+    const out = mapCharacterizationResults([
+      {
+        analysisId: 1,
+        covariateId: 100,
+        covariateName: 'X',
+        conceptId: 100,
+        // classifiable as prevalence (has count/pct) but no cohortId to key by
+        count: 5,
+        pct: 5,
+      },
+    ])
+    expect(out.prevalence).toEqual([])
+    expect(out.distribution).toEqual([])
+    expect(out.unmapped).toHaveLength(1)
+    expect(out.unmapped[0]).toMatchObject({ analysisId: 1, covariateId: 100 })
+  })
+
   it('does not surface malformed id-less rows as unmapped', () => {
     const out = mapCharacterizationResults([{ foo: 'bar' }, null, { analysisId: 1 }])
     expect(out.prevalence).toEqual([])
