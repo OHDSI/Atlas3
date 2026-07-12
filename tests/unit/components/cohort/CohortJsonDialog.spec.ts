@@ -156,6 +156,94 @@ describe('CohortJsonDialog', () => {
 
       expect(writeText).toHaveBeenCalledWith('{"edited": true}')
     })
+
+    it('reverts the button label from Copied after a couple of seconds', async () => {
+      vi.useFakeTimers()
+      const writeText = vi.fn().mockResolvedValue(undefined)
+      Object.assign(navigator, { clipboard: { writeText } })
+
+      const wrapper = mountComponent()
+      await wrapper.find('[data-testid="cohort-json-copy"]').trigger('click')
+      await vi.advanceTimersByTimeAsync(0)
+      expect(wrapper.find('[data-testid="cohort-json-copy"]').text()).toBe('Copied')
+
+      await vi.advanceTimersByTimeAsync(2000)
+      await wrapper.vm.$nextTick()
+      expect(wrapper.find('[data-testid="cohort-json-copy"]').text()).toBe('Copy')
+
+      vi.useRealTimers()
+    })
+
+    it('shows an error when the clipboard is unavailable', async () => {
+      const writeText = vi.fn().mockRejectedValue(new Error('denied'))
+      Object.assign(navigator, { clipboard: { writeText } })
+
+      const wrapper = mountComponent()
+      await wrapper.find('[data-testid="cohort-json-copy"]').trigger('click')
+
+      await vi.waitFor(() =>
+        expect(wrapper.find('[data-testid="cohort-json-error"]').text()).toContain(
+          'Could not copy to clipboard'
+        )
+      )
+    })
+  })
+
+  describe('Load file', () => {
+    function selectFile(wrapper: ReturnType<typeof mountComponent>, file: File) {
+      const input = wrapper.find('[data-testid="cohort-json-file-input"]')
+      Object.defineProperty(input.element, 'files', { value: [file], configurable: true })
+      return input.trigger('change')
+    }
+
+    it('loads the file contents into the editor', async () => {
+      const wrapper = mountComponent()
+      const contents = '{"PrimaryCriteria": {"CriteriaList": []}}'
+
+      await selectFile(wrapper, new File([contents], 'cohort.json', { type: 'application/json' }))
+      // FileReader resolves asynchronously.
+      await vi.waitFor(() =>
+        expect((wrapper.find('textarea').element as HTMLTextAreaElement).value).toBe(contents)
+      )
+
+      // Loading a file does not apply it — the user reviews it first.
+      expect(wrapper.emitted('apply')).toBeFalsy()
+    })
+
+    it('reports an error and keeps the draft when the file is rejected', async () => {
+      const wrapper = mountComponent()
+
+      await selectFile(wrapper, new File(['nope'], 'cohort.txt', { type: 'text/plain' }))
+
+      await vi.waitFor(() =>
+        expect(wrapper.find('[data-testid="cohort-json-error"]').exists()).toBe(true)
+      )
+      expect((wrapper.find('textarea').element as HTMLTextAreaElement).value).toBe(VALID_JSON)
+    })
+  })
+
+  describe('Download', () => {
+    it('downloads the draft under the given filename', async () => {
+      const createObjectURL = vi.fn(() => 'blob:fake')
+      const revokeObjectURL = vi.fn()
+      Object.assign(URL, { createObjectURL, revokeObjectURL })
+      const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+      const draft = '{"edited": true}'
+      const wrapper = mountComponent({ filename: 'my_cohort.json' })
+      await wrapper.find('textarea').setValue(draft)
+      await wrapper.find('[data-testid="cohort-json-download"]').trigger('click')
+
+      expect(createObjectURL).toHaveBeenCalledTimes(1)
+      // jsdom's Blob has no text(); assert on what it does expose.
+      const blob = createObjectURL.mock.calls[0]![0] as Blob
+      expect(blob.type).toBe('application/json')
+      expect(blob.size).toBe(draft.length)
+      expect(click).toHaveBeenCalled()
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:fake')
+
+      click.mockRestore()
+    })
   })
 
   describe('Cancel', () => {
