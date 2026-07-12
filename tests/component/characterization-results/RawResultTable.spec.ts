@@ -70,4 +70,27 @@ describe('RawResultTable', () => {
     expect(wrapper.find('.raw-result-table__badge').exists()).toBe(false)
     wrapper.unmount()
   })
+
+  it('formats large integers, nullish, boolean and object values', () => {
+    const circular: Record<string, unknown> = {}
+    circular.self = circular
+    const wrapper = mountTable([
+      {
+        covariateId: 1,
+        bigCount: 1234567, // integer >= 1000 → localized with separators
+        smallCount: 42, // left as a number
+        missing: null, // → em dash
+        flag: true, // → "true"
+        payload: { a: 1 }, // → JSON string
+        cyclic: circular, // JSON.stringify throws → String() fallback
+      },
+    ])
+    const text = wrapper.text()
+    expect(text).toContain((1234567).toLocaleString())
+    expect(text).toContain('—')
+    expect(text).toContain('true')
+    expect(text).toContain('{"a":1}')
+    expect(text).toContain('[object Object]')
+    wrapper.unmount()
+  })
 })

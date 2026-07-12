@@ -44,13 +44,7 @@
       :items-per-page-options="[10, 25, 50, 100, -1]"
       class="raw-result-table__table"
       :data-testid="`char-results-raw-table-${analysisId}`"
-    >
-      <template #no-data>
-        <div class="raw-result-table__empty">
-          {{ tv('common.noData', 'No rows match the current filter.') }}
-        </div>
-      </template>
-    </AtlasDataTable>
+    />
   </AtlasCard>
 </template>
 
@@ -197,11 +191,5 @@ function formatValue(value: unknown): string | number {
   border-radius: 10px;
   color: rgb(var(--v-theme-orange));
   background: rgba(var(--v-theme-orange), 0.12);
-}
-
-.raw-result-table__empty {
-  padding: 24px;
-  text-align: center;
-  color: rgba(var(--v-theme-on-surface), 0.6);
 }
 </style>
