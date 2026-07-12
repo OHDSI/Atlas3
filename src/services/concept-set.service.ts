@@ -261,16 +261,16 @@ export async function deleteConceptSet(id: number | string): Promise<boolean> {
 export async function assignTagToConceptSet(
   id: number | string,
   tagId: number
-): Promise<boolean> {
+): Promise<{ success: boolean; error?: string }> {
   try {
     await fetchJSON(`/conceptset/${id}/tag/`, {
       method: 'POST',
       body: JSON.stringify(tagId),
     })
-    return true
+    return { success: true }
   } catch (error) {
     logger.error('ConceptSet', `Failed to assign tag ${tagId} to concept set ${id}`, error)
-    return false
+    return { success: false, error: error instanceof Error ? error.message : String(error) }
   }
 }
 
@@ -281,14 +281,14 @@ export async function assignTagToConceptSet(
 export async function unassignTagFromConceptSet(
   id: number | string,
   tagId: number
-): Promise<boolean> {
+): Promise<{ success: boolean; error?: string }> {
   try {
     await fetchJSON(`/conceptset/${id}/tag/${tagId}`, {
       method: 'DELETE',
     })
-    return true
+    return { success: true }
   } catch (error) {
     logger.error('ConceptSet', `Failed to unassign tag ${tagId} from concept set ${id}`, error)
-    return false
+    return { success: false, error: error instanceof Error ? error.message : String(error) }
   }
 }

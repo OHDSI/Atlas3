@@ -1613,16 +1613,18 @@ describe('WebAPI Service', () => {
       expect(result).toBeNull()
     })
 
-    it('assignTagToCohort returns false on error', async () => {
+    it('assignTagToCohort returns the error message on failure', async () => {
       mockFetch.mockRejectedValueOnce(new Error('network error'))
       const result = await webapi.assignTagToCohort(1, 10)
-      expect(result).toBe(false)
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('network error')
     })
 
-    it('unassignTagFromCohort returns false on error', async () => {
+    it('unassignTagFromCohort returns the error message on failure', async () => {
       mockFetch.mockRejectedValueOnce(new Error('network error'))
       const result = await webapi.unassignTagFromCohort(1, 10)
-      expect(result).toBe(false)
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('network error')
     })
   })
 })

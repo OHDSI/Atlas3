@@ -68,8 +68,8 @@ vi.mock('@/services/webapi', () => ({
     }),
   }),
   saveCohortDefinition: vi.fn().mockResolvedValue({ id: 99, name: 'Saved' }),
-  assignTagToCohort: vi.fn().mockResolvedValue(true),
-  unassignTagFromCohort: vi.fn().mockResolvedValue(true),
+  assignTagToCohort: vi.fn().mockResolvedValue({ success: true }),
+  unassignTagFromCohort: vi.fn().mockResolvedValue({ success: true }),
 }))
 
 vi.mock('@/services/concept-set.service', () => ({
