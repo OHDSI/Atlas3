@@ -50,4 +50,16 @@ describe('ConceptSetService tags', () => {
     expect(result.success).toBe(false)
     expect(result.error).toContain('err')
   })
+
+  it('returns the server error message when unassigning fails', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'err',
+      text: async () => '',
+    })
+    const result = await unassignTagFromConceptSet(1, 2)
+    expect(result.success).toBe(false)
+    expect(result.error).toContain('err')
+  })
 })
