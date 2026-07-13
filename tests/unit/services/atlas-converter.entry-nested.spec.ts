@@ -1,15 +1,21 @@
 /**
- * Regression: entry-event nested criteria (#131)
+ * Regression: nested criteria on any criterion (#131)
  *
  * CIRCE models CorrelatedCriteria as a field of the Criteria class, so it
- * lives *inside* the domain object:
+ * lives *inside* the domain object, wherever that criterion appears:
  *
- *   { "ConditionOccurrence": { "CodesetId": 0, "CorrelatedCriteria": {...} } }
+ *   entry event:     { "ConditionOccurrence": { CorrelatedCriteria } }
+ *   inclusion rule:  { "Criteria": { "ConditionOccurrence": { CorrelatedCriteria } },
+ *                      "StartWindow": {...} }
  *
- * The converter used to read and write it on the *wrapper* instead — the
- * object that carries StartWindow/Occurrence for inclusion-rule criteria.
- * Entry events have no such wrapper, so every nested criterion on an entry
- * event was silently dropped on import and therefore missing from exports.
+ * The converter used to read and write it on the CorelatedCriteria *wrapper*
+ * (the object carrying StartWindow/Occurrence) — a placement CIRCE never
+ * emits and never reads. That dropped nested criteria on import for entry
+ * events *and* for inclusion-rule criteria alike: across the 1104-cohort
+ * phenotype-library fixtures, CorrelatedCriteria appears inside the domain
+ * object 448 times on entry events and 104 times under inclusion rules, and
+ * on the wrapper zero times. Both paths share convertAtlasToEvent /
+ * convertEventToAtlas, so both are covered here.
  */
 import { describe, it, expect } from 'vitest'
 import { convertAtlasToInternal, convertInternalToAtlas } from '@/services/atlas-converter'
@@ -131,5 +137,87 @@ describe('atlas-converter: entry-event nested criteria (#131)', () => {
     const internal = convertAtlasToInternal(legacy)
 
     expect(internal.entryEvents?.[0]?.nestedCriteria?.logicType).toBe('AT_LEAST')
+  })
+})
+
+/**
+ * An inclusion rule whose criterion carries a nested criterion. The rule's
+ * CriteriaList holds CorelatedCriteria wrappers (Criteria + StartWindow), and
+ * the nested criterion hangs off the *domain* object inside that wrapper —
+ * exactly as on an entry event.
+ */
+function atlasWithInclusionNestedCriteria() {
+  const base = atlasWithEntryNestedCriteria()
+  const entryDomain = base.PrimaryCriteria.CriteriaList[0]!.ConditionOccurrence
+  const correlated = entryDomain.CorrelatedCriteria
+
+  return {
+    ...base,
+    PrimaryCriteria: {
+      ...base.PrimaryCriteria,
+      CriteriaList: [{ ConditionOccurrence: { CodesetId: 0, ConditionTypeExclude: false } }],
+    },
+    InclusionRules: [
+      {
+        name: 'On anticoagulants',
+        expression: {
+          Type: 'ALL' as const,
+          CriteriaList: [
+            {
+              Criteria: {
+                ConditionOccurrence: {
+                  CodesetId: 0,
+                  ConditionTypeExclude: false,
+                  CorrelatedCriteria: correlated,
+                },
+              },
+              StartWindow: {
+                Start: { Days: 0, Coeff: -1 },
+                End: { Days: 0, Coeff: 1 },
+                UseIndexEnd: false,
+                UseEventEnd: false,
+              },
+              RestrictVisit: false,
+              IgnoreObservationPeriod: false,
+            },
+          ],
+          DemographicCriteriaList: [],
+          Groups: [],
+        },
+      },
+    ],
+  }
+}
+
+describe('atlas-converter: inclusion-rule nested criteria (#131)', () => {
+  it('imports CorrelatedCriteria from inside the wrapped domain object', () => {
+    const internal = convertAtlasToInternal(atlasWithInclusionNestedCriteria())
+
+    const criterion = internal.inclusionRules?.[0]?.criteriaGroups?.[0]?.events[0]
+    expect(criterion?.criteriaType).toBe('ConditionOccurrence')
+
+    const nested = criterion?.nestedCriteria
+    expect(nested).toBeDefined()
+    expect(nested?.logicType).toBe('AT_LEAST')
+    expect(nested?.events[0]?.criteriaType).toBe('DrugExposure')
+  })
+
+  it('exports it back inside the domain object, not on the wrapper', () => {
+    const internal = convertAtlasToInternal(atlasWithInclusionNestedCriteria())
+    const atlas = convertInternalToAtlas({
+      name: 'Stroke with anticoagulants',
+      qualifyingLimit: 'ALL',
+      ...internal,
+    } as CohortDefinition)
+
+    const wrapper = atlas.InclusionRules![0]!.expression.CriteriaList![0] as Record<string, unknown>
+    // The wrapper is CIRCE's CorelatedCriteria: Criteria + StartWindow, and no
+    // CorrelatedCriteria field of its own.
+    expect(wrapper).not.toHaveProperty('CorrelatedCriteria')
+    expect(wrapper).toHaveProperty('StartWindow')
+
+    const correlated = nestedOf(wrapper.Criteria)
+    expect(correlated?.Type).toBe('AT_LEAST')
+    expect(correlated?.CriteriaList).toHaveLength(1)
   })
 })
