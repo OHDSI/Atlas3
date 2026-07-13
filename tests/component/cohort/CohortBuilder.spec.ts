@@ -68,8 +68,8 @@ vi.mock('@/services/webapi', () => ({
     }),
   }),
   saveCohortDefinition: vi.fn().mockResolvedValue({ id: 99, name: 'Saved' }),
-  assignTagToCohort: vi.fn().mockResolvedValue(true),
-  unassignTagFromCohort: vi.fn().mockResolvedValue(true),
+  assignTagToCohort: vi.fn().mockResolvedValue({ success: true }),
+  unassignTagFromCohort: vi.fn().mockResolvedValue({ success: true }),
 }))
 
 vi.mock('@/services/concept-set.service', () => ({
@@ -1552,6 +1552,41 @@ describe('CohortBuilder', () => {
     const result = await setup.handleSave()
     expect(result).toEqual({})
     expect(setup.errorMessage).toBe('Failed to save cohort')
+    expect(setup.showError).toBe(true)
+  })
+
+  it('handleSave surfaces the server message when a tag assignment fails', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Savable'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    setup.handleTagsUpdate([{ id: 7, name: 'protected' }] as any)
+
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.assignTagToCohort).mockResolvedValueOnce({
+      success: false,
+      error: 'Tag group "Status" allows only one assignment',
+    })
+
+    await setup.handleSave()
+    expect(setup.errorMessage).toBe('Tag group "Status" allows only one assignment')
+    expect(setup.showError).toBe(true)
+  })
+
+  it('handleSave falls back to a per-tag message when unassignment fails without detail', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Savable'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    setup.loadedTags = [{ id: 9, name: 'old-tag' }]
+
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.unassignTagFromCohort).mockResolvedValueOnce({ success: false })
+
+    await setup.handleSave()
+    expect(setup.errorMessage).toBe('Failed to unassign tag "old-tag"')
     expect(setup.showError).toBe(true)
   })
 

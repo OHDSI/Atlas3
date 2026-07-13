@@ -49,7 +49,10 @@ describe('atlas-converter: nested criteria sub-groups (#112)', () => {
 
   it('serializes nested-criteria sub-groups to CorrelatedCriteria.Groups', () => {
     const atlas = convertInternalToAtlas(cohortWithNestedGroup())
-    const cc = (atlas.PrimaryCriteria.CriteriaList[0] as Record<string, any>).CorrelatedCriteria
+    const entry = atlas.PrimaryCriteria.CriteriaList[0] as Record<string, any>
+    // CIRCE nests CorrelatedCriteria inside the criteria-type object
+    // (ConditionOccurrence), not as a sibling of it — see #131.
+    const cc = entry.ConditionOccurrence.CorrelatedCriteria
     expect(cc.Groups).toHaveLength(1)
     expect(cc.Groups[0].Type).toBe('ANY')
     expect(cc.Groups[0].CriteriaList).toHaveLength(1)
@@ -62,5 +65,69 @@ describe('atlas-converter: nested criteria sub-groups (#112)', () => {
     expect(nested?.nestedGroups).toHaveLength(1)
     expect(nested?.nestedGroups?.[0].logicType).toBe('ANY')
     expect(nested?.nestedGroups?.[0].events).toHaveLength(1)
+  })
+})
+
+/**
+ * #131: imported cohort definitions (e.g. from the phenotype library / legacy
+ * ATLAS exports) place CorrelatedCriteria *inside* the criteria-type object
+ * (Measurement.CorrelatedCriteria), not as a sibling of it. Reading it from
+ * the wrong location silently dropped every entry event's nested criteria.
+ */
+describe('atlas-converter: legacy CIRCE CorrelatedCriteria placement (#131)', () => {
+  function legacyAtlasJsonWithNestedEntryCriteria() {
+    return {
+      ConceptSets: [],
+      PrimaryCriteria: {
+        CriteriaList: [
+          {
+            Measurement: {
+              CodesetId: 1,
+              MeasurementTypeExclude: false,
+              CorrelatedCriteria: {
+                Type: 'AT_LEAST',
+                Count: 1,
+                CriteriaList: [
+                  {
+                    Criteria: { ConditionOccurrence: { CodesetId: 2, ConditionTypeExclude: false } },
+                    StartWindow: { Start: { Days: 0, Coeff: -1 }, End: { Days: 365, Coeff: 1 } },
+                    Occurrence: { Type: 2, Count: 1 },
+                  },
+                ],
+                DemographicCriteriaList: [],
+                Groups: [],
+              },
+            },
+          },
+        ],
+        ObservationWindow: { PriorDays: 0, PostDays: 0 },
+        PrimaryCriteriaLimit: { Type: 'First' },
+      },
+      QualifiedLimit: { Type: 'First' },
+      ExpressionLimit: { Type: 'First' },
+      InclusionRules: [],
+      CensorWindow: {},
+      CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+      CensoringCriteria: [],
+    } as unknown as import('@/models/atlas.types').AtlasJSON
+  }
+
+  it('reads nested criteria that CIRCE places inside the criteria-type object', () => {
+    const cohort = convertAtlasToInternal(legacyAtlasJsonWithNestedEntryCriteria())
+    const nested = cohort.entryEvents?.[0]?.nestedCriteria
+    expect(nested).toBeDefined()
+    expect(nested?.logicType).toBe('AT_LEAST')
+    expect(nested?.events).toHaveLength(1)
+    expect(nested?.events[0].criteriaType).toBe('ConditionOccurrence')
+  })
+
+  it('does not lose nested entry-event criteria on an import/export round-trip', () => {
+    const cohort = convertAtlasToInternal(legacyAtlasJsonWithNestedEntryCriteria())
+    const reExported = convertInternalToAtlas(cohort as import('@/models/cohort.types').CohortDefinition)
+    const entry = reExported.PrimaryCriteria.CriteriaList[0] as Record<string, any>
+    expect(entry.Measurement.CorrelatedCriteria).toBeDefined()
+    expect(entry.Measurement.CorrelatedCriteria.CriteriaList).toHaveLength(1)
+    // Must not regress to the old (wrong) sibling placement.
+    expect(entry.CorrelatedCriteria).toBeUndefined()
   })
 })

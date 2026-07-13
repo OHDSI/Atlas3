@@ -28,6 +28,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useNotifications } from '@/stores/notifications'
 import { useWebAPIStore } from '@/stores/webapi'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
@@ -659,6 +660,34 @@ describe('ConceptSetEditor', () => {
       vm.parseJsonImport()
       expect(vm.jsonError).toMatch(/invalid json/i)
       expect(vm.jsonItems).toHaveLength(0)
+    })
+  })
+
+  describe('Tag sync on save', () => {
+    it('notifies with the server message when tag sync fails after save', async () => {
+      const store = useConceptSetsStore()
+      vi.spyOn(store, 'update').mockResolvedValue(mockConceptSet)
+      vi.spyOn(store, 'syncTags').mockResolvedValue({
+        success: false,
+        error: 'Tag "protected" may only be assigned once',
+      })
+      const notifications = useNotifications()
+      const dangerSpy = vi.spyOn(notifications, 'danger')
+
+      const wrapper = mountComponent({ conceptSet: mockConceptSet })
+      await flushPromises()
+      const vm = wrapper.vm as unknown as {
+        formValid: boolean
+        onSave: () => Promise<void>
+      }
+      vm.formValid = true
+      await vm.onSave()
+
+      expect(store.syncTags).toHaveBeenCalledWith(mockConceptSet.id, expect.anything(), expect.anything())
+      expect(dangerSpy).toHaveBeenCalledWith(
+        'Failed to update tags',
+        expect.objectContaining({ message: 'Tag "protected" may only be assigned once' })
+      )
     })
   })
 })

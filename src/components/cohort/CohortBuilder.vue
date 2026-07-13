@@ -2073,22 +2073,31 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
       prev => !currentTags.some(current => current.id === prev.id)
     )
 
+    const tagFailures: string[] = []
+
     for (const tag of tagsToAdd) {
       if (tag.id) {
-        const success = await assignTagToCohort(cohortId, tag.id)
-        if (!success) {
-          logger.warn('CohortBuilder', `Failed to assign tag ${tag.id}`)
+        const result = await assignTagToCohort(cohortId, tag.id)
+        if (!result.success) {
+          logger.warn('CohortBuilder', `Failed to assign tag ${tag.id}`, result.error)
+          tagFailures.push(result.error ?? `Failed to assign tag "${tag.name}"`)
         }
       }
     }
 
     for (const tag of tagsToRemove) {
       if (tag.id) {
-        const success = await unassignTagFromCohort(cohortId, tag.id)
-        if (!success) {
-          logger.warn('CohortBuilder', `Failed to unassign tag ${tag.id}`)
+        const result = await unassignTagFromCohort(cohortId, tag.id)
+        if (!result.success) {
+          logger.warn('CohortBuilder', `Failed to unassign tag ${tag.id}`, result.error)
+          tagFailures.push(result.error ?? `Failed to unassign tag "${tag.name}"`)
         }
       }
+    }
+
+    if (tagFailures.length > 0) {
+      errorMessage.value = tagFailures.join('; ')
+      showError.value = true
     }
 
     loadedTags.value = [...currentTags]

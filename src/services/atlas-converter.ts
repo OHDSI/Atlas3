@@ -455,7 +455,9 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
   }
 
   if (event.nestedCriteria) {
-    atlasEvent.CorrelatedCriteria = convertGroupToAtlasGroup(event.nestedCriteria)
+    // CIRCE nests CorrelatedCriteria inside the criteria-type object itself
+    // (e.g. Measurement.CorrelatedCriteria), not as a sibling of it — see #131.
+    criteriaTypeObj.CorrelatedCriteria = convertGroupToAtlasGroup(event.nestedCriteria)
   }
 
   return atlasEvent
@@ -1158,8 +1160,10 @@ function convertAtlasToEvent(
     }
   }
 
-  const eventWithCorrelatedCriteria = atlasEvent as { CorrelatedCriteria?: AtlasGroupShape }
-  const correlatedCriteria = eventWithCorrelatedCriteria.CorrelatedCriteria
+  // CIRCE nests CorrelatedCriteria inside the criteria-type object itself
+  // (e.g. Measurement.CorrelatedCriteria), not as a sibling of it — see #131.
+  const criteriaObjWithCorrelatedCriteria = criteriaObj as { CorrelatedCriteria?: AtlasGroupShape }
+  const correlatedCriteria = criteriaObjWithCorrelatedCriteria.CorrelatedCriteria
   if (correlatedCriteria) {
     event.nestedCriteria = convertAtlasGroupToGroup(correlatedCriteria, conceptSets)
   }

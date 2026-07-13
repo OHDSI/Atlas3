@@ -134,7 +134,6 @@ export interface AtlasPrimaryCriteria {
 
 export interface AtlasCriteria {
   [key: string]: unknown // Criteria type specific fields
-  CorrelatedCriteria?: AtlasCorrelatedCriteria // Nested criteria
   Occurrence?: AtlasOccurrence // Cardinality
 }
 
@@ -418,6 +417,7 @@ export interface ConceptSetItem {
  * Atlas criteria type object (the criteria-specific part)
  */
 export interface AtlasCriteriaTypeObject {
+  CorrelatedCriteria?: AtlasCorrelatedCriteria // Nested criteria (CIRCE nests it here, not on the wrapper)
   CodesetId?: number | null
   First?: boolean
   OccurrenceStartDate?: AtlasRange

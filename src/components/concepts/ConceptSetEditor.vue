@@ -648,6 +648,7 @@ import { logger } from '@/utils/logger'
 import { ref, computed, inject, watch, toRef, onBeforeUnmount } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useNotifications } from '@/stores/notifications'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import type { ConceptSet, Concept, ConceptSetItem } from '@/models/concept-set.types'
@@ -673,7 +674,7 @@ import {
   parseConceptSetJson,
 } from './concept-set-import'
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 const webapiStore = useWebAPIStore()
 
 // ============================================================================
@@ -698,6 +699,7 @@ const emit = defineEmits<{
 // ============================================================================
 
 const store = useConceptSetsStore()
+const notify = useNotifications()
 
 // ============================================================================
 // Local State
@@ -1022,7 +1024,12 @@ async function onSave() {
     if (result) {
       const savedId = result?.id
       if (savedId !== undefined && savedId !== null) {
-        await store.syncTags(savedId, loadedTags.value, selectedTags.value)
+        const tagResult = await store.syncTags(savedId, loadedTags.value, selectedTags.value)
+        if (!tagResult.success) {
+          notify.danger(tv('conceptSets.tagUpdateFailed', 'Failed to update tags'), {
+            message: tagResult.error,
+          })
+        }
         loadedTags.value = [...selectedTags.value]
       }
       hasUnsavedChanges.value = false

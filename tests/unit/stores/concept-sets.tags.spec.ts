@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
-const assignSpy = vi.fn().mockResolvedValue(true)
-const unassignSpy = vi.fn().mockResolvedValue(true)
+const assignSpy = vi.fn().mockResolvedValue({ success: true })
+const unassignSpy = vi.fn().mockResolvedValue({ success: true })
 
 vi.mock('@/services/concept-set.service', () => ({
   getAllConceptSets: vi.fn().mockResolvedValue([]),
@@ -25,9 +25,19 @@ describe('concept-sets store tags', () => {
 
   it('syncTags assigns added and unassigns removed tags', async () => {
     const store = useConceptSetsStore()
-    await store.syncTags(42, [{ id: 1, name: 'old' }], [{ id: 2, name: 'new' }])
+    const result = await store.syncTags(42, [{ id: 1, name: 'old' }], [{ id: 2, name: 'new' }])
     expect(assignSpy).toHaveBeenCalledWith(42, 2)
     expect(unassignSpy).toHaveBeenCalledWith(42, 1)
+    expect(result.success).toBe(true)
+  })
+
+  it('syncTags reports failure when the server rejects an assignment', async () => {
+    assignSpy.mockResolvedValueOnce({ success: false, error: 'HTTP 500: mandatory tag group violated' })
+    const store = useConceptSetsStore()
+    const result = await store.syncTags(42, [], [{ id: 2, name: 'new' }])
+    expect(result.success).toBe(false)
+    expect(result.error).toContain('mandatory tag group violated')
+    expect(store.error).toContain('mandatory tag group violated')
   })
 
   it('availableTags returns sorted unique tag names', () => {
