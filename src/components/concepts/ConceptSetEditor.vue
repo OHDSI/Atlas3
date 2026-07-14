@@ -23,7 +23,6 @@
               <span class="cs-editor__accent-rule" />
             </div>
             <v-form
-              ref="formRef"
               v-model="formValid"
               @submit.prevent
             >
@@ -705,7 +704,6 @@ const notify = useNotifications()
 // Local State
 // ============================================================================
 
-const formRef = ref()
 const formValid = ref(false)
 const loading = ref(false)
 const hasUnsavedChanges = ref(false)
