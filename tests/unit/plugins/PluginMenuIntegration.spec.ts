@@ -6,7 +6,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   generatePluginMenuItems,
   shouldUseVirtualScrolling,
-  getMenuItemsForPlugin
+  getMenuItemsForPlugin,
+  interleaveMenuItems,
+  type PluginMenuItem
 } from '@/plugins/navigation/PluginMenuIntegration'
 import { pluginRegistry } from '@/plugins/core/PluginRegistry'
 
@@ -221,5 +223,69 @@ describe('PluginMenuIntegration', () => {
 
       expect(items).toHaveLength(0)
     })
+  })
+})
+
+describe('interleaveMenuItems', () => {
+  interface NavItem {
+    id: string
+    titleKey: string
+  }
+
+  const core: NavItem[] = [
+    { id: 'datasources', titleKey: 'nav.ds' },
+    { id: 'cohorts', titleKey: 'nav.co' },
+  ]
+
+  function pluginItem(id: string, extra: Partial<PluginMenuItem> = {}): PluginMenuItem {
+    return {
+      id,
+      pluginId: 'p1',
+      name: id,
+      route: `/plugins/p1/${id}`,
+      order: 999,
+      visible: true,
+      ...extra,
+    }
+  }
+
+  const toItem = (p: PluginMenuItem): NavItem => ({ id: p.id, titleKey: p.name })
+
+  it('appends unanchored items at the end', () => {
+    const result = interleaveMenuItems(core, [pluginItem('a')], toItem)
+    expect(result.map((i) => i.id)).toEqual(['datasources', 'cohorts', 'a'])
+  })
+
+  it('inserts before the named core item', () => {
+    const result = interleaveMenuItems(core, [pluginItem('a', { insertBefore: 'cohorts' })], toItem)
+    expect(result.map((i) => i.id)).toEqual(['datasources', 'a', 'cohorts'])
+  })
+
+  it('inserts after the named core item', () => {
+    const result = interleaveMenuItems(core, [pluginItem('a', { insertAfter: 'datasources' })], toItem)
+    expect(result.map((i) => i.id)).toEqual(['datasources', 'a', 'cohorts'])
+  })
+
+  it('keeps relative order of multiple items sharing an anchor', () => {
+    const result = interleaveMenuItems(
+      core,
+      [pluginItem('a', { insertAfter: 'datasources' }), pluginItem('b', { insertAfter: 'datasources' })],
+      toItem
+    )
+    expect(result.map((i) => i.id)).toEqual(['datasources', 'a', 'b', 'cohorts'])
+  })
+
+  it('falls back to the end for unknown anchor targets', () => {
+    const result = interleaveMenuItems(core, [pluginItem('a', { insertBefore: 'nope' })], toItem)
+    expect(result.map((i) => i.id)).toEqual(['datasources', 'cohorts', 'a'])
+  })
+
+  it('prefers insertBefore when both anchors are set', () => {
+    const result = interleaveMenuItems(
+      core,
+      [pluginItem('a', { insertBefore: 'cohorts', insertAfter: 'datasources' })],
+      toItem
+    )
+    expect(result.map((i) => i.id)).toEqual(['datasources', 'a', 'cohorts'])
   })
 })

@@ -28,6 +28,8 @@ export interface MenuItemConfiguration {
   icon?: string
   order?: number
   parentId?: string
+  insertBefore?: string
+  insertAfter?: string
   visible?: boolean
   badge?: {
     content: string | number
@@ -184,6 +186,8 @@ export const MenuItemConfigurationSchema = z.object({
   icon: z.string().optional(),
   order: z.number().optional(),
   parentId: z.string().optional(),
+  insertBefore: z.string().optional(),
+  insertAfter: z.string().optional(),
   visible: z.boolean().optional(),
   badge: z
     .object({
