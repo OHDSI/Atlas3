@@ -49,6 +49,7 @@
 
           <div class="cs-editor__actions">
             <AtlasTooltip
+              v-if="!embedded"
               :text="t('common.tags', 'Tags').value"
               location="bottom"
             >
@@ -75,7 +76,7 @@
             </AtlasTooltip>
 
             <AtlasTooltip
-              v-if="isEditMode && props.conceptSet?.id"
+              v-if="!embedded && isEditMode && props.conceptSet?.id"
               :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
               location="bottom"
             >
@@ -100,7 +101,7 @@
             </AtlasTooltip>
 
             <AtlasButton
-              v-if="isEditMode"
+              v-if="!embedded && isEditMode"
               variant="ghost"
               tone="danger"
               :disabled="loading || !canDelete"
@@ -110,11 +111,27 @@
             </AtlasButton>
 
             <AtlasButton
+              v-if="embedded"
+              variant="ghost"
+              data-testid="cs-editor-cancel-btn"
+              @click="onClose"
+            >
+              {{ t('common.cancel', 'Cancel') }}
+            </AtlasButton>
+
+            <AtlasButton
               :disabled="!formValid || loading || !canSubmit"
               :loading="loading"
-              @click="onSave"
+              data-testid="cs-editor-primary-btn"
+              @click="embedded ? onApply() : onSave()"
             >
-              {{ isEditMode ? t('common.save', 'Save') : t('common.create', 'Create') }}
+              {{
+                embedded
+                  ? t('common.apply', 'Apply')
+                  : isEditMode
+                    ? t('common.save', 'Save')
+                    : t('common.create', 'Create')
+              }}
             </AtlasButton>
 
             <AtlasIconButton
@@ -684,6 +701,7 @@ const webapiStore = useWebAPIStore()
 interface Props {
   modelValue: boolean
   conceptSet: ConceptSet | null
+  embedded?: boolean
 }
 
 const props = defineProps<Props>()
@@ -691,6 +709,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   save: []
+  apply: [conceptSet: ConceptSet]
   delete: [id: number | string]
 }>()
 
@@ -828,9 +847,13 @@ const isEditMode = computed(() => {
 const conceptSetId = computed<number | string | null>(() => props.conceptSet?.id ?? null)
 const { hasPermission } = usePermissions()
 const { canWrite, canDelete } = useEntityAccess('conceptSet', conceptSetId)
-const canSubmit = computed<boolean>(() =>
-  isEditMode.value ? canWrite.value : hasPermission('create:conceptset')
-)
+const canSubmit = computed<boolean>(() => {
+  // Embedded sets carry cohort-local codeset ids; entity access on that id
+  // would check an unrelated repository concept set. The cohort's own save
+  // flow gates persistence instead.
+  if (props.embedded) return true
+  return isEditMode.value ? canWrite.value : hasPermission('create:conceptset')
+})
 
 const itemCount = computed(() => {
   return store.currentSet?.items?.length || 0
@@ -981,6 +1004,12 @@ watch(
 watch(
   () => props.conceptSet?.id,
   async id => {
+    // An embedded id is a cohort-local CodesetId — querying /conceptset/{id}/version
+    // with it would fetch an unrelated repository set's history.
+    if (props.embedded) {
+      versionCount.value = 0
+      return
+    }
     if (id && typeof id === 'number') {
       try {
         const versions = await getConceptSetVersions(id)
@@ -1039,6 +1068,18 @@ async function onSave() {
   } finally {
     loading.value = false
   }
+}
+
+function onApply() {
+  if (!formValid.value) return
+
+  emit('apply', {
+    id: props.conceptSet?.id,
+    name: form.value.name,
+    items: store.currentSet?.items ?? [],
+  } as ConceptSet)
+  hasUnsavedChanges.value = false
+  emit('update:modelValue', false)
 }
 
 function onTitleInput(event: Event) {

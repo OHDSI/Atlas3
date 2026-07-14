@@ -404,6 +404,21 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   }
 
   /**
+   * Open editor on a disposable clone of a cohort-embedded concept set, so
+   * editor mutations never reach the cohort until the host applies them.
+   */
+  function openEmbeddedEditor(set: {
+    id: number | string
+    name: string
+    items?: ConceptSetItem[]
+  }) {
+    currentSet.value = JSON.parse(
+      JSON.stringify({ id: set.id, name: set.name, items: set.items ?? [] })
+    ) as ConceptSet
+    editorOpen.value = true
+  }
+
+  /**
    * Close editor
    */
   function closeEditor() {
@@ -985,6 +1000,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     clearFilters,
     openCreateEditor,
     openEditEditor,
+    openEmbeddedEditor,
     closeEditor,
     clearError,
 

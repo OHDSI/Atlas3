@@ -52,6 +52,15 @@ vi.mock('@/services/concept-search.service', async (importOriginal) => {
   }
 })
 
+vi.mock('@/services/concept-set-versions.service', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/services/concept-set-versions.service')>()
+  return {
+    ...actual,
+    getVersions: vi.fn().mockResolvedValue([]),
+  }
+})
+import { getVersions as mockedGetVersions } from '@/services/concept-set-versions.service'
+
 const vuetify = createVuetify({ components, directives })
 
 const mockConceptSet: ConceptSet = {
@@ -354,6 +363,82 @@ describe('ConceptSetEditor', () => {
       await closeBtn.trigger('click')
       expect((wrapper.vm as unknown as { showCloseConfirm: boolean }).showCloseConfirm).toBe(true)
     }
+  })
+
+  describe('embedded mode (#133)', () => {
+    const embeddedSet: ConceptSet = { id: 3, name: 'Embedded Set', items: [] }
+
+    function mountEmbedded(props = {}) {
+      return mountComponent({ conceptSet: embeddedSet, embedded: true, ...props })
+    }
+
+    it('renders Apply and Cancel instead of Save/Delete/Tags/Versions', () => {
+      const wrapper = mountEmbedded()
+      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+      expect(buttons.find(btn => btn.text().includes('Apply'))).toBeTruthy()
+      expect(buttons.find(btn => btn.text().includes('Cancel'))).toBeTruthy()
+      expect(buttons.find(btn => btn.text().includes('Save'))).toBeFalsy()
+      expect(buttons.find(btn => btn.text().includes('Delete'))).toBeFalsy()
+      expect(wrapper.find('[data-testid="cs-editor-tags-btn"]').exists()).toBe(false)
+      expect(buttons.find(btn => btn.props('icon') === 'mdi-history')).toBeFalsy()
+    })
+
+    it('does not fetch version history for the cohort-local id', async () => {
+      vi.mocked(mockedGetVersions).mockClear()
+      mountEmbedded()
+      await flushPromises()
+      expect(mockedGetVersions).not.toHaveBeenCalled()
+    })
+
+    it('Apply emits the edited set without any store persistence call', async () => {
+      const wrapper = mountEmbedded()
+      const store = useConceptSetsStore()
+      store.currentSet = { id: 3, name: 'Embedded Set', items: [mockConceptSet.items[0]!] }
+      const updateSpy = vi.spyOn(store, 'update')
+      const createSpy = vi.spyOn(store, 'create')
+
+      wrapper.vm.formValid = true
+      await wrapper.vm.$nextTick()
+      wrapper.vm.onApply()
+
+      expect(wrapper.emitted('apply')).toBeTruthy()
+      expect(wrapper.emitted('apply')![0]![0]).toMatchObject({
+        id: 3,
+        name: 'Embedded Set',
+        items: [expect.objectContaining({ conceptId: 313217 })],
+      })
+      expect(wrapper.emitted('update:modelValue')).toEqual([[false]])
+      expect(updateSpy).not.toHaveBeenCalled()
+      expect(createSpy).not.toHaveBeenCalled()
+    })
+
+    it('Cancel with unsaved edits opens the confirm dialog; discarding closes without apply', async () => {
+      const wrapper = mountEmbedded()
+      const titleInput = wrapper.find('input.cs-editor__title-input')
+      ;(titleInput.element as HTMLInputElement).value = 'Modified'
+      await titleInput.trigger('input')
+
+      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+      const cancelBtn = buttons.find(btn => btn.text().includes('Cancel'))!
+      await cancelBtn.trigger('click')
+      expect((wrapper.vm as unknown as { showCloseConfirm: boolean }).showCloseConfirm).toBe(true)
+      expect(wrapper.emitted('update:modelValue')).toBeFalsy()
+      ;(wrapper.vm as unknown as { confirmClose: () => void }).confirmClose()
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.emitted('update:modelValue')).toEqual([[false]])
+      expect(wrapper.emitted('apply')).toBeFalsy()
+    })
+
+    it('Cancel with no edits closes immediately', async () => {
+      const wrapper = mountEmbedded()
+      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+      const cancelBtn = buttons.find(btn => btn.text().includes('Cancel'))!
+      await cancelBtn.trigger('click')
+
+      expect((wrapper.vm as unknown as { showCloseConfirm: boolean }).showCloseConfirm).toBe(false)
+      expect(wrapper.emitted('update:modelValue')).toEqual([[false]])
+    })
   })
 
   it('should add concept to set when add-concept is emitted', async () => {
