@@ -32,14 +32,6 @@ const KNOWN_LOSSY: { pattern: string; reason: string }[] = [
     reason: 'type-exclude flags are not modeled; export hardcodes false (4x)',
   },
   {
-    pattern: 'expression.Groups',
-    reason: 'nested subgroups inside inclusion-rule groups are partially dropped (2x)',
-  },
-  {
-    pattern: 'expression.Type',
-    reason: 'group logic type can mutate ALL -> ANY (1x, cohort 1091)',
-  },
-  {
     pattern: 'Observation.ObservationSourceConcept',
     reason: 'source-concept attribute inside correlated criteria is dropped (1x)',
   },

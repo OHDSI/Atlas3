@@ -201,3 +201,28 @@ describe('atlas-converter: AdditionalCriteria count, demographics, and nested gr
     expect(back.AdditionalCriteria.Groups).toHaveLength(1)
   })
 })
+
+describe('atlas-converter: inclusion-rule expression wrapper group preservation', () => {
+  it('preserves inclusion-rule expression Type and group count when direct list is empty', () => {
+    const atlas = {
+      ConceptSets: [{ id: 0, name: 'x', expression: { items: [] } }],
+      PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: { CodesetId: 0, ConditionTypeExclude: false } }], ObservationWindow: { PriorDays: 0, PostDays: 0 }, PrimaryCriteriaLimit: { Type: 'All' } },
+      QualifiedLimit: { Type: 'All' }, ExpressionLimit: { Type: 'All' },
+      InclusionRules: [{
+        name: 'r',
+        expression: {
+          Type: 'ALL', CriteriaList: [], DemographicCriteriaList: [],
+          Groups: [
+            { Type: 'ANY', CriteriaList: [{ Criteria: { DrugExposure: { CodesetId: 0, DrugTypeExclude: false } }, StartWindow: { Start: { Coeff: -1 }, End: { Coeff: 1 }, UseIndexEnd: false, UseEventEnd: false }, RestrictVisit: false, IgnoreObservationPeriod: false }], DemographicCriteriaList: [], Groups: [] },
+            { Type: 'ALL', CriteriaList: [{ Criteria: { DrugExposure: { CodesetId: 0, DrugTypeExclude: false } }, StartWindow: { Start: { Coeff: -1 }, End: { Coeff: 1 }, UseIndexEnd: false, UseEventEnd: false }, RestrictVisit: false, IgnoreObservationPeriod: false }], DemographicCriteriaList: [], Groups: [] },
+          ],
+        },
+      }],
+      CensoringCriteria: [], CollapseSettings: { CollapseType: 'ERA', EraPad: 0 }, CensorWindow: {},
+    }
+    const internal = convertAtlasToInternal(atlas as never)
+    const back = convertInternalToAtlas(internal as never) as never as { InclusionRules: Array<{ expression: { Type: string; Groups: unknown[] } }> }
+    expect(back.InclusionRules[0]!.expression.Type).toBe('ALL')
+    expect(back.InclusionRules[0]!.expression.Groups).toHaveLength(2)
+  })
+})
