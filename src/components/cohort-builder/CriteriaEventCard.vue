@@ -159,6 +159,51 @@
           </AtlasButton>
         </div>
 
+        <!-- Optional end-date constraint (endTemporalWindow). Constrains the
+             event's END date, independently of the start-date temporalWindow
+             above — e.g. "drug exposure must END within 30 days after index". -->
+        <div
+          v-if="showTemporal"
+          class="end-window-section mt-2"
+        >
+          <div
+            v-if="event.endTemporalWindow"
+            class="end-window-editor"
+            data-testid="end-window-editor-wrapper"
+          >
+            <div class="d-flex align-center justify-space-between mb-2">
+              <span class="text-subtitle-2">
+                {{ t('components.eventCard.endWindowLabel', 'End window') }}
+              </span>
+              <AtlasIconButton
+                v-bind="{ ariaLabel: t('components.eventCard.removeEndWindow', 'Remove end-date constraint').value }"
+                icon="mdi-close"
+                size="sm"
+                variant="text"
+                density="compact"
+                data-testid="remove-end-window"
+                @click="removeEndTemporalWindow"
+              />
+            </div>
+            <TemporalWindowEditor
+              :model-value="event.endTemporalWindow"
+              data-testid="end-window-editor"
+              @update:model-value="updateEndTemporalWindow"
+            />
+          </div>
+          <AtlasButton
+            v-else
+            size="sm"
+            variant="secondary"
+            icon="mdi-calendar-end"
+            density="compact"
+            data-testid="add-end-window"
+            @click="addEndTemporalWindow"
+          >
+            {{ t('components.eventCard.addEndWindow', 'Add End-Date Constraint') }}
+          </AtlasButton>
+        </div>
+
         <!-- Attributes -->
         <div class="attributes-section mt-3">
           <AttributesEditor
@@ -358,6 +403,25 @@ function updateTemporalWindow(temporalWindow: TemporalWindow) {
 function removeTemporalWindow() {
   const updated = { ...props.event }
   delete updated.temporalWindow
+  emit('update', updated)
+}
+
+// ── End-date constraint (endTemporalWindow) ───────────────────────────────
+function addEndTemporalWindow() {
+  emit('update', {
+    ...props.event,
+    endTemporalWindow: {
+      startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
+      endWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
+    },
+  })
+}
+function updateEndTemporalWindow(endTemporalWindow: TemporalWindow) {
+  emit('update', { ...props.event, endTemporalWindow })
+}
+function removeEndTemporalWindow() {
+  const updated = { ...props.event }
+  delete updated.endTemporalWindow
   emit('update', updated)
 }
 
