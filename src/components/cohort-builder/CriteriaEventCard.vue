@@ -238,6 +238,23 @@
           />
         </div>
 
+        <!-- Bare type-exclude flag (CIRCE `*TypeExclude`). Hidden once a
+             type-concept attribute (with its own isExclusion toggle) covers
+             the same flag, to avoid two controls editing one field. -->
+        <div
+          v-if="showBareTypeExclude"
+          class="type-exclude-section mt-2"
+        >
+          <AtlasSwitch
+            :model-value="event.typeExclude ?? false"
+            :label="t('components.eventCard.typeExcludeLabel', 'Exclude concept type (is not any of)').value"
+            density="compact"
+            hide-details
+            data-testid="type-exclude-toggle"
+            @update:model-value="(v) => setTypeExclude(!!v)"
+          />
+        </div>
+
         <!-- Per-criteria option switches (wrapped criteria only). These map to
              CIRCE Criteria.IgnoreObservationPeriod / RestrictVisit and are
              irrelevant to entry events, so they're gated on showCriteriaOptions. -->
@@ -289,7 +306,7 @@ import { useFilterConfig } from '@/composables/useFilterConfig'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import { useCriteriaSelection } from '@/composables/useCriteriaSelection'
 import { useTemporalWindows } from '@/composables/useTemporalWindows'
-import { SOURCE_CONCEPT_KEYS } from '@/services/atlas-converter'
+import { SOURCE_CONCEPT_KEYS, TYPE_EXCLUDE_KEYS } from '@/services/atlas-converter'
 import type { CohortEvent, NestedCriteria, TemporalWindow } from '@/models/cohort.types'
 import type {
   EventAttribute,
@@ -508,6 +525,36 @@ function removeSourceConcept() {
   delete updated.sourceConceptId
   emit('update', updated)
 }
+
+// ── Bare type-exclude flag (CIRCE `*TypeExclude`) ─────────────────────────
+// Only applies to criteria types the converter maps in TYPE_EXCLUDE_KEYS,
+// and only shown when no type-concept attribute already carries the same
+// flag via its own isExclusion toggle (AttributesEditor) — otherwise the
+// two controls would edit the same underlying CIRCE field.
+const typeExcludeKey = computed(() => TYPE_EXCLUDE_KEYS[props.event.criteriaType])
+
+// The type-concept attribute key follows the same prefix as the exclude key
+// (e.g. 'ConditionTypeExclude' -> 'conditionType'), per the parsing in
+// atlas-converter.ts's extractAttributesFromCriteria.
+const typeConceptAttributeKey = computed(() => {
+  const key = typeExcludeKey.value
+  if (!key) return undefined
+  const base = key.replace(/Exclude$/, '')
+  return base.charAt(0).toLowerCase() + base.slice(1)
+})
+
+const hasTypeConceptAttribute = computed(() =>
+  (props.event.attributes ?? []).some(
+    a => a.type === 'concept' && a.attributeKey === typeConceptAttributeKey.value,
+  ),
+)
+
+const showBareTypeExclude = computed(() => !!typeExcludeKey.value && !hasTypeConceptAttribute.value)
+
+function setTypeExclude(value: boolean) {
+  emit('update', { ...props.event, typeExclude: value })
+}
+
 function updateAttributes(attributes: EventAttribute[]) {
   emit('update', { ...props.event, attributes })
 }

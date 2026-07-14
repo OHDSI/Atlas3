@@ -315,4 +315,42 @@ describe('atlas-converter: bare type-exclude flag', () => {
     const back = convertInternalToAtlas(internal as never) as never as { PrimaryCriteria: { CriteriaList: Array<{ ConditionOccurrence: Record<string, unknown> }> } }
     expect(back.PrimaryCriteria.CriteriaList[0]!.ConditionOccurrence.ConditionTypeExclude).toBe(true)
   })
+
+  // Task-7 follow-up: the test above round-trips through convertAtlasToInternal
+  // first, so event.typeExclude and the ConceptAttribute's isExclusion both end
+  // up derived from the same ConditionTypeExclude field — agreement there
+  // doesn't prove anything about ordering. Build the internal event directly
+  // with genuinely decoupled inputs (event.typeExclude: false, attribute
+  // isExclusion: true) to confirm the attribute-derived exclusion still wins.
+  it('lets a type-concept attribute isExclusion win over a decoupled event.typeExclude default', () => {
+    const cohort: CohortDefinition = {
+      name: 'Decoupled type-exclude cohort',
+      description: '',
+      conceptSets: [],
+      entryEvents: [
+        {
+          id: 'e1',
+          criteriaType: 'ConditionOccurrence',
+          conceptSet: { id: 0, name: 'x' },
+          typeExclude: false,
+          attributes: [
+            {
+              type: 'concept',
+              attributeKey: 'conditionType',
+              concepts: [{ CONCEPT_ID: 44786627, CONCEPT_NAME: 'Primary Condition' }],
+              isExclusion: true,
+            },
+          ],
+        },
+      ],
+      qualifyingLimit: 'ALL',
+      expressionLimit: 'ALL',
+      inclusionRules: [],
+    } as unknown as CohortDefinition
+
+    const atlas = convertInternalToAtlas(cohort) as unknown as {
+      PrimaryCriteria: { CriteriaList: Array<{ ConditionOccurrence: Record<string, unknown> }> }
+    }
+    expect(atlas.PrimaryCriteria.CriteriaList[0]!.ConditionOccurrence.ConditionTypeExclude).toBe(true)
+  })
 })

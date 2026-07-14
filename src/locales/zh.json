@@ -1465,7 +1465,8 @@
       "restrictVisitNote": "事件必须发生在与索引相同的就诊中",
       "ignoreObservationNote": "事件可以发生在观察期之外",
       "sourceConceptLabel": "源概念",
-      "selectSourceConcept": "选择源概念"
+      "selectSourceConcept": "选择源概念",
+      "typeExcludeLabel": "排除概念类型（不属于以下任一项）"
     },
     "filterTypeSelector": {
       "label": "筛选类型",

@@ -63,7 +63,7 @@ export const SOURCE_CONCEPT_KEYS: Partial<Record<CriteriaType, string>> = {
   VisitDetail: 'VisitDetailSourceConcept',
 }
 
-const TYPE_EXCLUDE_KEYS: Partial<Record<CriteriaType, string>> = {
+export const TYPE_EXCLUDE_KEYS: Partial<Record<CriteriaType, string>> = {
   ConditionOccurrence: 'ConditionTypeExclude',
   ConditionEra: 'EraTypeExclude',
   DrugExposure: 'DrugTypeExclude',

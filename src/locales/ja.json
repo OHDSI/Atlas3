@@ -1640,7 +1640,8 @@
       "restrictVisitNote": "イベントはインデックスと同じ来院時に発生する必要があります",
       "ignoreObservationNote": "イベントは観察期間外に発生する可能性があります",
       "sourceConceptLabel": "ソースコンセプト",
-      "selectSourceConcept": "ソースコンセプトを選択"
+      "selectSourceConcept": "ソースコンセプトを選択",
+      "typeExcludeLabel": "コンセプトタイプを除外（いずれにも該当しない）"
     },
     "filterTypeSelector": {
       "label": "フィルタータイプ",
