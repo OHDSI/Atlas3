@@ -63,6 +63,24 @@ const SOURCE_CONCEPT_KEYS: Partial<Record<CriteriaType, string>> = {
   VisitDetail: 'VisitDetailSourceConcept',
 }
 
+const TYPE_EXCLUDE_KEYS: Partial<Record<CriteriaType, string>> = {
+  ConditionOccurrence: 'ConditionTypeExclude',
+  ConditionEra: 'EraTypeExclude',
+  DrugExposure: 'DrugTypeExclude',
+  DrugEra: 'EraTypeExclude',
+  DoseEra: 'EraTypeExclude',
+  ProcedureOccurrence: 'ProcedureTypeExclude',
+  Measurement: 'MeasurementTypeExclude',
+  Observation: 'ObservationTypeExclude',
+  ObservationPeriod: 'PeriodTypeExclude',
+  VisitOccurrence: 'VisitTypeExclude',
+  VisitDetail: 'VisitDetailTypeExclude',
+  DeviceExposure: 'DeviceTypeExclude',
+  Specimen: 'SpecimenTypeExclude',
+  Death: 'DeathTypeExclude',
+  PayerPlanPeriod: 'PeriodTypeExclude',
+}
+
 // CRITICAL: Preserves zero-count cardinality using ?? operator
 export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
   return {
@@ -283,54 +301,9 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
     if (sourceKey) (criteriaTypeObj as Record<string, unknown>)[sourceKey] = event.sourceConceptId
   }
 
-  switch (event.criteriaType) {
-    case 'ConditionOccurrence':
-      criteriaTypeObj.ConditionTypeExclude = false
-      break
-    case 'ConditionEra':
-      criteriaTypeObj.EraTypeExclude = false
-      break
-    case 'DrugExposure':
-      criteriaTypeObj.DrugTypeExclude = false
-      break
-    case 'DrugEra':
-      criteriaTypeObj.EraTypeExclude = false
-      break
-    case 'DoseEra':
-      criteriaTypeObj.EraTypeExclude = false
-      break
-    case 'ProcedureOccurrence':
-      criteriaTypeObj.ProcedureTypeExclude = false
-      break
-    case 'Measurement':
-      criteriaTypeObj.MeasurementTypeExclude = false
-      break
-    case 'Observation':
-      criteriaTypeObj.ObservationTypeExclude = false
-      break
-    case 'ObservationPeriod':
-      criteriaTypeObj.PeriodTypeExclude = false
-      break
-    case 'VisitOccurrence':
-      criteriaTypeObj.VisitTypeExclude = false
-      break
-    case 'VisitDetail':
-      criteriaTypeObj.VisitDetailTypeExclude = false
-      break
-    case 'DeviceExposure':
-      criteriaTypeObj.DeviceTypeExclude = false
-      break
-    case 'Specimen':
-      criteriaTypeObj.SpecimenTypeExclude = false
-      break
-    case 'Death':
-      criteriaTypeObj.DeathTypeExclude = false
-      break
-    case 'PayerPlanPeriod':
-      criteriaTypeObj.PeriodTypeExclude = false
-      break
-    case 'LocationRegion':
-      break
+  const typeExcludeKey = TYPE_EXCLUDE_KEYS[event.criteriaType]
+  if (typeExcludeKey) {
+    (criteriaTypeObj as Record<string, unknown>)[typeExcludeKey] = event.typeExclude ?? false
   }
 
   if (event.attributes && event.attributes.length > 0) {
@@ -1045,6 +1018,11 @@ function convertAtlasToEvent(
   const sourceKey = SOURCE_CONCEPT_KEYS[event.criteriaType]
   if (sourceKey && typeof criteriaObj[sourceKey] === 'number') {
     event.sourceConceptId = criteriaObj[sourceKey] as number
+  }
+
+  const typeExcludeKey = TYPE_EXCLUDE_KEYS[event.criteriaType]
+  if (typeExcludeKey && criteriaObj[typeExcludeKey] === true) {
+    event.typeExclude = true
   }
 
   interface AtlasEventWithStartWindow {

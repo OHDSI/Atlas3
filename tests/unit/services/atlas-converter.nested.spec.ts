@@ -268,3 +268,51 @@ describe('atlas-converter: source concept alongside codeset', () => {
     expect(v.VisitSourceConcept).toBe(8)
   })
 })
+
+describe('atlas-converter: bare type-exclude flag', () => {
+  it('round-trips a bare ConditionTypeExclude flag', () => {
+    const atlas = {
+      ConceptSets: [{ id: 0, name: 'x', expression: { items: [] } }],
+      PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: { CodesetId: 0, ConditionTypeExclude: true } }], ObservationWindow: { PriorDays: 0, PostDays: 0 }, PrimaryCriteriaLimit: { Type: 'All' } },
+      QualifiedLimit: { Type: 'All' }, ExpressionLimit: { Type: 'All' }, InclusionRules: [], CensoringCriteria: [], CollapseSettings: { CollapseType: 'ERA', EraPad: 0 }, CensorWindow: {},
+    }
+    const internal = convertAtlasToInternal(atlas as never)
+    const back = convertInternalToAtlas(internal as never) as never as { PrimaryCriteria: { CriteriaList: Array<{ ConditionOccurrence: Record<string, unknown> }> } }
+    expect(back.PrimaryCriteria.CriteriaList[0]!.ConditionOccurrence.ConditionTypeExclude).toBe(true)
+  })
+
+  it('exports false for a normal criterion with no type-exclude signal', () => {
+    const atlas = {
+      ConceptSets: [{ id: 0, name: 'x', expression: { items: [] } }],
+      PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: { CodesetId: 0, ConditionTypeExclude: false } }], ObservationWindow: { PriorDays: 0, PostDays: 0 }, PrimaryCriteriaLimit: { Type: 'All' } },
+      QualifiedLimit: { Type: 'All' }, ExpressionLimit: { Type: 'All' }, InclusionRules: [], CensoringCriteria: [], CollapseSettings: { CollapseType: 'ERA', EraPad: 0 }, CensorWindow: {},
+    }
+    const internal = convertAtlasToInternal(atlas as never)
+    const back = convertInternalToAtlas(internal as never) as never as { PrimaryCriteria: { CriteriaList: Array<{ ConditionOccurrence: Record<string, unknown> }> } }
+    expect(back.PrimaryCriteria.CriteriaList[0]!.ConditionOccurrence.ConditionTypeExclude).toBe(false)
+  })
+
+  it('lets a type-concept attribute isExclusion win over the bare-flag default', () => {
+    const atlas = {
+      ConceptSets: [{ id: 0, name: 'x', expression: { items: [] } }],
+      PrimaryCriteria: {
+        CriteriaList: [
+          {
+            ConditionOccurrence: {
+              CodesetId: 0,
+              ConditionTypeExclude: true,
+              ConditionType: [{ CONCEPT_ID: 44786627, CONCEPT_NAME: 'Primary Condition' }],
+              ConditionTypeCS: [],
+            },
+          },
+        ],
+        ObservationWindow: { PriorDays: 0, PostDays: 0 },
+        PrimaryCriteriaLimit: { Type: 'All' },
+      },
+      QualifiedLimit: { Type: 'All' }, ExpressionLimit: { Type: 'All' }, InclusionRules: [], CensoringCriteria: [], CollapseSettings: { CollapseType: 'ERA', EraPad: 0 }, CensorWindow: {},
+    }
+    const internal = convertAtlasToInternal(atlas as never)
+    const back = convertInternalToAtlas(internal as never) as never as { PrimaryCriteria: { CriteriaList: Array<{ ConditionOccurrence: Record<string, unknown> }> } }
+    expect(back.PrimaryCriteria.CriteriaList[0]!.ConditionOccurrence.ConditionTypeExclude).toBe(true)
+  })
+})

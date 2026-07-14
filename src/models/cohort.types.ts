@@ -64,6 +64,7 @@ export interface CohortEvent {
   restrictVisit?: boolean // Event must occur in same visit as index
   ignoreObservationPeriod?: boolean // Event can occur outside observation period
   dateAdjustment?: DateAdjustment
+  typeExclude?: boolean // bare CIRCE *TypeExclude flag with no accompanying type concepts
 }
 
 export interface InclusionRule {

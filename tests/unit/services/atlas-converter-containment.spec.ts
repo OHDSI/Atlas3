@@ -21,12 +21,7 @@ const FIXTURES = JSON.parse(
  *
  * Occurrence counts are from the 1104-cohort phenotype-library corpus.
  */
-const KNOWN_LOSSY: { pattern: string; reason: string }[] = [
-  {
-    pattern: 'ConditionOccurrence.ConditionTypeExclude',
-    reason: 'type-exclude flags are not modeled; export hardcodes false (4x)',
-  },
-]
+const KNOWN_LOSSY: { pattern: string; reason: string }[] = []
 
 /**
  * Containment check: every value present in `orig` must survive into `back`,
