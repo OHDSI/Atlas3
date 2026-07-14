@@ -1638,7 +1638,9 @@
       "criteriaTypeLabel": "基準タイプ：",
       "conceptSetIdLabel": "コンセプトセットID：",
       "restrictVisitNote": "イベントはインデックスと同じ来院時に発生する必要があります",
-      "ignoreObservationNote": "イベントは観察期間外に発生する可能性があります"
+      "ignoreObservationNote": "イベントは観察期間外に発生する可能性があります",
+      "sourceConceptLabel": "ソースコンセプト",
+      "selectSourceConcept": "ソースコンセプトを選択"
     },
     "filterTypeSelector": {
       "label": "フィルタータイプ",

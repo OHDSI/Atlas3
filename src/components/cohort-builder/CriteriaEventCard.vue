@@ -80,6 +80,21 @@
             @edit="onEditConceptSet"
             @clear="removeConceptSet"
           />
+          <template v-if="eventHasSourceConcept">
+            <span class="source-concept-label">
+              {{ t('components.eventCard.sourceConceptLabel', 'Source concept') }}
+            </span>
+            <EventConceptSetField
+              compact
+              :concept-set="sourceConceptDisplay"
+              :select-label="t('components.eventCard.selectSourceConcept', 'Select Source Concept').value"
+              picker-test-id="source-concept-picker"
+              chip-test-id="source-concept-selected"
+              @select="onSelectSourceConcept"
+              @edit="onSelectSourceConcept"
+              @clear="removeSourceConcept"
+            />
+          </template>
         </div>
         <div class="event-header__right">
           <AtlasMenu>
@@ -267,13 +282,14 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSwitch, AtlasTextField } from '@/components/ui'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import { useCriteriaSelection } from '@/composables/useCriteriaSelection'
 import { useTemporalWindows } from '@/composables/useTemporalWindows'
+import { SOURCE_CONCEPT_KEYS } from '@/services/atlas-converter'
 import type { CohortEvent, NestedCriteria, TemporalWindow } from '@/models/cohort.types'
 import type {
   EventAttribute,
@@ -331,6 +347,7 @@ const emit = defineEmits<{
   'select-concept-set-for-attribute': [attributeIndex: number]
   'select-concept-for-attribute': [attributeIndex: number, domainFilter: string | undefined]
   'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
+  'select-source-concept': []
 }>()
 
 const sectionRef = computed(() => props.section)
@@ -458,6 +475,38 @@ function onEditConceptSet(conceptSet: { id: number | string; name: string; items
 
 function removeConceptSet() {
   emit('update', { ...props.event, conceptSet: undefined })
+}
+
+// ── Source concept (CIRCE `<CriteriaType>SourceConcept`) ─────────────────
+// Only applies to the criteria types the converter maps in SOURCE_CONCEPT_KEYS.
+const eventHasSourceConcept = computed(() => !!SOURCE_CONCEPT_KEYS[props.event.criteriaType])
+
+// sourceConceptId is stored as a bare numeric codeset id (no embedded name),
+// so the picked concept set's name is cached locally purely for display —
+// re-selecting the same event after a reload shows the id until re-picked.
+const sourceConceptNames = ref<Record<number, string>>({})
+const sourceConceptDisplay = computed(() => {
+  const id = props.event.sourceConceptId
+  if (typeof id !== 'number') return undefined
+  return { id, name: sourceConceptNames.value[id] ?? `#${id}` }
+})
+
+function onSelectSourceConcept() {
+  if (selection) {
+    selection.requestConceptSet(conceptSet => {
+      if (typeof conceptSet.id !== 'number') return
+      sourceConceptNames.value = { ...sourceConceptNames.value, [conceptSet.id]: conceptSet.name }
+      emit('update', { ...props.event, sourceConceptId: conceptSet.id })
+    })
+    return
+  }
+  emit('select-source-concept')
+}
+
+function removeSourceConcept() {
+  const updated = { ...props.event }
+  delete updated.sourceConceptId
+  emit('update', updated)
 }
 function updateAttributes(attributes: EventAttribute[]) {
   emit('update', { ...props.event, attributes })
@@ -641,6 +690,10 @@ function addAttribute(attributeKey: string, attributeType: string) {
 .event-type-label {
   font-weight: 600;
   font-size: 14px;
+}
+.source-concept-label {
+  font-size: 12px;
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 .event-header__right {
   display: flex;

@@ -1638,7 +1638,9 @@
       "criteriaTypeLabel": "Criteria Type:",
       "conceptSetIdLabel": "Concept Set ID:",
       "restrictVisitNote": "Event must occur in same visit as index",
-      "ignoreObservationNote": "Event can occur outside observation period"
+      "ignoreObservationNote": "Event can occur outside observation period",
+      "sourceConceptLabel": "Source concept",
+      "selectSourceConcept": "Select Source Concept"
     },
     "filterTypeSelector": {
       "label": "Filter Type",

@@ -1476,7 +1476,9 @@
       "criteriaTypeLabel": "Тип критерия:",
       "conceptSetIdLabel": "ID набора концептов:",
       "restrictVisitNote": "Событие должно произойти в рамках того же визита, что и индексное",
-      "ignoreObservationNote": "Событие может произойти вне периода наблюдения"
+      "ignoreObservationNote": "Событие может произойти вне периода наблюдения",
+      "sourceConceptLabel": "Исходный концепт",
+      "selectSourceConcept": "Выбрать исходный концепт"
     },
     "filterTypeSelector": {
       "label": "Тип фильтра",

@@ -50,7 +50,7 @@ interface AtlasJSON {
   EndStrategy?: AtlasEndStrategy
 }
 
-const SOURCE_CONCEPT_KEYS: Partial<Record<CriteriaType, string>> = {
+export const SOURCE_CONCEPT_KEYS: Partial<Record<CriteriaType, string>> = {
   ConditionOccurrence: 'ConditionSourceConcept',
   ProcedureOccurrence: 'ProcedureSourceConcept',
   DrugExposure: 'DrugSourceConcept',
