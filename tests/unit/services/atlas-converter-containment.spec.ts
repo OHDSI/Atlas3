@@ -26,18 +26,6 @@ const KNOWN_LOSSY: { pattern: string; reason: string }[] = [
     pattern: 'ConditionOccurrence.ConditionTypeExclude',
     reason: 'type-exclude flags are not modeled; export hardcodes false (4x)',
   },
-  {
-    pattern: 'Observation.ObservationSourceConcept',
-    reason: 'source-concept attribute inside correlated criteria is dropped (1x)',
-  },
-  {
-    pattern: 'VisitOccurrence.VisitSourceConcept',
-    reason: 'known gap: VisitSourceConcept does not round-trip (1x)',
-  },
-  {
-    pattern: 'VisitDetail.VisitDetailSourceConcept',
-    reason: 'known gap: VisitDetailSourceConcept does not round-trip (1x)',
-  },
 ]
 
 /**

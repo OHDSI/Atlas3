@@ -275,11 +275,12 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
   const criteriaTypeObj: AtlasCriteriaTypeObject = {}
   if (event.conceptSet && typeof event.conceptSet.id === 'number') {
     criteriaTypeObj.CodesetId = event.conceptSet.id
-  } else if (typeof event.sourceConceptId === 'number') {
+  } else if (typeof event.sourceConceptId !== 'number') {
+    criteriaTypeObj.CodesetId = null
+  }
+  if (typeof event.sourceConceptId === 'number') {
     const sourceKey = SOURCE_CONCEPT_KEYS[event.criteriaType]
     if (sourceKey) (criteriaTypeObj as Record<string, unknown>)[sourceKey] = event.sourceConceptId
-  } else {
-    criteriaTypeObj.CodesetId = null
   }
 
   switch (event.criteriaType) {

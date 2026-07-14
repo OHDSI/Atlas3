@@ -253,3 +253,18 @@ describe('atlas-converter: EndWindow reference-point flag', () => {
     expect(w.UseEventEnd).toBe(true)
   })
 })
+
+describe('atlas-converter: source concept alongside codeset', () => {
+  it('emits both CodesetId and VisitSourceConcept when both are set', () => {
+    const atlas = {
+      ConceptSets: [{ id: 0, name: 'x', expression: { items: [] } }],
+      PrimaryCriteria: { CriteriaList: [{ VisitOccurrence: { CodesetId: 0, VisitTypeExclude: false, VisitSourceConcept: 8 } }], ObservationWindow: { PriorDays: 0, PostDays: 0 }, PrimaryCriteriaLimit: { Type: 'All' } },
+      QualifiedLimit: { Type: 'All' }, ExpressionLimit: { Type: 'All' }, InclusionRules: [], CensoringCriteria: [], CollapseSettings: { CollapseType: 'ERA', EraPad: 0 }, CensorWindow: {},
+    }
+    const internal = convertAtlasToInternal(atlas as never)
+    const back = convertInternalToAtlas(internal as never) as never as { PrimaryCriteria: { CriteriaList: Array<{ VisitOccurrence: Record<string, unknown> }> } }
+    const v = back.PrimaryCriteria.CriteriaList[0]!.VisitOccurrence
+    expect(v.CodesetId).toBe(0)
+    expect(v.VisitSourceConcept).toBe(8)
+  })
+})
