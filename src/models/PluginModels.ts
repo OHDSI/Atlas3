@@ -79,6 +79,7 @@ export interface PluginManifest {
       primaryColor?: string // Primary theme color override (hex color code, e.g., '#1f425a')
       logoUrl?: string // Custom logo URL/path (replaces default OHDSI + ATLAS logos)
       logoNavigateTo?: string // Route to navigate to when clicking the logo (default: '/')
+      landingLogoUrl?: string // Custom landing-page hero logo URL/path (replaces bundled atlas-loading.svg)
     }
     header?: {
       showNavBar?: boolean // Show/hide the entire navigation bar (default: true)
@@ -249,6 +250,7 @@ export const PluginManifestSchema = z.object({
             .optional(),
           logoUrl: z.string().optional(),
           logoNavigateTo: z.string().optional(),
+          landingLogoUrl: z.string().optional(),
         })
         .optional(),
       header: z
