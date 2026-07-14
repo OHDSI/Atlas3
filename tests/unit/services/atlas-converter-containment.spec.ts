@@ -60,10 +60,6 @@ const KNOWN_LOSSY: { pattern: string; reason: string }[] = [
     reason: 'source-concept attribute inside correlated criteria is dropped (1x)',
   },
   {
-    pattern: 'DrugEra.AgeAtStart',
-    reason: 'AgeAtStart is not modeled for era criteria (1x)',
-  },
-  {
     pattern: 'VisitOccurrence.VisitSourceConcept',
     reason: 'known gap: VisitSourceConcept does not round-trip (1x)',
   },

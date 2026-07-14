@@ -131,3 +131,31 @@ describe('atlas-converter: legacy CIRCE CorrelatedCriteria placement (#131)', ()
     expect(entry.CorrelatedCriteria).toBeUndefined()
   })
 })
+
+describe('atlas-converter: DrugEra AgeAtStart attribute key', () => {
+  it('round-trips DrugEra AgeAtStart without collapsing to Age', () => {
+    const atlas = {
+      ConceptSets: [{ id: 0, name: 'x', expression: { items: [] } }],
+      PrimaryCriteria: {
+        CriteriaList: [
+          { DrugEra: { CodesetId: 0, EraTypeExclude: false, AgeAtStart: { Op: 'gte', Value: 18 } } },
+        ],
+        ObservationWindow: { PriorDays: 0, PostDays: 0 },
+        PrimaryCriteriaLimit: { Type: 'All' },
+      },
+      QualifiedLimit: { Type: 'All' },
+      ExpressionLimit: { Type: 'All' },
+      InclusionRules: [],
+      CensoringCriteria: [],
+      CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+      CensorWindow: {},
+    }
+    const internal = convertAtlasToInternal(atlas as never)
+    const back = convertInternalToAtlas(internal as never) as never as {
+      PrimaryCriteria: { CriteriaList: Array<{ DrugEra: Record<string, unknown> }> }
+    }
+    const era = back.PrimaryCriteria.CriteriaList[0]!.DrugEra
+    expect(era.AgeAtStart).toEqual({ Op: 'gte', Value: 18 })
+    expect(era.Age).toBeUndefined()
+  })
+})

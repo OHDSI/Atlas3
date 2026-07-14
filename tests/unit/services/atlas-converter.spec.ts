@@ -2809,10 +2809,9 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
 
       const converted = convertAtlasToInternal(atlasJSON)
 
-      // AgeAtStart maps to age attribute internally
       expect(converted.entryEvents?.[0]?.attributes?.[0]).toEqual({
         type: 'numericRange',
-        attributeKey: 'age',
+        attributeKey: 'ageAtStart',
         operator: 'GREATER_THAN_OR_EQUAL',
         value: 65,
         extent: undefined,

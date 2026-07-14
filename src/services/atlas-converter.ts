@@ -1203,7 +1203,7 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     const ageAtStart = criteriaObj.AgeAtStart as { Op: string; Value: number; Extent?: number }
     attributes.push({
       type: 'numericRange',
-      attributeKey: 'age',
+      attributeKey: 'ageAtStart',
       operator: convertAtlasToOperator(
         ageAtStart.Op
       ) as import('@/models/event.types').NumericOperator,
