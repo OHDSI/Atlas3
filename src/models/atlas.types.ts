@@ -389,11 +389,12 @@ export interface AtlasDateAdjustment {
 }
 
 /**
- * Atlas user defined period
+ * Atlas user defined period — CIRCE nests the custom range under this object,
+ * not as flat PeriodStartDate/PeriodEndDate strings.
  */
 export interface AtlasUserDefinedPeriod {
-  PeriodStartDate: string
-  PeriodEndDate: string
+  StartDate: string
+  EndDate: string
 }
 
 /**

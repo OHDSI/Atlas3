@@ -28,10 +28,6 @@ const KNOWN_LOSSY: { pattern: string; reason: string }[] = [
       'EndWindow Use* flags are derived from the start window referencePoint on export; an explicit UseEventEnd=true is lost (13x)',
   },
   {
-    pattern: 'ObservationPeriod.UserDefinedPeriod',
-    reason: 'UserDefinedPeriod is not extracted from ObservationPeriod criteria on import (11x)',
-  },
-  {
     pattern: 'ConditionOccurrence.ConditionTypeExclude',
     reason: 'type-exclude flags are not modeled; export hardcodes false (4x)',
   },

@@ -3230,8 +3230,10 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       const atlasJSON = convertInternalToAtlas(cohort)
       const criteriaObj = atlasJSON.PrimaryCriteria.CriteriaList[0]?.ObservationPeriod
 
-      expect(criteriaObj?.PeriodStartDate).toBe('2020-01-01')
-      expect(criteriaObj?.PeriodEndDate).toBe('2020-12-31')
+      expect(criteriaObj?.UserDefinedPeriod).toEqual({
+        StartDate: '2020-01-01',
+        EndDate: '2020-12-31',
+      })
     })
   })
 
@@ -5004,8 +5006,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
                   EndWith: 'END_DATE',
                   EndOffset: 0,
                 },
-                PeriodStartDate: '2020-01-01',
-                PeriodEndDate: '2020-12-31',
+                UserDefinedPeriod: { StartDate: '2020-01-01', EndDate: '2020-12-31' },
               },
             },
           ],

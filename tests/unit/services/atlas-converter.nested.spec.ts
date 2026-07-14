@@ -159,3 +159,20 @@ describe('atlas-converter: DrugEra AgeAtStart attribute key', () => {
     expect(era.Age).toBeUndefined()
   })
 })
+
+describe('atlas-converter: ObservationPeriod UserDefinedPeriod object shape', () => {
+  it('round-trips ObservationPeriod UserDefinedPeriod object', () => {
+    const atlas = {
+      ConceptSets: [], PrimaryCriteria: {
+        CriteriaList: [{ ObservationPeriod: { PeriodTypeExclude: false, UserDefinedPeriod: { StartDate: '2010-01-01', EndDate: '2010-12-31' } } }],
+        ObservationWindow: { PriorDays: 0, PostDays: 0 }, PrimaryCriteriaLimit: { Type: 'All' },
+      },
+      QualifiedLimit: { Type: 'All' }, ExpressionLimit: { Type: 'All' },
+      InclusionRules: [], CensoringCriteria: [], CollapseSettings: { CollapseType: 'ERA', EraPad: 0 }, CensorWindow: {},
+    }
+    const internal = convertAtlasToInternal(atlas as never)
+    const back = convertInternalToAtlas(internal as never) as never as { PrimaryCriteria: { CriteriaList: Array<{ ObservationPeriod: Record<string, unknown> }> } }
+    expect(back.PrimaryCriteria.CriteriaList[0]!.ObservationPeriod.UserDefinedPeriod)
+      .toEqual({ StartDate: '2010-01-01', EndDate: '2010-12-31' })
+  })
+})

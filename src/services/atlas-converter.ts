@@ -712,11 +712,8 @@ function convertUserDefinedPeriodAttribute(
     startDate: string
     endDate: string
   }
-): Record<string, string> {
-  return {
-    PeriodStartDate: period.startDate,
-    PeriodEndDate: period.endDate,
-  }
+): Record<string, unknown> {
+  return { UserDefinedPeriod: { StartDate: period.startDate, EndDate: period.endDate } }
 }
 
 export function parseUserDefinedPeriodAttribute(
@@ -1729,17 +1726,11 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     }
   }
 
-  // UserDefinedPeriod - Custom period with start and end dates
-  if (
-    typeof criteriaObj.PeriodStartDate === 'string' &&
-    typeof criteriaObj.PeriodEndDate === 'string'
-  ) {
+  // UserDefinedPeriod - CIRCE nests the custom range under an object, not flat fields
+  const udp = criteriaObj.UserDefinedPeriod as { StartDate?: string; EndDate?: string } | undefined
+  if (udp && (typeof udp.StartDate === 'string' || typeof udp.EndDate === 'string')) {
     attributes.push(
-      parseUserDefinedPeriodAttribute(
-        'userDefinedPeriod',
-        criteriaObj.PeriodStartDate,
-        criteriaObj.PeriodEndDate
-      )
+      parseUserDefinedPeriodAttribute('userDefinedPeriod', udp.StartDate ?? '', udp.EndDate ?? ''),
     )
   }
 
