@@ -1048,7 +1048,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
           startWindow: {
             days: 30,
             beforeAfter: 'BEFORE',
-            referencePoint: 'INDEX_START',
+            useIndexEnd: false,
+            useEventEnd: false,
           },
           endWindow: undefined,
         },
@@ -1071,12 +1072,14 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
         startWindow: {
           days: 0,
           beforeAfter: 'BEFORE',
-          referencePoint: 'INDEX_END',
+          useIndexEnd: true,
+          useEventEnd: false,
         },
         endWindow: {
           days: 30,
           beforeAfter: 'AFTER',
-          referencePoint: 'INDEX_END',
+          useIndexEnd: true,
+          useEventEnd: false,
         },
       })
     })
@@ -1093,7 +1096,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       const result = parseTemporalRelationshipAttribute('temporalRelationship', temporalData)
 
       expect(result.temporalWindow.startWindow?.days).toBeNull()
-      expect(result.temporalWindow.startWindow?.referencePoint).toBe('EVENT_END')
+      expect(result.temporalWindow.startWindow?.useEventEnd).toBe(true)
     })
 
     it('handles positive coefficient (AFTER)', () => {
@@ -1440,7 +1443,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
               startWindow: {
                 days: null,
                 beforeAfter: 'BEFORE',
-                referencePoint: 'INDEX_START',
+                useIndexEnd: false,
+                useEventEnd: false,
               },
             },
           },
@@ -1466,7 +1470,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
               startWindow: {
                 days: null,
                 beforeAfter: 'AFTER',
-                referencePoint: 'INDEX_END',
+                useIndexEnd: true,
+                useEventEnd: false,
               },
             },
           },
@@ -1493,7 +1498,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
               startWindow: {
                 days: 10,
                 beforeAfter: 'AFTER',
-                referencePoint: 'EVENT_END',
+                useIndexEnd: false,
+                useEventEnd: true,
               },
             },
           },
@@ -1519,12 +1525,14 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
               startWindow: {
                 days: 0,
                 beforeAfter: 'BEFORE',
-                referencePoint: 'INDEX_START',
+                useIndexEnd: false,
+                useEventEnd: false,
               },
               endWindow: {
                 days: 30,
                 beforeAfter: 'AFTER',
-                referencePoint: 'INDEX_START',
+                useIndexEnd: false,
+                useEventEnd: false,
               },
             },
           },
@@ -1539,12 +1547,14 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
         startWindow: {
           days: 0,
           beforeAfter: 'BEFORE',
-          referencePoint: 'INDEX_START',
+          useIndexEnd: false,
+          useEventEnd: false,
         },
         endWindow: {
           days: 30,
           beforeAfter: 'AFTER',
-          referencePoint: 'INDEX_START',
+          useIndexEnd: false,
+          useEventEnd: false,
         },
       })
     })
@@ -3144,12 +3154,14 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
                   startWindow: {
                     days: 30,
                     beforeAfter: 'BEFORE',
-                    referencePoint: 'INDEX_START',
+                    useIndexEnd: false,
+                    useEventEnd: false,
                   },
                   endWindow: {
                     days: 0,
                     beforeAfter: 'AFTER',
-                    referencePoint: 'INDEX_START',
+                    useIndexEnd: false,
+                    useEventEnd: false,
                   },
                 },
               },
@@ -3430,12 +3442,14 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
               startWindow: {
                 days: 0,
                 beforeAfter: 'BEFORE',
-                referencePoint: 'INDEX_START',
+                useIndexEnd: false,
+                useEventEnd: false,
               },
               endWindow: {
                 days: 30,
                 beforeAfter: 'AFTER',
-                referencePoint: 'INDEX_START',
+                useIndexEnd: false,
+                useEventEnd: false,
               },
             },
             dateAdjustment: {
@@ -4143,12 +4157,14 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
               startWindow: {
                 days: null,
                 beforeAfter: 'AFTER',
-                referencePoint: 'INDEX_END',
+                useIndexEnd: true,
+                useEventEnd: false,
               },
               endWindow: {
                 days: null,
                 beforeAfter: 'BEFORE',
-                referencePoint: 'EVENT_END',
+                useIndexEnd: false,
+                useEventEnd: true,
               },
             },
           },
@@ -4174,7 +4190,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
               startWindow: {
                 days: 7,
                 beforeAfter: 'AFTER',
-                referencePoint: 'EVENT_END',
+                useIndexEnd: false,
+                useEventEnd: true,
               },
             },
           },
@@ -4238,7 +4255,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
         CensorWindow: {},
       } as unknown as Parameters<typeof convertAtlasToInternal>[0]
       const internal = convertAtlasToInternal(atlasJson)
-      expect(internal.entryEvents?.[0]?.temporalWindow?.startWindow?.referencePoint).toBe('EVENT_END')
+      expect(internal.entryEvents?.[0]?.temporalWindow?.startWindow?.useEventEnd).toBe(true)
     })
 
     it('parses temporal window with end window Coeff<0 and UseIndexEnd', () => {
@@ -4266,9 +4283,9 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       const internal = convertAtlasToInternal(atlasJson)
       const tw = internal.entryEvents?.[0]?.temporalWindow
       expect(tw?.startWindow?.beforeAfter).toBe('BEFORE')
-      expect(tw?.startWindow?.referencePoint).toBe('INDEX_END')
+      expect(tw?.startWindow?.useIndexEnd).toBe(true)
       expect(tw?.endWindow?.beforeAfter).toBe('BEFORE')
-      expect(tw?.endWindow?.referencePoint).toBe('INDEX_END')
+      expect(tw?.endWindow?.useIndexEnd).toBe(true)
     })
 
     it('parses temporal window with end window using UseEventEnd', () => {
@@ -4295,7 +4312,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       } as unknown as Parameters<typeof convertAtlasToInternal>[0]
       const internal = convertAtlasToInternal(atlasJson)
       const tw = internal.entryEvents?.[0]?.temporalWindow
-      expect(tw?.endWindow?.referencePoint).toBe('EVENT_END')
+      expect(tw?.endWindow?.useEventEnd).toBe(true)
     })
   })
 
@@ -4310,7 +4327,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       })
       if (result.type === 'temporalRelationship') {
         expect(result.temporalWindow.endWindow?.beforeAfter).toBe('BEFORE')
-        expect(result.temporalWindow.endWindow?.referencePoint).toBe('INDEX_END')
+        expect(result.temporalWindow.endWindow?.useIndexEnd).toBe(true)
       }
     })
 
@@ -4323,7 +4340,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
         },
       })
       if (result.type === 'temporalRelationship') {
-        expect(result.temporalWindow.endWindow?.referencePoint).toBe('EVENT_END')
+        expect(result.temporalWindow.endWindow?.useEventEnd).toBe(true)
       }
     })
 
@@ -4337,8 +4354,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       if (result.type === 'temporalRelationship') {
         expect(result.temporalWindow.startWindow?.days).toBe(null)
         expect(result.temporalWindow.endWindow?.days).toBe(null)
-        expect(result.temporalWindow.startWindow?.referencePoint).toBe('INDEX_START')
-        expect(result.temporalWindow.endWindow?.referencePoint).toBe('INDEX_START')
+        expect(result.temporalWindow.startWindow?.useIndexEnd).toBe(false)
+        expect(result.temporalWindow.endWindow?.useIndexEnd).toBe(false)
       }
     })
   })
@@ -4358,12 +4375,14 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
                   startWindow: {
                     days: 30,
                     beforeAfter: 'BEFORE',
-                    referencePoint: 'INDEX_START',
+                    useIndexEnd: false,
+                    useEventEnd: false,
                   },
                   endWindow: {
                     days: 10,
                     beforeAfter: 'AFTER',
-                    referencePoint: 'INDEX_END',
+                    useIndexEnd: true,
+                    useEventEnd: false,
                   },
                 },
               },
@@ -4395,12 +4414,14 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
                   startWindow: {
                     days: null,
                     beforeAfter: 'AFTER',
-                    referencePoint: 'INDEX_START',
+                    useIndexEnd: false,
+                    useEventEnd: false,
                   },
                   endWindow: {
                     days: null,
                     beforeAfter: 'BEFORE',
-                    referencePoint: 'INDEX_START',
+                    useIndexEnd: false,
+                    useEventEnd: false,
                   },
                 },
               },

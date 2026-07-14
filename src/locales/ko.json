@@ -1413,7 +1413,9 @@
     "temporalWindowEditor": {
       "referencePoint": "기준점",
       "startReferencePoint": "시작 기준점",
-      "endReferencePoint": "종료 기준점"
+      "endReferencePoint": "종료 기준점",
+      "useIndexEnd": "인덱스(index) 종료일 사용",
+      "useEventEnd": "이벤트 종료일 사용"
     },
     "conceptSetPicker": {
       "clearSelection": "선택 해제",

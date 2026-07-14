@@ -2,7 +2,7 @@
 import { AtlasAlert, AtlasCheckbox, AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import type { TemporalWindow, Window } from '@/models/event.types'
+import type { TemporalWindow } from '@/models/event.types'
 import { useTemporalWindows } from '@/composables/useTemporalWindows'
 
 const { t } = useI18n()
@@ -63,12 +63,21 @@ const updateStartAllTime = (allTime: boolean | null) => {
   }
 }
 
-const updateStartReferencePoint = (referencePoint: Window['referencePoint']) => {
+const updateStartUseIndexEnd = (useIndexEnd: boolean | null) => {
   temporalWindow.value = {
     ...temporalWindow.value,
     startWindow: temporalWindow.value.startWindow
-      ? { ...temporalWindow.value.startWindow, referencePoint }
-      : { ...defaultWindow('after', 0), referencePoint },
+      ? { ...temporalWindow.value.startWindow, useIndexEnd: !!useIndexEnd }
+      : { ...defaultWindow('after', 0), useIndexEnd: !!useIndexEnd },
+  }
+}
+
+const updateStartUseEventEnd = (useEventEnd: boolean | null) => {
+  temporalWindow.value = {
+    ...temporalWindow.value,
+    startWindow: temporalWindow.value.startWindow
+      ? { ...temporalWindow.value.startWindow, useEventEnd: !!useEventEnd }
+      : { ...defaultWindow('after', 0), useEventEnd: !!useEventEnd },
   }
 }
 
@@ -102,12 +111,21 @@ const updateEndAllTime = (allTime: boolean | null) => {
   }
 }
 
-const updateEndReferencePoint = (referencePoint: Window['referencePoint']) => {
+const updateEndUseIndexEnd = (useIndexEnd: boolean | null) => {
   temporalWindow.value = {
     ...temporalWindow.value,
     endWindow: temporalWindow.value.endWindow
-      ? { ...temporalWindow.value.endWindow, referencePoint }
-      : { ...defaultWindow('after', 90), referencePoint },
+      ? { ...temporalWindow.value.endWindow, useIndexEnd: !!useIndexEnd }
+      : { ...defaultWindow('after', 90), useIndexEnd: !!useIndexEnd },
+  }
+}
+
+const updateEndUseEventEnd = (useEventEnd: boolean | null) => {
+  temporalWindow.value = {
+    ...temporalWindow.value,
+    endWindow: temporalWindow.value.endWindow
+      ? { ...temporalWindow.value.endWindow, useEventEnd: !!useEventEnd }
+      : { ...defaultWindow('after', 90), useEventEnd: !!useEventEnd },
   }
 }
 
@@ -117,26 +135,16 @@ const startDirection = computed(() =>
   temporalWindow.value.startWindow?.beforeAfter === 'AFTER' ? 'after' : 'before'
 )
 const startAllTime = computed(() => temporalWindow.value.startWindow?.days === null)
-const startReferencePoint = computed(
-  () => temporalWindow.value.startWindow?.referencePoint ?? 'INDEX_START'
-)
+const startUseIndexEnd = computed(() => temporalWindow.value.startWindow?.useIndexEnd ?? false)
+const startUseEventEnd = computed(() => temporalWindow.value.startWindow?.useEventEnd ?? false)
 
 const endDays = computed(() => temporalWindow.value.endWindow?.days ?? 90)
 const endDirection = computed(() =>
   temporalWindow.value.endWindow?.beforeAfter === 'AFTER' ? 'after' : 'before'
 )
 const endAllTime = computed(() => temporalWindow.value.endWindow?.days === null)
-const endReferencePoint = computed(
-  () => temporalWindow.value.endWindow?.referencePoint ?? 'INDEX_START'
-)
-
-// Reference point options
-const referencePointOptions: Array<{ value: Window['referencePoint']; label: string }> = [
-  { value: 'INDEX_START', label: t('options.indexStartDate', 'Index Start').value },
-  { value: 'INDEX_END', label: t('options.indexEndDate', 'Index End').value },
-  { value: 'EVENT_START', label: t('options.eventStarts', 'Event Start').value },
-  { value: 'EVENT_END', label: t('options.eventEnds', 'Event End').value },
-]
+const endUseIndexEnd = computed(() => temporalWindow.value.endWindow?.useIndexEnd ?? false)
+const endUseEventEnd = computed(() => temporalWindow.value.endWindow?.useEventEnd ?? false)
 
 // Apply preset
 const applyPreset = (preset: TemporalWindow) => {
@@ -249,19 +257,32 @@ watch(
           dense
           class="mt-2"
         >
-          <AtlasCol cols="12">
-            <AtlasSelect
-              :model-value="startReferencePoint"
-              :items="referencePointOptions"
-              item-title="label"
-              item-value="value"
-              :label="t('components.temporalWindowEditor.referencePoint', 'Reference Point').value"
-              :aria-label="
-                t('components.temporalWindowEditor.startReferencePoint', 'Start Reference Point').value
-              "
-              variant="outlined"
+          <AtlasCol
+            cols="12"
+            md="6"
+          >
+            <AtlasCheckbox
+              :model-value="startUseIndexEnd"
+              density="compact"
+              data-test="start-use-index-end"
+              :label="t('components.temporalWindowEditor.useIndexEnd', 'Use index end date').value"
+              :aria-label="t('components.temporalWindowEditor.useIndexEnd', 'Use index end date').value"
               hide-details
-              @update:model-value="(v) => updateStartReferencePoint(v as Window['referencePoint'])"
+              @update:model-value="(v) => updateStartUseIndexEnd(v)"
+            />
+          </AtlasCol>
+          <AtlasCol
+            cols="12"
+            md="6"
+          >
+            <AtlasCheckbox
+              :model-value="startUseEventEnd"
+              density="compact"
+              data-test="start-use-event-end"
+              :label="t('components.temporalWindowEditor.useEventEnd', 'Use event end date').value"
+              :aria-label="t('components.temporalWindowEditor.useEventEnd', 'Use event end date').value"
+              hide-details
+              @update:model-value="(v) => updateStartUseEventEnd(v)"
             />
           </AtlasCol>
         </AtlasRow>
@@ -335,19 +356,32 @@ watch(
           dense
           class="mt-2"
         >
-          <AtlasCol cols="12">
-            <AtlasSelect
-              :model-value="endReferencePoint"
-              :items="referencePointOptions"
-              item-title="label"
-              item-value="value"
-              :label="t('components.temporalWindowEditor.referencePoint', 'Reference Point').value"
-              :aria-label="
-                t('components.temporalWindowEditor.endReferencePoint', 'End Reference Point').value
-              "
-              variant="outlined"
+          <AtlasCol
+            cols="12"
+            md="6"
+          >
+            <AtlasCheckbox
+              :model-value="endUseIndexEnd"
+              density="compact"
+              data-test="end-use-index-end"
+              :label="t('components.temporalWindowEditor.useIndexEnd', 'Use index end date').value"
+              :aria-label="t('components.temporalWindowEditor.useIndexEnd', 'Use index end date').value"
               hide-details
-              @update:model-value="(v) => updateEndReferencePoint(v as Window['referencePoint'])"
+              @update:model-value="(v) => updateEndUseIndexEnd(v)"
+            />
+          </AtlasCol>
+          <AtlasCol
+            cols="12"
+            md="6"
+          >
+            <AtlasCheckbox
+              :model-value="endUseEventEnd"
+              density="compact"
+              data-test="end-use-event-end"
+              :label="t('components.temporalWindowEditor.useEventEnd', 'Use event end date').value"
+              :aria-label="t('components.temporalWindowEditor.useEventEnd', 'Use event end date').value"
+              hide-details
+              @update:model-value="(v) => updateEndUseEventEnd(v)"
             />
           </AtlasCol>
         </AtlasRow>

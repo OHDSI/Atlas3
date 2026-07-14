@@ -347,8 +347,8 @@ function addTemporalWindow() {
   emit('update', {
     ...props.event,
     temporalWindow: {
-      startWindow: { days: 365, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' },
-      endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
+      startWindow: { days: 365, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false },
+      endWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
     },
   })
 }

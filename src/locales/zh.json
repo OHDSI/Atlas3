@@ -1413,7 +1413,9 @@
     "temporalWindowEditor": {
       "referencePoint": "参考点",
       "startReferencePoint": "起始参考点",
-      "endReferencePoint": "结束参考点"
+      "endReferencePoint": "结束参考点",
+      "useIndexEnd": "使用索引结束日期",
+      "useEventEnd": "使用事件结束日期"
     },
     "conceptSetPicker": {
       "clearSelection": "清除选择",

@@ -23,11 +23,6 @@ const FIXTURES = JSON.parse(
  */
 const KNOWN_LOSSY: { pattern: string; reason: string }[] = [
   {
-    pattern: 'EndWindow.UseEventEnd',
-    reason:
-      'CIRCE models UseIndexEnd/UseEventEnd as independent per-side flags (index anchor vs. event anchor), but the internal model stores one referencePoint enum per window; when source data sets both flags true simultaneously, export can only encode one (13x)',
-  },
-  {
     pattern: 'ConditionOccurrence.ConditionTypeExclude',
     reason: 'type-exclude flags are not modeled; export hardcodes false (4x)',
   },

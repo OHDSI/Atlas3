@@ -1591,7 +1591,9 @@
     "temporalWindowEditor": {
       "referencePoint": "Reference Point",
       "startReferencePoint": "Start Reference Point",
-      "endReferencePoint": "End Reference Point"
+      "endReferencePoint": "End Reference Point",
+      "useIndexEnd": "Use index end date",
+      "useEventEnd": "Use event end date"
     },
     "conceptSetPicker": {
       "clearSelection": "Clear selection",

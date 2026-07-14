@@ -392,8 +392,8 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
               Coeff: event.temporalWindow.endWindow.beforeAfter === 'AFTER' ? 1 : -1,
             }
           : undefined,
-        UseIndexEnd: event.temporalWindow.startWindow.referencePoint === 'INDEX_END',
-        UseEventEnd: event.temporalWindow.startWindow.referencePoint === 'EVENT_END',
+        UseIndexEnd: event.temporalWindow.startWindow.useIndexEnd ?? false,
+        UseEventEnd: event.temporalWindow.startWindow.useEventEnd ?? false,
       }
     }
   } else if (wrapInCriteria) {
@@ -422,7 +422,7 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
     const etw = event.endTemporalWindow
     const endStartDays = etw.startWindow?.days
     const endEndDays = etw.endWindow?.days
-    const etwRef = (etw.startWindow ?? etw.endWindow)?.referencePoint
+    const etwSrc = etw.startWindow ?? etw.endWindow
     atlasEvent.EndWindow = {
       Start: etw.startWindow
         ? {
@@ -436,8 +436,8 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
             Coeff: etw.endWindow.beforeAfter === 'AFTER' ? 1 : -1,
           }
         : { Coeff: 1 },
-      UseIndexEnd: etwRef === 'INDEX_END',
-      UseEventEnd: etwRef === 'EVENT_END',
+      UseIndexEnd: etwSrc?.useIndexEnd ?? false,
+      UseEventEnd: etwSrc?.useEventEnd ?? false,
     }
   }
 
@@ -584,12 +584,14 @@ function convertTemporalRelationshipAttribute(
     startWindow?: {
       days: number | null
       beforeAfter: 'BEFORE' | 'AFTER'
-      referencePoint: string
+      useIndexEnd?: boolean
+      useEventEnd?: boolean
     }
     endWindow?: {
       days: number | null
       beforeAfter: 'BEFORE' | 'AFTER'
-      referencePoint: string
+      useIndexEnd?: boolean
+      useEventEnd?: boolean
     }
   }
 ): Record<string, unknown> {
@@ -611,8 +613,8 @@ function convertTemporalRelationshipAttribute(
             Coeff: temporalWindow.endWindow.beforeAfter === 'AFTER' ? 1 : -1,
           }
         : undefined,
-      UseIndexEnd: temporalWindow.startWindow.referencePoint === 'INDEX_END',
-      UseEventEnd: temporalWindow.startWindow.referencePoint === 'EVENT_END',
+      UseIndexEnd: temporalWindow.startWindow.useIndexEnd ?? false,
+      UseEventEnd: temporalWindow.startWindow.useEventEnd ?? false,
     }
   }
 
@@ -641,11 +643,8 @@ export function parseTemporalRelationshipAttribute(
                 ? temporalWindowData.StartWindow.Start.Days
                 : null,
             beforeAfter: (temporalWindowData.StartWindow.Start.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
-            referencePoint: temporalWindowData.StartWindow.UseIndexEnd
-              ? 'INDEX_END'
-              : temporalWindowData.StartWindow.UseEventEnd
-                ? 'EVENT_END'
-                : 'INDEX_START',
+            useIndexEnd: !!temporalWindowData.StartWindow.UseIndexEnd,
+            useEventEnd: !!temporalWindowData.StartWindow.UseEventEnd,
           }
         : undefined,
       endWindow: temporalWindowData.StartWindow?.End
@@ -655,11 +654,8 @@ export function parseTemporalRelationshipAttribute(
                 ? temporalWindowData.StartWindow.End.Days
                 : null,
             beforeAfter: (temporalWindowData.StartWindow.End.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
-            referencePoint: temporalWindowData.StartWindow.UseIndexEnd
-              ? 'INDEX_END'
-              : temporalWindowData.StartWindow.UseEventEnd
-                ? 'EVENT_END'
-                : 'INDEX_START',
+            useIndexEnd: !!temporalWindowData.StartWindow.UseIndexEnd,
+            useEventEnd: !!temporalWindowData.StartWindow.UseEventEnd,
           }
         : undefined,
     },
@@ -1066,22 +1062,16 @@ function convertAtlasToEvent(
         ? {
             days: startWindow.Start.Days !== undefined ? startWindow.Start.Days : null,
             beforeAfter: (startWindow.Start.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
-            referencePoint: startWindow.UseIndexEnd
-              ? 'INDEX_END'
-              : startWindow.UseEventEnd
-                ? 'EVENT_END'
-                : 'INDEX_START',
+            useIndexEnd: !!startWindow.UseIndexEnd,
+            useEventEnd: !!startWindow.UseEventEnd,
           }
         : undefined,
       endWindow: startWindow.End
         ? {
             days: startWindow.End.Days !== undefined ? startWindow.End.Days : null,
             beforeAfter: (startWindow.End.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
-            referencePoint: startWindow.UseIndexEnd
-              ? 'INDEX_END'
-              : startWindow.UseEventEnd
-                ? 'EVENT_END'
-                : 'INDEX_START',
+            useIndexEnd: !!startWindow.UseIndexEnd,
+            useEventEnd: !!startWindow.UseEventEnd,
           }
         : undefined,
     }
@@ -1095,22 +1085,16 @@ function convertAtlasToEvent(
         ? {
             days: atlasEndWindow.Start.Days !== undefined ? atlasEndWindow.Start.Days : null,
             beforeAfter: (atlasEndWindow.Start.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
-            referencePoint: atlasEndWindow.UseIndexEnd
-              ? 'INDEX_END'
-              : atlasEndWindow.UseEventEnd
-                ? 'EVENT_END'
-                : 'INDEX_START',
+            useIndexEnd: !!atlasEndWindow.UseIndexEnd,
+            useEventEnd: !!atlasEndWindow.UseEventEnd,
           }
         : undefined,
       endWindow: atlasEndWindow.End
         ? {
             days: atlasEndWindow.End.Days !== undefined ? atlasEndWindow.End.Days : null,
             beforeAfter: (atlasEndWindow.End.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
-            referencePoint: atlasEndWindow.UseIndexEnd
-              ? 'INDEX_END'
-              : atlasEndWindow.UseEventEnd
-                ? 'EVENT_END'
-                : 'INDEX_START',
+            useIndexEnd: !!atlasEndWindow.UseIndexEnd,
+            useEventEnd: !!atlasEndWindow.UseEventEnd,
           }
         : undefined,
     }

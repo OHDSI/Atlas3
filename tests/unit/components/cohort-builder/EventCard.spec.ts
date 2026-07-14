@@ -83,8 +83,8 @@ const mockEventWithTemporalWindow: CohortEvent = {
   conceptSet: { id: 3, name: 'Hypertension' },
   attributes: [],
   temporalWindow: {
-    startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-    endWindow: { days: 30, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+    startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
+    endWindow: { days: 30, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
   }
 }
 
@@ -414,8 +414,8 @@ describe('EventCard', () => {
       const vm = wrapper.vm as any
 
       const newWindow = {
-        startWindow: { days: 10, beforeAfter: 'BEFORE' as const, referencePoint: 'INDEX_START' as const },
-        endWindow: { days: 60, beforeAfter: 'AFTER' as const, referencePoint: 'INDEX_START' as const }
+        startWindow: { days: 10, beforeAfter: 'BEFORE' as const, useIndexEnd: false, useEventEnd: false },
+        endWindow: { days: 60, beforeAfter: 'AFTER' as const, useIndexEnd: false, useEventEnd: false }
       }
 
       vm.updateTemporalWindows(newWindow)

@@ -239,4 +239,17 @@ describe('atlas-converter: EndWindow reference-point flag', () => {
     const nested = back.PrimaryCriteria.CriteriaList[0]!.ObservationPeriod.CorrelatedCriteria.CriteriaList[0]!
     expect(nested.EndWindow.UseEventEnd).toBe(true)
   })
+
+  it('round-trips a window with both UseIndexEnd and UseEventEnd true', () => {
+    const atlas = {
+      ConceptSets: [{ id: 0, name: 'x', expression: { items: [] } }],
+      PrimaryCriteria: { CriteriaList: [{ ObservationPeriod: { PeriodTypeExclude: false, CorrelatedCriteria: { Type: 'ALL', CriteriaList: [{ Criteria: { DrugExposure: { CodesetId: 0, DrugTypeExclude: false } }, StartWindow: { Start: { Coeff: -1 }, End: { Days: 0, Coeff: 1 }, UseIndexEnd: true, UseEventEnd: true }, RestrictVisit: false, IgnoreObservationPeriod: false }], DemographicCriteriaList: [], Groups: [] } } }], ObservationWindow: { PriorDays: 0, PostDays: 0 }, PrimaryCriteriaLimit: { Type: 'All' } },
+      QualifiedLimit: { Type: 'All' }, ExpressionLimit: { Type: 'All' }, InclusionRules: [], CensoringCriteria: [], CollapseSettings: { CollapseType: 'ERA', EraPad: 0 }, CensorWindow: {},
+    }
+    const internal = convertAtlasToInternal(atlas as never)
+    const back = convertInternalToAtlas(internal as never) as never as { PrimaryCriteria: { CriteriaList: Array<{ ObservationPeriod: { CorrelatedCriteria: { CriteriaList: Array<{ StartWindow: { UseIndexEnd: boolean; UseEventEnd: boolean } }> } } }> } }
+    const w = back.PrimaryCriteria.CriteriaList[0]!.ObservationPeriod.CorrelatedCriteria.CriteriaList[0]!.StartWindow
+    expect(w.UseIndexEnd).toBe(true)
+    expect(w.UseEventEnd).toBe(true)
+  })
 })

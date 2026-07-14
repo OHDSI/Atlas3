@@ -185,8 +185,8 @@ function toEventWindow(
   if (!w) return undefined
   const toWindowBound = (d: number | null | undefined, openEndedAfter: boolean) =>
     d === null || d === undefined
-      ? { days: null, beforeAfter: openEndedAfter ? 'AFTER' : 'BEFORE', referencePoint: 'INDEX_START' }
-      : { days: Math.abs(d), beforeAfter: d < 0 ? 'BEFORE' : 'AFTER', referencePoint: 'INDEX_START' }
+      ? { days: null, beforeAfter: openEndedAfter ? 'AFTER' : 'BEFORE', useIndexEnd: false, useEventEnd: false }
+      : { days: Math.abs(d), beforeAfter: d < 0 ? 'BEFORE' : 'AFTER', useIndexEnd: false, useEventEnd: false }
   // startDays: undefined and null both mean all-time-prior. endDays: undefined
   // means the index date (0), but explicit null means all-time-after — so only
   // default *undefined* to 0 (a plain `?? 0` would wrongly collapse null to 0).

@@ -1591,7 +1591,9 @@
     "temporalWindowEditor": {
       "referencePoint": "基準点",
       "startReferencePoint": "開始基準点",
-      "endReferencePoint": "終了基準点"
+      "endReferencePoint": "終了基準点",
+      "useIndexEnd": "インデックス終了日を使用",
+      "useEventEnd": "イベント終了日を使用"
     },
     "conceptSetPicker": {
       "clearSelection": "選択をクリア",

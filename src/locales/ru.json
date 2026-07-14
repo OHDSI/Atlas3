@@ -1426,7 +1426,9 @@
     "temporalWindowEditor": {
       "referencePoint": "Опорная точка",
       "startReferencePoint": "Опорная точка начала",
-      "endReferencePoint": "Опорная точка окончания"
+      "endReferencePoint": "Опорная точка окончания",
+      "useIndexEnd": "Использовать дату окончания индекса",
+      "useEventEnd": "Использовать дату окончания события"
     },
     "conceptSetPicker": {
       "clearSelection": "Очистить выбор",
