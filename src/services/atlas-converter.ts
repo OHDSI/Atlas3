@@ -9,7 +9,7 @@ import type {
   LogicType,
   CriteriaGroup,
 } from '@/models/cohort.types'
-import type { EventAttribute, TextAttributeKey } from '@/models/event.types'
+import type { EventAttribute, TextAttributeKey, ConceptAttribute } from '@/models/event.types'
 import type {
   AtlasConceptSet,
   AtlasCriteria,
@@ -303,7 +303,21 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
 
   const typeExcludeKey = TYPE_EXCLUDE_KEYS[event.criteriaType]
   if (typeExcludeKey) {
-    (criteriaTypeObj as Record<string, unknown>)[typeExcludeKey] = event.typeExclude ?? false
+    // A type-concept attribute (e.g. conditionType) is the single source of truth for
+    // this flag once present: convertAttributeToAtlas's concept branch only ever writes
+    // `*Exclude: true`, never `false`, so without this override an isExclusion:false
+    // attribute could not clear a stale event.typeExclude:true default — and the UI
+    // hides the bare toggle whenever that attribute exists, making it unfixable there.
+    const typeConceptAttr = (event.attributes ?? []).find(
+      (attr): attr is ConceptAttribute =>
+        !!attr &&
+        typeof attr === 'object' &&
+        attr.type === 'concept' &&
+        convertToPascalCase(attr.attributeKey) + 'Exclude' === typeExcludeKey,
+    )
+    ;(criteriaTypeObj as Record<string, unknown>)[typeExcludeKey] = typeConceptAttr
+      ? !!typeConceptAttr.isExclusion
+      : (event.typeExclude ?? false)
   }
 
   if (event.attributes && event.attributes.length > 0) {

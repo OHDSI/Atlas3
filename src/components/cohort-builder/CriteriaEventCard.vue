@@ -526,11 +526,9 @@ function removeSourceConcept() {
   emit('update', updated)
 }
 
-// ── Bare type-exclude flag (CIRCE `*TypeExclude`) ─────────────────────────
-// Only applies to criteria types the converter maps in TYPE_EXCLUDE_KEYS,
-// and only shown when no type-concept attribute already carries the same
-// flag via its own isExclusion toggle (AttributesEditor) — otherwise the
-// two controls would edit the same underlying CIRCE field.
+// Bare type-exclude toggle (CIRCE `*TypeExclude`) is only shown when no type-concept
+// attribute already carries the same flag via its own isExclusion toggle
+// (AttributesEditor) — otherwise two controls would edit the same CIRCE field.
 const typeExcludeKey = computed(() => TYPE_EXCLUDE_KEYS[props.event.criteriaType])
 
 // The type-concept attribute key follows the same prefix as the exclude key

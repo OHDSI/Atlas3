@@ -353,4 +353,41 @@ describe('atlas-converter: bare type-exclude flag', () => {
     }
     expect(atlas.PrimaryCriteria.CriteriaList[0]!.ConditionOccurrence.ConditionTypeExclude).toBe(true)
   })
+
+  // Review finding: convertAttributeToAtlas's concept branch only ever writes
+  // `*Exclude: true`, never `false` — so a type-concept attribute with
+  // isExclusion: false could not override a stale event.typeExclude: true
+  // default, and the UI hides the bare toggle whenever that attribute is
+  // present, making the resulting `true` invisible and unfixable.
+  it('lets a type-concept attribute isExclusion:false override a stale event.typeExclude:true default', () => {
+    const cohort: CohortDefinition = {
+      name: 'Stale type-exclude cohort',
+      description: '',
+      conceptSets: [],
+      entryEvents: [
+        {
+          id: 'e1',
+          criteriaType: 'ConditionOccurrence',
+          conceptSet: { id: 0, name: 'x' },
+          typeExclude: true,
+          attributes: [
+            {
+              type: 'concept',
+              attributeKey: 'conditionType',
+              concepts: [{ CONCEPT_ID: 44786627, CONCEPT_NAME: 'Primary Condition' }],
+              isExclusion: false,
+            },
+          ],
+        },
+      ],
+      qualifyingLimit: 'ALL',
+      expressionLimit: 'ALL',
+      inclusionRules: [],
+    } as unknown as CohortDefinition
+
+    const atlas = convertInternalToAtlas(cohort) as unknown as {
+      PrimaryCriteria: { CriteriaList: Array<{ ConditionOccurrence: Record<string, unknown> }> }
+    }
+    expect(atlas.PrimaryCriteria.CriteriaList[0]!.ConditionOccurrence.ConditionTypeExclude).toBe(false)
+  })
 })
