@@ -226,3 +226,17 @@ describe('atlas-converter: inclusion-rule expression wrapper group preservation'
     expect(back.InclusionRules[0]!.expression.Groups).toHaveLength(2)
   })
 })
+
+describe('atlas-converter: EndWindow reference-point flag', () => {
+  it('preserves EndWindow UseEventEnd when only the End bound is present', () => {
+    const atlas = {
+      ConceptSets: [{ id: 0, name: 'x', expression: { items: [] } }],
+      PrimaryCriteria: { CriteriaList: [{ ObservationPeriod: { PeriodTypeExclude: false, CorrelatedCriteria: { Type: 'ALL', CriteriaList: [{ Criteria: { DrugExposure: { CodesetId: 0, DrugTypeExclude: false } }, StartWindow: { Start: { Coeff: -1 }, End: { Coeff: 1 }, UseIndexEnd: false, UseEventEnd: false }, EndWindow: { End: { Days: 0, Coeff: 1 }, UseIndexEnd: false, UseEventEnd: true }, RestrictVisit: false, IgnoreObservationPeriod: false }], DemographicCriteriaList: [], Groups: [] } } }], ObservationWindow: { PriorDays: 0, PostDays: 0 }, PrimaryCriteriaLimit: { Type: 'All' } },
+      QualifiedLimit: { Type: 'All' }, ExpressionLimit: { Type: 'All' }, InclusionRules: [], CensoringCriteria: [], CollapseSettings: { CollapseType: 'ERA', EraPad: 0 }, CensorWindow: {},
+    }
+    const internal = convertAtlasToInternal(atlas as never)
+    const back = convertInternalToAtlas(internal as never) as never as { PrimaryCriteria: { CriteriaList: Array<{ ObservationPeriod: { CorrelatedCriteria: { CriteriaList: Array<{ EndWindow: { UseEventEnd: boolean } }> } } }> } }
+    const nested = back.PrimaryCriteria.CriteriaList[0]!.ObservationPeriod.CorrelatedCriteria.CriteriaList[0]!
+    expect(nested.EndWindow.UseEventEnd).toBe(true)
+  })
+})

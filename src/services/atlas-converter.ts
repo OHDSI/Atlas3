@@ -422,6 +422,7 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
     const etw = event.endTemporalWindow
     const endStartDays = etw.startWindow?.days
     const endEndDays = etw.endWindow?.days
+    const etwRef = (etw.startWindow ?? etw.endWindow)?.referencePoint
     atlasEvent.EndWindow = {
       Start: etw.startWindow
         ? {
@@ -435,8 +436,8 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
             Coeff: etw.endWindow.beforeAfter === 'AFTER' ? 1 : -1,
           }
         : { Coeff: 1 },
-      UseIndexEnd: etw.startWindow?.referencePoint === 'INDEX_END',
-      UseEventEnd: etw.startWindow?.referencePoint === 'EVENT_END',
+      UseIndexEnd: etwRef === 'INDEX_END',
+      UseEventEnd: etwRef === 'EVENT_END',
     }
   }
 
