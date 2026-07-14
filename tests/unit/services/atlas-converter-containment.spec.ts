@@ -32,20 +32,8 @@ const KNOWN_LOSSY: { pattern: string; reason: string }[] = [
     reason: 'type-exclude flags are not modeled; export hardcodes false (4x)',
   },
   {
-    pattern: 'AdditionalCriteria.Count',
-    reason: 'group count on AdditionalCriteria is not round-tripped (3x)',
-  },
-  {
-    pattern: 'AdditionalCriteria.DemographicCriteriaList',
-    reason: 'demographic criteria under AdditionalCriteria are dropped (2x)',
-  },
-  {
     pattern: 'expression.Groups',
     reason: 'nested subgroups inside inclusion-rule groups are partially dropped (2x)',
-  },
-  {
-    pattern: 'AdditionalCriteria.Groups',
-    reason: 'nested subgroups under AdditionalCriteria are dropped (2x)',
   },
   {
     pattern: 'expression.Type',

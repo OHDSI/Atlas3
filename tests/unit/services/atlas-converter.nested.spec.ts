@@ -176,3 +176,28 @@ describe('atlas-converter: ObservationPeriod UserDefinedPeriod object shape', ()
       .toEqual({ StartDate: '2010-01-01', EndDate: '2010-12-31' })
   })
 })
+
+describe('atlas-converter: AdditionalCriteria count, demographics, and nested groups', () => {
+  it('round-trips AdditionalCriteria count, demographics, and nested groups', () => {
+    const atlas = {
+      ConceptSets: [{ id: 0, name: 'x', expression: { items: [] } }],
+      PrimaryCriteria: {
+        CriteriaList: [{ ConditionOccurrence: { CodesetId: 0, ConditionTypeExclude: false } }],
+        ObservationWindow: { PriorDays: 0, PostDays: 0 }, PrimaryCriteriaLimit: { Type: 'All' },
+      },
+      AdditionalCriteria: {
+        Type: 'AT_LEAST', Count: 2,
+        CriteriaList: [{ Criteria: { DrugExposure: { CodesetId: 0, DrugTypeExclude: false } }, StartWindow: { Start: { Coeff: -1 }, End: { Coeff: 1 }, UseIndexEnd: false, UseEventEnd: false }, RestrictVisit: false, IgnoreObservationPeriod: false }],
+        DemographicCriteriaList: [{ Age: { Op: 'gte', Value: 18 } }],
+        Groups: [{ Type: 'ANY', CriteriaList: [{ Criteria: { DrugExposure: { CodesetId: 0, DrugTypeExclude: false } }, StartWindow: { Start: { Coeff: -1 }, End: { Coeff: 1 }, UseIndexEnd: false, UseEventEnd: false }, RestrictVisit: false, IgnoreObservationPeriod: false }], DemographicCriteriaList: [], Groups: [] }],
+      },
+      QualifiedLimit: { Type: 'All' }, ExpressionLimit: { Type: 'All' },
+      InclusionRules: [], CensoringCriteria: [], CollapseSettings: { CollapseType: 'ERA', EraPad: 0 }, CensorWindow: {},
+    }
+    const internal = convertAtlasToInternal(atlas as never)
+    const back = convertInternalToAtlas(internal as never) as never as { AdditionalCriteria: { Count?: number; DemographicCriteriaList: unknown[]; Groups: unknown[] } }
+    expect(back.AdditionalCriteria.Count).toBe(2)
+    expect(back.AdditionalCriteria.DemographicCriteriaList).toHaveLength(1)
+    expect(back.AdditionalCriteria.Groups).toHaveLength(1)
+  })
+})

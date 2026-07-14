@@ -33,9 +33,10 @@ interface AtlasJSON {
   }
   AdditionalCriteria?: {
     Type: string
+    Count?: number
     CriteriaList: AtlasCriteria[]
     DemographicCriteriaList: Record<string, unknown>[]
-    Groups: AtlasCriteria[]
+    Groups: AtlasGroup[]
   }
   InclusionRules?: AtlasInclusionRule[]
   CensoringCriteria?: AtlasCriteria[]
@@ -130,13 +131,16 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
     AdditionalCriteria: cohort.additionalCriteria
       ? {
           Type: cohort.additionalCriteria.logicType || 'ALL',
+          ...(typeof cohort.additionalCriteria.count === 'number'
+            ? { Count: cohort.additionalCriteria.count }
+            : {}),
           CriteriaList: cohort.additionalCriteria.events
             .filter(e => e.criteriaType !== 'Demographic')
             .map(e => convertEventToAtlas(e, true)),
           DemographicCriteriaList: cohort.additionalCriteria.events
             .filter(e => e.criteriaType === 'Demographic')
             .map(convertDemographicEventToAtlas),
-          Groups: [],
+          Groups: (cohort.additionalCriteria.nestedGroups ?? []).map(convertGroupToAtlasGroup),
         }
       : {
           Type: 'ALL',
@@ -818,18 +822,30 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
       ? (atlas.ExpressionLimit.Type.toUpperCase() as QualifyingLimit)
       : undefined,
     // Parse AdditionalCriteria
-    additionalCriteria:
-      atlas.AdditionalCriteria?.CriteriaList && atlas.AdditionalCriteria.CriteriaList.length > 0
-        ? {
-            id: generateId(),
-            logicType: (atlas.AdditionalCriteria.Type || 'ALL') as LogicType,
-            qualifyingLimit: (atlas.PrimaryCriteria?.PrimaryCriteriaLimit?.Type?.toUpperCase() ||
-              'ALL') as QualifyingLimit,
-            events: atlas.AdditionalCriteria.CriteriaList.map((e: AtlasCriteria) =>
-              convertAtlasToEvent(e, atlas.ConceptSets)
-            ),
-          }
-        : undefined,
+    additionalCriteria: (() => {
+      const ac = atlas.AdditionalCriteria
+      const hasContent =
+        (ac?.CriteriaList && ac.CriteriaList.length > 0) ||
+        (ac?.DemographicCriteriaList && ac.DemographicCriteriaList.length > 0) ||
+        (ac?.Groups && ac.Groups.length > 0)
+      if (!ac || !hasContent) return undefined
+      return {
+        id: generateId(),
+        logicType: (ac.Type || 'ALL') as LogicType,
+        qualifyingLimit: (atlas.PrimaryCriteria?.PrimaryCriteriaLimit?.Type?.toUpperCase() ||
+          'ALL') as QualifyingLimit,
+        ...(typeof ac.Count === 'number' ? { count: ac.Count } : {}),
+        events: [
+          ...ac.CriteriaList.map((e: AtlasCriteria) => convertAtlasToEvent(e, atlas.ConceptSets)),
+          ...(ac.DemographicCriteriaList?.map(dc => convertDemographicCriteriaToEvent(dc)) ?? []),
+        ],
+        ...(ac.Groups && ac.Groups.length > 0
+          ? {
+              nestedGroups: ac.Groups.map(g => convertAtlasGroupToGroup(g, atlas.ConceptSets)),
+            }
+          : {}),
+      }
+    })(),
     inclusionRules:
       atlas.InclusionRules?.map((rule: AtlasInclusionRule) => {
         const criteriaGroups: import('@/models/cohort.types').CriteriaGroup[] = []

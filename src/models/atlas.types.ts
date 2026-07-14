@@ -13,9 +13,10 @@
  */
 export interface AtlasAdditionalCriteria {
   Type: 'ALL' | 'ANY' | 'AT_LEAST' | 'AT_MOST'
+  Count?: number
   CriteriaList: AtlasCriteria[]
   DemographicCriteriaList: Record<string, unknown>[]
-  Groups: AtlasCriteria[]
+  Groups: AtlasGroup[]
 }
 
 /**
