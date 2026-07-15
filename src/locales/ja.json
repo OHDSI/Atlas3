@@ -1591,7 +1591,9 @@
     "temporalWindowEditor": {
       "referencePoint": "基準点",
       "startReferencePoint": "開始基準点",
-      "endReferencePoint": "終了基準点"
+      "endReferencePoint": "終了基準点",
+      "useIndexEnd": "インデックス終了日を使用",
+      "useEventEnd": "イベント終了日を使用"
     },
     "conceptSetPicker": {
       "clearSelection": "選択をクリア",
@@ -1629,11 +1631,17 @@
       "removeCardinality": "カーディナリティを削除",
       "temporalWindows": "時間ウィンドウ",
       "removeTemporalWindow": "時間ウィンドウを削除",
+      "addEndWindow": "終了日制約を追加",
+      "removeEndWindow": "終了日制約を削除",
+      "endWindowLabel": "終了ウィンドウ",
       "eventIdLabel": "イベントID：",
       "criteriaTypeLabel": "基準タイプ：",
       "conceptSetIdLabel": "コンセプトセットID：",
       "restrictVisitNote": "イベントはインデックスと同じ来院時に発生する必要があります",
-      "ignoreObservationNote": "イベントは観察期間外に発生する可能性があります"
+      "ignoreObservationNote": "イベントは観察期間外に発生する可能性があります",
+      "sourceConceptLabel": "ソースコンセプト",
+      "selectSourceConcept": "ソースコンセプトを選択",
+      "typeExcludeLabel": "コンセプトタイプを除外（いずれにも該当しない）"
     },
     "filterTypeSelector": {
       "label": "フィルタータイプ",

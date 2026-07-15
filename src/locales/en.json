@@ -1591,7 +1591,9 @@
     "temporalWindowEditor": {
       "referencePoint": "Reference Point",
       "startReferencePoint": "Start Reference Point",
-      "endReferencePoint": "End Reference Point"
+      "endReferencePoint": "End Reference Point",
+      "useIndexEnd": "Use index end date",
+      "useEventEnd": "Use event end date"
     },
     "conceptSetPicker": {
       "clearSelection": "Clear selection",
@@ -1629,11 +1631,17 @@
       "removeCardinality": "Remove cardinality",
       "temporalWindows": "Temporal Windows",
       "removeTemporalWindow": "Remove temporal window",
+      "addEndWindow": "Add End-Date Constraint",
+      "removeEndWindow": "Remove end-date constraint",
+      "endWindowLabel": "End window",
       "eventIdLabel": "Event ID:",
       "criteriaTypeLabel": "Criteria Type:",
       "conceptSetIdLabel": "Concept Set ID:",
       "restrictVisitNote": "Event must occur in same visit as index",
-      "ignoreObservationNote": "Event can occur outside observation period"
+      "ignoreObservationNote": "Event can occur outside observation period",
+      "sourceConceptLabel": "Source concept",
+      "selectSourceConcept": "Select Source Concept",
+      "typeExcludeLabel": "Exclude concept type (is not any of)"
     },
     "filterTypeSelector": {
       "label": "Filter Type",

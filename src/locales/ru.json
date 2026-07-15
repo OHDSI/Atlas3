@@ -1426,7 +1426,9 @@
     "temporalWindowEditor": {
       "referencePoint": "Опорная точка",
       "startReferencePoint": "Опорная точка начала",
-      "endReferencePoint": "Опорная точка окончания"
+      "endReferencePoint": "Опорная точка окончания",
+      "useIndexEnd": "Использовать дату окончания индекса",
+      "useEventEnd": "Использовать дату окончания события"
     },
     "conceptSetPicker": {
       "clearSelection": "Очистить выбор",
@@ -1467,11 +1469,17 @@
       "removeCardinality": "Удалить кардинальность",
       "temporalWindows": "Временные окна",
       "removeTemporalWindow": "Удалить временное окно",
+      "addEndWindow": "Добавить ограничение даты окончания",
+      "removeEndWindow": "Удалить ограничение даты окончания",
+      "endWindowLabel": "Окно окончания",
       "eventIdLabel": "ID события:",
       "criteriaTypeLabel": "Тип критерия:",
       "conceptSetIdLabel": "ID набора концептов:",
       "restrictVisitNote": "Событие должно произойти в рамках того же визита, что и индексное",
-      "ignoreObservationNote": "Событие может произойти вне периода наблюдения"
+      "ignoreObservationNote": "Событие может произойти вне периода наблюдения",
+      "sourceConceptLabel": "Исходный концепт",
+      "selectSourceConcept": "Выбрать исходный концепт",
+      "typeExcludeLabel": "Исключить тип концепта (не является ни одним из)"
     },
     "filterTypeSelector": {
       "label": "Тип фильтра",
