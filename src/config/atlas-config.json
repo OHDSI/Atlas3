@@ -265,8 +265,8 @@
         "name": "Condition Source Concept",
         "description": "Filter by condition source concept",
         "type": "concept",
-        "nameKey": "const.eventsList.addSourceConcept.title_conditionoccurrence",
-        "descriptionKey": "const.eventsList.addSourceConcept.desc_conditionoccurrence"
+        "nameKey": "const.eventsList.addSourceConcept.title_occurrence",
+        "descriptionKey": "const.eventsList.addSourceConcept.desc_occurrence"
       },
       {
         "id": "nested",
@@ -1142,6 +1142,14 @@
         "descriptionKey": "const.eventsList.addSourceId.desc_specimen"
       },
       {
+        "id": "specimenSourceConcept",
+        "name": "Specimen Source Concept",
+        "description": "Filter by specimen source concept",
+        "type": "concept",
+        "nameKey": "const.eventsList.addSourceConcept.title_specimen",
+        "descriptionKey": "const.eventsList.addSourceConcept.desc_specimen"
+      },
+      {
         "id": "nested",
         "name": "Nested Criteria",
         "description": "Add nested criteria group",
@@ -1236,6 +1244,14 @@
         "type": "concept",
         "nameKey": "const.eventsList.addPlaceServiceLocation.title_visit",
         "descriptionKey": "const.eventsList.addPlaceServiceLocation.desc_visit"
+      },
+      {
+        "id": "visitSourceConcept",
+        "name": "Visit Source Concept",
+        "description": "Filter by visit source concept",
+        "type": "concept",
+        "nameKey": "const.eventsList.addSourceConcept.title_visit",
+        "descriptionKey": "const.eventsList.addSourceConcept.desc_visit"
       },
       {
         "id": "nested",
@@ -1342,6 +1358,14 @@
         "type": "numericRange",
         "nameKey": "const.eventsList.addPlaceServiceDistance.title_visitDetail",
         "descriptionKey": "const.eventsList.addPlaceServiceDistance.desc_visitDetail"
+      },
+      {
+        "id": "visitDetailSourceConcept",
+        "name": "Visit Detail Source Concept",
+        "description": "Filter by visit detail source concept",
+        "type": "concept",
+        "nameKey": "const.eventsList.addSourceConcept.title_visitDetail",
+        "descriptionKey": "const.eventsList.addSourceConcept.desc_visitDetail"
       },
       {
         "id": "nested",

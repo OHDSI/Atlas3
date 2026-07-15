@@ -42,45 +42,17 @@ const createWrapper = (event: CohortEvent) => {
   })
 }
 
-describe('CriteriaEventCard — bare type-exclude toggle', () => {
+describe('CriteriaEventCard — type-exclude (2.15 parity: no bare toggle)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
 
-  it('renders the bare toggle for an applicable criteria type with no type-concept attribute', () => {
+  it('never renders a bare type-exclude toggle, even for supported types', () => {
     const wrapper = createWrapper(makeEvent({ typeExclude: false }))
-
-    expect(wrapper.find('[data-testid="type-exclude-toggle"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="type-exclude-toggle"]').exists()).toBe(false)
   })
 
-  it('toggling it sets event.typeExclude and survives convertInternalToAtlas as *TypeExclude', async () => {
-    const wrapper = createWrapper(makeEvent({ typeExclude: false }))
-
-    const toggle = wrapper.find('[data-testid="type-exclude-toggle"] input')
-    await toggle.setValue(true)
-
-    const updates = wrapper.emitted('update')
-    expect(updates).toBeTruthy()
-    const updatedEvent = updates![0]![0] as CohortEvent
-    expect(updatedEvent.typeExclude).toBe(true)
-
-    const cohort: CohortDefinition = {
-      name: 'Type-exclude toggle cohort',
-      description: '',
-      conceptSets: [],
-      entryEvents: [{ ...updatedEvent, conceptSet: { id: 0, name: 'x' } }],
-      qualifyingLimit: 'ALL',
-      expressionLimit: 'ALL',
-      inclusionRules: [],
-    } as unknown as CohortDefinition
-
-    const atlas = convertInternalToAtlas(cohort) as unknown as {
-      PrimaryCriteria: { CriteriaList: Array<{ ConditionOccurrence: Record<string, unknown> }> }
-    }
-    expect(atlas.PrimaryCriteria.CriteriaList[0]!.ConditionOccurrence.ConditionTypeExclude).toBe(true)
-  })
-
-  it('hides the bare toggle when a type-concept attribute with isExclusion is already present', () => {
+  it('renders no toggle when a type-concept attribute is present either', () => {
     const wrapper = createWrapper(
       makeEvent({
         typeExclude: false,
@@ -94,13 +66,25 @@ describe('CriteriaEventCard — bare type-exclude toggle', () => {
         ],
       }),
     )
-
     expect(wrapper.find('[data-testid="type-exclude-toggle"]').exists()).toBe(false)
   })
 
-  it('hides the bare toggle for criteria types with no *TypeExclude key', () => {
-    const wrapper = createWrapper(makeEvent({ criteriaType: 'LocationRegion' }))
+  it('still round-trips a loaded typeExclude flag through convertInternalToAtlas', () => {
+    const cohort: CohortDefinition = {
+      name: 'Type-exclude round-trip cohort',
+      description: '',
+      conceptSets: [],
+      entryEvents: [
+        { ...makeEvent({ typeExclude: true }), conceptSet: { id: 0, name: 'x' } },
+      ],
+      qualifyingLimit: 'ALL',
+      expressionLimit: 'ALL',
+      inclusionRules: [],
+    } as unknown as CohortDefinition
 
-    expect(wrapper.find('[data-testid="type-exclude-toggle"]').exists()).toBe(false)
+    const atlas = convertInternalToAtlas(cohort) as unknown as {
+      PrimaryCriteria: { CriteriaList: Array<{ ConditionOccurrence: Record<string, unknown> }> }
+    }
+    expect(atlas.PrimaryCriteria.CriteriaList[0]!.ConditionOccurrence.ConditionTypeExclude).toBe(true)
   })
 })

@@ -80,21 +80,6 @@
             @edit="onEditConceptSet"
             @clear="removeConceptSet"
           />
-          <template v-if="eventHasSourceConcept">
-            <span class="source-concept-label">
-              {{ t('components.eventCard.sourceConceptLabel', 'Source concept') }}
-            </span>
-            <EventConceptSetField
-              compact
-              :concept-set="sourceConceptDisplay"
-              :select-label="t('components.eventCard.selectSourceConcept', 'Select Source Concept').value"
-              picker-test-id="source-concept-picker"
-              chip-test-id="source-concept-selected"
-              @select="onSelectSourceConcept"
-              @edit="onSelectSourceConcept"
-              @clear="removeSourceConcept"
-            />
-          </template>
         </div>
         <div class="event-header__right">
           <AtlasMenu>
@@ -115,7 +100,8 @@
                 :key="attr.key"
                 :title="attr.label"
                 :subtitle="attr.description"
-                :disabled="attr.type === 'nested' && !!event.nestedCriteria"
+                :disabled="(attr.type === 'nested' && !!event.nestedCriteria)
+                  || (eventHasSourceConcept && attr.key.endsWith('SourceConcept') && sourceConceptRowVisible)"
                 @click="addAttribute(attr.key, attr.type)"
               />
             </AtlasList>
@@ -181,31 +167,33 @@
           v-if="showTemporal"
           class="end-window-section mt-2"
         >
-          <div
+          <AtlasMenu
             v-if="event.endTemporalWindow"
-            class="end-window-editor"
-            data-testid="end-window-editor-wrapper"
+            :close-on-content-click="false"
+            location="end"
           >
-            <div class="d-flex align-center justify-space-between mb-2">
-              <span class="text-subtitle-2">
-                {{ t('components.eventCard.endWindowLabel', 'End window') }}
+            <template #activator="{ props: menuProps }">
+              <span data-testid="end-window-chip">
+                <TemporalFilterChip
+                  v-bind="menuProps"
+                  :label="`${t('components.eventCard.endWindowLabel', 'End window').value}: ${formatTemporalWindowDisplay(event.endTemporalWindow)}`"
+                  @close="removeEndTemporalWindow"
+                />
               </span>
-              <AtlasIconButton
-                v-bind="{ ariaLabel: t('components.eventCard.removeEndWindow', 'Remove end-date constraint').value }"
-                icon="mdi-close"
-                size="sm"
-                variant="text"
-                density="compact"
-                data-testid="remove-end-window"
-                @click="removeEndTemporalWindow"
-              />
-            </div>
-            <TemporalWindowEditor
-              :model-value="event.endTemporalWindow"
-              data-testid="end-window-editor"
-              @update:model-value="updateEndTemporalWindow"
-            />
-          </div>
+            </template>
+            <v-card
+              class="temporal-window-menu"
+              style="min-width: 500px"
+            >
+              <v-card-text class="pa-3">
+                <TemporalWindowEditor
+                  :model-value="event.endTemporalWindow"
+                  data-testid="end-window-editor"
+                  @update:model-value="updateEndTemporalWindow"
+                />
+              </v-card-text>
+            </v-card>
+          </AtlasMenu>
           <AtlasButton
             v-else
             size="sm"
@@ -236,23 +224,38 @@
                 emit('select-concept-for-attribute', attributeIndex, domainFilter)
             "
           />
-        </div>
-
-        <!-- Bare type-exclude flag (CIRCE `*TypeExclude`). Hidden once a
-             type-concept attribute (with its own isExclusion toggle) covers
-             the same flag, to avoid two controls editing one field. -->
-        <div
-          v-if="showBareTypeExclude"
-          class="type-exclude-section mt-2"
-        >
-          <AtlasSwitch
-            :model-value="event.typeExclude ?? false"
-            :label="t('components.eventCard.typeExcludeLabel', 'Exclude concept type (is not any of)').value"
-            density="compact"
-            hide-details
-            data-testid="type-exclude-toggle"
-            @update:model-value="(v) => setTypeExclude(!!v)"
-          />
+          <div
+            v-if="sourceConceptRowVisible"
+            class="source-concept-row mt-2"
+            data-testid="source-concept-row"
+          >
+            <div class="source-concept-row__title">
+              {{ t('components.eventCard.sourceConceptLabel', 'Source concept') }}
+            </div>
+            <div class="source-concept-row__input">
+              <EventConceptSetField
+                compact
+                :concept-set="sourceConceptDisplay"
+                :select-label="t('components.eventCard.selectSourceConcept', 'Select Source Concept').value"
+                picker-test-id="source-concept-picker"
+                chip-test-id="source-concept-selected"
+                @select="onSelectSourceConcept"
+                @edit="onSelectSourceConcept"
+                @clear="removeSourceConcept"
+              />
+            </div>
+            <div class="source-concept-row__actions">
+              <AtlasIconButton
+                v-bind="{ ariaLabel: t('common.remove', 'Remove').value }"
+                icon="mdi-delete"
+                size="sm"
+                variant="text"
+                density="compact"
+                data-testid="remove-source-concept-attribute"
+                @click="removeSourceConcept"
+              />
+            </div>
+          </div>
         </div>
 
         <!-- Per-criteria option switches (wrapped criteria only). These map to
@@ -306,7 +309,7 @@ import { useFilterConfig } from '@/composables/useFilterConfig'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import { useCriteriaSelection } from '@/composables/useCriteriaSelection'
 import { useTemporalWindows } from '@/composables/useTemporalWindows'
-import { SOURCE_CONCEPT_KEYS, TYPE_EXCLUDE_KEYS } from '@/services/atlas-converter'
+import { SOURCE_CONCEPT_KEYS } from '@/services/atlas-converter'
 import type { CohortEvent, NestedCriteria, TemporalWindow } from '@/models/cohort.types'
 import type {
   EventAttribute,
@@ -498,6 +501,11 @@ function removeConceptSet() {
 // Only applies to the criteria types the converter maps in SOURCE_CONCEPT_KEYS.
 const eventHasSourceConcept = computed(() => !!SOURCE_CONCEPT_KEYS[props.event.criteriaType])
 
+const sourceConceptPending = ref(false)
+const sourceConceptRowVisible = computed(
+  () => typeof props.event.sourceConceptId === 'number' || sourceConceptPending.value,
+)
+
 // sourceConceptId is stored as a bare numeric codeset id (no embedded name),
 // so the picked concept set's name is cached locally purely for display —
 // re-selecting the same event after a reload shows the id until re-picked.
@@ -521,36 +529,10 @@ function onSelectSourceConcept() {
 }
 
 function removeSourceConcept() {
+  sourceConceptPending.value = false
   const updated = { ...props.event }
   delete updated.sourceConceptId
   emit('update', updated)
-}
-
-// Bare type-exclude toggle (CIRCE `*TypeExclude`) is only shown when no type-concept
-// attribute already carries the same flag via its own isExclusion toggle
-// (AttributesEditor) — otherwise two controls would edit the same CIRCE field.
-const typeExcludeKey = computed(() => TYPE_EXCLUDE_KEYS[props.event.criteriaType])
-
-// The type-concept attribute key follows the same prefix as the exclude key
-// (e.g. 'ConditionTypeExclude' -> 'conditionType'), per the parsing in
-// atlas-converter.ts's extractAttributesFromCriteria.
-const typeConceptAttributeKey = computed(() => {
-  const key = typeExcludeKey.value
-  if (!key) return undefined
-  const base = key.replace(/Exclude$/, '')
-  return base.charAt(0).toLowerCase() + base.slice(1)
-})
-
-const hasTypeConceptAttribute = computed(() =>
-  (props.event.attributes ?? []).some(
-    a => a.type === 'concept' && a.attributeKey === typeConceptAttributeKey.value,
-  ),
-)
-
-const showBareTypeExclude = computed(() => !!typeExcludeKey.value && !hasTypeConceptAttribute.value)
-
-function setTypeExclude(value: boolean) {
-  emit('update', { ...props.event, typeExclude: value })
 }
 
 function updateAttributes(attributes: EventAttribute[]) {
@@ -579,6 +561,16 @@ function onNestedSelectConceptSet(payload: number | { eventIndex: number }) {
 }
 
 function addAttribute(attributeKey: string, attributeType: string) {
+  // Task 1's config entries list *SourceConcept as a generic 'concept' attribute;
+  // intercept it here so it opens the dedicated row instead of the CIRCE-mismatched concept path.
+  if (
+    attributeType === 'concept' &&
+    attributeKey.endsWith('SourceConcept') &&
+    eventHasSourceConcept.value
+  ) {
+    sourceConceptPending.value = true
+    return
+  }
   if (attributeType === 'nested') {
     addNestedCriteria()
     return
@@ -736,10 +728,6 @@ function addAttribute(attributeKey: string, attributeType: string) {
   font-weight: 600;
   font-size: 14px;
 }
-.source-concept-label {
-  font-size: 12px;
-  color: rgb(var(--v-theme-on-surface-variant));
-}
 .event-header__right {
   display: flex;
   align-items: center;
@@ -773,5 +761,40 @@ function addAttribute(attributeKey: string, attributeType: string) {
 }
 .cardinality-chip--at_most.v-btn--variant-tonal {
   color: #336b91 !important;
+}
+
+.source-concept-row {
+  display: flex;
+  border-radius: 6px;
+  border: 1px solid rgb(var(--v-theme-primary));
+  overflow: hidden;
+}
+
+.source-concept-row__title {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  flex: 1;
+  max-width: 20%;
+  color: rgb(var(--v-theme-primary));
+  background: #ebf2fa;
+  font-size: 13px;
+  font-weight: 500;
+  border-right: 1px solid rgb(var(--v-theme-primary));
+}
+
+.source-concept-row__input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  flex: 2;
+  border-right: 1px solid rgb(var(--v-theme-primary));
+}
+
+.source-concept-row__actions {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
 }
 </style>

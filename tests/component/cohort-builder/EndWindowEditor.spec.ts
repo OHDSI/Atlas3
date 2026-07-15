@@ -42,6 +42,19 @@ const createWrapper = (event: CohortEvent) => {
   })
 }
 
+const END_WINDOW = {
+  startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
+  endWindow: { days: 30, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: true },
+}
+
+const createAttachedWrapper = (event: CohortEvent) => {
+  return mount(CriteriaEventCard, {
+    global: { plugins: [vuetify] },
+    props: { event, section: 'criteriaGroup', showTemporal: true },
+    attachTo: document.body,
+  })
+}
+
 function makeCohort(event: CohortEvent): CohortDefinition {
   return {
     name: 'EndWindow round-trip test',
@@ -95,16 +108,16 @@ describe('EndWindow editor', () => {
     expect(updated.endTemporalWindow).toBeDefined()
   })
 
-  it('renders and edits endTemporalWindow', async () => {
-    const event = makeEvent({
-      endTemporalWindow: {
-        startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
-        endWindow: { days: 30, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: true },
-      },
-    })
-    const wrapper = createWrapper(event)
+  it('renders a chip and edits endTemporalWindow through the popover', async () => {
+    const wrapper = createAttachedWrapper(makeEvent({ endTemporalWindow: END_WINDOW }))
 
-    expect(wrapper.text()).toContain('End window')
+    const chip = wrapper.find('[data-testid="end-window-chip"]')
+    expect(chip.exists()).toBe(true)
+    expect(chip.text()).toContain('End window')
+    expect(wrapper.findComponent(TemporalWindowEditor).exists()).toBe(false)
+
+    await chip.find('.v-chip').trigger('click')
+    await new Promise(resolve => setTimeout(resolve, 50))
 
     const editor = wrapper.findComponent(TemporalWindowEditor)
     expect(editor.exists()).toBe(true)
@@ -115,27 +128,19 @@ describe('EndWindow editor', () => {
     }
     await editor.vm.$emit('update:modelValue', mutated)
 
-    const updates = wrapper.emitted('update')
-    expect(updates).toBeTruthy()
-    const updated = updates![updates!.length - 1]![0] as CohortEvent
+    const updated = wrapper.emitted('update')!.at(-1)![0] as CohortEvent
     expect(updated.endTemporalWindow).toEqual(mutated)
+    wrapper.unmount()
   })
 
-  it('removes endTemporalWindow via the remove affordance', async () => {
-    const event = makeEvent({
-      endTemporalWindow: {
-        startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
-        endWindow: { days: 30, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: true },
-      },
-    })
-    const wrapper = createWrapper(event)
+  it('removes endTemporalWindow via the chip close icon', async () => {
+    const wrapper = createAttachedWrapper(makeEvent({ endTemporalWindow: END_WINDOW }))
 
-    await wrapper.find('[data-testid="remove-end-window"]').trigger('click')
+    await wrapper.find('[data-testid="end-window-chip"] .v-chip__close').trigger('click')
 
-    const updates = wrapper.emitted('update')
-    expect(updates).toBeTruthy()
-    const updated = updates![updates!.length - 1]![0] as CohortEvent
+    const updated = wrapper.emitted('update')!.at(-1)![0] as CohortEvent
     expect(updated.endTemporalWindow).toBeUndefined()
+    wrapper.unmount()
   })
 
   it('round-trips EndWindow.UseEventEnd through convertInternalToAtlas', async () => {
@@ -144,13 +149,17 @@ describe('EndWindow editor', () => {
     // which stamps the same flag onto both startWindow and endWindow). The
     // converter's write path takes the flags from startWindow when present,
     // so a realistic edit keeps both bounds' flags in agreement.
-    const event = makeEvent({
-      endTemporalWindow: {
-        startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: true },
-        endWindow: { days: 30, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: true },
-      },
-    })
-    const wrapper = createWrapper(event)
+    const wrapper = createAttachedWrapper(
+      makeEvent({
+        endTemporalWindow: {
+          startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: true },
+          endWindow: { days: 30, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: true },
+        },
+      }),
+    )
+
+    await wrapper.find('[data-testid="end-window-chip"] .v-chip').trigger('click')
+    await new Promise(resolve => setTimeout(resolve, 50))
 
     const editor = wrapper.findComponent(TemporalWindowEditor)
     const mutated = {
@@ -169,5 +178,6 @@ describe('EndWindow editor', () => {
     expect(rtCriteria.EndWindow).toBeDefined()
     expect(rtCriteria.EndWindow!.UseEventEnd).toBe(true)
     expect(rtCriteria.EndWindow!.End?.Days).toBe(45)
+    wrapper.unmount()
   })
 })

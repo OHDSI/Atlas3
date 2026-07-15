@@ -4593,6 +4593,8 @@
         "desc_observation": "Filter Observations by the Source Concept.",
         "title_procedureoccurrence": "Add Procedure Source Concept Criteria",
         "desc_procedureoccurrence": "Filter Procedure Occurrences by the Procedure Source Concept.",
+        "title_specimen": "Add Specimen Source Concept Criteria",
+        "desc_specimen": "Filter Specimens by the Specimen Source Concept.",
         "title_visit": "Add Visit Source Concept Criteria",
         "desc_visit": "Filter Visit Occurrences by the Visit Source Concept.",
         "title_visitDetail": "Add Visit detail Source Concept Criteria",
