@@ -49,6 +49,23 @@ describe('pathway-csv', () => {
     expect(rows.find(r => r['Event Cohort'] === 'A+B')).toBeUndefined()
   })
 
+  it('toEventCohortCountRows counts each person once per event cohort when a path repeats an event', () => {
+    // A → B → A: the 100 persons on this path all have event A (once) and B (once).
+    // Counting per occurrence would tally A twice (200) and push '%' to 200%.
+    const repeatGroup = {
+      targetCohortId: 1,
+      targetCohortCount: 100,
+      totalPathwaysCount: 100,
+      pathways: [{ path: '1-2-1', personCount: 100 }],
+    }
+    const rows = toEventCohortCountRows(repeatGroup, eventCodes)
+    const a = rows.find(r => r['Event Cohort'] === 'A')
+    const b = rows.find(r => r['Event Cohort'] === 'B')
+    expect(a?.['Count']).toBe(100)
+    expect(a?.['%']).toBe(100)
+    expect(b?.['Count']).toBe(100)
+  })
+
   it('toDistinctEventCountRows includes zero bucket', () => {
     const rows = toDistinctEventCountRows(group, eventCodes)
     const zero = rows.find(r => r['Distinct Events'] === 0)

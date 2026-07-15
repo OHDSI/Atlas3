@@ -57,7 +57,12 @@ export function toEventCohortCountRows(
 ): Array<Record<string, string | number>> {
   const tally = new Map<string, number>()
   for (const p of group.pathways) {
-    const steps = p.path.split('-')
+    // Count each person once per event cohort. A treatment pathway can repeat
+    // an event (e.g. A → B → A when repeats are allowed), but this report is
+    // person-level — its '%' divides by totalPathwaysCount (persons) — so a
+    // recurring event must not add personCount more than once per path.
+    // Mirrors the deduping in toDistinctEventCountRows below.
+    const steps = new Set(p.path.split('-'))
     for (const s of steps) {
       const c = eventCodes.find(x => x.code === Number(s))
       if (!c || c.isCombo) continue
