@@ -250,6 +250,7 @@
                 icon="mdi-delete"
                 size="sm"
                 variant="text"
+                density="compact"
                 data-testid="remove-source-concept-attribute"
                 @click="removeSourceConcept"
               />
