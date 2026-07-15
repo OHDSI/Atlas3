@@ -31,7 +31,13 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+
+    /* Restrict ambient @types auto-inclusion to Node globals only.
+       Without this, vue-tsc pulls in @types/echarts (a stale pre-v5 stub for
+       the echarts package, which now ships its own types) as a global
+       declaration, which shadows echarts' own `EChartsOption` export. */
+    "types": ["node"]
   },
   "include": [
     "src/**/*.ts",

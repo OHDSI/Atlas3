@@ -13,7 +13,6 @@
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <v-form
-      ref="formRef"
       v-model="formValid"
       @submit.prevent="handleSubmit"
     >
@@ -116,7 +115,6 @@ const emit = defineEmits<{
   save: [tag: Tag]
 }>()
 
-const formRef = ref()
 const formValid = ref(false)
 const saving = ref(false)
 const errors = ref<Record<string, string>>({})

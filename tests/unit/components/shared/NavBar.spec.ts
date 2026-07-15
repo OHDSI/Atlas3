@@ -8,6 +8,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { ref } from 'vue'
 import NavBar from '@/components/shared/NavBar.vue'
+import { generatePluginMenuItems } from '@/plugins/navigation/PluginMenuIntegration.ts'
 
 // Mock vue-router
 const mockPush = vi.fn()
@@ -78,8 +79,9 @@ vi.mock('@/config/auth.config', () => ({
 }))
 
 // Mock plugin-related modules
-vi.mock('@/plugins/navigation/PluginMenuIntegration.ts', () => ({
-  generatePluginMenuItems: () => []
+vi.mock('@/plugins/navigation/PluginMenuIntegration.ts', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  generatePluginMenuItems: vi.fn(() => [])
 }))
 
 vi.mock('@/plugins/core/PluginRegistry', () => ({
@@ -146,6 +148,7 @@ function mountComponent(options = {}) {
 describe('NavBar', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(generatePluginMenuItems).mockReturnValue([])
   })
 
   describe('Component Rendering', () => {
@@ -233,6 +236,24 @@ describe('NavBar', () => {
       const firstLink = wrapper.find('.nav-bar__nav-link')
       expect(firstLink.exists()).toBe(true)
       expect(firstLink.attributes('href')).toBe('#')
+    })
+
+    it('renders plugin items anchored between core items', async () => {
+      vi.mocked(generatePluginMenuItems).mockReturnValue([
+        {
+          id: 'p1-tools',
+          pluginId: 'p1',
+          name: 'Tools',
+          route: '/plugins/p1/tools',
+          order: 1,
+          visible: true,
+          insertAfter: 'datasources',
+        },
+      ])
+      const wrapper = mountComponent()
+      await flushPromises()
+      const labels = wrapper.findAll('.nav-bar__nav-list .nav-bar__nav-link').map((a) => a.text())
+      expect(labels.indexOf('Tools')).toBe(labels.findIndex((l) => /data/i.test(l)) + 1)
     })
   })
 

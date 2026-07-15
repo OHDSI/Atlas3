@@ -64,10 +64,12 @@ describe('CardinalityEditor', () => {
     }
     const wrapper = createWrapper(cardinality)
 
-    // Check that the select has the correct value
-    const typeSelect = wrapper.find('[aria-label="Cardinality Type"]')
-    expect(typeSelect.exists()).toBe(true)
-    expect(typeSelect.element.value).toBe('AT_LEAST')
+    // Check that the select has the correct value. VSelect's visible input
+    // displays the translated option label, not the raw model value, so
+    // assert against the component's modelValue prop instead of DOM text.
+    const typeSelect = wrapper.findAllComponents({ name: 'VSelect' })[0]
+    expect(typeSelect?.exists()).toBe(true)
+    expect(typeSelect?.props('modelValue')).toBe('AT_LEAST')
 
     // Check count input
     const countInput = wrapper.find('[aria-label="Count"]')
@@ -167,11 +169,13 @@ describe('CardinalityEditor', () => {
 
   it('should display all counting method options', () => {
     const wrapper = createWrapper()
-    const methodSelect = wrapper.find('[aria-label="Counting Method"]')
+    const methodSelect = wrapper.findAllComponents({ name: 'VSelect' })[1]
 
-    // Just verify the select exists and has the correct value attribute
-    expect(methodSelect.exists()).toBe(true)
-    expect(methodSelect.element.value).toBe('ALL')
+    // Verify the select exists and has the correct underlying value. VSelect's
+    // visible input displays the translated option label, not the raw model
+    // value, so assert against the component's modelValue prop instead.
+    expect(methodSelect?.exists()).toBe(true)
+    expect(methodSelect?.props('modelValue')).toBe('ALL')
   })
 
   it('should emit update when counting method changes', async () => {
@@ -197,14 +201,15 @@ describe('CardinalityEditor', () => {
   it('should initialize with default values when no cardinality provided', () => {
     const wrapper = createWrapper()
 
-    // Check that the default values are displayed
-    const typeSelect = wrapper.find('[aria-label="Cardinality Type"]')
-    expect(typeSelect.element.value).toBe('AT_LEAST')
+    // Check that the default values are displayed. VSelect's visible input
+    // shows the translated option label, not the raw model value, so assert
+    // against the component's modelValue prop instead of DOM text.
+    const selects = wrapper.findAllComponents({ name: 'VSelect' })
+    expect(selects[0]?.props('modelValue')).toBe('AT_LEAST')
 
     const countInput = wrapper.find('[aria-label="Count"]')
     expect(countInput.element.value).toBe('1')
 
-    const methodSelect = wrapper.find('[aria-label="Counting Method"]')
-    expect(methodSelect.element.value).toBe('ALL')
+    expect(selects[1]?.props('modelValue')).toBe('ALL')
   })
 })
