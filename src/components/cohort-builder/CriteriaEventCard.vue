@@ -167,31 +167,33 @@
           v-if="showTemporal"
           class="end-window-section mt-2"
         >
-          <div
+          <AtlasMenu
             v-if="event.endTemporalWindow"
-            class="end-window-editor"
-            data-testid="end-window-editor-wrapper"
+            :close-on-content-click="false"
+            location="end"
           >
-            <div class="d-flex align-center justify-space-between mb-2">
-              <span class="text-subtitle-2">
-                {{ t('components.eventCard.endWindowLabel', 'End window') }}
+            <template #activator="{ props: menuProps }">
+              <span data-testid="end-window-chip">
+                <TemporalFilterChip
+                  v-bind="menuProps"
+                  :label="`${t('components.eventCard.endWindowLabel', 'End window').value}: ${formatTemporalWindowDisplay(event.endTemporalWindow)}`"
+                  @close="removeEndTemporalWindow"
+                />
               </span>
-              <AtlasIconButton
-                v-bind="{ ariaLabel: t('components.eventCard.removeEndWindow', 'Remove end-date constraint').value }"
-                icon="mdi-close"
-                size="sm"
-                variant="text"
-                density="compact"
-                data-testid="remove-end-window"
-                @click="removeEndTemporalWindow"
-              />
-            </div>
-            <TemporalWindowEditor
-              :model-value="event.endTemporalWindow"
-              data-testid="end-window-editor"
-              @update:model-value="updateEndTemporalWindow"
-            />
-          </div>
+            </template>
+            <v-card
+              class="temporal-window-menu"
+              style="min-width: 500px"
+            >
+              <v-card-text class="pa-3">
+                <TemporalWindowEditor
+                  :model-value="event.endTemporalWindow"
+                  data-testid="end-window-editor"
+                  @update:model-value="updateEndTemporalWindow"
+                />
+              </v-card-text>
+            </v-card>
+          </AtlasMenu>
           <AtlasButton
             v-else
             size="sm"
