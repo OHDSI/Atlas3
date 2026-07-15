@@ -488,12 +488,13 @@
       v-if="conceptSetsStore.editorOpen"
       :model-value="conceptSetsStore.editorOpen"
       :concept-set="conceptSetsStore.currentSet"
+      embedded
       @update:model-value="
         value => {
           if (!value) conceptSetsStore.closeEditor()
         }
       "
-      @save="handleConceptSetSaved"
+      @apply="handleConceptSetApplied"
     />
 
     <AtlasSnackbar
@@ -630,6 +631,7 @@ import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { ensureUniqueConceptSetId, hasNumericConceptSetId } from '@/utils/concept-set-id'
+import { updateConceptSetUsages } from '@/utils/concept-set-usages'
 import { resolveCriteriaTargetEvent } from '@/utils/criteria-target'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
@@ -1837,12 +1839,11 @@ async function handleEditConceptSet(conceptSet: {
 
   // Use the embedded concept set items directly (don't fetch from API)
   // The concept set is embedded in the cohort definition with all its items
-  conceptSetsStore.currentSet = {
+  conceptSetsStore.openEmbeddedEditor({
     id: conceptSet.id,
     name: conceptSet.name,
     items: (conceptSet.items || []) as ConceptSetItem[],
-  }
-  conceptSetsStore.editorOpen = true
+  })
 }
 
 /**
@@ -1870,22 +1871,35 @@ function handleCreateNewConceptSet() {
 }
 
 /**
- * Called when a concept set is saved in the editor
- * This updates the cohort definition with the saved concept set
+ * Called when the embedded editor applies its changes. The editor worked on a
+ * disposable clone, so nothing reached the cohort yet — write the result into
+ * every usage of the concept set id, which flips the unsaved-changes snapshot.
  */
-function handleConceptSetSaved() {
-  // After save, the store.currentSet should hold the saved concept set
-  const conceptSet = conceptSetsStore.currentSet
-  if (!conceptSet || (!selectedCriteriaContext.value && !pendingConceptSetCallback.value)) return
+function handleConceptSetApplied(set: { id?: number | string; name: string; items?: unknown[] }) {
+  const items = JSON.parse(JSON.stringify(set.items ?? [])) as ConceptSetItem[]
 
-  // Copy the entire concept set including items into the cohort definition
-  const conceptSetRef: ConceptSetReference = {
-    id: conceptSet.id!,
-    name: conceptSet.name,
-    items: conceptSet.items || [],
+  if (set.id !== undefined && set.id !== null) {
+    const updated: ConceptSetReference = { id: set.id, name: set.name, items }
+    updateConceptSetUsages(
+      {
+        entryEvents: entryEvents.value,
+        additionalCriteria: additionalCriteria.value,
+        inclusionRules: inclusionRules.value,
+        exitCriteria: exitCriteria.value,
+        censoringCriteria: censoringCriteria.value,
+      },
+      updated
+    )
+    entryEvents.value = [...entryEvents.value]
+    inclusionRules.value = [...inclusionRules.value]
+    if (additionalCriteria.value) additionalCriteria.value = { ...additionalCriteria.value }
+    exitCriteria.value = { ...exitCriteria.value }
+    censoringCriteria.value = [...censoringCriteria.value]
   }
 
-  assignConceptSetToContext(conceptSetRef)
+  if (selectedCriteriaContext.value || pendingConceptSetCallback.value) {
+    assignConceptSetToContext({ id: set.id ?? 0, name: set.name, items })
+  }
 }
 
 /**
