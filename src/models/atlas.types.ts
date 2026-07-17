@@ -188,7 +188,7 @@ export interface AtlasEndStrategy {
     Offset: number
   }
   CustomEra?: {
-    DrugCodesetId: number
+    DrugCodesetId: number | undefined
     GapDays: number
     Offset: number
   }

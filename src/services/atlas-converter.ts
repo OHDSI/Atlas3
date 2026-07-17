@@ -15,12 +15,12 @@ import type {
   AtlasCriteria,
   AtlasInclusionRule,
   AtlasConcept,
-  ConceptSetItem,
   AtlasCriteriaTypeObject,
   AtlasConceptSetItem,
   AtlasEndStrategy,
   AtlasGroup,
 } from '@/models/atlas.types'
+import type { ConceptSetItem } from '@/models/concept-set.types'
 
 interface AtlasJSON {
   expressionType?: string
@@ -82,6 +82,29 @@ export const TYPE_EXCLUDE_KEYS: Partial<Record<CriteriaType, string>> = {
 }
 
 // CRITICAL: Preserves zero-count cardinality using ?? operator
+/**
+ * Transforms an Atlas concept set item to the internal format.
+ * Handles the mapping from nested CONCEPT_* fields to flat conceptId, conceptName, etc.
+ * Uses empty string defaults for optional fields to ensure type compatibility.
+ */
+function mapAtlasConceptSetItemToInternal(
+  item: AtlasConceptSetItem
+): ConceptSetItem {
+  return {
+    conceptId: item.concept.CONCEPT_ID,
+    conceptName: item.concept.CONCEPT_NAME,
+    domainId: item.concept.DOMAIN_ID ?? '',
+    vocabularyId: item.concept.VOCABULARY_ID ?? '',
+    conceptClassId: item.concept.CONCEPT_CLASS_ID ?? '',
+    standardConcept: item.concept.STANDARD_CONCEPT ?? null,
+    conceptCode: item.concept.CONCEPT_CODE ?? '',
+    invalidReason: item.concept.INVALID_REASON ?? null,
+    includeDescendants: item.includeDescendants ?? false,
+    isExcluded: item.isExcluded ?? false,
+    includeMapped: item.includeMapped ?? false,
+  }
+}
+
 export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
   return {
     expressionType: cohort.expressionType ?? 'SIMPLE_EXPRESSION',
@@ -245,7 +268,7 @@ function convertExitCriteriaToAtlas(
   if (exit.strategy === 'CONTINUOUS_DRUG') {
     return {
       CustomEra: {
-        DrugCodesetId: exit.conceptSet?.id as number ?? 0,
+        DrugCodesetId: typeof exit.conceptSet?.id === 'number' ? exit.conceptSet.id : undefined,
         GapDays: exit.persistenceWindow ?? 0,
         Offset: exit.offset ?? 0,
         ...(exit.surveillanceWindow != null ? { DaysSupplyOverride: exit.surveillanceWindow } : {}),
@@ -550,18 +573,28 @@ export function parseConceptAttribute(
 /**
  * Parse an Atlas 2.x `*CS` concept-set attribute (e.g. `VisitTypeCS: { CodesetId, IsExclusion }`)
  * into a Atlas3 ConceptSetAttribute. Returns undefined if the field is missing or empty.
+ * Looks up full concept set from conceptSets if available, otherwise creates stub.
  */
 export function parseConceptSetAttribute(
   attributeKey: string,
-  raw: unknown
+  raw: unknown,
+  conceptSets?: TransformedConceptSet[]
 ): EventAttribute | undefined {
   if (!raw || typeof raw !== 'object') return undefined
   const obj = raw as { CodesetId?: number | string | null; IsExclusion?: boolean }
   if (obj.CodesetId === undefined || obj.CodesetId === null) return undefined
+  if (typeof obj.CodesetId !== 'number') return undefined
+  
+  const codesetId = obj.CodesetId
+  const conceptSet =
+    conceptSets
+      ? conceptSets.find(cs => cs.id === codesetId)
+      : undefined
+  
   return {
     type: 'conceptSet',
     attributeKey: attributeKey as import('@/models/event.types').ConceptAttributeKey,
-    conceptSet: { id: obj.CodesetId, name: '' },
+    conceptSet: conceptSet || { id: codesetId, name: '' },
     ...(obj.IsExclusion ? { isExclusion: true } : {}),
   }
 }
@@ -767,6 +800,14 @@ function convertAttributeToAtlas(attr: EventAttribute): Record<string, unknown> 
 }
 
 export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefinition> {
+  // Transform concept sets upfront to internal format
+  const transformedConceptSets = atlas.ConceptSets?.map(cs => ({
+    id: cs.id,
+    name: cs.name,
+    items:
+      cs.expression?.items?.map(mapAtlasConceptSetItemToInternal) || [],
+  })) || []
+
   return {
     expressionType: atlas.expressionType,
     cdmVersionRange: atlas.cdmVersionRange,
@@ -782,13 +823,13 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
         : undefined,
     censoringCriteria:
       atlas.CensoringCriteria && atlas.CensoringCriteria.length > 0
-        ? atlas.CensoringCriteria.map(e => convertAtlasToEvent(e, atlas.ConceptSets))
+        ? atlas.CensoringCriteria.map(e => convertAtlasToEvent(e, transformedConceptSets))
         : undefined,
 
-    exitCriteria: atlas.EndStrategy ? convertAtlasEndStrategy(atlas.EndStrategy) : undefined,
+    exitCriteria: atlas.EndStrategy ? convertAtlasEndStrategy(atlas.EndStrategy, transformedConceptSets) : undefined,
 
     entryEvents:
-      atlas.PrimaryCriteria?.CriteriaList?.map(e => convertAtlasToEvent(e, atlas.ConceptSets)) ||
+      atlas.PrimaryCriteria?.CriteriaList?.map(e => convertAtlasToEvent(e, transformedConceptSets)) ||
       [],
     observationPeriod: atlas.PrimaryCriteria?.ObservationWindow
       ? {
@@ -817,12 +858,12 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
           'ALL') as QualifyingLimit,
         ...(typeof ac.Count === 'number' ? { count: ac.Count } : {}),
         events: [
-          ...ac.CriteriaList.map((e: AtlasCriteria) => convertAtlasToEvent(e, atlas.ConceptSets)),
-          ...(ac.DemographicCriteriaList?.map(dc => convertDemographicCriteriaToEvent(dc)) ?? []),
+          ...ac.CriteriaList.map((e: AtlasCriteria) => convertAtlasToEvent(e, transformedConceptSets)),
+          ...(ac.DemographicCriteriaList?.map(dc => convertDemographicCriteriaToEvent(dc, transformedConceptSets)) ?? []),
         ],
         ...(ac.Groups && ac.Groups.length > 0
           ? {
-              nestedGroups: ac.Groups.map(g => convertAtlasGroupToGroup(g, atlas.ConceptSets)),
+              nestedGroups: ac.Groups.map(g => convertAtlasGroupToGroup(g, transformedConceptSets)),
             }
           : {}),
       }
@@ -839,10 +880,10 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
         const expr = rule.expression
         const directEvents = [
           ...((expr?.CriteriaList ?? []).map((e: AtlasCriteria) =>
-            convertAtlasToEvent(e, atlas.ConceptSets)
+            convertAtlasToEvent(e, transformedConceptSets)
           )),
           ...(((expr?.DemographicCriteriaList as Array<Record<string, unknown>> | undefined) ?? []).map(
-            dc => convertDemographicCriteriaToEvent(dc)
+            dc => convertDemographicCriteriaToEvent(dc, transformedConceptSets)
           )),
         ]
         const hasGroups = !!(expr?.Groups && expr.Groups.length > 0)
@@ -857,7 +898,7 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
         if (hasGroups) {
           criteriaGroups.push(
             ...(expr!.Groups as import('@/models/atlas.types').AtlasGroup[]).map(g =>
-              convertAtlasGroupToGroup(g, atlas.ConceptSets)
+              convertAtlasGroupToGroup(g, transformedConceptSets)
             )
           )
         }
@@ -869,25 +910,7 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
           criteriaGroups,
         }
       }) || [],
-    conceptSets:
-      atlas.ConceptSets?.map(cs => ({
-        id: cs.id,
-        name: cs.name,
-        items:
-          cs.expression?.items?.map((item: AtlasConceptSetItem) => ({
-            conceptId: item.concept.CONCEPT_ID,
-            conceptName: item.concept.CONCEPT_NAME,
-            domainId: item.concept.DOMAIN_ID,
-            vocabularyId: item.concept.VOCABULARY_ID,
-            conceptClassId: item.concept.CONCEPT_CLASS_ID,
-            standardConcept: item.concept.STANDARD_CONCEPT,
-            conceptCode: item.concept.CONCEPT_CODE,
-            invalidReason: item.concept.INVALID_REASON,
-            includeDescendants: item.includeDescendants ?? false,
-            isExcluded: item.isExcluded ?? false,
-            includeMapped: item.includeMapped ?? false,
-          })) || [],
-      })) || [],
+    conceptSets: transformedConceptSets,
   }
 }
 
@@ -906,7 +929,7 @@ interface AtlasGroupShape {
  */
 function convertAtlasGroupToGroup(
   group: AtlasGroupShape,
-  conceptSets?: AtlasConceptSet[]
+  conceptSets?: TransformedConceptSet[]
 ): CriteriaGroup {
   const nestedGroups = (group.Groups ?? []).map(g => convertAtlasGroupToGroup(g, conceptSets))
   return {
@@ -915,15 +938,21 @@ function convertAtlasGroupToGroup(
     count: group.Count,
     events: [
       ...(group.CriteriaList?.map((e: AtlasCriteria) => convertAtlasToEvent(e, conceptSets)) || []),
-      ...((group.DemographicCriteriaList ?? []).map(dc => convertDemographicCriteriaToEvent(dc))),
+      ...((group.DemographicCriteriaList ?? []).map(dc => convertDemographicCriteriaToEvent(dc, conceptSets))),
     ],
     ...(nestedGroups.length > 0 ? { nestedGroups } : {}),
   }
 }
 
+interface TransformedConceptSet {
+  id: number | string
+  name: string
+  items: ConceptSetItem[]
+}
+
 function convertAtlasToEvent(
   atlasEvent: AtlasCriteria,
-  conceptSets?: AtlasConceptSet[]
+  conceptSets?: TransformedConceptSet[]
 ): CohortEvent {
   let criteriaType: string
   let criteriaObj: Record<string, unknown>
@@ -966,33 +995,7 @@ function convertAtlasToEvent(
   const event: CohortEvent = {
     id: generateId(),
     criteriaType: criteriaType as CriteriaType,
-    conceptSet: conceptSet
-      ? {
-          id: conceptSet.id,
-          name: conceptSet.name,
-          items:
-            conceptSet.expression?.items?.map(
-              (item: {
-                concept: AtlasConcept
-                includeDescendants?: boolean
-                isExcluded?: boolean
-                includeMapped?: boolean
-              }) => ({
-                conceptId: item.concept.CONCEPT_ID,
-                conceptName: item.concept.CONCEPT_NAME,
-                domainId: item.concept.DOMAIN_ID,
-                vocabularyId: item.concept.VOCABULARY_ID,
-                conceptClassId: item.concept.CONCEPT_CLASS_ID,
-                standardConcept: item.concept.STANDARD_CONCEPT,
-                conceptCode: item.concept.CONCEPT_CODE,
-                invalidReason: item.concept.INVALID_REASON,
-                includeDescendants: item.includeDescendants ?? false,
-                isExcluded: item.isExcluded ?? false,
-                includeMapped: item.includeMapped ?? false,
-              })
-            ) || [],
-        }
-      : undefined,
+    conceptSet: conceptSet || undefined,
     cardinality: (() => {
       interface AtlasEventWithOccurrence {
         Occurrence?: {
@@ -1027,7 +1030,7 @@ function convertAtlasToEvent(
     attributes: [],
   }
 
-  event.attributes = extractAttributesFromCriteria(criteriaObj)
+  event.attributes = extractAttributesFromCriteria(criteriaObj, conceptSets)
 
   const sourceKey = SOURCE_CONCEPT_KEYS[event.criteriaType]
   if (sourceKey && typeof criteriaObj[sourceKey] === 'number') {
@@ -1136,16 +1139,17 @@ function convertAtlasToEvent(
 }
 
 function convertDemographicCriteriaToEvent(
-  demographicCriteria: Record<string, unknown>
+  demographicCriteria: Record<string, unknown>,
+  conceptSets?: TransformedConceptSet[]
 ): CohortEvent {
   return {
     id: generateId(),
     criteriaType: 'Demographic',
-    attributes: extractAttributesFromCriteria(demographicCriteria),
+    attributes: extractAttributesFromCriteria(demographicCriteria, conceptSets),
   }
 }
 
-function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): EventAttribute[] {
+function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>, conceptSets?: TransformedConceptSet[]): EventAttribute[] {
   const attributes: EventAttribute[] = []
 
   if (criteriaObj.Age && typeof criteriaObj.Age === 'object' && criteriaObj.Age !== null) {
@@ -1187,7 +1191,7 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     )
   }
   {
-    const cs = parseConceptSetAttribute('genderCs', criteriaObj.GenderCS)
+    const cs = parseConceptSetAttribute('genderCs', criteriaObj.GenderCS, conceptSets)
     if (cs) attributes.push(cs)
   }
 
@@ -1202,7 +1206,7 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     )
   }
   {
-    const cs = parseConceptSetAttribute('raceCs', criteriaObj.RaceCS)
+    const cs = parseConceptSetAttribute('raceCs', criteriaObj.RaceCS, conceptSets)
     if (cs) attributes.push(cs)
   }
 
@@ -1221,7 +1225,7 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     )
   }
   {
-    const cs = parseConceptSetAttribute('ethnicityCs', criteriaObj.EthnicityCS)
+    const cs = parseConceptSetAttribute('ethnicityCs', criteriaObj.EthnicityCS, conceptSets)
     if (cs) attributes.push(cs)
   }
 
@@ -1240,7 +1244,7 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     )
   }
   {
-    const cs = parseConceptSetAttribute('conditionTypeCs', criteriaObj.ConditionTypeCS)
+    const cs = parseConceptSetAttribute('conditionTypeCs', criteriaObj.ConditionTypeCS, conceptSets)
     if (cs) attributes.push(cs)
   }
 
@@ -1259,7 +1263,7 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     )
   }
   {
-    const cs = parseConceptSetAttribute('conditionStatusCs', criteriaObj.ConditionStatusCS)
+    const cs = parseConceptSetAttribute('conditionStatusCs', criteriaObj.ConditionStatusCS, conceptSets)
     if (cs) attributes.push(cs)
   }
 
@@ -1440,7 +1444,7 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     )
   }
   {
-    const cs = parseConceptSetAttribute('visitTypeCs', criteriaObj.VisitTypeCS)
+    const cs = parseConceptSetAttribute('visitTypeCs', criteriaObj.VisitTypeCS, conceptSets)
     if (cs) attributes.push(cs)
   }
 
@@ -1459,7 +1463,7 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     )
   }
   {
-    const cs = parseConceptSetAttribute('providerSpecialtyCs', criteriaObj.ProviderSpecialtyCS)
+    const cs = parseConceptSetAttribute('providerSpecialtyCs', criteriaObj.ProviderSpecialtyCS, conceptSets)
     if (cs) attributes.push(cs)
   }
 
@@ -1520,22 +1524,24 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     )
   }
   {
-    const cs = parseConceptSetAttribute('periodTypeCs', criteriaObj.PeriodTypeCS)
+    const cs = parseConceptSetAttribute('periodTypeCs', criteriaObj.PeriodTypeCS, conceptSets)
     if (cs) attributes.push(cs)
   }
 
   // VisitDetailTypeCS - Concept set (VisitDetail)
   {
-    const cs = parseConceptSetAttribute('visitDetailTypeCs', criteriaObj.VisitDetailTypeCS)
+    const cs = parseConceptSetAttribute('visitDetailTypeCs', criteriaObj.VisitDetailTypeCS, conceptSets)
     if (cs) attributes.push(cs)
   }
 
   // PlaceOfServiceLocation - numeric reference (LocationRegion CodesetId)
   if (typeof criteriaObj.PlaceOfServiceLocation === 'number') {
+    const codesetId = criteriaObj.PlaceOfServiceLocation
+    const conceptSet = conceptSets?.find(cs => cs.id === codesetId)
     attributes.push({
       type: 'conceptSet',
       attributeKey: 'placeOfServiceLocation',
-      conceptSet: { id: criteriaObj.PlaceOfServiceLocation as number, name: '' },
+      conceptSet: conceptSet || { id: codesetId, name: '' },
     } as EventAttribute)
   }
 
@@ -1574,7 +1580,7 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
       )
     }
     const csAttrKey = attrKey + 'Cs'
-    const csVal = parseConceptSetAttribute(csAttrKey, criteriaObj[csKey])
+    const csVal = parseConceptSetAttribute(csAttrKey, criteriaObj[csKey], conceptSets)
     if (csVal) attributes.push(csVal)
   }
 
@@ -1752,7 +1758,10 @@ function convertCensorWindowFromAtlas(atlasCw: Record<string, unknown>): CensorW
   return cw
 }
 
-function convertAtlasEndStrategy(es: AtlasEndStrategy): import('@/models/cohort.types').ExitCriteria {
+function convertAtlasEndStrategy(
+  es: AtlasEndStrategy,
+  conceptSets?: TransformedConceptSet[]
+): import('@/models/cohort.types').ExitCriteria {
   if (es.DateOffset) {
     return {
       strategy: 'FIXED_DURATION',
@@ -1761,9 +1770,15 @@ function convertAtlasEndStrategy(es: AtlasEndStrategy): import('@/models/cohort.
     }
   }
   if (es.CustomEra) {
+    const drugCodesetId = es.CustomEra.DrugCodesetId
+    const conceptSet =
+      typeof drugCodesetId === 'number' && conceptSets
+        ? conceptSets.find(cs => cs.id === drugCodesetId)
+        : undefined
+
     return {
       strategy: 'CONTINUOUS_DRUG',
-      conceptSet: { id: es.CustomEra.DrugCodesetId, name: '' },
+      conceptSet: conceptSet || (typeof drugCodesetId === 'number' ? { id: drugCodesetId, name: '' } : undefined),
       persistenceWindow: es.CustomEra.GapDays ?? 0,
       offset: es.CustomEra.Offset ?? 0,
       surveillanceWindow: (es.CustomEra as Record<string, unknown>).DaysSupplyOverride as number | undefined,

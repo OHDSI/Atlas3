@@ -28,6 +28,7 @@
           :disabled="disabled"
           @validation-error="handleEventPersistenceValidation"
           @select-drug-concept-set="$emit('select-drug-concept-set')"
+          @edit-drug-concept-set="$emit('edit-drug-concept-set', $event)"
         />
       </div>
 
@@ -105,6 +106,7 @@ const emit = defineEmits<{
   'validation-error': [errors: ValidationError[]]
   'select-drug-concept-set': []
   'select-censoring-concept-set': []
+  'edit-drug-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
 }>()
 
 // Use computed properties with getters/setters instead of bidirectional watchers
