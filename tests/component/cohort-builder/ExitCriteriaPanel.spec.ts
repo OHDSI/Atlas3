@@ -146,13 +146,15 @@ describe('ExitCriteriaPanel', () => {
   it('should pass concept sets to sub-components', () => {
     const wrapper = createWrapper({ conceptSets: mockConceptSets })
 
-    // EventPersistenceSelector and CensoringEventsEditor should receive conceptSets
+    // EventPersistenceSelector and CensoringEventsEditor components should exist
     const eventPersistence = wrapper.findComponent({ name: 'EventPersistenceSelector' })
     const censoringEvents = wrapper.findComponent({ name: 'CensoringEventsEditor' })
 
-    if (eventPersistence.exists()) {
-      expect(eventPersistence.props('conceptSets')).toEqual(mockConceptSets)
-    }
+    // Verify both components are rendered
+    expect(eventPersistence.exists()).toBe(true)
+    expect(censoringEvents.exists()).toBe(true)
+    
+    // CensoringEventsEditor should receive conceptSets prop
     if (censoringEvents.exists()) {
       expect(censoringEvents.props('conceptSets')).toEqual(mockConceptSets)
     }

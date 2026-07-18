@@ -293,7 +293,8 @@ describe('CohortToolbarStatus', () => {
     it('should emit toolbar action events correctly', async () => {
       // Description update events removed — see header note above.
       const wrapper = mountComponent({
-        conceptSetCount: 3,
+        totalConceptSets: 3,
+        unusedConceptSetCount: 1,
         validationCount: 5,
         isValidating: false
       })
