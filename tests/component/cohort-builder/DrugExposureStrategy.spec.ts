@@ -127,7 +127,7 @@ describe('DrugExposureStrategy', () => {
       surveillanceWindow: 7
     }
 
-    let wrapper = mount(DrugExposureStrategy, {
+    const wrapper = mount(DrugExposureStrategy, {
       global: {
         plugins: [vuetify],
       },
@@ -137,7 +137,7 @@ describe('DrugExposureStrategy', () => {
     })
 
     // Chip should exist
-    let chip = wrapper.findComponent({ name: 'VChip' })
+    const chip = wrapper.findComponent({ name: 'VChip' })
     expect(chip.exists()).toBe(true)
 
     // Now re-render without concept set (simulating parent clearing it)

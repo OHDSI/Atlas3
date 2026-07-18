@@ -144,7 +144,6 @@ const { tv } = useI18n()
 
 interface Props {
   strategy: ExitCriteria
-  conceptSets?: Array<{ id: number | string; name: string; items?: unknown[] }>
   disabled?: boolean
 }
 
