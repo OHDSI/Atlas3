@@ -72,7 +72,9 @@ describe('ConceptSetsListDialog interactions', () => {
   it('emits view with the concept set when the row icon button is clicked', async () => {
     const wrapper = mountIt()
     const buttons = wrapper.findAll('.stub-icon-btn')
-    expect(buttons.length).toBe(2)
+    // 2 concept sets × 2 action buttons per row (edit + delete) = 4 buttons total
+    expect(buttons.length).toBe(4)
+    // First button in first row is the edit button for the first concept set
     await buttons[0]!.trigger('click')
     const emits = wrapper.emitted('view')
     expect(emits).toBeTruthy()

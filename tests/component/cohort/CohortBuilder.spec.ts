@@ -232,7 +232,8 @@ describe('CohortBuilder', () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
     const vm = wrapper.vm as any
-    expect(vm).toHaveProperty('conceptSetCount')
+    expect(vm).toHaveProperty('totalConceptSets')
+    expect(vm).toHaveProperty('unusedConceptSetCount')
     expect(vm).toHaveProperty('validationCount')
     expect(vm).toHaveProperty('canSave')
     expect(vm).toHaveProperty('handleCancel')
@@ -1105,7 +1106,7 @@ describe('CohortBuilder', () => {
       name: 'Inline',
       items: [{ concept: { CONCEPT_ID: 99, CONCEPT_NAME: 'X' } }],
     })
-    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 5, name: 'Inline' })
+    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 0, name: 'Inline' })
     expect(setup.isConceptSetDialogOpen).toBe(false)
   })
 
@@ -1127,7 +1128,7 @@ describe('CohortBuilder', () => {
     })
     await setup.handleConceptSetSelected({ id: 6, name: 'NeedsFetch' })
     expect(fetchSpy).toHaveBeenCalledWith(6)
-    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 6, name: 'Fetched' })
+    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 0, name: 'Fetched' })
   })
 
   // ---------------------------------------------------------------------------

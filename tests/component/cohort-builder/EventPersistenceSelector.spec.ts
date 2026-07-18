@@ -61,8 +61,8 @@ describe('EventPersistenceSelector', () => {
   it('should show "Select Concept Set" button when no concept set selected', () => {
     const wrapper = createWrapper()
 
-    // Should have selectedConceptSet as null
-    expect(wrapper.vm.selectedConceptSet).toBeNull()
+    // Should have selectedConceptSet as undefined (placeholder)
+    expect(wrapper.vm.selectedConceptSet).toBeUndefined()
 
     // Button should exist (with plus icon)
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
