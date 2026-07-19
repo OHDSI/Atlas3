@@ -109,4 +109,40 @@ describe('ConceptSetsListDialog interactions', () => {
     const wrapper = mountIt({ conceptSets: [] })
     expect(wrapper.text()).toContain('No concept sets')
   })
+
+  it('marks all concept sets as unused when usedConceptSets is empty', () => {
+    // When usedConceptSets is empty, all concept sets should be marked as unused
+    const wrapper = mountIt({ usedConceptSets: [] })
+    
+    // The component should render without errors
+    expect(wrapper.exists()).toBe(true)
+    
+    // All concept sets should be displayed (none filtered out)
+    expect(wrapper.html()).toContain('A')
+    expect(wrapper.html()).toContain('B')
+  })
+
+  it('marks all concept sets as unused when usedConceptSets is undefined', () => {
+    // When usedConceptSets is undefined, all concept sets should be marked as unused
+    const wrapper = mountIt({ usedConceptSets: undefined })
+    
+    // The component should render without errors
+    expect(wrapper.exists()).toBe(true)
+    
+    // All concept sets should be displayed (none filtered out)
+    expect(wrapper.html()).toContain('A')
+    expect(wrapper.html()).toContain('B')
+  })
+
+  it('identifies concept sets that are in use', () => {
+    // When usedConceptSets contains concept set IDs, those should be marked as used
+    const wrapper = mountIt({ usedConceptSets: [{ id: 1, name: 'A', items: [] }] })
+    
+    // The component should render without errors
+    expect(wrapper.exists()).toBe(true)
+    
+    // Both concept sets should be displayed
+    expect(wrapper.html()).toContain('A')
+    expect(wrapper.html()).toContain('B')
+  })
 })

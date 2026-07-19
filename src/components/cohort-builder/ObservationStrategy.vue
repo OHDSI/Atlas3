@@ -19,7 +19,9 @@
 
 <script setup lang="ts">
 import { AtlasIcon } from '@/components/ui'
+import { onMounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import type { ValidationError } from '@/models/validation.types'
 
 const { tv } = useI18n()
 
@@ -31,6 +33,15 @@ withDefaults(
     disabled: false,
   }
 )
+
+const emit = defineEmits<{
+  'validation-error': [errors: ValidationError[]]
+}>()
+
+// Emit empty validation errors on mount (placeholder for future validation rules)
+onMounted(() => {
+  emit('validation-error', [])
+})
 </script>
 
 <style scoped>

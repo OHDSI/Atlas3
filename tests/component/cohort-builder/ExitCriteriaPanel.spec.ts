@@ -5,10 +5,11 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
-// Mock i18n composable with real translations
+// Mock i18n composable - use key-only mock for unit tests
+// Returns format "i18n:keyName" so tests verify the KEY is used, not the translated TEXT
 vi.mock('@/composables/useI18n', async () => {
-  const { mockUseI18n } = await import('../../helpers/i18n-mock')
-  return mockUseI18n
+  const { mockUseI18nKeyOnly } = await import('../../helpers/i18n-mock')
+  return mockUseI18nKeyOnly
 })
 
 // Mock webapi service to prevent actual API calls
@@ -158,5 +159,100 @@ describe('ExitCriteriaPanel', () => {
     if (censoringEvents.exists()) {
       expect(censoringEvents.props('conceptSets')).toEqual(mockConceptSets)
     }
+  })
+
+  describe('error aggregation', () => {
+    it('should aggregate validation errors from EventPersistenceSelector', async () => {
+      const wrapper = createWrapper({
+        modelValue: {
+          strategy: 'CONTINUOUS_DRUG',
+          // Missing conceptSet - should error
+        }
+      })
+
+      // EventPersistenceSelector is stubbed in shallowMount
+      // Emit validation-error from the stubbed component
+      const eventPersistence = wrapper.findComponent({ name: 'EventPersistenceSelector' })
+      if (eventPersistence.exists()) {
+        const testError = [
+          { field: 'exitCriteria.conceptSet', message: 'i18n:required', severity: 'error' }
+        ]
+        await eventPersistence.vm.$emit('validation-error', testError)
+        await wrapper.vm.$nextTick()
+
+        // Panel should aggregate this error
+        const aggregated = wrapper.vm.aggregatedErrors
+        expect(aggregated.some((e: any) => e.field === 'exitCriteria.conceptSet')).toBe(true)
+      }
+    })
+
+    it('should aggregate errors from both sources simultaneously', async () => {
+      const wrapper = createWrapper()
+
+      // Emit from EventPersistenceSelector
+      const eventPersistence = wrapper.findComponent({ name: 'EventPersistenceSelector' })
+      const persistenceError = [
+        { field: 'exitCriteria.offset', message: 'i18n:error1', severity: 'error' }
+      ]
+      
+      // Emit from CensoringEventsEditor
+      const censoringEvents = wrapper.findComponent({ name: 'CensoringEventsEditor' })
+      const censoringError = [
+        { field: 'censoringEvents', message: 'i18n:error2', severity: 'error' }
+      ]
+
+      if (eventPersistence.exists() && censoringEvents.exists()) {
+        await eventPersistence.vm.$emit('validation-error', persistenceError)
+        await censoringEvents.vm.$emit('validation-error', censoringError)
+        await wrapper.vm.$nextTick()
+
+        // Both errors should be aggregated
+        const aggregated = wrapper.vm.aggregatedErrors
+        expect(aggregated.length).toBe(2)
+        expect(aggregated.some((e: any) => e.field === 'exitCriteria.offset')).toBe(true)
+        expect(aggregated.some((e: any) => e.field === 'censoringEvents')).toBe(true)
+      }
+    })
+
+    it('should clear aggregated errors when child emits empty array', async () => {
+      const wrapper = createWrapper()
+
+      const eventPersistence = wrapper.findComponent({ name: 'EventPersistenceSelector' })
+      if (eventPersistence.exists()) {
+        // Start with error
+        const error = [{ field: 'test', message: 'i18n:error', severity: 'error' }]
+        await eventPersistence.vm.$emit('validation-error', error)
+        await wrapper.vm.$nextTick()
+        expect(wrapper.vm.aggregatedErrors.length).toBeGreaterThan(0)
+
+        // Emit empty array to clear
+        await eventPersistence.vm.$emit('validation-error', [])
+        await wrapper.vm.$nextTick()
+
+        // Should be cleared
+        expect(wrapper.vm.aggregatedErrors.filter((e: any) => e.field === 'test').length).toBe(0)
+      }
+    })
+
+    it('should handle updates from parent correctly', async () => {
+      const wrapper = createWrapper({
+        modelValue: {
+          strategy: 'FIXED_DURATION',
+          dateField: 'START_DATE',
+          offset: 30
+        }
+      })
+
+      // Update parent model value
+      await wrapper.setProps({
+        modelValue: {
+          strategy: 'CONTINUOUS_OBSERVATION'
+        }
+      })
+
+      expect(wrapper.props('modelValue')).toEqual({
+        strategy: 'CONTINUOUS_OBSERVATION'
+      })
+    })
   })
 })

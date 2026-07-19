@@ -38,54 +38,21 @@
       </div>
 
       <!-- Strategy-specific Component -->
-      <ObservationStrategy
-        v-if="modelValue.strategy === 'CONTINUOUS_OBSERVATION'"
-        :disabled="disabled"
-      />
-      <FixedDurationStrategy
-        v-else-if="modelValue.strategy === 'FIXED_DURATION'"
+      <component
+        :is="currentStrategyComponent"
         :strategy="modelValue"
         :disabled="disabled"
-      />
-      <DrugExposureStrategy
-        v-else-if="modelValue.strategy === 'CONTINUOUS_DRUG'"
-        :strategy="modelValue"
-        :disabled="disabled"
+        @validation-error="$emit('validation-error', $event)"
         @select-drug-concept-set="$emit('select-drug-concept-set')"
         @edit-drug-concept-set="$emit('edit-drug-concept-set', $event)"
       />
-    </div>
-
-    <!-- Validation errors -->
-    <div
-      v-if="validationErrors.length > 0"
-      class="event-persistence-selector__validation"
-    >
-      <div class="event-persistence-selector__validation-header">
-        <AtlasIcon
-          icon="mdi-alert-circle-outline"
-          size="18"
-          class="event-persistence-selector__validation-icon"
-        />
-        <span class="event-persistence-selector__validation-title">
-          {{ tv('common.validationErrors', 'Validation errors') }}
-        </span>
-      </div>
-      <ul class="event-persistence-selector__validation-list">
-        <li
-          v-for="error in validationErrors"
-          :key="error.field"
-        >
-          <strong>{{ error.field }}:</strong> {{ error.message }}
-        </li>
-      </ul>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon } from '@/components/ui'
-import { computed } from 'vue'
+import { computed, type Component } from 'vue'
+import { AtlasButton } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import FixedDurationStrategy from './FixedDurationStrategy.vue'
 import DrugExposureStrategy from './DrugExposureStrategy.vue'
@@ -108,89 +75,54 @@ const emit = defineEmits<{
   'edit-drug-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
 }>()
 
+// Strategy component lookup
+const strategyComponents: Record<ExitStrategy, Component> = {
+  'CONTINUOUS_OBSERVATION': ObservationStrategy,
+  'FIXED_DURATION': FixedDurationStrategy,
+  'CONTINUOUS_DRUG': DrugExposureStrategy,
+}
+
+// Compute the current strategy component based on modelValue.strategy
+const currentStrategyComponent = computed(() => {
+  return strategyComponents[props.modelValue.strategy]
+})
+
 // Change strategy - initialize with default values for the new strategy
 function changeStrategy(newStrategy: ExitStrategy) {
-  const updated: ExitCriteria =
-    newStrategy === 'CONTINUOUS_OBSERVATION'
-      ? { strategy: 'CONTINUOUS_OBSERVATION' }
-      : newStrategy === 'FIXED_DURATION'
-        ? { strategy: 'FIXED_DURATION', dateField: 'START_DATE', offset: 0 }
-        : {
-            strategy: 'CONTINUOUS_DRUG',
-            persistenceWindow: 30,
-            offset: 0,
-            surveillanceWindow: 7,
-          }
+  let updated: ExitCriteria
+
+  switch (newStrategy) {
+    case 'CONTINUOUS_OBSERVATION':
+      updated = { strategy: 'CONTINUOUS_OBSERVATION' }
+      break
+    case 'FIXED_DURATION':
+      updated = { strategy: 'FIXED_DURATION', dateField: 'START_DATE', offset: 0 }
+      break
+    case 'CONTINUOUS_DRUG':
+      updated = {
+        strategy: 'CONTINUOUS_DRUG',
+        persistenceWindow: 30,
+        offset: 0,
+        surveillanceWindow: 7,
+      }
+      break
+    default:
+      // Emit validation error for unknown strategy type
+      emit('validation-error', [
+        {
+          field: 'strategy',
+          message: `Unknown strategy type: ${String(newStrategy)}`,
+          severity: 'error',
+        },
+      ])
+      return
+  }
 
   emit('update:modelValue', updated)
-  validateFields(updated)
+  // Emit empty validation errors to clear prior strategy's errors
+  emit('validation-error', [])
 }
 
-// Validate fields based on strategy
-function validateFields(exitCriteria: ExitCriteria) {
-  const errors: ValidationError[] = []
-
-  if (exitCriteria.strategy === 'FIXED_DURATION') {
-    if (exitCriteria.offset === undefined) {
-      errors.push({
-        field: 'exitCriteria.offset',
-        message: tv(
-          'exitCriteria.validation.offsetRequired',
-          'Offset is required for fixed duration strategy'
-        ),
-        severity: 'error',
-      })
-    }
-  }
-
-  if (exitCriteria.strategy === 'CONTINUOUS_DRUG') {
-    if (!exitCriteria.conceptSet || exitCriteria.conceptSet.id == null) {
-      errors.push({
-        field: 'exitCriteria.conceptSet',
-        message: tv(
-          'exitCriteria.validation.conceptSetRequired',
-          'Drug concept set required for this strategy'
-        ),
-        severity: 'warning',
-      })
-    }
-  }
-
-  emit('validation-error', errors)
-}
-
-// Compute validation errors
-const validationErrors = computed(() => {
-  const errors: ValidationError[] = []
-
-  if (props.modelValue.strategy === 'FIXED_DURATION') {
-    if (props.modelValue.offset === undefined) {
-      errors.push({
-        field: 'exitCriteria.offset',
-        message: tv(
-          'exitCriteria.validation.offsetRequired',
-          'Offset is required for fixed duration strategy'
-        ),
-        severity: 'error',
-      })
-    }
-  }
-
-  if (props.modelValue.strategy === 'CONTINUOUS_DRUG') {
-    if (!props.modelValue.conceptSet || props.modelValue.conceptSet.id == null) {
-      errors.push({
-        field: 'exitCriteria.conceptSet',
-        message: tv(
-          'exitCriteria.validation.conceptSetRequired',
-          'Drug concept set required for this strategy'
-        ),
-        severity: 'warning',
-      })
-    }
-  }
-
-  return errors
-})
 </script>
 
 <style scoped>

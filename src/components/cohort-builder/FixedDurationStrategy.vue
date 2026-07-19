@@ -45,8 +45,10 @@
 
 <script setup lang="ts">
 import { AtlasIcon, AtlasRow, AtlasCol, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ExitCriteria } from '@/models/cohort.types'
+import type { ValidationError } from '@/models/validation.types'
 
 const { tv } = useI18n()
 
@@ -55,9 +57,13 @@ interface Props {
   disabled?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   disabled: false,
 })
+
+const emit = defineEmits<{
+  'validation-error': [errors: ValidationError[]]
+}>()
 
 // Date field options
 const dateFieldOptions = [
@@ -65,9 +71,53 @@ const dateFieldOptions = [
   { value: 'END_DATE', title: tv('columns.endDate', 'End Date') },
 ]
 
-// Validation rules
+// Reusable validation helper
+function checkNonNegative(value: number | undefined): boolean {
+  return value === undefined || value >= 0
+}
+
+// Collect all validation errors for this strategy
+function getValidationErrors(): ValidationError[] {
+  const errors: ValidationError[] = []
+
+  // Check 1: offset required
+  if (props.strategy.offset === undefined) {
+    errors.push({
+      field: 'exitCriteria.offset',
+      message: tv(
+        'exitCriteria.validation.offsetRequired',
+        'Offset is required for fixed duration strategy'
+      ),
+      severity: 'error',
+    })
+  } 
+  // Check 2: offset non-negative
+  else if (!checkNonNegative(props.strategy.offset)) {
+    errors.push({
+      field: 'exitCriteria.offset',
+      message: tv(
+        'exitCriteria.validation.offsetNonNegative',
+        'Offset values must be non-negative'
+      ),
+      severity: 'error',
+    })
+  }
+
+  return errors
+}
+
+// Watch strategy object for changes and emit all validation errors
+watch(
+  () => props.strategy,
+  () => {
+    emit('validation-error', getValidationErrors())
+  },
+  { immediate: true, deep: true }
+)
+
+// Validation rule for Vuetify field
 const nonNegativeRule = (value: number) => {
-  if (value < 0) {
+  if (!checkNonNegative(value)) {
     return tv('exitCriteria.validation.offsetNonNegative', 'Offset values must be non-negative')
   }
   return true
