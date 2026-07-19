@@ -1,4 +1,3 @@
-// @vitest-environment node
 import { describe, it, expect } from 'vitest'
 import { extractRoutes } from '../emit-route-manifest.mjs'
 
@@ -69,15 +68,11 @@ describe('extractRoutes', () => {
 
 describe('extractRoutes silent-drop awareness', () => {
   it('captures routes that lack a meta block (regression for silent drops)', () => {
-    // Today, the regex requires meta. This test pins the current behavior
-    // and will start failing if a future engineer makes meta optional —
-    // at which point this expectation should flip.
     const fixture = `
     export const routes = [
       { path: '/no-meta', name: 'no-meta', component: () => null },
     ]`
     const out = extractRoutes(fixture)
-    // Document current behavior: routes without meta are dropped.
     expect(out.find(r => r.name === 'no-meta')).toBeUndefined()
   })
 })
@@ -93,8 +88,6 @@ describe('route counter does not double-count redirect targets', () => {
         meta: { agentVisible: true, agentLabel: 'Cohorts' } },
     ]`
     const out = extractRoutes(fixture)
-    // Only the second entry has path+name+meta; the first is a bare
-    // redirect with no `name:` of its own. We expect 1 extracted route.
     expect(out).toHaveLength(1)
     expect(out[0].name).toBe('cohorts')
   })
