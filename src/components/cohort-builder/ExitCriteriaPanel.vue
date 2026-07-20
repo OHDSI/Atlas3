@@ -1,24 +1,5 @@
 <template>
   <div class="exit-criteria-panel">
-    <!-- Legacy Conflict Warning — quieter inline warning row,
-         matches the rest of the modernised design. -->
-    <div
-      v-if="hasLegacyConflict"
-      class="exit-criteria-panel__warning"
-    >
-      <AtlasIcon
-        icon="mdi-alert-outline"
-        size="18"
-        class="exit-criteria-panel__warning-icon"
-      />
-      <span>{{
-        t(
-          'exitCriteria.warnings.legacyConflict',
-          'This cohort has both legacy and new exit criteria formats. Displaying Atlas format.'
-        ).value
-      }}</span>
-    </div>
-
     <div class="panel-content">
       <!-- Event Persistence Section -->
       <div class="section mb-6">
@@ -130,21 +111,6 @@ const aggregatedErrors = computed(() => {
   return [...eventPersistenceErrors.value, ...censoringEventsErrors.value]
 })
 
-// Detect legacy conflict
-// (Both old-style ExitCriteria and new CensoringCriteria exist)
-const hasLegacyConflict = computed(() => {
-  // Check if we have both legacy exitCriteria fields AND new Atlas fields
-  const hasLegacyExitCriteria =
-    props.modelValue &&
-    (props.modelValue.strategy !== 'CONTINUOUS_OBSERVATION' ||
-      props.modelValue.offset !== undefined ||
-      props.modelValue.conceptSet !== undefined)
-
-  const hasNewAtlasFields = localCensoringEvents.value.length > 0
-
-  return hasLegacyExitCriteria && hasNewAtlasFields
-})
-
 // Validation handlers
 function handleEventPersistenceValidation(errors: ValidationError[]) {
   eventPersistenceErrors.value = errors
@@ -183,28 +149,6 @@ function handleRemoveCensoringEvent(_index: number) {
 
 .section {
   margin-bottom: 24px;
-}
-
-/* Legacy-conflict warning — soft amber accent matching the
- * validation-error block pattern. */
-.exit-criteria-panel__warning {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 12px 16px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(var(--v-theme-warning, 255, 193, 7), 0.08);
-  border-left: 3px solid rgb(var(--v-theme-warning, 255, 193, 7));
-  font-size: 13px;
-  line-height: 1.5;
-  color: rgb(var(--v-theme-on-surface));
-}
-
-.exit-criteria-panel__warning-icon {
-  color: rgb(var(--v-theme-warning, 255, 193, 7));
-  flex-shrink: 0;
-  margin-top: 1px;
 }
 
 .exit-criteria-panel__validation {

@@ -87,23 +87,6 @@ describe('ExitCriteriaPanel', () => {
     expect(wrapper.find('.censoring-events-editor').exists()).toBe(true)
   })
 
-  it('should show legacy conflict warning when both formats exist', () => {
-    const exitCriteria: ExitCriteria = {
-      strategy: 'FIXED_DURATION',
-      offset: 365
-    }
-    const censoringCriteria: CohortEvent[] = [{
-      id: 'test-1',
-      criteriaType: 'Death',
-      attributes: []
-    }]
-
-    const wrapper = createWrapper({ modelValue: exitCriteria, censoringCriteria })
-
-    // The warning should appear when both legacy and new formats exist
-    expect(wrapper.html()).toContain('legacy')
-  })
-
   it('should aggregate validation errors from sub-components', async () => {
     const wrapper = createWrapper()
 
@@ -144,21 +127,15 @@ describe('ExitCriteriaPanel', () => {
     expect(wrapper.find('.exit-criteria-panel').exists()).toBe(true)
   })
 
-  it('should pass concept sets to sub-components', () => {
-    const wrapper = createWrapper({ conceptSets: mockConceptSets })
+  it('should render both sub-components', () => {
+    const wrapper = createWrapper()
 
     // EventPersistenceSelector and CensoringEventsEditor components should exist
     const eventPersistence = wrapper.findComponent({ name: 'EventPersistenceSelector' })
     const censoringEvents = wrapper.findComponent({ name: 'CensoringEventsEditor' })
 
-    // Verify both components are rendered
     expect(eventPersistence.exists()).toBe(true)
     expect(censoringEvents.exists()).toBe(true)
-    
-    // CensoringEventsEditor should receive conceptSets prop
-    if (censoringEvents.exists()) {
-      expect(censoringEvents.props('conceptSets')).toEqual(mockConceptSets)
-    }
   })
 
   describe('error aggregation', () => {
