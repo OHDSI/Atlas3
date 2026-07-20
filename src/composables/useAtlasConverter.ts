@@ -95,10 +95,12 @@ export function useAtlasConverter() {
   }
 
   /**
-   * Read file and import
+   * Read a file's raw text after validating it. Returns null (and sets
+   * conversionError) if the file is rejected or unreadable. Callers that
+   * want the parsed cohort should use importFromFile; callers that want to
+   * show the JSON to the user first (the JSON editor) use this.
    */
-  async function importFromFile(file: File): Promise<Partial<CohortDefinition> | null> {
-    // Validate file before processing
+  async function readFileText(file: File): Promise<string | null> {
     const validation = validateFile(file)
     if (!validation.valid) {
       conversionError.value = validation.error || 'Invalid file'
@@ -107,10 +109,8 @@ export function useAtlasConverter() {
 
     return new Promise(resolve => {
       const reader = new FileReader()
-      reader.onload = async e => {
-        const text = e.target?.result as string
-        const cohort = await importFromAtlas(text)
-        resolve(cohort)
+      reader.onload = e => {
+        resolve((e.target?.result as string) ?? '')
       }
       reader.onerror = () => {
         conversionError.value = 'Failed to read file'
@@ -120,6 +120,18 @@ export function useAtlasConverter() {
     })
   }
 
+  /**
+   * Read file and import
+   */
+  async function importFromFile(file: File): Promise<Partial<CohortDefinition> | null> {
+    conversionError.value = ''
+
+    const text = await readFileText(file)
+    if (text === null) return null
+
+    return importFromAtlas(text)
+  }
+
   return {
     isConverting,
     conversionError,
@@ -127,5 +139,6 @@ export function useAtlasConverter() {
     exportToAtlas,
     downloadAtlasJSON,
     importFromFile,
+    readFileText,
   }
 }

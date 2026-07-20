@@ -23,18 +23,25 @@ vi.mock('@/composables/useI18n', async () => {
 
 // downloadAtlasJSON spy lifted out via hoisted so test bodies can assert on
 // the call site without re-importing the composable internals.
-const { downloadAtlasJSONSpy, exportToAtlasSpy, importFromFileSpy, conversionErrorRef } =
-  vi.hoisted(() => ({
-    downloadAtlasJSONSpy: vi.fn(),
-    exportToAtlasSpy: vi.fn(() => '{"mocked":true}'),
-    importFromFileSpy: vi.fn(),
-    conversionErrorRef: { value: null as string | null },
-  }))
+const {
+  downloadAtlasJSONSpy,
+  exportToAtlasSpy,
+  importFromFileSpy,
+  importFromAtlasSpy,
+  conversionErrorRef,
+} = vi.hoisted(() => ({
+  downloadAtlasJSONSpy: vi.fn(),
+  exportToAtlasSpy: vi.fn(() => '{"mocked":true}'),
+  importFromFileSpy: vi.fn(),
+  importFromAtlasSpy: vi.fn(),
+  conversionErrorRef: { value: null as string | null },
+}))
 
 vi.mock('@/composables/useAtlasConverter', () => {
   return {
     useAtlasConverter: () => ({
       importFromFile: importFromFileSpy,
+      importFromAtlas: importFromAtlasSpy,
       downloadAtlasJSON: downloadAtlasJSONSpy,
       exportToAtlas: exportToAtlasSpy,
       conversionError: conversionErrorRef,
@@ -181,6 +188,7 @@ const childStubs = {
   CohortToolbarStatus: true,
   ConceptSetsListDialog: true,
   ValidationMessagesDialog: true,
+  CohortJsonDialog: true,
   TagSelectionDialog: true,
   'router-link': true,
 } as const
@@ -1687,5 +1695,123 @@ describe('CohortBuilder', () => {
     await setup.handleExportCopy()
     expect(setup.errorMessage).toBe('Export failed: cannot serialize')
     expect(setup.showError).toBe(true)
+  })
+
+  // ---------------------------------------------------------------------------
+  // JSON dialog: view / edit / overwrite the expression
+  // ---------------------------------------------------------------------------
+
+  /** A cohort as importFromAtlas would hand it back: a procedure entry event. */
+  const importedProcedureCohort = () => ({
+    name: 'Name From Pasted JSON',
+    description: 'Description from pasted JSON',
+    entryEvents: [
+      {
+        id: 'imported-evt',
+        criteriaType: 'ProcedureOccurrence',
+        conceptSet: { id: 7, name: 'Coronary Artery Bypass', items: [] },
+        attributes: [],
+      },
+    ],
+    // No inclusionRules key at all — importing a JSON that omits a section
+    // must clear it, not leave the previous cohort's rules behind.
+    exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' },
+    observationPeriod: { priorDays: 365, postDays: 30 },
+    qualifyingLimit: 'FIRST',
+  })
+
+  /** Emit `apply` from the stubbed CohortJsonDialog, as the real dialog does. */
+  async function applyJson(wrapper: ReturnType<typeof createWrapper>, json: string) {
+    const dialog = wrapper.findComponent({ name: 'CohortJsonDialog' })
+    dialog.vm.$emit('apply', json)
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+  }
+
+  it('openJsonDialog seeds the dialog with the exported Atlas JSON', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'My Cohort'
+
+    ;(wrapper.vm as any).openJsonDialog()
+    await wrapper.vm.$nextTick()
+
+    expect(exportToAtlasSpy).toHaveBeenCalled()
+    expect(setup.showJsonDialog).toBe(true)
+    expect(setup.jsonDialogSource).toBe('{"mocked":true}')
+  })
+
+  it('applying JSON overwrites the expression but keeps name and description', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+
+    // Loaded cohort: one condition entry event and one inclusion rule.
+    expect(setup.cohortName).toBe('Existing Cohort')
+    expect(setup.inclusionRules).toHaveLength(1)
+
+    importFromAtlasSpy.mockResolvedValueOnce(importedProcedureCohort())
+    await applyJson(wrapper, '{"PrimaryCriteria":{}}')
+
+    expect(importFromAtlasSpy).toHaveBeenCalledWith('{"PrimaryCriteria":{}}')
+    // Expression replaced...
+    expect(setup.entryEvents).toHaveLength(1)
+    expect(setup.entryEvents[0].criteriaType).toBe('ProcedureOccurrence')
+    expect(setup.observationPeriod).toEqual({ priorDays: 365, postDays: 30 })
+    // ...identity preserved, even though the pasted JSON carried its own name.
+    expect(setup.cohortName).toBe('Existing Cohort')
+    expect(setup.cohortDescription).toBe('A loaded cohort')
+  })
+
+  it('applying JSON that omits a section clears it', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    expect(setup.inclusionRules).toHaveLength(1)
+
+    importFromAtlasSpy.mockResolvedValueOnce(importedProcedureCohort())
+    await applyJson(wrapper, '{}')
+
+    // The pasted JSON has no InclusionRules, so the loaded rule is gone.
+    expect(setup.inclusionRules).toEqual([])
+  })
+
+  it('applying JSON closes the dialog and reports success', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    ;(wrapper.vm as any).openJsonDialog()
+    await wrapper.vm.$nextTick()
+    expect(setup.showJsonDialog).toBe(true)
+
+    importFromAtlasSpy.mockResolvedValueOnce(importedProcedureCohort())
+    await applyJson(wrapper, '{}')
+
+    expect(setup.showJsonDialog).toBe(false)
+    expect(setup.showSuccess).toBe(true)
+  })
+
+  it('a failed import leaves the expression untouched and surfaces an error', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    ;(wrapper.vm as any).openJsonDialog()
+    await wrapper.vm.$nextTick()
+
+    const entryEventsBefore = setup.entryEvents
+    importFromAtlasSpy.mockResolvedValueOnce(null)
+    conversionErrorRef.value = 'Unexpected token }'
+
+    await applyJson(wrapper, '{ broken')
+
+    expect(setup.showError).toBe(true)
+    expect(setup.errorMessage).toContain('Unexpected token }')
+    // State untouched, dialog stays open so the user can fix the JSON.
+    expect(setup.entryEvents).toBe(entryEventsBefore)
+    expect(setup.showJsonDialog).toBe(true)
   })
 })

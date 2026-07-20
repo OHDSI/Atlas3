@@ -70,6 +70,7 @@
             @save="handleSave"
             @export-download="handleExportDownload"
             @export-copy="handleExportCopy"
+            @view-json="openJsonDialog"
           />
         </template>
       </AtlasActionToolbar>
@@ -87,6 +88,14 @@
       v-model="showValidationDialog"
       :warnings="validationWarnings"
       :severity-color="highestSeverityColor"
+    />
+
+    <cohort-json-dialog
+      v-model="showJsonDialog"
+      :json="jsonDialogSource"
+      :filename="exportFilename()"
+      :can-apply="!isPreviewingVersion"
+      @apply="handleApplyJson"
     />
 
     <!-- Step rail: groups the four sections as numbered steps so
@@ -640,6 +649,7 @@ import { ensureUniqueConceptSetId, hasNumericConceptSetId, hasRealConceptSetId, 
 import { updateConceptSetUsages, clearConceptSetUsages } from '@/utils/concept-set-usages'
 import { resolveCriteriaTargetEvent } from '@/utils/criteria-target'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
+import CohortJsonDialog from './CohortJsonDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import type { Tag } from '@/models/cohort.types'
@@ -686,7 +696,7 @@ const route = useRoute()
 const cohortStore = useCohortStore()
 const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
-const { importFromFile, downloadAtlasJSON, exportToAtlas, conversionError } = useAtlasConverter()
+const { importFromAtlas, downloadAtlasJSON, exportToAtlas, conversionError } = useAtlasConverter()
 const { t, tv } = useI18n()
 
 // Core cohort state
@@ -709,6 +719,10 @@ const showValidationDialog = ref(false)
 const showConceptSetsDialog = ref(false)
 const showVersionsDialog = ref(false)
 const showTagsDialog = ref(false)
+const showJsonDialog = ref(false)
+// Snapshot of the expression taken when the JSON dialog opens, so the
+// editor is not re-seeded under the user while they type.
+const jsonDialogSource = ref('')
 const showUnsavedDialog = ref(false)
 let pendingNavigation: (() => void) | null = null
 
@@ -773,7 +787,6 @@ const showError = ref(false)
 const errorMessage = ref('')
 const showSuccess = ref(false)
 const successMessage = ref('')
-const fileInput = ref<HTMLInputElement | null>(null)
 const isConfirmingNavigation = ref(false) // Flag to prevent double confirmation
 
 // Snapshot of the loaded/saved state for change detection
@@ -2229,50 +2242,59 @@ function gatherConceptSets(): ConceptSetReference[] {
 }
 
 // Atlas JSON Import/Export
-// @ts-expect-error - Planned feature, not yet implemented in UI
-async function _handleFileImport(event: Event) {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (!file) return
 
-  const importedCohort = await importFromFile(file)
+/**
+ * Overwrite the builder's expression state from an imported cohort.
+ *
+ * Expression only: name, description and tags are the identity of the
+ * cohort you are editing and survive the overwrite. Every expression
+ * field is written unconditionally (falling back to its empty default)
+ * so that importing a JSON that *omits* a section clears that section
+ * rather than leaving the previous cohort's leftovers behind.
+ */
+function applyImportedExpression(importedCohort: Partial<CohortDefinition>) {
+  // Cancel any pending validation during batch state update
+  cancelValidation()
 
-  if (conversionError.value) {
-    errorMessage.value = `Import failed: ${conversionError.value}`
+  entryEvents.value = importedCohort.entryEvents || []
+  additionalCriteria.value = importedCohort.additionalCriteria
+  inclusionRules.value = importedCohort.inclusionRules || []
+  exitCriteria.value = importedCohort.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
+  censorWindow.value = importedCohort.censorWindow ?? null
+  collapseSettings.value = importedCohort.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
+  censoringCriteria.value = importedCohort.censoringCriteria ?? []
+  observationPeriod.value = importedCohort.observationPeriod ?? { priorDays: 0, postDays: 0 }
+  qualifyingLimit.value = importedCohort.qualifyingLimit || 'ALL'
+  primaryCriteriaLimit.value = importedCohort.primaryCriteriaLimit
+  inclusionQualifyingLimit.value = importedCohort.inclusionQualifyingLimit || 'ALL'
+
+  // Trigger validation (composable handles debouncing)
+  triggerValidation()
+}
+
+/**
+ * Apply JSON edited in the JSON dialog. The result is left unsaved and
+ * dirty — the user still has to press Save, exactly like a hand edit.
+ */
+async function handleApplyJson(json: string) {
+  const importedCohort = await importFromAtlas(json)
+
+  if (!importedCohort || conversionError.value) {
+    errorMessage.value = tv('components.cohortBuilder.jsonImportFailed', 'Import failed: {error}', {
+      error: conversionError.value || tv('components.cohortBuilder.jsonInvalidExpression', 'Not a valid Atlas cohort expression'),
+    })
     showError.value = true
     return
   }
 
-  if (importedCohort) {
-    // Cancel any pending validation during batch state update
-    cancelValidation()
+  applyImportedExpression(importedCohort)
 
-    // Load imported data into state
-    cohortName.value = importedCohort.name || ''
-    cohortDescription.value = importedCohort.description || ''
-    entryEvents.value = importedCohort.entryEvents || []
-    additionalCriteria.value = importedCohort.additionalCriteria
-    inclusionRules.value = importedCohort.inclusionRules || []
-    exitCriteria.value = importedCohort.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
-    censorWindow.value = importedCohort.censorWindow ?? null
-    collapseSettings.value = importedCohort.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
-    censoringCriteria.value = importedCohort.censoringCriteria ?? []
-    observationPeriod.value = importedCohort.observationPeriod ?? { priorDays: 0, postDays: 0 }
-    qualifyingLimit.value = importedCohort.qualifyingLimit || 'ALL'
-    primaryCriteriaLimit.value = importedCohort.primaryCriteriaLimit
-    inclusionQualifyingLimit.value = importedCohort.inclusionQualifyingLimit || 'ALL'
-
-    // Trigger validation (composable handles debouncing)
-    triggerValidation()
-
-    successMessage.value = 'Atlas JSON imported successfully'
-    showSuccess.value = true
-  }
-
-  // Reset file input
-  if (fileInput.value) {
-    fileInput.value.value = ''
-  }
+  showJsonDialog.value = false
+  successMessage.value = tv(
+    'components.cohortBuilder.jsonApplied',
+    'Cohort JSON applied — review the builder, then save'
+  )
+  showSuccess.value = true
 }
 
 function buildExportCohort(): CohortDefinition {
@@ -2295,6 +2317,15 @@ function buildExportCohort(): CohortDefinition {
 function exportFilename(): string {
   const slug = cohortName.value.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'cohort'
   return `${slug}_cohort.json`
+}
+
+/**
+ * Open the JSON dialog, seeding it with the same Atlas JSON the export
+ * actions produce, so view / copy / download / edit all agree.
+ */
+function openJsonDialog() {
+  jsonDialogSource.value = exportToAtlas(buildExportCohort())
+  showJsonDialog.value = true
 }
 
 function handleExportDownload() {
@@ -2443,6 +2474,7 @@ defineExpose({
   handleSave,
   handleExportDownload,
   handleExportCopy,
+  openJsonDialog,
   // Existing expose (criteria editor / inclusion panel) is
   // re-declared here because defineExpose may only be called
   // once per component.
