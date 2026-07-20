@@ -50,6 +50,12 @@ module.exports = {
     'vue/component-api-style': 'off',
     'vue/one-component-per-file': 'off',
 
+    // Allow mutations on props when using shared reactive objects (Pinia stores).
+    // With modern Vue 3 + Pinia, direct mutations on object references passed as props
+    // are idiomatic and reactive. The strict no-mutating-props rule conflicts with
+    // this pattern, so we disable it completely.
+    'vue/no-mutating-props': 'off',
+
     // Atlas UI library — Phase 1 + 2 wrappers shipped, severity at 'warn'.
     // Uses vue/no-restricted-html-elements (NOT no-restricted-component-names) because
     // Vuetify components are globally auto-imported via vite-plugin-vuetify and appear

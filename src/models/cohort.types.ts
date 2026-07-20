@@ -103,11 +103,7 @@ export interface ExitCriteria {
   censoringEvents?: CohortEvent[] // Events that cause exit
 }
 
-export type ExitStrategy =
-  | 'CONTINUOUS_OBSERVATION'
-  | 'FIXED_DURATION'
-  | 'CONTINUOUS_DRUG'
-  | 'CUSTOM_EVENT'
+export type ExitStrategy = 'CONTINUOUS_OBSERVATION' | 'FIXED_DURATION' | 'CONTINUOUS_DRUG'
 
 export interface ConceptSetReference {
   id: number | string // Number from WebAPI, string (UUID) for client-side

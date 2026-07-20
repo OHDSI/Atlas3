@@ -387,8 +387,9 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   /**
    * Open editor for creating new concept set
    */
-  function openCreateEditor() {
+  function openCreateEditor(id?: number) {
     currentSet.value = {
+      id,
       name: '',
       items: [] as ConceptSetItem[],
     } as ConceptSet

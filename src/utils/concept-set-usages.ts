@@ -59,3 +59,60 @@ export function updateConceptSetUsages(
 
   return count
 }
+
+/**
+ * Clear all references to a deleted concept set ID from the expression.
+ * Sets the conceptSet property to undefined in all events that referenced it,
+ * and removes concept set attributes that referenced the deleted ID.
+ * Similar to legacy behavior where deleting a concept set resets all references to undefined.
+ */
+export function clearConceptSetUsages(
+  cohort: ConceptSetUsageHost,
+  deletedConceptSetId: number | string | undefined
+): number {
+  let count = 0
+
+  function clearEvent(event: CohortEvent) {
+    if (event.conceptSet?.id === deletedConceptSetId) {
+      event.conceptSet = undefined
+      count++
+    }
+    // Remove concept set attributes that referenced the deleted ID
+    // (can't set conceptSet to undefined since it's required on ConceptSetAttribute)
+    if (event.attributes) {
+      event.attributes = event.attributes.filter(attribute => {
+        if (attribute.type === 'conceptSet' && attribute.conceptSet?.id === deletedConceptSetId) {
+          count++
+          return false // Remove this attribute
+        }
+        return true
+      })
+    }
+    if (event.nestedCriteria) {
+      clearGroup(event.nestedCriteria)
+    }
+  }
+
+  function clearGroup(group: CriteriaGroup) {
+    group.events.forEach(clearEvent)
+    group.nestedGroups?.forEach(clearGroup)
+  }
+
+  cohort.entryEvents.forEach(clearEvent)
+  if (cohort.additionalCriteria) {
+    clearGroup(cohort.additionalCriteria)
+  }
+  for (const rule of cohort.inclusionRules) {
+    rule.criteriaGroups.forEach(clearGroup)
+  }
+  if (cohort.exitCriteria) {
+    if (cohort.exitCriteria.conceptSet?.id === deletedConceptSetId) {
+      cohort.exitCriteria.conceptSet = undefined
+      count++
+    }
+    cohort.exitCriteria.censoringEvents?.forEach(clearEvent)
+  }
+  cohort.censoringCriteria?.forEach(clearEvent)
+
+  return count
+}
