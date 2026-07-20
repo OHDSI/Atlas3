@@ -215,7 +215,7 @@ import { useUIStore } from '@/stores/ui'
 import { getAuthConfig } from '@/config/auth.config'
 import {
   generatePluginMenuItems,
-  type PluginMenuItem,
+  interleaveMenuItems,
 } from '@/plugins/navigation/PluginMenuIntegration.ts'
 import { pluginRegistry } from '@/plugins/core/PluginRegistry'
 import { pluginConfigService } from '@/services/PluginConfigService'
@@ -308,23 +308,17 @@ function getFilteredCoreNavigationItems(): NavigationItem[] {
 function loadPluginMenuItems() {
   try {
     const pluginMenuItems = generatePluginMenuItems()
-
-    // Start with filtered core navigation items based on plugin configuration
-    navigationItems.value = getFilteredCoreNavigationItems()
-
-    // Add plugin menu items to navigation
-    pluginMenuItems.forEach((pluginItem: PluginMenuItem) => {
-      if (pluginItem.visible) {
-        navigationItems.value.push({
-          id: pluginItem.id,
-          titleKey: pluginItem.name, // Use name directly as title
-          route: pluginItem.route,
-          visible: true,
-          active: false,
-        })
-      }
-    })
-
+    navigationItems.value = interleaveMenuItems(
+      getFilteredCoreNavigationItems(),
+      pluginMenuItems.filter((item) => item.visible),
+      (item) => ({
+        id: item.id,
+        titleKey: item.name,
+        route: item.route,
+        visible: true,
+        active: false,
+      })
+    )
     logger.debug('NavBar', 'Loaded plugin menu items', pluginMenuItems.length)
   } catch (error) {
     logger.error('NavBar', 'Failed to load plugin menu items', error)

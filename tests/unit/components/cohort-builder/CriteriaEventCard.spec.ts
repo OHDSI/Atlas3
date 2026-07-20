@@ -196,7 +196,7 @@ describe('CriteriaEventCard', () => {
       const wrapper = mountComponent()
 
       const newTemporalWindow = {
-        startWindow: { days: 30, beforeAfter: 'BEFORE' as const, referencePoint: 'INDEX_START' as const },
+        startWindow: { days: 30, beforeAfter: 'BEFORE' as const, useIndexEnd: false, useEventEnd: false },
       }
       await wrapper.vm.updateTemporalWindow(newTemporalWindow)
 

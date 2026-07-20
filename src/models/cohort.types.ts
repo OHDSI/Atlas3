@@ -64,6 +64,7 @@ export interface CohortEvent {
   restrictVisit?: boolean // Event must occur in same visit as index
   ignoreObservationPeriod?: boolean // Event can occur outside observation period
   dateAdjustment?: DateAdjustment
+  typeExclude?: boolean // bare CIRCE *TypeExclude flag with no accompanying type concepts
 }
 
 export interface InclusionRule {
@@ -102,11 +103,7 @@ export interface ExitCriteria {
   censoringEvents?: CohortEvent[] // Events that cause exit
 }
 
-export type ExitStrategy =
-  | 'CONTINUOUS_OBSERVATION'
-  | 'FIXED_DURATION'
-  | 'CONTINUOUS_DRUG'
-  | 'CUSTOM_EVENT'
+export type ExitStrategy = 'CONTINUOUS_OBSERVATION' | 'FIXED_DURATION' | 'CONTINUOUS_DRUG'
 
 export interface ConceptSetReference {
   id: number | string // Number from WebAPI, string (UUID) for client-side

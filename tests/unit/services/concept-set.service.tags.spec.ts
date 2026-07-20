@@ -23,8 +23,8 @@ describe('ConceptSetService tags', () => {
   })
 
   it('POSTs the raw tagId to /conceptset/{id}/tag/', async () => {
-    const ok = await assignTagToConceptSet(42, 7)
-    expect(ok).toBe(true)
+    const result = await assignTagToConceptSet(42, 7)
+    expect(result.success).toBe(true)
     const [url, options] = mockFetch.mock.calls[0]
     expect(url).toContain('/conceptset/42/tag/')
     expect(options.method).toBe('POST')
@@ -32,15 +32,34 @@ describe('ConceptSetService tags', () => {
   })
 
   it('DELETEs /conceptset/{id}/tag/{tagId}', async () => {
-    const ok = await unassignTagFromConceptSet(42, 7)
-    expect(ok).toBe(true)
+    const result = await unassignTagFromConceptSet(42, 7)
+    expect(result.success).toBe(true)
     const [url, options] = mockFetch.mock.calls[0]
     expect(url).toContain('/conceptset/42/tag/7')
     expect(options.method).toBe('DELETE')
   })
 
-  it('returns false when the request fails', async () => {
-    mockFetch.mockResolvedValue({ ok: false, status: 500, statusText: 'err' })
-    expect(await assignTagToConceptSet(1, 2)).toBe(false)
+  it('returns the server error message when the request fails', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'err',
+      text: async () => '',
+    })
+    const result = await assignTagToConceptSet(1, 2)
+    expect(result.success).toBe(false)
+    expect(result.error).toContain('err')
+  })
+
+  it('returns the server error message when unassigning fails', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'err',
+      text: async () => '',
+    })
+    const result = await unassignTagFromConceptSet(1, 2)
+    expect(result.success).toBe(false)
+    expect(result.error).toContain('err')
   })
 })

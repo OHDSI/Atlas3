@@ -34,6 +34,7 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    open: true,
     proxy: {
       // Proxy WebAPI requests to local WebAPI instance
       '/WebAPI': {

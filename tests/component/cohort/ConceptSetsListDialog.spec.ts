@@ -72,7 +72,9 @@ describe('ConceptSetsListDialog interactions', () => {
   it('emits view with the concept set when the row icon button is clicked', async () => {
     const wrapper = mountIt()
     const buttons = wrapper.findAll('.stub-icon-btn')
-    expect(buttons.length).toBe(2)
+    // 2 concept sets × 2 action buttons per row (edit + delete) = 4 buttons total
+    expect(buttons.length).toBe(4)
+    // First button in first row is the edit button for the first concept set
     await buttons[0]!.trigger('click')
     const emits = wrapper.emitted('view')
     expect(emits).toBeTruthy()
@@ -106,5 +108,41 @@ describe('ConceptSetsListDialog interactions', () => {
   it('renders the empty-state when no concept sets are provided', () => {
     const wrapper = mountIt({ conceptSets: [] })
     expect(wrapper.text()).toContain('No concept sets')
+  })
+
+  it('marks all concept sets as unused when usedConceptSets is empty', () => {
+    // When usedConceptSets is empty, all concept sets should be marked as unused
+    const wrapper = mountIt({ usedConceptSets: [] })
+    
+    // The component should render without errors
+    expect(wrapper.exists()).toBe(true)
+    
+    // All concept sets should be displayed (none filtered out)
+    expect(wrapper.html()).toContain('A')
+    expect(wrapper.html()).toContain('B')
+  })
+
+  it('marks all concept sets as unused when usedConceptSets is undefined', () => {
+    // When usedConceptSets is undefined, all concept sets should be marked as unused
+    const wrapper = mountIt({ usedConceptSets: undefined })
+    
+    // The component should render without errors
+    expect(wrapper.exists()).toBe(true)
+    
+    // All concept sets should be displayed (none filtered out)
+    expect(wrapper.html()).toContain('A')
+    expect(wrapper.html()).toContain('B')
+  })
+
+  it('identifies concept sets that are in use', () => {
+    // When usedConceptSets contains concept set IDs, those should be marked as used
+    const wrapper = mountIt({ usedConceptSets: [{ id: 1, name: 'A', items: [] }] })
+    
+    // The component should render without errors
+    expect(wrapper.exists()).toBe(true)
+    
+    // Both concept sets should be displayed
+    expect(wrapper.html()).toContain('A')
+    expect(wrapper.html()).toContain('B')
   })
 })

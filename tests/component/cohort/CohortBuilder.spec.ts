@@ -75,8 +75,8 @@ vi.mock('@/services/webapi', () => ({
     }),
   }),
   saveCohortDefinition: vi.fn().mockResolvedValue({ id: 99, name: 'Saved' }),
-  assignTagToCohort: vi.fn().mockResolvedValue(true),
-  unassignTagFromCohort: vi.fn().mockResolvedValue(true),
+  assignTagToCohort: vi.fn().mockResolvedValue({ success: true }),
+  unassignTagFromCohort: vi.fn().mockResolvedValue({ success: true }),
 }))
 
 vi.mock('@/services/concept-set.service', () => ({
@@ -240,7 +240,8 @@ describe('CohortBuilder', () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
     const vm = wrapper.vm as any
-    expect(vm).toHaveProperty('conceptSetCount')
+    expect(vm).toHaveProperty('totalConceptSets')
+    expect(vm).toHaveProperty('unusedConceptSetCount')
     expect(vm).toHaveProperty('validationCount')
     expect(vm).toHaveProperty('canSave')
     expect(vm).toHaveProperty('handleCancel')
@@ -983,22 +984,93 @@ describe('CohortBuilder', () => {
   })
 
   // ---------------------------------------------------------------------------
-  // handleConceptSetSaved (relies on store.currentSet)
+  // handleEditConceptSet / handleConceptSetApplied (embedded editor flow)
   // ---------------------------------------------------------------------------
 
-  it('handleConceptSetSaved bails out early when context is null', async () => {
+  it('handleEditConceptSet opens the editor on a clone, leaving cohort items untouched', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    const items = [{ conceptId: 1, includeDescendants: false }]
+    await setup.handleEditConceptSet({ id: 5, name: 'Embedded', items })
+    const { useConceptSetsStore } = await import('@/stores/concept-sets')
+    const store = useConceptSetsStore()
+    expect(store.editorOpen).toBe(true)
+    store.currentSet!.items.push({ conceptId: 2 } as any)
+    store.currentSet!.items[0]!.includeDescendants = true
+    expect(items).toEqual([{ conceptId: 1, includeDescendants: false }])
+  })
+
+  it('handleConceptSetApplied is a no-op without a matching usage or pending context', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
     const setup = getSetup(wrapper)
     setup.selectedCriteriaContext = null
-    // Populate store.currentSet so the function reaches its early-return on context
-    const { useConceptSetsStore } = await import('@/stores/concept-sets')
-    const store = useConceptSetsStore()
-    store.currentSet = { id: 9, name: 'x', items: [] } as any
-    expect(() => setup.handleConceptSetSaved()).not.toThrow()
+    expect(() => setup.handleConceptSetApplied({ id: 9, name: 'x', items: [] })).not.toThrow()
   })
 
-  it('handleConceptSetSaved assigns the saved concept set to entry-event context', async () => {
+  it('handleConceptSetApplied updates every usage of the id and marks the cohort dirty', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.selectedCriteriaContext = null
+    setup.entryEvents = [
+      {
+        id: 'evt-1',
+        criteriaType: 'X',
+        attributes: [],
+        conceptSet: { id: 7, name: 'Old', items: [] },
+      },
+      {
+        id: 'evt-2',
+        criteriaType: 'X',
+        attributes: [],
+        conceptSet: { id: 8, name: 'Other', items: [] },
+      },
+    ]
+    setup.inclusionRules = [
+      {
+        id: 'rule-1',
+        name: 'r',
+        criteriaGroups: [
+          {
+            id: 'g-1',
+            logicType: 'ALL',
+            events: [
+              {
+                id: 'evt-3',
+                criteriaType: 'X',
+                attributes: [],
+                conceptSet: { id: 7, name: 'Old', items: [] },
+              },
+            ],
+          },
+        ],
+      },
+    ]
+    setup.exitCriteria = {
+      strategy: 'CONTINUOUS_DRUG',
+      conceptSet: { id: 7, name: 'Old', items: [] },
+    }
+    await wrapper.vm.$nextTick()
+    setup.loadedSnapshot = setup.createStateSnapshot()
+    expect(setup.hasUnsavedChanges).toBe(false)
+
+    const newItems = [{ conceptId: 42 }]
+    setup.handleConceptSetApplied({ id: 7, name: 'Updated', items: newItems })
+
+    expect(setup.entryEvents[0].conceptSet).toEqual({ id: 7, name: 'Updated', items: newItems })
+    expect(setup.entryEvents[1].conceptSet).toEqual({ id: 8, name: 'Other', items: [] })
+    expect(setup.inclusionRules[0].criteriaGroups[0].events[0].conceptSet).toEqual({
+      id: 7,
+      name: 'Updated',
+      items: newItems,
+    })
+    expect(setup.exitCriteria.conceptSet).toEqual({ id: 7, name: 'Updated', items: newItems })
+    expect(setup.hasUnsavedChanges).toBe(true)
+  })
+
+  it('handleConceptSetApplied assigns the applied concept set to a pending entry-event context', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
     const setup = getSetup(wrapper)
@@ -1009,10 +1081,7 @@ describe('CohortBuilder', () => {
       groupIndex: 0,
       eventIndex: 0,
     }
-    const { useConceptSetsStore } = await import('@/stores/concept-sets')
-    const store = useConceptSetsStore()
-    store.currentSet = { id: 77, name: 'Saved Set', items: [] } as any
-    setup.handleConceptSetSaved()
+    setup.handleConceptSetApplied({ id: 77, name: 'Saved Set', items: [] })
     expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 77, name: 'Saved Set' })
   })
 
@@ -1045,7 +1114,7 @@ describe('CohortBuilder', () => {
       name: 'Inline',
       items: [{ concept: { CONCEPT_ID: 99, CONCEPT_NAME: 'X' } }],
     })
-    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 5, name: 'Inline' })
+    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 0, name: 'Inline' })
     expect(setup.isConceptSetDialogOpen).toBe(false)
   })
 
@@ -1067,7 +1136,7 @@ describe('CohortBuilder', () => {
     })
     await setup.handleConceptSetSelected({ id: 6, name: 'NeedsFetch' })
     expect(fetchSpy).toHaveBeenCalledWith(6)
-    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 6, name: 'Fetched' })
+    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 0, name: 'Fetched' })
   })
 
   // ---------------------------------------------------------------------------
@@ -1560,6 +1629,41 @@ describe('CohortBuilder', () => {
     const result = await setup.handleSave()
     expect(result).toEqual({})
     expect(setup.errorMessage).toBe('Failed to save cohort')
+    expect(setup.showError).toBe(true)
+  })
+
+  it('handleSave surfaces the server message when a tag assignment fails', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Savable'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    setup.handleTagsUpdate([{ id: 7, name: 'protected' }] as any)
+
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.assignTagToCohort).mockResolvedValueOnce({
+      success: false,
+      error: 'Tag group "Status" allows only one assignment',
+    })
+
+    await setup.handleSave()
+    expect(setup.errorMessage).toBe('Tag group "Status" allows only one assignment')
+    expect(setup.showError).toBe(true)
+  })
+
+  it('handleSave falls back to a per-tag message when unassignment fails without detail', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Savable'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    setup.loadedTags = [{ id: 9, name: 'old-tag' }]
+
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.unassignTagFromCohort).mockResolvedValueOnce({ success: false })
+
+    await setup.handleSave()
+    expect(setup.errorMessage).toBe('Failed to unassign tag "old-tag"')
     expect(setup.showError).toBe(true)
   })
 

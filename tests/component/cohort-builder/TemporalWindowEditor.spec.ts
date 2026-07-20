@@ -61,12 +61,14 @@ describe('TemporalWindowEditor', () => {
       startWindow: {
         days: 0,
         beforeAfter: 'AFTER',
-        referencePoint: 'INDEX_START',
+        useIndexEnd: false,
+        useEventEnd: false,
       },
       endWindow: {
         days: 90,
         beforeAfter: 'AFTER',
-        referencePoint: 'INDEX_START',
+        useIndexEnd: false,
+        useEventEnd: false,
       },
     }
     const wrapper = createWrapper(temporalWindow)
@@ -80,7 +82,8 @@ describe('TemporalWindowEditor', () => {
       startWindow: {
         days: null,
         beforeAfter: 'BEFORE',
-        referencePoint: 'INDEX_START',
+        useIndexEnd: false,
+        useEventEnd: false,
       },
     }
     const wrapper = createWrapper(temporalWindow)
@@ -94,12 +97,14 @@ describe('TemporalWindowEditor', () => {
       startWindow: {
         days: 0,
         beforeAfter: 'AFTER',
-        referencePoint: 'INDEX_START',
+        useIndexEnd: false,
+        useEventEnd: false,
       },
       endWindow: {
         days: 90,
         beforeAfter: 'AFTER',
-        referencePoint: 'INDEX_START',
+        useIndexEnd: false,
+        useEventEnd: false,
       },
     })
 
@@ -113,12 +118,14 @@ describe('TemporalWindowEditor', () => {
       startWindow: {
         days: 0,
         beforeAfter: 'AFTER',
-        referencePoint: 'INDEX_START',
+        useIndexEnd: false,
+        useEventEnd: false,
       },
       endWindow: {
         days: 90,
         beforeAfter: 'AFTER',
-        referencePoint: 'INDEX_START',
+        useIndexEnd: false,
+        useEventEnd: false,
       },
     })
 
@@ -132,7 +139,8 @@ describe('TemporalWindowEditor', () => {
       startWindow: {
         days: 30,
         beforeAfter: 'AFTER',
-        referencePoint: 'INDEX_START',
+        useIndexEnd: false,
+        useEventEnd: false,
       },
     })
 
@@ -155,7 +163,8 @@ describe('TemporalWindowEditor', () => {
       startWindow: {
         days: 30,
         beforeAfter: 'AFTER',
-        referencePoint: 'INDEX_START',
+        useIndexEnd: false,
+        useEventEnd: false,
       },
     })
 
@@ -187,12 +196,14 @@ describe('TemporalWindowEditor', () => {
       startWindow: {
         days: 0,
         beforeAfter: 'AFTER',
-        referencePoint: 'INDEX_START',
+        useIndexEnd: false,
+        useEventEnd: false,
       },
       endWindow: {
         days: 90,
         beforeAfter: 'AFTER',
-        referencePoint: 'INDEX_START',
+        useIndexEnd: false,
+        useEventEnd: false,
       },
     }
     const wrapper = createWrapper(temporalWindow)

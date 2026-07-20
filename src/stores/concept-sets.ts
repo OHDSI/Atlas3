@@ -308,18 +308,30 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     id: number | string,
     oldTags: Tag[],
     newTags: Tag[]
-  ): Promise<void> {
+  ): Promise<{ success: boolean; error?: string }> {
     const toAdd = newTags.filter(n => n.id && !oldTags.some(o => o.id === n.id))
     const toRemove = oldTags.filter(o => o.id && !newTags.some(n => n.id === o.id))
+    const failures: string[] = []
     for (const tag of toAdd) {
-      if (tag.id) await assignTagToConceptSet(id, tag.id)
+      if (tag.id) {
+        const result = await assignTagToConceptSet(id, tag.id)
+        if (!result.success) failures.push(result.error ?? `Failed to assign tag "${tag.name}"`)
+      }
     }
     for (const tag of toRemove) {
-      if (tag.id) await unassignTagFromConceptSet(id, tag.id)
+      if (tag.id) {
+        const result = await unassignTagFromConceptSet(id, tag.id)
+        if (!result.success) failures.push(result.error ?? `Failed to unassign tag "${tag.name}"`)
+      }
     }
     if (currentSet.value?.id === id) {
       currentSet.value = { ...currentSet.value, tags: [...newTags] } as typeof currentSet.value
     }
+    if (failures.length > 0) {
+      error.value = failures.join('; ')
+      return { success: false, error: error.value }
+    }
+    return { success: true }
   }
 
   /**
@@ -375,8 +387,9 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   /**
    * Open editor for creating new concept set
    */
-  function openCreateEditor() {
+  function openCreateEditor(id?: number) {
     currentSet.value = {
+      id,
       name: '',
       items: [] as ConceptSetItem[],
     } as ConceptSet
@@ -388,6 +401,21 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    */
   async function openEditEditor(id: number | string) {
     await fetchOne(id)
+    editorOpen.value = true
+  }
+
+  /**
+   * Open editor on a disposable clone of a cohort-embedded concept set, so
+   * editor mutations never reach the cohort until the host applies them.
+   */
+  function openEmbeddedEditor(set: {
+    id: number | string
+    name: string
+    items?: ConceptSetItem[]
+  }) {
+    currentSet.value = JSON.parse(
+      JSON.stringify({ id: set.id, name: set.name, items: set.items ?? [] })
+    ) as ConceptSet
     editorOpen.value = true
   }
 
@@ -973,6 +1001,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     clearFilters,
     openCreateEditor,
     openEditEditor,
+    openEmbeddedEditor,
     closeEditor,
     clearError,
 

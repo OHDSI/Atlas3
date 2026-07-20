@@ -1413,7 +1413,9 @@
     "temporalWindowEditor": {
       "referencePoint": "기준점",
       "startReferencePoint": "시작 기준점",
-      "endReferencePoint": "종료 기준점"
+      "endReferencePoint": "종료 기준점",
+      "useIndexEnd": "인덱스(index) 종료일 사용",
+      "useEventEnd": "이벤트 종료일 사용"
     },
     "conceptSetPicker": {
       "clearSelection": "선택 해제",
@@ -1454,11 +1456,17 @@
       "removeCardinality": "카디널리티 제거",
       "temporalWindows": "시간 창",
       "removeTemporalWindow": "시간 창 제거",
+      "addEndWindow": "종료일 제약 조건 추가",
+      "removeEndWindow": "종료일 제약 조건 제거",
+      "endWindowLabel": "종료 창",
       "eventIdLabel": "이벤트 ID:",
       "criteriaTypeLabel": "기준 유형:",
       "conceptSetIdLabel": "개념 집합 ID:",
       "restrictVisitNote": "이벤트는 인덱스와 동일한 방문에서 발생해야 합니다",
-      "ignoreObservationNote": "이벤트는 관찰 기간 외에 발생할 수 있습니다"
+      "ignoreObservationNote": "이벤트는 관찰 기간 외에 발생할 수 있습니다",
+      "sourceConceptLabel": "소스 개념",
+      "selectSourceConcept": "소스 개념 선택",
+      "typeExcludeLabel": "개념 유형 제외 (다음 중 하나가 아님)"
     },
     "filterTypeSelector": {
       "label": "필터 유형",

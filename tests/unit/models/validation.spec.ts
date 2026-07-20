@@ -260,12 +260,41 @@ describe('Validation Schemas', () => {
               startWindow: {
                 days: 30,
                 beforeAfter: 'BEFORE',
-                referencePoint: 'INDEX_START',
+                useIndexEnd: false, useEventEnd: false,
               },
               endWindow: {
                 days: 0,
                 beforeAfter: 'AFTER',
-                referencePoint: 'INDEX_END',
+                useIndexEnd: true, useEventEnd: false,
+              },
+            },
+          },
+        ],
+      }
+
+      const result = NestedCriteriaSchema.safeParse(validCriteria)
+      expect(result.success).toBe(true)
+    })
+
+    it('validates a temporal window with both index-end and event-end flags true', () => {
+      const validCriteria = {
+        id: uuidv4(),
+        logicType: 'ALL',
+        events: [
+          {
+            id: uuidv4(),
+            criteriaType: 'conditionOccurrence',
+            cardinality: {
+              type: 'AT_LEAST',
+              count: 1,
+              countingMethod: 'ALL',
+            },
+            temporalWindow: {
+              startWindow: {
+                days: 30,
+                beforeAfter: 'BEFORE',
+                useIndexEnd: true,
+                useEventEnd: true,
               },
             },
           },

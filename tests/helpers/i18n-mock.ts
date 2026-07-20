@@ -91,9 +91,68 @@ export function createI18nMock(locale: LocaleCode = 'en'): UseI18nReturn {
     loading: computed(() => loadingRef.value),
     error: computed(() => errorRef.value),
     format: computed((): LocaleFormat | undefined => ({
-      date: 'MM/DD/YYYY',
-      datetime: 'MM/DD/YYYY HH:mm',
-      number: { decimal: '.', thousands: ',' },
+      date: {
+        datetime: 'MM/DD/YYYY HH:mm',
+        datetimeWithSeconds: 'MM/DD/YYYY HH:mm:ss',
+        dateOnly: 'MM/DD/YYYY',
+        timeOnly: 'HH:mm',
+      },
+      number: { decimal: '.', thousands: ',', grouping: [3] },
+    })),
+  }
+}
+
+/**
+ * Create mock i18n composable that returns key names (no actual translations)
+ * Useful for unit tests where we only care that the correct i18n key is used,
+ * not about the actual translated text. Returns format: "i18n:keyName"
+ * 
+ * This prevents tests from breaking when translation text changes,
+ * since tests only verify the KEY, not the VALUE.
+ */
+export function createI18nKeyOnlyMock(locale: LocaleCode = 'en'): UseI18nReturn {
+  const currentLocale = ref<LocaleCode>(locale)
+  const loadingRef = ref(false)
+  const errorRef = ref<string | null>(null)
+
+  /**
+   * Return just the key in format "i18n:keyName" to verify correct key is used
+   */
+  function getKeyOnlyTranslation(
+    key: string,
+    defaultValueOrParams?: string | TranslationParams
+  ): string {
+    // If a default value (non-object) is provided and key is not found, use default
+    // Otherwise return the key itself prefixed with "i18n:"
+    if (typeof defaultValueOrParams === 'string') {
+      return `i18n:${key}`
+    }
+    return `i18n:${key}`
+  }
+
+  return {
+    t: (key: string, defaultValueOrParams?: string | TranslationParams): ComputedRef<string> =>
+      computed(() => getKeyOnlyTranslation(key, defaultValueOrParams)),
+    tv: (key: string, defaultValueOrParams?: string | TranslationParams): string =>
+      getKeyOnlyTranslation(key, defaultValueOrParams),
+    locale: computed(() => currentLocale.value),
+    availableLocales: computed((): Locale[] => [
+      { code: 'en', name: 'English' },
+      { code: 'es', name: 'Spanish' },
+    ]),
+    changeLocale: async (newLocale: LocaleCode): Promise<void> => {
+      currentLocale.value = newLocale
+    },
+    loading: computed(() => loadingRef.value),
+    error: computed(() => errorRef.value),
+    format: computed((): LocaleFormat | undefined => ({
+      date: {
+        datetime: 'MM/DD/YYYY HH:mm',
+        datetimeWithSeconds: 'MM/DD/YYYY HH:mm:ss',
+        dateOnly: 'MM/DD/YYYY',
+        timeOnly: 'HH:mm',
+      },
+      number: { decimal: '.', thousands: ',', grouping: [3] },
     })),
   }
 }
@@ -103,4 +162,12 @@ export function createI18nMock(locale: LocaleCode = 'en'): UseI18nReturn {
  */
 export const mockUseI18n = {
   useI18n: () => createI18nMock()
+}
+
+/**
+ * Mock module with key-only translations (recommended for unit tests)
+ * Returns "i18n:keyName" format instead of actual translations
+ */
+export const mockUseI18nKeyOnly = {
+  useI18n: () => createI18nKeyOnlyMock()
 }

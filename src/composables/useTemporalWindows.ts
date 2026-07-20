@@ -113,7 +113,7 @@ export function useTemporalWindows() {
         const endDays = endWindow.days
         const startDir = startWindow.beforeAfter === 'AFTER' ? 'after' : 'before'
         const endDir = endWindow.beforeAfter === 'AFTER' ? 'after' : 'before'
-        const ref = formatReferencePoint(startWindow.referencePoint)
+        const ref = formatReferencePoint(startWindow)
         return `${startDays} days ${startDir} to ${endDays} days ${endDir} ${ref}`
       }
 
@@ -139,7 +139,7 @@ export function useTemporalWindows() {
 
     const dayStr = window.days === 1 ? '1 day' : `${window.days} days`
     const direction = window.beforeAfter === 'AFTER' ? 'after' : 'before'
-    const reference = formatReferencePoint(window.referencePoint)
+    const reference = formatReferencePoint(window)
 
     return `${prefix} ${dayStr} ${direction} ${reference}`
   }
@@ -155,21 +155,16 @@ export function useTemporalWindows() {
   }
 
   /**
-   * Format reference point (INDEX_START, INDEX_END, etc.)
+   * Format the anchor flags into display text. Event-end wins for phrasing;
+   * both-true is its own combined phrase since either flag alone loses a bound.
    */
-  function formatReferencePoint(referencePoint: Window['referencePoint']): string {
-    switch (referencePoint) {
-      case 'INDEX_START':
-        return 'index start'
-      case 'INDEX_END':
-        return 'index end'
-      case 'EVENT_START':
-        return 'event start'
-      case 'EVENT_END':
-        return 'event end'
-      default:
-        return 'index'
-    }
+  function formatReferencePoint(window: Pick<Window, 'useIndexEnd' | 'useEventEnd'>): string {
+    const useIndexEnd = window.useIndexEnd ?? false
+    const useEventEnd = window.useEventEnd ?? false
+    if (useIndexEnd && useEventEnd) return 'index end & event end'
+    if (useEventEnd) return 'event end'
+    if (useIndexEnd) return 'index end'
+    return 'index start'
   }
 
   /**
@@ -184,9 +179,12 @@ export function useTemporalWindows() {
           ? 'days before'
           : 'days' // mixed directions
 
-    // If both use same reference, show it once
-    if (startWindow.referencePoint === endWindow.referencePoint) {
-      const ref = formatReferencePoint(startWindow.referencePoint)
+    // If both use same anchor flags, show it once
+    if (
+      (startWindow.useIndexEnd ?? false) === (endWindow.useIndexEnd ?? false) &&
+      (startWindow.useEventEnd ?? false) === (endWindow.useEventEnd ?? false)
+    ) {
+      const ref = formatReferencePoint(startWindow)
       return `${direction} ${ref}`
     }
 
@@ -200,12 +198,14 @@ export function useTemporalWindows() {
   function defaultWindow(
     direction: 'before' | 'after' = 'after',
     days: number | null = 0,
-    referencePoint: Window['referencePoint'] = 'INDEX_START'
+    useIndexEnd = false,
+    useEventEnd = false
   ): Window {
     return {
       days,
       beforeAfter: direction === 'after' ? 'AFTER' : 'BEFORE',
-      referencePoint,
+      useIndexEnd,
+      useEventEnd,
     }
   }
 
@@ -222,72 +222,72 @@ export function useTemporalWindows() {
     label: string
     value: TemporalWindow
   }> {
-    const indexStart = 'INDEX_START' as const
+    const indexStart = { useIndexEnd: false, useEventEnd: false } as const
     return [
       // Baseline / lookback (relative to cohort start)
       {
         label: 'Short-term baseline (−30 to 0 days)',
         value: {
-          startWindow: { days: 30, beforeAfter: 'BEFORE', referencePoint: indexStart },
-          endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
+          startWindow: { days: 30, beforeAfter: 'BEFORE', ...indexStart },
+          endWindow: { days: 0, beforeAfter: 'AFTER', ...indexStart },
         },
       },
       {
         label: 'Medium-term baseline (−180 to 0 days)',
         value: {
-          startWindow: { days: 180, beforeAfter: 'BEFORE', referencePoint: indexStart },
-          endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
+          startWindow: { days: 180, beforeAfter: 'BEFORE', ...indexStart },
+          endWindow: { days: 0, beforeAfter: 'AFTER', ...indexStart },
         },
       },
       {
         label: 'Long-term baseline (−365 to 0 days)',
         value: {
-          startWindow: { days: 365, beforeAfter: 'BEFORE', referencePoint: indexStart },
-          endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
+          startWindow: { days: 365, beforeAfter: 'BEFORE', ...indexStart },
+          endWindow: { days: 0, beforeAfter: 'AFTER', ...indexStart },
         },
       },
       {
         label: 'All time prior to index',
         value: {
-          startWindow: { days: null, beforeAfter: 'BEFORE', referencePoint: indexStart },
-          endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
+          startWindow: { days: null, beforeAfter: 'BEFORE', ...indexStart },
+          endWindow: { days: 0, beforeAfter: 'AFTER', ...indexStart },
         },
       },
       // Concurrent
       {
         label: 'On index date',
         value: {
-          startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
-          endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
+          startWindow: { days: 0, beforeAfter: 'AFTER', ...indexStart },
+          endWindow: { days: 0, beforeAfter: 'AFTER', ...indexStart },
         },
       },
       // Follow-up
       {
         label: 'Acute follow-up (0 to 30 days after)',
         value: {
-          startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
-          endWindow: { days: 30, beforeAfter: 'AFTER', referencePoint: indexStart },
+          startWindow: { days: 0, beforeAfter: 'AFTER', ...indexStart },
+          endWindow: { days: 30, beforeAfter: 'AFTER', ...indexStart },
         },
       },
       {
         label: '90-day follow-up (0 to 90 days after)',
         value: {
-          startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
-          endWindow: { days: 90, beforeAfter: 'AFTER', referencePoint: indexStart },
+          startWindow: { days: 0, beforeAfter: 'AFTER', ...indexStart },
+          endWindow: { days: 90, beforeAfter: 'AFTER', ...indexStart },
         },
       },
       {
         label: '1-year follow-up (0 to 365 days after)',
         value: {
-          startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
-          endWindow: { days: 365, beforeAfter: 'AFTER', referencePoint: indexStart },
+          startWindow: { days: 0, beforeAfter: 'AFTER', ...indexStart },
+          endWindow: { days: 365, beforeAfter: 'AFTER', ...indexStart },
         },
       },
       {
         label: 'All time after index',
         value: {
-          startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
-          endWindow: { days: null, beforeAfter: 'AFTER', referencePoint: indexStart },
+          startWindow: { days: 0, beforeAfter: 'AFTER', ...indexStart },
+          endWindow: { days: null, beforeAfter: 'AFTER', ...indexStart },
         },
       },
     ]

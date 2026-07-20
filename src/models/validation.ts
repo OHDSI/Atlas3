@@ -102,11 +102,6 @@ const CardinalitySchema = z
   )
 
 /**
- * Window reference point enumeration
- */
-const ReferencePointSchema = z.enum(['INDEX_START', 'INDEX_END', 'EVENT_START', 'EVENT_END'])
-
-/**
  * Before/After enumeration
  */
 const BeforeAfterSchema = z.enum(['BEFORE', 'AFTER'])
@@ -117,7 +112,8 @@ const BeforeAfterSchema = z.enum(['BEFORE', 'AFTER'])
 const WindowSchema = z.object({
   days: z.number().int().nullable(), // null means "all time"
   beforeAfter: BeforeAfterSchema,
-  referencePoint: ReferencePointSchema,
+  useIndexEnd: z.boolean().optional(),
+  useEventEnd: z.boolean().optional(),
 })
 
 /**

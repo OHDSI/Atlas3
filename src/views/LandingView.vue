@@ -36,7 +36,7 @@
         </div>
         <div class="landing__illustration">
           <img
-            :src="atlasLogo"
+            :src="landingLogoSrc"
             alt="Atlas"
             class="landing__logo"
           >
@@ -97,10 +97,12 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import atlasLogo from '@/assets/icons/atlas-loading.svg'
 import { AtlasButton, AtlasCard, AtlasIcon } from '@/components/ui'
+import { pluginConfigService } from '@/services/PluginConfigService'
 
 interface FeatureTile {
   id: string
@@ -156,6 +158,17 @@ const handleSearchConcepts = () => {
 const handleNewCohort = () => {
   router.push('/cohorts/new')
 }
+
+const customLandingLogoUrl = ref<string | null>(null)
+const landingLogoSrc = computed(() => customLandingLogoUrl.value ?? atlasLogo)
+
+onMounted(() => {
+  customLandingLogoUrl.value = pluginConfigService.getLandingLogoUrl()
+  const unsubscribe = pluginConfigService.onChange(() => {
+    customLandingLogoUrl.value = pluginConfigService.getLandingLogoUrl()
+  })
+  onUnmounted(unsubscribe)
+})
 </script>
 
 <style scoped>

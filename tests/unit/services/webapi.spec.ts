@@ -1613,16 +1613,37 @@ describe('WebAPI Service', () => {
       expect(result).toBeNull()
     })
 
-    it('assignTagToCohort returns false on error', async () => {
+    it('assignTagToCohort returns the error message on failure', async () => {
       mockFetch.mockRejectedValueOnce(new Error('network error'))
       const result = await webapi.assignTagToCohort(1, 10)
-      expect(result).toBe(false)
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('network error')
     })
 
-    it('unassignTagFromCohort returns false on error', async () => {
+    it('unassignTagFromCohort returns the error message on failure', async () => {
       mockFetch.mockRejectedValueOnce(new Error('network error'))
       const result = await webapi.unassignTagFromCohort(1, 10)
-      expect(result).toBe(false)
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('network error')
+    })
+
+    it('assignTagToCohort POSTs the raw tagId and reports success', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve('') })
+      const result = await webapi.assignTagToCohort(1, 10)
+      expect(result).toEqual({ success: true })
+      const [url, options] = mockFetch.mock.calls[0]
+      expect(url).toContain('/cohortdefinition/1/tag/')
+      expect(options.method).toBe('POST')
+      expect(options.body).toBe('10')
+    })
+
+    it('unassignTagFromCohort DELETEs the tag and reports success', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve('') })
+      const result = await webapi.unassignTagFromCohort(1, 10)
+      expect(result).toEqual({ success: true })
+      const [url, options] = mockFetch.mock.calls[0]
+      expect(url).toContain('/cohortdefinition/1/tag/10')
+      expect(options.method).toBe('DELETE')
     })
   })
 })

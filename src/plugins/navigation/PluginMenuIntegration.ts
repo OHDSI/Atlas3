@@ -8,6 +8,8 @@ export interface PluginMenuItem {
   icon?: string
   order: number
   parentId?: string
+  insertBefore?: string
+  insertAfter?: string
   visible: boolean
   badge?: {
     content: string | number
@@ -32,6 +34,8 @@ export function generatePluginMenuItems(): PluginMenuItem[] {
         icon: menuItem.icon,
         order: menuItem.order ?? 999,
         parentId: menuItem.parentId ? `${plugin.registration.id}-${menuItem.parentId}` : undefined,
+        insertBefore: menuItem.insertBefore,
+        insertAfter: menuItem.insertAfter,
         visible: menuItem.visible ?? true,
         badge: menuItem.badge,
       })
@@ -50,4 +54,34 @@ export function shouldUseVirtualScrolling(itemCount: number): boolean {
 
 export function getMenuItemsForPlugin(pluginId: string): PluginMenuItem[] {
   return generatePluginMenuItems().filter(item => item.pluginId === pluginId)
+}
+
+export function interleaveMenuItems<T extends { id: string }>(
+  coreItems: T[],
+  pluginItems: PluginMenuItem[],
+  toItem: (item: PluginMenuItem) => T
+): T[] {
+  const coreIds = new Set(coreItems.map((c) => c.id))
+  const before = new Map<string, PluginMenuItem[]>()
+  const after = new Map<string, PluginMenuItem[]>()
+  const unanchored: PluginMenuItem[] = []
+
+  for (const item of pluginItems) {
+    if (item.insertBefore && coreIds.has(item.insertBefore)) {
+      before.set(item.insertBefore, [...(before.get(item.insertBefore) ?? []), item])
+    } else if (item.insertAfter && coreIds.has(item.insertAfter)) {
+      after.set(item.insertAfter, [...(after.get(item.insertAfter) ?? []), item])
+    } else {
+      unanchored.push(item)
+    }
+  }
+
+  const result: T[] = []
+  for (const core of coreItems) {
+    for (const p of before.get(core.id) ?? []) result.push(toItem(p))
+    result.push(core)
+    for (const p of after.get(core.id) ?? []) result.push(toItem(p))
+  }
+  for (const p of unanchored) result.push(toItem(p))
+  return result
 }

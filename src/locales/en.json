@@ -93,6 +93,7 @@
     "add": "Add",
     "and": "and",
     "anonymous": "anonymous",
+    "apply": "Apply",
     "cancel": "Cancel",
     "close": "Close",
     "configureAccess": "Configure access",
@@ -1591,7 +1592,9 @@
     "temporalWindowEditor": {
       "referencePoint": "Reference Point",
       "startReferencePoint": "Start Reference Point",
-      "endReferencePoint": "End Reference Point"
+      "endReferencePoint": "End Reference Point",
+      "useIndexEnd": "Use index end date",
+      "useEventEnd": "Use event end date"
     },
     "conceptSetPicker": {
       "clearSelection": "Clear selection",
@@ -1629,11 +1632,17 @@
       "removeCardinality": "Remove cardinality",
       "temporalWindows": "Temporal Windows",
       "removeTemporalWindow": "Remove temporal window",
+      "addEndWindow": "Add End-Date Constraint",
+      "removeEndWindow": "Remove end-date constraint",
+      "endWindowLabel": "End window",
       "eventIdLabel": "Event ID:",
       "criteriaTypeLabel": "Criteria Type:",
       "conceptSetIdLabel": "Concept Set ID:",
       "restrictVisitNote": "Event must occur in same visit as index",
-      "ignoreObservationNote": "Event can occur outside observation period"
+      "ignoreObservationNote": "Event can occur outside observation period",
+      "sourceConceptLabel": "Source concept",
+      "selectSourceConcept": "Select Source Concept",
+      "typeExcludeLabel": "Exclude concept type (is not any of)"
     },
     "filterTypeSelector": {
       "label": "Filter Type",
@@ -4597,6 +4606,8 @@
         "desc_observation": "Filter Observations by the Source Concept.",
         "title_procedureoccurrence": "Add Procedure Source Concept Criteria",
         "desc_procedureoccurrence": "Filter Procedure Occurrences by the Procedure Source Concept.",
+        "title_specimen": "Add Specimen Source Concept Criteria",
+        "desc_specimen": "Filter Specimens by the Specimen Source Concept.",
         "title_visit": "Add Visit Source Concept Criteria",
         "desc_visit": "Filter Visit Occurrences by the Visit Source Concept.",
         "title_visitDetail": "Add Visit detail Source Concept Criteria",
