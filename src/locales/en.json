@@ -5627,9 +5627,6 @@
       "addCensoringEvent": "Add Censoring Event",
       "clearCensorWindow": "Clear Censor Window",
       "removeCensoringEvent": "Remove"
-    },
-    "warnings": {
-      "legacyConflict": "This cohort has both legacy and new exit criteria formats. Displaying Atlas format."
     }
   },
   "config": {

@@ -1501,6 +1501,11 @@ async function loadCohort(id: string) {
       inclusionQualifyingLimit: converted.inclusionQualifyingLimit || 'ALL',
       additionalCriteria: converted.additionalCriteria,
       conceptSets: converted.conceptSets || [],
+      censoringCriteria: converted.censoringCriteria,
+      censorWindow: converted.censorWindow,
+      collapseSettings: converted.collapseSettings,
+      expressionType: converted.expressionType,
+      cdmVersionRange: converted.cdmVersionRange,
     }
 
     // Update store with loaded cohort
@@ -2311,6 +2316,11 @@ function buildExportCohort(): CohortDefinition {
     conceptSets: gatherConceptSets(),
     exitCriteria: exitCriteria.value,
     observationPeriod: observationPeriod.value,
+    censoringCriteria: censoringCriteria.value,
+    censorWindow: censorWindow.value || undefined,
+    collapseSettings: collapseSettings.value,
+    expressionType: cohortStore.currentCohort?.expressionType || 'SIMPLE_EXPRESSION',
+    cdmVersionRange: cohortStore.currentCohort?.cdmVersionRange,
   }
 }
 

@@ -1,10 +1,7 @@
 <template>
   <div class="censoring-events-editor">
     <div class="censoring-events-editor__body">
-      <!-- The "Censoring Events:" h3 was removed — its information
-           is duplicated by the eyebrow + the explanatory line below.
-           Eyebrow + a one-line description carries the same meaning
-           with less vertical weight. -->
+      <!-- Header: eyebrow + accent rule + description -->
       <div class="censoring-events-editor__heading">
         <span class="text-eyebrow">{{
           t('components.cohortExpressionEditor.censoringEvents', 'Censoring events').value
@@ -20,291 +17,221 @@
         }}
       </p>
 
-      <div>
-        <!-- Empty state — quiet inline hint (matches event
-             persistence + data sources hint style). -->
-        <div
-          v-if="localEvents.length === 0"
-          class="censoring-events__hint"
-        >
-          <AtlasIcon
-            icon="mdi-information-outline"
-            size="16"
-            class="censoring-events__hint-icon"
-          />
-          <span>{{
-            t(
-              'components.censoringEventsEditor.noEventsHint',
-              'No censoring events defined. Cohort membership will not be affected by additional events.'
-            ).value
-          }}</span>
-        </div>
-
-        <!-- Event list -->
-        <div
-          v-else
-          class="events-list"
-        >
-          <v-card
-            v-for="(event, index) in localEvents"
-            :key="event.id"
-            class="event-card mb-3"
-            variant="outlined"
-          >
-            <v-card-text>
-              <AtlasRow align="center">
-                <AtlasCol
-                  cols="1"
-                  class="text-center"
-                >
-                  <span class="text-h6 text-medium-emphasis">{{ index + 1 }}</span>
-                </AtlasCol>
-                <AtlasCol cols="10">
-                  <div class="event-info">
-                    <div class="event-type text-subtitle-1">
-                      {{ formatCriteriaType(event.criteriaType) }}
-                    </div>
-                    <div
-                      v-if="event.conceptSet"
-                      class="event-concept-set text-body-2"
-                    >
-                      <AtlasChip
-                        size="sm"
-                        tone="primary"
-                      >
-                        {{ event.conceptSet.name }}
-                      </AtlasChip>
-                    </div>
-                    <!-- Warning for invalid concept set reference -->
-                    <AtlasAlert
-                      v-if="hasInvalidConceptSet(event)"
-                      severity="warning"
-                      density="compact"
-                      class="mt-2"
-                    >
-                      {{
-                        t(
-                          'exitCriteria.validation.conceptSetNotFound',
-                          'Concept set not found in this cohort'
-                        ).value
-                      }}
-                    </AtlasAlert>
-                  </div>
-                </AtlasCol>
-                <AtlasCol
-                  cols="1"
-                  class="text-right"
-                >
-                  <AtlasIconButton
-                    icon="mdi-close"
-                    v-bind="{ ariaLabel: tv('components.censoringEventsEditor.removeEvent', 'Remove event') }"
-                    variant="text"
-                    tone="danger"
-                    size="sm"
-                    :disabled="disabled"
-                    @click="removeEvent(index)"
-                  />
-                </AtlasCol>
-              </AtlasRow>
-            </v-card-text>
-          </v-card>
-        </div>
+      <!-- Add Censoring Event button with dropdown menu -->
+      <div class="mt-4">
+        <AtlasMenu>
+          <template #activator="{ props: slotProps }">
+            <AtlasButton
+              v-bind="slotProps"
+              variant="secondary"
+              icon="mdi-plus"
+              size="sm"
+              :disabled="disabled"
+              data-testid="add-censoring-event"
+            >
+              {{ t('components.cohortExpressionEditor.addCensoringEvent', 'Add Censoring Event').value }}
+            </AtlasButton>
+          </template>
+          <AtlasList>
+            <AtlasListItem
+              v-for="filter in availableFilters"
+              :key="filter.criteriaType"
+              :title="filter.name"
+              :subtitle="filter.description"
+              @click="handleFilterTypeSelected(filter.criteriaType)"
+            />
+          </AtlasList>
+        </AtlasMenu>
       </div>
 
-      <div class="mt-4">
-        <AtlasButton
-          variant="secondary"
-          icon="mdi-plus"
-          :disabled="disabled"
-          @click="addEvent"
-        >
-          {{
-            t('components.cohortExpressionEditor.addCensoringEvent', 'Add Censoring Event...').value
-          }}
-        </AtlasButton>
+      <!-- Event list using CriteriaEventCard v-for (same pattern as EntryEventsList) -->
+      <div
+        v-if="modelValue.length > 0"
+        class="events-list mt-4"
+      >
+        <CriteriaEventCard
+          v-for="event in modelValue"
+          :key="event.id"
+          :event="event"
+          section="censoringEvents"
+          @update="updateEvent"
+          @remove="removeEvent(event.id)"
+          @select-concept-set="selectConceptSetForEvent(event.id)"
+          @select-concept-set-nested="
+            nestedEventIndex => emit('select-concept-set-nested', event.id, nestedEventIndex)
+          "
+          @select-concept-set-for-attribute="
+            attributeIndex => $emit('select-concept-set-for-attribute', event.id, attributeIndex)
+          "
+          @select-concept-for-attribute="
+            (attributeIndex, domainFilter) =>
+              $emit('select-concept-for-attribute', event.id, attributeIndex, domainFilter)
+          "
+          @edit-concept-set="$emit('edit-concept-set', $event)"
+          @select-source-concept="$emit('select-source-concept', event.id)"
+        />
+      </div>
+
+      <!-- Empty state -->
+      <div
+        v-else
+        class="censoring-events__hint mt-4"
+      >
+        <AtlasIcon
+          icon="mdi-information-outline"
+          size="16"
+          class="censoring-events__hint-icon"
+        />
+        <span>{{
+          t(
+            'components.censoringEventsEditor.noEventsHint',
+            'No censoring events defined. Cohort membership will not be affected by additional events.'
+          ).value
+        }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasChip, AtlasCol, AtlasIcon, AtlasIconButton, AtlasRow } from '@/components/ui'
-import { ref, watch } from 'vue'
+import { AtlasButton, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
+import { ref } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
-import type { CohortEvent, ConceptSetReference, CriteriaType } from '@/models/cohort.types'
-import type { ValidationError } from '@/models/validation.types'
-
-const { t, tv } = useI18n()
+import { useFilterConfig } from '@/composables/useFilterConfig'
+import type { CohortEvent, CriteriaType } from '@/models/cohort.types'
+import CriteriaEventCard from '@/components/cohort-builder/CriteriaEventCard.vue'
 
 interface Props {
   modelValue: CohortEvent[]
-  conceptSets: ConceptSetReference[]
   disabled?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  disabled: false,
+})
+
+const { t } = useI18n()
+
+// Get available filters for censoring events section
+const { availableFilters } = useFilterConfig(ref('censoringEvents'))
+
 const emit = defineEmits<{
   'update:modelValue': [value: CohortEvent[]]
-  'add-event': []
-  'remove-event': [index: number]
-  'validation-error': [errors: ValidationError[]]
-  'select-censoring-concept-set': []
+  'select-concept-set-nested': [eventId: string, nestedEventIndex: number]
+  'select-concept-set-for-attribute': [eventId: string, attributeIndex: number]
+  'select-concept-for-attribute': [
+    eventId: string,
+    attributeIndex: number,
+    domainFilter: string | undefined,
+  ]
+  'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
+  'select-source-concept': [eventId: string]
 }>()
 
-// Local state
-const localEvents = ref<CohortEvent[]>([...props.modelValue])
+/**
+ * Handle criteria type selection from dropdown menu
+ * Creates a new censoring event with the selected criteria type
+ */
+function handleFilterTypeSelected(filterType: string) {
+  if (!filterType) return
 
-// Format criteria type for display
-function formatCriteriaType(type: CriteriaType): string {
-  const typeMap: Record<CriteriaType, string> = {
-    ConditionOccurrence: tv('criteria.conditionOccurrence.name', 'Condition Occurrence'),
-    ConditionEra: tv('criteria.conditionEra.name', 'Condition Era'),
-    DrugExposure: tv('criteria.drugExposure.name', 'Drug Exposure'),
-    DrugEra: tv('criteria.drugEra.name', 'Drug Era'),
-    DoseEra: tv('criteria.doseEra.name', 'Dose Era'),
-    ProcedureOccurrence: tv('criteria.procedureOccurrence.name', 'Procedure Occurrence'),
-    Measurement: tv('criteria.measurement.name', 'Measurement'),
-    Observation: tv('criteria.observation.name', 'Observation'),
-    ObservationPeriod: tv('criteria.observationPeriod.name', 'Observation Period'),
-    DeviceExposure: tv('criteria.deviceExposure.name', 'Device Exposure'),
-    VisitOccurrence: tv('criteria.visitOccurrence.name', 'Visit Occurrence'),
-    VisitDetail: tv('criteria.visitDetail.name', 'Visit Detail'),
-    Death: tv('criteria.death.name', 'Death'),
-    Specimen: tv('criteria.specimen.name', 'Specimen'),
-    PayerPlanPeriod: tv('criteria.payerPlanPeriod.name', 'Payer Plan Period'),
-    LocationRegion: tv('criteria.locationRegion.name', 'Location Region'),
-    Demographic: tv('criteria.demographic.name', 'Demographic'),
+  const newEvent: CohortEvent = {
+    id: uuidv4(),
+    criteriaType: filterType as CriteriaType,
+    attributes: [],
   }
-  return typeMap[type] || type
+
+  emit('update:modelValue', [...props.modelValue, newEvent])
 }
 
-// Check if event has invalid concept set reference
-function hasInvalidConceptSet(event: CohortEvent): boolean {
-  if (!event.conceptSet) {
-    return false
-  }
-  // Check if concept set exists in available concept sets
-  return !props.conceptSets.some(
-    cs => cs.id === event.conceptSet?.id || cs.name === event.conceptSet?.name
-  )
+/**
+ * Update existing censoring event
+ */
+function updateEvent(updatedEvent: CohortEvent) {
+  const index = props.modelValue.findIndex(e => e.id === updatedEvent.id)
+  if (index === -1) return
+
+  const newEvents = [...props.modelValue]
+  newEvents[index] = updatedEvent
+  emit('update:modelValue', newEvents)
 }
 
-// Add new censoring event
-function addEvent() {
-  // Open concept set selector dialog for censoring events
-  emit('select-censoring-concept-set')
+/**
+ * Remove censoring event by ID
+ */
+function removeEvent(eventId: string) {
+  emit('update:modelValue', props.modelValue.filter(e => e.id !== eventId))
 }
 
-// Remove event
-function removeEvent(index: number) {
-  localEvents.value.splice(index, 1)
-  emit('update:modelValue', localEvents.value)
-  emit('remove-event', index)
-  validateEvents()
+/**
+ * Delegate concept set selection to parent
+ * Parent (ExitCriteriaPanel/CohortBuilder) listens for CriteriaEventCard event
+ * and opens the concept set modal via context tracking
+ */
+function selectConceptSetForEvent(_eventId: string) {
+  // Event is forwarded from CriteriaEventCard; parent handles modal
 }
-
-// Validate all events
-function validateEvents() {
-  const errors: ValidationError[] = []
-
-  localEvents.value.forEach((event, index) => {
-    if (hasInvalidConceptSet(event)) {
-      errors.push({
-        field: `censoringEvents[${index}].conceptSet`,
-        message: t(
-          'exitCriteria.validation.conceptSetNotFound',
-          'Concept set not found in this cohort'
-        ).value,
-        severity: 'warning',
-      })
-    }
-  })
-
-  emit('validation-error', errors)
-}
-
-// Watch for external changes (shallow watch to prevent reactive loops)
-// Deep watching is unnecessary here since we're copying the entire array
-watch(
-  () => props.modelValue,
-  newValue => {
-    localEvents.value = [...newValue]
-    validateEvents()
-  }
-)
-
-// Initial validation
-validateEvents()
 </script>
+
 
 <style scoped>
 .censoring-events-editor {
-  margin: 0;
+  display: block;
+  background: rgb(var(--v-theme-surface));
 }
 
 .censoring-events-editor__body {
-  padding: 12px 16px;
-  border-top: 1px dashed rgb(var(--v-theme-outline-variant, 224, 224, 224));
+  padding: 12px 20px 16px;
 }
 
 .censoring-events-editor__heading {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.text-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgb(var(--v-theme-primary));
 }
 
 .censoring-events-editor__heading-rule {
-  display: inline-block;
-  width: 24px;
-  height: 2px;
-  background: rgb(var(--v-theme-orange));
-  border-radius: 2px;
+  flex: 1;
+  height: 1px;
+  background: rgb(var(--v-theme-outline-variant));
 }
 
 .censoring-events-editor__lede {
-  font-size: 12px;
+  margin: 0 0 16px;
+  font-size: 14px;
   color: rgb(var(--v-theme-on-surface-variant));
-  margin: 0 0 8px;
-  line-height: 1.5;
-}
-
-/* Quiet inline hint — matches event persistence + data sources. */
-.censoring-events__hint {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 13px;
-  color: rgb(var(--v-theme-on-surface-variant));
-  line-height: 1.5;
-}
-
-.censoring-events__hint-icon {
-  color: rgb(var(--v-theme-primary));
-  opacity: 0.7;
-  flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .events-list {
-  margin-top: 8px;
-}
-
-.event-card {
-  transition: box-shadow 0.2s;
-}
-
-.event-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.event-info {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.event-type {
-  font-weight: 500;
+.censoring-events__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: rgb(var(--v-theme-surface-variant));
+  border-radius: 4px;
+  font-size: 14px;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+.censoring-events__hint-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 </style>
+
