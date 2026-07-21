@@ -707,9 +707,17 @@ describe('CohortBuilder', () => {
     const setup = getSetup(wrapper)
     expect(setup.additionalCriteria).toBeUndefined()
     setup.addAdditionalCriteria()
+    await wrapper.vm.$nextTick()
     expect(setup.additionalCriteria).toBeDefined()
     expect(setup.additionalCriteria.logicType).toBe('ALL')
     expect(setup.additionalCriteria.events).toEqual([])
+    const groupEditor = wrapper.findComponent({ name: 'GroupCriteriaUI' })
+    const header = wrapper.find('.cohort-builder__additional-criteria-header')
+    expect(groupEditor.exists()).toBe(true)
+    expect(header.exists()).toBe(true)
+    expect(
+      groupEditor.element.compareDocumentPosition(header.element) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
   })
 
   it('removeAdditionalCriteria clears the criteria group', async () => {
