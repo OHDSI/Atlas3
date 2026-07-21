@@ -1807,8 +1807,23 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       expect(atlasJSON.AdditionalCriteria?.CriteriaList).toHaveLength(1)
     })
 
-    it('creates empty additional criteria when missing', () => {
+    it('omits additional criteria when missing', () => {
       const cohort = createMinimalCohort()
+
+      const atlasJSON = convertInternalToAtlas(cohort)
+
+      expect(atlasJSON.AdditionalCriteria).toBeUndefined()
+    })
+
+    it('serializes empty additional criteria when the field exists', () => {
+      const cohort = createMinimalCohort({
+        additionalCriteria: {
+          id: 'additional-empty',
+          logicType: '',
+          qualifyingLimit: 'ALL',
+          events: [],
+        },
+      })
 
       const atlasJSON = convertInternalToAtlas(cohort)
 
@@ -1842,6 +1857,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       const converted = convertAtlasToInternal(atlasJSON)
 
       expect(converted.additionalCriteria?.logicType).toBe('ANY')
+      expect(converted.additionalCriteria?.qualifyingLimit).toBe('FIRST')
       expect(converted.additionalCriteria?.events).toHaveLength(1)
     })
   })
@@ -3476,7 +3492,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
         additionalCriteria: {
           id: 'additional-1',
           logicType: 'ANY',
-          qualifyingLimit: 'ALL',
+          qualifyingLimit: 'FIRST',
           events: [
             {
               id: 'evt-2',
@@ -4076,8 +4092,16 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
         additionalCriteria: {
           id: 'g1',
           logicType: '' as unknown as import('@/models/cohort.types').LogicType,
-          events: [],
+          events: [
+            {
+              id: 'evt-1',
+              criteriaType: 'ConditionOccurrence',
+              conceptSet: { id: 1, name: 'CS' },
+              attributes: [],
+            },
+          ],
         },
+        conceptSets: [{ id: 1, name: 'CS', items: [] }],
       })
       const atlas = convertInternalToAtlas(cohort)
       expect(atlas.AdditionalCriteria?.Type).toBe('ALL')
@@ -4755,7 +4779,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
         ConceptSets: [],
         PrimaryCriteria: {
           CriteriaList: [],
-          PrimaryCriteriaLimit: { Type: 'first' },
+          PrimaryCriteriaLimit: { Type: 'all' },
         },
         AdditionalCriteria: {
           CriteriaList: [{ ConditionOccurrence: { CodesetId: null } }],
@@ -4766,7 +4790,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
         CensoringCriteria: [],
         CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
         CensorWindow: {},
-        QualifiedLimit: { Type: 'All' },
+        QualifiedLimit: { Type: 'First' },
         ExpressionLimit: { Type: 'All' },
       } as unknown as Parameters<typeof convertAtlasToInternal>[0]
       const internal = convertAtlasToInternal(atlasJson)

@@ -194,6 +194,14 @@
             v-if="additionalCriteria"
             class="cohort-builder__additional-criteria"
           >
+            <GroupCriteriaUI
+              ref="additionalCriteriaRef"
+              v-model="additionalCriteria"
+              @select-concept-set="handleSelectConceptSetForAdditionalCriteria"
+              @select-concept="handleSelectConceptForAdditionalCriteria"
+              @edit-concept-set="handleEditConceptSet"
+              @remove="removeAdditionalCriteria"
+            />
             <div class="cohort-builder__additional-criteria-header">
               <span class="cohort-builder__connector-pill">
                 {{ t('components.cohortExpressionEditor.withQualifyingLimit', 'with').value }}
@@ -237,14 +245,6 @@
                 @click="removeAdditionalCriteria"
               />
             </div>
-            <criteria-group-editor
-              ref="additionalCriteriaRef"
-              v-model="additionalCriteria"
-              @select-concept-set="handleSelectConceptSetForAdditionalCriteria"
-              @select-concept="handleSelectConceptForAdditionalCriteria"
-              @edit-concept-set="handleEditConceptSet"
-              @remove="removeAdditionalCriteria"
-            />
           </div>
           <div
             v-else
@@ -1035,7 +1035,6 @@ async function buildCohortExpression() {
       description: cohortDescription.value,
       tags: cohortTags.value,
       entryEvents: entryEvents.value,
-      additionalCriteria: additionalCriteria.value,
       inclusionRules: sanitizedInclusionRules,
       exitCriteria: exitCriteria.value,
       censorWindow: censorWindow.value || undefined,
@@ -1046,6 +1045,7 @@ async function buildCohortExpression() {
       primaryCriteriaLimit: primaryCriteriaLimit.value,
       inclusionQualifyingLimit: inclusionQualifyingLimit.value,
       conceptSets: conceptSetsWithItems.filter(cs => cs.id !== 0),
+      ...(additionalCriteria.value !== undefined ? { additionalCriteria: additionalCriteria.value } : {}),
     }
 
     // Convert to Atlas format (same as checkV2 validation)
@@ -1499,13 +1499,13 @@ async function loadCohort(id: string) {
       qualifyingLimit: converted.qualifyingLimit || 'ALL',
       primaryCriteriaLimit: converted.primaryCriteriaLimit,
       inclusionQualifyingLimit: converted.inclusionQualifyingLimit || 'ALL',
-      additionalCriteria: converted.additionalCriteria,
       conceptSets: converted.conceptSets || [],
       censoringCriteria: converted.censoringCriteria,
       censorWindow: converted.censorWindow,
       collapseSettings: converted.collapseSettings,
       expressionType: converted.expressionType,
       cdmVersionRange: converted.cdmVersionRange,
+      ...(converted.additionalCriteria !== undefined ? { additionalCriteria: converted.additionalCriteria } : {}),
     }
 
     // Update store with loaded cohort
@@ -2303,7 +2303,7 @@ async function handleApplyJson(json: string) {
 }
 
 function buildExportCohort(): CohortDefinition {
-  return {
+  const cohortDefinition: CohortDefinition = {
     id: props.id ? Number(props.id) : undefined,
     name: cohortName.value,
     description: cohortDescription.value || undefined,
@@ -2311,7 +2311,6 @@ function buildExportCohort(): CohortDefinition {
     qualifyingLimit: qualifyingLimit.value,
     primaryCriteriaLimit: primaryCriteriaLimit.value,
     inclusionQualifyingLimit: inclusionQualifyingLimit.value,
-    additionalCriteria: additionalCriteria.value,
     inclusionRules: inclusionRules.value,
     conceptSets: gatherConceptSets(),
     exitCriteria: exitCriteria.value,
@@ -2321,7 +2320,10 @@ function buildExportCohort(): CohortDefinition {
     collapseSettings: collapseSettings.value,
     expressionType: cohortStore.currentCohort?.expressionType || 'SIMPLE_EXPRESSION',
     cdmVersionRange: cohortStore.currentCohort?.cdmVersionRange,
+    ...(additionalCriteria.value !== undefined ? { additionalCriteria: additionalCriteria.value } : {}),
   }
+
+  return cohortDefinition
 }
 
 function exportFilename(): string {

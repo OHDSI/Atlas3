@@ -161,20 +161,15 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
           }
         : undefined,
       PrimaryCriteriaLimit: {
-        Type: capitalizeFirst(
-          cohort.primaryCriteriaLimit ||
-            cohort.additionalCriteria?.qualifyingLimit ||
-            'All',
-        ),
+        Type: capitalizeFirst(cohort.primaryCriteriaLimit || 'All'),
       },
     },
 
-    AdditionalCriteria: cohort.additionalCriteria
+    AdditionalCriteria: Object.prototype.hasOwnProperty.call(cohort, 'additionalCriteria')
+      ? cohort.additionalCriteria
       ? {
           Type: cohort.additionalCriteria.logicType || 'ALL',
-          ...(typeof cohort.additionalCriteria.count === 'number'
-            ? { Count: cohort.additionalCriteria.count }
-            : {}),
+          ...(typeof cohort.additionalCriteria.count === 'number' ? { Count: cohort.additionalCriteria.count } : {}),
           CriteriaList: cohort.additionalCriteria.events
             .filter(e => e.criteriaType !== 'Demographic')
             .map(e => convertEventToAtlas(e, true)),
@@ -183,12 +178,8 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
             .map(convertDemographicEventToAtlas),
           Groups: (cohort.additionalCriteria.nestedGroups ?? []).map(convertGroupToAtlasGroup),
         }
-      : {
-          Type: 'ALL',
-          CriteriaList: [],
-          DemographicCriteriaList: [],
-          Groups: [],
-        },
+      : undefined
+      : undefined,
 
     InclusionRules: cohort.inclusionRules.map(rule => {
       // The CIRCE inclusion-rule expression is a single top-level criteria
@@ -224,7 +215,11 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
 
     CensoringCriteria: cohort.censoringCriteria?.map(e => convertEventToAtlas(e, false)) || [],
 
-    QualifiedLimit: { Type: capitalizeFirst(cohort.qualifyingLimit || 'All') },
+    QualifiedLimit: {
+      Type: capitalizeFirst(
+        cohort.additionalCriteria?.qualifyingLimit || cohort.qualifyingLimit || 'All',
+      ),
+    },
 
     ExpressionLimit: cohort.inclusionQualifyingLimit
       ? { Type: capitalizeFirst(cohort.inclusionQualifyingLimit) }
@@ -854,8 +849,7 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
       return {
         id: generateId(),
         logicType: (ac.Type || 'ALL') as LogicType,
-        qualifyingLimit: (atlas.PrimaryCriteria?.PrimaryCriteriaLimit?.Type?.toUpperCase() ||
-          'ALL') as QualifyingLimit,
+        qualifyingLimit: (atlas.QualifiedLimit?.Type?.toUpperCase() || 'ALL') as QualifyingLimit,
         ...(typeof ac.Count === 'number' ? { count: ac.Count } : {}),
         events: [
           ...ac.CriteriaList.map((e: AtlasCriteria) => convertAtlasToEvent(e, transformedConceptSets)),
