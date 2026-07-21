@@ -18,8 +18,8 @@ describe('useTemporalWindows', () => {
   describe('validateTemporalWindows', () => {
     it('should validate temporal windows with valid days', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-        endWindow: { days: 90, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
+        endWindow: { days: 90, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const result = validateTemporalWindows(temporalWindow)
       expect(result.isValid).toBe(true)
@@ -28,7 +28,7 @@ describe('useTemporalWindows', () => {
 
     it('should reject negative days', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: -10, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        startWindow: { days: -10, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const result = validateTemporalWindows(temporalWindow)
       expect(result.isValid).toBe(false)
@@ -37,7 +37,7 @@ describe('useTemporalWindows', () => {
 
     it('should allow null days for all time windows', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: null, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' }
+        startWindow: { days: null, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false }
       }
       const result = validateTemporalWindows(temporalWindow)
       expect(result.isValid).toBe(true)
@@ -46,8 +46,8 @@ describe('useTemporalWindows', () => {
 
     it('should validate start window comes before end window', () => {
       const invalidRange: TemporalWindow = {
-        startWindow: { days: 90, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-        endWindow: { days: 30, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        startWindow: { days: 90, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
+        endWindow: { days: 30, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const result = validateTemporalWindows(invalidRange)
       expect(result.isValid).toBe(false)
@@ -56,7 +56,7 @@ describe('useTemporalWindows', () => {
 
     it('should reject negative days in end window', () => {
       const temporalWindow: TemporalWindow = {
-        endWindow: { days: -5, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        endWindow: { days: -5, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const result = validateTemporalWindows(temporalWindow)
       expect(result.isValid).toBe(false)
@@ -65,8 +65,8 @@ describe('useTemporalWindows', () => {
 
     it('should validate when one window has null days for comparison', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: null, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' },
-        endWindow: { days: 30, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        startWindow: { days: null, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false },
+        endWindow: { days: 30, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const result = validateTemporalWindows(temporalWindow)
       expect(result.isValid).toBe(true)
@@ -75,8 +75,8 @@ describe('useTemporalWindows', () => {
 
     it('should validate when both windows have null days', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: null, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' },
-        endWindow: { days: null, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        startWindow: { days: null, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false },
+        endWindow: { days: null, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const result = validateTemporalWindows(temporalWindow)
       expect(result.isValid).toBe(true)
@@ -87,8 +87,8 @@ describe('useTemporalWindows', () => {
   describe('formatTemporalWindowDisplay', () => {
     it('should format 0 to 90 days after index', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-        endWindow: { days: 90, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
+        endWindow: { days: 90, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toBe('0 to 90 days after index start')
@@ -96,8 +96,8 @@ describe('useTemporalWindows', () => {
 
     it('should format 30 days before to 0 days after index', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: 30, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' },
-        endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        startWindow: { days: 30, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false },
+        endWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toContain('30 days before')
@@ -106,8 +106,8 @@ describe('useTemporalWindows', () => {
 
     it('should format 0 to 365 days after index end', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_END' },
-        endWindow: { days: 365, beforeAfter: 'AFTER', referencePoint: 'INDEX_END' }
+        startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: true, useEventEnd: false },
+        endWindow: { days: 365, beforeAfter: 'AFTER', useIndexEnd: true, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toContain('days after')
@@ -116,7 +116,7 @@ describe('useTemporalWindows', () => {
 
     it('should format start window only', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toContain('From')
@@ -125,7 +125,7 @@ describe('useTemporalWindows', () => {
 
     it('should format end window only', () => {
       const temporalWindow: TemporalWindow = {
-        endWindow: { days: 90, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        endWindow: { days: 90, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toContain('Up to')
@@ -133,7 +133,7 @@ describe('useTemporalWindows', () => {
 
     it('should handle singular day', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: 1, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        startWindow: { days: 1, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toContain('1 day')
@@ -147,7 +147,7 @@ describe('useTemporalWindows', () => {
 
     it('should format "any time after index" for start window with null days and AFTER', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: null, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        startWindow: { days: null, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toBe('Any time after index')
@@ -155,7 +155,7 @@ describe('useTemporalWindows', () => {
 
     it('should format "any time before index" for start window with null days and BEFORE', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: null, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' }
+        startWindow: { days: null, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toBe('Any time before index')
@@ -163,7 +163,7 @@ describe('useTemporalWindows', () => {
 
     it('should format "any time after index" for end window with null days and AFTER', () => {
       const temporalWindow: TemporalWindow = {
-        endWindow: { days: null, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        endWindow: { days: null, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toBe('Any time after index')
@@ -171,7 +171,7 @@ describe('useTemporalWindows', () => {
 
     it('should format "any time before index" for end window with null days and BEFORE', () => {
       const temporalWindow: TemporalWindow = {
-        endWindow: { days: null, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' }
+        endWindow: { days: null, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toBe('Any time before index')
@@ -179,8 +179,8 @@ describe('useTemporalWindows', () => {
 
     it('should format "any time before index" for both windows with start null BEFORE', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: null, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' },
-        endWindow: { days: 30, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' }
+        startWindow: { days: null, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false },
+        endWindow: { days: 30, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toBe('Any time before index')
@@ -188,26 +188,26 @@ describe('useTemporalWindows', () => {
 
     it('should format "any time after index" for both windows with end null AFTER', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-        endWindow: { days: null, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
+        startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
+        endWindow: { days: null, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toBe('Any time after index')
     })
 
-    it('should format range with EVENT_START reference point', () => {
+    it('should format range with both flags false as index start', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'EVENT_START' },
-        endWindow: { days: 30, beforeAfter: 'AFTER', referencePoint: 'EVENT_START' }
+        startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
+        endWindow: { days: 30, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
-      expect(display).toContain('event start')
+      expect(display).toContain('index start')
     })
 
     it('should format range with EVENT_END reference point', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'EVENT_END' },
-        endWindow: { days: 30, beforeAfter: 'AFTER', referencePoint: 'EVENT_END' }
+        startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: true },
+        endWindow: { days: 30, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: true }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toContain('event end')
@@ -215,8 +215,8 @@ describe('useTemporalWindows', () => {
 
     it('should format range with different reference points', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-        endWindow: { days: 30, beforeAfter: 'AFTER', referencePoint: 'INDEX_END' }
+        startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
+        endWindow: { days: 30, beforeAfter: 'AFTER', useIndexEnd: true, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toContain('days after')
@@ -225,8 +225,8 @@ describe('useTemporalWindows', () => {
 
     it('should format range with BEFORE direction for both windows', () => {
       const temporalWindow: TemporalWindow = {
-        startWindow: { days: 90, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' },
-        endWindow: { days: 30, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' }
+        startWindow: { days: 90, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false },
+        endWindow: { days: 30, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false }
       }
       const display = formatTemporalWindowDisplay(temporalWindow)
       expect(display).toContain('90 to 30 days before')
@@ -238,7 +238,7 @@ describe('useTemporalWindows', () => {
       const defaults = defaultWindow()
       expect(defaults.days).toBe(0)
       expect(defaults.beforeAfter).toBe('AFTER')
-      expect(defaults.referencePoint).toBe('INDEX_START')
+      expect(defaults.useIndexEnd).toBe(false)
     })
 
     it('should allow customizing direction', () => {
@@ -259,11 +259,11 @@ describe('useTemporalWindows', () => {
     })
 
     it('should allow customizing reference point', () => {
-      const eventStart = defaultWindow('after', 0, 'EVENT_START')
-      expect(eventStart.referencePoint).toBe('EVENT_START')
+      const eventStart = defaultWindow('after', 0, false, false)
+      expect(eventStart.useEventEnd).toBe(false)
 
-      const indexEnd = defaultWindow('before', 30, 'INDEX_END')
-      expect(indexEnd.referencePoint).toBe('INDEX_END')
+      const indexEnd = defaultWindow('before', 30, true)
+      expect(indexEnd.useIndexEnd).toBe(true)
     })
 
     it('should support null days for all time windows', () => {
@@ -351,13 +351,15 @@ describe('useTemporalWindows', () => {
         if (preset.value.startWindow) {
           expect(preset.value.startWindow).toHaveProperty('days')
           expect(preset.value.startWindow).toHaveProperty('beforeAfter')
-          expect(preset.value.startWindow).toHaveProperty('referencePoint')
+          expect(preset.value.startWindow).toHaveProperty('useIndexEnd')
+          expect(preset.value.startWindow).toHaveProperty('useEventEnd')
         }
 
         if (preset.value.endWindow) {
           expect(preset.value.endWindow).toHaveProperty('days')
           expect(preset.value.endWindow).toHaveProperty('beforeAfter')
-          expect(preset.value.endWindow).toHaveProperty('referencePoint')
+          expect(preset.value.endWindow).toHaveProperty('useIndexEnd')
+          expect(preset.value.endWindow).toHaveProperty('useEventEnd')
         }
       })
     })

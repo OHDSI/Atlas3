@@ -23,18 +23,25 @@ vi.mock('@/composables/useI18n', async () => {
 
 // downloadAtlasJSON spy lifted out via hoisted so test bodies can assert on
 // the call site without re-importing the composable internals.
-const { downloadAtlasJSONSpy, exportToAtlasSpy, importFromFileSpy, conversionErrorRef } =
-  vi.hoisted(() => ({
-    downloadAtlasJSONSpy: vi.fn(),
-    exportToAtlasSpy: vi.fn(() => '{"mocked":true}'),
-    importFromFileSpy: vi.fn(),
-    conversionErrorRef: { value: null as string | null },
-  }))
+const {
+  downloadAtlasJSONSpy,
+  exportToAtlasSpy,
+  importFromFileSpy,
+  importFromAtlasSpy,
+  conversionErrorRef,
+} = vi.hoisted(() => ({
+  downloadAtlasJSONSpy: vi.fn(),
+  exportToAtlasSpy: vi.fn(() => '{"mocked":true}'),
+  importFromFileSpy: vi.fn(),
+  importFromAtlasSpy: vi.fn(),
+  conversionErrorRef: { value: null as string | null },
+}))
 
 vi.mock('@/composables/useAtlasConverter', () => {
   return {
     useAtlasConverter: () => ({
       importFromFile: importFromFileSpy,
+      importFromAtlas: importFromAtlasSpy,
       downloadAtlasJSON: downloadAtlasJSONSpy,
       exportToAtlas: exportToAtlasSpy,
       conversionError: conversionErrorRef,
@@ -68,8 +75,8 @@ vi.mock('@/services/webapi', () => ({
     }),
   }),
   saveCohortDefinition: vi.fn().mockResolvedValue({ id: 99, name: 'Saved' }),
-  assignTagToCohort: vi.fn().mockResolvedValue(true),
-  unassignTagFromCohort: vi.fn().mockResolvedValue(true),
+  assignTagToCohort: vi.fn().mockResolvedValue({ success: true }),
+  unassignTagFromCohort: vi.fn().mockResolvedValue({ success: true }),
 }))
 
 vi.mock('@/services/concept-set.service', () => ({
@@ -181,6 +188,7 @@ const childStubs = {
   CohortToolbarStatus: true,
   ConceptSetsListDialog: true,
   ValidationMessagesDialog: true,
+  CohortJsonDialog: true,
   TagSelectionDialog: true,
   'router-link': true,
 } as const
@@ -232,7 +240,8 @@ describe('CohortBuilder', () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
     const vm = wrapper.vm as any
-    expect(vm).toHaveProperty('conceptSetCount')
+    expect(vm).toHaveProperty('totalConceptSets')
+    expect(vm).toHaveProperty('unusedConceptSetCount')
     expect(vm).toHaveProperty('validationCount')
     expect(vm).toHaveProperty('canSave')
     expect(vm).toHaveProperty('handleCancel')
@@ -975,22 +984,93 @@ describe('CohortBuilder', () => {
   })
 
   // ---------------------------------------------------------------------------
-  // handleConceptSetSaved (relies on store.currentSet)
+  // handleEditConceptSet / handleConceptSetApplied (embedded editor flow)
   // ---------------------------------------------------------------------------
 
-  it('handleConceptSetSaved bails out early when context is null', async () => {
+  it('handleEditConceptSet opens the editor on a clone, leaving cohort items untouched', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    const items = [{ conceptId: 1, includeDescendants: false }]
+    await setup.handleEditConceptSet({ id: 5, name: 'Embedded', items })
+    const { useConceptSetsStore } = await import('@/stores/concept-sets')
+    const store = useConceptSetsStore()
+    expect(store.editorOpen).toBe(true)
+    store.currentSet!.items.push({ conceptId: 2 } as any)
+    store.currentSet!.items[0]!.includeDescendants = true
+    expect(items).toEqual([{ conceptId: 1, includeDescendants: false }])
+  })
+
+  it('handleConceptSetApplied is a no-op without a matching usage or pending context', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
     const setup = getSetup(wrapper)
     setup.selectedCriteriaContext = null
-    // Populate store.currentSet so the function reaches its early-return on context
-    const { useConceptSetsStore } = await import('@/stores/concept-sets')
-    const store = useConceptSetsStore()
-    store.currentSet = { id: 9, name: 'x', items: [] } as any
-    expect(() => setup.handleConceptSetSaved()).not.toThrow()
+    expect(() => setup.handleConceptSetApplied({ id: 9, name: 'x', items: [] })).not.toThrow()
   })
 
-  it('handleConceptSetSaved assigns the saved concept set to entry-event context', async () => {
+  it('handleConceptSetApplied updates every usage of the id and marks the cohort dirty', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.selectedCriteriaContext = null
+    setup.entryEvents = [
+      {
+        id: 'evt-1',
+        criteriaType: 'X',
+        attributes: [],
+        conceptSet: { id: 7, name: 'Old', items: [] },
+      },
+      {
+        id: 'evt-2',
+        criteriaType: 'X',
+        attributes: [],
+        conceptSet: { id: 8, name: 'Other', items: [] },
+      },
+    ]
+    setup.inclusionRules = [
+      {
+        id: 'rule-1',
+        name: 'r',
+        criteriaGroups: [
+          {
+            id: 'g-1',
+            logicType: 'ALL',
+            events: [
+              {
+                id: 'evt-3',
+                criteriaType: 'X',
+                attributes: [],
+                conceptSet: { id: 7, name: 'Old', items: [] },
+              },
+            ],
+          },
+        ],
+      },
+    ]
+    setup.exitCriteria = {
+      strategy: 'CONTINUOUS_DRUG',
+      conceptSet: { id: 7, name: 'Old', items: [] },
+    }
+    await wrapper.vm.$nextTick()
+    setup.loadedSnapshot = setup.createStateSnapshot()
+    expect(setup.hasUnsavedChanges).toBe(false)
+
+    const newItems = [{ conceptId: 42 }]
+    setup.handleConceptSetApplied({ id: 7, name: 'Updated', items: newItems })
+
+    expect(setup.entryEvents[0].conceptSet).toEqual({ id: 7, name: 'Updated', items: newItems })
+    expect(setup.entryEvents[1].conceptSet).toEqual({ id: 8, name: 'Other', items: [] })
+    expect(setup.inclusionRules[0].criteriaGroups[0].events[0].conceptSet).toEqual({
+      id: 7,
+      name: 'Updated',
+      items: newItems,
+    })
+    expect(setup.exitCriteria.conceptSet).toEqual({ id: 7, name: 'Updated', items: newItems })
+    expect(setup.hasUnsavedChanges).toBe(true)
+  })
+
+  it('handleConceptSetApplied assigns the applied concept set to a pending entry-event context', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
     const setup = getSetup(wrapper)
@@ -1001,10 +1081,7 @@ describe('CohortBuilder', () => {
       groupIndex: 0,
       eventIndex: 0,
     }
-    const { useConceptSetsStore } = await import('@/stores/concept-sets')
-    const store = useConceptSetsStore()
-    store.currentSet = { id: 77, name: 'Saved Set', items: [] } as any
-    setup.handleConceptSetSaved()
+    setup.handleConceptSetApplied({ id: 77, name: 'Saved Set', items: [] })
     expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 77, name: 'Saved Set' })
   })
 
@@ -1037,7 +1114,7 @@ describe('CohortBuilder', () => {
       name: 'Inline',
       items: [{ concept: { CONCEPT_ID: 99, CONCEPT_NAME: 'X' } }],
     })
-    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 5, name: 'Inline' })
+    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 0, name: 'Inline' })
     expect(setup.isConceptSetDialogOpen).toBe(false)
   })
 
@@ -1059,7 +1136,7 @@ describe('CohortBuilder', () => {
     })
     await setup.handleConceptSetSelected({ id: 6, name: 'NeedsFetch' })
     expect(fetchSpy).toHaveBeenCalledWith(6)
-    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 6, name: 'Fetched' })
+    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 0, name: 'Fetched' })
   })
 
   // ---------------------------------------------------------------------------
@@ -1555,6 +1632,41 @@ describe('CohortBuilder', () => {
     expect(setup.showError).toBe(true)
   })
 
+  it('handleSave surfaces the server message when a tag assignment fails', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Savable'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    setup.handleTagsUpdate([{ id: 7, name: 'protected' }] as any)
+
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.assignTagToCohort).mockResolvedValueOnce({
+      success: false,
+      error: 'Tag group "Status" allows only one assignment',
+    })
+
+    await setup.handleSave()
+    expect(setup.errorMessage).toBe('Tag group "Status" allows only one assignment')
+    expect(setup.showError).toBe(true)
+  })
+
+  it('handleSave falls back to a per-tag message when unassignment fails without detail', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Savable'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    setup.loadedTags = [{ id: 9, name: 'old-tag' }]
+
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.unassignTagFromCohort).mockResolvedValueOnce({ success: false })
+
+    await setup.handleSave()
+    expect(setup.errorMessage).toBe('Failed to unassign tag "old-tag"')
+    expect(setup.showError).toBe(true)
+  })
+
   // ---------------------------------------------------------------------------
   // Export failure branches (conversionError set)
   // ---------------------------------------------------------------------------
@@ -1583,5 +1695,123 @@ describe('CohortBuilder', () => {
     await setup.handleExportCopy()
     expect(setup.errorMessage).toBe('Export failed: cannot serialize')
     expect(setup.showError).toBe(true)
+  })
+
+  // ---------------------------------------------------------------------------
+  // JSON dialog: view / edit / overwrite the expression
+  // ---------------------------------------------------------------------------
+
+  /** A cohort as importFromAtlas would hand it back: a procedure entry event. */
+  const importedProcedureCohort = () => ({
+    name: 'Name From Pasted JSON',
+    description: 'Description from pasted JSON',
+    entryEvents: [
+      {
+        id: 'imported-evt',
+        criteriaType: 'ProcedureOccurrence',
+        conceptSet: { id: 7, name: 'Coronary Artery Bypass', items: [] },
+        attributes: [],
+      },
+    ],
+    // No inclusionRules key at all — importing a JSON that omits a section
+    // must clear it, not leave the previous cohort's rules behind.
+    exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' },
+    observationPeriod: { priorDays: 365, postDays: 30 },
+    qualifyingLimit: 'FIRST',
+  })
+
+  /** Emit `apply` from the stubbed CohortJsonDialog, as the real dialog does. */
+  async function applyJson(wrapper: ReturnType<typeof createWrapper>, json: string) {
+    const dialog = wrapper.findComponent({ name: 'CohortJsonDialog' })
+    dialog.vm.$emit('apply', json)
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+  }
+
+  it('openJsonDialog seeds the dialog with the exported Atlas JSON', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'My Cohort'
+
+    ;(wrapper.vm as any).openJsonDialog()
+    await wrapper.vm.$nextTick()
+
+    expect(exportToAtlasSpy).toHaveBeenCalled()
+    expect(setup.showJsonDialog).toBe(true)
+    expect(setup.jsonDialogSource).toBe('{"mocked":true}')
+  })
+
+  it('applying JSON overwrites the expression but keeps name and description', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+
+    // Loaded cohort: one condition entry event and one inclusion rule.
+    expect(setup.cohortName).toBe('Existing Cohort')
+    expect(setup.inclusionRules).toHaveLength(1)
+
+    importFromAtlasSpy.mockResolvedValueOnce(importedProcedureCohort())
+    await applyJson(wrapper, '{"PrimaryCriteria":{}}')
+
+    expect(importFromAtlasSpy).toHaveBeenCalledWith('{"PrimaryCriteria":{}}')
+    // Expression replaced...
+    expect(setup.entryEvents).toHaveLength(1)
+    expect(setup.entryEvents[0].criteriaType).toBe('ProcedureOccurrence')
+    expect(setup.observationPeriod).toEqual({ priorDays: 365, postDays: 30 })
+    // ...identity preserved, even though the pasted JSON carried its own name.
+    expect(setup.cohortName).toBe('Existing Cohort')
+    expect(setup.cohortDescription).toBe('A loaded cohort')
+  })
+
+  it('applying JSON that omits a section clears it', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    expect(setup.inclusionRules).toHaveLength(1)
+
+    importFromAtlasSpy.mockResolvedValueOnce(importedProcedureCohort())
+    await applyJson(wrapper, '{}')
+
+    // The pasted JSON has no InclusionRules, so the loaded rule is gone.
+    expect(setup.inclusionRules).toEqual([])
+  })
+
+  it('applying JSON closes the dialog and reports success', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    ;(wrapper.vm as any).openJsonDialog()
+    await wrapper.vm.$nextTick()
+    expect(setup.showJsonDialog).toBe(true)
+
+    importFromAtlasSpy.mockResolvedValueOnce(importedProcedureCohort())
+    await applyJson(wrapper, '{}')
+
+    expect(setup.showJsonDialog).toBe(false)
+    expect(setup.showSuccess).toBe(true)
+  })
+
+  it('a failed import leaves the expression untouched and surfaces an error', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    ;(wrapper.vm as any).openJsonDialog()
+    await wrapper.vm.$nextTick()
+
+    const entryEventsBefore = setup.entryEvents
+    importFromAtlasSpy.mockResolvedValueOnce(null)
+    conversionErrorRef.value = 'Unexpected token }'
+
+    await applyJson(wrapper, '{ broken')
+
+    expect(setup.showError).toBe(true)
+    expect(setup.errorMessage).toContain('Unexpected token }')
+    // State untouched, dialog stays open so the user can fix the JSON.
+    expect(setup.entryEvents).toBe(entryEventsBefore)
+    expect(setup.showJsonDialog).toBe(true)
   })
 })

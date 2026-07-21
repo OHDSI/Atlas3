@@ -15,7 +15,8 @@
         v-if="!conceptSet || (conceptSet.id == null)"
         variant="secondary"
         size="sm"
-        data-testid="concept-set-picker"
+        density="compact"
+        :data-testid="pickerTestId"
         @click="emit('select')"
       >
         <AtlasIcon class="mr-2">
@@ -27,7 +28,7 @@
         v-else
         closable
         tone="primary"
-        data-testid="selected-concept-set"
+        :data-testid="chipTestId"
         style="cursor: pointer"
         @click="emit('edit', conceptSet)"
         @close="emit('clear')"
@@ -51,12 +52,17 @@ withDefaults(
     selectLabel?: string
     /** Compact, label-less, borderless variant for use inside a card header. */
     compact?: boolean
+    /** Overridable so a card can host more than one instance (e.g. primary + source concept) with distinct test hooks. */
+    pickerTestId?: string
+    chipTestId?: string
   }>(),
   {
     conceptSet: undefined,
     label: undefined,
     selectLabel: undefined,
     compact: false,
+    pickerTestId: 'concept-set-picker',
+    chipTestId: 'selected-concept-set',
   }
 )
 

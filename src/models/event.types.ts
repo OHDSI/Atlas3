@@ -23,7 +23,12 @@ export interface TemporalWindow {
 export interface Window {
   days: number | null // null means "all time"
   beforeAfter: 'BEFORE' | 'AFTER'
-  referencePoint: 'INDEX_START' | 'INDEX_END' | 'EVENT_START' | 'EVENT_END'
+  // Independent CIRCE anchor flags. Both may be true: anchor the window to the
+  // index event's end date AND compare against the criterion event's end date.
+  // Absent means false. Replaces the former single referencePoint enum, which
+  // could not represent the both-true case.
+  useIndexEnd?: boolean
+  useEventEnd?: boolean
 }
 
 /**

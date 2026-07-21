@@ -286,6 +286,52 @@ describe('PluginConfigService', () => {
     })
   })
 
+  describe('getLandingLogoUrl', () => {
+    it('should return null before loading', () => {
+      expect(service.getLandingLogoUrl()).toBeNull()
+    })
+
+    it('returns the configured landing logo url', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            version: '1.0',
+            plugins: [],
+            settings: {
+              theme: {
+                landingLogoUrl: '/branding/hero.svg',
+              },
+            },
+          }),
+      })
+
+      await service.loadConfig()
+
+      expect(service.getLandingLogoUrl()).toBe('/branding/hero.svg')
+    })
+
+    it('returns null when not configured', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            version: '1.0',
+            plugins: [],
+            settings: {
+              theme: {},
+            },
+          }),
+      })
+
+      await service.loadConfig()
+
+      expect(service.getLandingLogoUrl()).toBeNull()
+    })
+  })
+
   describe('isCoreNavigationItemEnabled', () => {
     it('should return true when no navigation settings', async () => {
       mockFetch.mockResolvedValueOnce({

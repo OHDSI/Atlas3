@@ -516,12 +516,14 @@ describe('AttributesEditor', () => {
             startWindow: {
               days: 0,
               beforeAfter: 'AFTER',
-              referencePoint: 'INDEX_START',
+              useIndexEnd: false,
+              useEventEnd: false,
             },
             endWindow: {
               days: 90,
               beforeAfter: 'AFTER',
-              referencePoint: 'INDEX_START',
+              useIndexEnd: false,
+              useEventEnd: false,
             },
           },
         },
@@ -543,12 +545,14 @@ describe('AttributesEditor', () => {
             startWindow: {
               days: 30,
               beforeAfter: 'AFTER',
-              referencePoint: 'INDEX_START',
+              useIndexEnd: false,
+              useEventEnd: false,
             },
             endWindow: {
               days: 90,
               beforeAfter: 'AFTER',
-              referencePoint: 'INDEX_START',
+              useIndexEnd: false,
+              useEventEnd: false,
             },
           },
         },

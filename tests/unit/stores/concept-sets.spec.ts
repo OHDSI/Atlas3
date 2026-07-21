@@ -424,6 +424,25 @@ describe('Concept Sets Store', () => {
       expect(store.currentSet).toBeNull()
       expect(store.error).toBeNull()
     })
+
+    it('openEmbeddedEditor opens on a clone so editor mutations never reach the source', () => {
+      const store = useConceptSetsStore()
+      const source = {
+        id: 2,
+        name: 'Embedded',
+        items: [{ conceptId: 1, includeDescendants: false }] as never[],
+      }
+
+      store.openEmbeddedEditor(source)
+
+      expect(store.editorOpen).toBe(true)
+      expect(store.currentSet).toEqual(source)
+      expect(store.currentSet!.items).not.toBe(source.items)
+
+      store.addConceptToSet({ conceptId: 9, conceptName: 'X' } as never)
+      store.toggleConceptFlag(1, 'includeDescendants')
+      expect(source.items).toEqual([{ conceptId: 1, includeDescendants: false }])
+    })
   })
 
   describe('clearError Action', () => {

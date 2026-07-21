@@ -21,7 +21,8 @@ const vuetify = createVuetify({ components, directives })
 function mountComponent(props = {}) {
   return mount(CohortToolbarStatus, {
     props: {
-      conceptSetCount: 0,
+      totalConceptSets: 0,
+      unusedConceptSetCount: 0,
       validationCount: 0,
       validationColor: 'success',
       isValidating: false,
@@ -67,14 +68,14 @@ describe('CohortToolbarStatus', () => {
     })
 
     it('should show concept sets badge when count > 0', () => {
-      const wrapper = mountComponent({ conceptSetCount: 5 })
+      const wrapper = mountComponent({ totalConceptSets: 5 })
 
       const conceptIcon = wrapper.find('[data-testid="concept-sets-icon"]')
       expect(conceptIcon.exists()).toBe(true)
     })
 
-    it('should display correct concept set count', () => {
-      const wrapper = mountComponent({ conceptSetCount: 3 })
+    it('should display correct unused concept set count in badge', () => {
+      const wrapper = mountComponent({ totalConceptSets: 5, unusedConceptSetCount: 3 })
 
       const badges = wrapper.findAllComponents({ name: 'VBadge' })
       const conceptBadge = badges.find(badge => {
@@ -85,7 +86,7 @@ describe('CohortToolbarStatus', () => {
     })
 
     it('should have primary color badge', () => {
-      const wrapper = mountComponent({ conceptSetCount: 3 })
+      const wrapper = mountComponent({ totalConceptSets: 3, unusedConceptSetCount: 2 })
 
       const badges = wrapper.findAllComponents({ name: 'VBadge' })
       const conceptBadge = badges.find(badge => {
@@ -96,7 +97,7 @@ describe('CohortToolbarStatus', () => {
     })
 
     it('should emit show-concept-sets when clicked', async () => {
-      const wrapper = mountComponent({ conceptSetCount: 3 })
+      const wrapper = mountComponent({ totalConceptSets: 3, unusedConceptSetCount: 1 })
 
       const conceptIcon = wrapper.find('[data-testid="concept-sets-icon"]')
       await conceptIcon.trigger('click')
@@ -105,7 +106,7 @@ describe('CohortToolbarStatus', () => {
     })
 
     it('should have shape icon', () => {
-      const wrapper = mountComponent({ conceptSetCount: 3 })
+      const wrapper = mountComponent({ totalConceptSets: 3, unusedConceptSetCount: 1 })
 
       const conceptIcon = wrapper.find('[data-testid="concept-sets-icon"]')
       // Check that icon is rendered with the shape identifier
@@ -292,7 +293,8 @@ describe('CohortToolbarStatus', () => {
     it('should emit toolbar action events correctly', async () => {
       // Description update events removed — see header note above.
       const wrapper = mountComponent({
-        conceptSetCount: 3,
+        totalConceptSets: 3,
+        unusedConceptSetCount: 1,
         validationCount: 5,
         isValidating: false
       })

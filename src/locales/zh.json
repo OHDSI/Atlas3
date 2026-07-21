@@ -1413,7 +1413,9 @@
     "temporalWindowEditor": {
       "referencePoint": "参考点",
       "startReferencePoint": "起始参考点",
-      "endReferencePoint": "结束参考点"
+      "endReferencePoint": "结束参考点",
+      "useIndexEnd": "使用索引结束日期",
+      "useEventEnd": "使用事件结束日期"
     },
     "conceptSetPicker": {
       "clearSelection": "清除选择",
@@ -1454,11 +1456,17 @@
       "removeCardinality": "移除基数",
       "temporalWindows": "时间窗口",
       "removeTemporalWindow": "移除时间窗口",
+      "addEndWindow": "添加结束日期约束",
+      "removeEndWindow": "移除结束日期约束",
+      "endWindowLabel": "结束窗口",
       "eventIdLabel": "事件 ID：",
       "criteriaTypeLabel": "条件类型：",
       "conceptSetIdLabel": "概念集 ID：",
       "restrictVisitNote": "事件必须发生在与索引相同的就诊中",
-      "ignoreObservationNote": "事件可以发生在观察期之外"
+      "ignoreObservationNote": "事件可以发生在观察期之外",
+      "sourceConceptLabel": "源概念",
+      "selectSourceConcept": "选择源概念",
+      "typeExcludeLabel": "排除概念类型（不属于以下任一项）"
     },
     "filterTypeSelector": {
       "label": "筛选类型",

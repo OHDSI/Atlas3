@@ -6,15 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atlas Cohort Builder</title>
     <!-- Load SystemJS before everything else -->
-    <script src="%BASE_URL%vendor/system.js"></script>
-    <script src="%BASE_URL%vendor/named-register.js"></script>
+    <script src="./vendor/system.js"></script>
+    <script src="./vendor/named-register.js"></script>
     <!-- Load Vue globally so SystemJS plugins can use it -->
-    <script src="%BASE_URL%vendor/vue.global.js"></script>
+    <script src="./vendor/vue.global.js"></script>
     <!-- Load Vue Router globally -->
-    <script src="%BASE_URL%vendor/vue-router.global.js"></script>
+    <script src="./vendor/vue-router.global.js"></script>
     <!-- Load React globally for React-based plugins -->
-    <script src="%BASE_URL%vendor/react.production.min.js" onerror="this.onerror=null;this.src='%BASE_URL%vendor/react.development.js'"></script>
-    <script src="%BASE_URL%vendor/react-dom.production.min.js" onerror="this.onerror=null;this.src='%BASE_URL%vendor/react-dom.development.js'"></script>
+    <script src="./vendor/react.production.min.js" onerror="this.onerror=null;this.src='./vendor/react.development.js'"></script>
+    <script src="./vendor/react-dom.production.min.js" onerror="this.onerror=null;this.src='./vendor/react-dom.development.js'"></script>
     <script>
       // Register dependencies with SystemJS
       (function() {
@@ -138,7 +138,7 @@
         });
 
         // Load and register single-spa-vue
-        window.System.import('%BASE_URL%vendor/single-spa-vue.js').then(function(module) {
+        window.System.import('./vendor/single-spa-vue.js').then(function(module) {
           console.log('[SystemJS] single-spa-vue loaded:', module);
           // Register it under the 'single-spa-vue' name
           window.System.register('single-spa-vue', [], function(_export) {
@@ -200,7 +200,7 @@
         }
 
         // Load single-spa-react
-        window.System.import('%BASE_URL%vendor/single-spa-react.js').then(function(module) {
+        window.System.import('./vendor/single-spa-react.js').then(function(module) {
           window.System.set('single-spa-react', { default: module.default || module });
         }).catch(function(err) {
           console.error('[SystemJS] Failed to load single-spa-react:', err);

@@ -1,13 +1,14 @@
 /**
  * LandingView Component Tests
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { ref } from 'vue'
 import LandingView from '@/views/LandingView.vue'
+import { pluginConfigService } from '@/services/PluginConfigService'
 
 // Mock vue-router
 const mockPush = vi.fn()
@@ -24,6 +25,13 @@ vi.mock('@/composables/useI18n', () => ({
     t: (key: string, fallback: string) => ref(fallback),
     tv: (key: string, fallback: string) => fallback
   })
+}))
+
+vi.mock('@/services/PluginConfigService', () => ({
+  pluginConfigService: {
+    getLandingLogoUrl: vi.fn(() => null),
+    onChange: vi.fn(() => () => {})
+  }
 }))
 
 const vuetify = createVuetify({ components, directives })
@@ -94,6 +102,25 @@ describe('LandingView', () => {
       const wrapper = mountComponent()
       const logo = wrapper.find('.landing__logo')
       expect(logo.attributes('src')).toContain('atlas-loading.svg')
+    })
+  })
+
+  describe('Configurable Landing Logo', () => {
+    afterEach(() => {
+      vi.mocked(pluginConfigService.getLandingLogoUrl).mockReturnValue(null)
+    })
+
+    it('renders the configured landing logo when set', async () => {
+      vi.mocked(pluginConfigService.getLandingLogoUrl).mockReturnValue('/branding/hero.svg')
+      const wrapper = mountComponent()
+      await flushPromises()
+      expect(wrapper.find('.landing__logo').attributes('src')).toBe('/branding/hero.svg')
+    })
+
+    it('falls back to the default logo when not configured', async () => {
+      const wrapper = mountComponent()
+      await flushPromises()
+      expect(wrapper.find('.landing__logo').attributes('src')).toContain('atlas-loading.svg')
     })
   })
 

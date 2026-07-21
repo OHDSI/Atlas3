@@ -100,7 +100,8 @@
                 :key="attr.key"
                 :title="attr.label"
                 :subtitle="attr.description"
-                :disabled="attr.type === 'nested' && !!event.nestedCriteria"
+                :disabled="(attr.type === 'nested' && !!event.nestedCriteria)
+                  || (eventHasSourceConcept && attr.key.endsWith('SourceConcept') && sourceConceptRowVisible)"
                 @click="addAttribute(attr.key, attr.type)"
               />
             </AtlasList>
@@ -159,6 +160,53 @@
           </AtlasButton>
         </div>
 
+        <!-- Optional end-date constraint (endTemporalWindow). Constrains the
+             event's END date, independently of the start-date temporalWindow
+             above — e.g. "drug exposure must END within 30 days after index". -->
+        <div
+          v-if="showTemporal"
+          class="end-window-section mt-2"
+        >
+          <AtlasMenu
+            v-if="event.endTemporalWindow"
+            :close-on-content-click="false"
+            location="end"
+          >
+            <template #activator="{ props: menuProps }">
+              <span data-testid="end-window-chip">
+                <TemporalFilterChip
+                  v-bind="menuProps"
+                  :label="`${t('components.eventCard.endWindowLabel', 'End window').value}: ${formatTemporalWindowDisplay(event.endTemporalWindow)}`"
+                  @close="removeEndTemporalWindow"
+                />
+              </span>
+            </template>
+            <v-card
+              class="temporal-window-menu"
+              style="min-width: 500px"
+            >
+              <v-card-text class="pa-3">
+                <TemporalWindowEditor
+                  :model-value="event.endTemporalWindow"
+                  data-testid="end-window-editor"
+                  @update:model-value="updateEndTemporalWindow"
+                />
+              </v-card-text>
+            </v-card>
+          </AtlasMenu>
+          <AtlasButton
+            v-else
+            size="sm"
+            variant="secondary"
+            icon="mdi-calendar-end"
+            density="compact"
+            data-testid="add-end-window"
+            @click="addEndTemporalWindow"
+          >
+            {{ t('components.eventCard.addEndWindow', 'Add End-Date Constraint') }}
+          </AtlasButton>
+        </div>
+
         <!-- Attributes -->
         <div class="attributes-section mt-3">
           <AttributesEditor
@@ -176,6 +224,38 @@
                 emit('select-concept-for-attribute', attributeIndex, domainFilter)
             "
           />
+          <div
+            v-if="sourceConceptRowVisible"
+            class="source-concept-row mt-2"
+            data-testid="source-concept-row"
+          >
+            <div class="source-concept-row__title">
+              {{ t('components.eventCard.sourceConceptLabel', 'Source concept') }}
+            </div>
+            <div class="source-concept-row__input">
+              <EventConceptSetField
+                compact
+                :concept-set="sourceConceptDisplay"
+                :select-label="t('components.eventCard.selectSourceConcept', 'Select Source Concept').value"
+                picker-test-id="source-concept-picker"
+                chip-test-id="source-concept-selected"
+                @select="onSelectSourceConcept"
+                @edit="onSelectSourceConcept"
+                @clear="removeSourceConcept"
+              />
+            </div>
+            <div class="source-concept-row__actions">
+              <AtlasIconButton
+                v-bind="{ ariaLabel: t('common.remove', 'Remove').value }"
+                icon="mdi-delete"
+                size="sm"
+                variant="text"
+                density="compact"
+                data-testid="remove-source-concept-attribute"
+                @click="removeSourceConcept"
+              />
+            </div>
+          </div>
         </div>
 
         <!-- Per-criteria option switches (wrapped criteria only). These map to
@@ -222,13 +302,14 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSwitch, AtlasTextField } from '@/components/ui'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import { useCriteriaSelection } from '@/composables/useCriteriaSelection'
 import { useTemporalWindows } from '@/composables/useTemporalWindows'
+import { SOURCE_CONCEPT_KEYS } from '@/services/atlas-converter'
 import type { CohortEvent, NestedCriteria, TemporalWindow } from '@/models/cohort.types'
 import type {
   EventAttribute,
@@ -286,6 +367,7 @@ const emit = defineEmits<{
   'select-concept-set-for-attribute': [attributeIndex: number]
   'select-concept-for-attribute': [attributeIndex: number, domainFilter: string | undefined]
   'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
+  'select-source-concept': []
 }>()
 
 const sectionRef = computed(() => props.section)
@@ -347,8 +429,8 @@ function addTemporalWindow() {
   emit('update', {
     ...props.event,
     temporalWindow: {
-      startWindow: { days: 365, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' },
-      endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
+      startWindow: { days: 365, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false },
+      endWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
     },
   })
 }
@@ -358,6 +440,25 @@ function updateTemporalWindow(temporalWindow: TemporalWindow) {
 function removeTemporalWindow() {
   const updated = { ...props.event }
   delete updated.temporalWindow
+  emit('update', updated)
+}
+
+// ── End-date constraint (endTemporalWindow) ───────────────────────────────
+function addEndTemporalWindow() {
+  emit('update', {
+    ...props.event,
+    endTemporalWindow: {
+      startWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
+      endWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
+    },
+  })
+}
+function updateEndTemporalWindow(endTemporalWindow: TemporalWindow) {
+  emit('update', { ...props.event, endTemporalWindow })
+}
+function removeEndTemporalWindow() {
+  const updated = { ...props.event }
+  delete updated.endTemporalWindow
   emit('update', updated)
 }
 
@@ -395,6 +496,45 @@ function onEditConceptSet(conceptSet: { id: number | string; name: string; items
 function removeConceptSet() {
   emit('update', { ...props.event, conceptSet: undefined })
 }
+
+// ── Source concept (CIRCE `<CriteriaType>SourceConcept`) ─────────────────
+// Only applies to the criteria types the converter maps in SOURCE_CONCEPT_KEYS.
+const eventHasSourceConcept = computed(() => !!SOURCE_CONCEPT_KEYS[props.event.criteriaType])
+
+const sourceConceptPending = ref(false)
+const sourceConceptRowVisible = computed(
+  () => typeof props.event.sourceConceptId === 'number' || sourceConceptPending.value,
+)
+
+// sourceConceptId is stored as a bare numeric codeset id (no embedded name),
+// so the picked concept set's name is cached locally purely for display —
+// re-selecting the same event after a reload shows the id until re-picked.
+const sourceConceptNames = ref<Record<number, string>>({})
+const sourceConceptDisplay = computed(() => {
+  const id = props.event.sourceConceptId
+  if (typeof id !== 'number') return undefined
+  return { id, name: sourceConceptNames.value[id] ?? `#${id}` }
+})
+
+function onSelectSourceConcept() {
+  if (selection) {
+    selection.requestConceptSet(conceptSet => {
+      if (typeof conceptSet.id !== 'number') return
+      sourceConceptNames.value = { ...sourceConceptNames.value, [conceptSet.id]: conceptSet.name }
+      emit('update', { ...props.event, sourceConceptId: conceptSet.id })
+    })
+    return
+  }
+  emit('select-source-concept')
+}
+
+function removeSourceConcept() {
+  sourceConceptPending.value = false
+  const updated = { ...props.event }
+  delete updated.sourceConceptId
+  emit('update', updated)
+}
+
 function updateAttributes(attributes: EventAttribute[]) {
   emit('update', { ...props.event, attributes })
 }
@@ -421,6 +561,16 @@ function onNestedSelectConceptSet(payload: number | { eventIndex: number }) {
 }
 
 function addAttribute(attributeKey: string, attributeType: string) {
+  // Task 1's config entries list *SourceConcept as a generic 'concept' attribute;
+  // intercept it here so it opens the dedicated row instead of the CIRCE-mismatched concept path.
+  if (
+    attributeType === 'concept' &&
+    attributeKey.endsWith('SourceConcept') &&
+    eventHasSourceConcept.value
+  ) {
+    sourceConceptPending.value = true
+    return
+  }
   if (attributeType === 'nested') {
     addNestedCriteria()
     return
@@ -611,5 +761,40 @@ function addAttribute(attributeKey: string, attributeType: string) {
 }
 .cardinality-chip--at_most.v-btn--variant-tonal {
   color: #336b91 !important;
+}
+
+.source-concept-row {
+  display: flex;
+  border-radius: 6px;
+  border: 1px solid rgb(var(--v-theme-primary));
+  overflow: hidden;
+}
+
+.source-concept-row__title {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  flex: 1;
+  max-width: 20%;
+  color: rgb(var(--v-theme-primary));
+  background: #ebf2fa;
+  font-size: 13px;
+  font-weight: 500;
+  border-right: 1px solid rgb(var(--v-theme-primary));
+}
+
+.source-concept-row__input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  flex: 2;
+  border-right: 1px solid rgb(var(--v-theme-primary));
+}
+
+.source-concept-row__actions {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
 }
 </style>

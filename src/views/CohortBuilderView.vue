@@ -36,7 +36,8 @@
     >
       <div class="cohort-builder-view__actions">
         <cohort-toolbar-status
-          :concept-set-count="builderRef.conceptSetCount"
+          :total-concept-sets="builderRef.totalConceptSets"
+          :unused-concept-set-count="builderRef.unusedConceptSetCount"
           :validation-count="builderRef.validationCount"
           :validation-color="builderRef.validationColor"
           :is-validating="builderRef.isValidating"
@@ -60,6 +61,7 @@
           @save="builderRef.handleSave()"
           @export-download="builderRef.handleExportDownload()"
           @export-copy="builderRef.handleExportCopy()"
+          @view-json="builderRef.openJsonDialog()"
         />
       </div>
     </template>

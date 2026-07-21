@@ -258,8 +258,8 @@ describe('translateCapability', () => {
       events: [{ conceptId: 1503297, conceptName: 'Metformin', domain: 'Drug', includeDescendants: true }],
     })
     const ev = p.rule.criteriaGroups[0].events[0]
-    expect(ev.temporalWindow.startWindow).toEqual({ days: 365, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' })
-    expect(ev.temporalWindow.endWindow).toEqual({ days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' })
+    expect(ev.temporalWindow.startWindow).toEqual({ days: 365, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false })
+    expect(ev.temporalWindow.endWindow).toEqual({ days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false })
   })
 
   it('add_inclusion_rule with logicType AT_MOST count 0 emits EXACTLY 0 on the event', () => {
@@ -285,8 +285,8 @@ describe('translateCapability', () => {
       events: [{ conceptId: 1, conceptName: 'X', domain: 'Condition', includeDescendants: true }],
     })
     const tw = p.rule.criteriaGroups[0].events[0].temporalWindow
-    expect(tw.startWindow).toEqual({ days: null, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' })
-    expect(tw.endWindow).toEqual({ days: null, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' })
+    expect(tw.startWindow).toEqual({ days: null, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false })
+    expect(tw.endWindow).toEqual({ days: null, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false })
   })
 
   it('omits temporalWindow on events when none is given', () => {

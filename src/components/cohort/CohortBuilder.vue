@@ -46,7 +46,8 @@
       <AtlasActionToolbar>
         <template #status>
           <cohort-toolbar-status
-            :concept-set-count="usedConceptSets.length"
+            :total-concept-sets="cohortStore.currentCohort?.conceptSets?.length || 0"
+            :unused-concept-set-count="(cohortStore.currentCohort?.conceptSets?.length || 0) - usedConceptSets.length"
             :validation-count="validationWarnings.length"
             :validation-color="highestSeverityColor"
             :is-validating="isValidating"
@@ -69,6 +70,7 @@
             @save="handleSave"
             @export-download="handleExportDownload"
             @export-copy="handleExportCopy"
+            @view-json="openJsonDialog"
           />
         </template>
       </AtlasActionToolbar>
@@ -76,14 +78,24 @@
 
     <concept-sets-list-dialog
       v-model="showConceptSetsDialog"
-      :concept-sets="usedConceptSets"
+      :concept-sets="cohortStore.currentCohort?.conceptSets || []"
+      :used-concept-sets="usedConceptSets"
       @view="handleViewConceptSet"
+      @delete="handleDeleteConceptSet"
     />
 
     <validation-messages-dialog
       v-model="showValidationDialog"
       :warnings="validationWarnings"
       :severity-color="highestSeverityColor"
+    />
+
+    <cohort-json-dialog
+      v-model="showJsonDialog"
+      :json="jsonDialogSource"
+      :filename="exportFilename()"
+      :can-apply="!isPreviewingVersion"
+      @apply="handleApplyJson"
     />
 
     <!-- Step rail: groups the four sections as numbered steps so
@@ -442,6 +454,7 @@
             @update:censoring-criteria="censoringCriteria = $event"
             @select-drug-concept-set="handleSelectDrugConceptSet"
             @select-censoring-concept-set="handleSelectCensoringConceptSet"
+            @edit-drug-concept-set="handleEditConceptSet"
           />
 
           <div class="section-subheader">
@@ -465,10 +478,12 @@
     <!-- /.cohort-builder__steps -->
 
     <!-- Concept Set Selection Dialog: in-definition (local) sets to reuse, plus
-         the repository to import a copy from (#111). -->
+         the repository to import a copy from (#111). 
+         Note: We show ALL loaded concept sets, not just currently-used ones,
+         so users can re-add concept sets they've cleared from criteria. -->
     <concept-set-selection-dialog
       v-model="isConceptSetDialogOpen"
-      :local-concept-sets="usedConceptSets"
+      :local-concept-sets="cohortStore.currentCohort?.conceptSets || []"
       @local-concept-set-selected="handleLocalConceptSetSelected"
       @concept-set-selected="handleConceptSetSelected"
       @edit-concept-set="handleEditConceptSet"
@@ -488,12 +503,13 @@
       v-if="conceptSetsStore.editorOpen"
       :model-value="conceptSetsStore.editorOpen"
       :concept-set="conceptSetsStore.currentSet"
+      embedded
       @update:model-value="
         value => {
           if (!value) conceptSetsStore.closeEditor()
         }
       "
-      @save="handleConceptSetSaved"
+      @apply="handleConceptSetApplied"
     />
 
     <AtlasSnackbar
@@ -629,9 +645,11 @@ import CohortBreadcrumb from './CohortBreadcrumb.vue'
 import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
-import { ensureUniqueConceptSetId, hasNumericConceptSetId } from '@/utils/concept-set-id'
+import { ensureUniqueConceptSetId, hasNumericConceptSetId, hasRealConceptSetId, nextConceptSetId } from '@/utils/concept-set-id'
+import { updateConceptSetUsages, clearConceptSetUsages } from '@/utils/concept-set-usages'
 import { resolveCriteriaTargetEvent } from '@/utils/criteria-target'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
+import CohortJsonDialog from './CohortJsonDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import type { Tag } from '@/models/cohort.types'
@@ -678,7 +696,7 @@ const route = useRoute()
 const cohortStore = useCohortStore()
 const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
-const { importFromFile, downloadAtlasJSON, exportToAtlas, conversionError } = useAtlasConverter()
+const { importFromAtlas, downloadAtlasJSON, exportToAtlas, conversionError } = useAtlasConverter()
 const { t, tv } = useI18n()
 
 // Core cohort state
@@ -701,6 +719,10 @@ const showValidationDialog = ref(false)
 const showConceptSetsDialog = ref(false)
 const showVersionsDialog = ref(false)
 const showTagsDialog = ref(false)
+const showJsonDialog = ref(false)
+// Snapshot of the expression taken when the JSON dialog opens, so the
+// editor is not re-seeded under the user while they type.
+const jsonDialogSource = ref('')
 const showUnsavedDialog = ref(false)
 let pendingNavigation: (() => void) | null = null
 
@@ -765,7 +787,6 @@ const showError = ref(false)
 const errorMessage = ref('')
 const showSuccess = ref(false)
 const successMessage = ref('')
-const fileInput = ref<HTMLInputElement | null>(null)
 const isConfirmingNavigation = ref(false) // Flag to prevent double confirmation
 
 // Snapshot of the loaded/saved state for change detection
@@ -966,8 +987,9 @@ async function buildCohortExpression() {
           return ref
         }
 
-        // Fetch full concept set from API
-        if (ref.id) {
+        // Fetch full concept set from API if it has a real (numeric) ID.
+        // Avoid falsy checks (id could be 0, which is valid). Use explicit check for undefined.
+        if (ref.id !== undefined && ref.id !== null) {
           const fullConceptSet = await getConceptSetById(ref.id)
           if (fullConceptSet && fullConceptSet.items) {
             return {
@@ -984,7 +1006,7 @@ async function buildCohortExpression() {
 
     // Strip in-progress criteria from inclusion rules before building the
     // live-preview expression. A criterion that was just added but has no
-    // valid concept set assigned (id === 0 placeholder, or a concept set
+    // valid concept set assigned (undefined id placeholder, or a concept set
     // whose items array is empty) makes circe NPE in
     // CohortExpressionQueryBuilder.getCorelatedlCriteriaQuery — it expects
     // every correlated criterion to have a populated codeset and a
@@ -1000,7 +1022,8 @@ async function buildCohortExpression() {
           if (e.criteriaType === 'Demographic') return true
           const cs = e.conceptSet
           if (!cs) return false
-          if (cs.id === 0) return false
+          // Skip if concept set has undefined placeholder ID (not yet assigned a real ID)
+          if (cs.id === undefined || cs.id === null) return false
           return Array.isArray(cs.items) && cs.items.length > 0
         }),
       })),
@@ -1790,9 +1813,16 @@ async function handleConceptSetSelected(conceptSet: {
     }
   }
 
-  // Copy the entire concept set including items into the cohort definition
+  // When importing from repository, assign a new internal ID to avoid conflicts.
+  // Remote concept sets may have IDs that conflict with newly created sets (e.g.,
+  // if we have id=1 locally and create a new set (id=2), importing a remote set
+  // with id=2 causes a conflict). Use nextConceptSetId to ensure uniqueness.
+  const internalId = nextConceptSetId(cohortStore.currentCohort?.conceptSets || [])
+
+  // Copy the entire concept set including items into the cohort definition,
+  // but with the new internal ID.
   const conceptSetRef: ConceptSetReference = {
-    id: fullConceptSet.id,
+    id: internalId,
     name: fullConceptSet.name,
     items: fullConceptSet.items || [],
   }
@@ -1837,12 +1867,11 @@ async function handleEditConceptSet(conceptSet: {
 
   // Use the embedded concept set items directly (don't fetch from API)
   // The concept set is embedded in the cohort definition with all its items
-  conceptSetsStore.currentSet = {
+  conceptSetsStore.openEmbeddedEditor({
     id: conceptSet.id,
     name: conceptSet.name,
     items: (conceptSet.items || []) as ConceptSetItem[],
-  }
-  conceptSetsStore.editorOpen = true
+  })
 }
 
 /**
@@ -1861,31 +1890,87 @@ function handleViewConceptSet(conceptSet: {
 }
 
 /**
+ * Delete a concept set from the cohort definition
+ */
+function handleDeleteConceptSet(conceptSet: ConceptSetReference) {
+  if (!cohortStore.currentCohort) return
+
+  // Remove the concept set from the cohort's conceptSets array
+  const index = cohortStore.currentCohort.conceptSets.findIndex(cs => cs.id === conceptSet.id)
+  if (index !== -1) {
+    cohortStore.currentCohort.conceptSets.splice(index, 1)
+  }
+
+  // Clear all references to this deleted concept set from the expression.
+  // This is similar to legacy behavior: deleting a concept set resets all
+  // references to it to undefined, which shows the "select concept set" selector.
+  clearConceptSetUsages(
+    {
+      entryEvents: entryEvents.value,
+      additionalCriteria: additionalCriteria.value,
+      inclusionRules: inclusionRules.value,
+      exitCriteria: exitCriteria.value,
+      censoringCriteria: censoringCriteria.value,
+    },
+    conceptSet.id
+  )
+
+  // Trigger reactivity for all affected arrays so Vue re-renders
+  entryEvents.value = [...entryEvents.value]
+  inclusionRules.value = [...inclusionRules.value]
+  if (additionalCriteria.value) additionalCriteria.value = { ...additionalCriteria.value }
+  exitCriteria.value = { ...exitCriteria.value }
+  censoringCriteria.value = [...censoringCriteria.value]
+}
+
+/**
  * Called when user clicks "Create New" in the dialog
  */
 function handleCreateNewConceptSet() {
   // Close dialog and open editor in create mode
   isConceptSetDialogOpen.value = false
+  // Open editor with undefined id (placeholder). The real ID will be assigned
+  // upfront in handleConceptSetApplied using nextConceptSetId(), ensuring
+  // we don't confuse the placeholder with id=0 (which is valid in legacy cohorts).
   conceptSetsStore.openCreateEditor()
 }
 
 /**
- * Called when a concept set is saved in the editor
- * This updates the cohort definition with the saved concept set
+ * Called when the embedded editor applies its changes. The editor worked on a
+ * disposable clone, so nothing reached the cohort yet — write the result into
+ * every usage of the concept set id, which flips the unsaved-changes snapshot.
  */
-function handleConceptSetSaved() {
-  // After save, the store.currentSet should hold the saved concept set
-  const conceptSet = conceptSetsStore.currentSet
-  if (!conceptSet || (!selectedCriteriaContext.value && !pendingConceptSetCallback.value)) return
+function handleConceptSetApplied(set: { id?: number | string; name: string; items?: unknown[] }) {
+  const items = JSON.parse(JSON.stringify(set.items ?? [])) as ConceptSetItem[]
 
-  // Copy the entire concept set including items into the cohort definition
-  const conceptSetRef: ConceptSetReference = {
-    id: conceptSet.id!,
-    name: conceptSet.name,
-    items: conceptSet.items || [],
+  // For new sets with undefined id (placeholder), assign a unique ID upfront now
+  const finalId = set.id === undefined || set.id === null
+    ? nextConceptSetId(cohortStore.currentCohort?.conceptSets || [])
+    : set.id
+
+  const updated: ConceptSetReference = { id: finalId, name: set.name, items }
+  
+  // Update all criteria that reference this concept set
+  updateConceptSetUsages(
+    {
+      entryEvents: entryEvents.value,
+      additionalCriteria: additionalCriteria.value,
+      inclusionRules: inclusionRules.value,
+      exitCriteria: exitCriteria.value,
+      censoringCriteria: censoringCriteria.value,
+    },
+    updated
+  )
+  entryEvents.value = [...entryEvents.value]
+  inclusionRules.value = [...inclusionRules.value]
+  if (additionalCriteria.value) additionalCriteria.value = { ...additionalCriteria.value }
+  exitCriteria.value = { ...exitCriteria.value }
+  censoringCriteria.value = [...censoringCriteria.value]
+
+  if (selectedCriteriaContext.value || pendingConceptSetCallback.value) {
+    // Assign the concept set (now with final ID) to the context
+    assignConceptSetToContext(updated)
   }
-
-  assignConceptSetToContext(conceptSetRef)
 }
 
 /**
@@ -1894,12 +1979,22 @@ function handleConceptSetSaved() {
 function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
   if (!selectedCriteriaContext.value && !pendingConceptSetCallback.value) return
 
-  // A concept set's id is its identity in the cohort — the Atlas CodesetId every
-  // criterion references and the key the cohort dedupes on. A freshly created set
-  // arrives without a real id (the new-set path yields id 0), so two new sets both
-  // carry id 0 and collapse onto each other: adding the second overrides the first.
-  // Give any id-less set a unique numeric id before it enters the cohort.
-  conceptSetRef = ensureUniqueConceptSetId(conceptSetRef, usedConceptSets.value)
+  // For imported/newly created sets: the ID was already assigned upfront and is final.
+  // Only for legacy code paths (if any) do we need to ensure uniqueness.
+  if (!hasRealConceptSetId(conceptSetRef)) {
+    conceptSetRef = ensureUniqueConceptSetId(conceptSetRef, cohortStore.currentCohort?.conceptSets || [])
+  }
+  
+  // Add the concept set to the cohort's conceptSets array. This happens on apply/import,
+  // not during creation. Cancel just closes the editor without reaching here.
+  if (cohortStore.currentCohort) {
+    const existingIndex = cohortStore.currentCohort.conceptSets.findIndex(cs => cs.id === conceptSetRef.id)
+    if (existingIndex === -1) {
+      cohortStore.currentCohort.conceptSets.push(conceptSetRef)
+    } else {
+      cohortStore.currentCohort.conceptSets[existingIndex] = conceptSetRef
+    }
+  }
 
   // Service path (issue #112): deliver to the requesting component, which
   // embeds the reference itself at whatever nesting depth it lives.
@@ -2002,21 +2097,29 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
 
   // Collect every concept set the cohort references (entry, additional,
   // inclusion rules, exit, censoring) and hydrate items from the API for any
-  // that aren't already populated. Saving with just `gatherConceptSets()`
-  // (entry-only) drops inclusion-rule concept sets — the saved Atlas
-  // expression then references CodesetIds that don't exist, and the WebAPI
-  // generator returns 0 patients on the next run.
+  // that aren't already populated. We preserve ALL loaded concept sets (not just
+  // used ones), so users can keep concept sets for potential future use after
+  // clearing them from criteria. This prevents data loss when toggling criteria.
+  // We hydrate items for any set that references the API (has numeric id).
+  const allLoadedSets = cohortStore.currentCohort?.conceptSets || []
+  const usedSetIds = new Set(usedConceptSets.value.map(cs => cs.id))
+  
+  // Merge: start with all loaded sets, but ensure used sets have hydrated items
   const conceptSetsForSave: ConceptSetReference[] = await Promise.all(
-    usedConceptSets.value.map(async ref => {
-      if (ref.items && ref.items.length > 0) {
-        return ref
-      }
-      if (ref.id) {
-        const fullConceptSet = await getConceptSetById(ref.id)
-        if (fullConceptSet?.items) {
-          return { ...ref, items: fullConceptSet.items as ConceptSetItem[] }
+    allLoadedSets.map(async ref => {
+      // If this set is currently used and needs hydration, fetch items from API
+      if (usedSetIds.has(ref.id)) {
+        if (ref.items && ref.items.length > 0) {
+          return ref
+        }
+        if (typeof ref.id === 'number') {
+          const fullConceptSet = await getConceptSetById(ref.id)
+          if (fullConceptSet?.items) {
+            return { ...ref, items: fullConceptSet.items as ConceptSetItem[] }
+          }
         }
       }
+      // For unused sets, preserve as-is
       return ref
     })
   )
@@ -2073,22 +2176,31 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
       prev => !currentTags.some(current => current.id === prev.id)
     )
 
+    const tagFailures: string[] = []
+
     for (const tag of tagsToAdd) {
       if (tag.id) {
-        const success = await assignTagToCohort(cohortId, tag.id)
-        if (!success) {
-          logger.warn('CohortBuilder', `Failed to assign tag ${tag.id}`)
+        const result = await assignTagToCohort(cohortId, tag.id)
+        if (!result.success) {
+          logger.warn('CohortBuilder', `Failed to assign tag ${tag.id}`, result.error)
+          tagFailures.push(result.error ?? `Failed to assign tag "${tag.name}"`)
         }
       }
     }
 
     for (const tag of tagsToRemove) {
       if (tag.id) {
-        const success = await unassignTagFromCohort(cohortId, tag.id)
-        if (!success) {
-          logger.warn('CohortBuilder', `Failed to unassign tag ${tag.id}`)
+        const result = await unassignTagFromCohort(cohortId, tag.id)
+        if (!result.success) {
+          logger.warn('CohortBuilder', `Failed to unassign tag ${tag.id}`, result.error)
+          tagFailures.push(result.error ?? `Failed to unassign tag "${tag.name}"`)
         }
       }
+    }
+
+    if (tagFailures.length > 0) {
+      errorMessage.value = tagFailures.join('; ')
+      showError.value = true
     }
 
     loadedTags.value = [...currentTags]
@@ -2130,50 +2242,59 @@ function gatherConceptSets(): ConceptSetReference[] {
 }
 
 // Atlas JSON Import/Export
-// @ts-expect-error - Planned feature, not yet implemented in UI
-async function _handleFileImport(event: Event) {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (!file) return
 
-  const importedCohort = await importFromFile(file)
+/**
+ * Overwrite the builder's expression state from an imported cohort.
+ *
+ * Expression only: name, description and tags are the identity of the
+ * cohort you are editing and survive the overwrite. Every expression
+ * field is written unconditionally (falling back to its empty default)
+ * so that importing a JSON that *omits* a section clears that section
+ * rather than leaving the previous cohort's leftovers behind.
+ */
+function applyImportedExpression(importedCohort: Partial<CohortDefinition>) {
+  // Cancel any pending validation during batch state update
+  cancelValidation()
 
-  if (conversionError.value) {
-    errorMessage.value = `Import failed: ${conversionError.value}`
+  entryEvents.value = importedCohort.entryEvents || []
+  additionalCriteria.value = importedCohort.additionalCriteria
+  inclusionRules.value = importedCohort.inclusionRules || []
+  exitCriteria.value = importedCohort.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
+  censorWindow.value = importedCohort.censorWindow ?? null
+  collapseSettings.value = importedCohort.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
+  censoringCriteria.value = importedCohort.censoringCriteria ?? []
+  observationPeriod.value = importedCohort.observationPeriod ?? { priorDays: 0, postDays: 0 }
+  qualifyingLimit.value = importedCohort.qualifyingLimit || 'ALL'
+  primaryCriteriaLimit.value = importedCohort.primaryCriteriaLimit
+  inclusionQualifyingLimit.value = importedCohort.inclusionQualifyingLimit || 'ALL'
+
+  // Trigger validation (composable handles debouncing)
+  triggerValidation()
+}
+
+/**
+ * Apply JSON edited in the JSON dialog. The result is left unsaved and
+ * dirty — the user still has to press Save, exactly like a hand edit.
+ */
+async function handleApplyJson(json: string) {
+  const importedCohort = await importFromAtlas(json)
+
+  if (!importedCohort || conversionError.value) {
+    errorMessage.value = tv('components.cohortBuilder.jsonImportFailed', 'Import failed: {error}', {
+      error: conversionError.value || tv('components.cohortBuilder.jsonInvalidExpression', 'Not a valid Atlas cohort expression'),
+    })
     showError.value = true
     return
   }
 
-  if (importedCohort) {
-    // Cancel any pending validation during batch state update
-    cancelValidation()
+  applyImportedExpression(importedCohort)
 
-    // Load imported data into state
-    cohortName.value = importedCohort.name || ''
-    cohortDescription.value = importedCohort.description || ''
-    entryEvents.value = importedCohort.entryEvents || []
-    additionalCriteria.value = importedCohort.additionalCriteria
-    inclusionRules.value = importedCohort.inclusionRules || []
-    exitCriteria.value = importedCohort.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
-    censorWindow.value = importedCohort.censorWindow ?? null
-    collapseSettings.value = importedCohort.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
-    censoringCriteria.value = importedCohort.censoringCriteria ?? []
-    observationPeriod.value = importedCohort.observationPeriod ?? { priorDays: 0, postDays: 0 }
-    qualifyingLimit.value = importedCohort.qualifyingLimit || 'ALL'
-    primaryCriteriaLimit.value = importedCohort.primaryCriteriaLimit
-    inclusionQualifyingLimit.value = importedCohort.inclusionQualifyingLimit || 'ALL'
-
-    // Trigger validation (composable handles debouncing)
-    triggerValidation()
-
-    successMessage.value = 'Atlas JSON imported successfully'
-    showSuccess.value = true
-  }
-
-  // Reset file input
-  if (fileInput.value) {
-    fileInput.value.value = ''
-  }
+  showJsonDialog.value = false
+  successMessage.value = tv(
+    'components.cohortBuilder.jsonApplied',
+    'Cohort JSON applied — review the builder, then save'
+  )
+  showSuccess.value = true
 }
 
 function buildExportCohort(): CohortDefinition {
@@ -2196,6 +2317,15 @@ function buildExportCohort(): CohortDefinition {
 function exportFilename(): string {
   const slug = cohortName.value.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'cohort'
   return `${slug}_cohort.json`
+}
+
+/**
+ * Open the JSON dialog, seeding it with the same Atlas JSON the export
+ * actions produce, so view / copy / download / edit all agree.
+ */
+function openJsonDialog() {
+  jsonDialogSource.value = exportToAtlas(buildExportCohort())
+  showJsonDialog.value = true
 }
 
 function handleExportDownload() {
@@ -2315,7 +2445,8 @@ function _getStatusText(status: string): string {
 // time, so a parent reading `builderRef.canSave` gets a number.
 defineExpose({
   // Status state
-  conceptSetCount: computed(() => usedConceptSets.value.length),
+  totalConceptSets: computed(() => (cohortStore.currentCohort?.conceptSets?.length || 0)),
+  unusedConceptSetCount: computed(() => (cohortStore.currentCohort?.conceptSets?.length || 0) - usedConceptSets.value.length),
   validationCount: computed(() => validationWarnings.value.length),
   validationColor: computed(() => highestSeverityColor.value),
   isValidating,
@@ -2343,6 +2474,7 @@ defineExpose({
   handleSave,
   handleExportDownload,
   handleExportCopy,
+  openJsonDialog,
   // Existing expose (criteria editor / inclusion panel) is
   // re-declared here because defineExpose may only be called
   // once per component.

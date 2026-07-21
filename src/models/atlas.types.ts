@@ -13,9 +13,10 @@
  */
 export interface AtlasAdditionalCriteria {
   Type: 'ALL' | 'ANY' | 'AT_LEAST' | 'AT_MOST'
+  Count?: number
   CriteriaList: AtlasCriteria[]
   DemographicCriteriaList: Record<string, unknown>[]
-  Groups: AtlasCriteria[]
+  Groups: AtlasGroup[]
 }
 
 /**
@@ -134,7 +135,6 @@ export interface AtlasPrimaryCriteria {
 
 export interface AtlasCriteria {
   [key: string]: unknown // Criteria type specific fields
-  CorrelatedCriteria?: AtlasCorrelatedCriteria // Nested criteria
   Occurrence?: AtlasOccurrence // Cardinality
 }
 
@@ -188,7 +188,7 @@ export interface AtlasEndStrategy {
     Offset: number
   }
   CustomEra?: {
-    DrugCodesetId: number
+    DrugCodesetId: number | undefined
     GapDays: number
     Offset: number
   }
@@ -390,11 +390,12 @@ export interface AtlasDateAdjustment {
 }
 
 /**
- * Atlas user defined period
+ * Atlas user defined period — CIRCE nests the custom range under this object,
+ * not as flat PeriodStartDate/PeriodEndDate strings.
  */
 export interface AtlasUserDefinedPeriod {
-  PeriodStartDate: string
-  PeriodEndDate: string
+  StartDate: string
+  EndDate: string
 }
 
 /**
@@ -418,6 +419,7 @@ export interface ConceptSetItem {
  * Atlas criteria type object (the criteria-specific part)
  */
 export interface AtlasCriteriaTypeObject {
+  CorrelatedCriteria?: AtlasCorrelatedCriteria // Nested criteria (CIRCE nests it here, not on the wrapper)
   CodesetId?: number | null
   First?: boolean
   OccurrenceStartDate?: AtlasRange

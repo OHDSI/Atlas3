@@ -15,18 +15,18 @@
       <template #activator="{ props: tooltipProps }">
         <AtlasBadge
           v-bind="tooltipProps"
-          :content="conceptSetCount"
-          :model-value="conceptSetCount > 0"
+          :content="unusedConceptSetCount"
+          :model-value="unusedConceptSetCount > 0"
           color="primary"
           class="cohort-toolbar-status__badge"
         >
           <AtlasIcon
-            :color="conceptSetCount > 0 ? 'primary' : 'grey'"
+            :color="totalConceptSets > 0 ? 'primary' : 'grey'"
             icon="mdi-shape"
             size="small"
             data-testid="concept-sets-icon"
-            :style="conceptSetCount > 0 ? 'cursor: pointer' : 'cursor: default; opacity: 0.5'"
-            @click="conceptSetCount > 0 && $emit('show-concept-sets')"
+            :style="totalConceptSets > 0 ? 'cursor: pointer' : 'cursor: default; opacity: 0.5'"
+            @click="totalConceptSets > 0 && $emit('show-concept-sets')"
           />
         </AtlasBadge>
       </template>
@@ -125,7 +125,8 @@ import { AtlasBadge, AtlasIcon, AtlasTooltip } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 interface Props {
-  conceptSetCount: number
+  totalConceptSets: number
+  unusedConceptSetCount: number
   validationCount: number
   validationColor: string
   isValidating: boolean

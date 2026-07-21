@@ -127,6 +127,10 @@ export class PluginConfigService {
     return this.manifest?.settings?.theme?.logoNavigateTo || '/'
   }
 
+  getLandingLogoUrl(): string | null {
+    return this.manifest?.settings?.theme?.landingLogoUrl || null
+  }
+
   isCoreNavigationItemEnabled(itemId: string): boolean {
     const navSettings = this.getNavigationSettings()
 

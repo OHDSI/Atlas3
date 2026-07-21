@@ -9,8 +9,8 @@ import type { ConceptSetReference } from '@/models/cohort.types'
 
 describe('concept-set-id helpers', () => {
   describe('hasRealConceptSetId', () => {
-    it('treats id 0, undefined and empty string as not-yet-assigned', () => {
-      expect(hasRealConceptSetId({ id: 0 })).toBe(false)
+    it('treats undefined and empty string as not-yet-assigned, but accepts id 0 as valid', () => {
+      expect(hasRealConceptSetId({ id: 0 })).toBe(true) // 0 is a valid CodesetId
       expect(hasRealConceptSetId({ id: undefined as unknown as number })).toBe(false)
       expect(hasRealConceptSetId({ id: '' })).toBe(false)
     })
@@ -36,12 +36,12 @@ describe('concept-set-id helpers', () => {
   })
 
   describe('nextConceptSetId', () => {
-    it('starts at 1 when there are no concept sets', () => {
-      expect(nextConceptSetId([])).toBe(1)
+    it('starts at 0 when there are no concept sets (historical behavior: first set in a cohort gets id=0)', () => {
+      expect(nextConceptSetId([])).toBe(0)
     })
 
     it('returns one past the highest existing numeric id', () => {
-      expect(nextConceptSetId([{ id: 1 }, { id: 7 }, { id: 3 }])).toBe(8)
+      expect(nextConceptSetId([{ id: 0 }, { id: 7 }, { id: 3 }])).toBe(8)
     })
 
     it('ignores non-numeric ids', () => {
@@ -50,27 +50,26 @@ describe('concept-set-id helpers', () => {
   })
 
   describe('ensureUniqueConceptSetId', () => {
-    it('assigns a unique id to a new (id 0) concept set so it does not override existing ones', () => {
+    it('preserves valid id=0 when it does not collide with other sets', () => {
       const existing: ConceptSetReference[] = [{ id: 1, name: 'Diabetes', items: [] }]
       const fresh: ConceptSetReference = { id: 0, name: 'Hypertension', items: [] }
 
       const result = ensureUniqueConceptSetId(fresh, existing)
 
-      expect(result.id).toBe(2)
-      // Distinct from the already-added set — appends rather than collides.
-      expect(result.id).not.toBe(existing[0]?.id)
+      expect(result.id).toBe(0) // id=0 is valid, no collision with id=1
+      expect(result).toEqual(fresh)
     })
 
-    it('two consecutively added id-0 sets receive distinct ids', () => {
+    it('two consecutively added fresh sets (both id=undefined) receive distinct ids', () => {
       const used: ConceptSetReference[] = []
 
-      const a = ensureUniqueConceptSetId({ id: 0, name: 'A', items: [] }, used)
+      const a = ensureUniqueConceptSetId({ id: undefined, name: 'A', items: [] } as any, used)
       used.push(a)
-      const b = ensureUniqueConceptSetId({ id: 0, name: 'B', items: [] }, used)
+      const b = ensureUniqueConceptSetId({ id: undefined, name: 'B', items: [] } as any, used)
       used.push(b)
 
-      expect(a.id).toBe(1)
-      expect(b.id).toBe(2)
+      expect(a.id).toBe(0) // First placeholder set gets id=0
+      expect(b.id).toBe(1) // Second placeholder set gets id=1
     })
 
     it('reassigns a distinct set that collides on a positive id (both stamped id 1)', () => {

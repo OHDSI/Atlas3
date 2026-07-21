@@ -250,31 +250,37 @@ export async function deleteCohortDefinition(id: number): Promise<boolean> {
 /**
  * Assign tag to cohort definition
  */
-export async function assignTagToCohort(cohortId: number, tagId: number): Promise<boolean> {
+export async function assignTagToCohort(
+  cohortId: number,
+  tagId: number
+): Promise<{ success: boolean; error?: string }> {
   try {
     await fetchJSON(`/cohortdefinition/${cohortId}/tag/`, {
       method: 'POST',
       body: JSON.stringify(tagId),
     })
-    return true
+    return { success: true }
   } catch (error) {
     logger.error('WebAPI', `Failed to assign tag ${tagId} to cohort ${cohortId}`, error)
-    return false
+    return { success: false, error: error instanceof Error ? error.message : String(error) }
   }
 }
 
 /**
  * Unassign tag from cohort definition
  */
-export async function unassignTagFromCohort(cohortId: number, tagId: number): Promise<boolean> {
+export async function unassignTagFromCohort(
+  cohortId: number,
+  tagId: number
+): Promise<{ success: boolean; error?: string }> {
   try {
     await fetchJSON(`/cohortdefinition/${cohortId}/tag/${tagId}`, {
       method: 'DELETE',
     })
-    return true
+    return { success: true }
   } catch (error) {
     logger.error('WebAPI', `Failed to unassign tag ${tagId} from cohort ${cohortId}`, error)
-    return false
+    return { success: false, error: error instanceof Error ? error.message : String(error) }
   }
 }
 

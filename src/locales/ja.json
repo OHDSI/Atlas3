@@ -93,6 +93,7 @@
     "add": "追加",
     "and": "かつ",
     "anonymous": "匿名",
+    "apply": "適用",
     "cancel": "キャンセル",
     "close": "閉じる",
     "configureAccess": "アクセスを設定",
@@ -1591,7 +1592,9 @@
     "temporalWindowEditor": {
       "referencePoint": "基準点",
       "startReferencePoint": "開始基準点",
-      "endReferencePoint": "終了基準点"
+      "endReferencePoint": "終了基準点",
+      "useIndexEnd": "インデックス終了日を使用",
+      "useEventEnd": "イベント終了日を使用"
     },
     "conceptSetPicker": {
       "clearSelection": "選択をクリア",
@@ -1629,11 +1632,17 @@
       "removeCardinality": "カーディナリティを削除",
       "temporalWindows": "時間ウィンドウ",
       "removeTemporalWindow": "時間ウィンドウを削除",
+      "addEndWindow": "終了日制約を追加",
+      "removeEndWindow": "終了日制約を削除",
+      "endWindowLabel": "終了ウィンドウ",
       "eventIdLabel": "イベントID：",
       "criteriaTypeLabel": "基準タイプ：",
       "conceptSetIdLabel": "コンセプトセットID：",
       "restrictVisitNote": "イベントはインデックスと同じ来院時に発生する必要があります",
-      "ignoreObservationNote": "イベントは観察期間外に発生する可能性があります"
+      "ignoreObservationNote": "イベントは観察期間外に発生する可能性があります",
+      "sourceConceptLabel": "ソースコンセプト",
+      "selectSourceConcept": "ソースコンセプトを選択",
+      "typeExcludeLabel": "コンセプトタイプを除外（いずれにも該当しない）"
     },
     "filterTypeSelector": {
       "label": "フィルタータイプ",
@@ -1685,7 +1694,20 @@
       "exportDownloaded": "コホート JSON をダウンロードしました",
       "copiedToClipboard": "コホート JSON をクリップボードにコピーしました",
       "copyFailed": "クリップボードにコピーできませんでした",
-      "emptyCohort": "空のコホート"
+      "emptyCohort": "空のコホート",
+      "jsonViewEdit": "表示 / 編集",
+      "jsonViewEditSubtitle": "JSON でコホートを上書きします",
+      "jsonDialogTitle": "コホート JSON",
+      "jsonDialogSubtitle": "Atlas 式を直接編集します。適用するとコホートのロジックが置き換えられます（名前と説明は保持されます）。",
+      "jsonPlaceholder": "Atlas のコホート式を貼り付けるか、ファイルから読み込んでください…",
+      "jsonLoadFile": "ファイルを読み込む",
+      "jsonCopied": "コピーしました",
+      "jsonApply": "ビルダーに適用",
+      "jsonApplied": "コホート JSON を適用しました。内容を確認して保存してください",
+      "jsonInvalid": "JSON が不正です: {error}",
+      "jsonInvalidExpression": "有効な Atlas コホート式ではありません",
+      "jsonImportFailed": "インポートに失敗しました: {error}",
+      "jsonReadFailed": "ファイルを読み込めませんでした"
     },
     "conceptDetail": {
       "closeDetails": "コンセプトの詳細を閉じる",

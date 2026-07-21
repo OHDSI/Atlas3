@@ -123,7 +123,23 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
       }
 
       if (!response.ok) {
-        const error = new Error(`HTTP ${response.status}: ${response.statusText}`)
+        // Surface the server's error body (e.g. WebAPI's tag-assignment
+        // constraint violations) instead of the bare status text, which
+        // alone doesn't say what went wrong (#132).
+        let detail = response.statusText
+        try {
+          const text = await response.text()
+          if (text) {
+            try {
+              detail = (JSON.parse(text) as { message?: string }).message ?? text
+            } catch {
+              detail = text
+            }
+          }
+        } catch {
+          // keep statusText
+        }
+        const error = new Error(`HTTP ${response.status}: ${detail}`)
         if (isRetryableError(error, response.status) && attempt < maxRetries - 1) {
           const delay = initialDelay * Math.pow(2, attempt)
           logger.warn(

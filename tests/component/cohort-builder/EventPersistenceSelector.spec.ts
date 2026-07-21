@@ -1,29 +1,18 @@
-import { createPinia, setActivePinia } from 'pinia'
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
 
 // Mock i18n composable
 vi.mock('@/composables/useI18n', async () => {
-  const { mockUseI18n } = await import('../../helpers/i18n-mock')
-  return mockUseI18n
+  const { mockUseI18nKeyOnly } = await import('../../helpers/i18n-mock')
+  return mockUseI18nKeyOnly
 })
-
-// Mock webapi service
-vi.mock('@/services/webapi', () => ({
-  fetchCDMSources: vi.fn().mockResolvedValue({ success: true, data: [] }),
-  getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
-}))
 
 import EventPersistenceSelector from '@/components/cohort-builder/EventPersistenceSelector.vue'
-import type { ExitCriteria, ConceptSetReference } from '@/models/cohort.types'
+import type { ExitCriteria } from '@/models/cohort.types'
+import type { ValidationError } from '@/models/validation.types'
 
-const vuetify = createVuetify({
-  components,
-  directives,
-})
+const vuetify = createVuetify()
 
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
@@ -32,140 +21,169 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }))
 
 describe('EventPersistenceSelector', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-  })
-
-  const mockConceptSets: ConceptSetReference[] = [
-    { id: 1, name: 'Statins' },
-    { id: 2, name: 'ACE Inhibitors' }
-  ]
-
-  const createWrapper = (exitCriteria?: ExitCriteria, conceptSets = mockConceptSets) => {
+  const createWrapper = (exitCriteria?: ExitCriteria) => {
     return mount(EventPersistenceSelector, {
-      global: {
-        plugins: [vuetify],
-      },
+      global: { plugins: [vuetify] },
       props: {
         modelValue: exitCriteria || { strategy: 'CONTINUOUS_DRUG' },
-        conceptSets,
       },
+      shallow: true,
     })
   }
 
-  it('should render event persistence selector', () => {
+  // Basic rendering
+  it('should render event persistence selector container', () => {
     const wrapper = createWrapper()
     expect(wrapper.find('.event-persistence-selector').exists()).toBe(true)
   })
 
-  it('should show "Select Concept Set" button when no concept set selected', () => {
-    const wrapper = createWrapper()
+  // Strategy selection - one test per strategy type
+  it('should render ObservationStrategy when CONTINUOUS_OBSERVATION is selected', () => {
+    const wrapper = createWrapper({ strategy: 'CONTINUOUS_OBSERVATION' })
+    expect(wrapper.findComponent({ name: 'ObservationStrategy' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'FixedDurationStrategy' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'DrugExposureStrategy' }).exists()).toBe(false)
+  })
 
-    // Should have selectedConceptSet as null
-    expect(wrapper.vm.selectedConceptSet).toBeNull()
+  it('should render FixedDurationStrategy when FIXED_DURATION is selected', () => {
+    const exitCriteria: ExitCriteria = { strategy: 'FIXED_DURATION', dateField: 'START_DATE', offset: 0 }
+    const wrapper = createWrapper(exitCriteria)
+    expect(wrapper.findComponent({ name: 'FixedDurationStrategy' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'ObservationStrategy' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'DrugExposureStrategy' }).exists()).toBe(false)
+  })
 
-    // Button should exist (with plus icon)
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+  it('should render DrugExposureStrategy when CONTINUOUS_DRUG is selected', () => {
+    const exitCriteria: ExitCriteria = {
+      strategy: 'CONTINUOUS_DRUG',
+      conceptSet: { id: 1, name: 'Statins' },
+      persistenceWindow: 30,
+      surveillanceWindow: 7
+    }
+    const wrapper = createWrapper(exitCriteria)
+    expect(wrapper.findComponent({ name: 'DrugExposureStrategy' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'ObservationStrategy' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'FixedDurationStrategy' }).exists()).toBe(false)
+  })
+
+  // Event pass-through
+  it('should pass through select-drug-concept-set event from DrugExposureStrategy', () => {
+    const wrapper = createWrapper({ strategy: 'CONTINUOUS_DRUG' })
+    const drugComponent = wrapper.findComponent({ name: 'DrugExposureStrategy' })
+    drugComponent.vm.$emit('select-drug-concept-set')
+    expect(wrapper.emitted('select-drug-concept-set')).toBeTruthy()
+  })
+
+  it('should pass through edit-drug-concept-set event from DrugExposureStrategy with payload', () => {
+    const exitCriteria: ExitCriteria = { strategy: 'CONTINUOUS_DRUG', conceptSet: { id: 1, name: 'Statins' } }
+    const wrapper = createWrapper(exitCriteria)
+    const drugComponent = wrapper.findComponent({ name: 'DrugExposureStrategy' })
+    const payload = { id: 1, name: 'Statins' }
+    drugComponent.vm.$emit('edit-drug-concept-set', payload)
+    const emitted = wrapper.emitted('edit-drug-concept-set')
+    expect(emitted).toBeTruthy()
+    expect(emitted?.[0]).toEqual([payload])
+  })
+
+  // Strategy switching
+  it('should emit update:modelValue when strategy button is clicked', async () => {
+    const wrapper = createWrapper({ strategy: 'CONTINUOUS_OBSERVATION' })
+    const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
+    const fixedDurationButton = buttons.find(btn => btn.text().includes('Fixed Duration'))
+
+    if (fixedDurationButton) {
+      await fixedDurationButton.trigger('click')
+      const emitted = wrapper.emitted('update:modelValue')
+      expect(emitted).toBeTruthy()
+      expect((emitted?.[0]?.[0] as ExitCriteria)?.strategy).toBe('FIXED_DURATION')
+    }
+  })
+
+  // Validation events
+  it('should emit validation-error event when strategy is changed', async () => {
+    const wrapper = createWrapper({ strategy: 'CONTINUOUS_OBSERVATION' })
+    const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
+    const fixedDurationButton = buttons.find(btn => btn.text().includes('Fixed Duration'))
+
+    if (fixedDurationButton) {
+      await fixedDurationButton.trigger('click')
+      const emitted = wrapper.emitted('validation-error')
+      expect(emitted).toBeTruthy()
+    }
+  })
+
+  // Disabled state
+  it('should disable strategy buttons when disabled prop is true', () => {
+    const wrapper = mount(EventPersistenceSelector, {
+      global: { plugins: [vuetify] },
+      props: {
+        modelValue: { strategy: 'CONTINUOUS_OBSERVATION' },
+        disabled: true,
+      },
+      shallow: true,
+    })
+
+    const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
     expect(buttons.length).toBeGreaterThan(0)
+    buttons.forEach(btn => {
+      expect(btn.props('disabled')).toBe(true)
+    })
   })
 
-  it('should show concept set chip when concept set is selected', () => {
-    const exitCriteria: ExitCriteria = {
-      strategy: 'CONTINUOUS_DRUG',
-      conceptSet: { id: 1, name: 'Statins' },
-      persistenceWindow: 30,
-      surveillanceWindow: 7
-    }
-
-    const wrapper = createWrapper(exitCriteria)
-
-    const chip = wrapper.findComponent({ name: 'VChip' })
-    expect(chip.exists()).toBe(true)
-    expect(chip.text()).toContain('Statins')
-  })
-
-  it('should show persistence window and surveillance window fields when concept set is selected', () => {
-    const exitCriteria: ExitCriteria = {
-      strategy: 'CONTINUOUS_DRUG',
-      conceptSet: { id: 1, name: 'Statins' },
-      persistenceWindow: 30,
-      surveillanceWindow: 7
-    }
-
-    const wrapper = createWrapper(exitCriteria)
-
-    // Should show both text fields
-    const textFields = wrapper.findAllComponents({ name: 'VTextField' })
-    expect(textFields.length).toBe(2)
-
-    // Check for persistence window and surveillance window
-    expect(wrapper.html()).toContain('Persistence Window')
-    expect(wrapper.html()).toContain('Surveillance Window')
-  })
-
-  it('should emit open-concept-set-dialog when select button is clicked', async () => {
-    const wrapper = createWrapper()
-
-    const button = wrapper.findAllComponents({ name: 'VBtn' }).find(btn =>
-      btn.text().includes('Select Concept Set')
-    )
-
-    if (button) {
-      await button.trigger('click')
-      expect(wrapper.emitted('open-concept-set-dialog')).toBeTruthy()
-    }
-  })
-
-  it('should clear concept set when chip close is clicked', async () => {
-    const exitCriteria: ExitCriteria = {
-      strategy: 'CONTINUOUS_DRUG',
-      conceptSet: { id: 1, name: 'Statins' },
-      persistenceWindow: 30,
-      surveillanceWindow: 7
-    }
-
-    const wrapper = createWrapper(exitCriteria)
-
-    // Component should have clearConceptSet method
-    expect(wrapper.vm.clearConceptSet).toBeDefined()
-
-    // Call it directly
-    await wrapper.vm.clearConceptSet()
+  // Transition tests - exercise changeStrategy for different paths
+  it('should transition from FIXED_DURATION to CONTINUOUS_OBSERVATION with defaults', async () => {
+    const wrapper = createWrapper({ strategy: 'FIXED_DURATION', dateField: 'START_DATE', offset: 30 })
+    const vm = wrapper.vm as any
+    vm.changeStrategy('CONTINUOUS_OBSERVATION')
     await wrapper.vm.$nextTick()
 
-    // Should emit update with no concept set
     const emitted = wrapper.emitted('update:modelValue')
-    expect(emitted).toBeDefined()
+    expect(emitted).toBeTruthy()
+    const payload = emitted?.[0]?.[0] as ExitCriteria
+    expect(payload.strategy).toBe('CONTINUOUS_OBSERVATION')
   })
 
-  it('should show tooltips for help icons', () => {
-    const exitCriteria: ExitCriteria = {
-      strategy: 'CONTINUOUS_DRUG',
-      conceptSet: { id: 1, name: 'Statins' },
-      persistenceWindow: 30,
-      surveillanceWindow: 7
-    }
+  it('should transition from CONTINUOUS_OBSERVATION to FIXED_DURATION with defaults', async () => {
+    const wrapper = createWrapper({ strategy: 'CONTINUOUS_OBSERVATION' })
+    const vm = wrapper.vm as any
+    vm.changeStrategy('FIXED_DURATION')
+    await wrapper.vm.$nextTick()
 
-    const wrapper = createWrapper(exitCriteria)
-
-    // Should have tooltips
-    const tooltips = wrapper.findAllComponents({ name: 'VTooltip' })
-    expect(tooltips.length).toBeGreaterThan(0)
+    const emitted = wrapper.emitted('update:modelValue')
+    expect(emitted).toBeTruthy()
+    const payload = emitted?.[0]?.[0] as ExitCriteria
+    expect(payload.strategy).toBe('FIXED_DURATION')
+    expect(payload.dateField).toBe('START_DATE')
+    expect(payload.offset).toBe(0)
   })
 
-  it('should show help hint about missing days supply', () => {
-    const exitCriteria: ExitCriteria = {
-      strategy: 'CONTINUOUS_DRUG',
-      conceptSet: { id: 1, name: 'Statins' },
-      persistenceWindow: 30,
-      surveillanceWindow: 7
-    }
+  it('should transition from FIXED_DURATION to CONTINUOUS_DRUG with defaults', async () => {
+    const wrapper = createWrapper({ strategy: 'FIXED_DURATION', dateField: 'START_DATE', offset: 30 })
+    const vm = wrapper.vm as any
+    vm.changeStrategy('CONTINUOUS_DRUG')
+    await wrapper.vm.$nextTick()
 
-    const wrapper = createWrapper(exitCriteria)
-
-    const hints = wrapper.findAll('.event-persistence__hint')
-    const daysSupplyHint = hints.find(h => h.text().includes('days supply'))
-    expect(daysSupplyHint).toBeDefined()
+    const emitted = wrapper.emitted('update:modelValue')
+    expect(emitted).toBeTruthy()
+    const payload = emitted?.[0]?.[0] as ExitCriteria
+    expect(payload.strategy).toBe('CONTINUOUS_DRUG')
+    expect(payload.persistenceWindow).toBe(30)
+    expect(payload.surveillanceWindow).toBe(7)
   })
 
+  it('should emit validation-error when an unknown strategy type is passed', async () => {
+    const wrapper = createWrapper({ strategy: 'CONTINUOUS_OBSERVATION' })
+    const vm = wrapper.vm as any
+    // Use type assertion to bypass TypeScript check and pass invalid strategy
+    vm.changeStrategy('UNKNOWN_STRATEGY' as any)
+    await wrapper.vm.$nextTick()
+
+    const emitted = wrapper.emitted('validation-error')
+    expect(emitted).toBeTruthy()
+    const errors = emitted?.[0]?.[0] as ValidationError[]
+    expect(errors).toHaveLength(1)
+    expect(errors[0].field).toBe('strategy')
+    expect(errors[0].severity).toBe('error')
+    expect(errors[0].message).toContain('Unknown strategy type')
+  })
 })

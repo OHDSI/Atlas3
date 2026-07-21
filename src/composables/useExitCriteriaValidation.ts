@@ -16,7 +16,6 @@ const exitCriteriaSchema = z
       'CONTINUOUS_OBSERVATION',
       'FIXED_DURATION',
       'CONTINUOUS_DRUG',
-      'CUSTOM_EVENT',
     ]),
     offset: z.number().int().nonnegative().optional(),
     dateField: z.enum(['START_DATE', 'END_DATE']).optional(),
