@@ -217,6 +217,28 @@ describe('FixedDurationStrategy', () => {
       expect(errors?.some((e: any) => e.field === 'exitCriteria.offset' && e.severity === 'error')).toBe(true)
     })
 
+    it('should emit validation-error when a cleared offset field yields an empty string', async () => {
+      // `v-model.number` produces '' (not undefined) when the user clears the field,
+      // so an empty offset must still be flagged as required rather than silently passing.
+      const wrapper = mount(FixedDurationStrategy, {
+        global: { plugins: [vuetify] },
+        props: {
+          strategy: {
+            strategy: 'FIXED_DURATION',
+            dateField: 'START_DATE',
+            offset: '' as unknown as number,
+          }
+        }
+      })
+
+      await wrapper.vm.$nextTick()
+
+      const emitted = wrapper.emitted('validation-error')
+      expect(emitted).toBeTruthy()
+      const errors = emitted?.[emitted.length - 1][0]
+      expect(errors?.some((e: any) => e.field === 'exitCriteria.offset' && e.severity === 'error')).toBe(true)
+    })
+
     it('should clear validation errors when valid offset provided', async () => {
       const wrapper = mount(FixedDurationStrategy, {
         global: { plugins: [vuetify] },

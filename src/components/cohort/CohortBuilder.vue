@@ -1044,7 +1044,12 @@ async function buildCohortExpression() {
       qualifyingLimit: qualifyingLimit.value,
       primaryCriteriaLimit: primaryCriteriaLimit.value,
       inclusionQualifyingLimit: inclusionQualifyingLimit.value,
-      conceptSets: conceptSetsWithItems.filter(cs => cs.id !== 0),
+      // Keep every hydrated concept set. Only a placeholder id (undefined/null)
+      // means "not yet assigned"; id 0 is a valid CodesetId (legacy/CIRCE cohorts
+      // start at 0, and nextConceptSetId() hands the first set id 0), so filtering
+      // on `id !== 0` would drop the cohort's first concept set and leave the entry
+      // event referencing a CodesetId that is missing from the ConceptSets array.
+      conceptSets: conceptSetsWithItems.filter(cs => cs.id !== undefined && cs.id !== null),
       ...(additionalCriteria.value !== undefined ? { additionalCriteria: additionalCriteria.value } : {}),
     }
 

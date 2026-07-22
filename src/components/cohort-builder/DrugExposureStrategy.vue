@@ -159,9 +159,20 @@ const emit = defineEmits<{
   'validation-error': [errors: ValidationError[]]
 }>()
 
+// A cleared numeric field bound with `v-model.number` yields '' (or NaN), not
+// undefined, so treat those as "not provided" instead of comparing them as numbers.
+function isBlank(value: unknown): boolean {
+  return (
+    value === undefined ||
+    value === null ||
+    (value as unknown) === '' ||
+    (typeof value === 'number' && Number.isNaN(value))
+  )
+}
+
 // Reusable validation helper
 function checkNonNegative(value: number | undefined): boolean {
-  return value === undefined || value >= 0
+  return isBlank(value) || (value as number) >= 0
 }
 
 // Collect all validation errors for this strategy

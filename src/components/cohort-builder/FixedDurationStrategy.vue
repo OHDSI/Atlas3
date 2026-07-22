@@ -71,9 +71,21 @@ const dateFieldOptions = [
   { value: 'END_DATE', title: tv('columns.endDate', 'End Date') },
 ]
 
+// A cleared numeric field bound with `v-model.number` yields '' (or NaN), not
+// undefined, so an empty offset must be treated as "not provided" rather than a
+// valid value that silently passes both checks below.
+function isBlank(value: unknown): boolean {
+  return (
+    value === undefined ||
+    value === null ||
+    (value as unknown) === '' ||
+    (typeof value === 'number' && Number.isNaN(value))
+  )
+}
+
 // Reusable validation helper
 function checkNonNegative(value: number | undefined): boolean {
-  return value === undefined || value >= 0
+  return isBlank(value) || (value as number) >= 0
 }
 
 // Collect all validation errors for this strategy
@@ -81,7 +93,7 @@ function getValidationErrors(): ValidationError[] {
   const errors: ValidationError[] = []
 
   // Check 1: offset required
-  if (props.strategy.offset === undefined) {
+  if (isBlank(props.strategy.offset)) {
     errors.push({
       field: 'exitCriteria.offset',
       message: tv(

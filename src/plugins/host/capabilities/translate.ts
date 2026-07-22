@@ -630,13 +630,19 @@ export function translateCapability(
 
     case 'add_exit_criterion': {
       const e = args as ExitCriterionArgs
+      // The agent-facing schema still advertises the legacy `custom_event` value
+      // (it is frozen against the original client.cljs contract), but the cohort
+      // model no longer supports a CUSTOM_EVENT exit strategy. Mapping it through
+      // would yield a strategy the exit UI cannot render (<component :is> resolves
+      // to undefined) and that fails schema validation on save. Only translate the
+      // strategies the model actually supports; reject anything else.
       const strategyMap: Record<string, string> = {
         end_of_observation: 'CONTINUOUS_OBSERVATION',
         fixed_duration: 'FIXED_DURATION',
         continuous_drug: 'CONTINUOUS_DRUG',
-        custom_event: 'CUSTOM_EVENT',
       }
       const strategy = strategyMap[e.strategy ?? 'end_of_observation']
+      if (!strategy) return null
       const exitCriteria: Record<string, unknown> = { strategy }
       if (typeof e.offset === 'number') exitCriteria.offset = e.offset
       if (e.dateField) exitCriteria.dateField = e.dateField

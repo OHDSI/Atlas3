@@ -68,6 +68,13 @@ describe('translateCapability', () => {
     expect((p as { exitCriteria: { strategy: string } }).exitCriteria.strategy).toBe('CONTINUOUS_DRUG')
   })
 
+  it('add_exit_criterion rejects the unsupported custom_event strategy', () => {
+    // custom_event is still advertised by the frozen agent schema but is not a
+    // supported exit strategy; it must not translate into an unrenderable value.
+    const p = translateCapability('add_exit_criterion', { strategy: 'custom_event' })
+    expect(p).toBeNull()
+  })
+
   it('set_censor_event → addCensoringCriterion', () => {
     const p = translateCapability('set_censor_event', {
       conceptId: 4099154,
