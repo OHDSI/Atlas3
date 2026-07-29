@@ -838,18 +838,24 @@ export function mapTrellisData(
 export function mapTimeSeriesData(
   raw: import('@/models/report.types').WebAPIPrevalenceByMonth[]
 ): import('@/models/report.types').TimeSeriesData[] {
-  return raw.map(item => {
-    // Convert YYYYMM to MM/YYYY format
-    const monthStr = item.xCalendarMonth.toString()
-    const month = monthStr.slice(-2)
-    const year = monthStr.slice(0, 4)
-    const dateString = `${month}/${year}`
+  // WebAPI doesn't guarantee prevalenceByMonth is ordered chronologically, so
+  // sort by the numeric YYYYMM key before mapping - otherwise the resulting
+  // series can render out of order on the chart.
+  return raw
+    .slice()
+    .sort((a, b) => (a.xCalendarMonth ?? 0) - (b.xCalendarMonth ?? 0))
+    .map(item => {
+      // Convert YYYYMM to MM/YYYY format
+      const monthStr = item.xCalendarMonth.toString()
+      const month = monthStr.slice(-2)
+      const year = monthStr.slice(0, 4)
+      const dateString = `${month}/${year}`
 
-    return {
-      date: dateString,
-      value: item.yPrevalence1000Pp,
-    }
-  })
+      return {
+        date: dateString,
+        value: item.yPrevalence1000Pp,
+      }
+    })
 }
 
 export function mapDrilldownReport(
