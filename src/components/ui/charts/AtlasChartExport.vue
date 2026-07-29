@@ -105,9 +105,18 @@ async function handleExportSVG() {
 
   try {
     // Get SVG string from ECharts
-    // Note: ECharts must be initialized with SVG renderer for this to work
-    // Otherwise, we convert canvas to SVG data URL
-    const svgString = props.chartInstance.renderToSVGString?.()
+    // Note: ECharts must be initialized with SVG renderer for this to work.
+    // With the (default) canvas renderer, renderToSVGString() itself exists
+    // on the prototype but throws when it delegates to the canvas painter,
+    // which has no renderToString - so `?.()` alone doesn't catch this, it
+    // has to be caught explicitly and treated the same as "not available".
+    let svgString: string | undefined
+    try {
+      svgString = props.chartInstance.renderToSVGString?.()
+    } catch (renderErr) {
+      logger.warn('ChartExport', 'renderToSVGString threw, falling back to PNG', renderErr)
+      svgString = undefined
+    }
 
     if (svgString) {
       // Direct SVG export (if SVG renderer is used)

@@ -219,8 +219,31 @@ describe('ChartExport', () => {
       expect(chartInstance.getDataURL).toHaveBeenCalled()
     })
 
-    it('should emit export-error on SVG failure', async () => {
+    it('should fallback to PNG when renderToSVGString throws (canvas renderer)', async () => {
+      // Regression test for issue #149: with the default ECharts canvas
+      // renderer, renderToSVGString exists on the prototype but throws
+      // "a.renderToString is not a function" when it delegates to the
+      // canvas painter. That's a real "SVG not available" case, not a hard
+      // failure, so it must fall back to PNG like the other two
+      // "not available" cases above, not surface export-error.
       const chartInstance = createMockChartInstance({
+        renderToSVGString: vi.fn(() => { throw new TypeError('a.renderToString is not a function') })
+      })
+      const wrapper = mountComponent({ chartInstance, filename: 'throw-fallback' })
+
+      const svgButton = wrapper.findAll('button')[1]
+      await svgButton.trigger('click')
+
+      expect(chartInstance.getDataURL).toHaveBeenCalled()
+      expect(mockLink.download).toBe('throw-fallback.png')
+      expect(wrapper.emitted('export-error')).toBeFalsy()
+      expect(wrapper.emitted('export-success')).toBeTruthy()
+      expect(wrapper.emitted('export-success')![0]).toEqual(['png', 'throw-fallback.png'])
+    })
+
+    it('should emit export-error if renderToSVGString throws and the PNG fallback also fails', async () => {
+      const chartInstance = createMockChartInstance({
+        getDataURL: vi.fn(() => { throw new Error('PNG failed too') }),
         renderToSVGString: vi.fn(() => { throw new Error('SVG failed') })
       })
       const wrapper = mountComponent({ chartInstance })
@@ -229,7 +252,7 @@ describe('ChartExport', () => {
       await svgButton.trigger('click')
 
       expect(wrapper.emitted('export-error')).toBeTruthy()
-      expect(wrapper.emitted('export-error')![0][0]).toBe('svg')
+      expect(wrapper.emitted('export-error')![0][0]).toBe('png')
     })
 
     it('should not export when no chart instance', async () => {
