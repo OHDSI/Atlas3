@@ -37,30 +37,31 @@
             :data="data.prevalenceData.treemapNodes"
             @node-click="handleNodeClick"
           />
-
-          <!-- Drill-down details. Render while LOADING too so the
-               progress overlay inside DrilldownDetails is visible
-               immediately on click — without v-if=loading the
-               component would only mount once the network request
-               returned data, leaving the user with no feedback. -->
-          <DrilldownDetails
-            v-if="drilldownData || drilldownLoading"
-            :data="drilldownData"
-            :loading="drilldownLoading"
-            :concept-name="selectedConceptName"
-            :concept-path="selectedConceptPath"
-            :domain="drilldownDomain"
-            @close="clearDrilldown"
-          />
         </v-window-item>
 
         <v-window-item value="table">
           <DomainPrevalenceTable
             :data="data.prevalenceData.tableRows"
             :metric-label="metricLabel"
+            @row-click="handleTableRowClick"
           />
         </v-window-item>
       </v-window>
+
+      <!-- Drill-down details, shared by both tabs. Render while LOADING too
+           so the progress overlay inside DrilldownDetails is visible
+           immediately on click — without v-if=loading the component would
+           only mount once the network request returned data, leaving the
+           user with no feedback. -->
+      <DrilldownDetails
+        v-if="drilldownData || drilldownLoading"
+        :data="drilldownData"
+        :loading="drilldownLoading"
+        :concept-name="selectedConceptName"
+        :concept-path="selectedConceptPath"
+        :domain="drilldownDomain"
+        @close="clearDrilldown"
+      />
     </div>
   </AtlasCard>
 </template>
@@ -155,6 +156,13 @@ async function handleNodeClick(conceptId: number, conceptName: string, conceptPa
   } finally {
     drilldownLoading.value = false
   }
+}
+
+// Table rows only carry the display name (see PrevalenceTableRow), not the
+// full "||"-delimited hierarchy path the treemap nodes have, so pass an
+// empty path — DrilldownDetails treats it as optional breadcrumb text.
+function handleTableRowClick(conceptId: number, conceptName: string) {
+  handleNodeClick(conceptId, conceptName, '')
 }
 
 function clearDrilldown() {

@@ -10,7 +10,13 @@ import { createPinia, setActivePinia } from 'pinia'
 import ClinicalDomainReport from '@/components/datasources/ClinicalDomainReport.vue'
 import DomainPrevalenceTreemap from '@/components/datasources/DomainPrevalenceTreemap.vue'
 import DomainPrevalenceTable from '@/components/datasources/DomainPrevalenceTable.vue'
+import { useDataSourcesStore } from '@/stores/datasources'
+import { getCDMDrilldown } from '@/services/webapi'
 import type { ClinicalDomainReport as ClinicalDomainReportData } from '@/models/datasource.types'
+
+vi.mock('@/services/webapi', () => ({
+  getCDMDrilldown: vi.fn().mockResolvedValue({}),
+}))
 
 // Mock the child components with props
 vi.mock('@/components/datasources/DomainPrevalenceTreemap.vue', () => ({
@@ -127,5 +133,28 @@ describe('ClinicalDomainReport', () => {
   it('should accept different report types', () => {
     const wrapper2 = mountComponent({ reportType: 'drugExposure' })
     expect(wrapper2.exists()).toBe(true)
+  })
+
+  // Regression test for issue #151: the treemap view could trigger a
+  // drill-down report on click, but the table view had no equivalent
+  // wiring at all. row-click from DomainPrevalenceTable must reach the
+  // same drill-down fetch as node-click from the treemap.
+  it('fetches drilldown data when the table emits row-click (issue #151)', async () => {
+    const store = useDataSourcesStore()
+    store.sources = [
+      { sourceId: 1, sourceName: 'Test Source', sourceKey: 'SYNPUF1K', sourceDialect: 'postgresql', daimons: [] },
+    ]
+    store.selectedSourceId = 1
+
+    const tabs = wrapper.findAllComponents({ name: 'VTab' })
+    await tabs[1].trigger('click')
+    await wrapper.vm.$nextTick()
+
+    const table = wrapper.findComponent(DomainPrevalenceTable)
+    await table.vm.$emit('row-click', 1, 'Test Concept')
+    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick()
+
+    expect(getCDMDrilldown).toHaveBeenCalledWith('SYNPUF1K', 'condition', 1)
   })
 })
