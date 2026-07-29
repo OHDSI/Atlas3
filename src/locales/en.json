@@ -2834,6 +2834,7 @@
       "pasteIdsResolveBtn": "Resolve",
       "pasteIdsAddBtn": "Add",
       "importSourceCodes": "Import codes",
+      "importSourceCodesButton": "Import by source code",
       "importSourceCodesTitle": "Import by source code",
       "importSourceCodesHint": "Separate source codes with commas, semicolons, or newlines. We resolve each code against the vocabulary before adding.",
       "importJson": "Import JSON",
