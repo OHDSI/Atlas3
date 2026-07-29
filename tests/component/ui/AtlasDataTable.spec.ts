@@ -105,4 +105,54 @@ describe('AtlasDataTable', () => {
     const ariaLabel = wrapper.findComponent({ name: 'VDataTable' }).attributes('aria-label')
     expect(ariaLabel === undefined || ariaLabel === '').toBe(true)
   })
+
+  // Regression test for issues #150 / #156: clicking a sortable column
+  // header did nothing when the caller only did a one-way `:sort-by`/no
+  // binding at all (the common case) - `sort-by` was always forced into a
+  // controlled prop, so v-data-table's own sort-state update was fed straight
+  // back into the exact same static prop value on every render and never
+  // took effect. When the caller doesn't bind sort-by, AtlasDataTable must
+  // now own that state itself so sorting works out of the box.
+  it('actually re-sorts displayed rows when the caller does not bind sortBy', async () => {
+    const headers = [
+      { key: 'name', title: 'Name', sortable: true },
+      { key: 'value', title: 'Value', sortable: true },
+    ]
+    const items = [
+      { name: 'beta', value: 2 },
+      { name: 'alpha', value: 1 },
+    ]
+    const wrapper = mount(AtlasDataTable, {
+      global: { plugins: [vuetify] },
+      props: { headers, items },
+    })
+
+    const firstRowName = () => wrapper.findAll('tbody tr')[0]?.findAll('td')[0]?.text()
+    expect(firstRowName()).toBe('beta')
+
+    const nameHeader = wrapper.findAll('th').find(th => th.text().includes('Name'))
+    expect(nameHeader).toBeTruthy()
+    await nameHeader!.trigger('click')
+
+    expect(firstRowName()).toBe('alpha')
+  })
+
+  it('still lets a caller with v-model:sort-by fully control sorting', async () => {
+    const headers = [{ key: 'name', title: 'Name', sortable: true }]
+    const items = [
+      { name: 'beta', value: 2 },
+      { name: 'alpha', value: 1 },
+    ]
+    const wrapper = mount(
+      {
+        components: { AtlasDataTable },
+        template: `<AtlasDataTable :headers="headers" :items="items" v-model:sort-by="sortBy" />`,
+        data: () => ({ headers, items, sortBy: [{ key: 'name', order: 'asc' }] }),
+      },
+      { global: { plugins: [vuetify] } },
+    )
+
+    expect(wrapper.findAll('tbody tr')[0].findAll('td')[0].text()).toBe('alpha')
+    expect((wrapper.vm as unknown as { sortBy: unknown }).sortBy).toEqual([{ key: 'name', order: 'asc' }])
+  })
 })
