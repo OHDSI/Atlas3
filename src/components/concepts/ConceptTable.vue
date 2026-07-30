@@ -73,10 +73,10 @@
         #item.conceptName="{ item }"
       >
         <a
-          href="#"
+          :href="conceptDetailHref(item)"
           :data-testid="`concept-name-link-${item.conceptId}`"
           class="concept-name-link"
-          @click.prevent="openConceptDetail(item)"
+          @click="onConceptNameClick($event, item)"
         >
           {{ item.conceptName }}
         </a>
@@ -316,6 +316,24 @@ function openConceptDetail(concept: Concept) {
     return
   }
   conceptDrawer.open(resolvedSourceKey.value, concept.conceptId)
+}
+
+// Real deep-link href to the concept detail route (matches the
+// `/concept/:sourceKey/:conceptId` route in router/routes.ts) so that
+// right-click "open in new tab" / "copy link" / ctrl-click work as expected
+// instead of landing on `#` (the app's front page). A plain left-click still
+// intercepts navigation and opens the fast in-app detail drawer/panel.
+function conceptDetailHref(concept: Concept): string {
+  if (!resolvedSourceKey.value) return '#'
+  return `#/concept/${encodeURIComponent(resolvedSourceKey.value)}/${concept.conceptId}`
+}
+
+function onConceptNameClick(event: MouseEvent, concept: Concept) {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+    return
+  }
+  event.preventDefault()
+  openConceptDetail(concept)
 }
 
 // ============================================================================

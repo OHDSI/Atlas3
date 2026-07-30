@@ -60,6 +60,50 @@ describe('ConceptTable linkable mode', () => {
     expect(open).toHaveBeenCalledWith('SYNPUF1K', 201826)
   })
 
+  it('renders a real deep-link href so right-click/ctrl-click "open in new tab" targets the concept detail route (#162)', async () => {
+    const vuetify = createVuetify({ components, directives })
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/concept/:sourceKey/:conceptId', component: { template: '<div />' } }],
+    })
+
+    const wrapper = mount(ConceptTable, {
+      props: { concepts, linkable: true, sourceKey: 'SYNPUF1K', loading: false, totalItems: 1 },
+      global: { plugins: [vuetify, router] },
+    })
+    await wrapper.vm.$nextTick()
+
+    const link = wrapper.find('a[data-testid="concept-name-link-201826"]')
+    expect(link.exists()).toBe(true)
+    // Previously this was href="#", so opening the link in a new tab (or
+    // right-click > copy link) landed on the app's front page instead of
+    // the concept. It must now resolve to the real concept detail route.
+    expect(link.attributes('href')).toBe('#/concept/SYNPUF1K/201826')
+
+    // A plain left-click still opens the fast in-app drawer instead of a
+    // full navigation.
+    await link.trigger('click')
+    expect(open).toHaveBeenCalledWith('SYNPUF1K', 201826)
+  })
+
+  it('does not intercept ctrl/cmd/middle-clicks, letting the browser open the real href in a new tab', async () => {
+    const vuetify = createVuetify({ components, directives })
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/concept/:sourceKey/:conceptId', component: { template: '<div />' } }],
+    })
+
+    const wrapper = mount(ConceptTable, {
+      props: { concepts, linkable: true, sourceKey: 'SYNPUF1K', loading: false, totalItems: 1 },
+      global: { plugins: [vuetify, router] },
+    })
+    await wrapper.vm.$nextTick()
+
+    const link = wrapper.find('a[data-testid="concept-name-link-201826"]')
+    await link.trigger('click', { ctrlKey: true })
+    expect(open).not.toHaveBeenCalled()
+  })
+
   it('renders concept name as plain text when linkable=false', () => {
     const vuetify = createVuetify({ components, directives })
     const router = createRouter({ history: createMemoryHistory(), routes: [] })
