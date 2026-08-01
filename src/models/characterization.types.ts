@@ -14,6 +14,8 @@ import type { Tag } from './cohort.types'
 import type { ConceptSetReference } from './concept-set.types'
 import type { FeatureAnalysisType } from './feature-analysis.types'
 import { FeatureAnalysisTypeSchema } from './feature-analysis.types'
+import { CriteriaGroupSchema } from '@/components/cohort-editor/circe.types'
+import type { CriteriaGroup } from '@/components/cohort-editor/circe.types'
 
 // ============================================================================
 // Linked entities
@@ -65,15 +67,17 @@ export const LinkedFeatureAnalysisSchema = z
 export interface Stratum {
   id: string
   name: string
-  // CohortBuilder CriteriaGroup; kept opaque until StrataEditor lands.
-  criteria: unknown
+  criteria?: CriteriaGroup
 }
+
+// Re-export so consumers of Stratum can import CriteriaGroup from one place.
+export type { CriteriaGroup }
 
 export const StratumSchema = z
   .object({
     id: z.union([z.string(), z.number()]).transform((v) => String(v)),
     name: z.string(),
-    criteria: z.unknown(),
+    criteria: CriteriaGroupSchema.optional(),
   })
   .passthrough()
 

@@ -375,7 +375,6 @@ import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
 import CohortFilters from '@/components/cohort/CohortFilters.vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import type { AtlasCohortDefinition } from '@/models/atlas.types'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -638,23 +637,11 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
       return
     }
 
-    const {
-      id: _id,
-      name: _name,
-      description,
-      createdBy: _createdBy,
-      createdDate: _createdDate,
-      modifiedBy: _modifiedBy,
-      modifiedDate: _modifiedDate,
-      tags: _tags,
-      ...expression
-    } = definition as AtlasCohortDefinition
-
     const created = await saveCohortDefinition({
       name: buildCopyName(cohort.name),
-      description,
+      description: definition.description,
       expressionType: 'SIMPLE_EXPRESSION',
-      expression,
+      expression: definition.expression ?? {},
     })
 
     if (!created?.id) {

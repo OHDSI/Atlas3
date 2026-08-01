@@ -25,8 +25,8 @@
             icon="mdi-shape"
             size="small"
             data-testid="concept-sets-icon"
-            :style="totalConceptSets > 0 ? 'cursor: pointer' : 'cursor: default; opacity: 0.5'"
-            @click="totalConceptSets > 0 && $emit('show-concept-sets')"
+            style="cursor: pointer"
+            @click="$emit('show-concept-sets')"
           />
         </AtlasBadge>
       </template>

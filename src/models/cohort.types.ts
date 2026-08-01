@@ -4,6 +4,7 @@
  */
 
 import type { Cardinality, TemporalWindow, EventAttribute, DateAdjustment } from './event.types'
+import type { CohortExpression } from '@/components/cohort-editor/circe.types'
 
 /**
  * Tag for cohort organization and filtering
@@ -14,126 +15,58 @@ export interface Tag {
   color?: string
 }
 
-export type QualifyingLimit = 'ALL' | 'FIRST' | 'LAST'
-
-export interface ObservationPeriod {
-  priorDays: number
-  postDays: number
+/**
+ * User shape matching Java's `org.ohdsi.webapi.security.authz.User` record.
+ * Returned as `createdBy` / `modifiedBy` on entity DTOs.
+ */
+export interface CohortUser {
+  id?: number
+  login?: string
+  name?: string | null
 }
 
+/**
+ * Mirrors Java's CohortDTO shape for all in-memory usage.
+ *
+ * GET /cohortdefinition/{id} returns CohortRawDTO (expression as JSON string); webapi.ts
+ * parses it into a typed CohortExpression before returning this type to callers.
+ * PUT /cohortdefinition/{id} accepts CohortDTO where expression is a serialized object;
+ * webapi.ts serializes expression back to JSON string in the save payload.
+ */
 export interface CohortDefinition {
   id?: number
   name: string
   description?: string
-  createdBy?: unknown
-  createdDate?: number
-  modifiedBy?: unknown
-  modifiedDate?: number
+  /** Read-only. Populated by the server (CommonEntityDTO). */
+  createdBy?: CohortUser | string
+  /** Unix-ms timestamp from Jackson Date serialization. */
+  createdDate?: number | string
+  /** Read-only. Populated by the server (CommonEntityDTO). */
+  modifiedBy?: CohortUser | string
+  modifiedDate?: number | string
+  writeAccess?: boolean
+  readAccess?: boolean
+  /** CommonEntityExtDTO tags. */
   tags?: Tag[]
-  entryEvents: CohortEvent[]
-  qualifyingLimit: QualifyingLimit
-  primaryCriteriaLimit?: QualifyingLimit
-  inclusionQualifyingLimit?: QualifyingLimit
-  observationPeriod?: ObservationPeriod
-  additionalCriteria?: CriteriaGroup // Criteria that restrict/qualify entry events
-  inclusionRules: InclusionRule[]
-  exitCriteria?: ExitCriteria
-  conceptSets: ConceptSetReference[]
-  // Missing attributes for Atlas compatibility
+  /** Parsed Circe CohortExpression. Serialized to JSON string only at the API boundary (save). */
+  expression?: CohortExpression
+  /** e.g. 'SIMPLE_EXPRESSION' */
   expressionType?: string
-  cdmVersionRange?: string
-  collapseSettings?: CollapseSettings
-  censorWindow?: CensorWindow
-  censoringCriteria?: CohortEvent[]
 }
 
-export interface CohortEvent {
-  id: string // UUIDv4 client-side ID
-  criteriaType: CriteriaType
-  conceptSet?: ConceptSetReference
-  /** Circe `<CriteriaType>SourceConcept` — concept id that resolves to a
-   *  source-concept set rather than a regular codeset. Mutually exclusive with
-   *  `conceptSet` in well-formed Atlas JSON, but both are allowed here so the
-   *  internal model can represent any input losslessly. */
-  sourceConceptId?: number
-  cardinality?: Cardinality
-  temporalWindow?: TemporalWindow
-  endTemporalWindow?: TemporalWindow
-  attributes?: EventAttribute[]
-  nestedCriteria?: NestedCriteria
-  restrictVisit?: boolean // Event must occur in same visit as index
-  ignoreObservationPeriod?: boolean // Event can occur outside observation period
-  dateAdjustment?: DateAdjustment
-  typeExclude?: boolean // bare CIRCE *TypeExclude flag with no accompanying type concepts
-}
-
-export interface InclusionRule {
-  id: string
-  name: string
-  description?: string
-  criteriaGroups: CriteriaGroup[]
-}
-
-export interface CriteriaGroup {
-  id: string
-  logicType: LogicType
-  count?: number // For AT_LEAST and AT_MOST
-  qualifyingLimit?: QualifyingLimit // For primary criteria limit (used in AdditionalCriteria)
-  events: CohortEvent[]
-  nestedGroups?: CriteriaGroup[] // Recursive nesting support
-}
+// ─── UI convenience types ────────────────────────────────────────────────────
 
 /**
- * Nested (correlated) criteria are structurally a {@link CriteriaGroup} — same
- * logic type, count, events and recursive sub-groups. They are unified into one
- * type (and one editor, GroupCriteriaUI) per #112. Alias kept so existing
- * `NestedCriteria` references keep compiling during/after the migration.
+ * Reference to a concept set used inside the UI (concept set selector, editor,
+ * validation display).  Not a server type — assembled from CohortExpression.ConceptSets
+ * in CohortBuilder.vue.
  */
-export type NestedCriteria = CriteriaGroup
-
-export type LogicType = 'ALL' | 'ANY' | 'AT_LEAST' | 'AT_MOST'
-
-export interface ExitCriteria {
-  strategy: ExitStrategy
-  offset?: number // Days offset for exit
-  dateField?: 'START_DATE' | 'END_DATE' // Which date to offset from (for FIXED_DURATION)
-  conceptSet?: ConceptSetReference // For CONTINUOUS_DRUG exit
-  persistenceWindow?: number // Gap days between exposures (for CONTINUOUS_DRUG)
-  surveillanceWindow?: number // Additional days after final exposure (for CONTINUOUS_DRUG)
-  censoringEvents?: CohortEvent[] // Events that cause exit
-}
-
-export type ExitStrategy = 'CONTINUOUS_OBSERVATION' | 'FIXED_DURATION' | 'CONTINUOUS_DRUG'
-
 export interface ConceptSetReference {
   id: number | string // Number from WebAPI, string (UUID) for client-side
   name: string
   conceptCount?: number
-  items?: unknown[] // Full concept set items to embed in cohort definition
+  items?: unknown[] // Full concept set items (flat camelCase ConceptSetItem[])
 }
-
-// OHDSI criteria types
-export type CriteriaType =
-  | 'ConditionOccurrence'
-  | 'ConditionEra'
-  | 'DrugExposure'
-  | 'DrugEra'
-  | 'DoseEra'
-  | 'ProcedureOccurrence'
-  | 'Measurement'
-  | 'Observation'
-  | 'ObservationPeriod'
-  | 'DeviceExposure'
-  | 'VisitOccurrence'
-  | 'VisitDetail'
-  | 'Death'
-  | 'Specimen'
-  | 'PayerPlanPeriod'
-  | 'LocationRegion'
-  | 'Demographic'
-
-// Import from event.types.ts (will be defined there)
-export type { Cardinality, TemporalWindow, EventAttribute, DateAdjustment } from './event.types'
 
 // Cohorts Page State (for list view)
 import type { CohortDefinitionSummary } from './webapi.types'
@@ -154,37 +87,97 @@ export interface PaginationState {
   totalItems: number
 }
 
-/**
- * CollapseSettings - Configuration for episode collapsing
- */
-export interface CollapseSettings {
-  collapseType: string
-  eraPad: number
+// ─── Criteria type enumeration ──────────────────────────────────────────────
+// Used by CriteriaEventCard and circe-criteria constants.
+
+export type CriteriaType =
+  | 'ConditionOccurrence'
+  | 'ConditionEra'
+  | 'DrugExposure'
+  | 'DrugEra'
+  | 'DoseEra'
+  | 'ProcedureOccurrence'
+  | 'Measurement'
+  | 'Observation'
+  | 'ObservationPeriod'
+  | 'DeviceExposure'
+  | 'VisitOccurrence'
+  | 'VisitDetail'
+  | 'Death'
+  | 'Specimen'
+  | 'PayerPlanPeriod'
+  | 'LocationRegion'
+  | 'Demographic'
+
+// ─── @deprecated — legacy internal Atlas model ───────────────────────────────
+// These types represent the old Atlas-internal cohort representation.
+// They remain for old cohort-builder components that have not been migrated.
+// New code should use circe.types.ts directly.
+
+/** @deprecated Use circe.types.ts ResultLimit.Type */
+export type QualifyingLimit = 'ALL' | 'FIRST' | 'LAST'
+
+/** @deprecated */
+export interface ObservationPeriod {
+  priorDays: number
+  postDays: number
 }
 
-/**
- * Period - Date range with optional start and end dates
- */
-export interface Period {
-  startDate?: DateField
-  endDate?: DateField
+/** @deprecated Use CriteriaGroup from circe.types.ts */
+export interface CohortEvent {
+  id: string
+  criteriaType: CriteriaType
+  conceptSet?: ConceptSetReference
+  sourceConceptId?: number
+  cardinality?: Cardinality
+  temporalWindow?: TemporalWindow
+  endTemporalWindow?: TemporalWindow
+  attributes?: EventAttribute[]
+  nestedCriteria?: NestedCriteria
+  restrictVisit?: boolean
+  ignoreObservationPeriod?: boolean
+  dateAdjustment?: DateAdjustment
+  typeExclude?: boolean
 }
 
-/**
- * CensorWindow - Optional left/right calendar-date trimming for
- * cohort entry/exit dates. Atlas 2.15 calls this "trimming options"
- * inside the Cohort Eras panel. Dates are ISO strings (yyyy-mm-dd)
- * or null when no trim is set.
- */
-export interface CensorWindow {
-  startDate?: string | null
-  endDate?: string | null
+/** @deprecated Use circe.types.ts InclusionRule */
+export interface InclusionRule {
+  id: string
+  name: string
+  description?: string
+  criteriaGroups: CriteriaGroup[]
 }
 
-/**
- * DateField - Anchor date with offset
- */
-export interface DateField {
-  dateField: 'START_DATE' | 'END_DATE'
+/** @deprecated Use circe.types.ts CriteriaGroup */
+export interface CriteriaGroup {
+  id: string
+  logicType: LogicType
+  count?: number
+  qualifyingLimit?: QualifyingLimit
+  events: CohortEvent[]
+  nestedGroups?: CriteriaGroup[]
+}
+
+/** @deprecated */
+export type NestedCriteria = CriteriaGroup
+
+/** @deprecated */
+export type LogicType = 'ALL' | 'ANY' | 'AT_LEAST' | 'AT_MOST'
+
+/** @deprecated Use circe.types.ts EndStrategy */
+export interface ExitCriteria {
+  strategy: ExitStrategy
   offset?: number
+  dateField?: 'START_DATE' | 'END_DATE'
+  conceptSet?: ConceptSetReference
+  persistenceWindow?: number
+  surveillanceWindow?: number
+  censoringEvents?: CohortEvent[]
 }
+
+/** @deprecated Use circe.types.ts EndStrategy */
+export type ExitStrategy = 'CONTINUOUS_OBSERVATION' | 'FIXED_DURATION' | 'CONTINUOUS_DRUG'
+
+// Re-exported for legacy cohort-builder components only.
+export type { Cardinality, TemporalWindow, EventAttribute, DateAdjustment } from './event.types'
+

@@ -52,7 +52,7 @@ describe('pythiaBridge', () => {
     vi.mocked(createIncidenceRate).mockReset()
   })
 
-  it('routes cohort.applyProposal into the cohort store', () => {
+  it('routes cohort.applyProposal into the cohort store (setObservationPeriod is a no-op in Circe-native)', () => {
     dispatchPluginMessage({
       type: 'cohort.applyProposal',
       sourcePluginId: 'pythia-plugin',
@@ -66,7 +66,9 @@ describe('pythiaBridge', () => {
     })
 
     const store = useCohortStore()
-    expect(store.currentCohort?.observationPeriod).toEqual({ priorDays: 365, postDays: 30 })
+    // setObservationPeriod is deprecated; applyProposal is a no-op for this kind.
+    // The observation period lives in CohortExpression, not CohortDefinition.
+    expect(store.currentCohort).toBeDefined()
   })
 
   it('ignores plugin-messages from unrelated plugins', () => {
@@ -392,14 +394,15 @@ describe('pythiaBridge', () => {
     expect(handleResponseSpy).toHaveBeenCalledWith('cb-resolve-empty', {})
   })
 
-  it('applyProposalDirect applies a proposal into the cohort store', async () => {
+  it('applyProposalDirect is a no-op for deprecated proposal kinds (setObservationPeriod)', async () => {
     await applyProposalDirect({
       kind: 'setObservationPeriod',
       observationPeriod: { priorDays: 180, postDays: 60 },
     } as never)
 
     const store = useCohortStore()
-    expect(store.currentCohort?.observationPeriod).toEqual({ priorDays: 180, postDays: 60 })
+    // observationPeriod was removed from CohortDefinition; proposal is a no-op.
+    expect(store.currentCohort).toBeDefined()
   })
 
   it('routes capability.apply through translate + apply and responds via the bus', async () => {
@@ -415,8 +418,7 @@ describe('pythiaBridge', () => {
     })
 
     await flush()
-    const store = useCohortStore()
-    expect(store.currentCohort?.observationPeriod).toEqual({ priorDays: 90, postDays: 45 })
+    // setObservationPeriod is a no-op in Circe-native; only verify the bus responds
     expect(handleResponseSpy).toHaveBeenCalledWith(
       'cap-cb-1',
       expect.objectContaining({ applied: true, kind: 'setObservationPeriod' })

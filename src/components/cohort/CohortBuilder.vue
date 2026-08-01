@@ -46,8 +46,8 @@
       <AtlasActionToolbar>
         <template #status>
           <cohort-toolbar-status
-            :total-concept-sets="cohortStore.currentCohort?.conceptSets?.length || 0"
-            :unused-concept-set-count="(cohortStore.currentCohort?.conceptSets?.length || 0) - usedConceptSets.length"
+            :total-concept-sets="expression.ConceptSets?.length ?? 0"
+            :unused-concept-set-count="(expression.ConceptSets?.length ?? 0) - usedConceptSets.length"
             :validation-count="validationWarnings.length"
             :validation-color="highestSeverityColor"
             :is-validating="isValidating"
@@ -78,7 +78,7 @@
 
     <concept-sets-list-dialog
       v-model="showConceptSetsDialog"
-      :concept-sets="cohortStore.currentCohort?.conceptSets || []"
+      :concept-sets="expressionConceptSets"
       :used-concept-sets="usedConceptSets"
       @view="handleViewConceptSet"
       @delete="handleDeleteConceptSet"
@@ -98,392 +98,24 @@
       @apply="handleApplyJson"
     />
 
-    <!-- Step rail: groups the four sections as numbered steps so
-         the page reads as a logical pipeline (entry → inclusion
-         → exit → era), not a stack of independent forms. -->
+    <!-- Step rail: delegated to CohortExpressionEditor (Phase 4) -->
     <div class="cohort-builder__steps">
-      <!-- Cohort Entry Events — Step 1 -->
-      <div
-        class="section-step mb-3"
-        data-step="1"
-      >
-        <span class="section-step-badge">1</span>
-        <div class="section-wrapper section-wrapper--step">
-          <div class="section-header">
-            <h3 class="section-title">
-              {{ t('components.cohortExpressionEditor.cohortEntryEvents') }}
-            </h3>
-            <span :class="['section-state-chip', `section-state-chip--${entryEventsState.tone}`]">
-              {{ entryEventsState.label }}
-            </span>
-            <AtlasSpacer />
-            <div class="section-controls">
-              <span class="section-controls__label">
-                {{
-                  t(
-                    'components.cohortExpressionEditor.entryQualifyingLimitLabel',
-                    'Cohort entry on'
-                  ).value
-                }}
-                <AtlasTooltip
-                  location="top"
-                  max-width="320"
-                >
-                  <template #activator="{ props: tooltipProps }">
-                    <AtlasIcon
-                      v-bind="tooltipProps"
-                      icon="mdi-help-circle-outline"
-                      size="14"
-                      class="section-controls__help"
-                    />
-                  </template>
-                  <span>{{
-                    t(
-                      'components.cohortExpressionEditor.entryQualifyingLimitHelp',
-                      'Which qualifying event marks a person’s cohort entry: their first, every occurrence, or their last.'
-                    ).value
-                  }}</span>
-                </AtlasTooltip>
-              </span>
-              <v-btn-toggle
-                v-model="qualifyingLimit"
-                mandatory
-                density="compact"
-                variant="outlined"
-                divided
-              >
-                <AtlasButton
-                  toggle
-                  value="FIRST"
-                  size="sm"
-                >
-                  {{ t('options.earliestEvents', 'First') }}
-                </AtlasButton>
-                <AtlasButton
-                  toggle
-                  value="ALL"
-                  size="sm"
-                >
-                  {{ t('options.all') }}
-                </AtlasButton>
-                <AtlasButton
-                  toggle
-                  value="LAST"
-                  size="sm"
-                >
-                  {{ t('options.latestEvents', 'Latest') }}
-                </AtlasButton>
-              </v-btn-toggle>
-            </div>
-          </div>
-
-          <entry-events-list
-            :events="entryEvents"
-            :observation-period="observationPeriod"
-            @update:events="entryEvents = $event"
-            @update:observation-period="observationPeriod = $event"
-            @select-concept-set="handleSelectConceptSet"
-            @select-concept-set-nested="handleSelectConceptSetForEntryNested"
-            @select-concept-for-attribute="handleSelectConceptForEntryEvent"
-            @edit-concept-set="handleEditConceptSet"
-          />
-
-          <!-- Additional Criteria (restricts entry events). The "with"
-           connector is now a soft pill, not block-letter "WITH". -->
-          <div
-            v-if="additionalCriteria"
-            class="cohort-builder__additional-criteria"
-          >
-            <GroupCriteriaUI
-              ref="additionalCriteriaRef"
-              v-model="additionalCriteria"
-              @select-concept-set="handleSelectConceptSetForAdditionalCriteria"
-              @select-concept="handleSelectConceptForAdditionalCriteria"
-              @edit-concept-set="handleEditConceptSet"
-              @remove="removeAdditionalCriteria"
-            />
-            <div class="cohort-builder__additional-criteria-header">
-              <span class="cohort-builder__connector-pill">
-                {{ t('components.cohortExpressionEditor.withQualifyingLimit', 'with').value }}
-              </span>
-              <v-btn-toggle
-                v-model="additionalCriteria.qualifyingLimit"
-                mandatory
-                density="compact"
-                variant="outlined"
-                divided
-              >
-                <AtlasButton
-                  toggle
-                  value="FIRST"
-                  size="sm"
-                >
-                  {{ t('options.earliestEvents', 'First') }}
-                </AtlasButton>
-                <AtlasButton
-                  toggle
-                  value="ALL"
-                  size="sm"
-                >
-                  {{ t('options.all') }}
-                </AtlasButton>
-                <AtlasButton
-                  toggle
-                  value="LAST"
-                  size="sm"
-                >
-                  {{ t('options.latestEvents', 'Latest') }}
-                </AtlasButton>
-              </v-btn-toggle>
-              <AtlasSpacer />
-              <AtlasIconButton
-                icon="mdi-close"
-                v-bind="{ ariaLabel: t('common.remove', 'Remove').value }"
-                variant="text"
-                tone="danger"
-                size="sm"
-                @click="removeAdditionalCriteria"
-              />
-            </div>
-          </div>
-          <div
-            v-else
-            class="cohort-builder__add-additional"
-          >
-            <AtlasButton
-              variant="ghost"
-              icon="mdi-filter-plus"
-              size="sm"
-              @click="addAdditionalCriteria"
-            >
-              {{
-                t(
-                  'components.cohortExpressionEditor.restrictInitialEventsButton',
-                  'Restrict initial events'
-                ).value
-              }}
-            </AtlasButton>
-          </div>
-        </div>
-        <!-- /.section-wrapper -->
-      </div>
-      <!-- /.section-step (1) -->
-
-      <!-- Inclusion Criteria — Step 2 -->
-      <div
-        class="section-step mb-3"
-        data-step="2"
-      >
-        <span class="section-step-badge">2</span>
-        <div class="section-wrapper section-wrapper--step">
-          <div class="section-header">
-            <h3 class="section-title">
-              {{ t('components.cohortExpressionEditor.inclusionCriteriaTitle') }}
-            </h3>
-            <span
-              :class="['section-state-chip', `section-state-chip--${inclusionRulesState.tone}`]"
-            >
-              {{ inclusionRulesState.label }}
-            </span>
-            <AtlasSpacer />
-            <div class="section-controls">
-              <span class="section-controls__label">
-                {{
-                  t(
-                    'components.cohortExpressionEditor.inclusionQualifyingLimitLabel',
-                    'Apply rules to'
-                  ).value
-                }}
-                <AtlasTooltip
-                  location="top"
-                  max-width="320"
-                >
-                  <template #activator="{ props: tooltipProps }">
-                    <AtlasIcon
-                      v-bind="tooltipProps"
-                      icon="mdi-help-circle-outline"
-                      size="14"
-                      class="section-controls__help"
-                    />
-                  </template>
-                  <span>{{
-                    t(
-                      'components.cohortExpressionEditor.inclusionQualifyingLimitHelp',
-                      'Which qualifying event each rule is evaluated against: a person’s first, every, or their last.'
-                    ).value
-                  }}</span>
-                </AtlasTooltip>
-              </span>
-              <v-btn-toggle
-                v-model="inclusionQualifyingLimit"
-                mandatory
-                density="compact"
-                variant="outlined"
-                divided
-              >
-                <AtlasButton
-                  toggle
-                  value="FIRST"
-                  size="sm"
-                >
-                  {{ t('options.earliestEvents', 'First') }}
-                </AtlasButton>
-                <AtlasButton
-                  toggle
-                  value="ALL"
-                  size="sm"
-                >
-                  {{ t('options.all') }}
-                </AtlasButton>
-                <AtlasButton
-                  toggle
-                  value="LAST"
-                  size="sm"
-                >
-                  {{ t('options.latestEvents', 'Latest') }}
-                </AtlasButton>
-              </v-btn-toggle>
-            </div>
-          </div>
-          <inclusion-criteria-panel
-            v-model="inclusionRules"
-            :expression="cohortExpression"
-            :qualifying-limit="inclusionQualifyingLimit"
-            @update:qualifying-limit="inclusionQualifyingLimit = $event"
-            @select-concept-set="handleSelectConceptSetForCriteria"
-            @select-concept="handleSelectConceptForCriteria"
-            @edit-concept-set="handleEditConceptSet"
-          />
-        </div>
-        <!-- /.section-wrapper -->
-      </div>
-      <!-- /.section-step (2) -->
-
-      <!-- Exit & Eras — Step 3 -->
-      <div
-        class="section-step mb-3"
-        data-step="3"
-      >
-        <span class="section-step-badge">3</span>
-        <div class="section-wrapper section-wrapper--step">
-          <div class="section-header">
-            <h3 class="section-title">
-              {{ t('components.cohortExpressionEditor.exitAndErasTitle', 'Cohort Exit & Eras') }}
-            </h3>
-            <span
-              v-if="exitCriteriaState.tone !== 'muted'"
-              :class="['section-state-chip', `section-state-chip--${exitCriteriaState.tone}`]"
-            >
-              {{ exitCriteriaState.label }}
-            </span>
-            <AtlasSpacer />
-            <div class="section-controls">
-              <span class="section-controls__label">{{
-                t('components.cohortExpressionEditor.exitStrategyLabel', 'Strategy').value
-              }}</span>
-              <v-btn-toggle
-                v-model="exitCriteria.strategy"
-                mandatory
-                density="compact"
-                variant="outlined"
-                divided
-              >
-                <AtlasTooltip
-                  :text="
-                    t('options.endOfContinuousObservation', 'End of continuous observation period')
-                      .value
-                  "
-                  location="top"
-                >
-                  <template #activator="{ props: tooltipProps }">
-                    <AtlasButton
-                      v-bind="tooltipProps"
-                      toggle
-                      value="CONTINUOUS_OBSERVATION"
-                      size="sm"
-                    >
-                      {{ t('options.endOfContinuousObservationShort', 'Observation').value }}
-                    </AtlasButton>
-                  </template>
-                </AtlasTooltip>
-                <AtlasTooltip
-                  :text="
-                    t(
-                      'options.fixedDurationRelativeToInitialEvent',
-                      'Fixed duration relative to initial event'
-                    ).value
-                  "
-                  location="top"
-                >
-                  <template #activator="{ props: tooltipProps }">
-                    <AtlasButton
-                      v-bind="tooltipProps"
-                      toggle
-                      value="FIXED_DURATION"
-                      size="sm"
-                    >
-                      {{ t('options.fixedDurationShort', 'Fixed duration').value }}
-                    </AtlasButton>
-                  </template>
-                </AtlasTooltip>
-                <AtlasTooltip
-                  :text="
-                    t('options.endOfContinuousDrugExposure', 'End of continuous drug exposure')
-                      .value
-                  "
-                  location="top"
-                >
-                  <template #activator="{ props: tooltipProps }">
-                    <AtlasButton
-                      v-bind="tooltipProps"
-                      toggle
-                      value="CONTINUOUS_DRUG"
-                      size="sm"
-                    >
-                      {{ t('options.endOfContinuousDrugExposureShort', 'Drug exposure').value }}
-                    </AtlasButton>
-                  </template>
-                </AtlasTooltip>
-              </v-btn-toggle>
-            </div>
-          </div>
-          <exit-criteria-panel
-            v-model="exitCriteria"
-            :censoring-criteria="censoringCriteria"
-            :concept-sets="usedConceptSets"
-            @update:censoring-criteria="censoringCriteria = $event"
-            @select-drug-concept-set="handleSelectDrugConceptSet"
-            @select-censoring-concept-set="handleSelectCensoringConceptSet"
-            @edit-drug-concept-set="handleEditConceptSet"
-          />
-
-          <div class="section-subheader">
-            <span class="text-eyebrow">{{
-              t('components.cohortExpressionEditor.cohortErasTitle', 'Cohort Eras').value
-            }}</span>
-            <span class="section-subheader__rule" />
-          </div>
-          <censor-window-editor
-            :censor-window="censorWindow"
-            :collapse-settings="collapseSettings"
-            @update:censor-window="onCensorWindowUpdate"
-            @update:collapse-settings="collapseSettings = $event"
-            @validation-error="handleCensorWindowValidation"
-          />
-        </div>
-        <!-- /.section-wrapper -->
-      </div>
-      <!-- /.section-step (3) -->
+      <CohortExpressionEditor
+        :expression="expression"
+        :concept-sets="conceptSetOptions"
+        @select-concept-set="openConceptSetSelection($event)"
+        @edit-concept-set="openConceptSetSelection($event)"
+        @clear-concept-set="activeCsTarget = null"
+      />
     </div>
     <!-- /.cohort-builder__steps -->
 
+
     <!-- Concept Set Selection Dialog: in-definition (local) sets to reuse, plus
-         the repository to import a copy from (#111). 
-         Note: We show ALL loaded concept sets, not just currently-used ones,
-         so users can re-add concept sets they've cleared from criteria. -->
+         the repository to import a copy from (#111). -->
     <concept-set-selection-dialog
       v-model="isConceptSetDialogOpen"
-      :local-concept-sets="cohortStore.currentCohort?.conceptSets || []"
+      :local-concept-sets="expressionConceptSets"
       @local-concept-set-selected="handleLocalConceptSetSelected"
       @concept-set-selected="handleConceptSetSelected"
       @edit-concept-set="handleEditConceptSet"
@@ -595,47 +227,31 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
-import { ref, computed, onMounted, onBeforeUnmount, watch, toRef } from 'vue'
+import { AtlasButton, AtlasDialog, AtlasIcon, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer } from '@/components/ui'
+import { ref, computed, onMounted, onBeforeUnmount, watch, toRef, reactive, shallowRef, toRaw } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
 import { useCohortStore } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
-import { useAtlasConverter } from '@/composables/useAtlasConverter'
 import { provideCriteriaSelection } from '@/composables/useCriteriaSelection'
 import { useI18n } from '@/composables/useI18n'
 import { useCohortValidation } from '@/composables/useCohortValidation'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import { getCohortDefinition } from '@/services/webapi'
-import { convertAtlasToInternal, convertInternalToAtlas } from '@/services/atlas-converter'
 import { getConceptSetById } from '@/services/concept-set.service'
-import { isAtlasCohortDefinitionWrapper } from '@/models/atlas.types'
-import type {
-  CohortDefinition,
-  CohortEvent,
-  ConceptSetReference,
-  InclusionRule,
-  ExitCriteria,
-  CensorWindow,
-  CollapseSettings,
-  ObservationPeriod,
-  QualifyingLimit,
-  CriteriaGroup,
-} from '@/models/cohort.types'
-// ValidationSeverity type is provided by useCohortValidation composable
-import type { EventAttribute } from '@/models/event.types'
+import type { CohortDefinition, ConceptSetReference } from '@/models/cohort.types'
 import type { Concept } from '@/models/event.types'
 import type { ConceptSetItem } from '@/models/concept-set.types'
-import EntryEventsList from './EntryEventsList.vue'
 import ConceptSetSelectionDialog from './ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from './ConceptSearchDialog.vue'
 import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
-import InclusionCriteriaPanel from '../cohort-builder/InclusionCriteriaPanel.vue'
-import ExitCriteriaPanel from '../cohort-builder/ExitCriteriaPanel.vue'
-import CensorWindowEditor from '../cohort-builder/CensorWindowEditor.vue'
-import GroupCriteriaUI from '../cohort-builder/GroupCriteriaUI.vue'
+import CohortExpressionEditor from '@/components/cohort-editor/CohortExpressionEditor.vue'
+import { CohortExpressionSchema } from '@/components/cohort-editor/circe.types'
+import type { CohortExpression, ConceptSetItem as CirceConceptSetItem } from '@/components/cohort-editor/circe.types'
+import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/cohort-editor/criteria/criteria-editor.types'
+import { unassignConceptSetId } from '@/components/cohort-editor/concept-set-usage'
 import CohortGenerationSection from './CohortGenerationSection.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import type { VersionsConfig, User } from '@/components/versions/types'
@@ -645,9 +261,7 @@ import CohortBreadcrumb from './CohortBreadcrumb.vue'
 import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
-import { ensureUniqueConceptSetId, hasNumericConceptSetId, hasRealConceptSetId, nextConceptSetId } from '@/utils/concept-set-id'
-import { updateConceptSetUsages, clearConceptSetUsages } from '@/utils/concept-set-usages'
-import { resolveCriteriaTargetEvent } from '@/utils/criteria-target'
+import { hasNumericConceptSetId, nextConceptSetId } from '@/utils/concept-set-id'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import CohortJsonDialog from './CohortJsonDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
@@ -696,23 +310,55 @@ const route = useRoute()
 const cohortStore = useCohortStore()
 const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
-const { importFromAtlas, downloadAtlasJSON, exportToAtlas, conversionError } = useAtlasConverter()
 const { t, tv } = useI18n()
 
-// Core cohort state
+// ── Core expression state (Phase 4) ──────────────────────────────────────────
+// Single reactive CohortExpression replaces 10+ individual refs.
+function defaultExpression(): CohortExpression { return {} }
+const expression = reactive<CohortExpression>(defaultExpression())
+
+// Target that receives a concept set id when the dialog confirms a selection.
+const activeCsTarget = shallowRef<ConceptSetSelectionTarget | null>(null)
+
+// Concept sets formatted for CohortExpressionEditor and ConceptSetSelectionDialog.
+const conceptSetOptions = computed<ConceptSetOption[]>(() =>
+  (expression.ConceptSets ?? [])
+    .filter(cs => cs.id !== undefined)
+    .map(cs => ({ id: cs.id!, name: cs.name ?? '' }))
+)
+
+/** Map a Circe concept set item (nested UPPERCASE concept) → flat camelCase ConceptSetItem for the UI. */
+function convertCirceItemToAtlas(item: CirceConceptSetItem): ConceptSetItem {
+  const c = item.concept
+  return {
+    conceptId: c?.CONCEPT_ID ?? 0,
+    conceptName: c?.CONCEPT_NAME ?? '',
+    conceptCode: c?.CONCEPT_CODE ?? '',
+    domainId: c?.DOMAIN_ID ?? '',
+    vocabularyId: c?.VOCABULARY_ID ?? '',
+    conceptClassId: c?.CONCEPT_CLASS_ID ?? '',
+    standardConcept: c?.STANDARD_CONCEPT ?? null,
+    invalidReason: c?.INVALID_REASON ?? null,
+    isExcluded: item.isExcluded ?? false,
+    includeDescendants: item.includeDescendants ?? false,
+    includeMapped: item.includeMapped ?? false,
+  }
+}
+
+/** expressionConceptSets as ConceptSetReference[] for dialogs that need id+name+items */
+const expressionConceptSets = computed<ConceptSetReference[]>(() =>
+  (expression.ConceptSets ?? [])
+    .filter(cs => cs.id !== undefined)
+    .map(cs => ({
+      id: cs.id!,
+      name: cs.name ?? '',
+      items: (cs.expression?.items ?? []).map(convertCirceItemToAtlas),
+    }))
+)
+
+// Core metadata state
 const cohortName = ref('')
 const cohortDescription = ref('')
-const entryEvents = ref<CohortEvent[]>([])
-const additionalCriteria = ref<CriteriaGroup | undefined>(undefined)
-const inclusionRules = ref<InclusionRule[]>([])
-const exitCriteria = ref<ExitCriteria>({ strategy: 'CONTINUOUS_OBSERVATION' })
-const censorWindow = ref<CensorWindow | null>(null)
-const collapseSettings = ref<CollapseSettings>({ collapseType: 'ERA', eraPad: 0 })
-const censoringCriteria = ref<CohortEvent[]>([])
-const observationPeriod = ref<ObservationPeriod>({ priorDays: 0, postDays: 0 })
-const qualifyingLimit = ref<QualifyingLimit>('ALL') // For entry events
-const primaryCriteriaLimit = ref<QualifyingLimit | undefined>(undefined)
-const inclusionQualifyingLimit = ref<QualifyingLimit>('ALL') // For inclusion criteria
 
 // UI state
 const showValidationDialog = ref(false)
@@ -726,55 +372,24 @@ const jsonDialogSource = ref('')
 const showUnsavedDialog = ref(false)
 let pendingNavigation: (() => void) | null = null
 
-// UI state
 // If we have an ID prop, start with loading=true to prevent UI from rendering before data loads
 const isLoadingCohort = ref(!!props.id)
 const isConceptSetDialogOpen = ref(false)
 const isConceptSearchDialogOpen = ref(false)
 const selectedConceptDomainFilter = ref<string | undefined>(undefined)
-const selectedCriteriaContext = ref<{
-  eventId?: string | null
-  ruleIndex: number
-  groupIndex: number
-  eventIndex: number
-  attributeIndex?: number
-  // When set, the selection targets the nested-criteria child at this index
-  // inside the resolved parent event (issue #93). Without this, a nested
-  // child's concept set was written onto its parent event.
-  nestedEventIndex?: number
-} | null>(null)
 
-// ── Criteria selection service (issue #112) ────────────────────────────────
-// Descendant criteria components at ANY nesting depth request the pickers
-// through this service and apply the result themselves via their normal
-// `update` emit. This replaces the fragile index-context relay for the
-// migrated components; the context/sentinel paths below remain for the
-// not-yet-migrated callers (entry-event concept set, exit criteria).
-const pendingConceptSetCallback = ref<((cs: ConceptSetReference) => void) | null>(null)
+// ── Criteria selection service ────────────────────────────────────────────────
+// ConceptArray.vue components at any depth request concepts through this
+// service. Concept-set selection flows via @select-concept-set events
+// directly to activeCsTarget instead.
 const pendingConceptsCallback = ref<((concepts: Concept[]) => void) | null>(null)
 
-function clearPendingSelectionCallbacks() {
-  pendingConceptSetCallback.value = null
-  pendingConceptsCallback.value = null
-}
-
-// A legacy opener setting an index context supersedes any service request
-// still pending from a cancelled dialog — otherwise the stale callback would
-// swallow the next selection.
-watch(selectedCriteriaContext, context => {
-  if (context) clearPendingSelectionCallbacks()
-})
-
 provideCriteriaSelection({
-  requestConceptSet(onSelect) {
-    clearPendingSelectionCallbacks()
-    selectedCriteriaContext.value = null
-    pendingConceptSetCallback.value = onSelect
-    isConceptSetDialogOpen.value = true
+  requestConceptSet(_onSelect) {
+    // not used by CohortExpressionEditor — concept-set events flow through
+    // @select-concept-set → openConceptSetSelection → activeCsTarget
   },
   requestConcepts(domainFilter, onSelect) {
-    clearPendingSelectionCallbacks()
-    selectedCriteriaContext.value = null
     pendingConceptsCallback.value = onSelect
     selectedConceptDomainFilter.value = domainFilter
     isConceptSearchDialogOpen.value = true
@@ -783,6 +398,7 @@ provideCriteriaSelection({
     handleEditConceptSet(conceptSet)
   },
 })
+
 const showError = ref(false)
 const errorMessage = ref('')
 const showSuccess = ref(false)
@@ -792,88 +408,11 @@ const isConfirmingNavigation = ref(false) // Flag to prevent double confirmation
 // Snapshot of the loaded/saved state for change detection
 const loadedSnapshot = ref<string | null>(null)
 
-// Component refs
-const additionalCriteriaRef = ref<InstanceType<typeof GroupCriteriaUI> | null>(null)
-
 // Generation state
 const selectedSourceKey = ref<string | null>(null)
 const generationError = ref<string | null>(null)
 
 const cohortId = computed(() => (props.id ? Number(props.id) : null))
-
-// ============================================================================
-// Section-state chips
-// ============================================================================
-//
-// Each section header shows a small pill conveying status at a
-// glance. The shape is: { label, tone } where tone is "primary"
-// (populated), "warning" (incomplete-required), "muted"
-// (optional/empty), or "success" (complete).
-
-interface SectionState {
-  label: string
-  tone: 'primary' | 'warning' | 'muted' | 'success'
-}
-
-const entryEventsState = computed<SectionState>(() => {
-  const events = entryEvents.value
-  if (events.length === 0) {
-    return { label: tv('components.cohortBuilder.stateRequired', 'Required'), tone: 'warning' }
-  }
-  const allHaveConceptSet = events.every(e => !!e.conceptSet)
-  const count =
-    events.length === 1
-      ? tv('components.cohortBuilder.eventCountOne', '1 event')
-      : tv('components.cohortBuilder.eventCountOther', '{count} events', { count: events.length })
-  return allHaveConceptSet ? { label: count, tone: 'success' } : { label: count, tone: 'warning' }
-})
-
-const inclusionRulesState = computed<SectionState>(() => {
-  const rules = inclusionRules.value
-  if (rules.length === 0) {
-    return { label: tv('components.cohortBuilder.stateOptional', 'Optional'), tone: 'muted' }
-  }
-  const label =
-    rules.length === 1
-      ? tv('components.cohortBuilder.ruleCountOne', '1 rule')
-      : tv('components.cohortBuilder.ruleCountOther', '{count} rules', { count: rules.length })
-  return { label, tone: 'primary' }
-})
-
-const exitCriteriaState = computed<SectionState>(() => {
-  const ec = exitCriteria.value
-  const censoringCount = censoringCriteria.value.length
-  // Continuous observation (default) is always valid on its own.
-  if (ec.strategy === 'CONTINUOUS_OBSERVATION') {
-    return censoringCount > 0
-      ? {
-          label: tv('components.cohortBuilder.stateCensoringCount', '+{count} censoring', {
-            count: censoringCount,
-          }),
-          tone: 'primary',
-        }
-      : {
-          label: tv('components.cohortBuilder.stateEndOfObservation', 'End of observation'),
-          tone: 'muted',
-        }
-  }
-  if (ec.strategy === 'FIXED_DURATION') {
-    if (ec.offset === undefined || ec.offset === null) {
-      return { label: tv('components.cohortBuilder.stateNeedsOffset', 'Needs offset'), tone: 'warning' }
-    }
-    return {
-      label: tv('components.cohortBuilder.stateOffsetDays', '+{count} days', { count: ec.offset }),
-      tone: 'success',
-    }
-  }
-  if (ec.strategy === 'CONTINUOUS_DRUG') {
-    if (!ec.conceptSet) {
-      return { label: tv('components.cohortBuilder.stateNeedsDrugSet', 'Needs drug set'), tone: 'warning' }
-    }
-    return { label: tv('components.cohortBuilder.stateDrugExposure', 'Drug exposure'), tone: 'success' }
-  }
-  return { label: tv('components.cohortBuilder.stateConfigured', 'Configured'), tone: 'muted' }
-})
 
 // Two-way sync with the parent's inline-edit name + description
 // inputs. The check `incoming !== cohortName.value` is what
@@ -915,18 +454,10 @@ const {
   triggerValidation,
   cancelValidation,
 } = useCohortValidation({
+  expression,
   cohortName,
   cohortDescription,
   cohortId,
-  entryEvents,
-  additionalCriteria,
-  inclusionRules,
-  exitCriteria,
-  censoringCriteria,
-  observationPeriod,
-  qualifyingLimit,
-  primaryCriteriaLimit,
-  inclusionQualifyingLimit,
 })
 
 // Permission gating for save: a *new* cohort needs `create:cohort-definition`,
@@ -940,9 +471,8 @@ const canSavePermission = computed(() =>
 )
 
 const canSave = computed(() => {
-  return (
-    cohortName.value.trim().length > 0 && entryEvents.value.length > 0 && canSavePermission.value
-  )
+  const hasEntryEvents = (expression.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0
+  return cohortName.value.trim().length > 0 && hasEntryEvents && canSavePermission.value
 })
 
 // Preview mode state
@@ -962,101 +492,6 @@ async function handleBackToCurrent(): Promise<void> {
 }
 
 /**
- * Cohort expression for patient count API
- * Holds the current Atlas format expression with concept set items populated
- */
-const cohortExpression = ref<ReturnType<typeof convertInternalToAtlas> | Record<string, never>>({})
-
-/**
- * Build cohort expression with full concept set items fetched from API
- * Called whenever cohort state changes
- */
-async function buildCohortExpression() {
-  // Only create expression if we have entry events
-  if (entryEvents.value.length === 0) {
-    cohortExpression.value = {}
-    return
-  }
-
-  try {
-    // Fetch full concept set items for all used concept sets
-    const conceptSetsWithItems: ConceptSetReference[] = await Promise.all(
-      usedConceptSets.value.map(async ref => {
-        // Skip if items are already populated
-        if (ref.items && ref.items.length > 0) {
-          return ref
-        }
-
-        // Fetch full concept set from API if it has a real (numeric) ID.
-        // Avoid falsy checks (id could be 0, which is valid). Use explicit check for undefined.
-        if (ref.id !== undefined && ref.id !== null) {
-          const fullConceptSet = await getConceptSetById(ref.id)
-          if (fullConceptSet && fullConceptSet.items) {
-            return {
-              ...ref,
-              items: fullConceptSet.items as ConceptSetItem[],
-            }
-          }
-        }
-
-        // Return reference as-is if fetching failed
-        return ref
-      })
-    )
-
-    // Strip in-progress criteria from inclusion rules before building the
-    // live-preview expression. A criterion that was just added but has no
-    // valid concept set assigned (undefined id placeholder, or a concept set
-    // whose items array is empty) makes circe NPE in
-    // CohortExpressionQueryBuilder.getCorelatedlCriteriaQuery — it expects
-    // every correlated criterion to have a populated codeset and a
-    // StartWindow. Rather than failing the entire preview, we exclude
-    // those criteria so the user still sees counts from the completed
-    // rules; the inclusion rule banner separately tells them their
-    // newest criterion is incomplete.
-    const sanitizedInclusionRules = inclusionRules.value.map(rule => ({
-      ...rule,
-      criteriaGroups: rule.criteriaGroups.map(group => ({
-        ...group,
-        events: group.events.filter(e => {
-          if (e.criteriaType === 'Demographic') return true
-          const cs = e.conceptSet
-          if (!cs) return false
-          // Skip if concept set has undefined placeholder ID (not yet assigned a real ID)
-          if (cs.id === undefined || cs.id === null) return false
-          return Array.isArray(cs.items) && cs.items.length > 0
-        }),
-      })),
-    }))
-
-    // Build cohort definition with all fields (same as validation)
-    const cohortDef: CohortDefinition = {
-      name: cohortName.value || 'Untitled Cohort',
-      description: cohortDescription.value,
-      tags: cohortTags.value,
-      entryEvents: entryEvents.value,
-      inclusionRules: sanitizedInclusionRules,
-      exitCriteria: exitCriteria.value,
-      censorWindow: censorWindow.value || undefined,
-      collapseSettings: collapseSettings.value,
-      censoringCriteria: censoringCriteria.value,
-      observationPeriod: observationPeriod.value,
-      qualifyingLimit: qualifyingLimit.value,
-      primaryCriteriaLimit: primaryCriteriaLimit.value,
-      inclusionQualifyingLimit: inclusionQualifyingLimit.value,
-      conceptSets: conceptSetsWithItems.filter(cs => cs.id !== 0),
-      ...(additionalCriteria.value !== undefined ? { additionalCriteria: additionalCriteria.value } : {}),
-    }
-
-    // Convert to Atlas format (same as checkV2 validation)
-    cohortExpression.value = convertInternalToAtlas(cohortDef)
-  } catch (error) {
-    logger.error('CohortBuilder', 'Failed to build cohort expression', error)
-    cohortExpression.value = {}
-  }
-}
-
-/**
  * Create a snapshot of the current cohort state for change detection
  */
 function createStateSnapshot(): string {
@@ -1064,106 +499,19 @@ function createStateSnapshot(): string {
     name: cohortName.value,
     description: cohortDescription.value,
     tags: cohortTags.value,
-    entryEvents: entryEvents.value,
-    additionalCriteria: additionalCriteria.value,
-    inclusionRules: inclusionRules.value,
-    exitCriteria: exitCriteria.value,
-    censorWindow: censorWindow.value,
-    collapseSettings: collapseSettings.value,
-    censoringCriteria: censoringCriteria.value,
-    observationPeriod: observationPeriod.value,
-    qualifyingLimit: qualifyingLimit.value,
-    primaryCriteriaLimit: primaryCriteriaLimit.value,
-    inclusionQualifyingLimit: inclusionQualifyingLimit.value,
+    expression: toRaw(expression),
   })
 }
 
-/**
- * Computed property that detects if there are unsaved changes
- * by comparing current state with the loaded snapshot
- */
 const hasUnsavedChanges = computed(() => {
   if (!loadedSnapshot.value) {
-    // No snapshot means we're in a new cohort, check if there's any content
-    return cohortName.value.trim().length > 0 || entryEvents.value.length > 0
+    return cohortName.value.trim().length > 0 || (expression.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0
   }
-
-  // Compare current state with loaded snapshot
-  const currentSnapshot = createStateSnapshot()
-  return currentSnapshot !== loadedSnapshot.value
+  return createStateSnapshot() !== loadedSnapshot.value
 })
 
-/**
- * Get the currently selected concepts for the attribute being edited
- */
-const currentlySelectedConcepts = computed(() => {
-  if (
-    !selectedCriteriaContext.value ||
-    selectedCriteriaContext.value.attributeIndex === undefined
-  ) {
-    return []
-  }
-
-  const context = selectedCriteriaContext.value
-  let attribute: EventAttribute | null = null
-
-  // Handle entry events
-  if (context.ruleIndex === -1 && context.eventId && context.attributeIndex !== undefined) {
-    const event = entryEvents.value.find(e => e.id === context.eventId)
-    if (event && event.attributes && event.attributes[context.attributeIndex]) {
-      attribute = event.attributes[context.attributeIndex] ?? null
-    }
-  }
-  // Handle inclusion criteria
-  else if (
-    context.ruleIndex >= 0 &&
-    context.groupIndex >= 0 &&
-    context.eventIndex !== undefined &&
-    context.attributeIndex !== undefined
-  ) {
-    const rule = inclusionRules.value[context.ruleIndex]
-    if (rule && rule.criteriaGroups) {
-      const group = rule.criteriaGroups[context.groupIndex]
-      if (group && group.events) {
-        const event = group.events[context.eventIndex]
-        if (event && event.attributes && event.attributes[context.attributeIndex]) {
-          attribute = event.attributes[context.attributeIndex] ?? null
-        }
-      }
-    }
-  }
-  // Handle additional criteria
-  else if (
-    context.ruleIndex === -2 &&
-    additionalCriteria.value &&
-    context.eventIndex !== undefined &&
-    context.attributeIndex !== undefined
-  ) {
-    const event = additionalCriteria.value.events[context.eventIndex]
-    if (event && event.attributes && event.attributes[context.attributeIndex]) {
-      attribute = event.attributes[context.attributeIndex] ?? null
-    }
-  }
-
-  // Return concepts if this is a concept attribute
-  if (attribute && attribute.type === 'concept') {
-    const concepts = attribute.concepts || []
-    // Convert UPPERCASE concepts to camelCase for the dialog
-    return concepts.map((c: Concept) => ({
-      conceptId: c.CONCEPT_ID,
-      conceptName: c.CONCEPT_NAME,
-      conceptCode: c.CONCEPT_CODE ?? '',
-      domainId: c.DOMAIN_ID ?? '',
-      vocabularyId: c.VOCABULARY_ID ?? '',
-      conceptClassId: c.CONCEPT_CLASS_ID ?? '',
-      standardConcept: c.STANDARD_CONCEPT ?? null,
-      invalidReason: c.INVALID_REASON ?? null,
-    }))
-  }
-
-  return []
-})
-
+/** Pre-populated concept list for the concept search dialog (no-op in new flow) */
+const currentlySelectedConcepts = computed(() => [])
 // Versions configuration
 const versionsConfig = computed<VersionsConfig>(() => {
   return {
@@ -1244,25 +592,20 @@ watch(
   { immediate: true }
 )
 
-// Re-sync local refs from the store when the cohort agent applies a proposal.
-// Local refs (entryEvents, inclusionRules, observationPeriod, …) are
-// initialized once at load (~1317) and shared by reference for arrays. Object
-// replacements (observationPeriod, exitCriteria) and freshly-created arrays
-// (censoringCriteria starting from undefined) lose that link, so we explicitly
-// re-bind them here. Only fires on agent-driven mutations — user edits use the
-// local refs directly without bumping `agentRevision`, so no feedback loop.
-watch(
-  () => cohortStore.agentRevision,
-  () => {
-    const c = cohortStore.currentCohort
-    if (!c) return
-    entryEvents.value = c.entryEvents
-    inclusionRules.value = c.inclusionRules
-    observationPeriod.value = c.observationPeriod || { priorDays: 0, postDays: 0 }
-    exitCriteria.value = c.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
-    censoringCriteria.value = c.censoringCriteria ?? []
+// Reconnected now that store's currentCohort carries a typed CohortExpression.
+// When the AI agent calls applyProposal (e.g. addInclusionRule, setObservationPeriod),
+// the store mutates currentCohort.expression and bumps agentRevision.
+// We re-sync our local reactive `expression` in-place so CohortExpressionEditor
+// sees the change without a full component reload.
+watch(() => cohortStore.agentRevision, () => {
+  const storeExpr = cohortStore.currentCohort?.expression
+  if (!storeExpr) return
+  // Update local reactive expression in-place (preserves proxy reactivity)
+  for (const key of Object.keys(expression)) {
+    delete (expression as Record<string, unknown>)[key]
   }
-)
+  Object.assign(expression, toRaw(storeExpr))
+})
 
 // The host bridge asks the mounted editor to run its full WebAPI save flow.
 // Always answer the signal — handleSave no-ops when nothing is savable — so the
@@ -1282,30 +625,18 @@ watch(
   }
 )
 
-// Reset to a blank cohort in place. Navigating cohort-new → cohort-new is a
-// same-route no-op, so onMounted never re-runs; without this the previous
-// cohort's criteria would linger and the next cohort's proposals would pile
-// onto it.
+// Reset to a blank cohort in place when the new-cohort signal fires.
 watch(
   () => cohortStore.newCohortSignal,
   () => {
-    const c = cohortStore.currentCohort
-    if (!c) return
     cancelValidation()
-    cohortName.value = c.name
-    cohortDescription.value = c.description ?? ''
-    entryEvents.value = c.entryEvents
-    additionalCriteria.value = c.additionalCriteria
-    inclusionRules.value = c.inclusionRules
-    exitCriteria.value = c.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
-    censorWindow.value = c.censorWindow ?? null
-    censoringCriteria.value = c.censoringCriteria ?? []
-    observationPeriod.value = c.observationPeriod || { priorDays: 0, postDays: 0 }
-    qualifyingLimit.value = c.qualifyingLimit
-    primaryCriteriaLimit.value = c.primaryCriteriaLimit
-    inclusionQualifyingLimit.value = c.inclusionQualifyingLimit ?? 'ALL'
+    for (const key of Object.keys(expression)) {
+      delete (expression as Record<string, unknown>)[key]
+    }
+    cohortName.value = ''
+    cohortDescription.value = ''
     loadedTags.value = []
-    loadedSnapshot.value = createStateSnapshot()
+    loadedSnapshot.value = null
   }
 )
 
@@ -1352,8 +683,6 @@ onMounted(async () => {
     }
     // Trigger validation for new/restored cohorts
     triggerValidation()
-    // Build cohort expression with concept set items for patient count
-    buildCohortExpression()
   }
 
   // Load resources in parallel in the background (don't block rendering)
@@ -1443,30 +772,13 @@ watch(
 )
 
 // Watch for changes to cohort definition and rebuild expression with concept set items
-watch(
-  [
-    entryEvents,
-    additionalCriteria,
-    inclusionRules,
-    exitCriteria,
-    censoringCriteria,
-    observationPeriod,
-    qualifyingLimit,
-    primaryCriteriaLimit,
-    inclusionQualifyingLimit,
-  ],
-  () => {
-    buildCohortExpression()
-  },
-  { deep: true }
-)
+// (removed in Phase 4 — useCohortValidation now watches expression directly)
 
 async function loadCohort(id: string) {
   isLoadingCohort.value = true
   try {
-    // Fetch cohort definition from WebAPI
-    const cohortId = parseInt(id, 10)
-    const atlasCohort = await getCohortDefinition(cohortId)
+    const numericId = parseInt(id, 10)
+    const atlasCohort = await getCohortDefinition(numericId)
 
     if (!atlasCohort) {
       logger.error('CohortBuilder', `Failed to load cohort ${id}`)
@@ -1474,187 +786,55 @@ async function loadCohort(id: string) {
       return
     }
 
-    // Parse expression if it's a string (stored as JSON in WebAPI)
-    let expression
-    if (isAtlasCohortDefinitionWrapper(atlasCohort)) {
-      const exprValue = atlasCohort.expression
-      expression = typeof exprValue === 'string' ? JSON.parse(exprValue) : exprValue
-    } else {
-      expression = atlasCohort
+    // Validate & parse with Circe schema (expression is already a CohortExpression object)
+    const parseResult = CohortExpressionSchema.safeParse(atlasCohort.expression ?? {})
+    if (!parseResult.success) {
+      logger.error('CohortBuilder', 'Failed to parse cohort expression', parseResult.error)
+      showError.value = true
+      errorMessage.value = tv('components.cohortBuilder.parseError', 'Failed to parse cohort definition')
+      isLoadingCohort.value = false
+      return
     }
 
-    // Convert Atlas JSON to internal format
-    const converted = convertAtlasToInternal(expression)
+    // Reset expression in-place
+    cancelValidation()
+    for (const key of Object.keys(expression)) {
+      delete (expression as Record<string, unknown>)[key]
+    }
+    Object.assign(expression, parseResult.data)
 
-    // Create cohort definition with converted data
+    // Minimal store update — include expression so pythiaBridge and agent proposals
+    // can read structure (entryEventCount, inclusionRuleCount, etc.) without re-parsing.
     const cohortDef: CohortDefinition = {
       id: atlasCohort.id,
       name: atlasCohort.name,
       description: atlasCohort.description || '',
       tags: atlasCohort.tags || [],
-      entryEvents: converted.entryEvents || [],
-      inclusionRules: converted.inclusionRules || [],
-      exitCriteria: converted.exitCriteria || { strategy: 'CONTINUOUS_OBSERVATION' },
-      observationPeriod: converted.observationPeriod || { priorDays: 0, postDays: 0 },
-      qualifyingLimit: converted.qualifyingLimit || 'ALL',
-      primaryCriteriaLimit: converted.primaryCriteriaLimit,
-      inclusionQualifyingLimit: converted.inclusionQualifyingLimit || 'ALL',
-      conceptSets: converted.conceptSets || [],
-      censoringCriteria: converted.censoringCriteria,
-      censorWindow: converted.censorWindow,
-      collapseSettings: converted.collapseSettings,
-      expressionType: converted.expressionType,
-      cdmVersionRange: converted.cdmVersionRange,
-      ...(converted.additionalCriteria !== undefined ? { additionalCriteria: converted.additionalCriteria } : {}),
+      expression: parseResult.data,
     }
-
-    // Update store with loaded cohort
     cohortStore.setCohort(cohortDef)
     cohortStore.markClean()
 
-    // Cancel any pending validation during batch state update
-    cancelValidation()
-
-    // Update local state
-    cohortName.value = cohortDef.name
-    cohortDescription.value = cohortDef.description ?? ''
-    entryEvents.value = cohortDef.entryEvents
-    additionalCriteria.value = cohortDef.additionalCriteria
-    inclusionRules.value = cohortDef.inclusionRules
-    exitCriteria.value = cohortDef.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
-    censorWindow.value = cohortDef.censorWindow ?? null
-    collapseSettings.value = cohortDef.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
-    censoringCriteria.value = cohortDef.censoringCriteria ?? []
-    observationPeriod.value = cohortDef.observationPeriod || { priorDays: 0, postDays: 0 }
-    qualifyingLimit.value = cohortDef.qualifyingLimit
-    primaryCriteriaLimit.value = cohortDef.primaryCriteriaLimit
-    inclusionQualifyingLimit.value = cohortDef.inclusionQualifyingLimit ?? 'ALL'
-
-    loadedTags.value = [...(cohortDef.tags || [])]
+    cohortName.value = atlasCohort.name
+    cohortDescription.value = atlasCohort.description || ''
+    loadedTags.value = [...(atlasCohort.tags || [])]
     loadedSnapshot.value = createStateSnapshot()
-
-    // Hide loading overlay immediately - cohort is now visible
     isLoadingCohort.value = false
 
-    // Trigger validation in the background (composable handles debouncing)
     triggerValidation()
-
-    // Build cohort expression with concept set items for patient count
-    buildCohortExpression()
   } catch (error) {
     logger.error('CohortBuilder', `Error loading cohort ${id}`, error)
     isLoadingCohort.value = false
   }
 }
 
-function handleSelectConceptSet(eventId: string) {
-  selectedCriteriaContext.value = { eventId, ruleIndex: -1, groupIndex: -1, eventIndex: -1 }
-  isConceptSetDialogOpen.value = true
-}
-
-// A nested-criteria child of an *entry event* requested a concept set. Keep the
-// parent entry event id, but mark the nested child index so assignment lands on
-// `parentEvent.nestedCriteria.events[nestedEventIndex]` rather than the parent.
-function handleSelectConceptSetForEntryNested(eventId: string, nestedEventIndex: number) {
-  selectedCriteriaContext.value = {
-    eventId,
-    ruleIndex: -1,
-    groupIndex: -1,
-    eventIndex: -1,
-    nestedEventIndex,
-  }
-  isConceptSetDialogOpen.value = true
-}
-
-function handleSelectConceptSetForCriteria(context: {
-  ruleIndex: number
-  groupIndex: number
-  eventIndex: number
-  nestedEventIndex?: number
-}) {
-  selectedCriteriaContext.value = { ...context, eventId: null }
-  isConceptSetDialogOpen.value = true
-}
-
-function handleSelectConceptSetForAdditionalCriteria(
-  eventIndexOrContext:
-    | number
-    | { eventIndex: number; eventId?: string; nestedEventIndex?: number }
-) {
-  const eventIndex =
-    typeof eventIndexOrContext === 'number' ? eventIndexOrContext : eventIndexOrContext.eventIndex
-  const nestedEventIndex =
-    typeof eventIndexOrContext === 'number' ? undefined : eventIndexOrContext.nestedEventIndex
-  selectedCriteriaContext.value = {
-    eventId: null,
-    ruleIndex: -2,
-    groupIndex: 0,
-    eventIndex,
-    nestedEventIndex,
-  }
-  isConceptSetDialogOpen.value = true
-}
-
-// Track which part of exit criteria needs the concept set
-const exitCriteriaSelectionType = ref<'DRUG_EXPOSURE' | 'CENSORING_EVENT' | null>(null)
-
-function handleSelectDrugConceptSet() {
-  exitCriteriaSelectionType.value = 'DRUG_EXPOSURE'
-  selectedCriteriaContext.value = { eventId: null, ruleIndex: -3, groupIndex: 0, eventIndex: 0 }
-  isConceptSetDialogOpen.value = true
-}
-
-function handleSelectCensoringConceptSet() {
-  exitCriteriaSelectionType.value = 'CENSORING_EVENT'
-  selectedCriteriaContext.value = { eventId: null, ruleIndex: -3, groupIndex: 0, eventIndex: 0 }
-  isConceptSetDialogOpen.value = true
-}
-
-// Concept attribute selection handlers
-function handleSelectConceptForEntryEvent(
-  eventId: string,
-  attributeIndex: number,
-  domainFilter: string | undefined
-) {
-  selectedCriteriaContext.value = {
-    eventId,
-    ruleIndex: -1, // Entry events
-    groupIndex: 0,
-    eventIndex: 0,
-    attributeIndex,
-  }
-  selectedConceptDomainFilter.value = domainFilter
-  isConceptSearchDialogOpen.value = true
-}
-
-function handleSelectConceptForAdditionalCriteria(context: {
-  eventIndex: number
-  domainFilter: string | undefined
-}) {
-  selectedCriteriaContext.value = {
-    eventId: null,
-    ruleIndex: -2,
-    groupIndex: 0,
-    eventIndex: context.eventIndex,
-    attributeIndex: -1, // Will be set by GroupCriteriaUI
-  }
-  selectedConceptDomainFilter.value = context.domainFilter
-  isConceptSearchDialogOpen.value = true
-}
-
-function handleSelectConceptForCriteria(context: {
-  ruleIndex: number
-  groupIndex: number
-  eventIndex: number
-  attributeIndex: number
-  domainFilter: string | undefined
-}) {
-  selectedCriteriaContext.value = {
-    ...context,
-    eventId: null,
-  }
-  selectedConceptDomainFilter.value = context.domainFilter
-  isConceptSearchDialogOpen.value = true
+// ── Concept set selection (Phase 4) ────────────────────────────────────────
+// CohortExpressionEditor emits @select-concept-set / @edit-concept-set with a
+// ConceptSetSelectionTarget. We record it in activeCsTarget so the result of
+// the dialog can be written directly back into expression.
+function openConceptSetSelection(target: ConceptSetSelectionTarget | undefined) {
+  activeCsTarget.value = target ?? null
+  if (target) isConceptSetDialogOpen.value = true
 }
 
 function handleConceptsSelected(
@@ -1669,13 +849,13 @@ function handleConceptsSelected(
     invalidReason: string | null
   }>
 ) {
-  if (concepts.length === 0 || (!selectedCriteriaContext.value && !pendingConceptsCallback.value)) {
+  if (concepts.length === 0 || !pendingConceptsCallback.value) {
     isConceptSearchDialogOpen.value = false
-    clearPendingSelectionCallbacks()
+    pendingConceptsCallback.value = null
     return
   }
 
-  // Convert camelCase concepts to UPPERCASE Atlas format
+  // Convert camelCase concepts to UPPERCASE Circe format
   const convertedConcepts = concepts.map(c => ({
     CONCEPT_ID: c.conceptId,
     CONCEPT_NAME: c.conceptName,
@@ -1687,176 +867,55 @@ function handleConceptsSelected(
     INVALID_REASON: c.invalidReason,
   }))
 
-  // Service path (issue #112): deliver to the requesting component, which
-  // applies the concepts itself at whatever nesting depth it lives.
-  if (pendingConceptsCallback.value) {
-    const callback = pendingConceptsCallback.value
-    clearPendingSelectionCallbacks()
-    callback(convertedConcepts)
-    isConceptSearchDialogOpen.value = false
-    return
-  }
-
-  // Concept attributes (Gender, Race, etc.) accept a list of concepts
-  // but a duplicate concept_id has no semantic meaning — circe treats
-  // `Gender IN (8507, 8507)` identically to `Gender IN (8507)` and the
-  // chip UI just renders two identical pills. Dedupe by CONCEPT_ID
-  // when merging the existing list with the user's new selection.
-  const mergeConcepts = <T extends { CONCEPT_ID: number }>(existing: T[], incoming: T[]): T[] => {
-    const seen = new Set(existing.map(c => c.CONCEPT_ID))
-    const merged = [...existing]
-    for (const c of incoming) {
-      if (!seen.has(c.CONCEPT_ID)) {
-        merged.push(c)
-        seen.add(c.CONCEPT_ID)
-      }
-    }
-    return merged
-  }
-
-  const context = selectedCriteriaContext.value
-  if (!context) {
-    isConceptSearchDialogOpen.value = false
-    return
-  }
-
-  // Handle entry events
-  if (context.ruleIndex === -1 && context.eventId && context.attributeIndex !== undefined) {
-    const event = entryEvents.value.find(e => e.id === context.eventId)
-    if (event && event.attributes && event.attributes[context.attributeIndex]) {
-      const attr = event.attributes[context.attributeIndex]
-      if (attr && attr.type === 'concept') {
-        // Add selected concepts to the existing array (support multi-select)
-        const existingConcepts = attr.concepts || []
-        const newConcepts = mergeConcepts(existingConcepts, convertedConcepts)
-        event.attributes[context.attributeIndex] = {
-          ...attr,
-          concepts: newConcepts,
-        }
-      }
-    }
-  }
-  // Handle additional criteria
-  else if (context.ruleIndex === -2 && additionalCriteriaRef.value) {
-    // Update for multi-select
-    additionalCriteriaRef.value.updateConceptAttribute(context.eventIndex, convertedConcepts)
-  }
-  // Handle inclusion criteria
-  else if (
-    context.ruleIndex >= 0 &&
-    context.groupIndex >= 0 &&
-    context.eventIndex !== undefined &&
-    context.attributeIndex !== undefined
-  ) {
-    // Update the inclusion criteria data directly
-    const rule = inclusionRules.value[context.ruleIndex]
-    if (rule && rule.criteriaGroups) {
-      const group = rule.criteriaGroups[context.groupIndex]
-      if (group && group.events) {
-        const event = group.events[context.eventIndex]
-        if (event && event.attributes && event.attributes[context.attributeIndex]) {
-          const attr = event.attributes[context.attributeIndex]
-          if (attr && attr.type === 'concept') {
-            // Add selected concepts to the existing array (support multi-select)
-            const existingConcepts = attr.concepts || []
-            const newConcepts = [...existingConcepts, ...convertedConcepts]
-            event.attributes[context.attributeIndex] = {
-              ...attr,
-              concepts: newConcepts,
-            }
-          }
-        }
-      }
-    }
-  }
-
+  const callback = pendingConceptsCallback.value
+  pendingConceptsCallback.value = null
+  callback(convertedConcepts)
   isConceptSearchDialogOpen.value = false
 }
-
-function handleCensorWindowValidation() {
-  // Handle censor window validation errors
-  // Currently just logging for now, could be used for aggregated validation display
-}
-
-function onCensorWindowUpdate(value: CensorWindow | undefined) {
-  censorWindow.value = value ?? null
-}
-
-function addAdditionalCriteria() {
-  additionalCriteria.value = {
-    id: `criteria_group_${Date.now()}`,
-    logicType: 'ALL',
-    qualifyingLimit: 'ALL',
-    events: [],
-  }
-}
-
-function removeAdditionalCriteria() {
-  additionalCriteria.value = undefined
-}
-
 /**
- * Called when user selects an existing concept set from the dialog
+ * Called when user selects an existing concept set from the dialog (repository import path).
+ * Mints a new internal ID, adds to expression.ConceptSets, assigns to activeCsTarget.
  */
 async function handleConceptSetSelected(conceptSet: {
   id: number | string
   name: string
   items?: unknown[]
 }) {
-  if (!conceptSet || (!selectedCriteriaContext.value && !pendingConceptSetCallback.value)) return
+  if (!conceptSet) return
 
   // Fetch the full concept set with items if we only have a reference
-  let fullConceptSet: { id: number | string; name: string; items?: unknown[] } = conceptSet
-  if (conceptSet.id && (!conceptSet.items || conceptSet.items.length === 0)) {
+  let fullItems: unknown[] = conceptSet.items || []
+  if (conceptSet.id && fullItems.length === 0) {
     await conceptSetsStore.fetchOne(conceptSet.id)
-    if (conceptSetsStore.currentSet && conceptSetsStore.currentSet.id !== undefined) {
-      fullConceptSet = {
-        id: conceptSetsStore.currentSet.id,
-        name: conceptSetsStore.currentSet.name,
-        items: conceptSetsStore.currentSet.items,
-      }
+    if (conceptSetsStore.currentSet?.id !== undefined) {
+      fullItems = conceptSetsStore.currentSet.items || []
     }
   }
 
-  // When importing from repository, assign a new internal ID to avoid conflicts.
-  // Remote concept sets may have IDs that conflict with newly created sets (e.g.,
-  // if we have id=1 locally and create a new set (id=2), importing a remote set
-  // with id=2 causes a conflict). Use nextConceptSetId to ensure uniqueness.
-  const internalId = nextConceptSetId(cohortStore.currentCohort?.conceptSets || [])
+  // Mint a new internal ID to avoid conflicts
+  const internalId = nextConceptSetId(conceptSetOptions.value.filter(cs => cs.id !== undefined) as Pick<ConceptSetReference, 'id'>[])
 
-  // Copy the entire concept set including items into the cohort definition,
-  // but with the new internal ID.
-  const conceptSetRef: ConceptSetReference = {
-    id: internalId,
-    name: fullConceptSet.name,
-    items: fullConceptSet.items || [],
+  if (!expression.ConceptSets) expression.ConceptSets = []
+  const circeItems = (fullItems as ConceptSetItem[]).map(convertAtlasItemToCirce)
+  expression.ConceptSets.push({ id: internalId, name: conceptSet.name, expression: { items: circeItems } })
+
+  if (activeCsTarget.value) {
+    activeCsTarget.value.targetRef.value = internalId
+    activeCsTarget.value = null
   }
 
-  assignConceptSetToContext(conceptSetRef)
   isConceptSetDialogOpen.value = false
 }
 
 /**
  * Called when the user picks a concept set that's already embedded in the
- * definition (#111). Unlike the repository path, this reuses the existing
- * local set in place: its id already matches an entry in `usedConceptSets`, so
- * `assignConceptSetToContext` (via `ensureUniqueConceptSetId`) keeps that id and
- * the cohort dedupes to a single CodesetId rather than minting a copy.
+ * definition. Writes the id directly to the active target.
  */
 function handleLocalConceptSetSelected(conceptSet: ConceptSetReference) {
-  // Guard the reuse invariant: only a set with a numeric id can be reused in
-  // place. id 0 is allowed — legacy/imported cohorts start CodesetIds at 0
-  // and those sets are real, already-embedded members of this cohort. The
-  // dialog already filters id-less placeholders out; this keeps it impossible
-  // for one to slip through and get minted as a new empty set.
-  if (
-    !conceptSet ||
-    !hasNumericConceptSetId(conceptSet) ||
-    (!selectedCriteriaContext.value && !pendingConceptSetCallback.value)
-  )
-    return
-  assignConceptSetToContext({ ...conceptSet })
+  if (!conceptSet || !hasNumericConceptSetId(conceptSet) || !activeCsTarget.value) return
+  activeCsTarget.value.targetRef.value = conceptSet.id as number
   isConceptSetDialogOpen.value = false
+  activeCsTarget.value = null
 }
 
 /**
@@ -1867,11 +926,7 @@ async function handleEditConceptSet(conceptSet: {
   name: string
   items?: unknown[]
 }) {
-  // Close dialog if it's open
   isConceptSetDialogOpen.value = false
-
-  // Use the embedded concept set items directly (don't fetch from API)
-  // The concept set is embedded in the cohort definition with all its items
   conceptSetsStore.openEmbeddedEditor({
     id: conceptSet.id,
     name: conceptSet.name,
@@ -1887,277 +942,107 @@ function handleViewConceptSet(conceptSet: {
   name: string
   items?: unknown[]
 }) {
-  // Close the concept sets dialog
   showConceptSetsDialog.value = false
-
-  // Open the concept set editor
   handleEditConceptSet(conceptSet)
 }
 
 /**
- * Delete a concept set from the cohort definition
+ * Delete a concept set from the cohort expression
  */
 function handleDeleteConceptSet(conceptSet: ConceptSetReference) {
-  if (!cohortStore.currentCohort) return
-
-  // Remove the concept set from the cohort's conceptSets array
-  const index = cohortStore.currentCohort.conceptSets.findIndex(cs => cs.id === conceptSet.id)
-  if (index !== -1) {
-    cohortStore.currentCohort.conceptSets.splice(index, 1)
+  if (conceptSet.id === undefined || conceptSet.id === null) return
+  const idx = (expression.ConceptSets ?? []).findIndex(cs => cs.id === conceptSet.id)
+  if (idx !== -1) {
+    expression.ConceptSets!.splice(idx, 1)
   }
-
-  // Clear all references to this deleted concept set from the expression.
-  // This is similar to legacy behavior: deleting a concept set resets all
-  // references to it to undefined, which shows the "select concept set" selector.
-  clearConceptSetUsages(
-    {
-      entryEvents: entryEvents.value,
-      additionalCriteria: additionalCriteria.value,
-      inclusionRules: inclusionRules.value,
-      exitCriteria: exitCriteria.value,
-      censoringCriteria: censoringCriteria.value,
-    },
-    conceptSet.id
-  )
-
-  // Trigger reactivity for all affected arrays so Vue re-renders
-  entryEvents.value = [...entryEvents.value]
-  inclusionRules.value = [...inclusionRules.value]
-  if (additionalCriteria.value) additionalCriteria.value = { ...additionalCriteria.value }
-  exitCriteria.value = { ...exitCriteria.value }
-  censoringCriteria.value = [...censoringCriteria.value]
+  unassignConceptSetId(expression, conceptSet.id as number)
 }
 
 /**
  * Called when user clicks "Create New" in the dialog
  */
 function handleCreateNewConceptSet() {
-  // Close dialog and open editor in create mode
   isConceptSetDialogOpen.value = false
-  // Open editor with undefined id (placeholder). The real ID will be assigned
-  // upfront in handleConceptSetApplied using nextConceptSetId(), ensuring
-  // we don't confuse the placeholder with id=0 (which is valid in legacy cohorts).
   conceptSetsStore.openCreateEditor()
 }
 
+/** Helper: convert a store ConceptSetItem to a Circe expression item */
+function convertAtlasItemToCirce(item: ConceptSetItem) {
+  return {
+    concept: {
+      CONCEPT_ID: item.conceptId,
+      CONCEPT_NAME: item.conceptName,
+      CONCEPT_CODE: item.conceptCode,
+      STANDARD_CONCEPT: item.standardConcept,
+      INVALID_REASON: item.invalidReason,
+      DOMAIN_ID: item.domainId,
+      VOCABULARY_ID: item.vocabularyId,
+      CONCEPT_CLASS_ID: item.conceptClassId,
+    },
+    isExcluded: item.isExcluded,
+    includeDescendants: item.includeDescendants,
+    includeMapped: item.includeMapped,
+  }
+}
+
 /**
- * Called when the embedded editor applies its changes. The editor worked on a
- * disposable clone, so nothing reached the cohort yet — write the result into
- * every usage of the concept set id, which flips the unsaved-changes snapshot.
+ * Called when the embedded editor applies its changes. Upserts the concept set
+ * into expression.ConceptSets; if activeCsTarget is still set, assigns the id.
  */
 function handleConceptSetApplied(set: { id?: number | string; name: string; items?: unknown[] }) {
   const items = JSON.parse(JSON.stringify(set.items ?? [])) as ConceptSetItem[]
 
-  // For new sets with undefined id (placeholder), assign a unique ID upfront now
   const finalId = set.id === undefined || set.id === null
-    ? nextConceptSetId(cohortStore.currentCohort?.conceptSets || [])
-    : set.id
+    ? nextConceptSetId((expression.ConceptSets ?? []).filter(cs => cs.id !== undefined) as Pick<ConceptSetReference, 'id'>[])
+    : (set.id as number)
 
-  const updated: ConceptSetReference = { id: finalId, name: set.name, items }
-  
-  // Update all criteria that reference this concept set
-  updateConceptSetUsages(
-    {
-      entryEvents: entryEvents.value,
-      additionalCriteria: additionalCriteria.value,
-      inclusionRules: inclusionRules.value,
-      exitCriteria: exitCriteria.value,
-      censoringCriteria: censoringCriteria.value,
-    },
-    updated
-  )
-  entryEvents.value = [...entryEvents.value]
-  inclusionRules.value = [...inclusionRules.value]
-  if (additionalCriteria.value) additionalCriteria.value = { ...additionalCriteria.value }
-  exitCriteria.value = { ...exitCriteria.value }
-  censoringCriteria.value = [...censoringCriteria.value]
-
-  if (selectedCriteriaContext.value || pendingConceptSetCallback.value) {
-    // Assign the concept set (now with final ID) to the context
-    assignConceptSetToContext(updated)
-  }
-}
-
-/**
- * Helper to assign a concept set to the current context (entry event or criteria)
- */
-function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
-  if (!selectedCriteriaContext.value && !pendingConceptSetCallback.value) return
-
-  // For imported/newly created sets: the ID was already assigned upfront and is final.
-  // Only for legacy code paths (if any) do we need to ensure uniqueness.
-  if (!hasRealConceptSetId(conceptSetRef)) {
-    conceptSetRef = ensureUniqueConceptSetId(conceptSetRef, cohortStore.currentCohort?.conceptSets || [])
-  }
-  
-  // Add the concept set to the cohort's conceptSets array. This happens on apply/import,
-  // not during creation. Cancel just closes the editor without reaching here.
-  if (cohortStore.currentCohort) {
-    const existingIndex = cohortStore.currentCohort.conceptSets.findIndex(cs => cs.id === conceptSetRef.id)
-    if (existingIndex === -1) {
-      cohortStore.currentCohort.conceptSets.push(conceptSetRef)
-    } else {
-      cohortStore.currentCohort.conceptSets[existingIndex] = conceptSetRef
-    }
+  if (!expression.ConceptSets) expression.ConceptSets = []
+  const existingIdx = expression.ConceptSets.findIndex(cs => cs.id === finalId)
+  const circeItems = items.map(convertAtlasItemToCirce)
+  if (existingIdx !== -1) {
+    expression.ConceptSets[existingIdx] = { id: finalId, name: set.name, expression: { items: circeItems } }
+  } else {
+    expression.ConceptSets.push({ id: finalId, name: set.name, expression: { items: circeItems } })
   }
 
-  // Service path (issue #112): deliver to the requesting component, which
-  // embeds the reference itself at whatever nesting depth it lives.
-  if (pendingConceptSetCallback.value) {
-    const callback = pendingConceptSetCallback.value
-    clearPendingSelectionCallbacks()
-    callback(conceptSetRef)
-    return
+  if (activeCsTarget.value) {
+    activeCsTarget.value.targetRef.value = finalId
+    activeCsTarget.value = null
   }
-
-  const context = selectedCriteriaContext.value
-  if (!context) return
-  const isNested = context.nestedEventIndex !== undefined && context.nestedEventIndex !== null
-
-  // Handle entry event selection
-  if (context.eventId) {
-    const eventIndex = entryEvents.value.findIndex(e => e.id === context.eventId)
-    if (eventIndex === -1) return
-
-    const currentEvent = entryEvents.value[eventIndex]
-    if (!currentEvent) return
-
-    if (isNested) {
-      // Assign to the nested child rather than the parent entry event (#93).
-      const target = resolveCriteriaTargetEvent(context, {
-        entryEvents: entryEvents.value,
-        additionalCriteria: additionalCriteria.value,
-        inclusionRules: inclusionRules.value,
-      })
-      if (!target) return
-      target.conceptSet = conceptSetRef
-      // Reassign the entry event ref so Vue picks up the nested mutation.
-      entryEvents.value[eventIndex] = { ...currentEvent }
-    } else {
-      // Update the event directly - Vue 3 ref reactivity will detect this
-      entryEvents.value[eventIndex] = {
-        ...currentEvent,
-        conceptSet: conceptSetRef,
-      }
-    }
-  }
-  // Handle additional criteria event selection
-  else if (context.ruleIndex === -2) {
-    if (!additionalCriteria.value) return
-
-    const target = resolveCriteriaTargetEvent(context, {
-      entryEvents: entryEvents.value,
-      additionalCriteria: additionalCriteria.value,
-      inclusionRules: inclusionRules.value,
-    })
-    if (!target) return
-
-    // Update the (parent or nested) event's concept set
-    target.conceptSet = conceptSetRef
-
-    // Trigger reactivity
-    additionalCriteria.value = { ...additionalCriteria.value }
-  }
-  // Handle criteria group event selection
-  else if (context.ruleIndex >= 0) {
-    const target = resolveCriteriaTargetEvent(context, {
-      entryEvents: entryEvents.value,
-      additionalCriteria: additionalCriteria.value,
-      inclusionRules: inclusionRules.value,
-    })
-    if (!target) return
-
-    // Update the (parent or nested) event's concept set
-    target.conceptSet = conceptSetRef
-
-    // Trigger reactivity
-    inclusionRules.value = [...inclusionRules.value]
-  }
-  // Handle exit criteria concept set selection
-  else if (context.ruleIndex === -3) {
-    if (exitCriteriaSelectionType.value === 'DRUG_EXPOSURE') {
-      // Set concept set for drug exposure strategy
-      exitCriteria.value = {
-        ...exitCriteria.value,
-        conceptSet: conceptSetRef,
-      }
-    } else if (exitCriteriaSelectionType.value === 'CENSORING_EVENT') {
-      // Create new censoring event with this concept set
-      const newEvent: CohortEvent = {
-        id: `censoring_${Date.now()}`,
-        criteriaType: 'DrugExposure', // Default, user might need to change
-        attributes: [],
-        conceptSet: conceptSetRef,
-      }
-      censoringCriteria.value = [...censoringCriteria.value, newEvent]
-    }
-    exitCriteriaSelectionType.value = null
-  }
-
-  selectedCriteriaContext.value = null
 }
 
 async function handleSave(): Promise<{ id?: number; name?: string }> {
   if (!canSave.value) return {}
 
-  // Collect every concept set the cohort references (entry, additional,
-  // inclusion rules, exit, censoring) and hydrate items from the API for any
-  // that aren't already populated. We preserve ALL loaded concept sets (not just
-  // used ones), so users can keep concept sets for potential future use after
-  // clearing them from criteria. This prevents data loss when toggling criteria.
-  // We hydrate items for any set that references the API (has numeric id).
-  const allLoadedSets = cohortStore.currentCohort?.conceptSets || []
-  const usedSetIds = new Set(usedConceptSets.value.map(cs => cs.id))
-  
-  // Merge: start with all loaded sets, but ensure used sets have hydrated items
-  const conceptSetsForSave: ConceptSetReference[] = await Promise.all(
-    allLoadedSets.map(async ref => {
-      // If this set is currently used and needs hydration, fetch items from API
-      if (usedSetIds.has(ref.id)) {
-        if (ref.items && ref.items.length > 0) {
-          return ref
-        }
-        if (typeof ref.id === 'number') {
-          const fullConceptSet = await getConceptSetById(ref.id)
-          if (fullConceptSet?.items) {
-            return { ...ref, items: fullConceptSet.items as ConceptSetItem[] }
-          }
-        }
-      }
-      // For unused sets, preserve as-is
-      return ref
-    })
-  )
-
-  const cohortDefinition: CohortDefinition = {
-    id: props.id ? Number(props.id) : undefined,
-    name: cohortName.value,
-    description: cohortDescription.value || undefined,
-    tags: cohortTags.value,
-    entryEvents: entryEvents.value,
-    qualifyingLimit: qualifyingLimit.value,
-    primaryCriteriaLimit: primaryCriteriaLimit.value,
-    inclusionQualifyingLimit: inclusionQualifyingLimit.value,
-    additionalCriteria: additionalCriteria.value,
-    inclusionRules: inclusionRules.value,
-    conceptSets: conceptSetsForSave,
-    exitCriteria: exitCriteria.value,
-    observationPeriod: observationPeriod.value,
-  }
-
-  // Convert to Atlas format and save to WebAPI
-  const { convertInternalToAtlas } = await import('@/services/atlas-converter')
   const { saveCohortDefinition, assignTagToCohort, unassignTagFromCohort } = await import(
     '@/services/webapi'
   )
 
-  const atlasExpression = convertInternalToAtlas(cohortDefinition)
+  // Deep-clone the expression for save (don't mutate live state)
+  const expressionForSave = JSON.parse(JSON.stringify(toRaw(expression))) as CohortExpression
+
+  // Hydrate concept set items from API for any sets that lack them
+  if (expressionForSave.ConceptSets) {
+    expressionForSave.ConceptSets = await Promise.all(
+      expressionForSave.ConceptSets.map(async cs => {
+        if ((cs.expression?.items?.length ?? 0) > 0) return cs
+        if (typeof cs.id === 'number') {
+          const fullCs = await getConceptSetById(cs.id)
+          if (fullCs?.items) {
+            return { ...cs, expression: { items: fullCs.items.map(convertAtlasItemToCirce) } }
+          }
+        }
+        return cs
+      })
+    )
+  }
+
   const atlasDefinition = {
-    id: cohortDefinition.id,
-    name: cohortDefinition.name,
-    description: cohortDefinition.description,
+    id: props.id ? Number(props.id) : undefined,
+    name: cohortName.value,
+    description: cohortDescription.value || undefined,
     expressionType: 'SIMPLE_EXPRESSION',
-    expression: atlasExpression,
+    expression: expressionForSave,
   }
 
   try {
@@ -2170,32 +1055,25 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     }
 
     // Sync tags via separate API calls
-    const cohortId = savedCohort.id
+    const savedId = savedCohort.id
     const currentTags = cohortTags.value
     const previousTags = loadedTags.value
-
-    const tagsToAdd = currentTags.filter(
-      current => !previousTags.some(prev => prev.id === current.id)
-    )
-    const tagsToRemove = previousTags.filter(
-      prev => !currentTags.some(current => current.id === prev.id)
-    )
-
+    const tagsToAdd = currentTags.filter(cur => !previousTags.some(p => p.id === cur.id))
+    const tagsToRemove = previousTags.filter(p => !currentTags.some(cur => cur.id === p.id))
     const tagFailures: string[] = []
 
     for (const tag of tagsToAdd) {
       if (tag.id) {
-        const result = await assignTagToCohort(cohortId, tag.id)
+        const result = await assignTagToCohort(savedId, tag.id)
         if (!result.success) {
           logger.warn('CohortBuilder', `Failed to assign tag ${tag.id}`, result.error)
           tagFailures.push(result.error ?? `Failed to assign tag "${tag.name}"`)
         }
       }
     }
-
     for (const tag of tagsToRemove) {
       if (tag.id) {
-        const result = await unassignTagFromCohort(cohortId, tag.id)
+        const result = await unassignTagFromCohort(savedId, tag.id)
         if (!result.success) {
           logger.warn('CohortBuilder', `Failed to unassign tag ${tag.id}`, result.error)
           tagFailures.push(result.error ?? `Failed to unassign tag "${tag.name}"`)
@@ -2210,14 +1088,27 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
 
     loadedTags.value = [...currentTags]
 
-    cohortStore.setCohort(cohortDefinition)
+    const minimalDef: CohortDefinition = {
+      id: savedCohort.id,
+      name: cohortName.value,
+      description: cohortDescription.value || '',
+      tags: cohortTags.value,
+      entryEvents: [],
+      inclusionRules: [],
+      exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' },
+      observationPeriod: { priorDays: 0, postDays: 0 },
+      qualifyingLimit: 'ALL',
+      inclusionQualifyingLimit: 'ALL',
+      conceptSets: [],
+    }
+    cohortStore.setCohort(minimalDef)
     cohortStore.markClean()
     cohortStore.clearDraft()
     loadedSnapshot.value = createStateSnapshot()
 
     successMessage.value = tv('components.cohortBuilder.saveSuccess', 'Cohort saved successfully')
     showSuccess.value = true
-    return { id: savedCohort.id, name: cohortDefinition.name }
+    return { id: savedCohort.id, name: cohortName.value }
   } catch (error) {
     logger.error('CohortBuilder', 'Failed to save cohort', error)
     errorMessage.value =
@@ -2234,65 +1125,35 @@ function handleCancel() {
   router.push('/cohorts')
 }
 
-function gatherConceptSets(): ConceptSetReference[] {
-  const conceptSetRefs = new Map<number | string, ConceptSetReference>()
-
-  for (const event of entryEvents.value) {
-    if (event.conceptSet) {
-      conceptSetRefs.set(event.conceptSet.id, event.conceptSet)
-    }
-  }
-
-  return Array.from(conceptSetRefs.values())
-}
-
 // Atlas JSON Import/Export
 
 /**
- * Overwrite the builder's expression state from an imported cohort.
- *
- * Expression only: name, description and tags are the identity of the
- * cohort you are editing and survive the overwrite. Every expression
- * field is written unconditionally (falling back to its empty default)
- * so that importing a JSON that *omits* a section clears that section
- * rather than leaving the previous cohort's leftovers behind.
- */
-function applyImportedExpression(importedCohort: Partial<CohortDefinition>) {
-  // Cancel any pending validation during batch state update
-  cancelValidation()
-
-  entryEvents.value = importedCohort.entryEvents || []
-  additionalCriteria.value = importedCohort.additionalCriteria
-  inclusionRules.value = importedCohort.inclusionRules || []
-  exitCriteria.value = importedCohort.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
-  censorWindow.value = importedCohort.censorWindow ?? null
-  collapseSettings.value = importedCohort.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
-  censoringCriteria.value = importedCohort.censoringCriteria ?? []
-  observationPeriod.value = importedCohort.observationPeriod ?? { priorDays: 0, postDays: 0 }
-  qualifyingLimit.value = importedCohort.qualifyingLimit || 'ALL'
-  primaryCriteriaLimit.value = importedCohort.primaryCriteriaLimit
-  inclusionQualifyingLimit.value = importedCohort.inclusionQualifyingLimit || 'ALL'
-
-  // Trigger validation (composable handles debouncing)
-  triggerValidation()
-}
-
-/**
- * Apply JSON edited in the JSON dialog. The result is left unsaved and
- * dirty — the user still has to press Save, exactly like a hand edit.
+ * Apply JSON edited in the JSON dialog.
  */
 async function handleApplyJson(json: string) {
-  const importedCohort = await importFromAtlas(json)
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(json)
+  } catch {
+    errorMessage.value = tv('components.cohortBuilder.jsonInvalidExpression', 'Not a valid Atlas cohort expression')
+    showError.value = true
+    return
+  }
 
-  if (!importedCohort || conversionError.value) {
+  const result = CohortExpressionSchema.safeParse(parsed)
+  if (!result.success) {
     errorMessage.value = tv('components.cohortBuilder.jsonImportFailed', 'Import failed: {error}', {
-      error: conversionError.value || tv('components.cohortBuilder.jsonInvalidExpression', 'Not a valid Atlas cohort expression'),
+      error: result.error.issues[0]?.message ?? 'Invalid expression',
     })
     showError.value = true
     return
   }
 
-  applyImportedExpression(importedCohort)
+  cancelValidation()
+  for (const key of Object.keys(expression)) {
+    delete (expression as Record<string, unknown>)[key]
+  }
+  Object.assign(expression, result.data)
 
   showJsonDialog.value = false
   successMessage.value = tv(
@@ -2302,66 +1163,34 @@ async function handleApplyJson(json: string) {
   showSuccess.value = true
 }
 
-function buildExportCohort(): CohortDefinition {
-  const cohortDefinition: CohortDefinition = {
-    id: props.id ? Number(props.id) : undefined,
-    name: cohortName.value,
-    description: cohortDescription.value || undefined,
-    entryEvents: entryEvents.value,
-    qualifyingLimit: qualifyingLimit.value,
-    primaryCriteriaLimit: primaryCriteriaLimit.value,
-    inclusionQualifyingLimit: inclusionQualifyingLimit.value,
-    inclusionRules: inclusionRules.value,
-    conceptSets: gatherConceptSets(),
-    exitCriteria: exitCriteria.value,
-    observationPeriod: observationPeriod.value,
-    censoringCriteria: censoringCriteria.value,
-    censorWindow: censorWindow.value || undefined,
-    collapseSettings: collapseSettings.value,
-    expressionType: cohortStore.currentCohort?.expressionType || 'SIMPLE_EXPRESSION',
-    cdmVersionRange: cohortStore.currentCohort?.cdmVersionRange,
-    ...(additionalCriteria.value !== undefined ? { additionalCriteria: additionalCriteria.value } : {}),
-  }
-
-  return cohortDefinition
-}
-
 function exportFilename(): string {
   const slug = cohortName.value.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'cohort'
   return `${slug}_cohort.json`
 }
 
 /**
- * Open the JSON dialog, seeding it with the same Atlas JSON the export
- * actions produce, so view / copy / download / edit all agree.
+ * Open the JSON dialog seeded with the current expression.
  */
 function openJsonDialog() {
-  jsonDialogSource.value = exportToAtlas(buildExportCohort())
+  jsonDialogSource.value = JSON.stringify(toRaw(expression), null, 2)
   showJsonDialog.value = true
 }
 
 function handleExportDownload() {
-  downloadAtlasJSON(buildExportCohort(), exportFilename())
-  if (conversionError.value) {
-    errorMessage.value = tv('components.cohortBuilder.exportFailed', 'Export failed: {error}', {
-      error: conversionError.value,
-    })
-    showError.value = true
-  } else {
-    successMessage.value = tv('components.cohortBuilder.exportDownloaded', 'Cohort JSON downloaded')
-    showSuccess.value = true
-  }
+  const json = JSON.stringify(toRaw(expression), null, 2)
+  const blob = new Blob([json], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = exportFilename()
+  a.click()
+  URL.revokeObjectURL(url)
+  successMessage.value = tv('components.cohortBuilder.exportDownloaded', 'Cohort JSON downloaded')
+  showSuccess.value = true
 }
 
 async function handleExportCopy() {
-  const json = exportToAtlas(buildExportCohort())
-  if (!json || conversionError.value) {
-    errorMessage.value = tv('components.cohortBuilder.exportFailed', 'Export failed: {error}', {
-      error: conversionError.value || tv('components.cohortBuilder.emptyCohort', 'Empty cohort'),
-    })
-    showError.value = true
-    return
-  }
+  const json = JSON.stringify(toRaw(expression), null, 2)
   try {
     await navigator.clipboard.writeText(json)
     successMessage.value = tv(

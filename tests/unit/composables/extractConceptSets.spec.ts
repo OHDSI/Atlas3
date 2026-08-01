@@ -1,64 +1,54 @@
+// extractConceptSets was removed in the circe-types refactor. The equivalent
+// functionality is now findUsedConceptSetIds (walks the CohortExpression graph
+// directly rather than transforming from an internal form).
 import { describe, it, expect } from 'vitest'
-import { extractConceptSets } from '@/composables/useCohortValidation'
-import type {
-  CohortEvent,
-  InclusionRule,
-  CriteriaGroup,
-  ExitCriteria,
-  ConceptSetReference,
-} from '@/models/cohort.types'
+import { findUsedConceptSetIds } from '@/components/cohort-editor/concept-set-usage'
+import type { CohortExpression } from '@/components/cohort-editor/circe.types'
 
-function event(id: string, conceptSet?: ConceptSetReference): CohortEvent {
-  return {
-    id,
-    criteriaType: 'ConditionOccurrence',
-    attributes: [],
-    ...(conceptSet ? { conceptSet } : {}),
-  } as CohortEvent
-}
+describe('findUsedConceptSetIds', () => {
+  it('returns both IDs when distinct concept sets share the same name (different ids)', () => {
+    // Two genuinely different concept sets referenced from different criteria.
+    const expression: CohortExpression = {
+      PrimaryCriteria: {
+        CriteriaList: [{ ConditionOccurrence: { CodesetId: 1 } }],
+      },
+      InclusionRules: [
+        {
+          name: 'Rule 1',
+          expression: {
+            Type: 'ALL',
+            CriteriaList: [{ Criteria: { ConditionOccurrence: { CodesetId: 2 } } }],
+          },
+        },
+      ],
+    }
 
-const emptyExit: ExitCriteria = { strategy: 'CONTINUOUS_OBSERVATION' }
+    const result = findUsedConceptSetIds(expression)
 
-describe('extractConceptSets', () => {
-  it('appends distinct concept sets that share the same name (different ids)', () => {
-    // Two genuinely different concept sets that happen to carry the same name
-    // (e.g. both still on the blank/default name the editor assigns).
-    const csA: ConceptSetReference = { id: 1, name: '', items: [] }
-    const csB: ConceptSetReference = { id: 2, name: '', items: [] }
-
-    const entryEvents = [event('e1', csA)]
-    const inclusionRules: InclusionRule[] = [
-      {
-        id: 'r1',
-        name: 'Rule 1',
-        criteriaGroups: [
-          { id: 'g1', logicType: 'ALL', events: [event('e2', csB)] } as CriteriaGroup,
-        ],
-      } as InclusionRule,
-    ]
-
-    const result = extractConceptSets(entryEvents, undefined, inclusionRules, emptyExit, [])
-
-    // Both concept sets must survive — the second must not override the first.
-    expect(result.map(cs => cs.id).sort()).toEqual([1, 2])
+    // Both concept sets must appear — distinct IDs are not collapsed.
+    expect([...result].sort((a, b) => a - b)).toEqual([1, 2])
   })
 
   it('deduplicates the same concept set referenced from multiple places (same id)', () => {
-    const cs: ConceptSetReference = { id: 5, name: 'Diabetes', items: [] }
-    const entryEvents = [event('e1', cs)]
-    const inclusionRules: InclusionRule[] = [
-      {
-        id: 'r1',
-        name: 'Rule 1',
-        criteriaGroups: [
-          { id: 'g1', logicType: 'ALL', events: [event('e2', cs)] } as CriteriaGroup,
-        ],
-      } as InclusionRule,
-    ]
+    // The same CodesetId appears in both primary criteria and an inclusion rule.
+    const expression: CohortExpression = {
+      PrimaryCriteria: {
+        CriteriaList: [{ ConditionOccurrence: { CodesetId: 5 } }],
+      },
+      InclusionRules: [
+        {
+          name: 'Rule 1',
+          expression: {
+            Type: 'ALL',
+            CriteriaList: [{ Criteria: { ConditionOccurrence: { CodesetId: 5 } } }],
+          },
+        },
+      ],
+    }
 
-    const result = extractConceptSets(entryEvents, undefined, inclusionRules, emptyExit, [])
+    const result = findUsedConceptSetIds(expression)
 
-    expect(result).toHaveLength(1)
-    expect(result[0]?.id).toBe(5)
+    expect(result.size).toBe(1)
+    expect(result.has(5)).toBe(true)
   })
 })

@@ -3,9 +3,9 @@
   terminology.
 
   Per-subgroup criteria editing happens in a wide dialog because the
-  GroupCriteriaUI is too dense for the 280px rail. Concept-set and
-  concept pickers are wired directly so the user can pick from existing
-  concept sets or search the vocabulary while editing strata criteria.
+  CriteriaGroup is too dense for the 280px rail. Concept-set selection uses
+  the circe-native useCirceConceptSetPicker composable; definitions are stored
+  in strataConceptSets at the CharacterizationDefinition level.
 -->
 <template>
   <div class="strata-editor">
@@ -100,20 +100,20 @@
       :close-label="t('common.close', 'Close').value"
       max-width="1100"
       persistent
-      @close="dialogOpen = false"
+      @close="onDialogClose"
     >
-      <GroupCriteriaUI
-        v-if="dialogStratum"
-        :model-value="dialogGroup"
-        @update:model-value="onDialogGroupUpdate"
+      <CriteriaGroup
+        v-if="dialogOpen"
+        :group="editingGroup"
+        :concept-sets="conceptSetOptions"
         @select-concept-set="onSelectConceptSet"
-        @select-concept="onSelectConcept"
+        @edit-concept-set="onSelectConceptSet"
       />
       <template #actions>
         <AtlasButton
           variant="ghost"
           size="sm"
-          @click="dialogOpen = false"
+          @click="onDialogClose"
         >
           {{ t('common.close', 'Close').value }}
         </AtlasButton>
@@ -121,58 +121,48 @@
     </AtlasDialog>
 
     <ConceptSetSelectionDialog
-      v-model="conceptSetDialogOpen"
+      v-model="csDialogOpen"
       @concept-set-selected="onConceptSetSelected"
-    />
-
-    <ConceptSearchDialog
-      v-model="conceptSearchDialogOpen"
-      :domain-filter="conceptSearchDomainFilter"
-      @concepts-selected="onConceptsSelected"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { v4 as uuidv4 } from 'uuid'
+import { reactive, ref, computed, toRaw } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
-import { useCriteriaGroupPicker } from '@/composables/useCriteriaGroupPicker'
+import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
 import { AtlasButton, AtlasChip, AtlasDialog, AtlasIconButton, AtlasSwitch, AtlasTextField } from '@/components/ui'
-import GroupCriteriaUI from '@/components/cohort-builder/GroupCriteriaUI.vue'
+import CriteriaGroup from '@/components/cohort-editor/criteria/CriteriaGroup.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
-import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
-import type { Stratum } from '@/models/characterization.types'
-import type { CriteriaGroup } from '@/models/cohort.types'
+import type { Stratum, CriteriaGroup as CriteriaGroupType } from '@/models/characterization.types'
+import type { ConceptSet } from '@/components/cohort-editor/circe.types'
 
 const props = defineProps<{
   modelValue: Stratum[]
   strataOnly?: boolean
+  strataConceptSets?: ConceptSet[]
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: Stratum[]]
   'update:strataOnly': [value: boolean]
+  'update:strataConceptSets': [value: ConceptSet[]]
 }>()
 
 const { t, tv } = useI18n()
 
-const dialogOpen = ref<boolean>(false)
+// ── Dialog state ──────────────────────────────────────────────────────────
+
+const dialogOpen = ref(false)
 const editingStratumId = ref<string | null>(null)
+
+// Reactive object mutated in-place by CriteriaGroup.vue.
+const editingGroup = reactive<CriteriaGroupType>({})
 
 const dialogStratum = computed<Stratum | null>(() => {
   if (!editingStratumId.value) return null
   return props.modelValue.find(s => s.id === editingStratumId.value) ?? null
-})
-
-const dialogGroup = computed<CriteriaGroup>(() => {
-  const stratum = dialogStratum.value
-  const candidate = stratum?.criteria as CriteriaGroup | undefined
-  if (candidate && typeof candidate === 'object' && 'logicType' in candidate) {
-    return candidate
-  }
-  return { id: uuidv4(), logicType: 'ALL', events: [] }
 })
 
 const dialogTitle = computed<string>(() => {
@@ -181,6 +171,47 @@ const dialogTitle = computed<string>(() => {
   return stratum.name.trim()
     || tv('cc.viewEdit.design.subgroups.namePlaceholder', 'Subgroup name')
 })
+
+// ── Concept-set picker ────────────────────────────────────────────────────
+
+const { dialogOpen: csDialogOpen, conceptSetOptions, onSelectConceptSet, onConceptSetSelected } =
+  useCirceConceptSetPicker({
+    getConceptSets: () => props.strataConceptSets ?? [],
+    addConceptSet: (cs) => {
+      const next = [...(props.strataConceptSets ?? []), cs]
+      emit('update:strataConceptSets', next)
+    },
+  })
+
+// ── Dialog helpers ────────────────────────────────────────────────────────
+
+function openCriteriaDialog(id: string) {
+  const stratum = props.modelValue.find(s => s.id === id)
+  const existing = stratum?.criteria ?? { Type: 'ALL', CriteriaList: [] }
+  // Deep-clone into the reactive object so CriteriaGroup mutations stay local
+  // until the dialog is closed and changes are emitted to the parent.
+  const cloned = JSON.parse(JSON.stringify(existing)) as CriteriaGroupType
+  for (const key of Object.keys(editingGroup)) {
+    delete (editingGroup as Record<string, unknown>)[key]
+  }
+  Object.assign(editingGroup, cloned)
+  editingStratumId.value = id
+  dialogOpen.value = true
+}
+
+function onDialogClose() {
+  const id = editingStratumId.value
+  if (id) {
+    const next = props.modelValue.map(s =>
+      s.id === id ? { ...s, criteria: toRaw(editingGroup) } : s,
+    )
+    emit('update:modelValue', next)
+  }
+  dialogOpen.value = false
+  editingStratumId.value = null
+}
+
+// ── Stratum list helpers ──────────────────────────────────────────────────
 
 function makeUuid(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -218,22 +249,26 @@ function nameErrors(name: string): string[] {
 }
 
 function hasCriteria(stratum: Stratum): boolean {
-  const c = stratum.criteria as CriteriaGroup | undefined
+  const c = stratum.criteria
   if (!c || typeof c !== 'object') return false
-  const events = (c as CriteriaGroup).events
-  if (!Array.isArray(events) || events.length === 0) return false
-  return true
+  const criteriaList = (c as CriteriaGroupType).CriteriaList
+  const demoList = (c as CriteriaGroupType).DemographicCriteriaList
+  return (
+    (Array.isArray(criteriaList) && criteriaList.length > 0) ||
+    (Array.isArray(demoList) && demoList.length > 0)
+  )
 }
 
 function criteriaSummary(stratum: Stratum): string {
   if (!hasCriteria(stratum)) {
     return tv('characterizations.editor.strata.noCriteria', 'No criteria')
   }
-  const events = (stratum.criteria as CriteriaGroup).events
+  const c = stratum.criteria as CriteriaGroupType
+  const n = (c.CriteriaList?.length ?? 0) + (c.DemographicCriteriaList?.length ?? 0)
   return tv(
     'characterizations.editor.strata.eventsCount',
-    `${events.length} event${events.length === 1 ? '' : 's'}`,
-    { n: events.length },
+    `${n} event${n === 1 ? '' : 's'}`,
+    { n },
   )
 }
 
@@ -246,39 +281,11 @@ function updateName(index: number, name: string) {
   emitUpdate(next)
 }
 
-function openCriteriaDialog(id: string) {
-  editingStratumId.value = id
-  dialogOpen.value = true
-}
-
-function onDialogGroupUpdate(group: CriteriaGroup) {
-  if (!editingStratumId.value) return
-  const id = editingStratumId.value
-  const next = props.modelValue.map(s => (s.id === id ? { ...s, criteria: group } : s))
-  emitUpdate(next)
-}
-
-// Concept-set / concept picking for the embedded GroupCriteriaUI. Shared
-// with the incidence-rate stratify editor so nested-child targeting (#93) stays
-// correct in one place.
-const {
-  conceptSetDialogOpen,
-  conceptSearchDialogOpen,
-  conceptSearchDomainFilter,
-  onSelectConceptSet,
-  onSelectConcept,
-  onConceptSetSelected,
-  onConceptsSelected,
-} = useCriteriaGroupPicker({
-  getGroup: () => dialogGroup.value,
-  onUpdate: onDialogGroupUpdate,
-})
-
 function addStratum() {
   const stratum: Stratum = {
     id: makeUuid(),
     name: '',
-    criteria: { id: uuidv4(), logicType: 'ALL', events: [] },
+    criteria: { Type: 'ALL', CriteriaList: [] },
   }
   emitUpdate([...props.modelValue, stratum])
 }
@@ -343,5 +350,4 @@ function removeStratum(index: number) {
 }
 
 .strata-editor__criteria-chip { font-size: 11px; }
-
 </style>

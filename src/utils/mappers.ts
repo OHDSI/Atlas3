@@ -32,7 +32,7 @@ export const ATLAS_TO_OPERATOR: Record<string, string> = {
 /**
  * Cardinality type mappings
  * Per the CIRCE Occurrence.Type enum: EXACTLY = 0, AT_MOST = 1, AT_LEAST = 2
- * (must stay in sync with the inline mapping in services/atlas-converter.ts)
+ * (moved to src/constants/circe-criteria.ts in Phase 6)
  */
 export const CARDINALITY_TO_ATLAS: Record<CardinalityType, 0 | 1 | 2> = {
   EXACTLY: 0,

@@ -1,14 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
-import { ref, computed, nextTick } from 'vue'
-import type { CohortEvent, InclusionRule, CriteriaGroup, ExitCriteria, QualifyingLimit } from '@/models/cohort.types'
+import { ref, reactive, computed, nextTick } from 'vue'
+import type { CohortExpression } from '@/components/cohort-editor/circe.types'
 import type { ValidationWarning } from '@/models/cohort-validation.types'
 
 vi.mock('@/services/webapi', () => ({
   validateCohortDefinition: vi.fn(),
-}))
-
-vi.mock('@/services/atlas-converter', () => ({
-  convertInternalToAtlas: vi.fn(() => ({ expression: {} })),
 }))
 
 vi.mock('@/services/concept-set.service', () => ({
@@ -41,24 +37,7 @@ describe('useCohortValidation', () => {
       cohortName: ref('Test Cohort'),
       cohortDescription: ref('Test Description'),
       cohortId: computed(() => null),
-      entryEvents: ref<CohortEvent[]>([
-        {
-          id: 'entry-1',
-          criteriaType: 'ConditionOccurrence',
-          conceptSet: { id: 1, name: 'Test Concept Set' },
-          attributes: [],
-        },
-      ]),
-      additionalCriteria: ref<CriteriaGroup | undefined>(undefined),
-      inclusionRules: ref<InclusionRule[]>([]),
-      exitCriteria: ref<ExitCriteria>({
-        exitType: 'fixedDuration',
-        duration: { value: 0, unit: 'days' },
-      }),
-      censoringCriteria: ref<CohortEvent[]>([]),
-      observationPeriod: ref({ priorDays: 0, postDays: 0 }),
-      qualifyingLimit: ref<QualifyingLimit>({ type: 'First' }),
-      inclusionQualifyingLimit: ref<QualifyingLimit>({ type: 'First' }),
+      expression: reactive<CohortExpression>({}),
       debounceDelay: 100,
       ...overrides,
     }
@@ -253,124 +232,91 @@ describe('useCohortValidation', () => {
   })
 
   describe('usedConceptSets', () => {
-    it('should extract concept sets from entry events', () => {
-      const options = createTestOptions({
-        entryEvents: ref([
-          {
-            id: 'entry-1',
-            criteriaType: 'ConditionOccurrence',
-            conceptSet: { id: 1, name: 'Condition Set' },
-            attributes: [],
-          },
-        ]),
-      })
+    // usedConceptSets now derives from the CohortExpression (circe-native):
+    // it walks the expression graph to find referenced CodesetIds, then filters
+    // expression.ConceptSets to those that are actually used.
 
+    it('should extract concept sets from primary criteria (entry events)', () => {
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [{ id: 1, name: 'Condition Set' }],
+        PrimaryCriteria: {
+          CriteriaList: [{ ConditionOccurrence: { CodesetId: 1 } }],
+        },
+      })
+      const options = createTestOptions({ expression })
       const { usedConceptSets } = useCohortValidation(options)
 
       expect(usedConceptSets.value).toHaveLength(1)
-      expect(usedConceptSets.value[0].name).toBe('Condition Set')
+      expect(usedConceptSets.value[0]!.name).toBe('Condition Set')
     })
 
     it('should extract concept sets from additional criteria', () => {
-      const options = createTestOptions({
-        additionalCriteria: ref<CriteriaGroup>({
-          id: 'group-1',
-          logicType: 'ALL',
-          events: [
-            {
-              id: 'add-1',
-              criteriaType: 'DrugExposure',
-              conceptSet: { id: 2, name: 'Drug Set' },
-              attributes: [],
-            },
-          ],
-        }),
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [{ id: 2, name: 'Drug Set' }],
+        AdditionalCriteria: {
+          Type: 'ALL',
+          CriteriaList: [{ Criteria: { DrugExposure: { CodesetId: 2 } } }],
+        },
       })
-
+      const options = createTestOptions({ expression })
       const { usedConceptSets } = useCohortValidation(options)
 
       expect(usedConceptSets.value.some(cs => cs.name === 'Drug Set')).toBe(true)
     })
 
     it('should extract concept sets from inclusion rules', () => {
-      const options = createTestOptions({
-        inclusionRules: ref([
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [{ id: 3, name: 'Procedure Set' }],
+        InclusionRules: [
           {
-            id: 'rule-1',
             name: 'Test Rule',
-            criteriaGroups: [
-              {
-                id: 'group-1',
-                logicType: 'ALL',
-                events: [
-                  {
-                    id: 'inc-1',
-                    criteriaType: 'ProcedureOccurrence',
-                    conceptSet: { id: 3, name: 'Procedure Set' },
-                    attributes: [],
-                  },
-                ],
-              },
-            ],
+            expression: {
+              Type: 'ALL',
+              CriteriaList: [{ Criteria: { ProcedureOccurrence: { CodesetId: 3 } } }],
+            },
           },
-        ]),
+        ],
       })
-
+      const options = createTestOptions({ expression })
       const { usedConceptSets } = useCohortValidation(options)
 
       expect(usedConceptSets.value.some(cs => cs.name === 'Procedure Set')).toBe(true)
     })
 
-    it('should extract concept sets from exit criteria', () => {
-      const options = createTestOptions({
-        exitCriteria: ref<ExitCriteria>({
-          exitType: 'drugExposure',
-          conceptSet: { id: 4, name: 'Exit Drug Set' },
-        }),
+    it('should extract concept sets from exit strategy (drug era end)', () => {
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [{ id: 4, name: 'Exit Drug Set' }],
+        EndStrategy: {
+          CustomEra: { DrugCodesetId: 4, GapDays: 0 },
+        },
       })
-
+      const options = createTestOptions({ expression })
       const { usedConceptSets } = useCohortValidation(options)
 
       expect(usedConceptSets.value.some(cs => cs.name === 'Exit Drug Set')).toBe(true)
     })
 
     it('should extract concept sets from censoring criteria', () => {
-      const options = createTestOptions({
-        censoringCriteria: ref([
-          {
-            id: 'censor-1',
-            criteriaType: 'Death',
-            conceptSet: { id: 5, name: 'Death Set' },
-            attributes: [],
-          },
-        ]),
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [{ id: 5, name: 'Death Set' }],
+        CensoringCriteria: [{ Death: { CodesetId: 5 } }],
       })
-
+      const options = createTestOptions({ expression })
       const { usedConceptSets } = useCohortValidation(options)
 
       expect(usedConceptSets.value.some(cs => cs.name === 'Death Set')).toBe(true)
     })
 
-    it('should deduplicate concept sets by name', () => {
-      const options = createTestOptions({
-        entryEvents: ref([
-          {
-            id: 'entry-1',
-            criteriaType: 'ConditionOccurrence',
-            conceptSet: { id: 1, name: 'Shared Set' },
-            attributes: [],
-          },
-        ]),
-        censoringCriteria: ref([
-          {
-            id: 'censor-1',
-            criteriaType: 'Death',
-            conceptSet: { id: 1, name: 'Shared Set' },
-            attributes: [],
-          },
-        ]),
+    it('should deduplicate: same concept set referenced from multiple criteria appears once', () => {
+      // Same CodesetId referenced from both primary criteria and censoring criteria.
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [{ id: 1, name: 'Shared Set' }],
+        PrimaryCriteria: {
+          CriteriaList: [{ ConditionOccurrence: { CodesetId: 1 } }],
+        },
+        CensoringCriteria: [{ ConditionOccurrence: { CodesetId: 1 } }],
       })
-
+      const options = createTestOptions({ expression })
       const { usedConceptSets } = useCohortValidation(options)
 
       const sharedSets = usedConceptSets.value.filter(cs => cs.name === 'Shared Set')

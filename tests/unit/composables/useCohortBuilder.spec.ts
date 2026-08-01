@@ -65,39 +65,17 @@ describe('useCohortBuilder', () => {
     it('should return canSave as false when name is empty', () => {
       const cohortStore = useCohortStore()
       cohortStore.createNewCohort()
-      cohortStore.setCohort({
-        ...cohortStore.currentCohort!,
-        name: '',
-        entryEvents: [{ id: '1', criteriaType: 'ConditionOccurrence', attributes: [] }]
-      })
+      cohortStore.setCohort({ ...cohortStore.currentCohort!, name: '' })
 
       const { canSave } = useCohortBuilder()
 
       expect(canSave.value).toBe(false)
     })
 
-    it('should return canSave as false when no entry events', () => {
+    it('should return canSave as true when cohort has a name', () => {
       const cohortStore = useCohortStore()
       cohortStore.createNewCohort()
-      cohortStore.setCohort({
-        ...cohortStore.currentCohort!,
-        name: 'Test Cohort',
-        entryEvents: []
-      })
-
-      const { canSave } = useCohortBuilder()
-
-      expect(canSave.value).toBe(false)
-    })
-
-    it('should return canSave as true when has name and entry events', () => {
-      const cohortStore = useCohortStore()
-      cohortStore.createNewCohort()
-      cohortStore.setCohort({
-        ...cohortStore.currentCohort!,
-        name: 'Test Cohort',
-        entryEvents: [{ id: '1', criteriaType: 'ConditionOccurrence', attributes: [] }]
-      })
+      cohortStore.setCohort({ ...cohortStore.currentCohort!, name: 'Test Cohort' })
 
       const { canSave } = useCohortBuilder()
 
@@ -139,88 +117,17 @@ describe('useCohortBuilder', () => {
     })
   })
 
-  describe('addEntryEvent', () => {
-    it('should add entry event with default type', () => {
-      const cohortStore = useCohortStore()
-      cohortStore.createNewCohort()
-
-      const { addEntryEvent } = useCohortBuilder()
-
-      const eventId = addEntryEvent()
-
-      expect(eventId).toBe('test-uuid-12345')
-      expect(cohortStore.currentCohort?.entryEvents).toHaveLength(1)
-      expect(cohortStore.currentCohort?.entryEvents[0].criteriaType).toBe('ConditionOccurrence')
-    })
-
-    it('should add entry event with specified type', () => {
-      const cohortStore = useCohortStore()
-      cohortStore.createNewCohort()
-
-      const { addEntryEvent } = useCohortBuilder()
-
-      addEntryEvent('DrugExposure')
-
-      expect(cohortStore.currentCohort?.entryEvents[0].criteriaType).toBe('DrugExposure')
-    })
-  })
-
-  describe('removeEntryEvent', () => {
-    it('should remove entry event', () => {
-      const cohortStore = useCohortStore()
-      cohortStore.createNewCohort()
-      cohortStore.addEntryEvent({ id: 'event-1', criteriaType: 'ConditionOccurrence', attributes: [] })
-
-      const { removeEntryEvent } = useCohortBuilder()
-
-      removeEntryEvent('event-1')
-
-      expect(cohortStore.currentCohort?.entryEvents).toHaveLength(0)
-    })
-  })
-
-  describe('updateEntryEvent', () => {
-    it('should update entry event', () => {
-      const cohortStore = useCohortStore()
-      cohortStore.createNewCohort()
-      cohortStore.addEntryEvent({ id: 'event-1', criteriaType: 'ConditionOccurrence', attributes: [] })
-
-      const { updateEntryEvent } = useCohortBuilder()
-
-      updateEntryEvent('event-1', {
-        id: 'event-1',
-        criteriaType: 'DrugExposure',
-        attributes: []
-      })
-
-      expect(cohortStore.currentCohort?.entryEvents[0].criteriaType).toBe('DrugExposure')
-    })
-  })
-
   describe('saveCohort', () => {
-    it('should throw error when cannot save', () => {
-      const cohortStore = useCohortStore()
-      cohortStore.createNewCohort()
-
-      const { saveCohort } = useCohortBuilder()
-
-      expect(() => saveCohort('Test', 'Description')).toThrow('Cannot save')
-    })
-
-    it('should throw error when no cohort exists', () => {
+    it('should throw when no cohort exists', () => {
       const { saveCohort } = useCohortBuilder()
 
       expect(() => saveCohort('Test', 'Description')).toThrow()
     })
 
-    it('should save cohort with name and description', () => {
+    it('should save cohort name and description and mark clean', () => {
       const cohortStore = useCohortStore()
       cohortStore.createNewCohort()
-      cohortStore.setCohort({
-        ...cohortStore.currentCohort!,
-        name: 'Test',
-        entryEvents: [{ id: '1', criteriaType: 'ConditionOccurrence', attributes: [] }]
-      })
+      cohortStore.markDirty()
 
       const { saveCohort } = useCohortBuilder()
 
@@ -229,35 +136,6 @@ describe('useCohortBuilder', () => {
       expect(result.name).toBe('Saved Cohort')
       expect(result.description).toBe('My description')
       expect(cohortStore.isDirty).toBe(false)
-    })
-
-    it('should collect concept sets from events', () => {
-      const cohortStore = useCohortStore()
-      cohortStore.createNewCohort()
-      cohortStore.setCohort({
-        ...cohortStore.currentCohort!,
-        name: 'Test',
-        entryEvents: [
-          {
-            id: '1',
-            criteriaType: 'ConditionOccurrence',
-            attributes: [],
-            conceptSet: { id: 100, name: 'Concept Set 1' }
-          },
-          {
-            id: '2',
-            criteriaType: 'DrugExposure',
-            attributes: [],
-            conceptSet: { id: 200, name: 'Concept Set 2' }
-          }
-        ]
-      })
-
-      const { saveCohort } = useCohortBuilder()
-
-      const result = saveCohort('Test', '')
-
-      expect(result.conceptSets).toHaveLength(2)
     })
   })
 

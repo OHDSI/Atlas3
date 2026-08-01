@@ -6,13 +6,9 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch, type WatchStopHandle } from 'vue'
 import type {
   CohortDefinition,
-  CohortEvent,
-  ConceptSetReference,
-  ExitCriteria,
-  InclusionRule,
-  ObservationPeriod,
 } from '@/models/cohort.types'
 import type { AgentProposal } from '@/models/agent.types'
+import type { Criteria } from '@/components/cohort-editor/circe.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
 import { saveCohortToCache, getCohortFromCache, deleteCohortFromCache } from '@/utils/cohort-cache'
 import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
@@ -72,24 +68,12 @@ export const useCohortStore = defineStore('cohort', () => {
   let watchHandle: WatchStopHandle | null = null
 
   // Getters
-  const hasEntryEvents = computed(() => {
-    return (currentCohort.value?.entryEvents.length ?? 0) > 0
-  })
-
-  const hasInclusionRules = computed(() => {
-    return (currentCohort.value?.inclusionRules.length ?? 0) > 0
-  })
-
-  const entryEventCount = computed(() => {
-    return currentCohort.value?.entryEvents.length ?? 0
-  })
-
   const hasValidationErrors = computed(() => {
     return validationErrors.value.some(err => err.severity === 'error')
   })
 
   const canSave = computed(() => {
-    return !isReadOnly.value && !hasValidationErrors.value
+    return !!currentCohort.value && !isReadOnly.value && !hasValidationErrors.value
   })
 
   // Actions
@@ -102,100 +86,115 @@ export const useCohortStore = defineStore('cohort', () => {
   function createNewCohort() {
     currentCohort.value = {
       name: 'New Cohort',
-      entryEvents: [],
-      qualifyingLimit: 'ALL',
-      inclusionRules: [],
-      conceptSets: [],
     }
     isDirty.value = false
     clearDraft()
   }
 
-  function addEntryEvent(event: CohortEvent) {
-    if (!currentCohort.value) {
-      createNewCohort()
-    }
-    currentCohort.value?.entryEvents.push(event)
-    isDirty.value = true
-  }
-
-  function removeEntryEvent(eventId: string) {
-    if (!currentCohort.value) return
-
-    const index = currentCohort.value.entryEvents.findIndex(e => e.id === eventId)
-    if (index !== -1) {
-      currentCohort.value.entryEvents.splice(index, 1)
-      isDirty.value = true
-    }
-  }
-
-  function updateEntryEvent(eventId: string, updatedEvent: CohortEvent) {
-    if (!currentCohort.value) return
-
-    const index = currentCohort.value.entryEvents.findIndex(e => e.id === eventId)
-    if (index !== -1) {
-      currentCohort.value.entryEvents[index] = updatedEvent
-      isDirty.value = true
-    }
-  }
-
-  function ensureCohort() {
-    if (!currentCohort.value) {
-      createNewCohort()
-    }
-    return currentCohort.value!
-  }
-
-  function addInclusionRule(rule: InclusionRule) {
-    ensureCohort().inclusionRules.push(rule)
-    isDirty.value = true
-  }
-
-  function addConceptSetReference(ref: ConceptSetReference) {
-    const cohort = ensureCohort()
-    if (!cohort.conceptSets.some(cs => cs.id === ref.id)) {
-      cohort.conceptSets.push(ref)
-      isDirty.value = true
-    }
-  }
-
-  function setObservationPeriod(period: ObservationPeriod) {
-    ensureCohort().observationPeriod = period
-    isDirty.value = true
-  }
-
-  function setExitCriteria(exit: ExitCriteria) {
-    ensureCohort().exitCriteria = exit
-    isDirty.value = true
-  }
-
-  function addCensoringCriterion(event: CohortEvent) {
-    const cohort = ensureCohort()
-    cohort.censoringCriteria = cohort.censoringCriteria ?? []
-    cohort.censoringCriteria.push(event)
-    isDirty.value = true
-  }
-
   function applyProposal(proposal: AgentProposal) {
     switch (proposal.kind) {
-      case 'addEntryEvent':
-        addEntryEvent(proposal.event)
+      case 'setObservationPeriod': {
+        if (!currentCohort.value?.expression) return
+        if (!currentCohort.value.expression.PrimaryCriteria) {
+          currentCohort.value.expression.PrimaryCriteria = {}
+        }
+        currentCohort.value.expression.PrimaryCriteria.ObservationWindow = {
+          PriorDays: proposal.observationPeriod.priorDays,
+          PostDays: proposal.observationPeriod.postDays,
+        }
         break
-      case 'addInclusionRule':
-        addInclusionRule(proposal.rule)
+      }
+      case 'addInclusionRule': {
+        if (!currentCohort.value?.expression) return
+        if (!currentCohort.value.expression.InclusionRules) {
+          currentCohort.value.expression.InclusionRules = []
+        }
+        currentCohort.value.expression.InclusionRules.push({
+          name: proposal.rule.name,
+          description: proposal.rule.description,
+          // CriteriaGroup expression left empty — agent must follow up with
+          // a more specific mutation to populate it.
+        })
         break
-      case 'addConceptSet':
-        addConceptSetReference(proposal.conceptSet)
+      }
+      case 'addConceptSet': {
+        if (!currentCohort.value?.expression) return
+        if (!currentCohort.value.expression.ConceptSets) {
+          currentCohort.value.expression.ConceptSets = []
+        }
+        const cs = proposal.conceptSet
+        if (typeof cs.id === 'number') {
+          // Deduplicate: skip if a concept set with the same id already exists.
+          const already = currentCohort.value.expression.ConceptSets.some(s => s.id === cs.id)
+          if (!already) {
+            currentCohort.value.expression.ConceptSets.push({ id: cs.id, name: cs.name })
+          }
+        }
         break
-      case 'setObservationPeriod':
-        setObservationPeriod(proposal.observationPeriod)
+      }
+      case 'addEntryEvent': {
+        // criteriaType from the proposal is the Circe wrapper key (e.g. 'ConditionOccurrence').
+        // Demographic goes in DemographicCriteriaList, not CriteriaList — not yet supported here.
+        const criteriaType = proposal.event.criteriaType
+        if (criteriaType === 'Demographic') {
+          logger.warn('CohortStore', 'addEntryEvent: Demographic not supported in PrimaryCriteria.CriteriaList')
+          break
+        }
+        if (!currentCohort.value?.expression) return
+        if (!currentCohort.value.expression.PrimaryCriteria) {
+          currentCohort.value.expression.PrimaryCriteria = {}
+        }
+        if (!currentCohort.value.expression.PrimaryCriteria.CriteriaList) {
+          currentCohort.value.expression.PrimaryCriteria.CriteriaList = []
+        }
+        currentCohort.value.expression.PrimaryCriteria.CriteriaList.push(
+          { [criteriaType]: {} } as Criteria
+        )
         break
-      case 'setExitCriteria':
-        setExitCriteria(proposal.exitCriteria)
+      }
+      case 'setCohortExit': {
+        if (!currentCohort.value?.expression) return
+        const ec = proposal.exitCriteria
+        switch (ec.strategy) {
+          case 'CONTINUOUS_OBSERVATION':
+            // Default Circe behavior: no EndStrategy means observation period end.
+            delete currentCohort.value.expression.EndStrategy
+            break
+          case 'FIXED_DURATION':
+            currentCohort.value.expression.EndStrategy = {
+              DateOffset: {
+                DateField: ec.dateField === 'END_DATE' ? 'EndDate' : 'StartDate',
+                Offset: ec.offset ?? 0,
+              },
+            }
+            break
+          case 'CONTINUOUS_DRUG':
+            currentCohort.value.expression.EndStrategy = {
+              CustomEra: {
+                DrugCodesetId: typeof ec.conceptSet?.id === 'number' ? ec.conceptSet.id : undefined,
+                GapDays: ec.surveillanceWindow ?? 0,
+                Offset: ec.offset ?? 0,
+              },
+            }
+            break
+        }
         break
-      case 'addCensoringCriterion':
-        addCensoringCriterion(proposal.event)
+      }
+      case 'addCensoringCriterion': {
+        const criteriaType = proposal.event.criteriaType
+        if (criteriaType === 'Demographic') {
+          logger.warn('CohortStore', 'addCensoringCriterion: Demographic not supported in CensoringCriteria')
+          break
+        }
+        if (!currentCohort.value?.expression) return
+        if (!currentCohort.value.expression.CensoringCriteria) {
+          currentCohort.value.expression.CensoringCriteria = []
+        }
+        currentCohort.value.expression.CensoringCriteria.push(
+          { [criteriaType]: {} } as Criteria
+        )
         break
+      }
       // Non-cohort proposal kinds are handled by pythiaBridge before
       // reaching the cohort store. Ignore here.
       case 'navigate':
@@ -218,6 +217,7 @@ export const useCohortStore = defineStore('cohort', () => {
       }
     }
     agentRevision.value++
+    markDirty()
   }
 
   function clearCohort() {
@@ -344,44 +344,12 @@ export const useCohortStore = defineStore('cohort', () => {
 
     const cohort = currentCohort.value
 
-    // Check required fields
     if (!cohort.name || cohort.name.trim() === '') {
       errors.push({
         field: 'name',
         message: 'Cohort name is required',
         severity: 'error',
       })
-    }
-
-    if (cohort.entryEvents.length === 0) {
-      errors.push({
-        field: 'entryEvents',
-        message: 'At least one entry event is required',
-        severity: 'error',
-      })
-    }
-
-    // Validate CollapseSettings if present
-    if (cohort.collapseSettings) {
-      if (!cohort.collapseSettings.collapseType) {
-        errors.push({
-          field: 'collapseSettings.collapseType',
-          message: 'Collapse type is required when collapse settings are specified',
-          severity: 'error',
-        })
-      }
-    }
-
-    // Validate CensorWindow dates (literal ISO date strings per Atlas 2.15)
-    if (cohort.censorWindow) {
-      const { startDate, endDate } = cohort.censorWindow
-      if (startDate && endDate && startDate > endDate) {
-        errors.push({
-          field: 'censorWindow',
-          message: 'Censor window start date must come before end date',
-          severity: 'warning',
-        })
-      }
     }
 
     validationErrors.value = errors
@@ -654,22 +622,11 @@ export const useCohortStore = defineStore('cohort', () => {
     newCohortSignal,
     saveOptions,
     // Getters
-    hasEntryEvents,
-    hasInclusionRules,
-    entryEventCount,
     hasValidationErrors,
     canSave,
     // Actions
     setCohort,
     createNewCohort,
-    addEntryEvent,
-    removeEntryEvent,
-    updateEntryEvent,
-    addInclusionRule,
-    addConceptSetReference,
-    setObservationPeriod,
-    setExitCriteria,
-    addCensoringCriterion,
     applyProposal,
     clearCohort,
     markClean,

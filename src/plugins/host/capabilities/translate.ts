@@ -649,7 +649,7 @@ export function translateCapability(
           conceptCount: 1,
         }
       }
-      return { kind: 'setExitCriteria', exitCriteria } as unknown as AgentProposal
+      return { kind: 'setCohortExit', exitCriteria } as unknown as AgentProposal
     }
 
     case 'set_censor_event': {

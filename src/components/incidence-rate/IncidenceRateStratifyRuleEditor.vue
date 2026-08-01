@@ -14,67 +14,69 @@
       class="mb-3"
       @update:model-value="(v) => emit('update', { description: String(v) })"
     />
-    <GroupCriteriaUI
-      :model-value="currentGroup"
-      @update:model-value="(g: CriteriaGroup) => emit('update', { expression: g })"
+    <CriteriaGroup
+      :group="currentGroup"
+      :concept-sets="conceptSetOptions"
       @select-concept-set="onSelectConceptSet"
-      @select-concept="onSelectConcept"
+      @edit-concept-set="onSelectConceptSet"
     />
 
     <ConceptSetSelectionDialog
-      v-model="conceptSetDialogOpen"
+      v-model="csDialogOpen"
       @concept-set-selected="onConceptSetSelected"
-    />
-
-    <ConceptSearchDialog
-      v-model="conceptSearchDialogOpen"
-      :domain-filter="conceptSearchDomainFilter"
-      @concepts-selected="onConceptsSelected"
     />
   </div>
 </template>
 
 <script setup lang="ts">
+import { reactive, watch } from 'vue'
 import { AtlasTextField } from '@/components/ui'
-import { computed } from 'vue'
-import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
-import { useCriteriaGroupPicker } from '@/composables/useCriteriaGroupPicker'
-import GroupCriteriaUI from '@/components/cohort-builder/GroupCriteriaUI.vue'
+import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
+import CriteriaGroup from '@/components/cohort-editor/criteria/CriteriaGroup.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
-import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
-import type { CriteriaGroup } from '@/models/cohort.types'
+import type { CriteriaGroup as CriteriaGroupType, ConceptSet } from '@/components/cohort-editor/circe.types'
 import type { StratifyRule } from '@/models/incidence-rate.types'
 
-const { rule } = defineProps<{ rule: StratifyRule }>()
-const emit = defineEmits<{ (e: 'update', partial: Partial<StratifyRule>): void }>()
+const { rule, conceptSets } = defineProps<{
+  rule: StratifyRule
+  conceptSets: ConceptSet[]
+}>()
+const emit = defineEmits<{
+  (e: 'update', partial: Partial<StratifyRule>): void
+  (e: 'add-concept-set', cs: ConceptSet): void
+}>()
 const { t } = useI18n()
 
-const defaultGroup = computed<CriteriaGroup>(() => ({
-  id: uuidv4(),
-  logicType: 'ALL',
-  events: [],
-}))
-
-const currentGroup = computed<CriteriaGroup>(
-  () => (rule.expression as CriteriaGroup) ?? defaultGroup.value,
+// Local reactive copy of the expression group so CriteriaGroup can mutate
+// it in-place.  Synced back to the parent via watch.
+const currentGroup = reactive<CriteriaGroupType>(
+  (rule.expression as CriteriaGroupType) ?? { Type: 'ALL', CriteriaList: [] },
 )
 
-// Concept-set / concept picking for the embedded GroupCriteriaUI, shared
-// with the characterization strata editor so nested-child targeting (#93) is
-// handled in one place.
-const {
-  conceptSetDialogOpen,
-  conceptSearchDialogOpen,
-  conceptSearchDomainFilter,
-  onSelectConceptSet,
-  onSelectConcept,
-  onConceptSetSelected,
-  onConceptsSelected,
-} = useCriteriaGroupPicker({
-  getGroup: () => currentGroup.value,
-  onUpdate: (g: CriteriaGroup) => emit('update', { expression: g }),
-})
+watch(
+  () => rule.expression,
+  (next) => {
+    const g = (next as CriteriaGroupType) ?? { Type: 'ALL', CriteriaList: [] }
+    Object.assign(currentGroup, g)
+  },
+  { deep: true },
+)
+
+// Emit mutations whenever CriteriaGroup changes the reactive object.
+watch(currentGroup, (g) => {
+  emit('update', { expression: { ...g } })
+}, { deep: true })
+
+const { dialogOpen: csDialogOpen, conceptSetOptions, onSelectConceptSet, onConceptSetSelected: _onConceptSetSelected } =
+  useCirceConceptSetPicker({
+    getConceptSets: () => conceptSets,
+    addConceptSet: (cs) => emit('add-concept-set', cs),
+  })
+
+async function onConceptSetSelected(cs: { id: number | string; name: string; items?: unknown[] }) {
+  await _onConceptSetSelected(cs)
+}
 </script>
 
 <style scoped>

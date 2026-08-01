@@ -134,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasDialog, AtlasListItem, AtlasProgressCircular, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasDialog, AtlasIcon, AtlasListItem, AtlasProgressCircular, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'

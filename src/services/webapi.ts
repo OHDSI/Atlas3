@@ -20,11 +20,8 @@ import {
   type Concept,
   type ConceptSet,
 } from '@/models/concept-set.types'
-import {
-  type AtlasCohortDefinition,
-  type AtlasCohortDefinitionInput,
-  isAtlasCohortDefinitionWrapper,
-} from '@/models/atlas.types'
+import type { CohortDefinition } from '@/models/cohort.types'
+import { CohortExpressionSchema } from '@/components/cohort-editor/circe.types'
 import type { ValidationResponse } from '@/models/cohort-validation.types'
 import {
   WebAPIReportResponseSchema,
@@ -182,10 +179,29 @@ export async function searchConcepts(
 /**
  * Get cohort definition by ID
  * Endpoint: GET /cohortdefinition/{id}
+ *
+ * The server returns CohortRawDTO where `expression` is a raw JSON string.
+ * We parse it into a typed CohortExpression here so callers always receive a
+ * structured object and never need to call JSON.parse themselves.
  */
-export async function getCohortDefinition(id: number): Promise<AtlasCohortDefinition | null> {
+export async function getCohortDefinition(id: number): Promise<CohortDefinition | null> {
   try {
-    return await fetchJSON<AtlasCohortDefinition>(`/cohortdefinition/${id}`)
+    // Fetch as raw shape (expression is a JSON string from server)
+    type RawResponse = Omit<CohortDefinition, 'expression'> & { expression?: string }
+    const raw = await fetchJSON<RawResponse>(`/cohortdefinition/${id}`)
+    if (!raw) return null
+
+    let expression: CohortDefinition['expression']
+    if (raw.expression) {
+      const parseResult = CohortExpressionSchema.safeParse(JSON.parse(raw.expression))
+      if (parseResult.success) {
+        expression = parseResult.data
+      } else {
+        logger.warn('WebAPI', `Failed to parse expression for cohort ${id}`, parseResult.error)
+      }
+    }
+
+    return { ...raw, expression }
   } catch (error) {
     logger.error('WebAPI', `Failed to fetch cohort definition ${id}`, error)
     return null
@@ -1611,27 +1627,15 @@ export async function getProcedureDrilldown(
  * The endpoint expects just the expression object from the cohort definition
  */
 export async function getCohortPrintFriendly(
-  cohortDefinition: AtlasCohortDefinitionInput
+  cohortDefinition: CohortDefinition
 ): Promise<string | null> {
   try {
     const baseUrl = getBaseUrl()
     const url = `${baseUrl}/cohortdefinition/printfriendly/cohort?format=html`
     const locale = localStorage.getItem('locale') || 'en'
 
-    // The cohort definition from WebAPI has structure: { id, name, description, expression: {...} }
-    // The printfriendly endpoint expects just the expression property
-    let payload: AtlasCohortDefinition | string
-
-    if (isAtlasCohortDefinitionWrapper(cohortDefinition)) {
-      payload = cohortDefinition.expression
-    } else {
-      payload = cohortDefinition
-    }
-
-    // If expression is a string, parse it first
-    if (typeof payload === 'string') {
-      payload = JSON.parse(payload) as AtlasCohortDefinition
-    }
+    // The printfriendly endpoint expects just the expression object
+    const expression = cohortDefinition.expression ?? {}
 
     // Get auth token for the request
     let authHeader: string | undefined
@@ -1656,7 +1660,7 @@ export async function getCohortPrintFriendly(
     const response = await fetch(url, {
       method: 'POST',
       headers,
-      body: JSON.stringify(payload),
+      body: JSON.stringify(expression),
     })
 
     if (!response.ok) {

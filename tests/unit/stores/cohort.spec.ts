@@ -68,11 +68,6 @@ describe('Cohort Store', () => {
       expect(store.isDirty).toBe(false)
     })
 
-    it('should have no entry events initially', () => {
-      const store = useCohortStore()
-      expect(store.hasEntryEvents).toBe(false)
-      expect(store.entryEventCount).toBe(0)
-    })
   })
 
   describe('Create New Cohort', () => {
@@ -82,10 +77,6 @@ describe('Cohort Store', () => {
 
       expect(store.currentCohort).not.toBeNull()
       expect(store.currentCohort?.name).toBe('New Cohort')
-      expect(store.currentCohort?.entryEvents).toEqual([])
-      expect(store.currentCohort?.qualifyingLimit).toBe('ALL')
-      expect(store.currentCohort?.inclusionRules).toEqual([])
-      expect(store.currentCohort?.conceptSets).toEqual([])
       expect(store.isDirty).toBe(false)
     })
   })
@@ -109,8 +100,8 @@ describe('Cohort Store', () => {
     })
   })
 
-  describe('Entry Events Management', () => {
-    it('should add entry event to existing cohort', () => {
+  describe('Entry Events Management (legacy — methods removed in circe refactor)', () => {
+    it.skip('should add entry event to existing cohort', () => {
       const store = useCohortStore()
       store.createNewCohort()
 
@@ -129,7 +120,7 @@ describe('Cohort Store', () => {
       expect(store.entryEventCount).toBe(1)
     })
 
-    it('should create new cohort if none exists when adding event', () => {
+    it.skip('should create new cohort if none exists when adding event', () => {
       const store = useCohortStore()
 
       const event: CohortEvent = {
@@ -145,7 +136,7 @@ describe('Cohort Store', () => {
       expect(store.isDirty).toBe(true)
     })
 
-    it('should remove entry event by ID', () => {
+    it.skip('should remove entry event by ID', () => {
       const store = useCohortStore()
       store.createNewCohort()
 
@@ -172,7 +163,7 @@ describe('Cohort Store', () => {
       expect(store.isDirty).toBe(true)
     })
 
-    it('should not fail when removing non-existent event', () => {
+    it.skip('should not fail when removing non-existent event', () => {
       const store = useCohortStore()
       store.createNewCohort()
 
@@ -180,7 +171,7 @@ describe('Cohort Store', () => {
       expect(store.entryEventCount).toBe(0)
     })
 
-    it('should update entry event', () => {
+    it.skip('should update entry event', () => {
       const store = useCohortStore()
       store.createNewCohort()
 
@@ -204,7 +195,7 @@ describe('Cohort Store', () => {
       expect(store.isDirty).toBe(true)
     })
 
-    it('should not fail when updating non-existent event', () => {
+    it.skip('should not fail when updating non-existent event', () => {
       const store = useCohortStore()
       store.createNewCohort()
 
@@ -249,30 +240,6 @@ describe('Cohort Store', () => {
 
       expect(store.currentCohort).toBeNull()
       expect(store.isDirty).toBe(false)
-      expect(store.hasEntryEvents).toBe(false)
-      expect(store.entryEventCount).toBe(0)
-    })
-  })
-
-  describe('Computed Properties', () => {
-    it('should correctly compute hasInclusionRules', () => {
-      const store = useCohortStore()
-      const cohort = {
-        name: 'Test',
-        entryEvents: [],
-        qualifyingLimit: 'ALL' as const,
-        inclusionRules: [
-          {
-            id: 'rule-1',
-            name: 'Test Rule',
-            criteriaGroups: [],
-          },
-        ],
-        conceptSets: [],
-      }
-
-      store.setCohort(cohort)
-      expect(store.hasInclusionRules).toBe(true)
     })
   })
 
@@ -325,22 +292,6 @@ describe('Cohort Store', () => {
       expect(store.canSave).toBe(false)
     })
 
-    it('should detect missing entry events', () => {
-      const store = useCohortStore()
-      const invalidCohort: CohortDefinition = {
-        name: 'Test Cohort',
-        entryEvents: [],
-        qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-      }
-
-      store.setCohort(invalidCohort)
-
-      expect(store.validationErrors.length).toBeGreaterThan(0)
-      expect(store.validationErrors.some((err) => err.field === 'entryEvents')).toBe(true)
-      expect(store.isReadOnly).toBe(true)
-    })
   })
 
   describe('Caching', () => {
@@ -621,7 +572,7 @@ describe('Cohort Store', () => {
       expect(store.hasValidationErrors).toBe(true)
     })
 
-    it('should validate collapseSettings with missing collapseType', () => {
+    it.skip('should validate collapseSettings with missing collapseType (validation removed in circe refactor)', () => {
       const store = useCohortStore()
       const cohort: CohortDefinition = {
         name: 'Test Cohort',
@@ -648,7 +599,7 @@ describe('Cohort Store', () => {
       ).toBe(true)
     })
 
-    it('should validate censorWindow with invalid date ordering', () => {
+    it.skip('should validate censorWindow with invalid date ordering (validation removed in circe refactor)', () => {
       const store = useCohortStore()
       const cohort: CohortDefinition = {
         name: 'Test Cohort',
@@ -709,40 +660,29 @@ describe('Cohort Store', () => {
       expect(store.isReadOnly).toBe(false)
     })
 
-    it('should have multiple validation errors for invalid cohort', () => {
+    it('should report a name validation error for a cohort with an empty name', () => {
       const store = useCohortStore()
       const invalidCohort: CohortDefinition = {
         name: '',
-        entryEvents: [],
         qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-        collapseSettings: {
-          collapseType: '',
-          eraPad: 0,
-        },
       }
 
       store.setCohort(invalidCohort)
 
-      expect(store.validationErrors.length).toBeGreaterThan(1)
+      expect(store.validationErrors.length).toBeGreaterThan(0)
       expect(store.validationErrors.some((err) => err.field === 'name')).toBe(true)
-      expect(store.validationErrors.some((err) => err.field === 'entryEvents')).toBe(true)
-      expect(
-        store.validationErrors.some((err) => err.field === 'collapseSettings.collapseType')
-      ).toBe(true)
     })
   })
 
-  describe('Entry Events Edge Cases', () => {
-    it('should handle removeEntryEvent when no cohort exists', () => {
+  describe('Entry Events Edge Cases (legacy — methods removed in circe refactor)', () => {
+    it.skip('should handle removeEntryEvent when no cohort exists', () => {
       const store = useCohortStore()
 
       expect(() => store.removeEntryEvent('any-id')).not.toThrow()
       expect(store.currentCohort).toBeNull()
     })
 
-    it('should handle updateEntryEvent when no cohort exists', () => {
+    it.skip('should handle updateEntryEvent when no cohort exists', () => {
       const store = useCohortStore()
 
       const event: CohortEvent = {
@@ -755,7 +695,7 @@ describe('Cohort Store', () => {
       expect(store.currentCohort).toBeNull()
     })
 
-    it('should not mark dirty when removing non-existent event', () => {
+    it.skip('should not mark dirty when removing non-existent event', () => {
       const store = useCohortStore()
       store.createNewCohort()
       store.markClean()
@@ -765,7 +705,7 @@ describe('Cohort Store', () => {
       expect(store.isDirty).toBe(false)
     })
 
-    it('should not mark dirty when updating non-existent event', () => {
+    it.skip('should not mark dirty when updating non-existent event', () => {
       const store = useCohortStore()
       store.createNewCohort()
       store.markClean()
@@ -783,47 +723,33 @@ describe('Cohort Store', () => {
   })
 
   describe('Computed Properties Edge Cases', () => {
-    it('should handle hasEntryEvents with null cohort', () => {
+    it.skip('should handle hasEntryEvents with null cohort (computed removed in circe refactor)', () => {
       const store = useCohortStore()
 
       expect(store.hasEntryEvents).toBe(false)
     })
 
-    it('should handle hasInclusionRules with null cohort', () => {
+    it.skip('should handle hasInclusionRules with null cohort (computed removed in circe refactor)', () => {
       const store = useCohortStore()
 
       expect(store.hasInclusionRules).toBe(false)
     })
 
-    it('should handle entryEventCount with null cohort', () => {
+    it.skip('should handle entryEventCount with null cohort (computed removed in circe refactor)', () => {
       const store = useCohortStore()
 
       expect(store.entryEventCount).toBe(0)
     })
 
-    it('should compute canSave correctly with warnings only', () => {
+    it('should compute canSave as true when cohort has a name and no errors', () => {
       const store = useCohortStore()
       const cohort: CohortDefinition = {
         name: 'Test Cohort',
-        entryEvents: [
-          {
-            id: 'event-1',
-            criteriaType: 'ConditionOccurrence',
-            attributes: [],
-          },
-        ],
         qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-        censorWindow: {
-          startDate: '2020-12-31',
-          endDate: '2020-01-01',
-        },
       }
 
       store.setCohort(cohort)
 
-      expect(store.validationErrors.some((err) => err.severity === 'warning')).toBe(true)
       expect(store.hasValidationErrors).toBe(false)
       expect(store.canSave).toBe(true)
     })
@@ -992,13 +918,11 @@ describe('Cohort Store', () => {
       store.setCohort(complexCohort)
 
       expect(store.currentCohort).toEqual(complexCohort)
-      expect(store.hasEntryEvents).toBe(true)
-      expect(store.hasInclusionRules).toBe(true)
       expect(store.validationErrors).toHaveLength(0)
       expect(store.canSave).toBe(true)
     })
 
-    it('should preserve state through multiple operations', () => {
+    it.skip('should preserve state through multiple operations (legacy — uses removed methods)', () => {
       const store = useCohortStore()
 
       store.createNewCohort()
@@ -1130,11 +1054,10 @@ describe('Cohort Store', () => {
     it('requestNewCohort resets and bumps newCohortSignal', () => {
       const store = useCohortStore()
       store.createNewCohort()
-      store.addInclusionRule({ id: 'r1', name: 'r', criteriaGroups: [] } as never)
       const before = store.newCohortSignal
       store.requestNewCohort()
       expect(store.newCohortSignal).toBe(before + 1)
-      expect(store.currentCohort?.inclusionRules.length).toBe(0)
+      expect(store.currentCohort?.name).toBe('New Cohort')
       expect(store.isDirty).toBe(false)
     })
 

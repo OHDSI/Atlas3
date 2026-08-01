@@ -8,6 +8,8 @@ import { z } from 'zod'
 import { TagSchema } from '@/models/webapi.types'
 import { ConceptSetSchema } from '@/models/concept-set.types'
 import { userSchema } from '@/components/versions/schemas'
+import { CriteriaGroupSchema } from '@/components/cohort-editor/circe.types'
+import type { CriteriaGroup } from '@/components/cohort-editor/circe.types'
 
 // ─── building blocks ──────────────────────────────────────────────────────
 
@@ -32,14 +34,15 @@ export const StudyWindowSchema = z.object({
 })
 export type StudyWindow = z.infer<typeof StudyWindowSchema>
 
-// CriteriaGroup is intentionally pass-through: the cohort-builder
-// CriteriaGroupEditor component will validate its own contents.
 export const StratifyRuleSchema = z.object({
   name: z.string().nullable(),
   description: z.string().nullable().optional(),
-  expression: z.any(), // CriteriaGroup; validated visually by CriteriaGroupEditor
+  expression: CriteriaGroupSchema.optional(),
 })
 export type StratifyRule = z.infer<typeof StratifyRuleSchema>
+
+// Re-export for consumers that need the circe CriteriaGroup type.
+export type { CriteriaGroup }
 
 // ─── expression ───────────────────────────────────────────────────────────
 

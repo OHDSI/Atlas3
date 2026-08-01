@@ -304,16 +304,15 @@ describe('Cohort Store - Auto-Save and Draft Management', () => {
       expect(savedData).toBeTruthy()
     })
 
-    it('should auto-save when adding entry event', async () => {
-      store.createNewCohort()
+    it('should auto-save when adding a primary criterion via proposal', async () => {
+      // createNewCohort sets name only; applyProposal needs expression to exist
+      store.setCohort({ name: 'New Cohort', expression: {} })
 
       // Wait for next tick
       await vi.advanceTimersByTimeAsync(0)
 
-      store.addEntryEvent({
-        id: '1',
-        criteriaType: 'ConditionOccurrence',
-      })
+      // addEntryEvent proposal mutates expression.PrimaryCriteria.CriteriaList
+      store.applyProposal({ kind: 'addEntryEvent', event: { id: '1', criteriaType: 'ConditionOccurrence' } })
 
       // Wait for watcher to trigger
       await vi.advanceTimersByTimeAsync(0)
@@ -325,7 +324,7 @@ describe('Cohort Store - Auto-Save and Draft Management', () => {
       expect(savedData).toBeTruthy()
 
       const parsed = JSON.parse(savedData!)
-      expect(parsed.cohort.entryEvents).toHaveLength(1)
+      expect(parsed.cohort.expression.PrimaryCriteria.CriteriaList).toHaveLength(1)
     })
   })
 

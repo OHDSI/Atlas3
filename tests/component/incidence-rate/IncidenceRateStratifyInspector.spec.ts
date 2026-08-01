@@ -19,14 +19,16 @@ vi.mock('@/components/ui', async (importOriginal) => {
   }
 })
 
-const rule = { name: 'Age band', description: '', expression: { id: 'a', logicType: 'ALL', events: [] } }
+import type { StratifyRule } from '@/models/incidence-rate.types'
+
+const rule: StratifyRule = { name: 'Age band', description: '', expression: { Type: 'ALL', CriteriaList: [] } }
 
 describe('IncidenceRateStratifyInspector', () => {
   it('renders the editor when modelValue=true and rule is provided', () => {
     const w = mount(IncidenceRateStratifyInspector, {
       attachTo: document.body,
       global: { plugins: [pristinePinia(), vuetify] },
-      props: { modelValue: true, rule },
+      props: { modelValue: true, rule, conceptSets: [] },
     })
     expect(document.body.querySelector('[data-testid="stub-editor"]')).toBeTruthy()
     w.unmount()
@@ -36,7 +38,7 @@ describe('IncidenceRateStratifyInspector', () => {
     const w = mount(IncidenceRateStratifyInspector, {
       attachTo: document.body,
       global: { plugins: [pristinePinia(), vuetify] },
-      props: { modelValue: true, rule },
+      props: { modelValue: true, rule, conceptSets: [] },
     })
     const btn = document.body.querySelector('[data-testid="ir-strata-inspector-close"]') as HTMLElement
     btn.click()

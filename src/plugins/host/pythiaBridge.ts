@@ -500,7 +500,7 @@ function buildArtifactSummary(routeName: string): ArtifactSummary | null {
         kind,
         id: c.id ?? 'draft',
         name: c.name,
-        summary: `${c.entryEvents.length} entry event(s), ${c.inclusionRules.length} inclusion rule(s).${c.description ? ` ${c.description}` : ''}`,
+        summary: `${c.description ?? ''}`.trim() || `Cohort: ${c.name}`,
       }
     }
     case 'conceptSet': {
@@ -817,8 +817,8 @@ function handleGetContext(callbackId?: string) {
           id: cohort.currentCohort.id,
           name: cohort.currentCohort.name,
           description: cohort.currentCohort.description,
-          entryEventCount: cohort.currentCohort.entryEvents.length,
-          inclusionRuleCount: cohort.currentCohort.inclusionRules.length,
+          entryEventCount: cohort.currentCohort.expression?.PrimaryCriteria?.CriteriaList?.length ?? 0,
+          inclusionRuleCount: cohort.currentCohort.expression?.InclusionRules?.length ?? 0,
         }
       : null,
     conceptSet: conceptSets.currentSet
