@@ -1,27 +1,17 @@
 # Dependencies
-.gitignore
 .worktrees/
 node_modules/
 .pnp/
 .pnp.js
-*md
 .claude/
-*png
 .gemini
-sp*
-sp*
-.sp*
+.mcp.json
 .env*
 !.env.test
 !.env.example
-*md
-.gitignore
 check-config.html
 /*.sh
 !docker-entrypoint.sh
-
-
-.mcp.json
 # Build outputs
 dist/
 build/

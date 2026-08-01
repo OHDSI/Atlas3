@@ -130,7 +130,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { v4 as uuidv4 } from 'uuid'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { useIncidenceRateReport } from '@/composables/useIncidenceRateReport'
 import { useIncidenceRateGeneration } from '@/composables/useIncidenceRateGeneration'
@@ -323,7 +322,7 @@ function onStrataAdd() {
   const newRule: StratifyRule = {
     name: `Rule ${(store.currentIR?.expression.strata.length ?? 0) + 1}`,
     description: '',
-    expression: { id: uuidv4(), logicType: 'ALL', events: [] } as CriteriaGroup,
+    expression: { Type: 'ALL', CriteriaList: [] },
   }
   store.addStratifyRule(newRule)
   strataInspectorIndex.value = (store.currentIR?.expression.strata.length ?? 1) - 1

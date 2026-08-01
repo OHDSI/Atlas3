@@ -666,9 +666,9 @@ onMounted(async () => {
       const existing = cohortStore.currentCohort
       const hasContent =
         existing != null &&
-        ((existing.entryEvents?.length ?? 0) > 0 ||
-          (existing.inclusionRules?.length ?? 0) > 0 ||
-          (existing.conceptSets?.length ?? 0) > 0 ||
+        ((existing.expression?.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0 ||
+          (existing.expression?.InclusionRules?.length ?? 0) > 0 ||
+          (existing.expression?.ConceptSets?.length ?? 0) > 0 ||
           (typeof existing.name === 'string' &&
             existing.name.trim().length > 0 &&
             existing.name !== 'New Cohort'))
@@ -1093,13 +1093,6 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
       name: cohortName.value,
       description: cohortDescription.value || '',
       tags: cohortTags.value,
-      entryEvents: [],
-      inclusionRules: [],
-      exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' },
-      observationPeriod: { priorDays: 0, postDays: 0 },
-      qualifyingLimit: 'ALL',
-      inclusionQualifyingLimit: 'ALL',
-      conceptSets: [],
     }
     cohortStore.setCohort(minimalDef)
     cohortStore.markClean()
@@ -1286,8 +1279,8 @@ function _getStatusText(status: string): string {
 // time, so a parent reading `builderRef.canSave` gets a number.
 defineExpose({
   // Status state
-  totalConceptSets: computed(() => (cohortStore.currentCohort?.conceptSets?.length || 0)),
-  unusedConceptSetCount: computed(() => (cohortStore.currentCohort?.conceptSets?.length || 0) - usedConceptSets.value.length),
+  totalConceptSets: computed(() => (cohortStore.currentCohort?.expression?.ConceptSets?.length || 0)),
+  unusedConceptSetCount: computed(() => (cohortStore.currentCohort?.expression?.ConceptSets?.length || 0) - usedConceptSets.value.length),
   validationCount: computed(() => validationWarnings.value.length),
   validationColor: computed(() => highestSeverityColor.value),
   isValidating,

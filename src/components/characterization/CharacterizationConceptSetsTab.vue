@@ -35,7 +35,7 @@
     >
       <AtlasListItem
         v-for="cs in conceptSets"
-        :key="String(cs.id)"
+        :key="String(cs.id ?? '')"
       >
         <template #prepend>
           <AtlasIcon size="small">
@@ -45,9 +45,6 @@
         <v-list-item-title>
           {{ cs.name }}
         </v-list-item-title>
-        <v-list-item-subtitle v-if="cs.conceptCount !== undefined">
-          {{ cs.conceptCount }}
-        </v-list-item-subtitle>
       </AtlasListItem>
     </AtlasList>
   </div>
@@ -58,8 +55,7 @@ import { AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
 import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
-import type { CharacterizationDefinition } from '@/models/characterization.types'
-import type { ConceptSetReference } from '@/models/concept-set.types'
+import type { CharacterizationDefinition, ConceptSet } from '@/models/characterization.types'
 
 const props = defineProps<{
   characterization: CharacterizationDefinition
@@ -67,7 +63,7 @@ const props = defineProps<{
 
 const { t } = useI18n()
 
-const conceptSets = computed<ConceptSetReference[]>(
+const conceptSets = computed<ConceptSet[]>(
   () => props.characterization.strataConceptSets ?? []
 )
 </script>

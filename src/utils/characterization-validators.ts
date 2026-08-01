@@ -31,18 +31,7 @@ const TOO_MANY_FEATURE_ANALYSES_THRESHOLD = 50
  * string.
  */
 function isStratumCriteriaValid(stratum: Stratum): boolean {
-  const { criteria } = stratum
-  if (criteria == null) return false
-  if (typeof criteria === 'string') {
-    if (criteria.trim().length === 0) return false
-    try {
-      JSON.parse(criteria)
-      return true
-    } catch {
-      return false
-    }
-  }
-  return typeof criteria === 'object'
+  return stratum.criteria != null
 }
 
 /**
