@@ -20,7 +20,7 @@ export interface CriteriaFieldSpec {
 }
 
 export interface ConceptSetSelectionTarget {
-  targetRef: Ref<number | undefined>
+  targetRef: Ref<number | null | undefined>
 }
 
 export interface ConceptArrayBinding {

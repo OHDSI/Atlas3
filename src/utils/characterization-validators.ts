@@ -31,7 +31,22 @@ const TOO_MANY_FEATURE_ANALYSES_THRESHOLD = 50
  * string.
  */
 function isStratumCriteriaValid(stratum: Stratum): boolean {
-  return stratum.criteria != null
+  // Cast through unknown — at runtime the WebAPI may still deliver criteria
+  // as a serialised JSON string (older Atlas format).  The Zod schema uses
+  // a loose Record<string,unknown> for parsing, so the TypeScript type is
+  // CriteriaGroup | undefined, but runtime values can still be strings.
+  const criteria = stratum.criteria as unknown
+  if (criteria == null) return false
+  if (typeof criteria === 'string') {
+    if ((criteria as string).trim().length === 0) return false
+    try {
+      JSON.parse(criteria as string)
+      return true
+    } catch {
+      return false
+    }
+  }
+  return typeof criteria === 'object'
 }
 
 /**

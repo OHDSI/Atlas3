@@ -193,7 +193,12 @@ export async function getCohortDefinition(id: number): Promise<CohortDefinition 
 
     let expression: CohortDefinition['expression']
     if (raw.expression) {
-      const parseResult = CohortExpressionSchema.safeParse(JSON.parse(raw.expression))
+      // Server sends expression as a JSON string; test mocks may provide it
+      // already parsed as an object — handle both.
+      const exprInput = typeof raw.expression === 'string'
+        ? JSON.parse(raw.expression)
+        : raw.expression
+      const parseResult = CohortExpressionSchema.safeParse(exprInput)
       if (parseResult.success) {
         expression = parseResult.data
       } else {

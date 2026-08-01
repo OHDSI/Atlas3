@@ -17,7 +17,7 @@ import { z } from 'zod'
  */
 
 export const OffsetSchema = z.object({
-  Days: z.number().nullable().optional(),
+  Days: z.number().nullish(),
   Coeff: z.number().optional(),
 })
 export type Offset = z.infer<typeof OffsetSchema>
@@ -25,8 +25,8 @@ export type Offset = z.infer<typeof OffsetSchema>
 export const WindowSchema = z.object({
   Start: OffsetSchema.optional(),
   End: OffsetSchema.optional(),
-  UseIndexEnd: z.boolean().optional(),
-  UseEventEnd: z.boolean().optional(),
+  UseIndexEnd: z.boolean().nullish(),
+  UseEventEnd: z.boolean().nullish(),
 })
 export type Window = z.infer<typeof WindowSchema>
 
@@ -41,7 +41,7 @@ export type DateAdjustment = z.infer<typeof DateAdjustmentSchema>
 export const OccurrenceSchema = z.object({
   Type: z.number().optional(), // 0=EXACTLY, 1=AT_MOST, 2=AT_LEAST
   Count: z.number().optional(),
-  IsDistinct: z.boolean().optional(),
+  IsDistinct: z.boolean().nullish(),
   CountColumn: z.enum([
     'DAYS_SUPPLY',
     'DOMAIN_CONCEPT',
@@ -59,28 +59,28 @@ export const OccurrenceSchema = z.object({
     'VALUE_AS_NUMBER',
     'VISIT_ID',
     'VISIT_DETAIL_ID',
-  ]).optional(),
+  ]).nullish(),
 })
 export type Occurrence = z.infer<typeof OccurrenceSchema>
 
 export const NumericRangeSchema = z.object({
-  Value: z.number().optional(),
+  Value: z.number().nullish(),
   Op: z.enum(['lt', 'lte', 'eq', '!eq', 'gt', 'gte', 'bt', '!bt']).optional(),
-  Extent: z.number().optional(),
+  Extent: z.number().nullish(),
 })
 export type NumericRange = z.infer<typeof NumericRangeSchema>
 export type NumericRangeOp = NonNullable<NumericRange['Op']>
 
 export const DateRangeSchema = z.object({
-  Value: z.string().optional(),
+  Value: z.string().nullish(),
   Op: z.enum(['lt', 'lte', 'eq', '!eq', 'gt', 'gte', 'bt', '!bt']).optional(),
-  Extent: z.string().optional(),
+  Extent: z.string().nullish(),
 })
 export type DateRange = z.infer<typeof DateRangeSchema>
 export type DateRangeOp = NonNullable<DateRange['Op']>
 
 export const TextFilterSchema = z.object({
-  Value: z.string().optional(),
+  Value: z.string().nullish(),
   Op: z.enum(['endsWith', 'startsWith', 'contains', '!endsWith', '!startsWith', '!contains']).optional(),
 })
 export type TextFilter = z.infer<typeof TextFilterSchema>
@@ -93,34 +93,32 @@ export type ResultLimit = z.infer<typeof ResultLimitSchema>
 
 export const ConceptSchema = z.object({
   CONCEPT_ID: z.number(),
-  CONCEPT_NAME: z.string(),
-  CONCEPT_CODE: z.string().optional(),
-  STANDARD_CONCEPT: z.string().nullable().optional(),
-  STANDARD_CONCEPT_CAPTION: z.string().optional(),
-  VOCABULARY_ID: z.string().optional(),
-  DOMAIN_ID: z.string().optional(),
-  CONCEPT_CLASS_ID: z.string().optional(),
-  INVALID_REASON: z.string().nullable().optional(),
-  VALID_START_DATE: z.string().optional(),
-  VALID_END_DATE: z.string().optional(),
-  INVALID_REASON_CAPTION: z.string().optional(),
+  CONCEPT_NAME: z.string().nullish(),
+  CONCEPT_CODE: z.string().nullish(),
+  STANDARD_CONCEPT: z.string().nullish(),
+  STANDARD_CONCEPT_CAPTION: z.string().nullish(),
+  VOCABULARY_ID: z.string().nullish(),
+  DOMAIN_ID: z.string().nullish(),
+  CONCEPT_CLASS_ID: z.string().nullish(),
+  INVALID_REASON: z.string().nullish(),
+  VALID_START_DATE: z.string().nullish(),
+  VALID_END_DATE: z.string().nullish(),
+  INVALID_REASON_CAPTION: z.string().nullish(),
 })
 export type Concept = z.infer<typeof ConceptSchema>
 
 /**
  * ConceptSetIdSchema
  * Marks a plain number field as a reference to a ConceptSet.id (a "codeset id").
- * This is a shared schema instance (reused via `ConceptSetIdSchema.optional()`) so that
+ * This is a shared schema instance (reused via `ConceptSetIdSchema.nullish()`) so that
  * a concept-set-id reference field can be identified at runtime by reference-equality
- * after unwrapping ZodOptional - the same pattern already used for ConceptSetSelectionSchema.
- * Using this instead of a bare `z.number().optional()` has no effect on the inferred
- * TypeScript type (still `number | undefined`).
+ * after unwrapping ZodOptional/ZodNullable — the same pattern used for ConceptSetSelectionSchema.
  */
 export const ConceptSetIdSchema = z.number()
 
 export const ConceptSetSelectionSchema = z.object({
-  CodesetId: ConceptSetIdSchema.optional(),
-  IsExclusion: z.boolean().optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  IsExclusion: z.boolean().nullish(),
 })
 export type ConceptSetSelection = z.infer<typeof ConceptSetSelectionSchema>
 
@@ -133,9 +131,9 @@ export type ConceptArray = z.infer<typeof ConceptArraySchema>
 
 export const ConceptSetItemSchema = z.object({
   concept: ConceptSchema.optional(),
-  isExcluded: z.boolean().optional(),
-  includeDescendants: z.boolean().optional(),
-  includeMapped: z.boolean().optional(),
+  isExcluded: z.boolean().nullish(),
+  includeDescendants: z.boolean().nullish(),
+  includeMapped: z.boolean().nullish(),
 })
 export type ConceptSetItem = z.infer<typeof ConceptSetItemSchema>
 
@@ -181,7 +179,7 @@ export const DateOffsetStrategySchema = z.object({
 export type DateOffsetStrategy = z.infer<typeof DateOffsetStrategySchema>
 
 export const CustomEraStrategySchema = z.object({
-  DrugCodesetId: ConceptSetIdSchema.optional(),
+  DrugCodesetId: ConceptSetIdSchema.nullish(),
   GapDays: z.number().optional(),
   Offset: z.number().optional(),
   DaysSupplyOverride: z.number().optional(),
@@ -199,8 +197,8 @@ export type EndStrategy = z.infer<typeof EndStrategySchema>
  * Contains common properties inherited by all event criteria
  */
 const CriteriaBaseSchema = z.object({
-  CorrelatedCriteria: z.lazy(() => CriteriaGroupSchema).optional(),
-  DateAdjustment: DateAdjustmentSchema.optional(),
+  CorrelatedCriteria: z.lazy(() => CriteriaGroupSchema).nullish(),
+  DateAdjustment: DateAdjustmentSchema.nullish(),
 })
 
 /**
@@ -209,38 +207,38 @@ const CriteriaBaseSchema = z.object({
  */
 
 export const ConditionEraSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  First: z.boolean().optional(),
-  EraStartDate: DateRangeSchema.optional(),
-  EraEndDate: DateRangeSchema.optional(),
-  OccurrenceCount: NumericRangeSchema.optional(),
-  EraLength: NumericRangeSchema.optional(),
-  AgeAtStart: NumericRangeSchema.optional(),
-  AgeAtEnd: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  First: z.boolean().nullish(),
+  EraStartDate: DateRangeSchema.nullish(),
+  EraEndDate: DateRangeSchema.nullish(),
+  OccurrenceCount: NumericRangeSchema.nullish(),
+  EraLength: NumericRangeSchema.nullish(),
+  AgeAtStart: NumericRangeSchema.nullish(),
+  AgeAtEnd: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
 })
 export type ConditionEra = z.infer<typeof ConditionEraSchema>
 
 export const ConditionOccurrenceSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  First: z.boolean().optional(),
-  OccurrenceStartDate: DateRangeSchema.optional(),
-  OccurrenceEndDate: DateRangeSchema.optional(),
-  ConditionType: ConceptArraySchema.optional(),
-  ConditionTypeCS: ConceptSetSelectionSchema.optional(),
-  ConditionTypeExclude: z.boolean().optional(),
-  ConditionSourceConcept: ConceptSetIdSchema.optional(),
-  Age: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
-  ProviderSpecialty: ConceptArraySchema.optional(),
-  ProviderSpecialtyCS: ConceptSetSelectionSchema.optional(),
-  VisitType: ConceptArraySchema.optional(),
-  VisitTypeCS: ConceptSetSelectionSchema.optional(),
-  ConditionStatus: ConceptArraySchema.optional(),
-  ConditionStatusCS: ConceptSetSelectionSchema.optional(),
-  StopReason: TextFilterSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  First: z.boolean().nullish(),
+  OccurrenceStartDate: DateRangeSchema.nullish(),
+  OccurrenceEndDate: DateRangeSchema.nullish(),
+  ConditionType: ConceptArraySchema.nullish(),
+  ConditionTypeCS: ConceptSetSelectionSchema.nullish(),
+  ConditionTypeExclude: z.boolean().nullish(),
+  ConditionSourceConcept: ConceptSetIdSchema.nullish(),
+  Age: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
+  ProviderSpecialty: ConceptArraySchema.nullish(),
+  ProviderSpecialtyCS: ConceptSetSelectionSchema.nullish(),
+  VisitType: ConceptArraySchema.nullish(),
+  VisitTypeCS: ConceptSetSelectionSchema.nullish(),
+  ConditionStatus: ConceptArraySchema.nullish(),
+  ConditionStatusCS: ConceptSetSelectionSchema.nullish(),
+  StopReason: TextFilterSchema.nullish(),
 })
 export type ConditionOccurrence = z.infer<typeof ConditionOccurrenceSchema>
 
@@ -250,272 +248,272 @@ export type ConditionOccurrence = z.infer<typeof ConditionOccurrenceSchema>
  * for the authoritative field list. Do not add fields here that aren't on the Java class.
  */
 export const DeathSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  OccurrenceStartDate: DateRangeSchema.optional(),
-  DeathType: ConceptArraySchema.optional(),
-  DeathTypeCS: ConceptSetSelectionSchema.optional(),
-  DeathTypeExclude: z.boolean().optional(),
-  DeathSourceConcept: ConceptSetIdSchema.optional(),
-  Age: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  OccurrenceStartDate: DateRangeSchema.nullish(),
+  DeathType: ConceptArraySchema.nullish(),
+  DeathTypeCS: ConceptSetSelectionSchema.nullish(),
+  DeathTypeExclude: z.boolean().nullish(),
+  DeathSourceConcept: ConceptSetIdSchema.nullish(),
+  Age: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
 })
 export type Death = z.infer<typeof DeathSchema>
 
 export const DeviceExposureSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  First: z.boolean().optional(),
-  OccurrenceStartDate: DateRangeSchema.optional(),
-  OccurrenceEndDate: DateRangeSchema.optional(),
-  DeviceType: ConceptArraySchema.optional(),
-  DeviceTypeCS: ConceptSetSelectionSchema.optional(),
-  DeviceTypeExclude: z.boolean().optional(),
-  UniqueDeviceId: TextFilterSchema.optional(),
-  Quantity: NumericRangeSchema.optional(),
-  DeviceSourceConcept: ConceptSetIdSchema.optional(),
-  Age: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
-  ProviderSpecialty: ConceptArraySchema.optional(),
-  ProviderSpecialtyCS: ConceptSetSelectionSchema.optional(),
-  VisitType: ConceptArraySchema.optional(),
-  VisitTypeCS: ConceptSetSelectionSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  First: z.boolean().nullish(),
+  OccurrenceStartDate: DateRangeSchema.nullish(),
+  OccurrenceEndDate: DateRangeSchema.nullish(),
+  DeviceType: ConceptArraySchema.nullish(),
+  DeviceTypeCS: ConceptSetSelectionSchema.nullish(),
+  DeviceTypeExclude: z.boolean().nullish(),
+  UniqueDeviceId: TextFilterSchema.nullish(),
+  Quantity: NumericRangeSchema.nullish(),
+  DeviceSourceConcept: ConceptSetIdSchema.nullish(),
+  Age: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
+  ProviderSpecialty: ConceptArraySchema.nullish(),
+  ProviderSpecialtyCS: ConceptSetSelectionSchema.nullish(),
+  VisitType: ConceptArraySchema.nullish(),
+  VisitTypeCS: ConceptSetSelectionSchema.nullish(),
 })
 export type DeviceExposure = z.infer<typeof DeviceExposureSchema>
 
 export const DoseEraSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  First: z.boolean().optional(),
-  EraStartDate: DateRangeSchema.optional(),
-  EraEndDate: DateRangeSchema.optional(),
-  DoseValue: NumericRangeSchema.optional(),
-  Unit: ConceptArraySchema.optional(),
-  UnitCS: ConceptSetSelectionSchema.optional(),
-  EraLength: NumericRangeSchema.optional(),
-  AgeAtStart: NumericRangeSchema.optional(),
-  AgeAtEnd: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  First: z.boolean().nullish(),
+  EraStartDate: DateRangeSchema.nullish(),
+  EraEndDate: DateRangeSchema.nullish(),
+  DoseValue: NumericRangeSchema.nullish(),
+  Unit: ConceptArraySchema.nullish(),
+  UnitCS: ConceptSetSelectionSchema.nullish(),
+  EraLength: NumericRangeSchema.nullish(),
+  AgeAtStart: NumericRangeSchema.nullish(),
+  AgeAtEnd: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
 })
 export type DoseEra = z.infer<typeof DoseEraSchema>
 
 export const DrugEraSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  First: z.boolean().optional(),
-  EraStartDate: DateRangeSchema.optional(),
-  EraEndDate: DateRangeSchema.optional(),
-  OccurrenceCount: NumericRangeSchema.optional(),
-  GapDays: NumericRangeSchema.optional(),
-  EraLength: NumericRangeSchema.optional(),
-  AgeAtStart: NumericRangeSchema.optional(),
-  AgeAtEnd: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  First: z.boolean().nullish(),
+  EraStartDate: DateRangeSchema.nullish(),
+  EraEndDate: DateRangeSchema.nullish(),
+  OccurrenceCount: NumericRangeSchema.nullish(),
+  GapDays: NumericRangeSchema.nullish(),
+  EraLength: NumericRangeSchema.nullish(),
+  AgeAtStart: NumericRangeSchema.nullish(),
+  AgeAtEnd: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
 })
 export type DrugEra = z.infer<typeof DrugEraSchema>
 
 export const DrugExposureSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  First: z.boolean().optional(),
-  OccurrenceStartDate: DateRangeSchema.optional(),
-  OccurrenceEndDate: DateRangeSchema.optional(),
-  DrugType: ConceptArraySchema.optional(),
-  DrugTypeCS: ConceptSetSelectionSchema.optional(),
-  DrugTypeExclude: z.boolean().optional(),
-  DrugSourceConcept: ConceptSetIdSchema.optional(),
-  StopReason: TextFilterSchema.optional(),
-  Refills: NumericRangeSchema.optional(),
-  Quantity: NumericRangeSchema.optional(),
-  DaysSupply: NumericRangeSchema.optional(),
-  RouteConcept: ConceptArraySchema.optional(),
-  RouteConceptCS: ConceptSetSelectionSchema.optional(),
-  DoseUnit: ConceptArraySchema.optional(),
-  DoseUnitCS: ConceptSetSelectionSchema.optional(),
-  EffectiveDrugDose: NumericRangeSchema.optional(),
-  LotNumber: TextFilterSchema.optional(),
-  Age: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
-  ProviderSpecialty: ConceptArraySchema.optional(),
-  ProviderSpecialtyCS: ConceptSetSelectionSchema.optional(),
-  VisitType: ConceptArraySchema.optional(),
-  VisitTypeCS: ConceptSetSelectionSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  First: z.boolean().nullish(),
+  OccurrenceStartDate: DateRangeSchema.nullish(),
+  OccurrenceEndDate: DateRangeSchema.nullish(),
+  DrugType: ConceptArraySchema.nullish(),
+  DrugTypeCS: ConceptSetSelectionSchema.nullish(),
+  DrugTypeExclude: z.boolean().nullish(),
+  DrugSourceConcept: ConceptSetIdSchema.nullish(),
+  StopReason: TextFilterSchema.nullish(),
+  Refills: NumericRangeSchema.nullish(),
+  Quantity: NumericRangeSchema.nullish(),
+  DaysSupply: NumericRangeSchema.nullish(),
+  RouteConcept: ConceptArraySchema.nullish(),
+  RouteConceptCS: ConceptSetSelectionSchema.nullish(),
+  DoseUnit: ConceptArraySchema.nullish(),
+  DoseUnitCS: ConceptSetSelectionSchema.nullish(),
+  EffectiveDrugDose: NumericRangeSchema.nullish(),
+  LotNumber: TextFilterSchema.nullish(),
+  Age: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
+  ProviderSpecialty: ConceptArraySchema.nullish(),
+  ProviderSpecialtyCS: ConceptSetSelectionSchema.nullish(),
+  VisitType: ConceptArraySchema.nullish(),
+  VisitTypeCS: ConceptSetSelectionSchema.nullish(),
 })
 export type DrugExposure = z.infer<typeof DrugExposureSchema>
 
 export const LocationRegionSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  StartDate: DateRangeSchema.optional(),
-  EndDate: DateRangeSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  StartDate: DateRangeSchema.nullish(),
+  EndDate: DateRangeSchema.nullish(),
 })
 export type LocationRegion = z.infer<typeof LocationRegionSchema>
 
 export const MeasurementSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  First: z.boolean().optional(),
-  OccurrenceStartDate: DateRangeSchema.optional(),
-  MeasurementType: ConceptArraySchema.optional(),
-  MeasurementTypeCS: ConceptSetSelectionSchema.optional(),
-  MeasurementTypeExclude: z.boolean().optional(),
-  Operator: ConceptArraySchema.optional(),
-  OperatorCS: ConceptSetSelectionSchema.optional(),
-  ValueAsNumber: NumericRangeSchema.optional(),
-  ValueAsConcept: ConceptArraySchema.optional(),
-  ValueAsConceptCS: ConceptSetSelectionSchema.optional(),
-  Unit: ConceptArraySchema.optional(),
-  UnitCS: ConceptSetSelectionSchema.optional(),
-  RangeHigh: NumericRangeSchema.optional(),
-  RangeLow: NumericRangeSchema.optional(),
-  RangeHighRatio: NumericRangeSchema.optional(),
-  RangeLowRatio: NumericRangeSchema.optional(),
-  Abnormal: z.boolean().optional(),
-  MeasurementSourceConcept: ConceptSetIdSchema.optional(),
-  Age: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
-  ProviderSpecialty: ConceptArraySchema.optional(),
-  ProviderSpecialtyCS: ConceptSetSelectionSchema.optional(),
-  VisitType: ConceptArraySchema.optional(),
-  VisitTypeCS: ConceptSetSelectionSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  First: z.boolean().nullish(),
+  OccurrenceStartDate: DateRangeSchema.nullish(),
+  MeasurementType: ConceptArraySchema.nullish(),
+  MeasurementTypeCS: ConceptSetSelectionSchema.nullish(),
+  MeasurementTypeExclude: z.boolean().nullish(),
+  Operator: ConceptArraySchema.nullish(),
+  OperatorCS: ConceptSetSelectionSchema.nullish(),
+  ValueAsNumber: NumericRangeSchema.nullish(),
+  ValueAsConcept: ConceptArraySchema.nullish(),
+  ValueAsConceptCS: ConceptSetSelectionSchema.nullish(),
+  Unit: ConceptArraySchema.nullish(),
+  UnitCS: ConceptSetSelectionSchema.nullish(),
+  RangeHigh: NumericRangeSchema.nullish(),
+  RangeLow: NumericRangeSchema.nullish(),
+  RangeHighRatio: NumericRangeSchema.nullish(),
+  RangeLowRatio: NumericRangeSchema.nullish(),
+  Abnormal: z.boolean().nullish(),
+  MeasurementSourceConcept: ConceptSetIdSchema.nullish(),
+  Age: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
+  ProviderSpecialty: ConceptArraySchema.nullish(),
+  ProviderSpecialtyCS: ConceptSetSelectionSchema.nullish(),
+  VisitType: ConceptArraySchema.nullish(),
+  VisitTypeCS: ConceptSetSelectionSchema.nullish(),
 })
 export type Measurement = z.infer<typeof MeasurementSchema>
 
 export const ObservationSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  First: z.boolean().optional(),
-  OccurrenceStartDate: DateRangeSchema.optional(),
-  ObservationType: ConceptArraySchema.optional(),
-  ObservationTypeCS: ConceptSetSelectionSchema.optional(),
-  ObservationTypeExclude: z.boolean().optional(),
-  ValueAsNumber: NumericRangeSchema.optional(),
-  ValueAsString: TextFilterSchema.optional(),
-  ValueAsConcept: ConceptArraySchema.optional(),
-  ValueAsConceptCS: ConceptSetSelectionSchema.optional(),
-  Qualifier: ConceptArraySchema.optional(),
-  QualifierCS: ConceptSetSelectionSchema.optional(),
-  Unit: ConceptArraySchema.optional(),
-  UnitCS: ConceptSetSelectionSchema.optional(),
-  ObservationSourceConcept: ConceptSetIdSchema.optional(),
-  Age: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
-  ProviderSpecialty: ConceptArraySchema.optional(),
-  ProviderSpecialtyCS: ConceptSetSelectionSchema.optional(),
-  VisitType: ConceptArraySchema.optional(),
-  VisitTypeCS: ConceptSetSelectionSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  First: z.boolean().nullish(),
+  OccurrenceStartDate: DateRangeSchema.nullish(),
+  ObservationType: ConceptArraySchema.nullish(),
+  ObservationTypeCS: ConceptSetSelectionSchema.nullish(),
+  ObservationTypeExclude: z.boolean().nullish(),
+  ValueAsNumber: NumericRangeSchema.nullish(),
+  ValueAsString: TextFilterSchema.nullish(),
+  ValueAsConcept: ConceptArraySchema.nullish(),
+  ValueAsConceptCS: ConceptSetSelectionSchema.nullish(),
+  Qualifier: ConceptArraySchema.nullish(),
+  QualifierCS: ConceptSetSelectionSchema.nullish(),
+  Unit: ConceptArraySchema.nullish(),
+  UnitCS: ConceptSetSelectionSchema.nullish(),
+  ObservationSourceConcept: ConceptSetIdSchema.nullish(),
+  Age: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
+  ProviderSpecialty: ConceptArraySchema.nullish(),
+  ProviderSpecialtyCS: ConceptSetSelectionSchema.nullish(),
+  VisitType: ConceptArraySchema.nullish(),
+  VisitTypeCS: ConceptSetSelectionSchema.nullish(),
 })
 export type Observation = z.infer<typeof ObservationSchema>
 
 export const ObservationPeriodSchema = CriteriaBaseSchema.extend({
-  First: z.boolean().optional(),
-  PeriodStartDate: DateRangeSchema.optional(),
-  PeriodEndDate: DateRangeSchema.optional(),
-  UserDefinedPeriod: PeriodSchema.optional(),
-  PeriodType: ConceptArraySchema.optional(),
-  PeriodTypeCS: ConceptSetSelectionSchema.optional(),
-  PeriodLength: NumericRangeSchema.optional(),
-  AgeAtStart: NumericRangeSchema.optional(),
-  AgeAtEnd: NumericRangeSchema.optional(),
+  First: z.boolean().nullish(),
+  PeriodStartDate: DateRangeSchema.nullish(),
+  PeriodEndDate: DateRangeSchema.nullish(),
+  UserDefinedPeriod: PeriodSchema.nullish(),
+  PeriodType: ConceptArraySchema.nullish(),
+  PeriodTypeCS: ConceptSetSelectionSchema.nullish(),
+  PeriodLength: NumericRangeSchema.nullish(),
+  AgeAtStart: NumericRangeSchema.nullish(),
+  AgeAtEnd: NumericRangeSchema.nullish(),
 })
 export type ObservationPeriod = z.infer<typeof ObservationPeriodSchema>
 
 export const PayerPlanPeriodSchema = CriteriaBaseSchema.extend({
-  First: z.boolean().optional(),
-  PeriodStartDate: DateRangeSchema.optional(),
-  PeriodEndDate: DateRangeSchema.optional(),
-  UserDefinedPeriod: PeriodSchema.optional(),
-  PeriodLength: NumericRangeSchema.optional(),
-  AgeAtStart: NumericRangeSchema.optional(),
-  AgeAtEnd: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
-  PayerConcept: ConceptSetIdSchema.optional(),
-  PlanConcept: ConceptSetIdSchema.optional(),
-  SponsorConcept: ConceptSetIdSchema.optional(),
-  StopReasonConcept: ConceptSetIdSchema.optional(),
-  PayerSourceConcept: ConceptSetIdSchema.optional(),
-  PlanSourceConcept: ConceptSetIdSchema.optional(),
-  SponsorSourceConcept: ConceptSetIdSchema.optional(),
-  StopReasonSourceConcept: ConceptSetIdSchema.optional(),
+  First: z.boolean().nullish(),
+  PeriodStartDate: DateRangeSchema.nullish(),
+  PeriodEndDate: DateRangeSchema.nullish(),
+  UserDefinedPeriod: PeriodSchema.nullish(),
+  PeriodLength: NumericRangeSchema.nullish(),
+  AgeAtStart: NumericRangeSchema.nullish(),
+  AgeAtEnd: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
+  PayerConcept: ConceptSetIdSchema.nullish(),
+  PlanConcept: ConceptSetIdSchema.nullish(),
+  SponsorConcept: ConceptSetIdSchema.nullish(),
+  StopReasonConcept: ConceptSetIdSchema.nullish(),
+  PayerSourceConcept: ConceptSetIdSchema.nullish(),
+  PlanSourceConcept: ConceptSetIdSchema.nullish(),
+  SponsorSourceConcept: ConceptSetIdSchema.nullish(),
+  StopReasonSourceConcept: ConceptSetIdSchema.nullish(),
 })
 export type PayerPlanPeriod = z.infer<typeof PayerPlanPeriodSchema>
 
 export const ProcedureOccurrenceSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  First: z.boolean().optional(),
-  OccurrenceStartDate: DateRangeSchema.optional(),
-  ProcedureType: ConceptArraySchema.optional(),
-  ProcedureTypeCS: ConceptSetSelectionSchema.optional(),
-  ProcedureTypeExclude: z.boolean().optional(),
-  Modifier: ConceptArraySchema.optional(),
-  ModifierCS: ConceptSetSelectionSchema.optional(),
-  ProcedureSourceConcept: ConceptSetIdSchema.optional(),
-  Age: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
-  ProviderSpecialty: ConceptArraySchema.optional(),
-  ProviderSpecialtyCS: ConceptSetSelectionSchema.optional(),
-  VisitType: ConceptArraySchema.optional(),
-  VisitTypeCS: ConceptSetSelectionSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  First: z.boolean().nullish(),
+  OccurrenceStartDate: DateRangeSchema.nullish(),
+  ProcedureType: ConceptArraySchema.nullish(),
+  ProcedureTypeCS: ConceptSetSelectionSchema.nullish(),
+  ProcedureTypeExclude: z.boolean().nullish(),
+  Modifier: ConceptArraySchema.nullish(),
+  ModifierCS: ConceptSetSelectionSchema.nullish(),
+  ProcedureSourceConcept: ConceptSetIdSchema.nullish(),
+  Age: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
+  ProviderSpecialty: ConceptArraySchema.nullish(),
+  ProviderSpecialtyCS: ConceptSetSelectionSchema.nullish(),
+  VisitType: ConceptArraySchema.nullish(),
+  VisitTypeCS: ConceptSetSelectionSchema.nullish(),
 })
 export type ProcedureOccurrence = z.infer<typeof ProcedureOccurrenceSchema>
 
 export const SpecimenSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  First: z.boolean().optional(),
-  OccurrenceStartDate: DateRangeSchema.optional(),
-  SpecimenType: ConceptArraySchema.optional(),
-  SpecimenTypeCS: ConceptSetSelectionSchema.optional(),
-  SpecimenTypeExclude: z.boolean().optional(),
-  SourceId: TextFilterSchema.optional(),
-  Unit: ConceptArraySchema.optional(),
-  UnitCS: ConceptSetSelectionSchema.optional(),
-  AnatomicSite: ConceptArraySchema.optional(),
-  AnatomicSiteCS: ConceptSetSelectionSchema.optional(),
-  DiseaseStatus: ConceptArraySchema.optional(),
-  DiseaseStatusCS: ConceptSetSelectionSchema.optional(),
-  SpecimenSourceConcept: ConceptSetIdSchema.optional(),
-  Age: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
-  Quantity: NumericRangeSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  First: z.boolean().nullish(),
+  OccurrenceStartDate: DateRangeSchema.nullish(),
+  SpecimenType: ConceptArraySchema.nullish(),
+  SpecimenTypeCS: ConceptSetSelectionSchema.nullish(),
+  SpecimenTypeExclude: z.boolean().nullish(),
+  SourceId: TextFilterSchema.nullish(),
+  Unit: ConceptArraySchema.nullish(),
+  UnitCS: ConceptSetSelectionSchema.nullish(),
+  AnatomicSite: ConceptArraySchema.nullish(),
+  AnatomicSiteCS: ConceptSetSelectionSchema.nullish(),
+  DiseaseStatus: ConceptArraySchema.nullish(),
+  DiseaseStatusCS: ConceptSetSelectionSchema.nullish(),
+  SpecimenSourceConcept: ConceptSetIdSchema.nullish(),
+  Age: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
+  Quantity: NumericRangeSchema.nullish(),
 })
 export type Specimen = z.infer<typeof SpecimenSchema>
 
 export const VisitDetailSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  First: z.boolean().optional(),
-  VisitDetailStartDate: DateRangeSchema.optional(),
-  VisitDetailEndDate: DateRangeSchema.optional(),
-  VisitDetailTypeCS: ConceptSetSelectionSchema.optional(),
-  VisitDetailSourceConcept: ConceptSetIdSchema.optional(),
-  VisitDetailLength: NumericRangeSchema.optional(),
-  Age: NumericRangeSchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
-  ProviderSpecialtyCS: ConceptSetSelectionSchema.optional(),
-  PlaceOfServiceCS: ConceptSetSelectionSchema.optional(),
-  PlaceOfServiceLocation: ConceptSetIdSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  First: z.boolean().nullish(),
+  VisitDetailStartDate: DateRangeSchema.nullish(),
+  VisitDetailEndDate: DateRangeSchema.nullish(),
+  VisitDetailTypeCS: ConceptSetSelectionSchema.nullish(),
+  VisitDetailSourceConcept: ConceptSetIdSchema.nullish(),
+  VisitDetailLength: NumericRangeSchema.nullish(),
+  Age: NumericRangeSchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
+  ProviderSpecialtyCS: ConceptSetSelectionSchema.nullish(),
+  PlaceOfServiceCS: ConceptSetSelectionSchema.nullish(),
+  PlaceOfServiceLocation: ConceptSetIdSchema.nullish(),
 })
 export type VisitDetail = z.infer<typeof VisitDetailSchema>
 
 export const VisitOccurrenceSchema = CriteriaBaseSchema.extend({
-  CodesetId: ConceptSetIdSchema.optional(),
-  First: z.boolean().optional(),
-  OccurrenceStartDate: DateRangeSchema.optional(),
-  OccurrenceEndDate: DateRangeSchema.optional(),
-  VisitType: ConceptArraySchema.optional(),
-  VisitTypeCS: ConceptSetSelectionSchema.optional(),
-  VisitTypeExclude: z.boolean().optional(),
-  VisitSourceConcept: ConceptSetIdSchema.optional(),
-  VisitLength: NumericRangeSchema.optional(),
-  Age: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
-  ProviderSpecialty: ConceptArraySchema.optional(),
-  ProviderSpecialtyCS: ConceptSetSelectionSchema.optional(),
-  PlaceOfService: ConceptArraySchema.optional(),
-  PlaceOfServiceCS: ConceptSetSelectionSchema.optional(),
-  PlaceOfServiceLocation: ConceptSetIdSchema.optional(),
+  CodesetId: ConceptSetIdSchema.nullish(),
+  First: z.boolean().nullish(),
+  OccurrenceStartDate: DateRangeSchema.nullish(),
+  OccurrenceEndDate: DateRangeSchema.nullish(),
+  VisitType: ConceptArraySchema.nullish(),
+  VisitTypeCS: ConceptSetSelectionSchema.nullish(),
+  VisitTypeExclude: z.boolean().nullish(),
+  VisitSourceConcept: ConceptSetIdSchema.nullish(),
+  VisitLength: NumericRangeSchema.nullish(),
+  Age: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
+  ProviderSpecialty: ConceptArraySchema.nullish(),
+  ProviderSpecialtyCS: ConceptSetSelectionSchema.nullish(),
+  PlaceOfService: ConceptArraySchema.nullish(),
+  PlaceOfServiceCS: ConceptSetSelectionSchema.nullish(),
+  PlaceOfServiceLocation: ConceptSetIdSchema.nullish(),
 })
 export type VisitOccurrence = z.infer<typeof VisitOccurrenceSchema>
 
@@ -571,15 +569,15 @@ export function getCriteriaWrapperKey(criteria: Criteria): CriteriaWrapperKey {
  * Demographic Criteria Schema
  */
 export const DemographicCriteriaSchema = z.object({
-  Age: NumericRangeSchema.optional(),
-  Gender: ConceptArraySchema.optional(),
-  GenderCS: ConceptSetSelectionSchema.optional(),
-  Race: ConceptArraySchema.optional(),
-  RaceCS: ConceptSetSelectionSchema.optional(),
-  Ethnicity: ConceptArraySchema.optional(),
-  EthnicityCS: ConceptSetSelectionSchema.optional(),
-  OccurrenceStartDate: DateRangeSchema.optional(),
-  OccurrenceEndDate: DateRangeSchema.optional(),
+  Age: NumericRangeSchema.nullish(),
+  Gender: ConceptArraySchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
+  Race: ConceptArraySchema.nullish(),
+  RaceCS: ConceptSetSelectionSchema.nullish(),
+  Ethnicity: ConceptArraySchema.nullish(),
+  EthnicityCS: ConceptSetSelectionSchema.nullish(),
+  OccurrenceStartDate: DateRangeSchema.nullish(),
+  OccurrenceEndDate: DateRangeSchema.nullish(),
 })
 export type DemographicCriteria = z.infer<typeof DemographicCriteriaSchema>
 
@@ -625,10 +623,10 @@ export interface CriteriaGroup {
 export const WindowedCriteriaSchema: z.ZodType<WindowedCriteria> = z.lazy(() =>
   z.object({
     Criteria: CriteriaSchema.optional(),
-    StartWindow: WindowSchema.optional(),
-    EndWindow: WindowSchema.optional(),
-    RestrictVisit: z.boolean().optional(),
-    IgnoreObservationPeriod: z.boolean().optional(),
+    StartWindow: WindowSchema.nullish(),
+    EndWindow: WindowSchema.nullish(),
+    RestrictVisit: z.boolean().nullish(),
+    IgnoreObservationPeriod: z.boolean().nullish(),
   }) as z.ZodType<WindowedCriteria>
 )
 
@@ -648,7 +646,7 @@ export const CorelatedCriteriaSchema: z.ZodType<CorelatedCriteria> = z.lazy(() =
 export const CriteriaGroupSchema: z.ZodType<CriteriaGroup> = z.lazy(() =>
   z.object({
     Type: z.enum(['ALL', 'ANY', 'AT_LEAST', 'AT_MOST']).optional(),
-    Count: z.number().optional(),
+    Count: z.number().nullish(),
     CriteriaList: z.array(CorelatedCriteriaSchema).optional(),
     DemographicCriteriaList: z.array(DemographicCriteriaSchema).optional(),
     Groups: z.array(CriteriaGroupSchema).optional(),
@@ -689,7 +687,7 @@ export const CohortExpressionSchema = z.object({
   EndStrategy: EndStrategySchema.optional(),
   CensoringCriteria: z.array(CriteriaSchema).optional(),
   CollapseSettings: CollapseSettingsSchema.optional(),
-  CensorWindow: PeriodSchema.optional(),
+  CensorWindow: PeriodSchema.nullish(),
   cdmVersionRange: z.string().optional(),
 })
 export type CohortExpression = z.infer<typeof CohortExpressionSchema>

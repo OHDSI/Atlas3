@@ -569,7 +569,7 @@ describe('CohortsView.vue', () => {
       modifiedBy: 'someone',
       modifiedDate: 1700000000000,
       tags: [{ id: 1, name: 'chronic' }],
-      expression: JSON.stringify(mockExpressionObj),
+      expression: mockExpressionObj,
       expressionType: 'SIMPLE_EXPRESSION',
     }
 
