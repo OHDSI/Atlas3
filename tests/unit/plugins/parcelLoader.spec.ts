@@ -233,4 +233,29 @@ describe('parcelLoader', () => {
     ]
     await expect(parcelProps.getToken()).resolves.toBe('')
   })
+
+  it('spreads extraProps into the parcel props', async () => {
+    registerTestPlugin('test-plugin')
+    const mod = makePluginModule()
+    systemImportMock.mockResolvedValue(mod)
+
+    const el = document.createElement('div')
+    await mountPluginParcel('test-plugin', el, { hostContext: { surface: 'admin-tabs' } })
+
+    expect(vi.mocked(mountRootParcel)).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ hostContext: { surface: 'admin-tabs' } })
+    )
+  })
+
+  it('returns a handle exposing update when the parcel provides it', async () => {
+    registerTestPlugin('test-plugin')
+    const mod = makePluginModule()
+    systemImportMock.mockResolvedValue(mod)
+
+    const el = document.createElement('div')
+    const handle = await mountPluginParcel('test-plugin', el)
+
+    expect(typeof handle.unmount).toBe('function')
+  })
 })

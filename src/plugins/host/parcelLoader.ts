@@ -27,8 +27,9 @@ interface PluginModule {
   update?: (props: unknown) => Promise<void>
 }
 
-interface ParcelHandle {
+export interface ParcelHandle {
   unmount(): Promise<unknown>
+  update?(props: Record<string, unknown>): Promise<unknown>
   mountPromise: Promise<unknown>
 }
 
@@ -89,7 +90,8 @@ async function loadModule(pluginId: string): Promise<PluginModule> {
 
 export async function mountPluginParcel(
   pluginId: string,
-  domElement: HTMLElement
+  domElement: HTMLElement,
+  extraProps: Record<string, unknown> = {}
 ): Promise<ParcelHandle> {
   const instance = pluginRegistry.getPlugin(pluginId)
   if (!instance) throw new Error(`Plugin ${pluginId} is not registered`)
@@ -106,6 +108,7 @@ export async function mountPluginParcel(
     locale: document.documentElement.lang || 'en',
     isAtlas: true,
     t: buildI18n(),
+    ...extraProps,
   }
 
   logger.debug('parcelLoader', `Mounting parcel for ${pluginId}`)
