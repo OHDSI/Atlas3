@@ -47,6 +47,28 @@ export interface FabMount {
   position?: FabPosition
 }
 
+export type PluginMountSurface =
+  | 'main-nav'
+  | 'datasource-sidebar'
+  | 'analysis-tabs'
+  | 'admin-tabs'
+  | 'account-menu'
+
+export interface PluginMountPoint {
+  id: string
+  surface: PluginMountSurface
+  name: string
+  icon?: string
+  path?: string
+  group?: string
+  hint?: string
+  order?: number
+  insertBefore?: string
+  insertAfter?: string
+  requiredPermissions?: string[]
+  visible?: boolean
+}
+
 export interface PluginRegistration {
   id: string
   name: string
@@ -54,6 +76,7 @@ export interface PluginRegistration {
   entryPoint: string
   menuItems: MenuItemConfiguration[]
   fabMounts?: FabMount[]
+  mountPoints?: PluginMountPoint[]
   activationConditions?: Record<string, unknown>
   metadata?: {
     author?: string
@@ -206,6 +229,29 @@ export const FabMountSchema = z.object({
   position: z.enum(['bottom-right', 'bottom-left', 'top-right', 'top-left']).optional(),
 })
 
+export const PluginMountSurfaceSchema = z.enum([
+  'main-nav',
+  'datasource-sidebar',
+  'analysis-tabs',
+  'admin-tabs',
+  'account-menu',
+])
+
+export const PluginMountPointSchema = z.object({
+  id: z.string().regex(/^[a-z0-9-_]+$/),
+  surface: PluginMountSurfaceSchema,
+  name: z.string().min(1),
+  icon: z.string().optional(),
+  path: z.string().optional(),
+  group: z.string().optional(),
+  hint: z.string().optional(),
+  order: z.number().optional(),
+  insertBefore: z.string().optional(),
+  insertAfter: z.string().optional(),
+  requiredPermissions: z.array(z.string()).optional(),
+  visible: z.boolean().optional(),
+})
+
 export const PluginRegistrationSchema = z.object({
   id: z.string().regex(/^[a-z0-9-_]+$/),
   name: z.string().min(1),
@@ -213,6 +259,7 @@ export const PluginRegistrationSchema = z.object({
   entryPoint: z.string(),
   menuItems: z.array(MenuItemConfigurationSchema),
   fabMounts: z.array(FabMountSchema).optional(),
+  mountPoints: z.array(PluginMountPointSchema).optional(),
   activationConditions: z.record(z.unknown()).optional(),
   metadata: z
     .object({
