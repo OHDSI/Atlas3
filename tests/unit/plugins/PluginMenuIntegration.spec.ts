@@ -172,6 +172,25 @@ describe('PluginMenuIntegration', () => {
 
       expect(items).toHaveLength(0)
     })
+
+    it('keeps the legacy "<pluginId>-<itemId>" id format', () => {
+      vi.mocked(pluginRegistry.getAllPlugins).mockReturnValue([
+        {
+          state: 'mounted',
+          registration: {
+            id: 'p1',
+            menuItems: [
+              { id: 'item1', name: 'Item 1', route: '/plugins/p1/item1', order: 1 },
+            ],
+          },
+        },
+      ] as any)
+
+      const items = generatePluginMenuItems()
+
+      expect(items[0]!.id).toBe('p1-item1')
+      expect(items[0]!.visible).toBe(true)
+    })
   })
 
   describe('shouldUseVirtualScrolling', () => {

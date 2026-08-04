@@ -15,6 +15,7 @@ export interface ResolvedMountItem {
   order: number
   insertBefore?: string
   insertAfter?: string
+  visible: boolean
 }
 
 export function mountKey(pluginId: string, itemId: string): string {
@@ -35,12 +36,14 @@ function toResolved(pluginId: string, point: PluginMountPoint): ResolvedMountIte
     order: point.order ?? 999,
     insertBefore: point.insertBefore,
     insertAfter: point.insertAfter,
+    visible: point.visible ?? true,
   }
 }
 
 export function getMountItems(
   surface: PluginMountSurface,
-  hasAnyPermission: (permissions: string[]) => boolean = () => true
+  hasAnyPermission: (permissions: string[]) => boolean = () => true,
+  options: { includeHidden?: boolean } = {}
 ): ResolvedMountItem[] {
   const byKey = new Map<string, ResolvedMountItem>()
 
@@ -69,7 +72,7 @@ export function getMountItems(
 
     for (const point of declared) {
       if (point.surface !== surface) continue
-      if (point.visible === false) continue
+      if (!options.includeHidden && point.visible === false) continue
       if (point.requiredPermissions?.length && !hasAnyPermission(point.requiredPermissions)) {
         continue
       }

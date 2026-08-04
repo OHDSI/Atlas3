@@ -44,6 +44,15 @@ describe('PluginMountPoints', () => {
     expect(getMountItems('admin-tabs')).toHaveLength(0)
   })
 
+  it('includes items with visible false when includeHidden is true', () => {
+    vi.mocked(pluginRegistry.getAllPlugins).mockReturnValue([
+      plugin('p1', [{ id: 'a', surface: 'admin-tabs', name: 'A', visible: false }]),
+    ])
+    const items = getMountItems('admin-tabs', undefined, { includeHidden: true })
+    expect(items).toHaveLength(1)
+    expect(items[0]!.visible).toBe(false)
+  })
+
   it('keeps items whose requiredPermissions is omitted', () => {
     vi.mocked(pluginRegistry.getAllPlugins).mockReturnValue([
       plugin('p1', [{ id: 'a', surface: 'admin-tabs', name: 'A' }]),
