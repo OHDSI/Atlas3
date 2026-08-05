@@ -37,10 +37,13 @@
 import { AtlasList, AtlasListItem } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import type { ReportType } from '@/models/datasource.types'
+import type { AnyReportType } from '@/models/datasource.types'
+import { usePluginMounts } from '@/composables/usePluginMounts'
+import { interleaveMenuItems } from '@/plugins/navigation/PluginMenuIntegration'
+import type { ResolvedMountItem } from '@/plugins/navigation/PluginMountPoints'
 
 interface Props {
-  modelValue: ReportType | null
+  modelValue: AnyReportType | null
   disabled?: boolean
 }
 
@@ -49,13 +52,13 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  'update:modelValue': [value: ReportType]
+  'update:modelValue': [value: AnyReportType]
 }>()
 
 const { t } = useI18n()
 
 interface SidebarItem {
-  value: ReportType
+  value: AnyReportType
   label: string
   icon: string
 }
@@ -65,7 +68,7 @@ interface SidebarGroup {
   items: SidebarItem[]
 }
 
-const groups = computed<SidebarGroup[]>(() => [
+const coreGroups = computed<SidebarGroup[]>(() => [
   {
     label: t('dataSources.sidebar.overview', 'Overview').value,
     items: [
@@ -148,7 +151,55 @@ const groups = computed<SidebarGroup[]>(() => [
   },
 ])
 
-function select(value: ReportType) {
+const { items: pluginItems } = usePluginMounts('datasource-sidebar')
+
+const PLUGIN_GROUP_FALLBACK = 'Plugins'
+
+function toSidebarItem(item: ResolvedMountItem): SidebarItem {
+  return {
+    value: item.key as AnyReportType,
+    label: item.name,
+    icon: item.icon ?? 'mdi-puzzle-outline',
+  }
+}
+
+const groups = computed<SidebarGroup[]>(() => {
+  const merged = coreGroups.value.map(group => ({ ...group, items: [...group.items] }))
+  const byGroup = new Map<string, ResolvedMountItem[]>()
+
+  for (const item of pluginItems.value) {
+    const label = item.group ?? PLUGIN_GROUP_FALLBACK
+    byGroup.set(label, [...(byGroup.get(label) ?? []), item])
+  }
+
+  for (const [label, items] of byGroup) {
+    const target = merged.find(g => g.label.toLowerCase() === label.toLowerCase())
+    if (!target) {
+      merged.push({ label, items: items.map(toSidebarItem) })
+      continue
+    }
+    // interleaveMenuItems anchors on `id`; sidebar items are keyed by `value`.
+    target.items = interleaveMenuItems(
+      target.items.map(i => ({ ...i, id: i.value })),
+      items.map(i => ({
+        id: i.key,
+        pluginId: i.pluginId,
+        name: i.name,
+        route: '',
+        icon: i.icon,
+        order: i.order,
+        insertBefore: i.insertBefore,
+        insertAfter: i.insertAfter,
+        visible: true,
+      })),
+      p => ({ ...toSidebarItem(pluginItems.value.find(x => x.key === p.id)!), id: p.id })
+    ).map(({ id: _id, ...rest }) => rest as SidebarItem)
+  }
+
+  return merged
+})
+
+function select(value: AnyReportType) {
   if (props.disabled) return
   if (value !== props.modelValue) {
     emit('update:modelValue', value)

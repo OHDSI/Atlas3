@@ -442,4 +442,17 @@ describe('DataSources Store', () => {
       expect(getDashboardReport).not.toHaveBeenCalled()
     })
   })
+
+  it('does not fetch a report for a plugin report type', async () => {
+    const store = useDataSourcesStore()
+    store.sources = [
+      { sourceId: 1, sourceName: 'S', sourceKey: 'SYNPUF', sourceDialect: 'postgresql', daimons: [] },
+    ]
+    store.selectedSourceId = 1
+
+    await store.selectReportType('plugin:p1:my-report')
+
+    expect(store.selectedReportType).toBe('plugin:p1:my-report')
+    expect(store.loading.report).toBe(false)
+  })
 })

@@ -122,6 +122,14 @@ vi.mock('@/components/datasources/ClinicalDomainReport.vue', () => ({
   },
 }))
 
+vi.mock('@/plugins/components/PluginParcelOutlet.vue', () => ({
+  default: {
+    name: 'PluginParcelOutlet',
+    props: ['pluginId', 'itemId', 'surface', 'sourceKey'],
+    template: '<div data-testid="datasource-plugin-outlet" />',
+  },
+}))
+
 const vuetify = createVuetify({ components, directives })
 
 function mountComponent(props = {}, options = {}) {
@@ -523,5 +531,19 @@ describe('DataSourcesView', () => {
       // Source picker lives in the PageShell #actions slot (page header)
       expect(wrapper.findComponent({ name: 'DataSourceSelector' }).exists()).toBe(true)
     })
+  })
+
+  it('renders the plugin outlet for a plugin report type', async () => {
+    const mockSource = createMockDataSource({ sourceId: 1, sourceName: 'S', sourceKey: 'SYNPUF' })
+    mockListDataSources.mockResolvedValue([mockSource])
+
+    wrapper = mountComponent()
+    await flushPromises()
+
+    store.selectedSourceId = 1
+    store.selectedReportType = 'plugin:p1:my-report'
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-testid="datasource-plugin-outlet"]').exists()).toBe(true)
   })
 })

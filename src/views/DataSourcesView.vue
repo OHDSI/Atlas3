@@ -99,11 +99,20 @@
             :data="deathData"
           />
 
+          <PluginParcelOutlet
+            v-else-if="pluginReport"
+            data-testid="datasource-plugin-outlet"
+            :plugin-id="pluginReport.pluginId"
+            :item-id="pluginReport.itemId"
+            surface="datasource-sidebar"
+            :source-key="selectedSource?.sourceKey"
+          />
+
           <ClinicalDomainReport
             v-else-if="isClinicalDomainReport && clinicalData"
             data-testid="clinical-domain-report"
             :data="clinicalData"
-            :report-type="store.selectedReportType"
+            :report-type="(store.selectedReportType as ReportType)"
           />
 
           <div
@@ -172,7 +181,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { logger } from '@/utils/logger'
-import { REPORT_TYPE_LABELS, type ReportType } from '@/models/datasource.types'
+import { REPORT_TYPE_LABELS, isPluginReportType, parsePluginReportType, type AnyReportType, type ReportType } from '@/models/datasource.types'
 import { AtlasAlert, AtlasButton, AtlasCard, AtlasIcon, AtlasPageShell, AtlasSkeleton } from '@/components/ui'
 import DataSourceSelector from '@/components/datasources/DataSourceSelector.vue'
 import DataSourceSidebar from '@/components/datasources/DataSourceSidebar.vue'
@@ -182,6 +191,7 @@ import PersonReport from '@/components/datasources/PersonReport.vue'
 import ObservationPeriodReport from '@/components/datasources/ObservationPeriodReport.vue'
 import DeathReport from '@/components/datasources/DeathReport.vue'
 import ClinicalDomainReport from '@/components/datasources/ClinicalDomainReport.vue'
+import PluginParcelOutlet from '@/plugins/components/PluginParcelOutlet.vue'
 
 const router = useRouter()
 const store = useDataSourcesStore()
@@ -199,7 +209,16 @@ const selectedSource = computed(() => store.selectedSource)
 
 const reportTypeLabel = computed(() => {
   if (!store.selectedReportType) return ''
+  if (isPluginReportType(store.selectedReportType)) {
+    return parsePluginReportType(store.selectedReportType).itemId
+  }
   return REPORT_TYPE_LABELS[store.selectedReportType]
+})
+
+const pluginReport = computed(() => {
+  const type = store.selectedReportType
+  if (!type || !isPluginReportType(type)) return null
+  return parsePluginReportType(type)
 })
 
 const pageTitle = computed(() => t('dataSources.headingTitle', 'Data Sources').value)
@@ -270,6 +289,7 @@ const clinicalData = computed(() => {
 
 const isClinicalDomainReport = computed(() => {
   if (!store.selectedReportType) return false
+  if (isPluginReportType(store.selectedReportType)) return false
   const clinicalReports: ReportType[] = [
     'visit',
     'conditionOccurrence',
@@ -300,7 +320,7 @@ function handleSourceChange(sourceId: number | null) {
   }
 }
 
-function handleReportTypeChange(reportType: ReportType | null) {
+function handleReportTypeChange(reportType: AnyReportType | null) {
   if (reportType === null) return
 
   // Don't call store.selectReportType here since it will be called by initializeFromRoute
