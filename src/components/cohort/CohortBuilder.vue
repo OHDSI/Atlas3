@@ -1044,7 +1044,10 @@ async function buildCohortExpression() {
       qualifyingLimit: qualifyingLimit.value,
       primaryCriteriaLimit: primaryCriteriaLimit.value,
       inclusionQualifyingLimit: inclusionQualifyingLimit.value,
-      conceptSets: conceptSetsWithItems.filter(cs => cs.id !== 0),
+      // 0 is a valid concept-set id (nextConceptSetId starts there), so a
+      // single-concept-set cohort must not have its only set filtered out
+      // while criteria still reference CodesetId 0.
+      conceptSets: conceptSetsWithItems,
       ...(additionalCriteria.value !== undefined ? { additionalCriteria: additionalCriteria.value } : {}),
     }
 
@@ -1805,9 +1808,11 @@ async function handleConceptSetSelected(conceptSet: {
 }) {
   if (!conceptSet || (!selectedCriteriaContext.value && !pendingConceptSetCallback.value)) return
 
-  // Fetch the full concept set with items if we only have a reference
   let fullConceptSet: { id: number | string; name: string; items?: unknown[] } = conceptSet
-  if (conceptSet.id && (!conceptSet.items || conceptSet.items.length === 0)) {
+  // Definedness, not truthiness: id 0 is valid, and a truthy check would skip
+  // the fetch and leave the partial reference in place.
+  const hasUsableId = conceptSet.id !== undefined && conceptSet.id !== null && conceptSet.id !== ''
+  if (hasUsableId && (!conceptSet.items || conceptSet.items.length === 0)) {
     await conceptSetsStore.fetchOne(conceptSet.id)
     if (conceptSetsStore.currentSet && conceptSetsStore.currentSet.id !== undefined) {
       fullConceptSet = {
@@ -2272,6 +2277,12 @@ function applyImportedExpression(importedCohort: Partial<CohortDefinition>) {
   qualifyingLimit.value = importedCohort.qualifyingLimit || 'ALL'
   primaryCriteriaLimit.value = importedCohort.primaryCriteriaLimit
   inclusionQualifyingLimit.value = importedCohort.inclusionQualifyingLimit || 'ALL'
+  // The Concepts dialog and unused-set badge read the store list directly
+  // rather than the refs above, so it would otherwise keep showing the
+  // previous cohort's sets after an Apply.
+  if (cohortStore.currentCohort) {
+    cohortStore.currentCohort.conceptSets = importedCohort.conceptSets || []
+  }
 
   // Trigger validation (composable handles debouncing)
   triggerValidation()

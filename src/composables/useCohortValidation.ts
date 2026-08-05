@@ -187,7 +187,8 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
             return ref
           }
 
-          if (ref.id) {
+          // Avoid a falsy check: id 0 is a valid concept-set id.
+          if (ref.id !== undefined && ref.id !== null) {
             const fullConceptSet = await getConceptSetById(ref.id)
             if (fullConceptSet && fullConceptSet.items) {
               return {

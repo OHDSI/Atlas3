@@ -158,6 +158,7 @@ vi.mock('@/services/atlas-converter', () => ({
 }))
 
 import CohortBuilder from '@/components/cohort/CohortBuilder.vue'
+import { convertInternalToAtlas } from '@/services/atlas-converter'
 
 const vuetify = createVuetify({
   components,
@@ -790,6 +791,29 @@ describe('CohortBuilder', () => {
     expect(def.qualifyingLimit).toBe('ALL')
   })
 
+  it('buildCohortExpression keeps a concept set whose id is 0 (single concept-set cohort)', async () => {
+    // Regression test for #144: dropping the id-0 set leaves criteria
+    // referencing CodesetId 0 against an empty ConceptSets.
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.entryEvents = [
+      {
+        id: 'e1',
+        criteriaType: 'DrugExposure',
+        attributes: [],
+        conceptSet: { id: 0, name: 'Solo Concept Set', items: [{ concept: { CONCEPT_ID: 1 } }] },
+      },
+    ]
+    await setup.buildCohortExpression()
+
+    const lastCall = (convertInternalToAtlas as unknown as { mock: { calls: any[][] } }).mock.calls.at(
+      -1
+    )
+    expect(lastCall?.[0].conceptSets).toHaveLength(1)
+    expect(lastCall?.[0].conceptSets[0].id).toBe(0)
+  })
+
   it('exportFilename slugifies the cohort name', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
@@ -1145,6 +1169,33 @@ describe('CohortBuilder', () => {
     await setup.handleConceptSetSelected({ id: 6, name: 'NeedsFetch' })
     expect(fetchSpy).toHaveBeenCalledWith(6)
     expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 0, name: 'Fetched' })
+  })
+
+  it('handleConceptSetSelected fetches items from store even when the selected concept set id is 0 (issue #144)', async () => {
+    // Regression test for #144: a truthy guard skips the fetch for id 0 and
+    // leaves the partial reference, showing the wrong embedded concept set.
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.entryEvents = [{ id: 'evt-1', criteriaType: 'X', attributes: [] }]
+    setup.selectedCriteriaContext = {
+      eventId: 'evt-1',
+      ruleIndex: -1,
+      groupIndex: 0,
+      eventIndex: 0,
+    }
+    const { useConceptSetsStore } = await import('@/stores/concept-sets')
+    const store = useConceptSetsStore()
+    const fetchSpy = vi.spyOn(store, 'fetchOne').mockImplementation(async (id: number | string) => {
+      store.currentSet = { id, name: 'FirstSet', items: [{ concept: { CONCEPT_ID: 42 } }] } as any
+    })
+    await setup.handleConceptSetSelected({ id: 0, name: 'FirstSet' })
+    expect(fetchSpy).toHaveBeenCalledWith(0)
+    expect(setup.entryEvents[0].conceptSet).toMatchObject({
+      id: 0,
+      name: 'FirstSet',
+      items: [{ concept: { CONCEPT_ID: 42 } }],
+    })
   })
 
   // ---------------------------------------------------------------------------
@@ -1726,6 +1777,7 @@ describe('CohortBuilder', () => {
     exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' },
     observationPeriod: { priorDays: 365, postDays: 30 },
     qualifyingLimit: 'FIRST',
+    conceptSets: [{ id: 7, name: 'Coronary Artery Bypass', items: [] }],
   })
 
   /** Emit `apply` from the stubbed CohortJsonDialog, as the real dialog does. */
@@ -1785,6 +1837,45 @@ describe('CohortBuilder', () => {
 
     // The pasted JSON has no InclusionRules, so the loaded rule is gone.
     expect(setup.inclusionRules).toEqual([])
+  })
+
+  // Regression test for #144: applying JSON refreshed the entry events but
+  // not the store list the embedded concept sets dialog reads from.
+  it('applying JSON refreshes the store concept-sets list backing the Concepts dialog', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    // Loaded cohort mock has no concept sets yet.
+    expect(store.currentCohort?.conceptSets).toEqual([])
+
+    importFromAtlasSpy.mockResolvedValueOnce(importedProcedureCohort())
+    await applyJson(wrapper, '{"PrimaryCriteria":{}}')
+
+    expect(store.currentCohort?.conceptSets).toEqual([
+      { id: 7, name: 'Coronary Artery Bypass', items: [] },
+    ])
+  })
+
+  it('applying JSON that omits concept sets clears the store list too', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    // Seed a leftover concept set as if a prior expression had loaded one.
+    if (store.currentCohort) {
+      store.currentCohort.conceptSets = [{ id: 0, name: 'Stale Set', items: [] }]
+    }
+
+    const { conceptSets: _omit, ...withoutConceptSets } = importedProcedureCohort()
+    importFromAtlasSpy.mockResolvedValueOnce(withoutConceptSets)
+    await applyJson(wrapper, '{}')
+
+    expect(store.currentCohort?.conceptSets).toEqual([])
   })
 
   it('applying JSON closes the dialog and reports success', async () => {
