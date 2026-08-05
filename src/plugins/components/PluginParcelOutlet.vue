@@ -55,24 +55,50 @@ const hostContext = computed<PluginHostContext>(() => ({
   surface: props.surface,
   itemId: props.itemId,
   locale: locale.value,
-  permissions: Object.keys(authStore.permissions ?? {}),
+  permissions: Object.values(authStore.permissions ?? {}).flat(),
   sourceKey: props.sourceKey,
 }))
 
 let parcel: ParcelHandle | null = null
+let mountToken = 0
 
 async function mountParcel() {
   if (!mountEl.value) return
+  // Guards against pluginId changing again before this call's mountPluginParcel
+  // resolves: only the invocation matching the latest token may become `parcel`.
+  const token = ++mountToken
   isLoading.value = true
   hasError.value = false
   error.value = null
+  const contextAtMount = hostContext.value
   try {
-    parcel = await mountPluginParcel(props.pluginId, mountEl.value, {
-      hostContext: hostContext.value,
+    const handle = await mountPluginParcel(props.pluginId, mountEl.value, {
+      hostContext: contextAtMount,
     })
+    if (token !== mountToken) {
+      try {
+        await handle.unmount()
+      } catch (err) {
+        logger.error(
+          'PluginParcelOutlet',
+          `Failed to unmount superseded parcel for ${props.pluginId}`,
+          err
+        )
+      }
+      return
+    }
+    parcel = handle
     await parcel.mountPromise
     isLoading.value = false
+    if (parcel.update && hostContext.value !== contextAtMount) {
+      try {
+        await parcel.update({ hostContext: hostContext.value })
+      } catch (err) {
+        logger.error('PluginParcelOutlet', `Failed to update ${props.pluginId}`, err)
+      }
+    }
   } catch (err) {
+    if (token !== mountToken) return
     const e = err as Error
     hasError.value = true
     isLoading.value = false
@@ -81,6 +107,15 @@ async function mountParcel() {
       stack: e.stack,
       timestamp: new Date(),
       recoverable: true,
+    }
+    if (parcel) {
+      const failed = parcel
+      parcel = null
+      try {
+        await failed.unmount()
+      } catch (err2) {
+        logger.error('PluginParcelOutlet', `Failed to unmount ${props.pluginId}`, err2)
+      }
     }
     logger.error('PluginParcelOutlet', `Failed to mount ${props.pluginId}`, err)
   }
@@ -96,8 +131,9 @@ async function unmountParcel() {
   parcel = null
 }
 
-function handleRetry() {
-  void mountParcel()
+async function handleRetry() {
+  await unmountParcel()
+  await mountParcel()
 }
 
 onMounted(mountParcel)
