@@ -7,15 +7,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createMemoryHistory, createRouter, RouterView, type Router } from 'vue-router'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, computed } from 'vue'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { usePluginMounts } from '@/composables/usePluginMounts'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../helpers/i18n-mock')
   return mockUseI18n
 })
+
+vi.mock('@/composables/usePluginMounts', () => ({
+  usePluginMounts: vi.fn(() => ({ items: computed(() => []) })),
+}))
 
 // AnalysisHubView statically imports the four sub-views, which pull in
 // Pinia stores. The hub itself doesn't touch a store, so we stub the
@@ -54,6 +59,7 @@ function makeRouter(): Router {
           { path: 'feature-analyses', name: 'feature-analyses', component: childStub('fa') },
           { path: 'pathways', name: 'pathways', component: childStub('pw') },
           { path: 'incidence-rates', name: 'incidence-rates', component: childStub('ir') },
+          { path: 'x/:pluginId/:itemId', name: 'analysis-plugin', component: AnalysisHubView },
         ],
       },
     ],
@@ -67,6 +73,17 @@ describe('AnalysisHubView', () => {
     vuetify = createVuetify({ components, directives })
     localStorage.clear()
   })
+
+  function factory(router: Router) {
+    return mount(RootHost, {
+      global: {
+        plugins: [router, vuetify],
+        stubs: {
+          PluginParcelOutlet: { template: '<div data-testid="analysis-plugin-outlet" />' },
+        },
+      },
+    })
+  }
 
   it('renders four tabs with the expected labels', async () => {
     const router = makeRouter()
@@ -115,5 +132,31 @@ describe('AnalysisHubView', () => {
     await router.push('/analysis/incidence-rates')
     await flushPromises()
     expect(localStorage.getItem('atlas3.analysis.lastTab')).toBe('incidence-rates')
+  })
+
+  it('renders a plugin tab and mounts its outlet when active', async () => {
+    vi.mocked(usePluginMounts).mockReturnValue({
+      items: computed(() => [
+        {
+          key: 'plugin:p1:my-tab',
+          pluginId: 'p1',
+          itemId: 'my-tab',
+          surface: 'analysis-tabs' as const,
+          name: 'My Tab',
+          icon: 'mdi-puzzle-outline',
+          order: 10,
+          visible: true,
+        },
+      ]),
+    })
+
+    const router = makeRouter()
+    await router.push({ name: 'analysis-plugin', params: { pluginId: 'p1', itemId: 'my-tab' } })
+    await router.isReady()
+    const wrapper = factory(router)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('My Tab')
+    expect(wrapper.find('[data-testid="analysis-plugin-outlet"]').exists()).toBe(true)
   })
 })

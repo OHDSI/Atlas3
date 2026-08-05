@@ -50,6 +50,18 @@
         <v-window-item value="incidence-rates">
           <IncidenceRatesView />
         </v-window-item>
+        <v-window-item
+          v-for="tab in pluginTabs"
+          :key="tab.name"
+          :value="tab.name"
+        >
+          <PluginParcelOutlet
+            data-testid="analysis-plugin-outlet"
+            :plugin-id="tab.plugin!.pluginId"
+            :item-id="tab.plugin!.itemId"
+            surface="analysis-tabs"
+          />
+        </v-window-item>
       </v-window>
     </div>
   </AtlasPageShell>
@@ -59,7 +71,9 @@
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
+import { usePluginMounts } from '@/composables/usePluginMounts'
 import { AtlasIcon, AtlasPageShell, AtlasTab, AtlasTabs } from '@/components/ui'
+import PluginParcelOutlet from '@/plugins/components/PluginParcelOutlet.vue'
 import CharacterizationsView from '@/views/CharacterizationsView.vue'
 import FeatureAnalysesView from '@/views/FeatureAnalysesView.vue'
 import PathwaysView from '@/views/PathwaysView.vue'
@@ -74,13 +88,15 @@ interface Tab {
    *  without making the hero title shake on tab change. */
   hintKey: string
   defaultHint: string
+  plugin?: { pluginId: string; itemId: string }
 }
 
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
+const { items: pluginTabItems } = usePluginMounts('analysis-tabs')
 
-const tabs: Tab[] = [
+const coreTabs: Tab[] = [
   {
     name: 'feature-analyses',
     titleKey: 'navigation.featureAnalyses',
@@ -115,18 +131,47 @@ const tabs: Tab[] = [
   },
 ]
 
-const tabNames = new Set(tabs.map(tab => tab.name))
+const tabs = computed<Tab[]>(() => [
+  ...coreTabs,
+  ...pluginTabItems.value.map(item => ({
+    name: item.key,
+    titleKey: item.name,
+    defaultLabel: item.name,
+    icon: item.icon ?? 'mdi-puzzle-outline',
+    hintKey: item.hint ?? '',
+    defaultHint: item.hint ?? '',
+    plugin: { pluginId: item.pluginId, itemId: item.itemId },
+  })),
+])
+
+const tabNames = computed(() => new Set(tabs.value.map(tab => tab.name)))
+
+const pluginTabs = computed(() => tabs.value.filter(tab => tab.plugin))
 
 // Bidirectional binding between active tab and the URL.
 const activeTabName = computed<string>({
   get: () => {
+    if (route.name === 'analysis-plugin') {
+      return `plugin:${route.params.pluginId as string}:${route.params.itemId as string}`
+    }
     const name = route.name as string | undefined
-    return name && tabNames.has(name) ? name : 'feature-analyses'
+    return name && tabNames.value.has(name) ? name : 'feature-analyses'
   },
   set: name => {
-    if (name && tabNames.has(name) && name !== route.name) {
-      router.push({ name })
+    if (!name || !tabNames.value.has(name)) return
+    const tab = tabs.value.find(t => t.name === name)
+    if (tab?.plugin) {
+      if (
+        route.name === 'analysis-plugin' &&
+        route.params.pluginId === tab.plugin.pluginId &&
+        route.params.itemId === tab.plugin.itemId
+      ) {
+        return
+      }
+      router.push({ name: 'analysis-plugin', params: tab.plugin })
+      return
     }
+    if (name !== route.name) router.push({ name })
   },
 })
 
@@ -148,11 +193,14 @@ watch(
 )
 
 function getLabel(tab: Tab): string {
+  if (tab.plugin) return tab.defaultLabel
   return t(tab.titleKey, tab.defaultLabel).value
 }
 
 const eyebrow = computed(() => `OHDSI · ${t('navigation.analysis', 'Analysis').value}`)
-const activeTab = computed(() => tabs.find(tab => tab.name === activeTabName.value) ?? tabs[0]!)
+const activeTab = computed(
+  () => tabs.value.find(tab => tab.name === activeTabName.value) ?? coreTabs[0]!
+)
 
 // Hero title and subtitle are stable — they describe the hub itself,
 // not the active tab. Per-tab context lives in the small hint line
@@ -166,7 +214,11 @@ const subtitle = computed(
       'Characterize cohorts, build features, trace pathways, and compute incidence rates.'
     ).value
 )
-const activeTabHint = computed(() => t(activeTab.value.hintKey, activeTab.value.defaultHint).value)
+const activeTabHint = computed(() => {
+  const tab = activeTab.value
+  if (tab.plugin) return tab.defaultHint
+  return t(tab.hintKey, tab.defaultHint).value
+})
 </script>
 
 <style scoped>
