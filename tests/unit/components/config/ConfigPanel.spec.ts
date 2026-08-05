@@ -10,8 +10,10 @@ import { createVuetify } from 'vuetify'
 import { createPinia, setActivePinia } from 'pinia'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { computed } from 'vue'
 import ConfigPanel from '@/components/config/ConfigPanel.vue'
 import { useUIStore } from '@/stores/ui'
+import { usePluginMounts } from '@/composables/usePluginMounts'
 import CacheManagementSection from '@/components/config/CacheManagementSection.vue'
 import DataSourcesSection from '@/components/config/DataSourcesSection.vue'
 import TagManagementSection from '@/components/config/TagManagementSection.vue'
@@ -23,19 +25,23 @@ vi.mock('@/composables/useI18n', async () => {
   return mockUseI18n
 })
 
+vi.mock('@/composables/usePluginMounts', () => ({
+  usePluginMounts: vi.fn(() => ({ items: computed(() => []) })),
+}))
+
 // Helper to mount ConfigPanel with stubs for layout components
 function mountConfigPanel(options: any = {}) {
   return mount(ConfigPanel, {
     global: {
       plugins: [vuetify],
+      ...options.global,
       stubs: {
         VNavigationDrawer: {
           template: '<div class="v-navigation-drawer"><slot /></div>',
           props: ['modelValue', 'location', 'temporary', 'width']
         },
         ...options.global?.stubs
-      },
-      ...options.global
+      }
     }
   })
 }
@@ -409,5 +415,62 @@ describe.skip('ConfigPanel.vue', () => {
       expect(sections[1].isVisible()).toBe(false)
       expect(sections[2].isVisible()).toBe(false)
     })
+  })
+})
+
+describe('ConfigPanel plugin admin tabs', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    // vi.clearAllMocks() clears call history but not a prior
+    // mockReturnValue(), so restore the no-plugin-tabs default explicitly to
+    // keep tests order-independent.
+    vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  function withPluginTab() {
+    vi.mocked(usePluginMounts).mockReturnValue({
+      items: computed(() => [
+        {
+          key: 'plugin:p1:audit',
+          pluginId: 'p1',
+          itemId: 'audit',
+          surface: 'admin-tabs' as const,
+          name: 'Audit',
+          icon: 'mdi-shield',
+          order: 10,
+          visible: true,
+        },
+      ]),
+    })
+  }
+
+  it('renders a plugin admin tab', () => {
+    withPluginTab()
+
+    const wrapper = mountConfigPanel({
+      global: { stubs: { PluginParcelOutlet: true } },
+    })
+
+    expect(wrapper.find('[data-testid="config-tab-plugin:p1:audit"]').exists()).toBe(true)
+  })
+
+  it('suppresses the no-access alert when a plugin supplies the only visible tab', () => {
+    withPluginTab()
+
+    const wrapper = mountConfigPanel({
+      global: { stubs: { PluginParcelOutlet: true } },
+    })
+
+    expect(wrapper.text()).not.toContain("You don't have access to any administrative settings.")
+  })
+
+  it('shows the no-access alert when there are no core and no plugin tabs', () => {
+    const wrapper = mountConfigPanel({
+      global: { stubs: { PluginParcelOutlet: true } },
+    })
+
+    expect(wrapper.text()).toContain("You don't have access to any administrative settings.")
   })
 })

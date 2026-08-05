@@ -68,6 +68,17 @@
             </AtlasIcon>
             {{ t('configuration.roles.tabs.permissions', 'Permissions').value }}
           </AtlasTab>
+          <AtlasTab
+            v-for="tab in pluginTabs"
+            :key="tab.key"
+            :value="tab.key"
+            :data-testid="`config-tab-${tab.key}`"
+          >
+            <AtlasIcon start>
+              {{ tab.icon ?? 'mdi-puzzle-outline' }}
+            </AtlasIcon>
+            {{ tab.name }}
+          </AtlasTab>
         </AtlasTabs>
 
         <!-- Scrollable Content -->
@@ -108,6 +119,20 @@
             <PermissionsSection />
           </div>
 
+          <div
+            v-for="tab in pluginTabs"
+            v-show="activeSection === tab.key"
+            :key="tab.key"
+            class="config-section"
+          >
+            <PluginParcelOutlet
+              v-if="activeSection === tab.key"
+              :plugin-id="tab.pluginId"
+              :item-id="tab.itemId"
+              surface="admin-tabs"
+            />
+          </div>
+
           <!-- All admin sections hidden — show a friendly placeholder. -->
           <div
             v-if="!hasAnyAdminTab"
@@ -134,6 +159,9 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useUIStore } from '@/stores/ui'
 import { usePermissions } from '@/composables/usePermissions'
+import { usePluginMounts } from '@/composables/usePluginMounts'
+import PluginParcelOutlet from '@/plugins/components/PluginParcelOutlet.vue'
+import type { ConfigPanelSection } from '@/models/config.types'
 import CacheManagementSection from './CacheManagementSection.vue'
 import DataSourcesSection from './DataSourcesSection.vue'
 import TagManagementSection from './TagManagementSection.vue'
@@ -142,6 +170,7 @@ import PermissionsSection from './PermissionsSection.vue'
 const { t, tv } = useI18n()
 const uiStore = useUIStore()
 const { hasPermission } = usePermissions()
+const { items: pluginTabs } = usePluginMounts('admin-tabs')
 
 // Admin-only sections: hidden entirely from users without the matching admin
 // permission, per the rule that admin functionality should disappear for
@@ -156,7 +185,8 @@ const hasAnyAdminTab = computed(
     canSeeCache.value ||
     canSeeSources.value ||
     canSeeTags.value ||
-    canSeePermissions.value
+    canSeePermissions.value ||
+    pluginTabs.value.length > 0
 )
 
 // Reactive state from UI store
@@ -176,7 +206,7 @@ const activeSection = computed({
     uiStore.configPanelState.activeSection === 'vocabulary'
       ? 'sources'
       : uiStore.configPanelState.activeSection,
-  set: (value: 'cache' | 'sources' | 'tags' | 'permissions' | 'jobs') => {
+  set: (value: ConfigPanelSection) => {
     // Map 'sources' to 'vocabulary' for the store
     const storeValue = value === 'sources' ? 'vocabulary' : value
     uiStore.setConfigPanelSection(storeValue)

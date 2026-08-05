@@ -150,6 +150,7 @@
           v-bind="{ ariaLabel: t('config.accessibility.openPanel', 'Open configuration panel').value }"
           variant="text"
           size="sm"
+          data-testid="nav-config"
           @click="handleConfigClick"
         />
 
@@ -212,6 +213,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
 import { usePermissions } from '@/composables/usePermissions'
 import { useUIStore } from '@/stores/ui'
+import { usePluginMounts } from '@/composables/usePluginMounts'
 import { getAuthConfig } from '@/config/auth.config'
 import {
   generatePluginMenuItems,
@@ -240,12 +242,17 @@ const { t } = useI18n()
 const { hasAnyPermission } = usePermissions()
 const uiStore = useUIStore()
 
+const { items: adminTabMounts } = usePluginMounts('admin-tabs')
+
 // Hide the cog icon entirely for users without any admin permission. Mirrors
 // the per-tab gating in ConfigPanel — if every section would be hidden, the
 // entry point shouldn't be visible at all. Jobs now has its own nav entry
-// (hasJobsAccess) and is no longer gating the cog.
-const hasAnyAdminAccess = computed(() =>
-  hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security'])
+// (hasJobsAccess) and is no longer gating the cog. Plugin-contributed admin
+// tabs also keep the cog visible, even with no core admin permission.
+const hasAnyAdminAccess = computed(
+  () =>
+    hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security']) ||
+    adminTabMounts.value.length > 0
 )
 const hasJobsAccess = computed(() => hasAnyPermission(['job:execution:get']))
 
