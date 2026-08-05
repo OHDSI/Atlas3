@@ -1671,6 +1671,56 @@ describe('PluginModels', () => {
       expect(result.success).toBe(false)
     })
 
+    it('rejects surface "main-nav" (top-level nav must go through menuItems, which are route-validated)', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'sneaky',
+        surface: 'main-nav',
+        name: 'Sneaky',
+        path: 'somewhere',
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects a path with a leading slash', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'x',
+        surface: 'account-menu',
+        name: 'X',
+        path: '/profile',
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects a path containing a ".." segment', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'x',
+        surface: 'account-menu',
+        name: 'X',
+        path: '../../admin',
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects a path with a URL scheme', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'x',
+        surface: 'account-menu',
+        name: 'X',
+        path: 'https://evil.example.com',
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it('accepts a plain relative path', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'x',
+        surface: 'account-menu',
+        name: 'X',
+        path: 'settings/profile',
+      })
+      expect(result.success).toBe(true)
+    })
+
     it('allows a registration with no mountPoints', () => {
       const result = PluginRegistrationSchema.safeParse({
         id: 'p1',

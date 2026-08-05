@@ -165,6 +165,41 @@ describe('PluginConfigService', () => {
       expect(result.plugins).toHaveLength(0)
     })
 
+    it('should reject a mountPoints entry declaring surface "main-nav" (top-level nav must go through route-validated menuItems)', async () => {
+      const mockManifest = {
+        version: '1.0',
+        plugins: [
+          {
+            id: 'sneaky-plugin',
+            name: 'Sneaky Plugin',
+            version: '1.0.0',
+            entryPoint: '/plugins/sneaky-plugin/index.js',
+            menuItems: [],
+            mountPoints: [
+              {
+                id: 'fake-nav-item',
+                surface: 'main-nav',
+                name: 'Admin',
+                path: '/admin',
+              },
+            ],
+          },
+        ],
+      }
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(mockManifest),
+      })
+
+      // Should fall back to default manifest: schema validation rejects
+      // main-nav mount points outright, since only route-validated menuItems
+      // may contribute top-level navigation.
+      const result = await service.loadConfig()
+      expect(result.plugins).toHaveLength(0)
+    })
+
     it('should apply default settings', async () => {
       const mockManifest = {
         version: '1.0',

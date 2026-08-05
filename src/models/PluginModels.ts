@@ -245,20 +245,41 @@ export const PluginMountSurfaceSchema = z.enum([
   'account-menu',
 ])
 
-export const PluginMountPointSchema = z.object({
-  id: z.string().regex(/^[a-z0-9-_]+$/),
-  surface: PluginMountSurfaceSchema,
-  name: z.string().min(1),
-  icon: z.string().optional(),
-  path: z.string().optional(),
-  group: z.string().optional(),
-  hint: z.string().optional(),
-  order: z.number().optional(),
-  insertBefore: z.string().optional(),
-  insertAfter: z.string().optional(),
-  requiredPermissions: z.array(z.string()).optional(),
-  visible: z.boolean().optional(),
-})
+// account-menu items navigate full-page: NavBar joins `path` onto
+// `/plugins/{pluginId}/` (see handleAccountItemClick), so a leading slash, a
+// `..` segment, or a URL scheme would let a manifest escape that prefix into
+// an arbitrary in-app or external destination.
+function isSafeMountPath(path: string): boolean {
+  if (path.startsWith('/') || path.startsWith('\\')) return false
+  if (path.split(/[/\\]/).includes('..')) return false
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(path)) return false
+  return true
+}
+
+export const PluginMountPointSchema = z
+  .object({
+    id: z.string().regex(/^[a-z0-9-_]+$/),
+    surface: PluginMountSurfaceSchema,
+    name: z.string().min(1),
+    icon: z.string().optional(),
+    path: z.string().optional(),
+    group: z.string().optional(),
+    hint: z.string().optional(),
+    order: z.number().optional(),
+    insertBefore: z.string().optional(),
+    insertAfter: z.string().optional(),
+    requiredPermissions: z.array(z.string()).optional(),
+    visible: z.boolean().optional(),
+  })
+  .refine(point => point.surface !== 'main-nav', {
+    message:
+      'main-nav mount points are not supported; contribute top-level navigation via menuItems instead',
+    path: ['surface'],
+  })
+  .refine(point => point.path === undefined || isSafeMountPath(point.path), {
+    message: 'path must be relative, without ".." segments or a URL scheme',
+    path: ['path'],
+  })
 
 export const PluginRegistrationSchema = z.object({
   id: z.string().regex(/^[a-z0-9-_]+$/),
