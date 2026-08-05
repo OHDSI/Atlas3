@@ -83,6 +83,8 @@ export const useDataSourcesStore = defineStore('datasources', () => {
     // If a report type is selected, fetch the report for the new source
     if (selectedReportType.value && !isPluginReportType(selectedReportType.value)) {
       await fetchReport(selectedReportType.value)
+    } else if (selectedReportType.value && isPluginReportType(selectedReportType.value)) {
+      error.value.report = null
     }
   }
 
@@ -91,7 +93,10 @@ export const useDataSourcesStore = defineStore('datasources', () => {
 
     // Plugin surfaces fetch their own data inside the parcel; there is no
     // WebAPI report endpoint behind a plugin report type.
-    if (isPluginReportType(reportType)) return
+    if (isPluginReportType(reportType)) {
+      error.value.report = null
+      return
+    }
 
     if (selectedSourceId.value) {
       await fetchReport(reportType)

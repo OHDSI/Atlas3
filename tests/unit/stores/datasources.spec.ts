@@ -228,6 +228,18 @@ describe('DataSources Store', () => {
 
       expect(getDashboardReport).toHaveBeenCalledWith('TEST_CDM_1')
     })
+
+    it('clears a stale report error when switching sources with a plugin report type selected', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedReportType = 'plugin:p1:my-report'
+      store.error.report = 'boom'
+
+      await store.selectDataSource(1)
+
+      expect(store.error.report).toBeNull()
+      expect(getDashboardReport).not.toHaveBeenCalled()
+    })
   })
 
   describe('selectReportType Action', () => {
@@ -454,5 +466,19 @@ describe('DataSources Store', () => {
 
     expect(store.selectedReportType).toBe('plugin:p1:my-report')
     expect(store.loading.report).toBe(false)
+  })
+
+  it('clears a stale report error when switching to a plugin report type', async () => {
+    const store = useDataSourcesStore()
+    store.sources = [
+      { sourceId: 1, sourceName: 'S', sourceKey: 'SYNPUF', sourceDialect: 'postgresql', daimons: [] },
+    ]
+    store.selectedSourceId = 1
+    store.error.report = 'boom'
+
+    await store.selectReportType('plugin:p1:my-report')
+
+    expect(store.error.report).toBeNull()
+    expect(getDashboardReport).not.toHaveBeenCalled()
   })
 })
