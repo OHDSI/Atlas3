@@ -54,6 +54,14 @@ export type PluginMountSurface =
   | 'admin-tabs'
   | 'account-menu'
 
+export interface PluginHostContext {
+  surface: PluginMountSurface
+  itemId: string
+  locale: string
+  permissions: string[]
+  sourceKey?: string
+}
+
 export interface PluginMountPoint {
   id: string
   surface: PluginMountSurface
