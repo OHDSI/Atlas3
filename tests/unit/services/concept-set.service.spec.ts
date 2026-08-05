@@ -415,6 +415,22 @@ describe('ConceptSetService', () => {
       )
     })
 
+    it('appends the selected source key when re-reading after a create with items', async () => {
+      localStorage.setItem('selectedVocabulary', 'created-source')
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: 3 }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: 3, name: 'CS' }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
+
+      await createConceptSet({
+        name: 'CS',
+        items: [{ conceptId: 1112807 }],
+      } as never)
+
+      expect(expressionUrl()).toContain('/conceptset/3/expression/created-source')
+    })
+
     it('appends the selected source key when re-reading after an update', async () => {
       localStorage.setItem('selectedVocabulary', 'demo-source')
       mockFetch
