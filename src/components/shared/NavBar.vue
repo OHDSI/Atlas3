@@ -186,6 +186,20 @@
               </AtlasButton>
             </template>
             <AtlasList>
+              <AtlasListItem
+                v-for="item in accountMenuItems"
+                :key="item.key"
+                :data-testid="`account-menu-${item.key}`"
+                @click="handleAccountItemClick(item)"
+              >
+                <template #prepend>
+                  <AtlasIcon>{{ item.icon ?? 'mdi-puzzle-outline' }}</AtlasIcon>
+                </template>
+                <v-list-item-title>
+                  {{ item.name }}
+                </v-list-item-title>
+              </AtlasListItem>
+              <AtlasDivider v-if="accountMenuItems.length" />
               <AtlasListItem @click="handleLogout">
                 <template #prepend>
                   <AtlasIcon>mdi-logout</AtlasIcon>
@@ -206,7 +220,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
@@ -243,6 +257,7 @@ const { hasAnyPermission } = usePermissions()
 const uiStore = useUIStore()
 
 const { items: adminTabMounts } = usePluginMounts('admin-tabs')
+const { items: accountMenuItems } = usePluginMounts('account-menu')
 
 // Hide the cog icon entirely for users without any admin permission. Mirrors
 // the per-tab gating in ConfigPanel — if every section would be hidden, the
@@ -370,6 +385,11 @@ const handleNavClick = async (item: NavigationItem) => {
     navItem.active = navItem.id === item.id
   })
   router.push(item.route)
+}
+
+function handleAccountItemClick(item: { pluginId: string; path?: string }) {
+  const suffix = item.path ?? ''
+  router.push(`/plugins/${item.pluginId}/${suffix}`.replace(/\/+$/, ''))
 }
 
 async function handleLogout() {

@@ -2,7 +2,7 @@
  * NavBar Component Tests
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount, flushPromises } from '@vue/test-utils'
+import { mount, flushPromises, DOMWrapper } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -29,10 +29,11 @@ vi.mock('vue-router', () => ({
 // Mock composables
 const mockLogout = vi.fn()
 const mockOpenLoginModal = vi.fn()
+const mockIsAuthenticated = ref(false)
 
 vi.mock('@/composables/useAuth', () => ({
   useAuth: () => ({
-    isAuthenticated: ref(false),
+    isAuthenticated: mockIsAuthenticated,
     userDisplayName: ref('Test User'),
     logout: mockLogout,
     openLoginModal: mockOpenLoginModal
@@ -160,6 +161,7 @@ function mountComponent(options = {}) {
 describe('NavBar', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockIsAuthenticated.value = false
     vi.mocked(generatePluginMenuItems).mockReturnValue([])
     vi.mocked(usePermissions).mockReturnValue(mockPermissions)
     vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
@@ -486,6 +488,55 @@ describe('NavBar', () => {
       await flushPromises()
 
       expect(wrapper.find('[data-testid="nav-config"]').exists()).toBe(false)
+    })
+  })
+
+  describe('Plugin account menu', () => {
+    it('renders plugin account menu items above sign out', async () => {
+      mockIsAuthenticated.value = true
+      vi.mocked(usePluginMounts).mockImplementation((surface: string) => ({
+        items: computed(() =>
+          surface === 'account-menu'
+            ? [
+                {
+                  key: 'plugin:p1:profile',
+                  pluginId: 'p1',
+                  itemId: 'profile',
+                  surface: 'account-menu' as const,
+                  name: 'My Profile',
+                  path: 'profile',
+                  icon: 'mdi-account',
+                  order: 10,
+                  visible: true,
+                },
+              ]
+            : []
+        ),
+      }))
+
+      const wrapper = mount(NavBar, mountOptions)
+      await flushPromises()
+      await wrapper.find('.nav-bar__user button').trigger('click')
+      await flushPromises()
+
+      const body = new DOMWrapper(document.body)
+      const item = body.find('[data-testid="account-menu-plugin:p1:profile"]')
+      expect(item.exists()).toBe(true)
+
+      await item.trigger('click')
+      expect(mockPush).toHaveBeenCalledWith('/plugins/p1/profile')
+    })
+
+    it('does not render a divider when there are no plugin account items', async () => {
+      mockIsAuthenticated.value = true
+
+      const wrapper = mount(NavBar, mountOptions)
+      await flushPromises()
+      await wrapper.find('.nav-bar__user button').trigger('click')
+      await flushPromises()
+
+      const body = new DOMWrapper(document.body)
+      expect(body.find('.v-divider').exists()).toBe(false)
     })
   })
 })
