@@ -1,12 +1,12 @@
 <!-- src/components/ui/AtlasDataTable.vue -->
 <template>
   <v-data-table
+    v-model:sort-by="sortByModel"
     :headers="headers"
     :items="items"
     :loading="loading"
     :items-per-page="itemsPerPage"
     :page="page"
-    :sort-by="sortBy"
     :height="height"
     :fixed-header="fixedHeader"
     :hide-default-footer="hideDefaultFooter"
@@ -17,7 +17,6 @@
     v-bind="forwardAttrs"
     @update:page="(v: number) => $emit('update:page', v)"
     @update:items-per-page="(v: number) => $emit('update:itemsPerPage', v)"
-    @update:sort-by="(v: SortItem[]) => $emit('update:sortBy', v)"
   >
     <template
       v-for="(_, name) in $slots"
@@ -32,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue'
+import { computed, ref, useAttrs } from 'vue'
 
 interface SortItem {
   key: string
@@ -64,11 +63,11 @@ interface Props {
   caption?: string
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   loading: false,
   itemsPerPage: 10,
   page: 1,
-  sortBy: () => [],
+  sortBy: undefined,
   height: undefined,
   fixedHeader: false,
   hideDefaultFooter: false,
@@ -77,13 +76,26 @@ withDefaults(defineProps<Props>(), {
   caption: undefined,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   'update:page': [page: number]
   'update:itemsPerPage': [count: number]
   'update:sortBy': [sortBy: SortItem[]]
 }>()
 
 defineOptions({ inheritAttrs: false })
+
+// When a caller doesn't bind `sort-by` (the common case), fall back to
+// internal state so v-data-table still owns and applies its own sort
+// instead of being pinned to a static prop that never changes. Callers that
+// DO bind `sort-by`/`v-model:sort-by` keep full control, unchanged.
+const internalSortBy = ref<SortItem[]>([])
+const sortByModel = computed<SortItem[]>({
+  get: () => props.sortBy ?? internalSortBy.value,
+  set: v => {
+    internalSortBy.value = v
+    emit('update:sortBy', v)
+  },
+})
 
 const attrs = useAttrs()
 const forwardAttrs = computed(() => {
