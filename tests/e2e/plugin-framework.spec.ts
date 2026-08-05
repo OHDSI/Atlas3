@@ -118,6 +118,10 @@ test.describe('Plugin Framework', () => {
 });
 
 test.describe('Plugin Messaging', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupBasicMocks(page)
+  });
+
   test('should send messages from plugin to host', async ({ page }) => {
     const messages: unknown[] = [];
 
@@ -125,6 +129,11 @@ test.describe('Plugin Messaging', () => {
     await page.exposeFunction('capturePluginMessage', (msg: unknown) => {
       messages.push(msg);
     });
+
+    // Console listener must be attached before the action that produces the
+    // log, otherwise the message that fires on click is missed entirely.
+    const logs: string[] = [];
+    page.on('console', msg => logs.push(msg.text()));
 
     await page.goto('/#/plugins/hello-world-plugin/main');
     await page.waitForTimeout(2000);
@@ -138,10 +147,7 @@ test.describe('Plugin Messaging', () => {
       await page.waitForTimeout(500);
 
       // Verify message was sent (check console logs)
-      const logs: string[] = [];
-      page.on('console', msg => logs.push(msg.text()));
-
-      expect(logs.some(log => log.includes('notification'))).toBeTruthy();
+      expect(logs.some(log => log.toLowerCase().includes('notification'))).toBeTruthy();
     }
   });
 });
