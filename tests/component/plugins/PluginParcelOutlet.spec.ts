@@ -16,6 +16,14 @@ const PluginErrorUIStub = {
   template: '<button data-testid="retry" @click="$emit(\'retry\')" />',
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>(res => {
+    resolve = res
+  })
+  return { promise, resolve }
+}
+
 describe('PluginParcelOutlet', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -129,5 +137,64 @@ describe('PluginParcelOutlet', () => {
     expect(mountPluginParcel).toHaveBeenCalledTimes(2)
     expect(failedUnmount).toHaveBeenCalledTimes(1)
     expect(wrapper.find('[data-testid="plugin-outlet-error"]').exists()).toBe(false)
+  })
+
+  it('does not let a stale generation clobber a newer one once its mount finally resolves', async () => {
+    const first = deferred<unknown>()
+    const third = deferred<unknown>()
+
+    const firstUnmount = vi.fn().mockResolvedValue(undefined)
+    const firstUpdate = vi.fn().mockResolvedValue(undefined)
+    const secondUnmount = vi.fn().mockResolvedValue(undefined)
+    const thirdUpdate = vi.fn().mockResolvedValue(undefined)
+
+    vi.mocked(mountPluginParcel)
+      .mockResolvedValueOnce({
+        update: firstUpdate,
+        unmount: firstUnmount,
+        mountPromise: first.promise,
+      })
+      .mockResolvedValueOnce({
+        update: vi.fn().mockResolvedValue(undefined),
+        unmount: secondUnmount,
+        mountPromise: Promise.resolve(),
+      })
+      .mockResolvedValueOnce({
+        update: thirdUpdate,
+        unmount: vi.fn().mockResolvedValue(undefined),
+        mountPromise: third.promise,
+      })
+
+    const wrapper = factory({ pluginId: 'p1' })
+    await flushPromises()
+
+    await wrapper.setProps({ pluginId: 'p2' })
+    await flushPromises()
+
+    await wrapper.setProps({ pluginId: 'p3' })
+    await flushPromises()
+
+    expect(mountPluginParcel).toHaveBeenCalledTimes(3)
+    expect(secondUnmount).toHaveBeenCalledTimes(1)
+    expect(wrapper.find('.plugin-parcel-outlet__mount').classes()).toContain(
+      'plugin-parcel-outlet__mount--hidden'
+    )
+
+    first.resolve(undefined)
+    await flushPromises()
+
+    expect(firstUnmount).toHaveBeenCalledTimes(1)
+    expect(firstUpdate).not.toHaveBeenCalled()
+    expect(wrapper.find('.plugin-parcel-outlet__mount').classes()).toContain(
+      'plugin-parcel-outlet__mount--hidden'
+    )
+
+    third.resolve(undefined)
+    await flushPromises()
+
+    expect(thirdUpdate).not.toHaveBeenCalled()
+    expect(wrapper.find('.plugin-parcel-outlet__mount').classes()).not.toContain(
+      'plugin-parcel-outlet__mount--hidden'
+    )
   })
 })
