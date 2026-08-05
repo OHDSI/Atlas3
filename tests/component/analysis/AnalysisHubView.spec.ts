@@ -159,4 +159,52 @@ describe('AnalysisHubView', () => {
     expect(wrapper.text()).toContain('My Tab')
     expect(wrapper.find('[data-testid="analysis-plugin-outlet"]').exists()).toBe(true)
   })
+
+  it('shows a plugin tab label and hint as literals, not translations', async () => {
+    // 'common.cancel' and 'common.close' are real i18n keys whose translated
+    // values ('Cancel', 'Close') differ from the raw key text. If the
+    // plugin-literal bypass in getLabel/activeTabHint were ever removed,
+    // these would render as 'Cancel'/'Close' instead of the raw name/hint.
+    vi.mocked(usePluginMounts).mockReturnValue({
+      items: computed(() => [
+        {
+          key: 'plugin:p3:literal-tab',
+          pluginId: 'p3',
+          itemId: 'literal-tab',
+          surface: 'analysis-tabs' as const,
+          name: 'common.cancel',
+          hint: 'common.close',
+          icon: 'mdi-puzzle-outline',
+          order: 10,
+          visible: true,
+        },
+      ]),
+    })
+
+    const router = makeRouter()
+    await router.push({ name: 'analysis-plugin', params: { pluginId: 'p3', itemId: 'literal-tab' } })
+    await router.isReady()
+    const wrapper = factory(router)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('common.cancel')
+    expect(wrapper.text()).not.toContain('Cancel')
+    expect(wrapper.text()).toContain('common.close')
+    expect(wrapper.text()).not.toContain('Close')
+  })
+
+  it('falls back to feature-analyses when the URL names a plugin tab that is not registered', async () => {
+    vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
+
+    const router = makeRouter()
+    await router.push({ name: 'analysis-plugin', params: { pluginId: 'ghost', itemId: 'gone' } })
+    await router.isReady()
+    const wrapper = factory(router)
+    await flushPromises()
+
+    const active = wrapper.find('.v-tab--selected')
+    expect(active.exists()).toBe(true)
+    expect(active.text()).toContain('Feature Analyses')
+    expect(wrapper.find('.child-fa').exists()).toBe(true)
+  })
 })

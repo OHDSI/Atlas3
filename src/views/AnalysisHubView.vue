@@ -152,7 +152,8 @@ const pluginTabs = computed(() => tabs.value.filter(tab => tab.plugin))
 const activeTabName = computed<string>({
   get: () => {
     if (route.name === 'analysis-plugin') {
-      return `plugin:${route.params.pluginId as string}:${route.params.itemId as string}`
+      const name = `plugin:${route.params.pluginId as string}:${route.params.itemId as string}`
+      return tabNames.value.has(name) ? name : 'feature-analyses'
     }
     const name = route.name as string | undefined
     return name && tabNames.value.has(name) ? name : 'feature-analyses'
