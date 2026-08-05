@@ -324,11 +324,17 @@ describe('DataSourcesView', () => {
 
       // Start the report fetch (don't await - we want to check loading state)
       const fetchPromise = store.selectReportType('dashboard')
-      await wrapper.vm.$nextTick()
-      await flushPromises()
 
-      const hasSkeleton = wrapper.findComponent({ name: 'VSkeletonLoader' }).exists()
-      expect(hasSkeleton).toBe(true)
+      // The report promise stays unresolved, so this polls until the
+      // skeleton has actually rendered rather than racing a single flush.
+      await vi.waitFor(
+        async () => {
+          await wrapper.vm.$nextTick()
+          const hasSkeleton = wrapper.findComponent({ name: 'VSkeletonLoader' }).exists()
+          expect(hasSkeleton).toBe(true)
+        },
+        { timeout: 5000, interval: 50 }
+      )
 
       resolveReport!({ summary: { sourceName: 'Test', personCount: 100 }, genderDistribution: [], ageDistribution: { categories: [], series: [] }, cumulativeObservation: { categories: [], series: [] }, observationByMonth: { categories: [], series: [] } })
       await fetchPromise

@@ -397,4 +397,51 @@ describe('ConceptSetService', () => {
       expect(result).toBe(false)
     })
   })
+
+  describe('expression requests carry the selected vocabulary source', () => {
+    const expressionUrl = () =>
+      mockFetch.mock.calls.map(call => String(call[0])).find(url => url.includes('/expression'))
+
+    it('appends the selected source key when reading a concept set', async () => {
+      localStorage.setItem('selectedVocabulary', 'ed0f253b-dfef-4202-b1d1-5b0ce9f7c9e0')
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: 1, name: 'CS' }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
+
+      await getConceptSetById(1)
+
+      expect(expressionUrl()).toContain(
+        '/conceptset/1/expression/ed0f253b-dfef-4202-b1d1-5b0ce9f7c9e0'
+      )
+    })
+
+    it('appends the selected source key when re-reading after a create with items', async () => {
+      localStorage.setItem('selectedVocabulary', 'created-source')
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: 3 }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: 3, name: 'CS' }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
+
+      await createConceptSet({
+        name: 'CS',
+        items: [{ conceptId: 1112807 }],
+      } as never)
+
+      expect(expressionUrl()).toContain('/conceptset/3/expression/created-source')
+    })
+
+    it('appends the selected source key when re-reading after an update', async () => {
+      localStorage.setItem('selectedVocabulary', 'demo-source')
+      mockFetch
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: 7 }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: 7, name: 'CS' }) })
+        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
+
+      await updateConceptSet({ id: 7, name: 'CS', items: [] } as never)
+
+      expect(expressionUrl()).toContain('/conceptset/7/expression/demo-source')
+    })
+  })
 })

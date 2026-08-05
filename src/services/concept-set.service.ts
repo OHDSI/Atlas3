@@ -15,6 +15,7 @@ import {
 } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
 import { getAppConfig } from '@/config/app-config.loader'
+import { getSourceKey } from '@/config/webapi'
 
 function getBaseUrl(): string {
   return getAppConfig().api.url
@@ -118,7 +119,7 @@ export async function getConceptSetById(
     // Fetch metadata and expression separately
     const [metadata, expression] = await Promise.all([
       fetchJSON<ConceptSetAPIMetadata>(`/conceptset/${id}`),
-      fetchJSON<ConceptSetAPIExpression>(`/conceptset/${id}/expression`),
+      fetchJSON<ConceptSetAPIExpression>(`/conceptset/${id}/expression/${getSourceKey()}`),
     ])
 
     // Combine metadata and expression
@@ -172,7 +173,7 @@ export async function createConceptSet(
 
       const [updatedMetadata, updatedExpression] = await Promise.all([
         fetchJSON<ConceptSetAPIMetadata>(`/conceptset/${data.id}`),
-        fetchJSON<ConceptSetAPIExpression>(`/conceptset/${data.id}/expression`),
+        fetchJSON<ConceptSetAPIExpression>(`/conceptset/${data.id}/expression/${getSourceKey()}`),
       ])
 
       return mapConceptSetFromAPI({
@@ -224,7 +225,9 @@ export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptS
 
     const [updatedMetadata, updatedExpression] = await Promise.all([
       fetchJSON<ConceptSetAPIMetadata>(`/conceptset/${conceptSet.id}`),
-      fetchJSON<ConceptSetAPIExpression>(`/conceptset/${conceptSet.id}/expression`),
+      fetchJSON<ConceptSetAPIExpression>(
+        `/conceptset/${conceptSet.id}/expression/${getSourceKey()}`
+      ),
     ])
 
     return mapConceptSetFromAPI({
