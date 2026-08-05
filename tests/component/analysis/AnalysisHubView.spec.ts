@@ -7,15 +7,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createMemoryHistory, createRouter, RouterView, type Router } from 'vue-router'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, computed } from 'vue'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { usePluginMounts } from '@/composables/usePluginMounts'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../helpers/i18n-mock')
   return mockUseI18n
 })
+
+vi.mock('@/composables/usePluginMounts', () => ({
+  usePluginMounts: vi.fn(() => ({ items: computed(() => []) })),
+}))
 
 // AnalysisHubView statically imports the four sub-views, which pull in
 // Pinia stores. The hub itself doesn't touch a store, so we stub the
@@ -54,6 +59,7 @@ function makeRouter(): Router {
           { path: 'feature-analyses', name: 'feature-analyses', component: childStub('fa') },
           { path: 'pathways', name: 'pathways', component: childStub('pw') },
           { path: 'incidence-rates', name: 'incidence-rates', component: childStub('ir') },
+          { path: 'x/:pluginId/:itemId', name: 'analysis-plugin', component: AnalysisHubView },
         ],
       },
     ],
@@ -67,6 +73,17 @@ describe('AnalysisHubView', () => {
     vuetify = createVuetify({ components, directives })
     localStorage.clear()
   })
+
+  function factory(router: Router) {
+    return mount(RootHost, {
+      global: {
+        plugins: [router, vuetify],
+        stubs: {
+          PluginParcelOutlet: { template: '<div data-testid="analysis-plugin-outlet" />' },
+        },
+      },
+    })
+  }
 
   it('renders four tabs with the expected labels', async () => {
     const router = makeRouter()
@@ -115,5 +132,79 @@ describe('AnalysisHubView', () => {
     await router.push('/analysis/incidence-rates')
     await flushPromises()
     expect(localStorage.getItem('atlas3.analysis.lastTab')).toBe('incidence-rates')
+  })
+
+  it('renders a plugin tab and mounts its outlet when active', async () => {
+    vi.mocked(usePluginMounts).mockReturnValue({
+      items: computed(() => [
+        {
+          key: 'plugin:p1:my-tab',
+          pluginId: 'p1',
+          itemId: 'my-tab',
+          surface: 'analysis-tabs' as const,
+          name: 'My Tab',
+          icon: 'mdi-puzzle-outline',
+          order: 10,
+          visible: true,
+        },
+      ]),
+    })
+
+    const router = makeRouter()
+    await router.push({ name: 'analysis-plugin', params: { pluginId: 'p1', itemId: 'my-tab' } })
+    await router.isReady()
+    const wrapper = factory(router)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('My Tab')
+    expect(wrapper.find('[data-testid="analysis-plugin-outlet"]').exists()).toBe(true)
+  })
+
+  it('shows a plugin tab label and hint as literals, not translations', async () => {
+    // 'common.cancel' and 'common.close' are real i18n keys whose translated
+    // values ('Cancel', 'Close') differ from the raw key text. If the
+    // plugin-literal bypass in getLabel/activeTabHint were ever removed,
+    // these would render as 'Cancel'/'Close' instead of the raw name/hint.
+    vi.mocked(usePluginMounts).mockReturnValue({
+      items: computed(() => [
+        {
+          key: 'plugin:p3:literal-tab',
+          pluginId: 'p3',
+          itemId: 'literal-tab',
+          surface: 'analysis-tabs' as const,
+          name: 'common.cancel',
+          hint: 'common.close',
+          icon: 'mdi-puzzle-outline',
+          order: 10,
+          visible: true,
+        },
+      ]),
+    })
+
+    const router = makeRouter()
+    await router.push({ name: 'analysis-plugin', params: { pluginId: 'p3', itemId: 'literal-tab' } })
+    await router.isReady()
+    const wrapper = factory(router)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('common.cancel')
+    expect(wrapper.text()).not.toContain('Cancel')
+    expect(wrapper.text()).toContain('common.close')
+    expect(wrapper.text()).not.toContain('Close')
+  })
+
+  it('falls back to feature-analyses when the URL names a plugin tab that is not registered', async () => {
+    vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
+
+    const router = makeRouter()
+    await router.push({ name: 'analysis-plugin', params: { pluginId: 'ghost', itemId: 'gone' } })
+    await router.isReady()
+    const wrapper = factory(router)
+    await flushPromises()
+
+    const active = wrapper.find('.v-tab--selected')
+    expect(active.exists()).toBe(true)
+    expect(active.text()).toContain('Feature Analyses')
+    expect(wrapper.find('.child-fa').exists()).toBe(true)
   })
 })

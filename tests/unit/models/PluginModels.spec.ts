@@ -12,6 +12,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   MenuItemConfigurationSchema,
+  PluginMountPointSchema,
   PluginRegistrationSchema,
   PluginManifestSchema,
   DEFAULT_MANIFEST_SETTINGS,
@@ -1620,6 +1621,126 @@ describe('PluginModels', () => {
       }
 
       const result = PluginManifestSchema.safeParse(manifest)
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('PluginMountPointSchema', () => {
+    it('accepts a minimal mount point', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'my-report',
+        surface: 'datasource-sidebar',
+        name: 'My Report',
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('accepts every documented optional field', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'audit',
+        surface: 'admin-tabs',
+        name: 'Audit',
+        icon: 'mdi-shield',
+        path: 'audit',
+        group: 'Custom',
+        hint: 'Recent admin actions',
+        order: 50,
+        insertBefore: 'person',
+        insertAfter: 'datadensity',
+        requiredPermissions: ['admin:security'],
+        visible: true,
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('rejects an unknown surface', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'x',
+        surface: 'nowhere',
+        name: 'X',
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects an id with invalid characters', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'My Report!',
+        surface: 'analysis-tabs',
+        name: 'X',
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects surface "main-nav" (top-level nav must go through menuItems, which are route-validated)', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'sneaky',
+        surface: 'main-nav',
+        name: 'Sneaky',
+        path: 'somewhere',
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects a path with a leading slash', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'x',
+        surface: 'account-menu',
+        name: 'X',
+        path: '/profile',
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects a path containing a ".." segment', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'x',
+        surface: 'account-menu',
+        name: 'X',
+        path: '../../admin',
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects a path with a URL scheme', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'x',
+        surface: 'account-menu',
+        name: 'X',
+        path: 'https://evil.example.com',
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it('accepts a plain relative path', () => {
+      const result = PluginMountPointSchema.safeParse({
+        id: 'x',
+        surface: 'account-menu',
+        name: 'X',
+        path: 'settings/profile',
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('allows a registration with no mountPoints', () => {
+      const result = PluginRegistrationSchema.safeParse({
+        id: 'p1',
+        name: 'P1',
+        version: '1.0.0',
+        entryPoint: 'p1/index.system.js',
+        menuItems: [],
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('parses mountPoints on a registration', () => {
+      const result = PluginRegistrationSchema.safeParse({
+        id: 'p1',
+        name: 'P1',
+        version: '1.0.0',
+        entryPoint: 'p1/index.system.js',
+        menuItems: [],
+        mountPoints: [{ id: 'a', surface: 'account-menu', name: 'A', path: 'a' }],
+      })
       expect(result.success).toBe(true)
     })
   })

@@ -21,6 +21,13 @@ export interface PluginProps {
     request: <T>(type: string, payload: unknown) => Promise<T>;
     subscribe: (type: string, callback: (data: unknown) => void) => () => void;
   };
+  hostContext?: {
+    surface: string;
+    itemId: string;
+    locale: string;
+    permissions: string[];
+    sourceKey?: string;
+  };
 }
 
 const vueLifecycles = singleSpaVue({
@@ -31,6 +38,7 @@ const vueLifecycles = singleSpaVue({
         name: (this as PluginProps).name,
         authContext: (this as PluginProps).authContext,
         messageBus: (this as PluginProps).messageBus,
+        hostContext: (this as PluginProps).hostContext,
       });
     },
   },
@@ -43,3 +51,4 @@ const vueLifecycles = singleSpaVue({
 export const bootstrap = vueLifecycles.bootstrap;
 export const mount = vueLifecycles.mount;
 export const unmount = vueLifecycles.unmount;
+export const update = vueLifecycles.update;

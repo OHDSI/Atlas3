@@ -1,4 +1,6 @@
 import { pluginRegistry } from '../core/PluginRegistry'
+import { getMountItems } from './PluginMountPoints'
+import type { MenuItemConfiguration } from '@/models/PluginModels'
 
 export interface PluginMenuItem {
   id: string
@@ -18,34 +20,29 @@ export interface PluginMenuItem {
 }
 
 export function generatePluginMenuItems(): PluginMenuItem[] {
-  const plugins = pluginRegistry.getAllPlugins()
-  const menuItems: PluginMenuItem[] = []
-
-  for (const plugin of plugins) {
-    // Skip plugins in error state
-    if (plugin.state === 'error') continue
-
-    for (const menuItem of plugin.registration.menuItems) {
-      menuItems.push({
-        id: `${plugin.registration.id}-${menuItem.id}`,
-        pluginId: plugin.registration.id,
-        name: menuItem.name,
-        route: menuItem.route,
-        icon: menuItem.icon,
-        order: menuItem.order ?? 999,
-        parentId: menuItem.parentId ? `${plugin.registration.id}-${menuItem.parentId}` : undefined,
-        insertBefore: menuItem.insertBefore,
-        insertAfter: menuItem.insertAfter,
-        visible: menuItem.visible ?? true,
-        badge: menuItem.badge,
-      })
+  const badges = new Map<string, MenuItemConfiguration['badge']>()
+  const parentIds = new Map<string, string>()
+  for (const plugin of pluginRegistry.getAllPlugins()) {
+    for (const item of plugin.registration.menuItems ?? []) {
+      const key = `${plugin.registration.id}:${item.id}`
+      if (item.badge) badges.set(key, item.badge)
+      if (item.parentId) parentIds.set(key, `${plugin.registration.id}-${item.parentId}`)
     }
   }
 
-  // Sort by order
-  menuItems.sort((a, b) => a.order - b.order)
-
-  return menuItems
+  return getMountItems('main-nav', undefined, { includeHidden: true }).map(item => ({
+    id: `${item.pluginId}-${item.itemId}`,
+    pluginId: item.pluginId,
+    name: item.name,
+    route: item.path ?? '',
+    icon: item.icon,
+    order: item.order,
+    parentId: parentIds.get(`${item.pluginId}:${item.itemId}`),
+    insertBefore: item.insertBefore,
+    insertAfter: item.insertAfter,
+    visible: item.visible,
+    badge: badges.get(`${item.pluginId}:${item.itemId}`),
+  }))
 }
 
 export function shouldUseVirtualScrolling(itemCount: number): boolean {
