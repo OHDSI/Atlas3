@@ -201,11 +201,30 @@ const isOpen = computed({
   },
 })
 
+// Fallback target for a stale `plugin:x:y` section (e.g. the plugin was
+// unregistered while the drawer was closed): the first section this user can
+// actually see, in the same order the tab strip renders them. Landing on
+// 'cache' unconditionally would trade one blank pane for another if the user
+// lacks admin:cache; falling through core tabs before plugin tabs keeps the
+// choice meaningful, and if nothing is visible the no-access alert takes over
+// regardless of which value we return here.
+const fallbackSection = computed<ConfigPanelSection>(() => {
+  if (canSeeCache.value) return 'cache'
+  if (canSeeSources.value) return 'sources'
+  if (canSeeTags.value) return 'tags'
+  if (canSeePermissions.value) return 'permissions'
+  return (pluginTabs.value[0]?.key as ConfigPanelSection | undefined) ?? 'cache'
+})
+
 const activeSection = computed({
-  get: () =>
-    uiStore.configPanelState.activeSection === 'vocabulary'
-      ? 'sources'
-      : uiStore.configPanelState.activeSection,
+  get: () => {
+    const stored = uiStore.configPanelState.activeSection
+    if (stored === 'vocabulary') return 'sources'
+    if (stored.startsWith('plugin:') && !pluginTabs.value.some(tab => tab.key === stored)) {
+      return fallbackSection.value
+    }
+    return stored
+  },
   set: (value: ConfigPanelSection) => {
     // Map 'sources' to 'vocabulary' for the store
     const storeValue = value === 'sources' ? 'vocabulary' : value

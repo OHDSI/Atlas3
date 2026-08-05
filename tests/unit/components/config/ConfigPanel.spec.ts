@@ -13,6 +13,7 @@ import * as directives from 'vuetify/directives'
 import { computed } from 'vue'
 import ConfigPanel from '@/components/config/ConfigPanel.vue'
 import { useUIStore } from '@/stores/ui'
+import { useAuthStore } from '@/stores/auth'
 import { usePluginMounts } from '@/composables/usePluginMounts'
 import CacheManagementSection from '@/components/config/CacheManagementSection.vue'
 import DataSourcesSection from '@/components/config/DataSourcesSection.vue'
@@ -472,5 +473,48 @@ describe('ConfigPanel plugin admin tabs', () => {
     })
 
     expect(wrapper.text()).toContain("You don't have access to any administrative settings.")
+  })
+
+  it('falls back to a visible section when the stored section belongs to a since-removed plugin tab', () => {
+    withPluginTab()
+    useAuthStore().setUser({
+      login: 'tester',
+      displayName: 'tester',
+      permissionIdx: { admin: ['admin:tags'] },
+    })
+
+    const wrapper = mountConfigPanel({
+      global: {
+        stubs: {
+          PluginParcelOutlet: true,
+          CacheManagementSection: true,
+          DataSourcesSection: true,
+          TagManagementSection: true,
+          PermissionsSection: true,
+        },
+      },
+    })
+    useUIStore().setConfigPanelSection('plugin:p1:audit')
+    wrapper.unmount()
+
+    // Simulate the plugin having been unregistered while the drawer was
+    // closed: the store still holds the stale `plugin:p1:audit` key, but
+    // usePluginMounts no longer resolves it to a tab.
+    vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
+
+    const reopened = mountConfigPanel({
+      global: {
+        stubs: {
+          PluginParcelOutlet: true,
+          CacheManagementSection: true,
+          DataSourcesSection: true,
+          TagManagementSection: true,
+          PermissionsSection: true,
+        },
+      },
+    })
+
+    expect(reopened.text()).not.toContain("You don't have access to any administrative settings.")
+    expect(reopened.findComponent({ name: 'TagManagementSection' }).exists()).toBe(true)
   })
 })
