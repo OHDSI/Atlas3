@@ -2,7 +2,7 @@
  * Vitest Test Setup
  * Configures global test environment for Vue components with Vuetify
  */
-import { vi } from 'vitest'
+import { afterEach, vi } from 'vitest'
 
 // Capture the real Blob constructor before any test file replaces it. Some
 // test files mock `global.Blob` in beforeEach without restoring it, which
@@ -105,6 +105,52 @@ if (typeof window !== 'undefined') {
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
     },
+  })
+
+  // Some components (e.g. Vuetify's VSnackbar auto-close timer) schedule a
+  // real setTimeout/setInterval without clearing it on unmount. If that
+  // callback fires after jsdom's `window` has been torn down for the test
+  // file, it throws "window is not defined" as an unhandled rejection and
+  // fails the run even though every test passed. Track outstanding timers
+  // and force-clear them after each test so nothing survives past teardown.
+  const pendingTimers = new Set<ReturnType<typeof window.setTimeout>>()
+  const pendingIntervals = new Set<ReturnType<typeof window.setInterval>>()
+  const realSetTimeout = window.setTimeout.bind(window)
+  const realClearTimeout = window.clearTimeout.bind(window)
+  const realSetInterval = window.setInterval.bind(window)
+  const realClearInterval = window.clearInterval.bind(window)
+
+  window.setTimeout = ((...args: Parameters<typeof window.setTimeout>) => {
+    const id = realSetTimeout(...args)
+    pendingTimers.add(id)
+    return id
+  }) as typeof window.setTimeout
+  global.setTimeout = window.setTimeout as typeof global.setTimeout
+
+  window.clearTimeout = ((id?: Parameters<typeof window.clearTimeout>[0]) => {
+    if (id !== undefined) pendingTimers.delete(id as ReturnType<typeof window.setTimeout>)
+    return realClearTimeout(id)
+  }) as typeof window.clearTimeout
+  global.clearTimeout = window.clearTimeout as typeof global.clearTimeout
+
+  window.setInterval = ((...args: Parameters<typeof window.setInterval>) => {
+    const id = realSetInterval(...args)
+    pendingIntervals.add(id)
+    return id
+  }) as typeof window.setInterval
+  global.setInterval = window.setInterval as typeof global.setInterval
+
+  window.clearInterval = ((id?: Parameters<typeof window.clearInterval>[0]) => {
+    if (id !== undefined) pendingIntervals.delete(id as ReturnType<typeof window.setInterval>)
+    return realClearInterval(id)
+  }) as typeof window.clearInterval
+  global.clearInterval = window.clearInterval as typeof global.clearInterval
+
+  afterEach(() => {
+    pendingTimers.forEach(id => realClearTimeout(id))
+    pendingTimers.clear()
+    pendingIntervals.forEach(id => realClearInterval(id))
+    pendingIntervals.clear()
   })
 }
 
