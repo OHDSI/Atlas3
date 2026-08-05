@@ -180,6 +180,7 @@ import { computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'
+import { usePluginMounts } from '@/composables/usePluginMounts'
 import { logger } from '@/utils/logger'
 import { REPORT_TYPE_LABELS, isPluginReportType, parsePluginReportType, type AnyReportType, type ReportType } from '@/models/datasource.types'
 import { AtlasAlert, AtlasButton, AtlasCard, AtlasIcon, AtlasPageShell, AtlasSkeleton } from '@/components/ui'
@@ -215,9 +216,16 @@ const reportTypeLabel = computed(() => {
   return REPORT_TYPE_LABELS[store.selectedReportType]
 })
 
+const { items: pluginSidebarItems } = usePluginMounts('datasource-sidebar')
+
+// The sidebar item list is already permission-filtered by usePluginMounts;
+// re-checking membership here (rather than trusting the URL-derived type)
+// keeps a hand-typed or deep-linked plugin: key from mounting a parcel the
+// user isn't allowed to see, and from mounting an unregistered plugin at all.
 const pluginReport = computed(() => {
   const type = store.selectedReportType
   if (!type || !isPluginReportType(type)) return null
+  if (!pluginSidebarItems.value.some(item => item.key === type)) return null
   return parsePluginReportType(type)
 })
 

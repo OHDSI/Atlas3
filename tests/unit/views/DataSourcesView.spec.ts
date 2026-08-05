@@ -6,10 +6,11 @@ import { mount, VueWrapper, flushPromises } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'
 import DataSourcesView from '@/views/DataSourcesView.vue'
 import { useDataSourcesStore } from '@/stores/datasources'
+import { usePluginMounts } from '@/composables/usePluginMounts'
 import { createMockDataSource } from '@/../tests/helpers/mock-factories'
 import type { DashboardReport } from '@/models/datasource.types'
 
@@ -130,6 +131,10 @@ vi.mock('@/plugins/components/PluginParcelOutlet.vue', () => ({
   },
 }))
 
+vi.mock('@/composables/usePluginMounts', () => ({
+  usePluginMounts: vi.fn(() => ({ items: computed(() => []) })),
+}))
+
 const vuetify = createVuetify({ components, directives })
 
 function mountComponent(props = {}, options = {}) {
@@ -150,6 +155,9 @@ describe('DataSourcesView', () => {
     setActivePinia(createPinia())
     store = useDataSourcesStore()
     vi.clearAllMocks()
+    // vi.clearAllMocks() clears call history but not a prior mockReturnValue(),
+    // so restore the no-plugin-items default explicitly for test order-independence.
+    vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
     mockRoute.params = {}
     mockListDataSources.mockResolvedValue([])
   })
@@ -533,7 +541,20 @@ describe('DataSourcesView', () => {
     })
   })
 
-  it('renders the plugin outlet for a plugin report type', async () => {
+  it('renders the plugin outlet for a plugin report type that is present in the resolved sidebar items', async () => {
+    vi.mocked(usePluginMounts).mockReturnValue({
+      items: computed(() => [
+        {
+          key: 'plugin:p1:my-report',
+          pluginId: 'p1',
+          itemId: 'my-report',
+          surface: 'datasource-sidebar' as const,
+          name: 'My Report',
+          order: 10,
+          visible: true,
+        },
+      ]),
+    })
     const mockSource = createMockDataSource({ sourceId: 1, sourceName: 'S', sourceKey: 'SYNPUF' })
     mockListDataSources.mockResolvedValue([mockSource])
 
@@ -545,5 +566,23 @@ describe('DataSourcesView', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.find('[data-testid="datasource-plugin-outlet"]').exists()).toBe(true)
+  })
+
+  it('does not render the plugin outlet when the report type key is absent from the resolved sidebar items', async () => {
+    // usePluginMounts already filters unregistered plugins and permission-gated
+    // items out of the sidebar item list; the view must not trust the URL/store
+    // value on its own or a hand-typed/deep-linked key would mount a parcel for
+    // a plugin the user cannot see (or that no longer exists).
+    const mockSource = createMockDataSource({ sourceId: 1, sourceName: 'S', sourceKey: 'SYNPUF' })
+    mockListDataSources.mockResolvedValue([mockSource])
+
+    wrapper = mountComponent()
+    await flushPromises()
+
+    store.selectedSourceId = 1
+    store.selectedReportType = 'plugin:gone:x'
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-testid="datasource-plugin-outlet"]').exists()).toBe(false)
   })
 })
