@@ -2,6 +2,27 @@
   "version": "1.0",
   "plugins": [
     {
+      "id": "hello-world-plugin",
+      "name": "Hello World",
+      "version": "1.0.0",
+      "entryPoint": "hello-world-plugin/index.system.js",
+      "menuItems": [],
+      "mountPoints": [
+        {
+          "id": "hello-report",
+          "surface": "datasource-sidebar",
+          "name": "Hello Report",
+          "icon": "mdi-hand-wave",
+          "group": "Custom",
+          "order": 10
+        }
+      ],
+      "metadata": {
+        "author": "Atlas Team",
+        "description": "Hello World plugin demonstrating the Atlas plugin framework"
+      }
+    },
+    {
       "id": "pythia-plugin",
       "name": "Pythia",
       "version": "0.1.0",

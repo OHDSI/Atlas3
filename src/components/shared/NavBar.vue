@@ -150,6 +150,7 @@
           v-bind="{ ariaLabel: t('config.accessibility.openPanel', 'Open configuration panel').value }"
           variant="text"
           size="sm"
+          data-testid="nav-config"
           @click="handleConfigClick"
         />
 
@@ -185,6 +186,20 @@
               </AtlasButton>
             </template>
             <AtlasList>
+              <AtlasListItem
+                v-for="item in accountMenuItems"
+                :key="item.key"
+                :data-testid="`account-menu-${item.key}`"
+                @click="handleAccountItemClick(item)"
+              >
+                <template #prepend>
+                  <AtlasIcon>{{ item.icon ?? 'mdi-puzzle-outline' }}</AtlasIcon>
+                </template>
+                <v-list-item-title>
+                  {{ item.name }}
+                </v-list-item-title>
+              </AtlasListItem>
+              <AtlasDivider v-if="accountMenuItems.length" />
               <AtlasListItem @click="handleLogout">
                 <template #prepend>
                   <AtlasIcon>mdi-logout</AtlasIcon>
@@ -205,13 +220,14 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
 import { usePermissions } from '@/composables/usePermissions'
 import { useUIStore } from '@/stores/ui'
+import { usePluginMounts } from '@/composables/usePluginMounts'
 import { getAuthConfig } from '@/config/auth.config'
 import {
   generatePluginMenuItems,
@@ -240,12 +256,18 @@ const { t } = useI18n()
 const { hasAnyPermission } = usePermissions()
 const uiStore = useUIStore()
 
+const { items: adminTabMounts } = usePluginMounts('admin-tabs')
+const { items: accountMenuItems } = usePluginMounts('account-menu')
+
 // Hide the cog icon entirely for users without any admin permission. Mirrors
 // the per-tab gating in ConfigPanel — if every section would be hidden, the
 // entry point shouldn't be visible at all. Jobs now has its own nav entry
-// (hasJobsAccess) and is no longer gating the cog.
-const hasAnyAdminAccess = computed(() =>
-  hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security'])
+// (hasJobsAccess) and is no longer gating the cog. Plugin-contributed admin
+// tabs also keep the cog visible, even with no core admin permission.
+const hasAnyAdminAccess = computed(
+  () =>
+    hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security']) ||
+    adminTabMounts.value.length > 0
 )
 const hasJobsAccess = computed(() => hasAnyPermission(['job:execution:get']))
 
@@ -363,6 +385,11 @@ const handleNavClick = async (item: NavigationItem) => {
     navItem.active = navItem.id === item.id
   })
   router.push(item.route)
+}
+
+function handleAccountItemClick(item: { pluginId: string; path?: string }) {
+  const suffix = item.path ?? ''
+  router.push(`/plugins/${item.pluginId}/${suffix}`.replace(/\/+$/, ''))
 }
 
 async function handleLogout() {

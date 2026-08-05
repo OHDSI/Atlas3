@@ -115,6 +115,23 @@ export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
   death: 'Death',
 }
 
+export type PluginReportType = `plugin:${string}:${string}`
+
+export type AnyReportType = ReportType | PluginReportType
+
+export function isPluginReportType(value: string): value is PluginReportType {
+  const parts = value.split(':')
+  return parts.length === 3 && parts[0] === 'plugin' && !!parts[1] && !!parts[2]
+}
+
+export function parsePluginReportType(value: PluginReportType): {
+  pluginId: string
+  itemId: string
+} {
+  const [, pluginId, itemId] = value.split(':')
+  return { pluginId: pluginId!, itemId: itemId! }
+}
+
 // Chart Data Types
 
 export interface PieChartData {

@@ -3,7 +3,8 @@
  */
 import { defineStore } from 'pinia'
 import { ref, computed, triggerRef } from 'vue'
-import type { DataSource, ReportType, ReportData } from '@/models/datasource.types'
+import type { DataSource, ReportData } from '@/models/datasource.types'
+import { isPluginReportType, type AnyReportType, type ReportType } from '@/models/datasource.types'
 import {
   listDataSources,
   getDashboardReport,
@@ -15,7 +16,7 @@ export const useDataSourcesStore = defineStore('datasources', () => {
   // State
   const sources = ref<DataSource[]>([])
   const selectedSourceId = ref<number | null>(null)
-  const selectedReportType = ref<ReportType | null>(null)
+  const selectedReportType = ref<AnyReportType | null>(null)
   const reportCache = ref<Map<string, ReportData>>(new Map())
 
   const loading = ref({
@@ -80,15 +81,23 @@ export const useDataSourcesStore = defineStore('datasources', () => {
     selectedSourceId.value = sourceId
 
     // If a report type is selected, fetch the report for the new source
-    if (selectedReportType.value) {
+    if (selectedReportType.value && !isPluginReportType(selectedReportType.value)) {
       await fetchReport(selectedReportType.value)
+    } else if (selectedReportType.value && isPluginReportType(selectedReportType.value)) {
+      error.value.report = null
     }
   }
 
-  async function selectReportType(reportType: ReportType) {
+  async function selectReportType(reportType: AnyReportType) {
     selectedReportType.value = reportType
 
-    // Fetch report if source is selected
+    // Plugin surfaces fetch their own data inside the parcel; there is no
+    // WebAPI report endpoint behind a plugin report type.
+    if (isPluginReportType(reportType)) {
+      error.value.report = null
+      return
+    }
+
     if (selectedSourceId.value) {
       await fetchReport(reportType)
     }
@@ -185,7 +194,7 @@ export const useDataSourcesStore = defineStore('datasources', () => {
   }
 
   function retryFetchReport() {
-    if (selectedReportType.value) {
+    if (selectedReportType.value && !isPluginReportType(selectedReportType.value)) {
       return fetchReport(selectedReportType.value)
     }
   }

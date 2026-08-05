@@ -114,6 +114,12 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/IncidenceRatesView.vue'),
         meta: { requiresAuth: true, titleKey: 'route.incidenceRates.title', agentVisible: true, agentLabel: 'Incidence rates' },
       },
+      {
+        path: 'x/:pluginId/:itemId',
+        name: 'analysis-plugin',
+        component: () => import('@/views/AnalysisHubView.vue'),
+        meta: { requiresAuth: true, titleKey: 'route.analysis.title', agentVisible: false },
+      },
     ],
   },
   // Route aliases: keep legacy list URLs mapped to Analysis Hub child routes.

@@ -4,7 +4,7 @@
  */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { ConfigPanelState } from '@/models/config.types'
+import type { ConfigPanelSection, ConfigPanelState } from '@/models/config.types'
 
 export const useUIStore = defineStore('ui', () => {
   // State
@@ -82,9 +82,7 @@ export const useUIStore = defineStore('ui', () => {
     configPanelState.value.isOpen = false
   }
 
-  function setConfigPanelSection(
-    section: 'cache' | 'vocabulary' | 'tags' | 'permissions' | 'jobs'
-  ) {
+  function setConfigPanelSection(section: ConfigPanelSection) {
     configPanelState.value.activeSection = section
   }
 

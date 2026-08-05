@@ -610,6 +610,12 @@ describe('Vue Router', () => {
 
       expect(route.params.id).toBe('abc')
     })
+
+    it('resolves the analysis plugin tab route', () => {
+      const resolved = router.resolve('/analysis/x/p1/my-tab')
+      expect(resolved.name).toBe('analysis-plugin')
+      expect(resolved.params).toEqual({ pluginId: 'p1', itemId: 'my-tab' })
+    })
   })
 
   describe('History Mode', () => {

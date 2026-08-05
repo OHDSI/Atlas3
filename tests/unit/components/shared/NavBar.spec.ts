@@ -2,13 +2,15 @@
  * NavBar Component Tests
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount, flushPromises } from '@vue/test-utils'
+import { mount, flushPromises, DOMWrapper } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import NavBar from '@/components/shared/NavBar.vue'
 import { generatePluginMenuItems } from '@/plugins/navigation/PluginMenuIntegration.ts'
+import { usePermissions } from '@/composables/usePermissions'
+import { usePluginMounts } from '@/composables/usePluginMounts'
 
 // Mock vue-router
 const mockPush = vi.fn()
@@ -27,27 +29,34 @@ vi.mock('vue-router', () => ({
 // Mock composables
 const mockLogout = vi.fn()
 const mockOpenLoginModal = vi.fn()
+const mockIsAuthenticated = ref(false)
 
 vi.mock('@/composables/useAuth', () => ({
   useAuth: () => ({
-    isAuthenticated: ref(false),
+    isAuthenticated: mockIsAuthenticated,
     userDisplayName: ref('Test User'),
     logout: mockLogout,
     openLoginModal: mockOpenLoginModal
   })
 }))
 
+const mockPermissions = {
+  hasPermission: () => true,
+  hasAnyPermission: () => true,
+  hasAllPermissions: () => true,
+  cacheHitRate: ref(0),
+  clearCache: vi.fn(),
+}
+
 // usePermissions reads from the auth store, which isn't initialised in this
-// suite; mock it to behave as an admin so the existing config-button
-// assertions keep passing.
+// suite; default it to admin so the existing config-button assertions keep
+// passing, and let individual tests override it.
 vi.mock('@/composables/usePermissions', () => ({
-  usePermissions: () => ({
-    hasPermission: () => true,
-    hasAnyPermission: () => true,
-    hasAllPermissions: () => true,
-    cacheHitRate: ref(0),
-    clearCache: vi.fn(),
-  }),
+  usePermissions: vi.fn(() => mockPermissions),
+}))
+
+vi.mock('@/composables/usePluginMounts', () => ({
+  usePluginMounts: vi.fn(() => ({ items: computed(() => []) })),
 }))
 
 vi.mock('@/composables/useI18n', () => ({
@@ -131,16 +140,20 @@ vi.mock('@/components/LanguageSelector.vue', () => ({
 
 const vuetify = createVuetify({ components, directives })
 
+const mountOptions = {
+  global: {
+    plugins: [vuetify],
+    stubs: {
+      LoginModal: true,
+      LanguageSelector: true,
+      NotificationInbox: true
+    }
+  }
+}
+
 function mountComponent(options = {}) {
   return mount(NavBar, {
-    global: {
-      plugins: [vuetify],
-      stubs: {
-        LoginModal: true,
-        LanguageSelector: true,
-        NotificationInbox: true
-      }
-    },
+    ...mountOptions,
     ...options
   })
 }
@@ -148,7 +161,10 @@ function mountComponent(options = {}) {
 describe('NavBar', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockIsAuthenticated.value = false
     vi.mocked(generatePluginMenuItems).mockReturnValue([])
+    vi.mocked(usePermissions).mockReturnValue(mockPermissions)
+    vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
   })
 
   describe('Component Rendering', () => {
@@ -427,6 +443,100 @@ describe('NavBar', () => {
       const wrapper = mountComponent()
       expect(wrapper.find('.d-none.d-md-flex').exists()).toBe(true)
       expect(wrapper.find('.d-md-none').exists()).toBe(true)
+    })
+  })
+
+  describe('Plugin admin tabs', () => {
+    it('shows the config cog when a plugin supplies the only admin tab', async () => {
+      vi.mocked(usePermissions).mockReturnValue({
+        hasPermission: () => false,
+        hasAnyPermission: () => false,
+        hasAllPermissions: () => false,
+        cacheHitRate: ref(0),
+        clearCache: vi.fn(),
+      })
+      vi.mocked(usePluginMounts).mockReturnValue({
+        items: computed(() => [
+          {
+            key: 'plugin:p1:audit',
+            pluginId: 'p1',
+            itemId: 'audit',
+            surface: 'admin-tabs' as const,
+            name: 'Audit',
+            order: 10,
+            visible: true,
+          },
+        ]),
+      })
+
+      const wrapper = mount(NavBar, mountOptions)
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="nav-config"]').exists()).toBe(true)
+    })
+
+    it('hides the config cog with no permissions and no plugin tabs', async () => {
+      vi.mocked(usePermissions).mockReturnValue({
+        hasPermission: () => false,
+        hasAnyPermission: () => false,
+        hasAllPermissions: () => false,
+        cacheHitRate: ref(0),
+        clearCache: vi.fn(),
+      })
+
+      const wrapper = mount(NavBar, mountOptions)
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="nav-config"]').exists()).toBe(false)
+    })
+  })
+
+  describe('Plugin account menu', () => {
+    it('renders plugin account menu items above sign out', async () => {
+      mockIsAuthenticated.value = true
+      vi.mocked(usePluginMounts).mockImplementation((surface: string) => ({
+        items: computed(() =>
+          surface === 'account-menu'
+            ? [
+                {
+                  key: 'plugin:p1:profile',
+                  pluginId: 'p1',
+                  itemId: 'profile',
+                  surface: 'account-menu' as const,
+                  name: 'My Profile',
+                  path: 'profile',
+                  icon: 'mdi-account',
+                  order: 10,
+                  visible: true,
+                },
+              ]
+            : []
+        ),
+      }))
+
+      const wrapper = mount(NavBar, mountOptions)
+      await flushPromises()
+      await wrapper.find('.nav-bar__user button').trigger('click')
+      await flushPromises()
+
+      const body = new DOMWrapper(document.body)
+      const item = body.find('[data-testid="account-menu-plugin:p1:profile"]')
+      expect(item.exists()).toBe(true)
+
+      await item.trigger('click')
+      expect(mockPush).toHaveBeenCalledWith('/plugins/p1/profile')
+    })
+
+    it('does not render a divider when there are no plugin account items', async () => {
+      mockIsAuthenticated.value = true
+
+      const wrapper = mount(NavBar, mountOptions)
+      await flushPromises()
+      await wrapper.find('.nav-bar__user button').trigger('click')
+      await flushPromises()
+
+      const body = new DOMWrapper(document.body)
+      expect(body.find('.v-divider').exists()).toBe(false)
     })
   })
 })
