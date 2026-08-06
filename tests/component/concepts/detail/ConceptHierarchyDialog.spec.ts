@@ -127,6 +127,22 @@ describe('ConceptHierarchyDialog', () => {
     )
   })
 
+  it('orders ancestors most-distant first so the chain reads down into the anchor', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const order = [...document.querySelectorAll('[data-ancestor-row]')].map(row =>
+      row.getAttribute('data-testid')
+    )
+
+    // 257907 "Disorder of lung" is the fixture's only distance-2 ancestor, so it
+    // must lead, with the two distance-1 parents settling next to the anchor.
+    expect(order[0]).toBe('hierarchy-row-257907')
+    expect(order.slice(1)).toEqual(
+      expect.arrayContaining(['hierarchy-row-253506', 'hierarchy-row-4318404'])
+    )
+  })
+
   it('loads record counts for the rows visible on open, before any expansion', async () => {
     (getConceptRecordCounts as Mock).mockResolvedValue(
       new Map([

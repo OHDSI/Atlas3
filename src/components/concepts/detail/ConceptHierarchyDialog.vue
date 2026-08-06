@@ -51,7 +51,9 @@ const ancestors = computed<AncestorRow[]>(() =>
         .map(r => r.relationshipDistance)
       return distances.length > 0 ? [{ concept, distance: Math.min(...distances) }] : []
     })
-    .sort((a, b) => a.distance - b.distance)
+    // Ancestors render above the anchor, so the chain has to read downwards:
+    // most distant first, direct parents last and adjacent to the anchor row.
+    .sort((a, b) => b.distance - a.distance)
 )
 
 const descendants = computed(() =>
