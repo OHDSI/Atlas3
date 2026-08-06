@@ -6,6 +6,7 @@ import { createApp, watch } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router'
 import { createVuetifyInstance } from './plugins/vuetify'
+import { setChartPalette } from './ui/chart-config'
 import { pluginConfigService } from './services/PluginConfigService'
 import App from './App.vue'
 import { setupAuthInterceptor } from './services/auth/authInterceptor'
@@ -93,6 +94,22 @@ async function initializeApp() {
     primaryColor = pluginConfigService.getPrimaryColor()
     if (primaryColor) {
       logger.info('Main', 'Using custom primary color from plugins.json:', primaryColor)
+    }
+
+    // Accent lives in CSS (--atlas-color-accent), not the Vuetify theme, so set it
+    // on the root element where it wins over the :root defaults in tokens.css.
+    const accentColor = pluginConfigService.getAccentColor()
+    if (accentColor) {
+      document.documentElement.style.setProperty('--atlas-color-accent', accentColor)
+      logger.info('Main', 'Using custom accent color from plugins.json:', accentColor)
+    }
+
+    // Applied before the app mounts, so the first chart already renders branded.
+    const chartColors = pluginConfigService.getChartColors()
+    const treemapGradient = pluginConfigService.getTreemapGradient()
+    if (chartColors || treemapGradient) {
+      setChartPalette({ chartColors, treemapGradient })
+      logger.info('Main', 'Using custom chart palette from plugins.json')
     }
   } catch (error) {
     logger.warn('Main', 'Failed to load plugin config for theme, using defaults:', error)
