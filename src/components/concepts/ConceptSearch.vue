@@ -54,8 +54,17 @@
       @clear="store.clearFacets()"
     />
 
+    <ConceptAddOptions
+      v-if="!store.isEmpty"
+      v-model="addFlags"
+      :selected-count="selected.length"
+      class="concept-search__add-options"
+      @add="onAddSelected"
+    />
+
     <!-- Results Table -->
     <ConceptTable
+      v-model:selected="selected"
       :concepts="store.concepts"
       :loading="store.loading"
       :loading-record-counts="store.loadingRecordCounts"
@@ -65,6 +74,7 @@
       :linkable="true"
       :source-key="selectedSourceKey"
       :show-add-button="true"
+      :selectable="true"
       :concepts-in-set="conceptsInSet"
       @update:page="onPageChange"
       @update:items-per-page="onItemsPerPageChange"
@@ -90,7 +100,8 @@ import { useWebAPIStore } from '@/stores/webapi'
 import { getSourceKey } from '@/config/webapi'
 import ConceptTable from './ConceptTable.vue'
 import ConceptFacetFilters from './ConceptFacetFilters.vue'
-import type { Concept } from '@/models/concept-set.types'
+import ConceptAddOptions from './ConceptAddOptions.vue'
+import type { Concept, ConceptAddFlags } from '@/models/concept-set.types'
 
 const { t } = useI18n()
 
@@ -119,6 +130,15 @@ const conceptsInSet = computed(() => {
 
 const searchInput = ref<string>('')
 const feedback = ref<{ open: boolean; text: string }>({ open: false, text: '' })
+const selected = ref<number[]>([])
+
+// Sticky across searches on purpose: the point of the add box is to set the
+// intent once and then collect concepts over several queries.
+const addFlags = ref<Required<ConceptAddFlags>>({
+  isExcluded: false,
+  includeDescendants: false,
+  includeMapped: false,
+})
 
 // ============================================================================
 // Computed
@@ -177,18 +197,48 @@ function onAddConcept(concept: Concept) {
   if (!conceptSetsStore.currentSet) {
     conceptSetsStore.openCreateEditor()
   }
-  conceptSetsStore.addConceptToSet(concept)
+  conceptSetsStore.addConceptToSet(concept, addFlags.value)
 
-  const setName =
-    conceptSetsStore.currentSet?.name ||
-    t('components.conceptSetBuilder.newConceptSet', 'New concept set').value
   feedback.value = {
     open: true,
     text: t('search.addedToSet', 'Added “{concept}” → {set}', {
       concept: concept.conceptName,
-      set: setName,
+      set: currentSetName(),
     }).value,
   }
+}
+
+function onAddSelected() {
+  const ids = new Set(selected.value)
+  if (ids.size === 0) return
+
+  if (!conceptSetsStore.currentSet) {
+    conceptSetsStore.openCreateEditor()
+  }
+
+  // Concepts already in the set are skipped by the store, so count what
+  // actually landed rather than what was ticked.
+  const before = conceptSetsStore.currentSet?.items.length ?? 0
+  for (const concept of store.allConcepts.filter(c => ids.has(c.conceptId))) {
+    conceptSetsStore.addConceptToSet(concept, addFlags.value)
+  }
+  const added = (conceptSetsStore.currentSet?.items.length ?? 0) - before
+  selected.value = []
+
+  feedback.value = {
+    open: true,
+    text: t('search.addedCountToSet', 'Added {count} concepts → {set}', {
+      count: added,
+      set: currentSetName(),
+    }).value,
+  }
+}
+
+function currentSetName(): string {
+  return (
+    conceptSetsStore.currentSet?.name ||
+    t('components.conceptSetBuilder.newConceptSet', 'New concept set').value
+  )
 }
 
 function onRemoveConcept(concept: Concept) {

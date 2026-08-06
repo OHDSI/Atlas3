@@ -295,6 +295,7 @@
               <v-window-item value="search">
                 <ConceptSearchInline
                   @add-concept="onAddConcept"
+                  @add-concepts="onAddConcepts"
                   @remove-concept="onRemoveConcept"
                   @view-concept="onViewConcept"
                 />
@@ -667,7 +668,7 @@ import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useNotifications } from '@/stores/notifications'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
-import type { ConceptSet, Concept, ConceptSetItem } from '@/models/concept-set.types'
+import type { ConceptSet, Concept, ConceptSetItem, ConceptAddFlags } from '@/models/concept-set.types'
 import type { VersionsConfig, VersionsTableItem, User } from '@/components/versions/types'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import type { Tag } from '@/models/cohort.types'
@@ -1118,8 +1119,15 @@ function confirmDelete() {
 // Concept Building Methods
 // ============================================================================
 
-function onAddConcept(concept: Concept) {
-  store.addConceptToSet(concept)
+function onAddConcept(concept: Concept, flags?: ConceptAddFlags) {
+  store.addConceptToSet(concept, flags)
+  hasUnsavedChanges.value = true
+}
+
+function onAddConcepts(concepts: Concept[], flags?: ConceptAddFlags) {
+  for (const concept of concepts) {
+    store.addConceptToSet(concept, flags)
+  }
   hasUnsavedChanges.value = true
 }
 

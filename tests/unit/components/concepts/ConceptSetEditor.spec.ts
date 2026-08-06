@@ -450,7 +450,33 @@ describe('ConceptSetEditor', () => {
     // Component is stubbed, so we can manually call the handler
     await wrapper.vm.onAddConcept(mockConcept)
 
-    expect(addConceptSpy).toHaveBeenCalledWith(mockConcept)
+    expect(addConceptSpy).toHaveBeenCalledWith(mockConcept, undefined)
+  })
+
+  it('should pass add-time flags straight through to the store', async () => {
+    const wrapper = mountComponent({ conceptSet: mockConceptSet })
+    const store = useConceptSetsStore()
+    store.currentSet = mockConceptSet
+    const addConceptSpy = vi.spyOn(store, 'addConceptToSet')
+    const flags = { isExcluded: true, includeDescendants: true, includeMapped: false }
+
+    await wrapper.vm.onAddConcept(mockConcept, flags)
+
+    expect(addConceptSpy).toHaveBeenCalledWith(mockConcept, flags)
+  })
+
+  it('should add every concept of a bulk add with the same flags', async () => {
+    const wrapper = mountComponent({ conceptSet: mockConceptSet })
+    const store = useConceptSetsStore()
+    store.currentSet = mockConceptSet
+    const addConceptSpy = vi.spyOn(store, 'addConceptToSet')
+    const second = { ...mockConcept, conceptId: mockConcept.conceptId + 1 }
+    const flags = { isExcluded: false, includeDescendants: true, includeMapped: false }
+
+    await wrapper.vm.onAddConcepts([mockConcept, second], flags)
+
+    expect(addConceptSpy).toHaveBeenNthCalledWith(1, mockConcept, flags)
+    expect(addConceptSpy).toHaveBeenNthCalledWith(2, second, flags)
   })
 
   it('should remove concept from set when remove-concept is emitted', async () => {
