@@ -1,5 +1,63 @@
-import { describe, it, expect } from 'vitest'
-import { parseYyyymm, dashboardObservationMonthLineOptions } from '@/ui/chart-config'
+import { describe, it, expect, afterEach } from 'vitest'
+import {
+  parseYyyymm,
+  dashboardObservationMonthLineOptions,
+  setChartPalette,
+  CHART_COLORS,
+  TREEMAP_GRADIENT,
+} from '@/ui/chart-config'
+
+describe('setChartPalette', () => {
+  afterEach(() => {
+    setChartPalette({ chartColors: null, treemapGradient: null })
+  })
+
+  it('overrides both palettes', () => {
+    setChartPalette({
+      chartColors: ['#000080', '#ff5e59'],
+      treemapGradient: ['#c3cce8', '#000080'],
+    })
+
+    expect([...CHART_COLORS]).toEqual(['#000080', '#ff5e59'])
+    expect([...TREEMAP_GRADIENT]).toEqual(['#c3cce8', '#000080'])
+  })
+
+  it('restores the defaults when passed null or an empty array', () => {
+    const defaultColors = [...CHART_COLORS]
+    const defaultGradient = [...TREEMAP_GRADIENT]
+
+    setChartPalette({ chartColors: ['#000080'], treemapGradient: ['#000080'] })
+    setChartPalette({ chartColors: null, treemapGradient: [] })
+
+    expect([...CHART_COLORS]).toEqual(defaultColors)
+    expect([...TREEMAP_GRADIENT]).toEqual(defaultGradient)
+  })
+
+  it('overrides one palette without disturbing the other', () => {
+    const defaultGradient = [...TREEMAP_GRADIENT]
+
+    setChartPalette({ chartColors: ['#000080'] })
+
+    expect([...CHART_COLORS]).toEqual(['#000080'])
+    expect([...TREEMAP_GRADIENT]).toEqual(defaultGradient)
+  })
+
+  // The builders read the palette at call time; charts would otherwise keep
+  // whatever was captured when the module first evaluated.
+  it('reaches options built after the override', () => {
+    setChartPalette({ chartColors: ['#000080', '#ff5e59'] })
+
+    const options = dashboardObservationMonthLineOptions({
+      categories: ['01/2003'],
+      monthCodes: [200301],
+      series: [{ name: 'Observations', data: [10] }],
+      xAxisLabel: 'Month',
+      yAxisLabel: 'Observations',
+    }) as { series?: Array<Record<string, unknown>> }
+
+    expect(JSON.stringify(options.series)).toContain('#000080')
+  })
+})
 
 describe('parseYyyymm', () => {
   it('parses a YYYYMM integer to a UTC timestamp', () => {

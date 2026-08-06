@@ -95,7 +95,7 @@ function formatSINumber(value: number): string {
  * Charts that pick a single color use CHART_COLORS[0]; multi-series
  * charts cycle through the array.
  */
-export const CHART_COLORS = [
+const DEFAULT_CHART_COLORS: readonly string[] = [
   '#4e79a7', // blue
   '#f28e2c', // orange
   '#e15759', // red
@@ -107,6 +107,12 @@ export const CHART_COLORS = [
   '#9c755f', // taupe
   '#bab0ab', // warm grey
 ]
+
+// Deployments that brand Atlas override these via settings.theme (see
+// setChartPalette). Every read happens inside the option builders below, at
+// render time, so a palette applied during startup is picked up by charts
+// mounted afterwards.
+export let CHART_COLORS: readonly string[] = DEFAULT_CHART_COLORS
 
 /**
  * Single-hue gradient used by treemaps and other "color-by-value"
@@ -122,7 +128,24 @@ export const CHART_COLORS = [
  * the Atlas brand navy `#1f425a` so the gradient tails into the
  * surrounding chrome.
  */
-export const TREEMAP_GRADIENT = ['#7e9bbf', '#4e79a7', '#1f425a'] as const
+const DEFAULT_TREEMAP_GRADIENT: readonly string[] = ['#7e9bbf', '#4e79a7', '#1f425a']
+
+export let TREEMAP_GRADIENT: readonly string[] = DEFAULT_TREEMAP_GRADIENT
+
+/**
+ * Override the chart palettes from `settings.theme` (chartColors /
+ * treemapGradient). Passing null or an empty array restores the default, so a
+ * deployment can override one palette without pinning the other.
+ */
+export function setChartPalette(palette: {
+  chartColors?: readonly string[] | null
+  treemapGradient?: readonly string[] | null
+}): void {
+  CHART_COLORS = palette.chartColors?.length ? [...palette.chartColors] : DEFAULT_CHART_COLORS
+  TREEMAP_GRADIENT = palette.treemapGradient?.length
+    ? [...palette.treemapGradient]
+    : DEFAULT_TREEMAP_GRADIENT
+}
 
 /**
  * Default bar chart configuration

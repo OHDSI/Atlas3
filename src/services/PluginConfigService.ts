@@ -117,6 +117,20 @@ export class PluginConfigService {
     return this.manifest?.settings?.theme?.primaryColor || null
   }
 
+  getAccentColor(): string | null {
+    return this.manifest?.settings?.theme?.accentColor || null
+  }
+
+  getChartColors(): string[] | null {
+    const colors = this.manifest?.settings?.theme?.chartColors
+    return colors && colors.length > 0 ? colors : null
+  }
+
+  getTreemapGradient(): string[] | null {
+    const gradient = this.manifest?.settings?.theme?.treemapGradient
+    return gradient && gradient.length > 0 ? gradient : null
+  }
+
   getLogoUrl(): string | null {
     const logoUrl = this.manifest?.settings?.theme?.logoUrl || null
     logger.debug('PluginConfig', 'getLogoUrl called, returning', logoUrl)

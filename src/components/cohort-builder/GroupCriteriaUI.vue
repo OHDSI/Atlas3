@@ -557,7 +557,7 @@ defineExpose({
 
 /* ANY - Orange */
 .vertical-label-container:has(.match-type-label[data-type='ANY']) {
-  border: 1px solid #eb6622;
+  border: 1px solid var(--atlas-color-accent);
 }
 .vertical-label-container:has(.match-type-label[data-type='ANY'])::before {
   content: '';
@@ -566,11 +566,11 @@ defineExpose({
   top: 0;
   bottom: 0;
   width: 30%;
-  background: #eb6622;
+  background: var(--atlas-color-accent);
   border-radius: 0 0 0 6px;
 }
 .match-type-label[data-type='ANY'] {
-  color: #eb6622;
+  color: var(--atlas-color-accent);
 }
 
 /* AT_LEAST - Light Blue */
@@ -629,7 +629,7 @@ defineExpose({
   color: #1f425a !important;
 }
 .match-chip--any.v-btn--variant-tonal {
-  color: #eb6622 !important;
+  color: var(--atlas-color-accent) !important;
 }
 .match-chip--at_least.v-btn--variant-tonal {
   color: #4a90ba !important;
