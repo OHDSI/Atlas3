@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { AtlasDialog, AtlasProgressCircular } from '@/components/ui'
+import { AtlasDialog, AtlasProgressCircular, AtlasTextField, AtlasSelect } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptDetailStore } from '@/stores/concept-detail'
 import { useConceptHierarchyStore } from '@/stores/concept-hierarchy'
@@ -55,6 +55,34 @@ const allAncestorCount = computed(
 
 const isEmpty = computed(() => hierarchy.value.length === 0)
 
+const filterText = ref('')
+const classFilter = ref<string | null>(null)
+const domainFilter = ref<string | null>(null)
+const vocabularyFilter = ref<string | null>(null)
+const view = ref<'tree' | 'flat'>('tree')
+
+const allDescendants = computed(() =>
+  hierarchy.value.filter(c => c.relationships.some(r => r.relationshipName === 'Has descendant of'))
+)
+
+function optionsFor(key: 'conceptClassId' | 'domainId' | 'vocabularyId') {
+  return [...new Set(hierarchy.value.map(c => c[key]))].sort()
+}
+
+function matches(row: RelatedConcept): boolean {
+  const q = filterText.value.trim().toLowerCase()
+  if (q && !row.conceptName.toLowerCase().includes(q) && !row.conceptCode.toLowerCase().includes(q))
+    return false
+  if (classFilter.value && row.conceptClassId !== classFilter.value) return false
+  if (domainFilter.value && row.domainId !== domainFilter.value) return false
+  if (vocabularyFilter.value && row.vocabularyId !== vocabularyFilter.value) return false
+  return true
+}
+
+const visibleRows = computed(() =>
+  (view.value === 'flat' ? allDescendants.value : descendants.value).filter(matches)
+)
+
 interface TreeRow {
   row: RelatedConcept
   depth: number
@@ -75,11 +103,21 @@ function flatten(rows: RelatedConcept[], depth: number, path: number[]): TreeRow
     // the source data (should be acyclic, but a bad vocabulary load must
     // not hang the UI) — render it once and stop recursing there.
     if (!tree.isExpanded(row.conceptId) || path.includes(row.conceptId)) return [self]
-    return [self, ...flatten(tree.childrenOf(row.conceptId), depth + 1, [...path, row.conceptId])]
+    return [
+      self,
+      ...flatten(tree.childrenOf(row.conceptId).filter(matches), depth + 1, [...path, row.conceptId]),
+    ]
   })
 }
 
-const treeRows = computed(() => flatten(descendants.value, 0, []))
+// Flat view already lists every descendant once, at every depth, so
+// re-nesting through flatten() would duplicate rows; each concept appears
+// only once in the source hierarchy, so its conceptId alone is a safe key.
+const treeRows = computed<TreeRow[]>(() =>
+  view.value === 'flat'
+    ? visibleRows.value.map(row => ({ row, depth: 0, key: String(row.conceptId) }))
+    : flatten(visibleRows.value, 0, [])
+)
 
 watch(
   () => props.sourceKey,
@@ -138,6 +176,53 @@ function counts(conceptId: number) {
       <p class="counts">
         {{ t('components.conceptHierarchyDialog.counts', '{ancestors} ancestors · {descendants} descendants', { ancestors: allAncestorCount, descendants: allDescendantCount }).value }}
       </p>
+
+      <div class="toolbar">
+        <AtlasTextField
+          v-model="filterText"
+          :placeholder="t('components.conceptHierarchyDialog.filterPlaceholder', 'Filter by name or code…').value"
+          data-testid="hierarchy-filter"
+        />
+        <AtlasSelect
+          v-model="classFilter"
+          clearable
+          :items="optionsFor('conceptClassId')"
+          :label="t('components.conceptHierarchyDialog.anyClass', 'Class: any').value"
+          data-testid="hierarchy-filter-class"
+        />
+        <AtlasSelect
+          v-model="domainFilter"
+          clearable
+          :items="optionsFor('domainId')"
+          :label="t('components.conceptHierarchyDialog.anyDomain', 'Domain: any').value"
+          data-testid="hierarchy-filter-domain"
+        />
+        <AtlasSelect
+          v-model="vocabularyFilter"
+          clearable
+          :items="optionsFor('vocabularyId')"
+          :label="t('components.conceptHierarchyDialog.anyVocabulary', 'Vocabulary: any').value"
+          data-testid="hierarchy-filter-vocabulary"
+        />
+        <div class="view-toggle">
+          <button
+            type="button"
+            :class="{ on: view === 'tree' }"
+            data-testid="hierarchy-view-tree"
+            @click="view = 'tree'"
+          >
+            {{ t('components.conceptHierarchyDialog.treeView', 'Tree').value }}
+          </button>
+          <button
+            type="button"
+            :class="{ on: view === 'flat' }"
+            data-testid="hierarchy-view-flat"
+            @click="view = 'flat'"
+          >
+            {{ t('components.conceptHierarchyDialog.flatView', 'Flat').value }}
+          </button>
+        </div>
+      </div>
 
       <table class="hierarchy-table">
         <thead>
@@ -208,7 +293,7 @@ function counts(conceptId: number) {
             >
               <td :style="{ paddingLeft: `${8 + depth * 24}px` }">
                 <button
-                  v-if="!tree.isLeaf(row.conceptId)"
+                  v-if="view === 'tree' && !tree.isLeaf(row.conceptId)"
                   type="button"
                   class="chev"
                   :data-testid="`hierarchy-expand-${row.conceptId}`"
@@ -278,4 +363,7 @@ function counts(conceptId: number) {
 .ancestor { opacity: 0.8; }
 .anchor { background: rgba(25, 118, 210, 0.12); font-weight: 600; }
 .chev { background: none; border: none; cursor: pointer; padding: 0 6px 0 0; }
+.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.view-toggle button { border: 1px solid rgba(0, 0, 0, 0.25); background: none; padding: 2px 10px; font-size: 12px; }
+.view-toggle button.on { background: rgba(25, 118, 210, 0.18); font-weight: 600; }
 </style>

@@ -272,3 +272,78 @@ describe('ConceptHierarchyDialog', () => {
     expect(document.body.textContent).toContain('No hierarchy found for non-standard concepts.')
   })
 })
+
+describe('toolbar', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    ;(getConceptRecordCounts as Mock).mockResolvedValue(new Map())
+    ;(fetchConceptAncestorAndDescendant as Mock).mockResolvedValue(INFECTIVE_PNEUMONIA_PAYLOAD)
+    useConceptDetailStore().hierarchy = PNEUMONIA_ANCESTOR_AND_DESCENDANT
+  })
+
+  afterEach(() => {
+    activeWrapper?.unmount()
+    activeWrapper = null
+    document.body.innerHTML = ''
+  })
+
+  it('narrows rows by the text filter without fetching', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+    ;(fetchConceptAncestorAndDescendant as Mock).mockClear()
+
+    const input = document.querySelector('[data-testid="hierarchy-filter"] input') as HTMLInputElement
+    input.value = 'Aspiration'
+    input.dispatchEvent(new Event('input'))
+    await wrapper.vm.$nextTick()
+
+    const rows = document.querySelectorAll('[data-descendant-row]')
+    expect(rows).toHaveLength(1)
+    expect(rows[0].textContent).toContain('Aspiration pneumonia')
+    expect(fetchConceptAncestorAndDescendant).not.toHaveBeenCalled()
+  })
+
+  it('matches on concept code as well as name', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const input = document.querySelector('[data-testid="hierarchy-filter"] input') as HTMLInputElement
+    input.value = '422588002'
+    input.dispatchEvent(new Event('input'))
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelectorAll('[data-descendant-row]')).toHaveLength(1)
+  })
+
+  it('flat view lists every descendant at every depth', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const flat = document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement
+    flat.click()
+    await wrapper.vm.$nextTick()
+
+    const rows = document.querySelectorAll('[data-descendant-row]')
+    expect(rows).toHaveLength(
+      PNEUMONIA_ANCESTOR_AND_DESCENDANT.filter(c =>
+        c.relationships.some(r => r.relationshipName === 'Has descendant of')
+      ).length
+    )
+  })
+
+  it('keeps the filter when switching between tree and flat', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const input = document.querySelector('[data-testid="hierarchy-filter"] input') as HTMLInputElement
+    input.value = 'Aspiration'
+    input.dispatchEvent(new Event('input'))
+    await wrapper.vm.$nextTick()
+    ;(document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+
+    expect(input.value).toBe('Aspiration')
+    expect(document.querySelectorAll('[data-descendant-row]')).toHaveLength(1)
+  })
+})
