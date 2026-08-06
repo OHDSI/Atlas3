@@ -829,6 +829,62 @@ describe('Concept Sets Store', () => {
       expect(store.loadingRecommended).toBe(false)
     })
 
+    it('should clear a previous unavailable flag once a later load succeeds', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Test', items: [makeItem(1)] }
+
+      vi.mocked(getRecommendedConcepts).mockResolvedValue({ available: false, concepts: [] })
+      await store.loadRecommendedConcepts('NO_PHOEBE')
+      expect(store.isRecommendedAvailable).toBe(false)
+
+      vi.mocked(getRecommendedConcepts).mockResolvedValue({
+        available: true,
+        concepts: [makeRecommended(10)],
+      })
+      vi.mocked(getConceptRecordCounts).mockResolvedValue(new Map())
+      await store.loadRecommendedConcepts('HAS_PHOEBE')
+
+      expect(store.isRecommendedAvailable).toBe(true)
+      expect(store.recommendedConcepts.map((c) => c.conceptId)).toEqual([10])
+    })
+
+    it('should surface a later failure as an error rather than keeping the unavailable flag', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Test', items: [makeItem(1)] }
+
+      vi.mocked(getRecommendedConcepts).mockResolvedValue({ available: false, concepts: [] })
+      await store.loadRecommendedConcepts('NO_PHOEBE')
+      expect(store.isRecommendedAvailable).toBe(false)
+
+      vi.mocked(getRecommendedConcepts).mockRejectedValue(new Error('boom'))
+      await store.loadRecommendedConcepts('HAS_PHOEBE')
+
+      expect(store.isRecommendedAvailable).toBe(true)
+      expect(store.recommendedError).toContain('boom')
+    })
+
+    it('should drop a previous unavailable flag while the next load is in flight', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Test', items: [makeItem(1)] }
+
+      vi.mocked(getRecommendedConcepts).mockResolvedValue({ available: false, concepts: [] })
+      await store.loadRecommendedConcepts('NO_PHOEBE')
+      expect(store.isRecommendedAvailable).toBe(false)
+
+      let resolve: (v: { available: true; concepts: Concept[] }) => void = () => {}
+      const pending = new Promise<{ available: true; concepts: Concept[] }>((r) => {
+        resolve = r
+      })
+      vi.mocked(getRecommendedConcepts).mockReturnValue(pending)
+      vi.mocked(getConceptRecordCounts).mockResolvedValue(new Map())
+
+      const inFlight = store.loadRecommendedConcepts('HAS_PHOEBE')
+      expect(store.isRecommendedAvailable).toBe(true)
+
+      resolve({ available: true, concepts: [] })
+      await inFlight
+    })
+
     it('should toggle loadingRecommended true during call and false in finally', async () => {
       const store = useConceptSetsStore()
       store.currentSet = { name: 'Test', items: [makeItem(1)] }
