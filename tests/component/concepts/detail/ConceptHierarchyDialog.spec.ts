@@ -346,4 +346,38 @@ describe('toolbar', () => {
     expect(input.value).toBe('Aspiration')
     expect(document.querySelectorAll('[data-descendant-row]')).toHaveLength(1)
   })
+
+  it('filters an already-expanded node\'s children too, not just the top level', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const chevron = document.querySelector(
+      '[data-testid="hierarchy-expand-443410"]'
+    ) as HTMLElement
+    chevron.click()
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    for (const child of INFECTIVE_PNEUMONIA_CHILDREN) {
+      expect(document.body.textContent).toContain(child.conceptName)
+    }
+
+    // "Infective" matches the expanded parent (443410, "Infective pneumonia")
+    // and exactly one of its eight children ("Infective pneumonia acquired
+    // prenatally", 4215807) — the other seven only contain "pneumonia". If
+    // flatten() filtered only its top-level input and forwarded children
+    // unfiltered, all eight would still render here.
+    const input = document.querySelector('[data-testid="hierarchy-filter"] input') as HTMLInputElement
+    input.value = 'Infective'
+    input.dispatchEvent(new Event('input'))
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[data-testid="hierarchy-row-443410"]')).not.toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-row-4215807"]')?.textContent).toContain(
+      'Infective pneumonia acquired prenatally'
+    )
+    for (const child of INFECTIVE_PNEUMONIA_CHILDREN.filter(c => c.conceptId !== 4215807)) {
+      expect(document.querySelector(`[data-testid="hierarchy-row-${child.conceptId}"]`)).toBeNull()
+    }
+  })
 })
