@@ -1726,6 +1726,25 @@
       "noRelatedConcepts": "No related concepts found.",
       "relationshipsCount": "{count} relationships"
     },
+    "conceptHierarchyDialog": {
+      "title": "Hierarchy · {concept}",
+      "viewFullHierarchy": "View full hierarchy",
+      "treeView": "Tree",
+      "flatView": "Flat",
+      "filterPlaceholder": "Filter by name or code…",
+      "anyClass": "Class: any",
+      "anyDomain": "Domain: any",
+      "anyVocabulary": "Vocabulary: any",
+      "counts": "{ancestors} ancestors · {descendants} descendants",
+      "ancestors": "Ancestors",
+      "inSet": "in set",
+      "excluded": "excluded",
+      "withDescendants": "+desc",
+      "expandFailed": "Could not load children",
+      "retry": "Retry",
+      "added": "Added {count} concepts",
+      "addedSkipped": "Added {count} concepts, skipped {skipped} already in the set"
+    },
     "conceptTable": {
       "selectAllConcepts": "Select all concepts",
       "selectConcept": "Select {name}",
