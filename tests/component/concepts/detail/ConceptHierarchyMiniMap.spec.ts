@@ -6,6 +6,7 @@ import * as directives from 'vuetify/directives'
 import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import ConceptHierarchyMiniMap from '@/components/concepts/detail/ConceptHierarchyMiniMap.vue'
+import ConceptHierarchyDialog from '@/components/concepts/detail/ConceptHierarchyDialog.vue'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import type { Concept } from '@/models/concept-set.types'
 import type { RelatedConcept } from '@/models/concept-detail.types'
@@ -101,5 +102,23 @@ describe('ConceptHierarchyMiniMap', () => {
       global: { plugins: [vuetify, router] },
     })
     expect(wrapper.text()).toMatch(/no hierarchy/i)
+  })
+
+  it('opens the hierarchy dialog rather than the concept drawer', async () => {
+    const vuetify = createVuetify({ components, directives })
+    const router = createRouter({ history: createMemoryHistory(), routes: [] })
+
+    const wrapper = mount(ConceptHierarchyMiniMap, {
+      props: { concept, parents, children, sourceKey: 'OHDSI' },
+      global: { plugins: [vuetify, router] },
+    })
+
+    const drawer = useConceptDetailDrawerStore()
+    const openSpy = vi.spyOn(drawer, 'open')
+
+    await wrapper.find('[data-testid="view-full"]').trigger('click')
+
+    expect(wrapper.findComponent(ConceptHierarchyDialog).props('modelValue')).toBe(true)
+    expect(openSpy).not.toHaveBeenCalled()
   })
 })

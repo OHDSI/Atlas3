@@ -1,9 +1,9 @@
 /**
  * ConceptHierarchyMiniMap Component Tests
  *
- * Covers issue #96: the "View full →" link must open the in-place concept
- * detail drawer (keeping the user in the cohort editor) and must NOT navigate
- * to a stand-alone route.
+ * Covers issue #96: the "View full →" link must not navigate to a stand-alone
+ * route. Since issue #161 it opens the ConceptHierarchyDialog rather than the
+ * in-place concept detail drawer.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -12,6 +12,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import ConceptHierarchyMiniMap from '@/components/concepts/detail/ConceptHierarchyMiniMap.vue'
+import ConceptHierarchyDialog from '@/components/concepts/detail/ConceptHierarchyDialog.vue'
 import type { Concept } from '@/models/concept-set.types'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
@@ -118,12 +119,12 @@ describe('ConceptHierarchyMiniMap', () => {
     expect(wrapper.find('[data-testid="view-full"]').exists()).toBe(true)
   })
 
-  it('opens the concept-detail drawer when View full is clicked', async () => {
+  it('opens the hierarchy dialog rather than the concept-detail drawer when View full is clicked', async () => {
     const wrapper = mountComponent()
     await wrapper.find('[data-testid="view-full"]').trigger('click')
 
-    expect(drawerOpen).toHaveBeenCalledTimes(1)
-    expect(drawerOpen).toHaveBeenCalledWith('EUNOMIA', 313217)
+    expect(wrapper.findComponent(ConceptHierarchyDialog).props('modelValue')).toBe(true)
+    expect(drawerOpen).not.toHaveBeenCalled()
   })
 
   it('does NOT navigate via the router when View full is clicked', async () => {
@@ -133,13 +134,13 @@ describe('ConceptHierarchyMiniMap', () => {
     expect(mockPush).not.toHaveBeenCalled()
   })
 
-  it('hides View full when the drawer already shows this exact concept', () => {
+  it('still shows View full when the drawer already shows this exact concept', () => {
     drawerState.isOpen = true
     drawerState.sourceKey = 'EUNOMIA'
     drawerState.conceptId = 313217
 
     const wrapper = mountComponent()
-    expect(wrapper.find('[data-testid="view-full"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="view-full"]').exists()).toBe(true)
   })
 
   it('still shows View full when the drawer is open for a different concept', () => {

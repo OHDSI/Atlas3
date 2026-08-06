@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { AtlasCard } from '@/components/ui'
+import ConceptHierarchyDialog from '@/components/concepts/detail/ConceptHierarchyDialog.vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import type { Concept } from '@/models/concept-set.types'
@@ -27,24 +28,13 @@ const sourceKey = computed(
 
 const conceptDrawer = useConceptDetailDrawerStore()
 
-// "View full" opens the in-place concept-detail drawer (an overlay) for this
-// concept instead of routing to a stand-alone page — that keeps the user in
-// the cohort editor flow. We hide the link when the drawer is already showing
-// this exact concept, since clicking it there would be a confusing no-op.
-const isInDrawerForThisConcept = computed(
-  () =>
-    conceptDrawer.isOpen &&
-    conceptDrawer.sourceKey === sourceKey.value &&
-    conceptDrawer.conceptId === props.concept.conceptId
-)
+const canViewFull = computed(() => !!sourceKey.value && !!props.concept.conceptId)
 
-const canViewFull = computed(
-  () => !!sourceKey.value && !!props.concept.conceptId && !isInDrawerForThisConcept.value
-)
+const dialogOpen = ref(false)
 
 function viewFull() {
-  if (!canViewFull.value) return
-  conceptDrawer.open(sourceKey.value, props.concept.conceptId)
+  if (!sourceKey.value) return
+  dialogOpen.value = true
 }
 
 // Jumping to a parent/child concept opens it in the same side-panel drawer
@@ -74,7 +64,7 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
         class="view-full"
         data-testid="view-full"
         @click.prevent="viewFull"
-      >{{ t('components.conceptDetail.viewFull', 'View full').value }} →</a>
+      >{{ t('components.conceptHierarchyDialog.viewFullHierarchy', 'View full hierarchy').value }} →</a>
     </header>
     <div class="card-body">
       <p
@@ -130,6 +120,11 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
       </template>
     </div>
   </AtlasCard>
+  <ConceptHierarchyDialog
+    v-model="dialogOpen"
+    :concept="concept"
+    :source-key="sourceKey"
+  />
 </template>
 
 <style scoped>
