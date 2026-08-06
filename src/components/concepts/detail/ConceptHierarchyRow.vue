@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { AtlasChip } from '@/components/ui'
+import ConceptHierarchySelectCell from '@/components/concepts/detail/ConceptHierarchySelectCell.vue'
 import { useI18n } from '@/composables/useI18n'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
@@ -28,16 +29,12 @@ const { t } = useI18n()
     :data-descendant-row="depth === 0 ? '' : undefined"
     class="descendant"
   >
-    <td>
-      <v-checkbox-btn
-        v-if="canAdd"
-        :model-value="selected"
-        density="compact"
-        hide-details
-        :data-testid="`hierarchy-select-${row.conceptId}`"
-        @update:model-value="emit('toggle-select')"
-      />
-    </td>
+    <ConceptHierarchySelectCell
+      :concept-id="row.conceptId"
+      :can-add="canAdd"
+      :selected="selected"
+      @toggle="emit('toggle-select')"
+    />
     <td :style="{ paddingLeft: `${8 + depth * 24}px` }">
       <button
         v-if="expandable"
@@ -82,7 +79,5 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
-.hierarchy-table td { border-bottom: 1px solid rgba(0, 0, 0, 0.06); padding: 5px 8px; }
-.hierarchy-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .chev { background: none; border: none; cursor: pointer; padding: 0 6px 0 0; }
 </style>

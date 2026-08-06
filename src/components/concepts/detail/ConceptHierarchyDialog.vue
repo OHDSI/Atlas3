@@ -10,6 +10,7 @@ import {
 } from '@/components/ui'
 import ConceptAddOptions from '@/components/concepts/ConceptAddOptions.vue'
 import ConceptHierarchyRow from '@/components/concepts/detail/ConceptHierarchyRow.vue'
+import ConceptHierarchySelectCell from '@/components/concepts/detail/ConceptHierarchySelectCell.vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptDetailStore } from '@/stores/concept-detail'
 import { useConceptHierarchyStore } from '@/stores/concept-hierarchy'
@@ -333,16 +334,12 @@ function counts(conceptId: number) {
             :data-testid="`hierarchy-row-${a.conceptId}`"
             class="ancestor"
           >
-            <td>
-              <v-checkbox-btn
-                v-if="canAdd"
-                :model-value="selected.includes(a.conceptId)"
-                density="compact"
-                hide-details
-                :data-testid="`hierarchy-select-${a.conceptId}`"
-                @update:model-value="toggleSelected(a.conceptId)"
-              />
-            </td>
+            <ConceptHierarchySelectCell
+              :concept-id="a.conceptId"
+              :can-add="canAdd"
+              :selected="selected.includes(a.conceptId)"
+              @toggle="toggleSelected(a.conceptId)"
+            />
             <td>{{ a.conceptName }}</td>
             <td>{{ a.conceptCode }}</td>
             <td>{{ a.conceptClassId }}</td>
@@ -453,8 +450,8 @@ function counts(conceptId: number) {
   border-bottom: 1px solid rgba(0, 0, 0, 0.15);
   padding: 6px 8px;
 }
-.hierarchy-table td { border-bottom: 1px solid rgba(0, 0, 0, 0.06); padding: 5px 8px; }
-.hierarchy-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.hierarchy-table :deep(td) { border-bottom: 1px solid rgba(0, 0, 0, 0.06); padding: 5px 8px; }
+.hierarchy-table :deep(td.num) { text-align: right; font-variant-numeric: tabular-nums; }
 .section-row td { font-size: 11px; text-transform: uppercase; opacity: 0.6; }
 .ancestor { opacity: 0.8; }
 .anchor { background: rgba(25, 118, 210, 0.12); font-weight: 600; }
