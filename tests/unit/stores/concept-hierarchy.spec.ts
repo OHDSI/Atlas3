@@ -6,18 +6,18 @@ vi.mock('@/utils/logger', () => ({
 }))
 
 vi.mock('@/services/concept-detail.service', () => ({
-  getConceptAncestorAndDescendant: vi.fn(),
+  fetchConceptAncestorAndDescendant: vi.fn(),
 }))
 
 import { useConceptHierarchyStore } from '@/stores/concept-hierarchy'
-import { getConceptAncestorAndDescendant } from '@/services/concept-detail.service'
+import { fetchConceptAncestorAndDescendant } from '@/services/concept-detail.service'
 import {
   INFECTIVE_PNEUMONIA_PAYLOAD,
   INFECTIVE_PNEUMONIA_CHILDREN,
 } from '../../fixtures/concept-hierarchy'
 import type { Mock } from 'vitest'
 
-const mockFetch = getConceptAncestorAndDescendant as Mock
+const mockFetch = fetchConceptAncestorAndDescendant as Mock
 
 describe('concept-hierarchy store', () => {
   beforeEach(() => {
@@ -119,6 +119,27 @@ describe('concept-hierarchy store', () => {
     await store.expandNode(443410)
 
     store.reset()
+
+    expect(store.childrenOf(443410)).toEqual([])
+    expect(store.isExpanded(443410)).toBe(false)
+  })
+
+  it('discards stale results when source changes before fetch completes', async () => {
+    let resolvePayload: (value: typeof INFECTIVE_PNEUMONIA_PAYLOAD) => void
+    const deferredPromise = new Promise<typeof INFECTIVE_PNEUMONIA_PAYLOAD>(
+      (resolve) => {
+        resolvePayload = resolve
+      }
+    )
+    mockFetch.mockReturnValueOnce(deferredPromise)
+
+    const store = useConceptHierarchyStore()
+    store.setSource('SYNPUF1K')
+    const expandPromise = store.expandNode(443410)
+
+    store.setSource('SYNPUF5PCT')
+    resolvePayload!(INFECTIVE_PNEUMONIA_PAYLOAD)
+    await expandPromise
 
     expect(store.childrenOf(443410)).toEqual([])
     expect(store.isExpanded(443410)).toBe(false)

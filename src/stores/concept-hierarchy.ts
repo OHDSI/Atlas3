@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { logger } from '@/utils/logger'
-import { getConceptAncestorAndDescendant } from '@/services/concept-detail.service'
+import { fetchConceptAncestorAndDescendant } from '@/services/concept-detail.service'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
 const CHILD_RELATIONSHIP = 'Has descendant of'
@@ -23,6 +23,7 @@ export const useConceptHierarchyStore = defineStore('concept-hierarchy', () => {
   const failedNodes = ref(new Set<number>())
 
   const inFlight = new Map<number, Promise<void>>()
+  let sourceGeneration = 0
 
   function reset() {
     childrenByConcept.value = new Map()
@@ -31,6 +32,7 @@ export const useConceptHierarchyStore = defineStore('concept-hierarchy', () => {
     expandedNodes.value = new Set()
     failedNodes.value = new Set()
     inFlight.clear()
+    sourceGeneration++
   }
 
   function setSource(nextSourceKey: string) {
@@ -63,22 +65,30 @@ export const useConceptHierarchyStore = defineStore('concept-hierarchy', () => {
   }
 
   async function fetchChildren(conceptId: number): Promise<void> {
+    const fetchSourceKey = sourceKey.value
+    const fetchGeneration = sourceGeneration
     loadingNodes.value = new Set(loadingNodes.value).add(conceptId)
     failedNodes.value = new Set([...failedNodes.value].filter(id => id !== conceptId))
     try {
-      const payload = await getConceptAncestorAndDescendant(sourceKey.value, conceptId)
+      const payload = await fetchConceptAncestorAndDescendant(fetchSourceKey, conceptId)
       const children = directDescendants(payload)
-      childrenByConcept.value = new Map(childrenByConcept.value).set(conceptId, children)
-      if (children.length === 0) {
-        leafNodes.value = new Set(leafNodes.value).add(conceptId)
-      } else {
-        expandedNodes.value = new Set(expandedNodes.value).add(conceptId)
+      if (fetchGeneration === sourceGeneration) {
+        childrenByConcept.value = new Map(childrenByConcept.value).set(conceptId, children)
+        if (children.length === 0) {
+          leafNodes.value = new Set(leafNodes.value).add(conceptId)
+        } else {
+          expandedNodes.value = new Set(expandedNodes.value).add(conceptId)
+        }
       }
     } catch (e) {
-      logger.error('ConceptHierarchy', `expandNode failed for ${sourceKey.value}/${conceptId}`, e)
-      failedNodes.value = new Set(failedNodes.value).add(conceptId)
+      logger.error('ConceptHierarchy', `expandNode failed for ${fetchSourceKey}/${conceptId}`, e)
+      if (fetchGeneration === sourceGeneration) {
+        failedNodes.value = new Set(failedNodes.value).add(conceptId)
+      }
     } finally {
-      loadingNodes.value = new Set([...loadingNodes.value].filter(id => id !== conceptId))
+      if (fetchGeneration === sourceGeneration) {
+        loadingNodes.value = new Set([...loadingNodes.value].filter(id => id !== conceptId))
+      }
       inFlight.delete(conceptId)
     }
   }

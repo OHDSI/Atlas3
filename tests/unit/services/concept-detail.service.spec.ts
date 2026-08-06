@@ -13,6 +13,7 @@ vi.mock('@/services/http-client', () => ({
 import {
   getConceptRelated,
   getConceptAncestorAndDescendant,
+  fetchConceptAncestorAndDescendant,
   getConceptDrilldown,
 } from '@/services/concept-detail.service'
 import { httpClient } from '@/services/http-client'
@@ -81,6 +82,53 @@ describe('concept-detail.service', () => {
       expect(result).toHaveLength(1)
       expect(result[0].relationships[0].relationshipName).toBe('Has ancestor of')
     })
+
+    it('returns [] when HTTP call rejects', async () => {
+      (httpClient as Mock).mockRejectedValueOnce(new Error('network error'))
+      const result = await getConceptAncestorAndDescendant('SYNPUF1K', 1)
+      expect(result).toEqual([])
+    })
+
+    it('returns [] on validation failure', async () => {
+      (httpClient as Mock).mockResolvedValueOnce([{ broken: true }])
+      const result = await getConceptAncestorAndDescendant('SYNPUF1K', 1)
+      expect(result).toEqual([])
+    })
+  })
+
+  describe('fetchConceptAncestorAndDescendant', () => {
+    it('fetches and returns the ancestor+descendant list', async () => {
+      (httpClient as Mock).mockResolvedValueOnce([
+        {
+          CONCEPT_ID: 73211009,
+          CONCEPT_NAME: 'Diabetes mellitus',
+          CONCEPT_CODE: '73211009',
+          DOMAIN_ID: 'Condition',
+          VOCABULARY_ID: 'SNOMED',
+          CONCEPT_CLASS_ID: 'Clinical Finding',
+          STANDARD_CONCEPT: 'S',
+          INVALID_REASON: null,
+          RELATIONSHIPS: [{ RELATIONSHIP_NAME: 'Has ancestor of', RELATIONSHIP_DISTANCE: 1 }],
+        },
+      ])
+
+      const result = await fetchConceptAncestorAndDescendant('SYNPUF1K', 201826)
+
+      expect(httpClient).toHaveBeenCalledWith(
+        '/vocabulary/SYNPUF1K/concept/201826/ancestorAndDescendant'
+      )
+      expect(result).toHaveLength(1)
+    })
+
+    it('rejects when HTTP call fails', async () => {
+      (httpClient as Mock).mockRejectedValueOnce(new Error('network error'))
+      await expect(fetchConceptAncestorAndDescendant('SYNPUF1K', 1)).rejects.toThrow()
+    })
+
+    it('rejects when validation fails', async () => {
+      (httpClient as Mock).mockResolvedValueOnce([{ broken: true }])
+      await expect(fetchConceptAncestorAndDescendant('SYNPUF1K', 1)).rejects.toThrow()
+    })
   })
 
   describe('getConceptDrilldown', () => {
@@ -113,18 +161,6 @@ describe('concept-detail.service', () => {
     it('returns [] from getConceptRelated when the HTTP call rejects', async () => {
       (httpClient as Mock).mockRejectedValueOnce(new Error('network error'))
       const result = await getConceptRelated('SYNPUF1K', 1)
-      expect(result).toEqual([])
-    })
-
-    it('returns [] from getConceptAncestorAndDescendant when the HTTP call rejects', async () => {
-      (httpClient as Mock).mockRejectedValueOnce(new Error('network error'))
-      const result = await getConceptAncestorAndDescendant('SYNPUF1K', 1)
-      expect(result).toEqual([])
-    })
-
-    it('returns [] from getConceptAncestorAndDescendant on validation failure', async () => {
-      (httpClient as Mock).mockResolvedValueOnce([{ broken: true }])
-      const result = await getConceptAncestorAndDescendant('SYNPUF1K', 1)
       expect(result).toEqual([])
     })
 
