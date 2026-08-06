@@ -144,7 +144,7 @@ export function transformClinicalDomainReport(
 
   const tableRows: PrevalenceTableRow[] = processedRaw.map(item => ({
     conceptId: item.conceptId,
-    conceptName: item.conceptPath,
+    conceptName: extractConceptDisplayName(item.conceptPath),
     personCount: item.numPersons,
     prevalence: item.percentPersons * 100, // percentPersons arrives as a 0..1 fraction
     metric: isEra ? item.lengthOfEra || 0 : item.recordsPerPerson || 0,
