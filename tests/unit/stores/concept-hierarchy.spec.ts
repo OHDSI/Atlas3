@@ -9,8 +9,13 @@ vi.mock('@/services/concept-detail.service', () => ({
   fetchConceptAncestorAndDescendant: vi.fn(),
 }))
 
+vi.mock('@/services/concept-search.service', () => ({
+  getConceptRecordCounts: vi.fn(),
+}))
+
 import { useConceptHierarchyStore } from '@/stores/concept-hierarchy'
 import { fetchConceptAncestorAndDescendant } from '@/services/concept-detail.service'
+import { getConceptRecordCounts } from '@/services/concept-search.service'
 import {
   INFECTIVE_PNEUMONIA_PAYLOAD,
   INFECTIVE_PNEUMONIA_CHILDREN,
@@ -18,11 +23,13 @@ import {
 import type { Mock } from 'vitest'
 
 const mockFetch = fetchConceptAncestorAndDescendant as Mock
+const mockCounts = getConceptRecordCounts as Mock
 
 describe('concept-hierarchy store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    mockCounts.mockResolvedValue(new Map())
   })
 
   it('keeps only distance-1 descendants when expanding a node', async () => {
@@ -143,5 +150,90 @@ describe('concept-hierarchy store', () => {
 
     expect(store.childrenOf(443410)).toEqual([])
     expect(store.isExpanded(443410)).toBe(false)
+  })
+
+  describe('record counts', () => {
+    it('fetches counts for the children an expansion produced', async () => {
+      mockFetch.mockResolvedValue(INFECTIVE_PNEUMONIA_PAYLOAD)
+      mockCounts.mockResolvedValue(
+        new Map([
+          [257315, { recordCount: 2880, descendantRecordCount: 12441, personCount: 900, descendantPersonCount: 4000 }],
+        ])
+      )
+      const store = useConceptHierarchyStore()
+      store.setSource('SYNPUF1K')
+
+      await store.expandNode(443410)
+
+      expect(mockCounts).toHaveBeenCalledWith(
+        'SYNPUF1K',
+        expect.arrayContaining([257315, 261326])
+      )
+      expect(store.countsFor(257315)?.recordCount).toBe(2880)
+    })
+
+    it('leaves the tree usable when the counts call fails', async () => {
+      mockFetch.mockResolvedValue(INFECTIVE_PNEUMONIA_PAYLOAD)
+      mockCounts.mockRejectedValue(new Error('counts down'))
+      const store = useConceptHierarchyStore()
+      store.setSource('SYNPUF1K')
+
+      await store.expandNode(443410)
+
+      expect(store.childrenOf(443410)).toHaveLength(INFECTIVE_PNEUMONIA_CHILDREN.length)
+      expect(store.hasFailed(443410)).toBe(false)
+      expect(store.countsFor(257315)).toBeUndefined()
+    })
+
+    it('does not call the counts endpoint with an empty id list', async () => {
+      mockFetch.mockResolvedValue([])
+      const store = useConceptHierarchyStore()
+      store.setSource('SYNPUF1K')
+
+      await store.expandNode(4025165)
+
+      expect(mockCounts).not.toHaveBeenCalled()
+    })
+
+    it('discards a stale counts response after a source switch', async () => {
+      let resolveFetch: (value: typeof INFECTIVE_PNEUMONIA_PAYLOAD) => void
+      const fetchPromise = new Promise<typeof INFECTIVE_PNEUMONIA_PAYLOAD>(resolve => {
+        resolveFetch = resolve
+      })
+      mockFetch.mockReturnValueOnce(fetchPromise)
+
+      let resolveCounts: (
+        value: Map<
+          number,
+          { recordCount: number; descendantRecordCount: number; personCount: number; descendantPersonCount: number }
+        >
+      ) => void
+      const countsPromise = new Promise<
+        Map<
+          number,
+          { recordCount: number; descendantRecordCount: number; personCount: number; descendantPersonCount: number }
+        >
+      >(resolve => {
+        resolveCounts = resolve
+      })
+      mockCounts.mockReturnValueOnce(countsPromise)
+
+      const store = useConceptHierarchyStore()
+      store.setSource('SYNPUF1K')
+      const expandPromise = store.expandNode(443410)
+
+      resolveFetch!(INFECTIVE_PNEUMONIA_PAYLOAD)
+      await vi.waitFor(() => expect(mockCounts).toHaveBeenCalled())
+
+      store.setSource('SYNPUF5PCT')
+      resolveCounts!(
+        new Map([
+          [257315, { recordCount: 2880, descendantRecordCount: 12441, personCount: 900, descendantPersonCount: 4000 }],
+        ])
+      )
+      await expandPromise
+
+      expect(store.countsFor(257315)).toBeUndefined()
+    })
   })
 })

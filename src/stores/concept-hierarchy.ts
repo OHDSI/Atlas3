@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { logger } from '@/utils/logger'
 import { fetchConceptAncestorAndDescendant } from '@/services/concept-detail.service'
-import type { RelatedConcept } from '@/models/concept-detail.types'
+import { getConceptRecordCounts } from '@/services/concept-search.service'
+import type { RelatedConcept, ConceptRecordCount } from '@/models/concept-detail.types'
 
 const CHILD_RELATIONSHIP = 'Has descendant of'
 
@@ -21,6 +22,7 @@ export const useConceptHierarchyStore = defineStore('concept-hierarchy', () => {
   const leafNodes = ref(new Set<number>())
   const expandedNodes = ref(new Set<number>())
   const failedNodes = ref(new Set<number>())
+  const countsByConcept = ref(new Map<number, ConceptRecordCount>())
 
   const inFlight = new Map<number, Promise<void>>()
   let sourceGeneration = 0
@@ -31,6 +33,7 @@ export const useConceptHierarchyStore = defineStore('concept-hierarchy', () => {
     leafNodes.value = new Set()
     expandedNodes.value = new Set()
     failedNodes.value = new Set()
+    countsByConcept.value = new Map()
     inFlight.clear()
     sourceGeneration++
   }
@@ -57,11 +60,30 @@ export const useConceptHierarchyStore = defineStore('concept-hierarchy', () => {
   function hasFailed(conceptId: number) {
     return failedNodes.value.has(conceptId)
   }
+  function countsFor(conceptId: number): ConceptRecordCount | undefined {
+    return countsByConcept.value.get(conceptId)
+  }
 
   function collapseNode(conceptId: number) {
     expandedNodes.value = new Set(
       [...expandedNodes.value].filter(id => id !== conceptId)
     )
+  }
+
+  // Counts are decorative: a failure must not take the tree down with it.
+  async function loadCounts(conceptIds: number[], requestSourceKey: string): Promise<void> {
+    const missing = conceptIds.filter(id => !countsByConcept.value.has(id))
+    if (missing.length === 0) return
+    const loadGeneration = sourceGeneration
+    try {
+      const fetched = await getConceptRecordCounts(requestSourceKey, missing)
+      if (loadGeneration !== sourceGeneration) return
+      const next = new Map(countsByConcept.value)
+      for (const [id, counts] of fetched) next.set(id, counts)
+      countsByConcept.value = next
+    } catch (e) {
+      logger.error('ConceptHierarchy', `loadCounts failed for ${requestSourceKey}`, e)
+    }
   }
 
   async function fetchChildren(conceptId: number): Promise<void> {
@@ -78,6 +100,7 @@ export const useConceptHierarchyStore = defineStore('concept-hierarchy', () => {
           leafNodes.value = new Set(leafNodes.value).add(conceptId)
         } else {
           expandedNodes.value = new Set(expandedNodes.value).add(conceptId)
+          await loadCounts(children.map(c => c.conceptId), fetchSourceKey)
         }
       }
     } catch (e) {
@@ -118,6 +141,8 @@ export const useConceptHierarchyStore = defineStore('concept-hierarchy', () => {
     isLeaf,
     isExpanded,
     hasFailed,
+    countsFor,
+    loadCounts,
     reset,
   }
 })
