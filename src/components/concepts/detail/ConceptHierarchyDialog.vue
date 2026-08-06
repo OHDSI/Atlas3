@@ -6,10 +6,10 @@ import {
   AtlasProgressCircular,
   AtlasTextField,
   AtlasSelect,
-  AtlasChip,
   AtlasSnackbar,
 } from '@/components/ui'
 import ConceptAddOptions from '@/components/concepts/ConceptAddOptions.vue'
+import ConceptHierarchyRow from '@/components/concepts/detail/ConceptHierarchyRow.vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptDetailStore } from '@/stores/concept-detail'
 import { useConceptHierarchyStore } from '@/stores/concept-hierarchy'
@@ -378,62 +378,21 @@ function counts(conceptId: number) {
             v-for="{ row, depth, key } in treeRows"
             :key="key"
           >
-            <tr
-              :data-testid="`hierarchy-row-${row.conceptId}`"
-              :data-descendant-row="depth === 0 ? '' : undefined"
-              class="descendant"
-            >
-              <td>
-                <v-checkbox-btn
-                  v-if="canAdd"
-                  :model-value="selected.includes(row.conceptId)"
-                  density="compact"
-                  hide-details
-                  :data-testid="`hierarchy-select-${row.conceptId}`"
-                  @update:model-value="toggleSelected(row.conceptId)"
-                />
-              </td>
-              <td :style="{ paddingLeft: `${8 + depth * 24}px` }">
-                <button
-                  v-if="view === 'tree' && !tree.isLeaf(row.conceptId)"
-                  type="button"
-                  class="chev"
-                  :data-testid="`hierarchy-expand-${row.conceptId}`"
-                  @click="toggle(row)"
-                >
-                  {{ tree.isExpanded(row.conceptId) ? '▾' : '▸' }}
-                </button>
-                {{ row.conceptName }}
-                <AtlasChip
-                  v-if="itemsById.has(row.conceptId)"
-                  size="sm"
-                >
-                  {{ t('components.conceptHierarchyDialog.inSet', 'in set').value }}
-                </AtlasChip>
-                <AtlasChip
-                  v-if="itemsById.get(row.conceptId)?.isExcluded"
-                  size="sm"
-                >
-                  {{ t('components.conceptHierarchyDialog.excluded', 'excluded').value }}
-                </AtlasChip>
-                <AtlasChip
-                  v-if="itemsById.get(row.conceptId)?.includeDescendants"
-                  size="sm"
-                >
-                  {{ t('components.conceptHierarchyDialog.withDescendants', '+desc').value }}
-                </AtlasChip>
-              </td>
-              <td>{{ row.conceptCode }}</td>
-              <td>{{ row.conceptClassId }}</td>
-              <td>{{ row.domainId }}</td>
-              <td>{{ row.vocabularyId }}</td>
-              <td class="num">
-                {{ counts(row.conceptId)?.recordCount ?? '—' }}
-              </td>
-              <td class="num">
-                {{ counts(row.conceptId)?.descendantRecordCount ?? '—' }}
-              </td>
-            </tr>
+            <ConceptHierarchyRow
+              :row="row"
+              :depth="depth"
+              :can-add="canAdd"
+              :selected="selected.includes(row.conceptId)"
+              :expandable="view === 'tree' && !tree.isLeaf(row.conceptId)"
+              :expanded="tree.isExpanded(row.conceptId)"
+              :in-set="itemsById.has(row.conceptId)"
+              :is-excluded="!!itemsById.get(row.conceptId)?.isExcluded"
+              :include-descendants="!!itemsById.get(row.conceptId)?.includeDescendants"
+              :record-count="counts(row.conceptId)?.recordCount"
+              :descendant-record-count="counts(row.conceptId)?.descendantRecordCount"
+              @toggle-select="toggleSelected(row.conceptId)"
+              @toggle-expand="toggle(row)"
+            />
 
             <tr
               v-if="tree.isLoading(row.conceptId)"
@@ -499,7 +458,6 @@ function counts(conceptId: number) {
 .section-row td { font-size: 11px; text-transform: uppercase; opacity: 0.6; }
 .ancestor { opacity: 0.8; }
 .anchor { background: rgba(25, 118, 210, 0.12); font-weight: 600; }
-.chev { background: none; border: none; cursor: pointer; padding: 0 6px 0 0; }
 .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
 .view-toggle button { border: 1px solid rgba(0, 0, 0, 0.25); background: none; padding: 2px 10px; font-size: 12px; }
 .view-toggle button.on { background: rgba(25, 118, 210, 0.18); font-weight: 600; }
