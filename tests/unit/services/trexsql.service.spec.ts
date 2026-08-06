@@ -218,10 +218,59 @@ describe('TrexSQLService', () => {
         })
       } as Response)
 
-      const result = await getCacheStatus('CDM_SOURCE')
+      // A persistent error is retried before it is believed; drive the backoff
+      // with fake timers so the assertion does not wait out the real delays.
+      vi.useFakeTimers()
+      try {
+        const pending = getCacheStatus('CDM_SOURCE')
+        await vi.runAllTimersAsync()
+        const result = await pending
 
-      expect(result.status).toBe('error')
-      expect(result.errorMessage).toBe('Cache attachment failed')
+        expect(result.status).toBe('error')
+        expect(result.errorMessage).toBe('Cache attachment failed')
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('re-checks a transient error and returns the recovered status', async () => {
+      const errorResponse = {
+        ok: true,
+        json: async () => ({
+          sourceKey: 'CDM_SOURCE',
+          cacheExists: true,
+          cacheAttached: false,
+          activeJob: false,
+          errorMessage: 'Cache attachment failed'
+        })
+      } as Response
+      const readyResponse = {
+        ok: true,
+        json: async () => ({
+          sourceKey: 'CDM_SOURCE',
+          cacheExists: true,
+          cacheAttached: true,
+          activeJob: false
+        })
+      } as Response
+
+      // trexsql reports cacheExists && !cacheAttached mid attach-retry; the next
+      // poll shows it healthy, and that recovery is what callers must observe.
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce(errorResponse)
+        .mockResolvedValue(readyResponse)
+
+      vi.useFakeTimers()
+      try {
+        const pending = getCacheStatus('CDM_SOURCE')
+        await vi.runAllTimersAsync()
+        const result = await pending
+
+        expect(result.status).toBe('ready')
+        expect(vi.mocked(global.fetch).mock.calls.length).toBeGreaterThan(1)
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it('throws on other errors', async () => {
