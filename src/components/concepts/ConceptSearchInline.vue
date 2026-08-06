@@ -37,6 +37,16 @@
       {{ store.error }}
     </AtlasAlert>
 
+    <ConceptFacetFilters
+      v-if="!store.isEmpty"
+      :facet-options="store.facetOptions"
+      :selected="store.selectedFacets"
+      :active-filter-count="store.activeFacetCount"
+      class="mb-4"
+      @update:facet="({ key, values }) => store.setFacet(key, values)"
+      @clear="store.clearFacets()"
+    />
+
     <!-- Results Table with Add/Remove buttons -->
     <ConceptTable
       :concepts="store.concepts"
@@ -62,6 +72,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import ConceptTable from './ConceptTable.vue'
+import ConceptFacetFilters from './ConceptFacetFilters.vue'
 import type { Concept } from '@/models/concept-set.types'
 
 const { t, tv } = useI18n()
