@@ -2707,6 +2707,7 @@
     }
   },
   "search": {
+    "addedCountToSet": "Added {count} concepts → {set}",
     "addedToSet": "Added “{concept}” → {set}",
     "advancedOptions": "Advanced Options",
     "buttonTitle": "Search",
@@ -2771,6 +2772,12 @@
         "export": "Export",
         "list": "List"
       }
+    },
+    "conceptAddBox": {
+      "addToConceptSet": "Add To Concept Set",
+      "descendants": "Descendants",
+      "exclude": "Exclude",
+      "mapped": "Mapped"
     },
     "manager": {
       "attemptingToFindMessage": "Attempting to find an optimal definition for this concept set...",

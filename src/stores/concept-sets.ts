@@ -17,6 +17,7 @@ import type {
   ConceptSet,
   ConceptSetListItem,
   ConceptSetItem,
+  ConceptAddFlags,
   ComparisonResultItem,
   ConceptSetExpression,
 } from '@/models/concept-set.types'
@@ -443,7 +444,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   /**
    * Add a concept to the current concept set
    */
-  function addConceptToSet(concept: Concept) {
+  function addConceptToSet(concept: Concept, flags?: ConceptAddFlags) {
     if (!currentSet.value) {
       error.value = 'No concept set selected'
       return
@@ -456,7 +457,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
-    const item: ConceptSetItem = conceptToConceptSetItem(concept)
+    const item: ConceptSetItem = conceptToConceptSetItem(concept, flags)
     currentSet.value.items.push(item)
     error.value = null
   }

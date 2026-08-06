@@ -73,6 +73,10 @@ export interface ConceptSetItem {
   includeMapped: boolean // Include mapped concepts from other vocabularies
 }
 
+export type ConceptAddFlags = Partial<
+  Pick<ConceptSetItem, 'isExcluded' | 'includeDescendants' | 'includeMapped'>
+>
+
 export const ConceptSetItemSchema = z.object({
   conceptId: z.number().int().positive(),
   conceptName: z.string(),
