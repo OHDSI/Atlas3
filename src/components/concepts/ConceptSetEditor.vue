@@ -239,7 +239,7 @@
               class="cs-editor__paste-btn"
               @click="showSourceCodeDialog = true"
             >
-              {{ t('cs.manager.importSourceCodes', 'Import codes') }}
+              {{ t('cs.manager.importSourceCodesButton', 'Import by source code') }}
             </AtlasButton>
 
             <AtlasButton
@@ -1170,6 +1170,16 @@ function applyConceptsToSet(concepts: Concept[]) {
 // Bulk paste IDs
 // ============================================================================
 
+// Re-resolving is required after any edit, so reset the resolved/unresolved
+// state when the textarea changes. Keeps the action button showing "Resolve"
+// until the user re-validates the (possibly corrected) input.
+watch(pasteInput, () => {
+  if (pasteResolved.value.length || pasteUnresolved.value.length) {
+    pasteResolved.value = []
+    pasteUnresolved.value = []
+  }
+})
+
 async function resolvePastedIds() {
   const ids = parsePastedIds(pasteInput.value)
   if (ids.length === 0) {
@@ -1213,6 +1223,14 @@ function closePasteDialog() {
 // ============================================================================
 // Import by source code
 // ============================================================================
+
+// Same reset as pasteInput above: a corrected code should re-enable resolving.
+watch(sourceCodeInput, () => {
+  if (sourceCodeResolved.value.length || sourceCodeUnresolved.value.length) {
+    sourceCodeResolved.value = []
+    sourceCodeUnresolved.value = []
+  }
+})
 
 async function resolvePastedSourceCodes() {
   const codes = parsePastedSourceCodes(sourceCodeInput.value)

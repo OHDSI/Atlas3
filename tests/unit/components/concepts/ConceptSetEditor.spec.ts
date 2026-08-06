@@ -583,6 +583,33 @@ describe('ConceptSetEditor', () => {
       expect(vm.pasteResolved).toHaveLength(1)
       expect(vm.pasteUnresolved).toEqual([999999])
     })
+
+    it('resets resolved/unresolved state when the input is edited after a failed resolve (issue #159)', async () => {
+      const webapi = useWebAPIStore()
+      vi.spyOn(webapi, 'getValidVocabularySource').mockReturnValue('MY_VOCAB')
+      vi.mocked(conceptSearchService.getConceptsByIds).mockResolvedValue([])
+
+      const wrapper = mountComponent()
+      const vm = wrapper.vm as unknown as {
+        pasteInput: string
+        resolvePastedIds: () => Promise<void>
+        pasteResolved: Concept[]
+        pasteUnresolved: number[]
+      }
+
+      vm.pasteInput = '999999'
+      await vm.resolvePastedIds()
+      expect(vm.pasteUnresolved).toEqual([999999])
+
+      // Correcting the input previously left pasteUnresolved stale, so the
+      // dialog stayed stuck on a disabled "Add" button instead of reverting
+      // to "Resolve" for the user to re-validate.
+      vm.pasteInput = '201826'
+      await wrapper.vm.$nextTick()
+
+      expect(vm.pasteResolved).toEqual([])
+      expect(vm.pasteUnresolved).toEqual([])
+    })
   })
 
   describe('source code import (#95 Part A)', () => {
@@ -633,6 +660,32 @@ describe('ConceptSetEditor', () => {
 
       expect(vm.sourceCodeResolved).toHaveLength(1)
       // Must NOT be reported as unresolved just because of a case mismatch.
+      expect(vm.sourceCodeUnresolved).toEqual([])
+    })
+
+    it('resets resolved/unresolved state when the input is edited after a failed resolve (issue #159)', async () => {
+      const webapi = useWebAPIStore()
+      vi.spyOn(webapi, 'getValidVocabularySource').mockReturnValue('MY_VOCAB')
+      vi.mocked(conceptSearchService.getConceptsBySourceCodes).mockResolvedValue([])
+
+      const wrapper = mountComponent()
+      const vm = wrapper.vm as unknown as {
+        sourceCodeInput: string
+        resolvePastedSourceCodes: () => Promise<void>
+        sourceCodeResolved: Concept[]
+        sourceCodeUnresolved: string[]
+      }
+
+      vm.sourceCodeInput = 'BADCODE'
+      await vm.resolvePastedSourceCodes()
+      expect(vm.sourceCodeUnresolved).toEqual(['BADCODE'])
+
+      // Correcting the code previously left the dialog stuck showing a
+      // disabled "Add" button because sourceCodeUnresolved never cleared.
+      vm.sourceCodeInput = 'E11.9'
+      await wrapper.vm.$nextTick()
+
+      expect(vm.sourceCodeResolved).toEqual([])
       expect(vm.sourceCodeUnresolved).toEqual([])
     })
   })
