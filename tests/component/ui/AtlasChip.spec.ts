@@ -63,9 +63,22 @@ describe('AtlasChip', () => {
     expect(wrapper.findComponent({ name: 'VChip' }).props('size')).toBe('default')
   })
 
-  it('emits click', async () => {
-    const wrapper = mountWith()
+  it('emits click when a consumer listens for click', async () => {
+    const wrapper = mount(AtlasChip, {
+      global: { plugins: [vuetify] },
+      attrs: { onClick: () => {} },
+      slots: { default: 'tag' },
+    })
     await wrapper.findComponent({ name: 'VChip' }).trigger('click')
     expect(wrapper.emitted('click')).toBeTruthy()
+  })
+
+  it('does not forward a click listener to v-chip when no consumer listens for click', () => {
+    // Regression test for #160: purely informational chips (no @click on AtlasChip)
+    // must not render with a pointer cursor / ripple, since Vuetify treats the mere
+    // presence of a click listener on v-chip as making it "clickable".
+    const wrapper = mountWith()
+    const chip = wrapper.findComponent({ name: 'VChip' })
+    expect(chip.vm.$attrs.onClick).toBeUndefined()
   })
 })
