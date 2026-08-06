@@ -21,6 +21,7 @@ vi.mock('@/services/concept-search.service', () => ({
   getConceptRecordCounts: vi.fn(),
   compareConceptSets: vi.fn(),
   getMappedSourceCodes: vi.fn(),
+  resolveConceptSetExpression: vi.fn(),
 }))
 
 vi.mock('@/utils/api-mappers', () => ({
@@ -80,6 +81,7 @@ import {
   getConceptRecordCounts,
   compareConceptSets,
   getMappedSourceCodes,
+  resolveConceptSetExpression,
 } from '@/services/concept-search.service'
 import type { ComparisonResultItem } from '@/models/concept-set.types'
 
@@ -1031,6 +1033,47 @@ describe('Concept Sets Store', () => {
       await inFlight
 
       expect(store.loadingComparison).toBe(false)
+    })
+  })
+
+  describe('resolveIncluded', () => {
+    it('falls back to the configured default source when no vocabulary source is selected yet (#158)', async () => {
+      // Regression test: when opened without an injected sourceKey and before any
+      // WebAPI vocabulary source has been loaded/selected (e.g. the concept set
+      // editor embedded in the cohort builder), the debounced auto-resolve used to
+      // call resolveIncluded() with no argument and only fall back to
+      // webapiStore.getValidVocabularySource(), which returns null in this state.
+      // That left includedItems (and therefore the Source Codes tab) empty even
+      // though the concept set has items. It must now also fall back to
+      // getSourceKey()'s configured default.
+      localStorage.removeItem('selectedVocabulary')
+      const store = useConceptSetsStore()
+      store.currentSet = {
+        name: 'Test',
+        items: [{
+          conceptId: 201826,
+          conceptName: 'Type 2 diabetes',
+          conceptCode: '44054006',
+          domainId: 'Condition',
+          vocabularyId: 'SNOMED',
+          conceptClassId: 'Clinical Finding',
+          standardConcept: 'S',
+          invalidReason: null,
+          isExcluded: false,
+          includeDescendants: false,
+          includeMapped: false,
+        }],
+      }
+      vi.mocked(resolveConceptSetExpression).mockResolvedValue([])
+
+      await store.resolveIncluded()
+
+      expect(resolveConceptSetExpression).toHaveBeenCalledWith(
+        'SYNPUF1K',
+        expect.anything(),
+        expect.any(AbortSignal),
+      )
+      expect(store.includedError).toBeNull()
     })
   })
 

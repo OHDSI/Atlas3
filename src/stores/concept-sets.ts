@@ -37,6 +37,7 @@ import {
 import { useWebAPIStore } from '@/stores/webapi'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
+import { getSourceKey } from '@/config/webapi'
 
 export interface ConceptSetFilterState {
   searchQuery: string
@@ -782,7 +783,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
-    const key = sourceKey || useWebAPIStore().getValidVocabularySource()
+    const key = sourceKey || useWebAPIStore().getValidVocabularySource() || getSourceKey()
     if (!key) {
       includedError.value = 'No vocabulary source available'
       return
