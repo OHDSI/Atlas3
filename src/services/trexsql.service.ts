@@ -128,7 +128,18 @@ function mapCacheStatusResponse(
   }
 }
 
-export async function getCacheStatus(sourceKey: string): Promise<TrexSQLCacheStatus> {
+// `cacheExists && !cacheAttached` reports as "error", but that combination is
+// also the momentary state during a benign attach retry, when the cache is built
+// and about to become healthy. Treating it as terminal makes every consumer — the
+// data-source list, the live count gate, the config page — give up on a cache that
+// works seconds later. Re-check a bounded number of times before believing it.
+const CACHE_STATUS_ERROR_RETRIES = 5
+const CACHE_STATUS_RETRY_DELAY_MS = 2500
+
+export async function getCacheStatus(
+  sourceKey: string,
+  attempt = 0
+): Promise<TrexSQLCacheStatus> {
   const url = `${getBaseUrl()}/trexsql/${sourceKey}/cache/status`
 
   try {
@@ -164,12 +175,14 @@ export async function getCacheStatus(sourceKey: string): Promise<TrexSQLCacheSta
     const data = await response.json()
 
     const result = TrexSQLCacheStatusSchema.safeParse(data)
-    if (result.success) {
-      return result.data
+    const status = result.success ? result.data : mapCacheStatusResponse(sourceKey, data)
+
+    if (status.status === 'error' && attempt < CACHE_STATUS_ERROR_RETRIES) {
+      await new Promise(resolve => setTimeout(resolve, CACHE_STATUS_RETRY_DELAY_MS))
+      return getCacheStatus(sourceKey, attempt + 1)
     }
 
-    const mappedStatus = mapCacheStatusResponse(sourceKey, data)
-    return mappedStatus
+    return status
   } catch (error) {
     logger.error('TrexSQL', 'Failed to get cache status', { sourceKey, error })
     throw error
