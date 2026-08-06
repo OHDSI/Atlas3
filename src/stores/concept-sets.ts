@@ -615,6 +615,9 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
     loadingRecommended.value = true
     recommendedError.value = null
+    // A 501 from one source must not leave the "not available" banner up for
+    // every later set or source — re-establish availability on each attempt.
+    isRecommendedAvailable.value = true
 
     try {
       const result = await getRecommendedConcepts(sourceKey, seed)
@@ -627,8 +630,6 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
       const existingIds = new Set((currentSet.value?.items ?? []).map(item => item.conceptId))
       const candidates = result.concepts.filter(c => !existingIds.has(c.conceptId))
-
-      isRecommendedAvailable.value = true
 
       const ids = candidates.map(c => c.conceptId)
       const counts = await getConceptRecordCounts(sourceKey, ids)

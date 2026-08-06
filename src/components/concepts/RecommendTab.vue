@@ -1,7 +1,17 @@
 <template>
   <div class="recommend-tab">
     <AtlasAlert
-      v-if="!store.isRecommendedAvailable"
+      v-if="store.recommendedError"
+      severity="danger"
+      :closable="true"
+      class="mb-4"
+      @close="store.recommendedError = null"
+    >
+      {{ store.recommendedError }}
+    </AtlasAlert>
+
+    <AtlasAlert
+      v-else-if="!store.isRecommendedAvailable"
       severity="info"
       class="mb-4"
       data-testid="recommend-not-available"
@@ -12,16 +22,6 @@
           'Recommendations are not available. The PHOEBE 2.0 vocabulary tables are required to generate recommendations.'
         )
       }}
-    </AtlasAlert>
-
-    <AtlasAlert
-      v-else-if="store.recommendedError"
-      severity="danger"
-      :closable="true"
-      class="mb-4"
-      @close="store.recommendedError = null"
-    >
-      {{ store.recommendedError }}
     </AtlasAlert>
 
     <AtlasAlert
