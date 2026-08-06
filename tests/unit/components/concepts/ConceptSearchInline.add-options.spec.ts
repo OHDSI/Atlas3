@@ -10,7 +10,6 @@ import { setActivePinia, createPinia } from 'pinia'
 import ConceptSearchInline from '@/components/concepts/ConceptSearchInline.vue'
 import ConceptAddOptions from '@/components/concepts/ConceptAddOptions.vue'
 import { useConceptSearchStore } from '@/stores/concept-search'
-import { useConceptSetsStore } from '@/stores/concept-sets'
 import { createMockConcept } from '@/../tests/helpers/mock-factories'
 
 vi.mock('@/composables/useI18n', async () => {
@@ -130,97 +129,5 @@ describe('ConceptSearchInline — add options', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.emitted('add-concepts')).toBeUndefined()
-  })
-})
-
-describe('ConceptSearchInline — search box and table wiring', () => {
-  let wrapper: VueWrapper
-
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    wrapper = mount(ConceptSearchInline, { global: { plugins: [vuetify] } })
-  })
-
-  it('rejects a term shorter than three characters', async () => {
-    const store = useConceptSearchStore()
-    const spy = vi.spyOn(store, 'search')
-
-    await wrapper.find('input').setValue('ab')
-    await wrapper.find('input').trigger('keyup.enter')
-
-    expect(spy).not.toHaveBeenCalled()
-    expect(wrapper.text()).toContain('Please enter at least 3 characters')
-  })
-
-  it('searches the trimmed term on Enter and on the append button', async () => {
-    const store = useConceptSearchStore()
-    const spy = vi.spyOn(store, 'search')
-
-    await wrapper.find('input').setValue('  diabetes  ')
-    await wrapper.find('input').trigger('keyup.enter')
-    expect(spy).toHaveBeenLastCalledWith('diabetes')
-
-    await wrapper.findComponent({ name: 'AtlasButton' }).trigger('click')
-    expect(spy).toHaveBeenLastCalledWith('diabetes')
-  })
-
-  it('clears the store when the input is emptied', async () => {
-    const store = useConceptSearchStore()
-    const spy = vi.spyOn(store, 'clearSearch')
-
-    await wrapper.find('input').setValue('diabetes')
-    await wrapper.find('input').setValue('')
-
-    expect(spy).toHaveBeenCalled()
-  })
-
-  it('resets the box and the store via the clear affordance', async () => {
-    const store = useConceptSearchStore()
-    const spy = vi.spyOn(store, 'clearSearch')
-
-    await wrapper.find('input').setValue('diabetes')
-    wrapper.findComponent({ name: 'AtlasTextField' }).vm.$emit('click:clear')
-    await wrapper.vm.$nextTick()
-
-    expect(spy).toHaveBeenCalled()
-    expect((wrapper.find('input').element as HTMLInputElement).value).toBe('')
-  })
-
-  it('surfaces a store error', async () => {
-    useConceptSearchStore().error = 'boom'
-    await wrapper.vm.$nextTick()
-    expect(wrapper.text()).toContain('boom')
-  })
-
-  it('forwards pagination changes to the store', async () => {
-    const store = useConceptSearchStore()
-    const spy = vi.spyOn(store, 'updatePagination')
-
-    table(wrapper).vm.$emit('update:page', 3)
-    expect(spy).toHaveBeenLastCalledWith(3, store.itemsPerPage)
-
-    table(wrapper).vm.$emit('update:itemsPerPage', 50)
-    expect(spy).toHaveBeenLastCalledWith(1, 50)
-  })
-
-  it('re-emits remove and view events from the table', async () => {
-    table(wrapper).vm.$emit('remove-concept', A)
-    table(wrapper).vm.$emit('view-concept', { conceptId: 1, sourceKey: 'SYNPUF1K' })
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.emitted('remove-concept')?.[0]).toEqual([A])
-    expect(wrapper.emitted('view-concept')?.[0]).toEqual([{ conceptId: 1, sourceKey: 'SYNPUF1K' }])
-  })
-
-  it('marks concepts already in the open set', async () => {
-    const sets = useConceptSetsStore()
-    sets.currentSet = {
-      id: 7,
-      name: 'Set',
-      items: [{ ...A, isExcluded: false, includeDescendants: false, includeMapped: false }],
-    }
-    await wrapper.vm.$nextTick()
-
-    expect([...(table(wrapper).props('conceptsInSet') as Set<number>)]).toEqual([A.conceptId])
   })
 })

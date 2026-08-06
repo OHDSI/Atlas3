@@ -234,7 +234,10 @@ describe('ConceptSearchInline search box and table wiring', () => {
     table().vm.$emit('view-concept', { conceptId: 1, sourceKey: 'SYNPUF1K' })
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.emitted('add-concept')?.[0]).toEqual([concept])
+    expect(wrapper.emitted('add-concept')?.[0]).toEqual([
+      concept,
+      { isExcluded: false, includeDescendants: false, includeMapped: false },
+    ])
     expect(wrapper.emitted('remove-concept')?.[0]).toEqual([concept])
     expect(wrapper.emitted('view-concept')?.[0]).toEqual([{ conceptId: 1, sourceKey: 'SYNPUF1K' }])
   })
