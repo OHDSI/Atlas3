@@ -58,19 +58,28 @@ const isEmpty = computed(() => hierarchy.value.length === 0)
 interface TreeRow {
   row: RelatedConcept
   depth: number
+  key: string
 }
 
 // One flattened list drives a single <tr v-for>, so rows at every depth share
-// one markup block instead of a copy per nesting level.
-function flatten(rows: RelatedConcept[], depth: number): TreeRow[] {
+// one markup block instead of a copy per nesting level. SNOMED is a
+// polyhierarchy, so the same conceptId can legitimately appear more than
+// once (under two different expanded parents) — the row key is derived from
+// the full ancestor path rather than the conceptId alone, so those rows stay
+// distinct instead of colliding on a duplicate Vue key.
+function flatten(rows: RelatedConcept[], depth: number, path: number[]): TreeRow[] {
   return rows.flatMap(row => {
-    const self: TreeRow = { row, depth }
-    if (!tree.isExpanded(row.conceptId)) return [self]
-    return [self, ...flatten(tree.childrenOf(row.conceptId), depth + 1)]
+    const key = [...path, row.conceptId].join('>')
+    const self: TreeRow = { row, depth, key }
+    // A concept that already appears higher up its own path is a cycle in
+    // the source data (should be acyclic, but a bad vocabulary load must
+    // not hang the UI) — render it once and stop recursing there.
+    if (!tree.isExpanded(row.conceptId) || path.includes(row.conceptId)) return [self]
+    return [self, ...flatten(tree.childrenOf(row.conceptId), depth + 1, [...path, row.conceptId])]
   })
 }
 
-const treeRows = computed(() => flatten(descendants.value, 0))
+const treeRows = computed(() => flatten(descendants.value, 0, []))
 
 watch(
   () => props.sourceKey,
@@ -189,8 +198,8 @@ function counts(conceptId: number) {
           </tr>
 
           <template
-            v-for="{ row, depth } in treeRows"
-            :key="`d-${row.conceptId}`"
+            v-for="{ row, depth, key } in treeRows"
+            :key="key"
           >
             <tr
               :data-testid="`hierarchy-row-${row.conceptId}`"
@@ -221,7 +230,10 @@ function counts(conceptId: number) {
               </td>
             </tr>
 
-            <tr v-if="tree.isLoading(row.conceptId)">
+            <tr
+              v-if="tree.isLoading(row.conceptId)"
+              :data-testid="`hierarchy-loading-${row.conceptId}`"
+            >
               <td colspan="7">
                 <AtlasProgressCircular
                   indeterminate

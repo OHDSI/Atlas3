@@ -26,9 +26,29 @@ import {
   INFECTIVE_PNEUMONIA_CHILDREN,
 } from '../../../fixtures/concept-hierarchy'
 import type { Concept } from '@/models/concept-set.types'
+import type { RelatedConcept } from '@/models/concept-detail.types'
 import type { Mock } from 'vitest'
 
 const vuetify = createVuetify({ components, directives })
+
+function relatedConcept(
+  conceptId: number,
+  conceptName: string,
+  overrides: Partial<RelatedConcept> = {}
+): RelatedConcept {
+  return {
+    conceptId,
+    conceptName,
+    conceptCode: `code-${conceptId}`,
+    domainId: 'Condition',
+    vocabularyId: 'SNOMED',
+    conceptClassId: 'Disorder',
+    standardConcept: 'S',
+    invalidReason: null,
+    relationships: [{ relationshipName: 'Has descendant of', relationshipDistance: 1 }],
+    ...overrides,
+  }
+}
 
 const concept: Concept = {
   conceptId: 255848,
@@ -149,6 +169,99 @@ describe('ConceptHierarchyDialog', () => {
     await wrapper.vm.$nextTick()
 
     expect(document.querySelector('[data-testid="hierarchy-retry-443410"]')).not.toBeNull()
+  })
+
+  it('renders a shared descendant once under each expanded parent, with no duplicate-key warning', async () => {
+    const shared = relatedConcept(9999001, 'Shared descendant')
+    ;(fetchConceptAncestorAndDescendant as Mock).mockImplementation((_key: string, conceptId: number) =>
+      conceptId === 4309106 || conceptId === 4236311
+        ? Promise.resolve([shared])
+        : Promise.resolve(INFECTIVE_PNEUMONIA_PAYLOAD)
+    )
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const firstParent = document.querySelector(
+      '[data-testid="hierarchy-expand-4309106"]'
+    ) as HTMLElement
+    const secondParent = document.querySelector(
+      '[data-testid="hierarchy-expand-4236311"]'
+    ) as HTMLElement
+    // Click both before awaiting anything so the two expansions resolve and
+    // apply within the same reactivity flush — that's what forces Vue's
+    // keyed-diff algorithm through its duplicate-key check; expanding them
+    // one at a time (with a render in between) only ever appends, which
+    // never exercises that path even with a colliding key.
+    firstParent.click()
+    secondParent.click()
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelectorAll('[data-testid="hierarchy-row-9999001"]')).toHaveLength(2)
+
+    const hasDuplicateKeyWarning = [...warnSpy.mock.calls, ...errorSpy.mock.calls].some(args =>
+      args.some(arg => typeof arg === 'string' && arg.toLowerCase().includes('duplicate key'))
+    )
+    expect(hasDuplicateKeyWarning).toBe(false)
+
+    warnSpy.mockRestore()
+    errorSpy.mockRestore()
+  })
+
+  it('terminates instead of recursing forever when a node lists an ancestor as its own descendant', async () => {
+    const selfReferencing = relatedConcept(443410, 'Infective pneumonia')
+    ;(fetchConceptAncestorAndDescendant as Mock).mockResolvedValue([selfReferencing])
+
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const chevron = document.querySelector(
+      '[data-testid="hierarchy-expand-443410"]'
+    ) as HTMLElement
+    chevron.click()
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelectorAll('[data-testid="hierarchy-row-443410"]')).toHaveLength(2)
+  })
+
+  it('shows a loading indicator while a node expands, then clears it once children arrive', async () => {
+    let resolveFetch!: (value: RelatedConcept[]) => void
+    const pending = new Promise<RelatedConcept[]>(resolve => {
+      resolveFetch = resolve
+    })
+    ;(fetchConceptAncestorAndDescendant as Mock).mockReturnValueOnce(pending)
+
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const chevron = document.querySelector(
+      '[data-testid="hierarchy-expand-443410"]'
+    ) as HTMLElement
+    chevron.click()
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[data-testid="hierarchy-loading-443410"]')).not.toBeNull()
+
+    resolveFetch(INFECTIVE_PNEUMONIA_CHILDREN)
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[data-testid="hierarchy-loading-443410"]')).toBeNull()
+  })
+
+  it('reports an empty hierarchy for a standard concept with no ancestors or descendants', async () => {
+    useConceptDetailStore().hierarchy = []
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[data-testid="hierarchy-empty"]')?.textContent).toContain(
+      'No hierarchy found for this concept.'
+    )
+    expect(document.body.textContent).not.toContain('No hierarchy found for non-standard concepts.')
   })
 
   it('reports non-standard concepts as having no hierarchy', async () => {
