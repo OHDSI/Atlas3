@@ -1036,6 +1036,13 @@ async function onSave() {
   try {
     let result
 
+    // Snapshot before the save: persisting mutates the store's concept set, which
+    // re-runs the props.conceptSet watcher and resets both refs to the still
+    // tag-less persisted value. Reading them after the await would diff nothing,
+    // so a newly added tag would never be assigned.
+    const tagsBeforeSave = [...loadedTags.value]
+    const tagsToPersist = [...selectedTags.value]
+
     if (isEditMode.value && props.conceptSet?.id) {
       result = await store.update({
         ...props.conceptSet,
@@ -1052,13 +1059,13 @@ async function onSave() {
     if (result) {
       const savedId = result?.id
       if (savedId !== undefined && savedId !== null) {
-        const tagResult = await store.syncTags(savedId, loadedTags.value, selectedTags.value)
+        const tagResult = await store.syncTags(savedId, tagsBeforeSave, tagsToPersist)
         if (!tagResult.success) {
           notify.danger(tv('conceptSets.tagUpdateFailed', 'Failed to update tags'), {
             message: tagResult.error,
           })
         }
-        loadedTags.value = [...selectedTags.value]
+        loadedTags.value = [...tagsToPersist]
       }
       hasUnsavedChanges.value = false
       emit('save')

@@ -853,5 +853,35 @@ describe('ConceptSetEditor', () => {
         expect.objectContaining({ message: 'Tag "protected" may only be assigned once' })
       )
     })
+
+    it('assigns a newly added tag even though saving re-seeds the tag refs', async () => {
+      const store = useConceptSetsStore()
+      const newTag = { id: 42, name: 'cardiology' }
+      vi.spyOn(store, 'syncTags').mockResolvedValue({ success: true })
+
+      const wrapper = mountComponent({ conceptSet: { ...mockConceptSet, tags: [] } })
+      await flushPromises()
+
+      // Persisting hands back a concept set that does not carry the pending tag
+      // yet. In the app that value flows straight back into props.conceptSet, so
+      // the seeding watcher runs mid-save and clears both refs — reading them
+      // after the await would diff nothing and silently drop the tag.
+      vi.spyOn(store, 'update').mockImplementation(async () => {
+        const persisted = { ...mockConceptSet, tags: [] }
+        await wrapper.setProps({ conceptSet: persisted })
+        return persisted
+      })
+
+      const vm = wrapper.vm as unknown as {
+        formValid: boolean
+        selectedTags: typeof newTag[]
+        onSave: () => Promise<void>
+      }
+      vm.selectedTags = [newTag]
+      vm.formValid = true
+      await vm.onSave()
+
+      expect(store.syncTags).toHaveBeenCalledWith(mockConceptSet.id, [], [newTag])
+    })
   })
 })
