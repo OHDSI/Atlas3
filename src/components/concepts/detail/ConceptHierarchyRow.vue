@@ -2,6 +2,7 @@
 import { AtlasChip } from '@/components/ui'
 import ConceptHierarchySelectCell from '@/components/concepts/detail/ConceptHierarchySelectCell.vue'
 import { useI18n } from '@/composables/useI18n'
+import { formatRecordCount } from '@/components/concepts/detail/record-count-format'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
 defineProps<{
@@ -20,7 +21,7 @@ defineProps<{
 
 const emit = defineEmits<{ 'toggle-select': []; 'toggle-expand': [] }>()
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 </script>
 
 <template>
@@ -31,6 +32,7 @@ const { t } = useI18n()
   >
     <ConceptHierarchySelectCell
       :concept-id="row.conceptId"
+      :concept-name="row.conceptName"
       :can-add="canAdd"
       :selected="selected"
       @toggle="emit('toggle-select')"
@@ -40,6 +42,10 @@ const { t } = useI18n()
         v-if="expandable"
         type="button"
         class="chev"
+        :aria-expanded="expanded"
+        :aria-label="expanded
+          ? tv('components.conceptHierarchyDialog.collapseConcept', 'Collapse {name}', { name: row.conceptName })
+          : tv('components.conceptHierarchyDialog.expandConcept', 'Expand {name}', { name: row.conceptName })"
         :data-testid="`hierarchy-expand-${row.conceptId}`"
         @click="emit('toggle-expand')"
       >
@@ -70,10 +76,10 @@ const { t } = useI18n()
     <td>{{ row.domainId }}</td>
     <td>{{ row.vocabularyId }}</td>
     <td class="num">
-      {{ recordCount ?? '—' }}
+      {{ formatRecordCount(recordCount) }}
     </td>
     <td class="num">
-      {{ descendantRecordCount ?? '—' }}
+      {{ formatRecordCount(descendantRecordCount) }}
     </td>
   </tr>
 </template>

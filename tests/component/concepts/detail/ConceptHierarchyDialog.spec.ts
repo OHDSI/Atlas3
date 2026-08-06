@@ -113,6 +113,87 @@ describe('ConceptHierarchyDialog', () => {
     expect(row?.textContent).toContain('SNOMED')
   })
 
+  it('lists every ancestor at every distance, matching the advertised count', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const advertised = PNEUMONIA_ANCESTOR_AND_DESCENDANT.filter(c =>
+      c.relationships.some(r => r.relationshipName === 'Has ancestor of')
+    ).length
+    expect(document.querySelectorAll('[data-ancestor-row]')).toHaveLength(advertised)
+    expect(document.body.textContent).toContain(`${advertised} ancestors`)
+    expect(document.querySelector('[data-testid="hierarchy-row-257907"]')?.textContent).toContain(
+      'distance 2'
+    )
+  })
+
+  it('loads record counts for the rows visible on open, before any expansion', async () => {
+    (getConceptRecordCounts as Mock).mockResolvedValue(
+      new Map([
+        [
+          4309106,
+          {
+            recordCount: 1234567,
+            descendantRecordCount: 2345678,
+            personCount: 10,
+            descendantPersonCount: 20,
+          },
+        ],
+        [
+          253506,
+          { recordCount: 42, descendantRecordCount: 99, personCount: 1, descendantPersonCount: 2 },
+        ],
+      ])
+    )
+    useConceptDetailStore().recordCountsBySource = new Map([
+      [
+        'SYNPUF1K',
+        {
+          recordCount: 7654321,
+          descendantRecordCount: 8765432,
+          personCount: 5,
+          descendantPersonCount: 6,
+        },
+      ],
+    ])
+
+    const wrapper = mountDialog()
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    expect(getConceptRecordCounts).toHaveBeenCalledWith(
+      'SYNPUF1K',
+      expect.arrayContaining([4309106, 253506])
+    )
+    expect(fetchConceptAncestorAndDescendant).not.toHaveBeenCalled()
+    expect(document.querySelector('[data-testid="hierarchy-row-4309106"]')?.textContent).toContain(
+      '1,234,567'
+    )
+    expect(document.querySelector('[data-testid="hierarchy-row-253506"]')?.textContent).toContain(
+      '42'
+    )
+    expect(document.querySelector('[data-testid="hierarchy-anchor"]')?.textContent).toContain(
+      '7,654,321'
+    )
+  })
+
+  it('labels the expand chevrons and the view toggle for assistive technology', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    expect(
+      document
+        .querySelector('[data-testid="hierarchy-expand-443410"]')
+        ?.getAttribute('aria-label')
+    ).toBe('Expand Infective pneumonia')
+    expect(
+      document.querySelector('[data-testid="hierarchy-expand-443410"]')?.getAttribute('aria-expanded')
+    ).toBe('false')
+    expect(
+      document.querySelector('[data-testid="hierarchy-view-tree"]')?.getAttribute('aria-pressed')
+    ).toBe('true')
+  })
+
   it('lists direct ancestors and highlights the anchor concept', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
@@ -345,6 +426,35 @@ describe('toolbar', () => {
 
     expect(input.value).toBe('Aspiration')
     expect(document.querySelectorAll('[data-descendant-row]')).toHaveLength(1)
+  })
+
+  it('keeps a non-matching parent visible when one of its loaded children matches', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const chevron = document.querySelector(
+      '[data-testid="hierarchy-expand-443410"]'
+    ) as HTMLElement
+    chevron.click()
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    // "Bacterial" matches only 257315 ("Bacterial pneumonia"), a loaded child of
+    // 443410 ("Infective pneumonia") — the parent itself does not match, and no
+    // top-level descendant does either.
+    const input = document.querySelector('[data-testid="hierarchy-filter"] input') as HTMLInputElement
+    input.value = 'Bacterial'
+    input.dispatchEvent(new Event('input'))
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[data-testid="hierarchy-row-257315"]')?.textContent).toContain(
+      'Bacterial pneumonia'
+    )
+    expect(document.querySelector('[data-testid="hierarchy-row-443410"]')?.textContent).toContain(
+      'Infective pneumonia'
+    )
+    expect(document.querySelectorAll('tr.descendant')).toHaveLength(2)
+    expect(fetchConceptAncestorAndDescendant).toHaveBeenCalledTimes(1)
   })
 
   it('filters an already-expanded node\'s children too, not just the top level', async () => {

@@ -111,8 +111,8 @@ export const useConceptHierarchyStore = defineStore('concept-hierarchy', () => {
     } finally {
       if (fetchGeneration === sourceGeneration) {
         loadingNodes.value = new Set([...loadingNodes.value].filter(id => id !== conceptId))
+        inFlight.delete(conceptId)
       }
-      inFlight.delete(conceptId)
     }
   }
 

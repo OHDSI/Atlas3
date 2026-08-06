@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import {
   AtlasDialog,
@@ -12,6 +12,7 @@ import ConceptAddOptions from '@/components/concepts/ConceptAddOptions.vue'
 import ConceptHierarchyRow from '@/components/concepts/detail/ConceptHierarchyRow.vue'
 import ConceptHierarchySelectCell from '@/components/concepts/detail/ConceptHierarchySelectCell.vue'
 import { useI18n } from '@/composables/useI18n'
+import { formatRecordCount } from '@/components/concepts/detail/record-count-format'
 import { useConceptDetailStore } from '@/stores/concept-detail'
 import { useConceptHierarchyStore } from '@/stores/concept-hierarchy'
 import { useConceptSetsStore } from '@/stores/concept-sets'
@@ -34,12 +35,23 @@ const { hierarchy } = storeToRefs(detail)
 
 const isNonStandard = computed(() => props.concept.standardConcept === 'N')
 
-const ancestors = computed(() =>
-  hierarchy.value.filter(c =>
-    c.relationships.some(
-      r => r.relationshipName === 'Has ancestor of' && r.relationshipDistance === 1
-    )
-  )
+interface AncestorRow {
+  concept: RelatedConcept
+  distance: number
+}
+
+// Every ancestor at every distance, not just the direct parents: the header
+// advertises the full count, so a truncated list would repeat the very bug
+// this dialog exists to fix.
+const ancestors = computed<AncestorRow[]>(() =>
+  hierarchy.value
+    .flatMap(concept => {
+      const distances = concept.relationships
+        .filter(r => r.relationshipName === 'Has ancestor of')
+        .map(r => r.relationshipDistance)
+      return distances.length > 0 ? [{ concept, distance: Math.min(...distances) }] : []
+    })
+    .sort((a, b) => a.distance - b.distance)
 )
 
 const descendants = computed(() =>
@@ -57,12 +69,7 @@ const allDescendantCount = computed(
     ).length
 )
 
-const allAncestorCount = computed(
-  () =>
-    hierarchy.value.filter(c =>
-      c.relationships.some(r => r.relationshipName === 'Has ancestor of')
-    ).length
-)
+const allAncestorCount = computed(() => ancestors.value.length)
 
 const isEmpty = computed(() => hierarchy.value.length === 0)
 
@@ -90,9 +97,7 @@ function matches(row: RelatedConcept): boolean {
   return true
 }
 
-const visibleRows = computed(() =>
-  (view.value === 'flat' ? allDescendants.value : descendants.value).filter(matches)
-)
+const flatRows = computed(() => allDescendants.value.filter(matches))
 
 interface TreeRow {
   row: RelatedConcept
@@ -106,18 +111,23 @@ interface TreeRow {
 // once (under two different expanded parents) — the row key is derived from
 // the full ancestor path rather than the conceptId alone, so those rows stay
 // distinct instead of colliding on a duplicate Vue key.
+//
+// Filtering is resolved bottom-up: a row survives when it matches or when
+// anything in its loaded subtree does, so a match never appears detached from
+// its ancestor chain. Only already-expanded nodes are walked, so filtering
+// still never triggers a fetch.
 function flatten(rows: RelatedConcept[], depth: number, path: number[]): TreeRow[] {
   return rows.flatMap(row => {
-    const key = [...path, row.conceptId].join('>')
-    const self: TreeRow = { row, depth, key }
+    const self: TreeRow = { row, depth, key: [...path, row.conceptId].join('>') }
     // A concept that already appears higher up its own path is a cycle in
     // the source data (should be acyclic, but a bad vocabulary load must
     // not hang the UI) — render it once and stop recursing there.
-    if (!tree.isExpanded(row.conceptId) || path.includes(row.conceptId)) return [self]
-    return [
-      self,
-      ...flatten(tree.childrenOf(row.conceptId).filter(matches), depth + 1, [...path, row.conceptId]),
-    ]
+    if (!tree.isExpanded(row.conceptId) || path.includes(row.conceptId)) {
+      return matches(row) ? [self] : []
+    }
+    const children = flatten(tree.childrenOf(row.conceptId), depth + 1, [...path, row.conceptId])
+    if (children.length === 0 && !matches(row)) return []
+    return [self, ...children]
   })
 }
 
@@ -126,8 +136,8 @@ function flatten(rows: RelatedConcept[], depth: number, path: number[]): TreeRow
 // only once in the source hierarchy, so its conceptId alone is a safe key.
 const treeRows = computed<TreeRow[]>(() =>
   view.value === 'flat'
-    ? visibleRows.value.map(row => ({ row, depth: 0, key: String(row.conceptId) }))
-    : flatten(visibleRows.value, 0, [])
+    ? flatRows.value.map(row => ({ row, depth: 0, key: String(row.conceptId) }))
+    : flatten(descendants.value, 0, [])
 )
 
 const selected = ref<number[]>([])
@@ -165,24 +175,27 @@ function toggleSelected(conceptId: number) {
     : [...selected.value, conceptId]
 }
 
-// treeRows already carries every row the user can see and therefore select,
-// at every depth — no need to re-walk the expansion cache.
-function rowsById(): Map<number, RelatedConcept> {
+// Ticks survive a filter change or a collapse, so the action must be scoped to
+// what is on screen right now — otherwise Add quietly adds rows the user can no
+// longer see, and the footer count disagrees with what happens.
+const visibleById = computed(() => {
   const map = new Map<number, RelatedConcept>()
-  for (const row of hierarchy.value) map.set(row.conceptId, row)
+  for (const { concept } of ancestors.value) map.set(concept.conceptId, concept)
   for (const { row } of treeRows.value) map.set(row.conceptId, row)
   return map
-}
+})
+
+const selectedVisible = computed(() => selected.value.filter(id => visibleById.value.has(id)))
 
 // addConceptToSet silently refuses duplicates, so count what actually landed
 // rather than what was ticked.
 function onAdd() {
   if (!conceptSets.currentSet) return
-  const lookup = rowsById()
+  const lookup = visibleById.value
   const before = conceptSets.currentSet.items.length
-  const attempted = selected.value.length
+  const attempted = selectedVisible.value.length
 
-  for (const conceptId of selected.value) {
+  for (const conceptId of selectedVisible.value) {
     const row = lookup.get(conceptId)
     if (row) conceptSets.addConceptToSet(toRow(row), addFlags.value)
   }
@@ -209,9 +222,43 @@ watch(
 watch(
   () => props.modelValue,
   open => {
-    if (!open) tree.reset()
+    if (!open) {
+      tree.reset()
+      selected.value = []
+    }
   }
 )
+
+// One dialog instance is reused as the drawer moves between concepts, so ticks
+// made for the previous concept would otherwise stay live — and get added.
+watch(
+  () => props.concept.conceptId,
+  () => {
+    selected.value = []
+  }
+)
+
+// The rows on screen when the dialog opens come from the concept-detail store,
+// not from an expansion, so nothing else would ever fetch their counts.
+watch(
+  [() => props.modelValue, () => props.concept.conceptId, () => props.sourceKey, hierarchy],
+  ([open]) => {
+    if (!open) return
+    void tree.loadCounts(
+      [
+        ...ancestors.value.map(a => a.concept.conceptId),
+        ...descendants.value.map(c => c.conceptId),
+      ],
+      props.sourceKey
+    )
+  },
+  { immediate: true }
+)
+
+// The drawer renders its content behind v-if, so closing it unmounts the dialog
+// without ever flipping modelValue — reset here too or expansion state leaks
+// into the next session.
+onUnmounted(() => tree.reset())
 
 function toggle(row: RelatedConcept) {
   if (tree.isExpanded(row.conceptId)) {
@@ -228,6 +275,8 @@ function close() {
 function counts(conceptId: number) {
   return tree.countsFor(conceptId)
 }
+
+const anchorCounts = computed(() => detail.recordCountsBySource.get(props.sourceKey))
 </script>
 
 <template>
@@ -289,6 +338,7 @@ function counts(conceptId: number) {
           <button
             type="button"
             :class="{ on: view === 'tree' }"
+            :aria-pressed="view === 'tree'"
             data-testid="hierarchy-view-tree"
             @click="view = 'tree'"
           >
@@ -297,6 +347,7 @@ function counts(conceptId: number) {
           <button
             type="button"
             :class="{ on: view === 'flat' }"
+            :aria-pressed="view === 'flat'"
             data-testid="hierarchy-view-flat"
             @click="view = 'flat'"
           >
@@ -329,27 +380,32 @@ function counts(conceptId: number) {
             </td>
           </tr>
           <tr
-            v-for="a in ancestors"
+            v-for="{ concept: a, distance } in ancestors"
             :key="`a-${a.conceptId}`"
             :data-testid="`hierarchy-row-${a.conceptId}`"
+            data-ancestor-row
             class="ancestor"
           >
             <ConceptHierarchySelectCell
               :concept-id="a.conceptId"
+              :concept-name="a.conceptName"
               :can-add="canAdd"
               :selected="selected.includes(a.conceptId)"
               @toggle="toggleSelected(a.conceptId)"
             />
-            <td>{{ a.conceptName }}</td>
+            <td>
+              {{ a.conceptName }}
+              <span class="dist">{{ t('components.conceptHierarchyDialog.ancestorDistance', 'distance {distance}', { distance }).value }}</span>
+            </td>
             <td>{{ a.conceptCode }}</td>
             <td>{{ a.conceptClassId }}</td>
             <td>{{ a.domainId }}</td>
             <td>{{ a.vocabularyId }}</td>
             <td class="num">
-              {{ counts(a.conceptId)?.recordCount ?? '—' }}
+              {{ formatRecordCount(counts(a.conceptId)?.recordCount) }}
             </td>
             <td class="num">
-              {{ counts(a.conceptId)?.descendantRecordCount ?? '—' }}
+              {{ formatRecordCount(counts(a.conceptId)?.descendantRecordCount) }}
             </td>
           </tr>
 
@@ -364,10 +420,10 @@ function counts(conceptId: number) {
             <td>{{ concept.domainId }}</td>
             <td>{{ concept.vocabularyId }}</td>
             <td class="num">
-              —
+              {{ formatRecordCount(anchorCounts?.recordCount) }}
             </td>
             <td class="num">
-              —
+              {{ formatRecordCount(anchorCounts?.descendantRecordCount) }}
             </td>
           </tr>
 
@@ -425,7 +481,7 @@ function counts(conceptId: number) {
       >
         <ConceptAddOptions
           v-model="addFlags"
-          :selected-count="selected.length"
+          :selected-count="selectedVisible.length"
           @add="onAdd"
         />
       </div>
@@ -453,6 +509,7 @@ function counts(conceptId: number) {
 .hierarchy-table :deep(td) { border-bottom: 1px solid rgba(0, 0, 0, 0.06); padding: 5px 8px; }
 .hierarchy-table :deep(td.num) { text-align: right; font-variant-numeric: tabular-nums; }
 .section-row td { font-size: 11px; text-transform: uppercase; opacity: 0.6; }
+.dist { font-size: 11px; opacity: 0.55; margin-left: 6px; }
 .ancestor { opacity: 0.8; }
 .anchor { background: rgba(25, 118, 210, 0.12); font-weight: 600; }
 .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
