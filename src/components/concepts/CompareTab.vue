@@ -42,7 +42,7 @@
           variant="ghost"
           size="sm"
           icon="mdi-download"
-          :disabled="store.comparison.length === 0 || store.loadingComparison"
+          :disabled="visibleRows.length === 0 || store.loadingComparison"
           data-testid="compare-export"
           @click="onExport"
         >
@@ -137,9 +137,30 @@
         </v-card-text>
       </v-card>
 
+      <div class="compare-tab__filters mb-4">
+        <AtlasTextField
+          v-model="searchText"
+          :placeholder="t('common.searchTable', 'Search table…').value"
+          prepend-inner-icon="mdi-magnify"
+          clearable
+          hide-details
+          variant="outlined"
+          data-testid="compare-search"
+          class="compare-tab__search"
+        />
+        <ConceptFacetFilters
+          :facets="compareFacets"
+          :facet-options="facetOptions"
+          :selected="selectedFacets"
+          :active-filter-count="activeFilterCount"
+          @update:facet="({ key, values }) => setFacet(key, values)"
+          @clear="clearFilters()"
+        />
+      </div>
+
       <AtlasDataTable
         :headers="headers"
-        :items="rows"
+        :items="visibleRows"
         :items-per-page="25"
         class="compare-tab__table"
       >
@@ -164,9 +185,15 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasChip, AtlasDataTable, AtlasProgressCircular } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasDataTable, AtlasProgressCircular, AtlasTextField } from '@/components/ui'
 import { ref, computed, inject, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import {
+  CONCEPT_FACETS,
+  useConceptFacets,
+  type FacetDefinition,
+} from '@/composables/useConceptFacets'
+import ConceptFacetFilters from './ConceptFacetFilters.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ComparisonMode } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
@@ -231,6 +258,50 @@ const rows = computed<Row[]>(() =>
           ? leftLabel.value
           : rightLabel.value,
   }))
+)
+
+const searchText = ref('')
+
+const SEARCHABLE_FIELDS = [
+  'conceptId',
+  'conceptName',
+  'conceptCode',
+  'domainId',
+  'vocabularyId',
+  'conceptClassId',
+  'match',
+] as const satisfies readonly (keyof Row)[]
+
+const searchedRows = computed<Row[]>(() => {
+  const term = searchText.value?.trim().toLowerCase()
+  if (!term) return rows.value
+  return rows.value.filter(r =>
+    SEARCHABLE_FIELDS.some(f => String(r[f] ?? '').toLowerCase().includes(term))
+  )
+})
+
+const compareFacets = computed<FacetDefinition<Row>[]>(() => [
+  { key: 'match', label: 'Match', display: r => r.match },
+  ...CONCEPT_FACETS,
+])
+
+const {
+  facetOptions,
+  selected: selectedFacets,
+  filteredConcepts: visibleRows,
+  activeFilterCount,
+  setFacet,
+  clearFilters,
+} = useConceptFacets<Row>(searchedRows, compareFacets)
+
+// A fresh comparison changes the value space entirely, so stale text and
+// facet selections would silently hide rows the user just asked for.
+watch(
+  () => store.comparison,
+  () => {
+    searchText.value = ''
+    clearFilters()
+  }
 )
 
 const isSourceMode = computed(() => store.comparisonMode === 'source')
@@ -334,8 +405,8 @@ function onClearOther() {
 }
 
 function onExport() {
-  if (store.comparison.length === 0) return
-  const csv = arrayToCsv(rows.value, [
+  if (visibleRows.value.length === 0) return
+  const csv = arrayToCsv(visibleRows.value, [
     { key: 'match', label: 'Match' },
     { key: 'conceptId', label: 'Concept Id' },
     { key: 'conceptCode', label: 'Concept Code' },
@@ -378,5 +449,17 @@ function onExport() {
 .compare-tab__venn {
   max-width: 480px;
   width: 100%;
+}
+
+.compare-tab__filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.compare-tab__search {
+  max-width: 320px;
+  flex: 1 1 220px;
 }
 </style>

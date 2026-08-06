@@ -48,7 +48,7 @@
             <AtlasAutocomplete
               v-for="facet in facets"
               :key="facet.key"
-              :model-value="selected[facet.key]"
+              :model-value="selectionFor(facet.key)"
               :items="itemsFor(facet.key)"
               item-title="label"
               item-value="value"
@@ -75,7 +75,7 @@
         :key="`chips-${facet.key}`"
       >
         <AtlasChip
-          v-for="value in selected[facet.key]"
+          v-for="value in selectionFor(facet.key)"
           :key="`${facet.key}-${value}`"
           size="sm"
           closable
@@ -99,13 +99,19 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import { CONCEPT_FACETS, type FacetKey, type FacetOption } from '@/composables/useConceptFacets'
+import {
+  CONCEPT_FACETS,
+  type FacetDefinition,
+  type FacetKey,
+  type FacetOption,
+} from '@/composables/useConceptFacets'
 import { AtlasAutocomplete, AtlasButton, AtlasCard, AtlasChip, AtlasMenu, AtlasSpacer } from '@/components/ui'
 
 interface Props {
   facetOptions: Record<FacetKey, FacetOption[]>
   selected: Record<FacetKey, string[]>
   activeFilterCount: number
+  facets?: Pick<FacetDefinition, 'key' | 'label'>[]
 }
 
 interface Emits {
@@ -113,36 +119,43 @@ interface Emits {
   (e: 'clear'): void
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  facets: () => CONCEPT_FACETS,
+})
 const emit = defineEmits<Emits>()
 const { t } = useI18n()
 
-const facets = CONCEPT_FACETS
 const filtersLabel = t('common.filters', 'Filters')
 const clearAllLabel = t('search.clearAllSelections', 'Clear all')
 const menuOpen = ref(false)
 
 // Translate facet labels via the existing column i18n keys.
-const labelKeys: Record<FacetKey, [string, string]> = {
+const labelKeys: Record<string, [string, string]> = {
   vocabularyId: ['columns.vocabulary', 'Vocabulary'],
   domainId: ['columns.domain', 'Domain'],
   standardConcept: ['columns.standard', 'Standard'],
   conceptClassId: ['columns.class', 'Class'],
   invalidReason: ['columns.validity', 'Validity'],
+  match: ['common.match', 'Match'],
 }
 
 function facetLabel(key: FacetKey): string {
-  const [k, fallback] = labelKeys[key]
-  return t(k, fallback).value
+  const entry = labelKeys[key]
+  if (entry) return t(entry[0], entry[1]).value
+  return props.facets.find(f => f.key === key)?.label ?? key
+}
+
+function selectionFor(key: FacetKey): string[] {
+  return props.selected[key] ?? []
 }
 
 // Facet counts are cross-facet, so a still-selected value can drop out of
 // facetOptions[key] (count 0). Re-add such values so their menu chips keep
 // a resolvable title.
 function itemsFor(key: FacetKey) {
-  const options = props.facetOptions[key]
+  const options = props.facetOptions[key] ?? []
   const present = new Set(options.map(o => o.value))
-  const missing = props.selected[key]
+  const missing = selectionFor(key)
     .filter(v => !present.has(v))
     .map(v => ({ value: v, label: v, count: 0 }))
   return [...options, ...missing]
@@ -153,7 +166,7 @@ function onUpdate(key: FacetKey, values: string[]) {
 }
 
 function removeValue(key: FacetKey, value: string) {
-  emit('update:facet', { key, values: props.selected[key].filter(v => v !== value) })
+  emit('update:facet', { key, values: selectionFor(key).filter(v => v !== value) })
 }
 </script>
 
