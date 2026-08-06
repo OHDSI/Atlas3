@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { AtlasDialog, AtlasProgressCircular, AtlasTextField, AtlasSelect } from '@/components/ui'
+import {
+  AtlasDialog,
+  AtlasProgressCircular,
+  AtlasTextField,
+  AtlasSelect,
+  AtlasChip,
+  AtlasSnackbar,
+} from '@/components/ui'
+import ConceptAddOptions from '@/components/concepts/ConceptAddOptions.vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptDetailStore } from '@/stores/concept-detail'
 import { useConceptHierarchyStore } from '@/stores/concept-hierarchy'
-import type { Concept } from '@/models/concept-set.types'
+import { useConceptSetsStore } from '@/stores/concept-sets'
+import type { Concept, ConceptAddFlags, ConceptSetItem } from '@/models/concept-set.types'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
 const props = defineProps<{
@@ -19,6 +28,7 @@ const emit = defineEmits<{ 'update:modelValue': [boolean] }>()
 const { t } = useI18n()
 const detail = useConceptDetailStore()
 const tree = useConceptHierarchyStore()
+const conceptSets = useConceptSetsStore()
 const { hierarchy } = storeToRefs(detail)
 
 const isNonStandard = computed(() => props.concept.standardConcept === 'N')
@@ -118,6 +128,76 @@ const treeRows = computed<TreeRow[]>(() =>
     ? visibleRows.value.map(row => ({ row, depth: 0, key: String(row.conceptId) }))
     : flatten(visibleRows.value, 0, [])
 )
+
+const selected = ref<number[]>([])
+const addFlags = ref<Required<ConceptAddFlags>>({
+  isExcluded: false,
+  includeDescendants: false,
+  includeMapped: false,
+})
+const feedback = ref({ open: false, text: '' })
+
+const canAdd = computed(() => !!conceptSets.currentSet)
+
+const itemsById = computed(() => {
+  const map = new Map<number, ConceptSetItem>()
+  for (const item of conceptSets.currentSet?.items ?? []) map.set(item.conceptId, item)
+  return map
+})
+
+function toRow(row: RelatedConcept): Concept {
+  return {
+    conceptId: row.conceptId,
+    conceptName: row.conceptName,
+    conceptCode: row.conceptCode,
+    domainId: row.domainId,
+    vocabularyId: row.vocabularyId,
+    conceptClassId: row.conceptClassId,
+    standardConcept: row.standardConcept,
+    invalidReason: row.invalidReason,
+  }
+}
+
+function toggleSelected(conceptId: number) {
+  selected.value = selected.value.includes(conceptId)
+    ? selected.value.filter(id => id !== conceptId)
+    : [...selected.value, conceptId]
+}
+
+// treeRows already carries every row the user can see and therefore select,
+// at every depth — no need to re-walk the expansion cache.
+function rowsById(): Map<number, RelatedConcept> {
+  const map = new Map<number, RelatedConcept>()
+  for (const row of hierarchy.value) map.set(row.conceptId, row)
+  for (const { row } of treeRows.value) map.set(row.conceptId, row)
+  return map
+}
+
+// addConceptToSet silently refuses duplicates, so count what actually landed
+// rather than what was ticked.
+function onAdd() {
+  if (!conceptSets.currentSet) return
+  const lookup = rowsById()
+  const before = conceptSets.currentSet.items.length
+  const attempted = selected.value.length
+
+  for (const conceptId of selected.value) {
+    const row = lookup.get(conceptId)
+    if (row) conceptSets.addConceptToSet(toRow(row), addFlags.value)
+  }
+
+  const added = conceptSets.currentSet.items.length - before
+  const skipped = attempted - added
+  selected.value = []
+
+  feedback.value = {
+    open: true,
+    text:
+      skipped > 0
+        ? t('components.conceptHierarchyDialog.addedSkipped', 'Added {count} concepts, skipped {skipped} already in the set', { count: added, skipped }).value
+        : t('components.conceptHierarchyDialog.added', 'Added {count} concepts', { count: added }).value,
+  }
+}
 
 watch(
   () => props.sourceKey,
@@ -227,6 +307,7 @@ function counts(conceptId: number) {
       <table class="hierarchy-table">
         <thead>
           <tr>
+            <th />
             <th>{{ t('columns.conceptName', 'Concept Name').value }}</th>
             <th>{{ t('columns.code', 'Code').value }}</th>
             <th>{{ t('columns.class', 'Class').value }}</th>
@@ -242,7 +323,7 @@ function counts(conceptId: number) {
         </thead>
         <tbody>
           <tr class="section-row">
-            <td colspan="7">
+            <td colspan="8">
               {{ t('components.conceptHierarchyDialog.ancestors', 'Ancestors').value }}
             </td>
           </tr>
@@ -252,6 +333,16 @@ function counts(conceptId: number) {
             :data-testid="`hierarchy-row-${a.conceptId}`"
             class="ancestor"
           >
+            <td>
+              <v-checkbox-btn
+                v-if="canAdd"
+                :model-value="selected.includes(a.conceptId)"
+                density="compact"
+                hide-details
+                :data-testid="`hierarchy-select-${a.conceptId}`"
+                @update:model-value="toggleSelected(a.conceptId)"
+              />
+            </td>
             <td>{{ a.conceptName }}</td>
             <td>{{ a.conceptCode }}</td>
             <td>{{ a.conceptClassId }}</td>
@@ -269,6 +360,7 @@ function counts(conceptId: number) {
             class="anchor"
             data-testid="hierarchy-anchor"
           >
+            <td />
             <td>{{ concept.conceptName }}</td>
             <td>{{ concept.conceptCode }}</td>
             <td>{{ concept.conceptClassId }}</td>
@@ -291,6 +383,16 @@ function counts(conceptId: number) {
               :data-descendant-row="depth === 0 ? '' : undefined"
               class="descendant"
             >
+              <td>
+                <v-checkbox-btn
+                  v-if="canAdd"
+                  :model-value="selected.includes(row.conceptId)"
+                  density="compact"
+                  hide-details
+                  :data-testid="`hierarchy-select-${row.conceptId}`"
+                  @update:model-value="toggleSelected(row.conceptId)"
+                />
+              </td>
               <td :style="{ paddingLeft: `${8 + depth * 24}px` }">
                 <button
                   v-if="view === 'tree' && !tree.isLeaf(row.conceptId)"
@@ -302,6 +404,24 @@ function counts(conceptId: number) {
                   {{ tree.isExpanded(row.conceptId) ? '▾' : '▸' }}
                 </button>
                 {{ row.conceptName }}
+                <AtlasChip
+                  v-if="itemsById.has(row.conceptId)"
+                  size="sm"
+                >
+                  {{ t('components.conceptHierarchyDialog.inSet', 'in set').value }}
+                </AtlasChip>
+                <AtlasChip
+                  v-if="itemsById.get(row.conceptId)?.isExcluded"
+                  size="sm"
+                >
+                  {{ t('components.conceptHierarchyDialog.excluded', 'excluded').value }}
+                </AtlasChip>
+                <AtlasChip
+                  v-if="itemsById.get(row.conceptId)?.includeDescendants"
+                  size="sm"
+                >
+                  {{ t('components.conceptHierarchyDialog.withDescendants', '+desc').value }}
+                </AtlasChip>
               </td>
               <td>{{ row.conceptCode }}</td>
               <td>{{ row.conceptClassId }}</td>
@@ -319,7 +439,7 @@ function counts(conceptId: number) {
               v-if="tree.isLoading(row.conceptId)"
               :data-testid="`hierarchy-loading-${row.conceptId}`"
             >
-              <td colspan="7">
+              <td colspan="8">
                 <AtlasProgressCircular
                   indeterminate
                   size="14"
@@ -328,7 +448,7 @@ function counts(conceptId: number) {
             </tr>
 
             <tr v-if="tree.hasFailed(row.conceptId)">
-              <td colspan="7">
+              <td colspan="8">
                 {{ t('components.conceptHierarchyDialog.expandFailed', 'Could not load children').value }}
                 <button
                   type="button"
@@ -342,7 +462,24 @@ function counts(conceptId: number) {
           </template>
         </tbody>
       </table>
+
+      <div
+        v-if="canAdd"
+        class="dialog-footer"
+      >
+        <ConceptAddOptions
+          v-model="addFlags"
+          :selected-count="selected.length"
+          @add="onAdd"
+        />
+      </div>
     </template>
+
+    <AtlasSnackbar
+      v-model="feedback.open"
+      severity="success"
+      :text="feedback.text"
+    />
   </AtlasDialog>
 </template>
 
@@ -366,4 +503,5 @@ function counts(conceptId: number) {
 .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
 .view-toggle button { border: 1px solid rgba(0, 0, 0, 0.25); background: none; padding: 2px 10px; font-size: 12px; }
 .view-toggle button.on { background: rgba(25, 118, 210, 0.18); font-weight: 600; }
+.dialog-footer { border-top: 1px solid rgba(0, 0, 0, 0.12); padding-top: 10px; margin-top: 10px; }
 </style>
