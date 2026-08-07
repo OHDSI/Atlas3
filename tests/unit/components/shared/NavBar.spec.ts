@@ -196,6 +196,11 @@ describe('NavBar', () => {
       expect(wrapper.findComponent({ name: 'LanguageSelector' }).exists()).toBe(true)
     })
 
+    it('should render ThemeToggle component', () => {
+      const wrapper = mountComponent()
+      expect(wrapper.findComponent({ name: 'ThemeToggle' }).exists()).toBe(true)
+    })
+
     it('should render feedback button', () => {
       const wrapper = mountComponent()
       const feedbackBtn = wrapper.findAll('.v-btn').find(btn => btn.text().includes('Feedback'))
