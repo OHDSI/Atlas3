@@ -484,9 +484,9 @@ export async function validateCohortDefinition(
 ): Promise<ValidationResponse> {
   try {
     logger.debug('WebAPI', 'Calling checkV2', { name })
-    const data = await fetchJSON<ValidationResponse>('/cohortdefinition/checkV2', {
-      method: 'POST',
-      body: JSON.stringify({ name, expression }),
+    const data = await httpPostRead<ValidationResponse>('/cohortdefinition/checkV2', {
+      name,
+      expression,
     })
     logger.debug('WebAPI', 'checkV2 response', { warningCount: data.warnings?.length ?? 0 })
     return data
@@ -2008,7 +2008,7 @@ export async function getCharacterizationResults(
   body: CharacterizationResultsBody
 ): Promise<unknown[]> {
   try {
-    const data = await httpPost<unknown>(
+    const data = await httpPostRead<unknown>(
       `/cohort-characterization/generation/${generationId}/result`,
       body
     )
@@ -2410,7 +2410,7 @@ export interface PathwayDiagnosticMessage {
  */
 export async function runPathwayDiagnostics(pathway: Pathway): Promise<PathwayDiagnosticMessage[]> {
   try {
-    const data = await httpPost<unknown>('/pathway-analysis/check', pathway)
+    const data = await httpPostRead<unknown>('/pathway-analysis/check', pathway)
     if (Array.isArray(data)) return data as PathwayDiagnosticMessage[]
     return []
   } catch (err) {
