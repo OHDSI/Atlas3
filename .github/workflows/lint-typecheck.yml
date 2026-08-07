@@ -32,7 +32,15 @@ jobs:
       
       - name: Run Type Check
         run: npm run type-check
-      
+
+      - name: Check i18n key coverage
+        run: npm run i18n:check
+
+      - name: Check generated artifacts are current
+        run: |
+          npm run tokens:check
+          npm run routes:check
+
       - name: Upload lint results
         if: failure()
         uses: actions/upload-artifact@v4

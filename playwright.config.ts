@@ -11,9 +11,6 @@ export default defineConfig({
   // HTML report still generated but not served/opened
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   timeout: 60000, // 60 seconds per test
-  expect: {
-    timeout: 10000, // 10 seconds for expect assertions
-  },
 
   use: {
     baseURL: 'http://localhost:5173',
@@ -49,6 +46,7 @@ export default defineConfig({
 
   // Visual regression testing config (Task T141)
   expect: {
+    timeout: 10000, // 10 seconds for expect assertions
     toMatchSnapshot: {
       threshold: 0.3, // 30% difference allowed (Material Design will differ from reference)
       maxDiffPixels: 1000,

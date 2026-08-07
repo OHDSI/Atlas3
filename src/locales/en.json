@@ -64,7 +64,8 @@
         "sortAscending": ": activate to sort column ascending",
         "sortDescending": ": activate to sort column descending"
       }
-    }
+    },
+    "itemsPerPage": "Rows per page:"
   },
   "format": {
     "number": "# ###.##",
@@ -183,7 +184,71 @@
     "columns": "Columns",
     "editName": "Edit Name",
     "description": "Description",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "back": "Back",
+    "tileView": "Tile view",
+    "requiredField": "This field is required",
+    "edit": "Edit",
+    "editCriteria": "Edit criteria",
+    "remove": "Remove",
+    "unsavedChanges": "Unsaved changes",
+    "discard": "Discard changes",
+    "cohortInformation": "Cohort information",
+    "duplicate": "Duplicate",
+    "noPermission": "You do not have permission for this action",
+    "filters": "Filters",
+    "from": "From",
+    "to": "To",
+    "toSeparator": "to",
+    "createdFrom": "Created from",
+    "createdTo": "Created to",
+    "modifiedFrom": "Modified from",
+    "modifiedTo": "Modified to",
+    "errorLoadingCohorts": "Failed to load cohorts",
+    "enterCohortDescription": "Enter cohort description (optional)",
+    "addTag": "Add tag",
+    "pickColor": "Pick color",
+    "selectItemsPerPage": "Select number of items per page",
+    "downloadFile": "Download as file",
+    "reset": "Reset",
+    "clearSearch": "Clear search",
+    "concepts": "Concepts",
+    "startDateAdjustment": "Start Date Adjustment",
+    "startWith": "Start With",
+    "offsetDays": "Offset (Days)",
+    "endDateAdjustment": "End Date Adjustment",
+    "endWith": "End With",
+    "validationErrors": "Validation errors",
+    "priorDays": "Prior Days",
+    "priorDaysHint": "Days of continuous observation before entry",
+    "postDays": "Post Days",
+    "postDaysHint": "Days of continuous observation after entry",
+    "temporalWindows": "Temporal Windows",
+    "presets": "Quick Presets",
+    "startWindow": "Start Window",
+    "startDays": "Start Days",
+    "startDirection": "Start Direction",
+    "endWindow": "End Window",
+    "endDirection": "End Direction",
+    "untitled": "Untitled",
+    "choose": "Choose",
+    "both": "Both",
+    "match": "Match",
+    "history": "History",
+    "unsavedChangesMessage": "You have unsaved changes. Are you sure you want to close?",
+    "status": "Status",
+    "actions": "Actions",
+    "reportType": "Report Type",
+    "start": "Start",
+    "end": "End",
+    "previewMode": "Preview mode",
+    "of": "of",
+    "goBack": "Go Back",
+    "cohortDefinition": "Cohort definition",
+    "filtering": "Filtering",
+    "importCohort": "Import cohort definition",
+    "deleteCohortTitle": "Delete cohort?",
+    "cannotUndo": "This action cannot be undone."
   },
   "validation": {
     "required": "This field is required"
@@ -192,7 +257,14 @@
     "noSources": "The current WebAPI has no sources defined.<br/>Please add one or more on <a href=\"#/configure\">configuration</a> page.",
     "webapiConnectError": "Unable to connect to an instance of the WebAPI.<br/>Please contact your administrator to resolve this issue.",
     "browserWarning": "Note that only Chrome browser newer than v.63 is officially supported",
-    "initFailed": "Application initialization failed"
+    "initFailed": "Application initialization failed",
+    "required": "This field is required",
+    "nameRequired": "Name is required",
+    "lengthValidation": "Name must be between 1 and 255 characters",
+    "invalid": "Invalid",
+    "valid": "Valid",
+    "unexpectedError": "An unexpected error occurred. This has been logged for investigation.",
+    "errorDetails": "Error Details"
   },
   "navigation": {
     "characterizations": "Characterizations",
@@ -211,7 +283,9 @@
     "prediction": "Prediction",
     "profiles": "Profiles",
     "search": "Search",
-    "tagging": "Tagging"
+    "tagging": "Tagging",
+    "docs": "User manual",
+    "analysis": "Analysis"
   },
   "route": {
     "home": {
@@ -346,7 +420,11 @@
       "rebuild": "Rebuild",
       "building": "Building...",
       "noDataSources": "No data sources available"
-    }
+    },
+    "endOfContinuousObservationShort": "Observation",
+    "fixedDurationShort": "Fixed duration",
+    "endOfContinuousDrugExposureShort": "Drug exposure",
+    "of": "of"
   },
   "components": {
     "inclusionRuleReport": {
@@ -423,7 +501,10 @@
         "generating": "Generating",
         "pending": "Pending",
         "latestResult": "View latest result",
-        "downloadLatestResult": "Download latest result"
+        "downloadLatestResult": "Download latest result",
+        "stopping": "Stopping…",
+        "cancel": "Cancel",
+        "rerun": "Rerun"
       },
       "designModal": {
         "title": "Design"
@@ -439,7 +520,14 @@
         "sameAsNow": "(same as now)"
       },
       "noCompletedExecutionsForDataSource": "There is no completed executions for the data source yet.",
-      "stopGenerationConfirmation": "Do you want to stop generation?"
+      "stopGenerationConfirmation": "Do you want to stop generation?",
+      "noWritePermission": "You do not have permission to run jobs against this source",
+      "previousRuns": "Previous runs",
+      "notRun": "Not run",
+      "noSources": "No data sources available",
+      "history": "HISTORY",
+      "viewResults": "View results",
+      "noPreviousRuns": "No previous runs."
     },
     "atlasCohortEditor": {
       "enterCohortPlaceholder": "Enter a cohort definition description here",
@@ -542,7 +630,16 @@
       "removeRestriction": "Remove initial event restriction",
       "restrictInitialEventsButton": "Restrict initial events",
       "restrictInitialEventsTitle": "Restrict intial events to:",
-      "unnamedCriteria": "Unnamed Criteria"
+      "unnamedCriteria": "Unnamed Criteria",
+      "entryQualifyingLimitLabel": "Cohort entry on",
+      "entryQualifyingLimitHelp": "Which qualifying event marks a person’s cohort entry: their first, every occurrence, or their last.",
+      "withQualifyingLimit": "with",
+      "inclusionQualifyingLimitLabel": "Apply rules to",
+      "inclusionQualifyingLimitHelp": "Which qualifying event each rule is evaluated against: a person’s first, every, or their last.",
+      "exitAndErasTitle": "Cohort Exit & Eras",
+      "exitStrategyLabel": "Strategy",
+      "censoringEventsDescription": "Exit cohort when any of these events occur.",
+      "inclusionCriteriaTextShort": "No inclusion rules — adding one narrows which patients qualify beyond the entry events."
     },
     "cohortExpressionViewer": {
       "cohortExpressionViewerText_1": "People having any of the following:",
@@ -652,7 +749,9 @@
       "pleaseSelectCodesetToModify": "Please select codeset to modify...",
       "removeSelected": "Remove Selected",
       "selectConceptSet": "Select Concept Set...",
-      "unnamedConceptSet": "Unnamed Concept Set"
+      "unnamedConceptSet": "Unnamed Concept Set",
+      "inThisDefinition": "In this definition",
+      "importFromRepository": "Import from repository"
     },
     "conceptSetSaveModal": {
       "conceptSetAlreadyExists": "Concept Set already exists",
@@ -1030,7 +1129,8 @@
       },
       "clickToChangeMatchType": "Click to change match type",
       "removeGroup": "Remove group",
-      "noEventsInGroup": "No events in group. Add events to build criteria logic."
+      "noEventsInGroup": "No events in group. Add events to build criteria logic.",
+      "addTemporalWindow": "Add Temporal Window"
     },
     "customEraStrategy": {
       "customEraStrategyText_1": "Continuous Exposure Persistence:",
@@ -1371,7 +1471,8 @@
       "windowedCriteriaText_6": "ignore observation period"
     },
     "common": {
-      "addAttribute": "Add Attribute..."
+      "addAttribute": "Add Attribute...",
+      "strategy": "Strategy"
     },
     "multiSelect": {
       "noneSelectedText": "Nothing selected",
@@ -1381,7 +1482,9 @@
     "generation": {
       "selectSources": "Select sources",
       "generate": "Generate",
-      "pickAtLeastOneSourceAlert": "Pick at least one source to generate"
+      "pickAtLeastOneSourceAlert": "Pick at least one source to generate",
+      "unsavedChanges": "Save changes before running",
+      "fixErrors": "Resolve validation errors before running"
     },
     "nameValidation": {
       "empty": "The name is empty.",
@@ -1476,7 +1579,9 @@
       "sessionWillExpireIn": "Your session will expire in",
       "extendSessionPrompt": "Would you like to extend your session?",
       "logout": "Logout",
-      "unknownUser": "Unknown"
+      "unknownUser": "Unknown",
+      "welcomeBack": "Welcome back",
+      "signInToAtlas": "Sign in to continue"
     },
     "profileTimeline": {
       "eyebrow": "TIMELINE",
@@ -1583,6 +1688,7 @@
       "detailsEyebrow": "DETAILS"
     },
     "inclusionCriteriaPanel": {
+      "add": "Add inclusion rule",
       "ruleIncomplete": "Inclusion rule incomplete.",
       "livePreviewFailed": "Live preview failed."
     },
@@ -2023,6 +2129,17 @@
     },
     "navBar": {
       "mainNavigation": "Main"
+    },
+    "authProviderSelect": {
+      "info": "Continue with",
+      "skipLogin": "Skip Login"
+    },
+    "nestedCriteria": {
+      "clickToChange": "Click to change",
+      "depthWarning": "Deep nesting detected"
+    },
+    "dateAdjust": {
+      "criteriaLabel": "Date Adjustment"
     }
   },
   "characterizations": {
@@ -2092,7 +2209,10 @@
         "criteriaLabel": "Criteria (JSON)",
         "criteriaPlaceholder": "Criteria builder integration ships in a follow-up. For now, paste a CriteriaGroup JSON.",
         "remove": "Remove",
-        "invalidJson": "Invalid JSON"
+        "invalidJson": "Invalid JSON",
+        "eventCount": "1 event",
+        "eventsCount": "{n} events",
+        "noCriteria": "No criteria"
       },
       "conceptSetsTab": {
         "title": "Concept Sets",
@@ -2221,7 +2341,9 @@
         "median": "Median",
         "p75": "P75",
         "max": "Max",
-        "empty": "No rows match the current filter."
+        "empty": "No rows match the current filter.",
+        "distribution": "Distribution",
+        "prevalence": "Prevalence"
       },
       "explore": {
         "title": "Explore covariate: {name}",
@@ -2528,6 +2650,7 @@
     "riskWindowStart": "Risk Window Start",
     "role": "Role",
     "roleName": "Role name",
+    "schema": "Schema",
     "selected": "Selected",
     "severity": "Severity",
     "sortOrder": "Sort Order",
@@ -2593,7 +2716,12 @@
     "rcTooltip": "Record Count",
     "drcTooltip": "Descendant Record Count",
     "pcTooltip": "Person Count",
-    "dpcTooltip": "Descendant Person Count"
+    "dpcTooltip": "Descendant Person Count",
+    "supportsAnnual": "Annual",
+    "age": "Age",
+    "lastRun": "Last run",
+    "outcome": "Outcome",
+    "createdBy": "Created By"
   },
   "dataSources": {
     "const": {
@@ -2631,7 +2759,9 @@
       "deathPrevalenceByMonth": "Death Prevalence by Month",
       "gender": "Gender",
       "prevalencePer1000People": "Prevalence Per 1000 People",
-      "yearOfObservation": "Year of Observation"
+      "yearOfObservation": "Year of Observation",
+      "noDataTitle": "No death data available",
+      "noDataSubtitle": "This data source has no death records to report on."
     },
     "drilldown": {
       "ageAtFirstOccurrence": "Age at First Occurrence",
@@ -2687,7 +2817,9 @@
       "ageDecile": "Age Decile",
       "percentOfPopulation": "Percent of Population",
       "years": "Years",
-      "date": "Date"
+      "date": "Date",
+      "noDataTitle": "No observation period data available",
+      "noDataSubtitle": "This data source has no observation period records to report on."
     },
     "personReport": {
       "ethnicity": "Ethnicity",
@@ -2730,7 +2862,28 @@
         "colorExplanation": "(Light to Dark = Low to High), Use Ctrl-Click to Zoom, Alt-Click to Reset Zoom"
       },
       "treemapTab": "Treemap"
-    }
+    },
+    "sidebar": {
+      "overview": "Overview",
+      "demographics": "Demographics",
+      "clinicalDomains": "Clinical Domains"
+    },
+    "reportTypes": {
+      "dashboard": "Dashboard",
+      "datadensity": "Data Density",
+      "person": "Person",
+      "observationPeriod": "Observation Period",
+      "death": "Death",
+      "visit": "Visit",
+      "conditionOccurrence": "Condition Occurrence",
+      "conditionEra": "Condition Era",
+      "procedure": "Procedure",
+      "drugExposure": "Drug Exposure",
+      "drugEra": "Drug Era",
+      "measurement": "Measurement",
+      "observation": "Observation"
+    },
+    "pageSubtitle": "Browse CDM data sources and run pre-built reports against them."
   },
   "search": {
     "addedCountToSet": "Added {count} concepts → {set}",
@@ -2758,7 +2911,8 @@
       "search": "Search"
     },
     "vocabularies": "Vocabularies",
-    "viewCountMessage": "View record count for:"
+    "viewCountMessage": "View record count for:",
+    "vocabulariesInfo": "Type at least 3 characters; press Enter to search across SNOMED, ICD, RxNorm, LOINC, and other vocabularies."
   },
   "cs": {
     "browser": {
@@ -2788,7 +2942,9 @@
         "vennDiagramCommonConcepts": "Common Concepts",
         "vennDiagramNameConceptSet": "<%=name%> concept set",
         "vennDiagramTotalAmountConcepts": "The total amount of concepts: <%=count%>",
-        "viewCountMessage": "View database record counts (RC) and descendant record counts (DRC) for:"
+        "viewCountMessage": "View database record counts (RC) and descendant record counts (DRC) for:",
+        "compare": "Compare",
+        "noMatches": "No concept sets match"
       },
       "exportConceptSetsButton": "Export Concept Sets",
       "exportConceptSetsNumber": "<b><%=num%></b> concept sets selected for export.",
@@ -2797,7 +2953,8 @@
       "tabs": {
         "export": "Export",
         "list": "List"
-      }
+      },
+      "subtitle": "Browse the OMOP vocabulary and curate reusable concept sets."
     },
     "conceptAddBox": {
       "addToConceptSet": "Add To Concept Set",
@@ -2894,7 +3051,8 @@
         "sourceCodes": "Source Codes",
         "selected": "Selected",
         "versions": "Versions",
-        "messages": "Messages"
+        "messages": "Messages",
+        "recommend": "Recommend"
       },
       "concept": {
         "title": "Vocabulary > Concept",
@@ -2941,7 +3099,20 @@
           }
         }
       },
-      "conceptSetOptimization": "Concept Set Optimization"
+      "conceptSetOptimization": "Concept Set Optimization",
+      "emptyFilterMessage": "No concept sets match your search.",
+      "emptyStateMessage": "No concept sets yet — create one to start curating concepts.",
+      "filters": "Filter",
+      "emptyFilteredMessage": "No concepts match the active filters.",
+      "emptyConceptsMessage": "No concepts in this set yet — search for concepts or paste IDs to add them."
+    },
+    "conceptSet": {
+      "recommend": {
+        "notAvailable": "Recommendations are not available. The PHOEBE 2.0 vocabulary tables are required to generate recommendations.",
+        "noSeed": "Add concepts to the set first — recommendations are based on what is already included.",
+        "recommendations": "recommendations"
+      },
+      "loadingRecommendedConcepts": "Loading Recommended Concepts"
     }
   },
   "cc": {
@@ -3046,7 +3217,8 @@
         "title": "Reports for <%= sourceName %>",
         "series": "Series",
         "covariate": "Covariate",
-        "allPrevalenceCovariates": "All prevalence covariates"
+        "allPrevalenceCovariates": "All prevalence covariates",
+        "thresholdLabel": "Threshold ≥"
       },
       "tabs": {
         "design": "Design",
@@ -3057,7 +3229,54 @@
       },
       "utilities": {
         "title": "Utilities"
-      }
+      },
+      "workbench": {
+        "modePerAnalysis": "Per-analysis",
+        "modeTable1": "Baseline",
+        "modeDashboard": "Overview",
+        "configure": "Configure",
+        "empty": {
+          "noIdTitle": "Save the design to enable runs",
+          "noRunsTitle": "No runs yet",
+          "runPendingTitle": "Run in progress",
+          "runFailedTitle": "Run failed",
+          "noDataTitle": "No rows match the current filter",
+          "runPendingHint": "Polling for completion…",
+          "noRunsHint": "Generate against a data source to see baseline characteristics."
+        },
+        "table1": {
+          "eyebrow": "Run summary",
+          "title": "Baseline Characteristics"
+        },
+        "configurator": {
+          "title": "Configure Baseline",
+          "rows": "Rows",
+          "groupByAnalysis": "Group by analysis",
+          "pinTopK": "Pin top-K by Std Diff",
+          "pinTopKCount": "K",
+          "cells": "Cells",
+          "binaryFormat": "Binary format",
+          "continuousFormat": "Continuous format",
+          "columns": "Columns",
+          "showCounts": "Show counts",
+          "showPercent": "Show percent",
+          "showStdDiff": "Std Diff",
+          "showStdDiffCI": "95% CI on Std Diff",
+          "strataAsCols": "Strata as columns"
+        },
+        "binaryFormat": {
+          "countPct": "N (%)",
+          "pct": "%",
+          "count": "N",
+          "countOfTotal": "N / total"
+        },
+        "continuousFormat": {
+          "meanSd": "mean (SD)",
+          "medianIqr": "median [IQR]"
+        }
+      },
+      "descriptionPlaceholder": "Add a short description",
+      "namePlaceholder": "Name this characterization"
     },
     "fa": {
       "tabs": {
@@ -3089,7 +3308,10 @@
       "selectConceptSet": "Select Concept Set...",
       "unsavedConfirmation": "Your changes are not saved. Would you like to continue?",
       "warning": "Warning:",
-      "warningText": "You wouldn't be able to change the type of analysis after save."
+      "warningText": "You wouldn't be able to change the type of analysis after save.",
+      "runError": "Failed to start generation",
+      "cancelError": "Failed to cancel generation",
+      "statType": "Stat Type"
     }
   },
   "home": {
@@ -3097,6 +3319,12 @@
     "documentation": {
       "text": "The ATLAS user guide can be found <a target='_new' href='http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas'>here</a>.",
       "title": "Documentation"
+    },
+    "features": {
+      "characterization": "Describe a population's baseline features and outcomes.",
+      "docs": "Browse the ATLAS v3.0 user guide without leaving the app.",
+      "pathway": "Visualize sequences of interventions over time.",
+      "incidenceRate": "Estimate event rates over time across populations."
     },
     "gettingStarted": {
       "newCohort": {
@@ -3115,7 +3343,13 @@
       "title": "Release Notes"
     },
     "title": "Home",
-    "welcome": "Welcome to ATLAS."
+    "welcome": "Welcome to ATLAS.",
+    "newEntityNames": {
+      "incidenceRate": "New incidence rate",
+      "pathway": "New pathway",
+      "characterization": "New characterization",
+      "featureAnalysis": "New feature analysis"
+    }
   },
   "ir": {
     "caption": "Incidence Rate Analysis #<%=id%>",
@@ -3151,7 +3385,10 @@
       "timeAtRiskPlus": "plus",
       "timeAtRiskStartDate": "start date",
       "timeAtRiskStartsWith": "Time at risk starts with",
-      "timeAtRiskWarningMessage": "Error: Time at risk starts on or after time at risk end, resulting in zero time at risk.  Please ensure the start offset is greater than the end offset."
+      "timeAtRiskWarningMessage": "Error: Time at risk starts on or after time at risk end, resulting in zero time at risk.  Please ensure the start offset is greater than the end offset.",
+      "timeAtRiskCohortStart": "Cohort start",
+      "timeAtRiskCohortEnd": "Cohort end",
+      "outcomes": "Outcomes"
     },
     "nameConflict": "An incidence rate with this name already exists. Please choose a different name.",
     "newanalysis": "New Analysis",
@@ -3208,7 +3445,8 @@
       "saveFirstTitle": "Save the analysis first",
       "selectToHint": "Use the target/outcome chips in the toolbar to view a rate.",
       "selectToTitle": "Pick a target and outcome",
-      "treemap": "Treemap"
+      "treemap": "Treemap",
+      "table": "Table"
     }
   },
   "profiles": {
@@ -3233,7 +3471,26 @@
     "title": "Profiles",
     "toggleChartTooltip": "toggle chart display",
     "toggleTableTooltip": "toggle table display",
-    "сantFind": "Can't find"
+    "сantFind": "Can't find",
+    "searchConceptsToHighlight": "Search concepts to highlight",
+    "highlightNone": "None",
+    "setHighlightColor": "Set highlight color",
+    "conceptSetHighlightingComingSoon": "Concept-set highlighting coming soon",
+    "highlightEyebrow": "HIGHLIGHT",
+    "highlightTabConcepts": "concepts",
+    "highlightTabSets": "sets",
+    "clearAllHighlights": "Clear all highlights",
+    "gender": "Gender",
+    "birthYear": "Birth Year",
+    "age": "Age",
+    "events": "Events",
+    "ageAtIndexTooltip": "Age at cohort index date",
+    "ageAtObservationStartTooltip": "Age at start of observation",
+    "searchEvents": "Search events",
+    "findAPerson": "Find a person",
+    "chooseSourceAndPerson": "Choose a data source and enter a person ID",
+    "dataSource": "Data source",
+    "emptyHint": "Use the source picker and person ID above to load a profile."
   },
   "pathways": {
     "loading": "Loading Pathway Analysis list...",
@@ -3563,7 +3820,11 @@
     }
   },
   "jobs": {
-    "refreshJobs": "Refresh Jobs"
+    "noAccess": "You don't have access to the jobs panel.",
+    "refreshJobs": "Refresh Jobs",
+    "title": "Jobs",
+    "close": "Close jobs panel",
+    "openPanel": "Open jobs panel"
   },
   "configuration": {
     "alerts": {
@@ -3891,6 +4152,22 @@
       "versions": "Versions"
     }
   },
+  "inclusionRail": {
+    "groups": "{count} groups",
+    "criteria": "{count} criteria",
+    "add": "Add rule",
+    "selectRule": "Select a rule on the left to edit it.",
+    "descriptionPlaceholder": "Add a description for this inclusion rule…",
+    "addCriteriaGroup": "Add criteria group",
+    "title": "Inclusion rules",
+    "entryEvents": "Entry events",
+    "of": "of",
+    "datasetPatients": "dataset patients",
+    "qualifyingCohort": "Qualifying cohort",
+    "ofEntry": "of entry",
+    "group": "1 group",
+    "criterion": "1 criterion"
+  },
   "cohortDefinitions": {
     "closeYourCurrentCohort": "Please close your current cohort definition before creating a new one",
     "cohort": {
@@ -4057,7 +4334,8 @@
         "statusNoRuns": "No generations yet",
         "statusCount": "{done} / {total} generated",
         "lastRunMeta": "Last run · {time} on {source}",
-        "generateAll": "Generate all"
+        "generateAll": "Generate all",
+        "onlyGenerated": "Only generated"
       },
       "row": {
         "inclusionReport": "Inclusion report",
@@ -4202,8 +4480,31 @@
     "saveDefinitionBefore": "You must save the definition before you can export",
     "title": "Cohort Definitions",
     "designTab": {
-      "collapseEntryLabel": "Collapse Cohort Entry Events"
-    }
+      "collapseEntryLabel": "Collapse Cohort Entry Events",
+      "countingOptions": {
+        "distinctConcept": "Distinct concept",
+        "distinctDate": "Distinct date",
+        "distinctVisit": "Distinct visit"
+      }
+    },
+    "unused": "Unused",
+    "ruleName": "Rule name",
+    "appearance": {
+      "timeAtRisk": "Time at risk"
+    },
+    "descriptionPlaceholder": "Add a description (optional) — purpose, scope, references…",
+    "cohortsLower": "cohorts",
+    "importHint": "Paste an Atlas cohort JSON or upload a .json file. The expression is validated before saving.",
+    "uploadJsonLabel": "Upload JSON file",
+    "expressionJsonLabel": "Expression JSON",
+    "cohortDefinitions": "Cohort Definitions",
+    "pageSubtitle": "Browse, filter, and manage cohort definitions.",
+    "importFileReadError": "Failed to read the selected file.",
+    "importInvalidJson": "Expression JSON is not valid JSON.",
+    "importInvalidShape": "Expression must be a JSON object.",
+    "importFailed": "Import failed. Check the JSON and try again.",
+    "copyLoadError": "Failed to load the cohort to copy.",
+    "copyError": "Failed to copy the cohort."
   },
   "const": {
     "disabledReason": {
@@ -5058,7 +5359,8 @@
     "conceptCount": "<%=count%> concept(s)",
     "concepts": "Concepts:",
     "addConcepts": "Add Concepts",
-    "defaultName": "Concept Set <%=number%>"
+    "defaultName": "Concept Set <%=number%>",
+    "tagUpdateFailed": "Failed to update tags"
   },
   "conceptSearch": {
     "title": "Search OHDSI Vocabulary",
@@ -5956,7 +6258,8 @@
     "exportPng": "PNG",
     "selectSourceTargetOutcome": "Select source, target, and outcome to view report.",
     "summary": "Summary",
-    "proportion": "Proportion"
+    "proportion": "Proportion",
+    "studyWindowEmpty": "No study window"
   },
   "incidenceRateAnalysis": {
     "newAnalysis": "New incidence rate"
@@ -6005,5 +6308,85 @@
       "title": "Role & Permissions Management",
       "subtitle": "Manage user roles, assign permissions, and control access to system features."
     }
+  },
+  "trexsql": {
+    "cacheReady": "Ready",
+    "cacheStale": "Stale",
+    "cacheBuilding": "Building",
+    "cacheError": "Error",
+    "cacheNotBuilt": "Not Built",
+    "selectDataset": "Select dataset",
+    "patients": "patients",
+    "selectDatasetPrompt": "Select a dataset to view patient count",
+    "staleCacheWarning": "Cache may be stale",
+    "lastBuilt": "Last built",
+    "built": "Built",
+    "addCriteria": "Add criteria to see patient count",
+    "cacheFilesTitle": "Cache files on disk",
+    "cacheFilesDescription": "Every cache on disk, including caches whose dataset has been deleted. Those are no longer reachable from the dataset list and can be reclaimed here.",
+    "cacheFilesCount": "files",
+    "cacheFilesOrphaned": "orphaned",
+    "cacheFileName": "Cache",
+    "cacheFileSize": "Size",
+    "cacheFileModified": "Last modified",
+    "cacheFileProtected": "System",
+    "cacheFileOrphaned": "No dataset",
+    "cacheFileAttached": "Attached",
+    "cacheFilesEmpty": "No cache files found.",
+    "cacheFileDeleteTitle": "Delete cache?",
+    "cacheFileDeleteOrphan": "No dataset references this cache. Deleting it frees the space and cannot be undone.",
+    "cacheFileDeleteActive": "This cache belongs to a dataset that is still registered. It will have to be rebuilt before that dataset can be queried again.",
+    "cacheTitle": "Patient Cache",
+    "cacheDescription": "Build and manage patient caches for fast cohort counting. Each data source can have its own cache.",
+    "rebuild": "Rebuild",
+    "build": "Build Cache",
+    "building": "Building...",
+    "noDataSources": "No data sources available",
+    "statusReady": "Ready",
+    "statusBuilding": "Building",
+    "statusStale": "Stale",
+    "statusError": "Error",
+    "statusNotBuilt": "Not Built"
+  },
+  "help": {
+    "dateAdjustmentExplanation": "Shifts criterion event dates by the specified offset. For example, \"Start Date + 30 days\" means the event start date will be 30 days after the original start date."
+  },
+  "pathway": {
+    "results": {
+      "tabular": "Tabular",
+      "allPathways": "All Pathways",
+      "countsByRank": "Counts by Rank",
+      "eventCohortCounts": "Event Cohort Counts",
+      "title": "Pathway results"
+    },
+    "workbench": {
+      "noRunsYet": "No runs yet",
+      "emptyChartTitle": "Your sunburst will appear here",
+      "emptyChartHint": "Pick at least one target cohort and a few event cohorts on the left, then run a generation against a data source.",
+      "noRunYetTitle": "No runs yet",
+      "noRunYetHint": "Generate against a data source to see the sunburst.",
+      "legend": "Legend",
+      "selectedPath": "Selected path",
+      "selectPathHint": "Click a slice to inspect a treatment path",
+      "insightsEmptyHint": "Insights appear after the first run.",
+      "runDisabledReason": "Save the design before generating",
+      "coverage": "Cohort coverage",
+      "coverageSuffix": "persons with pathway",
+      "persons": "persons",
+      "ofCohort": "of cohort",
+      "ofPathways": "of pathways",
+      "stepBreakdown": "Step breakdown",
+      "pathStats": "Path stats"
+    },
+    "combinationWindow": "Collapse window (days)",
+    "minCellCount": "Minimum cell count",
+    "maxDepth": "Maximum path length",
+    "allowRepeats": "Allow repeats"
+  },
+  "analysis": {
+    "subtitle": "Characterize cohorts, build features, trace pathways, and compute incidence rates."
+  },
+  "pathwayDefinitions": {
+    "deleteConfirm": "Delete this pathway? This cannot be undone."
   }
 }

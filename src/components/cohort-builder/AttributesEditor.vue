@@ -286,7 +286,7 @@
                 @blur="validatePeriodDates(index)"
                 @update:model-value="(v) => updatePeriodStartDate(index, v as string)"
               />
-              <span class="and-text">{{ t('common.to', 'to') }}</span>
+              <span class="and-text">{{ t('common.toSeparator', 'to') }}</span>
               <AtlasTextField
                 :model-value="attribute.period.endDate"
                 type="date"

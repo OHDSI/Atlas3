@@ -13,32 +13,17 @@ import type {
   ObservationPeriod,
 } from '@/models/cohort.types'
 import type { AgentProposal } from '@/models/agent.types'
-import type { Version, VersionedAsset } from '@/components/versions/types'
-import { saveCohortToCache, getCohortFromCache, deleteCohortFromCache } from '@/utils/cohort-cache'
+import type { Version } from '@/components/versions/types'
 import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
 import { logger } from '@/utils/logger'
 
 const STORAGE_KEY = 'atlas3_cohort_draft'
 const AUTO_SAVE_INTERVAL_MS = 30000 // 30 seconds
 
-// Exponential backoff retry configuration
-const RETRY_CONFIG = {
-  initialDelay: 1000, // 1 second
-  maxDelay: 30000, // 30 seconds
-  maxAttempts: 5,
-  backoffMultiplier: 2,
-}
-
 interface ValidationError {
   field: string
   message: string
   severity: 'error' | 'warning'
-}
-
-interface RetryState {
-  attempt: number
-  nextRetryAt: Date | null
-  isRetrying: boolean
 }
 
 export const useCohortStore = defineStore('cohort', () => {
@@ -59,16 +44,8 @@ export const useCohortStore = defineStore('cohort', () => {
   const validationErrors = ref<ValidationError[]>([])
   const isReadOnly = ref(false)
 
-  // Network retry state
-  const retryState = ref<RetryState>({
-    attempt: 0,
-    nextRetryAt: null,
-    isRetrying: false,
-  })
-
   // Auto-save timer
   let autoSaveTimer: ReturnType<typeof setInterval> | null = null
-  let retryTimer: ReturnType<typeof setTimeout> | null = null
   let watchHandle: WatchStopHandle | null = null
 
   // Getters
@@ -238,11 +215,17 @@ export const useCohortStore = defineStore('cohort', () => {
   // save) rather than re-implementing the editor's concept-set assembly.
   const saveRequest = ref(0)
   const newCohortSignal = ref(0)
+  // Bumped to ask the mounted editor to (re)fetch and resync. `reloadVersion`
+  // carries the target: null means "current version" (loadCohort), a number
+  // means that specific historical version (used entering preview).
+  const reloadRequest = ref(0)
+  const reloadVersion = ref<number | null>(null)
   // Name/description the caller wants applied to the cohort before it is saved.
   // The mounted editor reads this when it answers a save request — a cohort
   // built programmatically otherwise has no name and the editor refuses to save.
   const saveOptions = ref<{ name?: string; description?: string }>({})
   let saveResolver: ((r: { id?: number; name?: string }) => void) | null = null
+  let saveTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   function requestSave(opts: { name?: string; description?: string } = {}): Promise<{ id?: number; name?: string }> {
     return new Promise(resolve => {
@@ -250,11 +233,19 @@ export const useCohortStore = defineStore('cohort', () => {
       saveResolver = resolve
       saveRequest.value++
       // Never hang the caller if no editor is mounted to answer the signal.
-      setTimeout(() => notifySaved(), 8000)
+      saveTimeoutId = setTimeout(() => notifySaved(), 8000)
     })
   }
 
   function notifySaved(result: { id?: number; name?: string } = {}) {
+    // Clear the fallback timer so a save that resolves early can't leave an
+    // orphaned timeout that later fires and steals the *next* request's
+    // resolver (which would report that later save as failed/empty and drop
+    // its real result, since saveResolver would already be null by then).
+    if (saveTimeoutId) {
+      clearTimeout(saveTimeoutId)
+      saveTimeoutId = null
+    }
     const resolve = saveResolver
     saveResolver = null
     resolve?.(result)
@@ -388,167 +379,20 @@ export const useCohortStore = defineStore('cohort', () => {
     isReadOnly.value = errors.some(err => err.severity === 'error')
   }
 
-  // Calculate exponential backoff delay
-  function calculateBackoffDelay(attempt: number): number {
-    const delay = Math.min(
-      RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffMultiplier, attempt),
-      RETRY_CONFIG.maxDelay
-    )
-    return delay
-  }
-
-  // Load cohort with caching and retry
-  async function loadCohort(cohortId: number | string): Promise<CohortDefinition | null> {
-    try {
-      // TODO: Replace with actual WebAPI call
-      // For now, try to load from cache
-      const cachedCohort = await getCohortFromCache(cohortId)
-
-      if (cachedCohort) {
-        setCohort(cachedCohort)
-        logger.debug('CohortStore', `Loaded cohort ${cohortId} from cache`)
-        return cachedCohort
-      }
-
-      // If not in cache, would normally fetch from WebAPI here
-      logger.warn('CohortStore', `Cohort ${cohortId} not found in cache and WebAPI not implemented`)
-      return null
-    } catch (error) {
-      logger.error('CohortStore', 'Failed to load cohort:', error)
-
-      // Try to get from cache as fallback
-      return await getCachedCohort(cohortId)
-    }
-  }
-
-  // Get cohort from cache (fallback when WebAPI fails)
-  async function getCachedCohort(cohortId: number | string): Promise<CohortDefinition | null> {
-    try {
-      const cachedCohort = await getCohortFromCache(cohortId)
-
-      if (cachedCohort) {
-        logger.debug('CohortStore', `Loaded cohort ${cohortId} from cache (fallback mode)`)
-        setCohort(cachedCohort)
-        return cachedCohort
-      }
-
-      return null
-    } catch (error) {
-      logger.error('CohortStore', 'Failed to retrieve cached cohort:', error)
-      return null
-    }
-  }
-
-  // Save cohort with retry logic
-  async function saveCohort(): Promise<boolean> {
-    if (!currentCohort.value) {
-      logger.warn('CohortStore', 'No cohort to save')
-      return false
-    }
-
-    if (!canSave.value) {
-      logger.warn('CohortStore', 'Cannot save cohort: validation errors exist or read-only mode')
-      return false
-    }
-
-    // Reset retry state
-    retryState.value = {
-      attempt: 0,
-      nextRetryAt: null,
-      isRetrying: false,
-    }
-
-    return await saveCohortWithRetry()
-  }
-
-  // Internal save with exponential backoff retry
-  async function saveCohortWithRetry(): Promise<boolean> {
-    if (!currentCohort.value) return false
-
-    try {
-      retryState.value.isRetrying = true
-
-      // TODO: Replace with actual WebAPI save call
-      // For now, just cache the cohort
-      // Convert to plain object to avoid Pinia reactive proxy issues
-      const plainCohort = JSON.parse(JSON.stringify(currentCohort.value))
-      await saveCohortToCache(plainCohort, 'local')
-
-      logger.info('CohortStore', 'Cohort saved successfully')
-      markClean()
-      retryState.value.isRetrying = false
-      retryState.value.attempt = 0
-      retryState.value.nextRetryAt = null
-
-      return true
-    } catch (error) {
-      logger.error('CohortStore', `Save attempt ${retryState.value.attempt + 1} failed:`, error)
-
-      // Check if we should retry
-      if (retryState.value.attempt < RETRY_CONFIG.maxAttempts) {
-        retryState.value.attempt++
-
-        const delay = calculateBackoffDelay(retryState.value.attempt - 1)
-        retryState.value.nextRetryAt = new Date(Date.now() + delay)
-
-        logger.info(
-          'CohortStore',
-          `Retrying in ${delay / 1000} seconds (attempt ${retryState.value.attempt}/${RETRY_CONFIG.maxAttempts})`
-        )
-
-        // Schedule retry
-        return new Promise(resolve => {
-          if (retryTimer) {
-            clearTimeout(retryTimer)
-          }
-
-          retryTimer = setTimeout(async () => {
-            const result = await saveCohortWithRetry()
-            resolve(result)
-          }, delay)
-        })
-      } else {
-        logger.error(
-          'CohortStore',
-          `Max retry attempts (${RETRY_CONFIG.maxAttempts}) reached. Save failed.`
-        )
-        retryState.value.isRetrying = false
-        return false
-      }
-    }
-  }
-
-  // Cancel pending retry
-  function cancelRetry() {
-    if (retryTimer) {
-      clearTimeout(retryTimer)
-      retryTimer = null
-    }
-
-    retryState.value = {
-      attempt: 0,
-      nextRetryAt: null,
-      isRetrying: false,
-    }
-
-    logger.debug('CohortStore', 'Retry cancelled')
-  }
-
-  // Delete cohort from cache
-  async function deleteCachedCohort(cohortId: number | string): Promise<void> {
-    try {
-      await deleteCohortFromCache(cohortId)
-      logger.debug('CohortStore', `Cohort ${cohortId} deleted from cache`)
-    } catch (error) {
-      logger.error('CohortStore', 'Failed to delete cached cohort:', error)
-    }
-  }
-
   // Version preview actions (T014-T016)
 
   /**
    * Load a specific version for preview
-   * Fetches the historical version data and sets it as current with preview flag
+   * Fetches the version metadata and asks the mounted editor to fetch,
+   * convert, and resync from that version's Atlas-shaped data.
+   *
+   * `getVersionAPI`'s `entityDTO` is the raw Atlas-shaped DTO the WebAPI
+   * returns (id/name/description/expression-as-JSON-string), not an internal
+   * `CohortDefinition` — it must go through the same convertAtlasToInternal
+   * path `loadCohort` uses, which only the mounted `CohortBuilder` knows how
+   * to run and resync into its ~12 local refs. So this only fetches the
+   * version metadata and signals; it never assigns entityDTO to
+   * `currentCohort` directly.
    * @param versionNumber - The version number to load
    */
   async function loadVersionPreview(versionNumber: number): Promise<void> {
@@ -559,21 +403,16 @@ export const useCohortStore = defineStore('cohort', () => {
 
     try {
       const cohortId = currentCohort.value.id
-      const versionedAsset: VersionedAsset<CohortDefinition> = await getVersionAPI(
-        cohortId,
-        versionNumber
-      )
+      const versionedAsset = await getVersionAPI(cohortId, versionNumber)
 
       // Set preview version metadata
       previewVersion.value = versionedAsset.versionDTO
 
-      // Replace current cohort with historical data
-      currentCohort.value = versionedAsset.entityDTO
+      // Ask the mounted editor to fetch + convert + resync this version.
+      reloadVersion.value = versionNumber
+      reloadRequest.value++
 
-      // Mark as clean (read-only mode, no editing)
-      isDirty.value = false
-
-      logger.debug('CohortStore', `Loaded version ${versionNumber} for preview`)
+      logger.debug('CohortStore', `Requested version ${versionNumber} for preview`)
     } catch (error) {
       logger.error('CohortStore', `Failed to load version ${versionNumber}`, error)
       throw error
@@ -586,13 +425,11 @@ export const useCohortStore = defineStore('cohort', () => {
    */
   async function clearPreviewVersion(): Promise<void> {
     const wasPreviewingId = currentCohort.value?.id
-
-    // Clear preview state
     previewVersion.value = null
 
-    // Reload current version if we were previewing
     if (wasPreviewingId) {
-      await loadCohort(wasPreviewingId)
+      reloadVersion.value = null
+      reloadRequest.value++
     }
 
     logger.debug('CohortStore', 'Preview cleared, returned to current version')
@@ -614,16 +451,16 @@ export const useCohortStore = defineStore('cohort', () => {
     }
 
     try {
-      // Save the current (historical) data as new version
-      const success = await saveCohort()
+      const saved = await requestSave()
 
-      if (success) {
-        // Clear preview state after successful save
-        previewVersion.value = null
-        logger.debug('CohortStore', 'Preview saved as current version')
+      if (!saved?.id) {
+        logger.error('CohortStore', 'Preview save was not confirmed by the editor')
+        return false
       }
 
-      return success
+      previewVersion.value = null
+      logger.debug('CohortStore', 'Preview saved as current version')
+      return true
     } catch (error) {
       logger.error('CohortStore', 'Failed to save preview as current', error)
       return false
@@ -637,7 +474,6 @@ export const useCohortStore = defineStore('cohort', () => {
       watchHandle = null
     }
     stopAutoSave()
-    cancelRetry()
   }
 
   return {
@@ -648,10 +484,11 @@ export const useCohortStore = defineStore('cohort', () => {
     previewVersion,
     validationErrors,
     isReadOnly,
-    retryState,
     agentRevision,
     saveRequest,
     newCohortSignal,
+    reloadRequest,
+    reloadVersion,
     saveOptions,
     // Getters
     hasEntryEvents,
@@ -685,12 +522,6 @@ export const useCohortStore = defineStore('cohort', () => {
     stopAutoSave,
     // Validation
     validateCohort,
-    // Caching and retry
-    loadCohort,
-    getCachedCohort,
-    saveCohort,
-    cancelRetry,
-    deleteCachedCohort,
     // Version preview (T014-T016)
     loadVersionPreview,
     clearPreviewVersion,

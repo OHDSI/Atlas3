@@ -871,7 +871,7 @@ const eyebrowText = computed(() => {
 const nameError = computed(() => {
   const v = form.value.name
   if (!v || v.trim().length === 0) {
-    return t('commonErrors.required', 'Name is required').value
+    return t('commonErrors.nameRequired', 'Name is required').value
   }
   if (v.length > 255) {
     return t('commonErrors.lengthValidation', 'Name must be between 1 and 255 characters').value

@@ -97,7 +97,7 @@
                   v-if="source.cacheStatus?.lastBuiltAt"
                   class="text-caption text-grey"
                 >
-                  {{ t('trexsql.lastBuilt', 'Built') }}:
+                  {{ t('trexsql.built', 'Built') }}:
                   {{ formatDate(source.cacheStatus.lastBuiltAt) }}
                 </span>
 

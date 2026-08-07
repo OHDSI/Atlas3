@@ -131,9 +131,9 @@ describe('webapi pathway tags + diagnostics', () => {
   })
 
   it('runPathwayDiagnostics POSTs /pathway-analysis/check', async () => {
-    vi.mocked(httpClient.httpPost).mockResolvedValue([])
+    vi.mocked(httpClient.httpPostRead).mockResolvedValue([])
     await runPathwayDiagnostics({ design: {} } as never)
-    expect(httpClient.httpPost).toHaveBeenCalledWith('/pathway-analysis/check', { design: {} })
+    expect(httpClient.httpPostRead).toHaveBeenCalledWith('/pathway-analysis/check', { design: {} })
   })
 })
 

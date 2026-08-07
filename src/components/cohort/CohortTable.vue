@@ -157,7 +157,7 @@
               <div class="cohort-table__actions">
                 <AtlasIconButton
                   icon="mdi-information-outline"
-                  v-bind="{ ariaLabel: t('common.cohortInformation', 'Cohort Information').value }"
+                  v-bind="{ ariaLabel: t('common.cohortInformation', 'Cohort information').value }"
                   variant="text"
                   size="sm"
                   data-testid="cohort-table-info"
