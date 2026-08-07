@@ -234,6 +234,14 @@ export const useCohortStore = defineStore('cohort', () => {
       clearTimeout(saveTimeoutId)
       saveTimeoutId = null
     }
+    // Only one resolver slot exists, so replacing it below would otherwise
+    // strand a still-pending prior request's promise forever (its own timer
+    // was just cleared, and nothing else will ever settle it). Settle it now.
+    if (saveResolver) {
+      const prev = saveResolver
+      saveResolver = null
+      prev({})
+    }
     return new Promise(resolve => {
       saveOptions.value = opts
       saveResolver = resolve

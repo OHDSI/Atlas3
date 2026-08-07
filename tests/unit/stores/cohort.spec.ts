@@ -802,9 +802,15 @@ describe('Cohort Store', () => {
       vi.useFakeTimers()
       try {
         const store = useCohortStore()
-        void store.requestSave()
+        const pA = store.requestSave()
         vi.advanceTimersByTime(4000)
         const pB = store.requestSave()
+
+        // A's own promise must settle immediately when B supersedes it - it
+        // no longer has a timer or a resolver slot of its own, so nothing
+        // else would ever settle it (a WebMCP tool call awaiting it must not
+        // hang forever - see pythiaBridge.ts).
+        await expect(pA).resolves.toEqual({})
 
         // A's original 8s timer would fire here if it survived request B.
         vi.advanceTimersByTime(4000)
