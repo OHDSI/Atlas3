@@ -24,6 +24,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { hierarchy, partition, type HierarchyRectangularNode } from 'd3'
+import { CHART_LABEL_ON_MARK } from '@/ui/chart-config'
 
 export interface SunburstNode {
   name: string
@@ -126,7 +127,7 @@ function buildBreadcrumb(d: LaidOutNode | undefined): string {
     return segs
       .map(
         s =>
-          `<span style="display:inline-block;padding:1px 6px;margin-right:2px;border-radius:3px;background:${s.color};color:#fff;font-size:11px;">${escapeHtml(s.name)}</span>`
+          `<span style="display:inline-block;padding:1px 6px;margin-right:2px;border-radius:3px;background:${s.color};color:${CHART_LABEL_ON_MARK};font-size:11px;">${escapeHtml(s.name)}</span>`
       )
       .join('')
   })

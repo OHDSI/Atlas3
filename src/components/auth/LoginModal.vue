@@ -236,8 +236,12 @@ function close() {
   opacity: 1;
 }
 
+.v-theme--dark .login-modal :deep(.v-overlay__scrim) {
+  background: rgba(0, 0, 0, 0.45);
+}
+
 .login-card {
-  background: #ffffff;
+  background: var(--atlas-color-surface);
   overflow: hidden;
 }
 
@@ -259,7 +263,7 @@ function close() {
   font-size: 22px;
   font-weight: 600;
   line-height: 1.2;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--atlas-color-on-surface);
   margin: 0 0 6px;
 }
 
@@ -267,6 +271,10 @@ function close() {
   font-size: 14px;
   color: rgba(0, 0, 0, 0.55);
   margin: 0 0 28px;
+}
+
+.v-theme--dark .login-card__subtitle {
+  color: var(--atlas-color-on-surface-variant);
 }
 
 .login-card__body {
@@ -282,6 +290,10 @@ function close() {
   text-align: center;
 }
 
+.v-theme--dark .login-card__providers-label {
+  color: var(--atlas-color-on-surface-variant);
+}
+
 .login-card__providers {
   display: flex;
   flex-direction: column;
@@ -293,15 +305,15 @@ function close() {
   text-transform: none;
   letter-spacing: 0;
   font-weight: 500;
-  border-color: rgba(0, 0, 0, 0.12);
+  border-color: var(--atlas-color-outline-strong);
   transition:
     background-color 120ms ease,
     border-color 120ms ease;
 }
 
 .login-card__provider-btn:hover {
-  background-color: rgba(31, 66, 90, 0.04);
-  border-color: rgba(31, 66, 90, 0.4);
+  background-color: rgba(var(--v-theme-primary), 0.04);
+  border-color: rgba(var(--v-theme-primary), 0.4);
 }
 
 .login-card__provider-btn :deep(.v-btn__content) {
@@ -321,12 +333,16 @@ function close() {
   gap: 4px;
   padding: 10px 12px;
   margin-bottom: 16px;
-  background-color: rgba(255, 82, 82, 0.08);
-  border: 1px solid rgba(255, 82, 82, 0.25);
+  background-color: rgba(var(--v-theme-error), 0.08);
+  border: 1px solid rgba(var(--v-theme-error), 0.25);
   border-radius: 6px;
   color: rgba(0, 0, 0, 0.78);
   font-size: 13px;
   line-height: 1.4;
+}
+
+.v-theme--dark .login-card__error {
+  color: var(--atlas-color-danger-text);
 }
 
 .login-card__skip {
@@ -341,6 +357,10 @@ function close() {
   font-size: 11px;
   letter-spacing: 0.04em;
   color: rgba(0, 0, 0, 0.4);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: 1px solid rgba(var(--v-theme-on-surface), 0.06);
+}
+
+.v-theme--dark .login-card__footer {
+  color: var(--atlas-color-on-surface-variant);
 }
 </style>

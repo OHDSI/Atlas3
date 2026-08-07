@@ -260,6 +260,9 @@ onMounted(load)
   font-size: 13px;
   color: rgba(0, 0, 0, 0.6);
 }
+.v-theme--dark .summary {
+  color: var(--atlas-color-on-surface-variant);
+}
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;

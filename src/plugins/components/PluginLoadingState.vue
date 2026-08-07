@@ -26,4 +26,8 @@ import { AtlasProgressCircular } from '@/components/ui'
   color: #666;
   font-size: 0.875rem;
 }
+
+.v-theme--dark .plugin-loading-state p {
+  color: var(--atlas-color-on-surface-variant);
+}
 </style>

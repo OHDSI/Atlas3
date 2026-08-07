@@ -353,6 +353,9 @@ async function saveDescription() {
   font-weight: 500;
   color: rgba(0, 0, 0, 0.6);
 }
+.v-theme--dark .role-details__label {
+  color: var(--atlas-color-on-surface-variant);
+}
 
 .role-details__value {
   display: flex;
@@ -366,7 +369,7 @@ async function saveDescription() {
 }
 
 .role-details__description {
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--atlas-color-on-surface);
 }
 
 .role-details__edit {
@@ -385,12 +388,15 @@ async function saveDescription() {
   flex-wrap: wrap;
   gap: 24px;
   padding-top: 16px;
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  border-top: 1px solid var(--atlas-color-outline-strong);
 }
 
 .role-details__metadata-item {
   display: flex;
   align-items: center;
   color: rgba(0, 0, 0, 0.6);
+}
+.v-theme--dark .role-details__metadata-item {
+  color: var(--atlas-color-on-surface-variant);
 }
 </style>
