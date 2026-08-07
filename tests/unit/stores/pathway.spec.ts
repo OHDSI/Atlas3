@@ -321,6 +321,7 @@ describe('pathway store — load/preview lifecycle', () => {
     expect(s.currentPathway?.name).toBe('Versioned')
     await s.clearPreviewVersion()
     expect(s.isPreviewMode).toBe(false)
+    expect(s.currentPathway?.name).toBe('Loaded')
   })
 
   it('loadVersionPreview returns false on exception', async () => {

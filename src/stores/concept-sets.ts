@@ -22,12 +22,15 @@ import type {
   ConceptSetExpression,
 } from '@/models/concept-set.types'
 import type { Concept } from '@/models/concept-set.types'
-import type { Version, VersionedAsset } from '@/components/versions/types'
+import type { Version } from '@/components/versions/types'
 import type { Tag } from '@/models/cohort.types'
 import type { DateRange } from '@/composables/useCohorts'
 import { conceptToConceptSetItem, conceptSetItemToExpressionItem } from '@/utils/api-mappers'
 import { diffConceptLists } from '@/utils/concept-compare'
-import { getVersion as getVersionAPI } from '@/services/concept-set-versions.service'
+import {
+  getVersion as getVersionAPI,
+  type ConceptSetVersionedAsset,
+} from '@/services/concept-set-versions.service'
 import {
   getRecommendedConcepts,
   getConceptRecordCounts,
@@ -525,7 +528,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
     try {
       loading.value = true
-      const versionedAsset: VersionedAsset<ConceptSet> = await getVersionAPI(
+      const versionedAsset: ConceptSetVersionedAsset = await getVersionAPI(
         conceptSetId,
         versionNumber
       )
@@ -533,8 +536,9 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       // Set preview version metadata
       previewVersion.value = versionedAsset.versionDTO
 
-      // Replace current concept set with historical data
-      currentSet.value = versionedAsset.entityDTO
+      // Replace current concept set with historical data, including the
+      // historical items (entityDTO alone has none — see ConceptSetVersionedAsset)
+      currentSet.value = { ...versionedAsset.entityDTO, items: versionedAsset.items }
 
       // Mark as clean (read-only mode, no editing)
       isDirty.value = false

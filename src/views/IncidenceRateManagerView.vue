@@ -29,8 +29,6 @@ const loadingError = ref<string | null>(null)
 
 async function load() {
   loadingError.value = null
-  // Version preview: handled by router beforeEnter; if currentIR is set in preview mode, do nothing.
-  if (store.isPreviewMode && store.currentIR) return
 
   const idStr = props.id ?? (route.params.id as string | undefined)
   if (!idStr || idStr === 'new') {
@@ -40,8 +38,13 @@ async function load() {
     }
     return
   }
+
   const id = Number(idStr)
-  const ok = await store.loadIR(id)
+  const version = route.params.version as string | undefined
+  const ok =
+    version && version !== 'current'
+      ? await store.loadVersionPreview(id, Number(version))
+      : await store.loadIR(id)
   if (!ok)
     loadingError.value = t('incidenceRate.editor.loadError', 'Failed to load incidence rate').value
 }
@@ -53,7 +56,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => store.stopAutoSave())
 
-watch(() => route.params.id, load)
+watch(() => [route.params.id, route.params.version], load)
 </script>
 
 <style scoped>

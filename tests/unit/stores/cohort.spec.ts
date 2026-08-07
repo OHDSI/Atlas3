@@ -798,6 +798,31 @@ describe('Cohort Store', () => {
       }
     })
 
+    it('does not let an overlapping request A orphan timer resolve request B', async () => {
+      vi.useFakeTimers()
+      try {
+        const store = useCohortStore()
+        const pA = store.requestSave()
+        vi.advanceTimersByTime(4000)
+        const pB = store.requestSave()
+
+        // A's own promise must settle immediately when B supersedes it - it
+        // no longer has a timer or a resolver slot of its own, so nothing
+        // else would ever settle it (a WebMCP tool call awaiting it must not
+        // hang forever - see pythiaBridge.ts).
+        await expect(pA).resolves.toEqual({})
+
+        // A's original 8s timer would fire here if it survived request B.
+        vi.advanceTimersByTime(4000)
+        await Promise.resolve()
+
+        store.notifySaved({ id: 99, name: 'Cohort B' })
+        await expect(pB).resolves.toEqual({ id: 99, name: 'Cohort B' })
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
     it('notifySaved with no pending resolver is a no-op', () => {
       const store = useCohortStore()
       expect(() => store.notifySaved({ id: 1 })).not.toThrow()

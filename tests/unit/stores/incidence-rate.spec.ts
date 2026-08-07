@@ -182,6 +182,7 @@ describe('incidence-rate store', () => {
     expect(s.currentIR?.name).toBe('V')
     await s.clearPreviewVersion()
     expect(s.isPreviewMode).toBe(false)
+    expect(s.currentIR?.name).toBe('Current')
   })
 
   it('addTag does not mark dirty (metadata only)', async () => {
