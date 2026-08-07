@@ -3,9 +3,13 @@ import {
   parseYyyymm,
   dashboardObservationMonthLineOptions,
   setChartPalette,
+  setChartTheme,
   CHART_COLORS,
   TREEMAP_GRADIENT,
+  getExportConfig,
 } from '@/ui/chart-config'
+import { contrastRatio } from '@/ui/contrast'
+import { tokens } from '@/ui/tokens'
 
 describe('setChartPalette', () => {
   afterEach(() => {
@@ -193,5 +197,59 @@ describe('builders are defensive when scalar/time arrays are missing', () => {
       series: [{ name: 's', data: [1, 2] }],
     }) as any
     expect(opt.series[0].data).toEqual([[0, 1], [1, 2]])
+  })
+})
+
+describe('setChartTheme', () => {
+  afterEach(() => {
+    setChartTheme('light')
+    setChartPalette({ chartColors: null, treemapGradient: null })
+  })
+
+  it('keeps the light palette byte-for-byte when set to light', () => {
+    setChartTheme('light')
+    expect(CHART_COLORS[0]).toBe('#4e79a7')
+    expect(TREEMAP_GRADIENT).toEqual(['#7e9bbf', '#4e79a7', '#1f425a'])
+  })
+
+  it('swaps in the dark palette when set to dark', () => {
+    setChartTheme('dark')
+    expect(CHART_COLORS[0]).toBe('#7fb3e0')
+    expect(TREEMAP_GRADIENT).toEqual(['#4e79a7', '#7fb3e0', '#a8cdea'])
+  })
+
+  it('gives every dark categorical colour at least 3:1 against the dark surface', () => {
+    setChartTheme('dark')
+    for (const color of CHART_COLORS) {
+      expect(contrastRatio(color, tokens.colorDark.surface)).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it('gives every dark treemap stop at least 3:1 against the dark surface', () => {
+    setChartTheme('dark')
+    for (const stop of TREEMAP_GRADIENT) {
+      expect(contrastRatio(stop, tokens.colorDark.surface)).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it('exports on the dark surface rather than white when the theme is dark', () => {
+    setChartTheme('dark')
+    expect(getExportConfig().backgroundColor).toBe(tokens.colorDark.surface)
+  })
+
+  it('exports on white in light mode', () => {
+    setChartTheme('light')
+    expect(getExportConfig().backgroundColor).toBe('#ffffff')
+  })
+
+  it('still honours an explicit export background', () => {
+    setChartTheme('dark')
+    expect(getExportConfig('#123456').backgroundColor).toBe('#123456')
+  })
+
+  it('lets a deployment palette win over the theme palette', () => {
+    setChartTheme('dark')
+    setChartPalette({ chartColors: ['#abcdef'], treemapGradient: null })
+    expect(CHART_COLORS).toEqual(['#abcdef'])
   })
 })

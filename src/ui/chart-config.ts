@@ -6,6 +6,7 @@
 
 import type { EChartsOption } from 'echarts'
 import type { BarChartData, PieChartData, LineChartData, TreemapNode } from '@/models/report.types'
+import { tokens } from './tokens'
 
 /**
  * Convert a YYYYMM code (e.g. 200301) to a UTC millisecond timestamp
@@ -133,18 +134,81 @@ const DEFAULT_TREEMAP_GRADIENT: readonly string[] = ['#7e9bbf', '#4e79a7', '#1f4
 export let TREEMAP_GRADIENT: readonly string[] = DEFAULT_TREEMAP_GRADIENT
 
 /**
+ * Dark-surface counterparts of the Tableau palette. Each entry clears 3:1
+ * against the dark surface (#161618); the light values sit at 2.0–4.4:1 there
+ * and would read as muddy smears.
+ */
+const DARK_CHART_COLORS: readonly string[] = [
+  '#7fb3e0', // blue
+  '#f6a04d', // orange
+  '#f2777a', // red
+  '#6fd0c8', // teal
+  '#7bc96f', // green
+  '#f0d264', // mustard
+  '#c79bd1', // purple
+  '#ffb3bb', // soft coral
+  '#c49a80', // taupe
+  '#c9c2bd', // warm grey
+]
+
+// The light gradient tails into the brand navy, which disappears against a dark
+// surface at 1.95:1, so the dark ramp runs mid-blue to pale blue instead.
+const DARK_TREEMAP_GRADIENT: readonly string[] = ['#4e79a7', '#7fb3e0', '#a8cdea']
+
+// Five-stop prevalence ramp used by clinicalDomainTreemapOptions's built-in
+// visualMap color scale (cell backgrounds, not marks on the page background).
+const DEFAULT_PREVALENCE_RAMP: readonly string[] = [
+  '#e3f2fd', // Very light blue (low prevalence)
+  '#90caf9', // Light blue
+  '#42a5f5', // Medium blue
+  '#1e88e5', // Dark blue
+  '#1565c0', // Very dark blue (high prevalence)
+]
+
+const DARK_PREVALENCE_RAMP: readonly string[] = ['#1b3a5c', '#2f5d8a', '#4a86c4', '#7fb3e0', '#b3d4f0']
+
+let chartMode: 'light' | 'dark' = 'light'
+let paletteOverride: readonly string[] | null = null
+let gradientOverride: readonly string[] | null = null
+
+export let CHART_TEXT: string = tokens.color.onSurface
+export let CHART_SUBTLE_TEXT: string = '#5e6470'
+export let CHART_SURFACE: string = tokens.color.surface
+export let CHART_LABEL_ON_MARK: string = '#ffffff'
+
+function applyPalettes(): void {
+  const themeColors = chartMode === 'dark' ? DARK_CHART_COLORS : DEFAULT_CHART_COLORS
+  const themeGradient = chartMode === 'dark' ? DARK_TREEMAP_GRADIENT : DEFAULT_TREEMAP_GRADIENT
+  CHART_COLORS = paletteOverride?.length ? [...paletteOverride] : themeColors
+  TREEMAP_GRADIENT = gradientOverride?.length ? [...gradientOverride] : themeGradient
+
+  const set = chartMode === 'dark' ? tokens.colorDark : tokens.color
+  CHART_TEXT = set.onSurface
+  // #5e6470 is the light-mode axis grey; on the dark surface it sits at 3.04:1,
+  // so dark falls back to the on-surface-variant token at 7.05:1.
+  CHART_SUBTLE_TEXT = chartMode === 'dark' ? set.onSurfaceVariant : '#5e6470'
+  CHART_SURFACE = set.surface
+  // Dark marks are light fills, so their in-mark labels flip to near-black.
+  CHART_LABEL_ON_MARK = chartMode === 'dark' ? 'rgba(0,0,0,.87)' : '#ffffff'
+}
+
+/**
  * Override the chart palettes from `settings.theme` (chartColors /
- * treemapGradient). Passing null or an empty array restores the default, so a
+ * treemapGradient). Passing null or an empty array restores the theme default, so a
  * deployment can override one palette without pinning the other.
  */
 export function setChartPalette(palette: {
   chartColors?: readonly string[] | null
   treemapGradient?: readonly string[] | null
 }): void {
-  CHART_COLORS = palette.chartColors?.length ? [...palette.chartColors] : DEFAULT_CHART_COLORS
-  TREEMAP_GRADIENT = palette.treemapGradient?.length
-    ? [...palette.treemapGradient]
-    : DEFAULT_TREEMAP_GRADIENT
+  paletteOverride = palette.chartColors ?? null
+  gradientOverride = palette.treemapGradient ?? null
+  applyPalettes()
+}
+
+export function setChartTheme(mode: 'light' | 'dark'): void {
+  chartMode = mode
+  applyPalettes()
 }
 
 /**
@@ -204,7 +268,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
       nameRotate: 90,
       nameGap: 40,
       nameTextStyle: {
-        color: '#5e6470',
+        color: CHART_SUBTLE_TEXT,
         fontSize: 12,
       },
       axisLabel: {
@@ -280,7 +344,7 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
         avoidLabelOverlap: true,
         itemStyle: {
           borderRadius: 10,
-          borderColor: '#fff',
+          borderColor: CHART_SURFACE,
           borderWidth: 2,
         },
         // Percentage drawn inside the ring (no leader lines that overflow the card
@@ -289,7 +353,7 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
           show: true,
           position: 'inside',
           formatter: '{d}%',
-          color: '#fff',
+          color: CHART_LABEL_ON_MARK,
           fontSize: 11,
         },
         emphasis: {
@@ -444,7 +508,7 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
       text: [formatSINumber(dataMax), formatSINumber(dataMin)],
       textStyle: {
         fontSize: 11,
-        color: '#5e6470',
+        color: CHART_SUBTLE_TEXT,
       },
     },
     series: [
@@ -476,10 +540,10 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
         upperLabel: {
           show: true,
           height: 30,
-          color: '#fff',
+          color: CHART_LABEL_ON_MARK,
         },
         itemStyle: {
-          borderColor: '#fff',
+          borderColor: CHART_SURFACE,
           borderWidth: 2,
           gapWidth: 2,
         },
@@ -650,9 +714,9 @@ export function createResizeHandler(
 /**
  * Export chart configuration with consistent styling
  */
-export function getExportConfig(backgroundColor = '#ffffff') {
+export function getExportConfig(backgroundColor?: string) {
   return {
-    backgroundColor,
+    backgroundColor: backgroundColor ?? CHART_SURFACE,
     pixelRatio: 2, // 2x for high-DPI displays
     excludeComponents: ['toolbox'],
   }
@@ -716,7 +780,7 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
         avoidLabelOverlap: true,
         itemStyle: {
           borderRadius: 8,
-          borderColor: '#fff',
+          borderColor: CHART_SURFACE,
           borderWidth: 2,
         },
         label: {
@@ -931,7 +995,7 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
         focus: 'series',
         itemStyle: {
           borderWidth: 2,
-          borderColor: '#fff',
+          borderColor: CHART_SURFACE,
         },
       },
     })),
@@ -1083,7 +1147,7 @@ export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLin
         focus: 'series',
         itemStyle: {
           borderWidth: 2,
-          borderColor: '#fff',
+          borderColor: CHART_SURFACE,
         },
       },
     })),
@@ -1150,12 +1214,12 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
         upperLabel: {
           show: true,
           height: 30,
-          color: '#fff',
+          color: CHART_LABEL_ON_MARK,
           fontSize: 14,
           fontWeight: 'bold',
         },
         itemStyle: {
-          borderColor: '#fff',
+          borderColor: CHART_SURFACE,
           borderWidth: 2,
           gapWidth: 2,
         },
@@ -1179,13 +1243,7 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
         visualMax: maxValue,
         visualDimension: 0,
         colorMappingBy: 'value',
-        color: [
-          '#e3f2fd', // Very light blue (low prevalence)
-          '#90caf9', // Light blue
-          '#42a5f5', // Medium blue
-          '#1e88e5', // Dark blue
-          '#1565c0', // Very dark blue (high prevalence)
-        ],
+        color: [...(chartMode === 'dark' ? DARK_PREVALENCE_RAMP : DEFAULT_PREVALENCE_RAMP)],
         data: nodes,
       },
     ],
@@ -1372,7 +1430,7 @@ export function trellisChartOptions(
         nameTextStyle: {
           fontSize: 12,
           fontWeight: 'normal',
-          color: '#5e6470',
+          color: CHART_SUBTLE_TEXT,
         },
       }),
     })
