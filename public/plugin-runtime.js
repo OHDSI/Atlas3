@@ -10,7 +10,11 @@ window.__atlasPluginRuntimeReady = (function () {
   if (!window.Vue) {
     // eslint-disable-next-line no-console -- classic script outside the module graph; no logger available
     console.error('[SystemJS] window.Vue is not available!')
-    return Promise.resolve()
+    // Unlike the window.System guard above (whose absence is re-verified
+    // downstream by ensurePluginRuntime), nothing else checks window.Vue -
+    // resolving here would let the runtime report "ready" with the 'vue'
+    // SystemJS module exporting nothing, breaking every plugin silently.
+    return Promise.reject(new Error('[SystemJS] window.Vue is not available!'))
   }
 
   // A synchronous throw inside a classic <script> fires the window's error
@@ -137,6 +141,9 @@ window.__atlasPluginRuntimeReady = (function () {
     }).catch(function(err) {
       // eslint-disable-next-line no-console -- classic script outside the module graph; no logger available
       console.error('[SystemJS] Failed to load single-spa-vue:', err);
+      // Rethrow so the failure reaches ensurePluginRuntime's rejection path
+      // instead of letting this chain resolve with single-spa-vue unregistered.
+      throw err;
     });
   }
 })()
