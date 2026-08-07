@@ -4,15 +4,18 @@ import AxeBuilder from '@axe-core/playwright'
 // Verified against src/router/routes.ts. The four analysis-hub list views
 // (characterizations, pathways, incidence-rates) live under /analysis/* but
 // keep top-level redirect aliases; those aliases are used here since they
-// are the paths a user/bookmark would actually hit.
+// are the paths a user/bookmark would actually hit. `expectedUrl` is the
+// *resolved* hash (confirmed by navigating each path and reading page.url())
+// so a future redirect/auth-gate change that silently strands every route on
+// the landing page fails loudly instead of scanning `/#/` seven times.
 const ROUTES = [
-  { name: 'landing', path: '/#/' },
-  { name: 'cohorts', path: '/#/cohorts' },
-  { name: 'concept-sets', path: '/#/concepts' },
-  { name: 'data-sources', path: '/#/datasources' },
-  { name: 'characterizations', path: '/#/characterizations' },
-  { name: 'incidence-rates', path: '/#/incidence-rates' },
-  { name: 'pathways', path: '/#/pathways' },
+  { name: 'landing', path: '/#/', expectedUrl: /#\/$/ },
+  { name: 'cohorts', path: '/#/cohorts', expectedUrl: /#\/cohorts$/ },
+  { name: 'concept-sets', path: '/#/concepts', expectedUrl: /#\/concepts(\?|$)/ },
+  { name: 'data-sources', path: '/#/datasources', expectedUrl: /#\/datasources$/ },
+  { name: 'characterizations', path: '/#/characterizations', expectedUrl: /#\/analysis\/characterizations$/ },
+  { name: 'incidence-rates', path: '/#/incidence-rates', expectedUrl: /#\/analysis\/incidence-rates$/ },
+  { name: 'pathways', path: '/#/pathways', expectedUrl: /#\/analysis\/pathways$/ },
 ]
 
 async function enableDarkMode(page: Page) {
@@ -25,6 +28,7 @@ test.describe('dark mode colour contrast', () => {
       await enableDarkMode(page)
       await page.goto(route.path)
       await page.waitForLoadState('networkidle')
+      await expect(page).toHaveURL(route.expectedUrl)
       await expect(page.locator('[data-testid="nav-theme-toggle"]')).toBeVisible()
       await expect(page.locator('.v-application.v-theme--dark')).toHaveCount(1)
 
