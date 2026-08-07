@@ -133,6 +133,7 @@ export const useConceptHierarchyStore = defineStore('concept-hierarchy', () => {
 
   return {
     sourceKey,
+    childrenByConcept,
     setSource,
     expandNode,
     collapseNode,

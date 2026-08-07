@@ -446,6 +446,93 @@ describe('toolbar', () => {
     )
   })
 
+  it('merges a concept discovered only through expansion into flat view', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const chevron = document.querySelector(
+      '[data-testid="hierarchy-expand-443410"]'
+    ) as HTMLElement
+    chevron.click()
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+    ;(document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+
+    // 4050872 "Pneumonia due to parasitic infestation" exists only in 443410's
+    // own expansion payload, never in the anchor's ancestorAndDescendant
+    // response — Flat must still surface it once it has been discovered.
+    expect(
+      PNEUMONIA_ANCESTOR_AND_DESCENDANT.some(c => c.conceptId === 4050872)
+    ).toBe(false)
+    expect(
+      document.querySelector('[data-testid="hierarchy-row-4050872"]')?.textContent
+    ).toContain('Pneumonia due to parasitic infestation')
+  })
+
+  it('renders a concept present in both the anchor payload and an expansion exactly once, with no duplicate-key warning', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const chevron = document.querySelector(
+      '[data-testid="hierarchy-expand-443410"]'
+    ) as HTMLElement
+    chevron.click()
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+    ;(document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+
+    // 257315 "Bacterial pneumonia" is both a distance-2 descendant in the
+    // anchor's own payload and a distance-1 child returned by expanding
+    // 443410 — the merge must dedupe it rather than render it twice.
+    expect(
+      PNEUMONIA_ANCESTOR_AND_DESCENDANT.some(c => c.conceptId === 257315)
+    ).toBe(true)
+    expect(
+      INFECTIVE_PNEUMONIA_CHILDREN.some(c => c.conceptId === 257315)
+    ).toBe(true)
+    expect(document.querySelectorAll('[data-testid="hierarchy-row-257315"]')).toHaveLength(1)
+
+    const hasDuplicateKeyWarning = [...warnSpy.mock.calls, ...errorSpy.mock.calls].some(args =>
+      args.some(arg => typeof arg === 'string' && arg.toLowerCase().includes('duplicate key'))
+    )
+    expect(hasDuplicateKeyWarning).toBe(false)
+
+    warnSpy.mockRestore()
+    errorSpy.mockRestore()
+  })
+
+  it('keeps the toolbar descendant count in sync with the merged flat row count after an expansion', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const chevron = document.querySelector(
+      '[data-testid="hierarchy-expand-443410"]'
+    ) as HTMLElement
+    chevron.click()
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+    ;(document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+
+    const anchorDescendantIds = new Set(
+      PNEUMONIA_ANCESTOR_AND_DESCENDANT.filter(c =>
+        c.relationships.some(r => r.relationshipName === 'Has descendant of')
+      ).map(c => c.conceptId)
+    )
+    const newFromExpansion = INFECTIVE_PNEUMONIA_CHILDREN.filter(
+      c => !anchorDescendantIds.has(c.conceptId)
+    ).length
+    const expectedMerged = anchorDescendantIds.size + newFromExpansion
+
+    expect(document.body.textContent).toContain(`${expectedMerged} descendants`)
+    expect(document.querySelectorAll('[data-descendant-row]')).toHaveLength(expectedMerged)
+  })
+
   it('keeps the filter when switching between tree and flat', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()

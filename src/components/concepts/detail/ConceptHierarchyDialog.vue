@@ -64,13 +64,6 @@ const descendants = computed(() =>
   )
 )
 
-const allDescendantCount = computed(
-  () =>
-    hierarchy.value.filter(c =>
-      c.relationships.some(r => r.relationshipName === 'Has descendant of')
-    ).length
-)
-
 const allAncestorCount = computed(() => ancestors.value.length)
 
 const isEmpty = computed(() => hierarchy.value.length === 0)
@@ -81,9 +74,35 @@ const domainFilter = ref<string | null>(null)
 const vocabularyFilter = ref<string | null>(null)
 const view = ref<'tree' | 'flat'>('tree')
 
-const allDescendants = computed(() =>
+const anchorDescendants = computed(() =>
   hierarchy.value.filter(c => c.relationships.some(r => r.relationshipName === 'Has descendant of'))
 )
+
+// Expanding a node in Tree view fetches and caches that node's children
+// through the hierarchy store, independently of the anchor's own
+// ancestorAndDescendant payload. The two can disagree — different distance
+// cut-offs, vocabulary refresh skew, a concept whose own response includes
+// something the anchor's didn't — so Flat merges both, deduplicated by
+// conceptId with the anchor payload winning any overlap. Concepts found only
+// through expansion are appended in discovery order, so switching views never
+// reorders anything already visible.
+const allDescendants = computed<RelatedConcept[]>(() => {
+  const seen = new Set(anchorDescendants.value.map(c => c.conceptId))
+  const discovered: RelatedConcept[] = []
+  for (const children of tree.childrenByConcept.values()) {
+    for (const child of children) {
+      if (seen.has(child.conceptId)) continue
+      seen.add(child.conceptId)
+      discovered.push(child)
+    }
+  }
+  return [...anchorDescendants.value, ...discovered]
+})
+
+// The toolbar advertises this same merged total, so it can never disagree
+// with what Flat actually renders — a count/rows mismatch was a review
+// finding on this branch once already, in the ancestor direction.
+const allDescendantCount = computed(() => allDescendants.value.length)
 
 function optionsFor(key: 'conceptClassId' | 'domainId' | 'vocabularyId') {
   return [...new Set(hierarchy.value.map(c => c[key]))].sort()
