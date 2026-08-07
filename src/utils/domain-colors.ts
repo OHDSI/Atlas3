@@ -7,7 +7,7 @@
  * concept set tables, paste-IDs summaries, search results.
  */
 
-const DOMAIN_COLORS: Record<string, string> = {
+export const DOMAIN_COLORS: Record<string, string> = {
   Condition: 'red',
   Drug: 'purple',
   Procedure: 'teal',
@@ -31,7 +31,7 @@ const DOMAIN_COLORS: Record<string, string> = {
 // Vuetify's base named colours are tuned for white surfaces. On the dark
 // surface these particular hues drop below AA as tonal chip labels, so dark
 // mode substitutes a lighter step of the same hue.
-const DARK_DOMAIN_COLORS: Record<string, string> = {
+export const DARK_DOMAIN_COLORS: Record<string, string> = {
   Condition: 'red-lighten-1',
   Drug: 'purple-lighten-3',
   Procedure: 'teal-lighten-2',
@@ -41,7 +41,7 @@ const DARK_DOMAIN_COLORS: Record<string, string> = {
   Visit: 'cyan-lighten-2',
   Specimen: 'green-lighten-2',
   Note: 'grey-lighten-1',
-  Provider: 'indigo-lighten-2',
+  Provider: 'indigo-lighten-3',
   Geography: 'light-green-lighten-2',
   Race: 'pink-lighten-2',
   Gender: 'deep-purple-lighten-3',

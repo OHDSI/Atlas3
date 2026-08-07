@@ -27,7 +27,7 @@ function normalizeDomain(d: string): string {
  * directly so points still tint when ECharts renders into a canvas
  * without theme context.
  */
-const VUETIFY_COLOR_HEX: Record<string, string> = {
+export const VUETIFY_COLOR_HEX: Record<string, string> = {
   red: '#F44336',
   pink: '#E91E63',
   purple: '#9C27B0',
@@ -60,7 +60,7 @@ const VUETIFY_COLOR_HEX: Record<string, string> = {
   'cyan-lighten-2': '#4DD0E1',
   'green-lighten-2': '#81C784',
   'grey-lighten-1': '#BDBDBD',
-  'indigo-lighten-2': '#7986CB',
+  'indigo-lighten-3': '#9FA8DA',
   'light-green-lighten-2': '#AED581',
   'pink-lighten-2': '#F06292',
   'deep-purple-lighten-3': '#B39DDB',
