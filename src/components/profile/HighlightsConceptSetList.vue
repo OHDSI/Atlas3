@@ -72,7 +72,7 @@ const { tv } = useI18n()
   opacity: 0.5;
 }
 
-:global(.v-theme--dark) .color-dot {
+.v-theme--dark .color-dot {
   border-color: var(--atlas-color-outline-strong);
 }
 </style>

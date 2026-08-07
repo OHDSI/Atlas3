@@ -767,7 +767,7 @@ function addAttribute(attributeKey: string, attributeType: string) {
  * exact-match token, so light stays byte-identical and dark is remapped
  * onto the closest semantic tokens: AT_LEAST -> info, EXACTLY -> success,
  * AT_MOST -> primary. */
-:global(.v-theme--dark) .cardinality-at_least {
+.v-theme--dark .cardinality-at_least {
   border-right-color: var(--atlas-color-info);
   background: linear-gradient(
     to right,
@@ -775,11 +775,11 @@ function addAttribute(attributeKey: string, attributeType: string) {
     color-mix(in srgb, var(--atlas-color-info) 14%, var(--atlas-color-surface)) 30%
   );
 }
-:global(.v-theme--dark) .cardinality-at_least .cardinality-label {
+.v-theme--dark .cardinality-at_least .cardinality-label {
   color: var(--atlas-color-info-text);
 }
 
-:global(.v-theme--dark) .cardinality-exactly {
+.v-theme--dark .cardinality-exactly {
   border-right-color: var(--atlas-color-success);
   background: linear-gradient(
     to right,
@@ -787,11 +787,11 @@ function addAttribute(attributeKey: string, attributeType: string) {
     color-mix(in srgb, var(--atlas-color-success) 14%, var(--atlas-color-surface)) 30%
   );
 }
-:global(.v-theme--dark) .cardinality-exactly .cardinality-label {
+.v-theme--dark .cardinality-exactly .cardinality-label {
   color: var(--atlas-color-success-text);
 }
 
-:global(.v-theme--dark) .cardinality-at_most {
+.v-theme--dark .cardinality-at_most {
   border-right-color: var(--atlas-color-primary);
   background: linear-gradient(
     to right,
@@ -799,21 +799,21 @@ function addAttribute(attributeKey: string, attributeType: string) {
     color-mix(in srgb, var(--atlas-color-primary) 14%, var(--atlas-color-surface)) 30%
   );
 }
-:global(.v-theme--dark) .cardinality-at_most .cardinality-label {
+.v-theme--dark .cardinality-at_most .cardinality-label {
   color: var(--atlas-color-primary-text);
 }
 
-:global(.v-theme--dark) .cardinality-chip--at_least.v-btn--variant-tonal {
+.v-theme--dark .cardinality-chip--at_least.v-btn--variant-tonal {
   color: var(--atlas-color-info-text) !important;
 }
-:global(.v-theme--dark) .cardinality-chip--exactly.v-btn--variant-tonal {
+.v-theme--dark .cardinality-chip--exactly.v-btn--variant-tonal {
   color: var(--atlas-color-success-text) !important;
 }
-:global(.v-theme--dark) .cardinality-chip--at_most.v-btn--variant-tonal {
+.v-theme--dark .cardinality-chip--at_most.v-btn--variant-tonal {
   color: var(--atlas-color-primary-text) !important;
 }
 
-:global(.v-theme--dark) .source-concept-row__title {
+.v-theme--dark .source-concept-row__title {
   background: color-mix(in srgb, var(--atlas-color-primary) 14%, var(--atlas-color-surface));
 }
 

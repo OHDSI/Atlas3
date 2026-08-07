@@ -222,11 +222,11 @@ function exportCsv(rows: Array<Record<string, string | number>>, name: string): 
 
 /* #eee / #f8f9fa have no exact-match tokens; light stays byte-identical,
  * dark uses the hairline outline and recessed-surface tokens. */
-:global(.v-theme--dark) .pathway-tables th,
-:global(.v-theme--dark) .pathway-tables td {
+.v-theme--dark .pathway-tables th,
+.v-theme--dark .pathway-tables td {
   border-bottom-color: var(--atlas-color-outline);
 }
-:global(.v-theme--dark) .pathway-tables th {
+.v-theme--dark .pathway-tables th {
   background: var(--atlas-color-surface-variant);
 }
 </style>

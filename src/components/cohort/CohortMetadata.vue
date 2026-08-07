@@ -240,7 +240,7 @@ const rules = {
  * muted-text token. The colorSwatches palette and the default-tag-color
  * sentinel above are a deliberate fixed picker palette, not theme colour —
  * left as literals by design. */
-:global(.v-theme--dark) .metadata-tags__label {
+.v-theme--dark .metadata-tags__label {
   color: var(--atlas-color-on-surface-variant);
 }
 </style>

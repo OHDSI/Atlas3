@@ -374,8 +374,8 @@ function openCohort(cohort: CohortDefinitionSummary) {
 /* rgba(0,0,0,.54)/.6 have no exact-match token; light stays byte-identical,
  * dark uses the muted-text token — otherwise these render at ~1.1:1 on the
  * dark surface. */
-:global(.v-theme--dark) .cohort-table__col-id,
-:global(.v-theme--dark) .cohort-table__description {
+.v-theme--dark .cohort-table__col-id,
+.v-theme--dark .cohort-table__description {
   color: var(--atlas-color-on-surface-variant);
 }
 </style>

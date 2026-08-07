@@ -128,7 +128,7 @@ const totalLabel = computed(() => {
 
 /* multiply crushes both fills toward the near-black dark surface (~1:1 contrast,
    effectively invisible); screen gives the equivalent lighten-on-overlap effect there */
-:global(.v-theme--dark) .venn-circles {
+.v-theme--dark .venn-circles {
   mix-blend-mode: screen;
 }
 

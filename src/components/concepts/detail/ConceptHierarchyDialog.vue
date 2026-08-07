@@ -591,19 +591,19 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
 .view-toggle button.on { background: rgba(25, 118, 210, 0.18); font-weight: 600; }
 .dialog-footer { border-top: 1px solid var(--atlas-color-outline); padding-top: 10px; margin-top: 10px; }
 
-:global(.v-theme--dark) .hierarchy-table th {
+.v-theme--dark .hierarchy-table th {
   border-bottom-color: var(--atlas-color-outline);
 }
-:global(.v-theme--dark) .ancestors-toggle {
+.v-theme--dark .ancestors-toggle {
   color: var(--atlas-color-primary-text);
 }
-:global(.v-theme--dark) .anchor {
+.v-theme--dark .anchor {
   background: color-mix(in srgb, var(--atlas-color-primary) 16%, transparent);
 }
-:global(.v-theme--dark) .view-toggle button {
+.v-theme--dark .view-toggle button {
   border-color: var(--atlas-color-outline-strong);
 }
-:global(.v-theme--dark) .view-toggle button.on {
+.v-theme--dark .view-toggle button.on {
   background: color-mix(in srgb, var(--atlas-color-primary) 24%, transparent);
 }
 </style>

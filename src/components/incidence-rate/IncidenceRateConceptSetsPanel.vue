@@ -62,7 +62,7 @@ const conceptSets = computed(
   padding: 16px;
 }
 
-:global(.v-theme--dark) .muted {
+.v-theme--dark .muted {
   color: var(--atlas-color-on-surface-variant);
 }
 </style>

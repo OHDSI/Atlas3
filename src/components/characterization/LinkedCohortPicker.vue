@@ -197,7 +197,7 @@ function removeCohort(id: number) {
   font-style: italic;
 }
 
-:global(.v-theme--dark) .linked-cohort-picker__empty {
+.v-theme--dark .linked-cohort-picker__empty {
   color: var(--atlas-color-on-surface-variant);
 }
 

@@ -206,7 +206,7 @@ const legend = computed(() => {
   margin-top: 8px;
   flex-wrap: wrap;
 }
-:global(.v-theme--dark) .inclusion-treemap__legend {
+.v-theme--dark .inclusion-treemap__legend {
   color: var(--atlas-color-on-surface-variant);
 }
 .inclusion-treemap__swatch {

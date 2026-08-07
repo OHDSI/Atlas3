@@ -83,8 +83,8 @@ const rows = computed(() =>
 
 /* #eee has no exact-match token; light stays byte-identical, dark uses the
  * hairline outline token. */
-:global(.v-theme--dark) .path-details th,
-:global(.v-theme--dark) .path-details td {
+.v-theme--dark .path-details th,
+.v-theme--dark .path-details td {
   border-bottom-color: var(--atlas-color-outline);
 }
 </style>

@@ -71,11 +71,11 @@ defineProps<{ concept: Concept }>()
   }
 }
 
-:global(.v-theme--dark) .card-title,
-:global(.v-theme--dark) .kv dt {
+.v-theme--dark .card-title,
+.v-theme--dark .kv dt {
   color: var(--atlas-color-on-surface-variant);
 }
-:global(.v-theme--dark) .card-title {
+.v-theme--dark .card-title {
   border-bottom-color: var(--atlas-color-outline);
 }
 </style>

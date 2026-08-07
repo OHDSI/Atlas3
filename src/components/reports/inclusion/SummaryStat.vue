@@ -20,7 +20,7 @@ defineProps<{ label: string; value: string }>()
   padding: 12px 14px;
   background: #fafbfd;
 }
-:global(.v-theme--dark) .summary-stat {
+.v-theme--dark .summary-stat {
   border-color: var(--atlas-color-outline);
   background: var(--atlas-color-surface-variant);
 }
@@ -30,7 +30,7 @@ defineProps<{ label: string; value: string }>()
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-:global(.v-theme--dark) .summary-stat__label {
+.v-theme--dark .summary-stat__label {
   color: var(--atlas-color-on-surface-variant);
 }
 .summary-stat__value {
@@ -40,7 +40,7 @@ defineProps<{ label: string; value: string }>()
   margin-top: 4px;
   color: rgba(0, 0, 0, 0.86);
 }
-:global(.v-theme--dark) .summary-stat__value {
+.v-theme--dark .summary-stat__value {
   color: var(--atlas-color-on-surface);
 }
 </style>

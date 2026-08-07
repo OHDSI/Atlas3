@@ -283,13 +283,13 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   color: #79828f;
 }
 
-:global(.v-theme--dark) .entry-any-label {
+.v-theme--dark .entry-any-label {
   border-color: var(--atlas-color-outline-strong);
 }
-:global(.v-theme--dark) .entry-any-label::before {
+.v-theme--dark .entry-any-label::before {
   background: var(--atlas-color-outline-strong);
 }
-:global(.v-theme--dark) .entry-any-label__text {
+.v-theme--dark .entry-any-label__text {
   color: var(--atlas-color-on-surface-variant);
 }
 

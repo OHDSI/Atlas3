@@ -646,33 +646,33 @@ defineExpose({
  * byte-identical, dark is remapped onto semantic tokens. AT_LEAST -> info
  * (distinct blue from primary/ALL). AT_MOST -> a primary/info blend so it
  * reads as a third, distinguishable blue rather than colliding with ALL. */
-:global(.v-theme--dark) .vertical-label-container:has(.match-type-label[data-type='AT_LEAST']) {
+.v-theme--dark .vertical-label-container:has(.match-type-label[data-type='AT_LEAST']) {
   border-color: var(--atlas-color-info);
 }
-:global(.v-theme--dark) .vertical-label-container:has(.match-type-label[data-type='AT_LEAST'])::before {
+.v-theme--dark .vertical-label-container:has(.match-type-label[data-type='AT_LEAST'])::before {
   background: var(--atlas-color-info);
 }
-:global(.v-theme--dark) .match-type-label[data-type='AT_LEAST'] {
+.v-theme--dark .match-type-label[data-type='AT_LEAST'] {
   color: var(--atlas-color-info-text);
 }
-:global(.v-theme--dark) .match-chip--at_least.v-btn--variant-tonal {
+.v-theme--dark .match-chip--at_least.v-btn--variant-tonal {
   color: var(--atlas-color-info-text) !important;
 }
 
-:global(.v-theme--dark) .vertical-label-container:has(.match-type-label[data-type='AT_MOST']) {
+.v-theme--dark .vertical-label-container:has(.match-type-label[data-type='AT_MOST']) {
   border-color: color-mix(in srgb, var(--atlas-color-primary) 60%, var(--atlas-color-info) 40%);
 }
-:global(.v-theme--dark) .vertical-label-container:has(.match-type-label[data-type='AT_MOST'])::before {
+.v-theme--dark .vertical-label-container:has(.match-type-label[data-type='AT_MOST'])::before {
   background: color-mix(in srgb, var(--atlas-color-primary) 60%, var(--atlas-color-info) 40%);
 }
-:global(.v-theme--dark) .match-type-label[data-type='AT_MOST'] {
+.v-theme--dark .match-type-label[data-type='AT_MOST'] {
   color: color-mix(in srgb, var(--atlas-color-primary) 60%, var(--atlas-color-info) 40%);
 }
-:global(.v-theme--dark) .match-chip--at_most.v-btn--variant-tonal {
+.v-theme--dark .match-chip--at_most.v-btn--variant-tonal {
   color: color-mix(in srgb, var(--atlas-color-primary) 60%, var(--atlas-color-info) 40%) !important;
 }
 
-:global(.v-theme--dark) .no-events-text {
+.v-theme--dark .no-events-text {
   color: var(--atlas-color-on-surface-variant);
 }
 </style>

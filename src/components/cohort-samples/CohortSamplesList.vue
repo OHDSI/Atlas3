@@ -179,7 +179,7 @@ function summarizeCriteria(sample: CohortSample): string {
 
 /* rgba(0,0,0,.66) has no exact-match token; light stays byte-identical,
  * dark uses the muted-text token. */
-:global(.v-theme--dark) .cohort-samples-list__criteria {
+.v-theme--dark .cohort-samples-list__criteria {
   color: var(--atlas-color-on-surface-variant);
 }
 </style>

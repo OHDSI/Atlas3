@@ -194,7 +194,7 @@ function formatMessage(msg: ValidationMessage): string {
   font-style: italic;
 }
 
-:global(.v-theme--dark) .char-messages-tab__empty {
+.v-theme--dark .char-messages-tab__empty {
   color: var(--atlas-color-success-text);
 }
 

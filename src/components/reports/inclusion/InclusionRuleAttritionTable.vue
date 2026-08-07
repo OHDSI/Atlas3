@@ -209,7 +209,7 @@ function cumulativeBarStyle(idx: number): Record<string, string> {
   font-weight: 600;
   color: rgba(0, 0, 0, 0.74);
 }
-:global(.v-theme--dark) .attrition-table__grid th {
+.v-theme--dark .attrition-table__grid th {
   background: var(--atlas-color-surface-variant);
   color: var(--atlas-color-on-surface);
 }
@@ -218,7 +218,7 @@ function cumulativeBarStyle(idx: number): Record<string, string> {
   text-align: right;
   color: rgba(0, 0, 0, 0.54);
 }
-:global(.v-theme--dark) .attrition-table__col-idx {
+.v-theme--dark .attrition-table__col-idx {
   color: var(--atlas-color-on-surface-variant);
 }
 .attrition-table__col-num {

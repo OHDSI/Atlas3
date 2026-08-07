@@ -117,7 +117,7 @@ const emit = defineEmits<{
 
 /* #ebf2fa has no exact-match token; light stays byte-identical, dark uses
  * a primary tint over the dark surface. */
-:global(.v-theme--dark) .event-concept-set-field__title {
+.v-theme--dark .event-concept-set-field__title {
   background: color-mix(in srgb, var(--atlas-color-primary) 14%, var(--atlas-color-surface));
 }
 </style>

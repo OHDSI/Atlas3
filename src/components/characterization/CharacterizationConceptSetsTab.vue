@@ -92,7 +92,7 @@ const conceptSets = computed<ConceptSetReference[]>(
   margin: 0;
 }
 
-:global(.v-theme--dark) .char-conceptsets-tab__placeholder {
+.v-theme--dark .char-conceptsets-tab__placeholder {
   color: var(--atlas-color-on-surface-variant);
 }
 
@@ -102,7 +102,7 @@ const conceptSets = computed<ConceptSetReference[]>(
   font-style: italic;
 }
 
-:global(.v-theme--dark) .char-conceptsets-tab__empty {
+.v-theme--dark .char-conceptsets-tab__empty {
   color: var(--atlas-color-on-surface-variant);
 }
 
