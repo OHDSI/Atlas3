@@ -50,6 +50,21 @@ const children: RelatedConcept[] = [
   },
 ]
 
+function mountMiniMap(props: Record<string, unknown> = {}) {
+  const vuetify = createVuetify({ components, directives })
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [{ path: '/', name: 'root', component: { template: '<div />' } }],
+  })
+
+  const wrapper = mount(ConceptHierarchyMiniMap, {
+    props: { concept, parents, children, ...props },
+    global: { plugins: [vuetify, router] },
+  })
+
+  return { wrapper, router }
+}
+
 describe('ConceptHierarchyMiniMap', () => {
   // The component reads the concept-detail drawer store in setup (the in-place
   // "View full" overlay), so an active Pinia must exist before mounting.
@@ -58,13 +73,7 @@ describe('ConceptHierarchyMiniMap', () => {
   })
 
   it('renders parents above current and children below', () => {
-    const vuetify = createVuetify({ components, directives })
-    const router = createRouter({ history: createMemoryHistory(), routes: [] })
-
-    const wrapper = mount(ConceptHierarchyMiniMap, {
-      props: { concept, parents, children },
-      global: { plugins: [vuetify, router] },
-    })
+    const { wrapper } = mountMiniMap()
 
     const text = wrapper.text()
     expect(text).toContain('Diabetes mellitus')
@@ -76,14 +85,25 @@ describe('ConceptHierarchyMiniMap', () => {
     expect(current.text()).toContain('Type 2 diabetes mellitus')
   })
 
-  it('opens a parent/child concept in the side-panel drawer instead of routing', async () => {
-    const vuetify = createVuetify({ components, directives })
-    const router = createRouter({ history: createMemoryHistory(), routes: [] })
+  it('renders the View full link when the hierarchy is non-empty and a sourceKey is available', () => {
+    const { wrapper } = mountMiniMap({ sourceKey: 'OHDSI' })
+    expect(wrapper.find('[data-testid="view-full"]').exists()).toBe(true)
+  })
 
-    const wrapper = mount(ConceptHierarchyMiniMap, {
-      props: { concept, parents, children, sourceKey: 'OHDSI' },
-      global: { plugins: [vuetify, router] },
-    })
+  it('hides the View full link when there is no hierarchy', () => {
+    const { wrapper } = mountMiniMap({ parents: [], children: [], sourceKey: 'OHDSI' })
+    expect(wrapper.find('[data-testid="view-full"]').exists()).toBe(false)
+  })
+
+  it('hides the View full link when no sourceKey is available', () => {
+    // No sourceKey prop, and the memory router has no matching route, so
+    // route.params.sourceKey is also unavailable — canViewFull must be false.
+    const { wrapper } = mountMiniMap()
+    expect(wrapper.find('[data-testid="view-full"]').exists()).toBe(false)
+  })
+
+  it('opens a parent/child concept in the side-panel drawer instead of routing', async () => {
+    const { wrapper } = mountMiniMap({ sourceKey: 'OHDSI' })
 
     const drawer = useConceptDetailDrawerStore()
     const openSpy = vi.spyOn(drawer, 'open')
@@ -94,24 +114,12 @@ describe('ConceptHierarchyMiniMap', () => {
   })
 
   it('shows empty placeholder when no parents and no children', () => {
-    const vuetify = createVuetify({ components, directives })
-    const router = createRouter({ history: createMemoryHistory(), routes: [] })
-
-    const wrapper = mount(ConceptHierarchyMiniMap, {
-      props: { concept, parents: [], children: [] },
-      global: { plugins: [vuetify, router] },
-    })
+    const { wrapper } = mountMiniMap({ parents: [], children: [] })
     expect(wrapper.text()).toMatch(/no hierarchy/i)
   })
 
   it('distinguishes a failed hierarchy fetch from an empty hierarchy', () => {
-    const vuetify = createVuetify({ components, directives })
-    const router = createRouter({ history: createMemoryHistory(), routes: [] })
-
-    const wrapper = mount(ConceptHierarchyMiniMap, {
-      props: { concept, parents: [], children: [], loadFailed: true },
-      global: { plugins: [vuetify, router] },
-    })
+    const { wrapper } = mountMiniMap({ parents: [], children: [], loadFailed: true })
 
     expect(wrapper.find('[data-testid="minimap-load-failed"]').text()).toContain(
       'Could not load the hierarchy for this concept.'
@@ -119,21 +127,17 @@ describe('ConceptHierarchyMiniMap', () => {
     expect(wrapper.text()).not.toContain('No hierarchy found for this concept.')
   })
 
-  it('opens the hierarchy dialog rather than the concept drawer', async () => {
-    const vuetify = createVuetify({ components, directives })
-    const router = createRouter({ history: createMemoryHistory(), routes: [] })
-
-    const wrapper = mount(ConceptHierarchyMiniMap, {
-      props: { concept, parents, children, sourceKey: 'OHDSI' },
-      global: { plugins: [vuetify, router] },
-    })
+  it('opens the hierarchy dialog rather than the concept drawer, and does not navigate via the router', async () => {
+    const { wrapper, router } = mountMiniMap({ sourceKey: 'OHDSI' })
 
     const drawer = useConceptDetailDrawerStore()
     const openSpy = vi.spyOn(drawer, 'open')
+    const pushSpy = vi.spyOn(router, 'push')
 
     await wrapper.find('[data-testid="view-full"]').trigger('click')
 
     expect(wrapper.findComponent(ConceptHierarchyDialog).props('modelValue')).toBe(true)
     expect(openSpy).not.toHaveBeenCalled()
+    expect(pushSpy).not.toHaveBeenCalled()
   })
 })
