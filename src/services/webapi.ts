@@ -38,6 +38,7 @@ import {
   httpClient,
   httpGet,
   httpPost,
+  httpPostRead,
   httpPut,
   httpDelete,
   getBaseUrl,
@@ -149,9 +150,7 @@ export async function searchConcepts(
   }
 
   try {
-    const data = await httpPost<unknown>(endpoint, body, {
-      retryNonIdempotent: true,
-    })
+    const data = await httpPostRead<unknown>(endpoint, body)
     const parsed = ConceptSearchResponseSchema.safeParse(data)
 
     if (!parsed.success) {

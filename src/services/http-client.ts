@@ -218,6 +218,18 @@ export function httpPost<T>(
   return httpClient<T>(endpoint, { ...options, method: 'POST', body })
 }
 
+/**
+ * A read expressed as POST — WebAPI takes the query as a JSON body. Safe to
+ * retry, unlike a true write.
+ */
+export function httpPostRead<T>(
+  endpoint: string,
+  body?: unknown,
+  options?: Omit<HttpClientOptions, 'method' | 'body' | 'retryNonIdempotent'>
+): Promise<T> {
+  return httpClient<T>(endpoint, { ...options, method: 'POST', body, retryNonIdempotent: true })
+}
+
 export function httpPut<T>(
   endpoint: string,
   body?: unknown,

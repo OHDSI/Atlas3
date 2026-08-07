@@ -11,7 +11,7 @@ import {
 } from '@/models/concept-set.types'
 import { mapConceptFromAPI, mapComparisonItemFromAPI } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
-import { httpClient, httpPost } from '@/services/http-client'
+import { httpClient, httpPostRead } from '@/services/http-client'
 
 type ConceptRecordCountResponse = Array<Record<string, number[]>>
 
@@ -53,7 +53,7 @@ export async function searchConcepts(
   if (options?.domain) {
     body.DOMAIN_ID = [options.domain]
   }
-  const data = await httpPost<unknown>(endpoint, body)
+  const data = await httpPostRead<unknown>(endpoint, body)
   const parsed = ConceptSearchResponseSchema.safeParse(data)
 
   if (!parsed.success) {
@@ -106,7 +106,7 @@ export async function getConceptsByIds(
 
   if (conceptIds.length === 0) return []
 
-  const raw = await httpPost<unknown>(
+  const raw = await httpPostRead<unknown>(
     `/vocabulary/${sourceKey}/lookup/identifiers`,
     conceptIds,
     { signal },
@@ -139,7 +139,7 @@ export async function getConceptsBySourceCodes(
 
   if (sourceCodes.length === 0) return []
 
-  const raw = await httpPost<unknown>(
+  const raw = await httpPostRead<unknown>(
     `/vocabulary/${sourceKey}/lookup/sourcecodes`,
     sourceCodes,
     { signal },
@@ -172,7 +172,7 @@ export async function getMappedSourceCodes(
 
   if (conceptIds.length === 0) return []
 
-  const raw = await httpPost<unknown>(
+  const raw = await httpPostRead<unknown>(
     `/vocabulary/${sourceKey}/lookup/mapped`,
     conceptIds,
     { signal },
@@ -209,7 +209,7 @@ export async function getConceptRecordCounts(
 
   try {
     const endpoint = `/cdmresults/${sourceKey}/conceptRecordCount`
-    const data = await httpPost<ConceptRecordCountResponse>(endpoint, conceptIds)
+    const data = await httpPostRead<ConceptRecordCountResponse>(endpoint, conceptIds)
 
     for (const entry of data) {
       for (const [conceptIdStr, counts] of Object.entries(entry)) {
@@ -247,7 +247,7 @@ export async function getRecommendedConcepts(
 
   let data: unknown
   try {
-    data = await httpPost<unknown>(endpoint, conceptIds)
+    data = await httpPostRead<unknown>(endpoint, conceptIds)
   } catch (error) {
     if (extractHttpStatus(error) === 501) {
       return { available: false, concepts: [] }
@@ -280,7 +280,7 @@ export async function compareConceptSets(
   }
 
   const endpoint = `/vocabulary/${sourceKey}/compare`
-  const data = await httpPost<unknown>(endpoint, [expression1, expression2])
+  const data = await httpPostRead<unknown>(endpoint, [expression1, expression2])
   const parsed = ComparisonResultSchema.safeParse(data)
 
   if (!parsed.success) {
@@ -300,7 +300,7 @@ export async function resolveConceptSetExpression(
     throw new Error('Invalid vocabulary source. Please select a valid source in Configuration.')
   }
 
-  const ids = await httpPost<unknown>(
+  const ids = await httpPostRead<unknown>(
     `/vocabulary/${sourceKey}/resolveConceptSetExpression`,
     expression,
     { signal },
@@ -313,7 +313,7 @@ export async function resolveConceptSetExpression(
 
   if (ids.length === 0) return []
 
-  const raw = await httpPost<unknown>(
+  const raw = await httpPostRead<unknown>(
     `/vocabulary/${sourceKey}/lookup/identifiers`,
     ids,
     { signal },

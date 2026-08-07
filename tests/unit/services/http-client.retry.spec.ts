@@ -112,4 +112,29 @@ describe('services/http-client retry policy', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(3)
   })
+
+  it('retries httpPostRead, which is a read expressed as POST', async () => {
+    mockFetch.mockResolvedValue(serverError())
+
+    const { httpPostRead } = await import('@/services/http-client')
+    await expect(
+      httpPostRead('/vocabulary/SYNPUF1K/search', { QUERY: 'diabetes' }, {
+        skipAuth: true,
+        initialRetryDelay: 0,
+      })
+    ).rejects.toThrow('HTTP 500')
+
+    expect(mockFetch).toHaveBeenCalledTimes(3)
+  })
+
+  it('sends httpPostRead as a POST with a JSON body', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true, text: async () => '[]' })
+
+    const { httpPostRead } = await import('@/services/http-client')
+    await httpPostRead('/vocabulary/SYNPUF1K/search', { QUERY: 'diabetes' }, { skipAuth: true })
+
+    const [, init] = mockFetch.mock.calls[0]
+    expect(init.method).toBe('POST')
+    expect(init.body).toBe('{"QUERY":"diabetes"}')
+  })
 })
