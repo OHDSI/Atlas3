@@ -18,6 +18,8 @@ import { ref } from 'vue'
 const listDataSources = vi.fn()
 const getCacheStatus = vi.fn()
 const buildCache = vi.fn()
+const listCacheFiles = vi.fn()
+const deleteCacheFile = vi.fn()
 const initTrexSQL = vi.fn()
 const isTrexSQLEnabled = ref(true)
 const isAuthenticated = ref(false)
@@ -29,6 +31,8 @@ vi.mock('@/services/datasource.service', () => ({
 vi.mock('@/services/trexsql.service', () => ({
   getCacheStatus: (...args: unknown[]) => getCacheStatus(...args),
   buildCache: (...args: unknown[]) => buildCache(...args),
+  listCacheFiles: (...args: unknown[]) => listCacheFiles(...args),
+  deleteCacheFile: (...args: unknown[]) => deleteCacheFile(...args),
 }))
 
 vi.mock('@/composables/useTrexSQLCache', () => ({
@@ -70,6 +74,12 @@ function makeStubs() {
       emits: ['click'],
       template:
         '<button class="build-btn" :disabled="disabled" @click="$emit(\'click\', $event)"><slot /></button>',
+    },
+    AtlasDialog: {
+      name: 'AtlasDialog',
+      props: ['modelValue', 'title', 'maxWidth'],
+      template:
+        '<div class="dialog" v-if="modelValue"><slot /><slot name="actions" /></div>',
     },
     AtlasSnackbar: {
       name: 'AtlasSnackbar',
@@ -116,6 +126,8 @@ describe('TrexSQLCacheSection notifications', () => {
     listDataSources.mockReset()
     getCacheStatus.mockReset()
     buildCache.mockReset()
+    listCacheFiles.mockReset().mockResolvedValue([])
+    deleteCacheFile.mockReset().mockResolvedValue(undefined)
     initTrexSQL.mockReset().mockResolvedValue(undefined)
     isTrexSQLEnabled.value = true
     isAuthenticated.value = false
@@ -269,5 +281,129 @@ describe('TrexSQLCacheSection notifications', () => {
     await flushPromises()
 
     expect(snackbar(wrapper).text()).toContain('Cache build failed')
+  })
+})
+
+describe('TrexSQLCacheSection merged cache list', () => {
+  beforeEach(() => {
+    listDataSources.mockReset().mockResolvedValue([])
+    getCacheStatus.mockReset()
+    buildCache.mockReset()
+    listCacheFiles.mockReset().mockResolvedValue([])
+    deleteCacheFile.mockReset().mockResolvedValue(undefined)
+    initTrexSQL.mockReset().mockResolvedValue(undefined)
+    isTrexSQLEnabled.value = true
+    isAuthenticated.value = false
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function file(databaseCode: string, over: Record<string, unknown> = {}) {
+    return {
+      fileName: `${databaseCode}.db`,
+      databaseCode,
+      sizeBytes: 1024,
+      lastModified: 1786070957000,
+      attached: false,
+      orphaned: false,
+      protected: false,
+      ...over,
+    }
+  }
+
+  it('offers update and delete for a cache that still has a data source', async () => {
+    listDataSources.mockResolvedValue([source('CDM', 'CDM Source')])
+    getCacheStatus.mockResolvedValue({ ...notBuilt('CDM'), status: 'ready' })
+    listCacheFiles.mockResolvedValue([file('CDM')])
+
+    const wrapper = await mountSection()
+
+    expect(wrapper.find('[data-testid="cache-update-CDM"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="cache-delete-CDM"]').exists()).toBe(true)
+  })
+
+  it('offers delete only for an orphaned cache with no data source', async () => {
+    listDataSources.mockResolvedValue([])
+    listCacheFiles.mockResolvedValue([file('GONE', { orphaned: true })])
+
+    const wrapper = await mountSection()
+
+    expect(wrapper.find('[data-testid="cache-row-GONE"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="cache-delete-GONE"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="cache-update-GONE"]').exists()).toBe(false)
+  })
+
+  it('hides protected entries such as the job registry', async () => {
+    listDataSources.mockResolvedValue([])
+    listCacheFiles.mockResolvedValue([
+      file('_cache_jobs', { protected: true }),
+      file('GONE', { orphaned: true }),
+    ])
+
+    const wrapper = await mountSection()
+
+    expect(wrapper.find('[data-testid="cache-row-_cache_jobs"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="cache-row-GONE"]').exists()).toBe(true)
+  })
+
+  it('still lists source-backed caches when the file listing fails', async () => {
+    listDataSources.mockResolvedValue([source('CDM', 'CDM Source')])
+    getCacheStatus.mockResolvedValue(notBuilt('CDM'))
+    listCacheFiles.mockRejectedValueOnce(new Error('endpoint down'))
+
+    const wrapper = await mountSection()
+
+    expect(wrapper.find('[data-testid="cache-row-CDM"]').exists()).toBe(true)
+    expect(snackbar(wrapper).attributes('data-open')).not.toBe('true')
+  })
+
+  it('deletes a cache after confirmation and reloads the list', async () => {
+    listDataSources.mockResolvedValue([])
+    listCacheFiles.mockResolvedValue([file('GONE', { orphaned: true })])
+
+    const wrapper = await mountSection()
+    await wrapper.find('[data-testid="cache-delete-GONE"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('.dialog').exists()).toBe(true)
+
+    await wrapper.find('[data-testid="cache-delete-confirm"]').trigger('click')
+    await flushPromises()
+
+    expect(deleteCacheFile).toHaveBeenCalledWith('GONE')
+    expect(listCacheFiles).toHaveBeenCalledTimes(2)
+    expect(snackbar(wrapper).attributes('data-severity')).toBe('success')
+  })
+
+  it('does not delete when the confirmation is cancelled', async () => {
+    listDataSources.mockResolvedValue([])
+    listCacheFiles.mockResolvedValue([file('GONE', { orphaned: true })])
+
+    const wrapper = await mountSection()
+    await wrapper.find('[data-testid="cache-delete-GONE"]').trigger('click')
+    await flushPromises()
+    await wrapper.find('[data-testid="cache-delete-cancel"]').trigger('click')
+    await flushPromises()
+
+    expect(deleteCacheFile).not.toHaveBeenCalled()
+    expect(wrapper.find('.dialog').exists()).toBe(false)
+  })
+
+  it('reports a failed delete', async () => {
+    listDataSources.mockResolvedValue([])
+    listCacheFiles.mockResolvedValue([file('GONE', { orphaned: true })])
+    deleteCacheFile.mockRejectedValueOnce(new Error('file is locked'))
+
+    const wrapper = await mountSection()
+    await wrapper.find('[data-testid="cache-delete-GONE"]').trigger('click')
+    await flushPromises()
+    await wrapper.find('[data-testid="cache-delete-confirm"]').trigger('click')
+    await flushPromises()
+
+    const bar = snackbar(wrapper)
+    expect(bar.attributes('data-severity')).toBe('danger')
+    expect(bar.text()).toContain('file is locked')
   })
 })

@@ -6,18 +6,13 @@
 # /opt/webapi/plugins/trexsql.jar. This Dockerfile replaces it with a
 # specific release downloaded from the OHDSI/trex GitHub releases page.
 
-ARG WEBAPI_DIGEST=sha256:a084547bf3ff36fcf7de87eb03e5efbe2403739ab2b39e8ea344b8dc0af996f6
+ARG WEBAPI_DIGEST=sha256:d4a2e14341c4674d94caf07f9a03726c2574be4d2d1e0f2c5ed127db59cc87c3
 FROM ghcr.io/ohdsi/webapi:3.0-dev@${WEBAPI_DIGEST}
 
-ARG TREXSQL_VERSION=0.2.3
+ARG TREXSQL_VERSION=0.3.3
 ARG TREXSQL_URL=https://github.com/OHDSI/trex/releases/download/v${TREXSQL_VERSION}/trexsql-${TREXSQL_VERSION}.jar
 
 USER root
-# Note: the upstream v0.2.3 release jar internally still reports version 0.1.23
-# in its MANIFEST.MF / pom.properties (project.clj was not bumped before the
-# release was tagged). Source of truth is the GitHub release URL, not the jar
-# manifest. Verify only that the download is an uberjar with the expected
-# main class, not the version string.
 RUN set -eux; \
     curl -fsSL -o /opt/webapi/plugins/trexsql.jar "${TREXSQL_URL}"; \
     unzip -p /opt/webapi/plugins/trexsql.jar META-INF/MANIFEST.MF > /tmp/trexsql.manifest; \

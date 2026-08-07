@@ -36,9 +36,13 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import * as echarts from 'echarts/core'
 import type { EChartsType } from 'echarts/core'
+import { SVGRenderer } from 'echarts/renderers'
 import { logger } from '@/utils/logger'
 import { AtlasButton } from '@/components/ui'
+
+echarts.use([SVGRenderer])
 
 /**
  * Props
@@ -104,40 +108,52 @@ async function handleExportSVG() {
   emit('export-start', 'svg')
 
   try {
-    // Get SVG string from ECharts
-    // Note: ECharts must be initialized with SVG renderer for this to work.
-    // With the (default) canvas renderer, renderToSVGString() itself exists
-    // on the prototype but throws when it delegates to the canvas painter,
-    // which has no renderToString - so `?.()` alone doesn't catch this, it
-    // has to be caught explicitly and treated the same as "not available".
-    let svgString: string | undefined
-    try {
-      svgString = props.chartInstance.renderToSVGString?.()
-    } catch (renderErr) {
-      logger.warn('ChartExport', 'renderToSVGString threw, falling back to PNG', renderErr)
-      svgString = undefined
+    const svgString = buildSVGString(props.chartInstance)
+
+    if (!svgString) {
+      throw new Error('Unable to render chart as SVG')
     }
 
-    if (svgString) {
-      // Direct SVG export (if SVG renderer is used)
-      const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
-      const url = URL.createObjectURL(blob)
+    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
 
-      const filename = props.filename || `chart-${Date.now()}`
-      downloadURL(url, `${filename}.svg`)
+    const filename = props.filename || `chart-${Date.now()}`
+    downloadURL(url, `${filename}.svg`)
 
-      URL.revokeObjectURL(url)
-      emit('export-success', 'svg', `${filename}.svg`)
-    } else {
-      // Fallback: export as PNG if SVG renderer not available
-      logger.warn('ChartExport', 'SVG renderer not available, using PNG fallback')
-      await handleExportPNG()
-    }
+    URL.revokeObjectURL(url)
+    emit('export-success', 'svg', `${filename}.svg`)
   } catch (error) {
     logger.error('ChartExport', 'SVG export failed', error)
     emit('export-error', 'svg', error as Error)
   } finally {
     exporting.value = null
+  }
+}
+
+function buildSVGString(chart: EChartsType): string | undefined {
+  try {
+    const direct = chart.renderToSVGString?.()
+    if (direct) return direct
+  } catch {
+    // canvas renderer cannot render to string; fall through
+  }
+
+  return renderOffscreenSVG(chart)
+}
+
+function renderOffscreenSVG(chart: EChartsType): string | undefined {
+  const offscreen = echarts.init(document.createElement('div'), null, {
+    renderer: 'svg',
+    ssr: true,
+    width: chart.getWidth() || 800,
+    height: chart.getHeight() || 600,
+  })
+
+  try {
+    offscreen.setOption({ ...chart.getOption(), backgroundColor: '#ffffff' })
+    return offscreen.renderToSVGString()
+  } finally {
+    offscreen.dispose()
   }
 }
 

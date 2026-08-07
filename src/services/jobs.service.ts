@@ -44,12 +44,6 @@ function extractExecutions(data: unknown): JobExecution[] {
  */
 export async function getJobs(): Promise<ApiResult<Job[]>> {
   try {
-    // Cache builds now write a Spring Batch execution of their own
-    // (job_name "cacheGeneration"), on every dialect rather than only the
-    // JDBC ones, so they arrive with every other job. Merging bao's
-    // /trexsql/cache/jobs on top would list each build twice. That endpoint
-    // is still the source for per-table progress and cache errors — the
-    // cache view reads it directly.
     const batchData = await httpGet<unknown>('/job/execution?comprehensivePage=true')
 
     // Validate Spring Batch response with Zod

@@ -1892,7 +1892,9 @@
         "buildStarted": "Cache build started",
         "buildStartError": "Failed to start cache build",
         "buildComplete": "Cache build completed successfully",
-        "buildFailed": "Cache build failed"
+        "buildFailed": "Cache build failed",
+        "deleteComplete": "Cache deleted",
+        "deleteFailed": "Failed to delete cache"
       },
       "tags": {
         "colorHexHint": "Hex color code for visual identification",
@@ -2960,7 +2962,8 @@
       "addToConceptSet": "Add To Concept Set",
       "descendants": "Descendants",
       "exclude": "Exclude",
-      "mapped": "Mapped"
+      "mapped": "Mapped",
+      "addWith": "Add with"
     },
     "manager": {
       "attemptingToFindMessage": "Attempting to find an optimal definition for this concept set...",
@@ -6321,6 +6324,7 @@
     "staleCacheWarning": "Cache may be stale",
     "lastBuilt": "Last built",
     "built": "Built",
+    "update": "Update",
     "addCriteria": "Add criteria to see patient count",
     "cacheFilesTitle": "Cache files on disk",
     "cacheFilesDescription": "Every cache on disk, including caches whose dataset has been deleted. Those are no longer reachable from the dataset list and can be reclaimed here.",
