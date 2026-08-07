@@ -65,3 +65,12 @@
   border-top-right-radius: 8px !important;
   border-bottom-right-radius: 8px !important;
 }
+
+/* Vuetify's .text-grey-darken-1 utility (#757575, !important) only clears
+ * 3.92:1 against the dark surface — below the 4.5:1 text floor. Global
+ * because scoped component styles can't reach a utility class used across
+ * many components; two classes beat the utility's single class on
+ * specificity even without !important, but it's added here to match. */
+.v-theme--dark .text-grey-darken-1 {
+  color: var(--atlas-color-on-surface-variant) !important;
+}

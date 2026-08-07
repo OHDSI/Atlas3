@@ -25,7 +25,7 @@
   </div>
   <div
     v-else
-    class="inclusion-treemap__empty text-center py-6 text-grey-darken-1"
+    class="text-center py-6 text-grey-darken-1"
     data-testid="inclusion-treemap-empty"
   >
     No population breakdown available.
@@ -208,11 +208,6 @@ const legend = computed(() => {
 }
 :global(.v-theme--dark) .inclusion-treemap__legend {
   color: var(--atlas-color-on-surface-variant);
-}
-/* Vuetify's .text-grey-darken-1 (#757575, !important) only clears 3.92:1 on
-   the dark surface — below the 4.5:1 text floor. */
-:global(.v-theme--dark) .inclusion-treemap__empty {
-  color: var(--atlas-color-on-surface-variant) !important;
 }
 .inclusion-treemap__swatch {
   display: inline-flex;

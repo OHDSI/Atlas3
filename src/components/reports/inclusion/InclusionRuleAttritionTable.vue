@@ -244,12 +244,4 @@ function cumulativeBarStyle(idx: number): Record<string, string> {
     width 0.3s ease,
     background 0.3s ease;
 }
-
-/* Vuetify's .text-grey-darken-1 (#757575, !important) only clears 3.92:1 on
-   the dark surface — below the 4.5:1 text floor. Override with a token that
-   clears it; specificity (two classes + the scoped attribute) beats the
-   utility class's single class. */
-:global(.v-theme--dark) .attrition-table__empty {
-  color: var(--atlas-color-on-surface-variant) !important;
-}
 </style>
