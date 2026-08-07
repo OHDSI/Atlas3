@@ -4,6 +4,7 @@
   --atlas-color-primary: #1f425a;
   --atlas-color-primary-darken: #163349;
   --atlas-color-accent: #eb6622;
+  --atlas-color-scrim: #1f425a;
   --atlas-color-surface: #ffffff;
   --atlas-color-surface-variant: #f6f7f9;
   --atlas-color-on-surface: rgba(0,0,0,.87);
@@ -51,6 +52,7 @@
   --atlas-color-primary: #6aa3cb;
   --atlas-color-primary-darken: #4f86ad;
   --atlas-color-accent: #eb6622;
+  --atlas-color-scrim: #000000;
   --atlas-color-surface: #161618;
   --atlas-color-surface-variant: #0a0a0b;
   --atlas-color-on-surface: #f4f4f5;

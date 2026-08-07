@@ -11,7 +11,7 @@
 .v-overlay__scrim,
 .v-navigation-drawer__scrim {
   backdrop-filter: blur(4px);
-  background-color: color-mix(in srgb, var(--atlas-color-primary) 45%, transparent);
+  background-color: color-mix(in srgb, var(--atlas-color-scrim) 45%, transparent);
   opacity: 1;
 }
 
