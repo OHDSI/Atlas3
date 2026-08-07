@@ -1739,6 +1739,8 @@
       "counts": "{ancestors} ancestors · {descendants} descendants",
       "ancestors": "Ancestors",
       "ancestorDistance": "distance {distance}",
+      "showMoreAncestors": "Show {count} more ancestors",
+      "collapseAncestors": "Show direct parents only",
       "expandConcept": "Expand {name}",
       "collapseConcept": "Collapse {name}",
       "inSet": "in set",

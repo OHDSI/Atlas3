@@ -66,6 +66,16 @@ const descendants = computed(() =>
 
 const allAncestorCount = computed(() => ancestors.value.length)
 
+// Collapsed by default to the direct parents, per the design spec — ancestors
+// aren't the point of this dialog. The toolbar count above always reports the
+// full total regardless of this flag, so "N ancestors" never disagrees with
+// what a prior review already flagged: it's the collapsed control below that
+// has to name the remainder, not the header.
+const ancestorsExpanded = ref(false)
+const directAncestors = computed(() => ancestors.value.filter(a => a.distance === 1))
+const hiddenAncestorCount = computed(() => ancestors.value.length - directAncestors.value.length)
+const visibleAncestors = computed(() => (ancestorsExpanded.value ? ancestors.value : directAncestors.value))
+
 const isEmpty = computed(() => hierarchy.value.length === 0)
 
 const filterText = ref('')
@@ -104,8 +114,15 @@ const allDescendants = computed<RelatedConcept[]>(() => {
 // finding on this branch once already, in the ancestor direction.
 const allDescendantCount = computed(() => allDescendants.value.length)
 
+// hierarchy.value is only the anchor's own payload. A concept surfaced by
+// expanding a node (allDescendants.value) can carry a facet value the anchor
+// payload never mentioned, so the dropdown has to draw from the same rows the
+// filter itself matches against — otherwise a value is reachable by free-text
+// search but has no facet option to select it with.
 function optionsFor(key: 'conceptClassId' | 'domainId' | 'vocabularyId') {
-  return [...new Set(hierarchy.value.map(c => c[key]))].sort()
+  const values = new Set(hierarchy.value.map(c => c[key]))
+  for (const c of allDescendants.value) values.add(c[key])
+  return [...values].sort()
 }
 
 function matches(row: RelatedConcept): boolean {
@@ -198,10 +215,13 @@ function toggleSelected(conceptId: number) {
 
 // Ticks survive a filter change or a collapse, so the action must be scoped to
 // what is on screen right now — otherwise Add quietly adds rows the user can no
-// longer see, and the footer count disagrees with what happens.
+// longer see, and the footer count disagrees with what happens. This applies
+// to the ancestor collapse too: a distance-2+ ancestor ticked while expanded
+// and then hidden by re-collapsing drops out of both the footer count and Add,
+// exactly like a row hidden by the filter or a closed tree node.
 const visibleById = computed(() => {
   const map = new Map<number, RelatedConcept>()
-  for (const { concept } of ancestors.value) map.set(concept.conceptId, concept)
+  for (const { concept } of visibleAncestors.value) map.set(concept.conceptId, concept)
   for (const { row } of treeRows.value) map.set(row.conceptId, row)
   return map
 })
@@ -405,10 +425,22 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
           <tr class="section-row">
             <td colspan="8">
               {{ t('components.conceptHierarchyDialog.ancestors', 'Ancestors').value }}
+              <button
+                v-if="hiddenAncestorCount > 0"
+                type="button"
+                class="ancestors-toggle"
+                :aria-expanded="ancestorsExpanded"
+                data-testid="hierarchy-ancestors-toggle"
+                @click="ancestorsExpanded = !ancestorsExpanded"
+              >
+                {{ ancestorsExpanded
+                  ? t('components.conceptHierarchyDialog.collapseAncestors', 'Show direct parents only').value
+                  : t('components.conceptHierarchyDialog.showMoreAncestors', 'Show {count} more ancestors', { count: hiddenAncestorCount }).value }}
+              </button>
             </td>
           </tr>
           <tr
-            v-for="{ concept: a, distance } in ancestors"
+            v-for="{ concept: a, distance } in visibleAncestors"
             :key="`a-${a.conceptId}`"
             :data-testid="`hierarchy-row-${a.conceptId}`"
             data-ancestor-row
@@ -537,6 +569,16 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
 .hierarchy-table :deep(td) { border-bottom: 1px solid rgba(0, 0, 0, 0.06); padding: 5px 8px; }
 .hierarchy-table :deep(td.num) { text-align: right; font-variant-numeric: tabular-nums; }
 .section-row td { font-size: 11px; text-transform: uppercase; opacity: 0.6; }
+.ancestors-toggle {
+  background: none;
+  border: none;
+  color: rgb(25, 118, 210);
+  text-transform: none;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+}
 .dist { font-size: 11px; opacity: 0.55; margin-left: 6px; }
 .ancestor { opacity: 0.8; }
 .anchor { background: rgba(25, 118, 210, 0.12); font-weight: 600; }

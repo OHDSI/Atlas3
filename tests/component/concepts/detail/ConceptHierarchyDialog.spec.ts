@@ -116,13 +116,44 @@ describe('ConceptHierarchyDialog', () => {
     expect(row?.textContent).toContain('SNOMED')
   })
 
-  it('lists every ancestor at every distance, matching the advertised count', async () => {
+  it('collapses ancestors to the direct parents by default', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const directAncestors = PNEUMONIA_ANCESTOR_AND_DESCENDANT.filter(c =>
+      c.relationships.some(r => r.relationshipName === 'Has ancestor of' && r.relationshipDistance === 1)
+    ).length
+
+    const rows = [...document.querySelectorAll('[data-ancestor-row]')]
+    expect(rows).toHaveLength(directAncestors)
+    expect(rows.map(row => row.getAttribute('data-testid'))).toEqual(
+      expect.arrayContaining(['hierarchy-row-253506', 'hierarchy-row-4318404'])
+    )
+    expect(document.querySelector('[data-testid="hierarchy-row-257907"]')).toBeNull()
+  })
+
+  it('states how many ancestors are hidden while collapsed', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const toggle = document.querySelector('[data-testid="hierarchy-ancestors-toggle"]')
+    expect(toggle?.getAttribute('aria-expanded')).toBe('false')
+    expect(toggle?.textContent).toContain('1 more ancestor')
+  })
+
+  it('expands to every ancestor at every distance, matching the advertised count — the guarantee the header/rows mismatch review already caught', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
 
     const advertised = PNEUMONIA_ANCESTOR_AND_DESCENDANT.filter(c =>
       c.relationships.some(r => r.relationshipName === 'Has ancestor of')
     ).length
+
+    const toggle = document.querySelector('[data-testid="hierarchy-ancestors-toggle"]') as HTMLElement
+    toggle.click()
+    await wrapper.vm.$nextTick()
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
     expect(document.querySelectorAll('[data-ancestor-row]')).toHaveLength(advertised)
     expect(document.body.textContent).toContain(`${advertised} ancestors`)
     expect(document.querySelector('[data-testid="hierarchy-row-257907"]')?.textContent).toContain(
@@ -130,8 +161,27 @@ describe('ConceptHierarchyDialog', () => {
     )
   })
 
+  it('collapses the ancestor list back after expanding it', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const toggle = document.querySelector('[data-testid="hierarchy-ancestors-toggle"]') as HTMLElement
+    toggle.click()
+    await wrapper.vm.$nextTick()
+    expect(document.querySelectorAll('[data-ancestor-row]')).toHaveLength(3)
+
+    toggle.click()
+    await wrapper.vm.$nextTick()
+    expect(document.querySelectorAll('[data-ancestor-row]')).toHaveLength(2)
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+  })
+
   it('orders ancestors most-distant first so the chain reads down into the anchor', async () => {
     const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const toggle = document.querySelector('[data-testid="hierarchy-ancestors-toggle"]') as HTMLElement
+    toggle.click()
     await wrapper.vm.$nextTick()
 
     const order = [...document.querySelectorAll('[data-ancestor-row]')].map(row =>
@@ -239,6 +289,25 @@ describe('ConceptHierarchyDialog', () => {
     for (const child of INFECTIVE_PNEUMONIA_CHILDREN) {
       expect(document.body.textContent).toContain(child.conceptName)
     }
+  })
+
+  it('offers a facet value that exists only on an expansion-discovered concept', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    // Every ancestor/descendant in the anchor payload is class "Disorder";
+    // 3178885 "Secondary pneumonia" is class "Clinical Finding" and only
+    // surfaces once 443410 is expanded — it must reach the Class dropdown,
+    // not just the free-text filter.
+    const chevron = document.querySelector(
+      '[data-testid="hierarchy-expand-443410"]'
+    ) as HTMLElement
+    chevron.click()
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    const classSelect = wrapper.findComponent('[data-testid="hierarchy-filter-class"]')
+    expect(classSelect.props('items')).toContain('Clinical Finding')
   })
 
   it('drops the chevron when a node turns out to have no children', async () => {
