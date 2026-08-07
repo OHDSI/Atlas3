@@ -11,6 +11,13 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+const IDEMPOTENT_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
+
+function mayRetry(method: string | undefined, retryNonIdempotent: boolean): boolean {
+  if (retryNonIdempotent) return true
+  return IDEMPOTENT_METHODS.has((method ?? 'GET').toUpperCase())
+}
+
 function isRetryableError(error: unknown, statusCode?: number): boolean {
   if (error instanceof TypeError) return true
   if (statusCode && statusCode >= 500 && statusCode < 600) return true
@@ -72,6 +79,12 @@ export interface HttpClientOptions extends Omit<RequestInit, 'body'> {
   skipAuth?: boolean
   maxRetries?: number
   initialRetryDelay?: number
+  /**
+   * Re-sending a failed POST/PUT/DELETE can duplicate a row WebAPI already
+   * persisted, so writes are not retried by default. Set this only for an
+   * endpoint proven idempotent server-side.
+   */
+  retryNonIdempotent?: boolean
 }
 
 export interface HttpClientResponse<T> {
@@ -84,6 +97,7 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
   const url = `${getAppConfig().api.url}${endpoint}`
   const maxRetries = options.maxRetries ?? MAX_RETRY_ATTEMPTS
   const initialDelay = options.initialRetryDelay ?? INITIAL_RETRY_DELAY_MS
+  const retryAllowed = mayRetry(options.method, options.retryNonIdempotent ?? false)
   let lastError: Error | null = null
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -103,6 +117,7 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
         skipAuth: _skipAuth,
         maxRetries: _,
         initialRetryDelay: __,
+        retryNonIdempotent: ___,
         ...restOptions
       } = options
       const requestInit: RequestInit = { ...restOptions, headers }
@@ -140,7 +155,7 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
           // keep statusText
         }
         const error = new Error(`HTTP ${response.status}: ${detail}`)
-        if (isRetryableError(error, response.status) && attempt < maxRetries - 1) {
+        if (retryAllowed && isRetryableError(error, response.status) && attempt < maxRetries - 1) {
           const delay = initialDelay * Math.pow(2, attempt)
           logger.warn(
             'HttpClient',
@@ -167,7 +182,7 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error))
 
-      if (isRetryableError(error) && attempt < maxRetries - 1) {
+      if (retryAllowed && isRetryableError(error) && attempt < maxRetries - 1) {
         const delay = initialDelay * Math.pow(2, attempt)
         logger.warn(
           'HttpClient',
