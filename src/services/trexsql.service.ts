@@ -272,6 +272,55 @@ export async function getPatientCount(
   }
 }
 
+export interface CacheFile {
+  fileName: string
+  databaseCode: string
+  sizeBytes: number
+  lastModified: number | null
+  attached: boolean
+  /** No data source references this cache any more — safe to reclaim. */
+  orphaned: boolean
+  /** Not a dataset cache (job registry, FHIR database); listed but undeletable. */
+  protected: boolean
+}
+
+/**
+ * Every cache file on disk, including ones whose dataset has been deleted.
+ * Keyed by file rather than by source, which is the only way orphans surface —
+ * the per-source endpoints can't resolve them and answer 404.
+ */
+export async function listCacheFiles(): Promise<CacheFile[]> {
+  const url = `${getBaseUrl()}/trexsql/cache/files`
+  const authHeader = await getAuthHeader()
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json', ...authHeader },
+  })
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '')
+    throw new Error(`Failed to list cache files: ${response.status} ${detail}`.trim())
+  }
+
+  const data = (await response.json()) as { files?: unknown }
+  return Array.isArray(data.files) ? (data.files as CacheFile[]) : []
+}
+
+/** Delete a cache by database code. Works whether or not a source still exists. */
+export async function deleteCacheFile(databaseCode: string): Promise<void> {
+  const url = `${getBaseUrl()}/trexsql/cache/files/${encodeURIComponent(databaseCode)}`
+  const authHeader = await getAuthHeader()
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...authHeader },
+  })
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '')
+    throw new Error(`Failed to delete cache: ${response.status} ${detail}`.trim())
+  }
+}
+
 export async function getAllCacheStatuses(): Promise<TrexSQLCacheStatus[]> {
   try {
     const { listDataSources } = await import('./datasource.service')
