@@ -263,8 +263,12 @@ function updateFlag(id: number, flag: 'includeAnnual' | 'includeTemporal', value
   font-style: italic;
 }
 
+:global(.v-theme--dark) .linked-fa-picker__empty {
+  color: var(--atlas-color-on-surface-variant);
+}
+
 .linked-fa-picker__list {
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--atlas-color-outline);
   border-radius: 8px;
 }
 

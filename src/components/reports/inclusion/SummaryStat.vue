@@ -20,11 +20,18 @@ defineProps<{ label: string; value: string }>()
   padding: 12px 14px;
   background: #fafbfd;
 }
+:global(.v-theme--dark) .summary-stat {
+  border-color: var(--atlas-color-outline);
+  background: var(--atlas-color-surface-variant);
+}
 .summary-stat__label {
   font-size: 12px;
   color: rgba(0, 0, 0, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+:global(.v-theme--dark) .summary-stat__label {
+  color: var(--atlas-color-on-surface-variant);
 }
 .summary-stat__value {
   font-size: 20px;
@@ -32,5 +39,8 @@ defineProps<{ label: string; value: string }>()
   font-variant-numeric: tabular-nums;
   margin-top: 4px;
   color: rgba(0, 0, 0, 0.86);
+}
+:global(.v-theme--dark) .summary-stat__value {
+  color: var(--atlas-color-on-surface);
 }
 </style>

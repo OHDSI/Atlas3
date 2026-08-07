@@ -25,7 +25,7 @@
   </div>
   <div
     v-else
-    class="text-center py-6 text-grey-darken-1"
+    class="inclusion-treemap__empty text-center py-6 text-grey-darken-1"
     data-testid="inclusion-treemap-empty"
   >
     No population breakdown available.
@@ -79,6 +79,17 @@ function failuresFromName(name: string, ruleCount: number): number {
   let zeros = 0
   for (const ch of name) if (ch === '0') zeros++
   return Math.min(zeros, ruleCount)
+}
+
+// In-tile label sits on a 60%-alpha status tint over the chart's own
+// background — reads the live on-surface var the same way themeColor()
+// does so the label stays legible against a dark surface.
+function themeOnSurfaceColor(alpha: number): string {
+  if (typeof window === 'undefined') return `rgba(0, 0, 0, ${alpha})`
+  const root = getComputedStyle(document.documentElement)
+  const triplet = root.getPropertyValue('--v-theme-on-surface').trim()
+  if (!triplet) return `rgba(0, 0, 0, ${alpha})`
+  return `rgba(${triplet}, ${alpha})`
 }
 
 function colorForLeaf(name: string): string {
@@ -164,7 +175,7 @@ const chartOption = computed(() => {
             info.data?._friendly || info.name,
           fontSize: 11,
           lineHeight: 14,
-          color: 'rgba(0, 0, 0, 0.82)',
+          color: themeOnSurfaceColor(0.82),
         },
         data: root.children?.map(decorate) ?? [],
       },
@@ -194,6 +205,14 @@ const legend = computed(() => {
   color: rgba(0, 0, 0, 0.66);
   margin-top: 8px;
   flex-wrap: wrap;
+}
+:global(.v-theme--dark) .inclusion-treemap__legend {
+  color: var(--atlas-color-on-surface-variant);
+}
+/* Vuetify's .text-grey-darken-1 (#757575, !important) only clears 3.92:1 on
+   the dark surface — below the 4.5:1 text floor. */
+:global(.v-theme--dark) .inclusion-treemap__empty {
+  color: var(--atlas-color-on-surface-variant) !important;
 }
 .inclusion-treemap__swatch {
   display: inline-flex;

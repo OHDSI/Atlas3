@@ -201,7 +201,7 @@ function cumulativeBarStyle(idx: number): Record<string, string> {
 .attrition-table__grid th,
 .attrition-table__grid td {
   padding: 6px 10px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid var(--atlas-color-outline-variant);
   text-align: left;
 }
 .attrition-table__grid th {
@@ -209,10 +209,17 @@ function cumulativeBarStyle(idx: number): Record<string, string> {
   font-weight: 600;
   color: rgba(0, 0, 0, 0.74);
 }
+:global(.v-theme--dark) .attrition-table__grid th {
+  background: var(--atlas-color-surface-variant);
+  color: var(--atlas-color-on-surface);
+}
 .attrition-table__col-idx {
   width: 36px;
   text-align: right;
   color: rgba(0, 0, 0, 0.54);
+}
+:global(.v-theme--dark) .attrition-table__col-idx {
+  color: var(--atlas-color-on-surface-variant);
 }
 .attrition-table__col-num {
   width: 130px;
@@ -226,7 +233,7 @@ function cumulativeBarStyle(idx: number): Record<string, string> {
 .attrition-table__bar-track {
   width: 100%;
   height: 12px;
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--atlas-color-outline-variant);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -236,5 +243,13 @@ function cumulativeBarStyle(idx: number): Record<string, string> {
   transition:
     width 0.3s ease,
     background 0.3s ease;
+}
+
+/* Vuetify's .text-grey-darken-1 (#757575, !important) only clears 3.92:1 on
+   the dark surface — below the 4.5:1 text floor. Override with a token that
+   clears it; specificity (two classes + the scoped attribute) beats the
+   utility class's single class. */
+:global(.v-theme--dark) .attrition-table__empty {
+  color: var(--atlas-color-on-surface-variant) !important;
 }
 </style>

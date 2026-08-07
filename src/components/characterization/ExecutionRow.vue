@@ -155,6 +155,10 @@ function onViewResults() {
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
+:global(.v-theme--dark) .execution-row {
+  border-bottom-color: var(--atlas-color-outline);
+}
+
 .execution-row:last-child {
   border-bottom: none;
 }
@@ -169,6 +173,11 @@ function onViewResults() {
 .execution-row__duration {
   font-size: 0.875rem;
   color: rgba(0, 0, 0, 0.7);
+}
+
+:global(.v-theme--dark) .execution-row__start,
+:global(.v-theme--dark) .execution-row__duration {
+  color: var(--atlas-color-on-surface-variant);
 }
 
 .execution-row__actions {

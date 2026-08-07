@@ -350,7 +350,7 @@ function formatTimeSeriesData(timeSeriesData: TimeSeriesData[]): UILineChartData
   position: sticky;
   top: 0;
   z-index: 10;
-  background: white;
+  background: var(--atlas-color-surface);
 }
 
 /* Vertical separation between chart cards. Default v-col padding
