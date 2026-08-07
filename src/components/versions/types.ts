@@ -81,6 +81,19 @@ export interface VersionsConfig {
 }
 
 /**
+ * Route path segment for each asset type's version-preview / detail routes.
+ * assetType doesn't always match the URL segment (e.g. 'ir' routes live
+ * under /incidence-rates/...) - kept explicit and typed so a wrong segment
+ * fails type-checking instead of only surfacing as a dead link.
+ */
+export const ASSET_ROUTE_SEGMENT: Record<VersionsConfig['assetType'], string> = {
+  cohortdefinition: 'cohortdefinition',
+  conceptset: 'conceptset',
+  'pathway-analysis': 'pathway-analysis',
+  ir: 'incidence-rates',
+}
+
+/**
  * Request payload for updating version comment
  */
 export interface CommentUpdatePayload {

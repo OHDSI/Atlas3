@@ -70,6 +70,7 @@ import { useVersions } from '@/composables/useVersions'
 import { copyVersion as copyCohortVersion } from '@/services/cohort-definition-versions.service'
 import { copyVersion as copyConceptSetVersion } from '@/services/concept-set-versions.service'
 import { copyPathwayVersion } from '@/services/pathway-versions.service'
+import { ASSET_ROUTE_SEGMENT } from './types'
 import type { VersionsConfig, VersionsTableItem, Version } from './types'
 
 // Props
@@ -121,7 +122,7 @@ function handlePreview(versionNumber: number): void {
 
   // Navigate to version preview route (T036)
   router.push({
-    path: `/${props.config.assetType}/${props.config.assetId}/version/${versionNumber}`,
+    path: `/${ASSET_ROUTE_SEGMENT[props.config.assetType]}/${props.config.assetId}/version/${versionNumber}`,
   })
 }
 
@@ -188,7 +189,7 @@ async function handleCopy(versionNumber: number): Promise<void> {
     // Navigate to new asset (T058)
     setTimeout(() => {
       router.push({
-        path: `/${props.config.assetType}/${newAsset.id}`,
+        path: `/${ASSET_ROUTE_SEGMENT[props.config.assetType]}/${newAsset.id}`,
       })
     }, 1000)
   } catch (error) {
