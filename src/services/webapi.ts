@@ -149,9 +149,8 @@ export async function searchConcepts(
   }
 
   try {
-    const data = await fetchJSON<unknown>(endpoint, {
-      method: 'POST',
-      body: JSON.stringify(body),
+    const data = await httpPost<unknown>(endpoint, body, {
+      retryNonIdempotent: true,
     })
     const parsed = ConceptSearchResponseSchema.safeParse(data)
 

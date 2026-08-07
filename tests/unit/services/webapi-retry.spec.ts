@@ -12,6 +12,7 @@ global.fetch = mockFetch
 describe('WebAPI Service - Network Retry Logic', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockFetch.mockReset()
     vi.useFakeTimers()
   })
 
