@@ -9,7 +9,9 @@ vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 vi.mock('@/services/concept-detail.service', () => ({
-  fetchConceptAncestorAndDescendant: vi.fn(),
+  getConceptRelated: vi.fn(),
+  getConceptAncestorAndDescendant: vi.fn(),
+  getConceptDrilldown: vi.fn(),
 }))
 vi.mock('@/services/concept-search.service', () => ({
   getConceptRecordCounts: vi.fn(),
@@ -18,7 +20,7 @@ vi.mock('@/services/concept-search.service', () => ({
 import ConceptHierarchyDialog from '@/components/concepts/detail/ConceptHierarchyDialog.vue'
 import { useConceptDetailStore } from '@/stores/concept-detail'
 import { useConceptSetsStore } from '@/stores/concept-sets'
-import { fetchConceptAncestorAndDescendant } from '@/services/concept-detail.service'
+import { getConceptAncestorAndDescendant } from '@/services/concept-detail.service'
 import { getConceptRecordCounts } from '@/services/concept-search.service'
 import {
   PNEUMONIA_ANCESTOR_AND_DESCENDANT,
@@ -66,7 +68,7 @@ describe('ConceptHierarchyDialog — add and exclude', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     ;(getConceptRecordCounts as Mock).mockResolvedValue(new Map())
-    ;(fetchConceptAncestorAndDescendant as Mock).mockResolvedValue(INFECTIVE_PNEUMONIA_PAYLOAD)
+    ;(getConceptAncestorAndDescendant as Mock).mockResolvedValue(INFECTIVE_PNEUMONIA_PAYLOAD)
     useConceptDetailStore().hierarchy = PNEUMONIA_ANCESTOR_AND_DESCENDANT
     wrappers = []
   })

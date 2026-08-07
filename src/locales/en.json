@@ -1744,6 +1744,7 @@
       "excluded": "excluded",
       "withDescendants": "+desc",
       "expandFailed": "Could not load children",
+      "loadFailed": "Could not load the hierarchy for this concept.",
       "retry": "Retry",
       "added": "Added {count} concepts",
       "addedSkipped": "Added {count} concepts, skipped {skipped} already in the set"

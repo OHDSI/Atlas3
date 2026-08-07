@@ -15,6 +15,7 @@ const props = defineProps<{
   parents: RelatedConcept[]
   children: RelatedConcept[]
   sourceKey?: string
+  loadFailed?: boolean
 }>()
 
 // Prefer the explicit sourceKey prop (the drawer renders this component over
@@ -68,7 +69,14 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
     </header>
     <div class="card-body">
       <p
-        v-if="isEmpty"
+        v-if="loadFailed"
+        class="empty"
+        data-testid="minimap-load-failed"
+      >
+        {{ t('components.conceptHierarchyDialog.loadFailed', 'Could not load the hierarchy for this concept.').value }}
+      </p>
+      <p
+        v-else-if="isEmpty"
         class="empty"
       >
         {{ t('components.conceptDetail.noHierarchyForConcept', 'No hierarchy found for this concept.').value }}

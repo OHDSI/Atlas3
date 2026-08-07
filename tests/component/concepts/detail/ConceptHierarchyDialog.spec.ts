@@ -10,7 +10,9 @@ vi.mock('@/utils/logger', () => ({
 }))
 
 vi.mock('@/services/concept-detail.service', () => ({
-  fetchConceptAncestorAndDescendant: vi.fn(),
+  getConceptRelated: vi.fn(),
+  getConceptAncestorAndDescendant: vi.fn(),
+  getConceptDrilldown: vi.fn(),
 }))
 vi.mock('@/services/concept-search.service', () => ({
   getConceptRecordCounts: vi.fn(),
@@ -18,7 +20,7 @@ vi.mock('@/services/concept-search.service', () => ({
 
 import ConceptHierarchyDialog from '@/components/concepts/detail/ConceptHierarchyDialog.vue'
 import { useConceptDetailStore } from '@/stores/concept-detail'
-import { fetchConceptAncestorAndDescendant } from '@/services/concept-detail.service'
+import { getConceptAncestorAndDescendant } from '@/services/concept-detail.service'
 import { getConceptRecordCounts } from '@/services/concept-search.service'
 import {
   PNEUMONIA_ANCESTOR_AND_DESCENDANT,
@@ -82,7 +84,7 @@ describe('ConceptHierarchyDialog', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     ;(getConceptRecordCounts as Mock).mockResolvedValue(new Map())
-    ;(fetchConceptAncestorAndDescendant as Mock).mockResolvedValue(INFECTIVE_PNEUMONIA_PAYLOAD)
+    ;(getConceptAncestorAndDescendant as Mock).mockResolvedValue(INFECTIVE_PNEUMONIA_PAYLOAD)
     useConceptDetailStore().hierarchy = PNEUMONIA_ANCESTOR_AND_DESCENDANT
   })
 
@@ -181,7 +183,7 @@ describe('ConceptHierarchyDialog', () => {
       'SYNPUF1K',
       expect.arrayContaining([4309106, 253506])
     )
-    expect(fetchConceptAncestorAndDescendant).not.toHaveBeenCalled()
+    expect(getConceptAncestorAndDescendant).not.toHaveBeenCalled()
     expect(document.querySelector('[data-testid="hierarchy-row-4309106"]')?.textContent).toContain(
       '1,234,567'
     )
@@ -232,14 +234,14 @@ describe('ConceptHierarchyDialog', () => {
     await new Promise(r => setTimeout(r, 0))
     await wrapper.vm.$nextTick()
 
-    expect(fetchConceptAncestorAndDescendant).toHaveBeenCalledWith('SYNPUF1K', 443410)
+    expect(getConceptAncestorAndDescendant).toHaveBeenCalledWith('SYNPUF1K', 443410)
     for (const child of INFECTIVE_PNEUMONIA_CHILDREN) {
       expect(document.body.textContent).toContain(child.conceptName)
     }
   })
 
   it('drops the chevron when a node turns out to have no children', async () => {
-    (fetchConceptAncestorAndDescendant as Mock).mockResolvedValue([])
+    (getConceptAncestorAndDescendant as Mock).mockResolvedValue([])
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
 
@@ -254,7 +256,7 @@ describe('ConceptHierarchyDialog', () => {
   })
 
   it('offers a retry when expanding fails', async () => {
-    (fetchConceptAncestorAndDescendant as Mock).mockRejectedValue(new Error('boom'))
+    (getConceptAncestorAndDescendant as Mock).mockRejectedValue(new Error('boom'))
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
 
@@ -270,7 +272,7 @@ describe('ConceptHierarchyDialog', () => {
 
   it('renders a shared descendant once under each expanded parent, with no duplicate-key warning', async () => {
     const shared = relatedConcept(9999001, 'Shared descendant')
-    ;(fetchConceptAncestorAndDescendant as Mock).mockImplementation((_key: string, conceptId: number) =>
+    ;(getConceptAncestorAndDescendant as Mock).mockImplementation((_key: string, conceptId: number) =>
       conceptId === 4309106 || conceptId === 4236311
         ? Promise.resolve([shared])
         : Promise.resolve(INFECTIVE_PNEUMONIA_PAYLOAD)
@@ -310,7 +312,7 @@ describe('ConceptHierarchyDialog', () => {
 
   it('terminates instead of recursing forever when a node lists an ancestor as its own descendant', async () => {
     const selfReferencing = relatedConcept(443410, 'Infective pneumonia')
-    ;(fetchConceptAncestorAndDescendant as Mock).mockResolvedValue([selfReferencing])
+    ;(getConceptAncestorAndDescendant as Mock).mockResolvedValue([selfReferencing])
 
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
@@ -330,7 +332,7 @@ describe('ConceptHierarchyDialog', () => {
     const pending = new Promise<RelatedConcept[]>(resolve => {
       resolveFetch = resolve
     })
-    ;(fetchConceptAncestorAndDescendant as Mock).mockReturnValueOnce(pending)
+    ;(getConceptAncestorAndDescendant as Mock).mockReturnValueOnce(pending)
 
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
@@ -361,6 +363,20 @@ describe('ConceptHierarchyDialog', () => {
     expect(document.body.textContent).not.toContain('No hierarchy found for non-standard concepts.')
   })
 
+  it('reports a failed hierarchy fetch instead of claiming the concept has none', async () => {
+    const detail = useConceptDetailStore()
+    detail.hierarchy = []
+    detail.hierarchyError = 'Failed to load hierarchy'
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[data-testid="hierarchy-load-failed"]')?.textContent).toContain(
+      'Could not load the hierarchy for this concept.'
+    )
+    expect(document.querySelector('[data-testid="hierarchy-empty"]')).toBeNull()
+    expect(document.body.textContent).not.toContain('No hierarchy found for this concept.')
+  })
+
   it('reports non-standard concepts as having no hierarchy', async () => {
     useConceptDetailStore().hierarchy = []
     const wrapper = mountDialog({ concept: { ...concept, standardConcept: 'N' } })
@@ -375,7 +391,7 @@ describe('toolbar', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     ;(getConceptRecordCounts as Mock).mockResolvedValue(new Map())
-    ;(fetchConceptAncestorAndDescendant as Mock).mockResolvedValue(INFECTIVE_PNEUMONIA_PAYLOAD)
+    ;(getConceptAncestorAndDescendant as Mock).mockResolvedValue(INFECTIVE_PNEUMONIA_PAYLOAD)
     useConceptDetailStore().hierarchy = PNEUMONIA_ANCESTOR_AND_DESCENDANT
   })
 
@@ -388,7 +404,7 @@ describe('toolbar', () => {
   it('narrows rows by the text filter without fetching', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
-    ;(fetchConceptAncestorAndDescendant as Mock).mockClear()
+    ;(getConceptAncestorAndDescendant as Mock).mockClear()
 
     const input = document.querySelector('[data-testid="hierarchy-filter"] input') as HTMLInputElement
     input.value = 'Aspiration'
@@ -398,7 +414,7 @@ describe('toolbar', () => {
     const rows = document.querySelectorAll('[data-descendant-row]')
     expect(rows).toHaveLength(1)
     expect(rows[0].textContent).toContain('Aspiration pneumonia')
-    expect(fetchConceptAncestorAndDescendant).not.toHaveBeenCalled()
+    expect(getConceptAncestorAndDescendant).not.toHaveBeenCalled()
   })
 
   it('matches on concept code as well as name', async () => {
@@ -470,7 +486,7 @@ describe('toolbar', () => {
       'Infective pneumonia'
     )
     expect(document.querySelectorAll('tr.descendant')).toHaveLength(2)
-    expect(fetchConceptAncestorAndDescendant).toHaveBeenCalledTimes(1)
+    expect(getConceptAncestorAndDescendant).toHaveBeenCalledTimes(1)
   })
 
   it('filters an already-expanded node\'s children too, not just the top level', async () => {

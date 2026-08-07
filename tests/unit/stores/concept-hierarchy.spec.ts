@@ -6,7 +6,9 @@ vi.mock('@/utils/logger', () => ({
 }))
 
 vi.mock('@/services/concept-detail.service', () => ({
-  fetchConceptAncestorAndDescendant: vi.fn(),
+  getConceptRelated: vi.fn(),
+  getConceptAncestorAndDescendant: vi.fn(),
+  getConceptDrilldown: vi.fn(),
 }))
 
 vi.mock('@/services/concept-search.service', () => ({
@@ -14,7 +16,7 @@ vi.mock('@/services/concept-search.service', () => ({
 }))
 
 import { useConceptHierarchyStore } from '@/stores/concept-hierarchy'
-import { fetchConceptAncestorAndDescendant } from '@/services/concept-detail.service'
+import { getConceptAncestorAndDescendant } from '@/services/concept-detail.service'
 import { getConceptRecordCounts } from '@/services/concept-search.service'
 import {
   INFECTIVE_PNEUMONIA_PAYLOAD,
@@ -22,7 +24,7 @@ import {
 } from '../../fixtures/concept-hierarchy'
 import type { Mock } from 'vitest'
 
-const mockFetch = fetchConceptAncestorAndDescendant as Mock
+const mockFetch = getConceptAncestorAndDescendant as Mock
 const mockCounts = getConceptRecordCounts as Mock
 
 describe('concept-hierarchy store', () => {

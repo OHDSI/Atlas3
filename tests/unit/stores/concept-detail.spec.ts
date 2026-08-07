@@ -283,6 +283,115 @@ describe('concept-detail store', () => {
     expect(getConceptDrilldown).toHaveBeenCalledTimes(1)
   })
 
+  it('keeps the concept when the hierarchy fetch rejects and flags only the hierarchy', async () => {
+    (getConceptById as Mock).mockResolvedValue({
+      conceptId: 201826,
+      conceptName: 'T2DM',
+      domainId: 'Condition',
+      vocabularyId: 'SNOMED',
+      conceptClassId: 'Clinical Finding',
+      standardConcept: 'S',
+      conceptCode: '44054006',
+      invalidReason: null,
+    })
+    ;(getConceptRelated as Mock).mockResolvedValue([])
+    ;(getConceptAncestorAndDescendant as Mock).mockRejectedValue(new Error('network error'))
+    ;(getConceptRecordCounts as Mock).mockResolvedValue(new Map())
+
+    const store = useConceptDetailStore()
+    await store.loadConcept('SYNPUF1K', 201826)
+
+    expect(store.concept?.conceptName).toBe('T2DM')
+    expect(store.error).toBeNull()
+    expect(store.hierarchyError).toBe('Failed to load hierarchy')
+    expect(store.relatedError).toBeNull()
+    expect(store.hierarchy).toEqual([])
+    expect(store.isLoading).toBe(false)
+  })
+
+  it('keeps the concept when the related fetch rejects and flags only related', async () => {
+    (getConceptById as Mock).mockResolvedValue({
+      conceptId: 201826,
+      conceptName: 'T2DM',
+      domainId: 'Condition',
+      vocabularyId: 'SNOMED',
+      conceptClassId: 'Clinical Finding',
+      standardConcept: 'S',
+      conceptCode: '44054006',
+      invalidReason: null,
+    })
+    ;(getConceptRelated as Mock).mockRejectedValue(new Error('network error'))
+    ;(getConceptAncestorAndDescendant as Mock).mockResolvedValue([])
+    ;(getConceptRecordCounts as Mock).mockResolvedValue(new Map())
+
+    const store = useConceptDetailStore()
+    await store.loadConcept('SYNPUF1K', 201826)
+
+    expect(store.concept?.conceptName).toBe('T2DM')
+    expect(store.error).toBeNull()
+    expect(store.relatedError).toBe('Failed to load related concepts')
+    expect(store.hierarchyError).toBeNull()
+    expect(store.related).toEqual([])
+  })
+
+  it('does not cache a partial load, so the failed section is retried', async () => {
+    (getConceptById as Mock).mockResolvedValue({
+      conceptId: 1,
+      conceptName: 'X',
+      domainId: 'Condition',
+      vocabularyId: 'SNOMED',
+      conceptClassId: 'Clinical Finding',
+      standardConcept: 'S',
+      conceptCode: 'x',
+      invalidReason: null,
+    })
+    ;(getConceptRelated as Mock).mockResolvedValue([])
+    ;(getConceptAncestorAndDescendant as Mock).mockRejectedValueOnce(new Error('boom'))
+    ;(getConceptRecordCounts as Mock).mockResolvedValue(new Map())
+
+    const store = useConceptDetailStore()
+    await store.loadConcept('SYNPUF1K', 1)
+    expect(store.hierarchyError).not.toBeNull()
+
+    ;(getConceptAncestorAndDescendant as Mock).mockResolvedValue([])
+    await store.loadConcept('SYNPUF1K', 1)
+
+    expect(getConceptAncestorAndDescendant).toHaveBeenCalledTimes(2)
+    expect(store.hierarchyError).toBeNull()
+  })
+
+  it('records a drilldown failure without caching it as an absent report', async () => {
+    (getConceptById as Mock).mockResolvedValue({
+      conceptId: 10,
+      conceptName: 'D',
+      domainId: 'Condition',
+      vocabularyId: 'SNOMED',
+      conceptClassId: 'Clinical Finding',
+      standardConcept: 'S',
+      conceptCode: '10',
+      invalidReason: null,
+    })
+    ;(getConceptRelated as Mock).mockResolvedValue([])
+    ;(getConceptAncestorAndDescendant as Mock).mockResolvedValue([])
+    ;(getConceptRecordCounts as Mock).mockResolvedValue(new Map())
+    ;(getConceptDrilldown as Mock).mockRejectedValueOnce(new Error('boom'))
+
+    const store = useConceptDetailStore()
+    await store.loadConcept('SYNPUF1K', 10)
+    await store.loadDrilldown('SYNPUF1K')
+
+    expect(store.drilldownErrorFor('SYNPUF1K')).toBe('Failed to load drilldown')
+    expect(store.drilldownBySource.has('SYNPUF1K')).toBe(false)
+    expect(store.isDrilldownLoading).toBe(false)
+
+    ;(getConceptDrilldown as Mock).mockResolvedValueOnce({ report: { foo: 1 } })
+    await store.loadDrilldown('SYNPUF1K')
+
+    expect(getConceptDrilldown).toHaveBeenCalledTimes(2)
+    expect(store.drilldownErrorFor('SYNPUF1K')).toBeNull()
+    expect(store.drilldownBySource.get('SYNPUF1K')).toEqual({ report: { foo: 1 } })
+  })
+
   it('reset clears all state', async () => {
     (getConceptById as Mock).mockResolvedValue({
       conceptId: 1,
@@ -310,5 +419,9 @@ describe('concept-detail store', () => {
     expect(store.isLoading).toBe(false)
     expect(store.isDrilldownLoading).toBe(false)
     expect(store.error).toBeNull()
+    expect(store.hierarchyError).toBeNull()
+    expect(store.relatedError).toBeNull()
+    expect(store.recordCountsError).toBeNull()
+    expect(store.drilldownErrorBySource.size).toBe(0)
   })
 })

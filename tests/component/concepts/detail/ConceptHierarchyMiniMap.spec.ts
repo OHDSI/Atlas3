@@ -104,6 +104,21 @@ describe('ConceptHierarchyMiniMap', () => {
     expect(wrapper.text()).toMatch(/no hierarchy/i)
   })
 
+  it('distinguishes a failed hierarchy fetch from an empty hierarchy', () => {
+    const vuetify = createVuetify({ components, directives })
+    const router = createRouter({ history: createMemoryHistory(), routes: [] })
+
+    const wrapper = mount(ConceptHierarchyMiniMap, {
+      props: { concept, parents: [], children: [], loadFailed: true },
+      global: { plugins: [vuetify, router] },
+    })
+
+    expect(wrapper.find('[data-testid="minimap-load-failed"]').text()).toContain(
+      'Could not load the hierarchy for this concept.'
+    )
+    expect(wrapper.text()).not.toContain('No hierarchy found for this concept.')
+  })
+
   it('opens the hierarchy dialog rather than the concept drawer', async () => {
     const vuetify = createVuetify({ components, directives })
     const router = createRouter({ history: createMemoryHistory(), routes: [] })

@@ -11,9 +11,9 @@ vi.mock('@/services/http-client', () => ({
 }))
 
 import {
+  ConceptDetailServiceError,
   getConceptRelated,
   getConceptAncestorAndDescendant,
-  fetchConceptAncestorAndDescendant,
   getConceptDrilldown,
 } from '@/services/concept-detail.service'
 import { httpClient } from '@/services/http-client'
@@ -51,10 +51,24 @@ describe('concept-detail.service', () => {
       })
     })
 
-    it('returns [] and logs error when validation fails', async () => {
+    it('rejects when validation fails', async () => {
       (httpClient as Mock).mockResolvedValueOnce([{ broken: true }])
-      const result = await getConceptRelated('SYNPUF1K', 1)
-      expect(result).toEqual([])
+      await expect(getConceptRelated('SYNPUF1K', 1)).rejects.toThrow(
+        /getConceptRelated response validation failed for SYNPUF1K\/1/
+      )
+    })
+
+    it('rejects when the HTTP call fails, carrying the underlying cause', async () => {
+      const cause = new Error('network error')
+      ;(httpClient as Mock).mockRejectedValueOnce(cause)
+      await expect(getConceptRelated('SYNPUF1K', 1)).rejects.toBeInstanceOf(
+        ConceptDetailServiceError
+      )
+      ;(httpClient as Mock).mockRejectedValueOnce(cause)
+      await expect(getConceptRelated('SYNPUF1K', 1)).rejects.toMatchObject({
+        message: 'getConceptRelated request failed for SYNPUF1K/1',
+        cause,
+      })
     })
   })
 
@@ -83,51 +97,18 @@ describe('concept-detail.service', () => {
       expect(result[0].relationships[0].relationshipName).toBe('Has ancestor of')
     })
 
-    it('returns [] when HTTP call rejects', async () => {
+    it('rejects when the HTTP call fails', async () => {
       (httpClient as Mock).mockRejectedValueOnce(new Error('network error'))
-      const result = await getConceptAncestorAndDescendant('SYNPUF1K', 1)
-      expect(result).toEqual([])
-    })
-
-    it('returns [] on validation failure', async () => {
-      (httpClient as Mock).mockResolvedValueOnce([{ broken: true }])
-      const result = await getConceptAncestorAndDescendant('SYNPUF1K', 1)
-      expect(result).toEqual([])
-    })
-  })
-
-  describe('fetchConceptAncestorAndDescendant', () => {
-    it('fetches and returns the ancestor+descendant list', async () => {
-      (httpClient as Mock).mockResolvedValueOnce([
-        {
-          CONCEPT_ID: 73211009,
-          CONCEPT_NAME: 'Diabetes mellitus',
-          CONCEPT_CODE: '73211009',
-          DOMAIN_ID: 'Condition',
-          VOCABULARY_ID: 'SNOMED',
-          CONCEPT_CLASS_ID: 'Clinical Finding',
-          STANDARD_CONCEPT: 'S',
-          INVALID_REASON: null,
-          RELATIONSHIPS: [{ RELATIONSHIP_NAME: 'Has ancestor of', RELATIONSHIP_DISTANCE: 1 }],
-        },
-      ])
-
-      const result = await fetchConceptAncestorAndDescendant('SYNPUF1K', 201826)
-
-      expect(httpClient).toHaveBeenCalledWith(
-        '/vocabulary/SYNPUF1K/concept/201826/ancestorAndDescendant'
+      await expect(getConceptAncestorAndDescendant('SYNPUF1K', 1)).rejects.toThrow(
+        /getConceptAncestorAndDescendant request failed for SYNPUF1K\/1/
       )
-      expect(result).toHaveLength(1)
     })
 
-    it('rejects when HTTP call fails', async () => {
-      (httpClient as Mock).mockRejectedValueOnce(new Error('network error'))
-      await expect(fetchConceptAncestorAndDescendant('SYNPUF1K', 1)).rejects.toThrow()
-    })
-
-    it('rejects when validation fails', async () => {
+    it('rejects on validation failure', async () => {
       (httpClient as Mock).mockResolvedValueOnce([{ broken: true }])
-      await expect(fetchConceptAncestorAndDescendant('SYNPUF1K', 1)).rejects.toThrow()
+      await expect(getConceptAncestorAndDescendant('SYNPUF1K', 1)).rejects.toThrow(
+        /getConceptAncestorAndDescendant response validation failed for SYNPUF1K\/1/
+      )
     })
   })
 
@@ -138,16 +119,25 @@ describe('concept-detail.service', () => {
       expect(httpClient).not.toHaveBeenCalled()
     })
 
-    it('returns null and logs error when the drilldown response fails validation', async () => {
+    it('rejects when the drilldown response fails validation', async () => {
       (httpClient as Mock).mockResolvedValueOnce({ ageAtFirstOccurrence: 'not-an-array' })
-      const result = await getConceptDrilldown('SYNPUF1K', 'Condition', 201826)
-      expect(result).toBeNull()
+      await expect(getConceptDrilldown('SYNPUF1K', 'Condition', 201826)).rejects.toThrow(
+        /getConceptDrilldown response validation failed for SYNPUF1K\/201826/
+      )
     })
 
-    it('returns null when the drilldown HTTP call rejects', async () => {
+    it('rejects when the drilldown response is not an object', async () => {
+      (httpClient as Mock).mockResolvedValueOnce('nope')
+      await expect(getConceptDrilldown('SYNPUF1K', 'Condition', 201826)).rejects.toThrow(
+        /getConceptDrilldown response validation failed for SYNPUF1K\/201826/
+      )
+    })
+
+    it('rejects when the drilldown HTTP call rejects', async () => {
       (httpClient as Mock).mockRejectedValueOnce(new Error('boom'))
-      const result = await getConceptDrilldown('SYNPUF1K', 'Condition', 201826)
-      expect(result).toBeNull()
+      await expect(getConceptDrilldown('SYNPUF1K', 'Condition', 201826)).rejects.toThrow(
+        /getConceptDrilldown request failed for SYNPUF1K\/201826/
+      )
     })
 
     it('falls back to empty report when drilldown sections are missing', async () => {
@@ -156,12 +146,6 @@ describe('concept-detail.service', () => {
       expect(result).not.toBeNull()
       expect(result!.ageAtFirstOccurrence).toBeUndefined()
       expect(result!.prevalenceByMonth).toBeUndefined()
-    })
-
-    it('returns [] from getConceptRelated when the HTTP call rejects', async () => {
-      (httpClient as Mock).mockRejectedValueOnce(new Error('network error'))
-      const result = await getConceptRelated('SYNPUF1K', 1)
-      expect(result).toEqual([])
     })
 
     it('fetches and maps drilldown for a Condition concept', async () => {

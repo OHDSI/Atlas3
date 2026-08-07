@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { logger } from '@/utils/logger'
-import { fetchConceptAncestorAndDescendant } from '@/services/concept-detail.service'
+import { getConceptAncestorAndDescendant } from '@/services/concept-detail.service'
 import { getConceptRecordCounts } from '@/services/concept-search.service'
 import type { RelatedConcept, ConceptRecordCount } from '@/models/concept-detail.types'
 
@@ -92,7 +92,7 @@ export const useConceptHierarchyStore = defineStore('concept-hierarchy', () => {
     loadingNodes.value = new Set(loadingNodes.value).add(conceptId)
     failedNodes.value = new Set([...failedNodes.value].filter(id => id !== conceptId))
     try {
-      const payload = await fetchConceptAncestorAndDescendant(fetchSourceKey, conceptId)
+      const payload = await getConceptAncestorAndDescendant(fetchSourceKey, conceptId)
       const children = directDescendants(payload)
       if (fetchGeneration === sourceGeneration) {
         childrenByConcept.value = new Map(childrenByConcept.value).set(conceptId, children)

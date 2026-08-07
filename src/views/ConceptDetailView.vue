@@ -21,7 +21,7 @@ const props = defineProps<{
 }>()
 
 const store = useConceptDetailStore()
-const { concept, isLoading, error, related, parents, children, recordCountsBySource } =
+const { concept, isLoading, error, related, parents, children, recordCountsBySource, hierarchyError } =
   storeToRefs(store)
 
 const conceptSetsStore = useConceptSetsStore()
@@ -102,6 +102,7 @@ watch(() => [props.sourceKey, props.conceptId], load)
             :concept="concept"
             :parents="parents"
             :children="children"
+            :load-failed="!!hierarchyError"
           />
         </div>
 

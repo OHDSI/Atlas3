@@ -31,7 +31,7 @@ const { t } = useI18n()
 const detail = useConceptDetailStore()
 const tree = useConceptHierarchyStore()
 const conceptSets = useConceptSetsStore()
-const { hierarchy } = storeToRefs(detail)
+const { hierarchy, hierarchyError } = storeToRefs(detail)
 
 const isNonStandard = computed(() => props.concept.standardConcept === 'N')
 
@@ -295,6 +295,13 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
       data-testid="hierarchy-non-standard"
     >
       {{ t('cs.manager.concept.tabs.hierarchy.noHierarchyFoundMessage', 'No hierarchy found for non-standard concepts.').value }}
+    </p>
+
+    <p
+      v-else-if="hierarchyError"
+      data-testid="hierarchy-load-failed"
+    >
+      {{ t('components.conceptHierarchyDialog.loadFailed', 'Could not load the hierarchy for this concept.').value }}
     </p>
 
     <p
