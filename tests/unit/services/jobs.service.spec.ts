@@ -199,109 +199,29 @@ describe('JobsService', () => {
     })
   })
 
-  describe('cache jobs merge', () => {
-    it('merges bao cache jobs into the results when the cache endpoint returns { jobs: [...] }', async () => {
+  describe('cache builds', () => {
+    it('lists a cache build once, from the Spring Batch endpoint only', async () => {
       const { httpGet } = await import('@/services/http-client')
-      // First call: /job/execution returns an empty list.
-      // Second call: /trexsql/cache/jobs returns a cache job that should be
-      // transformed into a synthetic Job entry.
-      vi.mocked(httpGet)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce({
-          jobs: [
-            {
-              databaseCode: 'SYNPUF1K',
-              sourceKey: 'SYNPUF1K',
-              status: 'COMPLETE',
-              startTime: '2024-01-01T00:00:00Z',
-              endTime: '2024-01-01T01:00:00Z',
-              totalTables: 10,
-              completedTables: 10,
-            },
-          ],
-        })
+      // bao now writes a cacheGeneration execution for every dialect, so the
+      // build arrives with the other jobs. Fetching /trexsql/cache/jobs as
+      // well would list it twice.
+      vi.mocked(httpGet).mockResolvedValueOnce([
+        {
+          executionId: 42,
+          jobInstance: { name: 'cacheGeneration' },
+          status: 'COMPLETED',
+          startDate: '2026-08-06T10:00:00Z',
+        },
+      ])
 
       const result = await getJobs()
 
       expect(result.success).toBe(true)
       expect(result.data).toHaveLength(1)
-      expect(result.data![0].type).toBe('cacheGeneration')
-      expect(result.data![0].status).toBe('COMPLETED')
-      expect(result.data![0].name).toContain('SYNPUF1K')
-    })
-
-    it('skips cache jobs that are missing databaseCode / sourceKey', async () => {
-      const { httpGet } = await import('@/services/http-client')
-      vi.mocked(httpGet)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce({
-          jobs: [
-            // No databaseCode / sourceKey → transformCacheJob returns null.
-            { status: 'RUNNING' },
-            // Valid one.
-            { databaseCode: 'DB1', status: 'RUNNING' },
-          ],
-        })
-
-      const result = await getJobs()
-      expect(result.success).toBe(true)
-      expect(result.data).toHaveLength(1)
-      expect(result.data![0].name).toContain('DB1')
-    })
-
-    it('parses numeric (microsecond / millisecond / second) timestamps on cache jobs', async () => {
-      const { httpGet } = await import('@/services/http-client')
-      vi.mocked(httpGet)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce({
-          jobs: [
-            {
-              databaseCode: 'DB-US', // microseconds
-              status: 'RUNNING',
-              startTime: '1700000000000000',
-            },
-            {
-              databaseCode: 'DB-MS', // milliseconds
-              status: 'RUNNING',
-              startTime: '1700000000000',
-            },
-            {
-              databaseCode: 'DB-S', // seconds
-              status: 'RUNNING',
-              startTime: '1700000000',
-            },
-            {
-              databaseCode: 'DB-EMPTY', // empty timestamp
-              status: 'RUNNING',
-              startTime: '   ',
-            },
-          ],
-        })
-
-      const result = await getJobs()
-      expect(result.success).toBe(true)
-      expect(result.data).toHaveLength(4)
-    })
-
-    it('treats a failing cache-jobs fetch as non-fatal and still returns batch jobs', async () => {
-      const { httpGet } = await import('@/services/http-client')
-      vi.mocked(httpGet)
-        .mockResolvedValueOnce([
-          {
-            executionId: 1,
-            status: 'COMPLETED',
-            startDate: Date.now(),
-            jobInstance: { name: 'generateCohort' },
-          },
-        ])
-        .mockRejectedValueOnce(new Error('bao down'))
-
-      const result = await getJobs()
-      expect(result.success).toBe(true)
-      expect(result.data).toHaveLength(1)
+      expect(vi.mocked(httpGet)).toHaveBeenCalledTimes(1)
+      expect(vi.mocked(httpGet).mock.calls[0][0]).toContain('/job/execution')
     })
   })
-
   describe('jobsService singleton', () => {
     it('exports getJobs function', () => {
       expect(jobsService.getJobs).toBe(getJobs)
