@@ -6,7 +6,7 @@ import { createApp, watch } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router'
 import { createVuetifyInstance } from './plugins/vuetify'
-import { setChartPalette } from './ui/chart-config'
+import { setChartPalette, setChartTheme } from './ui/chart-config'
 import { pluginConfigService } from './services/PluginConfigService'
 import { useThemeStore } from './stores/theme'
 import App from './App.vue'
@@ -144,10 +144,12 @@ async function initializeApp() {
   const themeStore = useThemeStore()
   themeStore.initialize(defaultThemeMode ?? 'system')
   vuetify.theme.global.name.value = themeStore.resolved
+  setChartTheme(themeStore.resolved)
   watch(
     () => themeStore.resolved,
     (mode) => {
       vuetify.theme.global.name.value = mode
+      setChartTheme(mode)
     },
   )
 
