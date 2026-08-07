@@ -272,10 +272,14 @@ watch(
 
 // One dialog instance is reused as the drawer moves between concepts, so ticks
 // made for the previous concept would otherwise stay live — and get added.
+// The ancestor collapse is scoped to the same lifetime: an expand toggled for
+// concept A must not leak into concept B rendering pre-expanded when the user
+// never touched B's toggle.
 watch(
   () => props.concept.conceptId,
   () => {
     selected.value = []
+    ancestorsExpanded.value = false
   }
 )
 

@@ -176,6 +176,29 @@ describe('ConceptHierarchyDialog', () => {
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
   })
 
+  it('collapses ancestors again when the drawer switches to a different concept', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const toggle = document.querySelector('[data-testid="hierarchy-ancestors-toggle"]') as HTMLElement
+    toggle.click()
+    await wrapper.vm.$nextTick()
+    expect(document.querySelectorAll('[data-ancestor-row]')).toHaveLength(3)
+
+    // Same dialog instance, new concept — the drawer reuses it without
+    // remounting, so an expand toggled for the old concept must not leak
+    // into the next one rendering pre-expanded.
+    await wrapper.setProps({
+      concept: { ...concept, conceptId: 4025165, conceptName: 'Abscess of lung with pneumonia' },
+    })
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelectorAll('[data-ancestor-row]')).toHaveLength(2)
+    expect(
+      document.querySelector('[data-testid="hierarchy-ancestors-toggle"]')?.getAttribute('aria-expanded')
+    ).toBe('false')
+  })
+
   it('orders ancestors most-distant first so the chain reads down into the anchor', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
