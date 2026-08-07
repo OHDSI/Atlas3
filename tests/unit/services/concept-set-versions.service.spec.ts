@@ -98,31 +98,85 @@ describe('ConceptSetVersionsService', () => {
   })
 
   describe('getVersion', () => {
-    it('returns a specific version with asset', async () => {
-      const { httpGet } = await import('@/services/http-client')
-      const mockVersionedAsset = {
-        versionDTO: {
-          version: 2,
-          assetId: 456,
-          comment: 'Test version',
-          createdBy: { id: 1, name: 'user1' },
-          createdDate: Date.now(),
-          archived: false
-        },
-        entityDTO: {
-          id: 456,
-          name: 'Diabetes Concepts',
-          items: []
-        }
-      }
+    // Real WebAPI shape: ConceptSetVersionFullDTO puts `items` as a sibling of
+    // `entityDTO`, and those sibling items are the bare entity (conceptId +
+    // int flags, no concept name/domain/etc) - see ConceptSetItem.java.
+    const mockVersionResponse = {
+      versionDTO: {
+        version: 2,
+        assetId: 456,
+        comment: 'Test version',
+        createdBy: { id: 1, name: 'user1' },
+        createdDate: Date.now(),
+        archived: false
+      },
+      entityDTO: {
+        id: 456,
+        name: 'Diabetes Concepts'
+      },
+      items: [
+        { id: 1, conceptSetId: 456, conceptId: 201826, isExcluded: 0, includeDescendants: 1, includeMapped: 0 }
+      ]
+    }
 
-      vi.mocked(httpGet).mockResolvedValue(mockVersionedAsset)
+    const mockExpressionResponse = {
+      items: [
+        {
+          concept: {
+            CONCEPT_ID: 201826,
+            CONCEPT_NAME: 'Type 2 diabetes mellitus',
+            CONCEPT_CODE: '44054006',
+            DOMAIN_ID: 'Condition',
+            VOCABULARY_ID: 'SNOMED',
+            CONCEPT_CLASS_ID: 'Clinical Finding',
+            STANDARD_CONCEPT: 'S',
+            INVALID_REASON: null
+          },
+          isExcluded: false,
+          includeDescendants: true,
+          includeMapped: false
+        }
+      ]
+    }
+
+    it('parses a realistic three-key payload (versionDTO, entityDTO, items) without throwing', async () => {
+      const { httpGet } = await import('@/services/http-client')
+      vi.mocked(httpGet).mockImplementation(async (url: string) => {
+        if (url.endsWith('/expression')) return mockExpressionResponse
+        return mockVersionResponse
+      })
+
+      await expect(getVersion(456, 2)).resolves.toBeDefined()
+    })
+
+    it('returns a specific version with asset and its historical items', async () => {
+      const { httpGet } = await import('@/services/http-client')
+      vi.mocked(httpGet).mockImplementation(async (url: string) => {
+        if (url.endsWith('/expression')) return mockExpressionResponse
+        return mockVersionResponse
+      })
 
       const result = await getVersion(456, 2)
 
       expect(httpGet).toHaveBeenCalledWith('/conceptset/456/version/2')
+      expect(httpGet).toHaveBeenCalledWith('/conceptset/456/version/2/expression')
       expect(result.versionDTO.version).toBe(2)
       expect(result.entityDTO.name).toBe('Diabetes Concepts')
+      expect(result.items).toEqual([
+        {
+          conceptId: 201826,
+          conceptName: 'Type 2 diabetes mellitus',
+          conceptCode: '44054006',
+          domainId: 'Condition',
+          vocabularyId: 'SNOMED',
+          conceptClassId: 'Clinical Finding',
+          standardConcept: 'S',
+          invalidReason: null,
+          isExcluded: false,
+          includeDescendants: true,
+          includeMapped: false
+        }
+      ])
     })
 
     it('throws on validation error', async () => {

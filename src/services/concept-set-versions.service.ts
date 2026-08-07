@@ -2,20 +2,65 @@
  * Concept Set Versions Service
  * API service for concept set version history
  */
-import type { Version, VersionedAsset, CommentUpdatePayload } from '@/components/versions/types'
-import type { ConceptSet } from '@/models/concept-set.types'
-import {
-  versionSchema,
-  versionArraySchema,
-  versionedAssetSchema,
-  commentUpdateSchema,
-} from '@/components/versions/schemas'
+import type { Version, CommentUpdatePayload } from '@/components/versions/types'
+import type { ConceptSet, ConceptSetItem } from '@/models/concept-set.types'
+import { versionSchema, versionArraySchema, commentUpdateSchema } from '@/components/versions/schemas'
+import { mapExpressionItemsFromAPI, type ConceptSetAPIExpression } from '@/utils/api-mappers'
 import { z } from 'zod'
 import { logger } from '@/utils/logger'
 import { httpGet, httpPut } from '@/services/http-client'
 
 // Use pass-through validation for concept set data
 const conceptSetSchema = z.any()
+
+/**
+ * ConceptSetVersionFullDTO (WebAPI) puts `items` alongside `entityDTO`, not
+ * inside it — unlike cohort/pathway/IR, which have no such field — so concept
+ * sets need their own schema instead of loosening the shared strict one.
+ * The sibling `items` themselves are the bare ConceptSetItem entity (conceptId
+ * + flags, no concept metadata), so we only validate their shape here; the
+ * enriched data used to populate a preview comes from the expression endpoint.
+ */
+const conceptSetVersionedAssetSchema = z
+  .object({
+    versionDTO: versionSchema,
+    entityDTO: conceptSetSchema,
+    items: z.array(z.unknown()),
+  })
+  .strict()
+
+const conceptSetExpressionResponseSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        concept: z.object({
+          CONCEPT_ID: z.number(),
+          CONCEPT_NAME: z.string(),
+          CONCEPT_CODE: z.string(),
+          DOMAIN_ID: z.string(),
+          VOCABULARY_ID: z.string(),
+          CONCEPT_CLASS_ID: z.string(),
+          STANDARD_CONCEPT: z.string().nullable(),
+          INVALID_REASON: z.string().nullable(),
+        }),
+        isExcluded: z.boolean(),
+        includeDescendants: z.boolean(),
+        includeMapped: z.boolean(),
+      })
+    )
+    .optional(),
+})
+
+/**
+ * Versioned asset for a concept set: entityDTO never carries items (WebAPI's
+ * ConceptSetDTO has none), so historical items are surfaced as their own field
+ * rather than shoehorned into entityDTO's shape.
+ */
+export interface ConceptSetVersionedAsset {
+  versionDTO: Version
+  entityDTO: Omit<ConceptSet, 'items'>
+  items: ConceptSetItem[]
+}
 
 /**
  * Get all versions for a concept set
@@ -52,18 +97,34 @@ export async function getVersions(conceptSetId: number): Promise<Version[]> {
 export async function getVersion(
   conceptSetId: number,
   versionNumber: number
-): Promise<VersionedAsset<ConceptSet>> {
+): Promise<ConceptSetVersionedAsset> {
   try {
     const data = await httpGet<unknown>(`/conceptset/${conceptSetId}/version/${versionNumber}`)
 
-    const parsed = versionedAssetSchema(conceptSetSchema).safeParse(data)
+    const parsed = conceptSetVersionedAssetSchema.safeParse(data)
 
     if (!parsed.success) {
       logger.error('ConceptSetVersionsService', 'Versioned asset validation error', parsed.error)
       throw new Error('Failed to validate version data')
     }
 
-    return parsed.data as VersionedAsset<ConceptSet>
+    const expressionData = await getVersionExpression(conceptSetId, versionNumber)
+    const parsedExpression = conceptSetExpressionResponseSchema.safeParse(expressionData)
+
+    if (!parsedExpression.success) {
+      logger.error(
+        'ConceptSetVersionsService',
+        'Version expression validation error',
+        parsedExpression.error
+      )
+      throw new Error('Failed to validate version items')
+    }
+
+    return {
+      versionDTO: parsed.data.versionDTO,
+      entityDTO: parsed.data.entityDTO as Omit<ConceptSet, 'items'>,
+      items: mapExpressionItemsFromAPI(parsedExpression.data as ConceptSetAPIExpression),
+    }
   } catch (error) {
     logger.error(
       'ConceptSetVersionsService',
