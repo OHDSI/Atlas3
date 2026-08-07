@@ -9,6 +9,7 @@ import {
   CHART_MUTED_TEXT,
   CHART_GRID_BORDER,
   CHART_BOX_BORDER,
+  CHART_OUTLIER_MARKER,
   getExportConfig,
   trellisChartOptions,
   boxPlotChartOptions,
@@ -295,5 +296,24 @@ describe('setChartTheme', () => {
     ]
     const options = boxPlotChartOptions(data) as { series?: Array<{ itemStyle?: Record<string, unknown> }> }
     expect(options.series?.[0]?.itemStyle?.borderColor).toBe(CHART_BOX_BORDER)
+  })
+
+  it('keeps the outlier marker byte-for-byte in light mode', () => {
+    setChartTheme('light')
+    expect(CHART_OUTLIER_MARKER).toBe('rgba(255, 0, 0, 0.5)')
+  })
+
+  it('gives the dark outlier marker at least 3:1 against the dark surface', () => {
+    setChartTheme('dark')
+    expect(contrastRatio(CHART_OUTLIER_MARKER, tokens.colorDark.surface)).toBeGreaterThanOrEqual(3)
+  })
+
+  it('reaches boxPlotChartOptions outlier marker colour', () => {
+    setChartTheme('dark')
+    const data: BoxPlotData[] = [
+      { category: 'a', min: 1, p10: 0, p25: 3, median: 4, p75: 5, p90: 8, max: 7 },
+    ]
+    const options = boxPlotChartOptions(data) as { series?: Array<{ itemStyle?: Record<string, unknown> }> }
+    expect(options.series?.[1]?.itemStyle?.color).toBe(CHART_OUTLIER_MARKER)
   })
 })

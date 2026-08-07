@@ -178,6 +178,7 @@ export let CHART_LABEL_ON_MARK: string = '#ffffff'
 export let CHART_MUTED_TEXT: string = '#6b6b6b'
 export let CHART_GRID_BORDER: string = 'black'
 export let CHART_BOX_BORDER: string = '#333'
+export let CHART_OUTLIER_MARKER: string = 'rgba(255, 0, 0, 0.5)'
 
 function applyPalettes(): void {
   const themeColors = chartMode === 'dark' ? DARK_CHART_COLORS : DEFAULT_CHART_COLORS
@@ -201,6 +202,9 @@ function applyPalettes(): void {
   // clears 3.34:1 against the dark surface.
   CHART_GRID_BORDER = chartMode === 'dark' ? set.outlineStrong : 'black'
   CHART_BOX_BORDER = chartMode === 'dark' ? set.outlineStrong : '#333'
+  // No token is red; light stays at its pre-existing 2.44:1 (unrelated,
+  // out of scope). Dark only needs a value that clears 3:1 on its own.
+  CHART_OUTLIER_MARKER = chartMode === 'dark' ? 'rgba(255,107,107,0.7)' : 'rgba(255, 0, 0, 0.5)'
 }
 
 /**
@@ -1635,7 +1639,7 @@ export function boxPlotChartOptions(
         type: 'scatter',
         data: outlierData,
         itemStyle: {
-          color: 'rgba(255, 0, 0, 0.5)',
+          color: CHART_OUTLIER_MARKER,
         },
       },
     ],
