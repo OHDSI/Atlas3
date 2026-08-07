@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { buildVuetifyOptions } from '@/ui/theme'
 import { tokens } from '@/ui/tokens'
+import { contrastRatio } from '@/ui/contrast'
 
 describe('buildVuetifyOptions', () => {
   it('binds Vuetify color slots to tokens', () => {
@@ -57,7 +58,7 @@ describe('buildVuetifyOptions', () => {
     expect(dark['on-surface']).toBe(tokens.colorDark.onSurface)
     expect(dark.error).toBe(tokens.colorDark.danger)
     expect(dark.orange).toBe(tokens.colorDark.accent)
-    expect(dark.outline).toBe(tokens.colorDark.outline)
+    expect(dark.outline).toBe(tokens.colorDark.outlineStrong)
   })
 
   it('marks the dark theme as dark for Vuetify', () => {
@@ -65,9 +66,55 @@ describe('buildVuetifyOptions', () => {
     expect(opts.theme!.themes!.dark!.dark).toBe(true)
   })
 
-  it('applies a primary override to both light and dark', () => {
+  it('applies a primary override to light and lifts it for dark contrast', () => {
     const opts = buildVuetifyOptions('#000000')
     expect(opts.theme!.themes!.light!.colors!.primary).toBe('#000000')
-    expect(opts.theme!.themes!.dark!.colors!.primary).toBe('#000000')
+    expect(
+      contrastRatio(opts.theme!.themes!.dark!.colors!.primary as string, tokens.colorDark.surface),
+    ).toBeGreaterThanOrEqual(4.5)
+  })
+})
+
+describe('dark theme colours', () => {
+  it('binds the dark on-fill foregrounds explicitly', () => {
+    const dark = buildVuetifyOptions().theme!.themes!.dark!.colors!
+    expect(dark['on-primary']).toBe(tokens.colorDark.onPrimary)
+    expect(dark['on-error']).toBe(tokens.colorDark.onDanger)
+    expect(dark['on-info']).toBe(tokens.colorDark.onInfo)
+    expect(dark['on-success']).toBe(tokens.colorDark.onSuccess)
+    expect(dark['on-warning']).toBe(tokens.colorDark.onWarning)
+  })
+
+  it('leaves the light theme without explicit on-fill overrides', () => {
+    const light = buildVuetifyOptions().theme!.themes!.light!.colors!
+    expect(light['on-primary']).toBeUndefined()
+    expect(light['on-warning']).toBeUndefined()
+  })
+
+  it('lightens an admin primary that is too dark for the dark surface', () => {
+    const opts = buildVuetifyOptions('#1f425a')
+    const dark = opts.theme!.themes!.dark!.colors!
+    expect(dark.primary).toBe('#6d8494')
+    expect(contrastRatio(dark.primary as string, tokens.colorDark.surface)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('passes the admin primary through to the light theme unchanged', () => {
+    const opts = buildVuetifyOptions('#1f425a')
+    expect(opts.theme!.themes!.light!.colors!.primary).toBe('#1f425a')
+  })
+
+  it('leaves an admin primary that already clears AA untouched in dark', () => {
+    const opts = buildVuetifyOptions('#6aa3cb')
+    expect(opts.theme!.themes!.dark!.colors!.primary).toBe('#6aa3cb')
+  })
+
+  it('uses the strong outline for dark borders', () => {
+    const dark = buildVuetifyOptions().theme!.themes!.dark!.colors!
+    expect(dark.outline).toBe(tokens.colorDark.outlineStrong)
+  })
+
+  it('keeps the light outline decorative', () => {
+    const light = buildVuetifyOptions().theme!.themes!.light!.colors!
+    expect(light.outline).toBe(tokens.color.outline)
   })
 })
