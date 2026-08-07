@@ -6,10 +6,16 @@ import {
   setChartTheme,
   CHART_COLORS,
   TREEMAP_GRADIENT,
+  CHART_MUTED_TEXT,
+  CHART_GRID_BORDER,
+  CHART_BOX_BORDER,
   getExportConfig,
+  trellisChartOptions,
+  boxPlotChartOptions,
 } from '@/ui/chart-config'
 import { contrastRatio } from '@/ui/contrast'
 import { tokens } from '@/ui/tokens'
+import type { TrellisChartData, BoxPlotData } from '@/models/report.types'
 
 describe('setChartPalette', () => {
   afterEach(() => {
@@ -251,5 +257,43 @@ describe('setChartTheme', () => {
     setChartTheme('dark')
     setChartPalette({ chartColors: ['#abcdef'], treemapGradient: null })
     expect(CHART_COLORS).toEqual(['#abcdef'])
+  })
+
+  it('keeps the muted text and border literals byte-for-byte in light mode', () => {
+    setChartTheme('light')
+    expect(CHART_MUTED_TEXT).toBe('#6b6b6b')
+    expect(CHART_GRID_BORDER).toBe('black')
+    expect(CHART_BOX_BORDER).toBe('#333')
+  })
+
+  it('gives the dark muted text at least 4.5:1 (text floor) against the dark surface', () => {
+    setChartTheme('dark')
+    expect(contrastRatio(CHART_MUTED_TEXT, tokens.colorDark.surface)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('gives the dark grid and box borders at least 3:1 (non-text floor) against the dark surface', () => {
+    setChartTheme('dark')
+    expect(contrastRatio(CHART_GRID_BORDER, tokens.colorDark.surface)).toBeGreaterThanOrEqual(3)
+    expect(contrastRatio(CHART_BOX_BORDER, tokens.colorDark.surface)).toBeGreaterThanOrEqual(3)
+  })
+
+  it('reaches trellisChartOptions grid borders and section-header labels', () => {
+    setChartTheme('dark')
+    const data: TrellisChartData = {
+      categories: ['20-29'],
+      series: [{ name: 'Male', category: '20-29', data: [{ x: 2015, y: 12.5 }] }],
+    }
+    const options = trellisChartOptions(data) as { grid?: Array<Record<string, unknown>> }
+    expect(options.grid?.[0]?.borderColor).toBe(CHART_GRID_BORDER)
+    expect(JSON.stringify(options)).toContain(CHART_MUTED_TEXT)
+  })
+
+  it('reaches boxPlotChartOptions box borders', () => {
+    setChartTheme('dark')
+    const data: BoxPlotData[] = [
+      { category: 'a', min: 1, p10: 2, p25: 3, median: 4, p75: 5, p90: 6, max: 7 },
+    ]
+    const options = boxPlotChartOptions(data) as { series?: Array<{ itemStyle?: Record<string, unknown> }> }
+    expect(options.series?.[0]?.itemStyle?.borderColor).toBe(CHART_BOX_BORDER)
   })
 })

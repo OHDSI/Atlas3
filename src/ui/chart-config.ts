@@ -175,6 +175,9 @@ export let CHART_TEXT: string = tokens.color.onSurface
 export let CHART_SUBTLE_TEXT: string = '#5e6470'
 export let CHART_SURFACE: string = tokens.color.surface
 export let CHART_LABEL_ON_MARK: string = '#ffffff'
+export let CHART_MUTED_TEXT: string = '#6b6b6b'
+export let CHART_GRID_BORDER: string = 'black'
+export let CHART_BOX_BORDER: string = '#333'
 
 function applyPalettes(): void {
   const themeColors = chartMode === 'dark' ? DARK_CHART_COLORS : DEFAULT_CHART_COLORS
@@ -190,6 +193,14 @@ function applyPalettes(): void {
   CHART_SURFACE = set.surface
   // Dark marks are light fills, so their in-mark labels flip to near-black.
   CHART_LABEL_ON_MARK = chartMode === 'dark' ? 'rgba(0,0,0,.87)' : '#ffffff'
+  // #6b6b6b is a text label (trellis section headers); needs the 4.5:1 text
+  // floor, not just the 3:1 non-text floor, so it shares onSurfaceVariant
+  // (7.05:1) with CHART_SUBTLE_TEXT rather than a dimmer border token.
+  CHART_MUTED_TEXT = chartMode === 'dark' ? set.onSurfaceVariant : '#6b6b6b'
+  // Grid frame and boxplot outlines are decorative (3:1 floor); outlineStrong
+  // clears 3.34:1 against the dark surface.
+  CHART_GRID_BORDER = chartMode === 'dark' ? set.outlineStrong : 'black'
+  CHART_BOX_BORDER = chartMode === 'dark' ? set.outlineStrong : '#333'
 }
 
 /**
@@ -1329,7 +1340,7 @@ export function trellisChartOptions(
     left: 'center',
     textStyle: {
       fontSize: 13,
-      color: '#6b6b6b',
+      color: CHART_MUTED_TEXT,
     },
   })
   gridTitles.push({
@@ -1338,7 +1349,7 @@ export function trellisChartOptions(
     left: 'center',
     textStyle: {
       fontSize: 13,
-      color: '#6b6b6b',
+      color: CHART_MUTED_TEXT,
     },
   })
 
@@ -1355,7 +1366,7 @@ export function trellisChartOptions(
       height: `${GRID_HEIGHT}%`,
       left: `${colIndex * (GRID_WIDTH + GRID_GAP) + GRID_LEFT_MARGIN}%`,
       top: `${rowTop}%`,
-      borderColor: 'black',
+      borderColor: CHART_GRID_BORDER,
       borderWidth: 1,
       containLabel: true,
     })
@@ -1605,7 +1616,7 @@ export function boxPlotChartOptions(
         data: boxData,
         itemStyle: {
           color: CHART_COLORS[0],
-          borderColor: '#333',
+          borderColor: CHART_BOX_BORDER,
         },
         tooltip: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
