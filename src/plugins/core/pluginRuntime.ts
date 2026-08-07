@@ -13,6 +13,7 @@ declare global {
 }
 
 let pending: Promise<NonNullable<Window['System']>> | null = null
+let ready: NonNullable<Window['System']> | null = null
 const loaded = new Set<string>()
 
 function injectScript(src: string): Promise<void> {
@@ -35,7 +36,7 @@ function injectScript(src: string): Promise<void> {
 }
 
 export async function ensurePluginRuntime(): Promise<NonNullable<Window['System']>> {
-  if (window.System) return window.System
+  if (ready) return ready
   if (pending) return pending
 
   pending = (async () => {
@@ -47,7 +48,13 @@ export async function ensurePluginRuntime(): Promise<NonNullable<Window['System'
     if (!window.System) {
       throw new Error('Failed to load plugin runtime: SystemJS did not initialise')
     }
-    return window.System
+    // Only mark the runtime ready once the whole chain — including
+    // single-spa-vue registration — has succeeded. system.js sets
+    // window.System as soon as it executes, long before the rest of the
+    // chain finishes, so window.System truthiness alone can't be trusted
+    // as a "fully loaded" signal on a retry after a partial failure.
+    ready = window.System
+    return ready
   })()
 
   pending.catch(() => {
