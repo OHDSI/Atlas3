@@ -20,6 +20,7 @@ export function parseColor(value: string): Rgba {
   const match = trimmed.match(/rgba?\(([^)]+)\)/)
   if (!match) throw new Error(`Unsupported color format: ${value}`)
   const parts = match[1]!.split(',').map((s) => parseFloat(s.trim()))
+  if (parts.length < 3) throw new Error(`Unsupported color format: ${value}`)
   return [parts[0]!, parts[1]!, parts[2]!, parts[3] ?? 1]
 }
 

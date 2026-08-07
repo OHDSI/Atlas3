@@ -17,6 +17,10 @@ describe('parseColor', () => {
   it('parses rgba() with an explicit alpha', () => {
     expect(parseColor('rgba(255,255,255,.36)')).toEqual([255, 255, 255, 0.36])
   })
+
+  it('throws on a malformed rgb() with fewer than three components', () => {
+    expect(() => parseColor('rgb(10,20)')).toThrow('Unsupported color format: rgb(10,20)')
+  })
 })
 
 describe('relativeLuminance', () => {
