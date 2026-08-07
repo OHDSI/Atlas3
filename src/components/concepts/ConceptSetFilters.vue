@@ -183,6 +183,13 @@
           </div>
         </AtlasCard>
       </AtlasMenu>
+
+      <div
+        v-if="$slots.actions"
+        class="concept-set-filters__actions"
+      >
+        <slot name="actions" />
+      </div>
     </div>
 
     <div
@@ -396,6 +403,13 @@ function handleModifiedToChange(date: Date) {
 
 .concept-set-filters__menu-btn {
   flex-shrink: 0;
+}
+
+.concept-set-filters__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-inline-start: auto;
 }
 
 .concept-set-filters__menu-count {

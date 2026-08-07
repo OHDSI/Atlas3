@@ -15,6 +15,9 @@
         data-testid="incidence-rates-search"
         @update:model-value="(v: string | number) => handleSearchInput(v != null ? String(v) : null)"
       />
+    </template>
+
+    <template #primary-action>
       <AtlasButton
         icon="mdi-plus"
         data-testid="incidence-rates-create"

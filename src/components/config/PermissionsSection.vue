@@ -16,6 +16,7 @@
           clearable
           class="permissions-section__search"
         />
+        <AtlasSpacer />
         <AtlasButton
           icon="mdi-plus"
           @click="showCreateDialog = true"
@@ -176,7 +177,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasTab, AtlasTabs, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useRoles } from '@/composables/useRoles'
