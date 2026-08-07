@@ -91,7 +91,7 @@ vi.mock('@/components/cohort/CohortPagination.vue', () => ({
 vi.mock('@/components/cohort/CohortFilters.vue', () => ({
   default: {
     name: 'CohortFilters',
-    template: '<div class="cohort-filters-mock"></div>',
+    template: '<div class="cohort-filters-mock"><slot name="actions" /></div>',
     props: ['filters', 'availableTags', 'availableAuthors', 'activeFilterCount']
   }
 }))

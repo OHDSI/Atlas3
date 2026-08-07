@@ -186,6 +186,13 @@
           </div>
         </AtlasCard>
       </AtlasMenu>
+
+      <div
+        v-if="$slots.actions"
+        class="cohort-filters__actions"
+      >
+        <slot name="actions" />
+      </div>
     </div>
 
     <!-- Active filter chips (shown below the bar so they don't crowd it). -->
@@ -402,6 +409,13 @@ function removeTag(tag: string) {
 
 .cohort-filters__menu-btn {
   flex-shrink: 0;
+}
+
+.cohort-filters__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-inline-start: auto;
 }
 
 .cohort-filters__menu-count {
