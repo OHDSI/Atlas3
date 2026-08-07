@@ -59,4 +59,22 @@ describe('design tokens', () => {
   it('exposes a hover elevation token', () => {
     expect(tokens.elevation.hover).toBe('0 2px 6px rgba(15,23,42,.1), 0 12px 32px rgba(15,23,42,.12)')
   })
+
+  it('exposes a border-strength outline that clears the 3:1 UI floor in dark', () => {
+    expect(tokens.color.outlineStrong).toBe('rgba(0,0,0,.12)')
+    expect(tokens.colorDark.outlineStrong).toBe('rgba(255,255,255,.36)')
+  })
+
+  it('keeps the light palette identical to its pre-dark-mode values', () => {
+    expect(tokens.color.primaryText).toBe(tokens.color.primary)
+    expect(tokens.color.accentText).toBe(tokens.color.accent)
+    expect(tokens.color.infoText).toBe(tokens.color.info)
+    expect(tokens.color.successText).toBe(tokens.color.success)
+    expect(tokens.color.warningText).toBe(tokens.color.warning)
+    expect(tokens.color.dangerText).toBe(tokens.color.danger)
+  })
+
+  it('keys the light and dark palettes identically', () => {
+    expect(Object.keys(tokens.color)).toEqual(Object.keys(tokens.colorDark))
+  })
 })
