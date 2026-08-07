@@ -117,6 +117,10 @@ export class PluginConfigService {
     return this.manifest?.settings?.theme?.primaryColor || null
   }
 
+  getDefaultThemeMode(): 'light' | 'dark' | 'system' | null {
+    return this.manifest?.settings?.theme?.defaultMode || null
+  }
+
   getAccentColor(): string | null {
     return this.manifest?.settings?.theme?.accentColor || null
   }

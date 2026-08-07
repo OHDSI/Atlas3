@@ -114,6 +114,7 @@ export interface PluginManifest {
       landingLogoUrl?: string // Custom landing-page hero logo URL/path (replaces bundled atlas-loading.svg)
       chartColors?: string[] // Categorical chart palette override; multi-series charts cycle through it
       treemapGradient?: string[] // Color-by-value gradient override (light -> dark), used by treemaps
+      defaultMode?: 'light' | 'dark' | 'system' // Theme the deployment starts in
     }
     header?: {
       showNavBar?: boolean // Show/hide the entire navigation bar (default: true)
@@ -342,6 +343,7 @@ export const PluginManifestSchema = z.object({
             .array(z.string().regex(hexColorRegex, 'Invalid hex color in treemapGradient'))
             .nonempty()
             .optional(),
+          defaultMode: z.enum(['light', 'dark', 'system']).optional(),
         })
         .optional(),
       header: z
