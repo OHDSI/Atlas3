@@ -12,21 +12,30 @@ declare global {
   }
 }
 
-let pending: Promise<void> | null = null
+let pending: Promise<NonNullable<Window['System']>> | null = null
+const loaded = new Set<string>()
 
 function injectScript(src: string): Promise<void> {
+  // A retry after a partial failure must not re-run scripts that already
+  // executed — re-running system.js would reset window.System and discard
+  // everything plugin-runtime.js already registered on it.
+  if (loaded.has(src)) return Promise.resolve()
+
   return new Promise((resolve, reject) => {
     const el = document.createElement('script')
     el.src = src
     el.async = false
-    el.addEventListener('load', () => resolve())
+    el.addEventListener('load', () => {
+      loaded.add(src)
+      resolve()
+    })
     el.addEventListener('error', () => reject(new Error(`Failed to load plugin runtime: ${src}`)))
     document.head.appendChild(el)
   })
 }
 
-export async function ensurePluginRuntime(): Promise<void> {
-  if (window.System) return
+export async function ensurePluginRuntime(): Promise<NonNullable<Window['System']>> {
+  if (window.System) return window.System
   if (pending) return pending
 
   pending = (async () => {
@@ -38,6 +47,7 @@ export async function ensurePluginRuntime(): Promise<void> {
     if (!window.System) {
       throw new Error('Failed to load plugin runtime: SystemJS did not initialise')
     }
+    return window.System
   })()
 
   pending.catch(() => {

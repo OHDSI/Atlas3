@@ -74,9 +74,9 @@ export class PluginLoader {
       }
 
       try {
-        await ensurePluginRuntime()
+        const System = await ensurePluginRuntime()
 
-        const importedModule = await window.System!.import(pluginUrl).catch((err: Error) => {
+        const importedModule = await System.import(pluginUrl).catch((err: Error) => {
           throw new Error(`Failed to import plugin module: ${err.message}`)
         })
 

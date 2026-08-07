@@ -89,7 +89,7 @@ describe('PluginLoader', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setActivePinia(createPinia());
-    (ensurePluginRuntime as Mock).mockResolvedValue(undefined);
+    (ensurePluginRuntime as Mock).mockImplementation(() => Promise.resolve(window.System));
 
     registry = new PluginRegistry();
     loader = new PluginLoader(registry);

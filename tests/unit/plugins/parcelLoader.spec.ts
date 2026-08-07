@@ -92,7 +92,9 @@ describe('parcelLoader', () => {
     systemImportMock.mockReset()
     ;(mountRootParcel as unknown as Mock).mockClear()
     ;(logger.debug as Mock).mockClear()
-    ;(ensurePluginRuntime as Mock).mockReset().mockResolvedValue(undefined)
+    ;(ensurePluginRuntime as Mock).mockReset().mockImplementation(() =>
+      Promise.resolve(window.System)
+    )
   })
 
   afterEach(() => {

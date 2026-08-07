@@ -73,9 +73,9 @@ async function loadModule(pluginId: string): Promise<PluginModule> {
   const url = pluginEntryUrl(instance.registration.entryPoint)
   injectPluginStylesheet(pluginId, instance.registration.entryPoint)
 
-  await ensurePluginRuntime()
+  const System = await ensurePluginRuntime()
 
-  const promise = window.System!.import<PluginModule>(url).then(mod => {
+  const promise = System.import<PluginModule>(url).then(mod => {
     if (!mod.bootstrap || !mod.mount || !mod.unmount) {
       throw new Error(`Plugin ${pluginId} is missing required lifecycle methods`)
     }
