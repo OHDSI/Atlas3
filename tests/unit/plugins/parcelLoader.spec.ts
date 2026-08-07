@@ -30,9 +30,16 @@ vi.mock('@/services/auth/storageManager', () => ({
   },
 }))
 
+// Mock the runtime gate so tests control window.System directly instead of
+// racing real script injection.
+vi.mock('@/plugins/core/pluginRuntime', () => ({
+  ensurePluginRuntime: vi.fn().mockResolvedValue(undefined),
+}))
+
 import { mountRootParcel } from 'single-spa'
 import { logger } from '@/utils/logger'
 import { storageManager } from '@/services/auth/storageManager'
+import { ensurePluginRuntime } from '@/plugins/core/pluginRuntime'
 
 function makePluginModule() {
   return {
@@ -85,6 +92,7 @@ describe('parcelLoader', () => {
     systemImportMock.mockReset()
     ;(mountRootParcel as unknown as Mock).mockClear()
     ;(logger.debug as Mock).mockClear()
+    ;(ensurePluginRuntime as Mock).mockReset().mockResolvedValue(undefined)
   })
 
   afterEach(() => {
@@ -126,14 +134,10 @@ describe('parcelLoader', () => {
 
   it('throws if SystemJS is not available', async () => {
     registerTestPlugin('p3')
-    const originalSystem = window.System
-    // remove SystemJS
-    ;(window as { System?: typeof window.System }).System = undefined
-    try {
-      await expect(mountPluginParcel('p3', dom)).rejects.toThrow(/SystemJS is not available/)
-    } finally {
-      window.System = originalSystem
-    }
+    ;(ensurePluginRuntime as Mock).mockRejectedValueOnce(
+      new Error('Failed to load plugin runtime: SystemJS did not initialise')
+    )
+    await expect(mountPluginParcel('p3', dom)).rejects.toThrow(/SystemJS did not initialise/)
   })
 
   it('surfaces the error when System.import rejects', async () => {

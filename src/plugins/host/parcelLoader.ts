@@ -3,6 +3,7 @@ import { pluginRegistry } from '@/plugins/core/PluginRegistry'
 import { storageManager } from '@/services/auth/storageManager'
 import { useLocaleStore } from '@/stores/locale'
 import { logger } from '@/utils/logger'
+import { ensurePluginRuntime } from '@/plugins/core/pluginRuntime'
 
 function buildI18n() {
   const localeStore = useLocaleStore()
@@ -72,11 +73,9 @@ async function loadModule(pluginId: string): Promise<PluginModule> {
   const url = pluginEntryUrl(instance.registration.entryPoint)
   injectPluginStylesheet(pluginId, instance.registration.entryPoint)
 
-  if (!window.System) {
-    throw new Error('SystemJS is not available')
-  }
+  await ensurePluginRuntime()
 
-  const promise = window.System.import<PluginModule>(url).then(mod => {
+  const promise = window.System!.import<PluginModule>(url).then(mod => {
     if (!mod.bootstrap || !mod.mount || !mod.unmount) {
       throw new Error(`Plugin ${pluginId} is missing required lifecycle methods`)
     }
