@@ -1559,6 +1559,46 @@ describe('CohortBuilder', () => {
     expect(setup.cohortName).toBe('preserved')
   })
 
+  it('reloadRequest watcher re-fetches the cohort and resyncs local state when props.id is set', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    // Wait for onMounted's own loadCohort() to resolve first.
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.getCohortDefinition).mockClear()
+    setup.cohortName = 'stale preview name'
+
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    // clearPreviewVersion increments this on the store; simulate it directly
+    // to isolate the watcher's consumer behaviour.
+    ;(store as unknown as { reloadRequest: number }).reloadRequest += 1
+    await wrapper.vm.$nextTick()
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    expect(webapi.getCohortDefinition).toHaveBeenCalledWith(42)
+    expect(setup.cohortName).toBe('Existing Cohort')
+  })
+
+  it('reloadRequest watcher does not fetch when there is no props.id (new-cohort route)', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.getCohortDefinition).mockClear()
+
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    ;(store as unknown as { reloadRequest: number }).reloadRequest += 1
+    await wrapper.vm.$nextTick()
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(webapi.getCohortDefinition).not.toHaveBeenCalled()
+  })
+
   it('handleSave returns an empty object when canSave is false (so the bridge resolves)', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
