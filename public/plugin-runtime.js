@@ -2,11 +2,13 @@ window.__atlasPluginRuntimeReady = (function () {
   'use strict'
 
   if (!window.System) {
+    // eslint-disable-next-line no-console -- classic script outside the module graph; no logger available
     console.error('[SystemJS] window.System is not available!')
     return Promise.resolve()
   }
 
   if (!window.Vue) {
+    // eslint-disable-next-line no-console -- classic script outside the module graph; no logger available
     console.error('[SystemJS] window.Vue is not available!')
     return Promise.resolve()
   }
@@ -133,6 +135,7 @@ window.__atlasPluginRuntimeReady = (function () {
         };
       });
     }).catch(function(err) {
+      // eslint-disable-next-line no-console -- classic script outside the module graph; no logger available
       console.error('[SystemJS] Failed to load single-spa-vue:', err);
     });
   }
