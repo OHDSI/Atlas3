@@ -294,6 +294,44 @@ describe('PluginConfigService', () => {
     })
   })
 
+  describe('accent and chart palette settings', () => {
+    const loadTheme = async (theme: Record<string, unknown>) => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ version: '1.0', plugins: [], settings: { theme } }),
+      })
+      await service.loadConfig()
+    }
+
+    it('returns null for each when the theme omits them', async () => {
+      await loadTheme({ primaryColor: '#FF5733' })
+
+      expect(service.getAccentColor()).toBeNull()
+      expect(service.getChartColors()).toBeNull()
+      expect(service.getTreemapGradient()).toBeNull()
+    })
+
+    it('returns the configured accent and palettes', async () => {
+      await loadTheme({
+        accentColor: '#ff5e59',
+        chartColors: ['#000080', '#ff5e59'],
+        treemapGradient: ['#c3cce8', '#4a5fb0', '#000080'],
+      })
+
+      expect(service.getAccentColor()).toBe('#ff5e59')
+      expect(service.getChartColors()).toEqual(['#000080', '#ff5e59'])
+      expect(service.getTreemapGradient()).toEqual(['#c3cce8', '#4a5fb0', '#000080'])
+    })
+
+    it('treats an empty palette as unset so the default survives', async () => {
+      await loadTheme({ chartColors: [], treemapGradient: [] })
+
+      expect(service.getChartColors()).toBeNull()
+      expect(service.getTreemapGradient()).toBeNull()
+    })
+  })
+
   describe('getLogoUrl', () => {
     it('should return null before loading', () => {
       expect(service.getLogoUrl()).toBeNull()

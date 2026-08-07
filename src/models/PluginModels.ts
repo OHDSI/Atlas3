@@ -108,9 +108,12 @@ export interface PluginManifest {
     }
     theme?: {
       primaryColor?: string // Primary theme color override (hex color code, e.g., '#1f425a')
+      accentColor?: string // Accent color override (hex color code); drives --atlas-color-accent
       logoUrl?: string // Custom logo URL/path (replaces default OHDSI + ATLAS logos)
       logoNavigateTo?: string // Route to navigate to when clicking the logo (default: '/')
       landingLogoUrl?: string // Custom landing-page hero logo URL/path (replaces bundled atlas-loading.svg)
+      chartColors?: string[] // Categorical chart palette override; multi-series charts cycle through it
+      treemapGradient?: string[] // Color-by-value gradient override (light -> dark), used by treemaps
     }
     header?: {
       showNavBar?: boolean // Show/hide the entire navigation bar (default: true)
@@ -324,9 +327,21 @@ export const PluginManifestSchema = z.object({
             .string()
             .regex(hexColorRegex, 'Invalid hex color for primaryColor')
             .optional(),
+          accentColor: z
+            .string()
+            .regex(hexColorRegex, 'Invalid hex color for accentColor')
+            .optional(),
           logoUrl: z.string().optional(),
           logoNavigateTo: z.string().optional(),
           landingLogoUrl: z.string().optional(),
+          chartColors: z
+            .array(z.string().regex(hexColorRegex, 'Invalid hex color in chartColors'))
+            .nonempty()
+            .optional(),
+          treemapGradient: z
+            .array(z.string().regex(hexColorRegex, 'Invalid hex color in treemapGradient'))
+            .nonempty()
+            .optional(),
         })
         .optional(),
       header: z
