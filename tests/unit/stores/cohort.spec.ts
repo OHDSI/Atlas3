@@ -10,51 +10,23 @@ vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 
-vi.mock('@/utils/cohort-cache', () => {
-  const mockCache = new Map<number | string, CohortDefinition>()
-
-  return {
-    saveCohortToCache: vi.fn(async (cohort: CohortDefinition) => {
-      if (cohort.id) {
-        mockCache.set(cohort.id, { ...cohort })
-      }
-    }),
-    getCohortFromCache: vi.fn(async (id: number | string) => {
-      return mockCache.get(id) || null
-    }),
-    deleteCohortFromCache: vi.fn(async (id: number | string) => {
-      mockCache.delete(id)
-    }),
-    clearCache: vi.fn(async () => {
-      mockCache.clear()
-    }),
-    _mockCache: mockCache,
-  }
-})
-
 import { getVersion as mockGetVersion } from '@/services/cohort-definition-versions.service'
 
-let cohortCache: typeof import('@/utils/cohort-cache') & { _mockCache: Map<number | string, CohortDefinition> }
 let useCohortStore: typeof import('@/stores/cohort').useCohortStore
 
 beforeAll(async () => {
   vi.resetModules()
-  cohortCache = await import('@/utils/cohort-cache') as typeof cohortCache
   ;({ useCohortStore } = await import('@/stores/cohort'))
 })
 
 describe('Cohort Store', () => {
-  const getMockCache = () => cohortCache._mockCache
-
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-    getMockCache().clear()
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
-    getMockCache().clear()
   })
 
   describe('Initial State', () => {
@@ -343,261 +315,6 @@ describe('Cohort Store', () => {
     })
   })
 
-  describe('Caching', () => {
-    it('should cache cohort on successful load', async () => {
-      const store = useCohortStore()
-      const mockCohort: CohortDefinition = {
-        id: 123,
-        name: 'Test Cohort',
-        entryEvents: [
-          {
-            id: 'event-1',
-            criteriaType: 'ConditionOccurrence',
-            attributes: [],
-          },
-        ],
-        qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-      }
-
-      await cohortCache.saveCohortToCache(mockCohort)
-
-      const result = await store.loadCohort(123)
-
-      expect(result).not.toBeNull()
-      expect(result?.id).toBe(123)
-      expect(store.currentCohort?.id).toBe(123)
-    })
-
-    it('should use getCachedCohort as fallback', async () => {
-      const store = useCohortStore()
-      const mockCohort: CohortDefinition = {
-        id: 456,
-        name: 'Cached Cohort',
-        entryEvents: [
-          {
-            id: 'event-1',
-            criteriaType: 'ConditionOccurrence',
-            attributes: [],
-          },
-        ],
-        qualifyingLimit: 'FIRST',
-        inclusionRules: [],
-        conceptSets: [],
-      }
-
-      await cohortCache.saveCohortToCache(mockCohort)
-
-      const result = await store.getCachedCohort(456)
-
-      expect(result).not.toBeNull()
-      expect(result?.name).toBe('Cached Cohort')
-    })
-  })
-
-  describe('Save with Retry Logic', () => {
-    it('should successfully save cohort', async () => {
-      const store = useCohortStore()
-      const validCohort: CohortDefinition = {
-        id: 111,
-        name: 'Save Test',
-        entryEvents: [
-          {
-            id: 'event-1',
-            criteriaType: 'ConditionOccurrence',
-            attributes: [],
-          },
-        ],
-        qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-      }
-
-      store.setCohort(validCohort)
-      store.markDirty()
-
-      const result = await store.saveCohort()
-
-      expect(result).toBe(true)
-      expect(store.isDirty).toBe(false)
-      expect(store.retryState.attempt).toBe(0)
-      expect(store.retryState.isRetrying).toBe(false)
-    })
-
-    it('should not save when validation errors exist', async () => {
-      const store = useCohortStore()
-      const invalidCohort: CohortDefinition = {
-        name: '',
-        entryEvents: [],
-        qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-      }
-
-      store.setCohort(invalidCohort)
-      store.markDirty()
-
-      const result = await store.saveCohort()
-
-      expect(result).toBe(false)
-      expect(store.canSave).toBe(false)
-    })
-
-    it('should not save when no cohort exists', async () => {
-      const store = useCohortStore()
-
-      const result = await store.saveCohort()
-
-      expect(result).toBe(false)
-    })
-
-    it('should not save when in read-only mode', async () => {
-      const store = useCohortStore()
-      const invalidCohort: CohortDefinition = {
-        name: '  ',
-        entryEvents: [
-          {
-            id: 'event-1',
-            criteriaType: 'ConditionOccurrence',
-            attributes: [],
-          },
-        ],
-        qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-      }
-
-      store.setCohort(invalidCohort)
-      store.markDirty()
-
-      expect(store.isReadOnly).toBe(true)
-
-      const result = await store.saveCohort()
-
-      expect(result).toBe(false)
-    })
-
-    it('should retry on failure with exponential backoff', async () => {
-      vi.useFakeTimers()
-
-      const store = useCohortStore()
-      const cohort: CohortDefinition = {
-        id: 222,
-        name: 'Retry Test',
-        entryEvents: [
-          {
-            id: 'event-1',
-            criteriaType: 'ConditionOccurrence',
-            attributes: [],
-          },
-        ],
-        qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-      }
-
-      store.setCohort(cohort)
-
-      let attempts = 0
-      vi.mocked(cohortCache.saveCohortToCache).mockImplementation(async (coh) => {
-        attempts++
-        if (attempts < 3) {
-          throw new Error('Network error')
-        }
-        if (coh.id) {
-          getMockCache().set(coh.id, { ...coh })
-        }
-      })
-
-      const savePromise = store.saveCohort()
-
-      await vi.advanceTimersByTimeAsync(1000)
-      await vi.advanceTimersByTimeAsync(2000)
-
-      const result = await savePromise
-
-      expect(result).toBe(true)
-      expect(attempts).toBe(3)
-      expect(store.retryState.attempt).toBe(0)
-
-      vi.useRealTimers()
-    })
-
-    it.skip('should fail after max retry attempts', async () => {
-      const store = useCohortStore()
-      const cohort: CohortDefinition = {
-        id: 333,
-        name: 'Max Retry Test',
-        entryEvents: [
-          {
-            id: 'event-1',
-            criteriaType: 'ConditionOccurrence',
-            attributes: [],
-          },
-        ],
-        qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-      }
-
-      store.setCohort(cohort)
-
-      let attempts = 0
-      vi.mocked(cohortCache.saveCohortToCache).mockImplementation(async () => {
-        attempts++
-        throw new Error('Persistent network error')
-      })
-
-      const result = await store.saveCohort()
-
-      expect(result).toBe(false)
-      expect(attempts).toBe(5)
-      expect(store.retryState.isRetrying).toBe(false)
-    }, 60000)
-
-    it('should cancel retry', async () => {
-      const store = useCohortStore()
-
-      store.cancelRetry()
-
-      expect(store.retryState.attempt).toBe(0)
-      expect(store.retryState.isRetrying).toBe(false)
-      expect(store.retryState.nextRetryAt).toBeNull()
-    })
-
-    it.skip('should cancel pending retry operation', async () => {
-      const store = useCohortStore()
-      const cohort: CohortDefinition = {
-        id: 444,
-        name: 'Cancel Test',
-        entryEvents: [
-          {
-            id: 'event-1',
-            criteriaType: 'ConditionOccurrence',
-            attributes: [],
-          },
-        ],
-        qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-      }
-
-      store.setCohort(cohort)
-
-      vi.mocked(cohortCache.saveCohortToCache).mockRejectedValue(new Error('Network error'))
-
-      const savePromise = store.saveCohort()
-
-      store.cancelRetry()
-
-      await savePromise
-
-      expect(store.retryState.attempt).toBe(0)
-      expect(store.retryState.isRetrying).toBe(false)
-    })
-  })
-
   describe('Validation Edge Cases', () => {
     it('should validate cohort with whitespace-only name', () => {
       const store = useCohortStore()
@@ -829,97 +546,6 @@ describe('Cohort Store', () => {
     })
   })
 
-  describe('Cache Operations', () => {
-    it('should return null when loading non-existent cohort', async () => {
-      const store = useCohortStore()
-
-      const result = await store.loadCohort(999999)
-
-      expect(result).toBeNull()
-      expect(store.currentCohort).toBeNull()
-    })
-
-    it('should use fallback when loadCohort encounters error', async () => {
-      const store = useCohortStore()
-      const mockCohort: CohortDefinition = {
-        id: 555,
-        name: 'Fallback Test',
-        entryEvents: [
-          {
-            id: 'event-1',
-            criteriaType: 'ConditionOccurrence',
-            attributes: [],
-          },
-        ],
-        qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-      }
-
-      await cohortCache.saveCohortToCache(mockCohort)
-
-      let callCount = 0
-      vi.mocked(cohortCache.getCohortFromCache).mockImplementation(async (_id) => {
-        callCount++
-        if (callCount === 1) {
-          throw new Error('Cache error')
-        }
-        return mockCohort
-      })
-
-      const result = await store.loadCohort(555)
-
-      expect(result).not.toBeNull()
-      expect(result?.id).toBe(555)
-      expect(callCount).toBe(2)
-    })
-
-    it('should return null when getCachedCohort fails', async () => {
-      const store = useCohortStore()
-
-      vi.mocked(cohortCache.getCohortFromCache).mockRejectedValue(new Error('Cache error'))
-
-      const result = await store.getCachedCohort(999)
-
-      expect(result).toBeNull()
-    })
-
-    it('should handle deleteCachedCohort successfully', async () => {
-      const store = useCohortStore()
-      const mockCohort: CohortDefinition = {
-        id: 666,
-        name: 'Delete Test',
-        entryEvents: [
-          {
-            id: 'event-1',
-            criteriaType: 'ConditionOccurrence',
-            attributes: [],
-          },
-        ],
-        qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-      }
-
-      await cohortCache.saveCohortToCache(mockCohort)
-
-      await store.deleteCachedCohort(666)
-
-      const result = await cohortCache.getCohortFromCache(666)
-      expect(result).toBeNull()
-    })
-
-    it('should handle deleteCachedCohort with error gracefully', async () => {
-      const store = useCohortStore()
-
-      vi.mocked(cohortCache.deleteCohortFromCache).mockRejectedValue(
-        new Error('Delete failed')
-      )
-
-      await expect(store.deleteCachedCohort(777)).resolves.toBeUndefined()
-    })
-  })
-
   describe('State Combinations', () => {
     it('should handle complex cohort with all optional fields', () => {
       const store = useCohortStore()
@@ -1079,7 +705,7 @@ describe('Cohort Store', () => {
       await expect(store.loadVersionPreview(99)).rejects.toThrow('Not found')
     })
 
-    it('clearPreviewVersion clears preview state and reloads cohort', async () => {
+    it('clearPreviewVersion clears preview state and signals a reload', async () => {
       const store = useCohortStore()
       store.setCohort(baseCohort)
       store.previewVersion = {
@@ -1091,11 +717,12 @@ describe('Cohort Store', () => {
         archived: false,
       }
 
-      vi.mocked(cohortCache.getCohortFromCache).mockResolvedValueOnce(baseCohort)
+      const before = store.reloadRequest
 
       await store.clearPreviewVersion()
 
       expect(store.previewVersion).toBeNull()
+      expect(store.reloadRequest).toBe(before + 1)
     })
 
     it('savePreviewAsCurrent returns false when not in preview mode', async () => {

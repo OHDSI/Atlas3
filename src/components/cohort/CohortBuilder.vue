@@ -1285,6 +1285,15 @@ watch(
   }
 )
 
+// Leaving version preview keeps the same route id, so the props.id watcher does
+// not fire. The store signals instead, and loadCohort does the full resync.
+watch(
+  () => cohortStore.reloadRequest,
+  () => {
+    if (props.id) loadCohort(props.id)
+  }
+)
+
 // Reset to a blank cohort in place. Navigating cohort-new → cohort-new is a
 // same-route no-op, so onMounted never re-runs; without this the previous
 // cohort's criteria would linger and the next cohort's proposals would pile
@@ -1432,7 +1441,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
   // Stop timers to prevent memory leaks
   cohortStore.stopAutoSave()
-  cohortStore.cancelRetry()
 })
 
 watch(
