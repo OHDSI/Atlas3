@@ -88,7 +88,7 @@
           :data-testid="`strata-editor-edit-criteria-${index}`"
           @click="openCriteriaDialog(stratum.id)"
         >
-          {{ t('common.edit', 'Edit criteria').value }}
+          {{ t('common.editCriteria', 'Edit criteria').value }}
         </AtlasButton>
       </div>
     </div>

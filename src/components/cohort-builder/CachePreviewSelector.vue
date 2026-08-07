@@ -72,7 +72,7 @@ function statusLabel(status: CacheStatusType | undefined): string {
     case 'stale':     return t('trexsql.cacheStale', 'Stale').value
     case 'building':  return t('trexsql.cacheBuilding', 'Building').value
     case 'error':     return t('trexsql.cacheError', 'Error').value
-    case 'not_built': return t('trexsql.cacheNotBuilt', 'Not built').value
+    case 'not_built': return t('trexsql.cacheNotBuilt', 'Not Built').value
     default:          return ''
   }
 }

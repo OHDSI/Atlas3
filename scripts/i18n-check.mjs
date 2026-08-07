@@ -72,6 +72,39 @@ export function findBatchCollision(keys, key) {
   return null
 }
 
+/**
+ * When a key is called with two different literal fallbacks, findMissing's
+ * first-wins dedup means whichever call site the file walk visits first
+ * decides what actually gets backfilled — every other call site's fallback
+ * silently becomes dead text, and its rendered output changes without any
+ * source diff at that call site. Catch it before it reaches en.json.
+ *
+ * Only meaningful for keys findMissing would otherwise hand to --backfill:
+ * once a key is a string in en.json, the translation lookup wins outright
+ * and inline fallbacks are never consulted, so a mismatch there is inert.
+ * Call this with the `missing` list, not every usage in the codebase.
+ */
+export function findFallbackConflicts(usages) {
+  const byKey = new Map()
+  for (const { key, fallback, file } of usages) {
+    if (fallback === null) continue
+    if (!byKey.has(key)) byKey.set(key, new Map())
+    const fallbacks = byKey.get(key)
+    if (!fallbacks.has(fallback)) fallbacks.set(fallback, [])
+    fallbacks.get(fallback).push(file)
+  }
+
+  const conflicts = []
+  for (const [key, fallbacks] of byKey) {
+    if (fallbacks.size < 2) continue
+    conflicts.push({
+      key,
+      fallbacks: [...fallbacks.entries()].map(([fallback, files]) => ({ fallback, files })),
+    })
+  }
+  return conflicts
+}
+
 function sourceFiles(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, entry.name)
@@ -97,6 +130,23 @@ async function main() {
   if (missing.length === 0) {
     console.log(`[i18n-check] ok — ${usages.length} call sites, no missing keys`)
     return
+  }
+
+  // findMissing already dedupes to one entry per key — check every usage of
+  // each missing key, not just the first one it kept.
+  const missingKeys = new Set(missing.map(m => m.key))
+  const fallbackConflicts = findFallbackConflicts(usages.filter(u => missingKeys.has(u.key)))
+  for (const { key, fallbacks } of fallbackConflicts) {
+    console.error(`[i18n-check] "${key}" has conflicting inline fallbacks:`)
+    for (const { fallback, files } of fallbacks) {
+      console.error(`    ${JSON.stringify(fallback)}  (${files.join(', ')})`)
+    }
+  }
+  if (fallbackConflicts.length > 0) {
+    console.error(
+      `[i18n-check] refusing to continue: ${fallbackConflicts.length} key(s) have conflicting inline fallbacks — give each wording its own key`
+    )
+    process.exit(1)
   }
 
   const withFallback = missing.filter(m => m.fallback !== null)

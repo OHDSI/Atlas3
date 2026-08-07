@@ -196,7 +196,7 @@
               icon="mdi-close"
               @click="searchTerm = ''"
             >
-              {{ t('common.reset', 'Clear search').value }}
+              {{ t('common.clearSearch', 'Clear search').value }}
             </AtlasButton>
           </div>
         </div>

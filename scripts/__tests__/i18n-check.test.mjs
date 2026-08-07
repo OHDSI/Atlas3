@@ -1,6 +1,12 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest'
-import { extractKeys, findMissing, findParentCollision, findBatchCollision } from '../i18n-check.mjs'
+import {
+  extractKeys,
+  findMissing,
+  findParentCollision,
+  findBatchCollision,
+  findFallbackConflicts,
+} from '../i18n-check.mjs'
 
 describe('extractKeys', () => {
   it('extracts a key with an inline fallback', () => {
@@ -73,5 +79,40 @@ describe('findBatchCollision', () => {
 
   it('returns null when no other key in the batch is an ancestor', () => {
     expect(findBatchCollision(['foo.bar', 'foo.qux'], 'foo.bar')).toBeNull()
+  })
+})
+
+describe('findFallbackConflicts', () => {
+  it('flags a key used with two different literal fallbacks', () => {
+    const conflicts = findFallbackConflicts([
+      { key: 'common.to', fallback: 'To', file: 'a.vue' },
+      { key: 'common.to', fallback: 'to', file: 'b.vue' },
+    ])
+    expect(conflicts).toEqual([
+      {
+        key: 'common.to',
+        fallbacks: [
+          { fallback: 'To', files: ['a.vue'] },
+          { fallback: 'to', files: ['b.vue'] },
+        ],
+      },
+    ])
+  })
+
+  it('does not flag the same fallback repeated at many call sites', () => {
+    const conflicts = findFallbackConflicts([
+      { key: 'common.save', fallback: 'Save', file: 'a.vue' },
+      { key: 'common.save', fallback: 'Save', file: 'b.vue' },
+      { key: 'common.save', fallback: 'Save', file: 'c.vue' },
+    ])
+    expect(conflicts).toEqual([])
+  })
+
+  it('does not flag a fallback at one site and no fallback at another', () => {
+    const conflicts = findFallbackConflicts([
+      { key: 'common.save', fallback: 'Save', file: 'a.vue' },
+      { key: 'common.save', fallback: null, file: 'b.vue' },
+    ])
+    expect(conflicts).toEqual([])
   })
 })

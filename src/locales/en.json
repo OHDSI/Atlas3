@@ -188,7 +188,8 @@
     "back": "Back",
     "tileView": "Tile view",
     "requiredField": "This field is required",
-    "edit": "Edit criteria",
+    "edit": "Edit",
+    "editCriteria": "Edit criteria",
     "remove": "Remove",
     "unsavedChanges": "Unsaved changes",
     "discard": "Discard changes",
@@ -198,6 +199,7 @@
     "filters": "Filters",
     "from": "From",
     "to": "To",
+    "toSeparator": "to",
     "createdFrom": "Created from",
     "createdTo": "Created to",
     "modifiedFrom": "Modified from",
@@ -208,7 +210,8 @@
     "pickColor": "Pick color",
     "selectItemsPerPage": "Select number of items per page",
     "downloadFile": "Download as file",
-    "reset": "Clear search",
+    "reset": "Reset",
+    "clearSearch": "Clear search",
     "concepts": "Concepts",
     "startDateAdjustment": "Start Date Adjustment",
     "startWith": "Start With",
@@ -256,6 +259,7 @@
     "browserWarning": "Note that only Chrome browser newer than v.63 is officially supported",
     "initFailed": "Application initialization failed",
     "required": "This field is required",
+    "nameRequired": "Name is required",
     "lengthValidation": "Name must be between 1 and 255 characters",
     "invalid": "Invalid",
     "valid": "Valid",
@@ -1684,6 +1688,7 @@
       "detailsEyebrow": "DETAILS"
     },
     "inclusionCriteriaPanel": {
+      "add": "Add inclusion rule",
       "ruleIncomplete": "Inclusion rule incomplete.",
       "livePreviewFailed": "Live preview failed."
     },
@@ -3440,7 +3445,8 @@
       "saveFirstTitle": "Save the analysis first",
       "selectToHint": "Use the target/outcome chips in the toolbar to view a rate.",
       "selectToTitle": "Pick a target and outcome",
-      "treemap": "Treemap"
+      "treemap": "Treemap",
+      "table": "Table"
     }
   },
   "profiles": {
@@ -4149,7 +4155,7 @@
   "inclusionRail": {
     "groups": "{count} groups",
     "criteria": "{count} criteria",
-    "add": "Add inclusion rule",
+    "add": "Add rule",
     "selectRule": "Select a rule on the left to edit it.",
     "descriptionPlaceholder": "Add a description for this inclusion rule…",
     "addCriteriaGroup": "Add criteria group",
@@ -6308,12 +6314,13 @@
     "cacheStale": "Stale",
     "cacheBuilding": "Building",
     "cacheError": "Error",
-    "cacheNotBuilt": "Not built",
+    "cacheNotBuilt": "Not Built",
     "selectDataset": "Select dataset",
     "patients": "patients",
     "selectDatasetPrompt": "Select a dataset to view patient count",
     "staleCacheWarning": "Cache may be stale",
     "lastBuilt": "Last built",
+    "built": "Built",
     "addCriteria": "Add criteria to see patient count",
     "cacheFilesTitle": "Cache files on disk",
     "cacheFilesDescription": "Every cache on disk, including caches whose dataset has been deleted. Those are no longer reachable from the dataset list and can be reclaimed here.",
@@ -6346,7 +6353,7 @@
   },
   "pathway": {
     "results": {
-      "tabular": "Table",
+      "tabular": "Tabular",
       "allPathways": "All Pathways",
       "countsByRank": "Counts by Rank",
       "eventCohortCounts": "Event Cohort Counts",
