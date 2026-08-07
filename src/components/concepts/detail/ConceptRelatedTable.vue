@@ -138,4 +138,13 @@ const headers = computed(() => [
   text-decoration: none;
 }
 .concept-link:hover { text-decoration: underline; }
+
+:global(.v-theme--dark) .card-title,
+:global(.v-theme--dark) .muted,
+:global(.v-theme--dark) .empty {
+  color: var(--atlas-color-on-surface-variant);
+}
+:global(.v-theme--dark) .card-title {
+  border-bottom-color: var(--atlas-color-outline);
+}
 </style>

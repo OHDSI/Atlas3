@@ -71,4 +71,8 @@ const { tv } = useI18n()
   cursor: not-allowed;
   opacity: 0.5;
 }
+
+:global(.v-theme--dark) .color-dot {
+  border-color: var(--atlas-color-outline-strong);
+}
 </style>

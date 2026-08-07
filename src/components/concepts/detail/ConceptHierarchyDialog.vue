@@ -570,7 +570,7 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
   border-bottom: 1px solid rgba(0, 0, 0, 0.15);
   padding: 6px 8px;
 }
-.hierarchy-table :deep(td) { border-bottom: 1px solid rgba(0, 0, 0, 0.06); padding: 5px 8px; }
+.hierarchy-table :deep(td) { border-bottom: 1px solid var(--atlas-color-outline-variant); padding: 5px 8px; }
 .hierarchy-table :deep(td.num) { text-align: right; font-variant-numeric: tabular-nums; }
 .section-row td { font-size: 11px; text-transform: uppercase; opacity: 0.6; }
 .ancestors-toggle {
@@ -589,5 +589,21 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
 .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
 .view-toggle button { border: 1px solid rgba(0, 0, 0, 0.25); background: none; padding: 2px 10px; font-size: 12px; }
 .view-toggle button.on { background: rgba(25, 118, 210, 0.18); font-weight: 600; }
-.dialog-footer { border-top: 1px solid rgba(0, 0, 0, 0.12); padding-top: 10px; margin-top: 10px; }
+.dialog-footer { border-top: 1px solid var(--atlas-color-outline); padding-top: 10px; margin-top: 10px; }
+
+:global(.v-theme--dark) .hierarchy-table th {
+  border-bottom-color: var(--atlas-color-outline);
+}
+:global(.v-theme--dark) .ancestors-toggle {
+  color: var(--atlas-color-primary-text);
+}
+:global(.v-theme--dark) .anchor {
+  background: color-mix(in srgb, var(--atlas-color-primary) 16%, transparent);
+}
+:global(.v-theme--dark) .view-toggle button {
+  border-color: var(--atlas-color-outline-strong);
+}
+:global(.v-theme--dark) .view-toggle button.on {
+  background: color-mix(in srgb, var(--atlas-color-primary) 24%, transparent);
+}
 </style>

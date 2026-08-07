@@ -70,4 +70,12 @@ defineProps<{ concept: Concept }>()
     grid-template-columns: 140px 1fr;
   }
 }
+
+:global(.v-theme--dark) .card-title,
+:global(.v-theme--dark) .kv dt {
+  color: var(--atlas-color-on-surface-variant);
+}
+:global(.v-theme--dark) .card-title {
+  border-bottom-color: var(--atlas-color-outline);
+}
 </style>

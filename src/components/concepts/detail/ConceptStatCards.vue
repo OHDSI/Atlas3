@@ -96,4 +96,9 @@ watch(() => [props.conceptId, props.primarySourceKey], ensureCounts)
   font-variant-numeric: tabular-nums;
   margin-top: 4px;
 }
+
+:global(.v-theme--dark) .stat-source,
+:global(.v-theme--dark) .stat-sub {
+  color: var(--atlas-color-on-surface-variant);
+}
 </style>

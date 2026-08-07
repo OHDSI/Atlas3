@@ -201,4 +201,17 @@ function apply(conceptId: number, color: HighlightColor) {
   background: rgb(var(--v-theme-surface-variant));
   color: rgb(var(--v-theme-on-surface-variant));
 }
+
+:global(.v-theme--dark) .color-dot {
+  border-color: var(--atlas-color-outline-strong);
+}
+:global(.v-theme--dark) .color-dot:hover {
+  box-shadow: 0 0 0 2px var(--atlas-color-outline-strong);
+}
+:global(.v-theme--dark) .swatch {
+  border-color: var(--atlas-color-outline-strong);
+}
+:global(.v-theme--dark) .swatch:hover {
+  box-shadow: 0 0 0 2px var(--atlas-color-outline-strong);
+}
 </style>

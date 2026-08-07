@@ -179,4 +179,18 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
 }
 .node-link:hover { text-decoration: underline; }
 .empty { color: rgba(0, 0, 0, 0.6); font-size: 12px; margin: 0; }
+
+:global(.v-theme--dark) .card-title,
+:global(.v-theme--dark) .node.faded,
+:global(.v-theme--dark) .node.muted,
+:global(.v-theme--dark) .chev,
+:global(.v-theme--dark) .empty {
+  color: var(--atlas-color-on-surface-variant);
+}
+:global(.v-theme--dark) .card-title {
+  border-bottom-color: var(--atlas-color-outline);
+}
+:global(.v-theme--dark) .node.current {
+  background: color-mix(in srgb, var(--atlas-color-primary) 16%, transparent);
+}
 </style>
