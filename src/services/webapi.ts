@@ -18,7 +18,6 @@ import {
 import {
   ConceptSearchResponseSchema,
   type Concept,
-  type ConceptSet,
 } from '@/models/concept-set.types'
 import {
   type AtlasCohortDefinition,
@@ -358,82 +357,6 @@ export async function getCohortGenerationInfo(
         : `Failed to fetch cohort generation info for ${cohortId}`
     logger.error('WebAPI', `Failed to fetch cohort generation info for ${cohortId}`, error)
     return failure(message)
-  }
-}
-
-/**
- * Get concept set by ID
- * Endpoint: GET /conceptset/{id}
- */
-export async function getConceptSet(id: number | string): Promise<ConceptSet | null> {
-  try {
-    return await fetchJSON<ConceptSet>(`/conceptset/${id}`)
-  } catch (error) {
-    logger.error('WebAPI', `Failed to fetch concept set ${id}`, error)
-    return null
-  }
-}
-
-/**
- * Get all concept sets
- * Endpoint: GET /conceptset
- */
-export async function getAllConceptSets(): Promise<ApiResult<ConceptSet[]>> {
-  try {
-    const data = await fetchJSON<ConceptSet[]>('/conceptset')
-    return success(data)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch concept sets'
-    logger.error('WebAPI', 'Failed to fetch concept sets', error)
-    return failure(message)
-  }
-}
-
-/**
- * Create new concept set
- * Endpoint: POST /conceptset
- */
-export async function createConceptSet(conceptSet: ConceptSet): Promise<ConceptSet | null> {
-  try {
-    return await fetchJSON<ConceptSet>('/conceptset', {
-      method: 'POST',
-      body: JSON.stringify(conceptSet),
-    })
-  } catch (error) {
-    logger.error('WebAPI', 'Failed to create concept set', error)
-    return null
-  }
-}
-
-/**
- * Update existing concept set
- * Endpoint: PUT /conceptset/{id}
- */
-export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptSet | null> {
-  try {
-    return await fetchJSON<ConceptSet>(`/conceptset/${conceptSet.id}`, {
-      method: 'PUT',
-      body: JSON.stringify(conceptSet),
-    })
-  } catch (error) {
-    logger.error('WebAPI', `Failed to update concept set ${conceptSet.id}`, error)
-    return null
-  }
-}
-
-/**
- * Delete concept set
- * Endpoint: DELETE /conceptset/{id}
- */
-export async function deleteConceptSet(id: number | string): Promise<boolean> {
-  try {
-    await fetchJSON(`/conceptset/${id}`, {
-      method: 'DELETE',
-    })
-    return true
-  } catch (error) {
-    logger.error('WebAPI', `Failed to delete concept set ${id}`, error)
-    return false
   }
 }
 
