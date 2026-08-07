@@ -1179,4 +1179,42 @@ describe('Cohort Store', () => {
       expect(store.saveRequest).toBe(before)
     })
   })
+
+  describe('savePreviewAsCurrent', () => {
+    it('persists through the editor save path and reports the server result', async () => {
+      const store = useCohortStore()
+      store.setCohort({ id: 7, name: 'Restored', entryEvents: [] } as never)
+      store.previewVersion = { version: 3 } as never
+
+      const pending = store.savePreviewAsCurrent()
+      await Promise.resolve()
+
+      // The editor answers the signal, as CohortBuilder's watcher does.
+      store.notifySaved({ id: 7, name: 'Restored' })
+
+      expect(await pending).toBe(true)
+      expect(store.previewVersion).toBeNull()
+    })
+
+    it('reports failure when no editor answers the save signal', async () => {
+      vi.useFakeTimers()
+      const store = useCohortStore()
+      store.setCohort({ id: 7, name: 'Restored', entryEvents: [] } as never)
+      store.previewVersion = { version: 3 } as never
+
+      const pending = store.savePreviewAsCurrent()
+      await vi.advanceTimersByTimeAsync(8000)
+
+      expect(await pending).toBe(false)
+      expect(store.previewVersion).not.toBeNull()
+      vi.useRealTimers()
+    })
+
+    it('refuses to save when not in preview mode', async () => {
+      const store = useCohortStore()
+      store.setCohort({ id: 7, name: 'Restored', entryEvents: [] } as never)
+
+      expect(await store.savePreviewAsCurrent()).toBe(false)
+    })
+  })
 })

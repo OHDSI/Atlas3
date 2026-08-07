@@ -614,16 +614,16 @@ export const useCohortStore = defineStore('cohort', () => {
     }
 
     try {
-      // Save the current (historical) data as new version
-      const success = await saveCohort()
+      const saved = await requestSave()
 
-      if (success) {
-        // Clear preview state after successful save
-        previewVersion.value = null
-        logger.debug('CohortStore', 'Preview saved as current version')
+      if (!saved?.id) {
+        logger.error('CohortStore', 'Preview save was not confirmed by the editor')
+        return false
       }
 
-      return success
+      previewVersion.value = null
+      logger.debug('CohortStore', 'Preview saved as current version')
+      return true
     } catch (error) {
       logger.error('CohortStore', 'Failed to save preview as current', error)
       return false
