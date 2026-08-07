@@ -228,6 +228,12 @@ export const useCohortStore = defineStore('cohort', () => {
   let saveTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   function requestSave(opts: { name?: string; description?: string } = {}): Promise<{ id?: number; name?: string }> {
+    // Clear any timer from a still-in-flight prior request so its timeout
+    // can't fire later and resolve *this* request's promise instead.
+    if (saveTimeoutId) {
+      clearTimeout(saveTimeoutId)
+      saveTimeoutId = null
+    }
     return new Promise(resolve => {
       saveOptions.value = opts
       saveResolver = resolve
