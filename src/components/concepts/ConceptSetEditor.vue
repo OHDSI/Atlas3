@@ -104,6 +104,7 @@
               variant="ghost"
               tone="danger"
               :disabled="loading || !canDelete"
+              data-testid="conceptset-delete"
               @click="onDelete"
             >
               {{ t('common.delete', 'Delete') }}

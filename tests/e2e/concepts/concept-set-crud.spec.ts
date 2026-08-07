@@ -152,7 +152,7 @@ test.describe('Concept Set CRUD Operations', () => {
 
     // Click Delete button (only present in edit mode after backend loads the concept set;
     // skip gracefully when the backend isn't available in CI)
-    const deleteButton = page.getByRole('button', { name: /delete/i })
+    const deleteButton = page.getByTestId('conceptset-delete')
     if (await deleteButton.count() === 0) {
       expect(true).toBe(true)
       return
