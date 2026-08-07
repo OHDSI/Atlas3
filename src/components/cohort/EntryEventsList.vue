@@ -240,9 +240,9 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
    of the inclusion-rule vertical match-type label (GroupCriteriaUI's
    .vertical-label / ::before accent stripe) so the two read as the same family,
    but neutral and not clickable — entry events are always an implicit OR, so
-   there's nothing to edit. Greys are hard-coded (not theme tokens) for the same
-   reason GroupCriteriaUI hard-codes its navy: this app's --v-theme-*-variant
-   tokens resolve to 0,0,0 and can't express a muted grey. */
+   there's nothing to edit. #f6f7f9 is byte-identical to --atlas-color-surface-
+   variant so it's tokenized directly; #d4d9e0/#aab2bf/#79828f have no exact
+   token match, so light stays literal and dark is overridden below. */
 .entry-any-label {
   position: relative;
   width: 30px;
@@ -251,7 +251,7 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   justify-content: center;
   border: 1px solid #d4d9e0;
   border-radius: 0 0 0 8px;
-  background: #f6f7f9;
+  background: var(--atlas-color-surface-variant);
   user-select: none;
   cursor: default;
 }
@@ -281,6 +281,16 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   text-align: center;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   color: #79828f;
+}
+
+:global(.v-theme--dark) .entry-any-label {
+  border-color: var(--atlas-color-outline-strong);
+}
+:global(.v-theme--dark) .entry-any-label::before {
+  background: var(--atlas-color-outline-strong);
+}
+:global(.v-theme--dark) .entry-any-label__text {
+  color: var(--atlas-color-on-surface-variant);
 }
 
 .add-filter-wrapper {

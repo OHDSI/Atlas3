@@ -865,4 +865,14 @@ function validatePeriodDates(index: number) {
 .attribute-actions .v-btn:hover {
   background: #d8e6f5;
 }
+
+/* #ebf2fa/#d8e6f5 have no exact-match token; light stays byte-identical,
+ * dark uses a primary tint over the dark surface. */
+:global(.v-theme--dark) .attribute-title,
+:global(.v-theme--dark) .attribute-actions {
+  background: color-mix(in srgb, var(--atlas-color-primary) 14%, var(--atlas-color-surface));
+}
+:global(.v-theme--dark) .attribute-actions .v-btn:hover {
+  background: color-mix(in srgb, var(--atlas-color-primary) 24%, var(--atlas-color-surface));
+}
 </style>

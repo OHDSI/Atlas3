@@ -299,7 +299,7 @@ function openCohort(cohort: CohortDefinitionSummary) {
 }
 .cohort-table__name {
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--atlas-color-on-surface);
 }
 .cohort-table__description {
   font-size: 12px;
@@ -369,5 +369,13 @@ function openCohort(cohort: CohortDefinitionSummary) {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+
+/* rgba(0,0,0,.54)/.6 have no exact-match token; light stays byte-identical,
+ * dark uses the muted-text token — otherwise these render at ~1.1:1 on the
+ * dark surface. */
+:global(.v-theme--dark) .cohort-table__col-id,
+:global(.v-theme--dark) .cohort-table__description {
+  color: var(--atlas-color-on-surface-variant);
 }
 </style>

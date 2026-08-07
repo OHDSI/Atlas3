@@ -140,7 +140,7 @@ function handleRemoveCensoringEvent(_index: number) {
 
 <style scoped>
 .exit-criteria-panel {
-  background: white;
+  background: var(--atlas-color-surface);
 }
 
 .panel-content {

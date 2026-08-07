@@ -145,7 +145,7 @@ onBeforeUnmount(() => {
 .crd-scrim {
   position: fixed;
   inset: 0;
-  background: rgba(31, 66, 90, 0.45);
+  background: color-mix(in srgb, var(--atlas-color-scrim) 45%, transparent);
   backdrop-filter: blur(4px);
   z-index: 1009;
   transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);

@@ -213,7 +213,7 @@ describe('CohortMetadata', () => {
 
       const chips = wrapper.findAllComponents({ name: 'VChip' })
       const testChip = chips.find(chip => chip.text() === 'Test Tag')
-      expect(testChip?.props('color')).toBe('#1f425a')
+      expect(testChip?.props('color')).toBe('var(--atlas-color-primary)')
     })
 
     it('should not show tags list when no tags', () => {

@@ -210,7 +210,7 @@
                 severity="info"
                 variant="outlined"
               >
-                <div style="color: #666">
+                <div class="no-events-text">
                   {{ t('components.criteriaGroup.noEventsInGroup', 'No events in group. Add events to build criteria logic.').value }}
                 </div>
               </AtlasAlert>
@@ -539,7 +539,7 @@ defineExpose({
 
 /* ALL - Navy */
 .vertical-label-container:has(.match-type-label[data-type='ALL']) {
-  border: 1px solid #1f425a;
+  border: 1px solid var(--atlas-color-primary);
 }
 .vertical-label-container:has(.match-type-label[data-type='ALL'])::before {
   content: '';
@@ -548,11 +548,11 @@ defineExpose({
   top: 0;
   bottom: 0;
   width: 30%;
-  background: #1f425a;
+  background: var(--atlas-color-primary);
   border-radius: 0 0 0 6px;
 }
 .match-type-label[data-type='ALL'] {
-  color: #1f425a;
+  color: var(--atlas-color-primary);
 }
 
 /* ANY - Orange */
@@ -626,7 +626,7 @@ defineExpose({
  * (Vuetify's tonal variant derives text and tint from currentColor).
  * !important outranks the .text-primary utility from color="primary". */
 .match-chip--all.v-btn--variant-tonal {
-  color: #1f425a !important;
+  color: var(--atlas-color-primary) !important;
 }
 .match-chip--any.v-btn--variant-tonal {
   color: var(--atlas-color-accent) !important;
@@ -636,5 +636,43 @@ defineExpose({
 }
 .match-chip--at_most.v-btn--variant-tonal {
   color: #336b91 !important;
+}
+
+.no-events-text {
+  color: #666;
+}
+
+/* AT_LEAST/AT_MOST hues have no exact-match token; light stays
+ * byte-identical, dark is remapped onto semantic tokens. AT_LEAST -> info
+ * (distinct blue from primary/ALL). AT_MOST -> a primary/info blend so it
+ * reads as a third, distinguishable blue rather than colliding with ALL. */
+:global(.v-theme--dark) .vertical-label-container:has(.match-type-label[data-type='AT_LEAST']) {
+  border-color: var(--atlas-color-info);
+}
+:global(.v-theme--dark) .vertical-label-container:has(.match-type-label[data-type='AT_LEAST'])::before {
+  background: var(--atlas-color-info);
+}
+:global(.v-theme--dark) .match-type-label[data-type='AT_LEAST'] {
+  color: var(--atlas-color-info-text);
+}
+:global(.v-theme--dark) .match-chip--at_least.v-btn--variant-tonal {
+  color: var(--atlas-color-info-text) !important;
+}
+
+:global(.v-theme--dark) .vertical-label-container:has(.match-type-label[data-type='AT_MOST']) {
+  border-color: color-mix(in srgb, var(--atlas-color-primary) 60%, var(--atlas-color-info) 40%);
+}
+:global(.v-theme--dark) .vertical-label-container:has(.match-type-label[data-type='AT_MOST'])::before {
+  background: color-mix(in srgb, var(--atlas-color-primary) 60%, var(--atlas-color-info) 40%);
+}
+:global(.v-theme--dark) .match-type-label[data-type='AT_MOST'] {
+  color: color-mix(in srgb, var(--atlas-color-primary) 60%, var(--atlas-color-info) 40%);
+}
+:global(.v-theme--dark) .match-chip--at_most.v-btn--variant-tonal {
+  color: color-mix(in srgb, var(--atlas-color-primary) 60%, var(--atlas-color-info) 40%) !important;
+}
+
+:global(.v-theme--dark) .no-events-text {
+  color: var(--atlas-color-on-surface-variant);
 }
 </style>

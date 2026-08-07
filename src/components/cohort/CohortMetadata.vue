@@ -43,7 +43,7 @@
           <AtlasChip
             v-for="(tag, index) in localTags"
             :key="index"
-            :color="tag.color || '#1f425a'"
+            :color="tag.color || 'var(--atlas-color-primary)'"
             closable
             class="metadata-tags__chip"
             @close="removeTag(index)"
@@ -234,5 +234,13 @@ const rules = {
 
 .metadata-tags__input {
   max-width: 100%;
+}
+
+/* #666 has no exact-match token; light stays byte-identical, dark uses the
+ * muted-text token. The colorSwatches palette and the default-tag-color
+ * sentinel above are a deliberate fixed picker palette, not theme colour —
+ * left as literals by design. */
+:global(.v-theme--dark) .metadata-tags__label {
+  color: var(--atlas-color-on-surface-variant);
 }
 </style>

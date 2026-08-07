@@ -763,6 +763,60 @@ function addAttribute(attributeKey: string, attributeType: string) {
   color: #336b91 !important;
 }
 
+/* The cardinality hues (#69aed5/#2e7d32/#336b91 and their tints) have no
+ * exact-match token, so light stays byte-identical and dark is remapped
+ * onto the closest semantic tokens: AT_LEAST -> info, EXACTLY -> success,
+ * AT_MOST -> primary. */
+:global(.v-theme--dark) .cardinality-at_least {
+  border-right-color: var(--atlas-color-info);
+  background: linear-gradient(
+    to right,
+    var(--atlas-color-info) 30%,
+    color-mix(in srgb, var(--atlas-color-info) 14%, var(--atlas-color-surface)) 30%
+  );
+}
+:global(.v-theme--dark) .cardinality-at_least .cardinality-label {
+  color: var(--atlas-color-info-text);
+}
+
+:global(.v-theme--dark) .cardinality-exactly {
+  border-right-color: var(--atlas-color-success);
+  background: linear-gradient(
+    to right,
+    var(--atlas-color-success) 30%,
+    color-mix(in srgb, var(--atlas-color-success) 14%, var(--atlas-color-surface)) 30%
+  );
+}
+:global(.v-theme--dark) .cardinality-exactly .cardinality-label {
+  color: var(--atlas-color-success-text);
+}
+
+:global(.v-theme--dark) .cardinality-at_most {
+  border-right-color: var(--atlas-color-primary);
+  background: linear-gradient(
+    to right,
+    var(--atlas-color-primary) 30%,
+    color-mix(in srgb, var(--atlas-color-primary) 14%, var(--atlas-color-surface)) 30%
+  );
+}
+:global(.v-theme--dark) .cardinality-at_most .cardinality-label {
+  color: var(--atlas-color-primary-text);
+}
+
+:global(.v-theme--dark) .cardinality-chip--at_least.v-btn--variant-tonal {
+  color: var(--atlas-color-info-text) !important;
+}
+:global(.v-theme--dark) .cardinality-chip--exactly.v-btn--variant-tonal {
+  color: var(--atlas-color-success-text) !important;
+}
+:global(.v-theme--dark) .cardinality-chip--at_most.v-btn--variant-tonal {
+  color: var(--atlas-color-primary-text) !important;
+}
+
+:global(.v-theme--dark) .source-concept-row__title {
+  background: color-mix(in srgb, var(--atlas-color-primary) 14%, var(--atlas-color-surface));
+}
+
 .source-concept-row {
   display: flex;
   border-radius: 6px;

@@ -303,4 +303,10 @@ function handleCardClick() {
 .cohort-card:focus-within .cohort-card__action-btn {
   opacity: 1;
 }
+
+/* rgba(0,0,0,.74) has no exact-match token; light stays byte-identical,
+ * dark uses the body-text token. */
+:global(.v-theme--dark) .cohort-card__meta-row dd {
+  color: var(--atlas-color-on-surface);
+}
 </style>
