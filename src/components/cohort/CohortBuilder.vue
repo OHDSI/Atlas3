@@ -2527,12 +2527,12 @@ defineExpose({
 }
 
 .cohort-builder__breadcrumb-item--link:hover {
-  color: var(--atlas-color-primary);
+  color: #1f425a;
   text-decoration: underline;
 }
 
 .cohort-builder__breadcrumb-item--active {
-  color: var(--atlas-color-primary);
+  color: #1f425a;
   font-weight: 500;
 }
 
@@ -2598,8 +2598,8 @@ defineExpose({
   font-size: 16px;
   font-weight: 500;
   color: #333;
-  border: 1px solid var(--atlas-color-outline);
-  background: var(--atlas-color-surface);
+  border: 1px solid #e0e0e0;
+  background: white;
   padding: 6px 12px;
   border-radius: 4px;
   transition: all 0.2s;
@@ -2620,13 +2620,13 @@ defineExpose({
 
 .cohort-builder__name-input:hover,
 .cohort-builder__description-input:hover {
-  border-color: var(--atlas-color-primary);
+  border-color: #1f425a;
 }
 
 .cohort-builder__name-input:focus,
 .cohort-builder__description-input:focus {
-  border-color: var(--atlas-color-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--atlas-color-primary) 10%, transparent);
+  border-color: #1f425a;
+  box-shadow: 0 0 0 2px rgba(31, 66, 90, 0.1);
 }
 
 .cohort-builder__patient-count {
@@ -2963,7 +2963,7 @@ defineExpose({
 /* Tabs */
 .cohort-builder__tabs {
   margin-bottom: 24px;
-  border-bottom: 1px solid var(--atlas-color-outline);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .cohort-builder__tabs-window {
@@ -2993,28 +2993,6 @@ defineExpose({
 .cohort-builder__preview-banner-icon {
   color: rgb(var(--v-theme-primary));
   opacity: 0.8;
-}
-
-/* The literals above (#666/#999/#333) have no exact-match token, so light
- * stays byte-identical and only dark is overridden here. */
-:global(.v-theme--dark) .cohort-builder__breadcrumb,
-:global(.v-theme--dark) .cohort-builder__breadcrumb-item,
-:global(.v-theme--dark) .cohort-builder__breadcrumb-edit-icon,
-:global(.v-theme--dark) .cohort-builder__label,
-:global(.v-theme--dark) .obs-period-label,
-:global(.v-theme--dark) .obs-period-text {
-  color: var(--atlas-color-on-surface-variant);
-}
-
-:global(.v-theme--dark) .cohort-builder__breadcrumb-separator {
-  color: var(--atlas-color-on-surface-variant);
-}
-
-:global(.v-theme--dark) .cohort-builder__name-display,
-:global(.v-theme--dark) .cohort-builder__name-input,
-:global(.v-theme--dark) .cohort-builder__description-input,
-:global(.v-theme--dark) .cohort-builder__count {
-  color: var(--atlas-color-on-surface);
 }
 
 </style>
