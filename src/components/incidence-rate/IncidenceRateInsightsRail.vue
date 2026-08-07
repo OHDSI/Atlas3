@@ -79,7 +79,7 @@
             cy="40"
             r="30"
             fill="none"
-            stroke="rgba(var(--v-theme-on-surface), 0.08)"
+            class="ir-insights__donut-track"
             stroke-width="10"
           />
           <circle
@@ -87,7 +87,7 @@
             cy="40"
             r="30"
             fill="none"
-            stroke="rgb(var(--v-theme-orange))"
+            class="ir-insights__donut-value"
             stroke-width="10"
             :stroke-dasharray="`${casesArc} ${188.5 - casesArc}`"
             stroke-dashoffset="47.1"
@@ -211,6 +211,8 @@ function rate(r: number) {
 .k-hint { font-size: 10px; color: rgba(var(--v-theme-on-surface), 0.55); margin-top: 1px; }
 .ir-insights__donut-wrap { display: flex; justify-content: center; padding: 4px 0; }
 .ir-insights__donut { width: 80px; height: 80px; }
+.ir-insights__donut-track { stroke: rgba(var(--v-theme-on-surface), 0.08); }
+.ir-insights__donut-value { stroke: rgb(var(--v-theme-orange)); }
 .ir-insights__donut-label { font-size: 12px; font-weight: 600; fill: rgb(var(--v-theme-on-surface)); }
 .ir-insights__strata { width: 100%; border-collapse: collapse; font-size: 10px; }
 .ir-insights__strata th, .ir-insights__strata td {
