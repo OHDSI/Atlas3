@@ -70,7 +70,7 @@ import { useVersions } from '@/composables/useVersions'
 import { copyVersion as copyCohortVersion } from '@/services/cohort-definition-versions.service'
 import { copyVersion as copyConceptSetVersion } from '@/services/concept-set-versions.service'
 import { copyPathwayVersion } from '@/services/pathway-versions.service'
-import { ASSET_ROUTE_SEGMENT } from './types'
+import { ASSET_ROUTE_SEGMENT, ASSET_DETAIL_ROUTE_SEGMENT } from './types'
 import type { VersionsConfig, VersionsTableItem, Version } from './types'
 
 // Props
@@ -186,12 +186,18 @@ async function handleCopy(versionNumber: number): Promise<void> {
       }
     }
 
-    // Navigate to new asset (T058)
-    setTimeout(() => {
-      router.push({
-        path: `/${ASSET_ROUTE_SEGMENT[props.config.assetType]}/${newAsset.id}`,
-      })
-    }, 1000)
+    // Navigate to new asset (T058). Concept sets have no id-addressable
+    // route to navigate to (see ASSET_DETAIL_ROUTE_SEGMENT) - the copy
+    // still succeeded (toast above), so just skip the navigation for it
+    // rather than pushing a dead link.
+    const detailSegment = ASSET_DETAIL_ROUTE_SEGMENT[props.config.assetType]
+    if (detailSegment) {
+      setTimeout(() => {
+        router.push({
+          path: `/${detailSegment}/${newAsset.id}`,
+        })
+      }, 1000)
+    }
   } catch (error) {
     logger.error('VersionsTabContent', 'Failed to copy version', error)
     showSnackbar(tv('versions.copyError'), 'error')
