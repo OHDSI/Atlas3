@@ -673,7 +673,7 @@ describe('Cohort Store', () => {
       await expect(store.loadVersionPreview(1)).rejects.toThrow('No current cohort ID')
     })
 
-    it('loadVersionPreview sets previewVersion and replaces cohort data', async () => {
+    it('loadVersionPreview sets previewVersion and signals the editor to reload that version', async () => {
       const store = useCohortStore()
       store.setCohort(baseCohort)
 
@@ -685,17 +685,23 @@ describe('Cohort Store', () => {
         comment: null,
         archived: false,
       }
-      const historicalCohort = { ...baseCohort, name: 'Historical Cohort' }
+      // entityDTO is the raw Atlas-shaped DTO (id/name/description/expression),
+      // not an internal CohortDefinition — the store no longer touches it
+      // directly; the mounted editor fetches + converts + resyncs via the
+      // reloadRequest/reloadVersion signal below.
       vi.mocked(mockGetVersion).mockResolvedValueOnce({
         versionDTO,
-        entityDTO: historicalCohort,
+        entityDTO: { id: 10, name: 'Historical Cohort', description: '', expression: '{}' },
       })
+
+      const before = store.reloadRequest
 
       await store.loadVersionPreview(2)
 
       expect(store.previewVersion).toEqual(versionDTO)
-      expect(store.currentCohort?.name).toBe('Historical Cohort')
-      expect(store.isDirty).toBe(false)
+      expect(store.reloadVersion).toBe(2)
+      expect(store.reloadRequest).toBe(before + 1)
+      expect(store.currentCohort?.name).toBe('Test Cohort')
     })
 
     it('loadVersionPreview rethrows on service error', async () => {

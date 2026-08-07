@@ -13,7 +13,7 @@ import type {
   ObservationPeriod,
 } from '@/models/cohort.types'
 import type { AgentProposal } from '@/models/agent.types'
-import type { Version, VersionedAsset } from '@/components/versions/types'
+import type { Version } from '@/components/versions/types'
 import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
 import { logger } from '@/utils/logger'
 
@@ -215,12 +215,17 @@ export const useCohortStore = defineStore('cohort', () => {
   // save) rather than re-implementing the editor's concept-set assembly.
   const saveRequest = ref(0)
   const newCohortSignal = ref(0)
+  // Bumped to ask the mounted editor to (re)fetch and resync. `reloadVersion`
+  // carries the target: null means "current version" (loadCohort), a number
+  // means that specific historical version (used entering preview).
   const reloadRequest = ref(0)
+  const reloadVersion = ref<number | null>(null)
   // Name/description the caller wants applied to the cohort before it is saved.
   // The mounted editor reads this when it answers a save request — a cohort
   // built programmatically otherwise has no name and the editor refuses to save.
   const saveOptions = ref<{ name?: string; description?: string }>({})
   let saveResolver: ((r: { id?: number; name?: string }) => void) | null = null
+  let saveTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   function requestSave(opts: { name?: string; description?: string } = {}): Promise<{ id?: number; name?: string }> {
     return new Promise(resolve => {
@@ -228,11 +233,19 @@ export const useCohortStore = defineStore('cohort', () => {
       saveResolver = resolve
       saveRequest.value++
       // Never hang the caller if no editor is mounted to answer the signal.
-      setTimeout(() => notifySaved(), 8000)
+      saveTimeoutId = setTimeout(() => notifySaved(), 8000)
     })
   }
 
   function notifySaved(result: { id?: number; name?: string } = {}) {
+    // Clear the fallback timer so a save that resolves early can't leave an
+    // orphaned timeout that later fires and steals the *next* request's
+    // resolver (which would report that later save as failed/empty and drop
+    // its real result, since saveResolver would already be null by then).
+    if (saveTimeoutId) {
+      clearTimeout(saveTimeoutId)
+      saveTimeoutId = null
+    }
     const resolve = saveResolver
     saveResolver = null
     resolve?.(result)
@@ -370,7 +383,16 @@ export const useCohortStore = defineStore('cohort', () => {
 
   /**
    * Load a specific version for preview
-   * Fetches the historical version data and sets it as current with preview flag
+   * Fetches the version metadata and asks the mounted editor to fetch,
+   * convert, and resync from that version's Atlas-shaped data.
+   *
+   * `getVersionAPI`'s `entityDTO` is the raw Atlas-shaped DTO the WebAPI
+   * returns (id/name/description/expression-as-JSON-string), not an internal
+   * `CohortDefinition` — it must go through the same convertAtlasToInternal
+   * path `loadCohort` uses, which only the mounted `CohortBuilder` knows how
+   * to run and resync into its ~12 local refs. So this only fetches the
+   * version metadata and signals; it never assigns entityDTO to
+   * `currentCohort` directly.
    * @param versionNumber - The version number to load
    */
   async function loadVersionPreview(versionNumber: number): Promise<void> {
@@ -381,21 +403,16 @@ export const useCohortStore = defineStore('cohort', () => {
 
     try {
       const cohortId = currentCohort.value.id
-      const versionedAsset: VersionedAsset<CohortDefinition> = await getVersionAPI(
-        cohortId,
-        versionNumber
-      )
+      const versionedAsset = await getVersionAPI(cohortId, versionNumber)
 
       // Set preview version metadata
       previewVersion.value = versionedAsset.versionDTO
 
-      // Replace current cohort with historical data
-      currentCohort.value = versionedAsset.entityDTO
+      // Ask the mounted editor to fetch + convert + resync this version.
+      reloadVersion.value = versionNumber
+      reloadRequest.value++
 
-      // Mark as clean (read-only mode, no editing)
-      isDirty.value = false
-
-      logger.debug('CohortStore', `Loaded version ${versionNumber} for preview`)
+      logger.debug('CohortStore', `Requested version ${versionNumber} for preview`)
     } catch (error) {
       logger.error('CohortStore', `Failed to load version ${versionNumber}`, error)
       throw error
@@ -411,6 +428,7 @@ export const useCohortStore = defineStore('cohort', () => {
     previewVersion.value = null
 
     if (wasPreviewingId) {
+      reloadVersion.value = null
       reloadRequest.value++
     }
 
@@ -470,6 +488,7 @@ export const useCohortStore = defineStore('cohort', () => {
     saveRequest,
     newCohortSignal,
     reloadRequest,
+    reloadVersion,
     saveOptions,
     // Getters
     hasEntryEvents,

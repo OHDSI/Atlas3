@@ -1599,6 +1599,83 @@ describe('CohortBuilder', () => {
     expect(webapi.getCohortDefinition).not.toHaveBeenCalled()
   })
 
+  // Regression for a Critical: loadVersionPreview used to assign the raw,
+  // Atlas-shaped version DTO (entityDTO) straight into currentCohort. That
+  // DTO has no top-level conceptSets/entryEvents/inclusionRules — only a
+  // JSON-string `expression` — so previewing a version left currentCohort
+  // with conceptSets === undefined. handleSave then read
+  // `currentCohort?.conceptSets || []`, silently dropping every concept set
+  // (and, via the equivalent tags gap, unassigning every tag) on save. The
+  // fix routes version entry through the same reloadRequest/reloadVersion
+  // signal as the exit path, so the mounted editor does the real
+  // fetch-convert-resync instead of the store assigning raw DTO shape.
+  it('entering version preview converts the historical DTO into an internal CohortDefinition with populated conceptSets', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+
+    const versionsService = await import('@/services/cohort-definition-versions.service')
+    const historicalConceptSets = [{ id: 1, name: 'Historical Set' }]
+    vi.mocked(versionsService.getVersion).mockResolvedValue({
+      versionDTO: {
+        version: 3,
+        assetId: 42,
+        createdBy: { id: 1, name: 'U', email: 'u@test.com' },
+        createdDate: '2024-01-01T00:00:00Z',
+        comment: null,
+        archived: false,
+      },
+      // Raw historical DTO: id/name/description/expression only — no
+      // top-level conceptSets, entryEvents, or inclusionRules. Matches the
+      // WebAPI's CohortRawDTO shape confirmed against the WebAPI source.
+      entityDTO: {
+        id: 42,
+        name: 'Historical Name',
+        description: 'Historical description',
+        expression: JSON.stringify({
+          ConceptSets: [],
+          PrimaryCriteria: {
+            CriteriaList: [{ ConditionOccurrence: {} }],
+            ObservationWindow: { PriorDays: 0, PostDays: 0 },
+            PrimaryCriteriaLimit: { Type: 'First' },
+          },
+          QualifiedLimit: { Type: 'First' },
+          ExpressionLimit: { Type: 'First' },
+          InclusionRules: [],
+          CensoringCriteria: [],
+          CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+          CensorWindow: {},
+        }),
+      },
+    } as never)
+
+    const atlasConverter = await import('@/services/atlas-converter')
+    vi.mocked(atlasConverter.convertAtlasToInternal).mockReturnValueOnce({
+      entryEvents: [{ id: 'evt-hist', criteriaType: 'ConditionOccurrence', attributes: [] }],
+      inclusionRules: [],
+      exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' },
+      observationPeriod: { priorDays: 0, postDays: 0 },
+      qualifyingLimit: 'ALL',
+      primaryCriteriaLimit: 'First',
+      inclusionQualifyingLimit: 'ALL',
+      additionalCriteria: undefined,
+      conceptSets: historicalConceptSets,
+    } as never)
+
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    await store.loadVersionPreview(3)
+    await wrapper.vm.$nextTick()
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    expect(versionsService.getVersion).toHaveBeenCalledWith(42, 3)
+    expect(Array.isArray(store.currentCohort?.conceptSets)).toBe(true)
+    expect(store.currentCohort?.conceptSets).toEqual(historicalConceptSets)
+    expect(setup.cohortName).toBe('Historical Name')
+  })
+
   it('handleSave returns an empty object when canSave is false (so the bridge resolves)', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()

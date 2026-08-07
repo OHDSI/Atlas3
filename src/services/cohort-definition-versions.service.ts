@@ -4,6 +4,7 @@
  */
 import type { Version, VersionedAsset, CommentUpdatePayload } from '@/components/versions/types'
 import type { CohortDefinition } from '@/models/cohort.types'
+import type { AtlasCohortDefinitionInput } from '@/models/atlas.types'
 import {
   versionSchema,
   versionArraySchema,
@@ -45,6 +46,11 @@ export async function getVersions(cohortDefinitionId: number): Promise<Version[]
 
 /**
  * Get a specific version of a cohort definition
+ *
+ * `entityDTO` is the raw Atlas-shaped DTO the WebAPI returns for a historical
+ * version (id/name/description/expression-as-JSON-string) — not an internal
+ * `CohortDefinition`. Callers must run it through the same
+ * convertAtlasToInternal path used for the current-version WebAPI fetch.
  * @param cohortDefinitionId Cohort definition ID
  * @param versionNumber Version number to retrieve
  * @returns Versioned asset containing version metadata and historical data
@@ -52,7 +58,7 @@ export async function getVersions(cohortDefinitionId: number): Promise<Version[]
 export async function getVersion(
   cohortDefinitionId: number,
   versionNumber: number
-): Promise<VersionedAsset<CohortDefinition>> {
+): Promise<VersionedAsset<AtlasCohortDefinitionInput>> {
   try {
     const data = await httpGet<unknown>(
       `/cohortdefinition/${cohortDefinitionId}/version/${versionNumber}`
@@ -69,7 +75,7 @@ export async function getVersion(
       throw new Error('Failed to validate version data')
     }
 
-    return parsed.data as VersionedAsset<CohortDefinition>
+    return parsed.data as VersionedAsset<AtlasCohortDefinitionInput>
   } catch (error) {
     logger.error(
       'CohortDefinitionVersionsService',

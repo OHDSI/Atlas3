@@ -211,11 +211,8 @@ async function handleSavePreviewAsCurrent(): Promise<void> {
     const success = await savePreviewAsCurrent()
 
     if (success) {
-      // T066: Clear preview state after successful save
-      // eslint-disable-next-line vue/no-mutating-props
-      props.config.previewVersion.value = null
-
-      // Show success message
+      // The store's own savePreviewAsCurrent already nulls previewVersion on
+      // success, which flows back here through the shared ref.
       showSnackbar(tv('versions.saveSuccess'), 'success')
 
       // T067: Refresh the versions list to show the new version
