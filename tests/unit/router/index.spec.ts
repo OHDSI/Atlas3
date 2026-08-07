@@ -638,3 +638,85 @@ describe('Vue Router', () => {
     })
   })
 })
+
+// Separate top-level describe: the deeplink guard's `deeplinkProcessed` latch
+// is module state that only allows one navigation to see it as unprocessed,
+// and the outer 'Vue Router' describe's beforeEach already burns that shot
+// with its own `router.push('/')`. Each test here resets the module registry
+// and re-imports a fresh router (and the mocked deps it pulls in) so the
+// latch starts unset.
+describe('Deeplink guard (?route= handling)', () => {
+  let mockAuthStore: any
+  let mockUIStore: any
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    mockAuthStore = {
+      isAuthenticated: false,
+      userResolved: true,
+      user: null,
+      setToken: vi.fn(),
+      setUser: vi.fn(),
+      setAuthClient: vi.fn(),
+      setError: vi.fn(),
+      openLoginModal: vi.fn(),
+    }
+    mockUIStore = {
+      configPanelState: { isOpen: false },
+      closeConfigPanel: vi.fn(),
+    }
+
+    localStorage.clear()
+    sessionStorage.clear()
+  })
+
+  async function loadFreshRouter() {
+    vi.resetModules()
+
+    const authStoreModule = await import('@/stores/auth')
+    vi.mocked(authStoreModule.useAuthStore).mockReturnValue(mockAuthStore)
+
+    const uiStoreModule = await import('@/stores/ui')
+    vi.mocked(uiStoreModule.useUIStore).mockReturnValue(mockUIStore)
+
+    const pluginRoutesModule = await import('@/plugins/navigation/PluginRoutes.ts')
+    vi.mocked(pluginRoutesModule.generatePluginRoutes).mockReturnValue([])
+
+    const loggerModule = await import('@/utils/logger')
+
+    const routerModule = await import('@/router/index')
+    return { router: routerModule.default as Router, logger: loggerModule.logger }
+  }
+
+  it('navigates to a real route for ?route=/cohorts', async () => {
+    const { router: freshRouter } = await loadFreshRouter()
+
+    await freshRouter.push('/?route=/cohorts')
+    await freshRouter.isReady()
+
+    expect(freshRouter.currentRoute.value.path).toBe('/cohorts')
+  })
+
+  it('ignores ?route=/definitely/not/a/route and does not navigate there', async () => {
+    const { router: freshRouter, logger: freshLogger } = await loadFreshRouter()
+
+    await freshRouter.push('/?route=/definitely/not/a/route')
+    await freshRouter.isReady()
+
+    expect(freshRouter.currentRoute.value.path).toBe('/')
+    expect(freshLogger.warn).toHaveBeenCalledWith(
+      'Router',
+      'Deeplink: invalid route /definitely/not/a/route, ignoring'
+    )
+  })
+
+  it('normalises ?route=cohorts (no leading slash) and still navigates', async () => {
+    const { router: freshRouter } = await loadFreshRouter()
+
+    await freshRouter.push('/?route=cohorts')
+    await freshRouter.isReady()
+
+    expect(freshRouter.currentRoute.value.path).toBe('/cohorts')
+  })
+})

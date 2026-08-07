@@ -57,7 +57,7 @@ router.beforeEach(
 
       // Validate route exists to prevent open redirect
       const resolved = router.resolve(targetRoute)
-      if (resolved.matched.length === 0) {
+      if (resolved.matched.length === 0 || resolved.name === 'not-found') {
         logger.warn('Router', `Deeplink: invalid route ${targetRoute}, ignoring`)
         next()
         return
