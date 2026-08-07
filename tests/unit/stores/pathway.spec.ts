@@ -319,7 +319,7 @@ describe('pathway store — load/preview lifecycle', () => {
     expect(ok).toBe(true)
     expect(s.isPreviewMode).toBe(true)
     expect(s.currentPathway?.name).toBe('Versioned')
-    s.clearPreviewVersion()
+    await s.clearPreviewVersion()
     expect(s.isPreviewMode).toBe(false)
   })
 

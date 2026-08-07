@@ -243,7 +243,12 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     }
   }
 
-  function clearPreviewVersion() {
+  async function clearPreviewVersion(): Promise<void> {
+    const id = currentIR.value?.id
+    if (id) {
+      await loadIR(id)
+      return
+    }
     previewVersion.value = null
   }
 

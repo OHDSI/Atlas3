@@ -145,7 +145,12 @@ export const usePathwayStore = defineStore('pathway', () => {
     }
   }
 
-  function clearPreviewVersion() {
+  async function clearPreviewVersion(): Promise<void> {
+    const id = currentPathway.value?.id
+    if (id) {
+      await loadPathway(id)
+      return
+    }
     previewVersion.value = null
   }
 

@@ -162,11 +162,25 @@ describe('incidence-rate store', () => {
         tags: [],
       } as never,
     })
+    // clearPreviewVersion now reloads the current entity (id 1), so it needs
+    // a successful getIncidenceRate response the same way loadPathway's does.
+    vi.mocked(webapi.getIncidenceRate).mockResolvedValueOnce({
+      success: true,
+      data: {
+        id: 1, name: 'Current',
+        expression: {
+          ConceptSets: [], targetIds: [], outcomeIds: [],
+          timeAtRisk: { start: { DateField: 'StartDate', Offset: 0 }, end: { DateField: 'EndDate', Offset: 0 } },
+          strata: [],
+        },
+        tags: [],
+      } as never,
+    })
     const s = useIncidenceRateStore()
     await s.loadVersionPreview(1, 2)
     expect(s.isPreviewMode).toBe(true)
     expect(s.currentIR?.name).toBe('V')
-    s.clearPreviewVersion()
+    await s.clearPreviewVersion()
     expect(s.isPreviewMode).toBe(false)
   })
 
