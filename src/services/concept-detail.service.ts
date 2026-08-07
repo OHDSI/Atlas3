@@ -1,12 +1,54 @@
 import { httpClient } from '@/services/http-client'
-import { logger } from '@/utils/logger'
 import {
   RelatedConceptsResponseSchema,
   domainPath,
   type RelatedConcept,
 } from '@/models/concept-detail.types'
-import type { DrilldownReport } from '@/models/report.types'
+import type { DrilldownReport, WebAPIDrilldownRaw } from '@/models/report.types'
 import { mapDrilldownReport } from '@/services/report-mapper'
+
+// `cause` is declared here rather than passed to Error's constructor: the
+// project targets ES2020, whose Error has no cause option.
+export class ConceptDetailServiceError extends Error {
+  readonly cause: unknown
+
+  constructor(message: string, cause: unknown) {
+    super(message)
+    this.name = 'ConceptDetailServiceError'
+    this.cause = cause
+  }
+}
+
+interface RequestContext {
+  endpoint: string
+  sourceKey: string
+  conceptId: number
+}
+
+function serviceError(context: RequestContext, reason: string, cause: unknown) {
+  return new ConceptDetailServiceError(
+    `${context.endpoint} ${reason} for ${context.sourceKey}/${context.conceptId}`,
+    cause
+  )
+}
+
+async function fetchAndParse<T>(
+  path: string,
+  context: RequestContext,
+  parse: (data: unknown) => T
+): Promise<T> {
+  let data: unknown
+  try {
+    data = await httpClient<unknown>(path)
+  } catch (cause) {
+    throw serviceError(context, 'request failed', cause)
+  }
+  try {
+    return parse(data)
+  } catch (cause) {
+    throw serviceError(context, 'response validation failed', cause)
+  }
+}
 
 function mapRelatedFromApi(
   api: ReturnType<typeof RelatedConceptsResponseSchema.parse>[number]
@@ -29,50 +71,36 @@ function mapRelatedFromApi(
   }
 }
 
+function parseRelatedConcepts(data: unknown): RelatedConcept[] {
+  const parsed = RelatedConceptsResponseSchema.safeParse(data)
+  if (!parsed.success) throw parsed.error
+  return parsed.data.map(mapRelatedFromApi)
+}
+
 export async function getConceptRelated(
   sourceKey: string,
   conceptId: number
 ): Promise<RelatedConcept[]> {
-  try {
-    const data = await httpClient<unknown>(
-      `/vocabulary/${sourceKey}/concept/${conceptId}/related`
-    )
-    const parsed = RelatedConceptsResponseSchema.safeParse(data)
-    if (!parsed.success) {
-      logger.error('ConceptDetail', 'getConceptRelated validation failed', parsed.error)
-      return []
-    }
-    return parsed.data.map(mapRelatedFromApi)
-  } catch (error) {
-    logger.error('ConceptDetail', `getConceptRelated failed for ${sourceKey}/${conceptId}`, error)
-    return []
-  }
+  return fetchAndParse(
+    `/vocabulary/${sourceKey}/concept/${conceptId}/related`,
+    { endpoint: 'getConceptRelated', sourceKey, conceptId },
+    parseRelatedConcepts
+  )
 }
 
 export async function getConceptAncestorAndDescendant(
   sourceKey: string,
   conceptId: number
 ): Promise<RelatedConcept[]> {
-  try {
-    const data = await httpClient<unknown>(
-      `/vocabulary/${sourceKey}/concept/${conceptId}/ancestorAndDescendant`
-    )
-    const parsed = RelatedConceptsResponseSchema.safeParse(data)
-    if (!parsed.success) {
-      logger.error('ConceptDetail', 'getConceptAncestorAndDescendant validation failed', parsed.error)
-      return []
-    }
-    return parsed.data.map(mapRelatedFromApi)
-  } catch (error) {
-    logger.error(
-      'ConceptDetail',
-      `getConceptAncestorAndDescendant failed for ${sourceKey}/${conceptId}`,
-      error
-    )
-    return []
-  }
+  return fetchAndParse(
+    `/vocabulary/${sourceKey}/concept/${conceptId}/ancestorAndDescendant`,
+    { endpoint: 'getConceptAncestorAndDescendant', sourceKey, conceptId },
+    parseRelatedConcepts
+  )
 }
 
+// null means the domain has no drilldown report at all — the only "no data"
+// answer this function gives; every failure throws.
 export async function getConceptDrilldown(
   sourceKey: string,
   domainId: string,
@@ -82,22 +110,14 @@ export async function getConceptDrilldown(
   const path = domainPath(domainId)
   if (!path) return null
 
-  try {
-    const data = await httpClient<unknown>(`/cdmresults/${sourceKey}/${path}/${conceptId}`)
-    if (!data || typeof data !== 'object') return null
-    return mapDrilldownReport(
-      data as import('@/models/report.types').WebAPIDrilldownRaw,
-      conceptId,
-      conceptName,
-      '',
-      path,
-    )
-  } catch (error) {
-    logger.error(
-      'ConceptDetail',
-      `getConceptDrilldown failed for ${sourceKey}/${domainId}/${conceptId}`,
-      error
-    )
-    return null
-  }
+  return fetchAndParse(
+    `/cdmresults/${sourceKey}/${path}/${conceptId}`,
+    { endpoint: 'getConceptDrilldown', sourceKey, conceptId },
+    (data) => {
+      if (!data || typeof data !== 'object') {
+        throw new Error(`expected an object, received ${data === null ? 'null' : typeof data}`)
+      }
+      return mapDrilldownReport(data as WebAPIDrilldownRaw, conceptId, conceptName, '', path)
+    }
+  )
 }

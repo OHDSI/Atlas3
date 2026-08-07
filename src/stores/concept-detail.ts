@@ -33,6 +33,10 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
   const isLoading = ref(false)
   const isDrilldownLoading = ref(false)
   const error = ref<string | null>(null)
+  const relatedError = ref<string | null>(null)
+  const hierarchyError = ref<string | null>(null)
+  const recordCountsError = ref<string | null>(null)
+  const drilldownErrorBySource = ref<Map<string, string>>(new Map())
 
   const cache = new Map<string, CacheEntry>()
 
@@ -56,11 +60,35 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
     return `${sourceKey}-${conceptId}`
   }
 
-  function applyEntry(entry: CacheEntry) {
+  function applyValues(entry: CacheEntry) {
     concept.value = entry.concept
     related.value = entry.related
     hierarchy.value = entry.hierarchy
     recordCountsBySource.value = new Map(entry.recordCounts)
+  }
+
+  // A cache entry is only ever written for a fully successful load, so
+  // replaying one always clears the per-section errors.
+  function applyEntry(entry: CacheEntry) {
+    applyValues(entry)
+    relatedError.value = null
+    hierarchyError.value = null
+    recordCountsError.value = null
+  }
+
+  // Returns the outcome rather than writing the error ref, so a load reads only
+  // its own results: two loadConcept calls overlap freely (the view re-runs it
+  // on every concept switch), and a shared ref would let the first load's
+  // failure both suppress the second's cache write and mislabel its data.
+  function sectionOutcome<T>(
+    result: PromiseSettledResult<T>,
+    fallback: T,
+    section: string,
+    key: string
+  ): { value: T; error: string | null } {
+    if (result.status === 'fulfilled') return { value: result.value, error: null }
+    logger.error('ConceptDetail', `loadConcept ${section} failed for ${key}`, result.reason)
+    return { value: fallback, error: `Failed to load ${section}` }
   }
 
   async function loadConcept(sourceKey: string, conceptId: number, force = false): Promise<void> {
@@ -73,14 +101,26 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
 
     isLoading.value = true
     error.value = null
+    relatedError.value = null
+    hierarchyError.value = null
+    recordCountsError.value = null
     try {
-      const [c, rel, hier, rcByConcept] = await Promise.all([
-        getConceptById(sourceKey, conceptId),
-        getConceptRelated(sourceKey, conceptId),
-        getConceptAncestorAndDescendant(sourceKey, conceptId),
-        getConceptRecordCounts(sourceKey, [conceptId]),
-      ])
+      const [conceptResult, relatedResult, hierarchyResult, countsResult] = await Promise.allSettled(
+        [
+          getConceptById(sourceKey, conceptId),
+          getConceptRelated(sourceKey, conceptId),
+          getConceptAncestorAndDescendant(sourceKey, conceptId),
+          getConceptRecordCounts(sourceKey, [conceptId]),
+        ]
+      )
 
+      if (conceptResult.status === 'rejected') {
+        logger.error('ConceptDetail', `loadConcept failed for ${key}`, conceptResult.reason)
+        error.value = 'Failed to load concept'
+        return
+      }
+
+      const c = conceptResult.value
       if (!c) {
         error.value = 'Concept not found'
         concept.value = null
@@ -90,20 +130,38 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
         return
       }
 
+      const rel = sectionOutcome(relatedResult, [], 'related concepts', key)
+      const hier = sectionOutcome(hierarchyResult, [], 'hierarchy', key)
+      const counts = sectionOutcome(
+        countsResult,
+        new Map<number, ConceptRecordCount>(),
+        'record counts',
+        key
+      )
+
       const rcMap = new Map<string, ConceptRecordCount>()
-      const sourceCounts = rcByConcept.get(conceptId)
+      const sourceCounts = counts.value.get(conceptId)
       if (sourceCounts) rcMap.set(sourceKey, sourceCounts)
 
       const entry: CacheEntry = {
         loadedAt: Date.now(),
         concept: c,
-        related: rel,
-        hierarchy: hier,
+        related: rel.value,
+        hierarchy: hier.value,
         recordCounts: rcMap,
       }
-      cache.set(key, entry)
-      applyEntry(entry)
+      // A partial load is shown but never cached: caching it would let the
+      // empty stand-in for a failed section be served later as real data.
+      if (!rel.error && !hier.error && !counts.error) {
+        cache.set(key, entry)
+      }
+      applyValues(entry)
+      relatedError.value = rel.error
+      hierarchyError.value = hier.error
+      recordCountsError.value = counts.error
     } catch (e) {
+      // Callers invoke loadConcept from onMounted/watch without a .catch, so it
+      // must never reject: anything unexpected degrades to the fatal error.
       logger.error('ConceptDetail', `loadConcept failed for ${key}`, e)
       error.value = 'Failed to load concept'
     } finally {
@@ -132,6 +190,9 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
     if (drilldownBySource.value.has(sourceKey)) return
 
     isDrilldownLoading.value = true
+    drilldownErrorBySource.value = new Map(
+      [...drilldownErrorBySource.value].filter(([sk]) => sk !== sourceKey)
+    )
     try {
       const report = await getConceptDrilldown(
         sourceKey,
@@ -140,9 +201,21 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
         concept.value.conceptName,
       )
       drilldownBySource.value = new Map(drilldownBySource.value).set(sourceKey, report)
+    } catch (e) {
+      logger.error('ConceptDetail', `loadDrilldown failed for ${sourceKey}`, e)
+      // Deliberately not written to drilldownBySource: that map doubles as the
+      // "already fetched" guard, so a failure must stay retryable.
+      drilldownErrorBySource.value = new Map(drilldownErrorBySource.value).set(
+        sourceKey,
+        'Failed to load drilldown'
+      )
     } finally {
       isDrilldownLoading.value = false
     }
+  }
+
+  function drilldownErrorFor(sourceKey: string): string | null {
+    return drilldownErrorBySource.value.get(sourceKey) ?? null
   }
 
   function reset() {
@@ -151,9 +224,13 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
     hierarchy.value = []
     recordCountsBySource.value = new Map()
     drilldownBySource.value = new Map()
+    drilldownErrorBySource.value = new Map()
     isLoading.value = false
     isDrilldownLoading.value = false
     error.value = null
+    relatedError.value = null
+    hierarchyError.value = null
+    recordCountsError.value = null
   }
 
   return {
@@ -167,6 +244,11 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
     isLoading,
     isDrilldownLoading,
     error,
+    relatedError,
+    hierarchyError,
+    recordCountsError,
+    drilldownErrorBySource,
+    drilldownErrorFor,
     loadConcept,
     loadRecordCountsForSources,
     loadDrilldown,
