@@ -119,7 +119,7 @@
         size="sm"
         data-testid="ir-toolbar-mode-table"
       >
-        {{ t('pathway.results.tabular', 'Table').value }}
+        {{ t('ir.workbench.table', 'Table').value }}
       </AtlasButton>
     </v-btn-toggle>
 

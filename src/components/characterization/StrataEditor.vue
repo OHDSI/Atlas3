@@ -88,7 +88,7 @@
           :data-testid="`strata-editor-edit-criteria-${index}`"
           @click="openCriteriaDialog(stratum.id)"
         >
-          {{ t('common.edit', 'Edit criteria').value }}
+          {{ t('common.editCriteria', 'Edit criteria').value }}
         </AtlasButton>
       </div>
     </div>
@@ -230,11 +230,11 @@ function criteriaSummary(stratum: Stratum): string {
     return tv('characterizations.editor.strata.noCriteria', 'No criteria')
   }
   const events = (stratum.criteria as CriteriaGroup).events
-  return tv(
-    'characterizations.editor.strata.eventsCount',
-    `${events.length} event${events.length === 1 ? '' : 's'}`,
-    { n: events.length },
-  )
+  return events.length === 1
+    ? tv('characterizations.editor.strata.eventCount', '1 event')
+    : tv('characterizations.editor.strata.eventsCount', `${events.length} events`, {
+        n: events.length,
+      })
 }
 
 function emitUpdate(next: Stratum[]) {

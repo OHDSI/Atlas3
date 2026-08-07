@@ -95,14 +95,14 @@
                   v-if="row.cacheStatus?.lastBuiltAt"
                   class="text-caption text-grey"
                 >
-                  {{ t('trexsql.lastBuilt', 'Built') }}:
+                  {{ t('trexsql.built', 'Built') }}:
                   {{ formatDate(row.cacheStatus.lastBuiltAt) }}
                 </span>
                 <span
                   v-else-if="row.file?.lastModified"
                   class="text-caption text-grey"
                 >
-                  {{ t('trexsql.lastBuilt', 'Built') }}:
+                  {{ t('trexsql.built', 'Built') }}:
                   {{ formatDate(new Date(row.file.lastModified).toISOString()) }}
                 </span>
 

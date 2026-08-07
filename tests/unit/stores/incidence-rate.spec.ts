@@ -162,11 +162,25 @@ describe('incidence-rate store', () => {
         tags: [],
       } as never,
     })
+    // clearPreviewVersion now reloads the current entity (id 1), so it needs
+    // a successful getIncidenceRate response the same way loadPathway's does.
+    vi.mocked(webapi.getIncidenceRate).mockResolvedValueOnce({
+      success: true,
+      data: {
+        id: 1, name: 'Current',
+        expression: {
+          ConceptSets: [], targetIds: [], outcomeIds: [],
+          timeAtRisk: { start: { DateField: 'StartDate', Offset: 0 }, end: { DateField: 'EndDate', Offset: 0 } },
+          strata: [],
+        },
+        tags: [],
+      } as never,
+    })
     const s = useIncidenceRateStore()
     await s.loadVersionPreview(1, 2)
     expect(s.isPreviewMode).toBe(true)
     expect(s.currentIR?.name).toBe('V')
-    s.clearPreviewVersion()
+    await s.clearPreviewVersion()
     expect(s.isPreviewMode).toBe(false)
   })
 
@@ -647,6 +661,46 @@ describe('incidence-rate store — UI state setters and computed', () => {
   it('exposes RATE_MULTIPLIER_OPTIONS for convenience', () => {
     const s = useIncidenceRateStore()
     expect(Array.isArray(s.RATE_MULTIPLIER_OPTIONS)).toBe(true)
+  })
+})
+
+describe('savePreviewAsCurrent', () => {
+  it('PUTs the previewed IR and clears preview on success', async () => {
+    const saveIncidenceRate = vi.fn().mockResolvedValue({
+      success: true,
+      data: { id: 4, name: 'P' },
+    })
+    vi.doMock('@/services/webapi', () => ({ saveIncidenceRate }))
+
+    const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
+    const store = useIncidenceRateStore()
+    store.currentIR = { id: 4, name: 'P' } as never
+    store.previewVersion = { version: 2 } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(true)
+    expect(saveIncidenceRate).toHaveBeenCalledWith(4, store.currentIR)
+    expect(store.previewVersion).toBeNull()
+  })
+
+  it('keeps preview state when the server rejects the save', async () => {
+    const saveIncidenceRate = vi.fn().mockResolvedValue({ success: false, error: 'nope' })
+    vi.doMock('@/services/webapi', () => ({ saveIncidenceRate }))
+
+    const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
+    const store = useIncidenceRateStore()
+    store.currentIR = { id: 4, name: 'P' } as never
+    store.previewVersion = { version: 2 } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(false)
+    expect(store.previewVersion).not.toBeNull()
+  })
+
+  it('refuses when not in preview mode', async () => {
+    const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
+    const store = useIncidenceRateStore()
+    store.currentIR = { id: 4, name: 'P' } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(false)
   })
 })
 

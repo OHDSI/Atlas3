@@ -243,8 +243,36 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     }
   }
 
-  function clearPreviewVersion() {
+  async function clearPreviewVersion(): Promise<void> {
+    const id = currentIR.value?.id
+    if (id) {
+      await loadIR(id)
+      return
+    }
     previewVersion.value = null
+  }
+
+  async function savePreviewAsCurrent(): Promise<boolean> {
+    if (!previewVersion.value || !currentIR.value?.id) {
+      logger.error('IncidenceRateStore', 'Cannot save preview: not in preview mode')
+      return false
+    }
+
+    try {
+      const { saveIncidenceRate } = await import('@/services/webapi')
+      const result = await saveIncidenceRate(currentIR.value.id, currentIR.value)
+
+      if (!result.success) {
+        logger.error('IncidenceRateStore', 'Failed to save preview as current', result.error)
+        return false
+      }
+
+      previewVersion.value = null
+      return true
+    } catch (error) {
+      logger.error('IncidenceRateStore', 'Failed to save preview as current', error)
+      return false
+    }
   }
 
   let autoSaveTimer: ReturnType<typeof setInterval> | null = null
@@ -534,6 +562,7 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     loadIR,
     loadVersionPreview,
     clearPreviewVersion,
+    savePreviewAsCurrent,
     saveToDraft,
     restoreFromDraft,
     clearDraft,

@@ -3,7 +3,7 @@
  *
  * Provides functions for managing configuration data in IndexedDB cache.
  * Handles cache clearing, statistics, and vocabulary schema persistence.
- * Follows the same pattern as cohort-cache.ts (native IndexedDB API).
+ * Uses the native IndexedDB API directly.
  */
 
 import { logger } from '@/utils/logger'
