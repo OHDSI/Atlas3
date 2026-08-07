@@ -69,6 +69,7 @@ describe('buildVuetifyOptions', () => {
   it('applies a primary override to light and lifts it for dark contrast', () => {
     const opts = buildVuetifyOptions('#000000')
     expect(opts.theme!.themes!.light!.colors!.primary).toBe('#000000')
+    expect(opts.theme!.themes!.dark!.colors!.primary).toBe('#7f7f7f')
     expect(
       contrastRatio(opts.theme!.themes!.dark!.colors!.primary as string, tokens.colorDark.surface),
     ).toBeGreaterThanOrEqual(4.5)
