@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, type Ref } from 'vue'
+import { ref, computed } from 'vue'
 import { logger } from '@/utils/logger'
 import { getConceptById, getConceptRecordCounts } from '@/services/concept-search.service'
 import {
@@ -76,17 +76,19 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
     recordCountsError.value = null
   }
 
-  function sectionValue<T>(
+  // Returns the outcome rather than writing the error ref, so a load reads only
+  // its own results: two loadConcept calls overlap freely (the view re-runs it
+  // on every concept switch), and a shared ref would let the first load's
+  // failure both suppress the second's cache write and mislabel its data.
+  function sectionOutcome<T>(
     result: PromiseSettledResult<T>,
     fallback: T,
     section: string,
-    target: Ref<string | null>,
     key: string
-  ): T {
-    if (result.status === 'fulfilled') return result.value
+  ): { value: T; error: string | null } {
+    if (result.status === 'fulfilled') return { value: result.value, error: null }
     logger.error('ConceptDetail', `loadConcept ${section} failed for ${key}`, result.reason)
-    target.value = `Failed to load ${section}`
-    return fallback
+    return { value: fallback, error: `Failed to load ${section}` }
   }
 
   async function loadConcept(sourceKey: string, conceptId: number, force = false): Promise<void> {
@@ -128,33 +130,35 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
         return
       }
 
-      const rel = sectionValue(relatedResult, [], 'related concepts', relatedError, key)
-      const hier = sectionValue(hierarchyResult, [], 'hierarchy', hierarchyError, key)
-      const rcByConcept = sectionValue(
+      const rel = sectionOutcome(relatedResult, [], 'related concepts', key)
+      const hier = sectionOutcome(hierarchyResult, [], 'hierarchy', key)
+      const counts = sectionOutcome(
         countsResult,
         new Map<number, ConceptRecordCount>(),
         'record counts',
-        recordCountsError,
         key
       )
 
       const rcMap = new Map<string, ConceptRecordCount>()
-      const sourceCounts = rcByConcept.get(conceptId)
+      const sourceCounts = counts.value.get(conceptId)
       if (sourceCounts) rcMap.set(sourceKey, sourceCounts)
 
       const entry: CacheEntry = {
         loadedAt: Date.now(),
         concept: c,
-        related: rel,
-        hierarchy: hier,
+        related: rel.value,
+        hierarchy: hier.value,
         recordCounts: rcMap,
       }
       // A partial load is shown but never cached: caching it would let the
       // empty stand-in for a failed section be served later as real data.
-      if (!relatedError.value && !hierarchyError.value && !recordCountsError.value) {
+      if (!rel.error && !hier.error && !counts.error) {
         cache.set(key, entry)
       }
       applyValues(entry)
+      relatedError.value = rel.error
+      hierarchyError.value = hier.error
+      recordCountsError.value = counts.error
     } catch (e) {
       // Callers invoke loadConcept from onMounted/watch without a .catch, so it
       // must never reject: anything unexpected degrades to the fatal error.

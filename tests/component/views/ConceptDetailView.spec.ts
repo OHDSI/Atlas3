@@ -21,6 +21,7 @@ vi.mock('@/services/concept-search.service', () => ({
 }))
 
 vi.mock('@/services/concept-detail.service', () => ({
+  ConceptDetailServiceError: class ConceptDetailServiceError extends Error {},
   getConceptRelated: vi.fn().mockResolvedValue([]),
   getConceptAncestorAndDescendant: vi.fn().mockResolvedValue([]),
   getConceptDrilldown: vi.fn().mockResolvedValue(null),

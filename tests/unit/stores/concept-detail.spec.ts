@@ -12,6 +12,7 @@ vi.mock('@/services/concept-search.service', () => ({
 }))
 
 vi.mock('@/services/concept-detail.service', () => ({
+  ConceptDetailServiceError: class ConceptDetailServiceError extends Error {},
   getConceptRelated: vi.fn(),
   getConceptAncestorAndDescendant: vi.fn(),
   getConceptDrilldown: vi.fn(),
@@ -358,6 +359,48 @@ describe('concept-detail store', () => {
 
     expect(getConceptAncestorAndDescendant).toHaveBeenCalledTimes(2)
     expect(store.hierarchyError).toBeNull()
+  })
+
+  it('does not let an overlapping failed load flag or uncache a successful one', async () => {
+    (getConceptById as Mock).mockImplementation(async (_sourceKey: string, id: number) => ({
+      conceptId: id,
+      conceptName: `C${id}`,
+      domainId: 'Condition',
+      vocabularyId: 'SNOMED',
+      conceptClassId: 'Clinical Finding',
+      standardConcept: 'S',
+      conceptCode: String(id),
+      invalidReason: null,
+    }))
+    ;(getConceptRelated as Mock).mockResolvedValue([])
+    ;(getConceptRecordCounts as Mock).mockResolvedValue(new Map())
+
+    // The view re-runs loadConcept on every concept switch without waiting for
+    // the previous one, so hold both hierarchy fetches open and settle the
+    // first (rejecting) one after the second load has already started.
+    let rejectFirst!: (reason: Error) => void
+    let resolveSecond!: (rows: never[]) => void
+    ;(getConceptAncestorAndDescendant as Mock)
+      .mockImplementationOnce(() => new Promise((_, reject) => { rejectFirst = reject }))
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveSecond = resolve }))
+
+    const store = useConceptDetailStore()
+    const first = store.loadConcept('SYNPUF1K', 1)
+    const second = store.loadConcept('SYNPUF1K', 2)
+
+    rejectFirst(new Error('network error'))
+    await first
+    expect(store.hierarchyError).toBe('Failed to load hierarchy')
+
+    resolveSecond([])
+    await second
+
+    expect(store.concept?.conceptId).toBe(2)
+    expect(store.hierarchyError).toBeNull()
+
+    // Concept 2 loaded completely, so it must have been cached.
+    await store.loadConcept('SYNPUF1K', 2)
+    expect(getConceptAncestorAndDescendant).toHaveBeenCalledTimes(2)
   })
 
   it('records a drilldown failure without caching it as an absent report', async () => {

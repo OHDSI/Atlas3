@@ -1722,6 +1722,7 @@
       "conceptClass": "Concept Class",
       "viewFull": "View full",
       "noHierarchyForConcept": "No hierarchy found for this concept.",
+      "hierarchyLoadFailed": "Could not load the hierarchy for this concept.",
       "moreDescendants": "{count} more descendants",
       "noRelatedConcepts": "No related concepts found.",
       "relationshipsCount": "{count} relationships"
@@ -1744,7 +1745,6 @@
       "excluded": "excluded",
       "withDescendants": "+desc",
       "expandFailed": "Could not load children",
-      "loadFailed": "Could not load the hierarchy for this concept.",
       "retry": "Retry",
       "added": "Added {count} concepts",
       "addedSkipped": "Added {count} concepts, skipped {skipped} already in the set"

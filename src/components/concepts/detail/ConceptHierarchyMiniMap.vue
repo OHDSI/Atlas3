@@ -73,7 +73,7 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
         class="empty"
         data-testid="minimap-load-failed"
       >
-        {{ t('components.conceptHierarchyDialog.loadFailed', 'Could not load the hierarchy for this concept.').value }}
+        {{ t('components.conceptDetail.hierarchyLoadFailed', 'Could not load the hierarchy for this concept.').value }}
       </p>
       <p
         v-else-if="isEmpty"

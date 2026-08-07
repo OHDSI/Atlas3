@@ -9,6 +9,7 @@ vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 vi.mock('@/services/concept-detail.service', () => ({
+  ConceptDetailServiceError: class ConceptDetailServiceError extends Error {},
   getConceptRelated: vi.fn(),
   getConceptAncestorAndDescendant: vi.fn(),
   getConceptDrilldown: vi.fn(),

@@ -301,7 +301,7 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
       v-else-if="hierarchyError"
       data-testid="hierarchy-load-failed"
     >
-      {{ t('components.conceptHierarchyDialog.loadFailed', 'Could not load the hierarchy for this concept.').value }}
+      {{ t('components.conceptDetail.hierarchyLoadFailed', 'Could not load the hierarchy for this concept.').value }}
     </p>
 
     <p
