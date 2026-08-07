@@ -27,6 +27,7 @@
     "predev": "npm run tokens:build && npm run vendor:build",
     "generate:routes": "node scripts/emit-route-manifest.mjs",
     "generate:capabilities": "vite-node --script scripts/emit-capabilities-manifest.mjs",
+    "i18n:check": "node scripts/i18n-check.mjs",
     "i18n:status": "node scripts/i18n-sync.mjs status",
     "i18n:extract": "node scripts/i18n-sync.mjs extract",
     "i18n:apply": "node scripts/i18n-sync.mjs apply",

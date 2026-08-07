@@ -4,7 +4,7 @@
       v-if="!hasWindow"
       class="sw-empty"
     >
-      <span class="sw-empty__hint">{{ t('incidenceRate.studyWindow.empty', 'No study window').value }}</span>
+      <span class="sw-empty__hint">{{ t('incidenceRate.studyWindowEmpty', 'No study window').value }}</span>
       <AtlasButton
         size="sm"
         variant="ghost"

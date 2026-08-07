@@ -20,7 +20,6 @@ export default defineConfig({
       'node_modules/',
       'vue-mri-ui-lib/',
       'tests/e2e/**',
-      'scripts/__tests__/**',  // TODO: Fix vitest es-module handling in node environment
     ],
     reporters: ['default', 'junit'],
     outputFile: {
