@@ -70,6 +70,7 @@ import { useVersions } from '@/composables/useVersions'
 import { copyVersion as copyCohortVersion } from '@/services/cohort-definition-versions.service'
 import { copyVersion as copyConceptSetVersion } from '@/services/concept-set-versions.service'
 import { copyPathwayVersion } from '@/services/pathway-versions.service'
+import { copyIncidenceRateVersion } from '@/services/incidence-rate-versions.service'
 import { ASSET_ROUTE_SEGMENT, ASSET_DETAIL_ROUTE_SEGMENT } from './types'
 import type { VersionsConfig, VersionsTableItem, Version } from './types'
 
@@ -94,13 +95,20 @@ const snackbar = reactive({
   severity: 'success' as AtlasSnackbarSeverity,
 })
 
-// Get appropriate API service for copy
-const copyVersionAPI =
-  props.config.assetType === 'cohortdefinition'
-    ? copyCohortVersion
-    : props.config.assetType === 'pathway-analysis'
-      ? copyPathwayVersion
-      : copyConceptSetVersion
+// Copy dispatch keyed explicitly by assetType (a chained ternary's
+// fall-through else is exactly what let an IR copy silently PUT to
+// /conceptset/{irId}/... - see versions-navigation.spec.ts) so a future
+// fifth asset type is a type error here instead of a silent mis-dispatch.
+const COPY_VERSION_API: Record<
+  VersionsConfig['assetType'],
+  (assetId: number, versionNumber: number) => Promise<{ id?: number | string }>
+> = {
+  cohortdefinition: copyCohortVersion,
+  conceptset: copyConceptSetVersion,
+  'pathway-analysis': copyPathwayVersion,
+  ir: copyIncidenceRateVersion,
+}
+const copyVersionAPI = COPY_VERSION_API[props.config.assetType]
 
 // Load versions on mount
 onMounted(async () => {
