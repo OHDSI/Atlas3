@@ -2803,7 +2803,8 @@
       "addToConceptSet": "Add To Concept Set",
       "descendants": "Descendants",
       "exclude": "Exclude",
-      "mapped": "Mapped"
+      "mapped": "Mapped",
+      "addWith": "Add with"
     },
     "manager": {
       "attemptingToFindMessage": "Attempting to find an optimal definition for this concept set...",
