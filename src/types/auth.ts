@@ -112,23 +112,6 @@ export interface ExpiryDetectionConfig {
   autoRefreshBeforeWarning: boolean
 }
 
-/**
- * Parsed JWT payload with expiration info
- */
-export interface JWTPayload {
-  /** Subject (usually username) */
-  sub?: string
-
-  /** Expiration time (Unix timestamp in seconds) */
-  exp?: number
-
-  /** Issued at time (Unix timestamp in seconds) */
-  iat?: number
-
-  /** Additional custom claims */
-  [key: string]: unknown
-}
-
 // ============================================================================
 // Cross-Tab Session Sync Types
 // ============================================================================
@@ -477,24 +460,6 @@ export interface IPermissionService {
  */
 export function isTokenRefreshError(error: unknown): error is Error {
   return error instanceof Error && 'refreshToken' in error
-}
-
-/**
- * Type guard for checking if JWT payload is valid
- */
-export function isValidJWTPayload(payload: unknown): payload is JWTPayload {
-  if (typeof payload !== 'object' || payload === null) {
-    return false
-  }
-  const obj = payload as Record<string, unknown>
-  return 'exp' in obj && typeof obj.exp === 'number'
-}
-
-/**
- * Type guard for storage sync event
- */
-export function isAuthStorageEvent(event: StorageEvent): boolean {
-  return event.key === 'auth_token' && event.storageArea === localStorage
 }
 
 // ============================================================================
