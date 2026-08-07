@@ -57,6 +57,21 @@ export function findParentCollision(en, key) {
   return null
 }
 
+/**
+ * findParentCollision only sees strings already in en.json. A batch can
+ * still contain two NEW keys where one is a dot-boundary prefix of the
+ * other (new `foo.bar` and new `foo.bar.baz`) — neither is a string in the
+ * pre-mutation file, so that guard misses it, and setByPath silently
+ * destroys whichever of the pair gets written first. Check the batch
+ * against itself too.
+ */
+export function findBatchCollision(keys, key) {
+  for (const other of keys) {
+    if (other !== key && key.startsWith(`${other}.`)) return other
+  }
+  return null
+}
+
 function sourceFiles(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, entry.name)
@@ -86,17 +101,28 @@ async function main() {
 
   const withFallback = missing.filter(m => m.fallback !== null)
   const withoutFallback = missing.filter(m => m.fallback === null)
+  const batchKeys = withFallback.map(m => m.key)
 
   const collisions = missing
     .map(m => ({ ...m, parent: findParentCollision(en, m.key) }))
+    .filter(m => m.parent !== null)
+
+  const batchCollisions = withFallback
+    .map(m => ({ ...m, parent: findBatchCollision(batchKeys, m.key) }))
     .filter(m => m.parent !== null)
 
   for (const { key, parent, file } of collisions) {
     console.error(`[i18n-check] "${key}" nests under the existing string "${parent}"  (${file})`)
   }
 
+  for (const { key, parent, file } of batchCollisions) {
+    console.error(
+      `[i18n-check] "${key}" nests under "${parent}", which this same run is also about to add  (${file})`
+    )
+  }
+
   if (backfill) {
-    if (collisions.length > 0) {
+    if (collisions.length > 0 || batchCollisions.length > 0) {
       console.error('[i18n-check] refusing to backfill: would overwrite the strings above')
       process.exit(1)
     }

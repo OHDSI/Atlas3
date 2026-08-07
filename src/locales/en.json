@@ -2205,6 +2205,7 @@
         "criteriaPlaceholder": "Criteria builder integration ships in a follow-up. For now, paste a CriteriaGroup JSON.",
         "remove": "Remove",
         "invalidJson": "Invalid JSON",
+        "eventCount": "1 event",
         "eventsCount": "{n} events",
         "noCriteria": "No criteria"
       },

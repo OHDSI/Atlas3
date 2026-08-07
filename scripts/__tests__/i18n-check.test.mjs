@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest'
-import { extractKeys, findMissing, findParentCollision } from '../i18n-check.mjs'
+import { extractKeys, findMissing, findParentCollision, findBatchCollision } from '../i18n-check.mjs'
 
 describe('extractKeys', () => {
   it('extracts a key with an inline fallback', () => {
@@ -59,5 +59,19 @@ describe('findParentCollision', () => {
 
   it('returns null when no ancestor is a string', () => {
     expect(findParentCollision(en, 'common.back')).toBeNull()
+  })
+})
+
+describe('findBatchCollision', () => {
+  it('reports another key in the same batch that this key would nest under', () => {
+    expect(findBatchCollision(['foo.bar', 'foo.bar.baz'], 'foo.bar.baz')).toBe('foo.bar')
+  })
+
+  it('does not flag a near-miss that only shares a text prefix, not a dot boundary', () => {
+    expect(findBatchCollision(['foo.bar', 'foo.barbaz'], 'foo.barbaz')).toBeNull()
+  })
+
+  it('returns null when no other key in the batch is an ancestor', () => {
+    expect(findBatchCollision(['foo.bar', 'foo.qux'], 'foo.bar')).toBeNull()
   })
 })
