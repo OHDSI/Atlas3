@@ -6005,5 +6005,11 @@
       "title": "Role & Permissions Management",
       "subtitle": "Manage user roles, assign permissions, and control access to system features."
     }
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

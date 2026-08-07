@@ -146,7 +146,8 @@ const mountOptions = {
     stubs: {
       LoginModal: true,
       LanguageSelector: true,
-      NotificationInbox: true
+      NotificationInbox: true,
+      ThemeToggle: true
     }
   }
 }
