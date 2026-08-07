@@ -380,10 +380,10 @@ export const routes: RouteRecordRaw[] = [
     meta: { isOpenIDCallback: true, agentVisible: false },
   },
   {
-    path: '/:client/:token/:redirectUrl?',
-    name: 'oauth-token',
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
     component: () => import('@/views/LandingView.vue'),
-    meta: { isOAuthCallback: true, agentVisible: false },
+    meta: { agentVisible: false },
   },
   ...generatePluginRoutes(),
 ]

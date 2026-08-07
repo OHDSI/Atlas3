@@ -119,63 +119,6 @@ router.beforeEach(async (to, _from, next) => {
         return
       }
 
-      // Check for token in URL path parameters (WebAPI pattern: /:client/:token/:redirectUrl?)
-      const tokenFromPath = to.params.token as string
-      const clientFromPath = to.params.client as string
-      const redirectUrlFromPath = to.params.redirectUrl as string
-
-      if (tokenFromPath) {
-        logger.info('Router', 'Token received in URL path (WebAPI pattern)')
-        logger.debug('Router', 'OAuth details', {
-          client: clientFromPath,
-          redirectUrl: redirectUrlFromPath,
-        })
-
-        authStore.setToken(tokenFromPath)
-
-        // Fetch user info
-        const { authService } = await import('@/services/auth/authService')
-        const userInfo = await authService.fetchUserInfo()
-        authStore.setUser(userInfo)
-        authStore.setAuthClient(clientFromPath || 'OpenID')
-
-        // Use redirectUrl from path or restore from sessionStorage
-        let destination = redirectUrlFromPath ? decodeURIComponent(redirectUrlFromPath) : null
-        if (!destination) {
-          destination = sessionStorage.getItem('oauth_redirect_destination')
-          sessionStorage.removeItem('oauth_redirect_destination')
-        }
-
-        // If destination matches the base path, redirect to root to avoid duplication
-        const basePath = import.meta.env.BASE_URL.replace(/\/$/, '')
-        if (destination === basePath || destination === `${basePath}/`) {
-          destination = '/'
-        }
-
-        next(destination || '/')
-        return
-      }
-
-      // Check for token in URL query parameters (some OAuth providers use this)
-      const token = to.query.token as string
-
-      if (token) {
-        logger.info('Router', 'Token received in URL query')
-        authStore.setToken(token)
-
-        // Fetch user info
-        const { authService } = await import('@/services/auth/authService')
-        const userInfo = await authService.fetchUserInfo()
-        authStore.setUser(userInfo)
-
-        // Restore destination URL or redirect to home
-        const destination = sessionStorage.getItem('oauth_redirect_destination')
-        sessionStorage.removeItem('oauth_redirect_destination')
-
-        next(destination || '/')
-        return
-      }
-
       // Check for token in cookies (WebAPI might set it there)
       const cookieToken = getCookieToken()
       if (cookieToken) {

@@ -213,13 +213,6 @@ describe('Vue Router', () => {
       expect(openidCallbackRoute?.meta?.isOpenIDCallback).toBe(true)
     })
 
-    it('should define OAuth token route with dynamic parameters', () => {
-      const oauthTokenRoute = router.getRoutes().find((r) => r.name === 'oauth-token')
-      expect(oauthTokenRoute).toBeDefined()
-      expect(oauthTokenRoute?.path).toBe('/:client/:token/:redirectUrl?')
-      expect(oauthTokenRoute?.meta?.isOAuthCallback).toBe(true)
-    })
-
     it('should have lazy-loaded components', () => {
       const homeRoute = router.getRoutes().find((r) => r.name === 'home')
       expect(homeRoute?.components?.default).toBeDefined()
@@ -288,62 +281,27 @@ describe('Vue Router', () => {
       })
     })
 
-    describe('Token in URL path', () => {
-      it('should authenticate with token from URL path', async () => {
-        await router.push('/GoogleIAP/test-token-456')
+    describe('Token in URL is rejected', () => {
+      it('ignores a token supplied as a query parameter', async () => {
+        localStorage.removeItem('bearerToken')
 
-        expect(mockAuthStore.setToken).toHaveBeenCalledWith('test-token-456')
-        expect(authService.fetchUserInfo).toHaveBeenCalled()
-        expect(mockAuthStore.setUser).toHaveBeenCalled()
-        expect(mockAuthStore.setAuthClient).toHaveBeenCalledWith('GoogleIAP')
-        expect(logger.info).toHaveBeenCalledWith(
-          'Router',
-          'Token received in URL path (WebAPI pattern)'
+        await router.push('/oauth/callback?token=attacker.jwt.value')
+        await router.isReady()
+
+        expect(mockAuthStore.setToken).not.toHaveBeenCalled()
+        expect(mockAuthStore.setError).toHaveBeenCalledWith(
+          'Authentication failed - no token received'
         )
       })
 
-      it('should handle redirectUrl from path parameter', async () => {
-        const redirectUrl = encodeURIComponent('/cohorts/123')
-        await router.push(`/GoogleIAP/test-token/${redirectUrl}`)
-
-        expect(mockAuthStore.setToken).toHaveBeenCalledWith('test-token')
-        expect(authService.fetchUserInfo).toHaveBeenCalled()
+      it('does not resolve an arbitrary two-segment path as a token handoff', () => {
+        const resolved = router.resolve('/some/path')
+        expect(resolved.meta.isOAuthCallback).toBeUndefined()
       })
 
-      it('should clear sessionStorage when no redirectUrl in path', async () => {
-        sessionStorage.setItem('oauth_redirect_destination', '/concepts')
-        await router.push('/GoogleIAP/test-token')
-
-        expect(mockAuthStore.setToken).toHaveBeenCalledWith('test-token')
-        expect(sessionStorage.getItem('oauth_redirect_destination')).toBeNull()
-      })
-
-      it('should use redirectUrl from path parameter', async () => {
-        const redirectUrl = encodeURIComponent('/datasources')
-        await router.push(`/GoogleIAP/test-token/${redirectUrl}`)
-
-        // Check token was set
-        expect(mockAuthStore.setToken).toHaveBeenCalledWith('test-token')
-        expect(authService.fetchUserInfo).toHaveBeenCalled()
-      })
-    })
-
-    describe('Token in URL query', () => {
-      it('should authenticate with token from query parameter', async () => {
-        await router.push('/oauth/callback?token=test-query-token')
-
-        expect(mockAuthStore.setToken).toHaveBeenCalledWith('test-query-token')
-        expect(authService.fetchUserInfo).toHaveBeenCalled()
-        expect(mockAuthStore.setUser).toHaveBeenCalled()
-        expect(logger.info).toHaveBeenCalledWith('Router', 'Token received in URL query')
-      })
-
-      it('should clear sessionStorage after query token auth', async () => {
-        sessionStorage.setItem('oauth_redirect_destination', '/datasources')
-        await router.push('/oauth/callback?token=test-query-token')
-
-        expect(mockAuthStore.setToken).toHaveBeenCalledWith('test-query-token')
-        expect(sessionStorage.getItem('oauth_redirect_destination')).toBeNull()
+      it('resolves an unknown path to the not-found route', () => {
+        const resolved = router.resolve('/definitely/not/a/route')
+        expect(resolved.name).toBe('not-found')
       })
     })
 
