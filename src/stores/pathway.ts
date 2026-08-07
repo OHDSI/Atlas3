@@ -149,6 +149,29 @@ export const usePathwayStore = defineStore('pathway', () => {
     previewVersion.value = null
   }
 
+  async function savePreviewAsCurrent(): Promise<boolean> {
+    if (!previewVersion.value || !currentPathway.value?.id) {
+      logger.error('PathwayStore', 'Cannot save preview: not in preview mode')
+      return false
+    }
+
+    try {
+      const { savePathway } = await import('@/services/webapi')
+      const result = await savePathway(currentPathway.value.id, currentPathway.value)
+
+      if (!result.success) {
+        logger.error('PathwayStore', 'Failed to save preview as current', result.error)
+        return false
+      }
+
+      previewVersion.value = null
+      return true
+    } catch (error) {
+      logger.error('PathwayStore', 'Failed to save preview as current', error)
+      return false
+    }
+  }
+
   let autoSaveTimer: ReturnType<typeof setInterval> | null = null
 
   function saveToDraft() {
@@ -365,6 +388,7 @@ export const usePathwayStore = defineStore('pathway', () => {
     loadPathway,
     loadVersionPreview,
     clearPreviewVersion,
+    savePreviewAsCurrent,
     saveToDraft,
     restoreFromDraft,
     clearDraft,

@@ -593,3 +593,43 @@ describe('pathway store — canSave / canGenerate', () => {
     expect(s.canGenerate).toBe(false)
   })
 })
+
+describe('savePreviewAsCurrent', () => {
+  it('PUTs the previewed pathway and clears preview on success', async () => {
+    const savePathway = vi.fn().mockResolvedValue({
+      success: true,
+      data: { id: 4, name: 'P' },
+    })
+    vi.doMock('@/services/webapi', () => ({ savePathway }))
+
+    const { usePathwayStore } = await import('@/stores/pathway')
+    const store = usePathwayStore()
+    store.currentPathway = { id: 4, name: 'P' } as never
+    store.previewVersion = { version: 2 } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(true)
+    expect(savePathway).toHaveBeenCalledWith(4, store.currentPathway)
+    expect(store.previewVersion).toBeNull()
+  })
+
+  it('keeps preview state when the server rejects the save', async () => {
+    const savePathway = vi.fn().mockResolvedValue({ success: false, error: 'nope' })
+    vi.doMock('@/services/webapi', () => ({ savePathway }))
+
+    const { usePathwayStore } = await import('@/stores/pathway')
+    const store = usePathwayStore()
+    store.currentPathway = { id: 4, name: 'P' } as never
+    store.previewVersion = { version: 2 } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(false)
+    expect(store.previewVersion).not.toBeNull()
+  })
+
+  it('refuses when not in preview mode', async () => {
+    const { usePathwayStore } = await import('@/stores/pathway')
+    const store = usePathwayStore()
+    store.currentPathway = { id: 4, name: 'P' } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(false)
+  })
+})

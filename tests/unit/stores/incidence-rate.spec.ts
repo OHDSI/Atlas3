@@ -650,6 +650,46 @@ describe('incidence-rate store — UI state setters and computed', () => {
   })
 })
 
+describe('savePreviewAsCurrent', () => {
+  it('PUTs the previewed IR and clears preview on success', async () => {
+    const saveIncidenceRate = vi.fn().mockResolvedValue({
+      success: true,
+      data: { id: 4, name: 'P' },
+    })
+    vi.doMock('@/services/webapi', () => ({ saveIncidenceRate }))
+
+    const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
+    const store = useIncidenceRateStore()
+    store.currentIR = { id: 4, name: 'P' } as never
+    store.previewVersion = { version: 2 } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(true)
+    expect(saveIncidenceRate).toHaveBeenCalledWith(4, store.currentIR)
+    expect(store.previewVersion).toBeNull()
+  })
+
+  it('keeps preview state when the server rejects the save', async () => {
+    const saveIncidenceRate = vi.fn().mockResolvedValue({ success: false, error: 'nope' })
+    vi.doMock('@/services/webapi', () => ({ saveIncidenceRate }))
+
+    const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
+    const store = useIncidenceRateStore()
+    store.currentIR = { id: 4, name: 'P' } as never
+    store.previewVersion = { version: 2 } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(false)
+    expect(store.previewVersion).not.toBeNull()
+  })
+
+  it('refuses when not in preview mode', async () => {
+    const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
+    const store = useIncidenceRateStore()
+    store.currentIR = { id: 4, name: 'P' } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(false)
+  })
+})
+
 describe('useIncidenceRateStore — executions getter', () => {
   beforeEach(() => setActivePinia(createPinia()))
 

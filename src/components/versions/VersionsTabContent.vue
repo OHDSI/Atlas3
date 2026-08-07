@@ -241,11 +241,11 @@ async function savePreviewAsCurrent(): Promise<boolean> {
     const cohortStore = useCohortStore()
     return cohortStore.savePreviewAsCurrent()
   } else if (props.config.assetType === 'pathway-analysis') {
-    // Pathway store does not yet expose savePreviewAsCurrent; fall back to false
-    return false
+    const { usePathwayStore } = await import('@/stores/pathway')
+    return usePathwayStore().savePreviewAsCurrent()
   } else if (props.config.assetType === 'ir') {
-    // Incidence Rate store does not yet expose savePreviewAsCurrent; fall back to false
-    return false
+    const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
+    return useIncidenceRateStore().savePreviewAsCurrent()
   } else {
     const { useConceptSetsStore } = await import('@/stores/concept-sets')
     const conceptSetStore = useConceptSetsStore()
