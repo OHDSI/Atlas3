@@ -17,6 +17,22 @@ const ARTIFACTS = [
     from: join(ROOT, 'node_modules', 'single-spa-vue', 'dist', 'system', 'single-spa-vue.js'),
     to: join(OUT, 'single-spa-vue.js'),
   },
+  {
+    from: join(ROOT, 'node_modules', 'vue', 'dist', 'vue.global.js'),
+    to: join(OUT, 'vue.global.js'),
+  },
+  {
+    from: join(ROOT, 'node_modules', 'vue-router', 'dist', 'vue-router.global.js'),
+    to: join(OUT, 'vue-router.global.js'),
+  },
+  {
+    from: join(ROOT, 'node_modules', 'systemjs', 'dist', 'system.js'),
+    to: join(OUT, 'system.js'),
+  },
+  {
+    from: join(ROOT, 'node_modules', 'systemjs', 'dist', 'extras', 'named-register.js'),
+    to: join(OUT, 'named-register.js'),
+  },
 ]
 
 await mkdir(OUT, { recursive: true })
