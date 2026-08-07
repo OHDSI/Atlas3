@@ -25,7 +25,9 @@ const conceptSetVersionedAssetSchema = z
   .object({
     versionDTO: versionSchema,
     entityDTO: conceptSetSchema,
-    items: z.array(z.unknown()),
+    // WebAPI can send null instead of [] for "no items" - tolerate it rather
+    // than hard-failing; treated the same as [] wherever items.length matters.
+    items: z.array(z.unknown()).nullable(),
   })
   .strict()
 
@@ -120,10 +122,26 @@ export async function getVersion(
       throw new Error('Failed to validate version items')
     }
 
+    const mappedItems = mapExpressionItemsFromAPI(parsedExpression.data as ConceptSetAPIExpression)
+
+    // The sibling `items` field is the discriminator: a version that legitimately
+    // has zero items reports [] (or null) there too. If the sibling reports items
+    // but the expression endpoint's mapping produced none, the response body isn't
+    // the shape we expect (a different envelope, a partial serialization, an error
+    // rendered as `{}`) - fail loudly instead of silently writing an empty set.
+    const siblingItemCount = parsed.data.items?.length ?? 0
+    if (siblingItemCount > 0 && mappedItems.length === 0) {
+      logger.error(
+        'ConceptSetVersionsService',
+        `Version ${versionNumber} reports ${siblingItemCount} sibling items but the expression endpoint mapped none`
+      )
+      throw new Error('Failed to validate version items')
+    }
+
     return {
       versionDTO: parsed.data.versionDTO,
       entityDTO: parsed.data.entityDTO as Omit<ConceptSet, 'items'>,
-      items: mapExpressionItemsFromAPI(parsedExpression.data as ConceptSetAPIExpression),
+      items: mappedItems,
     }
   } catch (error) {
     logger.error(

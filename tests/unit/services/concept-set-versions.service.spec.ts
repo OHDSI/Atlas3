@@ -192,6 +192,42 @@ describe('ConceptSetVersionsService', () => {
 
       await expect(getVersion(456, 99)).rejects.toThrow('404 Not found')
     })
+
+    it('throws when sibling items are present but the expression endpoint maps none', async () => {
+      // A 200 whose body is a different envelope, a partial serialization, or
+      // an error rendered as {} still parses against the optional expression
+      // schema and maps to []. The non-empty sibling `items` proves the
+      // expression response should not have been empty.
+      const { httpGet } = await import('@/services/http-client')
+      vi.mocked(httpGet).mockImplementation(async (url: string) => {
+        if (url.endsWith('/expression')) return {}
+        return mockVersionResponse
+      })
+
+      await expect(getVersion(456, 2)).rejects.toThrow('Failed to validate version items')
+    })
+
+    it('succeeds with [] when a version legitimately has zero items', async () => {
+      const { httpGet } = await import('@/services/http-client')
+      vi.mocked(httpGet).mockImplementation(async (url: string) => {
+        if (url.endsWith('/expression')) return { items: [] }
+        return { ...mockVersionResponse, items: [] }
+      })
+
+      const result = await getVersion(456, 2)
+      expect(result.items).toEqual([])
+    })
+
+    it('tolerates a null sibling items field instead of hard-failing', async () => {
+      const { httpGet } = await import('@/services/http-client')
+      vi.mocked(httpGet).mockImplementation(async (url: string) => {
+        if (url.endsWith('/expression')) return { items: [] }
+        return { ...mockVersionResponse, items: null }
+      })
+
+      const result = await getVersion(456, 2)
+      expect(result.items).toEqual([])
+    })
   })
 
   describe('getVersionExpression', () => {
