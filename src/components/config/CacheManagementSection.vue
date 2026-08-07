@@ -78,6 +78,9 @@
 
     <!-- TrexSQL Cache Section -->
     <TrexSQLCacheSection />
+
+    <!-- Caches on disk, including ones whose dataset is gone -->
+    <CacheFilesSection class="mt-4" />
   </div>
 </template>
 
@@ -89,6 +92,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useConfigStore } from '@/stores/config'
 import { logger } from '@/utils/logger'
 import TrexSQLCacheSection from './TrexSQLCacheSection.vue'
+import CacheFilesSection from './CacheFilesSection.vue'
 
 const { t, tv } = useI18n()
 const configStore = useConfigStore()

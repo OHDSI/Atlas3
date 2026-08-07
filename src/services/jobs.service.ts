@@ -12,104 +12,8 @@ import {
   JobExecutionListSchema,
   type Job,
   type JobExecution,
-  type JobStatus,
   transformJobExecution,
 } from '@/models/jobs.types'
-
-/**
- * Bao cache-build job. Returned by `GET /WebAPI/trexsql/cache/jobs`.
- * Source: bao plugin tracks each cache build in `_cache_jobs.cache_generation_info`.
- */
-interface CacheJobApi {
-  databaseCode?: string
-  sourceKey?: string
-  status?: string
-  startTime?: string | null
-  endTime?: string | null
-  totalTables?: number | null
-  completedTables?: number | null
-  error?: string | null
-}
-
-const CACHE_STATUS_MAP: Record<string, JobStatus> = {
-  RUNNING: 'RUNNING',
-  COMPLETE: 'COMPLETED',
-  COMPLETED: 'COMPLETED',
-  ERROR: 'FAILED',
-  FAILED: 'FAILED',
-  CANCELED: 'STOPPED',
-  CANCELLED: 'STOPPED',
-  STOPPED: 'STOPPED',
-}
-
-function parseTimestamp(s: string | null | undefined): Date | null {
-  if (!s) return null
-  // bao serializes LocalDateTime as a microseconds-since-epoch string for some
-  // builds and as ISO-8601 for others — tolerate both.
-  const trimmed = String(s).trim()
-  if (!trimmed) return null
-  if (/^\d+$/.test(trimmed)) {
-    const n = Number(trimmed)
-    // Heuristic: > 1e15 → microseconds, > 1e12 → milliseconds, else seconds.
-    if (n > 1e15) return new Date(Math.floor(n / 1000))
-    if (n > 1e12) return new Date(n)
-    return new Date(n * 1000)
-  }
-  const d = new Date(trimmed)
-  return isNaN(d.getTime()) ? null : d
-}
-
-/**
- * Convert a bao cache job into the unified `Job` shape used by the UI.
- * `executionId` is synthesized from a hash of the database-code so the table
- * has a stable per-cache-build identifier (cache jobs aren't in Spring Batch).
- */
-function transformCacheJob(c: CacheJobApi): Job | null {
-  const dbCode = c.databaseCode ?? c.sourceKey
-  if (!dbCode) return null
-  const startTime = parseTimestamp(c.startTime)
-  const endTime = parseTimestamp(c.endTime)
-  const status: JobStatus = CACHE_STATUS_MAP[String(c.status ?? '').toUpperCase()] ?? 'UNKNOWN'
-  // Stable synthetic id from databaseCode + startTime. Use a small hash so the
-  // numeric id stays compact for display.
-  const idStr = `${dbCode}|${c.startTime ?? ''}`
-  let h = 0
-  for (let i = 0; i < idStr.length; i++) h = ((h << 5) - h + idStr.charCodeAt(i)) | 0
-  const id = Math.abs(h)
-  const total = c.totalTables ?? 0
-  const completed = c.completedTables ?? 0
-  const progressSuffix = total > 0 ? ` (${completed}/${total} tables)` : ''
-  return {
-    id,
-    executionId: id,
-    type: 'cacheGeneration',
-    name: `Cache build — ${dbCode}${progressSuffix}`,
-    status,
-    author: '',
-    startTime,
-    endTime,
-    duration: startTime && endTime ? endTime.getTime() - startTime.getTime() : null,
-    entityId: null,
-    sourceKey: c.sourceKey ?? dbCode,
-    exitMessage: c.error ?? null,
-  }
-}
-
-async function fetchCacheJobs(): Promise<Job[]> {
-  try {
-    const data = await httpGet<unknown>('/trexsql/cache/jobs')
-    const list = (data && typeof data === 'object' && 'jobs' in data
-      ? (data as { jobs?: unknown }).jobs
-      : null) as CacheJobApi[] | null
-    if (!Array.isArray(list)) return []
-    return list.map(transformCacheJob).filter((j): j is Job => j !== null)
-  } catch (err) {
-    // Cache-job tracking is optional — never let a bao failure break the
-    // rest of the jobs view.
-    logger.debug('JobsService', 'Cache jobs fetch failed (non-fatal)', err)
-    return []
-  }
-}
 
 /**
  * Extract job executions from the response
@@ -140,13 +44,13 @@ function extractExecutions(data: unknown): JobExecution[] {
  */
 export async function getJobs(): Promise<ApiResult<Job[]>> {
   try {
-    // Pull Spring Batch executions and bao cache-build jobs in parallel.
-    // Cache-build jobs run outside Spring Batch (in bao's own _cache_jobs
-    // tracking) so they need a separate fetch + merge.
-    const [batchData, cacheJobs] = await Promise.all([
-      httpGet<unknown>('/job/execution?comprehensivePage=true'),
-      fetchCacheJobs(),
-    ])
+    // Cache builds now write a Spring Batch execution of their own
+    // (job_name "cacheGeneration"), on every dialect rather than only the
+    // JDBC ones, so they arrive with every other job. Merging bao's
+    // /trexsql/cache/jobs on top would list each build twice. That endpoint
+    // is still the source for per-table progress and cache errors — the
+    // cache view reads it directly.
+    const batchData = await httpGet<unknown>('/job/execution?comprehensivePage=true')
 
     // Validate Spring Batch response with Zod
     const parsed = JobExecutionListSchema.safeParse(batchData)
@@ -159,8 +63,7 @@ export async function getJobs(): Promise<ApiResult<Job[]>> {
     // Extract executions from response (handles both array and paginated formats)
     const executions = extractExecutions(parsed.data)
 
-    // Transform to normalized Job format and merge with cache jobs
-    const jobs = [...executions.map(transformJobExecution), ...cacheJobs]
+    const jobs = executions.map(transformJobExecution)
 
     // Sort by start time descending (most recent first)
     jobs.sort((a, b) => {
