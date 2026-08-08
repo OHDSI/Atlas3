@@ -1,264 +1,401 @@
 /**
  * Characterization Service
- *
- * Thin façade over the WebAPI characterization endpoints. Adds friendly
- * error logging on top of the validated WebAPI wrappers — validation,
- * Zod parsing, and retry/backoff already happen in `webapi.ts`.
+ * CRUD, generation/polling and result retrieval for characterizations
+ * (WebAPI /cohort-characterization/...)
  */
-import { logger } from '@/utils/logger'
-import * as webapi from '@/services/webapi'
-import type {
-  CharacterizationDefinition,
-  CharacterizationListItem,
-  CharacterizationExecution,
+import { httpGet, httpPost, httpPut, httpDelete, httpPostRead } from '@/services/http-client'
+import { unwrap, ApiError } from '@/services/api-error'
+import { type ApiResult } from '@/types/api'
+import {
+  CharacterizationDefinitionSchema,
+  CharacterizationListItemSchema,
+  CharacterizationExecutionSchema,
+  GenerationStatusSchema,
+  type CharacterizationDefinition,
+  type CharacterizationListItem,
+  type CharacterizationExecution,
 } from '@/models/characterization.types'
+import { z } from 'zod'
+
+const CONTEXT = 'CharacterizationService'
 
 /**
- * List all characterizations available to the current user.
+ * The WebAPI list endpoint may return either a bare array or a Spring
+ * Data-style page wrapper `{ content: [...] }`. Normalise to a plain array.
  */
-export async function listCharacterizations(): Promise<CharacterizationListItem[]> {
-  try {
-    return await webapi.listCharacterizations()
-  } catch (error) {
-    logger.error('CharacterizationService', 'Failed to list characterizations', error)
-    throw error
+function unwrapList<T = unknown>(payload: unknown): T[] {
+  if (Array.isArray(payload)) return payload as T[]
+  if (
+    payload !== null &&
+    typeof payload === 'object' &&
+    Array.isArray((payload as { content?: unknown }).content)
+  ) {
+    return (payload as { content: T[] }).content
   }
+  return []
+}
+
+/**
+ * List all characterizations.
+ * Endpoint: GET /cohort-characterization?size=10000
+ */
+export async function listCharacterizations(): Promise<ApiResult<CharacterizationListItem[]>> {
+  return unwrap(async () => {
+    const data = await httpGet<unknown>('/cohort-characterization?size=10000')
+    const list = unwrapList(data)
+    const parsed = z.array(CharacterizationListItemSchema).safeParse(list)
+    if (!parsed.success) {
+      throw new ApiError('Invalid response from /cohort-characterization', 0, null)
+    }
+    return parsed.data
+  }, CONTEXT)
 }
 
 /**
  * Get the full design of a characterization.
+ * Endpoint: GET /cohort-characterization/{id}/design
  */
-export async function getCharacterization(id: number): Promise<CharacterizationDefinition | null> {
-  try {
-    return await webapi.getCharacterization(id)
-  } catch (error) {
-    logger.error('CharacterizationService', `Failed to load characterization ${id}`, error)
-    throw error
-  }
+export async function getCharacterization(
+  id: number
+): Promise<ApiResult<CharacterizationDefinition>> {
+  return unwrap(async () => {
+    const data = await httpGet<unknown>(`/cohort-characterization/${id}/design`)
+    const parsed = CharacterizationDefinitionSchema.safeParse(data)
+    if (!parsed.success) {
+      throw new ApiError(`Invalid response from /cohort-characterization/${id}/design`, 0, null)
+    }
+    return parsed.data as CharacterizationDefinition
+  }, CONTEXT)
+}
+
+// WebAPI expects numeric strata IDs (Long); the editor generates UUID
+// placeholders for keying, which must be stripped before send so the backend
+// assigns real IDs.
+function serializeCharacterization(def: CharacterizationDefinition): unknown {
+  const stratas = def.stratas.map((s) => {
+    const numeric = Number(s.id)
+    if (Number.isFinite(numeric) && Number.isInteger(numeric) && numeric > 0) {
+      return { ...s, id: numeric }
+    }
+    const { id: _id, ...rest } = s
+    void _id
+    return rest
+  })
+  return { ...def, stratas }
 }
 
 /**
  * Create a new characterization.
+ * Endpoint: POST /cohort-characterization
  */
 export async function createCharacterization(
   def: CharacterizationDefinition
-): Promise<CharacterizationDefinition> {
-  try {
-    return await webapi.createCharacterization(def)
-  } catch (error) {
-    logger.error('CharacterizationService', 'Failed to create characterization', error)
-    throw error
-  }
+): Promise<ApiResult<CharacterizationDefinition>> {
+  return unwrap(async () => {
+    const data = await httpPost<unknown>('/cohort-characterization', serializeCharacterization(def))
+    const parsed = CharacterizationDefinitionSchema.safeParse(data)
+    if (!parsed.success) {
+      throw new ApiError('Invalid response from POST /cohort-characterization', 0, null)
+    }
+    return parsed.data as CharacterizationDefinition
+  }, CONTEXT)
 }
 
 /**
  * Update an existing characterization.
+ * Endpoint: PUT /cohort-characterization/{id}
  */
 export async function updateCharacterization(
   def: CharacterizationDefinition
-): Promise<CharacterizationDefinition> {
-  try {
-    return await webapi.updateCharacterization(def)
-  } catch (error) {
-    logger.error(
-      'CharacterizationService',
-      `Failed to update characterization ${def.id ?? '<new>'}`,
-      error
+): Promise<ApiResult<CharacterizationDefinition>> {
+  return unwrap(async () => {
+    if (typeof def.id !== 'number') {
+      throw new Error('updateCharacterization requires def.id')
+    }
+    const data = await httpPut<unknown>(
+      `/cohort-characterization/${def.id}`,
+      serializeCharacterization(def)
     )
-    throw error
-  }
+    const parsed = CharacterizationDefinitionSchema.safeParse(data)
+    if (!parsed.success) {
+      throw new ApiError(`Invalid response from PUT /cohort-characterization/${def.id}`, 0, null)
+    }
+    return parsed.data as CharacterizationDefinition
+  }, CONTEXT)
 }
 
 /**
  * Delete a characterization.
+ * Endpoint: DELETE /cohort-characterization/{id}
  */
-export async function deleteCharacterization(id: number): Promise<void> {
-  try {
-    await webapi.deleteCharacterization(id)
-  } catch (error) {
-    logger.error('CharacterizationService', `Failed to delete characterization ${id}`, error)
-    throw error
-  }
+export async function deleteCharacterization(id: number): Promise<ApiResult<void>> {
+  return unwrap(async () => {
+    await httpDelete(`/cohort-characterization/${id}`)
+  }, CONTEXT)
 }
 
 /**
- * Server-side copy of a characterization.
+ * Server-side copy of a characterization. Atlas 2.15 uses `POST /{id}` for
+ * the copy operation (no body).
+ * Endpoint: POST /cohort-characterization/{id}
  */
-export async function copyCharacterization(id: number): Promise<CharacterizationDefinition> {
-  try {
-    return await webapi.copyCharacterization(id)
-  } catch (error) {
-    logger.error('CharacterizationService', `Failed to copy characterization ${id}`, error)
-    throw error
-  }
+export async function copyCharacterization(
+  id: number
+): Promise<ApiResult<CharacterizationDefinition>> {
+  return unwrap(async () => {
+    const data = await httpPost<unknown>(`/cohort-characterization/${id}`)
+    const parsed = CharacterizationDefinitionSchema.safeParse(data)
+    if (!parsed.success) {
+      throw new ApiError(`Invalid response from POST /cohort-characterization/${id}`, 0, null)
+    }
+    return parsed.data as CharacterizationDefinition
+  }, CONTEXT)
 }
 
 /**
  * Whether a characterization with the given name already exists.
+ * Endpoint: GET /cohort-characterization/{id}/exists?name={name}
  */
-export async function characterizationNameExists(id: number, name: string): Promise<boolean> {
-  try {
-    return await webapi.characterizationNameExists(id, name)
-  } catch (error) {
-    logger.error(
-      'CharacterizationService',
-      `Failed to check name existence for ${id}/${name}`,
-      error
+export async function characterizationNameExists(
+  id: number,
+  name: string
+): Promise<ApiResult<boolean>> {
+  return unwrap(async () => {
+    const data = await httpGet<unknown>(
+      `/cohort-characterization/${id}/exists?name=${encodeURIComponent(name)}`
     )
-    throw error
-  }
+    if (typeof data === 'boolean') return data
+    if (typeof data === 'number') return data > 0
+    return Boolean(data)
+  }, CONTEXT)
 }
 
 /**
- * Export a characterization design.
+ * Export a characterization design as a JSON-importable object.
+ * Endpoint: GET /cohort-characterization/{id}/export
  */
-export async function exportCharacterization(id: number): Promise<unknown> {
-  try {
-    return await webapi.exportCharacterization(id)
-  } catch (error) {
-    logger.error('CharacterizationService', `Failed to export characterization ${id}`, error)
-    throw error
-  }
+export async function exportCharacterization(id: number): Promise<ApiResult<unknown>> {
+  return unwrap(async () => {
+    return await httpGet<unknown>(`/cohort-characterization/${id}/export`)
+  }, CONTEXT)
 }
 
 /**
  * Import a characterization design.
+ * Endpoint: POST /cohort-characterization/import
  */
-export async function importCharacterization(design: unknown): Promise<CharacterizationDefinition> {
-  try {
-    return await webapi.importCharacterization(design)
-  } catch (error) {
-    logger.error('CharacterizationService', 'Failed to import characterization', error)
-    throw error
-  }
+export async function importCharacterization(
+  design: unknown
+): Promise<ApiResult<CharacterizationDefinition>> {
+  return unwrap(async () => {
+    const data = await httpPost<unknown>('/cohort-characterization/import', design)
+    const parsed = CharacterizationDefinitionSchema.safeParse(data)
+    if (!parsed.success) {
+      throw new ApiError('Invalid response from POST /cohort-characterization/import', 0, null)
+    }
+    return parsed.data as CharacterizationDefinition
+  }, CONTEXT)
 }
 
 /**
  * List executions (generations) for a characterization.
+ * Endpoint: GET /cohort-characterization/{id}/generation
  */
 export async function listCharacterizationExecutions(
   id: number
-): Promise<CharacterizationExecution[]> {
-  try {
-    return await webapi.listCharacterizationExecutions(id)
-  } catch (error) {
-    logger.error(
-      'CharacterizationService',
-      `Failed to list executions for characterization ${id}`,
-      error
-    )
-    throw error
-  }
+): Promise<ApiResult<CharacterizationExecution[]>> {
+  return unwrap(async () => {
+    const data = await httpGet<unknown>(`/cohort-characterization/${id}/generation`)
+    const list = unwrapList(data)
+    const parsed = z.array(CharacterizationExecutionSchema).safeParse(list)
+    if (!parsed.success) {
+      throw new ApiError(`Invalid response from /cohort-characterization/${id}/generation`, 0, null)
+    }
+    return parsed.data
+  }, CONTEXT)
 }
 
 /**
  * Get a specific characterization execution.
+ * Endpoint: GET /cohort-characterization/generation/{generationId}
  */
 export async function getCharacterizationExecution(
   generationId: number
-): Promise<CharacterizationExecution | null> {
-  try {
-    return await webapi.getCharacterizationExecution(generationId)
-  } catch (error) {
-    logger.error('CharacterizationService', `Failed to load execution ${generationId}`, error)
-    throw error
-  }
+): Promise<ApiResult<CharacterizationExecution>> {
+  return unwrap(async () => {
+    const data = await httpGet<unknown>(`/cohort-characterization/generation/${generationId}`)
+    const parsed = CharacterizationExecutionSchema.safeParse(data)
+    if (!parsed.success) {
+      throw new ApiError(
+        `Invalid response from /cohort-characterization/generation/${generationId}`,
+        0,
+        null
+      )
+    }
+    return parsed.data
+  }, CONTEXT)
 }
 
 /**
  * Trigger a characterization generation against a given source.
+ * Endpoint: POST /cohort-characterization/{id}/generation/{sourceKey}
+ *
+ * The POST response is the Spring Batch JobExecution that started the run, not
+ * a fully-populated CharacterizationExecution row. We accept either shape and
+ * normalize to CharacterizationExecution; callers refetch via the list/get
+ * endpoints once polling kicks in.
  */
 export async function generateCharacterization(
   id: number,
   sourceKey: string
-): Promise<CharacterizationExecution> {
-  try {
-    return await webapi.generateCharacterization(id, sourceKey)
-  } catch (error) {
-    logger.error('CharacterizationService', `Failed to start generation ${id}/${sourceKey}`, error)
-    throw error
-  }
+): Promise<ApiResult<CharacterizationExecution>> {
+  return unwrap(async () => {
+    const data = await httpPost<unknown>(
+      `/cohort-characterization/${id}/generation/${encodeURIComponent(sourceKey)}`
+    )
+
+    const direct = CharacterizationExecutionSchema.safeParse(data)
+    if (direct.success) return direct.data
+
+    const jobExecutionSchema = z
+      .object({
+        executionId: z.number().optional(),
+        id: z.number().optional(),
+        status: GenerationStatusSchema.optional(),
+      })
+      .passthrough()
+    const job = jobExecutionSchema.safeParse(data)
+    if (!job.success) {
+      throw new ApiError(
+        `Invalid response from POST /cohort-characterization/${id}/generation/${sourceKey}`,
+        0,
+        null
+      )
+    }
+
+    const executionId = job.data.executionId ?? job.data.id ?? 0
+    return {
+      id: executionId,
+      status: job.data.status ?? 'STARTING',
+      sourceKey,
+    }
+  }, CONTEXT)
 }
 
 /**
  * Cancel an in-progress characterization generation.
+ * Endpoint: DELETE /cohort-characterization/{id}/generation/{sourceKey}
  */
 export async function cancelCharacterizationGeneration(
   id: number,
   sourceKey: string
-): Promise<void> {
-  try {
-    await webapi.cancelCharacterizationGeneration(id, sourceKey)
-  } catch (error) {
-    logger.error('CharacterizationService', `Failed to cancel generation ${id}/${sourceKey}`, error)
-    throw error
-  }
+): Promise<ApiResult<void>> {
+  return unwrap(async () => {
+    await httpDelete(`/cohort-characterization/${id}/generation/${encodeURIComponent(sourceKey)}`)
+  }, CONTEXT)
 }
 
 /**
  * Fetch the design that was active at the time a generation was created.
+ * Endpoint: GET /cohort-characterization/generation/{generationId}/design
  */
-export async function getCharacterizationDesignSnapshot(generationId: number): Promise<unknown> {
-  try {
-    return await webapi.getCharacterizationDesignSnapshot(generationId)
-  } catch (error) {
-    logger.error(
-      'CharacterizationService',
-      `Failed to load design snapshot for ${generationId}`,
-      error
-    )
-    throw error
-  }
+export async function getCharacterizationDesignSnapshot(
+  generationId: number
+): Promise<ApiResult<unknown>> {
+  return unwrap(async () => {
+    return await httpGet<unknown>(`/cohort-characterization/generation/${generationId}/design`)
+  }, CONTEXT)
 }
 
 /**
  * Get the total count of result rows for a generation.
+ * Endpoint: GET /cohort-characterization/generation/{generationId}/result/count
  */
-export async function getCharacterizationResultCount(generationId: number): Promise<number> {
-  try {
-    return await webapi.getCharacterizationResultCount(generationId)
-  } catch (error) {
-    logger.error(
-      'CharacterizationService',
-      `Failed to load result count for ${generationId}`,
-      error
+export async function getCharacterizationResultCount(
+  generationId: number
+): Promise<ApiResult<number>> {
+  return unwrap(async () => {
+    const data = await httpGet<unknown>(
+      `/cohort-characterization/generation/${generationId}/result/count`
     )
-    throw error
-  }
+    const parsed = z.number().safeParse(data)
+    if (!parsed.success) {
+      throw new ApiError(
+        `Invalid response from /cohort-characterization/generation/${generationId}/result/count`,
+        0,
+        null
+      )
+    }
+    return parsed.data
+  }, CONTEXT)
+}
+
+/**
+ * Body parameters for `getCharacterizationResults`.
+ * Atlas 2.15 sends a free-form filter object; only a few keys are common.
+ */
+export interface CharacterizationResultsBody {
+  thresholdValuePct?: number
+  analysisIds?: number[]
+  cohortIds?: number[]
+  // The server accepts additional keys (e.g. `domainIds`, `summary`) and we
+  // pass them through unchanged. Result rows are validated as `unknown[]`
+  // here; conversion / typed mapping lands in the report-mapper layer.
+  [key: string]: unknown
 }
 
 /**
  * Fetch result rows for a generation.
+ * Endpoint: POST /cohort-characterization/generation/{generationId}/result
+ *
+ * Newer WebAPIs wrap rows as `{ reports: [{ analysisId, items: [...] }] }`;
+ * older builds return a flat array. Flatten either shape so the mapper sees
+ * a single list of rows.
  */
 export async function getCharacterizationResults(
   generationId: number,
-  body: webapi.CharacterizationResultsBody
-): Promise<unknown[]> {
-  try {
-    return await webapi.getCharacterizationResults(generationId, body)
-  } catch (error) {
-    logger.error('CharacterizationService', `Failed to load results for ${generationId}`, error)
-    throw error
-  }
+  body: CharacterizationResultsBody
+): Promise<ApiResult<unknown[]>> {
+  return unwrap(async () => {
+    const data = await httpPostRead<unknown>(
+      `/cohort-characterization/generation/${generationId}/result`,
+      body
+    )
+    if (Array.isArray(data)) return data
+
+    if (data && typeof data === 'object' && 'reports' in data) {
+      const reports = (data as { reports: unknown }).reports
+      if (Array.isArray(reports)) {
+        return reports.flatMap(report => {
+          if (!report || typeof report !== 'object') return []
+          const items = (report as { items?: unknown }).items
+          return Array.isArray(items) ? items : []
+        })
+      }
+    }
+
+    throw new ApiError(
+      `Invalid response from POST /cohort-characterization/generation/${generationId}/result`,
+      0,
+      null
+    )
+  }, CONTEXT)
 }
 
 /**
- * Drill into prevalence values for a single covariate / cohort cell.
+ * Drill into the prevalence values for a single covariate / cohort cell.
+ * Endpoint:
+ * GET /cohort-characterization/generation/{generationId}/explore/prevalence/{analysisId}/{cohortId}/{covariateId}
  */
 export async function explorePrevalence(
   generationId: number,
   analysisId: number,
   cohortId: number,
   covariateId: number
-): Promise<unknown> {
-  try {
-    return await webapi.explorePrevalence(generationId, analysisId, cohortId, covariateId)
-  } catch (error) {
-    logger.error(
-      'CharacterizationService',
-      `Failed to explore prevalence (${generationId}, ${analysisId}, ${cohortId}, ${covariateId})`,
-      error
+): Promise<ApiResult<unknown>> {
+  return unwrap(async () => {
+    return await httpGet<unknown>(
+      `/cohort-characterization/generation/${generationId}/explore/prevalence/${analysisId}/${cohortId}/${covariateId}`
     )
-    throw error
-  }
+  }, CONTEXT)
 }

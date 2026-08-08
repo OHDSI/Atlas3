@@ -7,14 +7,20 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
 
+// vi.mock factories are hoisted above imports, so the ApiResult shape is
+// inlined here rather than built via the `success()` helper.
 vi.mock('@/services/characterization.service', () => ({
-  getCharacterizationExecution: vi.fn().mockResolvedValue({ id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0 }),
-  getCharacterizationResultCount: vi.fn().mockResolvedValue(0),
-  getCharacterizationResults: vi.fn().mockResolvedValue([]),
-  listCharacterizationExecutions: vi.fn().mockResolvedValue([
-    { id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0 }
-  ]),
-  getCharacterizationExecutions: vi.fn().mockResolvedValue([]),
+  getCharacterizationExecution: vi.fn().mockResolvedValue({
+    success: true,
+    data: { id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0 },
+  }),
+  getCharacterizationResultCount: vi.fn().mockResolvedValue({ success: true, data: 0 }),
+  getCharacterizationResults: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  listCharacterizationExecutions: vi.fn().mockResolvedValue({
+    success: true,
+    data: [{ id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0 }],
+  }),
+  getCharacterizationExecutions: vi.fn().mockResolvedValue({ success: true, data: [] }),
   generateCharacterization: vi.fn(),
   cancelCharacterizationGeneration: vi.fn(),
   getCharacterization: vi.fn(),

@@ -30,6 +30,20 @@ vi.mock('@/services/characterization.service', () => ({
   updateCharacterization: vi.fn(),
   deleteCharacterization: vi.fn(),
   copyCharacterization: vi.fn(),
+  characterizationNameExists: vi.fn(),
+  exportCharacterization: vi.fn(),
+  importCharacterization: vi.fn(),
+  // The real CharacterizationWorkbench child mounts alongside this view and
+  // loads executions immediately whenever characterizationId is non-null
+  // (edit-mode tests), so this must resolve rather than return undefined.
+  listCharacterizationExecutions: vi.fn(),
+  getCharacterizationExecution: vi.fn(),
+  generateCharacterization: vi.fn(),
+  cancelCharacterizationGeneration: vi.fn(),
+  getCharacterizationDesignSnapshot: vi.fn(),
+  getCharacterizationResultCount: vi.fn(),
+  getCharacterizationResults: vi.fn(),
+  explorePrevalence: vi.fn(),
 }))
 
 vi.mock('@/services/feature-analysis.service', () => ({
@@ -54,10 +68,12 @@ import {
   createCharacterization,
   updateCharacterization,
   listCharacterizations,
+  listCharacterizationExecutions,
 } from '@/services/characterization.service'
 import { listFeatureAnalyses } from '@/services/feature-analysis.service'
 import { getCohorts } from '@/services/webapi'
 import CharacterizationBuilderView from '@/views/CharacterizationBuilderView.vue'
+import { success } from '@/types/api'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -146,9 +162,13 @@ describe('CharacterizationBuilderView', () => {
     vi.clearAllMocks()
 
     // Default lookups so onMounted resolves cleanly.
-    vi.mocked(listCharacterizations).mockResolvedValue([])
-    vi.mocked(listFeatureAnalyses).mockResolvedValue([])
+    vi.mocked(listCharacterizations).mockResolvedValue(success([]))
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success([]))
     vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [] })
+    // The workbench child loads executions immediately once characterizationId
+    // is set (edit-mode tests), so this must resolve instead of returning
+    // undefined — an unresolved ApiResult crashes `result.success` in the store.
+    vi.mocked(listCharacterizationExecutions).mockResolvedValue(success([]))
   })
 
   afterEach(() => {
@@ -181,7 +201,7 @@ describe('CharacterizationBuilderView', () => {
   })
 
   it('hydrates the form from the store in edit mode', async () => {
-    vi.mocked(getCharacterization).mockResolvedValue(sampleCharacterization)
+    vi.mocked(getCharacterization).mockResolvedValue(success(sampleCharacterization))
 
     mounted = await mountBuilder('/characterizations/42', { id: '42' })
     await flushPromises()
@@ -209,10 +229,10 @@ describe('CharacterizationBuilderView', () => {
   })
 
   it('Save in new mode calls createCharacterization', async () => {
-    vi.mocked(createCharacterization).mockResolvedValue({
+    vi.mocked(createCharacterization).mockResolvedValue(success({
       ...sampleCharacterization,
       id: 99,
-    })
+    }))
 
     mounted = await mountBuilder('/characterizations/new')
 
@@ -242,11 +262,11 @@ describe('CharacterizationBuilderView', () => {
   })
 
   it('Save in edit mode calls updateCharacterization', async () => {
-    vi.mocked(getCharacterization).mockResolvedValue(sampleCharacterization)
-    vi.mocked(updateCharacterization).mockResolvedValue({
+    vi.mocked(getCharacterization).mockResolvedValue(success(sampleCharacterization))
+    vi.mocked(updateCharacterization).mockResolvedValue(success({
       ...sampleCharacterization,
       name: 'Renamed',
-    })
+    }))
 
     mounted = await mountBuilder('/characterizations/42', { id: '42' })
     await flushPromises()

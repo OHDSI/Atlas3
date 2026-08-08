@@ -40,6 +40,7 @@ vi.mock('@/utils/logger', () => ({
 }))
 
 import { listCharacterizations } from '@/services/characterization.service'
+import { success } from '@/types/api'
 import CharacterizationsView from '@/views/CharacterizationsView.vue'
 import { useCharacterizationStore } from '@/stores/characterization'
 import { useAuthStore } from '@/stores/auth'
@@ -128,7 +129,7 @@ describe('CharacterizationsView', () => {
   })
 
   it('mounts with the create and search controls', async () => {
-    vi.mocked(listCharacterizations).mockResolvedValue([])
+    vi.mocked(listCharacterizations).mockResolvedValue(success([]))
     mounted = await mountView()
 
     expect(mounted.wrapper.find('[data-testid="characterizations-create"]').exists()).toBe(true)
@@ -138,7 +139,7 @@ describe('CharacterizationsView', () => {
   })
 
   it('renders rows from the store after fetch', async () => {
-    vi.mocked(listCharacterizations).mockResolvedValue(sampleList)
+    vi.mocked(listCharacterizations).mockResolvedValue(success(sampleList))
     mounted = await mountView()
 
     expect(mounted.wrapper.text()).toContain('Diabetes Cohort Profile')
@@ -146,7 +147,7 @@ describe('CharacterizationsView', () => {
   })
 
   it('shows empty state when there are no items', async () => {
-    vi.mocked(listCharacterizations).mockResolvedValue([])
+    vi.mocked(listCharacterizations).mockResolvedValue(success([]))
     mounted = await mountView()
 
     // After i18n migration, the empty-state label uses the generic "No data" string
@@ -155,7 +156,7 @@ describe('CharacterizationsView', () => {
 
   it('search input drives the store filter (after debounce)', async () => {
     vi.useFakeTimers()
-    vi.mocked(listCharacterizations).mockResolvedValue(sampleList)
+    vi.mocked(listCharacterizations).mockResolvedValue(success(sampleList))
     mounted = await mountView()
 
     const store = useCharacterizationStore()
@@ -174,7 +175,7 @@ describe('CharacterizationsView', () => {
   })
 
   it('clicking Create navigates to /characterizations/new', async () => {
-    vi.mocked(listCharacterizations).mockResolvedValue([])
+    vi.mocked(listCharacterizations).mockResolvedValue(success([]))
     mounted = await mountView()
     const { wrapper, router } = mounted
 
@@ -189,7 +190,7 @@ describe('CharacterizationsView', () => {
   })
 
   it('clicking a row name navigates to /characterizations/:id', async () => {
-    vi.mocked(listCharacterizations).mockResolvedValue(sampleList)
+    vi.mocked(listCharacterizations).mockResolvedValue(success(sampleList))
     mounted = await mountView()
     const { wrapper, router } = mounted
 

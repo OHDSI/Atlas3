@@ -117,11 +117,14 @@ describe('pythiaBridge', () => {
 
   it('createFeatureAnalysis proposal → calls service + navigates to feature-analysis-edit', async () => {
     vi.mocked(createFeatureAnalysis).mockResolvedValue({
-      id: 42,
-      name: 'Demographics',
-      type: 'PRESET',
-      design: 'demographics-age-group',
-    })
+      success: true,
+      data: {
+        id: 42,
+        name: 'Demographics',
+        type: 'PRESET',
+        design: 'demographics-age-group',
+      },
+    } as never)
 
     dispatchPluginMessage({
       type: 'cohort.applyProposal',
@@ -150,12 +153,15 @@ describe('pythiaBridge', () => {
 
   it('createCharacterization proposal → calls service + navigates to characterization-edit', async () => {
     vi.mocked(createCharacterization).mockResolvedValue({
-      id: 7,
-      name: 'T2DM baseline',
-      cohorts: [{ id: 1, name: 'T2DM' }],
-      featureAnalyses: [{ id: 10, name: 'Demographics' }],
-      stratas: [],
-    })
+      success: true,
+      data: {
+        id: 7,
+        name: 'T2DM baseline',
+        cohorts: [{ id: 1, name: 'T2DM' }],
+        featureAnalyses: [{ id: 10, name: 'Demographics' }],
+        stratas: [],
+      },
+    } as never)
 
     dispatchPluginMessage({
       type: 'cohort.applyProposal',

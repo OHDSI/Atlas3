@@ -567,20 +567,19 @@ function triggerDownload(filename: string, payload: string): void {
 async function handleExport(): Promise<void> {
   if (!draft.value.id) return
   exporting.value = true
-  try {
-    const design = await exportCharacterization(draft.value.id)
-    const json = JSON.stringify(design, null, 2)
+  const result = await exportCharacterization(draft.value.id)
+  if (result.success) {
+    const json = JSON.stringify(result.data, null, 2)
     const filename = `characterization-${slugifyName(draft.value.name)}-${draft.value.id}.json`
     triggerDownload(filename, json)
-  } catch (err) {
-    logger.error('CharacterizationBuilder', 'Export failed', err)
+  } else {
+    logger.error('CharacterizationBuilder', 'Export failed', result.error)
     showSnackbar(
       t('characterizations.editor.utilities.import.importError', 'Export failed.').value,
       'error'
     )
-  } finally {
-    exporting.value = false
   }
+  exporting.value = false
 }
 
 function handleImportClick() {
@@ -610,25 +609,24 @@ async function handleImportFileChange(event: Event) {
     return
   }
 
-  try {
-    const created = await importCharacterization(parsed)
+  const result = await importCharacterization(parsed)
+  if (result.success) {
     store.markClean()
     showSnackbar(
       t('characterizations.editor.utilities.import.importSuccess', 'Imported successfully.').value,
       'success'
     )
-    if (created.id != null) {
-      await router.push(`/characterizations/${created.id}`)
+    if (result.data.id != null) {
+      await router.push(`/characterizations/${result.data.id}`)
     }
-  } catch (err) {
-    logger.error('CharacterizationBuilder', 'Import failed', err)
+  } else {
+    logger.error('CharacterizationBuilder', 'Import failed', result.error)
     showSnackbar(
       t('characterizations.editor.utilities.import.importError', 'Import failed.').value,
       'error'
     )
-  } finally {
-    importing.value = false
   }
+  importing.value = false
 }
 
 function handleDeleteClick() {
@@ -679,10 +677,11 @@ async function loadAvailableCohorts() {
 }
 
 async function loadAvailableFeatureAnalyses() {
-  try {
-    availableFeatureAnalyses.value = await listFeatureAnalyses()
-  } catch (err) {
-    logger.error('CharacterizationBuilder', 'Failed to load feature analyses', err)
+  const result = await listFeatureAnalyses()
+  if (result.success) {
+    availableFeatureAnalyses.value = result.data
+  } else {
+    logger.error('CharacterizationBuilder', 'Failed to load feature analyses', result.error)
   }
 }
 

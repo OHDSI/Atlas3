@@ -323,19 +323,20 @@ async function handleCreateFeatureAnalysis(
     // CRITERIA_SET. Default to an empty string if the model omits it.
     design: (payload.design ?? '') as FeatureAnalysis['design'],
   }
-  try {
-    const created = await createFeatureAnalysis(fa)
-    if (!created?.id) {
-      showSnackbar('Failed to create feature analysis', 'error')
-      return
-    }
-    showSnackbar(`Feature analysis "${created.name}" created`, 'success')
-    await navigateToEditor('feature-analysis-edit', created.id)
-    return { id: created.id, name: created.name }
-  } catch (err) {
-    logger.error('pythiaBridge', 'createFeatureAnalysis failed', err)
-    showSnackbar(`Failed to create feature analysis: ${(err as Error).message}`, 'error')
+  const result = await createFeatureAnalysis(fa)
+  if (!result.success) {
+    logger.error('pythiaBridge', 'createFeatureAnalysis failed', result.error)
+    showSnackbar(`Failed to create feature analysis: ${result.error.message}`, 'error')
+    return
   }
+  const created = result.data
+  if (!created?.id) {
+    showSnackbar('Failed to create feature analysis', 'error')
+    return
+  }
+  showSnackbar(`Feature analysis "${created.name}" created`, 'success')
+  await navigateToEditor('feature-analysis-edit', created.id)
+  return { id: created.id, name: created.name }
 }
 
 async function handleCreateCharacterization(
@@ -366,19 +367,20 @@ async function handleCreateCharacterization(
     })),
     stratas: [],
   }
-  try {
-    const created = await createCharacterization(def)
-    if (!created?.id) {
-      showSnackbar('Failed to create characterization', 'error')
-      return
-    }
-    showSnackbar(`Characterization "${created.name}" created`, 'success')
-    await navigateToEditor('characterization-edit', created.id)
-    return { id: created.id, name: created.name }
-  } catch (err) {
-    logger.error('pythiaBridge', 'createCharacterization failed', err)
-    showSnackbar(`Failed to create characterization: ${(err as Error).message}`, 'error')
+  const result = await createCharacterization(def)
+  if (!result.success) {
+    logger.error('pythiaBridge', 'createCharacterization failed', result.error)
+    showSnackbar(`Failed to create characterization: ${result.error.message}`, 'error')
+    return
   }
+  const created = result.data
+  if (!created?.id) {
+    showSnackbar('Failed to create characterization', 'error')
+    return
+  }
+  showSnackbar(`Characterization "${created.name}" created`, 'success')
+  await navigateToEditor('characterization-edit', created.id)
+  return { id: created.id, name: created.name }
 }
 
 async function handleCreatePathway(
