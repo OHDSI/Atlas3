@@ -14,8 +14,19 @@ export default defineConfig({
   expect: {
     timeout: 10000, // 10 seconds for expect assertions
     // Visual regression testing config (Task T141)
-    toMatchSnapshot: {
-      threshold: 0.3, // 30% difference allowed (Material Design will differ from reference)
+    //
+    // page.toHaveScreenshot() reads its defaults from expect.toHaveScreenshot,
+    // not expect.toMatchSnapshot (that key only applies to the generic
+    // expect(value).toMatchSnapshot() buffer/string matcher — a different API
+    // that nothing in this suite calls). With the tolerance parked under the
+    // wrong key, every toHaveScreenshot() call that doesn't pass its own
+    // per-call options (dark-mode-visual.spec.ts's dark-mode screenshots) fell
+    // back to Playwright's built-in default of zero pixel tolerance instead of
+    // the loose comparison intended here — enough anti-aliasing/chart-render
+    // jitter to flake routes that never touched the mock change in this diff
+    // (e.g. landing/cohorts/pathways failing at ~0.01% pixel diff).
+    toHaveScreenshot: {
+      threshold: 0.3, // 30% per-pixel colour difference allowed (Material Design will differ from reference)
       maxDiffPixels: 1000,
     },
   },

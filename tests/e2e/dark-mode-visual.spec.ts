@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { setupBasicMocks } from './helpers/api-mocks'
+import { setupBasicMocks, setupDatasourcesMocks } from './helpers/api-mocks'
 
 // Same route list as tests/e2e/dark-mode-a11y.spec.ts — kept in sync deliberately
 // so the visual suite and the axe scan cover identical surfaces.
@@ -82,7 +82,20 @@ for (const mode of ['light', 'dark'] as const) {
         // License dialog never opens (it would otherwise cover most of every
         // route) and so cohorts/data-source content is deterministic instead
         // of depending on whatever the live WebAPI currently returns.
-        await setupBasicMocks(page)
+        //
+        // data-sources needs the richer mock set: setupBasicMocks alone doesn't
+        // stub the CDM results endpoints (dashboard/person/datadensity/etc.), so
+        // that route's dashboard report request falls through to the real
+        // (proxied) backend. Depending on timing that either renders the charts
+        // or the "Unable to load Dashboard report" error banner, which flaked
+        // this screenshot — pass and fail on consecutive runs with no code
+        // change. setupDatasourcesMocks (which wraps setupBasicMocks) mocks all
+        // of those endpoints so the route renders identical content every run.
+        if (route.name === 'data-sources') {
+          await setupDatasourcesMocks(page)
+        } else {
+          await setupBasicMocks(page)
+        }
         await forceUnauthenticated(page)
         await setTheme(page, mode)
         await page.goto(route.path)

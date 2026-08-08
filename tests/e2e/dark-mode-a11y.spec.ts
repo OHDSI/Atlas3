@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
-import { setupBasicMocks } from './helpers/api-mocks'
+import { setupBasicMocks, setupDatasourcesMocks } from './helpers/api-mocks'
 
 // Verified against src/router/routes.ts. The four analysis-hub list views
 // (characterizations, pathways, incidence-rates) live under /analysis/* but
@@ -53,7 +53,16 @@ test.describe('dark mode colour contrast', () => {
       // Mock the API and pre-accept the license agreement so the SNOMED
       // License dialog never opens — otherwise it sits on top of every
       // route and the scan mostly checks modal chrome, not page content.
-      await setupBasicMocks(page)
+      //
+      // data-sources needs the richer mock set (see dark-mode-visual.spec.ts):
+      // setupBasicMocks alone leaves the CDM results endpoints unmocked, so
+      // that route nondeterministically renders either its charts or an
+      // "Unable to load Dashboard report" error banner depending on timing.
+      if (route.name === 'data-sources') {
+        await setupDatasourcesMocks(page)
+      } else {
+        await setupBasicMocks(page)
+      }
       await enableDarkMode(page)
       await page.goto(route.path)
       await page.waitForLoadState('networkidle')
