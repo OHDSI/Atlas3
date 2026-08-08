@@ -244,7 +244,9 @@ import LanguageSelector from '@/components/LanguageSelector.vue'
 import NotificationInbox from '@/components/shared/NotificationInbox.vue'
 import ThemeToggle from './ThemeToggle.vue'
 import logoSvg from '@/assets/icons/atlas-text.svg'
+import logoDarkSvg from '@/assets/icons/atlas-text-dark.svg'
 import logoOhdsiOnlyPng from '@/assets/icons/OHDSI logo only - colored.png'
+import { useThemeStore } from '@/stores/theme'
 
 interface NavigationItem {
   id: string
@@ -275,7 +277,9 @@ const hasAnyAdminAccess = computed(
 )
 const hasJobsAccess = computed(() => hasAnyPermission(['job:execution:get']))
 
-const logoSrc = logoSvg
+// The brand navy logo measures 1.70:1 on the dark surface — effectively invisible.
+const themeStore = useThemeStore()
+const logoSrc = computed(() => (themeStore.resolved === 'dark' ? logoDarkSvg : logoSvg))
 const logoOhdsiOnlySrc = logoOhdsiOnlyPng
 const customLogoUrl = ref<string | null>(null)
 
