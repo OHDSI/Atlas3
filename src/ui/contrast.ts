@@ -38,6 +38,7 @@ export function relativeLuminance([r, g, b]: Rgb): number {
   return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
 }
 
+/** Precondition: `bg` must be opaque — the alpha compositing only accounts for `fg` over `bg`, not a translucent `bg` over whatever sits behind it. */
 export function contrastRatio(fg: string, bg: string): number {
   const a = relativeLuminance(composite(fg, bg))
   const b = relativeLuminance(composite(bg, fg))
