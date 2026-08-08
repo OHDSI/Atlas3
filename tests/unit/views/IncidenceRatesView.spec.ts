@@ -32,11 +32,11 @@ vi.mock('@/utils/logger', () => ({
 
 vi.mock('@/composables/usePermissions', () => ({ usePermissions: vi.fn() }))
 vi.mock('@/composables/useEntityAccess', () => ({ useEntityAccessFor: vi.fn() }))
-vi.mock('@/services/webapi')
+vi.mock('@/services/incidence-rate.service')
 
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
-import { listIncidenceRates, deleteIncidenceRate, copyIncidenceRate } from '@/services/webapi'
+import { listIncidenceRates, deleteIncidenceRate, copyIncidenceRate } from '@/services/incidence-rate.service'
 
 const vuetify = createVuetify({ components, directives })
 

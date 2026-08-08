@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePathwayStore } from '@/stores/pathway'
-import { createPathway, savePathway, copyPathway, deletePathway } from '@/services/webapi'
+import { createPathway, savePathway, copyPathway, deletePathway } from '@/services/pathway.service'
 import type { Pathway } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
 

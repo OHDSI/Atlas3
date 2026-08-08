@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vite
 import { setActivePinia, createPinia } from 'pinia'
 import { ApiError } from '@/services/api-error'
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/incidence-rate.service', () => ({
   getIncidenceRate: vi.fn(),
   assignIncidenceRateTag: vi.fn().mockResolvedValue({ success: true, data: undefined }),
   unassignIncidenceRateTag: vi.fn().mockResolvedValue({ success: true, data: undefined }),
@@ -21,14 +21,14 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-let webapi: typeof import('@/services/webapi')
+let webapi: typeof import('@/services/incidence-rate.service')
 let versions: typeof import('@/services/incidence-rate-versions.service')
 let useIncidenceRateStore: typeof import('@/stores/incidence-rate').useIncidenceRateStore
 let IR_AUTO_SAVE_INTERVAL_MS: typeof import('@/models/incidence-rate.types').IR_AUTO_SAVE_INTERVAL_MS
 
 beforeAll(async () => {
   vi.resetModules()
-  webapi = await import('@/services/webapi')
+  webapi = await import('@/services/incidence-rate.service')
   versions = await import('@/services/incidence-rate-versions.service')
   ;({ useIncidenceRateStore } = await import('@/stores/incidence-rate'))
   ;({ IR_AUTO_SAVE_INTERVAL_MS } = await import('@/models/incidence-rate.types'))
@@ -678,7 +678,7 @@ describe('savePreviewAsCurrent', () => {
       success: true,
       data: { id: 4, name: 'P' },
     })
-    vi.doMock('@/services/webapi', () => ({ saveIncidenceRate }))
+    vi.doMock('@/services/incidence-rate.service', () => ({ saveIncidenceRate }))
 
     const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
     const store = useIncidenceRateStore()
@@ -692,7 +692,7 @@ describe('savePreviewAsCurrent', () => {
 
   it('keeps preview state when the server rejects the save', async () => {
     const saveIncidenceRate = vi.fn().mockResolvedValue({ success: false, error: 'nope' })
-    vi.doMock('@/services/webapi', () => ({ saveIncidenceRate }))
+    vi.doMock('@/services/incidence-rate.service', () => ({ saveIncidenceRate }))
 
     const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
     const store = useIncidenceRateStore()

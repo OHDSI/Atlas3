@@ -20,7 +20,7 @@ import {
   getIncidenceRate,
   assignIncidenceRateTag,
   unassignIncidenceRateTag,
-} from '@/services/webapi'
+} from '@/services/incidence-rate.service'
 import type { Tag } from '@/models/webapi.types'
 import { getIncidenceRateVersion } from '@/services/incidence-rate-versions.service'
 import { logger } from '@/utils/logger'
@@ -259,7 +259,7 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     }
 
     try {
-      const { saveIncidenceRate } = await import('@/services/webapi')
+      const { saveIncidenceRate } = await import('@/services/incidence-rate.service')
       const result = await saveIncidenceRate(currentIR.value.id, currentIR.value)
 
       if (!result.success) {

@@ -50,7 +50,7 @@ vi.mock('@/services/feature-analysis.service', () => ({
   listFeatureAnalyses: vi.fn(),
 }))
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/cohort-definition.service', () => ({
   getCohorts: vi.fn(),
 }))
 
@@ -71,7 +71,7 @@ import {
   listCharacterizationExecutions,
 } from '@/services/characterization.service'
 import { listFeatureAnalyses } from '@/services/feature-analysis.service'
-import { getCohorts } from '@/services/webapi'
+import { getCohorts } from '@/services/cohort-definition.service'
 import CharacterizationBuilderView from '@/views/CharacterizationBuilderView.vue'
 import { success } from '@/types/api'
 

@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { listPathways } from '@/services/webapi'
+import { listPathways } from '@/services/pathway.service'
 import type { Pathway } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
 

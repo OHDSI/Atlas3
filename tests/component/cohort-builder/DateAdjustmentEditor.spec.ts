@@ -12,9 +12,11 @@ vi.mock('@/composables/useI18n', async () => {
   return mockUseI18n
 })
 
-// Mock webapi service to prevent actual API calls
-vi.mock('@/services/webapi', () => ({
-  getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
+// Mock services to prevent actual API calls
+vi.mock('@/services/concept-set.service', () => ({
+  getAllConceptSets: vi.fn().mockResolvedValue([]),
+}))
+vi.mock('@/services/concept-search.service', () => ({
   searchConcepts: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }))
 vi.mock('@/services/source.service', () => ({

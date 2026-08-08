@@ -294,7 +294,7 @@ import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWor
 import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/IncidenceRateConceptSetsPanel.vue'
 import IncidenceRateVersionsPanel from '@/components/incidence-rate/IncidenceRateVersionsPanel.vue'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
-import { exportIncidenceRate, importIncidenceRate } from '@/services/webapi'
+import { exportIncidenceRate, importIncidenceRate } from '@/services/incidence-rate.service'
 import { logger } from '@/utils/logger'
 import type { Tag } from '@/models/webapi.types'
 

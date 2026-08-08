@@ -20,8 +20,10 @@ vi.mock('@/services/feature-analysis.service', () => ({
 vi.mock('@/services/characterization.service', () => ({
   createCharacterization: vi.fn(),
 }))
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/pathway.service', () => ({
   createPathway: vi.fn(),
+}))
+vi.mock('@/services/incidence-rate.service', () => ({
   createIncidenceRate: vi.fn(),
 }))
 
@@ -29,7 +31,8 @@ import router from '@/router'
 import { createConceptSet } from '@/services/concept-set.service'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
 import { createCharacterization } from '@/services/characterization.service'
-import { createPathway, createIncidenceRate } from '@/services/webapi'
+import { createPathway } from '@/services/pathway.service'
+import { createIncidenceRate } from '@/services/incidence-rate.service'
 import { setupPythiaBridge } from '@/plugins/host/pythiaBridge'
 import { ApiError } from '@/services/api-error'
 import { useCohortStore } from '@/stores/cohort'

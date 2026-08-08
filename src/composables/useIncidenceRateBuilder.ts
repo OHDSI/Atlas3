@@ -7,7 +7,7 @@ import {
   copyIncidenceRate,
   deleteIncidenceRate,
   existsIncidenceRate,
-} from '@/services/webapi'
+} from '@/services/incidence-rate.service'
 
 export interface BuilderFeedback {
   message: string

@@ -1,5 +1,5 @@
 import { ref, onUnmounted } from 'vue'
-import { generatePathway, cancelPathwayGeneration, getPathwayExecution } from '@/services/webapi'
+import { generatePathway, cancelPathwayGeneration, getPathwayExecution } from '@/services/pathway.service'
 import type { PathwayExecution } from '@/models/pathway.types'
 import { PATHWAY_GENERATION_POLL_MS } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'

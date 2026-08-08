@@ -3,7 +3,7 @@ import {
   getPathwayExecution,
   getPathwayDesignByGeneration,
   getPathwayResults,
-} from '@/services/webapi'
+} from '@/services/pathway.service'
 import type { Pathway, PathwayExecution, PathwayResults } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
 

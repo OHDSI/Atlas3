@@ -9,7 +9,7 @@ import { usePathwayStore } from '@/stores/pathway'
 
 const vuetify = createVuetify({ components, directives })
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/pathway.service', () => ({
   listPathwayExecutions: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getPathwayExecution: vi.fn(),
   getPathwayDesignByGeneration: vi.fn(),

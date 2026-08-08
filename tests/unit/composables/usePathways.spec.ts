@@ -1,20 +1,13 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { ApiError } from '@/services/api-error'
+import * as pathwayService from '@/services/pathway.service'
+import { usePathways } from '@/composables/usePathways'
 
-vi.mock('@/services/webapi')
+vi.mock('@/services/pathway.service')
 vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
-
-let webapi: typeof import('@/services/webapi')
-let usePathways: typeof import('@/composables/usePathways').usePathways
-
-beforeAll(async () => {
-  vi.resetModules()
-  webapi = await import('@/services/webapi')
-  ;({ usePathways } = await import('@/composables/usePathways'))
-})
 
 const mkPathway = (
   id: number,
@@ -41,7 +34,7 @@ describe('usePathways', () => {
   })
 
   it('fetchPathways populates and stops loading', async () => {
-    vi.mocked(webapi.listPathways).mockResolvedValue({
+    vi.mocked(pathwayService.listPathways).mockResolvedValue({
       success: true,
       data: [mkPathway(1, 'A'), mkPathway(2, 'B')],
     })
@@ -55,7 +48,7 @@ describe('usePathways', () => {
   })
 
   it('filteredPathways applies search query', async () => {
-    vi.mocked(webapi.listPathways).mockResolvedValue({
+    vi.mocked(pathwayService.listPathways).mockResolvedValue({
       success: true,
       data: [mkPathway(1, 'Diabetes Pathway'), mkPathway(2, 'Cardio Pathway')],
     })
@@ -66,7 +59,7 @@ describe('usePathways', () => {
   })
 
   it('filteredPathways applies tag filter (all required)', async () => {
-    vi.mocked(webapi.listPathways).mockResolvedValue({
+    vi.mocked(pathwayService.listPathways).mockResolvedValue({
       success: true,
       data: [
         mkPathway(1, 'A', [{ id: 1, name: 'foo' }]),
@@ -80,7 +73,7 @@ describe('usePathways', () => {
   })
 
   it('paginatedPathways respects itemsPerPage and page', async () => {
-    vi.mocked(webapi.listPathways).mockResolvedValue({
+    vi.mocked(pathwayService.listPathways).mockResolvedValue({
       success: true,
       data: Array.from({ length: 25 }, (_, i) => mkPathway(i + 1, `P${i}`)),
     })
@@ -95,7 +88,7 @@ describe('usePathways', () => {
   })
 
   it('fetchPathways surfaces failure as Error when result.success=false', async () => {
-    vi.mocked(webapi.listPathways).mockResolvedValue({
+    vi.mocked(pathwayService.listPathways).mockResolvedValue({
       success: false,
       error: new ApiError('service down', 0, null),
     })
@@ -106,7 +99,7 @@ describe('usePathways', () => {
   })
 
   it('fetchPathways catches thrown Error', async () => {
-    vi.mocked(webapi.listPathways).mockRejectedValue(new Error('boom'))
+    vi.mocked(pathwayService.listPathways).mockRejectedValue(new Error('boom'))
     const { fetchPathways, error, loading } = usePathways()
     await fetchPathways()
     expect(error.value?.message).toBe('boom')
@@ -114,7 +107,7 @@ describe('usePathways', () => {
   })
 
   it('fetchPathways wraps non-Error rejections', async () => {
-    vi.mocked(webapi.listPathways).mockRejectedValue('boom')
+    vi.mocked(pathwayService.listPathways).mockRejectedValue('boom')
     const { fetchPathways, error } = usePathways()
     await fetchPathways()
     expect(error.value).toBeInstanceOf(Error)
@@ -140,7 +133,7 @@ describe('usePathways', () => {
   })
 
   it('filteredPathways treats missing description as non-match (optional-chain branch)', async () => {
-    vi.mocked(webapi.listPathways).mockResolvedValue({
+    vi.mocked(pathwayService.listPathways).mockResolvedValue({
       success: true,
       data: [
         mkPathway(1, 'P1', [], { description: undefined }),
@@ -154,7 +147,7 @@ describe('usePathways', () => {
   })
 
   it('filteredPathways handles missing createdDate/modifiedDate via nullish coalescing', async () => {
-    vi.mocked(webapi.listPathways).mockResolvedValue({
+    vi.mocked(pathwayService.listPathways).mockResolvedValue({
       success: true,
       data: [
         mkPathway(1, 'P1', [], { createdDate: undefined, modifiedDate: undefined }),
@@ -175,7 +168,7 @@ describe('usePathways', () => {
   })
 
   it('filteredPathways matches description and applies author/date filters', async () => {
-    vi.mocked(webapi.listPathways).mockResolvedValue({
+    vi.mocked(pathwayService.listPathways).mockResolvedValue({
       success: true,
       data: [
         mkPathway(1, 'P1', [], {

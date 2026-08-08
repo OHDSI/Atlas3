@@ -34,7 +34,7 @@ vi.mock('@/composables/usePagination', () => ({
 }))
 
 // Mock webapi services
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/cohort-definition.service', () => ({
   deleteCohort: vi.fn(),
   getCohortDefinition: vi.fn(),
   getCohortPrintFriendly: vi.fn(),
@@ -107,7 +107,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
-import { deleteCohort, getCohortDefinition, getCohortPrintFriendly, saveCohortDefinition } from '@/services/webapi'
+import { deleteCohort, getCohortDefinition, getCohortPrintFriendly, saveCohortDefinition } from '@/services/cohort-definition.service'
 
 // Create mock implementations
 const mockPush = vi.fn()

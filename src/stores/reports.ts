@@ -44,7 +44,7 @@ import {
   getDataCompletenessReport,
   getEntropyReport,
   getTornadoReport,
-} from '@/services/webapi'
+} from '@/services/report.service'
 import {
   mapPersonReport,
   mapConditionErasReport,

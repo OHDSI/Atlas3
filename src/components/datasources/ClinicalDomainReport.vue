@@ -77,7 +77,7 @@ import type {
 import type { DrilldownReport } from '@/models/report.types'
 import type { Domain } from '@/config/drilldown-config'
 import { getMetricLabel } from '@/utils/datasource-formatters'
-import { getCDMDrilldown } from '@/services/webapi'
+import { getCDMDrilldown } from '@/services/report.service'
 import { mapDrilldownReport } from '@/services/report-mapper'
 import { logger } from '@/utils/logger'
 import { AtlasCard, AtlasIcon, AtlasTab, AtlasTabs } from '@/components/ui'

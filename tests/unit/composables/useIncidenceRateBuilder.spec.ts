@@ -8,7 +8,7 @@ vi.mock('vue-router', () => ({
   useRouter: () => ({ push: pushMock }),
 }))
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/incidence-rate.service', () => ({
   createIncidenceRate: vi.fn(),
   saveIncidenceRate: vi.fn(),
   copyIncidenceRate: vi.fn(),
@@ -32,13 +32,13 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-let webapi: typeof import('@/services/webapi')
+let webapi: typeof import('@/services/incidence-rate.service')
 let useIncidenceRateBuilder: typeof import('@/composables/useIncidenceRateBuilder').useIncidenceRateBuilder
 let useIncidenceRateStore: typeof import('@/stores/incidence-rate').useIncidenceRateStore
 
 beforeAll(async () => {
   vi.resetModules()
-  webapi = await import('@/services/webapi')
+  webapi = await import('@/services/incidence-rate.service')
   ;({ useIncidenceRateBuilder } = await import('@/composables/useIncidenceRateBuilder'))
   ;({ useIncidenceRateStore } = await import('@/stores/incidence-rate'))
 })

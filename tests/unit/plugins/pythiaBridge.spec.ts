@@ -20,15 +20,19 @@ vi.mock('@/services/characterization.service', () => ({
   createCharacterization: vi.fn(),
 }))
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/pathway.service', () => ({
   createPathway: vi.fn(),
+}))
+
+vi.mock('@/services/incidence-rate.service', () => ({
   createIncidenceRate: vi.fn(),
 }))
 
 import router from '@/router'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
 import { createCharacterization } from '@/services/characterization.service'
-import { createPathway, createIncidenceRate } from '@/services/webapi'
+import { createPathway } from '@/services/pathway.service'
+import { createIncidenceRate } from '@/services/incidence-rate.service'
 import { setupPythiaBridge, applyProposalDirect } from '@/plugins/host/pythiaBridge'
 import { useCohortStore } from '@/stores/cohort'
 import { createHostMessageBus, getHostMessageBus } from '@/plugins/messaging/HostMessageBus'

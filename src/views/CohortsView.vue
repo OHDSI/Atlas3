@@ -365,7 +365,7 @@ import {
   getCohortDefinition,
   getCohortPrintFriendly,
   saveCohortDefinition,
-} from '@/services/webapi'
+} from '@/services/cohort-definition.service'
 import { logger } from '@/utils/logger'
 import { AtlasAlert, AtlasButton, AtlasChip, AtlasDialog, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'

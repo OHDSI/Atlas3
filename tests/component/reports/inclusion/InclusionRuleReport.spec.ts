@@ -5,12 +5,12 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { createPinia } from 'pinia'
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/report.service', () => ({
   getInclusionRuleReport: vi.fn(),
 }))
 
 import InclusionRuleReport from '@/components/reports/inclusion/InclusionRuleReport.vue'
-import { getInclusionRuleReport } from '@/services/webapi'
+import { getInclusionRuleReport } from '@/services/report.service'
 import { ApiError } from '@/services/api-error'
 
 const vuetify = createVuetify({ components, directives })

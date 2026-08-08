@@ -35,7 +35,7 @@ vi.mock('@/composables/usePagination', () => ({
 }))
 
 // Mock webapi services
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/cohort-definition.service', () => ({
   deleteCohort: vi.fn(),
   getCohortDefinition: vi.fn(),
   getCohortPrintFriendly: vi.fn()

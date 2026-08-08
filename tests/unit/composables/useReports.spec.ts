@@ -3,17 +3,17 @@ import { setActivePinia, createPinia } from 'pinia'
 import type { PersonReport } from '@/models/report.types'
 import { ApiError } from '@/services/api-error'
 
-vi.mock('@/services/webapi')
+vi.mock('@/services/report.service')
 vi.mock('@/services/report-mapper')
 
-let webapi: typeof import('@/services/webapi')
+let webapi: typeof import('@/services/report.service')
 let mapper: typeof import('@/services/report-mapper')
 let useReports: typeof import('@/composables/useReports').useReports
 let useReportsStore: typeof import('@/stores/reports').useReportsStore
 
 beforeAll(async () => {
   vi.resetModules()
-  webapi = await import('@/services/webapi')
+  webapi = await import('@/services/report.service')
   mapper = await import('@/services/report-mapper')
   ;({ useReports } = await import('@/composables/useReports'))
   ;({ useReportsStore } = await import('@/stores/reports'))

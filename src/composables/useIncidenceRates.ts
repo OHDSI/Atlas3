@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { listIncidenceRates } from '@/services/webapi'
+import { listIncidenceRates } from '@/services/incidence-rate.service'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
 import { logger } from '@/utils/logger'
 

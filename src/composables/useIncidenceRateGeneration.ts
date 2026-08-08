@@ -3,7 +3,7 @@ import {
   generateIncidenceRate,
   cancelIncidenceRateGeneration,
   listIncidenceRateInfo,
-} from '@/services/webapi'
+} from '@/services/incidence-rate.service'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { IR_GENERATION_POLL_MS, IR_TERMINAL_STATUSES } from '@/models/incidence-rate.types'

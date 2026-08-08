@@ -49,11 +49,6 @@ vi.mock('@/composables/useAtlasConverter', () => {
   }
 })
 
-// Webapi mocks: most calls are unused in these tests.
-vi.mock('@/services/webapi', () => ({
-  getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
-}))
-
 // A few flows (load existing cohort, save) need predictable ApiResult values.
 vi.mock('@/services/cohort-definition.service', () => ({
   getCohortDefinition: vi.fn().mockResolvedValue({

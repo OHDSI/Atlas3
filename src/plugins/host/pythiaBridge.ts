@@ -26,7 +26,8 @@ import router from '@/router'
 import { createConceptSet } from '@/services/concept-set.service'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
 import { createCharacterization } from '@/services/characterization.service'
-import { createPathway, createIncidenceRate } from '@/services/webapi'
+import { createPathway } from '@/services/pathway.service'
+import { createIncidenceRate } from '@/services/incidence-rate.service'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 import type {
   FeatureAnalysis,

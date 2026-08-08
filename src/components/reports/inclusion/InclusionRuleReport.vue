@@ -117,7 +117,7 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasSkeleton, AtlasTab, AtlasTabs } from '@/components/ui'
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
-import { getInclusionRuleReport } from '@/services/webapi'
+import { getInclusionRuleReport } from '@/services/report.service'
 import type { InclusionRuleReport, InclusionRuleReportMode } from '@/models/report.types'
 import { computeAttritionSteps } from '@/utils/inclusion-attrition'
 import { useI18n } from '@/composables/useI18n'

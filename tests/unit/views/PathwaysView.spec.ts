@@ -31,11 +31,11 @@ vi.mock('@/utils/logger', () => ({
 
 vi.mock('@/composables/usePermissions', () => ({ usePermissions: vi.fn() }))
 vi.mock('@/composables/useEntityAccess', () => ({ useEntityAccessFor: vi.fn() }))
-vi.mock('@/services/webapi')
+vi.mock('@/services/pathway.service')
 
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
-import { listPathways, deletePathway, copyPathway } from '@/services/webapi'
+import { listPathways, deletePathway, copyPathway } from '@/services/pathway.service'
 
 const vuetify = createVuetify({ components, directives })
 

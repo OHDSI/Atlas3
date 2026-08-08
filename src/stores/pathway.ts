@@ -7,7 +7,7 @@ import {
   PATHWAY_AUTO_SAVE_INTERVAL_MS,
 } from '@/models/pathway.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
-import { getPathway, assignPathwayTag, unassignPathwayTag } from '@/services/webapi'
+import { getPathway, assignPathwayTag, unassignPathwayTag } from '@/services/pathway.service'
 import type { Tag } from '@/models/webapi.types'
 import { getPathwayVersion } from '@/services/pathway-versions.service'
 import { logger } from '@/utils/logger'
@@ -161,7 +161,7 @@ export const usePathwayStore = defineStore('pathway', () => {
     }
 
     try {
-      const { savePathway } = await import('@/services/webapi')
+      const { savePathway } = await import('@/services/pathway.service')
       const result = await savePathway(currentPathway.value.id, currentPathway.value)
 
       if (!result.success) {
