@@ -5,7 +5,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { ConceptSet, Concept } from '@/models/concept-set.types'
-import { searchConceptsResult } from '@/services/concept-search.service'
+import { searchConcepts as searchConceptsApi } from '@/services/concept-search.service'
 import { logger } from '@/utils/logger'
 
 export const useConceptPickerStore = defineStore('concept-picker', () => {
@@ -63,7 +63,7 @@ export const useConceptPickerStore = defineStore('concept-picker', () => {
     try {
       setSearching(true)
       setSearchQuery(query)
-      const result = await searchConceptsResult(sourceKey, query, domain)
+      const result = await searchConceptsApi(sourceKey, query, { domain })
       if (result.success) {
         setSearchResults(result.data)
       } else {

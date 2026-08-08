@@ -5,7 +5,7 @@
 import { ref, computed } from 'vue'
 import { useConceptPickerStore } from '@/stores/concept-picker'
 import type { Concept } from '@/models/concept-set.types'
-import { searchConceptsResult as searchConceptsApi } from '@/services/concept-search.service'
+import { searchConcepts as searchConceptsApi } from '@/services/concept-search.service'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
 import { getSourceKey } from '@/config/webapi'
@@ -28,7 +28,7 @@ export function useConceptSets() {
       store.setSearchQuery(query)
 
       const sourceKey = getSourceKey()
-      const result = await searchConceptsApi(sourceKey, query, domain)
+      const result = await searchConceptsApi(sourceKey, query, { domain })
 
       if (result?.success) {
         store.setSearchResults(result.data)

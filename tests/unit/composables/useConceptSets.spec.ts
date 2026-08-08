@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
 vi.mock('@/services/concept-search.service', () => ({
-  searchConceptsResult: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  searchConcepts: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }))
 
 describe('useConceptSets', () => {

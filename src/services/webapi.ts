@@ -25,7 +25,7 @@ export async function fetchJSON<T>(endpoint: string, options?: RequestInit): Pro
 
 export { fetchCDMSources } from '@/services/source.service'
 
-export { searchConceptsResult as searchConcepts } from '@/services/concept-search.service'
+export { searchConcepts } from '@/services/concept-search.service'
 
 export {
   getCohortDefinition,

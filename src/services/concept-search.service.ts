@@ -30,6 +30,12 @@ function extractHttpStatus(error: unknown): number | null {
   return parseInt(match[1], 10)
 }
 
+// Single implementation for the one endpoint, POST /vocabulary/{sourceKey}/search:
+// the ApiResult contract (this used to be the separate searchConceptsResult),
+// with the options object — including unused-but-reserved page/pageSize,
+// carried over from the original throwing searchConcepts — for callers that
+// need a domain filter. Uses httpPostRead: the GET form of this endpoint
+// silently returns [] on current WebAPI builds, and POST is a retry-safe read.
 export async function searchConcepts(
   sourceKey: string,
   query: string,
@@ -38,47 +44,12 @@ export async function searchConcepts(
     pageSize?: number
     domain?: string
   }
-): Promise<{ concepts: Concept[]; total: number }> {
-  if (!query || query.length < 1) {
-    return { concepts: [], total: 0 }
-  }
-
-  if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
-    throw new Error('Invalid vocabulary source. Please select a valid source in Configuration.')
-  }
-
-  // Use POST /vocabulary/{sourceKey}/search with a JSON body. Current WebAPI
-  // builds silently return [] for the GET form (`?query=...`), which made
-  // every concept picker look broken.
-  const endpoint = `/vocabulary/${sourceKey}/search`
-  const body: Record<string, unknown> = { QUERY: query.trim() }
-  if (options?.domain) {
-    body.DOMAIN_ID = [options.domain]
-  }
-  const data = await httpPostRead<unknown>(endpoint, body)
-  const parsed = ConceptSearchResponseSchema.safeParse(data)
-
-  if (!parsed.success) {
-    logger.error('ConceptSearch', 'Concept search validation error', parsed.error)
-    throw new Error('Invalid concept search response format')
-  }
-
-  const concepts = parsed.data.map(mapConceptFromAPI)
-  return { concepts, total: concepts.length }
-}
-
-// Distinct from `searchConcepts` above (which throws and returns
-// {concepts,total}) — this is the concept-picker store's original search,
-// moved verbatim from webapi.ts, kept under its own name because the two
-// signatures collide. Still uses httpPostRead: the GET form of
-// /vocabulary/{sourceKey}/search silently returns [] on current WebAPI
-// builds, and this is a retry-safe read.
-export async function searchConceptsResult(
-  sourceKey: string,
-  query: string,
-  domain?: string
 ): Promise<ApiResult<Concept[]>> {
   return unwrap(async () => {
+    if (!query || query.length < 1) {
+      return []
+    }
+
     if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
       throw new ApiError(
         'Invalid vocabulary source. Please select a valid source in Configuration.',
@@ -88,27 +59,19 @@ export async function searchConceptsResult(
     }
 
     const endpoint = `/vocabulary/${sourceKey}/search`
-    const body: Record<string, unknown> = { QUERY: query }
-    if (domain) {
-      body.DOMAIN_ID = [domain]
+    const body: Record<string, unknown> = { QUERY: query.trim() }
+    if (options?.domain) {
+      body.DOMAIN_ID = [options.domain]
     }
-
     const data = await httpPostRead<unknown>(endpoint, body)
     const parsed = ConceptSearchResponseSchema.safeParse(data)
+
     if (!parsed.success) {
+      logger.error('ConceptSearch', 'Concept search validation error', parsed.error)
       throw new ApiError('Invalid concept search response format', 0, null)
     }
 
-    return parsed.data.map(c => ({
-      conceptId: c.CONCEPT_ID,
-      conceptName: c.CONCEPT_NAME,
-      conceptCode: c.CONCEPT_CODE,
-      domainId: c.DOMAIN_ID,
-      vocabularyId: c.VOCABULARY_ID,
-      conceptClassId: c.CONCEPT_CLASS_ID,
-      standardConcept: c.STANDARD_CONCEPT,
-      invalidReason: c.INVALID_REASON,
-    }))
+    return parsed.data.map(mapConceptFromAPI)
   }, 'ConceptSearchService')
 }
 
