@@ -23,7 +23,7 @@ vi.mock('vue-router', () => ({
 
 // Prevent any network from the concept stores' service calls.
 vi.mock('@/services/concept-search.service', () => ({
-  searchConcepts: vi.fn(),
+  searchConcepts: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getConceptById: vi.fn(),
   getConceptsByIds: vi.fn(),
   getConceptsBySourceCodes: vi.fn(),

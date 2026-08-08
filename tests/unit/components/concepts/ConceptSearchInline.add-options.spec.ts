@@ -18,7 +18,7 @@ vi.mock('@/composables/useI18n', async () => {
 })
 
 vi.mock('@/services/concept-search.service', () => ({
-  searchConcepts: vi.fn().mockResolvedValue({ concepts: [], totalCount: 0 }),
+  searchConcepts: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getConceptRecordCounts: vi.fn().mockResolvedValue(new Map()),
 }))
 
