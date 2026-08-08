@@ -55,4 +55,22 @@ describe('services/http-client error surfacing', () => {
       'HTTP 400: Bad Request'
     )
   })
+
+  it('preserves the HTTP status on the thrown error', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 403,
+      statusText: 'Forbidden',
+      text: async () => 'no access to this source',
+    })
+
+    const { httpClient } = await import('@/services/http-client')
+    const { ApiError } = await import('@/services/api-error')
+
+    await expect(httpClient('/source/sources', { skipAuth: true })).rejects.toMatchObject({
+      status: 403,
+      body: 'no access to this source',
+    })
+    await expect(httpClient('/source/sources', { skipAuth: true })).rejects.toBeInstanceOf(ApiError)
+  })
 })

@@ -133,7 +133,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
       const result = await promise
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toContain('Network')
+        expect(result.error.message).toContain('Network')
       }
       expect(mockFetch).toHaveBeenCalledTimes(3)
     })
@@ -328,7 +328,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
 
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toContain('400')
+        expect(result.error.message).toContain('400')
       }
       expect(mockFetch).toHaveBeenCalledTimes(1)
     })
@@ -344,7 +344,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
 
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toContain('401')
+        expect(result.error.message).toContain('401')
       }
       expect(mockFetch).toHaveBeenCalledTimes(1)
     })
@@ -360,7 +360,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
 
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toContain('404')
+        expect(result.error.message).toContain('404')
       }
       expect(mockFetch).toHaveBeenCalledTimes(1)
     })
@@ -376,7 +376,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
 
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toContain('422')
+        expect(result.error.message).toContain('422')
       }
       expect(mockFetch).toHaveBeenCalledTimes(1)
     })
@@ -444,7 +444,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
       const result = await promise
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toContain('500')
+        expect(result.error.message).toContain('500')
       }
       expect(mockFetch).toHaveBeenCalledTimes(3)
     })

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { ApiError } from '@/services/api-error'
 vi.mock('@/services/webapi', () => ({
   listIncidenceRates: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }))
@@ -44,7 +45,7 @@ describe('useIncidenceRates', () => {
   it('fetchIncidenceRates surfaces failure as Error when result.success=false', async () => {
     (listIncidenceRates as Mock).mockResolvedValueOnce({
       success: false,
-      error: 'service down',
+      error: new ApiError('service down', 0, null),
     })
     const c = useIncidenceRates()
     await c.fetchIncidenceRates()

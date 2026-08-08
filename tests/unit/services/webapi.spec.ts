@@ -628,7 +628,7 @@ describe('WebAPI Service', () => {
 
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toContain('Network error')
+        expect(result.error.message).toContain('Network error')
       }
     })
 

@@ -11,6 +11,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import PathwaysView from '@/views/PathwaysView.vue'
 import { usePathwayStore } from '@/stores/pathway'
 import type { Pathway } from '@/models/pathway.types'
+import { ApiError } from '@/services/api-error'
 
 const mockPush = vi.fn()
 vi.mock('vue-router', () => ({
@@ -153,7 +154,10 @@ describe('PathwaysView', () => {
     })
 
     it('shows the error banner when the fetch fails', async () => {
-      vi.mocked(listPathways).mockResolvedValue({ success: false, error: 'boom' })
+      vi.mocked(listPathways).mockResolvedValue({
+        success: false,
+        error: new ApiError('boom', 0, null),
+      })
       wrapper = mountView()
       await flushPromises()
 
@@ -251,7 +255,10 @@ describe('PathwaysView', () => {
 
     it('shows an error and logs when the copy fails', async () => {
       vi.mocked(listPathways).mockResolvedValue({ success: true, data: [mkPathway(1)] })
-      vi.mocked(copyPathway).mockResolvedValue({ success: false, error: 'copy failed' })
+      vi.mocked(copyPathway).mockResolvedValue({
+        success: false,
+        error: new ApiError('copy failed', 0, null),
+      })
       wrapper = mountView()
       await flushPromises()
 

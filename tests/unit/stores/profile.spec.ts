@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useProfileStore } from '@/stores/profile'
+import { ApiError } from '@/services/api-error'
 
 vi.mock('@/services/profile.service', () => ({
   getPerson: vi.fn(),
@@ -86,7 +87,10 @@ describe('Profile Store — loadPerson', () => {
 
   it('sets error and clears person on failure', async () => {
     const { getPerson } = await import('@/services/profile.service')
-    ;(getPerson as ReturnType<typeof vi.fn>).mockResolvedValue({ success: false, error: 'boom', code: 'NOT_FOUND' })
+    ;(getPerson as ReturnType<typeof vi.fn>).mockResolvedValue({
+      success: false,
+      error: new ApiError('boom', 404, null),
+    })
     const s = useProfileStore()
     s.setRouteParams({ sourceKey: 'SYNPUF', personId: 99 })
     await s.loadPerson()
@@ -107,7 +111,10 @@ describe('Profile Store — loadPerson', () => {
 
   it('does not fetch concept sets when person load fails (even with cohortDefinitionId)', async () => {
     const { getPerson, getCohortConceptSets } = await import('@/services/profile.service')
-    ;(getPerson as ReturnType<typeof vi.fn>).mockResolvedValue({ success: false, error: 'boom' })
+    ;(getPerson as ReturnType<typeof vi.fn>).mockResolvedValue({
+      success: false,
+      error: new ApiError('boom', 0, null),
+    })
     const s = useProfileStore()
     s.setRouteParams({ sourceKey: 'SYNPUF', personId: 99, cohortDefinitionId: 42 })
     await s.loadPerson()

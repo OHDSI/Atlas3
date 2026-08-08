@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useJobsStore } from '@/stores/jobs'
+import { ApiError } from '@/services/api-error'
 
 // Mock jobs service
 vi.mock('@/services/jobs.service', () => ({
@@ -75,7 +76,7 @@ describe('JobsStore', () => {
       const { jobsService } = await import('@/services/jobs.service')
       vi.mocked(jobsService.getJobs).mockResolvedValue({
         success: false,
-        error: 'Service error'
+        error: new ApiError('Service error', 0, null)
       })
 
       const store = useJobsStore()

@@ -25,7 +25,7 @@ export function usePathwayResults() {
       ])
       if (!execRes.success || !designRes.success || !resultsRes.success) {
         const errs = [execRes, designRes, resultsRes]
-          .map(r => (r.success ? null : r.error))
+          .map(r => (r.success ? null : r.error.message))
           .filter((e): e is string => Boolean(e))
         error.value = errs.length > 0 ? errs.join('; ') : 'Failed to load results'
         return false

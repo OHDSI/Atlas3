@@ -4,6 +4,7 @@
  */
 import { logger } from '@/utils/logger'
 import { getAppConfig } from '@/config/app-config.loader'
+import { ApiError } from '@/services/api-error'
 const MAX_RETRY_ATTEMPTS = 3
 const INITIAL_RETRY_DELAY_MS = 500
 
@@ -154,7 +155,7 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
         } catch {
           // keep statusText
         }
-        const error = new Error(`HTTP ${response.status}: ${detail}`)
+        const error = new ApiError(`HTTP ${response.status}: ${detail}`, response.status, detail)
         if (retryAllowed && isRetryableError(error, response.status) && attempt < maxRetries - 1) {
           const delay = initialDelay * Math.pow(2, attempt)
           logger.warn(
@@ -194,7 +195,7 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
       }
 
       if (error instanceof TypeError) {
-        throw new Error(`Network error: ${error.message}`)
+        throw new ApiError(`Network error: ${error.message}`, 0, null)
       }
       throw error
     }

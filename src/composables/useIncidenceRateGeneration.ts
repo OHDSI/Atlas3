@@ -33,7 +33,7 @@ export function useIncidenceRateGeneration(irId: number) {
   async function pollOnce() {
     const result = await listIncidenceRateInfo(irId)
     if (!result.success) {
-      error.value = result.error
+      error.value = result.error.message
       logger.error('IRGeneration', 'pollOnce failed', result.error)
       stopPolling()
       return
@@ -60,7 +60,7 @@ export function useIncidenceRateGeneration(irId: number) {
     error.value = null
     const result = await generateIncidenceRate(irId, sourceKey)
     if (!result.success) {
-      error.value = result.error
+      error.value = result.error.message
       logger.error('IRGeneration', 'start failed', result.error)
       return false
     }

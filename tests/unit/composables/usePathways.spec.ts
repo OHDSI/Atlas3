@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { ApiError } from '@/services/api-error'
 
 vi.mock('@/services/webapi')
 vi.mock('@/utils/logger', () => ({
@@ -96,7 +97,7 @@ describe('usePathways', () => {
   it('fetchPathways surfaces failure as Error when result.success=false', async () => {
     vi.mocked(webapi.listPathways).mockResolvedValue({
       success: false,
-      error: 'service down',
+      error: new ApiError('service down', 0, null),
     })
     const { fetchPathways, error } = usePathways()
     await fetchPathways()

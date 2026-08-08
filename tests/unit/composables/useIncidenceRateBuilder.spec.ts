@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { ApiError } from '@/services/api-error'
 
 const pushMock = vi.fn()
 
@@ -166,7 +167,7 @@ describe('useIncidenceRateBuilder', () => {
       vi.mocked(webapi.existsIncidenceRate).mockResolvedValue(0)
       vi.mocked(webapi.saveIncidenceRate).mockResolvedValue({
         success: false,
-        error: 'Server error',
+        error: new ApiError('Server error', 0, null),
       })
 
       const { save, feedback } = useIncidenceRateBuilder()
@@ -195,7 +196,7 @@ describe('useIncidenceRateBuilder', () => {
       store.setIR(makeValidIR({ id: 5 }))
       vi.mocked(webapi.copyIncidenceRate).mockResolvedValue({
         success: false,
-        error: 'Bad copy',
+        error: new ApiError('Bad copy', 0, null),
       })
 
       const { copy, feedback } = useIncidenceRateBuilder()

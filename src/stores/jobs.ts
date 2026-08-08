@@ -69,7 +69,7 @@ export const useJobsStore = defineStore('jobs', () => {
         jobs.value = result.data
         lastFetched.value = new Date()
       } else {
-        error.value = result.error
+        error.value = result.error.message
         logger.error('JobsStore', 'Failed to fetch jobs', result.error)
       }
     } catch (err) {

@@ -24,7 +24,7 @@ export function usePathwayGeneration(pathwayId: number) {
     if (!execution.value) return
     const result = await getPathwayExecution(execution.value.id)
     if (!result.success) {
-      error.value = result.error
+      error.value = result.error.message
       stopPolling()
       return
     }
@@ -36,7 +36,7 @@ export function usePathwayGeneration(pathwayId: number) {
     error.value = null
     const result = await generatePathway(pathwayId, sourceKey)
     if (!result.success) {
-      error.value = result.error
+      error.value = result.error.message
       logger.error('PathwayGeneration', 'start failed', result.error)
       return false
     }

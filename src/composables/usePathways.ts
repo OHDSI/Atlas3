@@ -33,7 +33,7 @@ export function usePathways() {
       if (result.success) {
         pathways.value = result.data
       } else {
-        error.value = new Error(result.error)
+        error.value = new Error(result.error.message)
       }
     } catch (err) {
       error.value = err instanceof Error ? err : new Error('Failed to load')

@@ -12,6 +12,7 @@ import IncidenceRatesView from '@/views/IncidenceRatesView.vue'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { useNotifications } from '@/stores/notifications'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
+import { ApiError } from '@/services/api-error'
 
 const mockPush = vi.fn()
 vi.mock('vue-router', () => ({
@@ -155,7 +156,10 @@ describe('IncidenceRatesView', () => {
     })
 
     it('shows the error banner when the fetch fails', async () => {
-      vi.mocked(listIncidenceRates).mockResolvedValue({ success: false, error: 'boom' })
+      vi.mocked(listIncidenceRates).mockResolvedValue({
+        success: false,
+        error: new ApiError('boom', 0, null),
+      })
       wrapper = mountView()
       await flushPromises()
 
@@ -252,7 +256,10 @@ describe('IncidenceRatesView', () => {
     })
 
     it('shows an error and logs when the copy fails', async () => {
-      vi.mocked(copyIncidenceRate).mockResolvedValue({ success: false, error: 'copy failed' })
+      vi.mocked(copyIncidenceRate).mockResolvedValue({
+        success: false,
+        error: new ApiError('copy failed', 0, null),
+      })
       wrapper = mountView()
       const notifications = useNotifications()
 

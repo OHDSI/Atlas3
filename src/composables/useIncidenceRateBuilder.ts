@@ -50,7 +50,7 @@ export function useIncidenceRateBuilder() {
     const result =
       ir.id !== undefined ? await saveIncidenceRate(ir.id, ir) : await createIncidenceRate(ir)
     if (!result.success) {
-      notify(result.error, 'error')
+      notify(result.error.message, 'error')
       return false
     }
     store.setIR(result.data)
@@ -66,7 +66,7 @@ export function useIncidenceRateBuilder() {
     if (!store.currentIR?.id) return false
     const result = await copyIncidenceRate(store.currentIR.id)
     if (!result.success) {
-      notify(result.error, 'error')
+      notify(result.error.message, 'error')
       return false
     }
     store.setIR(result.data)

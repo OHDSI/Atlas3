@@ -1,6 +1,7 @@
 import { httpGet } from '@/services/http-client'
 import { logger } from '@/utils/logger'
 import { type ApiResult, success, failure } from '@/types/api'
+import { toApiError } from '@/services/api-error'
 import {
   PersonProfileSchema,
   type PersonProfile,
@@ -24,10 +25,8 @@ export async function getPerson(
     }
     return success(parsed.data)
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Failed to fetch person profile'
     logger.error('ProfileService', 'Failed to fetch person profile', err)
-    if (msg.startsWith('HTTP 404:')) return failure(msg, 'NOT_FOUND')
-    return failure(msg)
+    return failure(toApiError(err))
   }
 }
 

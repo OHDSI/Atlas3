@@ -39,7 +39,7 @@ export function useIncidenceRateReport(
       )
       if (result.success) report.value = result.data
       else {
-        error.value = result.error
+        error.value = result.error.message
         report.value = null
       }
     } catch (err) {

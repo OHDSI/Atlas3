@@ -113,7 +113,7 @@ export function useCohorts() {
           return bDate - aDate
         })
       } else {
-        error.value = new Error(result.error)
+        error.value = new Error(result.error.message)
         logger.error('useCohorts', 'Failed to fetch cohorts', result.error)
       }
     } catch (err) {

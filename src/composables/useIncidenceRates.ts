@@ -31,7 +31,7 @@ export function useIncidenceRates() {
     try {
       const result = await listIncidenceRates()
       if (result.success) incidenceRates.value = result.data
-      else error.value = new Error(result.error)
+      else error.value = new Error(result.error.message)
     } catch (err) {
       error.value = err instanceof Error ? err : new Error('Failed to load')
       logger.error('useIncidenceRates', 'fetch failed', err)
