@@ -227,10 +227,22 @@ export function setChartTheme(mode: 'light' | 'dark'): void {
 }
 
 /**
+ * Root-level `textStyle` default for ECharts option objects. Text elements
+ * that don't set their own colour (axis names, tooltip labels ECharts draws
+ * internally, etc.) otherwise fall back to ECharts' own dark-grey default,
+ * which is invisible on the dark surface. Light omits the key entirely so
+ * light-mode options stay byte-identical to before this default existed.
+ */
+export function chartRootTextStyle(): { textStyle: { color: string } } | Record<string, never> {
+  return chartMode === 'dark' ? { textStyle: { color: CHART_TEXT } } : {}
+}
+
+/**
  * Default bar chart configuration
  */
 export function defaultBarChartOptions(data: BarChartData): EChartsOption {
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -315,6 +327,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
  */
 export function defaultPieChartOptions(data: PieChartData[], title?: string): EChartsOption {
   return {
+    ...chartRootTextStyle(),
     title: title
       ? {
           text: title,
@@ -399,6 +412,7 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
  */
 export function defaultLineChartOptions(data: LineChartData, title?: string): EChartsOption {
   return {
+    ...chartRootTextStyle(),
     title: title
       ? {
           text: title,
@@ -472,6 +486,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
 export function defaultTreemapOptions(data: TreemapNode[], title?: string): EChartsOption {
   const { min: dataMin, max: dataMax } = extractTreemapValueRange(data)
   return {
+    ...chartRootTextStyle(),
     title: title
       ? {
           text: title,
@@ -551,6 +566,11 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
           formatter: '{b}',
           overflow: 'truncate',
           ellipsis: '...',
+          // Sits on the node's own gradient-sampled fill, not the page
+          // background, so the root textStyle default (on-surface, made for
+          // text on CHART_SURFACE) would be too light against it in dark.
+          // Dark-only so light — which never set a colour here — is untouched.
+          ...(chartMode === 'dark' ? { color: CHART_LABEL_ON_MARK } : {}),
         },
         upperLabel: {
           show: true,
@@ -772,6 +792,7 @@ import { logger } from '@/utils/logger'
  */
 export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChartsOption {
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'item',
       formatter: (params: unknown) => {
@@ -802,6 +823,10 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
           show: true,
           formatter: '{b}\n{d}%',
           fontSize: 12,
+          // On the pie slice fill, not the page background — confirmed live as
+          // dark-on-dark with the root textStyle default. Dark-only override so
+          // light (which never set a colour here) stays byte-identical.
+          ...(chartMode === 'dark' ? { color: CHART_LABEL_ON_MARK } : {}),
         },
         emphasis: {
           label: {
@@ -847,6 +872,7 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
   const axisLabel = data.xAxisLabel || 'Age'
 
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'item',
       formatter: (params: unknown) => {
@@ -947,6 +973,7 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
  */
 export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): EChartsOption {
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'axis',
       formatter: (params: unknown) => {
@@ -1022,6 +1049,7 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
  */
 export function dashboardObservationMonthLineOptions(data: DatasourceLineChartData): EChartsOption {
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'axis',
       formatter: (params: unknown) => {
@@ -1094,6 +1122,7 @@ export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLin
   const formatValue = (value: number) =>
     isPercent ? `${(value * 100).toFixed(1)}%` : formatSINumber(value)
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -1179,6 +1208,7 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
   const maxValue = Math.max(...values)
 
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'item',
       formatter: (params: unknown) => {
@@ -1225,6 +1255,9 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
           overflow: 'truncate',
           ellipsis: '...',
           fontSize: 12,
+          // Sits on the node's prevalence-ramp fill, not the page background;
+          // same reasoning as defaultTreemapOptions above. Dark-only.
+          ...(chartMode === 'dark' ? { color: CHART_LABEL_ON_MARK } : {}),
         },
         upperLabel: {
           show: true,
@@ -1491,6 +1524,7 @@ export function trellisChartOptions(
   })
 
   return {
+    ...chartRootTextStyle(),
     title: title
       ? [
           {
@@ -1547,6 +1581,7 @@ export function boxPlotChartOptions(
   })
 
   return {
+    ...chartRootTextStyle(),
     title: title
       ? {
           text: title,

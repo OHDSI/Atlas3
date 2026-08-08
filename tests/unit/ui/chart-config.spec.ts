@@ -2,6 +2,15 @@ import { describe, it, expect, afterEach } from 'vitest'
 import {
   parseYyyymm,
   dashboardObservationMonthLineOptions,
+  dashboardGenderPieOptions,
+  dashboardAgeBarOptions,
+  dashboardCumulativeLineOptions as dashboardCumulativeLineOptionsBuilder,
+  multiLineChartOptions as multiLineChartOptionsBuilder,
+  defaultBarChartOptions,
+  defaultPieChartOptions,
+  defaultLineChartOptions,
+  defaultTreemapOptions,
+  clinicalDomainTreemapOptions,
   setChartPalette,
   setChartTheme,
   CHART_COLORS,
@@ -10,13 +19,15 @@ import {
   CHART_GRID_BORDER,
   CHART_BOX_BORDER,
   CHART_OUTLIER_MARKER,
+  CHART_TEXT,
+  CHART_LABEL_ON_MARK,
   getExportConfig,
   trellisChartOptions,
   boxPlotChartOptions,
 } from '@/ui/chart-config'
 import { contrastRatio } from '@/ui/contrast'
 import { tokens } from '@/ui/tokens'
-import type { TrellisChartData, BoxPlotData } from '@/models/report.types'
+import type { TrellisChartData, BoxPlotData, TreemapNode } from '@/models/report.types'
 
 describe('setChartPalette', () => {
   afterEach(() => {
@@ -315,5 +326,167 @@ describe('setChartTheme', () => {
     ]
     const options = boxPlotChartOptions(data) as { series?: Array<{ itemStyle?: Record<string, unknown> }> }
     expect(options.series?.[1]?.itemStyle?.color).toBe(CHART_OUTLIER_MARKER)
+  })
+})
+
+// Regression: ECharts falls back to its own dark-grey default (~#333) for any
+// text that doesn't set an explicit colour, which is invisible on the dark
+// surface. Every option builder must add a root-level textStyle default in
+// dark only, and must NOT add one in light (so light stays byte-identical).
+describe('chartRootTextStyle root default', () => {
+  afterEach(() => {
+    setChartTheme('light')
+  })
+
+  const treemapNodes: TreemapNode[] = [
+    { name: 'a', value: 10 },
+    { name: 'b', value: 20 },
+  ]
+
+  const builders: Array<{ name: string; build: () => { textStyle?: { color?: string } } }> = [
+    {
+      name: 'defaultBarChartOptions',
+      build: () => defaultBarChartOptions({ categories: ['a', 'b'], values: [1, 2] }),
+    },
+    {
+      name: 'defaultPieChartOptions',
+      build: () => defaultPieChartOptions([{ name: 'a', value: 1 }]),
+    },
+    {
+      name: 'defaultLineChartOptions',
+      build: () => defaultLineChartOptions({ xAxis: ['a', 'b'], yAxis: [1, 2] }),
+    },
+    {
+      name: 'defaultTreemapOptions',
+      build: () => defaultTreemapOptions(treemapNodes),
+    },
+    {
+      name: 'dashboardGenderPieOptions',
+      build: () => dashboardGenderPieOptions([{ name: 'Male', value: 1 }]),
+    },
+    {
+      name: 'dashboardAgeBarOptions',
+      build: () =>
+        dashboardAgeBarOptions({
+          intervalSize: 10,
+          offset: 0,
+          bins: [{ intervalIndex: 0, countValue: 5 }],
+        }),
+    },
+    {
+      name: 'dashboardCumulativeLineOptions',
+      build: () =>
+        dashboardCumulativeLineOptionsBuilder({
+          xValues: [0, 1],
+          series: [{ name: 'Percent', data: [100, 80] }],
+        }),
+    },
+    {
+      name: 'dashboardObservationMonthLineOptions',
+      build: () =>
+        dashboardObservationMonthLineOptions({
+          monthCodes: [200301],
+          series: [{ name: 'Observations', data: [10] }],
+        }),
+    },
+    {
+      name: 'multiLineChartOptions',
+      build: () =>
+        multiLineChartOptionsBuilder({
+          categories: ['a', 'b'],
+          series: [{ name: 's', data: [1, 2] }],
+        }),
+    },
+    {
+      name: 'clinicalDomainTreemapOptions',
+      build: () => clinicalDomainTreemapOptions(treemapNodes),
+    },
+    {
+      name: 'trellisChartOptions',
+      build: () =>
+        trellisChartOptions({
+          categories: ['20-29'],
+          series: [{ name: 'Male', category: '20-29', data: [{ x: 2015, y: 12.5 }] }],
+        }),
+    },
+    {
+      name: 'boxPlotChartOptions',
+      build: () =>
+        boxPlotChartOptions([
+          { category: 'a', min: 1, p10: 2, p25: 3, median: 4, p75: 5, p90: 6, max: 7 },
+        ]),
+    },
+  ]
+
+  it.each(builders)('$name emits no root textStyle in light', ({ build }) => {
+    setChartTheme('light')
+    expect(build().textStyle).toBeUndefined()
+  })
+
+  it.each(builders)('$name emits the dark on-surface root textStyle in dark', ({ build }) => {
+    setChartTheme('dark')
+    expect(build().textStyle?.color).toBe(tokens.colorDark.onSurface)
+    expect(build().textStyle?.color).toBe(CHART_TEXT)
+  })
+})
+
+// Regression: dashboardGenderPieOptions' donut labels sit on the pie slice
+// fill (a coloured mark), not the page background. Once the root textStyle
+// default above exists, an unset label colour would inherit the on-surface
+// colour meant for text on the page — too light against the light/pastel
+// dark-mode chart palette. It must flip to CHART_LABEL_ON_MARK instead.
+describe('labels on coloured marks use CHART_LABEL_ON_MARK, not the root default', () => {
+  afterEach(() => {
+    setChartTheme('light')
+  })
+
+  it('dashboardGenderPieOptions label has no colour in light (unchanged)', () => {
+    setChartTheme('light')
+    const options = dashboardGenderPieOptions([{ name: 'Male', value: 1 }]) as {
+      series?: Array<{ label?: { color?: string } }>
+    }
+    expect(options.series?.[0]?.label?.color).toBeUndefined()
+  })
+
+  it('dashboardGenderPieOptions label uses CHART_LABEL_ON_MARK in dark', () => {
+    setChartTheme('dark')
+    const options = dashboardGenderPieOptions([{ name: 'Male', value: 1 }]) as {
+      series?: Array<{ label?: { color?: string } }>
+    }
+    expect(options.series?.[0]?.label?.color).toBe(CHART_LABEL_ON_MARK)
+  })
+
+  const treemapNodes: TreemapNode[] = [{ name: 'a', value: 10 }]
+
+  it('defaultTreemapOptions leaf label has no colour in light (unchanged)', () => {
+    setChartTheme('light')
+    const options = defaultTreemapOptions(treemapNodes) as {
+      series?: Array<{ label?: { color?: string } }>
+    }
+    expect(options.series?.[0]?.label?.color).toBeUndefined()
+  })
+
+  it('defaultTreemapOptions leaf label uses CHART_LABEL_ON_MARK in dark', () => {
+    setChartTheme('dark')
+    const options = defaultTreemapOptions(treemapNodes) as {
+      series?: Array<{ label?: { color?: string } }>
+    }
+    expect(options.series?.[0]?.label?.color).toBe(CHART_LABEL_ON_MARK)
+  })
+
+  it('clinicalDomainTreemapOptions leaf label has no colour in light (unchanged)', () => {
+    setChartTheme('light')
+    const options = clinicalDomainTreemapOptions(treemapNodes) as {
+      series?: Array<{ label?: { color?: string } }>
+    }
+    expect(options.series?.[0]?.label?.color).toBeUndefined()
+  })
+
+  it('clinicalDomainTreemapOptions leaf label uses CHART_LABEL_ON_MARK in dark', () => {
+    setChartTheme('dark')
+    const options = clinicalDomainTreemapOptions(treemapNodes) as {
+      series?: Array<{ label?: { color?: string } }>
+    }
+    expect(options.series?.[0]?.label?.color).toBe(CHART_LABEL_ON_MARK)
   })
 })
