@@ -83,70 +83,114 @@ export const mockDatasourceSingle = mockDatasources[0]
 
 /**
  * Dashboard report data
+ *
+ * Shape matches src/models/datasource.types.ts's DashboardAPIResponse (the raw
+ * WebAPI /cdmresults/{sourceKey}/dashboard response), which
+ * transformDashboardReport in src/utils/datasource-formatters.ts expects —
+ * summary as an array of attributeName/attributeValue pairs (not a
+ * CDM_SOURCE_ABBREVIATION-keyed object), gender/ageAtFirstObservation keyed by
+ * conceptName/countValue, etc. An earlier, differently-shaped version of this
+ * fixture (summary as an object, CONCEPT_NAME/COUNT_VALUE keys) predated that
+ * schema and made transformDashboardReport throw ("raw.summary.find is not a
+ * function"), which setupDatasourcesMocks callers never caught because no
+ * existing test asserted the Dashboard report actually renders (only URL/
+ * heading checks). Fixed to match reality so the mock produces the real
+ * chart instead of silently mapping to the "Unable to load Dashboard report"
+ * error state.
  */
 export interface MockDashboardReport {
-  summary: {
-    CDM_SOURCE_ABBREVIATION: string
-    CDM_VERSION: string
-    VOCABULARY_VERSION: string
-  }
-  gender: Array<{ CONCEPT_NAME: string; COUNT_VALUE: number }>
-  age: Array<{ CATEGORY: string; COUNT_VALUE: number }>
+  summary: Array<{ attributeName: string; attributeValue: string }>
+  gender: Array<{ conceptName: string; countValue: number; percentValue: number }>
+  ageAtFirstObservation: Array<{ intervalIndex: number; countValue: number; percentValue: number }>
+  cumulativeObservation: Array<{ seriesName: string; xLengthOfObservation: number; yPercentPersons: number }>
+  observedByMonth: Array<{ monthYear: number; countValue: number; percentValue: number }>
 }
 
 export const mockDashboardReport: MockDashboardReport = {
-  summary: {
-    CDM_SOURCE_ABBREVIATION: 'SYNPUF1K',
-    CDM_VERSION: '5.4',
-    VOCABULARY_VERSION: 'v5.0 2023-05-01'
-  },
-  gender: [
-    { CONCEPT_NAME: 'FEMALE', COUNT_VALUE: 5000 },
-    { CONCEPT_NAME: 'MALE', COUNT_VALUE: 4500 }
+  summary: [
+    { attributeName: 'Source name', attributeValue: 'SYNPUF 1K' },
+    { attributeName: 'CDM source name', attributeValue: 'SYNPUF1K' },
+    { attributeName: 'CDM version', attributeValue: '5.4' },
+    { attributeName: 'Vocabulary version', attributeValue: 'v5.0 2023-05-01' },
+    { attributeName: 'Number of persons', attributeValue: '9500' }
   ],
-  age: [
-    { CATEGORY: '0-9', COUNT_VALUE: 500 },
-    { CATEGORY: '10-19', COUNT_VALUE: 800 },
-    { CATEGORY: '20-29', COUNT_VALUE: 1200 },
-    { CATEGORY: '30-39', COUNT_VALUE: 1500 },
-    { CATEGORY: '40-49', COUNT_VALUE: 1800 },
-    { CATEGORY: '50-59', COUNT_VALUE: 1500 },
-    { CATEGORY: '60-69', COUNT_VALUE: 1200 },
-    { CATEGORY: '70-79', COUNT_VALUE: 800 },
-    { CATEGORY: '80-89', COUNT_VALUE: 400 },
-    { CATEGORY: '90+', COUNT_VALUE: 200 }
+  gender: [
+    { conceptName: 'FEMALE', countValue: 5000, percentValue: 52.6 },
+    { conceptName: 'MALE', countValue: 4500, percentValue: 47.4 }
+  ],
+  ageAtFirstObservation: [
+    { intervalIndex: 0, countValue: 500, percentValue: 5.3 },
+    { intervalIndex: 10, countValue: 800, percentValue: 8.4 },
+    { intervalIndex: 20, countValue: 1200, percentValue: 12.6 },
+    { intervalIndex: 30, countValue: 1500, percentValue: 15.8 },
+    { intervalIndex: 40, countValue: 1800, percentValue: 18.9 },
+    { intervalIndex: 50, countValue: 1500, percentValue: 15.8 },
+    { intervalIndex: 60, countValue: 1200, percentValue: 12.6 },
+    { intervalIndex: 70, countValue: 800, percentValue: 8.4 },
+    { intervalIndex: 80, countValue: 400, percentValue: 4.2 },
+    { intervalIndex: 90, countValue: 200, percentValue: 2.1 }
+  ],
+  // dashboardCumulativeLineOptions (src/ui/chart-config.ts) plots yPercentPersons
+  // directly against a y-axis capped at max: 1 and multiplies by 100 in the
+  // tooltip formatter, so this must be a 0-1 fraction, not a 0-100 percentage
+  // (unlike mockObservationPeriodReport's same-named field below, which feeds a
+  // different chart/scale).
+  cumulativeObservation: [
+    { seriesName: 'Cumulative Observation', xLengthOfObservation: 0, yPercentPersons: 1.0 },
+    { seriesName: 'Cumulative Observation', xLengthOfObservation: 365, yPercentPersons: 0.85 },
+    { seriesName: 'Cumulative Observation', xLengthOfObservation: 730, yPercentPersons: 0.65 },
+    { seriesName: 'Cumulative Observation', xLengthOfObservation: 1095, yPercentPersons: 0.40 },
+    { seriesName: 'Cumulative Observation', xLengthOfObservation: 1460, yPercentPersons: 0.20 },
+    { seriesName: 'Cumulative Observation', xLengthOfObservation: 1825, yPercentPersons: 0.08 }
+  ],
+  observedByMonth: [
+    { monthYear: 201001, countValue: 1200, percentValue: 12.6 },
+    { monthYear: 201002, countValue: 1350, percentValue: 14.2 },
+    { monthYear: 201003, countValue: 1480, percentValue: 15.6 },
+    { monthYear: 201004, countValue: 1520, percentValue: 16.0 },
+    { monthYear: 201005, countValue: 1610, percentValue: 16.9 }
   ]
 }
 
 /**
  * Person demographics report data
+ *
+ * Shape matches PersonRaw in src/utils/datasource-formatters.ts (transformPersonReport's
+ * input) — conceptName/countValue distributions plus a yearOfBirthStats
+ * envelope (minValue/intervalSize), not the CATEGORY/COUNT_VALUE/CONCEPT_NAME
+ * keys the previous version of this fixture used. That mismatch didn't throw
+ * (the transform falls back to 'Unknown'/0 for unrecognized keys), so it went
+ * unnoticed, but it silently produced empty/zero-value charts — see the
+ * mockDashboardReport comment above for the sibling issue on this endpoint.
  */
 export interface MockPersonReport {
-  yearOfBirth: Array<{ CATEGORY: string; COUNT_VALUE: number }>
-  gender: Array<{ CONCEPT_NAME: string; COUNT_VALUE: number }>
-  race: Array<{ CONCEPT_NAME: string; COUNT_VALUE: number }>
-  ethnicity: Array<{ CONCEPT_NAME: string; COUNT_VALUE: number }>
+  yearOfBirth: Array<{ intervalIndex: number; countValue: number; percentValue: number }>
+  yearOfBirthStats: Array<{ minValue: number; maxValue: number; intervalSize: number }>
+  gender: Array<{ conceptName: string; countValue: number }>
+  race: Array<{ conceptName: string; countValue: number }>
+  ethnicity: Array<{ conceptName: string; countValue: number }>
 }
 
 export const mockPersonReport: MockPersonReport = {
   yearOfBirth: [
-    { CATEGORY: '1950', COUNT_VALUE: 100 },
-    { CATEGORY: '1960', COUNT_VALUE: 200 },
-    { CATEGORY: '1970', COUNT_VALUE: 300 },
-    { CATEGORY: '1980', COUNT_VALUE: 400 },
-    { CATEGORY: '1990', COUNT_VALUE: 500 }
+    { intervalIndex: 0, countValue: 100, percentValue: 5.3 },
+    { intervalIndex: 10, countValue: 200, percentValue: 10.5 },
+    { intervalIndex: 20, countValue: 300, percentValue: 15.8 },
+    { intervalIndex: 30, countValue: 400, percentValue: 21.1 },
+    { intervalIndex: 40, countValue: 500, percentValue: 26.3 }
   ],
+  yearOfBirthStats: [{ minValue: 1950, maxValue: 1990, intervalSize: 10 }],
   gender: [
-    { CONCEPT_NAME: 'FEMALE', COUNT_VALUE: 800 },
-    { CONCEPT_NAME: 'MALE', COUNT_VALUE: 700 }
+    { conceptName: 'FEMALE', countValue: 800 },
+    { conceptName: 'MALE', countValue: 700 }
   ],
   race: [
-    { CONCEPT_NAME: 'White', COUNT_VALUE: 900 },
-    { CONCEPT_NAME: 'Black or African American', COUNT_VALUE: 400 },
-    { CONCEPT_NAME: 'Asian', COUNT_VALUE: 200 }
+    { conceptName: 'White', countValue: 900 },
+    { conceptName: 'Black or African American', countValue: 400 },
+    { conceptName: 'Asian', countValue: 200 }
   ],
   ethnicity: [
-    { CONCEPT_NAME: 'Not Hispanic or Latino', COUNT_VALUE: 1200 },
-    { CONCEPT_NAME: 'Hispanic or Latino', COUNT_VALUE: 300 }
+    { conceptName: 'Not Hispanic or Latino', countValue: 1200 },
+    { conceptName: 'Hispanic or Latino', countValue: 300 }
   ]
 }

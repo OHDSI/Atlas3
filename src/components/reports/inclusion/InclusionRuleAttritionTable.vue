@@ -201,18 +201,18 @@ function cumulativeBarStyle(idx: number): Record<string, string> {
 .attrition-table__grid th,
 .attrition-table__grid td {
   padding: 6px 10px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid var(--atlas-color-outline-variant);
   text-align: left;
 }
 .attrition-table__grid th {
-  background: #f5f7fb;
+  background: var(--atlas-color-surface-variant);
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.74);
+  color: var(--atlas-color-on-surface);
 }
 .attrition-table__col-idx {
   width: 36px;
   text-align: right;
-  color: rgba(0, 0, 0, 0.54);
+  color: var(--atlas-color-on-surface-variant);
 }
 .attrition-table__col-num {
   width: 130px;
@@ -226,7 +226,7 @@ function cumulativeBarStyle(idx: number): Record<string, string> {
 .attrition-table__bar-track {
   width: 100%;
   height: 12px;
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--atlas-color-outline-variant);
   border-radius: 6px;
   overflow: hidden;
 }

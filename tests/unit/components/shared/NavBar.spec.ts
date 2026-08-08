@@ -11,6 +11,7 @@ import NavBar from '@/components/shared/NavBar.vue'
 import { generatePluginMenuItems } from '@/plugins/navigation/PluginMenuIntegration.ts'
 import { usePermissions } from '@/composables/usePermissions'
 import { usePluginMounts } from '@/composables/usePluginMounts'
+import { pluginConfigService } from '@/services/PluginConfigService'
 
 // Mock vue-router
 const mockPush = vi.fn()
@@ -79,6 +80,20 @@ vi.mock('@/stores/ui', () => ({
   })
 }))
 
+// The nav logo swaps to a light-on-dark asset based on the resolved theme.
+const mockThemeResolved = ref<'light' | 'dark'>('light')
+
+vi.mock('@/stores/theme', () => ({
+  useThemeStore: () => ({
+    // A real Pinia store auto-unwraps refs on access; a plain mock object
+    // does not, so forward through a getter rather than exposing the ref
+    // itself (which would make `themeStore.resolved === 'dark'` always false).
+    get resolved() {
+      return mockThemeResolved.value
+    }
+  })
+}))
+
 // Mock auth config
 vi.mock('@/config/auth.config', () => ({
   getAuthConfig: () => ({
@@ -109,6 +124,7 @@ vi.mock('@/services/PluginConfigService', () => ({
     showLanguageSelector: () => true,
     showConfigButton: () => true,
     showUserMenu: () => true,
+    showThemeToggle: vi.fn(() => false),
     getFeedbackUrl: () => 'https://forms.office.com/r/2JzrYy1yDP',
     getLogoNavigateTo: () => '/'
   }
@@ -146,7 +162,8 @@ const mountOptions = {
     stubs: {
       LoginModal: true,
       LanguageSelector: true,
-      NotificationInbox: true
+      NotificationInbox: true,
+      ThemeToggle: true
     }
   }
 }
@@ -162,9 +179,11 @@ describe('NavBar', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockIsAuthenticated.value = false
+    mockThemeResolved.value = 'light'
     vi.mocked(generatePluginMenuItems).mockReturnValue([])
     vi.mocked(usePermissions).mockReturnValue(mockPermissions)
     vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
+    vi.mocked(pluginConfigService.showThemeToggle).mockReturnValue(false)
   })
 
   describe('Component Rendering', () => {
@@ -284,6 +303,26 @@ describe('NavBar', () => {
       const wrapper = mountComponent()
       const userDiv = wrapper.find('.nav-bar__user')
       expect(userDiv.exists()).toBe(false)
+    })
+  })
+
+  describe('Theme-aware logo', () => {
+    it('uses the navy logo asset when the theme resolves to light', () => {
+      mockThemeResolved.value = 'light'
+      const wrapper = mountComponent()
+      const atlasLogo = wrapper.find('.nav-bar__logo img')
+      // vitest inlines svg imports as data URIs, so assert on the fill baked
+      // into the asset rather than a filename.
+      expect(atlasLogo.attributes('src')).toContain('1F4258')
+      expect(atlasLogo.attributes('src')).not.toContain('FFFFFF')
+    })
+
+    it('swaps to the dark logo asset when the theme resolves to dark', () => {
+      mockThemeResolved.value = 'dark'
+      const wrapper = mountComponent()
+      const atlasLogo = wrapper.find('.nav-bar__logo img')
+      expect(atlasLogo.attributes('src')).toContain('FFFFFF')
+      expect(atlasLogo.attributes('src')).not.toContain('1F4258')
     })
   })
 
@@ -443,6 +482,20 @@ describe('NavBar', () => {
       const wrapper = mountComponent()
       expect(wrapper.find('.d-none.d-md-flex').exists()).toBe(true)
       expect(wrapper.find('.d-md-none').exists()).toBe(true)
+    })
+  })
+
+  describe('Theme toggle', () => {
+    it('should not render ThemeToggle by default', () => {
+      const wrapper = mountComponent()
+      expect(wrapper.findComponent({ name: 'ThemeToggle' }).exists()).toBe(false)
+    })
+
+    it('should render ThemeToggle when enabled by deployment config', async () => {
+      vi.mocked(pluginConfigService.showThemeToggle).mockReturnValue(true)
+      const wrapper = mountComponent()
+      await flushPromises()
+      expect(wrapper.findComponent({ name: 'ThemeToggle' }).exists()).toBe(true)
     })
   })
 

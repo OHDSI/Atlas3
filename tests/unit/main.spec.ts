@@ -6,7 +6,7 @@
  * focus on verifying the module structure and critical imports exist.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 describe('main.ts - Application Entry Point', () => {
   beforeEach(() => {
@@ -209,6 +209,15 @@ describe('main.ts - Application Entry Point', () => {
     it('should fall back to default theme on error', () => {
       // Verifies default theme is used if plugin config fails
       expect(true).toBe(true)
+    })
+
+    it('applies the resolved theme to the chart palette at bootstrap', async () => {
+      const setChartTheme = vi.fn()
+      vi.resetModules()
+      vi.doMock('@/ui/chart-config', () => ({ setChartPalette: vi.fn(), setChartTheme }))
+      await import('@/main')
+      await vi.waitFor(() => expect(setChartTheme).toHaveBeenCalledWith('light'))
+      vi.doUnmock('@/ui/chart-config')
     })
   })
 

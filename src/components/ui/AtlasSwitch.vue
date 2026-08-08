@@ -72,7 +72,7 @@ const forwardAttrs = computed(() => {
 .atlas-switch :deep(.v-switch__track) {
   height: 20px;
   min-width: 36px;
-  border: 1px solid var(--atlas-color-outline);
+  border: 1px solid var(--atlas-color-outline-strong);
   background: var(--atlas-color-surface-variant);
   opacity: 1;
 }

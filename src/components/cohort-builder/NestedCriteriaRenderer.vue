@@ -115,7 +115,7 @@ function formatEventType(type: CriteriaType): string {
 <style scoped>
 .nested-criteria-renderer {
   padding: 8px;
-  border-left: 2px solid #e0e0e0;
+  border-left: 2px solid var(--atlas-color-outline);
   margin-top: 8px;
 }
 

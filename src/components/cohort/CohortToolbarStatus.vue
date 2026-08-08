@@ -185,4 +185,13 @@ const { t } = useI18n()
     margin-left: 8px;
   }
 }
+
+/* Vuetify's grey (#9e9e9e) with a white foreground is 2.68:1 — pre-existing
+ * in both themes, but out of scope to fix in light. Dark-only override to
+ * grey-darken-2 (#616161), which clears the 4.5:1 text floor at 6.19:1.
+ * Scoped to this component's badges so the general bg-grey utility class is
+ * unaffected elsewhere. */
+.v-theme--dark .cohort-toolbar-status :deep(.v-badge__badge.bg-grey) {
+  background-color: #616161 !important;
+}
 </style>

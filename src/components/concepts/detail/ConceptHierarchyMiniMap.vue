@@ -140,10 +140,10 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--atlas-color-on-surface-variant);
   font-weight: 600;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--atlas-color-outline);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -158,9 +158,9 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
 .card-body { padding: 16px; }
 .tree { list-style: none; padding: 0; margin: 0; font-size: 13px; }
 .node { display: flex; align-items: center; gap: 4px; padding: 2px 0; }
-.node.faded { color: rgba(0, 0, 0, 0.6); }
+.node.faded { color: var(--atlas-color-on-surface-variant); }
 .node.current {
-  background: rgba(25, 118, 210, 0.12);
+  background: var(--atlas-color-primary-tint);
   color: rgb(var(--v-theme-primary));
   font-weight: 600;
   padding: 4px 6px;
@@ -168,8 +168,8 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
   margin: 2px 0;
 }
 .node.child { padding-left: 16px; }
-.node.muted { color: rgba(0, 0, 0, 0.4); padding-left: 16px; font-size: 11px; }
-.chev { width: 14px; color: rgba(0, 0, 0, 0.4); flex-shrink: 0; }
+.node.muted { color: var(--atlas-color-on-surface-variant); padding-left: 16px; font-size: 11px; }
+.chev { width: 14px; color: var(--atlas-color-on-surface-variant); flex-shrink: 0; }
 .node-link {
   color: inherit;
   text-decoration: none;
@@ -178,5 +178,5 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
   text-overflow: ellipsis;
 }
 .node-link:hover { text-decoration: underline; }
-.empty { color: rgba(0, 0, 0, 0.6); font-size: 12px; margin: 0; }
+.empty { color: var(--atlas-color-on-surface-variant); font-size: 12px; margin: 0; }
 </style>

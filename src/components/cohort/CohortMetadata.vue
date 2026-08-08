@@ -43,7 +43,7 @@
           <AtlasChip
             v-for="(tag, index) in localTags"
             :key="index"
-            :color="tag.color || '#1f425a'"
+            :color="tag.color || 'var(--atlas-color-primary)'"
             closable
             class="metadata-tags__chip"
             @close="removeTag(index)"
@@ -213,7 +213,7 @@ const rules = {
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #666;
+  color: var(--atlas-color-on-surface-variant);
   margin-bottom: 12px;
 }
 

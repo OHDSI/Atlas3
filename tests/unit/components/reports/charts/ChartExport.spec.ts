@@ -7,6 +7,7 @@ import * as echarts from 'echarts/core'
 import { BarChart } from 'echarts/charts'
 import { GridComponent } from 'echarts/components'
 import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
+import { setChartTheme } from '@/ui/chart-config'
 
 // The app registers these globally in main.ts; the off-screen SVG exporter
 // reuses that registration, so the spec has to mirror it to get real output.
@@ -89,6 +90,7 @@ describe('ChartExport', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    setChartTheme('light')
   })
 
   describe('Rendering', () => {
@@ -124,6 +126,8 @@ describe('ChartExport', () => {
       const pngButton = wrapper.findAll('button')[0]
       await pngButton.trigger('click')
 
+      // Background tracks the active chart theme (see CHART_SURFACE); the
+      // rest of the export options are fixed and predate the theme work.
       expect(chartInstance.getDataURL).toHaveBeenCalledWith({
         type: 'png',
         pixelRatio: 2,
@@ -131,6 +135,21 @@ describe('ChartExport', () => {
       })
       expect(mockLink.download).toBe('test-chart.png')
       expect(mockLink.click).toHaveBeenCalled()
+    })
+
+    it('should export PNG with the dark surface as background when the dark theme is active', async () => {
+      setChartTheme('dark')
+      const chartInstance = createMockChartInstance()
+      const wrapper = mountComponent({ chartInstance, filename: 'test-chart' })
+
+      const pngButton = wrapper.findAll('button')[0]
+      await pngButton.trigger('click')
+
+      expect(chartInstance.getDataURL).toHaveBeenCalledWith({
+        type: 'png',
+        pixelRatio: 2,
+        backgroundColor: '#161618'
+      })
     })
 
     it('should emit export-start and export-success events', async () => {

@@ -6,8 +6,9 @@ import { createApp, watch } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router'
 import { createVuetifyInstance } from './plugins/vuetify'
-import { setChartPalette } from './ui/chart-config'
+import { setChartPalette, setChartTheme } from './ui/chart-config'
 import { pluginConfigService } from './services/PluginConfigService'
+import { useThemeStore } from './stores/theme'
 import App from './App.vue'
 import { setupAuthInterceptor } from './services/auth/authInterceptor'
 import { useAuthStore } from './stores/auth'
@@ -86,6 +87,7 @@ use([
 async function initializeApp() {
   // Load plugin configuration to get theme settings
   let primaryColor: string | null = null
+  let defaultThemeMode: 'light' | 'dark' | 'system' | null = null
   try {
     await pluginConfigService.loadConfig()
     primaryColor = pluginConfigService.getPrimaryColor()
@@ -108,6 +110,8 @@ async function initializeApp() {
       setChartPalette({ chartColors, treemapGradient })
       logger.info('Main', 'Using custom chart palette from plugins.json')
     }
+
+    defaultThemeMode = pluginConfigService.getDefaultThemeMode()
   } catch (error) {
     logger.warn('Main', 'Failed to load plugin config for theme, using defaults:', error)
   }
@@ -131,6 +135,20 @@ async function initializeApp() {
 
   // Install Vuetify (UI framework)
   app.use(vuetify)
+
+  // Resolve and apply the active theme before mount so there is no
+  // light-to-dark flash on first paint.
+  const themeStore = useThemeStore()
+  themeStore.initialize(defaultThemeMode ?? 'system')
+  vuetify.theme.global.name.value = themeStore.resolved
+  setChartTheme(themeStore.resolved)
+  watch(
+    () => themeStore.resolved,
+    (mode) => {
+      vuetify.theme.global.name.value = mode
+      setChartTheme(mode)
+    },
+  )
 
   return app
 }

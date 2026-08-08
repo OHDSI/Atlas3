@@ -210,7 +210,7 @@
                 severity="info"
                 variant="outlined"
               >
-                <div style="color: #666">
+                <div class="no-events-text">
                   {{ t('components.criteriaGroup.noEventsInGroup', 'No events in group. Add events to build criteria logic.').value }}
                 </div>
               </AtlasAlert>
@@ -539,7 +539,7 @@ defineExpose({
 
 /* ALL - Navy */
 .vertical-label-container:has(.match-type-label[data-type='ALL']) {
-  border: 1px solid #1f425a;
+  border: 1px solid var(--atlas-color-primary);
 }
 .vertical-label-container:has(.match-type-label[data-type='ALL'])::before {
   content: '';
@@ -548,11 +548,11 @@ defineExpose({
   top: 0;
   bottom: 0;
   width: 30%;
-  background: #1f425a;
+  background: var(--atlas-color-primary);
   border-radius: 0 0 0 6px;
 }
 .match-type-label[data-type='ALL'] {
-  color: #1f425a;
+  color: var(--atlas-color-primary);
 }
 
 /* ANY - Orange */
@@ -575,7 +575,7 @@ defineExpose({
 
 /* AT_LEAST - Light Blue */
 .vertical-label-container:has(.match-type-label[data-type='AT_LEAST']) {
-  border: 1px solid #69aed5;
+  border: 1px solid var(--atlas-color-cardinality-at-least);
 }
 .vertical-label-container:has(.match-type-label[data-type='AT_LEAST'])::before {
   content: '';
@@ -584,16 +584,16 @@ defineExpose({
   top: 0;
   bottom: 0;
   width: 30%;
-  background: #69aed5;
+  background: var(--atlas-color-cardinality-at-least);
   border-radius: 0 0 0 6px;
 }
 .match-type-label[data-type='AT_LEAST'] {
-  color: #69aed5;
+  color: var(--atlas-color-cardinality-at-least);
 }
 
 /* AT_MOST - Darker Blue */
 .vertical-label-container:has(.match-type-label[data-type='AT_MOST']) {
-  border: 1px solid #336b91;
+  border: 1px solid var(--atlas-color-cardinality-at-most);
 }
 .vertical-label-container:has(.match-type-label[data-type='AT_MOST'])::before {
   content: '';
@@ -602,11 +602,11 @@ defineExpose({
   top: 0;
   bottom: 0;
   width: 30%;
-  background: #336b91;
+  background: var(--atlas-color-cardinality-at-most);
   border-radius: 0 0 0 6px;
 }
 .match-type-label[data-type='AT_MOST'] {
-  color: #336b91;
+  color: var(--atlas-color-cardinality-at-most-text);
 }
 
 .segmented-buttons {
@@ -626,15 +626,19 @@ defineExpose({
  * (Vuetify's tonal variant derives text and tint from currentColor).
  * !important outranks the .text-primary utility from color="primary". */
 .match-chip--all.v-btn--variant-tonal {
-  color: #1f425a !important;
+  color: var(--atlas-color-primary) !important;
 }
 .match-chip--any.v-btn--variant-tonal {
   color: var(--atlas-color-accent) !important;
 }
 .match-chip--at_least.v-btn--variant-tonal {
-  color: #4a90ba !important;
+  color: var(--atlas-color-cardinality-at-least-chip-text) !important;
 }
 .match-chip--at_most.v-btn--variant-tonal {
-  color: #336b91 !important;
+  color: var(--atlas-color-cardinality-at-most-text) !important;
+}
+
+.no-events-text {
+  color: var(--atlas-color-on-surface-variant);
 }
 </style>

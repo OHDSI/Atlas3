@@ -269,7 +269,7 @@ function handleCardClick() {
 
 .cohort-card__meta-row dd {
   margin: 0;
-  color: rgba(0, 0, 0, 0.74);
+  color: var(--atlas-color-on-surface);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

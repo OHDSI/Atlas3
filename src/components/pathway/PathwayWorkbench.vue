@@ -535,7 +535,7 @@ defineExpose({ onPathSelect })
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 600;
-  color: #fff;
+  color: var(--atlas-color-on-primary);
   cursor: pointer;
   align-self: flex-start;
 }

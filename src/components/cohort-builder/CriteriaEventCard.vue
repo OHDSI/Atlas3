@@ -672,25 +672,37 @@ function addAttribute(attributeKey: string, attributeType: string) {
   cursor: pointer;
 }
 .cardinality-at_least {
-  border-right: 1px solid #69aed5;
-  background: linear-gradient(to right, #69aed5 30%, #ebf2fa 30%);
+  border-right: 1px solid var(--atlas-color-cardinality-at-least);
+  background: linear-gradient(
+    to right,
+    var(--atlas-color-cardinality-at-least) 30%,
+    var(--atlas-color-cardinality-at-least-tint) 30%
+  );
 }
 .cardinality-at_least .cardinality-label {
-  color: #336b91;
+  color: var(--atlas-color-cardinality-at-least-text);
 }
 .cardinality-exactly {
-  border-right: 1px solid #2e7d32;
-  background: linear-gradient(to right, #2e7d32 30%, #e8f5e9 30%);
+  border-right: 1px solid var(--atlas-color-cardinality-exactly);
+  background: linear-gradient(
+    to right,
+    var(--atlas-color-cardinality-exactly) 30%,
+    var(--atlas-color-cardinality-exactly-tint) 30%
+  );
 }
 .cardinality-exactly .cardinality-label {
-  color: #2e7d32;
+  color: var(--atlas-color-cardinality-exactly-text);
 }
 .cardinality-at_most {
-  border-right: 1px solid #336b91;
-  background: linear-gradient(to right, #336b91 30%, #e3ecf3 30%);
+  border-right: 1px solid var(--atlas-color-cardinality-at-most);
+  background: linear-gradient(
+    to right,
+    var(--atlas-color-cardinality-at-most) 30%,
+    var(--atlas-color-cardinality-at-most-tint) 30%
+  );
 }
 .cardinality-at_most .cardinality-label {
-  color: #336b91;
+  color: var(--atlas-color-cardinality-at-most-text);
 }
 .cardinality-label {
   writing-mode: sideways-lr;
@@ -754,13 +766,13 @@ function addAttribute(attributeKey: string, attributeType: string) {
  * derives both text and tint from currentColor). !important is needed to
  * outrank the .text-primary utility that color="primary" stamps on v-btn. */
 .cardinality-chip--at_least.v-btn--variant-tonal {
-  color: #4a90ba !important;
+  color: var(--atlas-color-cardinality-at-least-chip-text) !important;
 }
 .cardinality-chip--exactly.v-btn--variant-tonal {
-  color: #2e7d32 !important;
+  color: var(--atlas-color-cardinality-exactly-text) !important;
 }
 .cardinality-chip--at_most.v-btn--variant-tonal {
-  color: #336b91 !important;
+  color: var(--atlas-color-cardinality-at-most-text) !important;
 }
 
 .source-concept-row {

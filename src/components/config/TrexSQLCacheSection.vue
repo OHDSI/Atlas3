@@ -585,10 +585,18 @@ watch(
 }
 
 .trexsql-cache-section__item {
-  border: 1px solid var(--atlas-color-outline);
+  border: 1px solid var(--atlas-color-outline-strong);
   border-radius: 8px;
   margin-bottom: 12px;
   background: var(--atlas-color-surface-variant);
+}
+
+/* The avatar prepend icon is hardcoded white (see template) to sit on the
+ * success/info/warning/error status fill; every dark-mode status colour is a
+ * light tint (see DARK_CHART_COLORS-style tokens), so white drops well below
+ * the 4.5:1 floor there while near-black clears it for every status. */
+.v-theme--dark .trexsql-cache-section__item :deep(.v-avatar .v-icon) {
+  color: rgba(0, 0, 0, 0.87) !important;
 }
 
 .trexsql-cache-section__item:last-child {

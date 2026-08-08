@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useProfileStore } from '@/stores/profile'
-import { useTimelineFilters } from '@/composables/useTimelineFilters'
+import { useTimelineFilters, VUETIFY_COLOR_HEX } from '@/composables/useTimelineFilters'
+import { DOMAIN_COLORS, DARK_DOMAIN_COLORS } from '@/utils/domain-colors'
 
 const personWith = (records: unknown[], observationPeriods: unknown[] = []) =>
   ({
@@ -117,5 +118,19 @@ describe('useTimelineFilters axis extent + isRange', () => {
     expect(Number.isFinite(axisExtent.value.max)).toBe(true)
     expect(axisExtent.value.min).toBeLessThanOrEqual(0)
     expect(axisExtent.value.max).toBeGreaterThanOrEqual(0)
+  })
+})
+
+// VUETIFY_COLOR_HEX is a hand-maintained hex table paralleling
+// domain-colors.ts, needed because this composable paints an ECharts
+// canvas outside Vuetify's theme pipeline. Without this check, a domain
+// added (or renamed) in one module but not the other silently falls back
+// to VUETIFY_COLOR_HEX.primary — the wrong colour, no test, no type error.
+describe('VUETIFY_COLOR_HEX stays in sync with domain-colors', () => {
+  const tokens = [...new Set([...Object.values(DOMAIN_COLORS), ...Object.values(DARK_DOMAIN_COLORS)])]
+
+  it.each(tokens)('%s resolves to a real hex entry, not a silent fallback', (token) => {
+    expect(VUETIFY_COLOR_HEX).toHaveProperty(token)
+    expect(VUETIFY_COLOR_HEX[token]).toMatch(/^#[0-9A-Fa-f]{6}$/)
   })
 })

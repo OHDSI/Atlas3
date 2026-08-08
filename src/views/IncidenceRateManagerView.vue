@@ -79,9 +79,12 @@ watch([() => route.params.id, () => route.params.version], load)
 .state {
   padding: 24px;
   text-align: center;
-  color: #888;
+  color: var(--atlas-color-on-surface-variant);
 }
 .state.error {
   color: #c00;
+}
+.v-theme--dark .state.error {
+  color: var(--atlas-color-danger-text);
 }
 </style>

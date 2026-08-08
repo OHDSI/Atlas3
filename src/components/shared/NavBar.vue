@@ -119,6 +119,12 @@
         <!-- Language Selector -->
         <LanguageSelector v-if="showLanguageSelector" />
 
+        <!-- Theme (light / dark / system): opt-in per deployment -->
+        <ThemeToggle
+          v-if="showThemeToggle"
+          data-testid="nav-theme"
+        />
+
         <!-- Docs (user manual) -->
         <AtlasIconButton
           icon="mdi-book-open-page-variant-outline"
@@ -239,8 +245,11 @@ import { logger } from '@/utils/logger'
 import LoginModal from '@/components/auth/LoginModal.vue'
 import LanguageSelector from '@/components/LanguageSelector.vue'
 import NotificationInbox from '@/components/shared/NotificationInbox.vue'
+import ThemeToggle from './ThemeToggle.vue'
 import logoSvg from '@/assets/icons/atlas-text.svg'
+import logoDarkSvg from '@/assets/icons/atlas-text-dark.svg'
 import logoOhdsiOnlyPng from '@/assets/icons/OHDSI logo only - colored.png'
+import { useThemeStore } from '@/stores/theme'
 
 interface NavigationItem {
   id: string
@@ -271,7 +280,9 @@ const hasAnyAdminAccess = computed(
 )
 const hasJobsAccess = computed(() => hasAnyPermission(['job:execution:get']))
 
-const logoSrc = logoSvg
+// The brand navy logo measures 1.70:1 on the dark surface — effectively invisible.
+const themeStore = useThemeStore()
+const logoSrc = computed(() => (themeStore.resolved === 'dark' ? logoDarkSvg : logoSvg))
 const logoOhdsiOnlySrc = logoOhdsiOnlyPng
 const customLogoUrl = ref<string | null>(null)
 
@@ -279,6 +290,7 @@ const showFeedbackButton = ref(true)
 const showLanguageSelector = ref(true)
 const showConfigButton = ref(true)
 const showUserMenu = ref(true)
+const showThemeToggle = ref(false)
 const feedbackUrl = ref('https://forms.office.com/r/2JzrYy1yDP')
 const logoNavigateTo = ref('/')
 
@@ -436,6 +448,7 @@ onMounted(() => {
   showLanguageSelector.value = pluginConfigService.showLanguageSelector()
   showConfigButton.value = pluginConfigService.showConfigButton()
   showUserMenu.value = pluginConfigService.showUserMenu()
+  showThemeToggle.value = pluginConfigService.showThemeToggle()
   feedbackUrl.value = pluginConfigService.getFeedbackUrl()
   logoNavigateTo.value = pluginConfigService.getLogoNavigateTo()
 
@@ -445,6 +458,7 @@ onMounted(() => {
     showLanguageSelector.value = pluginConfigService.showLanguageSelector()
     showConfigButton.value = pluginConfigService.showConfigButton()
     showUserMenu.value = pluginConfigService.showUserMenu()
+    showThemeToggle.value = pluginConfigService.showThemeToggle()
     feedbackUrl.value = pluginConfigService.getFeedbackUrl()
     logoNavigateTo.value = pluginConfigService.getLogoNavigateTo()
   })

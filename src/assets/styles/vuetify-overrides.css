@@ -11,7 +11,7 @@
 .v-overlay__scrim,
 .v-navigation-drawer__scrim {
   backdrop-filter: blur(4px);
-  background-color: rgba(31, 66, 90, 0.45);
+  background-color: color-mix(in srgb, var(--atlas-color-scrim) 45%, transparent);
   opacity: 1;
 }
 
@@ -64,4 +64,13 @@
 .v-btn-toggle > .v-btn:last-child {
   border-top-right-radius: 8px !important;
   border-bottom-right-radius: 8px !important;
+}
+
+/* Vuetify's .text-grey-darken-1 utility (#757575, !important) only clears
+ * 3.92:1 against the dark surface — below the 4.5:1 text floor. Global
+ * because scoped component styles can't reach a utility class used across
+ * many components; two classes beat the utility's single class on
+ * specificity even without !important, but it's added here to match. */
+.v-theme--dark .text-grey-darken-1 {
+  color: var(--atlas-color-on-surface-variant) !important;
 }

@@ -6401,5 +6401,11 @@
   },
   "pathwayDefinitions": {
     "deleteConfirm": "Delete this pathway? This cannot be undone."
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

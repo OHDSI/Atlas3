@@ -41,6 +41,7 @@ import type { EChartsType } from 'echarts/core'
 import { SVGRenderer } from 'echarts/renderers'
 import { logger } from '@/utils/logger'
 import { AtlasButton } from '@/components/ui'
+import { CHART_SURFACE } from '@/ui/chart-config'
 
 echarts.use([SVGRenderer])
 
@@ -81,7 +82,7 @@ async function handleExportPNG() {
     const dataURL = props.chartInstance.getDataURL({
       type: 'png',
       pixelRatio: 2, // Higher resolution for better quality
-      backgroundColor: '#ffffff',
+      backgroundColor: CHART_SURFACE,
     })
 
     // Trigger download

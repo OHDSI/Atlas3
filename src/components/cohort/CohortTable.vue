@@ -292,18 +292,18 @@ function openCohort(cohort: CohortDefinitionSummary) {
 .cohort-table__col-id {
   width: 64px;
   font-variant-numeric: tabular-nums;
-  color: rgba(0, 0, 0, 0.54);
+  color: var(--atlas-color-on-surface-variant);
 }
 .cohort-table__col-name {
   min-width: 240px;
 }
 .cohort-table__name {
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--atlas-color-on-surface);
 }
 .cohort-table__description {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--atlas-color-on-surface-variant);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

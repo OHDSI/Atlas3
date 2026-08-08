@@ -130,6 +130,15 @@ const resolvedIcon = computed(() => {
 .atlas-feedback--warning .atlas-feedback__rail { background-color: rgb(var(--v-theme-warning)); }
 .atlas-feedback--danger .atlas-feedback__rail  { background-color: rgb(var(--v-theme-error)); }
 .atlas-feedback--neutral .atlas-feedback__rail { background-color: rgb(var(--v-theme-primary)); }
+/* The rail icon is a hardcoded white (see template) because it already sits
+ * below the AA floor against several light-theme rail fills and fixing that
+ * is out of this sweep's scope; on dark-theme rail fills white drops further
+ * (as low as 1.94:1), so pin the icon to the matching on-* token there only. */
+.v-theme--dark .atlas-feedback--info .atlas-feedback__rail :deep(.v-icon)    { color: var(--atlas-color-on-info) !important; }
+.v-theme--dark .atlas-feedback--success .atlas-feedback__rail :deep(.v-icon) { color: var(--atlas-color-on-success) !important; }
+.v-theme--dark .atlas-feedback--warning .atlas-feedback__rail :deep(.v-icon) { color: var(--atlas-color-on-warning) !important; }
+.v-theme--dark .atlas-feedback--danger .atlas-feedback__rail :deep(.v-icon)  { color: var(--atlas-color-on-danger) !important; }
+.v-theme--dark .atlas-feedback--neutral .atlas-feedback__rail :deep(.v-icon) { color: var(--atlas-color-on-primary) !important; }
 .atlas-feedback__inner {
   display: flex;
   gap: 12px;

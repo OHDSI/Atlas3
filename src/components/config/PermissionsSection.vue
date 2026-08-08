@@ -276,7 +276,7 @@ onMounted(() => {
 }
 
 .permissions-section__role-list {
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--atlas-color-outline-strong);
   border-radius: 4px;
 }
 
@@ -287,6 +287,10 @@ onMounted(() => {
   padding: 16px;
   background: rgba(0, 0, 0, 0.02);
   border-radius: 4px;
+}
+
+.v-theme--dark .permissions-section__role-header {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .permissions-section__role-actions {

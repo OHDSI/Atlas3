@@ -105,6 +105,18 @@ function retentionFill(pct: number): string {
   return themeColor(toneForRetention(pct), 0.25)
 }
 
+// In-segment label sits on a ~25%-alpha status tint over the funnel's own
+// background (`.attrition-funnel`, surface-token driven) — reads the live
+// on-surface var the same way themeColor() does so the label stays legible
+// once that background flips to the dark surface.
+function themeOnSurfaceColor(alpha: number): string {
+  if (typeof window === 'undefined') return `rgba(0, 0, 0, ${alpha})`
+  const root = getComputedStyle(document.documentElement)
+  const triplet = root.getPropertyValue('--v-theme-on-surface').trim()
+  if (!triplet) return `rgba(0, 0, 0, ${alpha})`
+  return `rgba(${triplet}, ${alpha})`
+}
+
 const numberFormat = new Intl.NumberFormat()
 function formatCount(n: number): string {
   return numberFormat.format(n)
@@ -222,7 +234,7 @@ const chartOption = computed(() => {
         label: {
           show: true,
           position: 'inside',
-          color: 'rgba(0, 0, 0, 0.86)',
+          color: themeOnSurfaceColor(0.86),
           fontFamily: 'Inter, -apple-system, system-ui, sans-serif',
           fontSize: 12,
           formatter: (p: { dataIndex: number }) => {
@@ -261,7 +273,7 @@ defineExpose({ steps, chartOption, exportCsv, retentionColor })
 <style scoped>
 .attrition-funnel {
   border-radius: 12px;
-  background: #fff;
+  background: var(--atlas-color-surface);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   /* Without these, the v-chart's autoresize observer can let the canvas
@@ -281,12 +293,12 @@ defineExpose({ steps, chartOption, exportCsv, retentionColor })
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid var(--atlas-color-outline-variant);
 }
 .attrition-funnel__title {
   font-size: 15px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.86);
+  color: var(--atlas-color-on-surface);
   letter-spacing: -0.2px;
 }
 .attrition-funnel__empty {
@@ -300,11 +312,11 @@ defineExpose({ steps, chartOption, exportCsv, retentionColor })
 .attrition-funnel__empty-title {
   font-size: 14px;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--atlas-color-on-surface-variant);
 }
 .attrition-funnel__empty-hint {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--atlas-color-on-surface-variant);
 }
 .attrition-funnel__footer {
   display: flex;
@@ -312,17 +324,17 @@ defineExpose({ steps, chartOption, exportCsv, retentionColor })
   gap: 8px;
   padding: 10px 16px 12px;
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.6);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  color: var(--atlas-color-on-surface-variant);
+  border-top: 1px solid var(--atlas-color-outline-variant);
   flex-wrap: wrap;
 }
 .attrition-funnel__count {
-  color: rgba(0, 0, 0, 0.86);
+  color: var(--atlas-color-on-surface);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 .attrition-funnel__arrow {
-  color: rgba(0, 0, 0, 0.35);
+  color: var(--atlas-color-on-surface-variant);
 }
 .attrition-funnel__retained {
   margin-left: 4px;

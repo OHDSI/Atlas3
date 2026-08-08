@@ -543,6 +543,10 @@ watch(
   border-radius: 3px;
 }
 
+.v-theme--dark .role-permissions-tab__permission-code {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
 .role-permissions-tab__description {
   max-width: 400px;
   overflow: hidden;

@@ -270,7 +270,7 @@ function formatUser(user: unknown): string {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(var(--v-theme-on-surface), 0.55);
+  color: var(--atlas-color-on-surface-variant);
 }
 
 .analysis-data-table :deep(tbody tr) {
@@ -316,7 +316,7 @@ function formatUser(user: unknown): string {
 
 .analysis-data-table__tag-overflow {
   font-size: 0.75rem;
-  color: rgba(var(--v-theme-on-surface), 0.55);
+  color: var(--atlas-color-on-surface-variant);
 }
 
 .analysis-data-table__description {

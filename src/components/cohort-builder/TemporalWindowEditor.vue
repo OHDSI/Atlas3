@@ -416,11 +416,11 @@ watch(
 <style scoped>
 .temporal-window-editor {
   border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  background-color: white;
+  background-color: var(--atlas-color-surface);
 }
 
 .temporal-window-editor :deep(.v-card-title),
 .temporal-window-editor :deep(.v-card-text) {
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--atlas-color-on-surface);
 }
 </style>

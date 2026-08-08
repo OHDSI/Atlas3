@@ -7,7 +7,7 @@
  * concept set tables, paste-IDs summaries, search results.
  */
 
-const DOMAIN_COLORS: Record<string, string> = {
+export const DOMAIN_COLORS: Record<string, string> = {
   Condition: 'red',
   Drug: 'purple',
   Procedure: 'teal',
@@ -28,9 +28,37 @@ const DOMAIN_COLORS: Record<string, string> = {
   Metadata: 'grey-darken-1',
 }
 
+// Vuetify's base named colours are tuned for white surfaces. On the dark
+// surface these particular hues drop below AA as tonal chip labels, so dark
+// mode substitutes a lighter step of the same hue.
+export const DARK_DOMAIN_COLORS: Record<string, string> = {
+  Condition: 'red-lighten-1',
+  Drug: 'purple-lighten-3',
+  Procedure: 'teal-lighten-2',
+  Measurement: 'blue-lighten-2',
+  Observation: 'amber-lighten-2',
+  Device: 'brown-lighten-2',
+  Visit: 'cyan-lighten-2',
+  Specimen: 'green-lighten-2',
+  Note: 'grey-lighten-1',
+  Provider: 'indigo-lighten-3',
+  Geography: 'light-green-lighten-2',
+  Race: 'pink-lighten-2',
+  Gender: 'deep-purple-lighten-3',
+  Ethnicity: 'lime-lighten-2',
+  Type: 'blue-grey-lighten-2',
+  Unit: 'orange-lighten-2',
+  Currency: 'amber-lighten-1',
+  Metadata: 'grey-lighten-1',
+}
+
 const DEFAULT_COLOR = 'primary'
 
-export function getDomainColor(domain: string | null | undefined): string {
+export function getDomainColor(
+  domain: string | null | undefined,
+  mode: 'light' | 'dark' = 'light',
+): string {
   if (!domain) return DEFAULT_COLOR
-  return DOMAIN_COLORS[domain] ?? DEFAULT_COLOR
+  const map = mode === 'dark' ? DARK_DOMAIN_COLORS : DOMAIN_COLORS
+  return map[domain] ?? DEFAULT_COLOR
 }

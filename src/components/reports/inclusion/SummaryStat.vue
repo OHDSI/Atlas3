@@ -15,14 +15,14 @@ defineProps<{ label: string; value: string }>()
 
 <style scoped>
 .summary-stat {
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--atlas-color-outline-strong);
   border-radius: 8px;
   padding: 12px 14px;
-  background: #fafbfd;
+  background: var(--atlas-color-surface-variant);
 }
 .summary-stat__label {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--atlas-color-on-surface-variant);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -31,6 +31,6 @@ defineProps<{ label: string; value: string }>()
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   margin-top: 4px;
-  color: rgba(0, 0, 0, 0.86);
+  color: var(--atlas-color-on-surface);
 }
 </style>

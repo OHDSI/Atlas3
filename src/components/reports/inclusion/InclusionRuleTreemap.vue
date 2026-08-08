@@ -81,6 +81,17 @@ function failuresFromName(name: string, ruleCount: number): number {
   return Math.min(zeros, ruleCount)
 }
 
+// In-tile label sits on a 60%-alpha status tint over the chart's own
+// background — reads the live on-surface var the same way themeColor()
+// does so the label stays legible against a dark surface.
+function themeOnSurfaceColor(alpha: number): string {
+  if (typeof window === 'undefined') return `rgba(0, 0, 0, ${alpha})`
+  const root = getComputedStyle(document.documentElement)
+  const triplet = root.getPropertyValue('--v-theme-on-surface').trim()
+  if (!triplet) return `rgba(0, 0, 0, ${alpha})`
+  return `rgba(${triplet}, ${alpha})`
+}
+
 function colorForLeaf(name: string): string {
   if (props.ruleCount === 0) return themeColor('success', 0.6)
   const passing = props.ruleCount - failuresFromName(name, props.ruleCount)
@@ -164,7 +175,7 @@ const chartOption = computed(() => {
             info.data?._friendly || info.name,
           fontSize: 11,
           lineHeight: 14,
-          color: 'rgba(0, 0, 0, 0.82)',
+          color: themeOnSurfaceColor(0.82),
         },
         data: root.children?.map(decorate) ?? [],
       },
@@ -191,7 +202,7 @@ const legend = computed(() => {
   display: flex;
   gap: 16px;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.66);
+  color: var(--atlas-color-on-surface-variant);
   margin-top: 8px;
   flex-wrap: wrap;
 }

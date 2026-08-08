@@ -89,7 +89,7 @@ const emit = defineEmits<{
   flex: 0 0 auto;
   min-width: 140px;
   color: rgb(var(--v-theme-primary));
-  background: #ebf2fa;
+  background: var(--atlas-color-primary-tint);
   font-size: 13px;
   font-weight: 500;
   border-right: 1px solid rgb(var(--v-theme-primary));

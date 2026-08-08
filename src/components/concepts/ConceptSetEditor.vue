@@ -1404,7 +1404,7 @@ function closeJsonDialog() {
   font-weight: 400;
 }
 .cs-editor__title-input:hover {
-  border-bottom-color: rgba(0, 0, 0, 0.12);
+  border-bottom-color: var(--atlas-color-outline);
 }
 .cs-editor__title-input:focus-visible {
   outline: 2px solid rgb(var(--v-theme-primary));

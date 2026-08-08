@@ -173,11 +173,11 @@ const updateEndOffset = (value: number) => {
 <style scoped>
 .date-adjustment-editor {
   border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  background-color: white;
+  background-color: var(--atlas-color-surface);
 }
 
 .date-adjustment-editor :deep(.v-card-title),
 .date-adjustment-editor :deep(.v-card-text) {
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--atlas-color-on-surface);
 }
 </style>

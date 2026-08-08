@@ -294,6 +294,75 @@ describe('PluginConfigService', () => {
     })
   })
 
+  describe('showThemeToggle', () => {
+    it('should return false before loading (no manifest)', () => {
+      expect(service.showThemeToggle()).toBe(false)
+    })
+
+    it('should return false when the manifest omits it', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            version: '1.0',
+            plugins: [],
+            settings: { theme: { primaryColor: '#FF5733' } },
+          }),
+      })
+
+      await service.loadConfig()
+
+      expect(service.showThemeToggle()).toBe(false)
+    })
+
+    it('should return false when explicitly disabled', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            version: '1.0',
+            plugins: [],
+            settings: { theme: { enableDarkMode: false } },
+          }),
+      })
+
+      await service.loadConfig()
+
+      expect(service.showThemeToggle()).toBe(false)
+    })
+
+    it('should return true when explicitly enabled', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            version: '1.0',
+            plugins: [],
+            settings: { theme: { enableDarkMode: true } },
+          }),
+      })
+
+      await service.loadConfig()
+
+      expect(service.showThemeToggle()).toBe(true)
+    })
+
+    it('should return false when config fails to load and falls back to defaults', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+      })
+
+      await expect(service.loadConfig()).rejects.toThrow('Failed to load plugins.json')
+
+      expect(service.showThemeToggle()).toBe(false)
+    })
+  })
+
   describe('accent and chart palette settings', () => {
     const loadTheme = async (theme: Record<string, unknown>) => {
       mockFetch.mockResolvedValueOnce({

@@ -1,5 +1,6 @@
 import { computed, type ComputedRef } from 'vue'
 import { useProfileStore } from '@/stores/profile'
+import { useThemeStore } from '@/stores/theme'
 import { DEFAULT_HIGHLIGHT_COLOR, OMOP_DOMAINS } from '@/models/profile.types'
 import { getDomainColor } from '@/utils/domain-colors'
 
@@ -26,7 +27,7 @@ function normalizeDomain(d: string): string {
  * directly so points still tint when ECharts renders into a canvas
  * without theme context.
  */
-const VUETIFY_COLOR_HEX: Record<string, string> = {
+export const VUETIFY_COLOR_HEX: Record<string, string> = {
   red: '#F44336',
   pink: '#E91E63',
   purple: '#9C27B0',
@@ -48,11 +49,30 @@ const VUETIFY_COLOR_HEX: Record<string, string> = {
   'blue-grey': '#607D8B',
   grey: '#9E9E9E',
   'grey-darken-1': '#757575',
+  // Dark-mode tokens from getDomainColor(domain, 'dark') — lighter steps of
+  // the same hues, tuned to stay legible on the dark timeline canvas.
+  'red-lighten-1': '#EF5350',
+  'purple-lighten-3': '#CE93D8',
+  'teal-lighten-2': '#4DB6AC',
+  'blue-lighten-2': '#64B5F6',
+  'amber-lighten-2': '#FFD54F',
+  'brown-lighten-2': '#A1887F',
+  'cyan-lighten-2': '#4DD0E1',
+  'green-lighten-2': '#81C784',
+  'grey-lighten-1': '#BDBDBD',
+  'indigo-lighten-3': '#9FA8DA',
+  'light-green-lighten-2': '#AED581',
+  'pink-lighten-2': '#F06292',
+  'deep-purple-lighten-3': '#B39DDB',
+  'lime-lighten-2': '#DCE775',
+  'blue-grey-lighten-2': '#90A4AE',
+  'orange-lighten-2': '#FFB74D',
+  'amber-lighten-1': '#FFCA28',
   primary: '#1976D2',
 }
 
-function resolveDomainColorHex(domain: string): string {
-  const token = getDomainColor(domain)
+function resolveDomainColorHex(domain: string, mode: 'light' | 'dark'): string {
+  const token = getDomainColor(domain, mode)
   return VUETIFY_COLOR_HEX[token] ?? VUETIFY_COLOR_HEX.primary ?? DEFAULT_HIGHLIGHT_COLOR
 }
 
@@ -87,6 +107,7 @@ export function useTimelineFilters(): {
   axisExtent: ComputedRef<{ min: number; max: number }>
 } {
   const store = useProfileStore()
+  const themeStore = useThemeStore()
 
   const uniqueConcepts = computed<UniqueConcept[]>(() => {
     const map = new Map<number, UniqueConcept>()
@@ -119,7 +140,7 @@ export function useTimelineFilters(): {
         endDay,
         isRange: endDay !== null && endDay > r.startDay,
         color: store.highlights.get(r.conceptId) ?? DEFAULT_HIGHLIGHT_COLOR,
-        domainColor: resolveDomainColorHex(domain),
+        domainColor: resolveDomainColorHex(domain, themeStore.resolved),
       }
       const arr = buckets.get(domain)
       if (arr) {

@@ -12,7 +12,7 @@
       <AtlasChip
         v-for="domain in availableDomains"
         :key="`d-${domain}`"
-        :color="getDomainColor(domain)"
+        :color="getDomainColor(domain, themeStore.resolved)"
         :variant="activeDomains.has(domain) ? 'flat' : 'tonal'"
         size="sm"
         class="concept-set-table__filter-chip"
@@ -133,7 +133,7 @@
         <template #item.domainId="{ item }">
           <AtlasChip
             v-if="item.domainId"
-            :color="getDomainColor(item.domainId)"
+            :color="getDomainColor(item.domainId, themeStore.resolved)"
             size="xs"
             variant="tonal"
             class="concept-set-table__chip"
@@ -247,11 +247,13 @@ import type { ConceptSetItem } from '@/models/concept-set.types'
 import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
 import { useWebAPIStore } from '@/stores/webapi'
+import { useThemeStore } from '@/stores/theme'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
 
 const { t } = useI18n()
 const webapiStore = useWebAPIStore()
+const themeStore = useThemeStore()
 const conceptDrawer = useConceptDetailDrawerStore()
 const instance = getCurrentInstance()
 
