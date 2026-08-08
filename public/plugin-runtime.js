@@ -137,7 +137,7 @@ window.__atlasPluginRuntimeReady = (function () {
     });
 
     // Load and register single-spa-vue
-    return window.System.import('./vendor/single-spa-vue.js').then(function(module) {
+    var chain = window.System.import('./vendor/single-spa-vue.js').then(function(module) {
       // Register it under the 'single-spa-vue' name
       window.System.register('single-spa-vue', [], function(_export) {
         return {
@@ -154,5 +154,10 @@ window.__atlasPluginRuntimeReady = (function () {
       // instead of letting this chain resolve with single-spa-vue unregistered.
       throw err;
     });
+    // Same handled-marking as rejected(): if a sibling vendor script fails
+    // first, Promise.all rejects and ensurePluginRuntime never awaits this
+    // chain, so its rejection would surface as unhandledrejection.
+    chain.catch(function () {});
+    return chain;
   }
 })()

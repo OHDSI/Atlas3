@@ -224,45 +224,35 @@ export const useCohortStore = defineStore('cohort', () => {
   // The mounted editor reads this when it answers a save request — a cohort
   // built programmatically otherwise has no name and the editor refuses to save.
   const saveOptions = ref<{ name?: string; description?: string }>({})
-  let saveResolver: ((r: { id?: number; name?: string }) => void) | null = null
-  let saveTimeoutId: ReturnType<typeof setTimeout> | null = null
+  // A queue, not a single slot: overlapping requests are answered in the order
+  // they were raised, so each caller gets its own save's result. A single slot
+  // cross-wired them — request B's arrival settled A with {}, then A's
+  // completion resolved B with A's result, and B's real result was dropped.
+  interface PendingSave {
+    resolve: (r: { id?: number; name?: string }) => void
+    timeoutId: ReturnType<typeof setTimeout>
+  }
+  const pendingSaves: PendingSave[] = []
+
+  function settleOldestSave(result: { id?: number; name?: string }) {
+    const entry = pendingSaves.shift()
+    if (!entry) return
+    clearTimeout(entry.timeoutId)
+    entry.resolve(result)
+  }
 
   function requestSave(opts: { name?: string; description?: string } = {}): Promise<{ id?: number; name?: string }> {
-    // Clear any timer from a still-in-flight prior request so its timeout
-    // can't fire later and resolve *this* request's promise instead.
-    if (saveTimeoutId) {
-      clearTimeout(saveTimeoutId)
-      saveTimeoutId = null
-    }
-    // Only one resolver slot exists, so replacing it below would otherwise
-    // strand a still-pending prior request's promise forever (its own timer
-    // was just cleared, and nothing else will ever settle it). Settle it now.
-    if (saveResolver) {
-      const prev = saveResolver
-      saveResolver = null
-      prev({})
-    }
     return new Promise(resolve => {
       saveOptions.value = opts
-      saveResolver = resolve
-      saveRequest.value++
       // Never hang the caller if no editor is mounted to answer the signal.
-      saveTimeoutId = setTimeout(() => notifySaved(), 8000)
+      const timeoutId = setTimeout(() => settleOldestSave({}), 8000)
+      pendingSaves.push({ resolve, timeoutId })
+      saveRequest.value++
     })
   }
 
   function notifySaved(result: { id?: number; name?: string } = {}) {
-    // Clear the fallback timer so a save that resolves early can't leave an
-    // orphaned timeout that later fires and steals the *next* request's
-    // resolver (which would report that later save as failed/empty and drop
-    // its real result, since saveResolver would already be null by then).
-    if (saveTimeoutId) {
-      clearTimeout(saveTimeoutId)
-      saveTimeoutId = null
-    }
-    const resolve = saveResolver
-    saveResolver = null
-    resolve?.(result)
+    settleOldestSave(result)
   }
 
   function requestNewCohort() {
