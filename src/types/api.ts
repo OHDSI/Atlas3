@@ -56,16 +56,6 @@ export function success<T>(data: T): ApiResult<T> {
 /**
  * Helper function to create a failed API result.
  */
-export function failure<T>(error: ApiError): ApiResult<T>
-export function failure<T>(error: string, code?: string): ApiResult<T>
-export function failure<T>(error: ApiError | string, code?: string): ApiResult<T> {
-  if (typeof error !== 'string') return { success: false, error }
-  // Shaped by hand rather than via `new ApiError(...)`: importing the class as
-  // a value here would close the api.ts → api-error.ts → api.ts cycle.
-  const wrapped = Object.assign(new Error(error), {
-    name: 'ApiError',
-    status: 0,
-    body: code ?? null,
-  }) as ApiError
-  return { success: false, error: wrapped }
+export function failure<T>(error: ApiError): ApiResult<T> {
+  return { success: false, error }
 }
