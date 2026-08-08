@@ -219,6 +219,51 @@ describe('CohortSamplesPanel', () => {
     expect(wrapper.find('[data-testid=cohort-samples-error]').text()).toContain('Failed to create sample')
   })
 
+  it('shows the error banner and clears the selection when the detail fetch fails', async () => {
+    vi.mocked(listCohortSamples).mockResolvedValue(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [sample] })
+    )
+    vi.mocked(getCohortSample).mockResolvedValueOnce(
+      failure(new ApiError('sample detail is gone', 404, null))
+    )
+
+    const wrapper = mount(CohortSamplesPanel, {
+      global: globalMountOpts,
+      props: { cohortId: 1, sourceKey: 'EUNOMIA' },
+    })
+    await flushPromises()
+
+    await wrapper.find('[data-testid=cohort-samples-list-row]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid=cohort-samples-error]').text()).toContain(
+      'sample detail is gone'
+    )
+    expect(wrapper.vm.selectedSample).toBeNull()
+    expect(wrapper.find('[data-testid=cohort-sample-detail-table]').exists()).toBe(false)
+  })
+
+  it('falls back to the generic error message when the detail fetch fails without a message', async () => {
+    vi.mocked(listCohortSamples).mockResolvedValue(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [sample] })
+    )
+    vi.mocked(getCohortSample).mockResolvedValueOnce(failure(new ApiError('', 0, null)))
+
+    const wrapper = mount(CohortSamplesPanel, {
+      global: globalMountOpts,
+      props: { cohortId: 1, sourceKey: 'EUNOMIA' },
+    })
+    await flushPromises()
+
+    await wrapper.find('[data-testid=cohort-samples-list-row]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid=cohort-samples-error]').text()).toContain(
+      'Failed to load sample detail'
+    )
+    expect(wrapper.vm.selectedSample).toBeNull()
+  })
+
   it('refresh on a non-selected sample does not reload the detail view', async () => {
     const other = { ...sample, id: 99, name: 'other' }
     vi.mocked(listCohortSamples).mockResolvedValue(

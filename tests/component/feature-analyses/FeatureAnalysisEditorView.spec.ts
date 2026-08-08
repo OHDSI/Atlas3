@@ -56,7 +56,8 @@ import {
   listFeatureAnalysisAggregates,
 } from '@/services/feature-analysis.service'
 import FeatureAnalysisEditorView from '@/views/FeatureAnalysisEditorView.vue'
-import { success } from '@/types/api'
+import { success, failure } from '@/types/api'
+import { ApiError } from '@/services/api-error'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -219,6 +220,36 @@ describe('FeatureAnalysisEditorView', () => {
       '[data-testid="feature-analysis-editor-preset-json"] textarea'
     ).element as HTMLTextAreaElement
     expect(presetTextarea.value).toContain('useDemographicsGender')
+  })
+
+  it('a failed "Load default covariate settings" shows the load-defaults error, not the save error', async () => {
+    vi.mocked(getDefaultCovariateSettings).mockResolvedValue(
+      failure(new ApiError('HTTP 500: boom', 500, null))
+    )
+
+    mounted = await mountEditor('/feature-analyses/new')
+
+    const btn = mounted.wrapper.get(
+      '[data-testid="feature-analysis-editor-preset-default"]'
+    ).element as HTMLButtonElement
+    btn.click()
+    await flushPromises()
+
+    const snackbar = mounted.wrapper.findComponent({ name: 'AtlasSnackbar' })
+    // 'cc.fa.loadDefaultsError'
+    expect(snackbar.props('text')).toBe('Failed to load default covariate settings.')
+    // ...and not 'cc.fa.saveError', which this branch used to reuse.
+    expect(snackbar.props('text')).not.toBe(
+      'An error occurred while attempting to save a feature analysis.'
+    )
+    expect(snackbar.props('severity')).toBe('danger')
+    expect(snackbar.props('modelValue')).toBe(true)
+
+    // The textarea must stay untouched on failure.
+    const presetTextarea = mounted.wrapper.find(
+      '[data-testid="feature-analysis-editor-preset-json"] textarea'
+    ).element as HTMLTextAreaElement
+    expect(presetTextarea.value).not.toContain('useDemographicsGender')
   })
 
   it('Save in new mode calls createFeatureAnalysis', async () => {

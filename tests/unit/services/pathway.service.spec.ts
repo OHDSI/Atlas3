@@ -359,6 +359,33 @@ describe('services/pathway.service', () => {
       expect(init.method).toBe('POST')
     })
 
+    it('generatePathway normalizes a Spring Batch JobExecution response', async () => {
+      ok({ executionId: 456 })
+
+      const result = await generatePathway(1, 'cdm')
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data?.id).toBe(456)
+        expect(result.data?.status).toBe('STARTING')
+        expect(result.data?.sourceKey).toBe('cdm')
+      }
+    })
+
+    it('generatePathway resolves with null instead of fabricating id 0 when the job response carries no execution id', async () => {
+      ok({ jobParameters: { jobName: 'pathwayAnalysis' }, exitStatus: 'UNKNOWN' })
+
+      const result = await generatePathway(1, 'cdm')
+
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data).toBeNull()
+      expect(vi.mocked(logger.warn)).toHaveBeenCalledWith(
+        'PathwayService',
+        'Generate response carried no execution id',
+        expect.anything()
+      )
+    })
+
     it('reports a status carrying failure when neither the execution nor job-execution shape parses', async () => {
       ok({ status: 'NOT_A_REAL_STATUS' })
 

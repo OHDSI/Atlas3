@@ -428,6 +428,23 @@ describe('Characterization Store', () => {
         expect(store.executions[0]?.status).toBe('RUNNING')
       })
 
+      it('refreshes the canonical list and returns null when the response carried no trackable execution', async () => {
+        const store = useCharacterizationStore()
+        const existing: CharacterizationExecution = { ...baseExec, id: 500 }
+        store.executions = [existing]
+        const canonical: CharacterizationExecution = { ...baseExec, id: 501, status: 'PENDING' }
+        vi.mocked(generateCharacterization).mockResolvedValue(success(null))
+        vi.mocked(listCharacterizationExecutions).mockResolvedValue(success([canonical]))
+
+        const result = await store.runExecution(42, 'CDM_V5')
+
+        expect(result).toBeNull()
+        expect(listCharacterizationExecutions).toHaveBeenCalledWith(42)
+        expect(store.executions).toEqual([canonical])
+        expect(store.executions.some((e) => e.id === 0)).toBe(false)
+        expect(store.executionsError).toBeNull()
+      })
+
       it('rethrows and sets error on failure', async () => {
         const store = useCharacterizationStore()
         vi.mocked(generateCharacterization).mockResolvedValue(apiErr('Down'))
