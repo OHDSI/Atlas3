@@ -378,7 +378,7 @@ async function handleRun(sourceKey: string): Promise<void> {
   if (props.characterizationId == null) return
   try {
     const exec = await store.runExecution(props.characterizationId, sourceKey)
-    onRunStarted(exec)
+    if (exec) onRunStarted(exec)
   } catch (err) {
     logger.error('CharacterizationWorkbench', 'Run failed', err)
     const msg = err instanceof Error ? err.message : tv('cc.fa.runError', 'Failed to start generation')

@@ -164,6 +164,7 @@ vi.mock('@/services/atlas-converter', () => ({
 import CohortBuilder from '@/components/cohort/CohortBuilder.vue'
 import { convertInternalToAtlas } from '@/services/atlas-converter'
 import { ApiError } from '@/services/api-error'
+import { logger } from '@/utils/logger'
 
 const vuetify = createVuetify({
   components,
@@ -1782,6 +1783,58 @@ describe('CohortBuilder', () => {
     expect(result).toEqual({})
     expect(setup.errorMessage).toBe('Failed to save cohort to server')
     expect(setup.showError).toBe(true)
+  })
+
+  it('handleSave logs and shows the localized server error when the save API fails', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Savable'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+
+    const apiError = new ApiError('HTTP 500: <html>Internal Server Error</html>', 500, null)
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.saveCohortDefinition).mockResolvedValueOnce({
+      success: false,
+      error: apiError,
+    })
+    const loggerSpy = vi.spyOn(logger, 'error').mockImplementation(() => {})
+
+    const result = await setup.handleSave()
+
+    expect(result).toEqual({})
+    expect(loggerSpy).toHaveBeenCalledWith('CohortBuilder', 'saveCohortDefinition failed', apiError)
+    // Raw transport text must not leak into the banner.
+    expect(setup.errorMessage).toBe('Failed to save cohort to server')
+    expect(setup.errorMessage).not.toContain('HTTP 500')
+    expect(setup.showError).toBe(true)
+
+    loggerSpy.mockRestore()
+  })
+
+  it('handleSave shows the forbidden message when the save API returns 403', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Savable'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+
+    const apiError = new ApiError('HTTP 403: Forbidden', 403, null)
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.saveCohortDefinition).mockResolvedValueOnce({
+      success: false,
+      error: apiError,
+    })
+    const loggerSpy = vi.spyOn(logger, 'error').mockImplementation(() => {})
+
+    const result = await setup.handleSave()
+
+    expect(result).toEqual({})
+    expect(loggerSpy).toHaveBeenCalledWith('CohortBuilder', 'saveCohortDefinition failed', apiError)
+    expect(setup.errorMessage).toBe('You do not have permission to save this cohort')
+    expect(setup.showError).toBe(true)
+
+    loggerSpy.mockRestore()
   })
 
   it('handleSave surfaces the thrown Error message when saving rejects', async () => {

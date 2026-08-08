@@ -12,7 +12,7 @@ import {
 import { mapConceptFromAPI, mapComparisonItemFromAPI } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
 import { httpClient, httpPostRead } from '@/services/http-client'
-import { unwrap, ApiError, zodIssues } from '@/services/api-error'
+import { unwrap, ApiError, zodIssues, parseOrThrow } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 
 type ConceptRecordCountResponse = Array<Record<string, number[]>>
@@ -20,15 +20,6 @@ type ConceptRecordCountResponse = Array<Record<string, number[]>>
 export type RecommendedConceptsResult =
   | { available: true; concepts: Concept[] }
   | { available: false; concepts: [] }
-
-// httpClient throws `Error('HTTP {status}: {statusText}')` — parse the code
-// out so we can distinguish 501 (feature unavailable) from real failures.
-function extractHttpStatus(error: unknown): number | null {
-  if (!(error instanceof Error)) return null
-  const match = /^HTTP (\d{3})\b/.exec(error.message)
-  if (!match || !match[1]) return null
-  return parseInt(match[1], 10)
-}
 
 // Single implementation for the one endpoint, POST /vocabulary/{sourceKey}/search:
 // the ApiResult contract (this used to be the separate searchConceptsResult),
@@ -64,14 +55,9 @@ export async function searchConcepts(
       body.DOMAIN_ID = [options.domain]
     }
     const data = await httpPostRead<unknown>(endpoint, body)
-    const parsed = ConceptSearchResponseSchema.safeParse(data)
+    const parsed = parseOrThrow(ConceptSearchResponseSchema, data, 'Invalid concept search response format')
 
-    if (!parsed.success) {
-      logger.error('ConceptSearch', 'Concept search validation error', parsed.error)
-      throw new ApiError('Invalid concept search response format', 0, zodIssues(parsed.error))
-    }
-
-    return parsed.data.map(mapConceptFromAPI)
+    return parsed.map(mapConceptFromAPI)
   }, 'ConceptSearchService')
 }
 
@@ -86,13 +72,16 @@ export async function getConceptById(
 
     if (!parsed.success) {
       logger.error('ConceptSearch', 'Concept detail validation error', parsed.error)
-      return null
+      throw new ApiError('Invalid concept detail response', 0, zodIssues(parsed.error))
     }
 
     return mapConceptFromAPI(parsed.data)
   } catch (error) {
+    // null strictly means "no such concept" - anything else (transport,
+    // validation) propagates so callers don't render a failure as not-found.
+    if (error instanceof ApiError && error.status === 404) return null
     logger.error('ConceptSearch', `Failed to fetch concept ${conceptId}`, error)
-    return null
+    throw error
   }
 }
 
@@ -259,7 +248,8 @@ export async function getRecommendedConcepts(
   try {
     data = await httpPostRead<unknown>(endpoint, conceptIds)
   } catch (error) {
-    if (extractHttpStatus(error) === 501) {
+    // 501 = feature unavailable on this WebAPI build, not a real failure.
+    if (error instanceof ApiError && error.status === 501) {
       return { available: false, concepts: [] }
     }
     throw error

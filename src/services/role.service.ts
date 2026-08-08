@@ -8,7 +8,7 @@
  */
 
 import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
-import { unwrap, ApiError } from '@/services/api-error'
+import { unwrap, ApiError, parseOrThrow } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import {
   RawRoleSchema,
@@ -35,14 +35,7 @@ const CONTEXT = 'RoleService'
 export async function fetchRoles(): Promise<ApiResult<Role[]>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>('/role/')
-    const parsed = RoleListSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error(CONTEXT, 'Roles validation error', parsed.error)
-      throw new ApiError('Invalid roles response format', 0, null)
-    }
-
-    return parsed.data
+    return parseOrThrow(RoleListSchema, data, 'Invalid roles response format')
   }, CONTEXT)
 }
 
@@ -53,14 +46,7 @@ export async function fetchRoles(): Promise<ApiResult<Role[]>> {
 export async function fetchRoleById(roleId: number): Promise<ApiResult<Role>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/role/${roleId}`)
-    const parsed = RawRoleSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error(CONTEXT, 'Role validation error', parsed.error)
-      throw new ApiError('Invalid role response format', 0, null)
-    }
-
-    return parsed.data
+    return parseOrThrow(RawRoleSchema, data, 'Invalid role response format')
   }, CONTEXT)
 }
 
@@ -71,21 +57,16 @@ export async function fetchRoleById(roleId: number): Promise<ApiResult<Role>> {
 export async function createRole(payload: RoleCreate): Promise<ApiResult<Role>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>('/role/', payload)
-    const parsed = RawRoleSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error(CONTEXT, 'Create role validation error', parsed.error)
-      throw new ApiError('Invalid role response format', 0, null)
-    }
+    const parsed = parseOrThrow(RawRoleSchema, data, 'Invalid role response format')
 
     // Audit log: Role created (FR-029)
-    logger.info(CONTEXT, `Role created: "${parsed.data.name}" (ID: ${parsed.data.id})`, {
-      roleId: parsed.data.id,
-      roleName: parsed.data.name,
+    logger.info(CONTEXT, `Role created: "${parsed.name}" (ID: ${parsed.id})`, {
+      roleId: parsed.id,
+      roleName: parsed.name,
       operation: 'CREATE',
     })
 
-    return parsed.data
+    return parsed
   }, CONTEXT)
 }
 
@@ -96,22 +77,17 @@ export async function createRole(payload: RoleCreate): Promise<ApiResult<Role>> 
 export async function updateRole(roleId: number, payload: RoleUpdate): Promise<ApiResult<Role>> {
   return unwrap(async () => {
     const data = await httpPut<unknown>(`/role/${roleId}`, payload)
-    const parsed = RawRoleSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error(CONTEXT, 'Update role validation error', parsed.error)
-      throw new ApiError('Invalid role response format', 0, null)
-    }
+    const parsed = parseOrThrow(RawRoleSchema, data, 'Invalid role response format')
 
     // Audit log: Role updated (FR-029)
-    logger.info(CONTEXT, `Role updated: "${parsed.data.name}" (ID: ${roleId})`, {
+    logger.info(CONTEXT, `Role updated: "${parsed.name}" (ID: ${roleId})`, {
       roleId,
-      roleName: parsed.data.name,
+      roleName: parsed.name,
       operation: 'UPDATE',
       changes: payload,
     })
 
-    return parsed.data
+    return parsed
   }, CONTEXT)
 }
 
@@ -142,14 +118,7 @@ export async function deleteRole(roleId: number): Promise<ApiResult<void>> {
 export async function getRolePermissions(roleId: number): Promise<ApiResult<Permission[]>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/role/${roleId}/permissions`)
-    const parsed = PermissionListSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error(CONTEXT, 'Role permissions validation error', parsed.error)
-      throw new ApiError('Invalid permissions response format', 0, null)
-    }
-
-    return parsed.data
+    return parseOrThrow(PermissionListSchema, data, 'Invalid permissions response format')
   }, CONTEXT)
 }
 
@@ -204,14 +173,7 @@ export async function removePermissionFromRole(
 export async function getRoleUsers(roleId: number): Promise<ApiResult<User[]>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/role/${roleId}/users`)
-    const parsed = UserListSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error(CONTEXT, 'Role users validation error', parsed.error)
-      throw new ApiError('Invalid users response format', 0, null)
-    }
-
-    return parsed.data
+    return parseOrThrow(UserListSchema, data, 'Invalid users response format')
   }, CONTEXT)
 }
 

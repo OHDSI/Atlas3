@@ -8,10 +8,9 @@
  */
 
 import { httpGet } from '@/services/http-client'
-import { unwrap, ApiError } from '@/services/api-error'
+import { unwrap, parseOrThrow } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import { UserSchema, UserListSchema, type User } from '@/models/role.types'
-import { logger } from '@/utils/logger'
 
 const CONTEXT = 'UserService'
 
@@ -31,14 +30,7 @@ export async function fetchUsers(limit = 50, offset = 0): Promise<ApiResult<User
 
     const url = `/user/?${params.toString()}`
     const data = await httpGet<unknown>(url)
-    const parsed = UserListSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error(CONTEXT, 'Users validation error', parsed.error)
-      throw new ApiError('Invalid users response format', 0, null)
-    }
-
-    return parsed.data
+    return parseOrThrow(UserListSchema, data, 'Invalid users response format')
   }, CONTEXT)
 }
 
@@ -49,14 +41,7 @@ export async function fetchUsers(limit = 50, offset = 0): Promise<ApiResult<User
 export async function fetchUserById(userId: number): Promise<ApiResult<User>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/user/${userId}`)
-    const parsed = UserSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error(CONTEXT, 'User validation error', parsed.error)
-      throw new ApiError('Invalid user response format', 0, null)
-    }
-
-    return parsed.data
+    return parseOrThrow(UserSchema, data, 'Invalid user response format')
   }, CONTEXT)
 }
 

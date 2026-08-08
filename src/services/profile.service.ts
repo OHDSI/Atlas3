@@ -1,7 +1,6 @@
 import { httpGet } from '@/services/http-client'
-import { logger } from '@/utils/logger'
 import { type ApiResult } from '@/types/api'
-import { unwrap, ApiError } from '@/services/api-error'
+import { unwrap, parseOrThrow } from '@/services/api-error'
 import {
   PersonProfileSchema,
   type PersonProfile,
@@ -18,12 +17,7 @@ export async function getPerson(
     const cohort = cohortId ?? 0
     const endpoint = `/${sourceKey}/person/${personId}?cohort=${cohort}`
     const data = await httpGet<unknown>(endpoint)
-    const parsed = PersonProfileSchema.safeParse(data)
-    if (!parsed.success) {
-      logger.error('ProfileService', 'Person profile schema validation failed', parsed.error)
-      throw new ApiError('Invalid person profile response format', 0, null)
-    }
-    return parsed.data
+    return parseOrThrow(PersonProfileSchema, data, 'Invalid person profile response format')
   }, 'ProfileService')
 }
 

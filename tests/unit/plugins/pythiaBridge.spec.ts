@@ -29,12 +29,14 @@ vi.mock('@/services/incidence-rate.service', () => ({
 }))
 
 import router from '@/router'
+import { createConceptSet } from '@/services/concept-set.service'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
 import { createCharacterization } from '@/services/characterization.service'
 import { createPathway } from '@/services/pathway.service'
 import { createIncidenceRate } from '@/services/incidence-rate.service'
 import { setupPythiaBridge, applyProposalDirect } from '@/plugins/host/pythiaBridge'
 import { useCohortStore } from '@/stores/cohort'
+import { useNotifications } from '@/stores/notifications'
 import { createHostMessageBus, getHostMessageBus } from '@/plugins/messaging/HostMessageBus'
 import { ApiError } from '@/services/api-error'
 
@@ -51,6 +53,7 @@ describe('pythiaBridge', () => {
     setupPythiaBridge()
     createHostMessageBus('pythia-plugin')
     vi.mocked(router.push).mockClear()
+    vi.mocked(createConceptSet).mockReset()
     vi.mocked(createFeatureAnalysis).mockReset()
     vi.mocked(createCharacterization).mockReset()
     vi.mocked(createPathway).mockReset()
@@ -277,6 +280,50 @@ describe('pythiaBridge', () => {
 
     await flush()
     expect(createPathway).toHaveBeenCalledOnce()
+    expect(router.push).not.toHaveBeenCalled()
+  })
+
+  function snackbarSpy() {
+    return vi.spyOn(useNotifications(), 'danger')
+  }
+
+  function conceptSetProposal() {
+    return {
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: {
+          kind: 'createStandaloneConceptSet',
+          conceptSet: {
+            name: 'Statins',
+            items: [{ conceptId: 1539403, conceptName: 'Simvastatin' }],
+          },
+        },
+      },
+      timestamp: new Date(),
+    }
+  }
+
+  it('createStandaloneConceptSet → surfaces a rejected createConceptSet as a snackbar without navigating', async () => {
+    const snackbar = snackbarSpy()
+    vi.mocked(createConceptSet).mockRejectedValue(new Error('WebAPI returned 500'))
+
+    dispatchPluginMessage(conceptSetProposal())
+
+    await flush()
+    expect(createConceptSet).toHaveBeenCalledOnce()
+    expect(snackbar).toHaveBeenCalledWith('WebAPI returned 500')
+    expect(router.push).not.toHaveBeenCalled()
+  })
+
+  it('createStandaloneConceptSet → falls back to a generic message for a non-Error throw', async () => {
+    const snackbar = snackbarSpy()
+    vi.mocked(createConceptSet).mockRejectedValue('boom')
+
+    dispatchPluginMessage(conceptSetProposal())
+
+    await flush()
+    expect(snackbar).toHaveBeenCalledWith('Failed to create concept set')
     expect(router.push).not.toHaveBeenCalled()
   })
 

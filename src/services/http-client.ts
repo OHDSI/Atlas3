@@ -155,7 +155,11 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
         } catch {
           // keep statusText
         }
-        const error = new ApiError(`HTTP ${response.status}: ${detail}`, response.status, detail)
+        // error.message ends up in user-facing toasts; a WebAPI error body can
+        // be a full HTML stack trace, so cap it there. `body` keeps the whole
+        // thing for logs.
+        const summary = detail.length > 300 ? `${detail.slice(0, 300)}…` : detail
+        const error = new ApiError(`HTTP ${response.status}: ${summary}`, response.status, detail)
         if (retryAllowed && isRetryableError(error, response.status) && attempt < maxRetries - 1) {
           const delay = initialDelay * Math.pow(2, attempt)
           logger.warn(

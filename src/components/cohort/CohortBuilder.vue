@@ -2227,10 +2227,11 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     const saved = await saveCohortDefinition(atlasDefinition)
 
     if (!saved.success) {
+      logger.error('CohortBuilder', 'saveCohortDefinition failed', saved.error)
       errorMessage.value =
         saved.error.status === 403
           ? tv('components.cohortBuilder.saveForbidden', 'You do not have permission to save this cohort')
-          : saved.error.message
+          : tv('components.cohortBuilder.saveToServerError', 'Failed to save cohort to server')
       showError.value = true
       return {}
     }

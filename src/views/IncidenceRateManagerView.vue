@@ -41,11 +41,24 @@ async function load() {
 
   const id = Number(idStr)
   const version = route.params.version as string | undefined
-  const ok =
-    version && version !== 'current'
-      ? await store.loadVersionPreview(id, Number(version))
-      : await store.loadIR(id)
-  if (!ok)
+  if (version && version !== 'current') {
+    // The route's beforeEnter already loaded this preview - don't fetch twice.
+    if (
+      store.isPreviewMode &&
+      store.currentIR?.id === id &&
+      store.previewVersion?.version === Number(version)
+    ) {
+      return
+    }
+    if (!(await store.loadVersionPreview(id, Number(version)))) {
+      loadingError.value = t(
+        'incidenceRate.editor.loadError',
+        'Failed to load incidence rate'
+      ).value
+    }
+    return
+  }
+  if (!(await store.loadIR(id)))
     loadingError.value = t('incidenceRate.editor.loadError', 'Failed to load incidence rate').value
 }
 
@@ -56,7 +69,10 @@ onMounted(async () => {
 
 onBeforeUnmount(() => store.stopAutoSave())
 
-watch(() => [route.params.id, route.params.version], load)
+// Two separate sources, not one getter returning a fresh array: the array
+// form re-fires on every route.params object replacement even when both
+// values are unchanged.
+watch([() => route.params.id, () => route.params.version], load)
 </script>
 
 <style scoped>

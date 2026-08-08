@@ -16,6 +16,14 @@ async function loadFromRoute() {
   const version = route.params.version as string | undefined
   if (Number.isFinite(id) && id > 0) {
     if (version && version !== 'current') {
+      // The route's beforeEnter already loaded this preview - don't fetch twice.
+      if (
+        store.isPreviewMode &&
+        store.currentPathway?.id === id &&
+        store.previewVersion?.version === Number(version)
+      ) {
+        return
+      }
       await store.loadVersionPreview(id, Number(version))
     } else {
       await store.loadPathway(id)
@@ -26,5 +34,8 @@ async function loadFromRoute() {
 }
 
 onMounted(loadFromRoute)
-watch(() => [route.params.id, route.params.version], loadFromRoute)
+// Two separate sources, not one getter returning a fresh array: the array
+// form re-fires on every route.params object replacement even when both
+// values are unchanged.
+watch([() => route.params.id, () => route.params.version], loadFromRoute)
 </script>

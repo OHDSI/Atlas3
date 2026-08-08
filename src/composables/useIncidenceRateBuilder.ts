@@ -40,13 +40,11 @@ export function useIncidenceRateBuilder() {
       return false
     }
 
-    // Name uniqueness check
+    // Name uniqueness check. Advisory only: if the check itself fails (it is
+    // already logged by the service), still attempt the save — the server is
+    // the authority and the save surfaces its own errors.
     const existsResult = await existsIncidenceRate(ir.name, ir.id ?? 0)
-    if (!existsResult.success) {
-      notify(`Could not verify name uniqueness: ${existsResult.error.message}`, 'error')
-      return false
-    }
-    if (existsResult.data > 0) {
+    if (existsResult.success && existsResult.data > 0) {
       notify('An incidence rate with this name already exists', 'error')
       return false
     }

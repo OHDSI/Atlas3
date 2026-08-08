@@ -1,16 +1,14 @@
 /**
- * Component tests: IncidenceRateManagerView
+ * Component tests: PathwayManagerView
  *
- * Guards against the version-preview-unreachable regression: mounting on
- * the /incidence-rates/:id/version/:version route must call
- * store.loadVersionPreview and must never call store.loadIR (which nulls
- * previewVersion and wipes the preview - see PathwayManagerView for the
- * pattern this mirrors).
+ * Mirrors IncidenceRateManagerView.spec.ts: the route's beforeEnter already
+ * loads a version preview, so mounting must not fetch it a second time, and
+ * replacing route.params with identical values must not retrigger the load.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { reactive, ref } from 'vue'
+import { reactive } from 'vue'
 import { mount, VueWrapper } from '@vue/test-utils'
-import IncidenceRateManagerView from '@/views/IncidenceRateManagerView.vue'
+import PathwayManagerView from '@/views/PathwayManagerView.vue'
 
 const mockRoute = reactive<{ params: Record<string, string> }>({ params: {} })
 
@@ -18,51 +16,43 @@ vi.mock('vue-router', () => ({
   useRoute: () => mockRoute,
 }))
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (_key: string, fallback: string) => ref(fallback),
-    tv: (_key: string, fallback: string) => fallback,
-  }),
-}))
-
-vi.mock('@/components/incidence-rate/IncidenceRateBuilder.vue', () => ({
+vi.mock('@/components/pathway/PathwayBuilder.vue', () => ({
   default: {
-    name: 'IncidenceRateBuilder',
-    template: '<div class="ir-builder-mock" />',
+    name: 'PathwayBuilder',
+    template: '<div class="pathway-builder-mock" />',
   },
 }))
 
 const store = {
-  currentIR: null as { id: number } | null,
+  currentPathway: null as { id: number } | null,
   isPreviewMode: false,
   previewVersion: null as { version: number } | null,
-  loadIR: vi.fn(),
+  loadPathway: vi.fn(),
   loadVersionPreview: vi.fn(),
   restoreFromDraft: vi.fn(() => false),
-  createNewIR: vi.fn(),
-  startAutoSave: vi.fn(),
-  stopAutoSave: vi.fn(),
+  createNewPathway: vi.fn(),
 }
 
-vi.mock('@/stores/incidence-rate', () => ({
-  useIncidenceRateStore: () => store,
+vi.mock('@/stores/pathway', () => ({
+  usePathwayStore: () => store,
 }))
 
-describe('IncidenceRateManagerView.vue', () => {
+describe('PathwayManagerView.vue', () => {
   let wrapper: VueWrapper
 
   // mockRoute is reactive, so a wrapper left mounted would keep watching it
-  // and re-run load() during the next test.
+  // and re-run loadFromRoute() during the next test.
   afterEach(() => wrapper.unmount())
 
   beforeEach(() => {
     vi.clearAllMocks()
     mockRoute.params = {}
-    store.currentIR = null
+    store.currentPathway = null
     store.isPreviewMode = false
     store.previewVersion = null
-    store.loadIR.mockResolvedValue(true)
+    store.loadPathway.mockResolvedValue(true)
     store.loadVersionPreview.mockResolvedValue(true)
+    store.restoreFromDraft.mockReturnValue(false)
   })
 
   async function flushMounted() {
@@ -71,68 +61,68 @@ describe('IncidenceRateManagerView.vue', () => {
     await Promise.resolve()
   }
 
-  it('loads the plain IR when no version param is present', async () => {
+  it('loads the plain pathway when no version param is present', async () => {
     mockRoute.params = { id: '5' }
 
-    wrapper = mount(IncidenceRateManagerView, { props: { id: '5' } })
+    wrapper = mount(PathwayManagerView)
     await flushMounted()
 
-    expect(store.loadIR).toHaveBeenCalledWith(5)
+    expect(store.loadPathway).toHaveBeenCalledWith(5)
     expect(store.loadVersionPreview).not.toHaveBeenCalled()
   })
 
-  it('loads the version preview instead of the plain IR when a version param is present', async () => {
+  it('loads the version preview instead of the plain pathway when a version param is present', async () => {
     mockRoute.params = { id: '5', version: '3' }
 
-    wrapper = mount(IncidenceRateManagerView, { props: { id: '5' } })
+    wrapper = mount(PathwayManagerView)
     await flushMounted()
 
     expect(store.loadVersionPreview).toHaveBeenCalledWith(5, 3)
-    expect(store.loadIR).not.toHaveBeenCalled()
+    expect(store.loadPathway).not.toHaveBeenCalled()
   })
 
-  it('loads the plain IR when version param is the literal "current"', async () => {
+  it('loads the plain pathway when version param is the literal "current"', async () => {
     mockRoute.params = { id: '5', version: 'current' }
 
-    wrapper = mount(IncidenceRateManagerView, { props: { id: '5' } })
+    wrapper = mount(PathwayManagerView)
     await flushMounted()
 
-    expect(store.loadIR).toHaveBeenCalledWith(5)
+    expect(store.loadPathway).toHaveBeenCalledWith(5)
     expect(store.loadVersionPreview).not.toHaveBeenCalled()
   })
 
   it('skips the refetch when the store already holds exactly this version preview', async () => {
     mockRoute.params = { id: '5', version: '3' }
     store.isPreviewMode = true
-    store.currentIR = { id: 5 }
+    store.currentPathway = { id: 5 }
     store.previewVersion = { version: 3 }
 
-    wrapper = mount(IncidenceRateManagerView, { props: { id: '5' } })
+    wrapper = mount(PathwayManagerView)
     await flushMounted()
 
     expect(store.loadVersionPreview).not.toHaveBeenCalled()
-    expect(store.loadIR).not.toHaveBeenCalled()
+    expect(store.loadPathway).not.toHaveBeenCalled()
   })
 
   it('refetches when the store holds a preview of a different version', async () => {
     mockRoute.params = { id: '5', version: '3' }
     store.isPreviewMode = true
-    store.currentIR = { id: 5 }
+    store.currentPathway = { id: 5 }
     store.previewVersion = { version: 2 }
 
-    wrapper = mount(IncidenceRateManagerView, { props: { id: '5' } })
+    wrapper = mount(PathwayManagerView)
     await flushMounted()
 
     expect(store.loadVersionPreview).toHaveBeenCalledWith(5, 3)
   })
 
-  it('refetches when the store holds a preview of a different incidence rate', async () => {
+  it('refetches when the store holds a preview of a different pathway', async () => {
     mockRoute.params = { id: '5', version: '3' }
     store.isPreviewMode = true
-    store.currentIR = { id: 9 }
+    store.currentPathway = { id: 9 }
     store.previewVersion = { version: 3 }
 
-    wrapper = mount(IncidenceRateManagerView, { props: { id: '5' } })
+    wrapper = mount(PathwayManagerView)
     await flushMounted()
 
     expect(store.loadVersionPreview).toHaveBeenCalledWith(5, 3)
@@ -141,31 +131,40 @@ describe('IncidenceRateManagerView.vue', () => {
   it('refetches when the store is not in preview mode despite matching id and version', async () => {
     mockRoute.params = { id: '5', version: '3' }
     store.isPreviewMode = false
-    store.currentIR = { id: 5 }
+    store.currentPathway = { id: 5 }
     store.previewVersion = { version: 3 }
 
-    wrapper = mount(IncidenceRateManagerView, { props: { id: '5' } })
+    wrapper = mount(PathwayManagerView)
     await flushMounted()
 
     expect(store.loadVersionPreview).toHaveBeenCalledWith(5, 3)
   })
 
-  it('renders the error state when the version preview fails to load', async () => {
-    mockRoute.params = { id: '5', version: '3' }
-    store.loadVersionPreview.mockResolvedValue(false)
+  it('restores the draft when the route carries no usable id', async () => {
+    mockRoute.params = {}
+    store.restoreFromDraft.mockReturnValue(true)
 
-    wrapper = mount(IncidenceRateManagerView, { props: { id: '5' } })
+    wrapper = mount(PathwayManagerView)
     await flushMounted()
-    await wrapper.vm.$nextTick()
 
-    expect(store.loadVersionPreview).toHaveBeenCalledWith(5, 3)
-    expect(wrapper.find('.state.error').text()).toBe('Failed to load incidence rate')
+    expect(store.restoreFromDraft).toHaveBeenCalled()
+    expect(store.createNewPathway).not.toHaveBeenCalled()
+  })
+
+  it('creates a new pathway when there is no id and no draft to restore', async () => {
+    mockRoute.params = {}
+    store.restoreFromDraft.mockReturnValue(false)
+
+    wrapper = mount(PathwayManagerView)
+    await flushMounted()
+
+    expect(store.createNewPathway).toHaveBeenCalled()
   })
 
   it('does not reload when route.params is replaced with identical id and version', async () => {
     mockRoute.params = { id: '5', version: '3' }
 
-    wrapper = mount(IncidenceRateManagerView, { props: { id: '5' } })
+    wrapper = mount(PathwayManagerView)
     await flushMounted()
     expect(store.loadVersionPreview).toHaveBeenCalledTimes(1)
 

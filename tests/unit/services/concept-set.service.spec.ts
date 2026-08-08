@@ -74,35 +74,29 @@ describe('ConceptSetService', () => {
       expect(result).toHaveLength(2)
     })
 
-    it('should return empty array on fetch failure', async () => {
+    it('throws on fetch failure', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
         statusText: 'Server Error',
       })
 
-      const result = await getAllConceptSets()
-
-      expect(result).toEqual([])
+      await expect(getAllConceptSets()).rejects.toThrow('HTTP 500')
     })
 
-    it('should return empty array for invalid response format', async () => {
+    it('throws for invalid response format', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ invalid: 'response' }),
       })
 
-      const result = await getAllConceptSets()
-
-      expect(result).toEqual([])
+      await expect(getAllConceptSets()).rejects.toThrow('Invalid concept set list response')
     })
 
-    it('should return empty array on network error', async () => {
+    it('throws on network error', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-      const result = await getAllConceptSets()
-
-      expect(result).toEqual([])
+      await expect(getAllConceptSets()).rejects.toThrow('Network error')
     })
   })
 
@@ -245,24 +239,20 @@ describe('ConceptSetService', () => {
       expect(result).not.toBeNull()
     })
 
-    it('should return null on create failure', async () => {
+    it('throws on create failure', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
         statusText: 'Bad Request',
       })
 
-      const result = await createConceptSet({ name: 'Test', items: [] })
-
-      expect(result).toBeNull()
+      await expect(createConceptSet({ name: 'Test', items: [] })).rejects.toThrow('HTTP 400')
     })
 
-    it('should return null on network error', async () => {
+    it('throws on network error', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-      const result = await createConceptSet({ name: 'Test', items: [] })
-
-      expect(result).toBeNull()
+      await expect(createConceptSet({ name: 'Test', items: [] })).rejects.toThrow('Network error')
     })
   })
 
@@ -327,24 +317,24 @@ describe('ConceptSetService', () => {
       )
     })
 
-    it('should return null on update failure', async () => {
+    it('throws on update failure', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
         statusText: 'Bad Request',
       })
 
-      const result = await updateConceptSet({ id: 1, name: 'Test', items: [] })
-
-      expect(result).toBeNull()
+      await expect(updateConceptSet({ id: 1, name: 'Test', items: [] })).rejects.toThrow(
+        'HTTP 400'
+      )
     })
 
-    it('should return null on network error', async () => {
+    it('throws on network error', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-      const result = await updateConceptSet({ id: 1, name: 'Test', items: [] })
-
-      expect(result).toBeNull()
+      await expect(updateConceptSet({ id: 1, name: 'Test', items: [] })).rejects.toThrow(
+        'Network error'
+      )
     })
   })
 

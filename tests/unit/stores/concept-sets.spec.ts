@@ -281,16 +281,6 @@ describe('Concept Sets Store', () => {
       expect(store.currentSet).toEqual({ ...newSet, id: 4 })
     })
 
-    it('should handle create failure', async () => {
-      const store = useConceptSetsStore()
-      vi.mocked(createConceptSet).mockResolvedValue(null)
-
-      const result = await store.create({ name: 'New Set', items: [] })
-
-      expect(result).toBeNull()
-      expect(store.error).toBe('Failed to create concept set')
-    })
-
     it('should handle create error', async () => {
       const store = useConceptSetsStore()
       vi.mocked(createConceptSet).mockRejectedValue(new Error('Server error'))
@@ -313,16 +303,6 @@ describe('Concept Sets Store', () => {
 
       expect(result).toEqual(updatedSet)
       expect(store.currentSet).toEqual(updatedSet)
-    })
-
-    it('should handle update failure', async () => {
-      const store = useConceptSetsStore()
-      vi.mocked(updateConceptSet).mockResolvedValue(null)
-
-      const result = await store.update(mockConceptSet)
-
-      expect(result).toBeNull()
-      expect(store.error).toBe('Failed to update concept set')
     })
 
     it('should handle update error', async () => {

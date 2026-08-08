@@ -8,10 +8,9 @@
  */
 
 import { httpGet } from '@/services/http-client'
-import { unwrap, ApiError } from '@/services/api-error'
+import { unwrap, parseOrThrow } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import { PermissionSchema, PermissionListSchema, type Permission } from '@/models/role.types'
-import { logger } from '@/utils/logger'
 
 const CONTEXT = 'PermissionService'
 
@@ -40,14 +39,7 @@ export async function fetchPermissions(
 
     const url = `/permission/?${params.toString()}`
     const data = await httpGet<unknown>(url)
-    const parsed = PermissionListSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error(CONTEXT, 'Permissions validation error', parsed.error)
-      throw new ApiError('Invalid permissions response format', 0, null)
-    }
-
-    return parsed.data
+    return parseOrThrow(PermissionListSchema, data, 'Invalid permissions response format')
   }, CONTEXT)
 }
 
@@ -58,14 +50,7 @@ export async function fetchPermissions(
 export async function fetchPermissionById(permissionId: number): Promise<ApiResult<Permission>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/permission/${permissionId}`)
-    const parsed = PermissionSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error(CONTEXT, 'Permission validation error', parsed.error)
-      throw new ApiError('Invalid permission response format', 0, null)
-    }
-
-    return parsed.data
+    return parseOrThrow(PermissionSchema, data, 'Invalid permission response format')
   }, CONTEXT)
 }
 

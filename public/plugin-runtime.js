@@ -14,7 +14,7 @@ window.__atlasPluginRuntimeReady = (function () {
     // downstream by ensurePluginRuntime), nothing else checks window.Vue -
     // resolving here would let the runtime report "ready" with the 'vue'
     // SystemJS module exporting nothing, breaking every plugin silently.
-    return Promise.reject(new Error('[SystemJS] window.Vue is not available!'))
+    return rejected(new Error('[SystemJS] window.Vue is not available!'))
   }
 
   // A synchronous throw inside a classic <script> fires the window's error
@@ -24,7 +24,16 @@ window.__atlasPluginRuntimeReady = (function () {
   try {
     return registerRuntime()
   } catch (err) {
-    return Promise.reject(err)
+    return rejected(err)
+  }
+
+  // ensurePluginRuntime attaches its await a task later at best - or never,
+  // if vendor-script loading fails first - so an eagerly-created rejection
+  // must be pre-marked as handled or it fires unhandledrejection.
+  function rejected(err) {
+    var p = Promise.reject(err)
+    p.catch(function () {})
+    return p
   }
 
   function registerRuntime() {
@@ -128,7 +137,7 @@ window.__atlasPluginRuntimeReady = (function () {
     });
 
     // Load and register single-spa-vue
-    return window.System.import('./vendor/single-spa-vue.js').then(function(module) {
+    var chain = window.System.import('./vendor/single-spa-vue.js').then(function(module) {
       // Register it under the 'single-spa-vue' name
       window.System.register('single-spa-vue', [], function(_export) {
         return {
@@ -145,5 +154,10 @@ window.__atlasPluginRuntimeReady = (function () {
       // instead of letting this chain resolve with single-spa-vue unregistered.
       throw err;
     });
+    // Same handled-marking as rejected(): if a sibling vendor script fails
+    // first, Promise.all rejects and ensurePluginRuntime never awaits this
+    // chain, so its rejection would surface as unhandledrejection.
+    chain.catch(function () {});
+    return chain;
   }
 })()

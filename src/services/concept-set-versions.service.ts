@@ -50,7 +50,9 @@ const conceptSetExpressionResponseSchema = z.object({
         includeMapped: z.boolean(),
       })
     )
-    .optional(),
+    // WebAPI sends items: null instead of [] for empty item lists (see the
+    // sibling schema above) - tolerate both here too.
+    .nullish(),
 })
 
 /**
