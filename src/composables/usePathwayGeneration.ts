@@ -41,7 +41,9 @@ export function usePathwayGeneration(pathwayId: number) {
       return false
     }
     execution.value = result.data
-    if (!TERMINAL.has(result.data.status)) {
+    // result.data is null when the generate response carried no execution id:
+    // the run started, but there is nothing to poll.
+    if (result.data && !TERMINAL.has(result.data.status)) {
       polling.value = true
       timer = setInterval(pollOnce, PATHWAY_GENERATION_POLL_MS)
     }

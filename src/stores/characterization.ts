@@ -275,7 +275,7 @@ export const useCharacterizationStore = defineStore('characterization', () => {
   async function runExecution(
     characterizationId: number,
     sourceKey: string
-  ): Promise<CharacterizationExecution> {
+  ): Promise<CharacterizationExecution | null> {
     executionsError.value = null
 
     const result = await generateCharacterization(characterizationId, sourceKey)
@@ -286,6 +286,12 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     }
 
     const created = result.data
+    // Started, but the response carried nothing trackable - fall back to the
+    // canonical list instead of inserting/polling a synthetic row.
+    if (created === null) {
+      await loadExecutions(characterizationId)
+      return null
+    }
     // Replace any existing execution with the same generation id; otherwise prepend.
     const existingIdx =
       created.id != null ? executions.value.findIndex(e => e.id === created.id) : -1

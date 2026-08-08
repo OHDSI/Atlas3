@@ -1331,6 +1331,7 @@
       "description": "从生成的队列中随机抽取的人员，可按年龄和性别进行筛选。",
       "newSample": "新建样本",
       "failedToLoadSamples": "加载样本失败",
+      "failedToLoadSampleDetail": "加载样本详情失败",
       "failedToCreateSample": "创建样本失败"
     },
     "cohortSampleDetail": {

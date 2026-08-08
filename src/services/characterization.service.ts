@@ -5,6 +5,7 @@
  */
 import { httpGet, httpPost, httpPut, httpDelete, httpPostRead } from '@/services/http-client'
 import { unwrap, unwrapList, ApiError, zodIssues } from '@/services/api-error'
+import { logger } from '@/utils/logger'
 import { type ApiResult } from '@/types/api'
 import {
   CharacterizationDefinitionSchema,
@@ -256,7 +257,7 @@ export async function getCharacterizationExecution(
 export async function generateCharacterization(
   id: number,
   sourceKey: string
-): Promise<ApiResult<CharacterizationExecution>> {
+): Promise<ApiResult<CharacterizationExecution | null>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>(
       `/cohort-characterization/${id}/generation/${encodeURIComponent(sourceKey)}`
@@ -281,7 +282,18 @@ export async function generateCharacterization(
       )
     }
 
-    const executionId = job.data.executionId ?? job.data.id ?? 0
+    // Don't fabricate an execution id: polling id 0 would track a phantom
+    // execution. The generation did start, so this isn't a failure either -
+    // return null so the caller refreshes the canonical list instead.
+    const executionId = job.data.executionId ?? job.data.id
+    if (executionId === undefined) {
+      logger.warn(
+        CONTEXT,
+        `Generation response from POST /cohort-characterization/${id}/generation/${sourceKey} carried no execution id`,
+        job.data
+      )
+      return null
+    }
     return {
       id: executionId,
       status: job.data.status ?? 'STARTING',

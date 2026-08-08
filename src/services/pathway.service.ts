@@ -239,7 +239,7 @@ export async function getPathwayResults(generationId: number): Promise<ApiResult
 export async function generatePathway(
   id: number,
   sourceKey: string
-): Promise<ApiResult<PathwayExecution>> {
+): Promise<ApiResult<PathwayExecution | null>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>(
       `/pathway-analysis/${id}/generation/${sourceKey}`,
@@ -258,8 +258,17 @@ export async function generatePathway(
       .passthrough()
     const job = jobSchema.safeParse(data)
     if (!job.success) throw new ApiError('Invalid generate response', 0, zodIssues(job.error))
+    // Don't fabricate an execution id: polling id 0 would track a phantom
+    // execution. The generation did start, so this isn't a failure either -
+    // return null so the caller skips polling and relies on the list/get
+    // endpoints for the canonical row.
+    const executionId = job.data.executionId ?? job.data.id
+    if (executionId === undefined) {
+      logger.warn(CONTEXT, 'Generate response carried no execution id', job.data)
+      return null
+    }
     return {
-      id: job.data.executionId ?? job.data.id ?? 0,
+      id: executionId,
       status: job.data.status ?? 'STARTING',
       sourceKey,
     }

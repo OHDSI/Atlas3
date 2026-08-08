@@ -1344,6 +1344,7 @@
       "description": "Случайная выборка лиц из сгенерированной когорты с возможностью фильтрации по возрасту и полу.",
       "newSample": "Новая выборка",
       "failedToLoadSamples": "Не удалось загрузить выборки",
+      "failedToLoadSampleDetail": "Не удалось загрузить сведения о выборке",
       "failedToCreateSample": "Не удалось создать выборку"
     },
     "cohortSampleDetail": {

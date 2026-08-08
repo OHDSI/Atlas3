@@ -1331,6 +1331,7 @@
       "description": "생성된 코호트에서 무작위로 추출한 대상자로, 연령과 성별로 선택적으로 필터링할 수 있습니다.",
       "newSample": "새 샘플",
       "failedToLoadSamples": "샘플을 불러오지 못했습니다",
+      "failedToLoadSampleDetail": "샘플 상세 정보를 불러오지 못했습니다",
       "failedToCreateSample": "샘플을 만들지 못했습니다"
     },
     "cohortSampleDetail": {

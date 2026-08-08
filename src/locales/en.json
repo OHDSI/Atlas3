@@ -1616,6 +1616,7 @@
       "description": "Random selections of persons drawn from the generated cohort, optionally filtered by age and gender.",
       "newSample": "New sample",
       "failedToLoadSamples": "Failed to load samples",
+      "failedToLoadSampleDetail": "Failed to load sample detail",
       "failedToCreateSample": "Failed to create sample"
     },
     "cohortSampleDetail": {

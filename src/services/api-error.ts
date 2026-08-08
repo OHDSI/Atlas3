@@ -43,6 +43,8 @@ export async function unwrap<T>(fn: () => Promise<T>, context: string): Promise<
 /**
  * The WebAPI list endpoint may return either a bare array or a Spring
  * Data-style page wrapper `{ content: [...] }`. Normalise to a plain array.
+ * Anything else (SSO-redirect JSON, an error body served with HTTP 200) is
+ * not "an empty list" — throw so the caller's unwrap() surfaces it.
  */
 export function unwrapList<T = unknown>(payload: unknown): T[] {
   if (Array.isArray(payload)) return payload as T[]
@@ -53,5 +55,9 @@ export function unwrapList<T = unknown>(payload: unknown): T[] {
   ) {
     return (payload as { content: T[] }).content
   }
-  return []
+  throw new ApiError(
+    'Expected a list response but got a different shape',
+    0,
+    JSON.stringify(payload) ?? String(payload)
+  )
 }

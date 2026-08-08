@@ -129,6 +129,7 @@ async function loadList() {
 
 async function loadDetail(sampleId: number) {
   detailLoading.value = true
+  error.value = null
   try {
     const result = await getCohortSample(props.cohortId, props.sourceKey, sampleId, {
       withElements: true,
@@ -137,6 +138,9 @@ async function loadDetail(sampleId: number) {
       selectedSample.value = result.data
     } else {
       selectedSample.value = null
+      error.value =
+        result.error.message ||
+        tv('components.cohortSamples.failedToLoadSampleDetail', 'Failed to load sample detail')
       logger.error('CohortSamplesPanel', 'Failed to load sample detail', result.error)
     }
   } finally {

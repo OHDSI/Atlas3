@@ -29,7 +29,9 @@ const CONTEXT = 'IncidenceRateService'
 // always works with a parsed object.
 function decodeIRExpression(wire: unknown): IncidenceRate {
   const parsed = IncidenceRateWireSchema.safeParse(wire)
-  if (!parsed.success) throw parsed.error
+  if (!parsed.success) {
+    throw new ApiError('Invalid incidence rate response', 0, zodIssues(parsed.error))
+  }
   const { expression: raw, ...rest } = parsed.data
   if (!raw) {
     return {
@@ -48,8 +50,11 @@ function decodeIRExpression(wire: unknown): IncidenceRate {
   } catch {
     throw new Error('expression is not valid JSON')
   }
-  const expr = IncidenceRateExpressionSchema.parse(parsedExpr)
-  return { ...rest, expression: expr } as IncidenceRate
+  const expr = IncidenceRateExpressionSchema.safeParse(parsedExpr)
+  if (!expr.success) {
+    throw new ApiError('Invalid incidence rate expression', 0, zodIssues(expr.error))
+  }
+  return { ...rest, expression: expr.data } as IncidenceRate
 }
 
 function encodeIRForSave(ir: IncidenceRate): Record<string, unknown> {
