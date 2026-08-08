@@ -5,7 +5,7 @@
  * generated cohort, optionally filtered by age and gender criteria.
  */
 import { httpGet, httpPost, httpDelete } from '@/services/http-client'
-import { unwrap, ApiError, zodIssues } from '@/services/api-error'
+import { unwrap, parseOrThrow } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import {
   CohortSampleSchema,
@@ -27,11 +27,7 @@ export async function listCohortSamples(
 ): Promise<ApiResult<CohortSampleList>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/cohortsample/${cohortDefinitionId}/${sourceKey}`)
-    const parsed = CohortSampleListSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError('Invalid cohort sample list response', 0, zodIssues(parsed.error))
-    }
-    return parsed.data
+    return parseOrThrow(CohortSampleListSchema, data, 'Invalid cohort sample list response')
   }, CONTEXT)
 }
 
@@ -61,11 +57,7 @@ export async function getCohortSample(
       ? `/cohortsample/${cohortDefinitionId}/${sourceKey}/${sampleId}?fields=elements`
       : `/cohortsample/${cohortDefinitionId}/${sourceKey}/${sampleId}`
     const data = await httpGet<unknown>(url)
-    const parsed = CohortSampleSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError('Invalid cohort sample response', 0, zodIssues(parsed.error))
-    }
-    return parsed.data
+    return parseOrThrow(CohortSampleSchema, data, 'Invalid cohort sample response')
   }, CONTEXT)
 }
 
@@ -80,11 +72,7 @@ export async function createCohortSample(
 ): Promise<ApiResult<CohortSample>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>(`/cohortsample/${cohortDefinitionId}/${sourceKey}`, parameters)
-    const parsed = CohortSampleSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError('Invalid cohort sample response', 0, zodIssues(parsed.error))
-    }
-    return parsed.data
+    return parseOrThrow(CohortSampleSchema, data, 'Invalid cohort sample response')
   }, CONTEXT)
 }
 
@@ -101,11 +89,7 @@ export async function refreshCohortSample(
     const data = await httpPost<unknown>(
       `/cohortsample/${cohortDefinitionId}/${sourceKey}/${sampleId}/refresh`
     )
-    const parsed = CohortSampleSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError('Invalid cohort sample response', 0, zodIssues(parsed.error))
-    }
-    return parsed.data
+    return parseOrThrow(CohortSampleSchema, data, 'Invalid cohort sample response')
   }, CONTEXT)
 }
 

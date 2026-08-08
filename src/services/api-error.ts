@@ -1,4 +1,4 @@
-import type { ZodError } from 'zod'
+import type { ZodError, ZodType, ZodTypeDef } from 'zod'
 import { logger } from '@/utils/logger'
 import { type ApiResult, success, failure } from '@/types/api'
 
@@ -30,6 +30,23 @@ export function toApiError(err: unknown): ApiError {
   return new ApiError(String(err), 0, null)
 }
 
+/**
+ * Validate a response payload, throwing the standard ApiError shape on
+ * mismatch: `message` for the toast, zod issues in `body` for the log.
+ * unwrap() already logs the thrown error - don't log again at the call site.
+ */
+export function parseOrThrow<T>(
+  schema: ZodType<T, ZodTypeDef, unknown>,
+  data: unknown,
+  message: string
+): T {
+  const parsed = schema.safeParse(data)
+  if (!parsed.success) {
+    throw new ApiError(message, 0, zodIssues(parsed.error))
+  }
+  return parsed.data
+}
+
 export async function unwrap<T>(fn: () => Promise<T>, context: string): Promise<ApiResult<T>> {
   try {
     return success(await fn())
@@ -43,6 +60,8 @@ export async function unwrap<T>(fn: () => Promise<T>, context: string): Promise<
 /**
  * The WebAPI list endpoint may return either a bare array or a Spring
  * Data-style page wrapper `{ content: [...] }`. Normalise to a plain array.
+ * Anything else (SSO-redirect JSON, an error body served with HTTP 200) is
+ * not "an empty list" — throw so the caller's unwrap() surfaces it.
  */
 export function unwrapList<T = unknown>(payload: unknown): T[] {
   if (Array.isArray(payload)) return payload as T[]
@@ -53,5 +72,9 @@ export function unwrapList<T = unknown>(payload: unknown): T[] {
   ) {
     return (payload as { content: T[] }).content
   }
-  return []
+  throw new ApiError(
+    'Expected a list response but got a different shape',
+    0,
+    JSON.stringify(payload) ?? String(payload)
+  )
 }

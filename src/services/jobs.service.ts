@@ -6,9 +6,8 @@
  */
 
 import { httpGet } from '@/services/http-client'
-import { logger } from '@/utils/logger'
 import { type ApiResult } from '@/types/api'
-import { unwrap, ApiError } from '@/services/api-error'
+import { unwrap, parseOrThrow } from '@/services/api-error'
 import {
   JobExecutionListSchema,
   type Job,
@@ -48,15 +47,10 @@ export async function getJobs(): Promise<ApiResult<Job[]>> {
     const batchData = await httpGet<unknown>('/job/execution?comprehensivePage=true')
 
     // Validate Spring Batch response with Zod
-    const parsed = JobExecutionListSchema.safeParse(batchData)
-
-    if (!parsed.success) {
-      logger.error('JobsService', 'Job executions validation error', parsed.error)
-      throw new ApiError('Invalid job executions response format', 0, null)
-    }
+    const parsed = parseOrThrow(JobExecutionListSchema, batchData, 'Invalid job executions response format')
 
     // Extract executions from response (handles both array and paginated formats)
-    const executions = extractExecutions(parsed.data)
+    const executions = extractExecutions(parsed)
 
     const jobs = executions.map(transformJobExecution)
 

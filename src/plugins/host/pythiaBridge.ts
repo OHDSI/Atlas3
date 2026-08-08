@@ -7,7 +7,7 @@ import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
 import { useCharacterizationStore } from '@/stores/characterization'
 import { usePathwayStore } from '@/stores/pathway'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
-import { useUIStore } from '@/stores/ui'
+import { useNotifications } from '@/stores/notifications'
 import type {
   AgentProposal,
   CharacterizationCreatePayload,
@@ -242,13 +242,22 @@ async function handleCreateStandaloneConceptSet(
     includeMapped: false,
   }))
 
-  const created = await createConceptSet({
-    name: payload.name,
-    description: payload.description ?? '',
-    items: conceptSetItems,
-  })
+  let created
+  try {
+    created = await createConceptSet({
+      name: payload.name,
+      description: payload.description ?? '',
+      items: conceptSetItems,
+    })
+  } catch (err) {
+    showSnackbar(
+      err instanceof Error ? err.message : 'Failed to create concept set',
+      'error'
+    )
+    return
+  }
 
-  if (!created || created.id === undefined || created.id === null) {
+  if (created.id === undefined || created.id === null) {
     showSnackbar('Failed to create concept set', 'error')
     return
   }
@@ -839,13 +848,13 @@ function handleSnackbar(payload: { message: string; type?: string }) {
   showSnackbar(payload.message, payload.type ?? 'info')
 }
 
+// The UI store never defined showSnackbar, so every message the bridge raised
+// fell through to a log line the user never saw. Route them to the
+// notification store that AtlasNotificationHost actually renders.
 function showSnackbar(message: string, type: string = 'info') {
-  const ui = useUIStore()
-  const fn = (ui as unknown as { showSnackbar?: (msg: string, t?: string) => void })
-    .showSnackbar
-  if (typeof fn === 'function') {
-    fn(message, type)
-  } else {
-    logger.info('pythiaBridge', 'snackbar', { message, type })
-  }
+  const notify = useNotifications()
+  if (type === 'error') notify.danger(message)
+  else if (type === 'success') notify.success(message)
+  else if (type === 'warning') notify.warning(message)
+  else notify.info(message)
 }

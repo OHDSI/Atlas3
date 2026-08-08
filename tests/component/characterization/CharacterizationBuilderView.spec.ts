@@ -69,11 +69,13 @@ import {
   updateCharacterization,
   listCharacterizations,
   listCharacterizationExecutions,
+  exportCharacterization,
 } from '@/services/characterization.service'
 import { listFeatureAnalyses } from '@/services/feature-analysis.service'
 import { getCohorts } from '@/services/cohort-definition.service'
 import CharacterizationBuilderView from '@/views/CharacterizationBuilderView.vue'
-import { success } from '@/types/api'
+import { success, failure } from '@/types/api'
+import { ApiError } from '@/services/api-error'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -284,5 +286,31 @@ describe('CharacterizationBuilderView', () => {
     const payload = vi.mocked(updateCharacterization).mock.calls[0]![0]!
     expect(payload.id).toBe(42)
     expect(payload.name).toBe('Renamed')
+  })
+
+  it('a failed export shows the export-specific error, not the import error', async () => {
+    vi.mocked(getCharacterization).mockResolvedValue(success(sampleCharacterization))
+    vi.mocked(exportCharacterization).mockResolvedValue(
+      failure(new ApiError('HTTP 500: boom', 500, null))
+    )
+
+    mounted = await mountBuilder('/characterizations/42', { id: '42' })
+    await flushPromises()
+
+    const exportBtn = mounted.wrapper.get('[data-testid="char-builder-export-icon"]')
+      .element as HTMLButtonElement
+    expect(exportBtn.disabled).toBe(false)
+    exportBtn.click()
+    await flushPromises()
+
+    expect(exportCharacterization).toHaveBeenCalledWith(42)
+
+    const snackbar = mounted.wrapper.findComponent({ name: 'AtlasSnackbar' })
+    // 'characterizations.editor.utilities.export.exportError'
+    expect(snackbar.props('text')).toBe('Export failed.')
+    // ...and specifically not the import-side key it used to reuse.
+    expect(snackbar.props('text')).not.toBe('Import failed.')
+    expect(snackbar.props('severity')).toBe('danger')
+    expect(snackbar.props('modelValue')).toBe(true)
   })
 })

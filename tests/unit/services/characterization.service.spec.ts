@@ -32,6 +32,7 @@ import {
   explorePrevalence,
 } from '@/services/characterization.service'
 import type { CharacterizationDefinition } from '@/models/characterization.types'
+import { logger } from '@/utils/logger'
 
 const validDesign: CharacterizationDefinition = {
   id: 1,
@@ -409,6 +410,32 @@ describe('services/characterization.service', () => {
       if (result.success) {
         expect(result.data.id).toBe(456)
         expect(result.data.sourceKey).toBe('CDM_A')
+      }
+    })
+
+    it('resolves with null instead of fabricating an id when the job response carries no execution id', async () => {
+      ok({ jobParameters: { jobName: 'cohortCharacterization' }, exitStatus: 'UNKNOWN' })
+
+      const result = await generateCharacterization(1, 'CDM_A')
+
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data).toBeNull()
+      expect(vi.mocked(logger.warn)).toHaveBeenCalledWith(
+        'CharacterizationService',
+        'Generation response from POST /cohort-characterization/1/generation/CDM_A carried no execution id',
+        expect.anything()
+      )
+    })
+
+    it('falls back to the job `id` when `executionId` is absent', async () => {
+      ok({ id: 789 })
+
+      const result = await generateCharacterization(1, 'CDM_A')
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data?.id).toBe(789)
+        expect(result.data?.status).toBe('STARTING')
       }
     })
 

@@ -198,8 +198,10 @@ async function handleCopy(versionNumber: number): Promise<void> {
     // route to navigate to (see ASSET_DETAIL_ROUTE_SEGMENT) - the copy
     // still succeeded (toast above), so just skip the navigation for it
     // rather than pushing a dead link.
+    // The copy responses are loosely validated (z.any() for cohorts), so id
+    // can be absent - skip navigation rather than pushing '/.../undefined'.
     const detailSegment = ASSET_DETAIL_ROUTE_SEGMENT[props.config.assetType]
-    if (detailSegment) {
+    if (detailSegment && newAsset.id != null) {
       setTimeout(() => {
         router.push({
           path: `/${detailSegment}/${newAsset.id}`,

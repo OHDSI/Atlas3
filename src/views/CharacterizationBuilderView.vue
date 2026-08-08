@@ -575,7 +575,7 @@ async function handleExport(): Promise<void> {
   } else {
     logger.error('CharacterizationBuilder', 'Export failed', result.error)
     showSnackbar(
-      t('characterizations.editor.utilities.import.importError', 'Export failed.').value,
+      t('characterizations.editor.utilities.export.exportError', 'Export failed.').value,
       'error'
     )
   }

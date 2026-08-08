@@ -119,7 +119,7 @@ describe('useIncidenceRateBuilder', () => {
       expect(webapi.existsIncidenceRate).toHaveBeenCalledWith('Test IR', 0)
     })
 
-    it('returns false and notifies when the uniqueness check itself fails', async () => {
+    it('still saves when the uniqueness check itself fails', async () => {
       const store = useIncidenceRateStore()
       store.setIR(makeValidIR())
 
@@ -127,14 +127,17 @@ describe('useIncidenceRateBuilder', () => {
         success: false,
         error: new ApiError('Server error', 500, null),
       })
+      vi.mocked(webapi.createIncidenceRate).mockResolvedValue({
+        success: true,
+        data: { ...makeValidIR(), id: 99 },
+      })
 
       const { save, feedback } = useIncidenceRateBuilder()
       const ok = await save()
 
-      expect(ok).toBe(false)
-      expect(feedback.value?.color).toBe('error')
-      expect(feedback.value?.message).toContain('Server error')
-      expect(webapi.createIncidenceRate).not.toHaveBeenCalled()
+      expect(ok).toBe(true)
+      expect(feedback.value?.color).toBe('success')
+      expect(webapi.createIncidenceRate).toHaveBeenCalled()
     })
 
     it('creates a new IR when no id is set', async () => {

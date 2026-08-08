@@ -1344,6 +1344,7 @@
       "description": "Случайная выборка лиц из сгенерированной когорты с возможностью фильтрации по возрасту и полу.",
       "newSample": "Новая выборка",
       "failedToLoadSamples": "Не удалось загрузить выборки",
+      "failedToLoadSampleDetail": "Не удалось загрузить сведения о выборке",
       "failedToCreateSample": "Не удалось создать выборку"
     },
     "cohortSampleDetail": {
@@ -1508,7 +1509,8 @@
       "searching": "Поиск концептов...",
       "foundResults": "Найдено результатов: {count}",
       "conceptMeta": "ID: {id} | Код: {code} | Домен: {domain}",
-      "enterSearchTerm": "Введите поисковый запрос для поиска концептов"
+      "enterSearchTerm": "Введите поисковый запрос для поиска концептов",
+      "searchFailed": "Не удалось выполнить поиск концептов"
     },
     "cohortBuilder": {
       "stateRequired": "Обязательно",
@@ -1525,8 +1527,11 @@
       "stateDrugExposure": "Воздействие препарата",
       "stateConfigured": "Настроено",
       "saveToServerError": "Не удалось сохранить когорту на сервере",
+      "saveForbidden": "У вас нет прав для сохранения этой когорты",
       "saveSuccess": "Когорта успешно сохранена",
       "saveError": "Не удалось сохранить когорту",
+      "loadForbidden": "У вас нет прав для открытия этой когорты",
+      "loadError": "Не удалось загрузить когорту",
       "exportFailed": "Ошибка экспорта: {error}",
       "exportDownloaded": "JSON когорты загружен",
       "copiedToClipboard": "JSON когорты скопирован в буфер обмена",
@@ -3230,6 +3235,8 @@
   },
   "cohortDefinitions": {
     "closeYourCurrentCohort": "Пожалуйста, закройте текущее определение когорты перед созданием нового",
+    "copyLoadForbidden": "У вас нет прав для чтения этой когорты.",
+    "deleteError": "Не удалось удалить когорту.",
     "cohort": {
       "modals": {
         "analysisTypes": {
