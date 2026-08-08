@@ -74,3 +74,41 @@ describe('services/http-client error surfacing', () => {
     await expect(httpClient('/source/sources', { skipAuth: true })).rejects.toBeInstanceOf(ApiError)
   })
 })
+
+describe('services/http-client locale header', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    global.fetch = mockFetch
+    localStorage.clear()
+  })
+
+  it('sends the stored locale as the User-Language header', async () => {
+    localStorage.setItem('locale', 'de')
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      text: async () => JSON.stringify([]),
+    })
+
+    const { httpClient } = await import('@/services/http-client')
+    await httpClient('/source/sources', { skipAuth: true })
+
+    const [, requestInit] = mockFetch.mock.calls[0]
+    const headers = requestInit.headers as Headers
+    expect(headers.get('User-Language')).toBe('de')
+  })
+
+  it('defaults to en when no locale is stored', async () => {
+    localStorage.removeItem('locale')
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      text: async () => JSON.stringify([]),
+    })
+
+    const { httpClient } = await import('@/services/http-client')
+    await httpClient('/source/sources', { skipAuth: true })
+
+    const [, requestInit] = mockFetch.mock.calls[0]
+    const headers = requestInit.headers as Headers
+    expect(headers.get('User-Language')).toBe('en')
+  })
+})
