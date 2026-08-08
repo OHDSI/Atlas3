@@ -33,6 +33,10 @@ export default defineConfig({
 
   use: {
     baseURL: 'http://localhost:5173',
+    // CI runs in a UTC container. Time-axis charts tick on local midnight, so
+    // without this the data-sources dashboard renders different axis labels for
+    // anyone outside UTC and their screenshots never match the baselines.
+    timezoneId: 'UTC',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     actionTimeout: 10000, // 10 seconds for actions

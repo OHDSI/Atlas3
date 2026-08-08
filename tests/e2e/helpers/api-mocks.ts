@@ -629,12 +629,19 @@ export async function setupAnalysisListMocks(page: Page) {
  * setupBasicMocks/setupDatasourcesMocks and before page.goto.
  */
 export async function enableDarkModeToggle(page: Page) {
+  // Read the shipped manifest from disk rather than route.fetch()-ing it: that
+  // round-trip races the plugin config loader's own timeout under load, and a
+  // manifest that arrives late leaves the nav without a theme toggle at all.
+  const manifestPath = resolve(
+    dirname(fileURLToPath(import.meta.url)),
+    '../../../public/config/plugins.json',
+  )
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+  manifest.settings = manifest.settings ?? {}
+  manifest.settings.theme = { ...manifest.settings.theme, enableDarkMode: true }
+
   await page.route('**/config/plugins.json', async (route: Route) => {
-    const response = await route.fetch()
-    const manifest = await response.json()
-    manifest.settings = manifest.settings ?? {}
-    manifest.settings.theme = { ...manifest.settings.theme, enableDarkMode: true }
-    await route.fulfill({ response, json: manifest })
+    await route.fulfill({ status: 200, contentType: 'application/json', json: manifest })
   })
 }
 
