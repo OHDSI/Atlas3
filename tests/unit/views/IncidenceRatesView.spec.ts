@@ -12,6 +12,7 @@ import IncidenceRatesView from '@/views/IncidenceRatesView.vue'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { useNotifications } from '@/stores/notifications'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
+import { ApiError } from '@/services/api-error'
 
 const mockPush = vi.fn()
 vi.mock('vue-router', () => ({
@@ -31,11 +32,11 @@ vi.mock('@/utils/logger', () => ({
 
 vi.mock('@/composables/usePermissions', () => ({ usePermissions: vi.fn() }))
 vi.mock('@/composables/useEntityAccess', () => ({ useEntityAccessFor: vi.fn() }))
-vi.mock('@/services/webapi')
+vi.mock('@/services/incidence-rate.service')
 
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
-import { listIncidenceRates, deleteIncidenceRate, copyIncidenceRate } from '@/services/webapi'
+import { listIncidenceRates, deleteIncidenceRate, copyIncidenceRate } from '@/services/incidence-rate.service'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -72,7 +73,7 @@ describe('IncidenceRatesView', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     vi.mocked(listIncidenceRates).mockResolvedValue({ success: true, data: [] })
-    vi.mocked(deleteIncidenceRate).mockResolvedValue(true)
+    vi.mocked(deleteIncidenceRate).mockResolvedValue({ success: true, data: undefined })
     vi.mocked(copyIncidenceRate).mockResolvedValue({ success: true, data: mkIR(99) })
     vi.mocked(usePermissions).mockReturnValue({
       hasPermission: () => true,
@@ -155,7 +156,10 @@ describe('IncidenceRatesView', () => {
     })
 
     it('shows the error banner when the fetch fails', async () => {
-      vi.mocked(listIncidenceRates).mockResolvedValue({ success: false, error: 'boom' })
+      vi.mocked(listIncidenceRates).mockResolvedValue({
+        success: false,
+        error: new ApiError('boom', 0, null),
+      })
       wrapper = mountView()
       await flushPromises()
 
@@ -252,7 +256,10 @@ describe('IncidenceRatesView', () => {
     })
 
     it('shows an error and logs when the copy fails', async () => {
-      vi.mocked(copyIncidenceRate).mockResolvedValue({ success: false, error: 'copy failed' })
+      vi.mocked(copyIncidenceRate).mockResolvedValue({
+        success: false,
+        error: new ApiError('copy failed', 0, null),
+      })
       wrapper = mountView()
       const notifications = useNotifications()
 
@@ -301,7 +308,7 @@ describe('IncidenceRatesView', () => {
 
     it('deletes the incidence rate, refreshes the list, and shows success feedback', async () => {
       vi.mocked(listIncidenceRates).mockResolvedValue({ success: true, data: [mkIR(5)] })
-      vi.mocked(deleteIncidenceRate).mockResolvedValue(true)
+      vi.mocked(deleteIncidenceRate).mockResolvedValue({ success: true, data: undefined })
       wrapper = mountView()
       await flushPromises()
       const notifications = useNotifications()
@@ -318,7 +325,10 @@ describe('IncidenceRatesView', () => {
     })
 
     it('shows error feedback when delete fails', async () => {
-      vi.mocked(deleteIncidenceRate).mockResolvedValue(false)
+      vi.mocked(deleteIncidenceRate).mockResolvedValue({
+        success: false,
+        error: new ApiError('referenced by a generation', 409, null),
+      })
       wrapper = mountView()
       const notifications = useNotifications()
 
@@ -326,7 +336,10 @@ describe('IncidenceRatesView', () => {
       wrapper.vm.showDelete = true
       await wrapper.vm.confirmDelete()
 
-      expect(notifications.items.at(-1)).toMatchObject({ severity: 'danger', title: 'Delete failed' })
+      expect(notifications.items.at(-1)).toMatchObject({
+        severity: 'danger',
+        title: 'referenced by a generation',
+      })
     })
 
     it('does nothing when there is no delete target', async () => {

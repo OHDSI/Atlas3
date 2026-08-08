@@ -1,5 +1,5 @@
 import { ref, onUnmounted } from 'vue'
-import { generatePathway, cancelPathwayGeneration, getPathwayExecution } from '@/services/webapi'
+import { generatePathway, cancelPathwayGeneration, getPathwayExecution } from '@/services/pathway.service'
 import type { PathwayExecution } from '@/models/pathway.types'
 import { PATHWAY_GENERATION_POLL_MS } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
@@ -24,7 +24,7 @@ export function usePathwayGeneration(pathwayId: number) {
     if (!execution.value) return
     const result = await getPathwayExecution(execution.value.id)
     if (!result.success) {
-      error.value = result.error
+      error.value = result.error.message
       stopPolling()
       return
     }
@@ -36,7 +36,7 @@ export function usePathwayGeneration(pathwayId: number) {
     error.value = null
     const result = await generatePathway(pathwayId, sourceKey)
     if (!result.success) {
-      error.value = result.error
+      error.value = result.error.message
       logger.error('PathwayGeneration', 'start failed', result.error)
       return false
     }
@@ -49,9 +49,14 @@ export function usePathwayGeneration(pathwayId: number) {
   }
 
   async function cancel(sourceKey: string): Promise<boolean> {
-    const ok = await cancelPathwayGeneration(pathwayId, sourceKey)
-    if (ok) stopPolling()
-    return ok
+    const result = await cancelPathwayGeneration(pathwayId, sourceKey)
+    if (!result.success) {
+      error.value = result.error.message
+      logger.error('PathwayGeneration', 'cancel failed', result.error)
+      return false
+    }
+    stopPolling()
+    return true
   }
 
   // Use try/catch around onUnmounted in case the composable is invoked

@@ -10,7 +10,7 @@ import type {
 } from '@/models/cohort.types'
 import type { ValidationWarning, ValidationSeverity } from '@/models/cohort-validation.types'
 import type { ConceptSetItem } from '@/models/concept-set.types'
-import { validateCohortDefinition } from '@/services/webapi'
+import { validateCohortDefinition } from '@/services/cohort-definition.service'
 import { convertInternalToAtlas } from '@/services/atlas-converter'
 import { getConceptSetById } from '@/services/concept-set.service'
 import { logger } from '@/utils/logger'
@@ -221,7 +221,19 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
 
       const nameForValidation = cohortName.value || 'Untitled Cohort'
       const result = await validateCohortDefinition(nameForValidation, atlasExpression)
-      validationWarnings.value = result.warnings || []
+      if (result.success) {
+        validationWarnings.value = result.data.warnings || []
+      } else {
+        // Surface the failure as a warning (matching the old contract) so the
+        // user sees *something* went wrong rather than a silently empty list.
+        validationWarnings.value = [
+          {
+            type: 'DefaultWarning',
+            severity: 'WARNING',
+            message: `Validation error: ${result.error.message}`,
+          },
+        ]
+      }
     } catch (error) {
       logger.error('CohortValidation', 'Failed to validate cohort', error)
       validationWarnings.value = []

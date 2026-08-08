@@ -1,5 +1,5 @@
 import { ref, watch, type Ref } from 'vue'
-import { getIncidenceRateReport } from '@/services/webapi'
+import { getIncidenceRateReport } from '@/services/incidence-rate.service'
 import type { IncidenceRateReport } from '@/models/incidence-rate.types'
 import { logger } from '@/utils/logger'
 
@@ -39,7 +39,7 @@ export function useIncidenceRateReport(
       )
       if (result.success) report.value = result.data
       else {
-        error.value = result.error
+        error.value = result.error.message
         report.value = null
       }
     } catch (err) {

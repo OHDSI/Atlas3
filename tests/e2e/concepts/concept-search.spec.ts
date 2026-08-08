@@ -287,29 +287,10 @@ test.describe('Concept Search', () => {
     // Search is triggered by pressing Enter on the input (no Search button)
     await searchInput.press('Enter')
 
-    // Wait for loading to complete - look for absence of loading indicator
-    await page.waitForTimeout(4000) // Give more time for API call
-
-    // Wait for table to not have loading state
-    await page.locator('table tbody tr').first().waitFor({ timeout: 5000 })
-
-    // Check for v-chip badge elements
-    const badges = page.locator('.v-chip')
-    const badgeCount = await badges.count()
-
-    // If we have results, we should have badges
-    const rows = page.locator('table tbody tr')
-    const rowCount = await rows.count()
-
-    if (rowCount > 0) {
-      const firstRowText = await rows.first().textContent()
-      // Only expect badges if we have actual data (not loading/no data)
-      if (firstRowText && !firstRowText.includes('Loading') && !firstRowText.includes('No records')) {
-        expect(badgeCount).toBeGreaterThan(0)
-      }
-    }
-    // Test should pass regardless
-    expect(true).toBe(true)
+    // The mocked vocabulary search always returns diabetes concepts, each
+    // rendered with a standard/non-standard chip in the results table.
+    await expect(page.locator('table tbody tr').first()).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('table tbody .v-chip').first()).toBeVisible()
   })
 
   /**

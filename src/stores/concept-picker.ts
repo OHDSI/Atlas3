@@ -5,7 +5,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { ConceptSet, Concept } from '@/models/concept-set.types'
-import * as webapi from '@/services/webapi'
+import { searchConcepts as searchConceptsApi } from '@/services/concept-search.service'
 import { logger } from '@/utils/logger'
 
 export const useConceptPickerStore = defineStore('concept-picker', () => {
@@ -14,6 +14,7 @@ export const useConceptPickerStore = defineStore('concept-picker', () => {
   const searchResults = ref<Concept[]>([])
   const isSearching = ref(false)
   const searchQuery = ref('')
+  const searchError = ref<string | null>(null)
 
   // Getters
   const conceptSetsList = computed(() => Array.from(conceptSets.value.values()))
@@ -53,26 +54,34 @@ export const useConceptPickerStore = defineStore('concept-picker', () => {
     searchQuery.value = query
   }
 
+  function setSearchError(error: string | null) {
+    searchError.value = error
+  }
+
   function clearSearch() {
     searchResults.value = []
     searchQuery.value = ''
     isSearching.value = false
+    searchError.value = null
   }
 
   async function searchConcepts(sourceKey: string, query: string, domain?: string) {
     try {
       setSearching(true)
       setSearchQuery(query)
-      const result = await webapi.searchConcepts(sourceKey, query, domain)
+      setSearchError(null)
+      const result = await searchConceptsApi(sourceKey, query, { domain })
       if (result.success) {
         setSearchResults(result.data)
       } else {
         logger.error('ConceptPickerStore', 'Search failed', { sourceKey, error: result.error })
         setSearchResults([])
+        setSearchError(result.error.message)
       }
     } catch (error) {
       logger.error('ConceptPickerStore', 'Search failed', { sourceKey, error })
       setSearchResults([])
+      setSearchError(error instanceof Error ? error.message : String(error))
     } finally {
       setSearching(false)
     }
@@ -89,6 +98,7 @@ export const useConceptPickerStore = defineStore('concept-picker', () => {
     searchResults,
     isSearching,
     searchQuery,
+    searchError,
     // Getters
     conceptSetsList,
     conceptSetsCount,
@@ -100,6 +110,7 @@ export const useConceptPickerStore = defineStore('concept-picker', () => {
     setSearchResults,
     setSearching,
     setSearchQuery,
+    setSearchError,
     searchConcepts,
     clearSearch,
     clearAll,

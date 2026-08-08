@@ -5,7 +5,7 @@
  * Shows warning modal 5 minutes before token expires.
  */
 
-import { getTokenExpiration } from '@/utils/jwt'
+import { tokenManager } from '@/services/auth/tokenManager'
 import type { ExpiryTimer, ExpiryDetectionConfig } from '@/types/auth'
 import { logger } from '@/utils/logger'
 
@@ -41,7 +41,7 @@ class TokenExpiryService {
     // Clear existing timer
     this.cancelExpiryWarning()
 
-    const expiration = getTokenExpiration(token)
+    const expiration = tokenManager.getExpirationDate(token)
     if (!expiration) {
       logger.warn('TokenExpiry', 'Cannot setup expiry warning: invalid token')
       return

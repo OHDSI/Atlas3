@@ -7,16 +7,13 @@
  * Based on: specs/001-role-permissions-management/contracts/role-api.yaml
  */
 
-import { fetchJSON } from './webapi'
-import {
-  PermissionSchema,
-  PermissionListSchema,
-  type Permission,
-  type ApiResult,
-  success,
-  failure,
-} from '@/models/role.types'
+import { httpGet } from '@/services/http-client'
+import { unwrap, ApiError } from '@/services/api-error'
+import { type ApiResult } from '@/types/api'
+import { PermissionSchema, PermissionListSchema, type Permission } from '@/models/role.types'
 import { logger } from '@/utils/logger'
+
+const CONTEXT = 'PermissionService'
 
 /**
  * Fetch all system permissions
@@ -31,8 +28,7 @@ export async function fetchPermissions(
   offset = 0,
   category?: string
 ): Promise<ApiResult<Permission[]>> {
-  try {
-    // Build query parameters
+  return unwrap(async () => {
     const params = new URLSearchParams({
       limit: limit.toString(),
       offset: offset.toString(),
@@ -43,20 +39,16 @@ export async function fetchPermissions(
     }
 
     const url = `/permission/?${params.toString()}`
-    const data = await fetchJSON<unknown>(url)
+    const data = await httpGet<unknown>(url)
     const parsed = PermissionListSchema.safeParse(data)
 
     if (!parsed.success) {
-      logger.error('PermissionService', 'Permissions validation error', parsed.error)
-      return failure('Invalid permissions response format')
+      logger.error(CONTEXT, 'Permissions validation error', parsed.error)
+      throw new ApiError('Invalid permissions response format', 0, null)
     }
 
-    return success(parsed.data)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch permissions'
-    logger.error('PermissionService', 'Failed to fetch permissions', error)
-    return failure(message)
-  }
+    return parsed.data
+  }, CONTEXT)
 }
 
 /**
@@ -64,21 +56,17 @@ export async function fetchPermissions(
  * GET /permission/{permissionId}
  */
 export async function fetchPermissionById(permissionId: number): Promise<ApiResult<Permission>> {
-  try {
-    const data = await fetchJSON<unknown>(`/permission/${permissionId}`)
+  return unwrap(async () => {
+    const data = await httpGet<unknown>(`/permission/${permissionId}`)
     const parsed = PermissionSchema.safeParse(data)
 
     if (!parsed.success) {
-      logger.error('PermissionService', 'Permission validation error', parsed.error)
-      return failure('Invalid permission response format')
+      logger.error(CONTEXT, 'Permission validation error', parsed.error)
+      throw new ApiError('Invalid permission response format', 0, null)
     }
 
-    return success(parsed.data)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch permission'
-    logger.error('PermissionService', `Failed to fetch permission ${permissionId}`, error)
-    return failure(message)
-  }
+    return parsed.data
+  }, CONTEXT)
 }
 
 /**

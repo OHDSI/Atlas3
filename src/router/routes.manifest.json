@@ -95,6 +95,15 @@
     "label": "Incidence rates"
   },
   {
+    "name": "analysis-plugin",
+    "path": "x/:pluginId/:itemId",
+    "params": [
+      "pluginId",
+      "itemId"
+    ],
+    "agentVisible": false
+  },
+  {
     "name": "feature-analysis-new",
     "path": "/feature-analyses/new",
     "params": [],
@@ -295,12 +304,10 @@
     "agentVisible": false
   },
   {
-    "name": "oauth-token",
-    "path": "/:client/:token/:redirectUrl?",
+    "name": "not-found",
+    "path": "/:pathMatch(.*)*",
     "params": [
-      "client",
-      "token",
-      "redirectUrl"
+      "pathMatch"
     ],
     "agentVisible": false
   }

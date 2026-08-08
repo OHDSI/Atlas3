@@ -42,6 +42,7 @@ vi.mock('@/utils/logger', () => ({
 }))
 
 import { listFeatureAnalyses } from '@/services/feature-analysis.service'
+import { success } from '@/types/api'
 import FeatureAnalysesView from '@/views/FeatureAnalysesView.vue'
 import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
 import { useAuthStore } from '@/stores/auth'
@@ -130,7 +131,7 @@ describe('FeatureAnalysesView', () => {
   })
 
   it('mounts with the create and search controls', async () => {
-    vi.mocked(listFeatureAnalyses).mockResolvedValue([])
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success([]))
     mounted = await mountView()
 
     expect(mounted.wrapper.find('[data-testid="feature-analyses-create"]').exists()).toBe(true)
@@ -139,7 +140,7 @@ describe('FeatureAnalysesView', () => {
   })
 
   it('renders rows from the store after fetch', async () => {
-    vi.mocked(listFeatureAnalyses).mockResolvedValue(sampleList)
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success(sampleList))
     mounted = await mountView()
 
     expect(mounted.wrapper.text()).toContain('Demographics PRESET')
@@ -149,7 +150,7 @@ describe('FeatureAnalysesView', () => {
   })
 
   it('shows empty state when there are no items', async () => {
-    vi.mocked(listFeatureAnalyses).mockResolvedValue([])
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success([]))
     mounted = await mountView()
 
     // After i18n migration the empty-state label uses generic "No data" (common.noData)
@@ -158,7 +159,7 @@ describe('FeatureAnalysesView', () => {
 
   it('search input drives the store filter (after debounce)', async () => {
     vi.useFakeTimers()
-    vi.mocked(listFeatureAnalyses).mockResolvedValue(sampleList)
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success(sampleList))
     mounted = await mountView()
 
     const store = useFeatureAnalysesStore()
@@ -177,7 +178,7 @@ describe('FeatureAnalysesView', () => {
   })
 
   it('clicking Create navigates to /feature-analyses/new', async () => {
-    vi.mocked(listFeatureAnalyses).mockResolvedValue([])
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success([]))
     mounted = await mountView()
     const { wrapper, router } = mounted
 

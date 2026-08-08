@@ -69,15 +69,15 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     loading.value = true
     error.value = null
 
-    try {
-      featureAnalyses.value = await listFeatureAnalyses()
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch feature analyses'
-      logger.error('FeatureAnalysesStore', 'Fetch feature analyses error', err)
+    const result = await listFeatureAnalyses()
+    if (result.success) {
+      featureAnalyses.value = result.data
+    } else {
+      error.value = result.error.message
+      logger.error('FeatureAnalysesStore', 'Fetch feature analyses error', result.error)
       featureAnalyses.value = []
-    } finally {
-      loading.value = false
     }
+    loading.value = false
   }
 
   /**
@@ -87,21 +87,15 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     loading.value = true
     error.value = null
 
-    try {
-      const fa = await getFeatureAnalysis(id)
-      if (fa) {
-        currentFA.value = fa
-      } else {
-        error.value = 'Feature analysis not found'
-        currentFA.value = null
-      }
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch feature analysis'
-      logger.error('FeatureAnalysesStore', 'Fetch feature analysis error', err)
+    const result = await getFeatureAnalysis(id)
+    if (result.success) {
+      currentFA.value = result.data
+    } else {
+      error.value = result.error.message
+      logger.error('FeatureAnalysesStore', 'Fetch feature analysis error', result.error)
       currentFA.value = null
-    } finally {
-      loading.value = false
     }
+    loading.value = false
   }
 
   /**
@@ -111,22 +105,17 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     loading.value = true
     error.value = null
 
-    try {
-      const created = await createFeatureAnalysis(fa)
-      if (created) {
-        await fetchAll()
-        currentFA.value = created
-        return created
-      }
-      error.value = 'Failed to create feature analysis'
-      return null
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to create feature analysis'
-      logger.error('FeatureAnalysesStore', 'Create feature analysis error', err)
-      return null
-    } finally {
+    const result = await createFeatureAnalysis(fa)
+    if (result.success) {
+      await fetchAll()
+      currentFA.value = result.data
       loading.value = false
+      return result.data
     }
+    error.value = result.error.message
+    logger.error('FeatureAnalysesStore', 'Create feature analysis error', result.error)
+    loading.value = false
+    return null
   }
 
   /**
@@ -136,22 +125,17 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     loading.value = true
     error.value = null
 
-    try {
-      const updated = await updateFeatureAnalysis(fa)
-      if (updated) {
-        await fetchAll()
-        currentFA.value = updated
-        return updated
-      }
-      error.value = 'Failed to update feature analysis'
-      return null
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to update feature analysis'
-      logger.error('FeatureAnalysesStore', 'Update feature analysis error', err)
-      return null
-    } finally {
+    const result = await updateFeatureAnalysis(fa)
+    if (result.success) {
+      await fetchAll()
+      currentFA.value = result.data
       loading.value = false
+      return result.data
     }
+    error.value = result.error.message
+    logger.error('FeatureAnalysesStore', 'Update feature analysis error', result.error)
+    loading.value = false
+    return null
   }
 
   /**
@@ -161,20 +145,19 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     loading.value = true
     error.value = null
 
-    try {
-      await deleteFeatureAnalysis(id)
+    const result = await deleteFeatureAnalysis(id)
+    if (result.success) {
       featureAnalyses.value = featureAnalyses.value.filter(fa => fa.id !== id)
       if (currentFA.value?.id === id) {
         currentFA.value = null
       }
-      return true
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to delete feature analysis'
-      logger.error('FeatureAnalysesStore', 'Delete feature analysis error', err)
-      return false
-    } finally {
       loading.value = false
+      return true
     }
+    error.value = result.error.message
+    logger.error('FeatureAnalysesStore', 'Delete feature analysis error', result.error)
+    loading.value = false
+    return false
   }
 
   /**
@@ -184,22 +167,17 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     loading.value = true
     error.value = null
 
-    try {
-      const copied = await copyFeatureAnalysis(id)
-      if (copied) {
-        await fetchAll()
-        currentFA.value = copied
-        return copied
-      }
-      error.value = 'Failed to copy feature analysis'
-      return null
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to copy feature analysis'
-      logger.error('FeatureAnalysesStore', 'Copy feature analysis error', err)
-      return null
-    } finally {
+    const result = await copyFeatureAnalysis(id)
+    if (result.success) {
+      await fetchAll()
+      currentFA.value = result.data
       loading.value = false
+      return result.data
     }
+    error.value = result.error.message
+    logger.error('FeatureAnalysesStore', 'Copy feature analysis error', result.error)
+    loading.value = false
+    return null
   }
 
   /**
@@ -217,11 +195,12 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     if (domains.value.length > 0) {
       return
     }
-    try {
-      domains.value = await listFeatureAnalysisDomains()
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to load feature analysis domains'
-      logger.error('FeatureAnalysesStore', 'Load domains error', err)
+    const result = await listFeatureAnalysisDomains()
+    if (result.success) {
+      domains.value = result.data
+    } else {
+      error.value = result.error.message
+      logger.error('FeatureAnalysesStore', 'Load domains error', result.error)
     }
   }
 
@@ -233,12 +212,12 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     if (aggregates.value.length > 0) {
       return
     }
-    try {
-      aggregates.value = await listFeatureAnalysisAggregates()
-    } catch (err) {
-      error.value =
-        err instanceof Error ? err.message : 'Failed to load feature analysis aggregates'
-      logger.error('FeatureAnalysesStore', 'Load aggregates error', err)
+    const result = await listFeatureAnalysisAggregates()
+    if (result.success) {
+      aggregates.value = result.data
+    } else {
+      error.value = result.error.message
+      logger.error('FeatureAnalysesStore', 'Load aggregates error', result.error)
     }
   }
 

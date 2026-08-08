@@ -4,6 +4,7 @@ import { PluginInstance } from '@/models/PluginModels'
 import { logger } from '@/utils/logger'
 import { useWebAPIStore } from '@/stores/webapi'
 import { storageManager } from '@/services/auth/storageManager'
+import { ensurePluginRuntime } from './pluginRuntime'
 
 export class PluginLoader {
   private registry: PluginRegistry
@@ -73,11 +74,9 @@ export class PluginLoader {
       }
 
       try {
-        if (!window.System) {
-          throw new Error('SystemJS is not available')
-        }
+        const System = await ensurePluginRuntime()
 
-        const importedModule = await window.System.import(pluginUrl).catch((err: Error) => {
+        const importedModule = await System.import(pluginUrl).catch((err: Error) => {
           throw new Error(`Failed to import plugin module: ${err.message}`)
         })
 

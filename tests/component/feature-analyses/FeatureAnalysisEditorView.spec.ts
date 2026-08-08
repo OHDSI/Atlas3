@@ -56,6 +56,7 @@ import {
   listFeatureAnalysisAggregates,
 } from '@/services/feature-analysis.service'
 import FeatureAnalysisEditorView from '@/views/FeatureAnalysisEditorView.vue'
+import { success } from '@/types/api'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -134,8 +135,8 @@ describe('FeatureAnalysisEditorView', () => {
     vi.clearAllMocks()
 
     // Default lookup-data stubs so onMounted lookups resolve cleanly.
-    vi.mocked(listFeatureAnalysisDomains).mockResolvedValue(['Demographics', 'Condition'])
-    vi.mocked(listFeatureAnalysisAggregates).mockResolvedValue([])
+    vi.mocked(listFeatureAnalysisDomains).mockResolvedValue(success(['Demographics', 'Condition']))
+    vi.mocked(listFeatureAnalysisAggregates).mockResolvedValue(success([]))
   })
 
   afterEach(() => {
@@ -176,7 +177,7 @@ describe('FeatureAnalysisEditorView', () => {
   })
 
   it('hydrates fields from store in edit mode', async () => {
-    vi.mocked(getFeatureAnalysis).mockResolvedValue(sampleFA)
+    vi.mocked(getFeatureAnalysis).mockResolvedValue(success(sampleFA))
 
     mounted = await mountEditor('/feature-analyses/42', { id: '42' })
     await flushPromises()
@@ -202,7 +203,7 @@ describe('FeatureAnalysisEditorView', () => {
   })
 
   it('"Load default covariate settings" populates the JSON textarea', async () => {
-    vi.mocked(getDefaultCovariateSettings).mockResolvedValue({ temporal: false, useDemographicsGender: true })
+    vi.mocked(getDefaultCovariateSettings).mockResolvedValue(success({ temporal: false, useDemographicsGender: true }))
 
     mounted = await mountEditor('/feature-analyses/new')
 
@@ -221,7 +222,7 @@ describe('FeatureAnalysisEditorView', () => {
   })
 
   it('Save in new mode calls createFeatureAnalysis', async () => {
-    vi.mocked(createFeatureAnalysis).mockResolvedValue({ ...sampleFA, id: 99 })
+    vi.mocked(createFeatureAnalysis).mockResolvedValue(success({ ...sampleFA, id: 99 }))
 
     mounted = await mountEditor('/feature-analyses/new')
 
@@ -244,8 +245,8 @@ describe('FeatureAnalysisEditorView', () => {
   })
 
   it('Save in edit mode calls updateFeatureAnalysis', async () => {
-    vi.mocked(getFeatureAnalysis).mockResolvedValue(sampleFA)
-    vi.mocked(updateFeatureAnalysis).mockResolvedValue({ ...sampleFA, name: 'Renamed FA' })
+    vi.mocked(getFeatureAnalysis).mockResolvedValue(success(sampleFA))
+    vi.mocked(updateFeatureAnalysis).mockResolvedValue(success({ ...sampleFA, name: 'Renamed FA' }))
 
     mounted = await mountEditor('/feature-analyses/42', { id: '42' })
     await flushPromises()

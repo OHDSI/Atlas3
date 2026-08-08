@@ -25,9 +25,6 @@ import { logger } from './utils/logger'
 import '@/assets/styles/typography.css'
 import '@/assets/styles/vuetify-overrides.css'
 
-// SystemJS is loaded from index.html with import map for 'vue'
-logger.debug('Main', 'SystemJS available:', !!window.System)
-
 // ECharts imports for tree-shaking
 import ECharts from 'vue-echarts'
 import { use } from 'echarts/core'

@@ -16,6 +16,9 @@
         data-testid="feature-analyses-search"
         @update:model-value="(v: string | number) => handleSearchInput(v != null ? String(v) : null)"
       />
+    </template>
+
+    <template #primary-action>
       <AtlasButton
         icon="mdi-plus"
         :aria-label="t('cc.tabs.featureAnalyses.newLabel', 'New Feature Analysis').value"

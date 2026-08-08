@@ -26,11 +26,15 @@ vi.mock('@/composables/useFilterConfig', () => ({
   }),
 }))
 
-// Mock webapi service to prevent actual API calls
-vi.mock('@/services/webapi', () => ({
-  fetchCDMSources: vi.fn().mockResolvedValue({ success: true, data: [] }),
-  getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
+// Mock services to prevent actual API calls
+vi.mock('@/services/concept-set.service', () => ({
+  getAllConceptSets: vi.fn().mockResolvedValue([]),
+}))
+vi.mock('@/services/concept-search.service', () => ({
   searchConcepts: vi.fn().mockResolvedValue({ success: true, data: [] }),
+}))
+vi.mock('@/services/source.service', () => ({
+  fetchCDMSources: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }))
 
 import CensoringEventsEditor from '@/components/cohort-builder/CensoringEventsEditor.vue'

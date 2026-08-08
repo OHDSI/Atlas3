@@ -28,7 +28,7 @@
         data-testid="inclusion-empty-add"
         @click="addNewRule"
       >
-        {{ t('inclusionRail.add', 'Add inclusion rule').value }}
+        {{ t('components.inclusionCriteriaPanel.add', 'Add inclusion rule').value }}
       </AtlasButton>
     </div>
 

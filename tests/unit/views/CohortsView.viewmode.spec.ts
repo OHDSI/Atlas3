@@ -35,7 +35,7 @@ vi.mock('@/composables/usePagination', () => ({
 }))
 
 // Mock webapi services
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/cohort-definition.service', () => ({
   deleteCohort: vi.fn(),
   getCohortDefinition: vi.fn(),
   getCohortPrintFriendly: vi.fn()
@@ -91,7 +91,7 @@ vi.mock('@/components/cohort/CohortPagination.vue', () => ({
 vi.mock('@/components/cohort/CohortFilters.vue', () => ({
   default: {
     name: 'CohortFilters',
-    template: '<div class="cohort-filters-mock"></div>',
+    template: '<div class="cohort-filters-mock"><slot name="actions" /></div>',
     props: ['filters', 'availableTags', 'availableAuthors', 'activeFilterCount']
   }
 }))

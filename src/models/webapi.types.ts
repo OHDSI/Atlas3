@@ -99,9 +99,14 @@ const RAW_STATUS_TO_GENERATION_STATUS: Record<string, GenerationStatus> = {
   ABANDONED: 'FAILED',
 }
 
-const generationStatusFromRaw = z
-  .string()
-  .transform(s => RAW_STATUS_TO_GENERATION_STATUS[s] ?? 'PENDING')
+// Single entry point for the table above — every caller normalizing a raw
+// job-execution status onto GenerationStatus must go through this, so the
+// mapping can't drift between callers polling the same job.
+export function toGenerationStatus(raw: string): GenerationStatus {
+  return RAW_STATUS_TO_GENERATION_STATUS[raw] ?? 'PENDING'
+}
+
+const generationStatusFromRaw = z.string().transform(toGenerationStatus)
 
 // WebAPI cohort definition generation info response
 //

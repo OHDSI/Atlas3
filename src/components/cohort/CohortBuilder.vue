@@ -608,10 +608,10 @@ import { useI18n } from '@/composables/useI18n'
 import { useCohortValidation } from '@/composables/useCohortValidation'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
-import { getCohortDefinition } from '@/services/webapi'
+import { getCohortDefinition } from '@/services/cohort-definition.service'
 import { convertAtlasToInternal, convertInternalToAtlas } from '@/services/atlas-converter'
 import { getConceptSetById } from '@/services/concept-set.service'
-import { isAtlasCohortDefinitionWrapper } from '@/models/atlas.types'
+import { isAtlasCohortDefinitionWrapper, type AtlasCohortDefinitionInput } from '@/models/atlas.types'
 import type {
   CohortDefinition,
   CohortEvent,
@@ -1285,6 +1285,24 @@ watch(
   }
 )
 
+// Entering/leaving version preview keeps the same route id, so the props.id
+// watcher does not fire either way. The store signals instead: reloadVersion
+// null means "back to current" (loadCohort's normal WebAPI fetch), a number
+// means a specific historical version (fetched + converted the same way, via
+// loadCohortVersion).
+watch(
+  () => cohortStore.reloadRequest,
+  () => {
+    if (!props.id) return
+    const version = cohortStore.reloadVersion
+    if (version === null) {
+      loadCohort(props.id)
+    } else {
+      loadCohortVersion(props.id, version)
+    }
+  }
+)
+
 // Reset to a blank cohort in place. Navigating cohort-new → cohort-new is a
 // same-route no-op, so onMounted never re-runs; without this the previous
 // cohort's criteria would linger and the next cohort's proposals would pile
@@ -1432,7 +1450,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
   // Stop timers to prevent memory leaks
   cohortStore.stopAutoSave()
-  cohortStore.cancelRetry()
 })
 
 watch(
@@ -1464,88 +1481,129 @@ watch(
   { deep: true }
 )
 
+// Shared by loadCohort (current version, via WebAPI) and loadCohortVersion
+// (a specific historical version, via the versions API) — both hand this an
+// Atlas-shaped definition (id/name/description/tags?/expression) and it does
+// the parse + convert + full local-ref/store resync. Do not duplicate this
+// block between the two callers.
+function applyAtlasCohort(atlasCohort: AtlasCohortDefinitionInput) {
+  // Parse expression if it's a string (stored as JSON in WebAPI)
+  let expression
+  if (isAtlasCohortDefinitionWrapper(atlasCohort)) {
+    const exprValue = atlasCohort.expression
+    expression = typeof exprValue === 'string' ? JSON.parse(exprValue) : exprValue
+  } else {
+    expression = atlasCohort
+  }
+
+  // Convert Atlas JSON to internal format
+  const converted = convertAtlasToInternal(expression)
+
+  // Create cohort definition with converted data
+  const cohortDef: CohortDefinition = {
+    id: atlasCohort.id,
+    name: atlasCohort.name ?? '',
+    description: atlasCohort.description || '',
+    tags: atlasCohort.tags || [],
+    entryEvents: converted.entryEvents || [],
+    inclusionRules: converted.inclusionRules || [],
+    exitCriteria: converted.exitCriteria || { strategy: 'CONTINUOUS_OBSERVATION' },
+    observationPeriod: converted.observationPeriod || { priorDays: 0, postDays: 0 },
+    qualifyingLimit: converted.qualifyingLimit || 'ALL',
+    primaryCriteriaLimit: converted.primaryCriteriaLimit,
+    inclusionQualifyingLimit: converted.inclusionQualifyingLimit || 'ALL',
+    conceptSets: converted.conceptSets || [],
+    censoringCriteria: converted.censoringCriteria,
+    censorWindow: converted.censorWindow,
+    collapseSettings: converted.collapseSettings,
+    expressionType: converted.expressionType,
+    cdmVersionRange: converted.cdmVersionRange,
+    ...(converted.additionalCriteria !== undefined ? { additionalCriteria: converted.additionalCriteria } : {}),
+  }
+
+  // Update store with loaded cohort
+  cohortStore.setCohort(cohortDef)
+  cohortStore.markClean()
+
+  // Cancel any pending validation during batch state update
+  cancelValidation()
+
+  // Update local state
+  cohortName.value = cohortDef.name
+  cohortDescription.value = cohortDef.description ?? ''
+  entryEvents.value = cohortDef.entryEvents
+  additionalCriteria.value = cohortDef.additionalCriteria
+  inclusionRules.value = cohortDef.inclusionRules
+  exitCriteria.value = cohortDef.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
+  censorWindow.value = cohortDef.censorWindow ?? null
+  collapseSettings.value = cohortDef.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
+  censoringCriteria.value = cohortDef.censoringCriteria ?? []
+  observationPeriod.value = cohortDef.observationPeriod || { priorDays: 0, postDays: 0 }
+  qualifyingLimit.value = cohortDef.qualifyingLimit
+  primaryCriteriaLimit.value = cohortDef.primaryCriteriaLimit
+  inclusionQualifyingLimit.value = cohortDef.inclusionQualifyingLimit ?? 'ALL'
+
+  loadedTags.value = [...(cohortDef.tags || [])]
+  loadedSnapshot.value = createStateSnapshot()
+
+  // Hide loading overlay immediately - cohort is now visible
+  isLoadingCohort.value = false
+
+  // Trigger validation in the background (composable handles debouncing)
+  triggerValidation()
+
+  // Build cohort expression with concept set items for patient count
+  buildCohortExpression()
+}
+
 async function loadCohort(id: string) {
   isLoadingCohort.value = true
   try {
     // Fetch cohort definition from WebAPI
     const cohortId = parseInt(id, 10)
-    const atlasCohort = await getCohortDefinition(cohortId)
+    const result = await getCohortDefinition(cohortId)
 
-    if (!atlasCohort) {
-      logger.error('CohortBuilder', `Failed to load cohort ${id}`)
+    if (!result.success) {
+      logger.error('CohortBuilder', `Failed to load cohort ${id}`, result.error)
+      errorMessage.value =
+        result.error.status === 403
+          ? tv('components.cohortBuilder.loadForbidden', 'You do not have permission to open this cohort')
+          : tv('components.cohortBuilder.loadError', 'Failed to load cohort')
+      showError.value = true
       isLoadingCohort.value = false
       return
     }
 
-    // Parse expression if it's a string (stored as JSON in WebAPI)
-    let expression
-    if (isAtlasCohortDefinitionWrapper(atlasCohort)) {
-      const exprValue = atlasCohort.expression
-      expression = typeof exprValue === 'string' ? JSON.parse(exprValue) : exprValue
-    } else {
-      expression = atlasCohort
-    }
-
-    // Convert Atlas JSON to internal format
-    const converted = convertAtlasToInternal(expression)
-
-    // Create cohort definition with converted data
-    const cohortDef: CohortDefinition = {
-      id: atlasCohort.id,
-      name: atlasCohort.name,
-      description: atlasCohort.description || '',
-      tags: atlasCohort.tags || [],
-      entryEvents: converted.entryEvents || [],
-      inclusionRules: converted.inclusionRules || [],
-      exitCriteria: converted.exitCriteria || { strategy: 'CONTINUOUS_OBSERVATION' },
-      observationPeriod: converted.observationPeriod || { priorDays: 0, postDays: 0 },
-      qualifyingLimit: converted.qualifyingLimit || 'ALL',
-      primaryCriteriaLimit: converted.primaryCriteriaLimit,
-      inclusionQualifyingLimit: converted.inclusionQualifyingLimit || 'ALL',
-      conceptSets: converted.conceptSets || [],
-      censoringCriteria: converted.censoringCriteria,
-      censorWindow: converted.censorWindow,
-      collapseSettings: converted.collapseSettings,
-      expressionType: converted.expressionType,
-      cdmVersionRange: converted.cdmVersionRange,
-      ...(converted.additionalCriteria !== undefined ? { additionalCriteria: converted.additionalCriteria } : {}),
-    }
-
-    // Update store with loaded cohort
-    cohortStore.setCohort(cohortDef)
-    cohortStore.markClean()
-
-    // Cancel any pending validation during batch state update
-    cancelValidation()
-
-    // Update local state
-    cohortName.value = cohortDef.name
-    cohortDescription.value = cohortDef.description ?? ''
-    entryEvents.value = cohortDef.entryEvents
-    additionalCriteria.value = cohortDef.additionalCriteria
-    inclusionRules.value = cohortDef.inclusionRules
-    exitCriteria.value = cohortDef.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
-    censorWindow.value = cohortDef.censorWindow ?? null
-    collapseSettings.value = cohortDef.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
-    censoringCriteria.value = cohortDef.censoringCriteria ?? []
-    observationPeriod.value = cohortDef.observationPeriod || { priorDays: 0, postDays: 0 }
-    qualifyingLimit.value = cohortDef.qualifyingLimit
-    primaryCriteriaLimit.value = cohortDef.primaryCriteriaLimit
-    inclusionQualifyingLimit.value = cohortDef.inclusionQualifyingLimit ?? 'ALL'
-
-    loadedTags.value = [...(cohortDef.tags || [])]
-    loadedSnapshot.value = createStateSnapshot()
-
-    // Hide loading overlay immediately - cohort is now visible
-    isLoadingCohort.value = false
-
-    // Trigger validation in the background (composable handles debouncing)
-    triggerValidation()
-
-    // Build cohort expression with concept set items for patient count
-    buildCohortExpression()
+    applyAtlasCohort(result.data)
   } catch (error) {
     logger.error('CohortBuilder', `Error loading cohort ${id}`, error)
+    errorMessage.value = tv('components.cohortBuilder.loadError', 'Failed to load cohort')
+    showError.value = true
+    isLoadingCohort.value = false
+  }
+}
+
+// Entering version preview: fetch that specific historical version and run
+// it through the same convert-and-resync path as the current-version fetch.
+// previewVersion is already set on the store by the time this fires (it's
+// set before the reloadRequest bump), so isPreviewingVersion / the save-gated
+// UI are already correct once this resolves.
+async function loadCohortVersion(id: string, versionNumber: number) {
+  isLoadingCohort.value = true
+  try {
+    const cohortId = parseInt(id, 10)
+    const versionedAsset = await cohortDefinitionVersionsService.getVersion(cohortId, versionNumber)
+    const atlasCohort = versionedAsset.entityDTO
+
+    if (!atlasCohort) {
+      logger.error('CohortBuilder', `Failed to load version ${versionNumber} for cohort ${id}`)
+      isLoadingCohort.value = false
+      return
+    }
+
+    applyAtlasCohort(atlasCohort)
+  } catch (error) {
+    logger.error('CohortBuilder', `Error loading version ${versionNumber} for cohort ${id}`, error)
     isLoadingCohort.value = false
   }
 }
@@ -2153,7 +2211,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
   // Convert to Atlas format and save to WebAPI
   const { convertInternalToAtlas } = await import('@/services/atlas-converter')
   const { saveCohortDefinition, assignTagToCohort, unassignTagFromCohort } = await import(
-    '@/services/webapi'
+    '@/services/cohort-definition.service'
   )
 
   const atlasExpression = convertInternalToAtlas(cohortDefinition)
@@ -2166,16 +2224,25 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
   }
 
   try {
-    const savedCohort = await saveCohortDefinition(atlasDefinition)
+    const saved = await saveCohortDefinition(atlasDefinition)
 
-    if (!savedCohort || !savedCohort.id) {
+    if (!saved.success) {
+      errorMessage.value =
+        saved.error.status === 403
+          ? tv('components.cohortBuilder.saveForbidden', 'You do not have permission to save this cohort')
+          : saved.error.message
+      showError.value = true
+      return {}
+    }
+
+    if (!saved.data.id) {
       errorMessage.value = tv('components.cohortBuilder.saveToServerError', 'Failed to save cohort to server')
       showError.value = true
       return {}
     }
 
     // Sync tags via separate API calls
-    const cohortId = savedCohort.id
+    const cohortId = saved.data.id
     const currentTags = cohortTags.value
     const previousTags = loadedTags.value
 
@@ -2193,7 +2260,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
         const result = await assignTagToCohort(cohortId, tag.id)
         if (!result.success) {
           logger.warn('CohortBuilder', `Failed to assign tag ${tag.id}`, result.error)
-          tagFailures.push(result.error ?? `Failed to assign tag "${tag.name}"`)
+          tagFailures.push(result.error.message || `Failed to assign tag "${tag.name}"`)
         }
       }
     }
@@ -2203,7 +2270,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
         const result = await unassignTagFromCohort(cohortId, tag.id)
         if (!result.success) {
           logger.warn('CohortBuilder', `Failed to unassign tag ${tag.id}`, result.error)
-          tagFailures.push(result.error ?? `Failed to unassign tag "${tag.name}"`)
+          tagFailures.push(result.error.message || `Failed to unassign tag "${tag.name}"`)
         }
       }
     }
@@ -2222,7 +2289,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
 
     successMessage.value = tv('components.cohortBuilder.saveSuccess', 'Cohort saved successfully')
     showSuccess.value = true
-    return { id: savedCohort.id, name: cohortDefinition.name }
+    return { id: saved.data.id, name: cohortDefinition.name }
   } catch (error) {
     logger.error('CohortBuilder', 'Failed to save cohort', error)
     errorMessage.value =

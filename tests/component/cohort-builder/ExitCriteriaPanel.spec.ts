@@ -12,10 +12,12 @@ vi.mock('@/composables/useI18n', async () => {
   return mockUseI18nKeyOnly
 })
 
-// Mock webapi service to prevent actual API calls
-vi.mock('@/services/webapi', () => ({
+// Mock services to prevent actual API calls
+vi.mock('@/services/concept-set.service', () => ({
+  getAllConceptSets: vi.fn().mockResolvedValue([]),
+}))
+vi.mock('@/services/source.service', () => ({
   fetchCDMSources: vi.fn().mockResolvedValue({ success: true, data: [] }),
-  getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }))
 
 import ExitCriteriaPanel from '@/components/cohort-builder/ExitCriteriaPanel.vue'

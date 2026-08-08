@@ -20,7 +20,7 @@ import {
   getIncidenceRate,
   assignIncidenceRateTag,
   unassignIncidenceRateTag,
-} from '@/services/webapi'
+} from '@/services/incidence-rate.service'
 import type { Tag } from '@/models/webapi.types'
 import { getIncidenceRateVersion } from '@/services/incidence-rate-versions.service'
 import { logger } from '@/utils/logger'
@@ -220,11 +220,11 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     const ids = [...(ir.expression.targetIds ?? []), ...(ir.expression.outcomeIds ?? [])]
     const missing = ids.filter(id => !cohortNameById.value.has(id))
     if (missing.length === 0) return
-    const { getCohortDefinition } = await import('@/services/webapi')
+    const { getCohortDefinition } = await import('@/services/cohort-definition.service')
     await Promise.all(
       missing.map(async id => {
-        const cohort = await getCohortDefinition(id)
-        if (cohort?.name) cohortNameById.value.set(id, cohort.name)
+        const result = await getCohortDefinition(id)
+        if (result.success && result.data.name) cohortNameById.value.set(id, result.data.name)
       })
     )
   }
@@ -243,8 +243,36 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     }
   }
 
-  function clearPreviewVersion() {
+  async function clearPreviewVersion(): Promise<void> {
+    const id = currentIR.value?.id
+    if (id) {
+      await loadIR(id)
+      return
+    }
     previewVersion.value = null
+  }
+
+  async function savePreviewAsCurrent(): Promise<boolean> {
+    if (!previewVersion.value || !currentIR.value?.id) {
+      logger.error('IncidenceRateStore', 'Cannot save preview: not in preview mode')
+      return false
+    }
+
+    try {
+      const { saveIncidenceRate } = await import('@/services/incidence-rate.service')
+      const result = await saveIncidenceRate(currentIR.value.id, currentIR.value)
+
+      if (!result.success) {
+        logger.error('IncidenceRateStore', 'Failed to save preview as current', result.error)
+        return false
+      }
+
+      previewVersion.value = null
+      return true
+    } catch (error) {
+      logger.error('IncidenceRateStore', 'Failed to save preview as current', error)
+      return false
+    }
   }
 
   let autoSaveTimer: ReturnType<typeof setInterval> | null = null
@@ -349,21 +377,29 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
 
   async function addTag(tag: Tag): Promise<boolean> {
     if (!currentIR.value?.id) return false
-    const ok = await assignIncidenceRateTag(currentIR.value.id, tag.id!)
-    if (ok && !currentIR.value.tags.some(t => t.id === tag.id)) {
+    const result = await assignIncidenceRateTag(currentIR.value.id, tag.id!)
+    if (!result.success) {
+      logger.error('IncidenceRate', 'addTag failed', result.error)
+      return false
+    }
+    if (!currentIR.value.tags.some(t => t.id === tag.id)) {
       currentIR.value.tags.push(tag)
       // tag mutations are metadata — do not mark dirty
     }
-    return ok
+    return true
   }
 
   async function removeTag(tagId: number): Promise<boolean> {
     if (!currentIR.value?.id) return false
-    const ok = await unassignIncidenceRateTag(currentIR.value.id, tagId)
-    if (ok && currentIR.value) {
+    const result = await unassignIncidenceRateTag(currentIR.value.id, tagId)
+    if (!result.success) {
+      logger.error('IncidenceRate', 'removeTag failed', result.error)
+      return false
+    }
+    if (currentIR.value) {
       currentIR.value.tags = currentIR.value.tags.filter(t => t.id !== tagId)
     }
-    return ok
+    return true
   }
 
   async function syncTags(newTags: Tag[]): Promise<void> {
@@ -534,6 +570,7 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     loadIR,
     loadVersionPreview,
     clearPreviewVersion,
+    savePreviewAsCurrent,
     saveToDraft,
     restoreFromDraft,
     clearDraft,

@@ -1227,17 +1227,84 @@ describe('Concept Sets Store', () => {
         comment: null,
         archived: false,
       }
-      const historicalSet = { ...mockConceptSet, name: 'Historical Set' }
+      // entityDTO never carries items (WebAPI's ConceptSetDTO has none) - the
+      // service returns them as a sibling field, mirroring ConceptSetVersionedAsset
+      const historicalEntity = { id: 1, name: 'Historical Set' }
+      const historicalItems: ConceptSetItem[] = [
+        {
+          conceptId: 999,
+          conceptName: 'Historical concept',
+          conceptCode: 'H1',
+          domainId: 'Condition',
+          vocabularyId: 'SNOMED',
+          conceptClassId: 'Clinical Finding',
+          standardConcept: 'S',
+          invalidReason: null,
+          isExcluded: false,
+          includeDescendants: true,
+          includeMapped: false,
+        },
+      ]
       vi.mocked(mockGetConceptSetVersion).mockResolvedValueOnce({
         versionDTO,
-        entityDTO: historicalSet,
+        entityDTO: historicalEntity,
+        items: historicalItems,
       })
 
       await store.loadVersionPreview(3)
 
       expect(store.previewVersion).toEqual(versionDTO)
       expect(store.currentSet?.name).toBe('Historical Set')
+      expect(store.currentSet?.items).toEqual(historicalItems)
       expect(store.isDirty).toBe(false)
+    })
+
+    it('savePreviewAsCurrent sends the historical items to the update service', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = mockConceptSet
+
+      const versionDTO = {
+        version: 3,
+        assetId: 1,
+        createdBy: { id: 1, name: 'User', email: 'u@test.com' },
+        createdDate: '2024-01-01T00:00:00Z',
+        comment: null,
+        archived: false,
+      }
+      const historicalItems: ConceptSetItem[] = [
+        {
+          conceptId: 999,
+          conceptName: 'Historical concept',
+          conceptCode: 'H1',
+          domainId: 'Condition',
+          vocabularyId: 'SNOMED',
+          conceptClassId: 'Clinical Finding',
+          standardConcept: 'S',
+          invalidReason: null,
+          isExcluded: false,
+          includeDescendants: true,
+          includeMapped: false,
+        },
+      ]
+      vi.mocked(mockGetConceptSetVersion).mockResolvedValueOnce({
+        versionDTO,
+        entityDTO: { id: 1, name: 'Historical Set' },
+        items: historicalItems,
+      })
+      vi.mocked(updateConceptSet).mockResolvedValueOnce({
+        id: 1,
+        name: 'Historical Set',
+        items: historicalItems,
+      })
+      vi.mocked(getAllConceptSets).mockResolvedValueOnce([])
+
+      await store.loadVersionPreview(3)
+      const result = await store.savePreviewAsCurrent()
+
+      expect(result).toBe(true)
+      expect(updateConceptSet).toHaveBeenCalledWith(
+        expect.objectContaining({ items: historicalItems })
+      )
     })
 
     it('loadVersionPreview rethrows on service error', async () => {

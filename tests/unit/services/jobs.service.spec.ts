@@ -165,7 +165,7 @@ describe('JobsService', () => {
       const result = await getJobs()
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain('Invalid job executions response format')
+      if (!result.success) expect(result.error.message).toContain('Invalid job executions response format')
     })
 
     it('returns failure on network error', async () => {
@@ -175,7 +175,7 @@ describe('JobsService', () => {
       const result = await getJobs()
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Network error')
+      if (!result.success) expect(result.error.message).toBe('Network error')
     })
 
     it('handles empty response', async () => {
@@ -200,26 +200,40 @@ describe('JobsService', () => {
   })
 
   describe('cache builds', () => {
+    // trexsql writes its own cacheGeneration Spring Batch execution, so the
+    // build already arrives with every other job. It is also still in
+    // trexsql's own registry; reading both would list each build twice.
     it('lists a cache build once, from the Spring Batch endpoint only', async () => {
       const { httpGet } = await import('@/services/http-client')
-      // bao now writes a cacheGeneration execution for every dialect, so the
-      // build arrives with the other jobs. Fetching /trexsql/cache/jobs as
-      // well would list it twice.
-      vi.mocked(httpGet).mockResolvedValueOnce([
-        {
-          executionId: 42,
-          jobInstance: { name: 'cacheGeneration' },
-          status: 'COMPLETED',
-          startDate: '2026-08-06T10:00:00Z',
-        },
-      ])
+      vi.mocked(httpGet).mockImplementation(async (url: string) => {
+        if (url.includes('/job/execution')) {
+          return [
+            {
+              executionId: 54,
+              jobInstance: { name: 'cacheGeneration' },
+              status: 'COMPLETED',
+              startDate: '2026-08-06T10:00:00Z',
+            },
+          ]
+        }
+        // The registry still holds the same build. If it were merged in, the
+        // assertions below would see two.
+        return {
+          jobs: [
+            { databaseCode: 'EUNOMIA', sourceKey: 'EUNOMIA', status: 'COMPLETE' },
+          ],
+        }
+      })
 
       const result = await getJobs()
 
       expect(result.success).toBe(true)
       expect(result.data).toHaveLength(1)
-      expect(vi.mocked(httpGet)).toHaveBeenCalledTimes(1)
-      expect(vi.mocked(httpGet).mock.calls[0][0]).toContain('/job/execution')
+
+      const urls = vi.mocked(httpGet).mock.calls.map(c => c[0])
+      expect(urls).toHaveLength(1)
+      expect(urls[0]).toContain('/job/execution')
+      expect(urls.some(u => u.includes('/trexsql/cache/jobs'))).toBe(false)
     })
   })
   describe('jobsService singleton', () => {

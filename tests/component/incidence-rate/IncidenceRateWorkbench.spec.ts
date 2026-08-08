@@ -6,7 +6,7 @@ import { vuetify, pristinePinia } from './_test-helpers'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/incidence-rate.service', () => ({
   getIncidenceRateReport: vi.fn().mockResolvedValue({ success: true, data: null }),
   listIncidenceRateInfo: vi.fn().mockResolvedValue({ success: true, data: [] }),
   generateIncidenceRate: vi.fn(),

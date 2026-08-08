@@ -72,13 +72,13 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await roleService.fetchRoles()
 
-      if (result.isSuccess) {
+      if (result.success) {
         roles.value = result.data
         logger.info('RolesStore', `Loaded ${result.data.length} roles`)
         return true
       } else {
-        rolesError.value = result.message
-        logger.error('RolesStore', 'Failed to fetch roles', result.message)
+        rolesError.value = result.error.message
+        logger.error('RolesStore', 'Failed to fetch roles', result.error.message)
         return false
       }
     } catch (error) {
@@ -101,13 +101,13 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await roleService.fetchRoleById(roleId)
 
-      if (result.isSuccess) {
+      if (result.success) {
         currentRole.value = result.data
         logger.info('RolesStore', `Loaded role ${roleId}`)
         return true
       } else {
-        rolesError.value = result.message
-        logger.error('RolesStore', `Failed to fetch role ${roleId}`, result.message)
+        rolesError.value = result.error.message
+        logger.error('RolesStore', `Failed to fetch role ${roleId}`, result.error.message)
         return false
       }
     } catch (error) {
@@ -130,7 +130,7 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await roleService.createRole(payload)
 
-      if (result.isSuccess) {
+      if (result.success) {
         // Add to local state
         roles.value.push(result.data)
         currentRole.value = result.data
@@ -138,8 +138,8 @@ export const useRolesStore = defineStore('roles', () => {
         logger.info('RolesStore', `Created role: ${result.data.name}`)
         return result.data
       } else {
-        rolesError.value = result.message
-        logger.error('RolesStore', 'Failed to create role', result.message)
+        rolesError.value = result.error.message
+        logger.error('RolesStore', 'Failed to create role', result.error.message)
         return null
       }
     } catch (error) {
@@ -162,7 +162,7 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await roleService.updateRole(roleId, payload)
 
-      if (result.isSuccess) {
+      if (result.success) {
         // Update in local state
         const index = roles.value.findIndex(r => r.id === roleId)
         if (index !== -1) {
@@ -176,8 +176,8 @@ export const useRolesStore = defineStore('roles', () => {
         logger.info('RolesStore', `Updated role ${roleId}: ${result.data.name}`)
         return true
       } else {
-        rolesError.value = result.message
-        logger.error('RolesStore', `Failed to update role ${roleId}`, result.message)
+        rolesError.value = result.error.message
+        logger.error('RolesStore', `Failed to update role ${roleId}`, result.error.message)
         return false
       }
     } catch (error) {
@@ -200,7 +200,7 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await roleService.deleteRole(roleId)
 
-      if (result.isSuccess) {
+      if (result.success) {
         // Remove from local state
         const index = roles.value.findIndex(r => r.id === roleId)
 
@@ -215,8 +215,8 @@ export const useRolesStore = defineStore('roles', () => {
         logger.info('RolesStore', `Deleted role ${roleId}`)
         return true
       } else {
-        rolesError.value = result.message
-        logger.error('RolesStore', `Failed to delete role ${roleId}`, result.message)
+        rolesError.value = result.error.message
+        logger.error('RolesStore', `Failed to delete role ${roleId}`, result.error.message)
         return false
       }
     } catch (error) {
@@ -243,13 +243,13 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await permissionService.fetchAllPermissions()
 
-      if (result.isSuccess) {
+      if (result.success) {
         permissions.value = result.data
         logger.info('RolesStore', `Loaded ${result.data.length} permissions`)
         return true
       } else {
-        permissionsError.value = result.message
-        logger.error('RolesStore', 'Failed to fetch permissions', result.message)
+        permissionsError.value = result.error.message
+        logger.error('RolesStore', 'Failed to fetch permissions', result.error.message)
         return false
       }
     } catch (error) {
@@ -272,13 +272,13 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await roleService.getRolePermissions(roleId)
 
-      if (result.isSuccess) {
+      if (result.success) {
         rolePermissions.value = result.data
         logger.info('RolesStore', `Loaded ${result.data.length} permissions for role ${roleId}`)
         return true
       } else {
-        permissionsError.value = result.message
-        logger.error('RolesStore', `Failed to fetch permissions for role ${roleId}`, result.message)
+        permissionsError.value = result.error.message
+        logger.error('RolesStore', `Failed to fetch permissions for role ${roleId}`, result.error.message)
         return false
       }
     } catch (error) {
@@ -300,7 +300,7 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await roleService.assignPermissionToRole(roleId, permissionId)
 
-      if (result.isSuccess) {
+      if (result.success) {
         // Add to local state if not already present
         const permission = permissions.value.find(p => p.id === permissionId)
         if (permission && !rolePermissions.value.find(p => p.id === permissionId)) {
@@ -313,7 +313,7 @@ export const useRolesStore = defineStore('roles', () => {
         logger.error(
           'RolesStore',
           `Failed to assign permission ${permissionId} to role ${roleId}`,
-          result.message
+          result.error.message
         )
         return false
       }
@@ -338,7 +338,7 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await roleService.removePermissionFromRole(roleId, permissionId)
 
-      if (result.isSuccess) {
+      if (result.success) {
         // Remove from local state
         const index = rolePermissions.value.findIndex(p => p.id === permissionId)
         if (index !== -1) {
@@ -351,7 +351,7 @@ export const useRolesStore = defineStore('roles', () => {
         logger.error(
           'RolesStore',
           `Failed to remove permission ${permissionId} from role ${roleId}`,
-          result.message
+          result.error.message
         )
         return false
       }
@@ -381,13 +381,13 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await userService.fetchAllUsers()
 
-      if (result.isSuccess) {
+      if (result.success) {
         users.value = result.data
         logger.info('RolesStore', `Loaded ${result.data.length} users`)
         return true
       } else {
-        usersError.value = result.message
-        logger.error('RolesStore', 'Failed to fetch users', result.message)
+        usersError.value = result.error.message
+        logger.error('RolesStore', 'Failed to fetch users', result.error.message)
         return false
       }
     } catch (error) {
@@ -410,13 +410,13 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await roleService.getRoleUsers(roleId)
 
-      if (result.isSuccess) {
+      if (result.success) {
         roleUsers.value = result.data
         logger.info('RolesStore', `Loaded ${result.data.length} users for role ${roleId}`)
         return true
       } else {
-        usersError.value = result.message
-        logger.error('RolesStore', `Failed to fetch users for role ${roleId}`, result.message)
+        usersError.value = result.error.message
+        logger.error('RolesStore', `Failed to fetch users for role ${roleId}`, result.error.message)
         return false
       }
     } catch (error) {
@@ -438,7 +438,7 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await roleService.assignUserToRole(roleId, userId)
 
-      if (result.isSuccess) {
+      if (result.success) {
         // Add to local state if not already present
         const user = users.value.find(u => u.id === userId)
         if (user && !roleUsers.value.find(u => u.id === userId)) {
@@ -451,7 +451,7 @@ export const useRolesStore = defineStore('roles', () => {
         logger.error(
           'RolesStore',
           `Failed to assign user ${userId} to role ${roleId}`,
-          result.message
+          result.error.message
         )
         return false
       }
@@ -472,7 +472,7 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await roleService.removeUserFromRole(roleId, userId)
 
-      if (result.isSuccess) {
+      if (result.success) {
         // Remove from local state
         const index = roleUsers.value.findIndex(u => u.id === userId)
         if (index !== -1) {
@@ -485,7 +485,7 @@ export const useRolesStore = defineStore('roles', () => {
         logger.error(
           'RolesStore',
           `Failed to remove user ${userId} from role ${roleId}`,
-          result.message
+          result.error.message
         )
         return false
       }
@@ -508,11 +508,11 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await roleService.exportRole(roleId)
 
-      if (result.isSuccess) {
+      if (result.success) {
         logger.info('RolesStore', `Exported role ${roleId}`)
         return result.data
       } else {
-        logger.error('RolesStore', `Failed to export role ${roleId}`, result.message)
+        logger.error('RolesStore', `Failed to export role ${roleId}`, result.error.message)
         return null
       }
     } catch (error) {
@@ -530,14 +530,14 @@ export const useRolesStore = defineStore('roles', () => {
     try {
       const result = await roleService.importRole(jsonData)
 
-      if (result.isSuccess) {
+      if (result.success) {
         // Add to local state
         roles.value.push(result.data)
 
         logger.info('RolesStore', `Imported role: ${result.data.name}`)
         return result.data
       } else {
-        logger.error('RolesStore', 'Failed to import role', result.message)
+        logger.error('RolesStore', 'Failed to import role', result.error.message)
         return null
       }
     } catch (error) {

@@ -5,7 +5,7 @@
  */
 import { ref, computed, watch } from 'vue'
 import type { Ref } from 'vue'
-import { getCohorts } from '@/services/webapi'
+import { getCohorts } from '@/services/cohort-definition.service'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
@@ -113,7 +113,7 @@ export function useCohorts() {
           return bDate - aDate
         })
       } else {
-        error.value = new Error(result.error)
+        error.value = new Error(result.error.message)
         logger.error('useCohorts', 'Failed to fetch cohorts', result.error)
       }
     } catch (err) {

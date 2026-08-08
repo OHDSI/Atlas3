@@ -26,7 +26,8 @@ import router from '@/router'
 import { createConceptSet } from '@/services/concept-set.service'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
 import { createCharacterization } from '@/services/characterization.service'
-import { createPathway, createIncidenceRate } from '@/services/webapi'
+import { createPathway } from '@/services/pathway.service'
+import { createIncidenceRate } from '@/services/incidence-rate.service'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 import type {
   FeatureAnalysis,
@@ -323,19 +324,20 @@ async function handleCreateFeatureAnalysis(
     // CRITERIA_SET. Default to an empty string if the model omits it.
     design: (payload.design ?? '') as FeatureAnalysis['design'],
   }
-  try {
-    const created = await createFeatureAnalysis(fa)
-    if (!created?.id) {
-      showSnackbar('Failed to create feature analysis', 'error')
-      return
-    }
-    showSnackbar(`Feature analysis "${created.name}" created`, 'success')
-    await navigateToEditor('feature-analysis-edit', created.id)
-    return { id: created.id, name: created.name }
-  } catch (err) {
-    logger.error('pythiaBridge', 'createFeatureAnalysis failed', err)
-    showSnackbar(`Failed to create feature analysis: ${(err as Error).message}`, 'error')
+  const result = await createFeatureAnalysis(fa)
+  if (!result.success) {
+    logger.error('pythiaBridge', 'createFeatureAnalysis failed', result.error)
+    showSnackbar(`Failed to create feature analysis: ${result.error.message}`, 'error')
+    return
   }
+  const created = result.data
+  if (!created?.id) {
+    showSnackbar('Failed to create feature analysis', 'error')
+    return
+  }
+  showSnackbar(`Feature analysis "${created.name}" created`, 'success')
+  await navigateToEditor('feature-analysis-edit', created.id)
+  return { id: created.id, name: created.name }
 }
 
 async function handleCreateCharacterization(
@@ -366,19 +368,20 @@ async function handleCreateCharacterization(
     })),
     stratas: [],
   }
-  try {
-    const created = await createCharacterization(def)
-    if (!created?.id) {
-      showSnackbar('Failed to create characterization', 'error')
-      return
-    }
-    showSnackbar(`Characterization "${created.name}" created`, 'success')
-    await navigateToEditor('characterization-edit', created.id)
-    return { id: created.id, name: created.name }
-  } catch (err) {
-    logger.error('pythiaBridge', 'createCharacterization failed', err)
-    showSnackbar(`Failed to create characterization: ${(err as Error).message}`, 'error')
+  const result = await createCharacterization(def)
+  if (!result.success) {
+    logger.error('pythiaBridge', 'createCharacterization failed', result.error)
+    showSnackbar(`Failed to create characterization: ${result.error.message}`, 'error')
+    return
   }
+  const created = result.data
+  if (!created?.id) {
+    showSnackbar('Failed to create characterization', 'error')
+    return
+  }
+  showSnackbar(`Characterization "${created.name}" created`, 'success')
+  await navigateToEditor('characterization-edit', created.id)
+  return { id: created.id, name: created.name }
 }
 
 async function handleCreatePathway(
@@ -403,7 +406,7 @@ async function handleCreatePathway(
   try {
     const result = await createPathway(pathway)
     if (!result.success || !result.data?.id) {
-      const msg = result.success ? 'no id returned' : result.error
+      const msg = result.success ? 'no id returned' : result.error.message
       showSnackbar(`Failed to create pathway: ${msg}`, 'error')
       return
     }
@@ -446,7 +449,7 @@ async function handleCreateIncidenceRate(
   try {
     const result = await createIncidenceRate(ir)
     if (!result.success || !result.data?.id) {
-      const msg = result.success ? 'no id returned' : result.error
+      const msg = result.success ? 'no id returned' : result.error.message
       showSnackbar(`Failed to create incidence rate: ${msg}`, 'error')
       return
     }

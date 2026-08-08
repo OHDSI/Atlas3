@@ -70,6 +70,8 @@ import { useVersions } from '@/composables/useVersions'
 import { copyVersion as copyCohortVersion } from '@/services/cohort-definition-versions.service'
 import { copyVersion as copyConceptSetVersion } from '@/services/concept-set-versions.service'
 import { copyPathwayVersion } from '@/services/pathway-versions.service'
+import { copyIncidenceRateVersion } from '@/services/incidence-rate-versions.service'
+import { ASSET_ROUTE_SEGMENT, ASSET_DETAIL_ROUTE_SEGMENT } from './types'
 import type { VersionsConfig, VersionsTableItem, Version } from './types'
 
 // Props
@@ -93,13 +95,20 @@ const snackbar = reactive({
   severity: 'success' as AtlasSnackbarSeverity,
 })
 
-// Get appropriate API service for copy
-const copyVersionAPI =
-  props.config.assetType === 'cohortdefinition'
-    ? copyCohortVersion
-    : props.config.assetType === 'pathway-analysis'
-      ? copyPathwayVersion
-      : copyConceptSetVersion
+// Copy dispatch keyed explicitly by assetType (a chained ternary's
+// fall-through else is exactly what let an IR copy silently PUT to
+// /conceptset/{irId}/... - see versions-navigation.spec.ts) so a future
+// fifth asset type is a type error here instead of a silent mis-dispatch.
+const COPY_VERSION_API: Record<
+  VersionsConfig['assetType'],
+  (assetId: number, versionNumber: number) => Promise<{ id?: number | string }>
+> = {
+  cohortdefinition: copyCohortVersion,
+  conceptset: copyConceptSetVersion,
+  'pathway-analysis': copyPathwayVersion,
+  ir: copyIncidenceRateVersion,
+}
+const copyVersionAPI = COPY_VERSION_API[props.config.assetType]
 
 // Load versions on mount
 onMounted(async () => {
@@ -121,7 +130,7 @@ function handlePreview(versionNumber: number): void {
 
   // Navigate to version preview route (T036)
   router.push({
-    path: `/${props.config.assetType}/${props.config.assetId}/version/${versionNumber}`,
+    path: `/${ASSET_ROUTE_SEGMENT[props.config.assetType]}/${props.config.assetId}/version/${versionNumber}`,
   })
 }
 
@@ -185,12 +194,18 @@ async function handleCopy(versionNumber: number): Promise<void> {
       }
     }
 
-    // Navigate to new asset (T058)
-    setTimeout(() => {
-      router.push({
-        path: `/${props.config.assetType}/${newAsset.id}`,
-      })
-    }, 1000)
+    // Navigate to new asset (T058). Concept sets have no id-addressable
+    // route to navigate to (see ASSET_DETAIL_ROUTE_SEGMENT) - the copy
+    // still succeeded (toast above), so just skip the navigation for it
+    // rather than pushing a dead link.
+    const detailSegment = ASSET_DETAIL_ROUTE_SEGMENT[props.config.assetType]
+    if (detailSegment) {
+      setTimeout(() => {
+        router.push({
+          path: `/${detailSegment}/${newAsset.id}`,
+        })
+      }, 1000)
+    }
   } catch (error) {
     logger.error('VersionsTabContent', 'Failed to copy version', error)
     showSnackbar(tv('versions.copyError'), 'error')
@@ -211,11 +226,8 @@ async function handleSavePreviewAsCurrent(): Promise<void> {
     const success = await savePreviewAsCurrent()
 
     if (success) {
-      // T066: Clear preview state after successful save
-      // eslint-disable-next-line vue/no-mutating-props
-      props.config.previewVersion.value = null
-
-      // Show success message
+      // The store's own savePreviewAsCurrent already nulls previewVersion on
+      // success, which flows back here through the shared ref.
       showSnackbar(tv('versions.saveSuccess'), 'success')
 
       // T067: Refresh the versions list to show the new version
@@ -241,11 +253,11 @@ async function savePreviewAsCurrent(): Promise<boolean> {
     const cohortStore = useCohortStore()
     return cohortStore.savePreviewAsCurrent()
   } else if (props.config.assetType === 'pathway-analysis') {
-    // Pathway store does not yet expose savePreviewAsCurrent; fall back to false
-    return false
+    const { usePathwayStore } = await import('@/stores/pathway')
+    return usePathwayStore().savePreviewAsCurrent()
   } else if (props.config.assetType === 'ir') {
-    // Incidence Rate store does not yet expose savePreviewAsCurrent; fall back to false
-    return false
+    const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
+    return useIncidenceRateStore().savePreviewAsCurrent()
   } else {
     const { useConceptSetsStore } = await import('@/stores/concept-sets')
     const conceptSetStore = useConceptSetsStore()

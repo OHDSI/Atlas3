@@ -110,17 +110,19 @@ describe('ConceptSearchService', () => {
           body: expect.stringContaining('"QUERY":"diabetes"'),
         })
       )
-      expect(result.concepts).toHaveLength(1)
-      expect(result.total).toBe(1)
-      // .map() calls the function with (item, index, array)
-      expect(mapConceptFromAPI).toHaveBeenCalledWith(mockResponse[0], 0, mockResponse)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+        // .map() calls the function with (item, index, array)
+        expect(mapConceptFromAPI).toHaveBeenCalledWith(mockResponse[0], 0, mockResponse)
+      }
     })
 
     it('should return empty results for empty query', async () => {
       const result = await searchConcepts('TEST', '')
 
-      expect(result.concepts).toEqual([])
-      expect(result.total).toBe(0)
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data).toEqual([])
       expect(mockFetch).not.toHaveBeenCalled()
     })
 
@@ -160,27 +162,39 @@ describe('ConceptSearchService', () => {
       )
     })
 
-    it('should throw error for invalid response format', async () => {
+    it('should fail with an error for invalid response format', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
         text: () => Promise.resolve(JSON.stringify({ invalid: 'response' })),
       })
 
-      await expect(searchConcepts('TEST', 'test')).rejects.toThrow(
-        'Invalid concept search response format'
-      )
+      const result = await searchConcepts('TEST', 'test')
+
+      expect(result.success).toBe(false)
+      if (!result.success) expect(result.error.message).toBe('Invalid concept search response format')
     })
 
-    it('should throw error on fetch failure', async () => {
-      // 404 is not retryable, so it throws immediately
-      mockFetch.mockResolvedValueOnce({
+    it('fails with the status when the search is rejected', async () => {
+      mockFetch.mockResolvedValue({
         ok: false,
-        status: 404,
-        statusText: 'Not Found',
+        status: 403,
+        statusText: 'Forbidden',
+        text: () => Promise.resolve('no access'),
       })
 
-      await expect(searchConcepts('TEST', 'test')).rejects.toThrow('HTTP 404')
+      const result = await searchConcepts('TEST', 'diabetes')
+
+      expect(result.success).toBe(false)
+      if (!result.success) expect(result.error.status).toBe(403)
+    })
+
+    it('fails with an error for an invalid sourceKey', async () => {
+      const result = await searchConcepts('', 'diabetes')
+
+      expect(result.success).toBe(false)
+      if (!result.success) expect(result.error.message).toContain('Invalid vocabulary source')
+      expect(mockFetch).not.toHaveBeenCalled()
     })
   })
 

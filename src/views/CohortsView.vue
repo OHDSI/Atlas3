@@ -38,52 +38,51 @@
     </template>
 
     <div class="cohorts-view">
-      <!-- Toolbar: primary actions on the left, status chip + filters
-           toggle on the right. Sits flush on the page card surface
-           with no inner v-card wrapper. -->
+      <!-- Toolbar: search + filters on the left, status chip in the
+           middle, primary actions right-aligned on the same row. Sits
+           flush on the page card surface with no inner v-card wrapper. -->
       <div class="cohorts-view__toolbar">
-        <AtlasButton
-          icon="mdi-plus"
-          :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
-          :disabled="!canCreateCohort"
-          @click="handleCreateCohort"
+        <cohort-filters
+          :filters="filters"
+          :available-tags="availableTags"
+          :available-authors="availableAuthors"
+          :active-filter-count="activeFilterCount"
+          class="cohorts-view__filters"
+          @update:filters="filters = $event"
+          @clear="clearFilters"
         >
-          {{ t('cohortDefinitions.newDefinition', 'New cohort') }}
-        </AtlasButton>
+          <template #actions>
+            <AtlasChip
+              v-if="!loading && filteredCohorts.length > 0"
+              size="sm"
+              tone="primary"
+              class="cohorts-view__count"
+            >
+              {{ countLabel }}
+            </AtlasChip>
 
-        <AtlasButton
-          variant="secondary"
-          icon="mdi-upload-outline"
-          :aria-label="t('common.import', 'Import cohort from JSON').value"
-          :disabled="!canCreateCohort"
-          data-testid="import-cohort-btn"
-          @click="handleImportCohort"
-        >
-          {{ t('common.import', 'Import') }}
-        </AtlasButton>
+            <AtlasButton
+              variant="secondary"
+              icon="mdi-upload-outline"
+              :aria-label="t('common.import', 'Import cohort from JSON').value"
+              :disabled="!canCreateCohort"
+              data-testid="import-cohort-btn"
+              @click="handleImportCohort"
+            >
+              {{ t('common.import', 'Import') }}
+            </AtlasButton>
 
-        <AtlasChip
-          v-if="!loading && filteredCohorts.length > 0"
-          size="sm"
-          tone="primary"
-          class="cohorts-view__count"
-        >
-          {{ countLabel }}
-        </AtlasChip>
-
-        <AtlasSpacer />
+            <AtlasButton
+              icon="mdi-plus"
+              :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
+              :disabled="!canCreateCohort"
+              @click="handleCreateCohort"
+            >
+              {{ t('cohortDefinitions.newDefinition', 'New cohort') }}
+            </AtlasButton>
+          </template>
+        </cohort-filters>
       </div>
-
-      <!-- Filters -->
-      <cohort-filters
-        :filters="filters"
-        :available-tags="availableTags"
-        :available-authors="availableAuthors"
-        :active-filter-count="activeFilterCount"
-        class="cohorts-view__filters"
-        @update:filters="filters = $event"
-        @clear="clearFilters"
-      />
 
       <!-- Filtering indicator -->
       <div
@@ -366,7 +365,7 @@ import {
   getCohortDefinition,
   getCohortPrintFriendly,
   saveCohortDefinition,
-} from '@/services/webapi'
+} from '@/services/cohort-definition.service'
 import { logger } from '@/utils/logger'
 import { AtlasAlert, AtlasButton, AtlasChip, AtlasDialog, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
@@ -579,7 +578,7 @@ async function confirmImport() {
       expression: parsed as object,
     })
 
-    if (!result || !result.id) {
+    if (!result.success || !result.data.id) {
       importError.value = t(
         'cohortDefinitions.importFailed',
         'Import failed. Check the JSON and try again.'
@@ -589,7 +588,7 @@ async function confirmImport() {
 
     closeImportDialog()
     await fetchCohorts()
-    router.push(`/cohorts/${result.id}`)
+    router.push(`/cohorts/${result.data.id}`)
   } catch (err) {
     logger.error('CohortsView', 'Failed to import cohort', err)
     importError.value = t(
@@ -629,12 +628,16 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
   copyingId.value = cohort.id
 
   try {
-    const definition = await getCohortDefinition(cohort.id)
-    if (!definition) {
-      showSnackbar(
-        t('cohortDefinitions.copyLoadError', 'Failed to load the cohort to copy.').value,
-        'danger'
-      )
+    const definitionResult = await getCohortDefinition(cohort.id)
+    if (!definitionResult.success) {
+      const message =
+        definitionResult.error.status === 403
+          ? t(
+              'cohortDefinitions.copyLoadForbidden',
+              'You do not have permission to read this cohort.'
+            ).value
+          : t('cohortDefinitions.copyLoadError', 'Failed to load the cohort to copy.').value
+      showSnackbar(message, 'danger')
       return
     }
 
@@ -648,7 +651,7 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
       modifiedDate: _modifiedDate,
       tags: _tags,
       ...expression
-    } = definition as AtlasCohortDefinition
+    } = definitionResult.data as AtlasCohortDefinition
 
     const created = await saveCohortDefinition({
       name: buildCopyName(cohort.name),
@@ -657,7 +660,7 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
       expression,
     })
 
-    if (!created?.id) {
+    if (!created.success || !created.data.id) {
       showSnackbar(
         t('cohortDefinitions.copyError', 'Failed to copy the cohort.').value,
         'danger'
@@ -666,7 +669,7 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
     }
 
     await fetchCohorts()
-    router.push(`/cohorts/${created.id}`)
+    router.push(`/cohorts/${created.data.id}`)
   } catch (err) {
     logger.error('CohortsView', 'Failed to copy cohort', err)
     showSnackbar(t('cohortDefinitions.copyError', 'Failed to copy the cohort.').value, 'danger')
@@ -706,7 +709,13 @@ async function confirmDelete() {
   deleting.value = true
 
   try {
-    await deleteCohort(selectedCohort.value.id)
+    const result = await deleteCohort(selectedCohort.value.id)
+
+    if (!result.success) {
+      logger.error('CohortsView', 'Failed to delete cohort', result.error)
+      showSnackbar(t('cohortDefinitions.deleteError', 'Failed to delete the cohort.').value, 'danger')
+      return
+    }
 
     // Refresh cohort list
     await fetchCohorts()
@@ -716,7 +725,7 @@ async function confirmDelete() {
     selectedCohort.value = null
   } catch (err) {
     logger.error('CohortsView', 'Failed to delete cohort', err)
-    // Error handling could be enhanced with a snackbar notification
+    showSnackbar(t('cohortDefinitions.deleteError', 'Failed to delete the cohort.').value, 'danger')
   } finally {
     deleting.value = false
   }
@@ -733,11 +742,13 @@ async function handleShowInfo(cohort: CohortDefinitionSummary) {
 
   try {
     // Fetch the full cohort definition
-    const atlasDefinition = await getCohortDefinition(cohort.id)
-    if (atlasDefinition) {
+    const definitionResult = await getCohortDefinition(cohort.id)
+    if (definitionResult.success) {
       // Get print-friendly HTML
-      const html = await getCohortPrintFriendly(atlasDefinition)
-      cohortInfoHtml.value = html
+      const htmlResult = await getCohortPrintFriendly(definitionResult.data)
+      cohortInfoHtml.value = htmlResult.success ? htmlResult.data : null
+    } else {
+      logger.error('CohortsView', 'Failed to fetch cohort definition', definitionResult.error)
     }
   } catch (error) {
     logger.error('CohortsView', 'Failed to fetch cohort print-friendly view', error)
@@ -776,7 +787,7 @@ onMounted(() => {
 }
 
 .cohorts-view__filters {
-  margin-bottom: 16px;
+  flex: 1 1 auto;
 }
 
 .cohorts-view__pagination {

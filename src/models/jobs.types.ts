@@ -220,17 +220,26 @@ export function parseJobType(name: string | null | undefined): JobType {
 
   const lowerName = name.toLowerCase()
 
+  if (lowerName.includes('cachegeneration') || lowerName.includes('cache build')) {
+    return 'cacheGeneration'
+  }
+  // Before the generateCohort check: "generateCohortCharacterization" contains
+  // "generatecohort" and would otherwise be reported as a plain cohort build.
+  if (lowerName.includes('characterization')) {
+    return 'generateCohortCharacterization'
+  }
   if (lowerName.includes('cohort generation') || lowerName.includes('generatecohort')) {
     return 'generateCohort'
   }
   if (lowerName.includes('cohort analysis') || lowerName.includes('heracles')) {
     return 'cohortAnalysisJob'
   }
-  if (lowerName.includes('incidence rate') || lowerName.includes('ir analysis')) {
+  if (
+    lowerName.includes('incidence rate') ||
+    lowerName.includes('ir analysis') ||
+    lowerName.includes('iranalysis')
+  ) {
     return 'irAnalysis'
-  }
-  if (lowerName.includes('characterization')) {
-    return 'generateCohortCharacterization'
   }
   if (lowerName.includes('pathway')) {
     return 'generatePathwayAnalysis'

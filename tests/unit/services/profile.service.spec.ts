@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { getPerson, getCohortConceptSets } from '@/services/profile.service'
+import { ApiError } from '@/services/api-error'
 
 vi.mock('@/services/http-client', () => ({
   httpGet: vi.fn(),
@@ -40,20 +41,22 @@ describe('getPerson', () => {
     expect(result.success).toBe(false)
   })
 
-  it('returns failure with code "NOT_FOUND" on HTTP 404', async () => {
+  it('returns failure carrying a 404 status on HTTP 404', async () => {
     const { httpGet } = await import('@/services/http-client')
-    ;(httpGet as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('HTTP 404: Not Found'))
+    ;(httpGet as ReturnType<typeof vi.fn>).mockRejectedValue(new ApiError('Not Found', 404, null))
     const result = await getPerson('SYNPUF', 99)
     expect(result.success).toBe(false)
-    if (!result.success) expect(result.code).toBe('NOT_FOUND')
+    if (!result.success) expect(result.error.status).toBe(404)
   })
 
-  it('does not map a 500 error to NOT_FOUND even if message mentions 404', async () => {
+  it('does not map a 500 error to a 404 status even if the message mentions 404', async () => {
     const { httpGet } = await import('@/services/http-client')
-    ;(httpGet as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('HTTP 500: server error 404 in upstream'))
+    ;(httpGet as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new ApiError('server error 404 in upstream', 500, null)
+    )
     const result = await getPerson('SYNPUF', 1)
     expect(result.success).toBe(false)
-    if (!result.success) expect(result.code).toBeUndefined()
+    if (!result.success) expect(result.error.status).toBe(500)
   })
 })
 
@@ -111,7 +114,7 @@ describe('getCohortConceptSets — error paths', () => {
     ;(httpGet as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('boom'))
     const result = await getCohortConceptSets(1)
     expect(result.success).toBe(false)
-    if (!result.success) expect(result.error).toBe('boom')
+    if (!result.success) expect(result.error.message).toBe('boom')
   })
 
   it('returns empty array when expression is malformed JSON string', async () => {

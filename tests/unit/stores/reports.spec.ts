@@ -1,21 +1,22 @@
 import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import type { PersonReport, ReportType } from '@/models/report.types'
+import { ApiError } from '@/services/api-error'
 
 interface MockReportData {
   data: string
 }
 
-vi.mock('@/services/webapi')
+vi.mock('@/services/report.service')
 vi.mock('@/services/report-mapper')
 
-let webapi: typeof import('@/services/webapi')
+let webapi: typeof import('@/services/report.service')
 let mapper: typeof import('@/services/report-mapper')
 let useReportsStore: typeof import('@/stores/reports').useReportsStore
 
 beforeAll(async () => {
   vi.resetModules()
-  webapi = await import('@/services/webapi')
+  webapi = await import('@/services/report.service')
   mapper = await import('@/services/report-mapper')
   ;({ useReportsStore } = await import('@/stores/reports'))
 })
@@ -87,7 +88,7 @@ describe('Reports Store', () => {
         }
       }
 
-      vi.mocked(webapi.getPersonReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getPersonReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapPersonReport).mockReturnValue(mockMappedData)
 
       await store.fetchReport(123, 'SYNPUF', 'person')
@@ -138,7 +139,10 @@ describe('Reports Store', () => {
     it('should handle fetch errors gracefully', async () => {
       const store = useReportsStore()
 
-      vi.mocked(webapi.getPersonReport).mockResolvedValue(null)
+      vi.mocked(webapi.getPersonReport).mockResolvedValue({
+        success: false,
+        error: new ApiError('Failed to fetch person report data', 0, null),
+      })
 
       await store.fetchReport(123, 'SYNPUF', 'person')
 
@@ -385,7 +389,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getConditionErasReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getConditionErasReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapConditionErasReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'condition-eras')
@@ -402,7 +406,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getConditionReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getConditionReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapConditionReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'condition')
@@ -418,7 +422,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getDrugErasReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getDrugErasReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapDrugErasReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'drug-eras')
@@ -434,7 +438,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getCohortSpecificReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getCohortSpecificReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapCohortSpecificReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'cohort-specific')
@@ -450,7 +454,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getPersonsExposureBaselineReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getPersonsExposureBaselineReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapPersonsExposureReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'persons-exposure-baseline')
@@ -466,7 +470,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getPersonsExposureCohortReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getPersonsExposureCohortReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapPersonsExposureReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'persons-exposure-cohort')
@@ -482,7 +486,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getVisitsBaselineReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getVisitsBaselineReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapVisitsReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'visits-baseline')
@@ -498,7 +502,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getVisitDatesBaselineReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getVisitDatesBaselineReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapVisitDatesReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'visit-dates-baseline')
@@ -514,7 +518,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getCareSiteVisitDatesBaselineReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getCareSiteVisitDatesBaselineReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapCareSiteVisitDatesReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'care-site-visit-dates-baseline')
@@ -530,7 +534,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getVisitsCohortReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getVisitsCohortReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapVisitsReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'visits-cohort')
@@ -546,7 +550,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getVisitDatesCohortReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getVisitDatesCohortReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapVisitDatesReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'visit-dates-cohort')
@@ -562,7 +566,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getCareSiteVisitDatesCohortReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getCareSiteVisitDatesCohortReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapCareSiteVisitDatesReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'care-site-visit-dates-cohort')
@@ -578,7 +582,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getDrugUtilizationBaselineReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getDrugUtilizationBaselineReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapDrugUtilizationReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'drug-utilization-baseline')
@@ -594,7 +598,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getDrugUtilizationCohortReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getDrugUtilizationCohortReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapDrugUtilizationReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'drug-utilization-cohort')
@@ -610,7 +614,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getHeraclesHeelReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getHeraclesHeelReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapHeraclesHeelReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'heracles-heel')
@@ -626,7 +630,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getConditionsByIndexReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getConditionsByIndexReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapConditionsByIndexReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'conditions-by-index')
@@ -642,7 +646,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getDeathReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getDeathReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapDeathReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'death')
@@ -658,7 +662,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getDrugExposureReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getDrugExposureReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapDrugExposureReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'drug-exposure')
@@ -674,7 +678,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getDrugsByIndexReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getDrugsByIndexReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapDrugsByIndexReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'drugs-by-index')
@@ -690,7 +694,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getObservationPeriodsReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getObservationPeriodsReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapObservationPeriodsReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'observation-periods')
@@ -706,7 +710,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getProcedureReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getProcedureReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapProcedureReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'procedure')
@@ -722,7 +726,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getProceduresByIndexReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getProceduresByIndexReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapProceduresByIndexReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'procedures-by-index')
@@ -738,7 +742,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getDataCompletenessReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getDataCompletenessReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapDataCompletenessReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'data-completeness')
@@ -754,7 +758,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getEntropyReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getEntropyReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapEntropyReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'entropy')
@@ -770,7 +774,7 @@ describe('Reports Store', () => {
       const mockRawData = { data: 'raw' }
       const mockMappedData = { data: 'mapped' }
 
-      vi.mocked(webapi.getTornadoReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getTornadoReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapTornadoReport).mockReturnValue(mockMappedData as MockReportData)
 
       await store.fetchReport(123, 'SYNPUF', 'tornado')
@@ -805,7 +809,7 @@ describe('Reports Store', () => {
         }
       }
 
-      vi.mocked(webapi.getPersonReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getPersonReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapPersonReport).mockReturnValue(mockMappedData)
 
       await store.fetchReport(123, 'SYNPUF', 'person')
@@ -825,10 +829,13 @@ describe('Reports Store', () => {
       expect(store.loading).toBe(false)
     })
 
-    it('should handle null response from condition-eras API', async () => {
+    it('should handle a failed response from condition-eras API', async () => {
       const store = useReportsStore()
 
-      vi.mocked(webapi.getConditionErasReport).mockResolvedValue(null)
+      vi.mocked(webapi.getConditionErasReport).mockResolvedValue({
+        success: false,
+        error: new ApiError('Failed to fetch condition eras report data', 0, null),
+      })
 
       await store.fetchReport(123, 'SYNPUF', 'condition-eras')
 
@@ -836,10 +843,13 @@ describe('Reports Store', () => {
       expect(store.loading).toBe(false)
     })
 
-    it('should handle null response from drug-eras API', async () => {
+    it('should handle a failed response from drug-eras API', async () => {
       const store = useReportsStore()
 
-      vi.mocked(webapi.getDrugErasReport).mockResolvedValue(null)
+      vi.mocked(webapi.getDrugErasReport).mockResolvedValue({
+        success: false,
+        error: new ApiError('Failed to fetch drug eras report data', 0, null),
+      })
 
       await store.fetchReport(123, 'SYNPUF', 'drug-eras')
 
@@ -871,7 +881,7 @@ describe('Reports Store', () => {
 
       vi.mocked(webapi.getPersonReport).mockImplementation(async () => {
         loadingDuringFetch = store.loading
-        return mockRawData
+        return { success: true, data: mockRawData }
       })
       vi.mocked(mapper.mapPersonReport).mockReturnValue(mockMappedData)
 
@@ -892,7 +902,7 @@ describe('Reports Store', () => {
         demographics: { gender: [], race: [], ethnicity: [] }
       }
 
-      vi.mocked(webapi.getPersonReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getPersonReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapPersonReport).mockReturnValue(mockMappedData)
 
       await store.fetchReport(123, 'SYNPUF', 'person')

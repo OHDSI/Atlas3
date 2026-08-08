@@ -52,7 +52,7 @@
 import { ref, computed, watch } from 'vue'
 import { AtlasCard } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
-import { getIncidenceRateReport } from '@/services/webapi'
+import { getIncidenceRateReport } from '@/services/incidence-rate.service'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { logger } from '@/utils/logger'
 

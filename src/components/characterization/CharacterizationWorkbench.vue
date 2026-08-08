@@ -158,7 +158,7 @@ import { useCharacterizationStore } from '@/stores/characterization'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { useCharacterizationResults } from '@/composables/useCharacterizationResults'
 import { isTerminalStatus } from '@/composables/useExecutionPolling'
-import { getCohortGenerationInfo } from '@/services/webapi'
+import { getCohortGenerationInfo } from '@/services/cohort-definition.service'
 import { logger } from '@/utils/logger'
 import {
   DEFAULT_TABLE1_CONFIG, DEFAULT_TABLE1_FILTERS,

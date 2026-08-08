@@ -11,11 +11,11 @@ import ClinicalDomainReport from '@/components/datasources/ClinicalDomainReport.
 import DomainPrevalenceTreemap from '@/components/datasources/DomainPrevalenceTreemap.vue'
 import DomainPrevalenceTable from '@/components/datasources/DomainPrevalenceTable.vue'
 import { useDataSourcesStore } from '@/stores/datasources'
-import { getCDMDrilldown } from '@/services/webapi'
+import { getCDMDrilldown } from '@/services/report.service'
 import type { ClinicalDomainReport as ClinicalDomainReportData } from '@/models/datasource.types'
 
-vi.mock('@/services/webapi', () => ({
-  getCDMDrilldown: vi.fn().mockResolvedValue({}),
+vi.mock('@/services/report.service', () => ({
+  getCDMDrilldown: vi.fn().mockResolvedValue({ success: true, data: {} }),
 }))
 
 // Mock the child components with props
