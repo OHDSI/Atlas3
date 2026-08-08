@@ -385,7 +385,7 @@ export async function getCharacterizationResults(
     throw new ApiError(
       `Invalid response from POST /cohort-characterization/generation/${generationId}/result`,
       0,
-      null
+      JSON.stringify(data)
     )
   }, CONTEXT)
 }
