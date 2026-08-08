@@ -263,8 +263,14 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   top: 0;
   bottom: 0;
   width: 30%;
-  background: var(--atlas-color-outline-strong);
+  background: #aab2bf;
   border-radius: 0 0 0 6px;
+}
+
+/* A solid fill, not a hairline: light --atlas-color-outline-strong is
+ * rgba(0,0,0,.12), which washes this stripe out to near-white. */
+.v-theme--dark .entry-any-label::before {
+  background: var(--atlas-color-outline-strong);
 }
 
 .entry-any-label__text {

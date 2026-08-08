@@ -576,7 +576,7 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
 .ancestors-toggle {
   background: none;
   border: none;
-  color: var(--atlas-color-primary-text);
+  color: rgb(25, 118, 210);
   text-transform: none;
   font-size: 11px;
   cursor: pointer;
@@ -587,7 +587,17 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
 .ancestor { opacity: 0.8; }
 .anchor { background: var(--atlas-color-primary-tint); font-weight: 600; }
 .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
-.view-toggle button { border: 1px solid var(--atlas-color-outline-strong); background: none; padding: 2px 10px; font-size: 12px; }
+.view-toggle button { border: 1px solid rgba(0, 0, 0, 0.25); background: none; padding: 2px 10px; font-size: 12px; }
 .view-toggle button.on { background: var(--atlas-color-primary-tint-strong); font-weight: 600; }
 .dialog-footer { border-top: 1px solid var(--atlas-color-outline); padding-top: 10px; margin-top: 10px; }
+
+/* Light keeps its own literals here: --atlas-color-primary-text is navy, not
+ * the link blue this toggle has always used, and light --atlas-color-outline-
+ * strong is only rgba(0,0,0,.12) — half this border's weight. */
+.v-theme--dark .ancestors-toggle {
+  color: var(--atlas-color-primary-text);
+}
+.v-theme--dark .view-toggle button {
+  border-color: var(--atlas-color-outline-strong);
+}
 </style>
