@@ -7,7 +7,8 @@
 
 import { httpGet } from '@/services/http-client'
 import { logger } from '@/utils/logger'
-import { type ApiResult, success, failure } from '@/types/api'
+import { type ApiResult } from '@/types/api'
+import { unwrap, ApiError } from '@/services/api-error'
 import {
   JobExecutionListSchema,
   type Job,
@@ -43,7 +44,7 @@ function extractExecutions(data: unknown): JobExecution[] {
  * @returns Promise with array of job executions
  */
 export async function getJobs(): Promise<ApiResult<Job[]>> {
-  try {
+  return unwrap(async () => {
     const batchData = await httpGet<unknown>('/job/execution?comprehensivePage=true')
 
     // Validate Spring Batch response with Zod
@@ -51,7 +52,7 @@ export async function getJobs(): Promise<ApiResult<Job[]>> {
 
     if (!parsed.success) {
       logger.error('JobsService', 'Job executions validation error', parsed.error)
-      return failure('Invalid job executions response format')
+      throw new ApiError('Invalid job executions response format', 0, null)
     }
 
     // Extract executions from response (handles both array and paginated formats)
@@ -67,12 +68,8 @@ export async function getJobs(): Promise<ApiResult<Job[]>> {
       return b.startTime.getTime() - a.startTime.getTime()
     })
 
-    return success(jobs)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch job executions'
-    logger.error('JobsService', 'Failed to fetch job executions', error)
-    return failure(message)
-  }
+    return jobs
+  }, 'JobsService')
 }
 
 /**
