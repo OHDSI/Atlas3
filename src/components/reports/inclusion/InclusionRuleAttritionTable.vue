@@ -205,20 +205,13 @@ function cumulativeBarStyle(idx: number): Record<string, string> {
   text-align: left;
 }
 .attrition-table__grid th {
-  background: #f5f7fb;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.74);
-}
-.v-theme--dark .attrition-table__grid th {
   background: var(--atlas-color-surface-variant);
+  font-weight: 600;
   color: var(--atlas-color-on-surface);
 }
 .attrition-table__col-idx {
   width: 36px;
   text-align: right;
-  color: rgba(0, 0, 0, 0.54);
-}
-.v-theme--dark .attrition-table__col-idx {
   color: var(--atlas-color-on-surface-variant);
 }
 .attrition-table__col-num {

@@ -28,6 +28,18 @@
   --atlas-color-on-success: #000000;
   --atlas-color-on-warning: #000000;
   --atlas-color-on-danger: #000000;
+  --atlas-color-primary-tint: #ebf2fa;
+  --atlas-color-primary-tint-strong: #d8e6f5;
+  --atlas-color-cardinality-at-least: #69aed5;
+  --atlas-color-cardinality-at-least-tint: #ebf2fa;
+  --atlas-color-cardinality-at-least-text: #336b91;
+  --atlas-color-cardinality-at-least-chip-text: #4a90ba;
+  --atlas-color-cardinality-exactly: #2e7d32;
+  --atlas-color-cardinality-exactly-tint: #e8f5e9;
+  --atlas-color-cardinality-exactly-text: #2e7d32;
+  --atlas-color-cardinality-at-most: #336b91;
+  --atlas-color-cardinality-at-most-tint: #e3ecf3;
+  --atlas-color-cardinality-at-most-text: #336b91;
   --atlas-radius-sm: 4px;
   --atlas-radius-md: 8px;
   --atlas-radius-lg: 12px;
@@ -76,4 +88,16 @@
   --atlas-color-on-success: rgba(0,0,0,.87);
   --atlas-color-on-warning: rgba(0,0,0,.87);
   --atlas-color-on-danger: rgba(0,0,0,.87);
+  --atlas-color-primary-tint: color-mix(in srgb, #6aa3cb 14%, #161618);
+  --atlas-color-primary-tint-strong: color-mix(in srgb, #6aa3cb 24%, #161618);
+  --atlas-color-cardinality-at-least: #4aa3f0;
+  --atlas-color-cardinality-at-least-tint: color-mix(in srgb, #4aa3f0 14%, #161618);
+  --atlas-color-cardinality-at-least-text: #4aa3f0;
+  --atlas-color-cardinality-at-least-chip-text: #4aa3f0;
+  --atlas-color-cardinality-exactly: #5cc16a;
+  --atlas-color-cardinality-exactly-tint: color-mix(in srgb, #5cc16a 14%, #161618);
+  --atlas-color-cardinality-exactly-text: #5cc16a;
+  --atlas-color-cardinality-at-most: #6aa3cb;
+  --atlas-color-cardinality-at-most-tint: color-mix(in srgb, #6aa3cb 14%, #161618);
+  --atlas-color-cardinality-at-most-text: #6aa3cb;
 }

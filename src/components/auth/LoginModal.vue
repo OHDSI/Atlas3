@@ -269,12 +269,8 @@ function close() {
 
 .login-card__subtitle {
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.55);
-  margin: 0 0 28px;
-}
-
-.v-theme--dark .login-card__subtitle {
   color: var(--atlas-color-on-surface-variant);
+  margin: 0 0 28px;
 }
 
 .login-card__body {
@@ -285,13 +281,9 @@ function close() {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--atlas-color-on-surface-variant);
   margin: 0 0 12px;
   text-align: center;
-}
-
-.v-theme--dark .login-card__providers-label {
-  color: var(--atlas-color-on-surface-variant);
 }
 
 .login-card__providers {
@@ -356,11 +348,7 @@ function close() {
   text-align: center;
   font-size: 11px;
   letter-spacing: 0.04em;
-  color: rgba(0, 0, 0, 0.4);
-  border-top: 1px solid rgba(var(--v-theme-on-surface), 0.06);
-}
-
-.v-theme--dark .login-card__footer {
   color: var(--atlas-color-on-surface-variant);
+  border-top: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 }
 </style>

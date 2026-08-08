@@ -567,7 +567,7 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
   font-size: 11px;
   text-transform: uppercase;
   opacity: 0.65;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid var(--atlas-color-outline);
   padding: 6px 8px;
 }
 .hierarchy-table :deep(td) { border-bottom: 1px solid var(--atlas-color-outline-variant); padding: 5px 8px; }
@@ -576,7 +576,7 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
 .ancestors-toggle {
   background: none;
   border: none;
-  color: rgb(25, 118, 210);
+  color: var(--atlas-color-primary-text);
   text-transform: none;
   font-size: 11px;
   cursor: pointer;
@@ -585,25 +585,9 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
 }
 .dist { font-size: 11px; opacity: 0.55; margin-left: 6px; }
 .ancestor { opacity: 0.8; }
-.anchor { background: rgba(25, 118, 210, 0.12); font-weight: 600; }
+.anchor { background: var(--atlas-color-primary-tint); font-weight: 600; }
 .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
-.view-toggle button { border: 1px solid rgba(0, 0, 0, 0.25); background: none; padding: 2px 10px; font-size: 12px; }
-.view-toggle button.on { background: rgba(25, 118, 210, 0.18); font-weight: 600; }
+.view-toggle button { border: 1px solid var(--atlas-color-outline-strong); background: none; padding: 2px 10px; font-size: 12px; }
+.view-toggle button.on { background: var(--atlas-color-primary-tint-strong); font-weight: 600; }
 .dialog-footer { border-top: 1px solid var(--atlas-color-outline); padding-top: 10px; margin-top: 10px; }
-
-.v-theme--dark .hierarchy-table th {
-  border-bottom-color: var(--atlas-color-outline);
-}
-.v-theme--dark .ancestors-toggle {
-  color: var(--atlas-color-primary-text);
-}
-.v-theme--dark .anchor {
-  background: color-mix(in srgb, var(--atlas-color-primary) 16%, transparent);
-}
-.v-theme--dark .view-toggle button {
-  border-color: var(--atlas-color-outline-strong);
-}
-.v-theme--dark .view-toggle button.on {
-  background: color-mix(in srgb, var(--atlas-color-primary) 24%, transparent);
-}
 </style>

@@ -193,12 +193,8 @@ function removeCohort(id: number) {
 
 .linked-cohort-picker__empty {
   padding: 12px 0;
-  color: #666;
-  font-style: italic;
-}
-
-.v-theme--dark .linked-cohort-picker__empty {
   color: var(--atlas-color-on-surface-variant);
+  font-style: italic;
 }
 
 .linked-cohort-picker__list {

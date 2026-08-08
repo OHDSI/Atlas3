@@ -351,9 +351,6 @@ async function saveDescription() {
 .role-details__label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
-}
-.v-theme--dark .role-details__label {
   color: var(--atlas-color-on-surface-variant);
 }
 
@@ -394,9 +391,6 @@ async function saveDescription() {
 .role-details__metadata-item {
   display: flex;
   align-items: center;
-  color: rgba(0, 0, 0, 0.6);
-}
-.v-theme--dark .role-details__metadata-item {
   color: var(--atlas-color-on-surface-variant);
 }
 </style>

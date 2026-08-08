@@ -64,15 +64,11 @@ const { tv } = useI18n()
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 2px solid rgba(15, 23, 42, 0.15);
+  border: 2px solid var(--atlas-color-outline-strong);
   background: rgb(var(--v-theme-surface-variant));
 }
 .color-dot--disabled {
   cursor: not-allowed;
   opacity: 0.5;
-}
-
-.v-theme--dark .color-dot {
-  border-color: var(--atlas-color-outline-strong);
 }
 </style>

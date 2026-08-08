@@ -298,11 +298,8 @@ defineExpose({ steps, chartOption, exportCsv, retentionColor })
 .attrition-funnel__title {
   font-size: 15px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.86);
-  letter-spacing: -0.2px;
-}
-.v-theme--dark .attrition-funnel__title {
   color: var(--atlas-color-on-surface);
+  letter-spacing: -0.2px;
 }
 .attrition-funnel__empty {
   display: flex;
@@ -315,16 +312,10 @@ defineExpose({ steps, chartOption, exportCsv, retentionColor })
 .attrition-funnel__empty-title {
   font-size: 14px;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
-}
-.v-theme--dark .attrition-funnel__empty-title {
   color: var(--atlas-color-on-surface-variant);
 }
 .attrition-funnel__empty-hint {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.45);
-}
-.v-theme--dark .attrition-funnel__empty-hint {
   color: var(--atlas-color-on-surface-variant);
 }
 .attrition-funnel__footer {
@@ -333,25 +324,16 @@ defineExpose({ steps, chartOption, exportCsv, retentionColor })
   gap: 8px;
   padding: 10px 16px 12px;
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--atlas-color-on-surface-variant);
   border-top: 1px solid var(--atlas-color-outline-variant);
   flex-wrap: wrap;
 }
-.v-theme--dark .attrition-funnel__footer {
-  color: var(--atlas-color-on-surface-variant);
-}
 .attrition-funnel__count {
-  color: rgba(0, 0, 0, 0.86);
+  color: var(--atlas-color-on-surface);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
-.v-theme--dark .attrition-funnel__count {
-  color: var(--atlas-color-on-surface);
-}
 .attrition-funnel__arrow {
-  color: rgba(0, 0, 0, 0.35);
-}
-.v-theme--dark .attrition-funnel__arrow {
   color: var(--atlas-color-on-surface-variant);
 }
 .attrition-funnel__retained {

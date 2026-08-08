@@ -58,11 +58,7 @@ const conceptSets = computed(
 
 <style scoped>
 .muted {
-  color: #888;
-  padding: 16px;
-}
-
-.v-theme--dark .muted {
   color: var(--atlas-color-on-surface-variant);
+  padding: 16px;
 }
 </style>

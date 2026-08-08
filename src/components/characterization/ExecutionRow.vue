@@ -152,11 +152,7 @@ function onViewResults() {
   gap: 12px;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.v-theme--dark .execution-row {
-  border-bottom-color: var(--atlas-color-outline);
+  border-bottom: 1px solid var(--atlas-color-outline);
 }
 
 .execution-row:last-child {
@@ -172,11 +168,6 @@ function onViewResults() {
 .execution-row__start,
 .execution-row__duration {
   font-size: 0.875rem;
-  color: rgba(0, 0, 0, 0.7);
-}
-
-.v-theme--dark .execution-row__start,
-.v-theme--dark .execution-row__duration {
   color: var(--atlas-color-on-surface-variant);
 }
 

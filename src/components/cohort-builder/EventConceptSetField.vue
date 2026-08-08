@@ -89,7 +89,7 @@ const emit = defineEmits<{
   flex: 0 0 auto;
   min-width: 140px;
   color: rgb(var(--v-theme-primary));
-  background: #ebf2fa;
+  background: var(--atlas-color-primary-tint);
   font-size: 13px;
   font-weight: 500;
   border-right: 1px solid rgb(var(--v-theme-primary));
@@ -113,11 +113,5 @@ const emit = defineEmits<{
 }
 .event-concept-set-field--compact .event-concept-set-field__input {
   padding: 0;
-}
-
-/* #ebf2fa has no exact-match token; light stays byte-identical, dark uses
- * a primary tint over the dark surface. */
-.v-theme--dark .event-concept-set-field__title {
-  background: color-mix(in srgb, var(--atlas-color-primary) 14%, var(--atlas-color-surface));
 }
 </style>

@@ -123,28 +123,19 @@ const headers = computed(() => [
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--atlas-color-on-surface-variant);
   justify-content: space-between;
   font-weight: 600;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--atlas-color-outline);
   display: flex;
   align-items: center;
 }
-.muted { color: rgba(0, 0, 0, 0.4); font-size: 11px; }
-.empty { padding: 24px; color: rgba(0, 0, 0, 0.6); font-size: 13px; margin: 0; text-align: center; }
+.muted { color: var(--atlas-color-on-surface-variant); font-size: 11px; }
+.empty { padding: 24px; color: var(--atlas-color-on-surface-variant); font-size: 13px; margin: 0; text-align: center; }
 .concept-link {
   color: rgb(var(--v-theme-primary));
   text-decoration: none;
 }
 .concept-link:hover { text-decoration: underline; }
-
-.v-theme--dark .card-title,
-.v-theme--dark .muted,
-.v-theme--dark .empty {
-  color: var(--atlas-color-on-surface-variant);
-}
-.v-theme--dark .card-title {
-  border-bottom-color: var(--atlas-color-outline);
-}
 </style>

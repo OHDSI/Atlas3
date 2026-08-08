@@ -575,7 +575,7 @@ defineExpose({
 
 /* AT_LEAST - Light Blue */
 .vertical-label-container:has(.match-type-label[data-type='AT_LEAST']) {
-  border: 1px solid #69aed5;
+  border: 1px solid var(--atlas-color-cardinality-at-least);
 }
 .vertical-label-container:has(.match-type-label[data-type='AT_LEAST'])::before {
   content: '';
@@ -584,16 +584,16 @@ defineExpose({
   top: 0;
   bottom: 0;
   width: 30%;
-  background: #69aed5;
+  background: var(--atlas-color-cardinality-at-least);
   border-radius: 0 0 0 6px;
 }
 .match-type-label[data-type='AT_LEAST'] {
-  color: #69aed5;
+  color: var(--atlas-color-cardinality-at-least);
 }
 
 /* AT_MOST - Darker Blue */
 .vertical-label-container:has(.match-type-label[data-type='AT_MOST']) {
-  border: 1px solid #336b91;
+  border: 1px solid var(--atlas-color-cardinality-at-most);
 }
 .vertical-label-container:has(.match-type-label[data-type='AT_MOST'])::before {
   content: '';
@@ -602,11 +602,11 @@ defineExpose({
   top: 0;
   bottom: 0;
   width: 30%;
-  background: #336b91;
+  background: var(--atlas-color-cardinality-at-most);
   border-radius: 0 0 0 6px;
 }
 .match-type-label[data-type='AT_MOST'] {
-  color: #336b91;
+  color: var(--atlas-color-cardinality-at-most-text);
 }
 
 .segmented-buttons {
@@ -632,47 +632,13 @@ defineExpose({
   color: var(--atlas-color-accent) !important;
 }
 .match-chip--at_least.v-btn--variant-tonal {
-  color: #4a90ba !important;
+  color: var(--atlas-color-cardinality-at-least-chip-text) !important;
 }
 .match-chip--at_most.v-btn--variant-tonal {
-  color: #336b91 !important;
+  color: var(--atlas-color-cardinality-at-most-text) !important;
 }
 
 .no-events-text {
-  color: #666;
-}
-
-/* AT_LEAST/AT_MOST hues have no exact-match token; light stays
- * byte-identical, dark is remapped onto semantic tokens. AT_LEAST -> info
- * (distinct blue from primary/ALL). AT_MOST -> a primary/info blend so it
- * reads as a third, distinguishable blue rather than colliding with ALL. */
-.v-theme--dark .vertical-label-container:has(.match-type-label[data-type='AT_LEAST']) {
-  border-color: var(--atlas-color-info);
-}
-.v-theme--dark .vertical-label-container:has(.match-type-label[data-type='AT_LEAST'])::before {
-  background: var(--atlas-color-info);
-}
-.v-theme--dark .match-type-label[data-type='AT_LEAST'] {
-  color: var(--atlas-color-info-text);
-}
-.v-theme--dark .match-chip--at_least.v-btn--variant-tonal {
-  color: var(--atlas-color-info-text) !important;
-}
-
-.v-theme--dark .vertical-label-container:has(.match-type-label[data-type='AT_MOST']) {
-  border-color: color-mix(in srgb, var(--atlas-color-primary) 60%, var(--atlas-color-info) 40%);
-}
-.v-theme--dark .vertical-label-container:has(.match-type-label[data-type='AT_MOST'])::before {
-  background: color-mix(in srgb, var(--atlas-color-primary) 60%, var(--atlas-color-info) 40%);
-}
-.v-theme--dark .match-type-label[data-type='AT_MOST'] {
-  color: color-mix(in srgb, var(--atlas-color-primary) 60%, var(--atlas-color-info) 40%);
-}
-.v-theme--dark .match-chip--at_most.v-btn--variant-tonal {
-  color: color-mix(in srgb, var(--atlas-color-primary) 60%, var(--atlas-color-info) 40%) !important;
-}
-
-.v-theme--dark .no-events-text {
   color: var(--atlas-color-on-surface-variant);
 }
 </style>

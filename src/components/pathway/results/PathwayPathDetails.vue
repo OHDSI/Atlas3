@@ -78,13 +78,6 @@ const rows = computed(() =>
 .path-details th,
 .path-details td {
   padding: 4px 8px;
-  border-bottom: 1px solid #eee;
-}
-
-/* #eee has no exact-match token; light stays byte-identical, dark uses the
- * hairline outline token. */
-.v-theme--dark .path-details th,
-.v-theme--dark .path-details td {
-  border-bottom-color: var(--atlas-color-outline);
+  border-bottom: 1px solid var(--atlas-color-outline);
 }
 </style>

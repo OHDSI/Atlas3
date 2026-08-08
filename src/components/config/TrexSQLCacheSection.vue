@@ -585,14 +585,9 @@ watch(
 }
 
 .trexsql-cache-section__item {
-  border: 1px solid var(--atlas-color-outline);
+  border: 1px solid var(--atlas-color-outline-strong);
   border-radius: 8px;
   margin-bottom: 12px;
-  background: var(--atlas-color-surface-variant);
-}
-
-.v-theme--dark .trexsql-cache-section__item {
-  border-color: var(--atlas-color-outline-strong);
   background: var(--atlas-color-surface-variant);
 }
 

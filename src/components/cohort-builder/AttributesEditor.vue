@@ -801,7 +801,7 @@ function validatePeriodDates(index: number) {
   flex: 1;
   max-width: 20%;
   color: rgb(var(--v-theme-primary));
-  background: #ebf2fa;
+  background: var(--atlas-color-primary-tint);
   font-size: 13px;
   font-weight: 500;
   border-right: 1px solid rgb(var(--v-theme-primary));
@@ -854,7 +854,7 @@ function validatePeriodDates(index: number) {
 .attribute-actions {
   display: flex;
   align-items: center;
-  background: #ebf2fa;
+  background: var(--atlas-color-primary-tint);
   padding: 0 4px;
 }
 
@@ -863,16 +863,6 @@ function validatePeriodDates(index: number) {
 }
 
 .attribute-actions .v-btn:hover {
-  background: #d8e6f5;
-}
-
-/* #ebf2fa/#d8e6f5 have no exact-match token; light stays byte-identical,
- * dark uses a primary tint over the dark surface. */
-.v-theme--dark .attribute-title,
-.v-theme--dark .attribute-actions {
-  background: color-mix(in srgb, var(--atlas-color-primary) 14%, var(--atlas-color-surface));
-}
-.v-theme--dark .attribute-actions .v-btn:hover {
-  background: color-mix(in srgb, var(--atlas-color-primary) 24%, var(--atlas-color-surface));
+  background: var(--atlas-color-primary-tint-strong);
 }
 </style>

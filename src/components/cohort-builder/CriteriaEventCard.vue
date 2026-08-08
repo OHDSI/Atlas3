@@ -672,25 +672,37 @@ function addAttribute(attributeKey: string, attributeType: string) {
   cursor: pointer;
 }
 .cardinality-at_least {
-  border-right: 1px solid #69aed5;
-  background: linear-gradient(to right, #69aed5 30%, #ebf2fa 30%);
+  border-right: 1px solid var(--atlas-color-cardinality-at-least);
+  background: linear-gradient(
+    to right,
+    var(--atlas-color-cardinality-at-least) 30%,
+    var(--atlas-color-cardinality-at-least-tint) 30%
+  );
 }
 .cardinality-at_least .cardinality-label {
-  color: #336b91;
+  color: var(--atlas-color-cardinality-at-least-text);
 }
 .cardinality-exactly {
-  border-right: 1px solid #2e7d32;
-  background: linear-gradient(to right, #2e7d32 30%, #e8f5e9 30%);
+  border-right: 1px solid var(--atlas-color-cardinality-exactly);
+  background: linear-gradient(
+    to right,
+    var(--atlas-color-cardinality-exactly) 30%,
+    var(--atlas-color-cardinality-exactly-tint) 30%
+  );
 }
 .cardinality-exactly .cardinality-label {
-  color: #2e7d32;
+  color: var(--atlas-color-cardinality-exactly-text);
 }
 .cardinality-at_most {
-  border-right: 1px solid #336b91;
-  background: linear-gradient(to right, #336b91 30%, #e3ecf3 30%);
+  border-right: 1px solid var(--atlas-color-cardinality-at-most);
+  background: linear-gradient(
+    to right,
+    var(--atlas-color-cardinality-at-most) 30%,
+    var(--atlas-color-cardinality-at-most-tint) 30%
+  );
 }
 .cardinality-at_most .cardinality-label {
-  color: #336b91;
+  color: var(--atlas-color-cardinality-at-most-text);
 }
 .cardinality-label {
   writing-mode: sideways-lr;
@@ -754,67 +766,13 @@ function addAttribute(attributeKey: string, attributeType: string) {
  * derives both text and tint from currentColor). !important is needed to
  * outrank the .text-primary utility that color="primary" stamps on v-btn. */
 .cardinality-chip--at_least.v-btn--variant-tonal {
-  color: #4a90ba !important;
+  color: var(--atlas-color-cardinality-at-least-chip-text) !important;
 }
 .cardinality-chip--exactly.v-btn--variant-tonal {
-  color: #2e7d32 !important;
+  color: var(--atlas-color-cardinality-exactly-text) !important;
 }
 .cardinality-chip--at_most.v-btn--variant-tonal {
-  color: #336b91 !important;
-}
-
-/* The cardinality hues (#69aed5/#2e7d32/#336b91 and their tints) have no
- * exact-match token, so light stays byte-identical and dark is remapped
- * onto the closest semantic tokens: AT_LEAST -> info, EXACTLY -> success,
- * AT_MOST -> primary. */
-.v-theme--dark .cardinality-at_least {
-  border-right-color: var(--atlas-color-info);
-  background: linear-gradient(
-    to right,
-    var(--atlas-color-info) 30%,
-    color-mix(in srgb, var(--atlas-color-info) 14%, var(--atlas-color-surface)) 30%
-  );
-}
-.v-theme--dark .cardinality-at_least .cardinality-label {
-  color: var(--atlas-color-info-text);
-}
-
-.v-theme--dark .cardinality-exactly {
-  border-right-color: var(--atlas-color-success);
-  background: linear-gradient(
-    to right,
-    var(--atlas-color-success) 30%,
-    color-mix(in srgb, var(--atlas-color-success) 14%, var(--atlas-color-surface)) 30%
-  );
-}
-.v-theme--dark .cardinality-exactly .cardinality-label {
-  color: var(--atlas-color-success-text);
-}
-
-.v-theme--dark .cardinality-at_most {
-  border-right-color: var(--atlas-color-primary);
-  background: linear-gradient(
-    to right,
-    var(--atlas-color-primary) 30%,
-    color-mix(in srgb, var(--atlas-color-primary) 14%, var(--atlas-color-surface)) 30%
-  );
-}
-.v-theme--dark .cardinality-at_most .cardinality-label {
-  color: var(--atlas-color-primary-text);
-}
-
-.v-theme--dark .cardinality-chip--at_least.v-btn--variant-tonal {
-  color: var(--atlas-color-info-text) !important;
-}
-.v-theme--dark .cardinality-chip--exactly.v-btn--variant-tonal {
-  color: var(--atlas-color-success-text) !important;
-}
-.v-theme--dark .cardinality-chip--at_most.v-btn--variant-tonal {
-  color: var(--atlas-color-primary-text) !important;
-}
-
-.v-theme--dark .source-concept-row__title {
-  background: color-mix(in srgb, var(--atlas-color-primary) 14%, var(--atlas-color-surface));
+  color: var(--atlas-color-cardinality-at-most-text) !important;
 }
 
 .source-concept-row {

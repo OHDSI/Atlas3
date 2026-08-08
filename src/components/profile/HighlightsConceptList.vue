@@ -146,7 +146,7 @@ function apply(conceptId: number, color: HighlightColor) {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 2px solid rgba(15, 23, 42, 0.15);
+  border: 2px solid var(--atlas-color-outline-strong);
   background: transparent;
   cursor: pointer;
   padding: 0;
@@ -156,7 +156,7 @@ function apply(conceptId: number, color: HighlightColor) {
 }
 .color-dot:hover {
   transform: scale(1.1);
-  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 0 0 2px var(--atlas-color-outline-strong);
 }
 .color-dot--empty {
   background: rgb(var(--v-theme-surface-variant));
@@ -180,7 +180,7 @@ function apply(conceptId: number, color: HighlightColor) {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--atlas-color-outline-strong);
   cursor: pointer;
   padding: 0;
   display: inline-flex;
@@ -191,7 +191,7 @@ function apply(conceptId: number, color: HighlightColor) {
     transform 0.12s ease;
 }
 .swatch:hover {
-  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 0 0 2px var(--atlas-color-outline-strong);
   transform: scale(1.05);
 }
 .swatch--active {
@@ -200,18 +200,5 @@ function apply(conceptId: number, color: HighlightColor) {
 .swatch--none {
   background: rgb(var(--v-theme-surface-variant));
   color: rgb(var(--v-theme-on-surface-variant));
-}
-
-.v-theme--dark .color-dot {
-  border-color: var(--atlas-color-outline-strong);
-}
-.v-theme--dark .color-dot:hover {
-  box-shadow: 0 0 0 2px var(--atlas-color-outline-strong);
-}
-.v-theme--dark .swatch {
-  border-color: var(--atlas-color-outline-strong);
-}
-.v-theme--dark .swatch:hover {
-  box-shadow: 0 0 0 2px var(--atlas-color-outline-strong);
 }
 </style>

@@ -269,7 +269,7 @@ function handleCardClick() {
 
 .cohort-card__meta-row dd {
   margin: 0;
-  color: rgba(0, 0, 0, 0.74);
+  color: var(--atlas-color-on-surface);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -302,11 +302,5 @@ function handleCardClick() {
 .cohort-card:hover .cohort-card__action-btn,
 .cohort-card:focus-within .cohort-card__action-btn {
   opacity: 1;
-}
-
-/* rgba(0,0,0,.74) has no exact-match token; light stays byte-identical,
- * dark uses the body-text token. */
-.v-theme--dark .cohort-card__meta-row dd {
-  color: var(--atlas-color-on-surface);
 }
 </style>

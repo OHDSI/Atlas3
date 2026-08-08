@@ -202,12 +202,9 @@ const legend = computed(() => {
   display: flex;
   gap: 16px;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.66);
+  color: var(--atlas-color-on-surface-variant);
   margin-top: 8px;
   flex-wrap: wrap;
-}
-.v-theme--dark .inclusion-treemap__legend {
-  color: var(--atlas-color-on-surface-variant);
 }
 .inclusion-treemap__swatch {
   display: inline-flex;
