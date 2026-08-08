@@ -31,13 +31,18 @@ function scopedStyleBlocks(source: string): string[] {
 // catches it. The fix is to drop the `:global()` wrapper — ancestor
 // selectors in Vue 3 scoped CSS (e.g. `.v-theme--dark .foo { ... }`) are
 // already left unscoped, so `:global()` is never needed here.
+//
+// The same miscompilation happens for ANY ancestor wrapped in :global(),
+// not just .v-theme--dark (e.g. `:global(.some-other-class) .target`), so
+// the check below matches a :global(...) wrapper followed by a further
+// compound selector, rather than hard-coding the .v-theme--dark class name.
 describe('scoped dark-mode selectors', () => {
-  it('never wraps .v-theme--dark in :global() inside a scoped <style> block', () => {
+  it('never wraps an ancestor in :global() followed by a further selector inside a scoped <style> block', () => {
     const offenders: string[] = []
     for (const file of listVueFiles(SRC_DIR)) {
       const source = readFileSync(file, 'utf-8')
       for (const block of scopedStyleBlocks(source)) {
-        if (/:global\(\s*\.v-theme--/.test(block)) {
+        if (/:global\([^)]*\)\s*\S/.test(block)) {
           offenders.push(path.relative(SRC_DIR, file))
         }
       }
@@ -46,12 +51,12 @@ describe('scoped dark-mode selectors', () => {
     expect(
       offenders,
       offenders.length
-        ? `Found ":global(.v-theme--...)" inside <style scoped> in:\n${offenders.join('\n')}\n\n` +
-            'This pattern silently compiles to a bare ".v-theme--dark { ... }" rule ' +
+        ? `Found ":global(...) <selector>" inside <style scoped> in:\n${offenders.join('\n')}\n\n` +
+            'This pattern silently compiles to a bare ":global(...) { ... }" rule ' +
             '(everything after :global() is dropped), which leaks its declarations onto ' +
-            'the theme root instead of the intended element. Use a plain ".v-theme--dark ' +
-            '.your-selector { ... }" descendant selector instead — no :global() wrapper needed, ' +
-            'since ancestor selectors in Vue 3 scoped CSS are already left unscoped.'
+            'the wrapped ancestor instead of the intended descendant. Use a plain ' +
+            '".ancestor .your-selector { ... }" descendant selector instead — no :global() ' +
+            'wrapper needed, since ancestor selectors in Vue 3 scoped CSS are already left unscoped.'
         : undefined,
     ).toEqual([])
   })
