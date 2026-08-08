@@ -82,7 +82,7 @@ describe('usePathwayBuilder', () => {
     const store = usePathwayStore()
     store.createNewPathway()
     if (store.currentPathway) store.currentPathway.id = 5
-    vi.mocked(webapi.deletePathway).mockResolvedValue(true)
+    vi.mocked(webapi.deletePathway).mockResolvedValue({ success: true, data: undefined })
     const { remove } = usePathwayBuilder()
     const ok = await remove()
     expect(webapi.deletePathway).toHaveBeenCalledWith(5)
@@ -188,12 +188,15 @@ describe('usePathwayBuilder', () => {
     const store = usePathwayStore()
     store.createNewPathway()
     if (store.currentPathway) store.currentPathway.id = 5
-    vi.mocked(webapi.deletePathway).mockResolvedValue(false)
+    vi.mocked(webapi.deletePathway).mockResolvedValue({
+      success: false,
+      error: { message: 'conflict' } as never,
+    })
 
     const { remove, feedback } = usePathwayBuilder()
     const ok = await remove()
     expect(ok).toBe(false)
     expect(feedback.value?.color).toBe('error')
-    expect(feedback.value?.message).toBe('Delete failed')
+    expect(feedback.value?.message).toBe('Delete failed: conflict')
   })
 })

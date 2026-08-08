@@ -52,9 +52,21 @@ describe('usePathwayGeneration', () => {
   })
 
   it('cancel calls cancelPathwayGeneration and stops polling', async () => {
-    vi.mocked(webapi.cancelPathwayGeneration).mockResolvedValue(true)
+    vi.mocked(webapi.cancelPathwayGeneration).mockResolvedValue({ success: true, data: undefined })
     const gen = usePathwayGeneration(10)
-    await gen.cancel('cdm')
+    const ok = await gen.cancel('cdm')
     expect(webapi.cancelPathwayGeneration).toHaveBeenCalledWith(10, 'cdm')
+    expect(ok).toBe(true)
+  })
+
+  it('cancel surfaces the failure reason instead of a bare false', async () => {
+    vi.mocked(webapi.cancelPathwayGeneration).mockResolvedValue({
+      success: false,
+      error: { message: 'generation already finished' } as never,
+    })
+    const gen = usePathwayGeneration(10)
+    const ok = await gen.cancel('cdm')
+    expect(ok).toBe(false)
+    expect(gen.error.value).toBe('generation already finished')
   })
 })

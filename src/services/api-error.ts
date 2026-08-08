@@ -28,3 +28,19 @@ export async function unwrap<T>(fn: () => Promise<T>, context: string): Promise<
     return failure(apiError)
   }
 }
+
+/**
+ * The WebAPI list endpoint may return either a bare array or a Spring
+ * Data-style page wrapper `{ content: [...] }`. Normalise to a plain array.
+ */
+export function unwrapList<T = unknown>(payload: unknown): T[] {
+  if (Array.isArray(payload)) return payload as T[]
+  if (
+    payload !== null &&
+    typeof payload === 'object' &&
+    Array.isArray((payload as { content?: unknown }).content)
+  ) {
+    return (payload as { content: T[] }).content
+  }
+  return []
+}

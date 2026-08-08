@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { usePathwayStore } from '@/stores/pathway'
 import { PATHWAY_DEFAULTS, PATHWAY_AUTO_SAVE_INTERVAL_MS } from '@/models/pathway.types'
+import { ApiError } from '@/services/api-error'
 
 vi.mock('@/services/webapi', () => ({
   getPathway: vi.fn().mockResolvedValue({
@@ -12,9 +13,9 @@ vi.mock('@/services/webapi', () => ({
       combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
     },
   }),
-  existsPathway: vi.fn().mockResolvedValue(0),
-  assignPathwayTag: vi.fn().mockResolvedValue(true),
-  unassignPathwayTag: vi.fn().mockResolvedValue(true),
+  existsPathway: vi.fn().mockResolvedValue({ success: true, data: 0 }),
+  assignPathwayTag: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+  unassignPathwayTag: vi.fn().mockResolvedValue({ success: true, data: undefined }),
 }))
 
 vi.mock('@/services/pathway-versions.service', () => ({
@@ -449,8 +450,8 @@ describe('pathway store — tags', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     const webapi = await import('@/services/webapi')
-    vi.mocked(webapi.assignPathwayTag).mockResolvedValue(true)
-    vi.mocked(webapi.unassignPathwayTag).mockResolvedValue(true)
+    vi.mocked(webapi.assignPathwayTag).mockResolvedValue({ success: true, data: undefined })
+    vi.mocked(webapi.unassignPathwayTag).mockResolvedValue({ success: true, data: undefined })
   })
 
   it('addTag returns false when no pathway id', async () => {
@@ -483,7 +484,10 @@ describe('pathway store — tags', () => {
 
   it('addTag returns false when API call fails (does not push)', async () => {
     const webapi = await import('@/services/webapi')
-    vi.mocked(webapi.assignPathwayTag).mockResolvedValueOnce(false)
+    vi.mocked(webapi.assignPathwayTag).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('conflict', 409, null),
+    })
     const s = usePathwayStore()
     s.createNewPathway()
     s.currentPathway!.id = 7
@@ -514,7 +518,10 @@ describe('pathway store — tags', () => {
 
   it('removeTag returns false on API failure', async () => {
     const webapi = await import('@/services/webapi')
-    vi.mocked(webapi.unassignPathwayTag).mockResolvedValueOnce(false)
+    vi.mocked(webapi.unassignPathwayTag).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('conflict', 409, null),
+    })
     const s = usePathwayStore()
     s.createNewPathway()
     s.currentPathway!.id = 7

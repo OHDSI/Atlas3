@@ -41,8 +41,12 @@ export function useIncidenceRateBuilder() {
     }
 
     // Name uniqueness check
-    const existing = await existsIncidenceRate(ir.name, ir.id ?? 0)
-    if (existing > 0) {
+    const existsResult = await existsIncidenceRate(ir.name, ir.id ?? 0)
+    if (!existsResult.success) {
+      notify(`Could not verify name uniqueness: ${existsResult.error.message}`, 'error')
+      return false
+    }
+    if (existsResult.data > 0) {
       notify('An incidence rate with this name already exists', 'error')
       return false
     }
@@ -79,9 +83,9 @@ export function useIncidenceRateBuilder() {
 
   async function remove(): Promise<boolean> {
     if (!store.currentIR?.id) return false
-    const ok = await deleteIncidenceRate(store.currentIR.id)
-    if (!ok) {
-      notify('Delete failed', 'error')
+    const result = await deleteIncidenceRate(store.currentIR.id)
+    if (!result.success) {
+      notify(`Delete failed: ${result.error.message}`, 'error')
       return false
     }
     notify('Deleted', 'success')

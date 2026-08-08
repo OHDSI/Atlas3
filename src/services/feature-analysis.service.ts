@@ -3,7 +3,7 @@
  * CRUD and metadata lookups for feature analyses (WebAPI /feature-analysis/...)
  */
 import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
-import { unwrap, ApiError } from '@/services/api-error'
+import { unwrap, unwrapList, ApiError } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import {
   FeatureAnalysisSchema,
@@ -18,22 +18,6 @@ import {
 import { z } from 'zod'
 
 const CONTEXT = 'FeatureAnalysisService'
-
-/**
- * The WebAPI list endpoint may return either a bare array or a Spring
- * Data-style page wrapper `{ content: [...] }`. Normalise to a plain array.
- */
-function unwrapList<T = unknown>(payload: unknown): T[] {
-  if (Array.isArray(payload)) return payload as T[]
-  if (
-    payload !== null &&
-    typeof payload === 'object' &&
-    Array.isArray((payload as { content?: unknown }).content)
-  ) {
-    return (payload as { content: T[] }).content
-  }
-  return []
-}
 
 /**
  * List all feature analyses.

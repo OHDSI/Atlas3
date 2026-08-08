@@ -377,21 +377,29 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
 
   async function addTag(tag: Tag): Promise<boolean> {
     if (!currentIR.value?.id) return false
-    const ok = await assignIncidenceRateTag(currentIR.value.id, tag.id!)
-    if (ok && !currentIR.value.tags.some(t => t.id === tag.id)) {
+    const result = await assignIncidenceRateTag(currentIR.value.id, tag.id!)
+    if (!result.success) {
+      logger.error('IncidenceRate', 'addTag failed', result.error)
+      return false
+    }
+    if (!currentIR.value.tags.some(t => t.id === tag.id)) {
       currentIR.value.tags.push(tag)
       // tag mutations are metadata — do not mark dirty
     }
-    return ok
+    return true
   }
 
   async function removeTag(tagId: number): Promise<boolean> {
     if (!currentIR.value?.id) return false
-    const ok = await unassignIncidenceRateTag(currentIR.value.id, tagId)
-    if (ok && currentIR.value) {
+    const result = await unassignIncidenceRateTag(currentIR.value.id, tagId)
+    if (!result.success) {
+      logger.error('IncidenceRate', 'removeTag failed', result.error)
+      return false
+    }
+    if (currentIR.value) {
       currentIR.value.tags = currentIR.value.tags.filter(t => t.id !== tagId)
     }
-    return ok
+    return true
   }
 
   async function syncTags(newTags: Tag[]): Promise<void> {

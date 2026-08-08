@@ -49,9 +49,14 @@ export function usePathwayGeneration(pathwayId: number) {
   }
 
   async function cancel(sourceKey: string): Promise<boolean> {
-    const ok = await cancelPathwayGeneration(pathwayId, sourceKey)
-    if (ok) stopPolling()
-    return ok
+    const result = await cancelPathwayGeneration(pathwayId, sourceKey)
+    if (!result.success) {
+      error.value = result.error.message
+      logger.error('PathwayGeneration', 'cancel failed', result.error)
+      return false
+    }
+    stopPolling()
+    return true
   }
 
   // Use try/catch around onUnmounted in case the composable is invoked

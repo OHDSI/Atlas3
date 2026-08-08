@@ -75,14 +75,15 @@ export function usePathwayBuilder() {
   async function remove(): Promise<boolean> {
     const id = store.currentPathway?.id
     if (!id) return false
-    const ok = await deletePathway(id)
-    if (ok) {
+    const result = await deletePathway(id)
+    if (result.success) {
       notify('Pathway deleted', 'success')
       router.push('/pathways')
     } else {
-      notify('Delete failed', 'error')
+      notify(`Delete failed: ${result.error.message}`, 'error')
+      logger.error('PathwayBuilder', 'delete failed', result.error)
     }
-    return ok
+    return result.success
   }
 
   return { save, copy, remove, feedback }

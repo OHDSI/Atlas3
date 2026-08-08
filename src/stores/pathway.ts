@@ -260,21 +260,29 @@ export const usePathwayStore = defineStore('pathway', () => {
 
   async function addTag(tag: Tag): Promise<boolean> {
     if (!currentPathway.value?.id) return false
-    const ok = await assignPathwayTag(currentPathway.value.id, tag.id!)
-    if (ok && !currentPathway.value.tags.some(t => t.id === tag.id)) {
+    const result = await assignPathwayTag(currentPathway.value.id, tag.id!)
+    if (!result.success) {
+      logger.error('Pathway', 'addTag failed', result.error)
+      return false
+    }
+    if (!currentPathway.value.tags.some(t => t.id === tag.id)) {
       currentPathway.value.tags.push(tag)
       // intentionally do NOT mark dirty — tag mutations are metadata
     }
-    return ok
+    return true
   }
 
   async function removeTag(tagId: number): Promise<boolean> {
     if (!currentPathway.value?.id) return false
-    const ok = await unassignPathwayTag(currentPathway.value.id, tagId)
-    if (ok && currentPathway.value) {
+    const result = await unassignPathwayTag(currentPathway.value.id, tagId)
+    if (!result.success) {
+      logger.error('Pathway', 'removeTag failed', result.error)
+      return false
+    }
+    if (currentPathway.value) {
       currentPathway.value.tags = currentPathway.value.tags.filter(t => t.id !== tagId)
     }
-    return ok
+    return true
   }
 
   async function syncTags(newTags: Tag[]): Promise<void> {

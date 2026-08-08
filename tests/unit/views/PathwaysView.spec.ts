@@ -68,7 +68,7 @@ describe('PathwaysView', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     vi.mocked(listPathways).mockResolvedValue({ success: true, data: [] })
-    vi.mocked(deletePathway).mockResolvedValue(true)
+    vi.mocked(deletePathway).mockResolvedValue({ success: true, data: undefined })
     vi.mocked(copyPathway).mockResolvedValue({ success: true, data: mkPathway(99) })
     vi.mocked(usePermissions).mockReturnValue({
       hasPermission: () => true,
@@ -307,7 +307,7 @@ describe('PathwaysView', () => {
 
     it('deletes the pathway, refreshes the list, and shows success feedback', async () => {
       vi.mocked(listPathways).mockResolvedValue({ success: true, data: [mkPathway(5)] })
-      vi.mocked(deletePathway).mockResolvedValue(true)
+      vi.mocked(deletePathway).mockResolvedValue({ success: true, data: undefined })
       wrapper = mountView()
       await flushPromises()
 
@@ -323,14 +323,20 @@ describe('PathwaysView', () => {
     })
 
     it('shows error feedback when delete fails', async () => {
-      vi.mocked(deletePathway).mockResolvedValue(false)
+      vi.mocked(deletePathway).mockResolvedValue({
+        success: false,
+        error: new ApiError('referenced by a generation', 409, null),
+      })
       wrapper = mountView()
 
       wrapper.vm.deleteTarget = 5
       wrapper.vm.showDelete = true
       await wrapper.vm.confirmDelete()
 
-      expect(wrapper.vm.feedback).toEqual({ message: 'Delete failed', color: 'error' })
+      expect(wrapper.vm.feedback).toEqual({
+        message: 'referenced by a generation',
+        color: 'error',
+      })
     })
 
     it('does nothing when there is no delete target', async () => {

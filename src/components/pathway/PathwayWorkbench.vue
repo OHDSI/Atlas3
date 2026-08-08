@@ -384,7 +384,7 @@ async function onCancel(sourceKey: string) {
   const gen = generation.value
   if (!gen) return
   const ok = await gen.cancel(sourceKey)
-  if (!ok) logger.error('PathwayWorkbench', 'cancel failed', { sourceKey })
+  if (!ok) logger.error('PathwayWorkbench', 'cancel failed', gen.error.value)
   await refreshExecutions()
 }
 

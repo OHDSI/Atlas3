@@ -200,12 +200,15 @@ function handleRemove(ir: IncidenceRate) {
 
 async function confirmDelete() {
   if (!deleteTarget.value) return
-  const ok = await deleteIncidenceRate(deleteTarget.value)
-  if (ok) {
+  const result = await deleteIncidenceRate(deleteTarget.value)
+  if (result.success) {
     notify.success(tv('views.incidenceRates.deleted', 'Incidence rate deleted'))
     await fetchIncidenceRates()
   } else {
-    notify.danger(tv('views.incidenceRates.deleteFailed', 'Delete failed'))
+    notify.danger(
+      result.error.message || tv('views.incidenceRates.deleteFailed', 'Delete failed')
+    )
+    logger.error('IncidenceRatesView', 'deleteIncidenceRate failed', result.error)
   }
   showDelete.value = false
   deleteTarget.value = null

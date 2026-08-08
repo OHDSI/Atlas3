@@ -70,8 +70,13 @@ export function useIncidenceRateGeneration(irId: number) {
   }
 
   async function cancel(sourceKey: string): Promise<boolean> {
-    const ok = await cancelIncidenceRateGeneration(irId, sourceKey)
-    return ok
+    const result = await cancelIncidenceRateGeneration(irId, sourceKey)
+    if (!result.success) {
+      error.value = result.error.message
+      logger.error('IRGeneration', 'cancel failed', result.error)
+      return false
+    }
+    return true
   }
 
   // Initial fetch on mount-equivalent: caller may invoke pollOnce() directly.

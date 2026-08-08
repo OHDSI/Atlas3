@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { ApiError } from '@/services/api-error'
 
 vi.mock('@/services/webapi', () => ({
   getIncidenceRate: vi.fn(),
-  assignIncidenceRateTag: vi.fn().mockResolvedValue(true),
-  unassignIncidenceRateTag: vi.fn().mockResolvedValue(true),
+  assignIncidenceRateTag: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+  unassignIncidenceRateTag: vi.fn().mockResolvedValue({ success: true, data: undefined }),
 }))
 
 vi.mock('@/services/incidence-rate-versions.service', () => ({
@@ -483,8 +484,8 @@ describe('incidence-rate store — validation studyWindow + edge cases', () => {
 
 describe('incidence-rate store — tags', () => {
   beforeEach(() => {
-    vi.mocked(webapi.assignIncidenceRateTag).mockResolvedValue(true)
-    vi.mocked(webapi.unassignIncidenceRateTag).mockResolvedValue(true)
+    vi.mocked(webapi.assignIncidenceRateTag).mockResolvedValue({ success: true, data: undefined })
+    vi.mocked(webapi.unassignIncidenceRateTag).mockResolvedValue({ success: true, data: undefined })
   })
 
   it('addTag returns false without id', async () => {
@@ -505,7 +506,10 @@ describe('incidence-rate store — tags', () => {
   })
 
   it('addTag returns false on API failure', async () => {
-    vi.mocked(webapi.assignIncidenceRateTag).mockResolvedValueOnce(false)
+    vi.mocked(webapi.assignIncidenceRateTag).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('conflict', 409, null),
+    })
     const s = useIncidenceRateStore()
     s.createNewIR()
     s.currentIR!.id = 7
@@ -535,7 +539,10 @@ describe('incidence-rate store — tags', () => {
   })
 
   it('removeTag returns false on API failure', async () => {
-    vi.mocked(webapi.unassignIncidenceRateTag).mockResolvedValueOnce(false)
+    vi.mocked(webapi.unassignIncidenceRateTag).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('conflict', 409, null),
+    })
     const s = useIncidenceRateStore()
     s.createNewIR()
     s.currentIR!.id = 7

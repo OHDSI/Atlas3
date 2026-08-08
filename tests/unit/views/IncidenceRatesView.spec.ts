@@ -73,7 +73,7 @@ describe('IncidenceRatesView', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     vi.mocked(listIncidenceRates).mockResolvedValue({ success: true, data: [] })
-    vi.mocked(deleteIncidenceRate).mockResolvedValue(true)
+    vi.mocked(deleteIncidenceRate).mockResolvedValue({ success: true, data: undefined })
     vi.mocked(copyIncidenceRate).mockResolvedValue({ success: true, data: mkIR(99) })
     vi.mocked(usePermissions).mockReturnValue({
       hasPermission: () => true,
@@ -308,7 +308,7 @@ describe('IncidenceRatesView', () => {
 
     it('deletes the incidence rate, refreshes the list, and shows success feedback', async () => {
       vi.mocked(listIncidenceRates).mockResolvedValue({ success: true, data: [mkIR(5)] })
-      vi.mocked(deleteIncidenceRate).mockResolvedValue(true)
+      vi.mocked(deleteIncidenceRate).mockResolvedValue({ success: true, data: undefined })
       wrapper = mountView()
       await flushPromises()
       const notifications = useNotifications()
@@ -325,7 +325,10 @@ describe('IncidenceRatesView', () => {
     })
 
     it('shows error feedback when delete fails', async () => {
-      vi.mocked(deleteIncidenceRate).mockResolvedValue(false)
+      vi.mocked(deleteIncidenceRate).mockResolvedValue({
+        success: false,
+        error: new ApiError('referenced by a generation', 409, null),
+      })
       wrapper = mountView()
       const notifications = useNotifications()
 
@@ -333,7 +336,10 @@ describe('IncidenceRatesView', () => {
       wrapper.vm.showDelete = true
       await wrapper.vm.confirmDelete()
 
-      expect(notifications.items.at(-1)).toMatchObject({ severity: 'danger', title: 'Delete failed' })
+      expect(notifications.items.at(-1)).toMatchObject({
+        severity: 'danger',
+        title: 'referenced by a generation',
+      })
     })
 
     it('does nothing when there is no delete target', async () => {
