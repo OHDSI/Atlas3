@@ -15,7 +15,7 @@ import { getCDMDrilldown } from '@/services/webapi'
 import type { ClinicalDomainReport as ClinicalDomainReportData } from '@/models/datasource.types'
 
 vi.mock('@/services/webapi', () => ({
-  getCDMDrilldown: vi.fn().mockResolvedValue({}),
+  getCDMDrilldown: vi.fn().mockResolvedValue({ success: true, data: {} }),
 }))
 
 // Mock the child components with props

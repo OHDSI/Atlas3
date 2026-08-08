@@ -11,6 +11,7 @@ vi.mock('@/services/webapi', () => ({
 
 import InclusionRuleReport from '@/components/reports/inclusion/InclusionRuleReport.vue'
 import { getInclusionRuleReport } from '@/services/webapi'
+import { ApiError } from '@/services/api-error'
 
 const vuetify = createVuetify({ components, directives })
 const global = {
@@ -31,8 +32,14 @@ const fetchMock = vi.mocked(getInclusionRuleReport)
 describe('InclusionRuleReport', () => {
   beforeEach(() => fetchMock.mockReset())
 
-  it('renders the empty state when getInclusionRuleReport returns null', async () => {
-    fetchMock.mockResolvedValueOnce(null)
+  it('renders an error state, not the empty state, when the report response fails validation', async () => {
+    // A schema-invalid response used to come back as `null` and render as the
+    // empty state, indistinguishable from a cohort with no inclusion rules.
+    // It now carries a real ApiError, so it must render as an error instead.
+    fetchMock.mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('Invalid inclusion-rule report response', 0, null),
+    })
 
     const wrapper = mount(InclusionRuleReport, {
       global,
@@ -40,7 +47,8 @@ describe('InclusionRuleReport', () => {
     })
     await flushPromises()
 
-    expect(wrapper.find('[data-testid=inclusion-rule-report-empty]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid=inclusion-rule-report-error]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid=inclusion-rule-report-empty]').exists()).toBe(false)
     expect(wrapper.find('[data-testid=inclusion-summary-final-count]').exists()).toBe(false)
   })
 
@@ -59,7 +67,7 @@ describe('InclusionRuleReport', () => {
   })
 
   it('renders summary, attrition table and treemap when data arrives', async () => {
-    fetchMock.mockResolvedValueOnce(fullReport)
+    fetchMock.mockResolvedValueOnce({ success: true, data: fullReport })
 
     const wrapper = mount(InclusionRuleReport, {
       global,
@@ -76,8 +84,8 @@ describe('InclusionRuleReport', () => {
 
   it('renders an em-dash when the match-rate percent is null', async () => {
     fetchMock.mockResolvedValueOnce({
-      ...fullReport,
-      summary: { ...fullReport.summary, percentMatched: null },
+      success: true,
+      data: { ...fullReport, summary: { ...fullReport.summary, percentMatched: null } },
     })
 
     const wrapper = mount(InclusionRuleReport, {
@@ -90,7 +98,7 @@ describe('InclusionRuleReport', () => {
   })
 
   it('refetches with the correct mode when the user switches the tab', async () => {
-    fetchMock.mockResolvedValue(fullReport)
+    fetchMock.mockResolvedValue({ success: true, data: fullReport })
 
     const wrapper = mount(InclusionRuleReport, {
       global,
@@ -109,7 +117,10 @@ describe('InclusionRuleReport', () => {
   })
 
   it('surfaces fetch errors as an error alert', async () => {
-    fetchMock.mockRejectedValueOnce(new Error('network down'))
+    fetchMock.mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('network down', 0, null),
+    })
 
     const wrapper = mount(InclusionRuleReport, {
       global,
@@ -149,8 +160,8 @@ describe('InclusionRuleReport', () => {
 
   it('echoes the percent string back when it is a non-numeric value', async () => {
     fetchMock.mockResolvedValueOnce({
-      ...fullReport,
-      summary: { ...fullReport.summary, percentMatched: 'unknown' },
+      success: true,
+      data: { ...fullReport, summary: { ...fullReport.summary, percentMatched: 'unknown' } },
     })
 
     const wrapper = mount(InclusionRuleReport, {

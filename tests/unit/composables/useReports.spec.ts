@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import type { PersonReport } from '@/models/report.types'
+import { ApiError } from '@/services/api-error'
 
 vi.mock('@/services/webapi')
 vi.mock('@/services/report-mapper')
@@ -84,7 +85,7 @@ describe('useReports Composable', () => {
         demographics: { gender: [], race: [], ethnicity: [] }
       }
 
-      vi.mocked(webapi.getPersonReport).mockResolvedValue(mockRawData)
+      vi.mocked(webapi.getPersonReport).mockResolvedValue({ success: true, data: mockRawData })
       vi.mocked(mapper.mapPersonReport).mockReturnValue(mockMappedData)
 
       await composable.loadReport(123, 'SYNPUF', 'person')
@@ -98,7 +99,7 @@ describe('useReports Composable', () => {
     it('should handle different report types', async () => {
       const composable = useReports()
 
-      vi.mocked(webapi.getConditionErasReport).mockResolvedValue([])
+      vi.mocked(webapi.getConditionErasReport).mockResolvedValue({ success: true, data: [] })
       vi.mocked(mapper.mapConditionErasReport).mockReturnValue({
         prevalence: [],
         treemapData: []
@@ -107,7 +108,7 @@ describe('useReports Composable', () => {
       await composable.loadReport(456, 'CDM', 'condition-eras')
       expect(webapi.getConditionErasReport).toHaveBeenCalledWith(456, 'CDM')
 
-      vi.mocked(webapi.getDrugErasReport).mockResolvedValue([])
+      vi.mocked(webapi.getDrugErasReport).mockResolvedValue({ success: true, data: [] })
       vi.mocked(mapper.mapDrugErasReport).mockReturnValue({
         prevalence: [],
         treemapData: []
@@ -121,7 +122,7 @@ describe('useReports Composable', () => {
       const composable = useReports()
       const store = useReportsStore()
 
-      vi.mocked(webapi.getPersonReport).mockResolvedValue(null)
+      vi.mocked(webapi.getPersonReport).mockResolvedValue({ success: false, error: new ApiError('Failed to fetch person report data', 0, null) })
 
       await composable.loadReport(123, 'SYNPUF', 'person')
 
@@ -136,7 +137,7 @@ describe('useReports Composable', () => {
 
       store.setCurrentReport(123, 'SYNPUF', 'person')
 
-      vi.mocked(webapi.getDrugErasReport).mockResolvedValue([])
+      vi.mocked(webapi.getDrugErasReport).mockResolvedValue({ success: true, data: [] })
       vi.mocked(mapper.mapDrugErasReport).mockReturnValue({
         prevalence: [],
         treemapData: []
@@ -207,10 +208,8 @@ describe('useReports Composable', () => {
       store.setCurrentReport(123, 'SYNPUF', 'person')
 
       vi.mocked(webapi.getPersonReport).mockResolvedValue({
-        yearOfBirth: [],
-        gender: [],
-        race: [],
-        ethnicity: []
+        success: true,
+        data: { yearOfBirth: [], gender: [], race: [], ethnicity: [] },
       })
       vi.mocked(mapper.mapPersonReport).mockReturnValue(mockData)
 
@@ -281,7 +280,7 @@ describe('useReports Composable', () => {
 
       store.setCurrentReport(123, 'SYNPUF', 'person')
 
-      vi.mocked(webapi.getPersonReport).mockResolvedValue(null)
+      vi.mocked(webapi.getPersonReport).mockResolvedValue({ success: false, error: new ApiError('Failed to fetch person report data', 0, null) })
 
       await composable.refreshReport()
 
@@ -604,10 +603,8 @@ describe('useReports Composable', () => {
       const store = useReportsStore()
 
       vi.mocked(webapi.getPersonReport).mockResolvedValue({
-        yearOfBirth: [],
-        gender: [],
-        race: [],
-        ethnicity: []
+        success: true,
+        data: { yearOfBirth: [], gender: [], race: [], ethnicity: [] },
       })
       vi.mocked(mapper.mapPersonReport).mockReturnValue({
         yearOfBirth: [],
@@ -617,7 +614,7 @@ describe('useReports Composable', () => {
       await composable.loadReport(123, 'SYNPUF', 'person')
       expect(store.currentReportType).toBe('person')
 
-      vi.mocked(webapi.getDrugErasReport).mockResolvedValue([])
+      vi.mocked(webapi.getDrugErasReport).mockResolvedValue({ success: true, data: [] })
       vi.mocked(mapper.mapDrugErasReport).mockReturnValue({
         prevalence: [],
         treemapData: []
@@ -716,23 +713,21 @@ describe('useReports Composable', () => {
       store.currentSourceKey = 'SYNPUF'
 
       vi.mocked(webapi.getPersonReport).mockResolvedValue({
-        yearOfBirth: [],
-        gender: [],
-        race: [],
-        ethnicity: []
+        success: true,
+        data: { yearOfBirth: [], gender: [], race: [], ethnicity: [] },
       })
       vi.mocked(mapper.mapPersonReport).mockReturnValue({
         yearOfBirth: [],
         demographics: { gender: [], race: [], ethnicity: [] }
       })
 
-      vi.mocked(webapi.getDrugErasReport).mockResolvedValue([])
+      vi.mocked(webapi.getDrugErasReport).mockResolvedValue({ success: true, data: [] })
       vi.mocked(mapper.mapDrugErasReport).mockReturnValue({
         prevalence: [],
         treemapData: []
       })
 
-      vi.mocked(webapi.getConditionErasReport).mockResolvedValue([])
+      vi.mocked(webapi.getConditionErasReport).mockResolvedValue({ success: true, data: [] })
       vi.mocked(mapper.mapConditionErasReport).mockReturnValue({
         prevalence: [],
         treemapData: []

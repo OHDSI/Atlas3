@@ -163,160 +163,159 @@ export const useReportsStore = defineStore('reports', () => {
 
       switch (reportType) {
         case 'person': {
-          const rawData = await getPersonReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch person report data')
-          mappedData = mapPersonReport(rawData)
+          const result = await getPersonReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapPersonReport(result.data)
           break
         }
         case 'condition-eras': {
-          const rawData = await getConditionErasReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch condition eras report data')
-          mappedData = mapConditionErasReport(rawData)
+          const result = await getConditionErasReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapConditionErasReport(result.data)
           break
         }
         case 'condition': {
-          const rawData = await getConditionReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch condition report data')
-          mappedData = mapConditionReport(rawData)
+          const result = await getConditionReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapConditionReport(result.data)
           break
         }
         case 'drug-eras': {
-          const rawData = await getDrugErasReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch drug eras report data')
-          mappedData = mapDrugErasReport(rawData)
+          const result = await getDrugErasReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapDrugErasReport(result.data)
           break
         }
         case 'cohort-specific': {
-          const rawData = await getCohortSpecificReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch cohort specific report data')
-          mappedData = mapCohortSpecificReport(rawData)
+          const result = await getCohortSpecificReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapCohortSpecificReport(result.data)
           break
         }
         case 'persons-exposure-baseline': {
-          const rawData = await getPersonsExposureBaselineReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch persons exposure baseline report data')
-          mappedData = mapPersonsExposureReport(rawData)
+          const result = await getPersonsExposureBaselineReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapPersonsExposureReport(result.data)
           break
         }
         case 'persons-exposure-cohort': {
-          const rawData = await getPersonsExposureCohortReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch persons exposure cohort report data')
-          mappedData = mapPersonsExposureReport(rawData)
+          const result = await getPersonsExposureCohortReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapPersonsExposureReport(result.data)
           break
         }
         case 'visits-baseline': {
-          const rawData = await getVisitsBaselineReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch visits baseline report data')
-          mappedData = mapVisitsReport(rawData)
+          const result = await getVisitsBaselineReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapVisitsReport(result.data)
           break
         }
         case 'visit-dates-baseline': {
-          const rawData = await getVisitDatesBaselineReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch visit dates baseline report data')
-          mappedData = mapVisitDatesReport(rawData)
+          const result = await getVisitDatesBaselineReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapVisitDatesReport(result.data)
           break
         }
         case 'care-site-visit-dates-baseline': {
-          const rawData = await getCareSiteVisitDatesBaselineReport(cohortId, sourceKey)
-          if (!rawData)
-            throw new Error('Failed to fetch care site visit dates baseline report data')
-          mappedData = mapCareSiteVisitDatesReport(rawData)
+          const result = await getCareSiteVisitDatesBaselineReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapCareSiteVisitDatesReport(result.data)
           break
         }
         case 'visits-cohort': {
-          const rawData = await getVisitsCohortReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch visits cohort report data')
-          mappedData = mapVisitsReport(rawData)
+          const result = await getVisitsCohortReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapVisitsReport(result.data)
           break
         }
         case 'visit-dates-cohort': {
-          const rawData = await getVisitDatesCohortReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch visit dates cohort report data')
-          mappedData = mapVisitDatesReport(rawData)
+          const result = await getVisitDatesCohortReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapVisitDatesReport(result.data)
           break
         }
         case 'care-site-visit-dates-cohort': {
-          const rawData = await getCareSiteVisitDatesCohortReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch care site visit dates cohort report data')
-          mappedData = mapCareSiteVisitDatesReport(rawData)
+          const result = await getCareSiteVisitDatesCohortReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapCareSiteVisitDatesReport(result.data)
           break
         }
         case 'drug-utilization-baseline': {
-          const rawData = await getDrugUtilizationBaselineReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch drug utilization baseline report data')
-          mappedData = mapDrugUtilizationReport(rawData)
+          const result = await getDrugUtilizationBaselineReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapDrugUtilizationReport(result.data)
           break
         }
         case 'drug-utilization-cohort': {
-          const rawData = await getDrugUtilizationCohortReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch drug utilization cohort report data')
-          mappedData = mapDrugUtilizationReport(rawData)
+          const result = await getDrugUtilizationCohortReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapDrugUtilizationReport(result.data)
           break
         }
         case 'heracles-heel': {
-          const rawData = await getHeraclesHeelReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch Heracles Heel report data')
-          mappedData = mapHeraclesHeelReport(rawData)
+          const result = await getHeraclesHeelReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapHeraclesHeelReport(result.data)
           break
         }
         case 'conditions-by-index': {
-          const rawData = await getConditionsByIndexReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch conditions by index report data')
-          mappedData = mapConditionsByIndexReport(rawData)
+          const result = await getConditionsByIndexReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapConditionsByIndexReport(result.data)
           break
         }
         case 'death': {
-          const rawData = await getDeathReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch death report data')
-          mappedData = mapDeathReport(rawData)
+          const result = await getDeathReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapDeathReport(result.data)
           break
         }
         case 'drug-exposure': {
-          const rawData = await getDrugExposureReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch drug exposure report data')
-          mappedData = mapDrugExposureReport(rawData)
+          const result = await getDrugExposureReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapDrugExposureReport(result.data)
           break
         }
         case 'drugs-by-index': {
-          const rawData = await getDrugsByIndexReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch drugs by index report data')
-          mappedData = mapDrugsByIndexReport(rawData)
+          const result = await getDrugsByIndexReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapDrugsByIndexReport(result.data)
           break
         }
         case 'observation-periods': {
-          const rawData = await getObservationPeriodsReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch observation periods report data')
-          mappedData = mapObservationPeriodsReport(rawData)
+          const result = await getObservationPeriodsReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapObservationPeriodsReport(result.data)
           break
         }
         case 'procedure': {
-          const rawData = await getProcedureReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch procedure report data')
-          mappedData = mapProcedureReport(rawData)
+          const result = await getProcedureReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapProcedureReport(result.data)
           break
         }
         case 'procedures-by-index': {
-          const rawData = await getProceduresByIndexReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch procedures by index report data')
-          mappedData = mapProceduresByIndexReport(rawData)
+          const result = await getProceduresByIndexReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapProceduresByIndexReport(result.data)
           break
         }
         case 'data-completeness': {
-          const rawData = await getDataCompletenessReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch data completeness report data')
-          mappedData = mapDataCompletenessReport(rawData)
+          const result = await getDataCompletenessReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapDataCompletenessReport(result.data)
           break
         }
         case 'entropy': {
-          const rawData = await getEntropyReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch entropy report data')
-          mappedData = mapEntropyReport(rawData)
+          const result = await getEntropyReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapEntropyReport(result.data)
           break
         }
         case 'tornado': {
-          const rawData = await getTornadoReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch tornado report data')
-          mappedData = mapTornadoReport(rawData)
+          const result = await getTornadoReport(cohortId, sourceKey)
+          if (!result.success) throw new Error(result.error.message)
+          mappedData = mapTornadoReport(result.data)
           break
         }
         default:

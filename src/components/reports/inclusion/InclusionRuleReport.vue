@@ -154,7 +154,14 @@ async function load() {
   loading.value = true
   error.value = null
   try {
-    report.value = await getInclusionRuleReport(props.cohortId, props.sourceKey, mode.value)
+    const result = await getInclusionRuleReport(props.cohortId, props.sourceKey, mode.value)
+    if (!result.success) {
+      const prefix = tv('components.inclusionRuleReport.loadError', 'Failed to load the inclusion-rule report')
+      error.value = `${prefix}: ${result.error.message}`
+      report.value = null
+      return
+    }
+    report.value = result.data
   } catch (e) {
     const prefix = tv('components.inclusionRuleReport.loadError', 'Failed to load the inclusion-rule report')
     error.value = e instanceof Error ? `${prefix}: ${e.message}` : `${prefix}.`
