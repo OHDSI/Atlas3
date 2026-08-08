@@ -6,9 +6,11 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useWebAPIStore } from '@/stores/webapi'
 import type { GenerationJob } from '@/models/webapi.types'
+import { success, failure } from '@/types/api'
+import { ApiError } from '@/services/api-error'
 
-// Mock the webapi service
-vi.mock('@/services/webapi', () => ({
+// Mock the cohort-definition service
+vi.mock('@/services/cohort-definition.service', () => ({
   generateCohort: vi.fn(),
   getCohortGenerationInfo: vi.fn(),
 }))
@@ -73,8 +75,8 @@ describe('WebAPI Store - Generation Polling', () => {
         status: 'PENDING',
       }
 
-      const webapi = await import('@/services/webapi')
-      vi.mocked(webapi.generateCohort).mockResolvedValue(mockJob)
+      const cohortDefService = await import('@/services/cohort-definition.service')
+      vi.mocked(cohortDefService.generateCohort).mockResolvedValue(success(mockJob))
 
       if ('generateCohort' in store) {
         await (store as unknown).generateCohort(123, 'SYNPUF1K')
@@ -86,8 +88,10 @@ describe('WebAPI Store - Generation Polling', () => {
     })
 
     it('should return null on generation error', async () => {
-      const webapi = await import('@/services/webapi')
-      vi.mocked(webapi.generateCohort).mockResolvedValue(null)
+      const cohortDefService = await import('@/services/cohort-definition.service')
+      vi.mocked(cohortDefService.generateCohort).mockResolvedValue(
+        failure(new ApiError('Generation request failed', 500, null))
+      )
 
       if ('generateCohort' in store) {
         const result = await (store as unknown).generateCohort(123, 'SYNPUF1K')
@@ -128,10 +132,10 @@ describe('WebAPI Store - Generation Polling', () => {
     })
 
     it('should handle polling timeout gracefully', async () => {
-      const webapi = await import('@/services/webapi')
+      const cohortDefService = await import('@/services/cohort-definition.service')
 
       // Always return RUNNING (never complete)
-      vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({
+      vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({
         success: true,
         data: [{
           id: { cohortDefinitionId: 123, sourceId: 1 },

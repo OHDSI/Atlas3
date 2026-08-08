@@ -578,7 +578,7 @@ async function confirmImport() {
       expression: parsed as object,
     })
 
-    if (!result || !result.id) {
+    if (!result.success || !result.data.id) {
       importError.value = t(
         'cohortDefinitions.importFailed',
         'Import failed. Check the JSON and try again.'
@@ -588,7 +588,7 @@ async function confirmImport() {
 
     closeImportDialog()
     await fetchCohorts()
-    router.push(`/cohorts/${result.id}`)
+    router.push(`/cohorts/${result.data.id}`)
   } catch (err) {
     logger.error('CohortsView', 'Failed to import cohort', err)
     importError.value = t(
@@ -628,12 +628,16 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
   copyingId.value = cohort.id
 
   try {
-    const definition = await getCohortDefinition(cohort.id)
-    if (!definition) {
-      showSnackbar(
-        t('cohortDefinitions.copyLoadError', 'Failed to load the cohort to copy.').value,
-        'danger'
-      )
+    const definitionResult = await getCohortDefinition(cohort.id)
+    if (!definitionResult.success) {
+      const message =
+        definitionResult.error.status === 403
+          ? t(
+              'cohortDefinitions.copyLoadForbidden',
+              'You do not have permission to read this cohort.'
+            ).value
+          : t('cohortDefinitions.copyLoadError', 'Failed to load the cohort to copy.').value
+      showSnackbar(message, 'danger')
       return
     }
 
@@ -647,7 +651,7 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
       modifiedDate: _modifiedDate,
       tags: _tags,
       ...expression
-    } = definition as AtlasCohortDefinition
+    } = definitionResult.data as AtlasCohortDefinition
 
     const created = await saveCohortDefinition({
       name: buildCopyName(cohort.name),
@@ -656,7 +660,7 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
       expression,
     })
 
-    if (!created?.id) {
+    if (!created.success || !created.data.id) {
       showSnackbar(
         t('cohortDefinitions.copyError', 'Failed to copy the cohort.').value,
         'danger'
@@ -665,7 +669,7 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
     }
 
     await fetchCohorts()
-    router.push(`/cohorts/${created.id}`)
+    router.push(`/cohorts/${created.data.id}`)
   } catch (err) {
     logger.error('CohortsView', 'Failed to copy cohort', err)
     showSnackbar(t('cohortDefinitions.copyError', 'Failed to copy the cohort.').value, 'danger')
@@ -705,7 +709,13 @@ async function confirmDelete() {
   deleting.value = true
 
   try {
-    await deleteCohort(selectedCohort.value.id)
+    const result = await deleteCohort(selectedCohort.value.id)
+
+    if (!result.success) {
+      logger.error('CohortsView', 'Failed to delete cohort', result.error)
+      showSnackbar(t('cohortDefinitions.deleteError', 'Failed to delete the cohort.').value, 'danger')
+      return
+    }
 
     // Refresh cohort list
     await fetchCohorts()
@@ -715,7 +725,7 @@ async function confirmDelete() {
     selectedCohort.value = null
   } catch (err) {
     logger.error('CohortsView', 'Failed to delete cohort', err)
-    // Error handling could be enhanced with a snackbar notification
+    showSnackbar(t('cohortDefinitions.deleteError', 'Failed to delete the cohort.').value, 'danger')
   } finally {
     deleting.value = false
   }
@@ -732,11 +742,13 @@ async function handleShowInfo(cohort: CohortDefinitionSummary) {
 
   try {
     // Fetch the full cohort definition
-    const atlasDefinition = await getCohortDefinition(cohort.id)
-    if (atlasDefinition) {
+    const definitionResult = await getCohortDefinition(cohort.id)
+    if (definitionResult.success) {
       // Get print-friendly HTML
-      const html = await getCohortPrintFriendly(atlasDefinition)
-      cohortInfoHtml.value = html
+      const htmlResult = await getCohortPrintFriendly(definitionResult.data)
+      cohortInfoHtml.value = htmlResult.success ? htmlResult.data : null
+    } else {
+      logger.error('CohortsView', 'Failed to fetch cohort definition', definitionResult.error)
     }
   } catch (error) {
     logger.error('CohortsView', 'Failed to fetch cohort print-friendly view', error)

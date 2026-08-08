@@ -5,8 +5,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { CDMSource, GenerationJob } from '@/models/webapi.types'
-import * as webapi from '@/services/webapi'
 import { fetchCDMSources } from '@/services/source.service'
+import { generateCohort as generateCohortRequest, getCohortGenerationInfo } from '@/services/cohort-definition.service'
 import { logger } from '@/utils/logger'
 
 export const useWebAPIStore = defineStore('webapi', () => {
@@ -157,9 +157,10 @@ export const useWebAPIStore = defineStore('webapi', () => {
     }
 
     try {
-      const job = await webapi.generateCohort(cohortId, sourceKey)
+      const result = await generateCohortRequest(cohortId, sourceKey)
 
-      if (job) {
+      if (result.success) {
+        const job = result.data
         const finalKey = knownKey ?? job.id
         if (knownKey != null && knownKey !== finalKey) {
           removeGenerationJob(knownKey)
@@ -174,7 +175,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
         return job
       }
 
-      // API call succeeded but returned null — surface as failure so the UI
+      // API call resolved but failed — surface as failure so the UI
       // doesn't sit on PENDING forever.
       if (knownKey != null) {
         updateGenerationJob(knownKey, {
@@ -182,9 +183,10 @@ export const useWebAPIStore = defineStore('webapi', () => {
           cohortDefinitionId: cohortId,
           sourceKey,
           status: 'FAILED',
-          failMessage: 'Generation request failed',
+          failMessage: result.error.message,
         })
       }
+      logger.error('WebAPIStore', 'Failed to generate cohort', result.error)
       return null
     } catch (error) {
       if (knownKey != null) {
@@ -219,7 +221,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
     const poll = async () => {
       try {
-        const result = await webapi.getCohortGenerationInfo(cohortId)
+        const result = await getCohortGenerationInfo(cohortId)
 
         // An empty/failed response doesn't mean we're done — a freshly kicked
         // off generation may not be indexed yet. Keep polling and rely on the
@@ -308,7 +310,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
    */
   async function fetchCohortGenerationInfo(cohortId: number): Promise<void> {
     try {
-      const result = await webapi.getCohortGenerationInfo(cohortId)
+      const result = await getCohortGenerationInfo(cohortId)
 
       if (!result.success || result.data.length === 0) {
         return

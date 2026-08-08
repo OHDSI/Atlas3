@@ -49,33 +49,39 @@ vi.mock('@/composables/useAtlasConverter', () => {
   }
 })
 
-// Webapi mocks: most calls are unused in these tests, but a few flows
-// (load existing cohort, save) need predictable return values.
+// Webapi mocks: most calls are unused in these tests.
 vi.mock('@/services/webapi', () => ({
   getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
+}))
+
+// A few flows (load existing cohort, save) need predictable ApiResult values.
+vi.mock('@/services/cohort-definition.service', () => ({
   getCohortDefinition: vi.fn().mockResolvedValue({
-    id: 42,
-    name: 'Existing Cohort',
-    description: 'A loaded cohort',
-    tags: [],
-    expression: JSON.stringify({
-      ConceptSets: [],
-      PrimaryCriteria: {
-        CriteriaList: [{ ConditionOccurrence: {} }],
-        ObservationWindow: { PriorDays: 0, PostDays: 0 },
-        PrimaryCriteriaLimit: { Type: 'First' },
-      },
-      QualifiedLimit: { Type: 'First' },
-      ExpressionLimit: { Type: 'First' },
-      InclusionRules: [],
-      CensoringCriteria: [],
-      CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
-      CensorWindow: {},
-    }),
+    success: true,
+    data: {
+      id: 42,
+      name: 'Existing Cohort',
+      description: 'A loaded cohort',
+      tags: [],
+      expression: JSON.stringify({
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [{ ConditionOccurrence: {} }],
+          ObservationWindow: { PriorDays: 0, PostDays: 0 },
+          PrimaryCriteriaLimit: { Type: 'First' },
+        },
+        QualifiedLimit: { Type: 'First' },
+        ExpressionLimit: { Type: 'First' },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      }),
+    },
   }),
-  saveCohortDefinition: vi.fn().mockResolvedValue({ id: 99, name: 'Saved' }),
-  assignTagToCohort: vi.fn().mockResolvedValue({ success: true }),
-  unassignTagFromCohort: vi.fn().mockResolvedValue({ success: true }),
+  saveCohortDefinition: vi.fn().mockResolvedValue({ success: true, data: { id: 99, name: 'Saved' } }),
+  assignTagToCohort: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+  unassignTagFromCohort: vi.fn().mockResolvedValue({ success: true, data: undefined }),
 }))
 
 vi.mock('@/services/source.service', () => ({
@@ -162,6 +168,7 @@ vi.mock('@/services/atlas-converter', () => ({
 
 import CohortBuilder from '@/components/cohort/CohortBuilder.vue'
 import { convertInternalToAtlas } from '@/services/atlas-converter'
+import { ApiError } from '@/services/api-error'
 
 const vuetify = createVuetify({
   components,
@@ -1245,8 +1252,8 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     const setup = getSetup(wrapper)
     // canSave is computed false for an empty cohort.
-    const webapi = await import('@/services/webapi')
-    const spy = vi.spyOn(webapi, 'saveCohortDefinition')
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    const spy = vi.spyOn(cohortDefService, 'saveCohortDefinition')
     await setup.handleSave()
     expect(spy).not.toHaveBeenCalled()
   })
@@ -1260,11 +1267,11 @@ describe('CohortBuilder', () => {
     setup.entryEvents = [{ id: 'evt-1', criteriaType: 'X', attributes: [] }]
     // canSavePermission gates on hasPermission/canWrite — for a new cohort,
     // both default to true in our basic mock. Verify save attempt runs.
-    const webapi = await import('@/services/webapi')
+    const cohortDefService = await import('@/services/cohort-definition.service')
     await setup.handleSave()
     // Either save was invoked OR canSave gated it; we accept that the path was
     // exercised (function coverage credit).
-    expect(webapi.saveCohortDefinition).toBeDefined()
+    expect(cohortDefService.saveCohortDefinition).toBeDefined()
   })
 
   // ---------------------------------------------------------------------------
@@ -1569,8 +1576,8 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     const setup = getSetup(wrapper)
 
-    const webapi = await import('@/services/webapi')
-    vi.mocked(webapi.getCohortDefinition).mockClear()
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.getCohortDefinition).mockClear()
     setup.cohortName = 'stale preview name'
 
     const { useCohortStore } = await import('@/stores/cohort')
@@ -1582,7 +1589,7 @@ describe('CohortBuilder', () => {
     await new Promise(r => setTimeout(r, 0))
     await wrapper.vm.$nextTick()
 
-    expect(webapi.getCohortDefinition).toHaveBeenCalledWith(42)
+    expect(cohortDefService.getCohortDefinition).toHaveBeenCalledWith(42)
     expect(setup.cohortName).toBe('Existing Cohort')
   })
 
@@ -1590,8 +1597,8 @@ describe('CohortBuilder', () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
 
-    const webapi = await import('@/services/webapi')
-    vi.mocked(webapi.getCohortDefinition).mockClear()
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.getCohortDefinition).mockClear()
 
     const { useCohortStore } = await import('@/stores/cohort')
     const store = useCohortStore()
@@ -1599,7 +1606,7 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     await new Promise(r => setTimeout(r, 0))
 
-    expect(webapi.getCohortDefinition).not.toHaveBeenCalled()
+    expect(cohortDefService.getCohortDefinition).not.toHaveBeenCalled()
   })
 
   // Regression for a Critical: loadVersionPreview used to assign the raw,
@@ -1770,8 +1777,11 @@ describe('CohortBuilder', () => {
     setup.cohortName = 'Savable'
     setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
 
-    const webapi = await import('@/services/webapi')
-    vi.mocked(webapi.saveCohortDefinition).mockResolvedValueOnce(null as never)
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.saveCohortDefinition).mockResolvedValueOnce({
+      success: true,
+      data: {} as never,
+    })
 
     const result = await setup.handleSave()
     expect(result).toEqual({})
@@ -1786,8 +1796,8 @@ describe('CohortBuilder', () => {
     setup.cohortName = 'Savable'
     setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
 
-    const webapi = await import('@/services/webapi')
-    vi.mocked(webapi.saveCohortDefinition).mockRejectedValueOnce(new Error('server boom'))
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.saveCohortDefinition).mockRejectedValueOnce(new Error('server boom'))
 
     const result = await setup.handleSave()
     expect(result).toEqual({})
@@ -1802,8 +1812,8 @@ describe('CohortBuilder', () => {
     setup.cohortName = 'Savable'
     setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
 
-    const webapi = await import('@/services/webapi')
-    vi.mocked(webapi.saveCohortDefinition).mockRejectedValueOnce('plain string failure')
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.saveCohortDefinition).mockRejectedValueOnce('plain string failure')
 
     const result = await setup.handleSave()
     expect(result).toEqual({})
@@ -1819,10 +1829,10 @@ describe('CohortBuilder', () => {
     setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
     setup.handleTagsUpdate([{ id: 7, name: 'protected' }] as any)
 
-    const webapi = await import('@/services/webapi')
-    vi.mocked(webapi.assignTagToCohort).mockResolvedValueOnce({
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.assignTagToCohort).mockResolvedValueOnce({
       success: false,
-      error: 'Tag group "Status" allows only one assignment',
+      error: new ApiError('Tag group "Status" allows only one assignment', 400, null),
     })
 
     await setup.handleSave()
@@ -1838,8 +1848,11 @@ describe('CohortBuilder', () => {
     setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
     setup.loadedTags = [{ id: 9, name: 'old-tag' }]
 
-    const webapi = await import('@/services/webapi')
-    vi.mocked(webapi.unassignTagFromCohort).mockResolvedValueOnce({ success: false })
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.unassignTagFromCohort).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('', 0, null),
+    })
 
     await setup.handleSave()
     expect(setup.errorMessage).toBe('Failed to unassign tag "old-tag"')

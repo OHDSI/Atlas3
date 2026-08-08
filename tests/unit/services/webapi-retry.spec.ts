@@ -512,11 +512,14 @@ describe('WebAPI Service - Network Retry Logic', () => {
 
       await vi.advanceTimersByTimeAsync(500)
 
-      const job = await promise
+      const result = await promise
 
       expect(mockFetch).toHaveBeenCalledTimes(2)
-      expect(job?.status).toBe('PENDING')
-      expect(job?.cohortDefinitionId).toBe(123)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.status).toBe('PENDING')
+        expect(result.data.cohortDefinitionId).toBe(123)
+      }
     })
   })
 

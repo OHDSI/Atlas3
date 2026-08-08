@@ -608,7 +608,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useCohortValidation } from '@/composables/useCohortValidation'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
-import { getCohortDefinition } from '@/services/webapi'
+import { getCohortDefinition } from '@/services/cohort-definition.service'
 import { convertAtlasToInternal, convertInternalToAtlas } from '@/services/atlas-converter'
 import { getConceptSetById } from '@/services/concept-set.service'
 import { isAtlasCohortDefinitionWrapper, type AtlasCohortDefinitionInput } from '@/models/atlas.types'
@@ -1561,17 +1561,24 @@ async function loadCohort(id: string) {
   try {
     // Fetch cohort definition from WebAPI
     const cohortId = parseInt(id, 10)
-    const atlasCohort = await getCohortDefinition(cohortId)
+    const result = await getCohortDefinition(cohortId)
 
-    if (!atlasCohort) {
-      logger.error('CohortBuilder', `Failed to load cohort ${id}`)
+    if (!result.success) {
+      logger.error('CohortBuilder', `Failed to load cohort ${id}`, result.error)
+      errorMessage.value =
+        result.error.status === 403
+          ? tv('components.cohortBuilder.loadForbidden', 'You do not have permission to open this cohort')
+          : tv('components.cohortBuilder.loadError', 'Failed to load cohort')
+      showError.value = true
       isLoadingCohort.value = false
       return
     }
 
-    applyAtlasCohort(atlasCohort)
+    applyAtlasCohort(result.data)
   } catch (error) {
     logger.error('CohortBuilder', `Error loading cohort ${id}`, error)
+    errorMessage.value = tv('components.cohortBuilder.loadError', 'Failed to load cohort')
+    showError.value = true
     isLoadingCohort.value = false
   }
 }
@@ -2204,7 +2211,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
   // Convert to Atlas format and save to WebAPI
   const { convertInternalToAtlas } = await import('@/services/atlas-converter')
   const { saveCohortDefinition, assignTagToCohort, unassignTagFromCohort } = await import(
-    '@/services/webapi'
+    '@/services/cohort-definition.service'
   )
 
   const atlasExpression = convertInternalToAtlas(cohortDefinition)
@@ -2217,16 +2224,25 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
   }
 
   try {
-    const savedCohort = await saveCohortDefinition(atlasDefinition)
+    const saved = await saveCohortDefinition(atlasDefinition)
 
-    if (!savedCohort || !savedCohort.id) {
+    if (!saved.success) {
+      errorMessage.value =
+        saved.error.status === 403
+          ? tv('components.cohortBuilder.saveForbidden', 'You do not have permission to save this cohort')
+          : saved.error.message
+      showError.value = true
+      return {}
+    }
+
+    if (!saved.data.id) {
       errorMessage.value = tv('components.cohortBuilder.saveToServerError', 'Failed to save cohort to server')
       showError.value = true
       return {}
     }
 
     // Sync tags via separate API calls
-    const cohortId = savedCohort.id
+    const cohortId = saved.data.id
     const currentTags = cohortTags.value
     const previousTags = loadedTags.value
 
@@ -2244,7 +2260,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
         const result = await assignTagToCohort(cohortId, tag.id)
         if (!result.success) {
           logger.warn('CohortBuilder', `Failed to assign tag ${tag.id}`, result.error)
-          tagFailures.push(result.error ?? `Failed to assign tag "${tag.name}"`)
+          tagFailures.push(result.error.message || `Failed to assign tag "${tag.name}"`)
         }
       }
     }
@@ -2254,7 +2270,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
         const result = await unassignTagFromCohort(cohortId, tag.id)
         if (!result.success) {
           logger.warn('CohortBuilder', `Failed to unassign tag ${tag.id}`, result.error)
-          tagFailures.push(result.error ?? `Failed to unassign tag "${tag.name}"`)
+          tagFailures.push(result.error.message || `Failed to unassign tag "${tag.name}"`)
         }
       }
     }
@@ -2273,7 +2289,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
 
     successMessage.value = tv('components.cohortBuilder.saveSuccess', 'Cohort saved successfully')
     showSuccess.value = true
-    return { id: savedCohort.id, name: cohortDefinition.name }
+    return { id: saved.data.id, name: cohortDefinition.name }
   } catch (error) {
     logger.error('CohortBuilder', 'Failed to save cohort', error)
     errorMessage.value =

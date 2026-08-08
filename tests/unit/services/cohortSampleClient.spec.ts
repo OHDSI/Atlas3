@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/services/http-client', () => ({
-  httpClient: vi.fn(),
+  httpGet: vi.fn(),
+  httpPost: vi.fn(),
+  httpDelete: vi.fn(),
   getBaseUrl: () => 'http://test/WebAPI',
 }))
 
@@ -12,10 +14,12 @@ import {
   refreshCohortSample,
   deleteCohortSample,
   hasCohortSamples,
-} from '@/services/webapi'
-import { httpClient } from '@/services/http-client'
+} from '@/services/cohort-sample.service'
+import { httpGet, httpPost, httpDelete } from '@/services/http-client'
 
-const httpMock = vi.mocked(httpClient as unknown as ReturnType<typeof vi.fn>)
+const httpGetMock = vi.mocked(httpGet)
+const httpPostMock = vi.mocked(httpPost)
+const httpDeleteMock = vi.mocked(httpDelete)
 
 const sampleObj = {
   id: 1,
@@ -28,10 +32,10 @@ const sampleObj = {
 }
 
 describe('cohort-sample API client', () => {
-  beforeEach(() => httpMock.mockReset())
+  beforeEach(() => vi.clearAllMocks())
 
   it('listCohortSamples parses the WebAPI envelope', async () => {
-    httpMock.mockResolvedValueOnce({
+    httpGetMock.mockResolvedValueOnce({
       cohortDefinitionId: 1,
       sourceId: 1,
       generationStatus: 'COMPLETE',
@@ -39,57 +43,61 @@ describe('cohort-sample API client', () => {
       samples: [sampleObj],
     })
     const result = await listCohortSamples(1, 'EUNOMIA')
-    expect(result).not.toBeNull()
-    expect(result?.samples).toHaveLength(1)
-    expect(httpMock.mock.calls[0]![0]).toBe('/cohortsample/1/EUNOMIA')
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data.samples).toHaveLength(1)
+    expect(httpGetMock.mock.calls[0]![0]).toBe('/cohortsample/1/EUNOMIA')
   })
 
-  it('listCohortSamples returns null on a malformed response', async () => {
-    httpMock.mockResolvedValueOnce({ unexpected: 'shape' })
-    expect(await listCohortSamples(1, 'EUNOMIA')).toBeNull()
+  it('listCohortSamples reports a malformed response as a failure, not an empty list', async () => {
+    httpGetMock.mockResolvedValueOnce({ unexpected: 'shape' })
+    const result = await listCohortSamples(1, 'EUNOMIA')
+    expect(result.success).toBe(false)
   })
 
   it('hasCohortSamples returns the boolean payload directly', async () => {
-    httpMock.mockResolvedValueOnce(true)
-    expect(await hasCohortSamples(1)).toBe(true)
-    httpMock.mockResolvedValueOnce(false)
-    expect(await hasCohortSamples(1)).toBe(false)
+    httpGetMock.mockResolvedValueOnce(true)
+    const trueResult = await hasCohortSamples(1)
+    expect(trueResult).toEqual({ success: true, data: true })
+
+    httpGetMock.mockResolvedValueOnce(false)
+    const falseResult = await hasCohortSamples(1)
+    expect(falseResult).toEqual({ success: true, data: false })
   })
 
   it('getCohortSample requests elements when withElements is true', async () => {
-    httpMock.mockResolvedValueOnce(sampleObj)
+    httpGetMock.mockResolvedValueOnce(sampleObj)
     await getCohortSample(1, 'EUNOMIA', 7, { withElements: true })
-    expect(httpMock.mock.calls[0]![0]).toContain('?fields=elements')
+    expect(httpGetMock.mock.calls[0]![0]).toContain('?fields=elements')
   })
 
   it('createCohortSample posts the parameters as JSON', async () => {
-    httpMock.mockResolvedValueOnce(sampleObj)
+    httpPostMock.mockResolvedValueOnce(sampleObj)
     const params = { name: 'demo', size: 100 }
     await createCohortSample(1, 'EUNOMIA', params)
-    const [url, opts] = httpMock.mock.calls[0]! as [string, { method: string; body: string }]
+    const [url, body] = httpPostMock.mock.calls[0]!
     expect(url).toBe('/cohortsample/1/EUNOMIA')
-    expect(opts.method).toBe('POST')
-    expect(JSON.parse(opts.body)).toEqual(params)
+    expect(body).toEqual(params)
   })
 
-  it('createCohortSample re-throws on transport errors', async () => {
-    httpMock.mockRejectedValueOnce(new Error('boom'))
-    await expect(createCohortSample(1, 'EUNOMIA', { name: 'x', size: 1 })).rejects.toThrow('boom')
+  it('createCohortSample reports transport errors as a failure rather than throwing', async () => {
+    httpPostMock.mockRejectedValueOnce(new Error('boom'))
+    const result = await createCohortSample(1, 'EUNOMIA', { name: 'x', size: 1 })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error.message).toBe('boom')
   })
 
   it('refreshCohortSample posts to the refresh subpath', async () => {
-    httpMock.mockResolvedValueOnce(sampleObj)
+    httpPostMock.mockResolvedValueOnce(sampleObj)
     await refreshCohortSample(1, 'EUNOMIA', 7)
-    const [url, opts] = httpMock.mock.calls[0]! as [string, { method: string }]
+    const [url] = httpPostMock.mock.calls[0]!
     expect(url).toBe('/cohortsample/1/EUNOMIA/7/refresh')
-    expect(opts.method).toBe('POST')
   })
 
   it('deleteCohortSample sends DELETE', async () => {
-    httpMock.mockResolvedValueOnce(undefined)
-    expect(await deleteCohortSample(1, 'EUNOMIA', 7)).toBe(true)
-    const [url, opts] = httpMock.mock.calls[0]! as [string, { method: string }]
+    httpDeleteMock.mockResolvedValueOnce(undefined)
+    const result = await deleteCohortSample(1, 'EUNOMIA', 7)
+    expect(result).toEqual({ success: true, data: undefined })
+    const [url] = httpDeleteMock.mock.calls[0]!
     expect(url).toBe('/cohortsample/1/EUNOMIA/7')
-    expect(opts.method).toBe('DELETE')
   })
 })

@@ -220,11 +220,11 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     const ids = [...(ir.expression.targetIds ?? []), ...(ir.expression.outcomeIds ?? [])]
     const missing = ids.filter(id => !cohortNameById.value.has(id))
     if (missing.length === 0) return
-    const { getCohortDefinition } = await import('@/services/webapi')
+    const { getCohortDefinition } = await import('@/services/cohort-definition.service')
     await Promise.all(
       missing.map(async id => {
-        const cohort = await getCohortDefinition(id)
-        if (cohort?.name) cohortNameById.value.set(id, cohort.name)
+        const result = await getCohortDefinition(id)
+        if (result.success && result.data.name) cohortNameById.value.set(id, result.data.name)
       })
     )
   }

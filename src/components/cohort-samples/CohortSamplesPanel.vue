@@ -82,7 +82,8 @@ import {
   getCohortSample,
   refreshCohortSample,
   deleteCohortSample,
-} from '@/services/webapi'
+} from '@/services/cohort-sample.service'
+import { logger } from '@/utils/logger'
 import type { CohortSample, SampleParameters } from '@/models/cohort-sample.types'
 import CohortSamplesList from './CohortSamplesList.vue'
 import CohortSampleDetail from './CohortSampleDetail.vue'
@@ -111,25 +112,33 @@ async function loadList() {
   if (!props.cohortId || !props.sourceKey) return
   loading.value = true
   error.value = null
-  try {
-    const list = await listCohortSamples(props.cohortId, props.sourceKey)
-    samples.value = list?.samples ?? []
-  } catch (e) {
+  const result = await listCohortSamples(props.cohortId, props.sourceKey)
+  if (result.success) {
+    samples.value = result.data.samples
+  } else {
+    // A failed list fetch is not "no samples" — show the error rather than
+    // an empty state, or a 403/network failure looks identical to a cohort
+    // that simply has no samples yet.
+    samples.value = []
     error.value =
-      e instanceof Error
-        ? e.message
-        : tv('components.cohortSamples.failedToLoadSamples', 'Failed to load samples')
-  } finally {
-    loading.value = false
+      result.error.message ||
+      tv('components.cohortSamples.failedToLoadSamples', 'Failed to load samples')
   }
+  loading.value = false
 }
 
 async function loadDetail(sampleId: number) {
   detailLoading.value = true
   try {
-    selectedSample.value = await getCohortSample(props.cohortId, props.sourceKey, sampleId, {
+    const result = await getCohortSample(props.cohortId, props.sourceKey, sampleId, {
       withElements: true,
     })
+    if (result.success) {
+      selectedSample.value = result.data
+    } else {
+      selectedSample.value = null
+      logger.error('CohortSamplesPanel', 'Failed to load sample detail', result.error)
+    }
   } finally {
     detailLoading.value = false
   }
@@ -145,39 +154,41 @@ async function onSelect(sample: CohortSample) {
 async function onCreate(parameters: SampleParameters) {
   creating.value = true
   error.value = null
-  try {
-    const created = await createCohortSample(props.cohortId, props.sourceKey, parameters)
-    if (created) {
-      dialogOpen.value = false
-      await loadList()
-      await onSelect(created)
-    }
-  } catch (e) {
+  const result = await createCohortSample(props.cohortId, props.sourceKey, parameters)
+  if (result.success) {
+    dialogOpen.value = false
+    await loadList()
+    await onSelect(result.data)
+  } else {
+    // Previously a malformed response was swallowed silently while a
+    // transport error surfaced — both are a failed create now.
     error.value =
-      e instanceof Error
-        ? e.message
-        : tv('components.cohortSamples.failedToCreateSample', 'Failed to create sample')
-  } finally {
-    creating.value = false
+      result.error.message ||
+      tv('components.cohortSamples.failedToCreateSample', 'Failed to create sample')
   }
+  creating.value = false
 }
 
 async function onRefresh(sample: CohortSample) {
-  const refreshed = await refreshCohortSample(props.cohortId, props.sourceKey, sample.id)
-  if (refreshed) {
+  const result = await refreshCohortSample(props.cohortId, props.sourceKey, sample.id)
+  if (result.success) {
     if (selectedSampleId.value === sample.id) await loadDetail(sample.id)
     await loadList()
+  } else {
+    logger.error('CohortSamplesPanel', 'Failed to refresh sample', result.error)
   }
 }
 
 async function onDelete(sample: CohortSample) {
-  const ok = await deleteCohortSample(props.cohortId, props.sourceKey, sample.id)
-  if (ok) {
+  const result = await deleteCohortSample(props.cohortId, props.sourceKey, sample.id)
+  if (result.success) {
     if (selectedSampleId.value === sample.id) {
       selectedSampleId.value = null
       selectedSample.value = null
     }
     await loadList()
+  } else {
+    logger.error('CohortSamplesPanel', 'Failed to delete sample', result.error)
   }
 }
 
