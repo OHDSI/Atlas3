@@ -107,13 +107,12 @@ describe('ChartExport', () => {
       const pngButton = wrapper.findAll('button')[0]
       await pngButton.trigger('click')
 
-      // getExportConfig() carries the shared export defaults - theme-aware
-      // background plus excluding the toolbox from exported images.
+      // Background tracks the active chart theme (see CHART_SURFACE); the
+      // rest of the export options are fixed and predate the theme work.
       expect(chartInstance.getDataURL).toHaveBeenCalledWith({
         type: 'png',
         pixelRatio: 2,
-        backgroundColor: '#ffffff',
-        excludeComponents: ['toolbox']
+        backgroundColor: '#ffffff'
       })
       expect(mockLink.download).toBe('test-chart.png')
       expect(mockLink.click).toHaveBeenCalled()
@@ -130,8 +129,7 @@ describe('ChartExport', () => {
       expect(chartInstance.getDataURL).toHaveBeenCalledWith({
         type: 'png',
         pixelRatio: 2,
-        backgroundColor: '#161618',
-        excludeComponents: ['toolbox']
+        backgroundColor: '#161618'
       })
     })
 

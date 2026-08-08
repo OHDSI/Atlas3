@@ -39,7 +39,7 @@ import { ref } from 'vue'
 import type { EChartsType } from 'echarts/core'
 import { logger } from '@/utils/logger'
 import { AtlasButton } from '@/components/ui'
-import { getExportConfig } from '@/ui/chart-config'
+import { CHART_SURFACE } from '@/ui/chart-config'
 
 /**
  * Props
@@ -77,7 +77,8 @@ async function handleExportPNG() {
     // Get PNG data URL from ECharts
     const dataURL = props.chartInstance.getDataURL({
       type: 'png',
-      ...getExportConfig(),
+      pixelRatio: 2, // Higher resolution for better quality
+      backgroundColor: CHART_SURFACE,
     })
 
     // Trigger download
