@@ -5,7 +5,7 @@
  */
 import { logger } from '@/utils/logger'
 import { httpGet, httpPost } from '@/services/http-client'
-import { unwrap, ApiError } from '@/services/api-error'
+import { unwrap, ApiError, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import {
   WebAPIReportResponseSchema,
@@ -53,7 +53,7 @@ export async function getCohortReport(
 
     const parsed = WebAPIReportResponseSchema.safeParse(data)
     if (!parsed.success) {
-      throw new ApiError('Invalid cohort report response', 0, null)
+      throw new ApiError('Invalid cohort report response', 0, zodIssues(parsed.error))
     }
     if (!parsed.data.summary) {
       throw new ApiError('Invalid cohort report response: missing summary', 0, null)
@@ -87,7 +87,7 @@ export async function getInclusionRuleReport(
 
     const parsed = InclusionRuleReportSchema.safeParse(data)
     if (!parsed.success) {
-      throw new ApiError('Invalid inclusion-rule report response', 0, null)
+      throw new ApiError('Invalid inclusion-rule report response', 0, zodIssues(parsed.error))
     }
 
     let treemap: InclusionTreemapNode | null = null

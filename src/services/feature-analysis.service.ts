@@ -3,7 +3,7 @@
  * CRUD and metadata lookups for feature analyses (WebAPI /feature-analysis/...)
  */
 import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
-import { unwrap, unwrapList, ApiError } from '@/services/api-error'
+import { unwrap, unwrapList, ApiError, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import {
   FeatureAnalysisSchema,
@@ -29,7 +29,7 @@ export async function listFeatureAnalyses(): Promise<ApiResult<FeatureAnalysisLi
     const list = unwrapList(data)
     const parsed = z.array(FeatureAnalysisListItemSchema).safeParse(list)
     if (!parsed.success) {
-      throw new ApiError('Invalid response from /feature-analysis', 0, null)
+      throw new ApiError('Invalid response from /feature-analysis', 0, zodIssues(parsed.error))
     }
     return parsed.data
   }, CONTEXT)
@@ -44,7 +44,7 @@ export async function getFeatureAnalysis(id: number): Promise<ApiResult<FeatureA
     const data = await httpGet<unknown>(`/feature-analysis/${id}`)
     const parsed = FeatureAnalysisSchema.safeParse(data)
     if (!parsed.success) {
-      throw new ApiError(`Invalid response from /feature-analysis/${id}`, 0, null)
+      throw new ApiError(`Invalid response from /feature-analysis/${id}`, 0, zodIssues(parsed.error))
     }
     return parsed.data as FeatureAnalysis
   }, CONTEXT)
@@ -61,7 +61,7 @@ export async function createFeatureAnalysis(
     const data = await httpPost<unknown>('/feature-analysis', fa)
     const parsed = FeatureAnalysisSchema.safeParse(data)
     if (!parsed.success) {
-      throw new ApiError('Invalid response from POST /feature-analysis', 0, null)
+      throw new ApiError('Invalid response from POST /feature-analysis', 0, zodIssues(parsed.error))
     }
     return parsed.data as FeatureAnalysis
   }, CONTEXT)
@@ -81,7 +81,11 @@ export async function updateFeatureAnalysis(
     const data = await httpPut<unknown>(`/feature-analysis/${fa.id}`, fa)
     const parsed = FeatureAnalysisSchema.safeParse(data)
     if (!parsed.success) {
-      throw new ApiError(`Invalid response from PUT /feature-analysis/${fa.id}`, 0, null)
+      throw new ApiError(
+        `Invalid response from PUT /feature-analysis/${fa.id}`,
+        0,
+        zodIssues(parsed.error)
+      )
     }
     return parsed.data as FeatureAnalysis
   }, CONTEXT)
@@ -106,7 +110,11 @@ export async function copyFeatureAnalysis(id: number): Promise<ApiResult<Feature
     const data = await httpGet<unknown>(`/feature-analysis/${id}/copy`)
     const parsed = FeatureAnalysisSchema.safeParse(data)
     if (!parsed.success) {
-      throw new ApiError(`Invalid response from /feature-analysis/${id}/copy`, 0, null)
+      throw new ApiError(
+        `Invalid response from /feature-analysis/${id}/copy`,
+        0,
+        zodIssues(parsed.error)
+      )
     }
     return parsed.data as FeatureAnalysis
   }, CONTEXT)
@@ -144,7 +152,7 @@ export async function listFeatureAnalysisDomains(): Promise<ApiResult<string[]>>
     const schema = z.array(z.union([z.string(), z.object({ id: z.string() }).passthrough()]))
     const parsed = schema.safeParse(data)
     if (!parsed.success) {
-      throw new ApiError('Invalid response from /feature-analysis/domains', 0, null)
+      throw new ApiError('Invalid response from /feature-analysis/domains', 0, zodIssues(parsed.error))
     }
     return parsed.data.map(entry => (typeof entry === 'string' ? entry : entry.id))
   }, CONTEXT)
@@ -161,7 +169,11 @@ export async function listFeatureAnalysisAggregates(): Promise<
     const data = await httpGet<unknown>('/feature-analysis/aggregates')
     const parsed = z.array(FeatureAnalysisAggregateSchema).safeParse(data)
     if (!parsed.success) {
-      throw new ApiError('Invalid response from /feature-analysis/aggregates', 0, null)
+      throw new ApiError(
+        'Invalid response from /feature-analysis/aggregates',
+        0,
+        zodIssues(parsed.error)
+      )
     }
     return parsed.data
   }, CONTEXT)
@@ -183,7 +195,7 @@ export async function getDefaultCovariateSettings(
       throw new ApiError(
         'Invalid response from /featureextraction/defaultcovariatesettings',
         0,
-        null
+        zodIssues(parsed.error)
       )
     }
     return parsed.data

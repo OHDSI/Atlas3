@@ -12,7 +12,7 @@ import {
 import { mapConceptFromAPI, mapComparisonItemFromAPI } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
 import { httpClient, httpPostRead } from '@/services/http-client'
-import { unwrap, ApiError } from '@/services/api-error'
+import { unwrap, ApiError, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 
 type ConceptRecordCountResponse = Array<Record<string, number[]>>
@@ -68,7 +68,7 @@ export async function searchConcepts(
 
     if (!parsed.success) {
       logger.error('ConceptSearch', 'Concept search validation error', parsed.error)
-      throw new ApiError('Invalid concept search response format', 0, null)
+      throw new ApiError('Invalid concept search response format', 0, zodIssues(parsed.error))
     }
 
     return parsed.data.map(mapConceptFromAPI)

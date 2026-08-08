@@ -4,7 +4,7 @@
  * (WebAPI /ir/...)
  */
 import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
-import { unwrap, ApiError } from '@/services/api-error'
+import { unwrap, ApiError, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import { logger } from '@/utils/logger'
 import {
@@ -62,7 +62,9 @@ export async function listIncidenceRates(): Promise<ApiResult<IncidenceRate[]>> 
   return unwrap(async () => {
     const data = await httpGet<unknown>('/ir/')
     const parsed = z.array(IncidenceRateSummarySchema.passthrough()).safeParse(data)
-    if (!parsed.success) throw new ApiError('Invalid incidence rate list response', 0, null)
+    if (!parsed.success) {
+      throw new ApiError('Invalid incidence rate list response', 0, zodIssues(parsed.error))
+    }
     return parsed.data as IncidenceRate[]
   }, CONTEXT)
 }
@@ -163,7 +165,9 @@ export async function listIncidenceRateInfo(
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/ir/${id}/info`)
     const parsed = IncidenceRateInfoListSchema.safeParse(data)
-    if (!parsed.success) throw new ApiError('Invalid info list response', 0, null)
+    if (!parsed.success) {
+      throw new ApiError('Invalid info list response', 0, zodIssues(parsed.error))
+    }
     return parsed.data
   }, CONTEXT)
 }
@@ -176,7 +180,9 @@ export async function getIncidenceRateInfoBySource(
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/ir/${id}/info/${sourceKey}`)
     const parsed = IncidenceRateInfoBySourceSchema.safeParse(data)
-    if (!parsed.success) throw new ApiError('Invalid info-by-source response', 0, null)
+    if (!parsed.success) {
+      throw new ApiError('Invalid info-by-source response', 0, zodIssues(parsed.error))
+    }
     return parsed.data
   }, CONTEXT)
 }
@@ -225,7 +231,9 @@ export async function getIncidenceRateReport(
     const url = `/ir/${id}/report/${sourceKey}?targetId=${targetId}&outcomeId=${outcomeId}`
     const data = await httpGet<unknown>(url)
     const parsed = IncidenceRateReportSchema.passthrough().safeParse(data)
-    if (!parsed.success) throw new ApiError('Invalid report response', 0, null)
+    if (!parsed.success) {
+      throw new ApiError('Invalid report response', 0, zodIssues(parsed.error))
+    }
     return parsed.data as IncidenceRateReport
   }, CONTEXT)
 }

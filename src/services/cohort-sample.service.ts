@@ -5,7 +5,7 @@
  * generated cohort, optionally filtered by age and gender criteria.
  */
 import { httpGet, httpPost, httpDelete } from '@/services/http-client'
-import { unwrap, ApiError } from '@/services/api-error'
+import { unwrap, ApiError, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import {
   CohortSampleSchema,
@@ -29,7 +29,7 @@ export async function listCohortSamples(
     const data = await httpGet<unknown>(`/cohortsample/${cohortDefinitionId}/${sourceKey}`)
     const parsed = CohortSampleListSchema.safeParse(data)
     if (!parsed.success) {
-      throw new ApiError('Invalid cohort sample list response', 0, null)
+      throw new ApiError('Invalid cohort sample list response', 0, zodIssues(parsed.error))
     }
     return parsed.data
   }, CONTEXT)
@@ -63,7 +63,7 @@ export async function getCohortSample(
     const data = await httpGet<unknown>(url)
     const parsed = CohortSampleSchema.safeParse(data)
     if (!parsed.success) {
-      throw new ApiError('Invalid cohort sample response', 0, null)
+      throw new ApiError('Invalid cohort sample response', 0, zodIssues(parsed.error))
     }
     return parsed.data
   }, CONTEXT)
@@ -82,7 +82,7 @@ export async function createCohortSample(
     const data = await httpPost<unknown>(`/cohortsample/${cohortDefinitionId}/${sourceKey}`, parameters)
     const parsed = CohortSampleSchema.safeParse(data)
     if (!parsed.success) {
-      throw new ApiError('Invalid cohort sample response', 0, null)
+      throw new ApiError('Invalid cohort sample response', 0, zodIssues(parsed.error))
     }
     return parsed.data
   }, CONTEXT)
@@ -103,7 +103,7 @@ export async function refreshCohortSample(
     )
     const parsed = CohortSampleSchema.safeParse(data)
     if (!parsed.success) {
-      throw new ApiError('Invalid cohort sample response', 0, null)
+      throw new ApiError('Invalid cohort sample response', 0, zodIssues(parsed.error))
     }
     return parsed.data
   }, CONTEXT)

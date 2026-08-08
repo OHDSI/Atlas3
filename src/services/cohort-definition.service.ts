@@ -5,7 +5,7 @@
  */
 import { logger } from '@/utils/logger'
 import { httpGet, httpPost, httpPut, httpDelete, httpPostRead, getBaseUrl } from '@/services/http-client'
-import { unwrap, ApiError } from '@/services/api-error'
+import { unwrap, ApiError, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import {
   type AtlasCohortDefinition,
@@ -147,7 +147,7 @@ export async function getCohortGenerationInfo(
     const data = await httpGet<unknown>(`/cohortdefinition/${cohortId}/info`)
     const parsed = CohortGenerationInfoListSchema.safeParse(data)
     if (!parsed.success) {
-      throw new ApiError('Invalid cohort generation info response format', 0, null)
+      throw new ApiError('Invalid cohort generation info response format', 0, zodIssues(parsed.error))
     }
     return parsed.data
   }, CONTEXT)
@@ -163,7 +163,7 @@ export async function getCohorts(): Promise<ApiResult<CohortDefinitionSummary[]>
     const data = await httpGet<unknown>('/cohortdefinition')
     const parsed = CohortDefinitionListSchema.safeParse(data)
     if (!parsed.success) {
-      throw new ApiError('Invalid cohort list response format', 0, null)
+      throw new ApiError('Invalid cohort list response format', 0, zodIssues(parsed.error))
     }
     return parsed.data
   }, CONTEXT)

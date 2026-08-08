@@ -4,7 +4,7 @@
  * (WebAPI /pathway-analysis/...)
  */
 import { httpGet, httpPost, httpPostRead, httpPut, httpDelete } from '@/services/http-client'
-import { unwrap, ApiError } from '@/services/api-error'
+import { unwrap, ApiError, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import { logger } from '@/utils/logger'
 import {
@@ -36,7 +36,11 @@ export async function listPathways(): Promise<ApiResult<Pathway[]>> {
     if (asPage.success) return asPage.data.content as Pathway[]
     const asArray = z.array(PathwaySchema).safeParse(data)
     if (asArray.success) return asArray.data as Pathway[]
-    throw new ApiError('Invalid pathway list response', 0, null)
+    throw new ApiError(
+      'Invalid pathway list response',
+      0,
+      JSON.stringify({ page: asPage.error.issues, array: asArray.error.issues })
+    )
   }, CONTEXT)
 }
 
@@ -48,7 +52,7 @@ export async function getPathway(id: number): Promise<ApiResult<Pathway>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/pathway-analysis/${id}`)
     const parsed = PathwaySchema.passthrough().safeParse(data)
-    if (!parsed.success) throw new ApiError('Invalid pathway response', 0, null)
+    if (!parsed.success) throw new ApiError('Invalid pathway response', 0, zodIssues(parsed.error))
     return parsed.data as Pathway
   }, CONTEXT)
 }
@@ -61,7 +65,7 @@ export async function createPathway(pathway: Pathway): Promise<ApiResult<Pathway
   return unwrap(async () => {
     const data = await httpPost<unknown>('/pathway-analysis', pathway)
     const parsed = PathwaySchema.passthrough().safeParse(data)
-    if (!parsed.success) throw new ApiError('Invalid create response', 0, null)
+    if (!parsed.success) throw new ApiError('Invalid create response', 0, zodIssues(parsed.error))
     return parsed.data as Pathway
   }, CONTEXT)
 }
@@ -74,7 +78,7 @@ export async function savePathway(id: number, pathway: Pathway): Promise<ApiResu
   return unwrap(async () => {
     const data = await httpPut<unknown>(`/pathway-analysis/${id}`, pathway)
     const parsed = PathwaySchema.passthrough().safeParse(data)
-    if (!parsed.success) throw new ApiError('Invalid save response', 0, null)
+    if (!parsed.success) throw new ApiError('Invalid save response', 0, zodIssues(parsed.error))
     return parsed.data as Pathway
   }, CONTEXT)
 }
@@ -87,7 +91,7 @@ export async function copyPathway(id: number): Promise<ApiResult<Pathway>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>(`/pathway-analysis/${id}`, undefined)
     const parsed = PathwaySchema.passthrough().safeParse(data)
-    if (!parsed.success) throw new ApiError('Invalid copy response', 0, null)
+    if (!parsed.success) throw new ApiError('Invalid copy response', 0, zodIssues(parsed.error))
     return parsed.data as Pathway
   }, CONTEXT)
 }
@@ -191,7 +195,7 @@ export async function listPathwayExecutions(id: number): Promise<ApiResult<Pathw
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/pathway-analysis/${id}/generation`)
     const parsed = PathwayExecutionListSchema.safeParse(data)
-    if (!parsed.success) throw new ApiError('Invalid execution list', 0, null)
+    if (!parsed.success) throw new ApiError('Invalid execution list', 0, zodIssues(parsed.error))
     return parsed.data
   }, CONTEXT)
 }
@@ -206,7 +210,7 @@ export async function getPathwayExecution(
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/pathway-analysis/generation/${generationId}`)
     const parsed = PathwayExecutionSchema.safeParse(data)
-    if (!parsed.success) throw new ApiError('Invalid execution response', 0, null)
+    if (!parsed.success) throw new ApiError('Invalid execution response', 0, zodIssues(parsed.error))
     return parsed.data
   }, CONTEXT)
 }
@@ -219,7 +223,7 @@ export async function getPathwayResults(generationId: number): Promise<ApiResult
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/pathway-analysis/generation/${generationId}/result`)
     const parsed = PathwayResultsSchema.safeParse(data)
-    if (!parsed.success) throw new ApiError('Invalid results response', 0, null)
+    if (!parsed.success) throw new ApiError('Invalid results response', 0, zodIssues(parsed.error))
     return parsed.data
   }, CONTEXT)
 }
@@ -253,7 +257,7 @@ export async function generatePathway(
       })
       .passthrough()
     const job = jobSchema.safeParse(data)
-    if (!job.success) throw new ApiError('Invalid generate response', 0, null)
+    if (!job.success) throw new ApiError('Invalid generate response', 0, zodIssues(job.error))
     return {
       id: job.data.executionId ?? job.data.id ?? 0,
       status: job.data.status ?? 'STARTING',
@@ -285,7 +289,7 @@ export async function getPathwayDesignByGeneration(
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/pathway-analysis/generation/${generationId}/design`)
     const parsed = PathwaySchema.passthrough().safeParse(data)
-    if (!parsed.success) throw new ApiError('Invalid design response', 0, null)
+    if (!parsed.success) throw new ApiError('Invalid design response', 0, zodIssues(parsed.error))
     return parsed.data as Pathway
   }, CONTEXT)
 }

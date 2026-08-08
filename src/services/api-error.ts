@@ -1,5 +1,16 @@
+import type { ZodError } from 'zod'
 import { logger } from '@/utils/logger'
 import { type ApiResult, success, failure } from '@/types/api'
+
+/**
+ * Serialise a Zod failure into ApiError's `body` carrier. `issues` (field
+ * paths + messages) is what's actually useful when read from a log or
+ * surfaced in a report; the full ZodError also carries a redundant `message`
+ * string and internal `_ctx`, which just adds noise.
+ */
+export function zodIssues(error: ZodError): string {
+  return JSON.stringify(error.issues)
+}
 
 export class ApiError extends Error {
   readonly status: number
