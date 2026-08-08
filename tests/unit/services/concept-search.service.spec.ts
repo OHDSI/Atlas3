@@ -240,24 +240,22 @@ describe('ConceptSearchService', () => {
       expect(result).toBeNull()
     })
 
-    it('should return null for invalid response format', async () => {
+    it('throws for invalid response format', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
         text: () => Promise.resolve(JSON.stringify({ invalid: 'response' })),
       })
 
-      const result = await getConceptById('TEST', 123)
-
-      expect(result).toBeNull()
+      await expect(getConceptById('TEST', 123)).rejects.toThrow(
+        'Invalid concept detail response'
+      )
     })
 
-    it('should return null on network error', async () => {
+    it('throws on network error', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-      const result = await getConceptById('TEST', 123)
-
-      expect(result).toBeNull()
+      await expect(getConceptById('TEST', 123)).rejects.toThrow('Network error')
     })
   })
 

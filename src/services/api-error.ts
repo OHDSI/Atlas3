@@ -1,4 +1,4 @@
-import type { ZodError } from 'zod'
+import type { ZodError, ZodType, ZodTypeDef } from 'zod'
 import { logger } from '@/utils/logger'
 import { type ApiResult, success, failure } from '@/types/api'
 
@@ -28,6 +28,23 @@ export function toApiError(err: unknown): ApiError {
   if (err instanceof ApiError) return err
   if (err instanceof Error) return new ApiError(err.message, 0, null)
   return new ApiError(String(err), 0, null)
+}
+
+/**
+ * Validate a response payload, throwing the standard ApiError shape on
+ * mismatch: `message` for the toast, zod issues in `body` for the log.
+ * unwrap() already logs the thrown error - don't log again at the call site.
+ */
+export function parseOrThrow<T>(
+  schema: ZodType<T, ZodTypeDef, unknown>,
+  data: unknown,
+  message: string
+): T {
+  const parsed = schema.safeParse(data)
+  if (!parsed.success) {
+    throw new ApiError(message, 0, zodIssues(parsed.error))
+  }
+  return parsed.data
 }
 
 export async function unwrap<T>(fn: () => Promise<T>, context: string): Promise<ApiResult<T>> {

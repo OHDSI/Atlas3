@@ -1496,7 +1496,8 @@
       "searching": "개념 검색 중...",
       "foundResults": "{count}개의 결과를 찾았습니다",
       "conceptMeta": "ID: {id} | 코드: {code} | 도메인: {domain}",
-      "enterSearchTerm": "개념을 찾으려면 검색어를 입력하세요"
+      "enterSearchTerm": "개념을 찾으려면 검색어를 입력하세요",
+      "searchFailed": "개념 검색에 실패했습니다"
     },
     "cohortBuilder": {
       "stateRequired": "필수",
@@ -1513,8 +1514,11 @@
       "stateDrugExposure": "약물 노출",
       "stateConfigured": "구성됨",
       "saveToServerError": "코호트를 서버에 저장하지 못했습니다",
+      "saveForbidden": "이 코호트를 저장할 권한이 없습니다",
       "saveSuccess": "코호트를 저장했습니다",
       "saveError": "코호트를 저장하지 못했습니다",
+      "loadForbidden": "이 코호트를 열 권한이 없습니다",
+      "loadError": "코호트를 불러오지 못했습니다",
       "exportFailed": "내보내기 실패: {error}",
       "exportDownloaded": "코호트 JSON을 다운로드했습니다",
       "copiedToClipboard": "코호트 JSON을 클립보드에 복사했습니다",
@@ -3218,6 +3222,8 @@
   },
   "cohortDefinitions": {
     "closeYourCurrentCohort": "새로운 코호트 정의을 만들기 전에 현재 코호트 정의를 닫으십시오.",
+    "copyLoadForbidden": "이 코호트를 읽을 권한이 없습니다.",
+    "deleteError": "코호트를 삭제하지 못했습니다.",
     "cohort": {
       "modals": {
         "analysisTypes": {

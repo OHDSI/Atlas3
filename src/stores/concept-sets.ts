@@ -261,15 +261,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
     try {
       const created = await createConceptSet(set)
-      if (created) {
-        // Refresh the list
-        await fetchAll()
-        currentSet.value = created
-        return created
-      } else {
-        error.value = 'Failed to create concept set'
-        return null
-      }
+      // Refresh the list
+      await fetchAll()
+      currentSet.value = created
+      return created
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to create concept set'
       logger.error('ConceptSetsStore', 'Create concept set error', err)
@@ -288,15 +283,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
     try {
       const updated = await updateConceptSet(set)
-      if (updated) {
-        // Refresh the list
-        await fetchAll()
-        currentSet.value = updated
-        return updated
-      } else {
-        error.value = 'Failed to update concept set'
-        return null
-      }
+      // Refresh the list
+      await fetchAll()
+      currentSet.value = updated
+      return updated
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to update concept set'
       logger.error('ConceptSetsStore', 'Update concept set error', err)

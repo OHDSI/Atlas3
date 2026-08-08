@@ -1496,7 +1496,8 @@
       "searching": "正在搜索概念...",
       "foundResults": "找到 {count} 条结果",
       "conceptMeta": "ID: {id} | 代码: {code} | 域: {domain}",
-      "enterSearchTerm": "输入搜索词以查找概念"
+      "enterSearchTerm": "输入搜索词以查找概念",
+      "searchFailed": "搜索概念失败"
     },
     "cohortBuilder": {
       "stateRequired": "必填",
@@ -1513,8 +1514,11 @@
       "stateDrugExposure": "药物暴露",
       "stateConfigured": "已配置",
       "saveToServerError": "无法将队列保存到服务器",
+      "saveForbidden": "您没有权限保存此队列",
       "saveSuccess": "队列保存成功",
       "saveError": "无法保存队列",
+      "loadForbidden": "您没有权限打开此队列",
+      "loadError": "加载队列失败",
       "exportFailed": "导出失败：{error}",
       "exportDownloaded": "已下载队列 JSON",
       "copiedToClipboard": "已将队列 JSON 复制到剪贴板",
@@ -3218,6 +3222,8 @@
   },
   "cohortDefinitions": {
     "closeYourCurrentCohort": "在创建新的队列定义之前，请先关闭您的当前队列定义",
+    "copyLoadForbidden": "您没有权限读取此队列。",
+    "deleteError": "删除队列失败。",
     "cohort": {
       "modals": {
         "analysisTypes": {

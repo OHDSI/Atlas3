@@ -602,7 +602,10 @@ async function loadDefaultCovariateSettings(temporal: boolean) {
     dirty.value = true
   } else {
     logger.error('FeatureAnalysisEditor', 'Failed to load default covariate settings', result.error)
-    showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
+    showSnackbar(
+      t('cc.fa.loadDefaultsError', 'Failed to load default covariate settings.').value,
+      'error'
+    )
   }
   loadingDefaults.value = false
 }

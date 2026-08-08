@@ -4,7 +4,7 @@
  * (WebAPI /ir/...)
  */
 import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
-import { unwrap, ApiError, zodIssues } from '@/services/api-error'
+import { unwrap, parseOrThrow } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import { logger } from '@/utils/logger'
 import {
@@ -28,11 +28,11 @@ const CONTEXT = 'IncidenceRateService'
 // for both reads and writes. Decode/encode at the boundary so the editor
 // always works with a parsed object.
 function decodeIRExpression(wire: unknown): IncidenceRate {
-  const parsed = IncidenceRateWireSchema.safeParse(wire)
-  if (!parsed.success) {
-    throw new ApiError('Invalid incidence rate response', 0, zodIssues(parsed.error))
-  }
-  const { expression: raw, ...rest } = parsed.data
+  const { expression: raw, ...rest } = parseOrThrow(
+    IncidenceRateWireSchema,
+    wire,
+    'Invalid incidence rate response'
+  )
   if (!raw) {
     return {
       ...rest,
@@ -50,11 +50,8 @@ function decodeIRExpression(wire: unknown): IncidenceRate {
   } catch {
     throw new Error('expression is not valid JSON')
   }
-  const expr = IncidenceRateExpressionSchema.safeParse(parsedExpr)
-  if (!expr.success) {
-    throw new ApiError('Invalid incidence rate expression', 0, zodIssues(expr.error))
-  }
-  return { ...rest, expression: expr.data } as IncidenceRate
+  const expr = parseOrThrow(IncidenceRateExpressionSchema, parsedExpr, 'Invalid incidence rate expression')
+  return { ...rest, expression: expr } as IncidenceRate
 }
 
 function encodeIRForSave(ir: IncidenceRate): Record<string, unknown> {
@@ -66,11 +63,11 @@ function encodeIRForSave(ir: IncidenceRate): Record<string, unknown> {
 export async function listIncidenceRates(): Promise<ApiResult<IncidenceRate[]>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>('/ir/')
-    const parsed = z.array(IncidenceRateSummarySchema.passthrough()).safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError('Invalid incidence rate list response', 0, zodIssues(parsed.error))
-    }
-    return parsed.data as IncidenceRate[]
+    return parseOrThrow(
+      z.array(IncidenceRateSummarySchema.passthrough()),
+      data,
+      'Invalid incidence rate list response'
+    ) as IncidenceRate[]
   }, CONTEXT)
 }
 
@@ -169,11 +166,7 @@ export async function listIncidenceRateInfo(
 ): Promise<ApiResult<IncidenceRateInfoBySource[]>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/ir/${id}/info`)
-    const parsed = IncidenceRateInfoListSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError('Invalid info list response', 0, zodIssues(parsed.error))
-    }
-    return parsed.data
+    return parseOrThrow(IncidenceRateInfoListSchema, data, 'Invalid info list response')
   }, CONTEXT)
 }
 
@@ -184,11 +177,7 @@ export async function getIncidenceRateInfoBySource(
 ): Promise<ApiResult<IncidenceRateInfoBySource>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/ir/${id}/info/${sourceKey}`)
-    const parsed = IncidenceRateInfoBySourceSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError('Invalid info-by-source response', 0, zodIssues(parsed.error))
-    }
-    return parsed.data
+    return parseOrThrow(IncidenceRateInfoBySourceSchema, data, 'Invalid info-by-source response')
   }, CONTEXT)
 }
 
@@ -235,10 +224,10 @@ export async function getIncidenceRateReport(
   return unwrap(async () => {
     const url = `/ir/${id}/report/${sourceKey}?targetId=${targetId}&outcomeId=${outcomeId}`
     const data = await httpGet<unknown>(url)
-    const parsed = IncidenceRateReportSchema.passthrough().safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError('Invalid report response', 0, zodIssues(parsed.error))
-    }
-    return parsed.data as IncidenceRateReport
+    return parseOrThrow(
+      IncidenceRateReportSchema.passthrough(),
+      data,
+      'Invalid report response'
+    ) as IncidenceRateReport
   }, CONTEXT)
 }

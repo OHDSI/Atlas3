@@ -242,13 +242,22 @@ async function handleCreateStandaloneConceptSet(
     includeMapped: false,
   }))
 
-  const created = await createConceptSet({
-    name: payload.name,
-    description: payload.description ?? '',
-    items: conceptSetItems,
-  })
+  let created
+  try {
+    created = await createConceptSet({
+      name: payload.name,
+      description: payload.description ?? '',
+      items: conceptSetItems,
+    })
+  } catch (err) {
+    showSnackbar(
+      err instanceof Error ? err.message : 'Failed to create concept set',
+      'error'
+    )
+    return
+  }
 
-  if (!created || created.id === undefined || created.id === null) {
+  if (created.id === undefined || created.id === null) {
     showSnackbar('Failed to create concept set', 'error')
     return
   }

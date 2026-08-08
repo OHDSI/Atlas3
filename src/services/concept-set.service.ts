@@ -96,13 +96,15 @@ export async function getAllConceptSets(): Promise<ConceptSetListItem[]> {
 
     if (!parsed.success) {
       logger.error('ConceptSet', 'Concept set list validation error', parsed.error)
-      return []
+      throw new Error('Invalid concept set list response')
     }
 
     return parsed.data
   } catch (error) {
+    // A failed fetch is not "no concept sets" - propagate so the store's
+    // error state renders instead of an empty list.
     logger.error('ConceptSet', 'Failed to fetch concept sets', error)
-    return []
+    throw error
   }
 }
 
@@ -146,7 +148,7 @@ export async function getConceptSetById(
  */
 export async function createConceptSet(
   conceptSet: Omit<ConceptSet, 'id' | 'createdDate' | 'createdBy' | 'modifiedDate' | 'modifiedBy'>
-): Promise<ConceptSet | null> {
+): Promise<ConceptSet> {
   try {
     const metadataPayload = {
       name: conceptSet.name,
@@ -184,8 +186,10 @@ export async function createConceptSet(
 
     return mapConceptSetFromAPI(data)
   } catch (error) {
+    // Propagate: the server's error detail (fetchJSON surfaces the body) is
+    // what the user needs; a bare null reduced every failure to a generic toast.
     logger.error('ConceptSet', 'Failed to create concept set', error)
-    return null
+    throw error
   }
 }
 
@@ -194,7 +198,7 @@ export async function createConceptSet(
  * @param conceptSet Concept set with id
  * @returns Updated concept set
  */
-export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptSet | null> {
+export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptSet> {
   if (!conceptSet.id) {
     throw new Error('Concept set ID is required for update')
   }
@@ -236,7 +240,7 @@ export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptS
     })
   } catch (error) {
     logger.error('ConceptSet', `Failed to update concept set ${conceptSet.id}`, error)
-    return null
+    throw error
   }
 }
 

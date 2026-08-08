@@ -4,7 +4,7 @@
  * (WebAPI /cohort-characterization/...)
  */
 import { httpGet, httpPost, httpPut, httpDelete, httpPostRead } from '@/services/http-client'
-import { unwrap, unwrapList, ApiError, zodIssues } from '@/services/api-error'
+import { unwrap, unwrapList, ApiError, parseOrThrow } from '@/services/api-error'
 import { logger } from '@/utils/logger'
 import { type ApiResult } from '@/types/api'
 import {
@@ -28,11 +28,7 @@ export async function listCharacterizations(): Promise<ApiResult<Characterizatio
   return unwrap(async () => {
     const data = await httpGet<unknown>('/cohort-characterization?size=10000')
     const list = unwrapList(data)
-    const parsed = z.array(CharacterizationListItemSchema).safeParse(list)
-    if (!parsed.success) {
-      throw new ApiError('Invalid response from /cohort-characterization', 0, zodIssues(parsed.error))
-    }
-    return parsed.data
+    return parseOrThrow(z.array(CharacterizationListItemSchema), list, 'Invalid response from /cohort-characterization')
   }, CONTEXT)
 }
 
@@ -45,15 +41,11 @@ export async function getCharacterization(
 ): Promise<ApiResult<CharacterizationDefinition>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/cohort-characterization/${id}/design`)
-    const parsed = CharacterizationDefinitionSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError(
-        `Invalid response from /cohort-characterization/${id}/design`,
-        0,
-        zodIssues(parsed.error)
-      )
-    }
-    return parsed.data as CharacterizationDefinition
+    return parseOrThrow(
+      CharacterizationDefinitionSchema,
+      data,
+      `Invalid response from /cohort-characterization/${id}/design`
+    ) as CharacterizationDefinition
   }, CONTEXT)
 }
 
@@ -82,15 +74,11 @@ export async function createCharacterization(
 ): Promise<ApiResult<CharacterizationDefinition>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>('/cohort-characterization', serializeCharacterization(def))
-    const parsed = CharacterizationDefinitionSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError(
-        'Invalid response from POST /cohort-characterization',
-        0,
-        zodIssues(parsed.error)
-      )
-    }
-    return parsed.data as CharacterizationDefinition
+    return parseOrThrow(
+      CharacterizationDefinitionSchema,
+      data,
+      'Invalid response from POST /cohort-characterization'
+    ) as CharacterizationDefinition
   }, CONTEXT)
 }
 
@@ -109,15 +97,11 @@ export async function updateCharacterization(
       `/cohort-characterization/${def.id}`,
       serializeCharacterization(def)
     )
-    const parsed = CharacterizationDefinitionSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError(
-        `Invalid response from PUT /cohort-characterization/${def.id}`,
-        0,
-        zodIssues(parsed.error)
-      )
-    }
-    return parsed.data as CharacterizationDefinition
+    return parseOrThrow(
+      CharacterizationDefinitionSchema,
+      data,
+      `Invalid response from PUT /cohort-characterization/${def.id}`
+    ) as CharacterizationDefinition
   }, CONTEXT)
 }
 
@@ -141,15 +125,11 @@ export async function copyCharacterization(
 ): Promise<ApiResult<CharacterizationDefinition>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>(`/cohort-characterization/${id}`)
-    const parsed = CharacterizationDefinitionSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError(
-        `Invalid response from POST /cohort-characterization/${id}`,
-        0,
-        zodIssues(parsed.error)
-      )
-    }
-    return parsed.data as CharacterizationDefinition
+    return parseOrThrow(
+      CharacterizationDefinitionSchema,
+      data,
+      `Invalid response from POST /cohort-characterization/${id}`
+    ) as CharacterizationDefinition
   }, CONTEXT)
 }
 
@@ -190,15 +170,11 @@ export async function importCharacterization(
 ): Promise<ApiResult<CharacterizationDefinition>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>('/cohort-characterization/import', design)
-    const parsed = CharacterizationDefinitionSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError(
-        'Invalid response from POST /cohort-characterization/import',
-        0,
-        zodIssues(parsed.error)
-      )
-    }
-    return parsed.data as CharacterizationDefinition
+    return parseOrThrow(
+      CharacterizationDefinitionSchema,
+      data,
+      'Invalid response from POST /cohort-characterization/import'
+    ) as CharacterizationDefinition
   }, CONTEXT)
 }
 
@@ -212,15 +188,11 @@ export async function listCharacterizationExecutions(
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/cohort-characterization/${id}/generation`)
     const list = unwrapList(data)
-    const parsed = z.array(CharacterizationExecutionSchema).safeParse(list)
-    if (!parsed.success) {
-      throw new ApiError(
-        `Invalid response from /cohort-characterization/${id}/generation`,
-        0,
-        zodIssues(parsed.error)
-      )
-    }
-    return parsed.data
+    return parseOrThrow(
+      z.array(CharacterizationExecutionSchema),
+      list,
+      `Invalid response from /cohort-characterization/${id}/generation`
+    )
   }, CONTEXT)
 }
 
@@ -233,15 +205,11 @@ export async function getCharacterizationExecution(
 ): Promise<ApiResult<CharacterizationExecution>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/cohort-characterization/generation/${generationId}`)
-    const parsed = CharacterizationExecutionSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError(
-        `Invalid response from /cohort-characterization/generation/${generationId}`,
-        0,
-        zodIssues(parsed.error)
-      )
-    }
-    return parsed.data
+    return parseOrThrow(
+      CharacterizationExecutionSchema,
+      data,
+      `Invalid response from /cohort-characterization/generation/${generationId}`
+    )
   }, CONTEXT)
 }
 
@@ -273,30 +241,27 @@ export async function generateCharacterization(
         status: GenerationStatusSchema.optional(),
       })
       .passthrough()
-    const job = jobExecutionSchema.safeParse(data)
-    if (!job.success) {
-      throw new ApiError(
-        `Invalid response from POST /cohort-characterization/${id}/generation/${sourceKey}`,
-        0,
-        zodIssues(job.error)
-      )
-    }
+    const job = parseOrThrow(
+      jobExecutionSchema,
+      data,
+      `Invalid response from POST /cohort-characterization/${id}/generation/${sourceKey}`
+    )
 
     // Don't fabricate an execution id: polling id 0 would track a phantom
     // execution. The generation did start, so this isn't a failure either -
     // return null so the caller refreshes the canonical list instead.
-    const executionId = job.data.executionId ?? job.data.id
+    const executionId = job.executionId ?? job.id
     if (executionId === undefined) {
       logger.warn(
         CONTEXT,
         `Generation response from POST /cohort-characterization/${id}/generation/${sourceKey} carried no execution id`,
-        job.data
+        job
       )
       return null
     }
     return {
       id: executionId,
-      status: job.data.status ?? 'STARTING',
+      status: job.status ?? 'STARTING',
       sourceKey,
     }
   }, CONTEXT)
@@ -338,15 +303,11 @@ export async function getCharacterizationResultCount(
     const data = await httpGet<unknown>(
       `/cohort-characterization/generation/${generationId}/result/count`
     )
-    const parsed = z.number().safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError(
-        `Invalid response from /cohort-characterization/generation/${generationId}/result/count`,
-        0,
-        zodIssues(parsed.error)
-      )
-    }
-    return parsed.data
+    return parseOrThrow(
+      z.number(),
+      data,
+      `Invalid response from /cohort-characterization/generation/${generationId}/result/count`
+    )
   }, CONTEXT)
 }
 

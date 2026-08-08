@@ -2296,7 +2296,8 @@
         "export": {
           "title": "Export design",
           "description": "Download the design as JSON.",
-          "download": "Download design JSON"
+          "download": "Download design JSON",
+          "exportError": "Export failed."
         },
         "import": {
           "title": "Import design",
@@ -3313,6 +3314,7 @@
       "preset": "Preset",
       "retrievingList": "Retrieving feature analyses list...",
       "saveError": "An error occurred while attempting to save a feature analysis.",
+      "loadDefaultsError": "Failed to load default covariate settings.",
       "selectConceptSet": "Select Concept Set...",
       "unsavedConfirmation": "Your changes are not saved. Would you like to continue?",
       "warning": "Warning:",

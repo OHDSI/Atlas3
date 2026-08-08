@@ -3,7 +3,7 @@
  * CRUD and metadata lookups for feature analyses (WebAPI /feature-analysis/...)
  */
 import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
-import { unwrap, unwrapList, ApiError, zodIssues } from '@/services/api-error'
+import { unwrap, unwrapList, parseOrThrow } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import {
   FeatureAnalysisSchema,
@@ -27,11 +27,7 @@ export async function listFeatureAnalyses(): Promise<ApiResult<FeatureAnalysisLi
   return unwrap(async () => {
     const data = await httpGet<unknown>('/feature-analysis?size=100000')
     const list = unwrapList(data)
-    const parsed = z.array(FeatureAnalysisListItemSchema).safeParse(list)
-    if (!parsed.success) {
-      throw new ApiError('Invalid response from /feature-analysis', 0, zodIssues(parsed.error))
-    }
-    return parsed.data
+    return parseOrThrow(z.array(FeatureAnalysisListItemSchema), list, 'Invalid response from /feature-analysis')
   }, CONTEXT)
 }
 
@@ -42,11 +38,7 @@ export async function listFeatureAnalyses(): Promise<ApiResult<FeatureAnalysisLi
 export async function getFeatureAnalysis(id: number): Promise<ApiResult<FeatureAnalysis>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/feature-analysis/${id}`)
-    const parsed = FeatureAnalysisSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError(`Invalid response from /feature-analysis/${id}`, 0, zodIssues(parsed.error))
-    }
-    return parsed.data as FeatureAnalysis
+    return parseOrThrow(FeatureAnalysisSchema, data, `Invalid response from /feature-analysis/${id}`) as FeatureAnalysis
   }, CONTEXT)
 }
 
@@ -59,11 +51,7 @@ export async function createFeatureAnalysis(
 ): Promise<ApiResult<FeatureAnalysis>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>('/feature-analysis', fa)
-    const parsed = FeatureAnalysisSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError('Invalid response from POST /feature-analysis', 0, zodIssues(parsed.error))
-    }
-    return parsed.data as FeatureAnalysis
+    return parseOrThrow(FeatureAnalysisSchema, data, 'Invalid response from POST /feature-analysis') as FeatureAnalysis
   }, CONTEXT)
 }
 
@@ -79,15 +67,11 @@ export async function updateFeatureAnalysis(
       throw new Error('updateFeatureAnalysis requires fa.id')
     }
     const data = await httpPut<unknown>(`/feature-analysis/${fa.id}`, fa)
-    const parsed = FeatureAnalysisSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError(
-        `Invalid response from PUT /feature-analysis/${fa.id}`,
-        0,
-        zodIssues(parsed.error)
-      )
-    }
-    return parsed.data as FeatureAnalysis
+    return parseOrThrow(
+      FeatureAnalysisSchema,
+      data,
+      `Invalid response from PUT /feature-analysis/${fa.id}`
+    ) as FeatureAnalysis
   }, CONTEXT)
 }
 
@@ -108,15 +92,11 @@ export async function deleteFeatureAnalysis(id: number): Promise<ApiResult<void>
 export async function copyFeatureAnalysis(id: number): Promise<ApiResult<FeatureAnalysis>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/feature-analysis/${id}/copy`)
-    const parsed = FeatureAnalysisSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError(
-        `Invalid response from /feature-analysis/${id}/copy`,
-        0,
-        zodIssues(parsed.error)
-      )
-    }
-    return parsed.data as FeatureAnalysis
+    return parseOrThrow(
+      FeatureAnalysisSchema,
+      data,
+      `Invalid response from /feature-analysis/${id}/copy`
+    ) as FeatureAnalysis
   }, CONTEXT)
 }
 
@@ -150,11 +130,8 @@ export async function listFeatureAnalysisDomains(): Promise<ApiResult<string[]>>
   return unwrap(async () => {
     const data = await httpGet<unknown>('/feature-analysis/domains')
     const schema = z.array(z.union([z.string(), z.object({ id: z.string() }).passthrough()]))
-    const parsed = schema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError('Invalid response from /feature-analysis/domains', 0, zodIssues(parsed.error))
-    }
-    return parsed.data.map(entry => (typeof entry === 'string' ? entry : entry.id))
+    const parsed = parseOrThrow(schema, data, 'Invalid response from /feature-analysis/domains')
+    return parsed.map(entry => (typeof entry === 'string' ? entry : entry.id))
   }, CONTEXT)
 }
 
@@ -167,15 +144,11 @@ export async function listFeatureAnalysisAggregates(): Promise<
 > {
   return unwrap(async () => {
     const data = await httpGet<unknown>('/feature-analysis/aggregates')
-    const parsed = z.array(FeatureAnalysisAggregateSchema).safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError(
-        'Invalid response from /feature-analysis/aggregates',
-        0,
-        zodIssues(parsed.error)
-      )
-    }
-    return parsed.data
+    return parseOrThrow(
+      z.array(FeatureAnalysisAggregateSchema),
+      data,
+      'Invalid response from /feature-analysis/aggregates'
+    )
   }, CONTEXT)
 }
 
@@ -190,14 +163,10 @@ export async function getDefaultCovariateSettings(
     const data = await httpGet<unknown>(
       `/featureextraction/defaultcovariatesettings?temporal=${temporal ? 'true' : 'false'}`
     )
-    const parsed = CovariateSettingSchema.safeParse(data)
-    if (!parsed.success) {
-      throw new ApiError(
-        'Invalid response from /featureextraction/defaultcovariatesettings',
-        0,
-        zodIssues(parsed.error)
-      )
-    }
-    return parsed.data
+    return parseOrThrow(
+      CovariateSettingSchema,
+      data,
+      'Invalid response from /featureextraction/defaultcovariatesettings'
+    )
   }, CONTEXT)
 }
