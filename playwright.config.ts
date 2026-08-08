@@ -13,6 +13,11 @@ export default defineConfig({
   timeout: 60000, // 60 seconds per test
   expect: {
     timeout: 10000, // 10 seconds for expect assertions
+    // Visual regression testing config (Task T141)
+    toMatchSnapshot: {
+      threshold: 0.3, // 30% difference allowed (Material Design will differ from reference)
+      maxDiffPixels: 1000,
+    },
   },
 
   use: {
@@ -45,13 +50,5 @@ export default defineConfig({
     command: 'npm run dev -- --mode test',
     url: 'http://localhost:5173',
     reuseExistingServer: true,
-  },
-
-  // Visual regression testing config (Task T141)
-  expect: {
-    toMatchSnapshot: {
-      threshold: 0.3, // 30% difference allowed (Material Design will differ from reference)
-      maxDiffPixels: 1000,
-    },
   },
 })
