@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
-import { setupBasicMocks, setupDatasourcesMocks } from './helpers/api-mocks'
+import { setupBasicMocks, setupDatasourcesMocks, enableDarkModeToggle } from './helpers/api-mocks'
 
 // Verified against src/router/routes.ts. The four analysis-hub list views
 // (characterizations, pathways, incidence-rates) live under /analysis/* but
@@ -63,6 +63,11 @@ test.describe('dark mode colour contrast', () => {
       } else {
         await setupBasicMocks(page)
       }
+      // Dark mode is opt-in per deployment (settings.theme.enableDarkMode,
+      // default false) — patch the manifest response so the toggle this
+      // suite exercises is actually present, without touching the shipped
+      // default in public/config/plugins.json.
+      await enableDarkModeToggle(page)
       await enableDarkMode(page)
       await page.goto(route.path)
       await page.waitForLoadState('networkidle')

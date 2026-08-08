@@ -514,6 +514,24 @@ export async function setupBasicMocks(page: Page) {
 }
 
 /**
+ * Force the nav bar's theme toggle to render regardless of the shipped
+ * deployment config. `settings.theme.enableDarkMode` defaults to false in
+ * plugins.json (dark mode is opt-in per deployment) — the dark-mode specs
+ * need the toggle visible to exercise it, so they patch the manifest
+ * response instead of flipping the shipped default. Call after
+ * setupBasicMocks/setupDatasourcesMocks and before page.goto.
+ */
+export async function enableDarkModeToggle(page: Page) {
+  await page.route('**/config/plugins.json', async (route: Route) => {
+    const response = await route.fetch()
+    const manifest = await response.json()
+    manifest.settings = manifest.settings ?? {}
+    manifest.settings.theme = { ...manifest.settings.theme, enableDarkMode: true }
+    await route.fulfill({ response, json: manifest })
+  })
+}
+
+/**
  * Setup mocks for datasources feature
  */
 export async function setupDatasourcesMocks(page: Page) {

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { setupBasicMocks, setupDatasourcesMocks } from './helpers/api-mocks'
+import { setupBasicMocks, setupDatasourcesMocks, enableDarkModeToggle } from './helpers/api-mocks'
 
 // Same route list as tests/e2e/dark-mode-a11y.spec.ts — kept in sync deliberately
 // so the visual suite and the axe scan cover identical surfaces.
@@ -96,6 +96,11 @@ for (const mode of ['light', 'dark'] as const) {
         } else {
           await setupBasicMocks(page)
         }
+        // Dark mode is opt-in per deployment (settings.theme.enableDarkMode,
+        // default false) — patch the manifest response so the toggle this
+        // suite exercises is actually present, without touching the shipped
+        // default in public/config/plugins.json.
+        await enableDarkModeToggle(page)
         await forceUnauthenticated(page)
         await setTheme(page, mode)
         await page.goto(route.path)
