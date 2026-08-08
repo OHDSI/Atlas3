@@ -13,8 +13,10 @@ vi.mock('@/composables/useI18n', async () => {
 
 // Mock webapi service to prevent actual API calls
 vi.mock('@/services/webapi', () => ({
-  searchConcepts: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
+}))
+vi.mock('@/services/concept-search.service', () => ({
+  searchConceptsResult: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }))
 
 import ConceptSearch from '@/components/concept-sets/ConceptSearch.vue'

@@ -4,12 +4,30 @@
  */
 import { logger } from '@/utils/logger'
 import { httpGet, httpPost, httpPut, httpDelete, getBaseUrl } from '@/services/http-client'
+import { unwrap, ApiError } from '@/services/api-error'
+import { type ApiResult } from '@/types/api'
+import { CDMSourceListSchema, type CDMSource } from '@/models/webapi.types'
 import type {
   DataSource,
   SourceRequest,
   SourceDetails,
   DaimonRequest,
 } from '@/models/datasource.types'
+
+/**
+ * Get list of available CDM data sources
+ * Endpoint: GET /source/sources
+ */
+export async function fetchCDMSources(): Promise<ApiResult<CDMSource[]>> {
+  return unwrap(async () => {
+    const data = await httpGet<unknown>('/source/sources')
+    const parsed = CDMSourceListSchema.safeParse(data)
+    if (!parsed.success) {
+      throw new ApiError('Invalid source list response', 0, null)
+    }
+    return parsed.data
+  }, 'SourceService')
+}
 
 /**
  * Get detailed information about a source

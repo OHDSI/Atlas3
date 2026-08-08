@@ -8,17 +8,11 @@
 import { logger } from '@/utils/logger'
 import { type ApiResult, success, failure } from '@/types/api'
 import {
-  CDMSourceListSchema,
   CohortGenerationInfoListSchema,
-  type CDMSource,
   type GenerationJob,
   type CohortGenerationInfoList,
   type GenerationStatus,
 } from '@/models/webapi.types'
-import {
-  ConceptSearchResponseSchema,
-  type Concept,
-} from '@/models/concept-set.types'
 import {
   type AtlasCohortDefinition,
   type AtlasCohortDefinitionInput,
@@ -104,77 +98,9 @@ export async function fetchJSON<T>(endpoint: string, options?: RequestInit): Pro
   return httpClient<T>(endpoint, clientOptions)
 }
 
-/**
- * Get list of available CDM data sources
- * Endpoint: GET /source/sources
- */
-export async function fetchCDMSources(): Promise<ApiResult<CDMSource[]>> {
-  try {
-    const data = await fetchJSON<unknown>('/source/sources')
-    const parsed = CDMSourceListSchema.safeParse(data)
+export { fetchCDMSources } from '@/services/source.service'
 
-    if (!parsed.success) {
-      logger.error('WebAPI', 'CDM sources validation error', parsed.error)
-      return failure('Invalid CDM sources response format')
-    }
-
-    return success(parsed.data)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch CDM sources'
-    logger.error('WebAPI', 'Failed to fetch CDM sources', error)
-    return failure(message)
-  }
-}
-
-/**
- * Search for concepts in vocabulary.
- *
- * Uses POST /vocabulary/{sourceKey}/search with a JSON body — the GET form
- * (`?query=...`) silently returns an empty array against current WebAPI
- * builds, which made gender/race/etc. concept pickers look broken.
- */
-export async function searchConcepts(
-  sourceKey: string,
-  query: string,
-  domain?: string
-): Promise<ApiResult<Concept[]>> {
-  if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
-    return failure('Invalid vocabulary source. Please select a valid source in Configuration.')
-  }
-
-  const endpoint = `/vocabulary/${sourceKey}/search`
-  const body: Record<string, unknown> = { QUERY: query }
-  if (domain) {
-    body.DOMAIN_ID = [domain]
-  }
-
-  try {
-    const data = await httpPostRead<unknown>(endpoint, body)
-    const parsed = ConceptSearchResponseSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error('WebAPI', 'Concept search validation failed', parsed.error)
-      return failure('Invalid concept search response format')
-    }
-
-    return success(
-      parsed.data.map(c => ({
-        conceptId: c.CONCEPT_ID,
-        conceptName: c.CONCEPT_NAME,
-        conceptCode: c.CONCEPT_CODE,
-        domainId: c.DOMAIN_ID,
-        vocabularyId: c.VOCABULARY_ID,
-        conceptClassId: c.CONCEPT_CLASS_ID,
-        standardConcept: c.STANDARD_CONCEPT,
-        invalidReason: c.INVALID_REASON,
-      }))
-    )
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to search concepts'
-    logger.error('WebAPI', 'searchConcepts error', error)
-    return failure(message)
-  }
-}
+export { searchConceptsResult as searchConcepts } from '@/services/concept-search.service'
 
 /**
  * Get cohort definition by ID

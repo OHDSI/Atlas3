@@ -5,7 +5,7 @@
 import { ref, computed } from 'vue'
 import { useConceptPickerStore } from '@/stores/concept-picker'
 import type { Concept } from '@/models/concept-set.types'
-import { searchConcepts as searchConceptsApi } from '@/services/webapi'
+import { searchConceptsResult as searchConceptsApi } from '@/services/concept-search.service'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
 import { getSourceKey } from '@/config/webapi'

@@ -12,6 +12,8 @@ import {
 import { mapConceptFromAPI, mapComparisonItemFromAPI } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
 import { httpClient, httpPostRead } from '@/services/http-client'
+import { unwrap, ApiError } from '@/services/api-error'
+import { type ApiResult } from '@/types/api'
 
 type ConceptRecordCountResponse = Array<Record<string, number[]>>
 
@@ -63,6 +65,51 @@ export async function searchConcepts(
 
   const concepts = parsed.data.map(mapConceptFromAPI)
   return { concepts, total: concepts.length }
+}
+
+// Distinct from `searchConcepts` above (which throws and returns
+// {concepts,total}) — this is the concept-picker store's original search,
+// moved verbatim from webapi.ts, kept under its own name because the two
+// signatures collide. Still uses httpPostRead: the GET form of
+// /vocabulary/{sourceKey}/search silently returns [] on current WebAPI
+// builds, and this is a retry-safe read.
+export async function searchConceptsResult(
+  sourceKey: string,
+  query: string,
+  domain?: string
+): Promise<ApiResult<Concept[]>> {
+  return unwrap(async () => {
+    if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
+      throw new ApiError(
+        'Invalid vocabulary source. Please select a valid source in Configuration.',
+        0,
+        null
+      )
+    }
+
+    const endpoint = `/vocabulary/${sourceKey}/search`
+    const body: Record<string, unknown> = { QUERY: query }
+    if (domain) {
+      body.DOMAIN_ID = [domain]
+    }
+
+    const data = await httpPostRead<unknown>(endpoint, body)
+    const parsed = ConceptSearchResponseSchema.safeParse(data)
+    if (!parsed.success) {
+      throw new ApiError('Invalid concept search response format', 0, null)
+    }
+
+    return parsed.data.map(c => ({
+      conceptId: c.CONCEPT_ID,
+      conceptName: c.CONCEPT_NAME,
+      conceptCode: c.CONCEPT_CODE,
+      domainId: c.DOMAIN_ID,
+      vocabularyId: c.VOCABULARY_ID,
+      conceptClassId: c.CONCEPT_CLASS_ID,
+      standardConcept: c.STANDARD_CONCEPT,
+      invalidReason: c.INVALID_REASON,
+    }))
+  }, 'ConceptSearchService')
 }
 
 export async function getConceptById(

@@ -6,6 +6,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { CDMSource, GenerationJob } from '@/models/webapi.types'
 import * as webapi from '@/services/webapi'
+import { fetchCDMSources } from '@/services/source.service'
 import { logger } from '@/utils/logger'
 
 export const useWebAPIStore = defineStore('webapi', () => {
@@ -113,7 +114,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
   async function fetchSources(): Promise<void> {
     try {
       setLoadingSources(true)
-      const result = await webapi.fetchCDMSources()
+      const result = await fetchCDMSources()
       if (result.success) {
         setSources(result.data)
       } else {

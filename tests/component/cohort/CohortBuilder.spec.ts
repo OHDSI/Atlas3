@@ -52,7 +52,6 @@ vi.mock('@/composables/useAtlasConverter', () => {
 // Webapi mocks: most calls are unused in these tests, but a few flows
 // (load existing cohort, save) need predictable return values.
 vi.mock('@/services/webapi', () => ({
-  fetchCDMSources: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getCohortDefinition: vi.fn().mockResolvedValue({
     id: 42,
@@ -77,6 +76,10 @@ vi.mock('@/services/webapi', () => ({
   saveCohortDefinition: vi.fn().mockResolvedValue({ id: 99, name: 'Saved' }),
   assignTagToCohort: vi.fn().mockResolvedValue({ success: true }),
   unassignTagFromCohort: vi.fn().mockResolvedValue({ success: true }),
+}))
+
+vi.mock('@/services/source.service', () => ({
+  fetchCDMSources: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }))
 
 vi.mock('@/services/concept-set.service', () => ({

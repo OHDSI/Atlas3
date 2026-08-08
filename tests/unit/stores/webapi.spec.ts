@@ -3,9 +3,12 @@ import { setActivePinia, createPinia } from 'pinia'
 import type { CDMSource, GenerationJob, CohortGenerationInfo } from '@/models/webapi.types'
 
 vi.mock('@/services/webapi', () => ({
-  fetchCDMSources: vi.fn(),
   generateCohort: vi.fn(),
   getCohortGenerationInfo: vi.fn(),
+}))
+
+vi.mock('@/services/source.service', () => ({
+  fetchCDMSources: vi.fn(),
 }))
 
 vi.mock('@/utils/logger', () => ({
@@ -18,11 +21,13 @@ vi.mock('@/utils/logger', () => ({
 }))
 
 let webapi: typeof import('@/services/webapi')
+let sourceService: typeof import('@/services/source.service')
 let useWebAPIStore: typeof import('@/stores/webapi').useWebAPIStore
 
 beforeAll(async () => {
   vi.resetModules()
   webapi = await import('@/services/webapi')
+  sourceService = await import('@/services/source.service')
   ;({ useWebAPIStore } = await import('@/stores/webapi'))
 })
 
@@ -327,7 +332,7 @@ describe('WebAPI Store', () => {
           },
         ]
 
-        vi.mocked(webapi.fetchCDMSources).mockResolvedValue({ success: true, data: mockSources })
+        vi.mocked(sourceService.fetchCDMSources).mockResolvedValue({ success: true, data: mockSources })
 
         await store.fetchSources()
 
@@ -339,7 +344,7 @@ describe('WebAPI Store', () => {
         vi.useFakeTimers()
         try {
           const store = useWebAPIStore()
-          vi.mocked(webapi.fetchCDMSources).mockImplementation(
+          vi.mocked(sourceService.fetchCDMSources).mockImplementation(
             () => new Promise(resolve => setTimeout(() => resolve({ success: true, data: [] }), 100))
           )
 
@@ -356,7 +361,7 @@ describe('WebAPI Store', () => {
 
       it('should handle fetch error', async () => {
         const store = useWebAPIStore()
-        vi.mocked(webapi.fetchCDMSources).mockRejectedValue(new Error('Network error'))
+        vi.mocked(sourceService.fetchCDMSources).mockRejectedValue(new Error('Network error'))
 
         await store.fetchSources()
 

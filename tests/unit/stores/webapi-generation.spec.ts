@@ -9,9 +9,12 @@ import type { GenerationJob } from '@/models/webapi.types'
 
 // Mock the webapi service
 vi.mock('@/services/webapi', () => ({
-  fetchCDMSources: vi.fn(),
   generateCohort: vi.fn(),
   getCohortGenerationInfo: vi.fn(),
+}))
+
+vi.mock('@/services/source.service', () => ({
+  fetchCDMSources: vi.fn(),
 }))
 
 describe('WebAPI Store - Generation Polling', () => {
@@ -35,8 +38,8 @@ describe('WebAPI Store - Generation Polling', () => {
         { sourceKey: 'SYNPUF23M', sourceName: 'SYNPUF 23M', sourceDialect: 'postgresql', daimons: [] },
       ]
 
-      const webapi = await import('@/services/webapi')
-      vi.mocked(webapi.fetchCDMSources).mockResolvedValue({ success: true, data: mockSources })
+      const sourceService = await import('@/services/source.service')
+      vi.mocked(sourceService.fetchCDMSources).mockResolvedValue({ success: true, data: mockSources })
 
       // Assume fetchSources action exists
       if ('fetchSources' in store) {
@@ -48,8 +51,8 @@ describe('WebAPI Store - Generation Polling', () => {
     })
 
     it('should set loading state during fetch', async () => {
-      const webapi = await import('@/services/webapi')
-      vi.mocked(webapi.fetchCDMSources).mockResolvedValue({ success: true, data: [] })
+      const sourceService = await import('@/services/source.service')
+      vi.mocked(sourceService.fetchCDMSources).mockResolvedValue({ success: true, data: [] })
 
       if ('fetchSources' in store) {
         const fetchPromise = (store as unknown).fetchSources()

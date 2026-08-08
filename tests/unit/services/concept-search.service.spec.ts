@@ -52,6 +52,7 @@ vi.mock('@/utils/api-mappers', () => ({
 
 import {
   searchConcepts,
+  searchConceptsResult,
   getConceptById,
   getConceptsByIds,
   getMappedSourceCodes,
@@ -181,6 +182,48 @@ describe('ConceptSearchService', () => {
       })
 
       await expect(searchConcepts('TEST', 'test')).rejects.toThrow('HTTP 404')
+    })
+  })
+
+  describe('searchConceptsResult', () => {
+    it('returns the parsed concept list', async () => {
+      const mockResponse = [
+        {
+          CONCEPT_ID: 123,
+          CONCEPT_NAME: 'Test Concept',
+          DOMAIN_ID: 'Condition',
+          VOCABULARY_ID: 'SNOMED',
+          CONCEPT_CLASS_ID: 'Clinical Finding',
+          STANDARD_CONCEPT: 'S',
+          CONCEPT_CODE: '12345',
+          INVALID_REASON: null,
+        },
+      ]
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify(mockResponse)),
+      })
+
+      const result = await searchConceptsResult('TEST', 'diabetes')
+
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data[0]?.conceptId).toBe(123)
+    })
+
+    it('fails with the status when the search is rejected', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 403,
+        statusText: 'Forbidden',
+        text: () => Promise.resolve('no access'),
+      })
+
+      const result = await searchConceptsResult('TEST', 'diabetes')
+
+      expect(result.success).toBe(false)
+      if (!result.success) expect(result.error.status).toBe(403)
     })
   })
 
