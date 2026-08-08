@@ -60,6 +60,8 @@ export default defineConfig({
     // Use --mode test to load .env.test with auth disabled for E2E tests
     command: 'npm run dev -- --mode test',
     url: 'http://localhost:5173',
-    reuseExistingServer: true,
+    // Attaching to a dev server someone left running on another branch silently
+    // tests that branch's code — never do it in CI or when recording baselines.
+    reuseExistingServer: !process.env.CI,
   },
 })

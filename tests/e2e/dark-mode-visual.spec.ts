@@ -1,5 +1,11 @@
 import { test, expect, type Page } from '@playwright/test'
-import { setupBasicMocks, setupDatasourcesMocks, enableDarkModeToggle } from './helpers/api-mocks'
+import {
+  setupBasicMocks,
+  setupDatasourcesMocks,
+  setupAnalysisListMocks,
+  enableDarkModeToggle,
+} from './helpers/api-mocks'
+import { expectRouteContent } from './helpers/route-content'
 
 // Same route list as tests/e2e/dark-mode-a11y.spec.ts — kept in sync deliberately
 // so the visual suite and the axe scan cover identical surfaces.
@@ -96,6 +102,11 @@ for (const mode of ['light', 'dark'] as const) {
         } else {
           await setupBasicMocks(page)
         }
+        // The analysis-hub routes reach endpoints setupBasicMocks doesn't cover,
+        // so without this they render live proxied data on a box running WebAPI
+        // and a loading/error state in CI. Applied to every route because it also
+        // pins the clock the relative-date cells render against.
+        await setupAnalysisListMocks(page)
         // Dark mode is opt-in per deployment (settings.theme.enableDarkMode,
         // default false) — patch the manifest response so the toggle this
         // suite exercises is actually present, without touching the shipped
@@ -108,6 +119,7 @@ for (const mode of ['light', 'dark'] as const) {
         await expect(page).toHaveURL(route.expectedUrl)
         await expect(page.locator('[data-testid="nav-theme-toggle"]')).toBeVisible()
         await expect(page.locator(`.v-application.v-theme--${mode}`)).toHaveCount(1)
+        await expectRouteContent(page, route.name)
 
         // Light baselines come from pre-change code (see task-18-report.md), so any
         // pixel drift here is a real regression — compare strictly, except for the

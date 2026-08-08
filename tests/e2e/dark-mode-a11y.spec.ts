@@ -1,6 +1,12 @@
 import { test, expect, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
-import { setupBasicMocks, setupDatasourcesMocks, enableDarkModeToggle } from './helpers/api-mocks'
+import {
+  setupBasicMocks,
+  setupDatasourcesMocks,
+  setupAnalysisListMocks,
+  enableDarkModeToggle,
+} from './helpers/api-mocks'
+import { expectRouteContent } from './helpers/route-content'
 
 // Verified against src/router/routes.ts. The four analysis-hub list views
 // (characterizations, pathways, incidence-rates) live under /analysis/* but
@@ -63,6 +69,10 @@ test.describe('dark mode colour contrast', () => {
       } else {
         await setupBasicMocks(page)
       }
+      // Without these the analysis-hub routes render live proxied data here and
+      // a loading/error state in CI, so the scan covers different pixels in each
+      // environment — the reason this suite passed locally and failed in CI.
+      await setupAnalysisListMocks(page)
       // Dark mode is opt-in per deployment (settings.theme.enableDarkMode,
       // default false) — patch the manifest response so the toggle this
       // suite exercises is actually present, without touching the shipped
@@ -74,6 +84,7 @@ test.describe('dark mode colour contrast', () => {
       await expect(page).toHaveURL(route.expectedUrl)
       await expect(page.locator('[data-testid="nav-theme-toggle"]')).toBeVisible()
       await expect(page.locator('.v-application.v-theme--dark')).toHaveCount(1)
+      await expectRouteContent(page, route.name)
 
       const results = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze()
 
