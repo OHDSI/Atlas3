@@ -207,16 +207,21 @@ describe('services/cohort-definition.service', () => {
       expect(result.success).toBe(false)
     })
 
-    // NOTE: this inline map disagrees with the canonical
-    // RAW_STATUS_TO_GENERATION_STATUS table in webapi.types.ts, which maps
-    // STARTED -> RUNNING. Pinned here as documented (if surprising) current
-    // behavior rather than "fixed" — production code is out of scope.
+    // generateCohort triggers the same job getCohortGenerationInfo polls
+    // moments later, so both must agree on every raw status via the shared
+    // toGenerationStatus helper — a table pinned only against one entry
+    // point would miss the other silently drifting.
     it.each([
-      ['STARTED', 'PENDING'],
+      ['PENDING', 'PENDING'],
+      ['STARTING', 'PENDING'],
+      ['STARTED', 'RUNNING'],
       ['RUNNING', 'RUNNING'],
-      ['COMPLETED', 'COMPLETE'],
+      ['STOPPING', 'RUNNING'],
       ['COMPLETE', 'COMPLETE'],
+      ['COMPLETED', 'COMPLETE'],
       ['FAILED', 'FAILED'],
+      ['STOPPED', 'FAILED'],
+      ['ABANDONED', 'FAILED'],
     ])('maps job status %s to GenerationStatus %s', async (jobStatus, expected) => {
       mockFetch.mockResolvedValueOnce({
         ok: true,

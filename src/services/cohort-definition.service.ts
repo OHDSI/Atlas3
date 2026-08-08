@@ -15,8 +15,8 @@ import {
 import {
   CohortGenerationInfoListSchema,
   CohortDefinitionListSchema,
+  toGenerationStatus,
   type GenerationJob,
-  type GenerationStatus,
   type CohortGenerationInfoList,
   type CohortDefinitionSummary,
 } from '@/models/webapi.types'
@@ -109,18 +109,7 @@ export async function generateCohort(
     // The API returns a job execution object with format:
     // { status: "STARTING", executionId: number, jobParameters: {...} }
     // We need to convert this to our GenerationJob format
-
-    // Map status from job execution to our GenerationStatus
-    let status: GenerationStatus = 'PENDING'
-    if (data.status === 'STARTING' || data.status === 'STARTED') {
-      status = 'PENDING'
-    } else if (data.status === 'RUNNING') {
-      status = 'RUNNING'
-    } else if (data.status === 'COMPLETED' || data.status === 'COMPLETE') {
-      status = 'COMPLETE'
-    } else if (data.status === 'FAILED') {
-      status = 'FAILED'
-    }
+    const status = toGenerationStatus(data.status ?? '')
 
     const job: GenerationJob = {
       id: data.executionId || Date.now(),
