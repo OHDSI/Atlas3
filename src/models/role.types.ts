@@ -157,32 +157,6 @@ export const RoleUserAssignmentSchema = z.object({
 export type RoleUserAssignment = z.infer<typeof RoleUserAssignmentSchema>
 
 // ============================================================================
-// API Result Types
-// ============================================================================
-
-/**
- * API Result type for consistent error handling
- * Follows existing Atlas3 pattern from src/services/webapi.ts
- */
-export type ApiResult<T> = { isSuccess: true; data: T } | { isSuccess: false; message: string }
-
-/**
- * Helper to create success result
- */
-export const success = <T>(data: T): ApiResult<T> => ({
-  isSuccess: true,
-  data,
-})
-
-/**
- * Helper to create failure result
- */
-export const failure = (message: string): ApiResult<never> => ({
-  isSuccess: false,
-  message,
-})
-
-// ============================================================================
 // Import/Export Types
 // ============================================================================
 

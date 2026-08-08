@@ -5,7 +5,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useRolesStore } from '@/stores/roles'
-import type { Role, RoleCreate, RoleUpdate, Permission, User, ApiResult } from '@/models/role.types'
+import type { Role, RoleCreate, RoleUpdate, Permission, User } from '@/models/role.types'
+import type { ApiResult } from '@/types/api'
+import { ApiError } from '@/services/api-error'
 
 // Mock the services
 vi.mock('@/services/role.service')
@@ -56,7 +58,7 @@ describe('useRolesStore', () => {
   describe('fetchRoles', () => {
     it('should fetch roles successfully', async () => {
       const successResult: ApiResult<Role[]> = {
-        isSuccess: true,
+        success: true,
         data: mockRoles,
       }
 
@@ -74,8 +76,8 @@ describe('useRolesStore', () => {
 
     it('should handle fetch roles error', async () => {
       const errorResult: ApiResult<Role[]> = {
-        isSuccess: false,
-        message: 'Failed to fetch roles',
+        success: false,
+        error: new ApiError('Failed to fetch roles', 0, null),
       }
 
       vi.spyOn(roleService, 'fetchRoles').mockResolvedValue(errorResult)
@@ -110,7 +112,7 @@ describe('useRolesStore', () => {
 
     it('should set loading state correctly', async () => {
       const successResult: ApiResult<Role[]> = {
-        isSuccess: true,
+        success: true,
         data: mockRoles,
       }
 
@@ -135,7 +137,7 @@ describe('useRolesStore', () => {
   describe('fetchRoleById', () => {
     it('should fetch single role successfully', async () => {
       const successResult: ApiResult<Role> = {
-        isSuccess: true,
+        success: true,
         data: mockRole,
       }
 
@@ -152,8 +154,8 @@ describe('useRolesStore', () => {
 
     it('should handle fetch role by id error', async () => {
       const errorResult: ApiResult<Role> = {
-        isSuccess: false,
-        message: 'Role not found',
+        success: false,
+        error: new ApiError('Role not found', 0, null),
       }
 
       vi.spyOn(roleService, 'fetchRoleById').mockResolvedValue(errorResult)
@@ -175,7 +177,7 @@ describe('useRolesStore', () => {
       }
 
       const successResult: ApiResult<Role> = {
-        isSuccess: true,
+        success: true,
         data: mockRole,
       }
 
@@ -198,8 +200,8 @@ describe('useRolesStore', () => {
       }
 
       const errorResult: ApiResult<Role> = {
-        isSuccess: false,
-        message: 'Role name already exists',
+        success: false,
+        error: new ApiError('Role name already exists', 0, null),
       }
 
       vi.spyOn(roleService, 'createRole').mockResolvedValue(errorResult)
@@ -219,7 +221,7 @@ describe('useRolesStore', () => {
       }
 
       const successResult: ApiResult<Role> = {
-        isSuccess: true,
+        success: true,
         data: mockRole,
       }
 
@@ -255,7 +257,7 @@ describe('useRolesStore', () => {
       }
 
       const successResult: ApiResult<Role> = {
-        isSuccess: true,
+        success: true,
         data: updatedRole,
       }
 
@@ -279,8 +281,8 @@ describe('useRolesStore', () => {
       }
 
       const errorResult: ApiResult<Role> = {
-        isSuccess: false,
-        message: 'Update failed',
+        success: false,
+        error: new ApiError('Update failed', 0, null),
       }
 
       vi.spyOn(roleService, 'updateRole').mockResolvedValue(errorResult)
@@ -296,7 +298,7 @@ describe('useRolesStore', () => {
   describe('deleteRole', () => {
     it('should delete role successfully', async () => {
       const successResult: ApiResult<void> = {
-        isSuccess: true,
+        success: true,
         data: undefined,
       }
 
@@ -317,8 +319,8 @@ describe('useRolesStore', () => {
 
     it('should handle delete role error', async () => {
       const errorResult: ApiResult<void> = {
-        isSuccess: false,
-        message: 'Delete failed',
+        success: false,
+        error: new ApiError('Delete failed', 0, null),
       }
 
       vi.spyOn(roleService, 'deleteRole').mockResolvedValue(errorResult)
@@ -335,7 +337,7 @@ describe('useRolesStore', () => {
 
     it('should set deleting state correctly', async () => {
       const successResult: ApiResult<void> = {
-        isSuccess: true,
+        success: true,
         data: undefined,
       }
 
@@ -484,7 +486,7 @@ describe('useRolesStore', () => {
     it('should not update currentRole when ids do not match', async () => {
       const updatedRole: Role = { ...mockRoles[0], name: 'Updated' }
       vi.spyOn(roleService, 'updateRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: updatedRole,
       })
 
@@ -503,7 +505,7 @@ describe('useRolesStore', () => {
     it('should handle role missing in roles array', async () => {
       const updatedRole: Role = { ...mockRole, name: 'Updated' }
       vi.spyOn(roleService, 'updateRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: updatedRole,
       })
 
@@ -533,7 +535,7 @@ describe('useRolesStore', () => {
   describe('deleteRole edge cases', () => {
     it('should not clear currentRole when ids do not match', async () => {
       vi.spyOn(roleService, 'deleteRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: undefined,
       })
 
@@ -571,7 +573,7 @@ describe('useRolesStore', () => {
 
     it('should fetch permissions successfully', async () => {
       const successResult: ApiResult<Permission[]> = {
-        isSuccess: true,
+        success: true,
         data: mockPermissions,
       }
       vi.spyOn(_permissionService, 'fetchAllPermissions').mockResolvedValue(successResult)
@@ -588,8 +590,8 @@ describe('useRolesStore', () => {
 
     it('should handle fetchPermissions failure result', async () => {
       vi.spyOn(_permissionService, 'fetchAllPermissions').mockResolvedValue({
-        isSuccess: false,
-        message: 'denied',
+        success: false,
+        error: new ApiError('denied', 0, null),
       })
 
       const store = useRolesStore()
@@ -621,7 +623,7 @@ describe('useRolesStore', () => {
 
     it('should fetch role permissions successfully', async () => {
       vi.spyOn(roleService, 'getRolePermissions').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: mockPerms,
       })
 
@@ -635,8 +637,8 @@ describe('useRolesStore', () => {
 
     it('should handle failure result', async () => {
       vi.spyOn(roleService, 'getRolePermissions').mockResolvedValue({
-        isSuccess: false,
-        message: 'no role',
+        success: false,
+        error: new ApiError('no role', 0, null),
       })
       const store = useRolesStore()
       const ok = await store.fetchRolePermissions(1)
@@ -666,7 +668,7 @@ describe('useRolesStore', () => {
 
     it('should assign permission and add to rolePermissions if known', async () => {
       vi.spyOn(roleService, 'assignPermissionToRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: undefined,
       })
 
@@ -682,7 +684,7 @@ describe('useRolesStore', () => {
 
     it('should not double-add a permission already on role', async () => {
       vi.spyOn(roleService, 'assignPermissionToRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: undefined,
       })
 
@@ -696,7 +698,7 @@ describe('useRolesStore', () => {
 
     it('should handle missing permission silently (not pushed)', async () => {
       vi.spyOn(roleService, 'assignPermissionToRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: undefined,
       })
 
@@ -711,8 +713,8 @@ describe('useRolesStore', () => {
 
     it('should return false on failure result', async () => {
       vi.spyOn(roleService, 'assignPermissionToRole').mockResolvedValue({
-        isSuccess: false,
-        message: 'forbidden',
+        success: false,
+        error: new ApiError('forbidden', 0, null),
       })
 
       const store = useRolesStore()
@@ -735,7 +737,7 @@ describe('useRolesStore', () => {
 
     it('should remove permission from rolePermissions', async () => {
       vi.spyOn(roleService, 'removePermissionFromRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: undefined,
       })
 
@@ -748,7 +750,7 @@ describe('useRolesStore', () => {
 
     it('should noop when permission not present', async () => {
       vi.spyOn(roleService, 'removePermissionFromRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: undefined,
       })
       const store = useRolesStore()
@@ -759,8 +761,8 @@ describe('useRolesStore', () => {
 
     it('should return false on failure result', async () => {
       vi.spyOn(roleService, 'removePermissionFromRole').mockResolvedValue({
-        isSuccess: false,
-        message: 'no',
+        success: false,
+        error: new ApiError('no', 0, null),
       })
       const store = useRolesStore()
       const ok = await store.removePermissionFromRole(1, 10)
@@ -783,7 +785,7 @@ describe('useRolesStore', () => {
 
     it('should fetch users successfully', async () => {
       vi.spyOn(_userService, 'fetchAllUsers').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: mockUsers,
       })
 
@@ -796,8 +798,8 @@ describe('useRolesStore', () => {
 
     it('should handle failure result', async () => {
       vi.spyOn(_userService, 'fetchAllUsers').mockResolvedValue({
-        isSuccess: false,
-        message: 'no',
+        success: false,
+        error: new ApiError('no', 0, null),
       })
       const store = useRolesStore()
       const ok = await store.fetchUsers()
@@ -827,7 +829,7 @@ describe('useRolesStore', () => {
 
     it('should fetch role users', async () => {
       vi.spyOn(roleService, 'getRoleUsers').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: mockUsers,
       })
       const store = useRolesStore()
@@ -838,8 +840,8 @@ describe('useRolesStore', () => {
 
     it('should handle failure result', async () => {
       vi.spyOn(roleService, 'getRoleUsers').mockResolvedValue({
-        isSuccess: false,
-        message: 'forbidden',
+        success: false,
+        error: new ApiError('forbidden', 0, null),
       })
       const store = useRolesStore()
       const ok = await store.fetchRoleUsers(1)
@@ -869,7 +871,7 @@ describe('useRolesStore', () => {
 
     it('should assign user and update roleUsers if known', async () => {
       vi.spyOn(roleService, 'assignUserToRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: undefined,
       })
       const store = useRolesStore()
@@ -882,7 +884,7 @@ describe('useRolesStore', () => {
 
     it('should not double-add a user already on role', async () => {
       vi.spyOn(roleService, 'assignUserToRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: undefined,
       })
       const store = useRolesStore()
@@ -894,7 +896,7 @@ describe('useRolesStore', () => {
 
     it('should noop locally when user unknown', async () => {
       vi.spyOn(roleService, 'assignUserToRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: undefined,
       })
       const store = useRolesStore()
@@ -907,8 +909,8 @@ describe('useRolesStore', () => {
 
     it('should return false on failure result', async () => {
       vi.spyOn(roleService, 'assignUserToRole').mockResolvedValue({
-        isSuccess: false,
-        message: 'no',
+        success: false,
+        error: new ApiError('no', 0, null),
       })
       const store = useRolesStore()
       const ok = await store.assignUserToRole(1, 5)
@@ -928,7 +930,7 @@ describe('useRolesStore', () => {
 
     it('should remove user from roleUsers', async () => {
       vi.spyOn(roleService, 'removeUserFromRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: undefined,
       })
       const store = useRolesStore()
@@ -940,7 +942,7 @@ describe('useRolesStore', () => {
 
     it('should noop when user not present', async () => {
       vi.spyOn(roleService, 'removeUserFromRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: undefined,
       })
       const store = useRolesStore()
@@ -951,8 +953,8 @@ describe('useRolesStore', () => {
 
     it('should return false on failure result', async () => {
       vi.spyOn(roleService, 'removeUserFromRole').mockResolvedValue({
-        isSuccess: false,
-        message: 'no',
+        success: false,
+        error: new ApiError('no', 0, null),
       })
       const store = useRolesStore()
       const ok = await store.removeUserFromRole(1, 5)
@@ -970,7 +972,7 @@ describe('useRolesStore', () => {
   describe('exportRole', () => {
     it('should export role on success', async () => {
       vi.spyOn(roleService, 'exportRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: '{"role":{}}',
       })
       const store = useRolesStore()
@@ -980,8 +982,8 @@ describe('useRolesStore', () => {
 
     it('should return null on failure result', async () => {
       vi.spyOn(roleService, 'exportRole').mockResolvedValue({
-        isSuccess: false,
-        message: 'no',
+        success: false,
+        error: new ApiError('no', 0, null),
       })
       const store = useRolesStore()
       const result = await store.exportRole(7)
@@ -999,7 +1001,7 @@ describe('useRolesStore', () => {
   describe('importRole', () => {
     it('should import role and add to roles', async () => {
       vi.spyOn(roleService, 'importRole').mockResolvedValue({
-        isSuccess: true,
+        success: true,
         data: mockRole,
       })
       const store = useRolesStore()
@@ -1011,8 +1013,8 @@ describe('useRolesStore', () => {
 
     it('should return null on failure result', async () => {
       vi.spyOn(roleService, 'importRole').mockResolvedValue({
-        isSuccess: false,
-        message: 'invalid',
+        success: false,
+        error: new ApiError('invalid', 0, null),
       })
       const store = useRolesStore()
       const result = await store.importRole('garbage')
