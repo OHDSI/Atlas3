@@ -4,6 +4,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
+import { setChartTheme } from '@/ui/chart-config'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -70,6 +71,7 @@ describe('ChartExport', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    setChartTheme('light')
   })
 
   describe('Rendering', () => {
@@ -105,13 +107,32 @@ describe('ChartExport', () => {
       const pngButton = wrapper.findAll('button')[0]
       await pngButton.trigger('click')
 
+      // getExportConfig() carries the shared export defaults - theme-aware
+      // background plus excluding the toolbox from exported images.
       expect(chartInstance.getDataURL).toHaveBeenCalledWith({
         type: 'png',
         pixelRatio: 2,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        excludeComponents: ['toolbox']
       })
       expect(mockLink.download).toBe('test-chart.png')
       expect(mockLink.click).toHaveBeenCalled()
+    })
+
+    it('should export PNG with the dark surface as background when the dark theme is active', async () => {
+      setChartTheme('dark')
+      const chartInstance = createMockChartInstance()
+      const wrapper = mountComponent({ chartInstance, filename: 'test-chart' })
+
+      const pngButton = wrapper.findAll('button')[0]
+      await pngButton.trigger('click')
+
+      expect(chartInstance.getDataURL).toHaveBeenCalledWith({
+        type: 'png',
+        pixelRatio: 2,
+        backgroundColor: '#161618',
+        excludeComponents: ['toolbox']
+      })
     })
 
     it('should emit export-start and export-success events', async () => {
