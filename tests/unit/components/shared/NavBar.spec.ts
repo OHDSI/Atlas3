@@ -11,6 +11,7 @@ import NavBar from '@/components/shared/NavBar.vue'
 import { generatePluginMenuItems } from '@/plugins/navigation/PluginMenuIntegration.ts'
 import { usePermissions } from '@/composables/usePermissions'
 import { usePluginMounts } from '@/composables/usePluginMounts'
+import { pluginConfigService } from '@/services/PluginConfigService'
 
 // Mock vue-router
 const mockPush = vi.fn()
@@ -123,6 +124,7 @@ vi.mock('@/services/PluginConfigService', () => ({
     showLanguageSelector: () => true,
     showConfigButton: () => true,
     showUserMenu: () => true,
+    showThemeToggle: vi.fn(() => false),
     getFeedbackUrl: () => 'https://forms.office.com/r/2JzrYy1yDP',
     getLogoNavigateTo: () => '/'
   }
@@ -181,6 +183,7 @@ describe('NavBar', () => {
     vi.mocked(generatePluginMenuItems).mockReturnValue([])
     vi.mocked(usePermissions).mockReturnValue(mockPermissions)
     vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
+    vi.mocked(pluginConfigService.showThemeToggle).mockReturnValue(false)
   })
 
   describe('Component Rendering', () => {
@@ -209,11 +212,6 @@ describe('NavBar', () => {
     it('should render LanguageSelector component', () => {
       const wrapper = mountComponent()
       expect(wrapper.findComponent({ name: 'LanguageSelector' }).exists()).toBe(true)
-    })
-
-    it('should render ThemeToggle component', () => {
-      const wrapper = mountComponent()
-      expect(wrapper.findComponent({ name: 'ThemeToggle' }).exists()).toBe(true)
     })
 
     it('should render feedback button', () => {
@@ -484,6 +482,20 @@ describe('NavBar', () => {
       const wrapper = mountComponent()
       expect(wrapper.find('.d-none.d-md-flex').exists()).toBe(true)
       expect(wrapper.find('.d-md-none').exists()).toBe(true)
+    })
+  })
+
+  describe('Theme toggle', () => {
+    it('should not render ThemeToggle by default', () => {
+      const wrapper = mountComponent()
+      expect(wrapper.findComponent({ name: 'ThemeToggle' }).exists()).toBe(false)
+    })
+
+    it('should render ThemeToggle when enabled by deployment config', async () => {
+      vi.mocked(pluginConfigService.showThemeToggle).mockReturnValue(true)
+      const wrapper = mountComponent()
+      await flushPromises()
+      expect(wrapper.findComponent({ name: 'ThemeToggle' }).exists()).toBe(true)
     })
   })
 

@@ -119,8 +119,11 @@
         <!-- Language Selector -->
         <LanguageSelector v-if="showLanguageSelector" />
 
-        <!-- Theme (light / dark / system) -->
-        <ThemeToggle data-testid="nav-theme" />
+        <!-- Theme (light / dark / system): opt-in per deployment -->
+        <ThemeToggle
+          v-if="showThemeToggle"
+          data-testid="nav-theme"
+        />
 
         <!-- Docs (user manual) -->
         <AtlasIconButton
@@ -287,6 +290,7 @@ const showFeedbackButton = ref(true)
 const showLanguageSelector = ref(true)
 const showConfigButton = ref(true)
 const showUserMenu = ref(true)
+const showThemeToggle = ref(false)
 const feedbackUrl = ref('https://forms.office.com/r/2JzrYy1yDP')
 const logoNavigateTo = ref('/')
 
@@ -444,6 +448,7 @@ onMounted(() => {
   showLanguageSelector.value = pluginConfigService.showLanguageSelector()
   showConfigButton.value = pluginConfigService.showConfigButton()
   showUserMenu.value = pluginConfigService.showUserMenu()
+  showThemeToggle.value = pluginConfigService.showThemeToggle()
   feedbackUrl.value = pluginConfigService.getFeedbackUrl()
   logoNavigateTo.value = pluginConfigService.getLogoNavigateTo()
 
@@ -453,6 +458,7 @@ onMounted(() => {
     showLanguageSelector.value = pluginConfigService.showLanguageSelector()
     showConfigButton.value = pluginConfigService.showConfigButton()
     showUserMenu.value = pluginConfigService.showUserMenu()
+    showThemeToggle.value = pluginConfigService.showThemeToggle()
     feedbackUrl.value = pluginConfigService.getFeedbackUrl()
     logoNavigateTo.value = pluginConfigService.getLogoNavigateTo()
   })
