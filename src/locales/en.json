@@ -1778,7 +1778,8 @@
       "searching": "Searching concepts...",
       "foundResults": "Found {count} results",
       "conceptMeta": "ID: {id} | Code: {code} | Domain: {domain}",
-      "enterSearchTerm": "Enter a search term to find concepts"
+      "enterSearchTerm": "Enter a search term to find concepts",
+      "searchFailed": "Failed to search concepts"
     },
     "cohortBuilder": {
       "stateRequired": "Required",

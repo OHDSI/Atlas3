@@ -60,9 +60,18 @@
         </template>
       </v-virtual-scroll>
 
+      <!-- Search Error -->
+      <AtlasAlert
+        v-if="searchError && !isSearching"
+        severity="danger"
+        data-testid="search-error"
+      >
+        {{ searchError || tv('components.conceptSearch.searchFailed', 'Failed to search concepts') }}
+      </AtlasAlert>
+
       <!-- No Results Message -->
       <AtlasAlert
-        v-if="searchQuery && !isSearching && searchResults && searchResults.length === 0"
+        v-else-if="searchQuery && !isSearching && searchResults && searchResults.length === 0"
         severity="info"
         data-testid="no-results-message"
       >
@@ -70,7 +79,7 @@
       </AtlasAlert>
 
       <AtlasAlert
-        v-if="!searchQuery && (!searchResults || searchResults.length === 0)"
+        v-if="!searchError && !searchQuery && (!searchResults || searchResults.length === 0)"
         severity="info"
         variant="flat"
       >
@@ -93,7 +102,7 @@ defineEmits<{
   'select-concept': [concept: Concept]
 }>()
 
-const { searchConcepts, searchResults, isSearching } = useConceptSets()
+const { searchConcepts, searchResults, isSearching, searchError } = useConceptSets()
 
 const searchQuery = ref('')
 const selectedDomain = ref<string | undefined>(undefined)

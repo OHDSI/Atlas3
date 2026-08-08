@@ -20,12 +20,14 @@ export function useConceptSets() {
     if (!query || query.trim().length === 0) {
       store.setSearchResults([])
       store.setSearching(false)
+      store.setSearchError(null)
       return
     }
 
     try {
       store.setSearching(true)
       store.setSearchQuery(query)
+      store.setSearchError(null)
 
       const sourceKey = getSourceKey()
       const result = await searchConceptsApi(sourceKey, query, { domain })
@@ -35,10 +37,12 @@ export function useConceptSets() {
       } else {
         logger.error('ConceptSets', 'Search failed', result?.error)
         store.setSearchResults([])
+        store.setSearchError(result?.error?.message ?? null)
       }
     } catch (error) {
       logger.error('ConceptSets', 'Search failed', error)
       store.setSearchResults([])
+      store.setSearchError(error instanceof Error ? error.message : String(error))
       throw error
     } finally {
       store.setSearching(false)
@@ -48,6 +52,7 @@ export function useConceptSets() {
   return {
     searchResults: computed(() => store.searchResults),
     isSearching: computed(() => store.isSearching),
+    searchError: computed(() => store.searchError),
     selectedConcepts,
     searchConcepts,
   }
