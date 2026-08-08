@@ -107,7 +107,7 @@ const conceptSets = computed<ConceptSetReference[]>(
 }
 
 .char-conceptsets-tab__list {
-  border: 1px solid var(--atlas-color-outline);
+  border: 1px solid var(--atlas-color-outline-strong);
   border-radius: 8px;
 }
 </style>

@@ -268,7 +268,7 @@ function updateFlag(id: number, flag: 'includeAnnual' | 'includeTemporal', value
 }
 
 .linked-fa-picker__list {
-  border: 1px solid var(--atlas-color-outline);
+  border: 1px solid var(--atlas-color-outline-strong);
   border-radius: 8px;
 }
 

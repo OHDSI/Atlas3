@@ -21,7 +21,7 @@ defineProps<{ label: string; value: string }>()
   background: #fafbfd;
 }
 .v-theme--dark .summary-stat {
-  border-color: var(--atlas-color-outline);
+  border-color: var(--atlas-color-outline-strong);
   background: var(--atlas-color-surface-variant);
 }
 .summary-stat__label {
