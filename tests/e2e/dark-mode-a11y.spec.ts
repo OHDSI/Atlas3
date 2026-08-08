@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { setupBasicMocks } from './helpers/api-mocks'
 
 // Verified against src/router/routes.ts. The four analysis-hub list views
 // (characterizations, pathways, incidence-rates) live under /analysis/* but
@@ -25,6 +26,10 @@ async function enableDarkMode(page: Page) {
 test.describe('dark mode colour contrast', () => {
   for (const route of ROUTES) {
     test(`${route.name} has no colour-contrast violations in dark mode`, async ({ page }) => {
+      // Mock the API and pre-accept the license agreement so the SNOMED
+      // License dialog never opens — otherwise it sits on top of every
+      // route and the scan mostly checks modal chrome, not page content.
+      await setupBasicMocks(page)
       await enableDarkMode(page)
       await page.goto(route.path)
       await page.waitForLoadState('networkidle')
