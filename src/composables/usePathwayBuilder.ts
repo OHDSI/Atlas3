@@ -46,7 +46,7 @@ export function usePathwayBuilder() {
       ? await savePathway(id, store.currentPathway)
       : await createPathway(store.currentPathway)
     if (!result.success) {
-      notify(`Save failed: ${result.error}`, 'error')
+      notify(`Save failed: ${result.error.message}`, 'error')
       return null
     }
     store.setPathway(result.data)
@@ -64,7 +64,7 @@ export function usePathwayBuilder() {
     if (!id) return null
     const result = await copyPathway(id)
     if (!result.success) {
-      notify(`Copy failed: ${result.error}`, 'error')
+      notify(`Copy failed: ${result.error.message}`, 'error')
       logger.error('PathwayBuilder', 'copy failed', result.error)
       return null
     }

@@ -3,6 +3,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import * as webapi from '@/services/pathway.service'
 import { usePathwayBuilder } from '@/composables/usePathwayBuilder'
 import { usePathwayStore } from '@/stores/pathway'
+import { ApiError } from '@/services/api-error'
 
 vi.mock('@/services/pathway.service')
 vi.mock('@/utils/logger', () => ({
@@ -116,7 +117,7 @@ describe('usePathwayBuilder', () => {
 
     vi.mocked(webapi.createPathway).mockResolvedValue({
       success: false,
-      error: 'server exploded',
+      error: new ApiError('server exploded', 500, null),
     })
 
     const { save, feedback } = usePathwayBuilder()
@@ -124,6 +125,7 @@ describe('usePathwayBuilder', () => {
     expect(result).toBeNull()
     expect(feedback.value?.color).toBe('error')
     expect(feedback.value?.message).toContain('server exploded')
+    expect(feedback.value?.message).not.toContain('ApiError')
   })
 
   it('save navigates to /pathways/:id when creating a brand-new pathway', async () => {
@@ -159,7 +161,7 @@ describe('usePathwayBuilder', () => {
     if (store.currentPathway) store.currentPathway.id = 5
     vi.mocked(webapi.copyPathway).mockResolvedValue({
       success: false,
-      error: 'cannot copy',
+      error: new ApiError('cannot copy', 0, null),
     })
 
     const { copy, feedback } = usePathwayBuilder()
@@ -167,6 +169,7 @@ describe('usePathwayBuilder', () => {
     expect(out).toBeNull()
     expect(feedback.value?.color).toBe('error')
     expect(feedback.value?.message).toContain('cannot copy')
+    expect(feedback.value?.message).not.toContain('ApiError')
   })
 
   it('remove returns false when no current pathway id', async () => {
@@ -182,7 +185,7 @@ describe('usePathwayBuilder', () => {
     if (store.currentPathway) store.currentPathway.id = 5
     vi.mocked(webapi.deletePathway).mockResolvedValue({
       success: false,
-      error: { message: 'conflict' } as never,
+      error: new ApiError('conflict', 409, null),
     })
 
     const { remove, feedback } = usePathwayBuilder()
@@ -190,5 +193,6 @@ describe('usePathwayBuilder', () => {
     expect(ok).toBe(false)
     expect(feedback.value?.color).toBe('error')
     expect(feedback.value?.message).toBe('Delete failed: conflict')
+    expect(feedback.value?.message).not.toContain('ApiError')
   })
 })

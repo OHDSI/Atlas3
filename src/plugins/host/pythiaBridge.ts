@@ -406,7 +406,7 @@ async function handleCreatePathway(
   try {
     const result = await createPathway(pathway)
     if (!result.success || !result.data?.id) {
-      const msg = result.success ? 'no id returned' : result.error
+      const msg = result.success ? 'no id returned' : result.error.message
       showSnackbar(`Failed to create pathway: ${msg}`, 'error')
       return
     }
@@ -449,7 +449,7 @@ async function handleCreateIncidenceRate(
   try {
     const result = await createIncidenceRate(ir)
     if (!result.success || !result.data?.id) {
-      const msg = result.success ? 'no id returned' : result.error
+      const msg = result.success ? 'no id returned' : result.error.message
       showSnackbar(`Failed to create incidence rate: ${msg}`, 'error')
       return
     }

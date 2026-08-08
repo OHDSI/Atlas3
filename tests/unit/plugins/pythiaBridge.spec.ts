@@ -36,6 +36,7 @@ import { createIncidenceRate } from '@/services/incidence-rate.service'
 import { setupPythiaBridge, applyProposalDirect } from '@/plugins/host/pythiaBridge'
 import { useCohortStore } from '@/stores/cohort'
 import { createHostMessageBus, getHostMessageBus } from '@/plugins/messaging/HostMessageBus'
+import { ApiError } from '@/services/api-error'
 
 function dispatchPluginMessage(detail: unknown) {
   window.dispatchEvent(new CustomEvent('plugin-message', { detail }))
@@ -258,7 +259,7 @@ describe('pythiaBridge', () => {
   it('createPathway proposal → no router.push when ApiResult.success is false', async () => {
     vi.mocked(createPathway).mockResolvedValue({
       success: false,
-      error: 'WebAPI returned 500',
+      error: new ApiError('WebAPI returned 500', 500, null),
     })
 
     dispatchPluginMessage({
