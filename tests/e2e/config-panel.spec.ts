@@ -81,12 +81,18 @@ test.describe('Configuration Panel', () => {
     })
 
     test('should have openable and closeable config panel', async ({ page }) => {
-      // Try to open panel
-      const panel = await ensurePanelOpen(page)
-      await expect(panel).toBeVisible()
+      // Not ensurePanelOpen: Vuetify keeps the closed drawer in the DOM
+      // positioned offscreen, where Playwright still reports it "visible",
+      // so the helper skips the open click against a closed panel. Only
+      // toBeInViewport distinguishes open from closed here.
+      await page.setViewportSize({ width: 1920, height: 1080 })
+      const panel = page.locator('.v-navigation-drawer').filter({ hasText: /Configuration/ })
 
-      // Panel exists and can be opened - that's the main functionality
-      expect(true).toBe(true)
+      await page.getByTestId('nav-config').click()
+      await expect(panel).toBeInViewport()
+
+      await panel.locator('button[aria-label="Close configuration panel"]').click()
+      await expect(panel).not.toBeInViewport()
     })
 
     test('should navigate away from home page successfully', async ({ page }) => {
@@ -161,16 +167,6 @@ test.describe('Configuration Panel', () => {
   })
 
   test.describe('US4: Manage Tag Groups (T107)', () => {
-    test('should close config panel when clicking outside or close button', async ({ page }) => {
-      // Ensure panel is open
-      const panel = await ensurePanelOpen(page)
-      await expect(panel).toBeVisible()
-
-      // Panel can be closed (implementation may vary)
-      // Just verify it's openable - closing mechanism might differ
-      expect(true).toBe(true)
-    })
-
     test('should display config panel with buttons', async ({ page }) => {
       // Ensure config panel is open
       await ensurePanelOpen(page)
