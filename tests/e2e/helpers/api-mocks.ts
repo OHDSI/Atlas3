@@ -13,8 +13,7 @@ import {
   mockDashboardReport,
   mockPersonReport,
   mockDiabetesConcepts,
-  mockCardiovascularConcepts,
-  createConceptSearchResponse
+  mockCardiovascularConcepts
 } from '../fixtures'
 
 // In-memory store for cohorts — persists data between requests.
@@ -326,23 +325,46 @@ export async function setupBasicMocks(page: Page) {
 
   // Mock vocabulary search endpoint (concept search)
   await page.route('**/WebAPI/vocabulary/*/search**', async (route: Route) => {
+    // The app POSTs { QUERY: ... }; older callers used ?query=. Support both.
     const url = route.request().url()
     const searchParams = new URLSearchParams(url.split('?')[1] || '')
-    const query = searchParams.get('query')?.toLowerCase() || ''
+    let query = searchParams.get('query')?.toLowerCase() || ''
+    if (!query) {
+      try {
+        const body = route.request().postDataJSON() as { QUERY?: string } | null
+        query = (body?.QUERY || '').toLowerCase()
+      } catch {
+        query = ''
+      }
+    }
 
     let results = mockDiabetesConcepts
     if (query.includes('cardio') || query.includes('hypert') || query.includes('heart')) {
       results = mockCardiovascularConcepts
     } else if (query.includes('diabet')) {
       results = mockDiabetesConcepts
+    } else if (query) {
+      results = []
     }
 
-    const _response = createConceptSearchResponse(results, 20, 0)
+    // The app validates against WebAPI's raw uppercase field names
+    // (ConceptSearchResponseSchema); the camelCase fixture shape fails that
+    // parse and used to make every search silently return zero rows.
+    const webApiShape = results.map(c => ({
+      CONCEPT_ID: c.conceptId,
+      CONCEPT_NAME: c.conceptName,
+      CONCEPT_CODE: c.conceptCode,
+      DOMAIN_ID: c.domainId,
+      VOCABULARY_ID: c.vocabularyId,
+      CONCEPT_CLASS_ID: c.conceptClassId,
+      STANDARD_CONCEPT: c.standardConcept,
+      INVALID_REASON: c.invalidReason
+    }))
 
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(results)
+      body: JSON.stringify(webApiShape)
     })
   })
 
