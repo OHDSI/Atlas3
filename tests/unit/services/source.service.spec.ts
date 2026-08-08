@@ -82,6 +82,24 @@ describe('SourceService', () => {
       expect(result.success).toBe(false)
       if (!result.success) expect(result.error.status).toBe(403)
     })
+
+    it('reports a malformed source list as an ApiResult failure carrying the Zod issues', async () => {
+      const { httpGet } = await import('@/services/http-client')
+      vi.mocked(httpGet).mockResolvedValue([
+        { sourceKey: 'SYNPUF1K', sourceName: 'SYNPUF 1K' /* missing sourceDialect/daimons */ },
+      ])
+
+      const result = await fetchCDMSources()
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid source list response')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(Array.isArray(issues)).toBe(true)
+        expect(issues.length).toBeGreaterThan(0)
+      }
+    })
   })
 
   describe('getSourceDetails', () => {

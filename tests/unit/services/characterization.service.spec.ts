@@ -148,6 +148,38 @@ describe('services/characterization.service', () => {
       expect(url).toContain('/cohort-characterization')
       expect(init.method).toBe('POST')
     })
+
+    it('reports a parse failure carrying the status and Zod issues', async () => {
+      ok({ ...validDesign, cohorts: 'not an array' })
+
+      const result = await createCharacterization(validDesign)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid response from POST /cohort-characterization')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.some((i: { path: string[] }) => i.path.includes('cohorts'))).toBe(true)
+      }
+    })
+
+    it('coerces a numeric-and-positive strata id and strips a non-numeric placeholder id', async () => {
+      ok(validDesign)
+
+      await createCharacterization({
+        ...validDesign,
+        stratas: [
+          { id: '42', name: 'Real strata', criteria: {} },
+          { id: 'placeholder-uuid', name: 'New strata', criteria: {} },
+        ],
+      })
+
+      const [, init] = mockFetch.mock.calls[0]
+      const sent = JSON.parse(init.body as string) as { stratas: Array<Record<string, unknown>> }
+      expect(sent.stratas[0].id).toBe(42)
+      expect(sent.stratas[1]).not.toHaveProperty('id')
+      expect(sent.stratas[1].name).toBe('New strata')
+    })
   })
 
   describe('updateCharacterization', () => {
@@ -169,6 +201,20 @@ describe('services/characterization.service', () => {
       expect(result.success).toBe(false)
       if (!result.success) expect(result.error.message).toBe('updateCharacterization requires def.id')
       expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('reports a parse failure carrying the status and Zod issues', async () => {
+      ok({ ...validDesign, cohorts: 'not an array' })
+
+      const result = await updateCharacterization(validDesign)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid response from PUT /cohort-characterization/1')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.some((i: { path: string[] }) => i.path.includes('cohorts'))).toBe(true)
+      }
     })
   })
 
@@ -205,6 +251,20 @@ describe('services/characterization.service', () => {
       expect(url).toContain('/cohort-characterization/1')
       expect(init.method).toBe('POST')
     })
+
+    it('reports a parse failure carrying the status and Zod issues', async () => {
+      ok({ ...validDesign, cohorts: 'not an array' })
+
+      const result = await copyCharacterization(1)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid response from POST /cohort-characterization/1')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.some((i: { path: string[] }) => i.path.includes('cohorts'))).toBe(true)
+      }
+    })
   })
 
   describe('characterizationNameExists', () => {
@@ -213,6 +273,20 @@ describe('services/characterization.service', () => {
       const result = await characterizationNameExists(0, 'name')
       expect(result.success).toBe(true)
       if (result.success) expect(result.data).toBe(true)
+    })
+
+    it('treats a positive number as an existing name (legacy WebAPI id-count reply)', async () => {
+      ok(1)
+      const result = await characterizationNameExists(0, 'name')
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data).toBe(true)
+    })
+
+    it('falls back to Boolean() coercion for an unexpected response shape', async () => {
+      ok(null)
+      const result = await characterizationNameExists(0, 'name')
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data).toBe(false)
     })
 
     it('encodes the name parameter', async () => {
@@ -244,6 +318,20 @@ describe('services/characterization.service', () => {
       const [url, init] = mockFetch.mock.calls[0]
       expect(url).toContain('/cohort-characterization/import')
       expect(init.method).toBe('POST')
+    })
+
+    it('reports a parse failure carrying the status and Zod issues', async () => {
+      ok({ ...validDesign, cohorts: 'not an array' })
+
+      const result = await importCharacterization({ raw: 'design' })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid response from POST /cohort-characterization/import')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.some((i: { path: string[] }) => i.path.includes('cohorts'))).toBe(true)
+      }
     })
   })
 
@@ -281,6 +369,22 @@ describe('services/characterization.service', () => {
       expect(result.success).toBe(true)
       if (result.success) expect(result.data.id).toBe(1)
     })
+
+    it('reports a parse failure carrying the status and Zod issues', async () => {
+      ok({ id: 1, status: 'BOGUS_STATUS', sourceKey: 'CDM_A' })
+
+      const result = await getCharacterizationExecution(1)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe(
+          'Invalid response from /cohort-characterization/generation/1'
+        )
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.some((i: { path: string[] }) => i.path.includes('status'))).toBe(true)
+      }
+    })
   })
 
   describe('generateCharacterization', () => {
@@ -305,6 +409,22 @@ describe('services/characterization.service', () => {
       if (result.success) {
         expect(result.data.id).toBe(456)
         expect(result.data.sourceKey).toBe('CDM_A')
+      }
+    })
+
+    it('reports a status carrying failure when neither the execution nor job-execution shape parses', async () => {
+      ok({ status: 'NOT_A_REAL_STATUS' })
+
+      const result = await generateCharacterization(1, 'CDM_A')
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe(
+          'Invalid response from POST /cohort-characterization/1/generation/CDM_A'
+        )
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.some((i: { path: string[] }) => i.path.includes('status'))).toBe(true)
       }
     })
   })
@@ -365,12 +485,19 @@ describe('services/characterization.service', () => {
       if (result.success) expect(result.data).toHaveLength(2)
     })
 
-    it('reports an unexpected shape as ApiResult failure', async () => {
+    it('reports an unexpected shape as ApiResult failure carrying the offending payload', async () => {
       ok({ not: 'an array' })
 
       const result = await getCharacterizationResults(1, { thresholdValuePct: 0 })
 
       expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe(
+          'Invalid response from POST /cohort-characterization/generation/1/result'
+        )
+        expect(result.error.status).toBe(0)
+        expect(JSON.parse(result.error.body as string)).toEqual({ not: 'an array' })
+      }
     })
   })
 

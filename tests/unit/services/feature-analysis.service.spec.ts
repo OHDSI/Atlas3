@@ -150,6 +150,22 @@ describe('services/feature-analysis.service', () => {
 
       expect(result.success).toBe(false)
     })
+
+    it('reports a parse failure carrying the status and Zod issues, not just a boolean', async () => {
+      ok({ id: 1, type: 'BOGUS_TYPE', design: {} })
+
+      const result = await createFeatureAnalysis({ name: 'x', type: 'PRESET', design: {} })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid response from POST /feature-analysis')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(Array.isArray(issues)).toBe(true)
+        expect(issues.length).toBeGreaterThan(0)
+        expect(issues.some((i: { path: string[] }) => i.path.includes('type'))).toBe(true)
+      }
+    })
   })
 
   describe('updateFeatureAnalysis', () => {
@@ -171,6 +187,20 @@ describe('services/feature-analysis.service', () => {
       expect(result.success).toBe(false)
       if (!result.success) expect(result.error.message).toBe('updateFeatureAnalysis requires fa.id')
       expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('reports a parse failure carrying the status and Zod issues', async () => {
+      ok({ id: 9, type: 'BOGUS_TYPE', design: {} })
+
+      const result = await updateFeatureAnalysis({ id: 9, name: 'Updated', type: 'PRESET', design: {} })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid response from PUT /feature-analysis/9')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.some((i: { path: string[] }) => i.path.includes('type'))).toBe(true)
+      }
     })
   })
 
@@ -207,6 +237,20 @@ describe('services/feature-analysis.service', () => {
       expect(url).toContain('/feature-analysis/100/copy')
       expect(init.method).toBe('GET')
     })
+
+    it('reports a parse failure carrying the status and Zod issues', async () => {
+      ok({ type: 'BOGUS_TYPE', design: {} })
+
+      const result = await copyFeatureAnalysis(100)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid response from /feature-analysis/100/copy')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.some((i: { path: string[] }) => i.path.includes('type'))).toBe(true)
+      }
+    })
   })
 
   describe('featureAnalysisNameExists', () => {
@@ -215,6 +259,27 @@ describe('services/feature-analysis.service', () => {
       const result = await featureAnalysisNameExists(0, 'foo')
       expect(result.success).toBe(true)
       if (result.success) expect(result.data).toBe(true)
+    })
+
+    it('treats a positive number as an existing name (legacy WebAPI id-count reply)', async () => {
+      ok(1)
+      const result = await featureAnalysisNameExists(0, 'foo')
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data).toBe(true)
+    })
+
+    it('treats zero as a non-existing name', async () => {
+      ok(0)
+      const result = await featureAnalysisNameExists(0, 'foo')
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data).toBe(false)
+    })
+
+    it('falls back to Boolean() coercion for an unexpected response shape', async () => {
+      ok(null)
+      const result = await featureAnalysisNameExists(0, 'foo')
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data).toBe(false)
     })
 
     it('encodes the name parameter', async () => {
@@ -232,6 +297,20 @@ describe('services/feature-analysis.service', () => {
       const result = await listFeatureAnalysisDomains()
       expect(result.success).toBe(true)
       if (result.success) expect(result.data).toEqual(['CONDITION', 'DRUG'])
+    })
+
+    it('reports a parse failure carrying the status and Zod issues', async () => {
+      ok([42])
+
+      const result = await listFeatureAnalysisDomains()
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid response from /feature-analysis/domains')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.length).toBeGreaterThan(0)
+      }
     })
   })
 
@@ -257,6 +336,20 @@ describe('services/feature-analysis.service', () => {
       const result = await listFeatureAnalysisAggregates()
 
       expect(result.success).toBe(false)
+    })
+
+    it('reports a parse failure carrying the status and Zod issues', async () => {
+      ok([{ name: 'missing id' }])
+
+      const result = await listFeatureAnalysisAggregates()
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid response from /feature-analysis/aggregates')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.some((i: { path: string[] }) => i.path.includes('id'))).toBe(true)
+      }
     })
   })
 
@@ -285,6 +378,22 @@ describe('services/feature-analysis.service', () => {
       const result = await getDefaultCovariateSettings(true)
 
       expect(result.success).toBe(false)
+    })
+
+    it('reports a parse failure carrying the status and Zod issues', async () => {
+      ok('not an object')
+
+      const result = await getDefaultCovariateSettings(true)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe(
+          'Invalid response from /featureextraction/defaultcovariatesettings'
+        )
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.length).toBeGreaterThan(0)
+      }
     })
   })
 })

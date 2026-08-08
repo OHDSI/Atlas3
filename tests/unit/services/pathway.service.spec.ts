@@ -30,7 +30,10 @@ import {
   generatePathway,
   cancelPathwayGeneration,
   getPathwayDesignByGeneration,
+  exportPathway,
+  importPathway,
 } from '@/services/pathway.service'
+import { logger } from '@/utils/logger'
 
 const samplePathway = {
   id: 1,
@@ -84,6 +87,23 @@ describe('services/pathway.service', () => {
 
       expect(result.success).toBe(false)
       if (!result.success) expect(result.error.message).toBe('network error')
+    })
+
+    it('carries both the page and array Zod issues when neither shape parses', async () => {
+      ok({ neither: 'a page nor an array' })
+
+      const result = await listPathways()
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid pathway list response')
+        expect(result.error.status).toBe(0)
+        const body = JSON.parse(result.error.body as string)
+        expect(Array.isArray(body.page)).toBe(true)
+        expect(body.page.length).toBeGreaterThan(0)
+        expect(Array.isArray(body.array)).toBe(true)
+        expect(body.array.length).toBeGreaterThan(0)
+      }
     })
 
     it('does not import the webapi barrel', async () => {
@@ -237,6 +257,66 @@ describe('services/pathway.service', () => {
       expect(url).toContain('/pathway-analysis/check')
       expect(init.method).toBe('POST')
     })
+
+    it('runPathwayDiagnostics swallows a transport failure into an empty list rather than throwing', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('network error'))
+
+      const result = await runPathwayDiagnostics({ design: {} } as never)
+
+      expect(result).toEqual([])
+      expect(vi.mocked(logger.error)).toHaveBeenCalledWith(
+        'Pathway',
+        'runPathwayDiagnostics failed',
+        expect.any(Error)
+      )
+    })
+  })
+
+  describe('pathway export/import', () => {
+    it('exportPathway GETs /pathway-analysis/:id/export', async () => {
+      ok({ design: {} })
+
+      const result = await exportPathway(1)
+
+      expect(result).toEqual({ design: {} })
+      const [url] = mockFetch.mock.calls[0]
+      expect(url).toContain('/pathway-analysis/1/export')
+    })
+
+    it('exportPathway logs and rethrows instead of swallowing a transport failure', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('network error'))
+
+      await expect(exportPathway(1)).rejects.toThrow('network error')
+      expect(vi.mocked(logger.error)).toHaveBeenCalledWith(
+        'Pathway',
+        'exportPathway(1) failed',
+        expect.any(Error)
+      )
+    })
+
+    it('importPathway POSTs /pathway-analysis/import and returns the created pathway', async () => {
+      ok(samplePathway)
+
+      const result = await importPathway({ design: samplePathway })
+
+      expect(result).toEqual(samplePathway)
+      const [url, init] = mockFetch.mock.calls[0]
+      expect(url).toContain('/pathway-analysis/import')
+      expect(init.method).toBe('POST')
+    })
+
+    it('importPathway logs and throws a descriptive error on a malformed response', async () => {
+      ok({ not: 'a pathway' })
+
+      await expect(importPathway({ design: {} })).rejects.toThrow(
+        'Invalid response from POST /pathway-analysis/import'
+      )
+      expect(vi.mocked(logger.error)).toHaveBeenCalledWith(
+        'Pathway',
+        'importPathway validation',
+        expect.anything()
+      )
+    })
   })
 
   describe('pathway executions', () => {
@@ -277,6 +357,20 @@ describe('services/pathway.service', () => {
       const [url, init] = mockFetch.mock.calls[0]
       expect(url).toContain('/pathway-analysis/1/generation/cdm')
       expect(init.method).toBe('POST')
+    })
+
+    it('reports a status carrying failure when neither the execution nor job-execution shape parses', async () => {
+      ok({ status: 'NOT_A_REAL_STATUS' })
+
+      const result = await generatePathway(1, 'cdm')
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid generate response')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.some((i: { path: string[] }) => i.path.includes('status'))).toBe(true)
+      }
     })
 
     it('cancelPathwayGeneration DELETEs the same path and succeeds', async () => {

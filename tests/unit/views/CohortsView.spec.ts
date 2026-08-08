@@ -43,6 +43,7 @@ vi.mock('@/services/cohort-definition.service', () => ({
 
 import { success, failure } from '@/types/api'
 import { ApiError } from '@/services/api-error'
+import { logger } from '@/utils/logger'
 
 // Mock logger
 vi.mock('@/utils/logger', () => ({
@@ -546,14 +547,42 @@ describe('CohortsView.vue', () => {
       expect(wrapper.vm.deleting).toBe(true)
     })
 
-    it('should handle delete errors gracefully', async () => {
-      const error = new Error('Delete failed')
-      vi.mocked(deleteCohort).mockRejectedValue(error)
+    it('does not close the dialog or refetch when deleteCohort reports a failure ApiResult', async () => {
+      vi.mocked(deleteCohort).mockResolvedValue(failure(new ApiError('Delete failed', 409, null)))
       wrapper.vm.selectedCohort = mockCohort
+      wrapper.vm.showDeleteDialog = true
+      await wrapper.vm.$nextTick()
+      mockFetchCohorts.mockClear() // clear the call from mount
 
       await wrapper.vm.confirmDelete()
 
       expect(wrapper.vm.deleting).toBe(false)
+      // A failed delete must not read as a successful one: the dialog stays
+      // open, the selection is kept, and the list is not refetched (which
+      // would otherwise silently imply the cohort is gone).
+      expect(wrapper.vm.showDeleteDialog).toBe(true)
+      expect(wrapper.vm.selectedCohort).toEqual(mockCohort)
+      expect(mockFetchCohorts).not.toHaveBeenCalled()
+      expect(vi.mocked(logger.error)).toHaveBeenCalledWith(
+        'CohortsView',
+        'Failed to delete cohort',
+        expect.objectContaining({ message: 'Delete failed' })
+      )
+    })
+
+    it('handles a thrown/rejected deleteCohort gracefully (defense in depth)', async () => {
+      const error = new Error('network down')
+      vi.mocked(deleteCohort).mockRejectedValue(error)
+      wrapper.vm.selectedCohort = mockCohort
+      wrapper.vm.showDeleteDialog = true
+      await wrapper.vm.$nextTick()
+      mockFetchCohorts.mockClear() // clear the call from mount
+
+      await wrapper.vm.confirmDelete()
+
+      expect(wrapper.vm.deleting).toBe(false)
+      expect(wrapper.vm.showDeleteDialog).toBe(true)
+      expect(mockFetchCohorts).not.toHaveBeenCalled()
     })
   })
 

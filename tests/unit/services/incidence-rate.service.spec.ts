@@ -29,7 +29,10 @@ import {
   cancelIncidenceRateGeneration,
   deleteIncidenceRateInfo,
   getIncidenceRateReport,
+  exportIncidenceRate,
+  importIncidenceRate,
 } from '@/services/incidence-rate.service'
+import { logger } from '@/utils/logger'
 
 const expressionObj = {
   ConceptSets: [],
@@ -120,6 +123,29 @@ describe('services/incidence-rate.service', () => {
 
       expect(result.success).toBe(false)
       if (!result.success) expect(result.error.status).toBe(403)
+    })
+
+    it('synthesizes a default timeAtRisk expression when the wire payload omits it', async () => {
+      ok({ id: 1, name: 'X', tags: [] })
+
+      const result = await getIncidenceRate(1)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.expression.timeAtRisk).toEqual({
+          start: { DateField: 'StartDate', Offset: 0 },
+          end: { DateField: 'StartDate', Offset: 0 },
+        })
+      }
+    })
+
+    it('reports malformed expression JSON as a failure instead of throwing a raw SyntaxError', async () => {
+      ok({ id: 1, name: 'X', expression: 'not valid json{', tags: [] })
+
+      const result = await getIncidenceRate(1)
+
+      expect(result.success).toBe(false)
+      if (!result.success) expect(result.error.message).toBe('expression is not valid JSON')
     })
   })
 
@@ -238,6 +264,20 @@ describe('services/incidence-rate.service', () => {
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/ir/7/info')
     })
+
+    it('reports a parse failure carrying the status and Zod issues', async () => {
+      ok([{ executionInfo: 'not an object' }])
+
+      const result = await listIncidenceRateInfo(7)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid info list response')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.length).toBeGreaterThan(0)
+      }
+    })
   })
 
   describe('getIncidenceRateInfoBySource', () => {
@@ -250,6 +290,20 @@ describe('services/incidence-rate.service', () => {
 
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/ir/7/info/CCAE')
+    })
+
+    it('reports a parse failure carrying the status and Zod issues', async () => {
+      ok({ executionInfo: 'not an object' })
+
+      const result = await getIncidenceRateInfoBySource(7, 'CCAE')
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid info-by-source response')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.length).toBeGreaterThan(0)
+      }
     })
   })
 
@@ -324,6 +378,64 @@ describe('services/incidence-rate.service', () => {
 
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/ir/1/report/CCAE?targetId=10&outcomeId=20')
+    })
+
+    it('reports a parse failure carrying the status and Zod issues', async () => {
+      ok({ summary: 'not an object', stratifyStats: [], treemapData: '{}' })
+
+      const result = await getIncidenceRateReport(1, 'CCAE', 10, 20)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid report response')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.length).toBeGreaterThan(0)
+      }
+    })
+  })
+
+  describe('exportIncidenceRate', () => {
+    it('GETs /ir/{id}/design and returns the raw design', async () => {
+      ok({ some: 'design' })
+
+      const result = await exportIncidenceRate(7)
+
+      expect(result).toEqual({ some: 'design' })
+      const [url] = mockFetch.mock.calls[0]
+      expect(url).toContain('/ir/7/design')
+    })
+
+    it('logs and rethrows instead of swallowing a transport failure', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('network error'))
+
+      await expect(exportIncidenceRate(7)).rejects.toThrow('network error')
+      expect(vi.mocked(logger.error)).toHaveBeenCalledWith(
+        'IncidenceRate',
+        'exportIncidenceRate(7) failed',
+        expect.any(Error)
+      )
+    })
+  })
+
+  describe('importIncidenceRate', () => {
+    it('POSTs /ir/design and decodes the returned expression', async () => {
+      ok(irWire)
+
+      const result = await importIncidenceRate({ design: irWire })
+
+      expect(result.expression.timeAtRisk.start.DateField).toBe('StartDate')
+      const [url, init] = mockFetch.mock.calls[0]
+      expect(url).toContain('/ir/design')
+      expect(init.method).toBe('POST')
+    })
+
+    it('rejects with malformed-JSON error rather than a raw SyntaxError', async () => {
+      ok({ id: 1, name: 'X', expression: 'not valid json{', tags: [] })
+
+      await expect(importIncidenceRate({ design: {} })).rejects.toThrow(
+        'expression is not valid JSON'
+      )
     })
   })
 })

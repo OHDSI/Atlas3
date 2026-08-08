@@ -70,6 +70,24 @@ describe('cohort-sample API client', () => {
     expect(httpGetMock.mock.calls[0]![0]).toContain('?fields=elements')
   })
 
+  it('getCohortSample omits the elements query param by default', async () => {
+    httpGetMock.mockResolvedValueOnce(sampleObj)
+    await getCohortSample(1, 'EUNOMIA', 7)
+    expect(httpGetMock.mock.calls[0]![0]).toBe('/cohortsample/1/EUNOMIA/7')
+  })
+
+  it('getCohortSample reports a malformed sample as a failure carrying the Zod issues', async () => {
+    httpGetMock.mockResolvedValueOnce({ id: 'not-a-number', name: 'demo' })
+    const result = await getCohortSample(1, 'EUNOMIA', 7)
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.message).toBe('Invalid cohort sample response')
+      expect(result.error.status).toBe(0)
+      const issues = JSON.parse(result.error.body as string)
+      expect(issues.length).toBeGreaterThan(0)
+    }
+  })
+
   it('createCohortSample posts the parameters as JSON', async () => {
     httpPostMock.mockResolvedValueOnce(sampleObj)
     const params = { name: 'demo', size: 100 }
@@ -86,11 +104,35 @@ describe('cohort-sample API client', () => {
     if (!result.success) expect(result.error.message).toBe('boom')
   })
 
+  it('createCohortSample reports a malformed response as a failure carrying the Zod issues', async () => {
+    httpPostMock.mockResolvedValueOnce({ id: 'not-a-number', name: 'demo' })
+    const result = await createCohortSample(1, 'EUNOMIA', { name: 'x', size: 1 })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.message).toBe('Invalid cohort sample response')
+      expect(result.error.status).toBe(0)
+      const issues = JSON.parse(result.error.body as string)
+      expect(issues.length).toBeGreaterThan(0)
+    }
+  })
+
   it('refreshCohortSample posts to the refresh subpath', async () => {
     httpPostMock.mockResolvedValueOnce(sampleObj)
     await refreshCohortSample(1, 'EUNOMIA', 7)
     const [url] = httpPostMock.mock.calls[0]!
     expect(url).toBe('/cohortsample/1/EUNOMIA/7/refresh')
+  })
+
+  it('refreshCohortSample reports a malformed response as a failure carrying the Zod issues', async () => {
+    httpPostMock.mockResolvedValueOnce({ id: 'not-a-number', name: 'demo' })
+    const result = await refreshCohortSample(1, 'EUNOMIA', 7)
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.message).toBe('Invalid cohort sample response')
+      expect(result.error.status).toBe(0)
+      const issues = JSON.parse(result.error.body as string)
+      expect(issues.length).toBeGreaterThan(0)
+    }
   })
 
   it('deleteCohortSample sends DELETE', async () => {

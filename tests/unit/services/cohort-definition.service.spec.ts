@@ -4,6 +4,10 @@ vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: vi.fn(() => ({ token: 'mock-token' })),
+}))
+
 import {
   getCohortDefinition,
   saveCohortDefinition,
@@ -202,6 +206,100 @@ describe('services/cohort-definition.service', () => {
 
       expect(result.success).toBe(false)
     })
+
+    // NOTE: this inline map disagrees with the canonical
+    // RAW_STATUS_TO_GENERATION_STATUS table in webapi.types.ts, which maps
+    // STARTED -> RUNNING. Pinned here as documented (if surprising) current
+    // behavior rather than "fixed" — production code is out of scope.
+    it.each([
+      ['STARTED', 'PENDING'],
+      ['RUNNING', 'RUNNING'],
+      ['COMPLETED', 'COMPLETE'],
+      ['COMPLETE', 'COMPLETE'],
+      ['FAILED', 'FAILED'],
+    ])('maps job status %s to GenerationStatus %s', async (jobStatus, expected) => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () => JSON.stringify({ status: jobStatus, executionId: 1 }),
+      })
+
+      const result = await generateCohort(123, 'SYNPUF1K')
+
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data.status).toBe(expected)
+    })
+
+    it('defaults an unrecognized job status to PENDING rather than throwing', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () => JSON.stringify({ status: 'SOME_NEW_SPRING_STATUS', executionId: 1 }),
+      })
+
+      const result = await generateCohort(123, 'SYNPUF1K')
+
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data.status).toBe('PENDING')
+    })
+
+    it('maps executionId to the job id', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () => JSON.stringify({ status: 'RUNNING', executionId: 789 }),
+      })
+
+      const result = await generateCohort(123, 'SYNPUF1K')
+
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data.id).toBe(789)
+    })
+
+    it('falls back to a generated id when executionId is absent', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () => JSON.stringify({ status: 'RUNNING' }),
+      })
+
+      const result = await generateCohort(123, 'SYNPUF1K')
+
+      expect(result.success).toBe(true)
+      if (result.success) expect(typeof result.data.id).toBe('number')
+    })
+
+    it('converts startDate/endDate to ISO startTime/endTime', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            status: 'COMPLETED',
+            executionId: 1,
+            startDate: '2026-01-01T00:00:00.000Z',
+            endDate: '2026-01-02T00:00:00.000Z',
+          }),
+      })
+
+      const result = await generateCohort(123, 'SYNPUF1K')
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.startTime).toBe(new Date('2026-01-01T00:00:00.000Z').toISOString())
+        expect(result.data.endTime).toBe(new Date('2026-01-02T00:00:00.000Z').toISOString())
+      }
+    })
+
+    it('leaves startTime/endTime undefined when the dates are absent', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () => JSON.stringify({ status: 'RUNNING', executionId: 1 }),
+      })
+
+      const result = await generateCohort(123, 'SYNPUF1K')
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.startTime).toBeUndefined()
+        expect(result.data.endTime).toBeUndefined()
+      }
+    })
   })
 
   describe('getCohortGenerationInfo', () => {
@@ -228,6 +326,49 @@ describe('services/cohort-definition.service', () => {
 
       expect(result.success).toBe(false)
     })
+
+    // The raw Spring Batch job status on the wire does not match the
+    // internal four-value GenerationStatus enum; the schema's
+    // `generationStatusFromRaw` transform normalizes it. Polling silently
+    // dies if this table drifts, so pin every raw -> internal pair.
+    it.each([
+      ['PENDING', 'PENDING'],
+      ['STARTING', 'PENDING'],
+      ['STARTED', 'RUNNING'],
+      ['RUNNING', 'RUNNING'],
+      ['STOPPING', 'RUNNING'],
+      ['COMPLETE', 'COMPLETE'],
+      ['COMPLETED', 'COMPLETE'],
+      ['FAILED', 'FAILED'],
+      ['STOPPED', 'FAILED'],
+      ['ABANDONED', 'FAILED'],
+    ])('normalizes raw status %s to GenerationStatus %s', async (rawStatus, expected) => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify([{ id: { cohortDefinitionId: 123, sourceId: 1 }, status: rawStatus }]),
+      })
+
+      const result = await getCohortGenerationInfo(123)
+
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data[0].status).toBe(expected)
+    })
+
+    it('normalizes an unrecognized raw status to PENDING rather than failing validation', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify([
+            { id: { cohortDefinitionId: 123, sourceId: 1 }, status: 'SOME_NEW_SPRING_STATUS' },
+          ]),
+      })
+
+      const result = await getCohortGenerationInfo(123)
+
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data[0].status).toBe('PENDING')
+    })
   })
 
   describe('getCohorts', () => {
@@ -241,6 +382,23 @@ describe('services/cohort-definition.service', () => {
 
       expect(result.success).toBe(true)
       if (result.success) expect(result.data).toHaveLength(1)
+    })
+
+    it('reports a malformed cohort in the list as ApiResult failure carrying the Zod issues', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () => JSON.stringify([{ id: -1, name: 'Bad id' }]),
+      })
+
+      const result = await getCohorts()
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid cohort list response format')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(issues.length).toBeGreaterThan(0)
+      }
     })
   })
 
@@ -294,6 +452,41 @@ describe('services/cohort-definition.service', () => {
 
       expect(result.success).toBe(false)
       if (!result.success) expect(result.error.status).toBe(500)
+    })
+
+    it('parses a stringified expression on a wrapper before sending it', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true, text: async () => '<html></html>' })
+
+      await getCohortPrintFriendly({ expression: JSON.stringify({ ConceptSets: [] }) } as never)
+
+      const [, options] = mockFetch.mock.calls[0]
+      expect(JSON.parse(options.body as string)).toEqual({ ConceptSets: [] })
+    })
+
+    it('attaches an Authorization header when an auth token is available', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true, text: async () => '<html></html>' })
+
+      await getCohortPrintFriendly({ expression: {} } as never)
+
+      const [, options] = mockFetch.mock.calls[0]
+      expect((options.headers as Record<string, string>).Authorization).toBe('Bearer mock-token')
+    })
+
+    it('reports a text-parse failure as ApiResult instead of throwing', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () => {
+          throw new Error('stream error')
+        },
+      })
+
+      const result = await getCohortPrintFriendly({ expression: {} } as never)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid response format')
+        expect(result.error.status).toBe(0)
+      }
     })
   })
 })
