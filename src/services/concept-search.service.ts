@@ -12,6 +12,8 @@ import {
 import { mapConceptFromAPI, mapComparisonItemFromAPI } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
 import { httpClient, httpPostRead } from '@/services/http-client'
+import { unwrap, ApiError, zodIssues } from '@/services/api-error'
+import { type ApiResult } from '@/types/api'
 
 type ConceptRecordCountResponse = Array<Record<string, number[]>>
 
@@ -28,6 +30,12 @@ function extractHttpStatus(error: unknown): number | null {
   return parseInt(match[1], 10)
 }
 
+// Single implementation for the one endpoint, POST /vocabulary/{sourceKey}/search:
+// the ApiResult contract (this used to be the separate searchConceptsResult),
+// with the options object — including unused-but-reserved page/pageSize,
+// carried over from the original throwing searchConcepts — for callers that
+// need a domain filter. Uses httpPostRead: the GET form of this endpoint
+// silently returns [] on current WebAPI builds, and POST is a retry-safe read.
 export async function searchConcepts(
   sourceKey: string,
   query: string,
@@ -36,33 +44,35 @@ export async function searchConcepts(
     pageSize?: number
     domain?: string
   }
-): Promise<{ concepts: Concept[]; total: number }> {
-  if (!query || query.length < 1) {
-    return { concepts: [], total: 0 }
-  }
+): Promise<ApiResult<Concept[]>> {
+  return unwrap(async () => {
+    if (!query || query.length < 1) {
+      return []
+    }
 
-  if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
-    throw new Error('Invalid vocabulary source. Please select a valid source in Configuration.')
-  }
+    if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
+      throw new ApiError(
+        'Invalid vocabulary source. Please select a valid source in Configuration.',
+        0,
+        null
+      )
+    }
 
-  // Use POST /vocabulary/{sourceKey}/search with a JSON body. Current WebAPI
-  // builds silently return [] for the GET form (`?query=...`), which made
-  // every concept picker look broken.
-  const endpoint = `/vocabulary/${sourceKey}/search`
-  const body: Record<string, unknown> = { QUERY: query.trim() }
-  if (options?.domain) {
-    body.DOMAIN_ID = [options.domain]
-  }
-  const data = await httpPostRead<unknown>(endpoint, body)
-  const parsed = ConceptSearchResponseSchema.safeParse(data)
+    const endpoint = `/vocabulary/${sourceKey}/search`
+    const body: Record<string, unknown> = { QUERY: query.trim() }
+    if (options?.domain) {
+      body.DOMAIN_ID = [options.domain]
+    }
+    const data = await httpPostRead<unknown>(endpoint, body)
+    const parsed = ConceptSearchResponseSchema.safeParse(data)
 
-  if (!parsed.success) {
-    logger.error('ConceptSearch', 'Concept search validation error', parsed.error)
-    throw new Error('Invalid concept search response format')
-  }
+    if (!parsed.success) {
+      logger.error('ConceptSearch', 'Concept search validation error', parsed.error)
+      throw new ApiError('Invalid concept search response format', 0, zodIssues(parsed.error))
+    }
 
-  const concepts = parsed.data.map(mapConceptFromAPI)
-  return { concepts, total: concepts.length }
+    return parsed.data.map(mapConceptFromAPI)
+  }, 'ConceptSearchService')
 }
 
 export async function getConceptById(

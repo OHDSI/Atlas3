@@ -1,11 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import type { CDMSource, GenerationJob, CohortGenerationInfo } from '@/models/webapi.types'
+import { success, failure } from '@/types/api'
+import { ApiError } from '@/services/api-error'
 
-vi.mock('@/services/webapi', () => ({
-  fetchCDMSources: vi.fn(),
+vi.mock('@/services/cohort-definition.service', () => ({
   generateCohort: vi.fn(),
   getCohortGenerationInfo: vi.fn(),
+}))
+
+vi.mock('@/services/source.service', () => ({
+  fetchCDMSources: vi.fn(),
 }))
 
 vi.mock('@/utils/logger', () => ({
@@ -17,12 +22,14 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-let webapi: typeof import('@/services/webapi')
+let cohortDefService: typeof import('@/services/cohort-definition.service')
+let sourceService: typeof import('@/services/source.service')
 let useWebAPIStore: typeof import('@/stores/webapi').useWebAPIStore
 
 beforeAll(async () => {
   vi.resetModules()
-  webapi = await import('@/services/webapi')
+  cohortDefService = await import('@/services/cohort-definition.service')
+  sourceService = await import('@/services/source.service')
   ;({ useWebAPIStore } = await import('@/stores/webapi'))
 })
 
@@ -327,7 +334,7 @@ describe('WebAPI Store', () => {
           },
         ]
 
-        vi.mocked(webapi.fetchCDMSources).mockResolvedValue({ success: true, data: mockSources })
+        vi.mocked(sourceService.fetchCDMSources).mockResolvedValue({ success: true, data: mockSources })
 
         await store.fetchSources()
 
@@ -339,7 +346,7 @@ describe('WebAPI Store', () => {
         vi.useFakeTimers()
         try {
           const store = useWebAPIStore()
-          vi.mocked(webapi.fetchCDMSources).mockImplementation(
+          vi.mocked(sourceService.fetchCDMSources).mockImplementation(
             () => new Promise(resolve => setTimeout(() => resolve({ success: true, data: [] }), 100))
           )
 
@@ -356,7 +363,7 @@ describe('WebAPI Store', () => {
 
       it('should handle fetch error', async () => {
         const store = useWebAPIStore()
-        vi.mocked(webapi.fetchCDMSources).mockRejectedValue(new Error('Network error'))
+        vi.mocked(sourceService.fetchCDMSources).mockRejectedValue(new Error('Network error'))
 
         await store.fetchSources()
 
@@ -375,8 +382,8 @@ describe('WebAPI Store', () => {
           status: 'PENDING',
         }
 
-        vi.mocked(webapi.generateCohort).mockResolvedValue(mockJob)
-        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
+        vi.mocked(cohortDefService.generateCohort).mockResolvedValue(success(mockJob))
+        vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
 
         const result = await store.generateCohort(123, 'SYNPUF1K')
 
@@ -401,8 +408,8 @@ describe('WebAPI Store', () => {
           status: 'PENDING',
         }
 
-        vi.mocked(webapi.generateCohort).mockResolvedValue(mockJob)
-        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
+        vi.mocked(cohortDefService.generateCohort).mockResolvedValue(success(mockJob))
+        vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
 
         await store.generateCohort(123, 'SYNPUF1K')
 
@@ -411,16 +418,18 @@ describe('WebAPI Store', () => {
 
       it('should handle generate error', async () => {
         const store = useWebAPIStore()
-        vi.mocked(webapi.generateCohort).mockRejectedValue(new Error('Generation failed'))
+        vi.mocked(cohortDefService.generateCohort).mockRejectedValue(new Error('Generation failed'))
 
         const result = await store.generateCohort(123, 'SYNPUF1K')
 
         expect(result).toBeNull()
       })
 
-      it('should return null when API returns null', async () => {
+      it('should return null when the API resolves with a failure', async () => {
         const store = useWebAPIStore()
-        vi.mocked(webapi.generateCohort).mockResolvedValue(null)
+        vi.mocked(cohortDefService.generateCohort).mockResolvedValue(
+          failure(new ApiError('Generation request failed', 500, null))
+        )
 
         const result = await store.generateCohort(123, 'SYNPUF1K')
 
@@ -463,7 +472,7 @@ describe('WebAPI Store', () => {
           },
         ]
 
-        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
+        vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
 
         await store.fetchCohortGenerationInfo(123)
 
@@ -490,7 +499,7 @@ describe('WebAPI Store', () => {
           },
         ]
 
-        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
+        vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
 
         await store.fetchCohortGenerationInfo(123)
 
@@ -508,7 +517,7 @@ describe('WebAPI Store', () => {
           },
         ]
 
-        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
+        vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
 
         await store.fetchCohortGenerationInfo(123)
 
@@ -518,7 +527,7 @@ describe('WebAPI Store', () => {
 
       it('should handle empty info list', async () => {
         const store = useWebAPIStore()
-        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
+        vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
 
         await store.fetchCohortGenerationInfo(123)
 
@@ -528,7 +537,7 @@ describe('WebAPI Store', () => {
 
       it('should handle fetch error', async () => {
         const store = useWebAPIStore()
-        vi.mocked(webapi.getCohortGenerationInfo).mockRejectedValue(new Error('Fetch failed'))
+        vi.mocked(cohortDefService.getCohortGenerationInfo).mockRejectedValue(new Error('Fetch failed'))
 
         await store.fetchCohortGenerationInfo(123)
 
@@ -565,7 +574,7 @@ describe('WebAPI Store', () => {
             },
           ]
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
+          vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
 
           const pollPromise = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
@@ -595,7 +604,7 @@ describe('WebAPI Store', () => {
             },
           ]
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
+          vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
 
           const pollPromise = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
@@ -625,7 +634,7 @@ describe('WebAPI Store', () => {
             },
           ]
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
+          vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
 
           const pollPromise = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
@@ -646,7 +655,7 @@ describe('WebAPI Store', () => {
           }
           store.addGenerationJob(job)
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
+          vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
 
           const pollPromise = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
@@ -657,7 +666,7 @@ describe('WebAPI Store', () => {
         it('should stop polling when no jobs exist', async () => {
           const store = useWebAPIStore()
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
+          vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
 
           const pollPromise = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
@@ -675,7 +684,7 @@ describe('WebAPI Store', () => {
           }
           store.addGenerationJob(job)
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockRejectedValue(new Error('Network error'))
+          vi.mocked(cohortDefService.getCohortGenerationInfo).mockRejectedValue(new Error('Network error'))
 
           const pollPromise = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
@@ -693,7 +702,7 @@ describe('WebAPI Store', () => {
           }
           store.addGenerationJob(job)
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue([
+          vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue([
             {
               id: { cohortDefinitionId: 123, sourceId: 1 },
               status: 'RUNNING',
@@ -723,7 +732,7 @@ describe('WebAPI Store', () => {
           }
           store.addGenerationJob(job)
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue([
+          vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue([
             {
               id: { cohortDefinitionId: 123, sourceId: 1 },
               status: 'RUNNING',
@@ -752,7 +761,7 @@ describe('WebAPI Store', () => {
           store.addGenerationJob({ id: 1, cohortDefinitionId: 123, sourceKey: 'test', status: 'RUNNING' })
           store.addGenerationJob({ id: 2, cohortDefinitionId: 456, sourceKey: 'test', status: 'RUNNING' })
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
+          vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
 
           const poll1 = store.pollGenerationStatus(123)
           const poll2 = store.pollGenerationStatus(456)

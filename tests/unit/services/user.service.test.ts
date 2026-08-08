@@ -7,11 +7,15 @@ import * as userService from '@/services/user.service'
 import type { User } from '@/models/role.types'
 
 // Mock dependencies
-vi.mock('@/services/webapi')
-vi.mock('@/utils/logger')
+vi.mock('@/services/http-client', () => ({
+  httpGet: vi.fn(),
+}))
+vi.mock('@/utils/logger', () => ({
+  logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
 
 describe('user.service', () => {
-  let fetchJSON: typeof import('@/services/webapi').fetchJSON
+  let httpGet: typeof import('@/services/http-client').httpGet
 
   const mockUsers: User[] = [
     {
@@ -38,115 +42,115 @@ describe('user.service', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
-    const webapi = await import('@/services/webapi')
-    fetchJSON = webapi.fetchJSON
+    const httpClient = await import('@/services/http-client')
+    httpGet = httpClient.httpGet
   })
 
   describe('fetchUsers', () => {
     it('should fetch users with default pagination', async () => {
-      vi.mocked(fetchJSON).mockResolvedValue(mockUsers)
+      vi.mocked(httpGet).mockResolvedValue(mockUsers)
 
       const result = await userService.fetchUsers()
 
-      expect(fetchJSON).toHaveBeenCalledWith('/user/?limit=50&offset=0')
-      expect(result.isSuccess).toBe(true)
-      if (result.isSuccess) {
+      expect(httpGet).toHaveBeenCalledWith('/user/?limit=50&offset=0')
+      expect(result.success).toBe(true)
+      if (result.success) {
         expect(result.data).toEqual(mockUsers)
       }
     })
 
     it('should fetch users with custom pagination', async () => {
-      vi.mocked(fetchJSON).mockResolvedValue(mockUsers)
+      vi.mocked(httpGet).mockResolvedValue(mockUsers)
 
       const result = await userService.fetchUsers(100, 20)
 
-      expect(fetchJSON).toHaveBeenCalledWith('/user/?limit=100&offset=20')
-      expect(result.isSuccess).toBe(true)
-      if (result.isSuccess) {
+      expect(httpGet).toHaveBeenCalledWith('/user/?limit=100&offset=20')
+      expect(result.success).toBe(true)
+      if (result.success) {
         expect(result.data).toEqual(mockUsers)
       }
     })
 
     it('should handle validation error', async () => {
-      vi.mocked(fetchJSON).mockResolvedValue({ invalid: 'data' })
+      vi.mocked(httpGet).mockResolvedValue({ invalid: 'data' })
 
       const result = await userService.fetchUsers()
 
-      expect(result.isSuccess).toBe(false)
-      if (!result.isSuccess) {
-        expect(result.message).toBe('Invalid users response format')
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid users response format')
       }
     })
 
     it('should handle fetch error', async () => {
-      vi.mocked(fetchJSON).mockRejectedValue(new Error('Network error'))
+      vi.mocked(httpGet).mockRejectedValue(new Error('Network error'))
 
       const result = await userService.fetchUsers()
 
-      expect(result.isSuccess).toBe(false)
-      if (!result.isSuccess) {
-        expect(result.message).toBe('Network error')
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Network error')
       }
     })
   })
 
   describe('fetchUserById', () => {
     it('should fetch single user successfully', async () => {
-      vi.mocked(fetchJSON).mockResolvedValue(mockUser)
+      vi.mocked(httpGet).mockResolvedValue(mockUser)
 
       const result = await userService.fetchUserById(1)
 
-      expect(fetchJSON).toHaveBeenCalledWith('/user/1')
-      expect(result.isSuccess).toBe(true)
-      if (result.isSuccess) {
+      expect(httpGet).toHaveBeenCalledWith('/user/1')
+      expect(result.success).toBe(true)
+      if (result.success) {
         expect(result.data).toEqual(mockUser)
       }
     })
 
     it('should handle validation error', async () => {
-      vi.mocked(fetchJSON).mockResolvedValue({ invalid: 'data' })
+      vi.mocked(httpGet).mockResolvedValue({ invalid: 'data' })
 
       const result = await userService.fetchUserById(1)
 
-      expect(result.isSuccess).toBe(false)
-      if (!result.isSuccess) {
-        expect(result.message).toBe('Invalid user response format')
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid user response format')
       }
     })
 
     it('should handle fetch error', async () => {
-      vi.mocked(fetchJSON).mockRejectedValue(new Error('User not found'))
+      vi.mocked(httpGet).mockRejectedValue(new Error('User not found'))
 
       const result = await userService.fetchUserById(999)
 
-      expect(result.isSuccess).toBe(false)
-      if (!result.isSuccess) {
-        expect(result.message).toBe('User not found')
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('User not found')
       }
     })
   })
 
   describe('fetchAllUsers', () => {
     it('should fetch all users with high limit', async () => {
-      vi.mocked(fetchJSON).mockResolvedValue(mockUsers)
+      vi.mocked(httpGet).mockResolvedValue(mockUsers)
 
       const result = await userService.fetchAllUsers()
 
-      expect(fetchJSON).toHaveBeenCalledWith('/user/?limit=1000&offset=0')
-      expect(result.isSuccess).toBe(true)
-      if (result.isSuccess) {
+      expect(httpGet).toHaveBeenCalledWith('/user/?limit=1000&offset=0')
+      expect(result.success).toBe(true)
+      if (result.success) {
         expect(result.data).toEqual(mockUsers)
       }
     })
 
     it('should handle errors from underlying fetchUsers', async () => {
-      vi.mocked(fetchJSON).mockRejectedValue(new Error('Server error'))
+      vi.mocked(httpGet).mockRejectedValue(new Error('Server error'))
 
       const result = await userService.fetchAllUsers()
 
-      expect(result.isSuccess).toBe(false)
-      if (!result.isSuccess) {
-        expect(result.message).toBe('Server error')
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Server error')
       }
     })
   })

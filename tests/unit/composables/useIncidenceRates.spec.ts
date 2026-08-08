@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-vi.mock('@/services/webapi', () => ({
+import { ApiError } from '@/services/api-error'
+vi.mock('@/services/incidence-rate.service', () => ({
   listIncidenceRates: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }))
 vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 import { useIncidenceRates } from '@/composables/useIncidenceRates'
-import { listIncidenceRates } from '@/services/webapi'
+import { listIncidenceRates } from '@/services/incidence-rate.service'
 import type { Mock } from 'vitest'
 
 beforeEach(() => vi.clearAllMocks())
@@ -44,7 +45,7 @@ describe('useIncidenceRates', () => {
   it('fetchIncidenceRates surfaces failure as Error when result.success=false', async () => {
     (listIncidenceRates as Mock).mockResolvedValueOnce({
       success: false,
-      error: 'service down',
+      error: new ApiError('service down', 0, null),
     })
     const c = useIncidenceRates()
     await c.fetchIncidenceRates()

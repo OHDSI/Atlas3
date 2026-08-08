@@ -8,7 +8,7 @@ import PathwayCohortPicker from '@/components/pathway/PathwayCohortPicker.vue'
 
 const vuetify = createVuetify({ components, directives })
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/cohort-definition.service', () => ({
   getCohorts: vi.fn().mockResolvedValue({
     success: true,
     data: [

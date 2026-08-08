@@ -1,23 +1,16 @@
-import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import * as webapi from '@/services/pathway.service'
+import { usePathwayBuilder } from '@/composables/usePathwayBuilder'
+import { usePathwayStore } from '@/stores/pathway'
+import { ApiError } from '@/services/api-error'
 
-vi.mock('@/services/webapi')
+vi.mock('@/services/pathway.service')
 vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 const routerPushMock = vi.fn()
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: routerPushMock }) }))
-
-let webapi: typeof import('@/services/webapi')
-let usePathwayBuilder: typeof import('@/composables/usePathwayBuilder').usePathwayBuilder
-let usePathwayStore: typeof import('@/stores/pathway').usePathwayStore
-
-beforeAll(async () => {
-  vi.resetModules()
-  webapi = await import('@/services/webapi')
-  ;({ usePathwayBuilder } = await import('@/composables/usePathwayBuilder'))
-  ;({ usePathwayStore } = await import('@/stores/pathway'))
-})
 
 describe('usePathwayBuilder', () => {
   beforeEach(() => {
@@ -82,7 +75,7 @@ describe('usePathwayBuilder', () => {
     const store = usePathwayStore()
     store.createNewPathway()
     if (store.currentPathway) store.currentPathway.id = 5
-    vi.mocked(webapi.deletePathway).mockResolvedValue(true)
+    vi.mocked(webapi.deletePathway).mockResolvedValue({ success: true, data: undefined })
     const { remove } = usePathwayBuilder()
     const ok = await remove()
     expect(webapi.deletePathway).toHaveBeenCalledWith(5)
@@ -124,7 +117,7 @@ describe('usePathwayBuilder', () => {
 
     vi.mocked(webapi.createPathway).mockResolvedValue({
       success: false,
-      error: 'server exploded',
+      error: new ApiError('server exploded', 500, null),
     })
 
     const { save, feedback } = usePathwayBuilder()
@@ -132,6 +125,7 @@ describe('usePathwayBuilder', () => {
     expect(result).toBeNull()
     expect(feedback.value?.color).toBe('error')
     expect(feedback.value?.message).toContain('server exploded')
+    expect(feedback.value?.message).not.toContain('ApiError')
   })
 
   it('save navigates to /pathways/:id when creating a brand-new pathway', async () => {
@@ -167,7 +161,7 @@ describe('usePathwayBuilder', () => {
     if (store.currentPathway) store.currentPathway.id = 5
     vi.mocked(webapi.copyPathway).mockResolvedValue({
       success: false,
-      error: 'cannot copy',
+      error: new ApiError('cannot copy', 0, null),
     })
 
     const { copy, feedback } = usePathwayBuilder()
@@ -175,6 +169,7 @@ describe('usePathwayBuilder', () => {
     expect(out).toBeNull()
     expect(feedback.value?.color).toBe('error')
     expect(feedback.value?.message).toContain('cannot copy')
+    expect(feedback.value?.message).not.toContain('ApiError')
   })
 
   it('remove returns false when no current pathway id', async () => {
@@ -188,12 +183,16 @@ describe('usePathwayBuilder', () => {
     const store = usePathwayStore()
     store.createNewPathway()
     if (store.currentPathway) store.currentPathway.id = 5
-    vi.mocked(webapi.deletePathway).mockResolvedValue(false)
+    vi.mocked(webapi.deletePathway).mockResolvedValue({
+      success: false,
+      error: new ApiError('conflict', 409, null),
+    })
 
     const { remove, feedback } = usePathwayBuilder()
     const ok = await remove()
     expect(ok).toBe(false)
     expect(feedback.value?.color).toBe('error')
-    expect(feedback.value?.message).toBe('Delete failed')
+    expect(feedback.value?.message).toBe('Delete failed: conflict')
+    expect(feedback.value?.message).not.toContain('ApiError')
   })
 })

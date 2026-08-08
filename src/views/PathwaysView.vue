@@ -116,7 +116,7 @@ import { useI18n } from '@/composables/useI18n'
 import { usePathwayStore } from '@/stores/pathway'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
-import { deletePathway, copyPathway } from '@/services/webapi'
+import { deletePathway, copyPathway } from '@/services/pathway.service'
 import { logger } from '@/utils/logger'
 import type { Pathway } from '@/models/pathway.types'
 import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
@@ -204,12 +204,16 @@ function handleRemove(p: Pathway) {
 
 async function confirmDelete() {
   if (!deleteTarget.value) return
-  const ok = await deletePathway(deleteTarget.value)
-  if (ok) {
+  const result = await deletePathway(deleteTarget.value)
+  if (result.success) {
     feedback.value = { message: tv('views.pathways.deleted', 'Pathway deleted'), color: 'success' }
     await fetchPathways()
   } else {
-    feedback.value = { message: tv('views.pathways.deleteFailed', 'Delete failed'), color: 'error' }
+    feedback.value = {
+      message: result.error.message || tv('views.pathways.deleteFailed', 'Delete failed'),
+      color: 'error',
+    }
+    logger.error('PathwaysView', 'deletePathway failed', result.error)
   }
   showDelete.value = false
   deleteTarget.value = null

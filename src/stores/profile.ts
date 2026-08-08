@@ -111,7 +111,7 @@ export const useProfileStore = defineStore('profile', () => {
         }
       } else {
         person.value = null
-        error.value = result.error
+        error.value = result.error.message
         cohortConceptSets.value = []
       }
     } catch (err) {

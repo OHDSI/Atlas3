@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import { AtlasButton, AtlasDialog, AtlasList, AtlasListItem, AtlasTextField } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
-import { getCohorts } from '@/services/webapi'
+import { getCohorts } from '@/services/cohort-definition.service'
 import type { PathwayCohortRef } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
 import { useI18n } from '@/composables/useI18n'

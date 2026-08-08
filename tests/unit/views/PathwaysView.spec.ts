@@ -11,6 +11,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import PathwaysView from '@/views/PathwaysView.vue'
 import { usePathwayStore } from '@/stores/pathway'
 import type { Pathway } from '@/models/pathway.types'
+import { ApiError } from '@/services/api-error'
 
 const mockPush = vi.fn()
 vi.mock('vue-router', () => ({
@@ -30,11 +31,11 @@ vi.mock('@/utils/logger', () => ({
 
 vi.mock('@/composables/usePermissions', () => ({ usePermissions: vi.fn() }))
 vi.mock('@/composables/useEntityAccess', () => ({ useEntityAccessFor: vi.fn() }))
-vi.mock('@/services/webapi')
+vi.mock('@/services/pathway.service')
 
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
-import { listPathways, deletePathway, copyPathway } from '@/services/webapi'
+import { listPathways, deletePathway, copyPathway } from '@/services/pathway.service'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -67,7 +68,7 @@ describe('PathwaysView', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     vi.mocked(listPathways).mockResolvedValue({ success: true, data: [] })
-    vi.mocked(deletePathway).mockResolvedValue(true)
+    vi.mocked(deletePathway).mockResolvedValue({ success: true, data: undefined })
     vi.mocked(copyPathway).mockResolvedValue({ success: true, data: mkPathway(99) })
     vi.mocked(usePermissions).mockReturnValue({
       hasPermission: () => true,
@@ -153,7 +154,10 @@ describe('PathwaysView', () => {
     })
 
     it('shows the error banner when the fetch fails', async () => {
-      vi.mocked(listPathways).mockResolvedValue({ success: false, error: 'boom' })
+      vi.mocked(listPathways).mockResolvedValue({
+        success: false,
+        error: new ApiError('boom', 0, null),
+      })
       wrapper = mountView()
       await flushPromises()
 
@@ -251,7 +255,10 @@ describe('PathwaysView', () => {
 
     it('shows an error and logs when the copy fails', async () => {
       vi.mocked(listPathways).mockResolvedValue({ success: true, data: [mkPathway(1)] })
-      vi.mocked(copyPathway).mockResolvedValue({ success: false, error: 'copy failed' })
+      vi.mocked(copyPathway).mockResolvedValue({
+        success: false,
+        error: new ApiError('copy failed', 0, null),
+      })
       wrapper = mountView()
       await flushPromises()
 
@@ -300,7 +307,7 @@ describe('PathwaysView', () => {
 
     it('deletes the pathway, refreshes the list, and shows success feedback', async () => {
       vi.mocked(listPathways).mockResolvedValue({ success: true, data: [mkPathway(5)] })
-      vi.mocked(deletePathway).mockResolvedValue(true)
+      vi.mocked(deletePathway).mockResolvedValue({ success: true, data: undefined })
       wrapper = mountView()
       await flushPromises()
 
@@ -316,14 +323,20 @@ describe('PathwaysView', () => {
     })
 
     it('shows error feedback when delete fails', async () => {
-      vi.mocked(deletePathway).mockResolvedValue(false)
+      vi.mocked(deletePathway).mockResolvedValue({
+        success: false,
+        error: new ApiError('referenced by a generation', 409, null),
+      })
       wrapper = mountView()
 
       wrapper.vm.deleteTarget = 5
       wrapper.vm.showDelete = true
       await wrapper.vm.confirmDelete()
 
-      expect(wrapper.vm.feedback).toEqual({ message: 'Delete failed', color: 'error' })
+      expect(wrapper.vm.feedback).toEqual({
+        message: 'referenced by a generation',
+        color: 'error',
+      })
     })
 
     it('does nothing when there is no delete target', async () => {

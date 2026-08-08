@@ -77,7 +77,7 @@ import type {
 import type { DrilldownReport } from '@/models/report.types'
 import type { Domain } from '@/config/drilldown-config'
 import { getMetricLabel } from '@/utils/datasource-formatters'
-import { getCDMDrilldown } from '@/services/webapi'
+import { getCDMDrilldown } from '@/services/report.service'
 import { mapDrilldownReport } from '@/services/report-mapper'
 import { logger } from '@/utils/logger'
 import { AtlasCard, AtlasIcon, AtlasTab, AtlasTabs } from '@/components/ui'
@@ -146,10 +146,18 @@ async function handleNodeClick(conceptId: number, conceptName: string, conceptPa
 
   try {
     const domain = getDomainFromReportType(props.reportType)
-    const rawData = await getCDMDrilldown(selectedSource.sourceKey, domain, conceptId)
+    const result = await getCDMDrilldown(selectedSource.sourceKey, domain, conceptId)
 
-    if (rawData) {
-      drilldownData.value = mapDrilldownReport(rawData, conceptId, conceptName, conceptPath, domain)
+    if (result.success) {
+      drilldownData.value = mapDrilldownReport(
+        result.data,
+        conceptId,
+        conceptName,
+        conceptPath,
+        domain
+      )
+    } else {
+      logger.error('ClinicalDomainReport', 'Failed to fetch drill-down data', result.error)
     }
   } catch (error) {
     logger.error('ClinicalDomainReport', 'Failed to fetch drill-down data', error)

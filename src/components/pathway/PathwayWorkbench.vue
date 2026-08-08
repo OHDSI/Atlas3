@@ -174,7 +174,7 @@ import { usePathwayGeneration } from '@/composables/usePathwayGeneration'
 import { usePathwayStore } from '@/stores/pathway'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { computePathStats } from '@/utils/pathway-path-stats'
-import { listPathwayExecutions } from '@/services/webapi'
+import { listPathwayExecutions } from '@/services/pathway.service'
 import { logger } from '@/utils/logger'
 import PathwayDesignForm from './PathwayDesignForm.vue'
 import PathwaySunburst from './results/PathwaySunburst.vue'
@@ -384,7 +384,7 @@ async function onCancel(sourceKey: string) {
   const gen = generation.value
   if (!gen) return
   const ok = await gen.cancel(sourceKey)
-  if (!ok) logger.error('PathwayWorkbench', 'cancel failed', { sourceKey })
+  if (!ok) logger.error('PathwayWorkbench', 'cancel failed', gen.error.value)
   await refreshExecutions()
 }
 

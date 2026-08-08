@@ -6,6 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
+  fetchCDMSources,
   getSourceDetails,
   createSource,
   updateSource,
@@ -45,6 +46,60 @@ describe('SourceService', () => {
     vi.clearAllMocks()
     // Reset fetch mock
     global.fetch = vi.fn()
+  })
+
+  describe('fetchCDMSources', () => {
+    // http-client is module-mocked above (vi.mock('@/services/http-client', ...)),
+    // so these stub httpGet directly rather than the raw fetch response the
+    // real client would see — consistent with every other test in this file.
+    it('returns the parsed source list', async () => {
+      const { httpGet } = await import('@/services/http-client')
+      vi.mocked(httpGet).mockResolvedValue([
+        {
+          sourceKey: 'SYNPUF1K',
+          sourceName: 'SYNPUF 1K',
+          sourceDialect: 'postgresql',
+          daimons: [],
+          sourceId: 1,
+          sourceConnection: 'connection string',
+        },
+      ])
+
+      const result = await fetchCDMSources()
+
+      expect(httpGet).toHaveBeenCalledWith('/source/sources')
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data[0]?.sourceKey).toBe('SYNPUF1K')
+    })
+
+    it('fails with the status when the source list is rejected', async () => {
+      const { httpGet } = await import('@/services/http-client')
+      const { ApiError } = await import('@/services/api-error')
+      vi.mocked(httpGet).mockRejectedValue(new ApiError('HTTP 403: Forbidden', 403, 'no access'))
+
+      const result = await fetchCDMSources()
+
+      expect(result.success).toBe(false)
+      if (!result.success) expect(result.error.status).toBe(403)
+    })
+
+    it('reports a malformed source list as an ApiResult failure carrying the Zod issues', async () => {
+      const { httpGet } = await import('@/services/http-client')
+      vi.mocked(httpGet).mockResolvedValue([
+        { sourceKey: 'SYNPUF1K', sourceName: 'SYNPUF 1K' /* missing sourceDialect/daimons */ },
+      ])
+
+      const result = await fetchCDMSources()
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.message).toBe('Invalid source list response')
+        expect(result.error.status).toBe(0)
+        const issues = JSON.parse(result.error.body as string)
+        expect(Array.isArray(issues)).toBe(true)
+        expect(issues.length).toBeGreaterThan(0)
+      }
+    })
   })
 
   describe('getSourceDetails', () => {

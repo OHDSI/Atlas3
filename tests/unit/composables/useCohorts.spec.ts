@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 // Mock webapi
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/cohort-definition.service', () => ({
   getCohorts: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }))
 
@@ -21,7 +21,7 @@ vi.mock('@/utils/logger', () => ({
 }))
 
 import { useCohorts } from '@/composables/useCohorts'
-import { getCohorts } from '@/services/webapi'
+import { getCohorts } from '@/services/cohort-definition.service'
 
 describe('useCohorts', () => {
   const mockCohorts: CohortDefinitionSummary[] = [

@@ -7,7 +7,7 @@ import {
   copyIncidenceRate,
   deleteIncidenceRate,
   existsIncidenceRate,
-} from '@/services/webapi'
+} from '@/services/incidence-rate.service'
 
 export interface BuilderFeedback {
   message: string
@@ -41,8 +41,12 @@ export function useIncidenceRateBuilder() {
     }
 
     // Name uniqueness check
-    const existing = await existsIncidenceRate(ir.name, ir.id ?? 0)
-    if (existing > 0) {
+    const existsResult = await existsIncidenceRate(ir.name, ir.id ?? 0)
+    if (!existsResult.success) {
+      notify(`Could not verify name uniqueness: ${existsResult.error.message}`, 'error')
+      return false
+    }
+    if (existsResult.data > 0) {
       notify('An incidence rate with this name already exists', 'error')
       return false
     }
@@ -50,7 +54,7 @@ export function useIncidenceRateBuilder() {
     const result =
       ir.id !== undefined ? await saveIncidenceRate(ir.id, ir) : await createIncidenceRate(ir)
     if (!result.success) {
-      notify(result.error, 'error')
+      notify(result.error.message, 'error')
       return false
     }
     store.setIR(result.data)
@@ -66,7 +70,7 @@ export function useIncidenceRateBuilder() {
     if (!store.currentIR?.id) return false
     const result = await copyIncidenceRate(store.currentIR.id)
     if (!result.success) {
-      notify(result.error, 'error')
+      notify(result.error.message, 'error')
       return false
     }
     store.setIR(result.data)
@@ -79,9 +83,9 @@ export function useIncidenceRateBuilder() {
 
   async function remove(): Promise<boolean> {
     if (!store.currentIR?.id) return false
-    const ok = await deleteIncidenceRate(store.currentIR.id)
-    if (!ok) {
-      notify('Delete failed', 'error')
+    const result = await deleteIncidenceRate(store.currentIR.id)
+    if (!result.success) {
+      notify(`Delete failed: ${result.error.message}`, 'error')
       return false
     }
     notify('Deleted', 'success')

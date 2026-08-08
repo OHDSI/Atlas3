@@ -12,6 +12,8 @@ import type {
   CharacterizationDefinition,
   CharacterizationListItem,
 } from '@/models/characterization.types'
+import { success, failure } from '@/types/api'
+import { ApiError } from '@/services/api-error'
 
 // Mock service layer
 vi.mock('@/services/characterization.service', () => ({
@@ -49,6 +51,10 @@ import {
   cancelCharacterizationGeneration,
 } from '@/services/characterization.service'
 import type { CharacterizationExecution } from '@/models/characterization.types'
+
+function apiErr(message: string, status = 0) {
+  return failure(new ApiError(message, status, null))
+}
 
 const mockList: CharacterizationListItem[] = [
   {
@@ -137,7 +143,7 @@ describe('Characterization Store', () => {
   describe('fetchAll', () => {
     it('populates list on success', async () => {
       const store = useCharacterizationStore()
-      vi.mocked(listCharacterizations).mockResolvedValue(mockList)
+      vi.mocked(listCharacterizations).mockResolvedValue(success(mockList))
 
       await store.fetchAll()
 
@@ -165,7 +171,7 @@ describe('Characterization Store', () => {
 
     it('captures error and resets list on failure', async () => {
       const store = useCharacterizationStore()
-      vi.mocked(listCharacterizations).mockRejectedValue(new Error('Network down'))
+      vi.mocked(listCharacterizations).mockResolvedValue(apiErr('Network down'))
 
       await store.fetchAll()
 
@@ -178,16 +184,16 @@ describe('Characterization Store', () => {
   describe('fetchOne', () => {
     it('populates currentCharacterization on success', async () => {
       const store = useCharacterizationStore()
-      vi.mocked(getCharacterization).mockResolvedValue(mockCC)
+      vi.mocked(getCharacterization).mockResolvedValue(success(mockCC))
 
       await store.fetchOne(1)
 
       expect(store.currentCharacterization).toEqual(mockCC)
     })
 
-    it('sets error on not found', async () => {
+    it('captures error on failure (e.g. not found)', async () => {
       const store = useCharacterizationStore()
-      vi.mocked(getCharacterization).mockResolvedValue(null)
+      vi.mocked(getCharacterization).mockResolvedValue(apiErr('Characterization not found', 404))
 
       await store.fetchOne(999)
 
@@ -195,9 +201,9 @@ describe('Characterization Store', () => {
       expect(store.currentCharacterization).toBeNull()
     })
 
-    it('captures error on failure', async () => {
+    it('captures error on generic failure', async () => {
       const store = useCharacterizationStore()
-      vi.mocked(getCharacterization).mockRejectedValue(new Error('Boom'))
+      vi.mocked(getCharacterization).mockResolvedValue(apiErr('Boom'))
 
       await store.fetchOne(1)
 
@@ -209,8 +215,8 @@ describe('Characterization Store', () => {
   describe('create', () => {
     it('creates and refreshes list', async () => {
       const store = useCharacterizationStore()
-      vi.mocked(createCharacterization).mockResolvedValue(mockCC)
-      vi.mocked(listCharacterizations).mockResolvedValue(mockList)
+      vi.mocked(createCharacterization).mockResolvedValue(success(mockCC))
+      vi.mocked(listCharacterizations).mockResolvedValue(success(mockList))
 
       const result = await store.create(mockCC)
 
@@ -220,7 +226,7 @@ describe('Characterization Store', () => {
 
     it('returns null and sets error on failure', async () => {
       const store = useCharacterizationStore()
-      vi.mocked(createCharacterization).mockRejectedValue(new Error('Server error'))
+      vi.mocked(createCharacterization).mockResolvedValue(apiErr('Server error'))
 
       const result = await store.create(mockCC)
 
@@ -233,8 +239,8 @@ describe('Characterization Store', () => {
     it('updates and refreshes list', async () => {
       const store = useCharacterizationStore()
       const updated = { ...mockCC, name: 'Renamed' }
-      vi.mocked(updateCharacterization).mockResolvedValue(updated)
-      vi.mocked(listCharacterizations).mockResolvedValue(mockList)
+      vi.mocked(updateCharacterization).mockResolvedValue(success(updated))
+      vi.mocked(listCharacterizations).mockResolvedValue(success(mockList))
 
       const result = await store.update(updated)
 
@@ -244,7 +250,7 @@ describe('Characterization Store', () => {
 
     it('returns null and sets error on failure', async () => {
       const store = useCharacterizationStore()
-      vi.mocked(updateCharacterization).mockRejectedValue(new Error('Conflict'))
+      vi.mocked(updateCharacterization).mockResolvedValue(apiErr('Conflict'))
 
       const result = await store.update(mockCC)
 
@@ -257,7 +263,7 @@ describe('Characterization Store', () => {
     it('removes from list on success', async () => {
       const store = useCharacterizationStore()
       store.characterizations = [...mockList]
-      vi.mocked(deleteCharacterization).mockResolvedValue(undefined)
+      vi.mocked(deleteCharacterization).mockResolvedValue(success(undefined))
 
       const result = await store.remove(1)
 
@@ -269,7 +275,7 @@ describe('Characterization Store', () => {
       const store = useCharacterizationStore()
       store.characterizations = [...mockList]
       store.currentCharacterization = { ...mockCC }
-      vi.mocked(deleteCharacterization).mockResolvedValue(undefined)
+      vi.mocked(deleteCharacterization).mockResolvedValue(success(undefined))
 
       await store.remove(1)
 
@@ -278,7 +284,7 @@ describe('Characterization Store', () => {
 
     it('returns false and sets error on failure', async () => {
       const store = useCharacterizationStore()
-      vi.mocked(deleteCharacterization).mockRejectedValue(new Error('Gone'))
+      vi.mocked(deleteCharacterization).mockResolvedValue(apiErr('Gone'))
 
       const result = await store.remove(1)
 
@@ -291,8 +297,8 @@ describe('Characterization Store', () => {
     it('copies, refreshes, and sets currentCharacterization', async () => {
       const store = useCharacterizationStore()
       const copied = { ...mockCC, id: 42, name: 'COPY OF Diabetes Cohort Profile' }
-      vi.mocked(copyCharacterization).mockResolvedValue(copied)
-      vi.mocked(listCharacterizations).mockResolvedValue(mockList)
+      vi.mocked(copyCharacterization).mockResolvedValue(success(copied))
+      vi.mocked(listCharacterizations).mockResolvedValue(success(mockList))
 
       const result = await store.copy(1)
 
@@ -302,7 +308,7 @@ describe('Characterization Store', () => {
 
     it('returns null and sets error on failure', async () => {
       const store = useCharacterizationStore()
-      vi.mocked(copyCharacterization).mockRejectedValue(new Error('Nope'))
+      vi.mocked(copyCharacterization).mockResolvedValue(apiErr('Nope'))
 
       const result = await store.copy(1)
 
@@ -374,7 +380,7 @@ describe('Characterization Store', () => {
           startTime: 2000,
           status: 'COMPLETED',
         }
-        vi.mocked(listCharacterizationExecutions).mockResolvedValue([older, newer])
+        vi.mocked(listCharacterizationExecutions).mockResolvedValue(success([older, newer]))
 
         await store.loadExecutions(42)
 
@@ -386,7 +392,7 @@ describe('Characterization Store', () => {
 
       it('captures error on failure', async () => {
         const store = useCharacterizationStore()
-        vi.mocked(listCharacterizationExecutions).mockRejectedValue(new Error('Boom'))
+        vi.mocked(listCharacterizationExecutions).mockResolvedValue(apiErr('Boom'))
 
         await store.loadExecutions(42)
 
@@ -400,7 +406,7 @@ describe('Characterization Store', () => {
       it('prepends new execution and returns it', async () => {
         const store = useCharacterizationStore()
         const created: CharacterizationExecution = { ...baseExec, id: 200 }
-        vi.mocked(generateCharacterization).mockResolvedValue(created)
+        vi.mocked(generateCharacterization).mockResolvedValue(success(created))
 
         const result = await store.runExecution(42, 'CDM_V5')
 
@@ -414,7 +420,7 @@ describe('Characterization Store', () => {
         const initial: CharacterizationExecution = { ...baseExec, id: 200, status: 'PENDING' }
         store.executions = [initial]
         const updated: CharacterizationExecution = { ...initial, status: 'RUNNING' }
-        vi.mocked(generateCharacterization).mockResolvedValue(updated)
+        vi.mocked(generateCharacterization).mockResolvedValue(success(updated))
 
         await store.runExecution(42, 'CDM_V5')
 
@@ -424,7 +430,7 @@ describe('Characterization Store', () => {
 
       it('rethrows and sets error on failure', async () => {
         const store = useCharacterizationStore()
-        vi.mocked(generateCharacterization).mockRejectedValue(new Error('Down'))
+        vi.mocked(generateCharacterization).mockResolvedValue(apiErr('Down'))
 
         await expect(store.runExecution(42, 'CDM_V5')).rejects.toThrow('Down')
         expect(store.executionsError).toBe('Down')
@@ -434,8 +440,8 @@ describe('Characterization Store', () => {
     describe('cancelExecution', () => {
       it('calls cancel and refreshes the list', async () => {
         const store = useCharacterizationStore()
-        vi.mocked(cancelCharacterizationGeneration).mockResolvedValue(undefined)
-        vi.mocked(listCharacterizationExecutions).mockResolvedValue([])
+        vi.mocked(cancelCharacterizationGeneration).mockResolvedValue(success(undefined))
+        vi.mocked(listCharacterizationExecutions).mockResolvedValue(success([]))
 
         await store.cancelExecution(42, 'CDM_V5')
 
@@ -445,7 +451,7 @@ describe('Characterization Store', () => {
 
       it('rethrows and sets error on failure', async () => {
         const store = useCharacterizationStore()
-        vi.mocked(cancelCharacterizationGeneration).mockRejectedValue(new Error('Cant'))
+        vi.mocked(cancelCharacterizationGeneration).mockResolvedValue(apiErr('Cant'))
 
         await expect(store.cancelExecution(42, 'CDM_V5')).rejects.toThrow('Cant')
         expect(store.executionsError).toBe('Cant')
@@ -465,8 +471,8 @@ describe('Characterization Store', () => {
         store.executions = [{ ...baseExec, id: 300, status: 'PENDING' }]
 
         vi.mocked(getCharacterizationExecution)
-          .mockResolvedValueOnce({ ...baseExec, id: 300, status: 'RUNNING' })
-          .mockResolvedValueOnce({ ...baseExec, id: 300, status: 'COMPLETED' })
+          .mockResolvedValueOnce(success({ ...baseExec, id: 300, status: 'RUNNING' }))
+          .mockResolvedValueOnce(success({ ...baseExec, id: 300, status: 'COMPLETED' }))
 
         const onTerminal = vi.fn<[CharacterizationExecution], void>()
 
@@ -487,11 +493,9 @@ describe('Characterization Store', () => {
 
       it('stopPolling cancels an in-flight poll', async () => {
         const store = useCharacterizationStore()
-        vi.mocked(getCharacterizationExecution).mockResolvedValue({
-          ...baseExec,
-          id: 400,
-          status: 'RUNNING',
-        })
+        vi.mocked(getCharacterizationExecution).mockResolvedValue(
+          success({ ...baseExec, id: 400, status: 'RUNNING' })
+        )
 
         store.pollExecution(400)
         await vi.advanceTimersByTimeAsync(0)

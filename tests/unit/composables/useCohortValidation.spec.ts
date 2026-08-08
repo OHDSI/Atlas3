@@ -3,7 +3,7 @@ import { ref, computed, nextTick } from 'vue'
 import type { CohortEvent, InclusionRule, CriteriaGroup, ExitCriteria, QualifyingLimit } from '@/models/cohort.types'
 import type { ValidationWarning } from '@/models/cohort-validation.types'
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/cohort-definition.service', () => ({
   validateCohortDefinition: vi.fn(),
 }))
 
@@ -24,13 +24,13 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-let webapi: typeof import('@/services/webapi')
+let cohortDefService: typeof import('@/services/cohort-definition.service')
 let useCohortValidation: typeof import('@/composables/useCohortValidation').useCohortValidation
 let CohortValidationOptions: import('@/composables/useCohortValidation').CohortValidationOptions
 
 beforeAll(async () => {
   vi.resetModules()
-  webapi = await import('@/services/webapi')
+  cohortDefService = await import('@/services/cohort-definition.service')
   const mod = await import('@/composables/useCohortValidation')
   useCohortValidation = mod.useCohortValidation
 })
@@ -98,14 +98,14 @@ describe('useCohortValidation', () => {
         { type: 'DefaultWarning', severity: 'WARNING', message: 'Another warning' },
       ]
 
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       const options = createTestOptions()
       const { groupedWarningsBySeverity, triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       triggerValidation()
       await vi.runAllTimersAsync()
@@ -141,14 +141,14 @@ describe('useCohortValidation', () => {
         { type: 'DefaultWarning', severity: 'WARNING', message: 'Warning' },
       ]
 
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       const options = createTestOptions()
       const { highestSeverity, triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       triggerValidation()
       await vi.runAllTimersAsync()
@@ -163,14 +163,14 @@ describe('useCohortValidation', () => {
         { type: 'DefaultWarning', severity: 'WARNING', message: 'Warning' },
       ]
 
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       const options = createTestOptions()
       const { highestSeverity, triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       triggerValidation()
       await vi.runAllTimersAsync()
@@ -184,14 +184,14 @@ describe('useCohortValidation', () => {
         { type: 'DefaultWarning', severity: 'INFO', message: 'Info' },
       ]
 
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       const options = createTestOptions()
       const { highestSeverity, triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       triggerValidation()
       await vi.runAllTimersAsync()
@@ -214,14 +214,14 @@ describe('useCohortValidation', () => {
         { type: 'DefaultWarning', severity: 'CRITICAL', message: 'Critical' },
       ]
 
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       const options = createTestOptions()
       const { highestSeverityColor, triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       triggerValidation()
       await vi.runAllTimersAsync()
@@ -235,14 +235,14 @@ describe('useCohortValidation', () => {
         { type: 'DefaultWarning', severity: 'WARNING', message: 'Warning' },
       ]
 
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       const options = createTestOptions()
       const { highestSeverityColor, triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       triggerValidation()
       await vi.runAllTimersAsync()
@@ -380,74 +380,74 @@ describe('useCohortValidation', () => {
 
   describe('triggerValidation', () => {
     it('should debounce validation calls', async () => {
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings: [] })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
 
       const options = createTestOptions()
       const { triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
 
       triggerValidation()
       triggerValidation()
       triggerValidation()
 
-      expect(webapi.validateCohortDefinition).not.toHaveBeenCalled()
+      expect(cohortDefService.validateCohortDefinition).not.toHaveBeenCalled()
 
       await vi.runAllTimersAsync()
       await nextTick()
 
-      expect(webapi.validateCohortDefinition).toHaveBeenCalledTimes(1)
+      expect(cohortDefService.validateCohortDefinition).toHaveBeenCalledTimes(1)
     })
 
     it('should validate with placeholder name when cohort name is empty', async () => {
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings: [] })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
       const options = createTestOptions({
         cohortName: ref(''),
       })
       const { cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
 
       await vi.runAllTimersAsync()
       await nextTick()
 
-      const calls = vi.mocked(webapi.validateCohortDefinition).mock.calls
+      const calls = vi.mocked(cohortDefService.validateCohortDefinition).mock.calls
       if (calls.length > 0) {
         expect(calls[0][0]).toBe('Untitled Cohort')
       }
     })
 
     it('should validate even when no entry events', async () => {
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings: [] })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
       const options = createTestOptions({
         entryEvents: ref([]),
       })
       const { triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
 
       triggerValidation()
       await vi.runAllTimersAsync()
       await nextTick()
 
-      expect(webapi.validateCohortDefinition).toHaveBeenCalled()
+      expect(cohortDefService.validateCohortDefinition).toHaveBeenCalled()
     })
 
     it('should set validation warnings from API response', async () => {
       const warnings: ValidationWarning[] = [
         { type: 'DefaultWarning', severity: 'WARNING', message: 'Test warning' },
       ]
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       const options = createTestOptions()
       const { validationWarnings, triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       triggerValidation()
       await vi.runAllTimersAsync()
@@ -457,14 +457,14 @@ describe('useCohortValidation', () => {
     })
 
     it('should clear warnings when validation fails', async () => {
-      vi.mocked(webapi.validateCohortDefinition).mockRejectedValue(new Error('API Error'))
+      vi.mocked(cohortDefService.validateCohortDefinition).mockRejectedValue(new Error('API Error'))
 
       const options = createTestOptions()
       const { validationWarnings, triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
-      vi.mocked(webapi.validateCohortDefinition).mockRejectedValue(new Error('API Error'))
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockRejectedValue(new Error('API Error'))
 
       triggerValidation()
       await vi.runAllTimersAsync()
@@ -472,17 +472,47 @@ describe('useCohortValidation', () => {
 
       expect(validationWarnings.value).toEqual([])
     })
+
+    it('surfaces an ApiResult failure as a DefaultWarning rather than silently clearing warnings', async () => {
+      // validateCohortDefinition itself never rejects post-migration — an
+      // HTTP/network failure resolves as { success: false }. The old
+      // contract folded that into a synthetic warning so the user saw
+      // *something*; the composable must reproduce that, not go quiet.
+      const { ApiError } = await import('@/services/api-error')
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+        success: false,
+        error: new ApiError('Network error', 0, null),
+      })
+
+      const options = createTestOptions()
+      const { validationWarnings, triggerValidation, cancelValidation } = useCohortValidation(options)
+
+      cancelValidation()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+        success: false,
+        error: new ApiError('Network error', 0, null),
+      })
+
+      triggerValidation()
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      expect(validationWarnings.value).toHaveLength(1)
+      expect(validationWarnings.value[0]?.type).toBe('DefaultWarning')
+      expect(validationWarnings.value[0]?.message).toContain('Network error')
+    })
   })
 
   describe('cancelValidation', () => {
     it('should cancel pending validation', async () => {
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings: [] })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
 
       const options = createTestOptions()
       const { triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
 
       triggerValidation()
 
@@ -491,7 +521,7 @@ describe('useCohortValidation', () => {
       vi.advanceTimersByTime(100)
       await vi.runAllTimersAsync()
 
-      expect(webapi.validateCohortDefinition).not.toHaveBeenCalled()
+      expect(cohortDefService.validateCohortDefinition).not.toHaveBeenCalled()
     })
   })
 
@@ -500,14 +530,14 @@ describe('useCohortValidation', () => {
       const warnings: ValidationWarning[] = [
         { type: 'DefaultWarning', severity: 'WARNING', message: 'Test warning' },
       ]
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       const options = createTestOptions()
       const { validationWarnings, triggerValidation, clearWarnings, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
 
       triggerValidation()
       await vi.runAllTimersAsync()
@@ -521,7 +551,7 @@ describe('useCohortValidation', () => {
 
   describe('auto-validation on changes', () => {
     it('should auto-trigger validation when cohort name changes', async () => {
-      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings: [] })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
 
       const cohortName = ref('Initial Name')
       const options = createTestOptions({ cohortName })
@@ -530,7 +560,7 @@ describe('useCohortValidation', () => {
       cancelValidation()
       await vi.runAllTimersAsync()
       await nextTick()
-      vi.mocked(webapi.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
 
       cohortName.value = 'Updated Name'
       await nextTick()
@@ -538,7 +568,7 @@ describe('useCohortValidation', () => {
       await vi.runAllTimersAsync()
       await nextTick()
 
-      expect(webapi.validateCohortDefinition).toHaveBeenCalled()
+      expect(cohortDefService.validateCohortDefinition).toHaveBeenCalled()
     })
   })
 })

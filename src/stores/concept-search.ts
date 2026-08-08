@@ -119,18 +119,21 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
       }
 
       const result = await searchConcepts(sourceKey, term)
+      if (!result.success) {
+        throw result.error
+      }
 
-      allConcepts.value = result.concepts
+      allConcepts.value = result.data
       loading.value = false
       page.value = 1
       // A new query changes the available value space — drop stale facets.
       facets.clearFilters()
 
       loadingRecordCounts.value = true
-      const conceptIds = result.concepts.map(c => c.conceptId)
+      const conceptIds = result.data.map(c => c.conceptId)
       const recordCounts = await getConceptRecordCounts(sourceKey, conceptIds)
 
-      allConcepts.value = result.concepts.map(concept => ({
+      allConcepts.value = result.data.map(concept => ({
         ...concept,
         recordCount: recordCounts.get(concept.conceptId)?.recordCount,
         descendantRecordCount: recordCounts.get(concept.conceptId)?.descendantRecordCount,

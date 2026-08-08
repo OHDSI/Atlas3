@@ -82,7 +82,7 @@ describe('ConceptSearch', () => {
     setActivePinia(createPinia())
     store = useConceptSearchStore()
     vi.clearAllMocks()
-    mockSearchConcepts.mockResolvedValue({ concepts: [] })
+    mockSearchConcepts.mockResolvedValue({ success: true, data: [] })
     mockGetConceptRecordCounts.mockResolvedValue(new Map())
   })
 
@@ -208,7 +208,7 @@ describe('ConceptSearch', () => {
   describe('Search Functionality', () => {
     it('should call search when user clicks search button with valid input', async () => {
       const mockConcept = createMockConcept({ conceptName: 'Diabetes' })
-      mockSearchConcepts.mockResolvedValue({ concepts: [mockConcept] })
+      mockSearchConcepts.mockResolvedValue({ success: true, data: [mockConcept] })
 
       wrapper = mountComponent()
 
@@ -260,7 +260,7 @@ describe('ConceptSearch', () => {
 
     it('should fetch record counts after search completes', async () => {
       const mockConcept = createMockConcept({ conceptId: 123, conceptName: 'Diabetes' })
-      mockSearchConcepts.mockResolvedValue({ concepts: [mockConcept] })
+      mockSearchConcepts.mockResolvedValue({ success: true, data: [mockConcept] })
       mockGetConceptRecordCounts.mockResolvedValue(new Map([[123, { recordCount: 100 }]]))
 
       wrapper = mountComponent()
@@ -315,7 +315,7 @@ describe('ConceptSearch', () => {
       const textField = wrapper.findComponent({ name: 'VTextField' })
       expect(textField.props('disabled')).toBe(true)
 
-      resolveSearch!({ concepts: [] })
+      resolveSearch!({ success: true, data: [] })
       await flushPromises()
     })
 
@@ -331,7 +331,7 @@ describe('ConceptSearch', () => {
 
       expect(store.loading).toBe(true)
 
-      resolveSearch!({ concepts: [] })
+      resolveSearch!({ success: true, data: [] })
       await flushPromises()
     })
   })
@@ -388,7 +388,7 @@ describe('ConceptSearch', () => {
   describe('ConceptTable Integration', () => {
     it('should pass concepts to ConceptTable', async () => {
       const mockConcepts = [createMockConcept()]
-      mockSearchConcepts.mockResolvedValue({ concepts: mockConcepts })
+      mockSearchConcepts.mockResolvedValue({ success: true, data: mockConcepts })
 
       wrapper = mountComponent()
 
@@ -518,7 +518,7 @@ describe('ConceptSearch', () => {
     })
 
     it('should handle empty search results', async () => {
-      mockSearchConcepts.mockResolvedValue({ concepts: [] })
+      mockSearchConcepts.mockResolvedValue({ success: true, data: [] })
 
       wrapper = mountComponent()
 
@@ -577,7 +577,7 @@ describe('ConceptSearch', () => {
       const textField = wrapper.findComponent({ name: 'VTextField' })
       expect(textField.props('disabled')).toBe(true)
 
-      resolveSearch!({ concepts: [] })
+      resolveSearch!({ success: true, data: [] })
       await flushPromises()
     })
   })

@@ -20,18 +20,23 @@ vi.mock('@/services/characterization.service', () => ({
   createCharacterization: vi.fn(),
 }))
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/pathway.service', () => ({
   createPathway: vi.fn(),
+}))
+
+vi.mock('@/services/incidence-rate.service', () => ({
   createIncidenceRate: vi.fn(),
 }))
 
 import router from '@/router'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
 import { createCharacterization } from '@/services/characterization.service'
-import { createPathway, createIncidenceRate } from '@/services/webapi'
+import { createPathway } from '@/services/pathway.service'
+import { createIncidenceRate } from '@/services/incidence-rate.service'
 import { setupPythiaBridge, applyProposalDirect } from '@/plugins/host/pythiaBridge'
 import { useCohortStore } from '@/stores/cohort'
 import { createHostMessageBus, getHostMessageBus } from '@/plugins/messaging/HostMessageBus'
+import { ApiError } from '@/services/api-error'
 
 function dispatchPluginMessage(detail: unknown) {
   window.dispatchEvent(new CustomEvent('plugin-message', { detail }))
@@ -117,11 +122,14 @@ describe('pythiaBridge', () => {
 
   it('createFeatureAnalysis proposal → calls service + navigates to feature-analysis-edit', async () => {
     vi.mocked(createFeatureAnalysis).mockResolvedValue({
-      id: 42,
-      name: 'Demographics',
-      type: 'PRESET',
-      design: 'demographics-age-group',
-    })
+      success: true,
+      data: {
+        id: 42,
+        name: 'Demographics',
+        type: 'PRESET',
+        design: 'demographics-age-group',
+      },
+    } as never)
 
     dispatchPluginMessage({
       type: 'cohort.applyProposal',
@@ -150,12 +158,15 @@ describe('pythiaBridge', () => {
 
   it('createCharacterization proposal → calls service + navigates to characterization-edit', async () => {
     vi.mocked(createCharacterization).mockResolvedValue({
-      id: 7,
-      name: 'T2DM baseline',
-      cohorts: [{ id: 1, name: 'T2DM' }],
-      featureAnalyses: [{ id: 10, name: 'Demographics' }],
-      stratas: [],
-    })
+      success: true,
+      data: {
+        id: 7,
+        name: 'T2DM baseline',
+        cohorts: [{ id: 1, name: 'T2DM' }],
+        featureAnalyses: [{ id: 10, name: 'Demographics' }],
+        stratas: [],
+      },
+    } as never)
 
     dispatchPluginMessage({
       type: 'cohort.applyProposal',
@@ -248,7 +259,7 @@ describe('pythiaBridge', () => {
   it('createPathway proposal → no router.push when ApiResult.success is false', async () => {
     vi.mocked(createPathway).mockResolvedValue({
       success: false,
-      error: 'WebAPI returned 500',
+      error: new ApiError('WebAPI returned 500', 500, null),
     })
 
     dispatchPluginMessage({

@@ -3,7 +3,7 @@ import {
   generateIncidenceRate,
   cancelIncidenceRateGeneration,
   listIncidenceRateInfo,
-} from '@/services/webapi'
+} from '@/services/incidence-rate.service'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { IR_GENERATION_POLL_MS, IR_TERMINAL_STATUSES } from '@/models/incidence-rate.types'
@@ -33,7 +33,7 @@ export function useIncidenceRateGeneration(irId: number) {
   async function pollOnce() {
     const result = await listIncidenceRateInfo(irId)
     if (!result.success) {
-      error.value = result.error
+      error.value = result.error.message
       logger.error('IRGeneration', 'pollOnce failed', result.error)
       stopPolling()
       return
@@ -60,7 +60,7 @@ export function useIncidenceRateGeneration(irId: number) {
     error.value = null
     const result = await generateIncidenceRate(irId, sourceKey)
     if (!result.success) {
-      error.value = result.error
+      error.value = result.error.message
       logger.error('IRGeneration', 'start failed', result.error)
       return false
     }
@@ -70,8 +70,13 @@ export function useIncidenceRateGeneration(irId: number) {
   }
 
   async function cancel(sourceKey: string): Promise<boolean> {
-    const ok = await cancelIncidenceRateGeneration(irId, sourceKey)
-    return ok
+    const result = await cancelIncidenceRateGeneration(irId, sourceKey)
+    if (!result.success) {
+      error.value = result.error.message
+      logger.error('IRGeneration', 'cancel failed', result.error)
+      return false
+    }
+    return true
   }
 
   // Initial fetch on mount-equivalent: caller may invoke pollOnce() directly.

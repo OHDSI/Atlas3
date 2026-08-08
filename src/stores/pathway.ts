@@ -7,7 +7,7 @@ import {
   PATHWAY_AUTO_SAVE_INTERVAL_MS,
 } from '@/models/pathway.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
-import { getPathway, assignPathwayTag, unassignPathwayTag } from '@/services/webapi'
+import { getPathway, assignPathwayTag, unassignPathwayTag } from '@/services/pathway.service'
 import type { Tag } from '@/models/webapi.types'
 import { getPathwayVersion } from '@/services/pathway-versions.service'
 import { logger } from '@/utils/logger'
@@ -161,7 +161,7 @@ export const usePathwayStore = defineStore('pathway', () => {
     }
 
     try {
-      const { savePathway } = await import('@/services/webapi')
+      const { savePathway } = await import('@/services/pathway.service')
       const result = await savePathway(currentPathway.value.id, currentPathway.value)
 
       if (!result.success) {
@@ -260,21 +260,29 @@ export const usePathwayStore = defineStore('pathway', () => {
 
   async function addTag(tag: Tag): Promise<boolean> {
     if (!currentPathway.value?.id) return false
-    const ok = await assignPathwayTag(currentPathway.value.id, tag.id!)
-    if (ok && !currentPathway.value.tags.some(t => t.id === tag.id)) {
+    const result = await assignPathwayTag(currentPathway.value.id, tag.id!)
+    if (!result.success) {
+      logger.error('Pathway', 'addTag failed', result.error)
+      return false
+    }
+    if (!currentPathway.value.tags.some(t => t.id === tag.id)) {
       currentPathway.value.tags.push(tag)
       // intentionally do NOT mark dirty — tag mutations are metadata
     }
-    return ok
+    return true
   }
 
   async function removeTag(tagId: number): Promise<boolean> {
     if (!currentPathway.value?.id) return false
-    const ok = await unassignPathwayTag(currentPathway.value.id, tagId)
-    if (ok && currentPathway.value) {
+    const result = await unassignPathwayTag(currentPathway.value.id, tagId)
+    if (!result.success) {
+      logger.error('Pathway', 'removeTag failed', result.error)
+      return false
+    }
+    if (currentPathway.value) {
       currentPathway.value.tags = currentPathway.value.tags.filter(t => t.id !== tagId)
     }
-    return ok
+    return true
   }
 
   async function syncTags(newTags: Tag[]): Promise<void> {

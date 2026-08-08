@@ -67,7 +67,7 @@ describe('ConceptSearchInline facet filters', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     store = useConceptSearchStore()
-    mockSearchConcepts.mockResolvedValue({ concepts: RESULTS, totalCount: RESULTS.length })
+    mockSearchConcepts.mockResolvedValue({ success: true, data: RESULTS })
     mockGetConceptRecordCounts.mockResolvedValue(new Map())
     wrapper = mount(ConceptSearchInline, { global: { plugins: [vuetify] } })
   })
@@ -152,7 +152,7 @@ describe('ConceptSearchInline search box and table wiring', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     store = useConceptSearchStore()
-    mockSearchConcepts.mockResolvedValue({ concepts: RESULTS, totalCount: RESULTS.length })
+    mockSearchConcepts.mockResolvedValue({ success: true, data: RESULTS })
     mockGetConceptRecordCounts.mockResolvedValue(new Map())
     wrapper = mount(ConceptSearchInline, { global: { plugins: [vuetify] } })
   })
