@@ -184,6 +184,12 @@ describe('PieChart', () => {
       const wrapper = createWrapper({ loading: true, showExport: true })
       expect(wrapper.find('.chart-export-toolbar').exists()).toBe(false)
     })
+
+    it('should use image type for skeleton loader', () => {
+      const wrapper = createWrapper({ loading: true })
+      const skeleton = wrapper.findComponent({ name: 'v-skeleton-loader' })
+      expect(skeleton.props('type')).toBe('image')
+    })
   })
 
   // ============================================================================

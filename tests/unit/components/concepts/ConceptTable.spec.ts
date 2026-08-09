@@ -500,3 +500,119 @@ describe('ConceptTable', () => {
     })
   })
 })
+
+describe('ConceptTable selection', () => {
+  const selectionConcepts: Concept[] = [
+    { ...mockConcepts[0], conceptId: 100, conceptName: 'Diabetes', conceptCode: 'D1' },
+    { ...mockConcepts[0], conceptId: 200, conceptName: 'Hypertension', conceptCode: 'H1' },
+    { ...mockConcepts[0], conceptId: 300, conceptName: 'Asthma', conceptCode: 'A1' },
+  ]
+
+  function createWrapper(opts: {
+    selectable?: boolean
+    selected?: number[]
+    showAddButton?: boolean
+    conceptsInSet?: Set<number>
+    concepts?: Concept[]
+  } = {}) {
+    return mountComponent({
+      concepts: opts.concepts ?? selectionConcepts,
+      totalItems: (opts.concepts ?? selectionConcepts).length,
+      selectable: opts.selectable ?? false,
+      selected: opts.selected ?? [],
+      showAddButton: opts.showAddButton ?? false,
+      conceptsInSet: opts.conceptsInSet ?? new Set<number>(),
+    })
+  }
+
+  it('renders no checkbox column when selectable is false (default)', async () => {
+    const wrapper = createWrapper({ selectable: false })
+    await wrapper.vm.$nextTick()
+
+    const headerCheckbox = wrapper.find('[data-testid="concept-table-select-all"]')
+    expect(headerCheckbox.exists()).toBe(false)
+
+    const rowCheckboxes = wrapper.findAll('[data-testid^="concept-table-row-checkbox-"]')
+    expect(rowCheckboxes.length).toBe(0)
+  })
+
+  it('renders checkbox column with selectable=true and none checked when selected is empty', async () => {
+    const wrapper = createWrapper({ selectable: true, selected: [] })
+    await wrapper.vm.$nextTick()
+
+    const headerCheckbox = wrapper.find('[data-testid="concept-table-select-all"]')
+    expect(headerCheckbox.exists()).toBe(true)
+
+    const rowCheckboxes = wrapper.findAll('[data-testid^="concept-table-row-checkbox-"]')
+    expect(rowCheckboxes.length).toBe(selectionConcepts.length)
+
+    for (const cb of rowCheckboxes) {
+      const input = cb.find('input[type="checkbox"]')
+      expect(input.exists()).toBe(true)
+      expect((input.element as HTMLInputElement).checked).toBe(false)
+    }
+  })
+
+  it('checks only the row whose conceptId is in selected', async () => {
+    const wrapper = createWrapper({ selectable: true, selected: [200] })
+    await wrapper.vm.$nextTick()
+
+    const checked100 = wrapper.find('[data-testid="concept-table-row-checkbox-100"] input[type="checkbox"]')
+    const checked200 = wrapper.find('[data-testid="concept-table-row-checkbox-200"] input[type="checkbox"]')
+    const checked300 = wrapper.find('[data-testid="concept-table-row-checkbox-300"] input[type="checkbox"]')
+
+    expect((checked100.element as HTMLInputElement).checked).toBe(false)
+    expect((checked200.element as HTMLInputElement).checked).toBe(true)
+    expect((checked300.element as HTMLInputElement).checked).toBe(false)
+  })
+
+  it('emits update:selected when a row checkbox is clicked', async () => {
+    const wrapper = createWrapper({ selectable: true, selected: [] })
+    await wrapper.vm.$nextTick()
+
+    const cb = wrapper.find('[data-testid="concept-table-row-checkbox-200"] input[type="checkbox"]')
+    expect(cb.exists()).toBe(true)
+    await cb.setValue(true)
+    await wrapper.vm.$nextTick()
+
+    const events = wrapper.emitted('update:selected')
+    expect(events).toBeTruthy()
+    const last = events![events!.length - 1][0] as number[]
+    expect(last).toContain(200)
+  })
+
+  it('emits update:selected with all visible conceptIds when header checkbox toggled on', async () => {
+    const wrapper = createWrapper({ selectable: true, selected: [] })
+    await wrapper.vm.$nextTick()
+
+    const header = wrapper.find('[data-testid="concept-table-select-all"] input[type="checkbox"]')
+    expect(header.exists()).toBe(true)
+    await header.setValue(true)
+    await wrapper.vm.$nextTick()
+
+    const events = wrapper.emitted('update:selected')
+    expect(events).toBeTruthy()
+    const last = events![events!.length - 1][0] as number[]
+    expect(last.sort()).toEqual([100, 200, 300])
+  })
+
+  it('coexists with showAddButton; clicking Add still emits add-concept', async () => {
+    const wrapper = createWrapper({
+      selectable: true,
+      selected: [],
+      showAddButton: true,
+      conceptsInSet: new Set<number>(),
+    })
+    await wrapper.vm.$nextTick()
+
+    const headerCheckbox = wrapper.find('[data-testid="concept-table-select-all"]')
+    expect(headerCheckbox.exists()).toBe(true)
+
+    const addButtons = wrapper.findAll('button').filter((b) => b.text().includes('Add'))
+    expect(addButtons.length).toBeGreaterThan(0)
+    await addButtons[0].trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.emitted('add-concept')).toBeTruthy()
+  })
+})
