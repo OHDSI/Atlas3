@@ -159,7 +159,10 @@ export const useCohortStore = defineStore('cohort', () => {
   // CodesetId when the id is a number, so without this the criterion saves as
   // `CodesetId: null` with `ConceptSets: []`, i.e. "any drug exposure" instead
   // of the drug the agent actually picked. Assign a numeric id and register it.
-  function registerEventConceptSet(event: CohortEvent | undefined) {
+  // Takes anything carrying a `conceptSet` — an event or an exit criterion —
+  // because both reference their set by CodesetId and both need it to exist
+  // in cohort.conceptSets or the reference dangles.
+  function registerEventConceptSet(event: { conceptSet?: CohortEvent['conceptSet'] } | undefined) {
     const cs = event?.conceptSet
     if (!cs) return
     const cohort = ensureCohort()
@@ -220,6 +223,9 @@ export const useCohortStore = defineStore('cohort', () => {
         setObservationPeriod(proposal.observationPeriod)
         break
       case 'setExitCriteria':
+        // A CONTINUOUS_DRUG exit emits CustomEra.DrugCodesetId; without this the
+        // codeset is never defined and circe resolves the era against nothing.
+        registerEventConceptSet(proposal.exitCriteria)
         setExitCriteria(proposal.exitCriteria)
         break
       case 'addCensoringCriterion':

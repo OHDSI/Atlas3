@@ -116,10 +116,30 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
       expression: {
         items:
           (cs.items as ConceptSetItem[] | undefined)?.map(item => {
+            // Items reach us in two shapes. Concept sets the user built carry
+            // the internal shape (item.conceptId); ones the agent attached to a
+            // criterion are already in ATLAS shape ({ concept: { CONCEPT_ID } }).
+            // Mapping the latter with internal-shape keys silently produced a
+            // concept with no CONCEPT_ID at all, so circe generated a Codesets
+            // table with no concepts and the query failed to execute — which is
+            // what broke the live preview for every agent-built cohort.
+            const raw = item as unknown as { concept?: AtlasConcept }
+            if (raw.concept && raw.concept.CONCEPT_ID != null) {
+              return {
+                concept: raw.concept,
+                isExcluded: item.isExcluded ?? false,
+                includeDescendants: item.includeDescendants ?? false,
+                includeMapped: item.includeMapped ?? false,
+              }
+            }
+            // The agent's concept-set proposals carry `domain`, the editor's
+            // carry `domainId`. Read both so an injected set doesn't lose its
+            // domain on the way to ATLAS JSON.
+            const loose = item as unknown as { domain?: string }
             const concept: AtlasConcept = {
               CONCEPT_ID: item.conceptId,
               CONCEPT_NAME: item.conceptName,
-              DOMAIN_ID: item.domainId,
+              DOMAIN_ID: item.domainId ?? loose.domain,
               VOCABULARY_ID: item.vocabularyId,
               CONCEPT_CLASS_ID: item.conceptClassId,
             }

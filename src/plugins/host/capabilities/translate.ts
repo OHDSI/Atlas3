@@ -209,31 +209,41 @@ function deriveRuleName(items: CriterionArgs[], group?: string, logic?: string):
   return `${groupLabel}: ${names[0]}${join}${names[1]} (+${names.length - 2} more)`
 }
 
+// Every criterion the agent injects references its concepts by CodesetId, so
+// the set has to carry the concept itself. Shared by entry/inclusion events and
+// by the exit criterion, which used to build a named but empty set.
+function embeddedConceptSet(c: {
+  conceptId: number
+  conceptName: string
+  domain?: string
+  includeDescendants?: boolean
+  isExcluded?: boolean
+}): Record<string, unknown> {
+  return {
+    id: uid(),
+    name: c.conceptName,
+    conceptCount: 1,
+    items: [
+      {
+        concept: {
+          CONCEPT_ID: c.conceptId,
+          CONCEPT_NAME: c.conceptName,
+          DOMAIN_ID: c.domain ?? '',
+        },
+        includeDescendants: c.includeDescendants ?? true,
+        isExcluded: c.isExcluded ?? false,
+        includeMapped: false,
+      },
+    ],
+  }
+}
+
 function buildEventFromCriterion(args: CriterionArgs): Record<string, unknown> | null {
   if (!args.conceptId || !args.conceptName) return null
   const event: Record<string, unknown> = {
     id: uid(),
     criteriaType: domainToCriteriaType(args.domain),
-    conceptSet: {
-      id: uid(),
-      name: args.conceptName,
-      conceptCount: 1,
-      // Embed the concept item directly. Without this, the cohort builder
-      // renders the criterion with an empty concept set and the user sees
-      // "nothing was added".
-      items: [
-        {
-          concept: {
-            CONCEPT_ID: args.conceptId,
-            CONCEPT_NAME: args.conceptName,
-            DOMAIN_ID: args.domain ?? '',
-          },
-          includeDescendants: args.includeDescendants ?? true,
-          isExcluded: args.isExcluded ?? false,
-          includeMapped: false,
-        },
-      ],
-    },
+    conceptSet: embeddedConceptSet(args as Parameters<typeof embeddedConceptSet>[0]),
   }
   if (args.operator && typeof args.value === 'number') {
     event.measurementOperator = args.operator
@@ -658,11 +668,9 @@ export function translateCapability(
       if (typeof e.persistenceWindow === 'number') exitCriteria.persistenceWindow = e.persistenceWindow
       if (typeof e.surveillanceWindow === 'number') exitCriteria.surveillanceWindow = e.surveillanceWindow
       if (e.concept?.conceptId && e.concept?.conceptName) {
-        exitCriteria.conceptSet = {
-          id: uid(),
-          name: e.concept.conceptName,
-          conceptCount: 1,
-        }
+        exitCriteria.conceptSet = embeddedConceptSet(
+          e.concept as Parameters<typeof embeddedConceptSet>[0],
+        )
       }
       return { kind: 'setExitCriteria', exitCriteria } as unknown as AgentProposal
     }
