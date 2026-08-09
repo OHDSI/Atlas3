@@ -1,6 +1,6 @@
 /**
- * Plugin Isolation Tests
- * Tests for plugin error isolation
+ * Plugin Diagnostics Tests
+ * Tests for plugin error logging
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { logger } from '@/utils/logger'
@@ -14,18 +14,18 @@ vi.mock('@/utils/logger', () => ({
   }
 }))
 
-describe('PluginIsolation', () => {
+describe('PluginDiagnostics', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.resetModules()
   })
 
-  describe('setupPluginIsolation', () => {
+  describe('setupPluginDiagnostics', () => {
     it('should setup routing event listener', async () => {
       const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
 
-      const { setupPluginIsolation } = await import('@/plugins/core/PluginIsolation')
-      setupPluginIsolation()
+      const { setupPluginDiagnostics } = await import('@/plugins/core/PluginDiagnostics')
+      setupPluginDiagnostics()
 
       expect(addEventListenerSpy).toHaveBeenCalledWith(
         'single-spa:routing-event',
@@ -38,8 +38,8 @@ describe('PluginIsolation', () => {
     it('should setup app change listener', async () => {
       const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
 
-      const { setupPluginIsolation } = await import('@/plugins/core/PluginIsolation')
-      setupPluginIsolation()
+      const { setupPluginDiagnostics } = await import('@/plugins/core/PluginDiagnostics')
+      setupPluginDiagnostics()
 
       expect(addEventListenerSpy).toHaveBeenCalledWith(
         'single-spa:app-change',
@@ -52,8 +52,8 @@ describe('PluginIsolation', () => {
     it('should setup error handler', async () => {
       const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
 
-      const { setupPluginIsolation } = await import('@/plugins/core/PluginIsolation')
-      setupPluginIsolation()
+      const { setupPluginDiagnostics } = await import('@/plugins/core/PluginDiagnostics')
+      setupPluginDiagnostics()
 
       expect(addEventListenerSpy).toHaveBeenCalledWith(
         'error',
@@ -63,13 +63,13 @@ describe('PluginIsolation', () => {
       addEventListenerSpy.mockRestore()
     })
 
-    it('should setup unhandled rejection handler', async () => {
+    it('should not register an unhandledrejection handler (main.ts owns the global one)', async () => {
       const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
 
-      const { setupPluginIsolation } = await import('@/plugins/core/PluginIsolation')
-      setupPluginIsolation()
+      const { setupPluginDiagnostics } = await import('@/plugins/core/PluginDiagnostics')
+      setupPluginDiagnostics()
 
-      expect(addEventListenerSpy).toHaveBeenCalledWith(
+      expect(addEventListenerSpy).not.toHaveBeenCalledWith(
         'unhandledrejection',
         expect.any(Function)
       )
@@ -80,8 +80,8 @@ describe('PluginIsolation', () => {
     it('should log plugin errors from /plugins/ path', async () => {
       const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
 
-      const { setupPluginIsolation } = await import('@/plugins/core/PluginIsolation')
-      setupPluginIsolation()
+      const { setupPluginDiagnostics } = await import('@/plugins/core/PluginDiagnostics')
+      setupPluginDiagnostics()
 
       // Get the error handler
       const errorHandler = addEventListenerSpy.mock.calls.find(
@@ -99,7 +99,7 @@ describe('PluginIsolation', () => {
       errorHandler(mockEvent)
 
       expect(logger.error).toHaveBeenCalledWith(
-        'PluginIsolation',
+        'PluginDiagnostics',
         'Uncaught plugin error',
         mockEvent.error
       )
@@ -111,8 +111,8 @@ describe('PluginIsolation', () => {
     it('should not intercept non-plugin errors', async () => {
       const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
 
-      const { setupPluginIsolation } = await import('@/plugins/core/PluginIsolation')
-      setupPluginIsolation()
+      const { setupPluginDiagnostics } = await import('@/plugins/core/PluginDiagnostics')
+      setupPluginDiagnostics()
 
       const errorHandler = addEventListenerSpy.mock.calls.find(
         call => call[0] === 'error'
@@ -129,52 +129,13 @@ describe('PluginIsolation', () => {
       errorHandler(mockEvent)
 
       expect(logger.error).not.toHaveBeenCalledWith(
-        'PluginIsolation',
+        'PluginDiagnostics',
         'Uncaught plugin error',
         expect.anything()
       )
       expect(mockEvent.preventDefault).not.toHaveBeenCalled()
 
       addEventListenerSpy.mockRestore()
-    })
-
-    it('should log unhandled promise rejections', async () => {
-      const addEventListenerSpy = vi.spyOn(window, 'addEventListener')
-
-      const { setupPluginIsolation } = await import('@/plugins/core/PluginIsolation')
-      setupPluginIsolation()
-
-      const rejectionHandler = addEventListenerSpy.mock.calls.find(
-        call => call[0] === 'unhandledrejection'
-      )?.[1] as (event: PromiseRejectionEvent) => void
-
-      expect(rejectionHandler).toBeDefined()
-
-      const mockEvent = {
-        reason: 'Test rejection'
-      } as PromiseRejectionEvent
-
-      rejectionHandler(mockEvent)
-
-      expect(logger.error).toHaveBeenCalledWith(
-        'PluginIsolation',
-        'Unhandled promise rejection',
-        'Test rejection'
-      )
-
-      addEventListenerSpy.mockRestore()
-    })
-  })
-
-  describe('createPluginErrorBoundary', () => {
-    it('should log debug message when called', async () => {
-      const { createPluginErrorBoundary } = await import('@/plugins/core/PluginIsolation')
-      createPluginErrorBoundary()
-
-      expect(logger.debug).toHaveBeenCalledWith(
-        'PluginIsolation',
-        'Error boundary created'
-      )
     })
   })
 })

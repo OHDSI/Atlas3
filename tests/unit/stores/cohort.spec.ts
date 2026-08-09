@@ -759,6 +759,49 @@ describe('Cohort Store', () => {
     })
   })
 
+  describe('auto-save lifecycle', () => {
+    // The timer belongs to the mounted CohortBuilder, not to the store: an edit
+    // alone must not leave a 30s serialiser running for the rest of the session.
+    it('does not start the auto-save timer just because the cohort became dirty', async () => {
+      const store = useCohortStore()
+      const setItem = vi.spyOn(Storage.prototype, 'setItem')
+      vi.useFakeTimers()
+      try {
+        store.createNewCohort()
+        store.markDirty()
+
+        await vi.advanceTimersByTimeAsync(60000)
+
+        expect(setItem).not.toHaveBeenCalled()
+        expect(store.lastAutoSave).toBeNull()
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('saves the draft on the interval once started and stops on stopAutoSave', async () => {
+      const store = useCohortStore()
+      vi.useFakeTimers()
+      try {
+        store.createNewCohort()
+        store.markDirty()
+        store.startAutoSave()
+
+        await vi.advanceTimersByTimeAsync(30000)
+        expect(store.lastAutoSave).not.toBeNull()
+
+        store.stopAutoSave()
+        const afterStop = store.lastAutoSave
+        await vi.advanceTimersByTimeAsync(60000)
+
+        expect(store.lastAutoSave).toBe(afterStop)
+      } finally {
+        store.stopAutoSave()
+        vi.useRealTimers()
+      }
+    })
+  })
+
   describe('agent handshake', () => {
     it('requestNewCohort resets and bumps newCohortSignal', () => {
       const store = useCohortStore()

@@ -24,7 +24,7 @@ import type {
 import type { Concept } from '@/models/concept-set.types'
 import type { Version } from '@/components/versions/types'
 import type { Tag } from '@/models/cohort.types'
-import type { DateRange } from '@/composables/useCohorts'
+import { getUserString, isDateInRange, type DateRange } from '@/utils/list-filters'
 import { conceptToConceptSetItem, conceptSetItemToExpressionItem } from '@/utils/api-mappers'
 import { diffConceptLists } from '@/utils/concept-compare'
 import {
@@ -63,6 +63,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   const currentSet = ref<ConceptSet | null>(null)
   const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
+  let fetchAllInFlight: Promise<void> | null = null
+  // getConceptSetById takes no abort signal, so stale responses are dropped by
+  // sequence number instead.
+  let fetchOneRequestId = 0
   const filters = ref<ConceptSetFilterState>({
     searchQuery: '',
     author: '',
@@ -120,24 +124,6 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   // ============================================================================
   // Getters
   // ============================================================================
-
-  function getUserString(userValue: unknown): string {
-    if (!userValue) return ''
-    if (typeof userValue === 'string') return userValue.toLowerCase()
-    if (typeof userValue === 'object' && userValue !== null) {
-      const u = userValue as Record<string, unknown>
-      return ((u.name || u.login || u.id || '') as string).toLowerCase()
-    }
-    return ''
-  }
-
-  function isDateInRange(date: number | string | undefined, range: DateRange): boolean {
-    if (!date) return !range.from && !range.to
-    const d = new Date(date)
-    if (range.from && d < range.from) return false
-    if (range.to && d > range.to) return false
-    return true
-  }
 
   const availableTags = computed(() => {
     const tagSet = new Set<string>()
@@ -207,46 +193,58 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   /**
    * Fetch all concept sets
    */
-  async function fetchAll() {
-    // Skip if already loading to prevent concurrent calls
-    if (loading.value) {
-      return
+  async function fetchAll(): Promise<void> {
+    // Concurrent callers share the in-flight request, so awaiting fetchAll()
+    // always resolves against the response rather than the previous list.
+    if (fetchAllInFlight) {
+      return fetchAllInFlight
     }
 
     loading.value = true
     error.value = null
 
-    try {
-      conceptSets.value = await getAllConceptSets()
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch concept sets'
-      logger.error('ConceptSetsStore', 'Fetch concept sets error', err)
-      conceptSets.value = []
-    } finally {
-      loading.value = false
-    }
+    fetchAllInFlight = (async () => {
+      try {
+        conceptSets.value = await getAllConceptSets()
+      } catch (err) {
+        error.value = err instanceof Error ? err.message : 'Failed to fetch concept sets'
+        logger.error('ConceptSetsStore', 'Fetch concept sets error', err)
+        conceptSets.value = []
+      } finally {
+        fetchAllInFlight = null
+        loading.value = false
+      }
+    })()
+
+    return fetchAllInFlight
   }
 
   /**
    * Fetch a single concept set by ID with full details
    */
   async function fetchOne(id: number | string) {
+    const requestId = ++fetchOneRequestId
+
     loading.value = true
     error.value = null
 
     try {
       const set = await getConceptSetById(id)
+      if (requestId !== fetchOneRequestId) return
       if (set) {
         currentSet.value = set
       } else {
         error.value = 'Concept set not found'
       }
     } catch (err) {
+      if (requestId !== fetchOneRequestId) return
       error.value = err instanceof Error ? err.message : 'Failed to fetch concept set'
       logger.error('ConceptSetsStore', 'Fetch concept set error', err)
       currentSet.value = null
     } finally {
-      loading.value = false
+      if (requestId === fetchOneRequestId) {
+        loading.value = false
+      }
     }
   }
 

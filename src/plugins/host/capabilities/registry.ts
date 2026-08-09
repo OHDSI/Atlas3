@@ -200,16 +200,16 @@ export const CAPABILITIES: Capability[] = [
 
   {
     name: 'add_exit_criterion',
-    description: 'Define how a patient exits the cohort. Strategy: end_of_observation = end of continuous observation period; fixed_duration = N days after entry; continuous_drug = persistence-window-driven exit; custom_event = exit on a clinical event.',
+    description: 'Define how a patient exits the cohort. Strategy: end_of_observation = end of continuous observation period; fixed_duration = N days after entry; continuous_drug = persistence-window-driven exit.',
     schema: {
       type: 'object',
       properties: {
-        strategy: { type: 'string', enum: ['end_of_observation', 'fixed_duration', 'continuous_drug', 'custom_event'] },
+        strategy: { type: 'string', enum: ['end_of_observation', 'fixed_duration', 'continuous_drug'] },
         offset: { type: 'number', description: 'Days offset (for fixed_duration and continuous_drug)' },
         dateField: { type: 'string', enum: ['START_DATE', 'END_DATE'], description: 'Anchor for offset' },
         persistenceWindow: { type: 'number', description: 'Gap days between exposures for continuous_drug' },
         surveillanceWindow: { type: 'number', description: 'Trailing days after final exposure for continuous_drug' },
-        concept: { ...conceptRefSchema, description: 'Concept defining the exit event (for continuous_drug or custom_event)' },
+        concept: { ...conceptRefSchema, description: 'Drug concept whose exposure eras define the exit (for continuous_drug)' },
       },
       required: ['strategy'],
     },

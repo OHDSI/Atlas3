@@ -354,8 +354,9 @@ describe('DataSourcesSection.vue', () => {
       expect(text).toContain('Clear Server Cache')
     })
 
-    it('should clear localStorage when clear local cache clicked', async () => {
+    it('should clear only the data source keys it owns when clear local cache clicked', async () => {
       const clearSpy = vi.spyOn(Storage.prototype, 'clear')
+      const removeItemSpy = vi.spyOn(Storage.prototype, 'removeItem')
 
       wrapper = mount(DataSourcesSection, {
         global: {
@@ -367,14 +368,19 @@ describe('DataSourcesSection.vue', () => {
 
       // Find the button with the mdi-delete-sweep icon
       const icons = wrapper.findAll('.mdi-delete-sweep')
-      if (icons.length > 0) {
-        const btn = icons[0].element.closest('button')
-        if (btn) {
-          await btn.click()
-          await wrapper.vm.$nextTick()
-          expect(clearSpy).toHaveBeenCalled()
-        }
-      }
+      expect(icons.length).toBeGreaterThan(0)
+      const btn = icons[0].element.closest('button')
+      expect(btn).not.toBeNull()
+
+      await (btn as HTMLButtonElement).click()
+      await wrapper.vm.$nextTick()
+
+      expect(removeItemSpy).toHaveBeenCalledWith('selectedVocabulary')
+      expect(removeItemSpy).toHaveBeenCalledWith('selectedEvidence')
+      expect(removeItemSpy).toHaveBeenCalledWith('selectedResults')
+      // The session token, theme, locale and license keys must survive
+      expect(removeItemSpy).not.toHaveBeenCalledWith('bearerToken')
+      expect(clearSpy).not.toHaveBeenCalled()
     })
 
     it('should show confirmation for server cache clear', async () => {

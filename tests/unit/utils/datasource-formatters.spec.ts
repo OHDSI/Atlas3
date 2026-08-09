@@ -185,7 +185,7 @@ describe('Data Source Formatters', () => {
       const csv = exportTableToCSV(rows, 'Records Per Person')
 
       expect(csv).toContain('Concept ID,Name,Person Count,Prevalence (%),Records Per Person')
-      expect(csv).toContain('1,"Condition A",100,10.50,2.50')
+      expect(csv).toContain('1,Condition A,100,10.50,2.50')
     })
 
     it('should escape quotes in concept names', () => {

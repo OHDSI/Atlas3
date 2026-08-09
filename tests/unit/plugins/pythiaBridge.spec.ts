@@ -37,6 +37,8 @@ import { createCharacterization } from '@/services/characterization.service'
 import { createPathway, generatePathway } from '@/services/pathway.service'
 import { createIncidenceRate } from '@/services/incidence-rate.service'
 import { setupPythiaBridge, applyProposalDirect } from '@/plugins/host/pythiaBridge'
+import { translateCapability } from '@/plugins/host/capabilities/translate'
+import { convertInternalToAtlas } from '@/services/atlas-converter'
 import { useCohortStore } from '@/stores/cohort'
 import { useNotifications } from '@/stores/notifications'
 import { createHostMessageBus, getHostMessageBus } from '@/plugins/messaging/HostMessageBus'
@@ -54,6 +56,7 @@ describe('pythiaBridge', () => {
     setActivePinia(createPinia())
     setupPythiaBridge()
     createHostMessageBus('pythia-plugin')
+    router.currentRoute.value = { name: 'home', params: {} } as never
     vi.mocked(router.push).mockClear()
     vi.mocked(createConceptSet).mockReset()
     vi.mocked(createFeatureAnalysis).mockReset()
@@ -450,6 +453,111 @@ describe('pythiaBridge', () => {
     // handleSaveCohort returns void → bridge still resolves caller with {} so
     // the agent isn't left hanging.
     expect(handleResponseSpy).toHaveBeenCalledWith('cb-resolve-empty', {})
+  })
+
+  it('assigns numeric concept-set ids and registers them on the cohort', async () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    // The editor is mounted on the blank-cohort route, so the bridge builds on
+    // the open cohort instead of resetting it per proposal.
+    router.currentRoute.value = { name: 'cohort-new', params: {} } as never
+
+    await applyProposalDirect({
+      kind: 'addEntryEvent',
+      event: {
+        id: 'uuid-event',
+        criteriaType: 'ConditionOccurrence',
+        conceptSet: { id: 'uuid-cs', name: 'T2DM', items: [] },
+      },
+    } as never)
+
+    const entry = store.currentCohort!.entryEvents[0]!
+    expect(entry.conceptSet?.id).toBe(0)
+    expect(store.currentCohort!.conceptSets).toEqual([
+      expect.objectContaining({ id: 0, name: 'T2DM' }),
+    ])
+  })
+
+  it('keeps concept-set ids unique across a multi-criterion rule and later proposals', async () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    // The editor is mounted on the blank-cohort route, so the bridge builds on
+    // the open cohort instead of resetting it per proposal.
+    router.currentRoute.value = { name: 'cohort-new', params: {} } as never
+
+    await applyProposalDirect({
+      kind: 'addInclusionRule',
+      rule: {
+        id: 'uuid-rule',
+        name: 'On metformin or sulfonylurea',
+        criteriaGroups: [
+          {
+            id: 'uuid-group',
+            logicType: 'ANY',
+            events: [
+              { id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 'u1', name: 'Metformin' } },
+              { id: 'e2', criteriaType: 'DrugExposure', conceptSet: { id: 'u2', name: 'Glipizide' } },
+            ],
+          },
+        ],
+      },
+    } as never)
+
+    await applyProposalDirect({
+      kind: 'addCensoringCriterion',
+      event: { id: 'e3', criteriaType: 'Death', conceptSet: { id: 'u3', name: 'Death' } },
+    } as never)
+
+    expect(store.currentCohort!.conceptSets.map(cs => cs.id)).toEqual([0, 1, 2])
+    const ruleEvents = store.currentCohort!.inclusionRules[0]!.criteriaGroups[0]!.events
+    expect(ruleEvents.map(e => e.conceptSet?.id)).toEqual([0, 1])
+    expect(store.currentCohort!.censoringCriteria![0]!.conceptSet?.id).toBe(2)
+  })
+
+  it('gives the continuous-drug exit criteria a numeric concept-set id', async () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    // The editor is mounted on the blank-cohort route, so the bridge builds on
+    // the open cohort instead of resetting it per proposal.
+    router.currentRoute.value = { name: 'cohort-new', params: {} } as never
+
+    await applyProposalDirect({
+      kind: 'setExitCriteria',
+      exitCriteria: {
+        strategy: 'CONTINUOUS_DRUG',
+        persistenceWindow: 30,
+        conceptSet: { id: 'uuid-drug', name: 'Metformin' },
+      },
+    } as never)
+
+    expect(store.currentCohort!.exitCriteria?.conceptSet?.id).toBe(0)
+    expect(store.currentCohort!.conceptSets).toHaveLength(1)
+  })
+
+  it('an agent-built cohort converts to Atlas with matching CodesetIds', async () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    router.currentRoute.value = { name: 'cohort-new', params: {} } as never
+
+    for (const [name, args] of [
+      ['set_entry_event', { conceptId: 201826, conceptName: 'T2DM', domain: 'Condition' }],
+      ['add_exit_criterion', {
+        strategy: 'continuous_drug',
+        persistenceWindow: 30,
+        concept: { conceptId: 1503297, conceptName: 'Metformin', domain: 'Drug' },
+      }],
+    ] as const) {
+      await applyProposalDirect(translateCapability(name, args as Record<string, unknown>)!)
+    }
+
+    const atlas = convertInternalToAtlas(store.currentCohort!)
+    expect(atlas.ConceptSets.map(cs => cs.id)).toEqual([0, 1])
+    expect(atlas.ConceptSets[0]!.expression.items[0]!.concept.CONCEPT_ID).toBe(201826)
+    const entry = atlas.PrimaryCriteria.CriteriaList[0] as Record<string, { CodesetId?: number }>
+    expect(entry.ConditionOccurrence!.CodesetId).toBe(0)
+    expect(atlas.EndStrategy).toEqual({
+      CustomEra: { DrugCodesetId: 1, GapDays: 30, Offset: 0 },
+    })
   })
 
   it('applyProposalDirect applies a proposal into the cohort store', async () => {

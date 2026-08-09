@@ -30,6 +30,8 @@ import { createCharacterization } from '@/services/characterization.service'
 import { createPathway, generatePathway } from '@/services/pathway.service'
 import { createIncidenceRate } from '@/services/incidence-rate.service'
 import type { ConceptSetItem } from '@/models/concept-set.types'
+import type { CohortEvent, ConceptSetReference, CriteriaGroup } from '@/models/cohort.types'
+import { ensureUniqueConceptSetId } from '@/utils/concept-set-id'
 import type {
   FeatureAnalysis,
   FeatureAnalysisType,
@@ -184,10 +186,54 @@ async function applyProposalInner(
         cohortStore.requestNewCohort()
         savedCohortId = null
       }
+      adoptProposalConceptSets(proposal)
       cohortStore.applyProposal(proposal)
       await ensureOnCohortRoute()
       return
     }
+  }
+}
+
+function groupEvents(group: CriteriaGroup): CohortEvent[] {
+  return [...group.events, ...(group.nestedGroups ?? []).flatMap(groupEvents)]
+}
+
+// A proposal's concept sets arrive with client-side UUID ids, but the Atlas
+// converter only emits a CodesetId for numeric ones, so without this every
+// agent-added criterion would save with `CodesetId: null` and lose its
+// concepts. Mirrors the builder's assignConceptSetToContext: allocate an id
+// that is unique within the cohort, then register the set on the cohort so
+// ConceptSets[] and the criteria agree.
+function adoptProposalConceptSets(proposal: AgentProposal): void {
+  const owners: Array<{ conceptSet?: ConceptSetReference }> = []
+  switch (proposal.kind) {
+    case 'addEntryEvent':
+    case 'addCensoringCriterion':
+      owners.push(proposal.event)
+      break
+    case 'addInclusionRule':
+      owners.push(...proposal.rule.criteriaGroups.flatMap(groupEvents))
+      break
+    case 'setExitCriteria':
+      owners.push(proposal.exitCriteria)
+      break
+    case 'addConceptSet':
+      owners.push(proposal)
+      break
+    default:
+      return
+  }
+
+  const cohortStore = useCohortStore()
+  // An addConceptSet proposal registers itself once the caller applies it.
+  const register = proposal.kind !== 'addConceptSet'
+  const existing: ConceptSetReference[] = [...(cohortStore.currentCohort?.conceptSets ?? [])]
+  for (const owner of owners) {
+    if (!owner.conceptSet) continue
+    const ref = ensureUniqueConceptSetId(owner.conceptSet, existing)
+    owner.conceptSet = ref
+    if (!existing.some(cs => cs.id === ref.id)) existing.push(ref)
+    if (register) cohortStore.applyProposal({ kind: 'addConceptSet', conceptSet: ref })
   }
 }
 
@@ -328,7 +374,7 @@ async function handleNavigate(route: NavigateRoute) {
     cohortStore.requestNewCohort()
   }
   try {
-    router.push({ name: route.name, params: route.params ?? {} })
+    await router.push({ name: route.name, params: route.params ?? {} })
   } catch (err) {
     logger.warn('pythiaBridge', 'navigate failed', { route, err })
     showSnackbar('Could not navigate to that view', 'error')
@@ -399,7 +445,7 @@ async function handleCreateStandaloneConceptSet(
   //   concept-set editor" — the user explicitly wanted a standalone set.
   const cohortStore = useCohortStore()
   if (cohortStore.currentCohort) {
-    cohortStore.applyProposal({
+    const proposal: AgentProposal = {
       kind: 'addConceptSet',
       conceptSet: {
         id: created.id as number,
@@ -409,7 +455,9 @@ async function handleCreateStandaloneConceptSet(
         // anything referencing it matches nobody while the cohort still builds.
         items: created.items ?? [],
       },
-    } as never)
+    }
+    adoptProposalConceptSets(proposal)
+    cohortStore.applyProposal(proposal)
     await ensureOnCohortRoute()
     showSnackbar(
       `Concept set "${created.name}" created and attached to the cohort`,

@@ -68,6 +68,28 @@ describe('StorageManager', () => {
         expect(document.cookie).toContain('bearerToken=test-token')
       })
 
+      it('should not mark the cookie Secure when served over http', () => {
+        manager.saveToken('test-token')
+        expect(document.cookie).not.toContain('Secure')
+      })
+
+      it('should mark the cookie Secure when served over https', () => {
+        const originalLocation = window.location
+        Object.defineProperty(window, 'location', {
+          value: { ...originalLocation, protocol: 'https:' },
+          configurable: true,
+        })
+
+        manager.saveToken('test-token')
+
+        expect(document.cookie).toContain('Secure')
+
+        Object.defineProperty(window, 'location', {
+          value: originalLocation,
+          configurable: true,
+        })
+      })
+
       it('should handle localStorage error', () => {
         vi.mocked(localStorage.setItem).mockImplementationOnce(() => {
           throw new Error('Storage error')

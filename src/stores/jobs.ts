@@ -8,6 +8,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { jobsService } from '@/services/jobs.service'
+import { useExecutionPolling } from '@/composables/useExecutionPolling'
 import { logger } from '@/utils/logger'
 import type { Job, JobStatusFilter } from '@/models/jobs.types'
 import { isJobRunning, isJobCompleted, isJobFailed } from '@/models/jobs.types'
@@ -20,12 +21,8 @@ export const useJobsStore = defineStore('jobs', () => {
   const jobs = ref<Job[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-  const pollingEnabled = ref(false)
   const statusFilter = ref<JobStatusFilter>('all')
   const lastFetched = ref<Date | null>(null)
-
-  // Private polling interval ID
-  let pollingIntervalId: ReturnType<typeof setInterval> | null = null
 
   // Getters
   const filteredJobs = computed(() => {
@@ -81,25 +78,31 @@ export const useJobsStore = defineStore('jobs', () => {
     }
   }
 
+  // The jobs list has no terminal state: polling runs until the user (or an
+  // unmounting view) turns it off.
+  const poller = useExecutionPolling<Job[]>({
+    intervalMs: POLLING_INTERVAL_MS,
+    fetcher: async () => {
+      await fetchJobs()
+      return jobs.value
+    },
+    isTerminal: () => false,
+  })
+
+  const pollingEnabled = poller.isPolling
+
   function startPolling(): void {
-    if (pollingIntervalId) {
-      return // Already polling
+    if (pollingEnabled.value) {
+      return
     }
 
-    pollingEnabled.value = true
-    pollingIntervalId = setInterval(() => {
-      fetchJobs()
-    }, POLLING_INTERVAL_MS)
+    void poller.start()
 
     logger.debug('JobsStore', 'Started job polling')
   }
 
   function stopPolling(): void {
-    if (pollingIntervalId) {
-      clearInterval(pollingIntervalId)
-      pollingIntervalId = null
-    }
-    pollingEnabled.value = false
+    poller.stop()
 
     logger.debug('JobsStore', 'Stopped job polling')
   }

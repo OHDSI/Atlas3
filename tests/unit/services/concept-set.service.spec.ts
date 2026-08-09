@@ -4,6 +4,14 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
+// Mock http-client
+vi.mock('@/services/http-client', () => ({
+  httpGet: vi.fn(),
+  httpPost: vi.fn(),
+  httpPut: vi.fn(),
+  httpDelete: vi.fn(),
+}))
+
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {
@@ -14,15 +22,21 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
+const getValidVocabularySource = vi.fn<() => string | null>(() => null)
+
+vi.mock('@/stores/webapi', () => ({
+  useWebAPIStore: () => ({ getValidVocabularySource }),
+}))
+
 // Mock api-mappers
 vi.mock('@/utils/api-mappers', () => ({
-  mapConceptSetFromAPI: vi.fn((data) => ({
+  mapConceptSetFromAPI: vi.fn(data => ({
     id: data.id,
     name: data.name,
     description: data.description,
     items: data.expression?.items || [],
   })),
-  mapConceptSetToAPI: vi.fn((data) => ({
+  mapConceptSetToAPI: vi.fn(data => ({
     id: data.id,
     name: data.name,
     description: data.description,
@@ -38,63 +52,46 @@ import {
   deleteConceptSet,
 } from '@/services/concept-set.service'
 import { mapConceptSetFromAPI } from '@/utils/api-mappers'
+import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
 
 describe('ConceptSetService', () => {
-  let mockFetch: ReturnType<typeof vi.fn>
-
   beforeEach(() => {
     vi.clearAllMocks()
-
-    mockFetch = vi.fn()
-    global.fetch = mockFetch
+    getValidVocabularySource.mockReturnValue(null)
+    localStorage.clear()
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
+    localStorage.clear()
   })
 
   describe('getAllConceptSets', () => {
     it('should fetch and return concept set list', async () => {
-      const mockResponse = [
+      vi.mocked(httpGet).mockResolvedValueOnce([
         { id: 1, name: 'Concept Set 1' },
         { id: 2, name: 'Concept Set 2' },
-      ]
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      })
+      ])
 
       const result = await getAllConceptSets()
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/conceptset'),
-        expect.any(Object)
-      )
+      expect(httpGet).toHaveBeenCalledWith('/conceptset')
       expect(result).toHaveLength(2)
     })
 
     it('throws on fetch failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        statusText: 'Server Error',
-      })
+      vi.mocked(httpGet).mockRejectedValueOnce(new Error('HTTP 500: Server Error'))
 
       await expect(getAllConceptSets()).rejects.toThrow('HTTP 500')
     })
 
     it('throws for invalid response format', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ invalid: 'response' }),
-      })
+      vi.mocked(httpGet).mockResolvedValueOnce({ invalid: 'response' })
 
       await expect(getAllConceptSets()).rejects.toThrow('Invalid concept set list response')
     })
 
     it('throws on network error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+      vi.mocked(httpGet).mockRejectedValueOnce(new Error('Network error'))
 
       await expect(getAllConceptSets()).rejects.toThrow('Network error')
     })
@@ -102,59 +99,31 @@ describe('ConceptSetService', () => {
 
   describe('getConceptSetById', () => {
     it('should fetch concept set by ID', async () => {
-      const mockMetadata = { id: 1, name: 'Test Concept Set', description: 'Test description' }
-      const mockExpression = { items: [{ concept: { conceptId: 123 } }] }
-
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(mockMetadata),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(mockExpression),
-        })
+      vi.mocked(httpGet)
+        .mockResolvedValueOnce({ id: 1, name: 'Test Concept Set', description: 'Test description' })
+        .mockResolvedValueOnce({ items: [{ concept: { conceptId: 123 } }] })
 
       const result = await getConceptSetById(1)
 
-      expect(mockFetch).toHaveBeenCalledTimes(2)
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/conceptset/1'),
-        expect.any(Object)
-      )
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/conceptset/1/expression'),
-        expect.any(Object)
-      )
+      expect(httpGet).toHaveBeenCalledTimes(2)
+      expect(httpGet).toHaveBeenCalledWith('/conceptset/1')
+      expect(httpGet).toHaveBeenCalledWith(expect.stringContaining('/conceptset/1/expression/'))
       expect(result).not.toBeNull()
       expect(mapConceptSetFromAPI).toHaveBeenCalled()
     })
 
     it('should accept string ID', async () => {
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve({ id: 1 }),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve({ items: [] }),
-        })
+      vi.mocked(httpGet)
+        .mockResolvedValueOnce({ id: 1 })
+        .mockResolvedValueOnce({ items: [] })
 
       await getConceptSetById('1')
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/conceptset/1'),
-        expect.any(Object)
-      )
+      expect(httpGet).toHaveBeenCalledWith('/conceptset/1')
     })
 
     it('should return null on fetch failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found',
-      })
+      vi.mocked(httpGet).mockRejectedValue(new Error('HTTP 404: Not Found'))
 
       const result = await getConceptSetById(999)
 
@@ -162,95 +131,54 @@ describe('ConceptSetService', () => {
     })
 
     it('should return null on network error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+      vi.mocked(httpGet).mockRejectedValue(new Error('Network error'))
 
       const result = await getConceptSetById(1)
 
       expect(result).toBeNull()
     })
 
-    it('rethrows with the server message body when rethrow is requested', async () => {
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve({ id: 3 }),
-        })
-        .mockResolvedValueOnce({
-          ok: false,
-          status: 400,
-          statusText: 'Bad Request',
-          text: () =>
-            Promise.resolve(
-              JSON.stringify({
-                message: 'Current data source does not contain required concepts (443238)',
-              })
-            ),
-        })
+    it('rethrows the server message when rethrow is requested', async () => {
+      vi.mocked(httpGet)
+        .mockResolvedValueOnce({ id: 3 })
+        .mockRejectedValueOnce(
+          new Error('HTTP 400: Current data source does not contain required concepts (443238)')
+        )
 
       await expect(getConceptSetById(3, { rethrow: true })).rejects.toThrow(/required concepts/)
-    })
-
-    it('falls back to the raw body text when the error body is not JSON', async () => {
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve({ id: 3 }),
-        })
-        .mockResolvedValueOnce({
-          ok: false,
-          status: 400,
-          statusText: 'Bad Request',
-          text: () => Promise.resolve('plain text failure'),
-        })
-
-      await expect(getConceptSetById(3, { rethrow: true })).rejects.toThrow(/plain text failure/)
     })
   })
 
   describe('createConceptSet', () => {
     it('should create concept set', async () => {
-      const newConceptSet = {
-        name: 'New Concept Set',
-        description: 'New description',
-        items: [],
-      }
-
-      const mockResponse = {
+      vi.mocked(httpPost).mockResolvedValueOnce({
         id: 1,
         name: 'New Concept Set',
         description: 'New description',
         expression: { items: [] },
-      }
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
       })
 
-      const result = await createConceptSet(newConceptSet)
+      const result = await createConceptSet({
+        name: 'New Concept Set',
+        description: 'New description',
+        items: [],
+      })
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/conceptset'),
-        expect.objectContaining({
-          method: 'POST',
-          body: expect.any(String),
-        })
-      )
+      expect(httpPost).toHaveBeenCalledWith('/conceptset', {
+        name: 'New Concept Set',
+        description: 'New description',
+      })
       expect(result).not.toBeNull()
     })
 
     it('throws on create failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        statusText: 'Bad Request',
-      })
+      vi.mocked(httpPost).mockRejectedValueOnce(new Error('HTTP 400: Bad Request'))
 
       await expect(createConceptSet({ name: 'Test', items: [] })).rejects.toThrow('HTTP 400')
     })
 
     it('throws on network error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+      vi.mocked(httpPost).mockRejectedValueOnce(new Error('Network error'))
 
       await expect(createConceptSet({ name: 'Test', items: [] })).rejects.toThrow('Network error')
     })
@@ -258,79 +186,37 @@ describe('ConceptSetService', () => {
 
   describe('updateConceptSet', () => {
     it('should update concept set', async () => {
-      const conceptSet = {
+      const metadata = { id: 1, name: 'Updated Concept Set', description: 'Updated description' }
+
+      vi.mocked(httpPut).mockResolvedValue(undefined)
+      vi.mocked(httpGet).mockResolvedValueOnce(metadata).mockResolvedValueOnce({ items: [] })
+
+      const result = await updateConceptSet({
         id: 1,
         name: 'Updated Concept Set',
         description: 'Updated description',
         items: [],
-      }
+      })
 
-      const mockMetadataResponse = {
-        id: 1,
-        name: 'Updated Concept Set',
-        description: 'Updated description',
-      }
-
-      const mockExpressionResponse = {
-        items: [],
-      }
-
-      // Mock the three fetch calls: PUT metadata, PUT items, GET metadata, GET expression
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(mockMetadataResponse),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 204,
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(mockMetadataResponse),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve(mockExpressionResponse),
-        })
-
-      const result = await updateConceptSet(conceptSet)
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/conceptset/1'),
-        expect.objectContaining({
-          method: 'PUT',
-          body: expect.any(String),
-        })
-      )
+      expect(httpPut).toHaveBeenCalledWith('/conceptset/1', metadata)
+      expect(httpPut).toHaveBeenCalledWith('/conceptset/1/items', [])
       expect(result).not.toBeNull()
     })
 
     it('should throw error when ID is missing', async () => {
-      const conceptSet = {
-        name: 'No ID',
-        items: [],
-      }
-
-      await expect(updateConceptSet(conceptSet as any)).rejects.toThrow(
+      await expect(updateConceptSet({ name: 'No ID', items: [] } as never)).rejects.toThrow(
         'Concept set ID is required for update'
       )
     })
 
     it('throws on update failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        statusText: 'Bad Request',
-      })
+      vi.mocked(httpPut).mockRejectedValueOnce(new Error('HTTP 400: Bad Request'))
 
-      await expect(updateConceptSet({ id: 1, name: 'Test', items: [] })).rejects.toThrow(
-        'HTTP 400'
-      )
+      await expect(updateConceptSet({ id: 1, name: 'Test', items: [] })).rejects.toThrow('HTTP 400')
     })
 
     it('throws on network error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+      vi.mocked(httpPut).mockRejectedValueOnce(new Error('Network error'))
 
       await expect(updateConceptSet({ id: 1, name: 'Test', items: [] })).rejects.toThrow(
         'Network error'
@@ -340,27 +226,16 @@ describe('ConceptSetService', () => {
 
   describe('deleteConceptSet', () => {
     it('should delete concept set', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 204,
-      })
+      vi.mocked(httpDelete).mockResolvedValueOnce(undefined)
 
       const result = await deleteConceptSet(1)
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/conceptset/1'),
-        expect.objectContaining({
-          method: 'DELETE',
-        })
-      )
+      expect(httpDelete).toHaveBeenCalledWith('/conceptset/1')
       expect(result).toBe(true)
     })
 
     it('should accept string ID', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 204,
-      })
+      vi.mocked(httpDelete).mockResolvedValueOnce(undefined)
 
       const result = await deleteConceptSet('1')
 
@@ -368,35 +243,42 @@ describe('ConceptSetService', () => {
     })
 
     it('should return false on delete failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found',
-      })
+      vi.mocked(httpDelete).mockRejectedValueOnce(new Error('HTTP 404: Not Found'))
 
-      const result = await deleteConceptSet(999)
-
-      expect(result).toBe(false)
+      expect(await deleteConceptSet(999)).toBe(false)
     })
 
     it('should return false on network error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+      vi.mocked(httpDelete).mockRejectedValueOnce(new Error('Network error'))
 
-      const result = await deleteConceptSet(1)
-
-      expect(result).toBe(false)
+      expect(await deleteConceptSet(1)).toBe(false)
     })
   })
 
-  describe('expression requests carry the selected vocabulary source', () => {
+  describe('expression requests carry the validated vocabulary source', () => {
     const expressionUrl = () =>
-      mockFetch.mock.calls.map(call => String(call[0])).find(url => url.includes('/expression'))
+      vi
+        .mocked(httpGet)
+        .mock.calls.map(call => String(call[0]))
+        .find(url => url.includes('/expression'))
 
-    it('appends the selected source key when reading a concept set', async () => {
+    it('prefers the source validated against the server list', async () => {
+      getValidVocabularySource.mockReturnValue('validated-source')
+      localStorage.setItem('selectedVocabulary', 'stale-source')
+      vi.mocked(httpGet)
+        .mockResolvedValueOnce({ id: 1, name: 'CS' })
+        .mockResolvedValueOnce({ items: [] })
+
+      await getConceptSetById(1)
+
+      expect(expressionUrl()).toContain('/conceptset/1/expression/validated-source')
+    })
+
+    it('falls back to the stored key when no validated source is available', async () => {
       localStorage.setItem('selectedVocabulary', 'ed0f253b-dfef-4202-b1d1-5b0ce9f7c9e0')
-      mockFetch
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: 1, name: 'CS' }) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
+      vi.mocked(httpGet)
+        .mockResolvedValueOnce({ id: 1, name: 'CS' })
+        .mockResolvedValueOnce({ items: [] })
 
       await getConceptSetById(1)
 
@@ -405,29 +287,25 @@ describe('ConceptSetService', () => {
       )
     })
 
-    it('appends the selected source key when re-reading after a create with items', async () => {
-      localStorage.setItem('selectedVocabulary', 'created-source')
-      mockFetch
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: 3 }) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: 3, name: 'CS' }) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
+    it('appends the source key when re-reading after a create with items', async () => {
+      getValidVocabularySource.mockReturnValue('created-source')
+      vi.mocked(httpPost).mockResolvedValueOnce({ id: 3 })
+      vi.mocked(httpPut).mockResolvedValue(undefined)
+      vi.mocked(httpGet)
+        .mockResolvedValueOnce({ id: 3, name: 'CS' })
+        .mockResolvedValueOnce({ items: [] })
 
-      await createConceptSet({
-        name: 'CS',
-        items: [{ conceptId: 1112807 }],
-      } as never)
+      await createConceptSet({ name: 'CS', items: [{ conceptId: 1112807 }] } as never)
 
       expect(expressionUrl()).toContain('/conceptset/3/expression/created-source')
     })
 
-    it('appends the selected source key when re-reading after an update', async () => {
-      localStorage.setItem('selectedVocabulary', 'demo-source')
-      mockFetch
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: 7 }) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: 7, name: 'CS' }) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [] }) })
+    it('appends the source key when re-reading after an update', async () => {
+      getValidVocabularySource.mockReturnValue('demo-source')
+      vi.mocked(httpPut).mockResolvedValue(undefined)
+      vi.mocked(httpGet)
+        .mockResolvedValueOnce({ id: 7, name: 'CS' })
+        .mockResolvedValueOnce({ items: [] })
 
       await updateConceptSet({ id: 7, name: 'CS', items: [] } as never)
 

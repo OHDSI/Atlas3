@@ -227,13 +227,22 @@ describe('Concept Sets Store', () => {
       expect(store.loading).toBe(false)
     })
 
-    it('should not fetch if already loading', async () => {
+    it('should share the in-flight request with concurrent callers', async () => {
       const store = useConceptSetsStore()
-      store.loading = true
+      let resolveFetch: (value: typeof mockConceptSetList) => void = () => {}
+      vi.mocked(getAllConceptSets).mockImplementation(
+        () => new Promise(resolve => { resolveFetch = resolve })
+      )
 
-      await store.fetchAll()
+      const first = store.fetchAll()
+      const second = store.fetchAll()
+      resolveFetch(mockConceptSetList)
+      await Promise.all([first, second])
 
-      expect(getAllConceptSets).not.toHaveBeenCalled()
+      expect(getAllConceptSets).toHaveBeenCalledTimes(1)
+      // The second caller awaited the real response instead of resolving
+      // against the previous (empty) list.
+      expect(store.conceptSets).toEqual(mockConceptSetList)
     })
   })
 
@@ -265,6 +274,25 @@ describe('Concept Sets Store', () => {
 
       expect(store.error).toBe('Network error')
       expect(store.currentSet).toBeNull()
+    })
+
+    it('should ignore a slow response from a superseded request', async () => {
+      const store = useConceptSetsStore()
+      const older = { ...mockConceptSet, id: 1, name: 'Older' } as ConceptSet
+      const newer = { ...mockConceptSet, id: 2, name: 'Newer' } as ConceptSet
+      let resolveOlder: (value: ConceptSet) => void = () => {}
+      vi.mocked(getConceptSetById)
+        .mockImplementationOnce(() => new Promise(resolve => { resolveOlder = resolve }))
+        .mockResolvedValueOnce(newer)
+
+      const first = store.fetchOne(1)
+      const second = store.fetchOne(2)
+      await second
+      resolveOlder(older)
+      await first
+
+      expect(store.currentSet).toEqual(newer)
+      expect(store.loading).toBe(false)
     })
   })
 

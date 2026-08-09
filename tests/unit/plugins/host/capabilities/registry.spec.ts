@@ -29,7 +29,7 @@ describe('capability registry', () => {
   // the original-schemas fixture, so they're outside the drift check.
   const ADDED_IN_ATLAS = new Set(['generate_analysis', 'remove_inclusion_rule', 'remove_entry_event', 'use_concept_set', 'add_demographic_criterion', 'set_event_limits', 'add_qualifying_criterion', 'set_censor_window', 'set_era_collapse'])
 
-  it('schemas are byte-identical to the original client.cljs schemas', () => {
+  it('schemas match the pinned schema baseline', () => {
     for (const name of EXPECTED_NAMES.filter(n => !ADDED_IN_ATLAS.has(n))) {
       expect(getCapability(name)?.schema).toEqual((original as Record<string, unknown>)[name])
     }

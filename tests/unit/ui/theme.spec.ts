@@ -58,7 +58,7 @@ describe('buildVuetifyOptions', () => {
     expect(dark['on-surface']).toBe(tokens.colorDark.onSurface)
     expect(dark.error).toBe(tokens.colorDark.danger)
     expect(dark.orange).toBe(tokens.colorDark.accent)
-    expect(dark.outline).toBe(tokens.colorDark.outlineStrong)
+    expect(dark.outline).toBe(tokens.colorDark.outline)
   })
 
   it('marks the dark theme as dark for Vuetify', () => {
@@ -109,9 +109,12 @@ describe('dark theme colours', () => {
     expect(opts.theme!.themes!.dark!.colors!.primary).toBe('#6aa3cb')
   })
 
-  it('uses the strong outline for dark borders', () => {
+  // Vuetify emits `--v-theme-outline: r,g,b`, dropping alpha, so promoting the
+  // dark outline to outlineStrong here produced an identical variable. The
+  // strong border lives in --atlas-color-outline-strong instead.
+  it('leaves the dark outline on the base token', () => {
     const dark = buildVuetifyOptions().theme!.themes!.dark!.colors!
-    expect(dark.outline).toBe(tokens.colorDark.outlineStrong)
+    expect(dark.outline).toBe(tokens.colorDark.outline)
   })
 
   it('keeps the light outline decorative', () => {

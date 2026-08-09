@@ -1,4 +1,5 @@
 import type { AgentProposal } from '@/models/agent.types'
+import type { ExitStrategy } from '@/models/cohort.types'
 import routeManifest from '@/router/routes.manifest.json'
 
 interface ConceptRefArgs {
@@ -22,17 +23,12 @@ interface ObservationWindowArgs {
 }
 
 interface ExitCriterionArgs {
-  strategy?: 'end_of_observation' | 'fixed_duration' | 'continuous_drug' | 'custom_event'
+  strategy?: 'end_of_observation' | 'fixed_duration' | 'continuous_drug'
   offset?: number
   dateField?: 'START_DATE' | 'END_DATE'
   persistenceWindow?: number
   surveillanceWindow?: number
   concept?: ConceptRefArgs
-}
-
-interface ConceptSetArgs {
-  name?: string
-  items?: ConceptRefArgs[]
 }
 
 interface AgentTemporalWindow {
@@ -120,7 +116,6 @@ interface CreateIncidenceRateArgs {
 type ProposalArgs = CriterionArgs &
   ObservationWindowArgs &
   ExitCriterionArgs &
-  ConceptSetArgs &
   InclusionRuleArgs &
   NavigateArgs &
   StandaloneConceptSetArgs &
@@ -212,6 +207,14 @@ function deriveRuleName(items: CriterionArgs[], group?: string, logic?: string):
 // Every criterion the agent injects references its concepts by CodesetId, so
 // the set has to carry the concept itself. Shared by entry/inclusion events and
 // by the exit criterion, which used to build a named but empty set.
+//
+// The id is a placeholder: the host bridge swaps it for a cohort-unique numeric
+// one before the proposal reaches the store, because only numeric ids survive
+// Atlas conversion as a CodesetId.
+//
+// Items use the internal ConceptSetItem shape, which is what the cohort builder,
+// extractConceptSets and the Atlas converter all read. The metadata the agent
+// cannot know is a placeholder; the concept-set editor re-resolves it on load.
 function embeddedConceptSet(c: {
   conceptId: number
   conceptName: string
@@ -225,11 +228,14 @@ function embeddedConceptSet(c: {
     conceptCount: 1,
     items: [
       {
-        concept: {
-          CONCEPT_ID: c.conceptId,
-          CONCEPT_NAME: c.conceptName,
-          DOMAIN_ID: c.domain ?? '',
-        },
+        conceptId: c.conceptId,
+        conceptName: c.conceptName,
+        conceptCode: '',
+        domainId: c.domain ?? '',
+        vocabularyId: '',
+        conceptClassId: '',
+        standardConcept: 'S',
+        invalidReason: null,
         includeDescendants: c.includeDescendants ?? true,
         isExcluded: c.isExcluded ?? false,
         includeMapped: false,
@@ -510,29 +516,6 @@ function buildUpdateIncidenceRateProposal(args: ProposalArgs): AgentProposal | n
   } as unknown as AgentProposal
 }
 
-function buildConceptSetProposal(args: ConceptSetArgs): AgentProposal | null {
-  // Embeds a concept set into the open cohort; create_standalone_concept_set
-  // saves one as its own artifact instead.
-  if (!args.items?.length) return null
-  const items = args.items
-    .filter(it => typeof it.conceptId === 'number' && typeof it.conceptName === 'string')
-    .map(it => ({
-      conceptId: it.conceptId as number,
-      conceptName: it.conceptName as string,
-      domain: it.domain,
-      includeDescendants: it.includeDescendants ?? true,
-      isExcluded: it.isExcluded ?? false,
-    }))
-  if (items.length === 0) return null
-  return {
-    kind: 'addConceptSet',
-    conceptSet: {
-      name: args.name,
-      items,
-    },
-  } as unknown as AgentProposal
-}
-
 function buildStandaloneConceptSetProposal(args: StandaloneConceptSetArgs): AgentProposal | null {
   if (!args.name || !args.items?.length) return null
   return {
@@ -771,13 +754,16 @@ export function translateCapability(
 
     case 'add_exit_criterion': {
       const e = args as ExitCriterionArgs
-      const strategyMap: Record<string, string> = {
+      // CIRCE's EndStrategy is polymorphic over DateOffset | CustomEra only, so
+      // there is nothing to map an event-driven exit onto. Anything outside this
+      // map is rejected rather than silently degraded to end-of-observation.
+      const strategyMap: Record<NonNullable<ExitCriterionArgs['strategy']>, ExitStrategy> = {
         end_of_observation: 'CONTINUOUS_OBSERVATION',
         fixed_duration: 'FIXED_DURATION',
         continuous_drug: 'CONTINUOUS_DRUG',
-        custom_event: 'CUSTOM_EVENT',
       }
       const strategy = strategyMap[e.strategy ?? 'end_of_observation']
+      if (!strategy) return null
       const exitCriteria: Record<string, unknown> = { strategy }
       if (typeof e.offset === 'number') exitCriteria.offset = e.offset
       if (e.dateField) exitCriteria.dateField = e.dateField
@@ -806,9 +792,6 @@ export function translateCapability(
         name: typeof args.name === 'string' ? args.name : undefined,
         description: typeof args.description === 'string' ? args.description : undefined,
       } as AgentProposal
-
-    case 'create_concept_set':
-      return buildConceptSetProposal(args as ConceptSetArgs)
 
     case 'create_standalone_concept_set':
       return buildStandaloneConceptSetProposal(args as StandaloneConceptSetArgs)

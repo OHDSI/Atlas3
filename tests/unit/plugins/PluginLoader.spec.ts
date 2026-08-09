@@ -281,6 +281,28 @@ describe('PluginLoader', () => {
       );
     });
 
+    it('should discard a module that resolves after the loading timeout', async () => {
+      let resolveImport: (module: unknown) => void = () => {};
+      mockSystemImport.mockImplementationOnce(
+        () =>
+          new Promise(resolve => {
+            resolveImport = resolve;
+          })
+      );
+
+      const updateStateSpy = vi.spyOn(registry, 'updatePluginState');
+
+      loader.loadPlugin(mockPlugin).catch(() => {});
+
+      await vi.advanceTimersByTimeAsync(30000);
+
+      resolveImport(mockPluginModule);
+      await vi.advanceTimersByTimeAsync(1);
+
+      expect(updateStateSpy).not.toHaveBeenCalledWith('test-plugin', 'loaded');
+      expect(registerApplication).not.toHaveBeenCalled();
+    });
+
     describe('activeWhen function', () => {
       it('should return true when hash path matches plugin path', async () => {
         await loader.loadPlugin(mockPlugin);
@@ -406,7 +428,7 @@ describe('PluginLoader', () => {
       expect(mockSystemImport).toHaveBeenCalledTimes(2);
     });
 
-    it('should use exponential backoff for retries', async () => {
+    it('should use linear backoff for retries', async () => {
       mockSystemImport.mockRejectedValue(new Error('Always fail'));
 
       const setTimeoutSpy = vi.spyOn(global, 'setTimeout');

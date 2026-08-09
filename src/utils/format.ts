@@ -22,9 +22,11 @@ export function formatNumber(
 }
 
 /**
- * Format date according to locale
+ * Format date according to locale.
+ * Distinct from `formatDate` in date-format.ts, which is locale-independent
+ * (fixed MM/DD/YYYY) and renders missing/invalid input as a dash.
  */
-export function formatDate(
+export function formatDateLocalized(
   value: Date | string | number,
   locale: LocaleCode = 'en',
   options?: Intl.DateTimeFormatOptions
@@ -45,7 +47,7 @@ export function formatDate(
  * Format date and time according to locale
  */
 export function formatDateTime(value: Date | string | number, locale: LocaleCode = 'en'): string {
-  return formatDate(value, locale, {
+  return formatDateLocalized(value, locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
   })
@@ -55,7 +57,7 @@ export function formatDateTime(value: Date | string | number, locale: LocaleCode
  * Format date only (no time) according to locale
  */
 export function formatDateOnly(value: Date | string | number, locale: LocaleCode = 'en'): string {
-  return formatDate(value, locale, {
+  return formatDateLocalized(value, locale, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -66,7 +68,7 @@ export function formatDateOnly(value: Date | string | number, locale: LocaleCode
  * Format time only (no date) according to locale
  */
 export function formatTimeOnly(value: Date | string | number, locale: LocaleCode = 'en'): string {
-  return formatDate(value, locale, {
+  return formatDateLocalized(value, locale, {
     hour: '2-digit',
     minute: '2-digit',
   })

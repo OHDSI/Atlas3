@@ -2,6 +2,7 @@
  * Data Source Formatters and Transformers
  */
 import { logger } from '@/utils/logger'
+import { arrayToCsv } from '@/utils/csv'
 import type {
   DashboardAPIResponse,
   DashboardReport,
@@ -14,6 +15,8 @@ import type {
   LineChartData,
   ReportType,
 } from '@/models/datasource.types'
+
+export { formatNumber } from '@/utils/format'
 
 const DAYS_PER_YEAR = 365.25
 
@@ -210,27 +213,13 @@ export function getMetricLabel(reportType: ReportType): string {
  * Export table data to CSV format
  */
 export function exportTableToCSV(rows: PrevalenceTableRow[], metricLabel: string): string {
-  const headers = ['Concept ID', 'Name', 'Person Count', 'Prevalence (%)', metricLabel]
-  const csvRows = [
-    headers.join(','),
-    ...rows.map(row =>
-      [
-        row.conceptId,
-        `"${row.conceptName.replace(/"/g, '""')}"`,
-        row.personCount,
-        row.prevalence.toFixed(2),
-        row.metric.toFixed(2),
-      ].join(',')
-    ),
-  ]
-  return csvRows.join('\n')
-}
-
-/**
- * Format large numbers with commas
- */
-export function formatNumber(num: number): string {
-  return num.toLocaleString('en-US')
+  return arrayToCsv(rows, [
+    { key: 'conceptId', label: 'Concept ID' },
+    { key: 'conceptName', label: 'Name' },
+    { key: 'personCount', label: 'Person Count' },
+    { key: row => row.prevalence.toFixed(2), label: 'Prevalence (%)' },
+    { key: row => row.metric.toFixed(2), label: metricLabel },
+  ])
 }
 
 /**

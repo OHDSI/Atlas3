@@ -4,6 +4,7 @@
  */
 import { ref, computed } from 'vue'
 import { useConceptPickerStore } from '@/stores/concept-picker'
+import { useWebAPIStore } from '@/stores/webapi'
 import type { Concept } from '@/models/concept-set.types'
 import { searchConcepts as searchConceptsApi } from '@/services/concept-search.service'
 import { logger } from '@/utils/logger'
@@ -12,6 +13,7 @@ import { getSourceKey } from '@/config/webapi'
 
 export function useConceptSets() {
   const store = useConceptPickerStore()
+  const webapiStore = useWebAPIStore()
 
   // Local state for selected concepts (for creating/editing concept sets)
   const selectedConcepts = ref<Concept[]>([])
@@ -29,7 +31,7 @@ export function useConceptSets() {
       store.setSearchQuery(query)
       store.setSearchError(null)
 
-      const sourceKey = getSourceKey()
+      const sourceKey = webapiStore.getValidVocabularySource() || getSourceKey()
       const result = await searchConceptsApi(sourceKey, query, { domain })
 
       if (result?.success) {

@@ -49,7 +49,9 @@ export const DARK_DOMAIN_COLORS: Record<string, string> = {
   Type: 'blue-grey-lighten-2',
   Unit: 'orange-lighten-2',
   Currency: 'amber-lighten-1',
-  Metadata: 'grey-lighten-1',
+  // One step below Note, mirroring the light map's grey / grey-darken-1 split
+  // so the two greys stay tellable apart as chips and as timeline series.
+  Metadata: 'grey',
 }
 
 const DEFAULT_COLOR = 'primary'

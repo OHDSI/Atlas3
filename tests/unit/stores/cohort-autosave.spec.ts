@@ -277,8 +277,12 @@ describe('Cohort Store - Auto-Save and Draft Management', () => {
     })
   })
 
-  describe('auto-save on dirty state change', () => {
-    it('should automatically start auto-save when cohort becomes dirty', async () => {
+  describe('auto-save ownership', () => {
+    // The timer is owned by the mounted editor, which pairs startAutoSave in
+    // onMounted with stopAutoSave in onBeforeUnmount. A store that started it
+    // on dirty would leave it running with nobody to stop it whenever the
+    // cohort is mutated while the editor is closed, e.g. by an agent proposal.
+    it('should not start auto-save merely because the cohort became dirty', async () => {
       const cohort: CohortDefinition = {
         name: 'Test Cohort',
         entryEvents: [],
@@ -288,37 +292,22 @@ describe('Cohort Store - Auto-Save and Draft Management', () => {
       }
 
       store.setCohort(cohort)
+      store.markDirty()
 
-      // Wait for next tick to allow watcher to run
-      await vi.advanceTimersByTimeAsync(0)
-
-      store.markDirty() // This should trigger auto-save
-
-      // Wait for watcher to trigger
-      await vi.advanceTimersByTimeAsync(0)
-
-      // Fast-forward 30 seconds
       await vi.advanceTimersByTimeAsync(30000)
 
-      const savedData = sessionStorage.getItem('atlas3_cohort_draft')
-      expect(savedData).toBeTruthy()
+      expect(sessionStorage.getItem('atlas3_cohort_draft')).toBeNull()
     })
 
-    it('should auto-save when adding entry event', async () => {
+    it('should auto-save an added entry event once the editor starts auto-save', async () => {
       store.createNewCohort()
-
-      // Wait for next tick
-      await vi.advanceTimersByTimeAsync(0)
+      store.startAutoSave()
 
       store.addEntryEvent({
         id: '1',
         criteriaType: 'ConditionOccurrence',
       })
 
-      // Wait for watcher to trigger
-      await vi.advanceTimersByTimeAsync(0)
-
-      // Fast-forward 30 seconds
       await vi.advanceTimersByTimeAsync(30000)
 
       const savedData = sessionStorage.getItem('atlas3_cohort_draft')
@@ -326,6 +315,22 @@ describe('Cohort Store - Auto-Save and Draft Management', () => {
 
       const parsed = JSON.parse(savedData!)
       expect(parsed.cohort.entryEvents).toHaveLength(1)
+    })
+
+    it('should stop writing drafts once the editor unmounts', async () => {
+      store.createNewCohort()
+      store.startAutoSave()
+      store.markDirty()
+
+      await vi.advanceTimersByTimeAsync(30000)
+      expect(sessionStorage.getItem('atlas3_cohort_draft')).toBeTruthy()
+
+      store.stopAutoSave()
+      sessionStorage.removeItem('atlas3_cohort_draft')
+      store.markDirty()
+
+      await vi.advanceTimersByTimeAsync(60000)
+      expect(sessionStorage.getItem('atlas3_cohort_draft')).toBeNull()
     })
   })
 

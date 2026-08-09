@@ -83,6 +83,11 @@ export const useAuthStore = defineStore('auth', {
       this.scheduleTokenRefresh()
     },
 
+    /**
+     * The only path that changes the current subject. Every other action
+     * (run-as, exit run-as, clearAuth) routes through here so the permission
+     * cache can never survive a subject change.
+     */
     setUser(user: UserInfo | null) {
       // Clear permission cache BEFORE mutating reactive state. permissionService
       // keys its cache only by the required-permission string, so any value
@@ -116,9 +121,7 @@ export const useAuthStore = defineStore('auth', {
 
     clearAuth() {
       this.token = null
-      this.user = null
-      this.permissions = {}
-      this.entityAccess = emptyEntityAccess()
+      this.setUser(null)
       this.authProvider = null
       this.authClient = null
       this.tokenExpirationDate = null
@@ -136,9 +139,6 @@ export const useAuthStore = defineStore('auth', {
 
       storageManager.clearAll()
       this.cancelRefreshTimer()
-
-      // Clear permission cache on logout
-      permissionService.clearCache()
     },
 
     setRunAsState(targetUser: UserInfo) {
@@ -147,12 +147,12 @@ export const useAuthStore = defineStore('auth', {
         this.originalUser = this.user
       }
       this.isRunningAs = true
-      this.user = targetUser
+      this.setUser(targetUser)
     },
 
     exitRunAsState(originalUser: UserInfo) {
       this.isRunningAs = false
-      this.user = originalUser
+      this.setUser(originalUser)
       this.originalUser = null
     },
 

@@ -38,9 +38,18 @@ import {
   getDeathReport,
 } from '@/services/datasource.service'
 
+// fetchJSON retries every failure with a real setTimeout backoff (500ms + 1000ms).
+// Driving those timers keeps the suite from sleeping 1.5s per failing case.
+async function expectRejection(promise: Promise<unknown>, message?: string): Promise<void> {
+  const assertion = expect(promise).rejects.toThrow(message)
+  await vi.runAllTimersAsync()
+  await assertion
+}
+
 describe('DataSourceService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.useFakeTimers()
   })
 
   afterEach(() => {
@@ -80,7 +89,7 @@ describe('DataSourceService', () => {
         text: () => Promise.resolve('Bad request'),
       })
 
-      await expect(listDataSources()).rejects.toThrow('Unable to load data sources')
+      await expectRejection(listDataSources(), 'Unable to load data sources')
     })
 
     it('should retry on 5xx errors', async () => {
@@ -165,7 +174,7 @@ describe('DataSourceService', () => {
         text: () => Promise.resolve('Not found'),
       })
 
-      await expect(getDashboardReport('TEST')).rejects.toThrow('Unable to load Dashboard report')
+      await expectRejection(getDashboardReport('TEST'), 'Unable to load Dashboard report')
     })
   })
 
@@ -198,7 +207,7 @@ describe('DataSourceService', () => {
         text: () => Promise.resolve('Error'),
       })
 
-      await expect(getDataDensityReport('TEST')).rejects.toThrow('Unable to load Data Density report')
+      await expectRejection(getDataDensityReport('TEST'), 'Unable to load Data Density report')
     })
   })
 
@@ -231,7 +240,7 @@ describe('DataSourceService', () => {
         text: () => Promise.resolve('Error'),
       })
 
-      await expect(getPersonReport('TEST')).rejects.toThrow('Unable to load Person report')
+      await expectRejection(getPersonReport('TEST'), 'Unable to load Person report')
     })
   })
 
@@ -292,7 +301,8 @@ describe('DataSourceService', () => {
         text: () => Promise.resolve('Error'),
       })
 
-      await expect(getClinicalDomainReport('TEST', 'conditionOccurrence')).rejects.toThrow(
+      await expectRejection(
+        getClinicalDomainReport('TEST', 'conditionOccurrence'),
         'Unable to load conditionOccurrence report'
       )
     })
@@ -327,7 +337,8 @@ describe('DataSourceService', () => {
         text: () => Promise.resolve('Error'),
       })
 
-      await expect(getObservationPeriodReport('TEST')).rejects.toThrow(
+      await expectRejection(
+        getObservationPeriodReport('TEST'),
         'Unable to load Observation Period report'
       )
     })
@@ -362,7 +373,7 @@ describe('DataSourceService', () => {
         text: () => Promise.resolve('Error'),
       })
 
-      await expect(getDeathReport('TEST')).rejects.toThrow('Unable to load Death report')
+      await expectRejection(getDeathReport('TEST'), 'Unable to load Death report')
     })
   })
 
@@ -400,16 +411,24 @@ describe('DataSourceService', () => {
     })
 
     it('should not retry on 4xx errors (except 429)', async () => {
-      // Note: The current implementation does retry on 4xx errors due to how error handling works
-      // This test verifies the current behavior - it attempts MAX_RETRY_ATTEMPTS times
       mockFetch.mockResolvedValue({
         ok: false,
         status: 400,
         text: () => Promise.resolve('Bad request'),
       })
 
-      await expect(listDataSources()).rejects.toThrow()
-      // Current behavior: retries on all errors including 4xx (MAX_RETRY_ATTEMPTS = 3)
+      await expectRejection(listDataSources())
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+    })
+
+    it('should retry on 429', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 429,
+        text: () => Promise.resolve('Too many requests'),
+      })
+
+      await expectRejection(listDataSources())
       expect(mockFetch).toHaveBeenCalledTimes(3)
     })
   })

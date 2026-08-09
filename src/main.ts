@@ -14,6 +14,7 @@ import { setupAuthInterceptor } from './services/auth/authInterceptor'
 import { useAuthStore } from './stores/auth'
 import { useLocaleStore } from './stores/locale'
 import { initializePluginFramework } from './plugins/index.ts'
+import type { AuthContext } from './models/PluginModels'
 import { setupGlobalMessageHandler } from './plugins/messaging/HostMessageBus.ts'
 import { setupPythiaBridge } from './plugins/host/pythiaBridge.ts'
 import { initWebMcp } from './plugins/host/webmcp'
@@ -140,12 +141,12 @@ async function initializeApp() {
   // light-to-dark flash on first paint.
   const themeStore = useThemeStore()
   themeStore.initialize(defaultThemeMode ?? 'system')
-  vuetify.theme.global.name.value = themeStore.resolved
+  vuetify.theme.change(themeStore.resolved)
   setChartTheme(themeStore.resolved)
   watch(
     () => themeStore.resolved,
     (mode) => {
-      vuetify.theme.global.name.value = mode
+      vuetify.theme.change(mode)
       setChartTheme(mode)
     },
   )
@@ -179,108 +180,114 @@ loadAppConfig()
 
     // Mount app first, then initialize stores asynchronously
     // This ensures the app is interactive immediately
-    await router
-      .isReady()
-      .then(async () => {
-        // Load configuration early
-        logger.info('Config', 'Loading atlas-config.json...')
-        try {
-          const validationResult = await configLoaderService.loadConfiguration()
-          if (validationResult.valid) {
-            logger.info('Config', 'Configuration loaded successfully')
-          } else if (validationResult.validFilterTypes.length > 0) {
-            logger.warn(
-              'Config',
-              `Configuration loaded with errors (${validationResult.validFilterTypes.length} valid filters)`
-            )
-          } else {
-            logger.error('Config', 'Configuration loading failed - no valid filters')
-          }
+    try {
+      await router.isReady()
+    } catch (error) {
+      logger.error('App', 'Router initialization failed:', error)
+    }
 
-          // Make validation result available globally for UI components
-          app.provide('configValidationResult', validationResult)
-        } catch (error) {
-          logger.error('Config', 'Critical error loading configuration:', error)
+    // Load configuration early
+    logger.info('Config', 'Loading atlas-config.json...')
+    try {
+      const validationResult = await configLoaderService.loadConfiguration()
+      if (validationResult.valid) {
+        logger.info('Config', 'Configuration loaded successfully')
+      } else if (validationResult.validFilterTypes.length > 0) {
+        logger.warn(
+          'Config',
+          `Configuration loaded with errors (${validationResult.validFilterTypes.length} valid filters)`
+        )
+      } else {
+        logger.error('Config', 'Configuration loading failed - no valid filters')
+      }
+
+      // Make validation result available globally for UI components
+      app.provide('configValidationResult', validationResult)
+    } catch (error) {
+      logger.error('Config', 'Critical error loading configuration:', error)
+    }
+
+    // Mount the app first so it's interactive. Everything below runs after the
+    // mount, so nothing here may re-enter it.
+    app.mount('#app')
+
+    // Setup token expiry watcher
+    watch(
+      () => authStore.token,
+      newToken => {
+        if (newToken) {
+          tokenExpiryService.setupExpiryWarning(newToken)
+        } else {
+          tokenExpiryService.cancelExpiryWarning()
+        }
+      },
+      { immediate: true }
+    )
+
+    // Initialize stores asynchronously after mount
+    void Promise.all([
+      authStore.initializeFromStorage().catch(error => {
+        logger.error('Auth', 'Initialization failed:', error)
+      }),
+      localeStore.initialize().catch(error => {
+        logger.error('i18n', 'Initialization failed:', error)
+      }),
+    ]).then(async () => {
+      // The initial route guard ran before user/me resolved (userResolved
+      // was still false), so it deferred the login prompt. Now that the
+      // subject is resolved, prompt if the landing route needs auth and
+      // neither an authenticated nor anonymous subject was found.
+      const currentRoute = router.currentRoute.value
+      if (
+        currentRoute.meta.requiresAuth === true &&
+        !authStore.isAuthenticated &&
+        !authStore.user &&
+        getAuthConfig().userAuthenticationEnabled
+      ) {
+        authStore.openLoginModal()
+      }
+
+      // Initialize plugin framework after auth is ready
+      try {
+        // Import permission service for proper permission checking
+        const { permissionService } = await import('@/services/auth/permissions')
+
+        // Read through to the store on every access: plugins keep this object
+        // across token refreshes, Run As and logout.
+        const currentUser = (): AuthContext['user'] => {
+          const user = authStore.user
+          if (!user) return null
+          return {
+            id: user.login || '',
+            username: user.displayName || user.login || '',
+            email: user.email,
+            permissions: user.permissionIdx ? Object.values(user.permissionIdx).flat() : [],
+          }
         }
 
-        // Mount the app first so it's interactive
-        app.mount('#app')
-
-        // Setup token expiry watcher
-        watch(
-          () => authStore.token,
-          newToken => {
-            if (newToken) {
-              tokenExpiryService.setupExpiryWarning(newToken)
-            } else {
-              tokenExpiryService.cancelExpiryWarning()
-            }
+        const authContext: AuthContext = {
+          get user() {
+            return currentUser()
           },
-          { immediate: true }
-        )
+          get token() {
+            return authStore.token
+          },
+          get isAuthenticated() {
+            return authStore.isAuthenticated
+          },
+          hasPermission(permission: string): boolean {
+            const user = currentUser()
+            if (!user) return false
+            return permissionService.hasPermission(permission, user.permissions)
+          },
+        }
 
-        // Initialize stores asynchronously after mount
-        Promise.all([
-          authStore.initializeFromStorage().catch(error => {
-            logger.error('Auth', 'Initialization failed:', error)
-          }),
-          localeStore.initialize().catch(error => {
-            logger.error('i18n', 'Initialization failed:', error)
-          }),
-        ]).then(async () => {
-          // The initial route guard ran before user/me resolved (userResolved
-          // was still false), so it deferred the login prompt. Now that the
-          // subject is resolved, prompt if the landing route needs auth and
-          // neither an authenticated nor anonymous subject was found.
-          const currentRoute = router.currentRoute.value
-          if (
-            currentRoute.meta.requiresAuth === true &&
-            !authStore.isAuthenticated &&
-            !authStore.user &&
-            getAuthConfig().userAuthenticationEnabled
-          ) {
-            authStore.openLoginModal()
-          }
-
-          // Initialize plugin framework after auth is ready
-          try {
-            // Import permission service for proper permission checking
-            const { permissionService } = await import('@/services/auth/permissions')
-
-            // Extract flat array of permissions from permissionIdx object
-            const userPermissions = authStore.user?.permissionIdx
-              ? Object.values(authStore.user.permissionIdx).flat()
-              : []
-
-            const authContext = {
-              user: authStore.user
-                ? {
-                    id: authStore.user.login || '',
-                    username: authStore.user.displayName || authStore.user.login || '',
-                    email: authStore.user.email,
-                    permissions: userPermissions,
-                  }
-                : null,
-              token: authStore.token,
-              isAuthenticated: authStore.isAuthenticated,
-              hasPermission(permission: string): boolean {
-                if (!this.user) return false
-                return permissionService.hasPermission(permission, this.user.permissions)
-              },
-            }
-
-            await initializePluginFramework(authContext)
-            logger.info('App', 'Plugin framework initialized')
-          } catch (error) {
-            logger.error('App', 'Plugin framework initialization failed:', error)
-          }
-        })
-      })
-      .catch(error => {
-        logger.error('App', 'Router initialization failed:', error)
-        // Mount anyway
-        app.mount('#app')
-      })
+        await initializePluginFramework(authContext)
+        logger.info('App', 'Plugin framework initialized')
+      } catch (error) {
+        logger.error('App', 'Plugin framework initialization failed:', error)
+      }
+    })
   })
   .catch(error => {
     logger.error('App', 'Application initialization failed:', error)

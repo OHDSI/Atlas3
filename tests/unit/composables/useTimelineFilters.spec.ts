@@ -3,6 +3,8 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useProfileStore } from '@/stores/profile'
 import { useTimelineFilters, VUETIFY_COLOR_HEX } from '@/composables/useTimelineFilters'
 import { DOMAIN_COLORS, DARK_DOMAIN_COLORS } from '@/utils/domain-colors'
+import { useThemeStore } from '@/stores/theme'
+import { tokens } from '@/ui/tokens'
 
 const personWith = (records: unknown[], observationPeriods: unknown[] = []) =>
   ({
@@ -126,6 +128,30 @@ describe('useTimelineFilters axis extent + isRange', () => {
 // canvas outside Vuetify's theme pipeline. Without this check, a domain
 // added (or renamed) in one module but not the other silently falls back
 // to VUETIFY_COLOR_HEX.primary — the wrong colour, no test, no type error.
+// Regression: an unknown domain falls back to the 'primary' token, and the hex
+// table only holds the light-mode primary, so dark-mode timelines painted those
+// records in the light blue instead of the dark theme's primary.
+describe('unknown domains fall back to the primary of the active theme', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  const unknownDomainRecord = [
+    { conceptId: 9, conceptName: 'Z', domain: 'Nonsense', startDate: null, endDate: null, startDay: 1, endDay: null },
+  ]
+
+  it('uses the light primary in light mode', () => {
+    useProfileStore().person = personWith(unknownDomainRecord)
+    const { chartSeries } = useTimelineFilters()
+    expect(chartSeries.value[0]?.points[0]?.domainColor).toBe(VUETIFY_COLOR_HEX.primary)
+  })
+
+  it('uses the dark primary in dark mode', () => {
+    useThemeStore().setPreference('dark')
+    useProfileStore().person = personWith(unknownDomainRecord)
+    const { chartSeries } = useTimelineFilters()
+    expect(chartSeries.value[0]?.points[0]?.domainColor).toBe(tokens.colorDark.primary)
+  })
+})
+
 describe('VUETIFY_COLOR_HEX stays in sync with domain-colors', () => {
   const tokens = [...new Set([...Object.values(DOMAIN_COLORS), ...Object.values(DARK_DOMAIN_COLORS)])]
 

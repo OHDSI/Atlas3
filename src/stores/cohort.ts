@@ -3,7 +3,7 @@
  * Manages current cohort definition state
  */
 import { defineStore } from 'pinia'
-import { ref, computed, watch, type WatchStopHandle } from 'vue'
+import { ref, computed } from 'vue'
 import type {
   CohortDefinition,
   CohortEvent,
@@ -53,9 +53,9 @@ export const useCohortStore = defineStore('cohort', () => {
   const validationErrors = ref<ValidationError[]>([])
   const isReadOnly = ref(false)
 
-  // Auto-save timer
+  // Auto-save timer, owned by the mounted CohortBuilder (start on mount, stop on
+  // unmount) so it doesn't keep serialising the cohort on every other screen.
   let autoSaveTimer: ReturnType<typeof setInterval> | null = null
-  let watchHandle: WatchStopHandle | null = null
 
   // Getters
   const hasEntryEvents = computed(() => {
@@ -475,13 +475,6 @@ export const useCohortStore = defineStore('cohort', () => {
     }
   }
 
-  // Watch for changes and trigger auto-save timer
-  watchHandle = watch(isDirty, dirty => {
-    if (dirty) {
-      startAutoSave()
-    }
-  })
-
   // Validation logic
   function validateCohort() {
     const errors: ValidationError[] = []
@@ -628,10 +621,6 @@ export const useCohortStore = defineStore('cohort', () => {
 
   // Cleanup function
   function dispose() {
-    if (watchHandle) {
-      watchHandle()
-      watchHandle = null
-    }
     stopAutoSave()
   }
 

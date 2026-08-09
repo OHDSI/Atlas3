@@ -41,6 +41,7 @@ export const useCharacterizationStore = defineStore('characterization', () => {
   const characterizations = ref<CharacterizationListItem[]>([])
   const currentCharacterization = ref<CharacterizationDefinition | null>(null)
   const loading = ref<boolean>(false)
+  let fetchAllInFlight: Promise<void> | null = null
   const error = ref<string | null>(null)
   const filterTerm = ref<string>('')
 
@@ -79,25 +80,34 @@ export const useCharacterizationStore = defineStore('characterization', () => {
 
   /**
    * Fetch all characterizations.
-   * Skip if already loading to prevent concurrent calls.
+   * Concurrent callers share the in-flight request, so awaiting fetchAll()
+   * always resolves against the response rather than the previous list.
    */
-  async function fetchAll() {
-    if (loading.value) {
-      return
+  async function fetchAll(): Promise<void> {
+    if (fetchAllInFlight) {
+      return fetchAllInFlight
     }
 
     loading.value = true
     error.value = null
 
-    const result = await listCharacterizations()
-    if (result.success) {
-      characterizations.value = result.data
-    } else {
-      error.value = result.error.message
-      logger.error('CharacterizationStore', 'Fetch characterizations error', result.error)
-      characterizations.value = []
-    }
-    loading.value = false
+    fetchAllInFlight = (async () => {
+      try {
+        const result = await listCharacterizations()
+        if (result.success) {
+          characterizations.value = result.data
+        } else {
+          error.value = result.error.message
+          logger.error('CharacterizationStore', 'Fetch characterizations error', result.error)
+          characterizations.value = []
+        }
+      } finally {
+        fetchAllInFlight = null
+        loading.value = false
+      }
+    })()
+
+    return fetchAllInFlight
   }
 
   /**

@@ -1,4 +1,4 @@
-import { ref, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import {
   generateIncidenceRate,
   cancelIncidenceRateGeneration,
@@ -6,28 +6,41 @@ import {
 } from '@/services/incidence-rate.service'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { useDataSourcesStore } from '@/stores/datasources'
+import { useExecutionPolling } from '@/composables/useExecutionPolling'
 import { IR_GENERATION_POLL_MS, IR_TERMINAL_STATUSES } from '@/models/incidence-rate.types'
 import { logger } from '@/utils/logger'
+
+// Callers re-create the composable per action (see IncidenceRateWorkbench) and
+// drop the handle, so the live poller has to be tracked per analysis id or a
+// second run would leave the first one polling forever.
+const activePollers = new Map<number, () => void>()
 
 export function useIncidenceRateGeneration(irId: number) {
   const store = useIncidenceRateStore()
   const ds = useDataSourcesStore()
-  const polling = ref(false)
   const error = ref<string | null>(null)
-  let timer: ReturnType<typeof setInterval> | null = null
-
-  function stopPolling() {
-    if (timer) {
-      clearInterval(timer)
-      timer = null
-    }
-    polling.value = false
-  }
 
   function isAnyRunning(): boolean {
     return Object.values(store.executionInfoBySourceKey).some(
       info => !IR_TERMINAL_STATUSES.has(info.executionInfo.status)
     )
+  }
+
+  const poller = useExecutionPolling<{ done: boolean }>({
+    intervalMs: IR_GENERATION_POLL_MS,
+    immediate: false,
+    fetcher: async () => {
+      await pollOnce()
+      return { done: !isAnyRunning() }
+    },
+    isTerminal: item => item.done,
+  })
+
+  function stopPolling() {
+    poller.stop()
+    if (activePollers.get(irId) === poller.stop) {
+      activePollers.delete(irId)
+    }
   }
 
   async function pollOnce() {
@@ -47,13 +60,13 @@ export function useIncidenceRateGeneration(irId: number) {
       const sourceKey = idToKey.get(numId) ?? String(numId)
       store.setExecutionInfo(sourceKey, info)
     }
-    if (!isAnyRunning()) stopPolling()
   }
 
   function startPolling() {
-    if (polling.value) return
-    polling.value = true
-    timer = setInterval(pollOnce, IR_GENERATION_POLL_MS)
+    if (poller.isPolling.value) return
+    activePollers.get(irId)?.()
+    activePollers.set(irId, poller.stop)
+    void poller.start()
   }
 
   async function start(sourceKey: string): Promise<boolean> {
@@ -79,12 +92,5 @@ export function useIncidenceRateGeneration(irId: number) {
     return true
   }
 
-  // Initial fetch on mount-equivalent: caller may invoke pollOnce() directly.
-  try {
-    onUnmounted(stopPolling)
-  } catch {
-    /* outside component */
-  }
-
-  return { polling, error, start, cancel, pollOnce, startPolling, stopPolling }
+  return { polling: poller.isPolling, error, start, cancel, pollOnce, startPolling, stopPolling }
 }

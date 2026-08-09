@@ -1,18 +1,23 @@
 import { ref, computed, watch, type Ref, type ComputedRef, onUnmounted } from 'vue'
 import type {
+  CensorWindow,
   CohortDefinition,
   CohortEvent,
+  CollapseSettings,
   InclusionRule,
   CriteriaGroup,
   ExitCriteria,
+  ObservationPeriod,
   ConceptSetReference,
   QualifyingLimit,
+  Tag,
 } from '@/models/cohort.types'
 import type { ValidationWarning, ValidationSeverity } from '@/models/cohort-validation.types'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 import { validateCohortDefinition } from '@/services/cohort-definition.service'
 import { convertInternalToAtlas } from '@/services/atlas-converter'
 import { getConceptSetById } from '@/services/concept-set.service'
+import { hasNumericConceptSetId } from '@/utils/concept-set-id'
 import { logger } from '@/utils/logger'
 
 export interface CohortValidationOptions {
@@ -32,6 +37,10 @@ export interface CohortValidationOptions {
   exitCriteria: Ref<ExitCriteria>
   /** Censoring criteria ref */
   censoringCriteria: Ref<CohortEvent[]>
+  /** Censor window ref */
+  censorWindow?: Ref<CensorWindow | null | undefined>
+  /** Collapse settings ref */
+  collapseSettings?: Ref<CollapseSettings | undefined>
   /** Observation period ref */
   observationPeriod: Ref<{ priorDays: number; postDays: number }>
   /** Qualifying limit ref */
@@ -111,6 +120,77 @@ export function extractConceptSets(
   return Array.from(conceptSetsMap.values())
 }
 
+/** Editor state the cohort definition is assembled from. */
+export interface CohortEditorState {
+  id?: number
+  name: string
+  description?: string
+  tags?: Tag[]
+  entryEvents: CohortEvent[]
+  additionalCriteria?: CriteriaGroup
+  inclusionRules: InclusionRule[]
+  exitCriteria?: ExitCriteria
+  censorWindow?: CensorWindow | null
+  collapseSettings?: CollapseSettings
+  censoringCriteria?: CohortEvent[]
+  observationPeriod?: ObservationPeriod
+  qualifyingLimit: QualifyingLimit
+  primaryCriteriaLimit?: QualifyingLimit
+  inclusionQualifyingLimit?: QualifyingLimit
+  conceptSets: ConceptSetReference[]
+}
+
+/**
+ * The single assembly point for a CohortDefinition built from editor state.
+ * Validation, the live-preview expression and save all go through this, so a
+ * cohort can never be validated against a different field set than the one
+ * that is converted and sent to the server.
+ */
+export function assembleCohortDefinition(state: CohortEditorState): CohortDefinition {
+  return {
+    id: state.id,
+    name: state.name,
+    description: state.description,
+    tags: state.tags,
+    entryEvents: state.entryEvents,
+    inclusionRules: state.inclusionRules,
+    exitCriteria: state.exitCriteria,
+    censorWindow: state.censorWindow ?? undefined,
+    collapseSettings: state.collapseSettings,
+    censoringCriteria: state.censoringCriteria,
+    observationPeriod: state.observationPeriod,
+    qualifyingLimit: state.qualifyingLimit,
+    primaryCriteriaLimit: state.primaryCriteriaLimit,
+    inclusionQualifyingLimit: state.inclusionQualifyingLimit,
+    conceptSets: state.conceptSets,
+    ...(state.additionalCriteria !== undefined ? { additionalCriteria: state.additionalCriteria } : {}),
+  }
+}
+
+export async function hydrateConceptSetItems(
+  refs: ConceptSetReference[]
+): Promise<ConceptSetReference[]> {
+  return Promise.all(
+    refs.map(async ref => {
+      if (ref.items && ref.items.length > 0) {
+        return ref
+      }
+
+      if (hasNumericConceptSetId(ref)) {
+        const fullConceptSet = await getConceptSetById(ref.id)
+        if (fullConceptSet && fullConceptSet.items) {
+          return {
+            ...ref,
+            items: fullConceptSet.items as ConceptSetItem[],
+          }
+        }
+      }
+
+      return ref
+    })
+  )
+}
+
 export function useCohortValidation(options: CohortValidationOptions): CohortValidationReturn {
   const {
     cohortName,
@@ -127,10 +207,13 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     debounceDelay = 2000,
   } = options
   const primaryCriteriaLimit = options.primaryCriteriaLimit ?? ref<QualifyingLimit | undefined>(undefined)
+  const censorWindow = options.censorWindow ?? ref<CensorWindow | null | undefined>(undefined)
+  const collapseSettings = options.collapseSettings ?? ref<CollapseSettings | undefined>(undefined)
 
   const validationWarnings = ref<ValidationWarning[]>([])
   const _isValidatingInternal = ref(false)
   let _isValidatingFlag = false
+  let revalidationQueued = false
   let validationDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
   const isValidating = computed(() => _isValidatingInternal.value)
@@ -181,28 +264,9 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
       _isValidatingFlag = true
       _isValidatingInternal.value = true
 
-      const conceptSetsWithItems: ConceptSetReference[] = await Promise.all(
-        usedConceptSets.value.map(async ref => {
-          if (ref.items && ref.items.length > 0) {
-            return ref
-          }
+      const conceptSetsWithItems = await hydrateConceptSetItems(usedConceptSets.value)
 
-          // Avoid a falsy check: id 0 is a valid concept-set id.
-          if (ref.id !== undefined && ref.id !== null) {
-            const fullConceptSet = await getConceptSetById(ref.id)
-            if (fullConceptSet && fullConceptSet.items) {
-              return {
-                ...ref,
-                items: fullConceptSet.items as ConceptSetItem[],
-              }
-            }
-          }
-
-          return ref
-        })
-      )
-
-      const cohortDef: CohortDefinition = {
+      const cohortDef = assembleCohortDefinition({
         id: cohortId.value ?? undefined,
         name: cohortName.value,
         description: cohortDescription.value,
@@ -210,12 +274,15 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
         additionalCriteria: additionalCriteria.value,
         inclusionRules: inclusionRules.value,
         exitCriteria: exitCriteria.value,
+        censorWindow: censorWindow.value,
+        collapseSettings: collapseSettings.value,
+        censoringCriteria: censoringCriteria.value,
         observationPeriod: observationPeriod.value,
         qualifyingLimit: qualifyingLimit.value,
         primaryCriteriaLimit: primaryCriteriaLimit.value,
         inclusionQualifyingLimit: inclusionQualifyingLimit.value,
         conceptSets: conceptSetsWithItems,
-      }
+      })
 
       const atlasExpression = convertInternalToAtlas(cohortDef)
 
@@ -240,24 +307,39 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     } finally {
       _isValidatingFlag = false
       _isValidatingInternal.value = false
+      // Edits that landed while the request was in flight validated nothing:
+      // re-run once for the state they produced. validateCohort writes only
+      // `validationWarnings`, which nothing here watches, so the follow-up run
+      // cannot queue another one by itself.
+      if (revalidationQueued) {
+        revalidationQueued = false
+        scheduleValidation()
+      }
     }
   }
 
-  function triggerValidation() {
-    if (_isValidatingFlag) {
-      return
-    }
-
+  function scheduleValidation() {
     if (validationDebounceTimer) {
       clearTimeout(validationDebounceTimer)
     }
 
     validationDebounceTimer = setTimeout(() => {
+      validationDebounceTimer = null
       validateCohort()
     }, debounceDelay)
   }
 
+  function triggerValidation() {
+    if (_isValidatingFlag) {
+      revalidationQueued = true
+      return
+    }
+
+    scheduleValidation()
+  }
+
   function cancelValidation() {
+    revalidationQueued = false
     if (validationDebounceTimer) {
       clearTimeout(validationDebounceTimer)
       validationDebounceTimer = null
@@ -276,6 +358,8 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
       inclusionRules,
       exitCriteria,
       censoringCriteria,
+      censorWindow,
+      collapseSettings,
       observationPeriod,
       qualifyingLimit,
       primaryCriteriaLimit,

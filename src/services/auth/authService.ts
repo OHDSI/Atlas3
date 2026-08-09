@@ -239,14 +239,13 @@ class AuthService implements IAuthService {
       const authClient = storageManager.getAuthClient()
       const logoutUrl = storageManager.getLogoutUrl()
       const token = authStore.token
+      const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
 
       // First, invalidate the JWT on WebAPI
       logger.info('Auth', 'Invalidating JWT on WebAPI')
       await fetch(`${baseUrl}user/logout`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: authHeaders,
       }).catch(e => logger.warn('Auth', 'WebAPI logout call failed', e))
 
       if (authClient === 'SAML') {
@@ -254,9 +253,7 @@ class AuthService implements IAuthService {
         logger.info('Auth', 'Performing SAML Single Logout')
         const response = await fetch(`${baseUrl}user/logout/saml`, {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: authHeaders,
         })
 
         authStore.clearAuth()

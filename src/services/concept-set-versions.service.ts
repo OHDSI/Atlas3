@@ -4,14 +4,33 @@
  */
 import type { Version, CommentUpdatePayload } from '@/components/versions/types'
 import type { ConceptSet, ConceptSetItem } from '@/models/concept-set.types'
-import { versionSchema, versionArraySchema, commentUpdateSchema } from '@/components/versions/schemas'
+import { versionSchema, commentUpdateSchema } from '@/components/versions/schemas'
+import { createVersionsService } from '@/services/versions-service.factory'
 import { mapExpressionItemsFromAPI, type ConceptSetAPIExpression } from '@/utils/api-mappers'
 import { z } from 'zod'
 import { logger } from '@/utils/logger'
-import { httpGet, httpPut } from '@/services/http-client'
+import { httpGet } from '@/services/http-client'
 
-// Use pass-through validation for concept set data
+// entityDTO is the WebAPI ConceptSetDTO, whose `createdBy`/`modifiedBy` are
+// user objects; ConceptSetSchema in src/models types them as strings, so it
+// would reject a valid payload.
 const conceptSetSchema = z.any()
+
+const LOG_TAG = 'ConceptSetVersionsService'
+
+const service = createVersionsService({
+  pathPrefix: '/conceptset',
+  logTag: LOG_TAG,
+  entitySchema: conceptSetSchema,
+  copySchema: conceptSetSchema,
+  payloadSchema: commentUpdateSchema,
+  messages: {
+    invalidList: 'Failed to validate version data',
+    invalidAsset: 'Failed to validate version data',
+    invalidUpdate: 'Failed to validate updated version data',
+    invalidCopy: 'Failed to validate created concept set',
+  },
+})
 
 /**
  * ConceptSetVersionFullDTO (WebAPI) puts `items` alongside `entityDTO`, not
@@ -71,25 +90,8 @@ export interface ConceptSetVersionedAsset {
  * @param conceptSetId Concept set ID
  * @returns Array of versions ordered by version number descending
  */
-export async function getVersions(conceptSetId: number): Promise<Version[]> {
-  try {
-    const data = await httpGet<unknown>(`/conceptset/${conceptSetId}/version/`)
-    const parsed = versionArraySchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error('ConceptSetVersionsService', 'Version list validation error', parsed.error)
-      throw new Error('Failed to validate version data')
-    }
-
-    return parsed.data
-  } catch (error) {
-    logger.error(
-      'ConceptSetVersionsService',
-      `Failed to fetch versions for concept set ${conceptSetId}`,
-      error
-    )
-    throw error
-  }
+export function getVersions(conceptSetId: number): Promise<Version[]> {
+  return service.getVersions(conceptSetId)
 }
 
 /**
@@ -108,7 +110,7 @@ export async function getVersion(
     const parsed = conceptSetVersionedAssetSchema.safeParse(data)
 
     if (!parsed.success) {
-      logger.error('ConceptSetVersionsService', 'Versioned asset validation error', parsed.error)
+      logger.error(LOG_TAG, 'Versioned asset validation error', parsed.error)
       throw new Error('Failed to validate version data')
     }
 
@@ -117,7 +119,7 @@ export async function getVersion(
 
     if (!parsedExpression.success) {
       logger.error(
-        'ConceptSetVersionsService',
+        LOG_TAG,
         'Version expression validation error',
         parsedExpression.error
       )
@@ -134,7 +136,7 @@ export async function getVersion(
     const siblingItemCount = parsed.data.items?.length ?? 0
     if (siblingItemCount > 0 && mappedItems.length === 0) {
       logger.error(
-        'ConceptSetVersionsService',
+        LOG_TAG,
         `Version ${versionNumber} reports ${siblingItemCount} sibling items but the expression endpoint mapped none`
       )
       throw new Error('Failed to validate version items')
@@ -147,7 +149,7 @@ export async function getVersion(
     }
   } catch (error) {
     logger.error(
-      'ConceptSetVersionsService',
+      LOG_TAG,
       `Failed to fetch version ${versionNumber} for concept set ${conceptSetId}:`,
       error
     )
@@ -173,7 +175,7 @@ export async function getVersionExpression(
     return data
   } catch (error) {
     logger.error(
-      'ConceptSetVersionsService',
+      LOG_TAG,
       `Failed to fetch expression for version ${versionNumber} of concept set ${conceptSetId}:`,
       error
     )
@@ -188,36 +190,12 @@ export async function getVersionExpression(
  * @param payload Comment and archived status
  * @returns Updated version metadata
  */
-export async function updateVersion(
+export function updateVersion(
   conceptSetId: number,
   versionNumber: number,
   payload: CommentUpdatePayload
 ): Promise<Version> {
-  try {
-    // Validate payload
-    const validatedPayload = commentUpdateSchema.parse(payload)
-
-    const data = await httpPut<unknown>(
-      `/conceptset/${conceptSetId}/version/${versionNumber}`,
-      validatedPayload
-    )
-
-    const parsed = versionSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error('ConceptSetVersionsService', 'Version validation error', parsed.error)
-      throw new Error('Failed to validate updated version data')
-    }
-
-    return parsed.data
-  } catch (error) {
-    logger.error(
-      'ConceptSetVersionsService',
-      `Failed to update version ${versionNumber} for concept set ${conceptSetId}:`,
-      error
-    )
-    throw error
-  }
+  return service.updateVersion(conceptSetId, versionNumber, payload)
 }
 
 /**
@@ -226,29 +204,6 @@ export async function updateVersion(
  * @param versionNumber Version number to copy from
  * @returns Newly created concept set
  */
-export async function copyVersion(
-  conceptSetId: number,
-  versionNumber: number
-): Promise<ConceptSet> {
-  try {
-    const data = await httpPut<unknown>(
-      `/conceptset/${conceptSetId}/version/${versionNumber}/createAsset`
-    )
-
-    const parsed = conceptSetSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error('ConceptSetVersionsService', 'Concept set validation error', parsed.error)
-      throw new Error('Failed to validate created concept set')
-    }
-
-    return parsed.data
-  } catch (error) {
-    logger.error(
-      'ConceptSetVersionsService',
-      `Failed to copy version ${versionNumber} for concept set ${conceptSetId}:`,
-      error
-    )
-    throw error
-  }
+export function copyVersion(conceptSetId: number, versionNumber: number): Promise<ConceptSet> {
+  return service.copyVersion<ConceptSet>(conceptSetId, versionNumber)
 }

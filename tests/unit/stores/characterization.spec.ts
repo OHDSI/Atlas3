@@ -160,13 +160,14 @@ describe('Characterization Store', () => {
       expect(store.loading).toBe(true)
     })
 
-    it('skips when already loading', async () => {
+    it('shares one request between concurrent callers', async () => {
       const store = useCharacterizationStore()
-      store.loading = true
+      vi.mocked(listCharacterizations).mockResolvedValue(success(mockList))
 
-      await store.fetchAll()
+      await Promise.all([store.fetchAll(), store.fetchAll()])
 
-      expect(listCharacterizations).not.toHaveBeenCalled()
+      expect(listCharacterizations).toHaveBeenCalledTimes(1)
+      expect(store.characterizations).toEqual(mockList)
     })
 
     it('captures error and resets list on failure', async () => {
