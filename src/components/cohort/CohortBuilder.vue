@@ -2298,6 +2298,20 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
 
     successMessage.value = tv('components.cohortBuilder.saveSuccess', 'Cohort saved successfully')
     showSuccess.value = true
+
+    // Adopt the new id in the route. `cohortId` is derived from props.id, so a
+    // cohort saved from /cohorts/new stayed id-less in the editor: the
+    // Generation panel kept offering "Save cohort to generate" for a cohort
+    // that had just been saved, with no way to generate it without navigating
+    // away and back. Navigation must never fail the save — the cohort is
+    // already persisted by this point.
+    if (!props.id && saved.data.id) {
+      try {
+        await router.replace(`/cohorts/${saved.data.id}`)
+      } catch (navErr) {
+        logger.warn('CohortBuilder', 'Saved, but could not open the saved cohort', navErr)
+      }
+    }
     return { id: saved.data.id, name: cohortDefinition.name }
   } catch (error) {
     logger.error('CohortBuilder', 'Failed to save cohort', error)

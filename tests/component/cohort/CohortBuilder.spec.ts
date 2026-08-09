@@ -2116,4 +2116,27 @@ describe('CohortBuilder', () => {
     expect(setup.entryEvents).toBe(entryEventsBefore)
     expect(setup.showJsonDialog).toBe(true)
   })
+
+  // Regression: `cohortId` is derived from the route param, so a cohort saved
+  // from /cohorts/new left the editor id-less — the Generation panel kept
+  // offering "Save cohort to generate" for a cohort that had just been saved,
+  // and it could not be generated without navigating away and back.
+  it('opens the saved cohort after saving a new one', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Adults on ibuprofen'
+    vm.entryEvents = [{ id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Ibuprofen', items: [] } }]
+    await wrapper.vm.$nextTick()
+
+    const pushed: string[] = []
+    const spy = vi.spyOn(router, 'replace').mockImplementation(async (to: any) => {
+      pushed.push(typeof to === 'string' ? to : JSON.stringify(to))
+    })
+
+    await vm.handleSave()
+    spy.mockRestore()
+
+    expect(pushed.some(p => /\/cohorts\/\d+/.test(p))).toBe(true)
+  })
 })
