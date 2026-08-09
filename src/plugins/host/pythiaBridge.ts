@@ -24,7 +24,7 @@ import type {
   UpdatePathwayPayload,
 } from '@/models/agent.types'
 import router from '@/router'
-import { createConceptSet } from '@/services/concept-set.service'
+import { createConceptSet, getConceptSetById } from '@/services/concept-set.service'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
 import { createCharacterization } from '@/services/characterization.service'
 import { createPathway, generatePathway } from '@/services/pathway.service'
@@ -41,6 +41,7 @@ import type { Pathway } from '@/models/pathway.types'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
 import { logger } from '@/utils/logger'
 import { applyCapability, type ApplyResult } from './capabilities/apply'
+import { domainToCriteriaType } from './capabilities/translate'
 
 const PLUGIN_ID = 'pythia-plugin'
 
@@ -131,6 +132,8 @@ async function applyProposalInner(
       return await handleSaveCohort(proposal)
     case 'createStandaloneConceptSet':
       return await handleCreateStandaloneConceptSet(proposal.conceptSet)
+    case 'useConceptSet':
+      return await handleUseConceptSet(proposal.payload)
     case 'createFeatureAnalysis':
       return await handleCreateFeatureAnalysis(proposal.payload)
     case 'createCharacterization':
@@ -217,6 +220,83 @@ async function ensureOnCohortRoute() {
 // survived any navigation, so opening an existing cohort and asking the agent
 // to change its entry event wiped the cohort the user had just opened.
 let savedCohortId: number | null = null
+
+// Reuse a concept set the user already curated instead of rebuilding it concept
+// by concept. Circe resolves criteria against the sets embedded in the cohort
+// expression, so "reuse" means copying the saved set's concepts in — keeping its
+// name and id so the cohort still reads as that set.
+async function handleUseConceptSet(payload: {
+  conceptSetId: number
+  group?: 'entry' | 'inclusion' | 'exclusion'
+  name?: string
+}): Promise<{ id?: number | string; name?: string } | void> {
+  if (payload?.conceptSetId === undefined) return
+  let set
+  try {
+    set = await getConceptSetById(payload.conceptSetId)
+  } catch (err) {
+    logger.error('pythiaBridge', 'useConceptSet: fetch failed', err)
+    showSnackbar(`Could not read concept set ${payload.conceptSetId}`, 'error')
+    return
+  }
+  // getConceptSetById returns the set with its concepts flattened onto `items`
+  // in the editor's internal shape, which is what the cohort store expects.
+  const items = (set?.items ?? []) as unknown as Array<Record<string, unknown>>
+  if (!set || items.length === 0) {
+    // An empty set would silently match nobody, so refuse rather than attach it.
+    showSnackbar(
+      set ? `Concept set "${set.name}" has no concepts` : `Concept set ${payload.conceptSetId} not found`,
+      'error',
+    )
+    return
+  }
+
+  const first = items[0] as Record<string, unknown>
+  const nested = (first.concept ?? {}) as Record<string, unknown>
+  const domain = String(first.domainId ?? nested.DOMAIN_ID ?? '')
+  const group = payload.group ?? 'inclusion'
+  const conceptSet = {
+    id: set.id,
+    name: set.name,
+    conceptCount: items.length,
+    items,
+  }
+  const event: Record<string, unknown> = {
+    id: `use-${set.id}-${Date.now()}`,
+    criteriaType: domainToCriteriaType(domain),
+    conceptSet,
+  }
+
+  const cohortStore = useCohortStore()
+  if (!cohortStore.currentCohort) cohortStore.requestNewCohort()
+
+  if (group === 'entry') {
+    cohortStore.applyProposal({ kind: 'addEntryEvent', event } as never)
+  } else {
+    const excluded = group === 'exclusion'
+    cohortStore.applyProposal({
+      kind: 'addInclusionRule',
+      rule: {
+        id: `use-rule-${set.id}-${Date.now()}`,
+        name: payload.name || (excluded ? `Exclude: ${set.name}` : set.name),
+        criteriaGroups: [
+          {
+            id: `use-group-${set.id}`,
+            logicType: 'ALL',
+            events: [
+              excluded
+                ? { ...event, cardinality: { type: 'EXACTLY', count: 0, countingMethod: 'ALL' } }
+                : event,
+            ],
+          },
+        ],
+      },
+    } as never)
+  }
+  await ensureOnCohortRoute()
+  showSnackbar(`Using concept set "${set.name}" (${items.length} concepts)`, 'success')
+  return { id: set.id, name: set.name }
+}
 
 async function handleSaveCohort(
   proposal: { name?: string; description?: string } = {}
@@ -325,6 +405,9 @@ async function handleCreateStandaloneConceptSet(
         id: created.id as number,
         name: created.name,
         conceptCount: created.items?.length ?? 0,
+        // Without the concepts themselves the set lands in the cohort empty, so
+        // anything referencing it matches nobody while the cohort still builds.
+        items: created.items ?? [],
       },
     } as never)
     await ensureOnCohortRoute()

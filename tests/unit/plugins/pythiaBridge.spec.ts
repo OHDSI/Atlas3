@@ -10,6 +10,7 @@ vi.mock('@/router', () => ({
 
 vi.mock('@/services/concept-set.service', () => ({
   createConceptSet: vi.fn(),
+  getConceptSetById: vi.fn(),
 }))
 
 vi.mock('@/services/feature-analysis.service', () => ({
@@ -30,7 +31,7 @@ vi.mock('@/services/incidence-rate.service', () => ({
 }))
 
 import router from '@/router'
-import { createConceptSet } from '@/services/concept-set.service'
+import { createConceptSet, getConceptSetById } from '@/services/concept-set.service'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
 import { createCharacterization } from '@/services/characterization.service'
 import { createPathway, generatePathway } from '@/services/pathway.service'
@@ -771,5 +772,146 @@ describe('proposals never discard work that is already open', () => {
 
     expect(store.currentCohort).toBeTruthy()
     expect(store.currentCohort?.observationPeriod?.priorDays).toBe(90)
+  })
+})
+
+// Reuse beats rebuilding: a set the user curated carries their inclusions and
+// exclusions, and a near-duplicate assembled concept by concept drifts from it.
+describe('use_concept_set', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    setupPythiaBridge()
+    createHostMessageBus('pythia-plugin')
+    vi.mocked(getConceptSetById).mockReset()
+    ;(router as unknown as { currentRoute: { value: { name: string; params: object } } })
+      .currentRoute.value = { name: 'cohort-new', params: {} }
+  })
+
+  const statins = {
+    id: 7,
+    name: 'Statins',
+    items: [
+      { conceptId: 1539403, conceptName: 'Simvastatin', domainId: 'Drug' },
+      { conceptId: 1545958, conceptName: 'Atorvastatin', domainId: 'Drug' },
+    ],
+  }
+
+  it('adds an inclusion rule carrying the saved set and its concepts', async () => {
+    vi.mocked(getConceptSetById).mockResolvedValue(statins as never)
+    const store = useCohortStore()
+    store.createNewCohort()
+
+    await applyProposalDirect({
+      kind: 'useConceptSet',
+      payload: { conceptSetId: 7, group: 'inclusion' },
+    } as never)
+
+    expect(getConceptSetById).toHaveBeenCalledWith(7)
+    const rules = store.currentCohort!.inclusionRules
+    expect(rules).toHaveLength(1)
+    expect(rules[0].name).toBe('Statins')
+    // The concepts must travel with it — circe resolves criteria against the
+    // sets embedded in the cohort, so an id alone matches nobody.
+    const set = store.currentCohort!.conceptSets.find(c => c.name === 'Statins')
+    expect(set?.items).toHaveLength(2)
+  })
+
+  it('encodes an exclusion group at zero cardinality', async () => {
+    vi.mocked(getConceptSetById).mockResolvedValue(statins as never)
+    const store = useCohortStore()
+    store.createNewCohort()
+
+    await applyProposalDirect({
+      kind: 'useConceptSet',
+      payload: { conceptSetId: 7, group: 'exclusion' },
+    } as never)
+
+    const rule = store.currentCohort!.inclusionRules[0] as unknown as {
+      name: string
+      criteriaGroups: Array<{ events: Array<{ cardinality?: { count: number } }> }>
+    }
+    expect(rule.name).toMatch(/^Exclude/)
+    expect(rule.criteriaGroups[0].events[0].cardinality).toMatchObject({ count: 0 })
+  })
+
+  it('uses the set as the entry event when asked', async () => {
+    vi.mocked(getConceptSetById).mockResolvedValue(statins as never)
+    const store = useCohortStore()
+    store.createNewCohort()
+
+    await applyProposalDirect({
+      kind: 'useConceptSet',
+      payload: { conceptSetId: 7, group: 'entry' },
+    } as never)
+
+    expect(store.currentCohort?.entryEvents).toHaveLength(1)
+    expect(store.currentCohort?.inclusionRules).toHaveLength(0)
+  })
+
+  it('refuses an empty set rather than attaching one that matches nobody', async () => {
+    vi.mocked(getConceptSetById).mockResolvedValue({ id: 9, name: 'Empty', items: [] } as never)
+    const store = useCohortStore()
+    store.createNewCohort()
+    const danger = vi.spyOn(useNotifications(), 'danger')
+
+    await applyProposalDirect({
+      kind: 'useConceptSet',
+      payload: { conceptSetId: 9, group: 'inclusion' },
+    } as never)
+
+    expect(store.currentCohort?.inclusionRules).toHaveLength(0)
+    expect(danger).toHaveBeenCalledWith(expect.stringContaining('no concepts'))
+  })
+
+  it('reports a set that cannot be read instead of failing silently', async () => {
+    vi.mocked(getConceptSetById).mockRejectedValue(new Error('gone'))
+    const store = useCohortStore()
+    store.createNewCohort()
+    const danger = vi.spyOn(useNotifications(), 'danger')
+
+    await applyProposalDirect({
+      kind: 'useConceptSet',
+      payload: { conceptSetId: 404, group: 'inclusion' },
+    } as never)
+
+    expect(danger).toHaveBeenCalledWith(expect.stringContaining('Could not read concept set'))
+    expect(store.currentCohort?.inclusionRules).toHaveLength(0)
+  })
+})
+
+// A set created for the cohort in front of the user is attached to it. It has
+// to carry its concepts: attaching id and name alone left an empty set in the
+// cohort, so anything referencing it matched nobody while the cohort still
+// built and generated.
+describe('createStandaloneConceptSet attaches the concepts, not just the name', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    setupPythiaBridge()
+    createHostMessageBus('pythia-plugin')
+    vi.mocked(createConceptSet).mockReset()
+    ;(router as unknown as { currentRoute: { value: { name: string; params: object } } })
+      .currentRoute.value = { name: 'cohort-new', params: {} }
+  })
+
+  it('carries the created set items into the cohort', async () => {
+    vi.mocked(createConceptSet).mockResolvedValue({
+      id: 11,
+      name: 'Statins',
+      items: [{ conceptId: 1539403, conceptName: 'Simvastatin', domainId: 'Drug' }],
+    } as never)
+    const store = useCohortStore()
+    store.createNewCohort()
+
+    await applyProposalDirect({
+      kind: 'createStandaloneConceptSet',
+      conceptSet: {
+        name: 'Statins',
+        items: [{ conceptId: 1539403, conceptName: 'Simvastatin', domain: 'Drug' }],
+      },
+    } as never)
+
+    const attached = store.currentCohort!.conceptSets.find(c => c.name === 'Statins')
+    expect(attached).toBeTruthy()
+    expect(attached?.items).toHaveLength(1)
   })
 })

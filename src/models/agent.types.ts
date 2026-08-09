@@ -146,6 +146,12 @@ export type AgentProposal =
   | { kind: 'addEntryEvent'; event: CohortEvent; replace?: boolean }
   | { kind: 'removeInclusionRule'; match: { id?: string | number; name?: string } }
   | { kind: 'removeEntryEvent'; match: { conceptId?: number; conceptName?: string } }
+  // Handled by the bridge, not the store: the saved set's concepts have to be
+  // fetched before a criterion can carry them.
+  | {
+      kind: 'useConceptSet'
+      payload: { conceptSetId: number; group?: 'entry' | 'inclusion' | 'exclusion'; name?: string }
+    }
   | { kind: 'addInclusionRule'; rule: InclusionRule }
   | { kind: 'addConceptSet'; conceptSet: ConceptSetReference }
   | { kind: 'setObservationPeriod'; observationPeriod: ObservationPeriod }

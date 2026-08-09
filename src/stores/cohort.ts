@@ -302,6 +302,10 @@ export const useCohortStore = defineStore('cohort', () => {
       case 'updateCharacterization':
       case 'updatePathway':
       case 'updateIncidenceRate':
+      // useConceptSet is bridge-handled too: it fetches the saved set's
+      // concepts and then applies an ordinary criterion proposal, so the store
+      // never sees this kind.
+      case 'useConceptSet': // eslint-disable-line no-fallthrough
         return
       default: {
         const exhaustive: never = proposal

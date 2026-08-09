@@ -159,7 +159,7 @@ function uid(): string {
 // occurrence count is EXACTLY 0. Shared by every exclusion path below.
 const ZERO_OCCURRENCE_CARDINALITY = { type: 'EXACTLY', count: 0, countingMethod: 'ALL' } as const
 
-function domainToCriteriaType(domain: string | undefined): string {
+export function domainToCriteriaType(domain: string | undefined): string {
   switch (domain) {
     case 'Condition': return 'ConditionOccurrence'
     case 'Drug': return 'DrugExposure'
@@ -619,6 +619,16 @@ export function translateCapability(
             { id: uid(), logicType, events },
           ],
         },
+      } as unknown as AgentProposal
+    }
+
+    case 'use_concept_set': {
+      const a = args as { conceptSetId?: number; group?: string; name?: string }
+      if (a.conceptSetId === undefined) return null
+      const group = a.group === 'entry' || a.group === 'exclusion' ? a.group : 'inclusion'
+      return {
+        kind: 'useConceptSet',
+        payload: { conceptSetId: Number(a.conceptSetId), group, name: a.name },
       } as unknown as AgentProposal
     }
 

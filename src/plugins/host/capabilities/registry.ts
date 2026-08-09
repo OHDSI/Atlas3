@@ -78,6 +78,20 @@ export const CAPABILITIES: Capability[] = [
   },
 
   {
+    name: 'use_concept_set',
+    description: "Use an EXISTING saved concept set in the cohort being built, by its id from search_existing_concept_sets. Prefer this over rebuilding the same set concept by concept: it reuses the definition the user already curated, and stays in step with it. The host reads the saved set's concepts and adds the criterion. Use group 'entry' for a qualifying event, 'inclusion' to require it, 'exclusion' to require its absence.",
+    schema: {
+      type: 'object',
+      properties: {
+        conceptSetId: { type: 'number', description: 'Id of the saved concept set (from search_existing_concept_sets).' },
+        group: { type: 'string', enum: ['entry', 'inclusion', 'exclusion'], description: "Where the criterion goes. Defaults to 'inclusion'." },
+        name: { type: 'string', description: 'Rule name to show in the editor. Defaults to the concept set name.' },
+      },
+      required: ['conceptSetId'],
+    },
+    requiresApproval: true,
+  },
+  {
     name: 'remove_inclusion_rule',
     description: "Remove an inclusion rule from the cohort being edited, by its name (as shown in the editor) or its id. Use this when the user asks to drop, delete or undo a rule you added — do not rebuild the cohort to get rid of one rule.",
     schema: {
