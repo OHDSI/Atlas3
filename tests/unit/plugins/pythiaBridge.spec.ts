@@ -22,6 +22,7 @@ vi.mock('@/services/characterization.service', () => ({
 
 vi.mock('@/services/pathway.service', () => ({
   createPathway: vi.fn(),
+  generatePathway: vi.fn(),
 }))
 
 vi.mock('@/services/incidence-rate.service', () => ({
@@ -32,7 +33,7 @@ import router from '@/router'
 import { createConceptSet } from '@/services/concept-set.service'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
 import { createCharacterization } from '@/services/characterization.service'
-import { createPathway } from '@/services/pathway.service'
+import { createPathway, generatePathway } from '@/services/pathway.service'
 import { createIncidenceRate } from '@/services/incidence-rate.service'
 import { setupPythiaBridge, applyProposalDirect } from '@/plugins/host/pythiaBridge'
 import { useCohortStore } from '@/stores/cohort'
@@ -527,5 +528,68 @@ describe('editor starts blank for each new cohort', () => {
     // requestNewCohort bumps the signal CohortBuilder watches; createNewCohort
     // does not. That bump is the whole fix.
     expect(store.newCohortSignal).toBeGreaterThan(before)
+  })
+})
+
+// generate_analysis: the agent can run a saved analysis rather than telling the
+// user to click Generate. The bridge resolves the source, calls the service, and
+// tells the workbench to start polling — a run started this way is otherwise
+// invisible until a manual reload.
+describe('generateAnalysis', () => {
+  beforeEach(async () => {
+    setActivePinia(createPinia())
+    setupPythiaBridge()
+    createHostMessageBus('pythia-plugin')
+    vi.mocked(generatePathway).mockReset()
+    const { useWebAPIStore } = await import('@/stores/webapi')
+    const webapi = useWebAPIStore()
+    webapi.sources = [{ sourceKey: 'EUNOMIA', sourceName: 'Eunomia' }] as never
+    webapi.selectedSource = 'EUNOMIA'
+  })
+
+  it('runs a saved pathway on the explicit source and signals the workbench', async () => {
+    vi.mocked(generatePathway).mockResolvedValue({ success: true, data: null } as never)
+    const { usePathwayStore } = await import('@/stores/pathway')
+    const pathwayStore = usePathwayStore()
+    const before = pathwayStore.agentGenerationSignal
+
+    await applyProposalDirect({
+      kind: 'generateAnalysis',
+      payload: { analysisType: 'pathway', analysisId: 12, sourceKey: 'EUNOMIA' },
+    } as never)
+
+    expect(generatePathway).toHaveBeenCalledWith(12, 'EUNOMIA')
+    expect(pathwayStore.agentGenerationSignal).toBeGreaterThan(before)
+  })
+
+  it('falls back to the source the user is working against', async () => {
+    vi.mocked(generatePathway).mockResolvedValue({ success: true, data: null } as never)
+    await applyProposalDirect({
+      kind: 'generateAnalysis',
+      payload: { analysisType: 'pathway', analysisId: 7 },
+    } as never)
+    expect(generatePathway).toHaveBeenCalledWith(7, 'EUNOMIA')
+  })
+
+  it('does not signal the workbench when the run could not be started', async () => {
+    vi.mocked(generatePathway).mockResolvedValue({ success: false, error: 'boom' } as never)
+    const { usePathwayStore } = await import('@/stores/pathway')
+    const pathwayStore = usePathwayStore()
+    const before = pathwayStore.agentGenerationSignal
+
+    await applyProposalDirect({
+      kind: 'generateAnalysis',
+      payload: { analysisType: 'pathway', analysisId: 12 },
+    } as never)
+
+    expect(pathwayStore.agentGenerationSignal).toBe(before)
+  })
+
+  it('reports unsupported analysis types instead of silently doing nothing', async () => {
+    await applyProposalDirect({
+      kind: 'generateAnalysis',
+      payload: { analysisType: 'characterization', analysisId: 4 },
+    } as never)
+    expect(generatePathway).not.toHaveBeenCalled()
   })
 })
