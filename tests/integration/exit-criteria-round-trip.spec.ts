@@ -31,37 +31,34 @@ describe('Exit Criteria Round-Trip Tests', () => {
       const atlasOutput = convertInternalToAtlas(internal)
 
       // Verify semantic equality
-      if (censorWindowFixture.CensorWindow) {
-        expect(atlasOutput.CensorWindow).toEqual(censorWindowFixture.CensorWindow)
-      }
+      expect(censorWindowFixture.CensorWindow).toBeDefined()
+      expect(atlasOutput.CensorWindow).toEqual(censorWindowFixture.CensorWindow)
     })
 
     it('should correctly parse CensorWindow StartDate and EndDate', () => {
       const internal: CohortDefinition = convertAtlasToInternal(censorWindowFixture)
 
-      if (censorWindowFixture.CensorWindow) {
-        // Verify StartDate
-        if (censorWindowFixture.CensorWindow.StartDate) {
-          expect(internal.censorWindow?.startDate).toBeDefined()
-          expect(internal.censorWindow?.startDate?.dateField).toEqual(
-            censorWindowFixture.CensorWindow.StartDate.DateField
-          )
-          expect(internal.censorWindow?.startDate?.offset).toEqual(
-            censorWindowFixture.CensorWindow.StartDate.Offset
-          )
-        }
+      expect(censorWindowFixture.CensorWindow).toBeDefined()
 
-        // Verify EndDate
-        if (censorWindowFixture.CensorWindow.EndDate) {
-          expect(internal.censorWindow?.endDate).toBeDefined()
-          expect(internal.censorWindow?.endDate?.dateField).toEqual(
-            censorWindowFixture.CensorWindow.EndDate.DateField
-          )
-          expect(internal.censorWindow?.endDate?.offset).toEqual(
-            censorWindowFixture.CensorWindow.EndDate.Offset
-          )
-        }
-      }
+      // Verify StartDate
+      expect(censorWindowFixture.CensorWindow.StartDate).toBeDefined()
+      expect(internal.censorWindow?.startDate).toBeDefined()
+      expect(internal.censorWindow?.startDate?.dateField).toEqual(
+        censorWindowFixture.CensorWindow.StartDate.DateField
+      )
+      expect(internal.censorWindow?.startDate?.offset).toEqual(
+        censorWindowFixture.CensorWindow.StartDate.Offset
+      )
+
+      // Verify EndDate
+      expect(censorWindowFixture.CensorWindow.EndDate).toBeDefined()
+      expect(internal.censorWindow?.endDate).toBeDefined()
+      expect(internal.censorWindow?.endDate?.dateField).toEqual(
+        censorWindowFixture.CensorWindow.EndDate.DateField
+      )
+      expect(internal.censorWindow?.endDate?.offset).toEqual(
+        censorWindowFixture.CensorWindow.EndDate.Offset
+      )
     })
 
     it('should preserve CensorWindow through round-trip conversion', () => {
@@ -86,27 +83,25 @@ describe('Exit Criteria Round-Trip Tests', () => {
       const atlasOutput = convertInternalToAtlas(internal)
 
       // Verify censoring criteria exists in output
-      if (censoringCriteriaFixture.CensoringCriteria) {
-        expect(atlasOutput.CensoringCriteria).toBeDefined()
-      }
+      expect(censoringCriteriaFixture.CensoringCriteria).toBeDefined()
+      expect(atlasOutput.CensoringCriteria).toBeDefined()
     })
 
     it('should correctly parse CensoringCriteria array', () => {
       const internal: CohortDefinition = convertAtlasToInternal(censoringCriteriaFixture)
 
-      if (censoringCriteriaFixture.CensoringCriteria) {
-        expect(Array.isArray(internal.censoringCriteria)).toBe(true)
-        expect(internal.censoringCriteria?.length).toEqual(
-          censoringCriteriaFixture.CensoringCriteria.length
-        )
+      expect(censoringCriteriaFixture.CensoringCriteria).toBeDefined()
+      expect(Array.isArray(internal.censoringCriteria)).toBe(true)
+      expect(internal.censoringCriteria?.length).toEqual(
+        censoringCriteriaFixture.CensoringCriteria.length
+      )
 
-        // Verify each censoring event has required fields
-        internal.censoringCriteria?.forEach((event) => {
-          expect(event).toHaveProperty('id')
-          expect(event).toHaveProperty('criteriaType')
-          expect(event).toHaveProperty('attributes')
-        })
-      }
+      // Verify each censoring event has required fields
+      internal.censoringCriteria?.forEach((event) => {
+        expect(event).toHaveProperty('id')
+        expect(event).toHaveProperty('criteriaType')
+        expect(event).toHaveProperty('attributes')
+      })
     })
 
     it('should preserve CensoringCriteria through round-trip conversion', () => {
@@ -137,12 +132,10 @@ describe('Exit Criteria Round-Trip Tests', () => {
       const atlasOutput = convertInternalToAtlas(internal)
 
       // Verify both are preserved
-      if (combined.CensorWindow) {
-        expect(atlasOutput.CensorWindow).toBeDefined()
-      }
-      if (combined.CensoringCriteria) {
-        expect(atlasOutput.CensoringCriteria).toBeDefined()
-      }
+      expect(combined.CensorWindow).toBeDefined()
+      expect(atlasOutput.CensorWindow).toBeDefined()
+      expect(combined.CensoringCriteria).toBeDefined()
+      expect(atlasOutput.CensoringCriteria).toBeDefined()
     })
   })
 
