@@ -5145,3 +5145,38 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
     })
   })
 })
+
+// Regression: concept-set items arrive in two shapes. User-built sets carry the
+// internal shape (item.conceptId); sets the agent attaches to a criterion are
+// already in ATLAS shape ({ concept: { CONCEPT_ID } }). Mapping the latter with
+// internal-shape keys produced a concept with no CONCEPT_ID, so circe built a
+// Codesets table with no concepts and the live preview failed with
+// "Failed to execute circe SQL" for every agent-built cohort.
+describe('concept set items already in ATLAS shape', () => {
+  it('keeps the concept instead of emitting a null CONCEPT_ID', () => {
+    const atlas = convertInternalToAtlas({
+      name: 'Sinusitis',
+      entryEvents: [],
+      inclusionRules: [],
+      qualifyingLimit: 'ALL',
+      conceptSets: [
+        {
+          id: 0,
+          name: 'Sinusitis',
+          items: [
+            {
+              concept: { CONCEPT_ID: 40481087, CONCEPT_NAME: 'Viral sinusitis', DOMAIN_ID: 'Condition' },
+              includeDescendants: true,
+              isExcluded: false,
+            },
+          ] as never,
+        },
+      ],
+    } as never)
+
+    const item = (atlas.ConceptSets as never as Array<Record<string, never>>)[0]
+      .expression.items[0] as unknown as { concept: { CONCEPT_ID: number; CONCEPT_NAME: string } }
+    expect(item.concept.CONCEPT_ID).toBe(40481087)
+    expect(item.concept.CONCEPT_NAME).toBe('Viral sinusitis')
+  })
+})

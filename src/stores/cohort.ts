@@ -14,6 +14,15 @@ import type {
 } from '@/models/cohort.types'
 import type { AgentProposal } from '@/models/agent.types'
 import type { Version } from '@/components/versions/types'
+
+/** Outcome of a save the editor performs on the store's behalf. `timedOut`
+ *  means nobody answered the save signal in time — the save may still be in
+ *  flight, so it must not be read as "nothing was saved". */
+export interface SaveResult {
+  id?: number
+  name?: string
+  timedOut?: boolean
+}
 import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
 import { logger } from '@/utils/logger'
 
@@ -96,6 +105,41 @@ export const useCohortStore = defineStore('cohort', () => {
     isDirty.value = true
   }
 
+  // Removal by what the agent actually knows: the rule's name, or the concept
+  // it was built from. It never sees the generated ids.
+  function removeInclusionRuleBy(match: { id?: string | number; name?: string }): boolean {
+    const rules = currentCohort.value?.inclusionRules
+    if (!rules) return false
+    const wanted = (match.name ?? '').trim().toLowerCase()
+    const idx = rules.findIndex(r =>
+      (match.id !== undefined && String(r.id) === String(match.id)) ||
+      (!!wanted && String(r.name ?? '').trim().toLowerCase() === wanted))
+    if (idx < 0) return false
+    rules.splice(idx, 1)
+    isDirty.value = true
+    return true
+  }
+
+  function removeEntryEventBy(match: { conceptId?: number; conceptName?: string }): boolean {
+    const events = currentCohort.value?.entryEvents
+    if (!events) return false
+    const wantedName = (match.conceptName ?? '').trim().toLowerCase()
+    const idx = events.findIndex(e => {
+      const items = (e.conceptSet?.items ?? []) as Array<Record<string, unknown>>
+      return items.some(raw => {
+        const c = (raw.concept ?? raw) as Record<string, unknown>
+        const id = c.CONCEPT_ID ?? raw.conceptId
+        const name = String(c.CONCEPT_NAME ?? raw.conceptName ?? '').trim().toLowerCase()
+        return (match.conceptId !== undefined && Number(id) === Number(match.conceptId)) ||
+          (!!wantedName && name === wantedName)
+      })
+    })
+    if (idx < 0) return false
+    events.splice(idx, 1)
+    isDirty.value = true
+    return true
+  }
+
   function removeEntryEvent(eventId: string) {
     if (!currentCohort.value) return
 
@@ -153,24 +197,126 @@ export const useCohortStore = defineStore('cohort', () => {
     isDirty.value = true
   }
 
+  // Agent criteria arrive with their concept set embedded on the event and a
+  // client-side string uid. CIRCE needs an integer CodesetId plus a matching
+  // entry in the cohort's ConceptSets array — convertEventToAtlas only emits
+  // CodesetId when the id is a number, so without this the criterion saves as
+  // `CodesetId: null` with `ConceptSets: []`, i.e. "any drug exposure" instead
+  // of the drug the agent actually picked. Assign a numeric id and register it.
+  // Takes anything carrying a `conceptSet` — an event or an exit criterion —
+  // because both reference their set by CodesetId and both need it to exist
+  // in cohort.conceptSets or the reference dangles.
+  function registerEventConceptSet(event: { conceptSet?: CohortEvent['conceptSet'] } | undefined) {
+    const cs = event?.conceptSet
+    if (!cs) return
+    const cohort = ensureCohort()
+    if (typeof cs.id !== 'number') {
+      const used = cohort.conceptSets
+        .map(c => (typeof c.id === 'number' ? c.id : -1))
+        .filter(n => n >= 0)
+      cs.id = used.length ? Math.max(...used) + 1 : 0
+    }
+    addConceptSetReference({
+      id: cs.id,
+      name: cs.name,
+      conceptCount: cs.conceptCount,
+      // Event items arrive already in ATLAS shape ({ concept: { CONCEPT_ID … } }),
+      // but convertInternalToAtlas reads the internal shape (item.conceptId …)
+      // and would emit CONCEPT_ID: null for every concept. Normalise here.
+      items: (cs.items ?? []).map(raw => {
+        const it = raw as Record<string, unknown>
+        const c = (it.concept ?? {}) as Record<string, unknown>
+        if (it.conceptId !== undefined) return it // already internal shape
+        return {
+          conceptId: c.CONCEPT_ID,
+          conceptName: c.CONCEPT_NAME,
+          domainId: c.DOMAIN_ID,
+          vocabularyId: c.VOCABULARY_ID,
+          conceptClassId: c.CONCEPT_CLASS_ID,
+          standardConcept: c.STANDARD_CONCEPT,
+          conceptCode: c.CONCEPT_CODE,
+          invalidReason: c.INVALID_REASON,
+          includeDescendants: it.includeDescendants ?? true,
+          isExcluded: it.isExcluded ?? false,
+          includeMapped: it.includeMapped ?? false,
+        }
+      }),
+    })
+  }
+
+  function registerRuleConceptSets(rule: InclusionRule | undefined) {
+    for (const group of rule?.criteriaGroups ?? []) {
+      for (const event of group.events ?? []) registerEventConceptSet(event)
+    }
+  }
+
   function applyProposal(proposal: AgentProposal) {
     switch (proposal.kind) {
       case 'addEntryEvent':
-        addEntryEvent(proposal.event)
+        registerEventConceptSet(proposal.event)
+        if (proposal.replace && currentCohort.value) {
+          currentCohort.value.entryEvents = [proposal.event]
+          isDirty.value = true
+        } else {
+          addEntryEvent(proposal.event)
+        }
+        break
+      case 'removeInclusionRule':
+        removeInclusionRuleBy(proposal.match)
+        break
+      case 'removeEntryEvent':
+        removeEntryEventBy(proposal.match)
         break
       case 'addInclusionRule':
+        registerRuleConceptSets(proposal.rule)
         addInclusionRule(proposal.rule)
         break
       case 'addConceptSet':
         addConceptSetReference(proposal.conceptSet)
         break
+      case 'setEventLimits': {
+        const c = ensureCohort()
+        if (proposal.limits.primaryCriteriaLimit) c.primaryCriteriaLimit = proposal.limits.primaryCriteriaLimit
+        if (proposal.limits.qualifyingLimit) c.qualifyingLimit = proposal.limits.qualifyingLimit
+        if (proposal.limits.inclusionQualifyingLimit) c.inclusionQualifyingLimit = proposal.limits.inclusionQualifyingLimit
+        isDirty.value = true
+        break
+      }
+      case 'addQualifyingCriterion': {
+        // "Restrict initial events": criteria that qualify the entry event
+        // itself, rather than the person. One group, appended to.
+        registerEventConceptSet(proposal.event)
+        const c = ensureCohort()
+        if (!c.additionalCriteria) {
+          c.additionalCriteria = { id: `qualifying-${Date.now()}`, logicType: 'ALL', events: [] }
+        }
+        c.additionalCriteria.events.push(proposal.event)
+        isDirty.value = true
+        break
+      }
+      case 'setCensorWindow': {
+        const c = ensureCohort()
+        c.censorWindow = proposal.censorWindow
+        isDirty.value = true
+        break
+      }
+      case 'setEraCollapse': {
+        const c = ensureCohort()
+        c.collapseSettings = proposal.collapseSettings
+        isDirty.value = true
+        break
+      }
       case 'setObservationPeriod':
         setObservationPeriod(proposal.observationPeriod)
         break
       case 'setExitCriteria':
+        // A CONTINUOUS_DRUG exit emits CustomEra.DrugCodesetId; without this the
+        // codeset is never defined and circe resolves the era against nothing.
+        registerEventConceptSet(proposal.exitCriteria)
         setExitCriteria(proposal.exitCriteria)
         break
       case 'addCensoringCriterion':
+        registerEventConceptSet(proposal.event)
         addCensoringCriterion(proposal.event)
         break
       // Non-cohort proposal kinds are handled by pythiaBridge before
@@ -182,11 +328,16 @@ export const useCohortStore = defineStore('cohort', () => {
       case 'createCharacterization':
       case 'createPathway':
       case 'createIncidenceRate':
+      case 'generateAnalysis':
       case 'updateConceptSet':
       case 'updateFeatureAnalysis':
       case 'updateCharacterization':
       case 'updatePathway':
       case 'updateIncidenceRate':
+      // useConceptSet is bridge-handled too: it fetches the saved set's
+      // concepts and then applies an ordinary criterion proposal, so the store
+      // never sees this kind.
+      case 'useConceptSet': // eslint-disable-line no-fallthrough
         return
       default: {
         const exhaustive: never = proposal
@@ -234,24 +385,28 @@ export const useCohortStore = defineStore('cohort', () => {
   }
   const pendingSaves: PendingSave[] = []
 
-  function settleOldestSave(result: { id?: number; name?: string }) {
+  function settleOldestSave(result: SaveResult) {
     const entry = pendingSaves.shift()
     if (!entry) return
     clearTimeout(entry.timeoutId)
     entry.resolve(result)
   }
 
-  function requestSave(opts: { name?: string; description?: string } = {}): Promise<{ id?: number; name?: string }> {
+  function requestSave(opts: { name?: string; description?: string } = {}): Promise<SaveResult> {
     return new Promise(resolve => {
       saveOptions.value = opts
       // Never hang the caller if no editor is mounted to answer the signal.
-      const timeoutId = setTimeout(() => settleOldestSave({}), 8000)
+      // Mark it, so "nobody answered in time" is distinguishable from "the save
+      // returned nothing": a WebAPI save slower than this still lands, and a
+      // caller told only `{}` would reasonably conclude nothing was saved and
+      // save again, leaving two cohorts.
+      const timeoutId = setTimeout(() => settleOldestSave({ timedOut: true }), 8000)
       pendingSaves.push({ resolve, timeoutId })
       saveRequest.value++
     })
   }
 
-  function notifySaved(result: { id?: number; name?: string } = {}) {
+  function notifySaved(result: SaveResult = {}) {
     settleOldestSave(result)
   }
 
@@ -493,6 +648,8 @@ export const useCohortStore = defineStore('cohort', () => {
     setCohort,
     createNewCohort,
     addEntryEvent,
+    removeInclusionRuleBy,
+    removeEntryEventBy,
     removeEntryEvent,
     updateEntryEvent,
     addInclusionRule,

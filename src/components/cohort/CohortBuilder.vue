@@ -734,6 +734,9 @@ let pendingNavigation: (() => void) | null = null
 // UI state
 // If we have an ID prop, start with loading=true to prevent UI from rendering before data loads
 const isLoadingCohort = ref(!!props.id)
+// Set to the id we just saved, so the props.id watcher can tell our own
+// route adoption apart from a real navigation to another cohort.
+const adoptedSavedId = ref<string | null>(null)
 const isConceptSetDialogOpen = ref(false)
 const isConceptSearchDialogOpen = ref(false)
 const selectedConceptDomainFilter = ref<string | undefined>(undefined)
@@ -1252,18 +1255,28 @@ watch(
 // (censoringCriteria starting from undefined) lose that link, so we explicitly
 // re-bind them here. Only fires on agent-driven mutations — user edits use the
 // local refs directly without bumping `agentRevision`, so no feedback loop.
-watch(
-  () => cohortStore.agentRevision,
-  () => {
-    const c = cohortStore.currentCohort
-    if (!c) return
-    entryEvents.value = c.entryEvents
-    inclusionRules.value = c.inclusionRules
-    observationPeriod.value = c.observationPeriod || { priorDays: 0, postDays: 0 }
-    exitCriteria.value = c.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
-    censoringCriteria.value = c.censoringCriteria ?? []
-  }
-)
+function syncLocalRefsFromStore() {
+  const c = cohortStore.currentCohort
+  if (!c) return
+  entryEvents.value = c.entryEvents
+  inclusionRules.value = c.inclusionRules
+  observationPeriod.value = c.observationPeriod || { priorDays: 0, postDays: 0 }
+  exitCriteria.value = c.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
+  censoringCriteria.value = c.censoringCriteria ?? []
+  // Everything else the agent can now set. The save serialises these local
+  // refs, so a field the agent writes to the store but that is not mirrored
+  // here is accepted on screen and then silently dropped at save: an entry
+  // limit that stays "All", a study window that never bounds anything. Keep
+  // this list in step with the proposal kinds the store applies.
+  additionalCriteria.value = c.additionalCriteria
+  censorWindow.value = c.censorWindow ?? null
+  collapseSettings.value = c.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
+  qualifyingLimit.value = c.qualifyingLimit ?? 'ALL'
+  primaryCriteriaLimit.value = c.primaryCriteriaLimit
+  inclusionQualifyingLimit.value = c.inclusionQualifyingLimit ?? 'ALL'
+}
+
+watch(() => cohortStore.agentRevision, syncLocalRefsFromStore)
 
 // The host bridge asks the mounted editor to run its full WebAPI save flow.
 // Always answer the signal — handleSave no-ops when nothing is savable — so the
@@ -1362,6 +1375,15 @@ onMounted(async () => {
             existing.name !== 'New Cohort'))
       if (!hasContent) {
         cohortStore.createNewCohort()
+      } else {
+        // Pythia populated the store BEFORE this editor mounted, so the local
+        // refs below still hold their empty initial values and the criteria it
+        // added would stay invisible until the next agent mutation bumped
+        // `agentRevision` and re-bound them — which is why an agent-set entry
+        // event only appeared once the observation window was applied.
+        syncLocalRefsFromStore()
+        cohortName.value = existing.name ?? ''
+        cohortDescription.value = existing.description ?? ''
       }
     }
     loadedTags.value = []
@@ -1452,13 +1474,23 @@ onBeforeUnmount(() => {
   cohortStore.stopAutoSave()
 })
 
+// Adopting the id of a cohort we just saved must NOT re-fetch it. The editor
+// already holds exactly what was persisted, and the fetch is async: anything
+// added while it is in flight (the agent's next accepted proposals, or the
+// user's next edit) is silently overwritten when it resolves, and the next
+// save then persists the stale definition. That cost a full phenotype once —
+// observation window and four inclusion rules accepted on screen, none of them
+// in the saved cohort.
 watch(
   () => props.id,
   newId => {
-    if (newId) {
-      isLoadingCohort.value = true
-      loadCohort(newId)
+    if (!newId) return
+    if (adoptedSavedId.value !== null && adoptedSavedId.value === String(newId)) {
+      adoptedSavedId.value = null
+      return
     }
+    isLoadingCohort.value = true
+    loadCohort(newId)
   }
 )
 
@@ -2282,6 +2314,23 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
 
     successMessage.value = tv('components.cohortBuilder.saveSuccess', 'Cohort saved successfully')
     showSuccess.value = true
+
+    // Adopt the new id in the route. `cohortId` is derived from props.id, so a
+    // cohort saved from /cohorts/new stayed id-less in the editor: the
+    // Generation panel kept offering "Save cohort to generate" for a cohort
+    // that had just been saved, with no way to generate it without navigating
+    // away and back. Navigation must never fail the save — the cohort is
+    // already persisted by this point.
+    if (!props.id && saved.data.id) {
+      // Tell the props.id watcher this id change is ours, so it adopts the id
+      // without reloading over the editor state we just saved.
+      adoptedSavedId.value = String(saved.data.id)
+      try {
+        await router.replace(`/cohorts/${saved.data.id}`)
+      } catch (navErr) {
+        logger.warn('CohortBuilder', 'Saved, but could not open the saved cohort', navErr)
+      }
+    }
     return { id: saved.data.id, name: cohortDefinition.name }
   } catch (error) {
     logger.error('CohortBuilder', 'Failed to save cohort', error)

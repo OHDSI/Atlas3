@@ -39,6 +39,13 @@ export const usePathwayStore = defineStore('pathway', () => {
   const previewVersion = ref<Version | null>(null)
   const validationErrors = ref<PathwayValidationError[]>([])
   const isReadOnly = ref(false)
+  // Bumped when the agent starts a generation outside the workbench's own
+  // Generate button. The workbench watches this and picks up polling, so an
+  // agent-started run reports its progress and results like any other.
+  const agentGenerationSignal = ref(0)
+  function notifyAgentGeneration() {
+    agentGenerationSignal.value++
+  }
 
   const isPreviewMode = computed(() => previewVersion.value !== null)
   const hasErrors = computed(() => validationErrors.value.some(e => e.severity === 'error'))
@@ -377,6 +384,8 @@ export const usePathwayStore = defineStore('pathway', () => {
   }
 
   return {
+    agentGenerationSignal,
+    notifyAgentGeneration,
     currentPathway,
     isDirty,
     lastAutoSave,

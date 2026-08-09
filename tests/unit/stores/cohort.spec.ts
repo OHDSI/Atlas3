@@ -829,13 +829,13 @@ describe('Cohort Store', () => {
       expect(store.saveOptions).toEqual({ name: 'N', description: 'D' })
     })
 
-    it('requestSave falls back to {} after the 8s timeout if nothing answers', async () => {
+    it('requestSave falls back to a timedOut result after 8s if nothing answers', async () => {
       vi.useFakeTimers()
       try {
         const store = useCohortStore()
         const p = store.requestSave()
         vi.advanceTimersByTime(8000)
-        await expect(p).resolves.toEqual({})
+        await expect(p).resolves.toEqual({ timedOut: true })
       } finally {
         vi.useRealTimers()
       }
@@ -870,10 +870,10 @@ describe('Cohort Store', () => {
         // A waits 8s from its own start, not B's - a WebMCP tool call awaiting
         // it must never hang forever (see pythiaBridge.ts).
         vi.advanceTimersByTime(4000)
-        await expect(pA).resolves.toEqual({})
+        await expect(pA).resolves.toEqual({ timedOut: true })
 
         vi.advanceTimersByTime(4000)
-        await expect(pB).resolves.toEqual({})
+        await expect(pB).resolves.toEqual({ timedOut: true })
       } finally {
         vi.useRealTimers()
       }
