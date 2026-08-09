@@ -1292,6 +1292,41 @@ describe('CohortBuilder', () => {
     expect(cohortDefService.saveCohortDefinition).toBeDefined()
   })
 
+  // Regression: the save assembled its payload field by field and silently
+  // omitted three of them, so anything set there was accepted on screen, shown
+  // in the editor, and dropped on the way to WebAPI — including censoring
+  // events, which the agent has always been able to propose. Found by driving
+  // the real editor and reading the cohort back from the database; the unit
+  // tests missed it because they convert the store directly and never go
+  // through the editor's own payload.
+  it('handleSave sends every field the editor holds, not just some of them', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'A Cohort'
+    setup.entryEvents = [{ id: 'evt-1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'X', items: [] } }]
+    setup.censorWindow = { startDate: '2015-01-01', endDate: '2019-12-31' }
+    setup.collapseSettings = { collapseType: 'ERA', eraPad: 30 }
+    setup.censoringCriteria = [{ id: 'c1', criteriaType: 'ConditionOccurrence', conceptSet: { id: 1, name: 'Death', items: [] } }]
+    await wrapper.vm.$nextTick()
+
+    // The converter is stubbed in this spec, so assert on what the editor hands
+    // it — that is exactly where the fields were being dropped.
+    const converter = await import('@/services/atlas-converter')
+    vi.mocked(converter.convertInternalToAtlas).mockClear()
+    await setup.handleSave()
+
+    const definition = vi.mocked(converter.convertInternalToAtlas).mock.calls[0]?.[0] as unknown as {
+      censorWindow?: { startDate?: string }
+      collapseSettings?: { eraPad?: number }
+      censoringCriteria?: unknown[]
+    }
+    expect(definition, 'the save never reached the converter').toBeTruthy()
+    expect(definition.censorWindow).toMatchObject({ startDate: '2015-01-01', endDate: '2019-12-31' })
+    expect(definition.collapseSettings?.eraPad).toBe(30)
+    expect(definition.censoringCriteria).toHaveLength(1)
+  })
+
   // ---------------------------------------------------------------------------
   // handleExportCopy
   // ---------------------------------------------------------------------------

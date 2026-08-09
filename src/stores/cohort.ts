@@ -274,6 +274,38 @@ export const useCohortStore = defineStore('cohort', () => {
       case 'addConceptSet':
         addConceptSetReference(proposal.conceptSet)
         break
+      case 'setEventLimits': {
+        const c = ensureCohort()
+        if (proposal.limits.primaryCriteriaLimit) c.primaryCriteriaLimit = proposal.limits.primaryCriteriaLimit
+        if (proposal.limits.qualifyingLimit) c.qualifyingLimit = proposal.limits.qualifyingLimit
+        if (proposal.limits.inclusionQualifyingLimit) c.inclusionQualifyingLimit = proposal.limits.inclusionQualifyingLimit
+        isDirty.value = true
+        break
+      }
+      case 'addQualifyingCriterion': {
+        // "Restrict initial events": criteria that qualify the entry event
+        // itself, rather than the person. One group, appended to.
+        registerEventConceptSet(proposal.event)
+        const c = ensureCohort()
+        if (!c.additionalCriteria) {
+          c.additionalCriteria = { id: `qualifying-${Date.now()}`, logicType: 'ALL', events: [] }
+        }
+        c.additionalCriteria.events.push(proposal.event)
+        isDirty.value = true
+        break
+      }
+      case 'setCensorWindow': {
+        const c = ensureCohort()
+        c.censorWindow = proposal.censorWindow
+        isDirty.value = true
+        break
+      }
+      case 'setEraCollapse': {
+        const c = ensureCohort()
+        c.collapseSettings = proposal.collapseSettings
+        isDirty.value = true
+        break
+      }
       case 'setObservationPeriod':
         setObservationPeriod(proposal.observationPeriod)
         break

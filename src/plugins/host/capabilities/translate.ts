@@ -622,6 +622,94 @@ export function translateCapability(
       } as unknown as AgentProposal
     }
 
+    case 'add_qualifying_criterion': {
+      const event = buildEventFromCriterion(args as CriterionArgs)
+      if (!event) return null
+      return { kind: 'addQualifyingCriterion', event } as unknown as AgentProposal
+    }
+
+    case 'set_censor_window': {
+      const a = args as { startDate?: string; endDate?: string }
+      const iso = /^\d{4}-\d{2}-\d{2}$/
+      const startDate = typeof a.startDate === 'string' && iso.test(a.startDate) ? a.startDate : undefined
+      const endDate = typeof a.endDate === 'string' && iso.test(a.endDate) ? a.endDate : undefined
+      if (!startDate && !endDate) return null
+      return {
+        kind: 'setCensorWindow',
+        censorWindow: { startDate: startDate ?? null, endDate: endDate ?? null },
+      } as unknown as AgentProposal
+    }
+
+    case 'set_era_collapse': {
+      const a = args as { gapDays?: number }
+      if (typeof a.gapDays !== 'number' || a.gapDays < 0) return null
+      return {
+        kind: 'setEraCollapse',
+        collapseSettings: { collapseType: 'ERA', eraPad: a.gapDays },
+      } as unknown as AgentProposal
+    }
+
+    case 'set_event_limits': {
+      const a = args as { entryEvents?: string; qualifyingEvents?: string; inclusionRuleEvents?: string }
+      const norm = (v?: string) => {
+        const u = String(v ?? '').toUpperCase()
+        return u === 'FIRST' || u === 'ALL' || u === 'LAST' ? (u as 'FIRST' | 'ALL' | 'LAST') : undefined
+      }
+      const primaryCriteriaLimit = norm(a.entryEvents)
+      const qualifyingLimit = norm(a.qualifyingEvents)
+      const inclusionQualifyingLimit = norm(a.inclusionRuleEvents)
+      if (!primaryCriteriaLimit && !qualifyingLimit && !inclusionQualifyingLimit) return null
+      return {
+        kind: 'setEventLimits',
+        limits: { primaryCriteriaLimit, qualifyingLimit, inclusionQualifyingLimit },
+      } as unknown as AgentProposal
+    }
+
+    case 'add_demographic_criterion': {
+      const a = args as { minAge?: number; maxAge?: number; sex?: string; name?: string }
+      const hasMin = typeof a.minAge === 'number'
+      const hasMax = typeof a.maxAge === 'number'
+      const sex = a.sex === 'male' || a.sex === 'female' ? a.sex : undefined
+      if (!hasMin && !hasMax && !sex) return null
+
+      const attributes: Record<string, unknown>[] = []
+      if (hasMin && hasMax) {
+        attributes.push({ type: 'numericRange', attributeKey: 'age', operator: 'BETWEEN', value: a.minAge, extent: a.maxAge })
+      } else if (hasMin) {
+        attributes.push({ type: 'numericRange', attributeKey: 'age', operator: 'GREATER_THAN_OR_EQUAL', value: a.minAge })
+      } else if (hasMax) {
+        attributes.push({ type: 'numericRange', attributeKey: 'age', operator: 'LESS_THAN_OR_EQUAL', value: a.maxAge })
+      }
+      if (sex) {
+        // The OMOP gender concepts are fixed CDM vocabulary, not something the
+        // model should be recalling or searching for per source.
+        const concept = sex === 'male'
+          ? { CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE', DOMAIN_ID: 'Gender' }
+          : { CONCEPT_ID: 8532, CONCEPT_NAME: 'FEMALE', DOMAIN_ID: 'Gender' }
+        attributes.push({ type: 'concept', attributeKey: 'gender', concepts: [concept] })
+      }
+
+      const label = [
+        hasMin && hasMax ? `Age ${a.minAge}-${a.maxAge}` : hasMin ? `Age ${a.minAge}+` : hasMax ? `Age up to ${a.maxAge}` : null,
+        sex === 'male' ? 'Male' : sex === 'female' ? 'Female' : null,
+      ].filter(Boolean).join(', ')
+
+      // CIRCE keeps demographics out of PrimaryCriteria: they belong to a
+      // group's DemographicCriteriaList, so this is always an inclusion rule.
+      // (convertInternalToAtlas asserts this — a Demographic event routed to the
+      // entry-event list throws rather than silently producing a criterion CIRCE
+      // cannot read.)
+      const event = { id: uid(), criteriaType: 'Demographic', attributes }
+      return {
+        kind: 'addInclusionRule',
+        rule: {
+          id: uid(),
+          name: (typeof a.name === 'string' && a.name.trim()) || label,
+          criteriaGroups: [{ id: uid(), logicType: 'ALL', events: [event] }],
+        },
+      } as unknown as AgentProposal
+    }
+
     case 'use_concept_set': {
       const a = args as { conceptSetId?: number; group?: string; name?: string }
       if (a.conceptSetId === undefined) return null

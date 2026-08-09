@@ -11,10 +11,12 @@ const EXPECTED_NAMES = [
   'update_feature_analysis', 'update_characterization', 'update_pathway',
   'update_incidence_rate', 'create_incidence_rate', 'save_cohort',
   'remove_inclusion_rule', 'remove_entry_event', 'use_concept_set',
+  'add_demographic_criterion', 'set_event_limits', 'add_qualifying_criterion',
+  'set_censor_window', 'set_era_collapse',
 ]
 
 describe('capability registry', () => {
-  it('exposes exactly the 23 artifact-editing capabilities', () => {
+  it('exposes exactly the 28 artifact-editing capabilities', () => {
     expect(new Set(capabilityNames())).toEqual(new Set(EXPECTED_NAMES))
   })
   it('every capability has an object schema and a description', () => {
@@ -25,7 +27,7 @@ describe('capability registry', () => {
   })
   // Capabilities introduced in ATLAS after the cljs migration have no entry in
   // the original-schemas fixture, so they're outside the drift check.
-  const ADDED_IN_ATLAS = new Set(['generate_analysis', 'remove_inclusion_rule', 'remove_entry_event', 'use_concept_set'])
+  const ADDED_IN_ATLAS = new Set(['generate_analysis', 'remove_inclusion_rule', 'remove_entry_event', 'use_concept_set', 'add_demographic_criterion', 'set_event_limits', 'add_qualifying_criterion', 'set_censor_window', 'set_era_collapse'])
 
   it('schemas are byte-identical to the original client.cljs schemas', () => {
     for (const name of EXPECTED_NAMES.filter(n => !ADDED_IN_ATLAS.has(n))) {

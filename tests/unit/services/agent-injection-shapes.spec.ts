@@ -151,6 +151,113 @@ describe('shapes of everything the agent injects', () => {
     expect(store.currentCohort?.entryEvents).toHaveLength(1)
   })
 
+  // Observed live: the agent named a cohort "Adult osteoarthritis patients …"
+  // and then said plainly that age was not encoded, because nothing could
+  // express it. A cohort named for adults that silently contains children is
+  // the same class of defect as an inverted exclusion.
+  function demographicsOf(atlas: Record<string, never>) {
+    const rules = (atlas.InclusionRules ?? []) as unknown as Array<{
+      expression: { DemographicCriteriaList?: Array<Record<string, never>> }
+    }>
+    return rules.flatMap(r => r.expression.DemographicCriteriaList ?? [])
+  }
+
+  it('add_demographic_criterion encodes an age floor', () => {
+    const atlas = applyAndConvert('add_demographic_criterion', { minAge: 18 })
+    expect(demographicsOf(atlas)[0]?.Age).toEqual({ Op: 'gte', Value: 18 })
+  })
+
+  it('encodes an age range as a between', () => {
+    const atlas = applyAndConvert('add_demographic_criterion', { minAge: 40, maxAge: 70 })
+    expect(demographicsOf(atlas)[0]?.Age).toEqual({ Op: 'bt', Value: 40, Extent: 70 })
+  })
+
+  it('encodes sex with the CDM gender concept rather than a searched one', () => {
+    const atlas = applyAndConvert('add_demographic_criterion', { sex: 'female' })
+    const gender = demographicsOf(atlas)[0]?.Gender as unknown as Array<{ CONCEPT_ID: number }>
+    expect(gender?.[0]?.CONCEPT_ID).toBe(8532)
+  })
+
+  it('names the rule after the restriction', () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    store.applyProposal(translateCapability('add_demographic_criterion', { minAge: 18 }) as never)
+    expect(store.currentCohort?.inclusionRules[0].name).toBe('Age 18+')
+  })
+
+  it('proposes nothing when no restriction was given', () => {
+    expect(translateCapability('add_demographic_criterion', {})).toBeNull()
+  })
+
+  // The instructions tell the agent that a new-user design wants the FIRST
+  // qualifying event, and phenotype_patterns reports what the library uses —
+  // but until this capability existed there was no way to act on either. The
+  // default puts a person in the cohort once per qualifying event, so the
+  // counts silently mean episodes rather than people.
+  it('set_event_limits restricts entry to the first qualifying event', () => {
+    const atlas = applyAndConvert('set_event_limits', { entryEvents: 'first' })
+    const pc = atlas.PrimaryCriteria as unknown as { PrimaryCriteriaLimit: { Type: string } }
+    expect(pc.PrimaryCriteriaLimit.Type).toBe('First')
+  })
+
+  it('sets which qualifying events the rules apply to', () => {
+    const atlas = applyAndConvert('set_event_limits', { qualifyingEvents: 'first' })
+    expect((atlas.QualifiedLimit as unknown as { Type: string }).Type).toBe('First')
+  })
+
+  it('leaves the other limit alone when only one is given', () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    const before = store.currentCohort!.qualifyingLimit
+    store.applyProposal(translateCapability('set_event_limits', { entryEvents: 'first' }) as never)
+    expect(store.currentCohort!.primaryCriteriaLimit).toBe('FIRST')
+    expect(store.currentCohort!.qualifyingLimit).toBe(before)
+  })
+
+  it('proposes nothing for an unrecognised limit', () => {
+    expect(translateCapability('set_event_limits', { entryEvents: 'earliest-ish' })).toBeNull()
+  })
+
+  it('add_qualifying_criterion restricts the entry event itself', () => {
+    const atlas = applyAndConvert('add_qualifying_criterion', { ...CONCEPT })
+    const add = atlas.AdditionalCriteria as unknown as {
+      CriteriaList: Array<{ Criteria?: unknown; ConditionOccurrence?: unknown }>
+    }
+    expect(add?.CriteriaList).toHaveLength(1)
+    // and it must not have landed among the entry events instead
+    expect((atlas.PrimaryCriteria as unknown as { CriteriaList: unknown[] }).CriteriaList).toHaveLength(0)
+  })
+
+  it('the qualifying criterion carries a resolvable concept set', () => {
+    const atlas = applyAndConvert('add_qualifying_criterion', { ...CONCEPT })
+    const sets = (atlas.ConceptSets ?? []) as unknown as Array<{ id: number; expression: { items: unknown[] } }>
+    expect(sets).toHaveLength(1)
+    expect(sets[0].expression.items).toHaveLength(1)
+  })
+
+  // A study window is a claim about what the numbers mean; without it the
+  // cohort silently spans the whole database.
+  it('set_censor_window bounds the study period', () => {
+    const atlas = applyAndConvert('set_censor_window', { startDate: '2015-01-01', endDate: '2019-12-31' })
+    expect(atlas.CensorWindow).toMatchObject({ StartDate: '2015-01-01', EndDate: '2019-12-31' })
+  })
+
+  it('rejects a censor window that is not a date', () => {
+    expect(translateCapability('set_censor_window', { startDate: 'last January' })).toBeNull()
+  })
+
+  it('set_era_collapse merges brief gaps in follow-up', () => {
+    const atlas = applyAndConvert('set_era_collapse', { gapDays: 30 })
+    expect(atlas.CollapseSettings).toMatchObject({ CollapseType: 'ERA', EraPad: 30 })
+  })
+
+  it('set_event_limits also covers what survives the inclusion rules', () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    store.applyProposal(translateCapability('set_event_limits', { inclusionRuleEvents: 'first' }) as never)
+    expect(store.currentCohort?.inclusionQualifyingLimit).toBe('FIRST')
+  })
+
   it('set_observation_window always yields a complete ObservationWindow', () => {
     const atlas = applyAndConvert('set_observation_window', { priorDays: 365, postDays: 0 })
     const pc = atlas.PrimaryCriteria as unknown as { ObservationWindow?: { PriorDays: number; PostDays: number } }

@@ -170,6 +170,37 @@
     "requiresApproval": true
   },
   {
+    "name": "add_demographic_criterion",
+    "description": "Restrict the cohort by age or sex — the criteria that have no concept set. Use for \"adults\", \"age 18 and over\", \"women aged 40 to 70\": pass minAge / maxAge in years and/or sex. Without this a cohort NAMED for adults contains children, because nothing in the definition says otherwise. Added as an inclusion rule, which is where CIRCE keeps demographic criteria.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "minAge": {
+          "type": "number",
+          "description": "Lowest age in years, inclusive. 18 for adults."
+        },
+        "maxAge": {
+          "type": "number",
+          "description": "Highest age in years, inclusive."
+        },
+        "sex": {
+          "type": "string",
+          "enum": [
+            "male",
+            "female"
+          ],
+          "description": "Restrict to one sex. Omit for any."
+        },
+        "name": {
+          "type": "string",
+          "description": "Rule name shown in the editor. Defaults to a label like \"Age 18+\"."
+        }
+      },
+      "required": []
+    },
+    "requiresApproval": true
+  },
+  {
     "name": "add_exit_criterion",
     "description": "Define how a patient exits the cohort. Strategy: end_of_observation = end of continuous observation period; fixed_duration = N days after entry; continuous_drug = persistence-window-driven exit; custom_event = exit on a clinical event.",
     "schema": {
@@ -365,6 +396,47 @@
         "name",
         "logicType",
         "events"
+      ]
+    },
+    "requiresApproval": true
+  },
+  {
+    "name": "add_qualifying_criterion",
+    "description": "Restrict the ENTRY EVENT itself rather than the person — the editor's \"Restrict initial events\". Use when the qualifying event must coincide with something, e.g. an inpatient visit, a diagnosis recorded on the same admission. Distinct from add_criterion, which qualifies the person over a window.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "conceptId": {
+          "type": "number"
+        },
+        "conceptName": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string",
+          "enum": [
+            "Condition",
+            "Drug",
+            "Procedure",
+            "Measurement",
+            "Observation",
+            "Visit",
+            "Device",
+            "Specimen"
+          ]
+        },
+        "includeDescendants": {
+          "type": "boolean"
+        },
+        "isExcluded": {
+          "type": "boolean",
+          "description": "Optional exclusion flag for concept-set items"
+        }
+      },
+      "required": [
+        "conceptId",
+        "conceptName",
+        "domain"
       ]
     },
     "requiresApproval": true
@@ -897,6 +969,25 @@
     "requiresApproval": true
   },
   {
+    "name": "set_censor_window",
+    "description": "Bound the study period with fixed dates (YYYY-MM-DD): nobody is followed before startDate or after endDate, whatever their observation. Use when the user names a study window ('2015 to 2019') — without it the cohort spans the whole database and the counts answer a different question.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "startDate": {
+          "type": "string",
+          "description": "Earliest date to include, YYYY-MM-DD."
+        },
+        "endDate": {
+          "type": "string",
+          "description": "Latest date to include, YYYY-MM-DD."
+        }
+      },
+      "required": []
+    },
+    "requiresApproval": true
+  },
+  {
     "name": "set_entry_event",
     "description": "Set the cohort's primary qualifying entry event. Replaces any existing entry event.",
     "schema": {
@@ -934,6 +1025,61 @@
         "conceptName",
         "domain"
       ]
+    },
+    "requiresApproval": true
+  },
+  {
+    "name": "set_era_collapse",
+    "description": "Gap in days below which two stretches of cohort membership are merged into one era (the editor's era collapse). Default 0 — a person who leaves and re-enters counts as two episodes. Raise it when brief gaps should not split a person's follow-up.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "gapDays": {
+          "type": "number",
+          "description": "Merge stretches separated by fewer than this many days."
+        }
+      },
+      "required": [
+        "gapDays"
+      ]
+    },
+    "requiresApproval": true
+  },
+  {
+    "name": "set_event_limits",
+    "description": "Choose which qualifying events count, per person. 'first' is the new-user / first-diagnosis design — one row per person at their earliest qualifying event; 'all' (the default) puts a person in the cohort once per qualifying event, so counts mean episodes rather than people. Set this deliberately whenever the design is about new users or incident disease; phenotype_patterns reports what accepted definitions of the condition use.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "entryEvents": {
+          "type": "string",
+          "enum": [
+            "first",
+            "all",
+            "last"
+          ],
+          "description": "Which entry events qualify a person ('Cohort entry on' in the editor)."
+        },
+        "qualifyingEvents": {
+          "type": "string",
+          "enum": [
+            "first",
+            "all",
+            "last"
+          ],
+          "description": "Which qualifying events the inclusion rules apply to ('Apply rules to')."
+        },
+        "inclusionRuleEvents": {
+          "type": "string",
+          "enum": [
+            "first",
+            "all",
+            "last"
+          ],
+          "description": "Which events remain after the inclusion rules are applied."
+        }
+      },
+      "required": []
     },
     "requiresApproval": true
   },

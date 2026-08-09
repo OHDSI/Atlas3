@@ -1265,6 +1265,17 @@ function syncLocalRefsFromStore() {
   observationPeriod.value = c.observationPeriod || { priorDays: 0, postDays: 0 }
   exitCriteria.value = c.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
   censoringCriteria.value = c.censoringCriteria ?? []
+  // Everything else the agent can now set. The save serialises these local
+  // refs, so a field the agent writes to the store but that is not mirrored
+  // here is accepted on screen and then silently dropped at save: an entry
+  // limit that stays "All", a study window that never bounds anything. Keep
+  // this list in step with the proposal kinds the store applies.
+  additionalCriteria.value = c.additionalCriteria
+  censorWindow.value = c.censorWindow ?? null
+  collapseSettings.value = c.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
+  qualifyingLimit.value = c.qualifyingLimit ?? 'ALL'
+  primaryCriteriaLimit.value = c.primaryCriteriaLimit
+  inclusionQualifyingLimit.value = c.inclusionQualifyingLimit ?? 'ALL'
 }
 
 watch(() => cohortStore.agentRevision, syncLocalRefsFromStore)
@@ -2227,6 +2238,14 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     conceptSets: conceptSetsForSave,
     exitCriteria: exitCriteria.value,
     observationPeriod: observationPeriod.value,
+    // These three were missing, so anything set here was accepted on screen and
+    // then dropped at save: censoring events (set_censor_event has never
+    // persisted), a study window that never bounded anything, and the era
+    // collapse gap. The editor state is the source of truth for the save, so a
+    // field absent here does not exist as far as WebAPI is concerned.
+    censoringCriteria: censoringCriteria.value,
+    censorWindow: censorWindow.value || undefined,
+    collapseSettings: collapseSettings.value,
   }
 
   // Convert to Atlas format and save to WebAPI

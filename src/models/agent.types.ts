@@ -146,6 +146,17 @@ export type AgentProposal =
   | { kind: 'addEntryEvent'; event: CohortEvent; replace?: boolean }
   | { kind: 'removeInclusionRule'; match: { id?: string | number; name?: string } }
   | { kind: 'removeEntryEvent'; match: { conceptId?: number; conceptName?: string } }
+  | {
+      kind: 'setEventLimits'
+      limits: {
+        primaryCriteriaLimit?: 'ALL' | 'FIRST' | 'LAST'
+        qualifyingLimit?: 'ALL' | 'FIRST' | 'LAST'
+        inclusionQualifyingLimit?: 'ALL' | 'FIRST' | 'LAST'
+      }
+    }
+  | { kind: 'addQualifyingCriterion'; event: CohortEvent }
+  | { kind: 'setCensorWindow'; censorWindow: { startDate?: string | null; endDate?: string | null } }
+  | { kind: 'setEraCollapse'; collapseSettings: { collapseType: string; eraPad: number } }
   // Handled by the bridge, not the store: the saved set's concepts have to be
   // fetched before a criterion can carry them.
   | {
