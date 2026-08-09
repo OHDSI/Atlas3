@@ -154,7 +154,12 @@ async function applyProposalInner(
     default: {
       const cohortStore = useCohortStore()
       const currentRoute = router.currentRoute.value
-      const onCohortRoute = COHORT_ROUTES.has(String(currentRoute.name))
+      // Still sitting on the cohort we just saved, so an entry event now means
+      // "the next cohort" rather than "edit this one".
+      const routeCohortId = Number(
+        (currentRoute.params as { id?: string } | undefined)?.id ?? NaN,
+      )
+      const onJustSavedCohort = savedCohortId !== null && routeCohortId === savedCohortId
       // A cohort definition always begins with its entry event, so that is what
       // marks "this is the next artifact" rather than "keep building the one on
       // screen". Resetting on any proposal that arrived while not on
@@ -167,9 +172,14 @@ async function applyProposalInner(
       // requestNewCohort (not createNewCohort) so the MOUNTED editor re-syncs:
       // the plain reset clears the store but leaves the editor's local refs
       // holding the previous cohort's criteria.
-      if (!onCohortRoute || (startFreshCohort && startsNewDefinition)) {
+      // Reset only when there is nothing to keep, or when the agent is starting
+      // the next cohort after saving one. Resetting because the route happens
+      // not to be /cohorts/new discards whatever is open — the cohort the user
+      // is editing, or work in progress while they looked something up on
+      // another page.
+      if (!cohortStore.currentCohort || (onJustSavedCohort && startsNewDefinition)) {
         cohortStore.requestNewCohort()
-        startFreshCohort = false
+        savedCohortId = null
       }
       cohortStore.applyProposal(proposal)
       await ensureOnCohortRoute()
@@ -201,9 +211,12 @@ async function ensureOnCohortRoute() {
   }
 }
 
-// Set once a cohort has been saved: the next artifact the agent starts must
-// begin from a blank editor even though the route (cohort-new) hasn't changed.
-let startFreshCohort = false
+// Id of the cohort the agent last saved. The next artifact it starts must begin
+// from a blank editor even though the route (cohort-new) hasn't changed — but
+// only while that same cohort is still the one on screen. As a bare flag this
+// survived any navigation, so opening an existing cohort and asking the agent
+// to change its entry event wiped the cohort the user had just opened.
+let savedCohortId: number | null = null
 
 async function handleSaveCohort(
   proposal: { name?: string; description?: string } = {}
@@ -219,7 +232,7 @@ async function handleSaveCohort(
   // cohort, so the editor must start blank — otherwise the next entry event is
   // added on top of this one and the user watches a single editor accumulate
   // three entry criteria while three separate cohorts are saved underneath.
-  if (saved?.id) startFreshCohort = true
+  if (saved?.id) savedCohortId = Number(saved.id)
   return saved
 }
 

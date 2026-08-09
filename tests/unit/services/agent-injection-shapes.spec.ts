@@ -78,6 +78,33 @@ describe('shapes of everything the agent injects', () => {
     }
   })
 
+  // The capability says "Replaces any existing entry event", but the store
+  // appended: asking the agent to change the entry event left the cohort
+  // qualifying on either drug — roughly twice the population, with nothing
+  // failing and both events sitting in the editor looking deliberate.
+  it('set_entry_event replaces the entry event rather than adding a second', () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    store.applyProposal(translateCapability('set_entry_event', { ...CONCEPT }) as never)
+    store.applyProposal(translateCapability('set_entry_event', {
+      conceptId: 1177480, conceptName: 'Ibuprofen', domain: 'Drug',
+    }) as never)
+    expect(store.currentCohort?.entryEvents).toHaveLength(1)
+    const atlas = convertInternalToAtlas(store.currentCohort!) as unknown as Record<string, never>
+    expect((atlas.PrimaryCriteria as unknown as { CriteriaList: unknown[] }).CriteriaList).toHaveLength(1)
+  })
+
+  // add_criterion group=entry means "another qualifying event", so it still adds.
+  it('add_criterion with group entry adds an alternative entry event', () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    store.applyProposal(translateCapability('set_entry_event', { ...CONCEPT }) as never)
+    store.applyProposal(translateCapability('add_criterion', {
+      conceptId: 1177480, conceptName: 'Ibuprofen', domain: 'Drug', group: 'entry',
+    }) as never)
+    expect(store.currentCohort?.entryEvents).toHaveLength(2)
+  })
+
   it('set_observation_window always yields a complete ObservationWindow', () => {
     const atlas = applyAndConvert('set_observation_window', { priorDays: 365, postDays: 0 })
     const pc = atlas.PrimaryCriteria as unknown as { ObservationWindow?: { PriorDays: number; PostDays: number } }

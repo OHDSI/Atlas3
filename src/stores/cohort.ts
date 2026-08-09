@@ -14,6 +14,15 @@ import type {
 } from '@/models/cohort.types'
 import type { AgentProposal } from '@/models/agent.types'
 import type { Version } from '@/components/versions/types'
+
+/** Outcome of a save the editor performs on the store's behalf. `timedOut`
+ *  means nobody answered the save signal in time — the save may still be in
+ *  flight, so it must not be read as "nothing was saved". */
+export interface SaveResult {
+  id?: number
+  name?: string
+  timedOut?: boolean
+}
 import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
 import { logger } from '@/utils/logger'
 
@@ -210,7 +219,12 @@ export const useCohortStore = defineStore('cohort', () => {
     switch (proposal.kind) {
       case 'addEntryEvent':
         registerEventConceptSet(proposal.event)
-        addEntryEvent(proposal.event)
+        if (proposal.replace && currentCohort.value) {
+          currentCohort.value.entryEvents = [proposal.event]
+          isDirty.value = true
+        } else {
+          addEntryEvent(proposal.event)
+        }
         break
       case 'addInclusionRule':
         registerRuleConceptSets(proposal.rule)
@@ -294,24 +308,28 @@ export const useCohortStore = defineStore('cohort', () => {
   }
   const pendingSaves: PendingSave[] = []
 
-  function settleOldestSave(result: { id?: number; name?: string }) {
+  function settleOldestSave(result: SaveResult) {
     const entry = pendingSaves.shift()
     if (!entry) return
     clearTimeout(entry.timeoutId)
     entry.resolve(result)
   }
 
-  function requestSave(opts: { name?: string; description?: string } = {}): Promise<{ id?: number; name?: string }> {
+  function requestSave(opts: { name?: string; description?: string } = {}): Promise<SaveResult> {
     return new Promise(resolve => {
       saveOptions.value = opts
       // Never hang the caller if no editor is mounted to answer the signal.
-      const timeoutId = setTimeout(() => settleOldestSave({}), 8000)
+      // Mark it, so "nobody answered in time" is distinguishable from "the save
+      // returned nothing": a WebAPI save slower than this still lands, and a
+      // caller told only `{}` would reasonably conclude nothing was saved and
+      // save again, leaving two cohorts.
+      const timeoutId = setTimeout(() => settleOldestSave({ timedOut: true }), 8000)
       pendingSaves.push({ resolve, timeoutId })
       saveRequest.value++
     })
   }
 
-  function notifySaved(result: { id?: number; name?: string } = {}) {
+  function notifySaved(result: SaveResult = {}) {
     settleOldestSave(result)
   }
 

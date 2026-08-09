@@ -626,7 +626,10 @@ export function translateCapability(
       const ref = args as ConceptRefArgs
       const event = buildEventFromCriterion(ref as CriterionArgs)
       if (!event) return null
-      return { kind: 'addEntryEvent', event } as unknown as AgentProposal
+      // The capability's contract is "replaces any existing entry event". Without
+      // this the store appended, so changing the entry event left the cohort
+      // qualifying on either one — twice the population, no error anywhere.
+      return { kind: 'addEntryEvent', event, replace: true } as unknown as AgentProposal
     }
 
     case 'generate_analysis': {

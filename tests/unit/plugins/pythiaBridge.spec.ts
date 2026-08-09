@@ -505,6 +505,19 @@ describe('pythiaBridge', () => {
 // clears the store but leaves the MOUNTED editor's local refs alone. The user
 // watched one editor accumulate three entry criteria while three separate
 // cohorts were saved underneath.
+// handleSaveCohort awaits a route check before it calls requestSave, so the
+// editor's answer has to wait for the request to actually be registered.
+async function completeSave(
+  store: { saveRequest: number; notifySaved: (r: { id?: number; name?: string }) => void },
+  result: { id?: number; name?: string },
+) {
+  const before = store.saveRequest
+  for (let i = 0; i < 50 && store.saveRequest === before; i++) {
+    await new Promise(r => setTimeout(r, 5))
+  }
+  store.notifySaved(result)
+}
+
 describe('editor starts blank for each new cohort', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -512,15 +525,24 @@ describe('editor starts blank for each new cohort', () => {
     createHostMessageBus('pythia-plugin')
   })
 
+  // The trigger used to be "any proposal while not on /cohorts/new", which is
+  // what discarded the cohort on screen after the first save. The reset itself
+  // is still right when the agent starts the NEXT cohort after saving one, and
+  // it must still go through requestNewCohort so the mounted editor re-syncs —
+  // that is what this covers.
   it('signals the mounted editor rather than silently resetting the store', async () => {
     const { useCohortStore } = await import('@/stores/cohort')
     const store = useCohortStore()
     store.createNewCohort()
-    const before = store.newCohortSignal
+    vi.mocked(router).currentRoute = { value: { name: 'cohort-edit', params: { id: '83' } } } as never
+    // The editor answers a save request via notifySaved; without one mounted
+    // the promise would sit until its fallback timer.
+    const saved = applyProposalDirect({ kind: 'saveCohort' } as never)
+    await completeSave(store as never, { id: 83, name: 'saved cohort' })
+    await saved
 
-    // Simulate ATLAS being on some other route, which always forced a reset.
-    vi.mocked(router).currentRoute = { value: { name: 'cohorts' } } as never
-    applyProposalDirect({
+    const before = store.newCohortSignal
+    await applyProposalDirect({
       kind: 'addEntryEvent',
       event: { id: 'e1', criteriaType: 'ConditionOccurrence', conceptSet: { id: 'x', name: 'Sinusitis', items: [] } },
     } as never)
@@ -681,5 +703,73 @@ describe('building on a cohort that is already saved', () => {
     expect(c?.entryEvents).toHaveLength(1)
     expect(c?.observationPeriod?.priorDays).toBe(365)
     expect(c?.inclusionRules).toHaveLength(2)
+  })
+})
+
+// Two more cases of the same shape as the reset bug: state the user or the
+// agent had already built, discarded with no failure anywhere.
+describe('proposals never discard work that is already open', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    setupPythiaBridge()
+    createHostMessageBus('pythia-plugin')
+  })
+
+  it('does not wipe a cohort the user opened after the agent saved a different one', async () => {
+    const store = useCohortStore()
+    ;(router as unknown as { currentRoute: { value: { name: string; params: object } } })
+      .currentRoute.value = { name: 'cohort-edit', params: { id: '83' } }
+    store.createNewCohort()
+    // The agent saves cohort 83 …
+    const saved = applyProposalDirect({ kind: 'saveCohort' } as never)
+    await completeSave(store as never, { id: 83, name: 'saved cohort' })
+    await saved
+    // … then the user opens cohort 42 and asks for a different entry event.
+    ;(router as unknown as { currentRoute: { value: { name: string; params: object } } })
+      .currentRoute.value = { name: 'cohort-edit', params: { id: '42' } }
+    store.createNewCohort()
+    store.currentCohort!.name = 'Cohort 42 the user opened'
+    const reset = vi.spyOn(store, 'requestNewCohort')
+
+    await applyProposalDirect({
+      kind: 'addEntryEvent',
+      event: { id: 'e9', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Naproxen', items: [] } },
+    } as never)
+
+    expect(reset).not.toHaveBeenCalled()
+    expect(store.currentCohort?.name).toBe('Cohort 42 the user opened')
+  })
+
+  it('adds to an in-progress cohort even when the user is on another page', async () => {
+    const store = useCohortStore()
+    ;(router as unknown as { currentRoute: { value: { name: string; params: object } } })
+      .currentRoute.value = { name: 'concept-sets', params: {} }
+    store.createNewCohort()
+    store.currentCohort!.name = 'half-built cohort'
+    const reset = vi.spyOn(store, 'requestNewCohort')
+
+    await applyProposalDirect({
+      kind: 'setObservationPeriod',
+      observationPeriod: { priorDays: 180, postDays: 0 },
+    } as never)
+
+    expect(reset).not.toHaveBeenCalled()
+    expect(store.currentCohort?.name).toBe('half-built cohort')
+    expect(store.currentCohort?.observationPeriod?.priorDays).toBe(180)
+  })
+
+  it('still creates a cohort when there is nothing open at all', async () => {
+    const store = useCohortStore()
+    ;(router as unknown as { currentRoute: { value: { name: string; params: object } } })
+      .currentRoute.value = { name: 'home', params: {} }
+    store.clearCohort()
+
+    await applyProposalDirect({
+      kind: 'setObservationPeriod',
+      observationPeriod: { priorDays: 90, postDays: 0 },
+    } as never)
+
+    expect(store.currentCohort).toBeTruthy()
+    expect(store.currentCohort?.observationPeriod?.priorDays).toBe(90)
   })
 })
