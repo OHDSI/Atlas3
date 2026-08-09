@@ -39,10 +39,13 @@ function darkColors(primaryOverride?: string | null) {
   const primary = primaryOverride
     ? lightenUntil(primaryOverride, set.surface, AA_TEXT)
     : set.primary
+  // No `outline` override here: Vuetify emits theme colours as bare `r,g,b`
+  // triplets, so outline and outlineStrong collapse to the same value. The
+  // stronger dark border ships as the alpha-preserving CSS custom property
+  // --atlas-color-outline-strong (src/ui/tokens.css).
   return {
     ...colorsFor(set),
     primary,
-    outline: set.outlineStrong,
     'on-primary': set.onPrimary,
     'on-error': set.onDanger,
     'on-info': set.onInfo,

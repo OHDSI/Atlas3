@@ -16,7 +16,7 @@ vi.mock('@/utils/logger', () => ({
 
 import {
   formatNumber,
-  formatDate,
+  formatDateLocalized,
   formatDateTime,
   formatDateOnly,
   formatTimeOnly,
@@ -65,18 +65,18 @@ describe('Format Utils', () => {
     })
   })
 
-  describe('formatDate', () => {
+  describe('formatDateLocalized', () => {
     it('should format Date object', () => {
       const date = new Date('2024-06-15T12:00:00Z')
 
-      const result = formatDate(date, 'en')
+      const result = formatDateLocalized(date, 'en')
 
       expect(result).toBeDefined()
       expect(result.length).toBeGreaterThan(0)
     })
 
     it('should format date string', () => {
-      const result = formatDate('2024-06-15', 'en')
+      const result = formatDateLocalized('2024-06-15', 'en')
 
       expect(result).toBeDefined()
     })
@@ -84,13 +84,13 @@ describe('Format Utils', () => {
     it('should format timestamp', () => {
       const timestamp = Date.now()
 
-      const result = formatDate(timestamp, 'en')
+      const result = formatDateLocalized(timestamp, 'en')
 
       expect(result).toBeDefined()
     })
 
     it('should return Invalid Date for invalid input', () => {
-      const result = formatDate('not-a-date', 'en')
+      const result = formatDateLocalized('not-a-date', 'en')
 
       expect(result).toBe('Invalid Date')
     })
@@ -98,7 +98,7 @@ describe('Format Utils', () => {
     it('should accept custom options', () => {
       const date = new Date('2024-06-15')
 
-      const result = formatDate(date, 'en', { year: 'numeric' })
+      const result = formatDateLocalized(date, 'en', { year: 'numeric' })
 
       expect(result).toContain('2024')
     })

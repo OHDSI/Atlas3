@@ -70,6 +70,7 @@ vi.mock('@/services/auth/tokenRefresh', () => ({
 import { storageManager } from '@/services/auth/storageManager'
 import { tokenManager } from '@/services/auth/tokenManager'
 import { refreshManager } from '@/services/auth/refreshManager'
+import { permissionService } from '@/services/auth/permissions'
 
 describe('Auth Store', () => {
   beforeEach(() => {
@@ -340,6 +341,28 @@ describe('Auth Store', () => {
       store.setRunAsState(secondTarget)
 
       expect(store.originalUser).toEqual(firstOriginal)
+    })
+
+    it('setRunAsState should apply the target permissions and evict the permission cache', () => {
+      const store = useAuthStore()
+      store.setUser({ login: 'admin', permissionIdx: { admin: ['admin:security'] } } as UserInfo)
+      vi.mocked(permissionService.clearCache).mockClear()
+
+      store.setRunAsState({ login: 'testuser', permissionIdx: { cohort: ['cohort:1:get'] } } as UserInfo)
+
+      expect(permissionService.clearCache).toHaveBeenCalled()
+      expect(store.permissions).toEqual({ cohort: ['cohort:1:get'] })
+    })
+
+    it('exitRunAsState should evict the permission cache', () => {
+      const store = useAuthStore()
+      store.setRunAsState({ login: 'testuser' } as UserInfo)
+      vi.mocked(permissionService.clearCache).mockClear()
+
+      store.exitRunAsState({ login: 'admin', permissionIdx: { admin: ['admin:security'] } } as UserInfo)
+
+      expect(permissionService.clearCache).toHaveBeenCalled()
+      expect(store.permissions).toEqual({ admin: ['admin:security'] })
     })
 
     it('exitRunAsState should restore original user', () => {

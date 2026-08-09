@@ -4,6 +4,7 @@
  * Provides default configuration helpers for all chart types
  */
 
+import { shallowRef } from 'vue'
 import type { EChartsOption } from 'echarts'
 import type { BarChartData, PieChartData, LineChartData, TreemapNode } from '@/models/report.types'
 import { tokens } from './tokens'
@@ -171,6 +172,20 @@ let chartMode: 'light' | 'dark' = 'light'
 let paletteOverride: readonly string[] | null = null
 let gradientOverride: readonly string[] | null = null
 
+// The palette bindings below are plain module-level `let`s, so a chart computed
+// that reads them (directly or through an option builder) tracks nothing and
+// keeps the previous theme's colours until its data changes. Every builder
+// touches this revision so setChartTheme / setChartPalette invalidate them.
+const chartThemeRevision = shallowRef(0)
+
+/**
+ * Register the active chart theme as a reactive dependency of the caller.
+ * Call it from any computed that reads a CHART_* binding at compute time.
+ */
+export function trackChartTheme(): number {
+  return chartThemeRevision.value
+}
+
 export let CHART_TEXT: string = tokens.color.onSurface
 export let CHART_SUBTLE_TEXT: string = '#5e6470'
 export let CHART_SURFACE: string = tokens.color.surface
@@ -205,6 +220,7 @@ function applyPalettes(): void {
   // No token is red; light stays at its pre-existing 2.44:1 (unrelated,
   // out of scope). Dark only needs a value that clears 3:1 on its own.
   CHART_OUTLIER_MARKER = chartMode === 'dark' ? 'rgba(255,107,107,0.7)' : 'rgba(255, 0, 0, 0.5)'
+  chartThemeRevision.value++
 }
 
 /**
@@ -241,6 +257,7 @@ export function chartRootTextStyle(): { textStyle: { color: string } } | Record<
  * Default bar chart configuration
  */
 export function defaultBarChartOptions(data: BarChartData): EChartsOption {
+  trackChartTheme()
   return {
     ...chartRootTextStyle(),
     tooltip: {
@@ -326,6 +343,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
  * Default pie chart configuration
  */
 export function defaultPieChartOptions(data: PieChartData[], title?: string): EChartsOption {
+  trackChartTheme()
   return {
     ...chartRootTextStyle(),
     title: title
@@ -411,6 +429,7 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
  * Default line chart configuration
  */
 export function defaultLineChartOptions(data: LineChartData, title?: string): EChartsOption {
+  trackChartTheme()
   return {
     ...chartRootTextStyle(),
     title: title
@@ -484,6 +503,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
  * Default treemap configuration
  */
 export function defaultTreemapOptions(data: TreemapNode[], title?: string): EChartsOption {
+  trackChartTheme()
   const { min: dataMin, max: dataMax } = extractTreemapValueRange(data)
   return {
     ...chartRootTextStyle(),
@@ -791,6 +811,7 @@ import { logger } from '@/utils/logger'
  * Dashboard Gender Pie Chart Configuration
  */
 export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChartsOption {
+  trackChartTheme()
   return {
     ...chartRootTextStyle(),
     tooltip: {
@@ -855,6 +876,7 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
  * Dashboard Age Bar Chart Configuration
  */
 export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): EChartsOption {
+  trackChartTheme()
   const validBins = data.bins.filter(
     b => Number.isFinite(b.intervalIndex) && Number.isFinite(b.countValue) && b.countValue >= 0
   )
@@ -972,6 +994,7 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
  * Dashboard Cumulative Observation Line Chart Configuration
  */
 export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): EChartsOption {
+  trackChartTheme()
   return {
     ...chartRootTextStyle(),
     tooltip: {
@@ -1048,6 +1071,7 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
  * Dashboard Observation by Month Line Chart Configuration
  */
 export function dashboardObservationMonthLineOptions(data: DatasourceLineChartData): EChartsOption {
+  trackChartTheme()
   return {
     ...chartRootTextStyle(),
     tooltip: {
@@ -1118,6 +1142,7 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
  * Multi-Line Chart Configuration for Data Density Reports
  */
 export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLineChartData): EChartsOption {
+  trackChartTheme()
   const isPercent = 'yAxisFormat' in data && data.yAxisFormat === 'percent'
   const formatValue = (value: number) =>
     isPercent ? `${(value * 100).toFixed(1)}%` : formatSINumber(value)
@@ -1202,6 +1227,7 @@ export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLin
  * Clinical Domain Treemap Configuration
  */
 export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOption {
+  trackChartTheme()
   // Calculate prevalence range for color mapping
   const values = extractAllValues(nodes)
   const minValue = Math.min(...values)
@@ -1323,6 +1349,7 @@ export function trellisChartOptions(
   title?: string,
   maxPlotsPerRow: number = 5
 ): EChartsOption {
+  trackChartTheme()
   // Sort categories by leading numeric prefix so age brackets come
   // out 0-9, 10-19, 20-29, ..., 100-109 instead of the ASCII order
   // 0-9, 10-19, 100-109, 20-29.
@@ -1564,6 +1591,7 @@ export function boxPlotChartOptions(
   data: import('@/models/report.types').BoxPlotData[],
   title?: string
 ): EChartsOption {
+  trackChartTheme()
   const categories = data.map(d => d.category)
 
   // Convert data to ECharts boxplot format: [min, Q1, median, Q3, max]

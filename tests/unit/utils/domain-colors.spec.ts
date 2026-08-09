@@ -109,6 +109,17 @@ describe('getDomainColor', () => {
     expect(ratio).toBeGreaterThanOrEqual(AA_TEXT)
   })
 
+  // Regression: Note and Metadata both mapped to grey-lighten-1 in dark, so a
+  // concept set holding both drew two identical chips and two identical
+  // timeline series.
+  it.each([
+    ['light', 'light' as const],
+    ['dark', 'dark' as const],
+  ])('%s mode gives every domain its own colour', (_label, mode) => {
+    const assigned = ALL_DOMAINS.map((domain) => getDomainColor(domain, mode))
+    expect(new Set(assigned).size).toBe(ALL_DOMAINS.length)
+  })
+
   it('picks a lighter step of the same hue for dark mode without switching hue families', () => {
     const sameFamily = (light: string, dark: string) => dark.split('-')[0] === light.split('-')[0]
     expect(sameFamily(getDomainColor('Condition'), getDomainColor('Condition', 'dark'))).toBe(true)

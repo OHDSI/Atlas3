@@ -605,7 +605,12 @@ import { useWebAPIStore } from '@/stores/webapi'
 import { useAtlasConverter } from '@/composables/useAtlasConverter'
 import { provideCriteriaSelection } from '@/composables/useCriteriaSelection'
 import { useI18n } from '@/composables/useI18n'
-import { useCohortValidation } from '@/composables/useCohortValidation'
+import {
+  useCohortValidation,
+  assembleCohortDefinition,
+  hydrateConceptSetItems,
+  type CohortEditorState,
+} from '@/composables/useCohortValidation'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import { getCohortDefinition } from '@/services/cohort-definition.service'
@@ -923,6 +928,8 @@ const {
   inclusionRules,
   exitCriteria,
   censoringCriteria,
+  censorWindow,
+  collapseSettings,
   observationPeriod,
   qualifyingLimit,
   primaryCriteriaLimit,
@@ -968,6 +975,33 @@ async function handleBackToCurrent(): Promise<void> {
 const cohortExpression = ref<ReturnType<typeof convertInternalToAtlas> | Record<string, never>>({})
 
 /**
+ * The editor's current state, minus the concept sets (each caller resolves
+ * those differently: the preview and validation hydrate the used sets, the
+ * save keeps every loaded set). Everything that reaches `convertInternalToAtlas`
+ * is assembled from this, so the preview, the validator and the save can never
+ * drift onto different field sets.
+ */
+function currentEditorState(): Omit<CohortEditorState, 'conceptSets'> {
+  return {
+    id: cohortId.value ?? undefined,
+    name: cohortName.value,
+    description: cohortDescription.value,
+    tags: cohortTags.value,
+    entryEvents: entryEvents.value,
+    additionalCriteria: additionalCriteria.value,
+    inclusionRules: inclusionRules.value,
+    exitCriteria: exitCriteria.value,
+    censorWindow: censorWindow.value,
+    collapseSettings: collapseSettings.value,
+    censoringCriteria: censoringCriteria.value,
+    observationPeriod: observationPeriod.value,
+    qualifyingLimit: qualifyingLimit.value,
+    primaryCriteriaLimit: primaryCriteriaLimit.value,
+    inclusionQualifyingLimit: inclusionQualifyingLimit.value,
+  }
+}
+
+/**
  * Build cohort expression with full concept set items fetched from API
  * Called whenever cohort state changes
  */
@@ -979,30 +1013,7 @@ async function buildCohortExpression() {
   }
 
   try {
-    // Fetch full concept set items for all used concept sets
-    const conceptSetsWithItems: ConceptSetReference[] = await Promise.all(
-      usedConceptSets.value.map(async ref => {
-        // Skip if items are already populated
-        if (ref.items && ref.items.length > 0) {
-          return ref
-        }
-
-        // Fetch full concept set from API if it has a real (numeric) ID.
-        // Avoid falsy checks (id could be 0, which is valid). Use explicit check for undefined.
-        if (ref.id !== undefined && ref.id !== null) {
-          const fullConceptSet = await getConceptSetById(ref.id)
-          if (fullConceptSet && fullConceptSet.items) {
-            return {
-              ...ref,
-              items: fullConceptSet.items as ConceptSetItem[],
-            }
-          }
-        }
-
-        // Return reference as-is if fetching failed
-        return ref
-      })
-    )
+    const conceptSetsWithItems = await hydrateConceptSetItems(usedConceptSets.value)
 
     // Strip in-progress criteria from inclusion rules before building the
     // live-preview expression. A criterion that was just added but has no
@@ -1029,29 +1040,16 @@ async function buildCohortExpression() {
       })),
     }))
 
-    // Build cohort definition with all fields (same as validation)
-    const cohortDef: CohortDefinition = {
+    const cohortDef = assembleCohortDefinition({
+      ...currentEditorState(),
       name: cohortName.value || 'Untitled Cohort',
-      description: cohortDescription.value,
-      tags: cohortTags.value,
-      entryEvents: entryEvents.value,
       inclusionRules: sanitizedInclusionRules,
-      exitCriteria: exitCriteria.value,
-      censorWindow: censorWindow.value || undefined,
-      collapseSettings: collapseSettings.value,
-      censoringCriteria: censoringCriteria.value,
-      observationPeriod: observationPeriod.value,
-      qualifyingLimit: qualifyingLimit.value,
-      primaryCriteriaLimit: primaryCriteriaLimit.value,
-      inclusionQualifyingLimit: inclusionQualifyingLimit.value,
       // 0 is a valid concept-set id (nextConceptSetId starts there), so a
       // single-concept-set cohort must not have its only set filtered out
       // while criteria still reference CodesetId 0.
       conceptSets: conceptSetsWithItems,
-      ...(additionalCriteria.value !== undefined ? { additionalCriteria: additionalCriteria.value } : {}),
-    }
+    })
 
-    // Convert to Atlas format (same as checkV2 validation)
     cohortExpression.value = convertInternalToAtlas(cohortDef)
   } catch (error) {
     logger.error('CohortBuilder', 'Failed to build cohort expression', error)
@@ -1392,6 +1390,8 @@ onMounted(async () => {
 
   // Add beforeunload handler to warn when closing tab/window with unsaved changes
   window.addEventListener('beforeunload', handleBeforeUnload)
+
+  cohortStore.startAutoSave()
 })
 
 // Navigation guard to prevent losing unsaved changes. The confirm
@@ -1470,6 +1470,8 @@ watch(
     inclusionRules,
     exitCriteria,
     censoringCriteria,
+    censorWindow,
+    collapseSettings,
     observationPeriod,
     qualifyingLimit,
     primaryCriteriaLimit,
@@ -2192,21 +2194,11 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     })
   )
 
-  const cohortDefinition: CohortDefinition = {
-    id: props.id ? Number(props.id) : undefined,
-    name: cohortName.value,
+  const cohortDefinition = assembleCohortDefinition({
+    ...currentEditorState(),
     description: cohortDescription.value || undefined,
-    tags: cohortTags.value,
-    entryEvents: entryEvents.value,
-    qualifyingLimit: qualifyingLimit.value,
-    primaryCriteriaLimit: primaryCriteriaLimit.value,
-    inclusionQualifyingLimit: inclusionQualifyingLimit.value,
-    additionalCriteria: additionalCriteria.value,
-    inclusionRules: inclusionRules.value,
     conceptSets: conceptSetsForSave,
-    exitCriteria: exitCriteria.value,
-    observationPeriod: observationPeriod.value,
-  }
+  })
 
   // Convert to Atlas format and save to WebAPI
   const { convertInternalToAtlas } = await import('@/services/atlas-converter')

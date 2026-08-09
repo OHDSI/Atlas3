@@ -1,63 +1,50 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
+
+vi.mock('@/services/http-client', () => ({
+  httpGet: vi.fn(),
+  httpPost: vi.fn(),
+  httpPut: vi.fn(),
+  httpDelete: vi.fn(),
 }))
 
 import {
   assignTagToConceptSet,
   unassignTagFromConceptSet,
 } from '@/services/concept-set.service'
+import { httpPost, httpDelete } from '@/services/http-client'
 
 describe('ConceptSetService tags', () => {
-  let mockFetch: ReturnType<typeof vi.fn>
-
   beforeEach(() => {
     vi.clearAllMocks()
-    mockFetch = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) })
-    global.fetch = mockFetch
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
+    vi.mocked(httpPost).mockResolvedValue(undefined)
+    vi.mocked(httpDelete).mockResolvedValue(undefined)
   })
 
   it('POSTs the raw tagId to /conceptset/{id}/tag/', async () => {
     const result = await assignTagToConceptSet(42, 7)
     expect(result.success).toBe(true)
-    const [url, options] = mockFetch.mock.calls[0]
-    expect(url).toContain('/conceptset/42/tag/')
-    expect(options.method).toBe('POST')
-    expect(options.body).toBe('7')
+    expect(httpPost).toHaveBeenCalledWith('/conceptset/42/tag/', 7)
   })
 
   it('DELETEs /conceptset/{id}/tag/{tagId}', async () => {
     const result = await unassignTagFromConceptSet(42, 7)
     expect(result.success).toBe(true)
-    const [url, options] = mockFetch.mock.calls[0]
-    expect(url).toContain('/conceptset/42/tag/7')
-    expect(options.method).toBe('DELETE')
+    expect(httpDelete).toHaveBeenCalledWith('/conceptset/42/tag/7')
   })
 
   it('returns the server error message when the request fails', async () => {
-    mockFetch.mockResolvedValue({
-      ok: false,
-      status: 500,
-      statusText: 'err',
-      text: async () => '',
-    })
+    vi.mocked(httpPost).mockRejectedValue(new Error('HTTP 500: err'))
     const result = await assignTagToConceptSet(1, 2)
     expect(result.success).toBe(false)
     expect(result.error).toContain('err')
   })
 
   it('returns the server error message when unassigning fails', async () => {
-    mockFetch.mockResolvedValue({
-      ok: false,
-      status: 500,
-      statusText: 'err',
-      text: async () => '',
-    })
+    vi.mocked(httpDelete).mockRejectedValue(new Error('HTTP 500: err'))
     const result = await unassignTagFromConceptSet(1, 2)
     expect(result.success).toBe(false)
     expect(result.error).toContain('err')

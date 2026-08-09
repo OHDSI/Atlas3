@@ -218,8 +218,7 @@
         "enum": [
           "end_of_observation",
           "fixed_duration",
-          "continuous_drug",
-          "custom_event"
+          "continuous_drug"
         ]
       },
       "offset": {
@@ -277,7 +276,7 @@
           "conceptName",
           "domain"
         ],
-        "description": "Concept defining the exit event (for continuous_drug or custom_event)"
+        "description": "Drug concept whose exposure eras define the exit (for continuous_drug)"
       }
     },
     "required": [

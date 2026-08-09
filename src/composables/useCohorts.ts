@@ -9,11 +9,10 @@ import { getCohorts } from '@/services/cohort-definition.service'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
+import { getUserString, isDateInRange } from '@/utils/list-filters'
+import type { DateRange } from '@/utils/list-filters'
 
-export interface DateRange {
-  from?: Date
-  to?: Date
-}
+export type { DateRange }
 
 export interface FilterState {
   searchQuery: string
@@ -122,30 +121,6 @@ export function useCohorts() {
     } finally {
       loading.value = false
     }
-  }
-
-  /**
-   * Helper: Check if date is within range
-   */
-  function isDateInRange(date: number | string | undefined, range: DateRange): boolean {
-    if (!date) return !range.from && !range.to // If no date, only pass if no range set
-    const dateObj = new Date(date)
-    if (range.from && dateObj < range.from) return false
-    if (range.to && dateObj > range.to) return false
-    return true
-  }
-
-  /**
-   * Helper: Format user for comparison
-   */
-  function getUserString(userValue: unknown): string {
-    if (!userValue) return ''
-    if (typeof userValue === 'string') return userValue.toLowerCase()
-    if (typeof userValue === 'object' && userValue !== null) {
-      const user = userValue as Record<string, unknown>
-      return ((user.name || user.login || user.id || '') as string).toLowerCase()
-    }
-    return ''
   }
 
   /**

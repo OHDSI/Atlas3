@@ -1,4 +1,7 @@
 import type { PathwayEventCode, PathwayGroup } from '@/models/pathway.types'
+import { arrayToCsv } from '@/utils/csv'
+
+export { downloadCsv } from '@/utils/csv'
 
 const codeToName = (codes: PathwayEventCode[], code: string): string => {
   const c = codes.find(x => x.code === Number(code))
@@ -95,25 +98,10 @@ export function toDistinctEventCountRows(
 }
 
 export function toCsv(rows: Array<Record<string, string | number>>): string {
-  if (rows.length === 0) return ''
   const firstRow = rows[0]
   if (!firstRow) return ''
-  const headers = Object.keys(firstRow)
-  const escape = (v: string | number): string => {
-    const s = String(v)
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-  }
-  const head = headers.map(escape).join(',')
-  const body = rows.map(r => headers.map(h => escape(r[h] ?? '')).join(',')).join('\n')
-  return `${head}\n${body}`
-}
-
-export function downloadCsv(filename: string, csv: string): void {
-  const blob = new Blob([csv], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
+  return arrayToCsv(
+    rows,
+    Object.keys(firstRow).map(key => ({ key, label: key }))
+  )
 }

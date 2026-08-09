@@ -33,6 +33,7 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
   const featureAnalyses = ref<FeatureAnalysisListItem[]>([])
   const currentFA = ref<FeatureAnalysis | null>(null)
   const loading = ref<boolean>(false)
+  let fetchAllInFlight: Promise<void> | null = null
   const error = ref<string | null>(null)
   const filterTerm = ref<string>('')
   const domains = ref<string[]>([])
@@ -59,25 +60,34 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
 
   /**
    * Fetch all feature analyses.
-   * Skip if already loading to prevent concurrent calls.
+   * Concurrent callers share the in-flight request, so awaiting fetchAll()
+   * always resolves against the response rather than the previous list.
    */
-  async function fetchAll() {
-    if (loading.value) {
-      return
+  async function fetchAll(): Promise<void> {
+    if (fetchAllInFlight) {
+      return fetchAllInFlight
     }
 
     loading.value = true
     error.value = null
 
-    const result = await listFeatureAnalyses()
-    if (result.success) {
-      featureAnalyses.value = result.data
-    } else {
-      error.value = result.error.message
-      logger.error('FeatureAnalysesStore', 'Fetch feature analyses error', result.error)
-      featureAnalyses.value = []
-    }
-    loading.value = false
+    fetchAllInFlight = (async () => {
+      try {
+        const result = await listFeatureAnalyses()
+        if (result.success) {
+          featureAnalyses.value = result.data
+        } else {
+          error.value = result.error.message
+          logger.error('FeatureAnalysesStore', 'Fetch feature analyses error', result.error)
+          featureAnalyses.value = []
+        }
+      } finally {
+        fetchAllInFlight = null
+        loading.value = false
+      }
+    })()
+
+    return fetchAllInFlight
   }
 
   /**

@@ -719,6 +719,30 @@ describe('WebAPI Store', () => {
           store.stopPolling(123)
           await Promise.all([poll1, poll2])
         })
+
+        it('should not issue a second request while one is in flight', async () => {
+          const store = useWebAPIStore()
+          store.addGenerationJob({
+            id: 1,
+            cohortDefinitionId: 123,
+            sourceKey: 'SYNPUF1K',
+            status: 'RUNNING',
+          })
+
+          let resolveInfo: (value: unknown) => void = () => {}
+          vi.mocked(cohortDefService.getCohortGenerationInfo).mockImplementation(
+            () => new Promise(resolve => { resolveInfo = resolve }) as never
+          )
+
+          const pollPromise = store.pollGenerationStatus(123)
+          await vi.advanceTimersByTimeAsync(10000)
+
+          expect(cohortDefService.getCohortGenerationInfo).toHaveBeenCalledTimes(1)
+
+          resolveInfo({ success: true, data: [] })
+          await pollPromise
+          store.stopPolling(123)
+        })
       })
 
       describe('stopPolling', () => {

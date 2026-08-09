@@ -3,6 +3,7 @@ import { useProfileStore } from '@/stores/profile'
 import { useThemeStore } from '@/stores/theme'
 import { DEFAULT_HIGHLIGHT_COLOR, OMOP_DOMAINS } from '@/models/profile.types'
 import { getDomainColor } from '@/utils/domain-colors'
+import { tokens } from '@/ui/tokens'
 
 /**
  * WebAPI returns domain values inconsistently: Eunomia (CDM 5.4)
@@ -71,9 +72,18 @@ export const VUETIFY_COLOR_HEX: Record<string, string> = {
   primary: '#1976D2',
 }
 
+// getDomainColor answers 'primary' for domains outside the map. The table above
+// holds only the light-mode primary, which is invisible against the dark
+// timeline canvas, so the fallback resolves per mode.
+const PRIMARY_FALLBACK_HEX: Record<'light' | 'dark', string> = {
+  light: VUETIFY_COLOR_HEX.primary ?? DEFAULT_HIGHLIGHT_COLOR,
+  dark: tokens.colorDark.primary,
+}
+
 function resolveDomainColorHex(domain: string, mode: 'light' | 'dark'): string {
   const token = getDomainColor(domain, mode)
-  return VUETIFY_COLOR_HEX[token] ?? VUETIFY_COLOR_HEX.primary ?? DEFAULT_HIGHLIGHT_COLOR
+  if (token === 'primary') return PRIMARY_FALLBACK_HEX[mode]
+  return VUETIFY_COLOR_HEX[token] ?? PRIMARY_FALLBACK_HEX[mode]
 }
 
 export interface UniqueConcept {

@@ -6,7 +6,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
-import { useLocaleStore } from '@/stores/locale'
+import { useI18n } from '@/composables/useI18n'
 import { getAuthConfig } from '@/config/auth.config'
 import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
@@ -234,21 +234,7 @@ function applyDocumentTitle(route: RouteLocationNormalized): void {
   }
   let label: string = titleKey
   try {
-    const localeStore = useLocaleStore()
-    const translations = localeStore.translations as Record<string, unknown>
-    const segments = titleKey.split('.')
-    let value: unknown = translations
-    for (const seg of segments) {
-      if (value && typeof value === 'object') {
-        value = (value as Record<string, unknown>)[seg]
-      } else {
-        value = undefined
-        break
-      }
-    }
-    if (typeof value === 'string' && value.length > 0) {
-      label = value
-    }
+    label = useI18n().tv(titleKey)
   } catch {
     // Pinia not yet installed (e.g. early in bootstrap or in isolated tests);
     // fall back to the title key itself.
@@ -260,6 +246,9 @@ router.afterEach((to: RouteLocationNormalized) => {
   applyDocumentTitle(to)
 })
 
+// This module is evaluated before Pinia is installed (main.ts imports the router
+// at load time), so the locale store cannot be watched from here; the store
+// dispatches `locale-changed` for exactly this case.
 if (typeof window !== 'undefined' && window.addEventListener) {
   window.addEventListener('locale-changed', () => {
     applyDocumentTitle(router.currentRoute.value)

@@ -8,7 +8,11 @@ export class StorageManager {
   saveToken(token: string): void {
     try {
       localStorage.setItem(this.TOKEN_KEY, token)
-      document.cookie = `${this.TOKEN_KEY}=${token}; path=/; SameSite=Lax`
+      // Secure is added only under https: on a plain-http deployment the
+      // browser would refuse to store the cookie at all, and the token is
+      // already travelling in the clear there anyway.
+      const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+      document.cookie = `${this.TOKEN_KEY}=${token}; path=/; SameSite=Lax${secure}`
     } catch (error) {
       logger.error('StorageManager', 'Failed to save token', error)
     }

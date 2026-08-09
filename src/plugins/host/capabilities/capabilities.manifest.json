@@ -97,8 +97,7 @@
         "logic",
         "items"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "add_criterion",
@@ -166,12 +165,11 @@
         "group",
         "includeDescendants"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "add_exit_criterion",
-    "description": "Define how a patient exits the cohort. Strategy: end_of_observation = end of continuous observation period; fixed_duration = N days after entry; continuous_drug = persistence-window-driven exit; custom_event = exit on a clinical event.",
+    "description": "Define how a patient exits the cohort. Strategy: end_of_observation = end of continuous observation period; fixed_duration = N days after entry; continuous_drug = persistence-window-driven exit.",
     "schema": {
       "type": "object",
       "properties": {
@@ -180,8 +178,7 @@
           "enum": [
             "end_of_observation",
             "fixed_duration",
-            "continuous_drug",
-            "custom_event"
+            "continuous_drug"
           ]
         },
         "offset": {
@@ -239,14 +236,13 @@
             "conceptName",
             "domain"
           ],
-          "description": "Concept defining the exit event (for continuous_drug or custom_event)"
+          "description": "Drug concept whose exposure eras define the exit (for continuous_drug)"
         }
       },
       "required": [
         "strategy"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "add_inclusion_rule",
@@ -366,8 +362,7 @@
         "logicType",
         "events"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "create_characterization",
@@ -425,8 +420,7 @@
         "cohorts",
         "featureAnalyses"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "create_feature_analysis",
@@ -468,8 +462,7 @@
         "name",
         "type"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "create_incidence_rate",
@@ -563,8 +556,7 @@
       "required": [
         "name"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "create_pathway",
@@ -635,8 +627,7 @@
       "required": [
         "name"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "create_standalone_concept_set",
@@ -696,8 +687,7 @@
         "name",
         "items"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "navigate_to",
@@ -765,8 +755,7 @@
       "required": [
         "view"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "save_cohort",
@@ -783,8 +772,7 @@
           "description": "Optional description."
         }
       }
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "set_censor_event",
@@ -824,8 +812,7 @@
         "conceptName",
         "domain"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "set_entry_event",
@@ -865,8 +852,7 @@
         "conceptName",
         "domain"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "set_observation_window",
@@ -885,8 +871,7 @@
         "priorDays",
         "postDays"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "update_characterization",
@@ -984,8 +969,7 @@
       "required": [
         "id"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "update_concept_set",
@@ -1087,8 +1071,7 @@
       "required": [
         "id"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "update_feature_analysis",
@@ -1131,8 +1114,7 @@
       "required": [
         "id"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "update_incidence_rate",
@@ -1262,8 +1244,7 @@
       "required": [
         "id"
       ]
-    },
-    "requiresApproval": true
+    }
   },
   {
     "name": "update_pathway",
@@ -1373,7 +1354,6 @@
       "required": [
         "id"
       ]
-    },
-    "requiresApproval": true
+    }
   }
 ]

@@ -113,6 +113,7 @@
 
 <script setup lang="ts">
 import { useI18n } from '@/composables/useI18n'
+import { trackChartTheme } from '@/ui/chart-config'
 import type { InclusionRuleStatistic } from '@/models/report.types'
 
 const { t } = useI18n()
@@ -146,6 +147,9 @@ function formatPercent(s: string): string {
 // success ≥ 80%, warning ≥ 40%, error otherwise. Reads the runtime
 // Vuetify theme variable so all three views stay visually consistent.
 function themeColor(token: 'success' | 'warning' | 'error', alpha: number): string {
+  // getComputedStyle is not reactive, so without this the bar tints keep the
+  // previous theme's colours until something else re-renders the row.
+  trackChartTheme()
   if (typeof window === 'undefined') return '#7BB209'
   const root = getComputedStyle(document.documentElement)
   const triplet = root.getPropertyValue(`--v-theme-${token}`).trim()

@@ -36,6 +36,7 @@
 import { computed } from 'vue'
 import type { InclusionTreemapNode } from '@/models/report.types'
 import { useI18n } from '@/composables/useI18n'
+import { trackChartTheme } from '@/ui/chart-config'
 
 const { t } = useI18n()
 
@@ -62,6 +63,9 @@ const hasData = computed(() => {
 // error (red) when most/all rules fail. Reads the runtime CSS variable
 // so it tracks the active Vuetify theme.
 function themeColor(token: 'success' | 'warning' | 'error', alpha: number): string {
+  // getComputedStyle is a one-shot read, so the computeds calling this need an
+  // explicit reactive dependency on the active theme to rebuild after a switch.
+  trackChartTheme()
   if (typeof window === 'undefined') return '#7BB209'
   const root = getComputedStyle(document.documentElement)
   const triplet = root.getPropertyValue(`--v-theme-${token}`).trim()
@@ -85,6 +89,7 @@ function failuresFromName(name: string, ruleCount: number): number {
 // background — reads the live on-surface var the same way themeColor()
 // does so the label stays legible against a dark surface.
 function themeOnSurfaceColor(alpha: number): string {
+  trackChartTheme()
   if (typeof window === 'undefined') return `rgba(0, 0, 0, ${alpha})`
   const root = getComputedStyle(document.documentElement)
   const triplet = root.getPropertyValue('--v-theme-on-surface').trim()

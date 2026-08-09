@@ -50,10 +50,7 @@ describe('pathway-versions.service', () => {
   it('copyPathwayVersion PUTs to /createAsset', async () => {
     vi.mocked(httpClient.httpPut).mockResolvedValue({ id: 99 })
     await copyPathwayVersion(1, 2)
-    expect(httpClient.httpPut).toHaveBeenCalledWith(
-      '/pathway-analysis/1/version/2/createAsset',
-      undefined
-    )
+    expect(httpClient.httpPut).toHaveBeenCalledWith('/pathway-analysis/1/version/2/createAsset')
   })
 
   describe('error / validation branches', () => {

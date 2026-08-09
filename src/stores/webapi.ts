@@ -4,9 +4,10 @@
  */
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { CDMSource, GenerationJob } from '@/models/webapi.types'
+import type { CDMSource, GenerationJob, CohortGenerationInfoList } from '@/models/webapi.types'
 import { fetchCDMSources } from '@/services/source.service'
 import { generateCohort as generateCohortRequest, getCohortGenerationInfo } from '@/services/cohort-definition.service'
+import { useExecutionPolling } from '@/composables/useExecutionPolling'
 import { logger } from '@/utils/logger'
 
 export const useWebAPIStore = defineStore('webapi', () => {
@@ -208,91 +209,87 @@ export const useWebAPIStore = defineStore('webapi', () => {
    */
   const POLL_INTERVAL_MS = 2000 // 2 seconds
   const POLL_TIMEOUT_MS = 300000 // 5 minutes max
-  const pollingTimers = new Map<number, number>()
+  const pollingStops = new Map<number, () => void>()
+
+  function applyGenerationInfo(cohortId: number, infoList: CohortGenerationInfoList): void {
+    for (const info of infoList) {
+      // Jobs are keyed by sourceId (matches /info entries directly).
+      const existing = generationJobs.value.get(info.id.sourceId)
+      // Only update jobs we actually started for this cohort. /info may
+      // return entries we don't have a job for, leave those alone.
+      if (!existing || existing.cohortDefinitionId !== cohortId) continue
+
+      const source = sources.value.find(s => s.sourceId === info.id.sourceId)
+      const sourceKey = source?.sourceKey ?? existing.sourceKey
+
+      updateGenerationJob(info.id.sourceId, {
+        id: info.id.sourceId,
+        cohortDefinitionId: cohortId,
+        sourceKey,
+        status: info.status,
+        personCount: info.personCount ?? undefined,
+        recordCount: info.recordCount ?? undefined,
+        startTime: info.startTime ? new Date(info.startTime).toISOString() : existing.startTime,
+        endTime:
+          info.status === 'COMPLETE' || info.status === 'FAILED'
+            ? info.startTime != null && info.executionDuration != null
+              ? new Date(info.startTime + info.executionDuration).toISOString()
+              : new Date().toISOString()
+            : undefined,
+        failMessage: info.failMessage ?? undefined,
+      })
+    }
+  }
 
   async function pollGenerationStatus(cohortId: number): Promise<void> {
-    // Clear any existing timer for this cohort
-    const existingTimer = pollingTimers.get(cohortId)
-    if (existingTimer) {
-      clearInterval(existingTimer)
-    }
+    stopPolling(cohortId)
 
     const startTime = Date.now()
 
-    const poll = async () => {
-      try {
+    const polling = useExecutionPolling<{ done: boolean }>({
+      intervalMs: POLL_INTERVAL_MS,
+      fetcher: async () => {
         const result = await getCohortGenerationInfo(cohortId)
 
-        // An empty/failed response doesn't mean we're done — a freshly kicked
+        // An empty/failed response doesn't mean we're done: a freshly kicked
         // off generation may not be indexed yet. Keep polling and rely on the
-        // per-cohort terminal-state check below to stop.
+        // per-cohort terminal-state check to stop.
         if (result.success) {
-          for (const info of result.data) {
-            // Jobs are keyed by sourceId (matches /info entries directly).
-            const existing = generationJobs.value.get(info.id.sourceId)
-            // Only update jobs we actually started for this cohort. /info may
-            // return entries we don't have a job for — leave those alone.
-            if (!existing || existing.cohortDefinitionId !== cohortId) continue
-
-            const source = sources.value.find(s => s.sourceId === info.id.sourceId)
-            const sourceKey = source?.sourceKey ?? existing.sourceKey
-
-            updateGenerationJob(info.id.sourceId, {
-              id: info.id.sourceId,
-              cohortDefinitionId: cohortId,
-              sourceKey,
-              status: info.status,
-              personCount: info.personCount ?? undefined,
-              recordCount: info.recordCount ?? undefined,
-              startTime: info.startTime
-                ? new Date(info.startTime).toISOString()
-                : existing.startTime,
-              endTime:
-                info.status === 'COMPLETE' || info.status === 'FAILED'
-                  ? info.startTime != null && info.executionDuration != null
-                    ? new Date(info.startTime + info.executionDuration).toISOString()
-                    : new Date().toISOString()
-                  : undefined,
-              failMessage: info.failMessage ?? undefined,
-            })
-          }
+          applyGenerationInfo(cohortId, result.data)
         }
 
         const stillActive = getJobsByCohortId(cohortId).some(
           j => j.status === 'PENDING' || j.status === 'RUNNING'
         )
 
-        if (!stillActive) {
-          stopPolling(cohortId)
-          return
-        }
-
-        if (Date.now() - startTime > POLL_TIMEOUT_MS) {
+        if (stillActive && Date.now() - startTime > POLL_TIMEOUT_MS) {
           logger.warn('WebAPIStore', `Generation polling timeout for cohort ${cohortId}`)
-          stopPolling(cohortId)
+          return { done: true }
         }
-      } catch (error) {
-        logger.error('WebAPIStore', 'Error polling generation status', error)
-        stopPolling(cohortId)
-      }
-    }
 
-    // Start polling
-    const timer = setInterval(poll, POLL_INTERVAL_MS)
-    pollingTimers.set(cohortId, timer as unknown as number)
+        return { done: !stillActive }
+      },
+      isTerminal: item => item.done,
+      onUpdate: item => {
+        if (item.done) {
+          pollingStops.delete(cohortId)
+        }
+      },
+    })
 
-    // Do an immediate poll
-    await poll()
+    pollingStops.set(cohortId, polling.stop)
+
+    await polling.start()
   }
 
   /**
    * Stop polling for a specific cohort
    */
   function stopPolling(cohortId: number): void {
-    const timer = pollingTimers.get(cohortId)
-    if (timer) {
-      clearInterval(timer)
-      pollingTimers.delete(cohortId)
+    const stop = pollingStops.get(cohortId)
+    if (stop) {
+      stop()
+      pollingStops.delete(cohortId)
     }
   }
 
@@ -300,8 +297,8 @@ export const useWebAPIStore = defineStore('webapi', () => {
    * Stop all active polling
    */
   function stopAllPolling(): void {
-    pollingTimers.forEach(timer => clearInterval(timer))
-    pollingTimers.clear()
+    pollingStops.forEach(stop => stop())
+    pollingStops.clear()
   }
 
   /**

@@ -30,8 +30,8 @@ vi.mock('@/plugins/core/PluginLoader', () => ({
   }))
 }))
 
-vi.mock('@/plugins/core/PluginIsolation', () => ({
-  setupPluginIsolation: vi.fn()
+vi.mock('@/plugins/core/PluginDiagnostics', () => ({
+  setupPluginDiagnostics: vi.fn()
 }))
 
 vi.mock('@/plugins/messaging/HostMessageBus', () => ({

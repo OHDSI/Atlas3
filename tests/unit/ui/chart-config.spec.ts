@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { computed } from 'vue'
 import {
   parseYyyymm,
   dashboardObservationMonthLineOptions,
@@ -329,6 +330,86 @@ describe('setChartTheme', () => {
   })
 })
 
+const sharedTreemapNodes: TreemapNode[] = [
+  { name: 'a', value: 10 },
+  { name: 'b', value: 20 },
+]
+
+const builders: Array<{ name: string; build: () => { textStyle?: { color?: string } } }> = [
+  {
+    name: 'defaultBarChartOptions',
+    build: () => defaultBarChartOptions({ categories: ['a', 'b'], values: [1, 2] }),
+  },
+  {
+    name: 'defaultPieChartOptions',
+    build: () => defaultPieChartOptions([{ name: 'a', value: 1 }]),
+  },
+  {
+    name: 'defaultLineChartOptions',
+    build: () => defaultLineChartOptions({ xAxis: ['a', 'b'], yAxis: [1, 2] }),
+  },
+  {
+    name: 'defaultTreemapOptions',
+    build: () => defaultTreemapOptions(sharedTreemapNodes),
+  },
+  {
+    name: 'dashboardGenderPieOptions',
+    build: () => dashboardGenderPieOptions([{ name: 'Male', value: 1 }]),
+  },
+  {
+    name: 'dashboardAgeBarOptions',
+    build: () =>
+      dashboardAgeBarOptions({
+        intervalSize: 10,
+        offset: 0,
+        bins: [{ intervalIndex: 0, countValue: 5 }],
+      }),
+  },
+  {
+    name: 'dashboardCumulativeLineOptions',
+    build: () =>
+      dashboardCumulativeLineOptionsBuilder({
+        xValues: [0, 1],
+        series: [{ name: 'Percent', data: [100, 80] }],
+      }),
+  },
+  {
+    name: 'dashboardObservationMonthLineOptions',
+    build: () =>
+      dashboardObservationMonthLineOptions({
+        monthCodes: [200301],
+        series: [{ name: 'Observations', data: [10] }],
+      }),
+  },
+  {
+    name: 'multiLineChartOptions',
+    build: () =>
+      multiLineChartOptionsBuilder({
+        categories: ['a', 'b'],
+        series: [{ name: 's', data: [1, 2] }],
+      }),
+  },
+  {
+    name: 'clinicalDomainTreemapOptions',
+    build: () => clinicalDomainTreemapOptions(sharedTreemapNodes),
+  },
+  {
+    name: 'trellisChartOptions',
+    build: () =>
+      trellisChartOptions({
+        categories: ['20-29'],
+        series: [{ name: 'Male', category: '20-29', data: [{ x: 2015, y: 12.5 }] }],
+      }),
+  },
+  {
+    name: 'boxPlotChartOptions',
+    build: () =>
+      boxPlotChartOptions([
+        { category: 'a', min: 1, p10: 2, p25: 3, median: 4, p75: 5, p90: 6, max: 7 },
+      ]),
+  },
+]
+
 // Regression: ECharts falls back to its own dark-grey default (~#333) for any
 // text that doesn't set an explicit colour, which is invisible on the dark
 // surface. Every option builder must add a root-level textStyle default in
@@ -337,86 +418,6 @@ describe('chartRootTextStyle root default', () => {
   afterEach(() => {
     setChartTheme('light')
   })
-
-  const treemapNodes: TreemapNode[] = [
-    { name: 'a', value: 10 },
-    { name: 'b', value: 20 },
-  ]
-
-  const builders: Array<{ name: string; build: () => { textStyle?: { color?: string } } }> = [
-    {
-      name: 'defaultBarChartOptions',
-      build: () => defaultBarChartOptions({ categories: ['a', 'b'], values: [1, 2] }),
-    },
-    {
-      name: 'defaultPieChartOptions',
-      build: () => defaultPieChartOptions([{ name: 'a', value: 1 }]),
-    },
-    {
-      name: 'defaultLineChartOptions',
-      build: () => defaultLineChartOptions({ xAxis: ['a', 'b'], yAxis: [1, 2] }),
-    },
-    {
-      name: 'defaultTreemapOptions',
-      build: () => defaultTreemapOptions(treemapNodes),
-    },
-    {
-      name: 'dashboardGenderPieOptions',
-      build: () => dashboardGenderPieOptions([{ name: 'Male', value: 1 }]),
-    },
-    {
-      name: 'dashboardAgeBarOptions',
-      build: () =>
-        dashboardAgeBarOptions({
-          intervalSize: 10,
-          offset: 0,
-          bins: [{ intervalIndex: 0, countValue: 5 }],
-        }),
-    },
-    {
-      name: 'dashboardCumulativeLineOptions',
-      build: () =>
-        dashboardCumulativeLineOptionsBuilder({
-          xValues: [0, 1],
-          series: [{ name: 'Percent', data: [100, 80] }],
-        }),
-    },
-    {
-      name: 'dashboardObservationMonthLineOptions',
-      build: () =>
-        dashboardObservationMonthLineOptions({
-          monthCodes: [200301],
-          series: [{ name: 'Observations', data: [10] }],
-        }),
-    },
-    {
-      name: 'multiLineChartOptions',
-      build: () =>
-        multiLineChartOptionsBuilder({
-          categories: ['a', 'b'],
-          series: [{ name: 's', data: [1, 2] }],
-        }),
-    },
-    {
-      name: 'clinicalDomainTreemapOptions',
-      build: () => clinicalDomainTreemapOptions(treemapNodes),
-    },
-    {
-      name: 'trellisChartOptions',
-      build: () =>
-        trellisChartOptions({
-          categories: ['20-29'],
-          series: [{ name: 'Male', category: '20-29', data: [{ x: 2015, y: 12.5 }] }],
-        }),
-    },
-    {
-      name: 'boxPlotChartOptions',
-      build: () =>
-        boxPlotChartOptions([
-          { category: 'a', min: 1, p10: 2, p25: 3, median: 4, p75: 5, p90: 6, max: 7 },
-        ]),
-    },
-  ]
 
   it.each(builders)('$name emits no root textStyle in light', ({ build }) => {
     setChartTheme('light')
@@ -427,6 +428,32 @@ describe('chartRootTextStyle root default', () => {
     setChartTheme('dark')
     expect(build().textStyle?.color).toBe(tokens.colorDark.onSurface)
     expect(build().textStyle?.color).toBe(CHART_TEXT)
+  })
+})
+
+// Regression: the CHART_* bindings are module-level `let`s, so a chart's
+// `computed(() => builder(data))` tracked nothing and kept the previous theme's
+// palette until its data changed or the component remounted. Every builder must
+// register the theme as a reactive dependency of its caller.
+describe('option builders invalidate their caller on a theme change', () => {
+  afterEach(() => {
+    setChartTheme('light')
+    setChartPalette({ chartColors: null, treemapGradient: null })
+  })
+
+  it.each(builders)('$name rebuilds after setChartTheme', ({ build }) => {
+    setChartTheme('light')
+    const option = computed(() => build())
+    const inLight = option.value
+    setChartTheme('dark')
+    expect(option.value).not.toBe(inLight)
+  })
+
+  it.each(builders)('$name rebuilds after setChartPalette', ({ build }) => {
+    const option = computed(() => build())
+    const before = option.value
+    setChartPalette({ chartColors: ['#abcdef'], treemapGradient: null })
+    expect(option.value).not.toBe(before)
   })
 })
 

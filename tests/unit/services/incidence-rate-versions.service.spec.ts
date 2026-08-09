@@ -65,7 +65,7 @@ describe('IR versions service', () => {
   it('copies version → asset', async () => {
     vi.mocked(http.httpPut).mockResolvedValueOnce({ id: 99 })
     const r = await copyIncidenceRateVersion(7, 3)
-    expect(http.httpPut).toHaveBeenCalledWith('/ir/7/version/3/createAsset', undefined)
+    expect(http.httpPut).toHaveBeenCalledWith('/ir/7/version/3/createAsset')
     expect(r.id).toBe(99)
   })
 

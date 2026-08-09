@@ -243,6 +243,8 @@ interface DataSourceDisplay {
   hasResults: boolean
 }
 
+const OWNED_CACHE_KEYS = ['selectedVocabulary', 'selectedEvidence', 'selectedResults']
+
 // State
 const priorityScope = ref<'session' | 'application'>('session')
 const dataSources = ref<DataSourceDisplay[]>([])
@@ -382,9 +384,13 @@ async function refreshCache(source: DataSourceDisplay) {
 
 /**
  * Clear local storage cache
+ *
+ * Only the data-source selections this screen owns. A blanket
+ * localStorage.clear() would also drop the bearer token, the theme, the locale
+ * and the license acceptance, logging the user out on the next reload.
  */
 function clearLocalCache() {
-  localStorage.clear()
+  OWNED_CACHE_KEYS.forEach(key => localStorage.removeItem(key))
   toastMessage.value = tv('configuration.alerts.clearLocalCache')
   showToast.value = true
 }

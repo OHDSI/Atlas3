@@ -21,6 +21,7 @@ import {
   transformPersonReport,
 } from '@/utils/datasource-formatters'
 import { getAppConfig } from '@/config/app-config.loader'
+import { ApiError } from '@/services/api-error'
 
 function getBaseUrl(): string {
   return getAppConfig().api.url
@@ -104,7 +105,7 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
           continue
         }
 
-        throw new Error(`HTTP ${status}: ${errorText}`)
+        throw new ApiError(`HTTP ${status}: ${errorText}`, status, errorText)
       }
 
       // Parse JSON response with error handling
@@ -123,6 +124,12 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
       }
 
       lastError = error instanceof Error ? error : new Error('Unknown error')
+
+      // The status check above only escapes this catch by throwing, so without
+      // re-checking here every 4xx would be retried anyway.
+      if (lastError instanceof ApiError && !isRetryableError(lastError.status)) {
+        break
+      }
 
       if (attempt < MAX_RETRY_ATTEMPTS - 1) {
         const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)

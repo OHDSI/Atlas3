@@ -21,7 +21,7 @@ describe('capability registry', () => {
       expect(c.description.length).toBeGreaterThan(0)
     }
   })
-  it('schemas are byte-identical to the original client.cljs schemas', () => {
+  it('schemas match the pinned schema baseline', () => {
     for (const name of EXPECTED_NAMES) {
       expect(getCapability(name)?.schema).toEqual((original as Record<string, unknown>)[name])
     }

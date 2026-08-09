@@ -1,7 +1,7 @@
 import { pluginConfigService } from '@/services/PluginConfigService'
 import { PluginRegistry, pluginRegistry } from './core/PluginRegistry'
 import { PluginLoader } from './core/PluginLoader'
-import { setupPluginIsolation } from './core/PluginIsolation'
+import { setupPluginDiagnostics } from './core/PluginDiagnostics'
 import { createHostMessageBus } from './messaging/HostMessageBus'
 import { AuthContext } from '@/models/PluginModels'
 import { logger } from '@/utils/logger'
@@ -18,8 +18,7 @@ export async function initializePluginFramework(authContext: AuthContext): Promi
   try {
     logger.info('PluginFramework', 'Initializing...')
 
-    // Setup error isolation
-    setupPluginIsolation()
+    setupPluginDiagnostics()
 
     // Load plugin configuration
     const manifest = await pluginConfigService.loadConfig()

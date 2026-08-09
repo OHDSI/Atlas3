@@ -230,16 +230,10 @@ function close() {
 </script>
 
 <style scoped>
-.login-modal :deep(.v-overlay__scrim) {
-  backdrop-filter: blur(4px);
-  background: rgba(31, 66, 90, 0.45);
-  opacity: 1;
-}
-
-.v-theme--dark .login-modal :deep(.v-overlay__scrim) {
-  background: rgba(0, 0, 0, 0.45);
-}
-
+/* No scrim rules here: Vuetify teleports the overlay root out of this
+ * component's scope, so a scoped `.login-modal :deep(.v-overlay__scrim)` never
+ * matches. The global rule in assets/styles/vuetify-overrides.css paints the
+ * same blur and 45% --atlas-color-scrim tint, per theme. */
 .login-card {
   background: var(--atlas-color-surface);
   overflow: hidden;

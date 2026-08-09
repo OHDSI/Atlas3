@@ -5,7 +5,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export function buildManifest(capabilities) {
   return [...capabilities]
-    .map(({ name, description, schema, requiresApproval }) => ({ name, description, schema, requiresApproval }))
+    .map(({ name, description, schema }) => ({ name, description, schema }))
     .sort((a, b) => a.name.localeCompare(b.name))
 }
 

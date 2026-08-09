@@ -418,6 +418,7 @@ const importing = ref(false)
 const showCohortInfoDialog = ref(false)
 const cohortInfoHtml = ref<string | null>(null)
 const loadingCohortInfo = ref(false)
+let cohortInfoRequestId = 0
 
 // Copy-cohort state
 const copyingId = ref<number | null>(null)
@@ -735,6 +736,10 @@ async function confirmDelete() {
  * Show cohort info dialog and fetch print-friendly HTML
  */
 async function handleShowInfo(cohort: CohortDefinitionSummary) {
+  // Clicking through cohorts faster than the network would otherwise land an
+  // earlier cohort's HTML in the dialog of the one now selected.
+  const requestId = ++cohortInfoRequestId
+
   selectedCohort.value = cohort
   showCohortInfoDialog.value = true
   loadingCohortInfo.value = true
@@ -743,18 +748,23 @@ async function handleShowInfo(cohort: CohortDefinitionSummary) {
   try {
     // Fetch the full cohort definition
     const definitionResult = await getCohortDefinition(cohort.id)
+    if (requestId !== cohortInfoRequestId) return
     if (definitionResult.success) {
       // Get print-friendly HTML
       const htmlResult = await getCohortPrintFriendly(definitionResult.data)
+      if (requestId !== cohortInfoRequestId) return
       cohortInfoHtml.value = htmlResult.success ? htmlResult.data : null
     } else {
       logger.error('CohortsView', 'Failed to fetch cohort definition', definitionResult.error)
     }
   } catch (error) {
+    if (requestId !== cohortInfoRequestId) return
     logger.error('CohortsView', 'Failed to fetch cohort print-friendly view', error)
     cohortInfoHtml.value = null
   } finally {
-    loadingCohortInfo.value = false
+    if (requestId === cohortInfoRequestId) {
+      loadingCohortInfo.value = false
+    }
   }
 }
 

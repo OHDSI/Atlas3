@@ -57,9 +57,7 @@ export const CAPABILITIES: Capability[] = [
   {
     name: 'add_criterion',
     description: 'Propose adding one criterion to the cohort. The user sees a confirmation card and accepts or rejects.',
-    schema: criterionSchema,
-    requiresApproval: true,
-  },
+    schema: criterionSchema,  },
 
   {
     name: 'add_criteria',
@@ -73,16 +71,12 @@ export const CAPABILITIES: Capability[] = [
         items: { type: 'array', items: criterionSchema },
       },
       required: ['name', 'group', 'logic', 'items'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'set_entry_event',
     description: "Set the cohort's primary qualifying entry event. Replaces any existing entry event.",
-    schema: conceptRefSchema,
-    requiresApproval: true,
-  },
+    schema: conceptRefSchema,  },
 
   {
     name: 'set_observation_window',
@@ -94,34 +88,28 @@ export const CAPABILITIES: Capability[] = [
         postDays: { type: 'number' },
       },
       required: ['priorDays', 'postDays'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'add_exit_criterion',
-    description: 'Define how a patient exits the cohort. Strategy: end_of_observation = end of continuous observation period; fixed_duration = N days after entry; continuous_drug = persistence-window-driven exit; custom_event = exit on a clinical event.',
+    description: 'Define how a patient exits the cohort. Strategy: end_of_observation = end of continuous observation period; fixed_duration = N days after entry; continuous_drug = persistence-window-driven exit.',
     schema: {
       type: 'object',
       properties: {
-        strategy: { type: 'string', enum: ['end_of_observation', 'fixed_duration', 'continuous_drug', 'custom_event'] },
+        strategy: { type: 'string', enum: ['end_of_observation', 'fixed_duration', 'continuous_drug'] },
         offset: { type: 'number', description: 'Days offset (for fixed_duration and continuous_drug)' },
         dateField: { type: 'string', enum: ['START_DATE', 'END_DATE'], description: 'Anchor for offset' },
         persistenceWindow: { type: 'number', description: 'Gap days between exposures for continuous_drug' },
         surveillanceWindow: { type: 'number', description: 'Trailing days after final exposure for continuous_drug' },
-        concept: { ...conceptRefSchema, description: 'Concept defining the exit event (for continuous_drug or custom_event)' },
+        concept: { ...conceptRefSchema, description: 'Drug concept whose exposure eras define the exit (for continuous_drug)' },
       },
       required: ['strategy'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'set_censor_event',
     description: "Add a censoring criterion that ends a patient's time-at-risk when the event occurs.",
-    schema: conceptRefSchema,
-    requiresApproval: true,
-  },
+    schema: conceptRefSchema,  },
 
   {
     name: 'create_standalone_concept_set',
@@ -134,9 +122,7 @@ export const CAPABILITIES: Capability[] = [
         items: { type: 'array', items: conceptRefSchema },
       },
       required: ['name', 'items'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'navigate_to',
@@ -157,9 +143,7 @@ export const CAPABILITIES: Capability[] = [
         reason: { type: 'string', description: 'One short sentence; surfaced in the undo toast.' },
       },
       required: ['view'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'add_inclusion_rule',
@@ -175,9 +159,7 @@ export const CAPABILITIES: Capability[] = [
         events: { type: 'array', items: criterionSchema },
       },
       required: ['name', 'logicType', 'events'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'create_feature_analysis',
@@ -196,9 +178,7 @@ export const CAPABILITIES: Capability[] = [
         design: { description: 'Type-dependent: string for PRESET/CUSTOM_FE; object for CRITERIA_SET.' },
       },
       required: ['name', 'type'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'create_characterization',
@@ -220,9 +200,7 @@ export const CAPABILITIES: Capability[] = [
         },
       },
       required: ['name', 'cohorts', 'featureAnalyses'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'create_pathway',
@@ -240,9 +218,7 @@ export const CAPABILITIES: Capability[] = [
         allowRepeats: { type: 'boolean', description: 'Whether the same event can repeat in a pathway (default false)' },
       },
       required: ['name'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'update_concept_set',
@@ -257,9 +233,7 @@ export const CAPABILITIES: Capability[] = [
         itemsToAdd: { type: 'array', items: conceptRefSchema, description: 'Append-only — skips items whose conceptId already exists.' },
       },
       required: ['id'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'update_feature_analysis',
@@ -276,9 +250,7 @@ export const CAPABILITIES: Capability[] = [
         design: { description: 'Type-dependent: string for PRESET/CUSTOM_FE; object for CRITERIA_SET. Replaces the existing design entirely.' },
       },
       required: ['id'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'update_characterization',
@@ -295,9 +267,7 @@ export const CAPABILITIES: Capability[] = [
         featureAnalysesToAdd: { type: 'array', items: idNameItem(true), description: 'Append-only.' },
       },
       required: ['id'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'update_pathway',
@@ -318,9 +288,7 @@ export const CAPABILITIES: Capability[] = [
         allowRepeats: { type: 'boolean' },
       },
       required: ['id'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'update_incidence_rate',
@@ -354,9 +322,7 @@ export const CAPABILITIES: Capability[] = [
         studyWindow: { type: 'object', properties: { startDate: { type: 'string' }, endDate: { type: 'string' } } },
       },
       required: ['id'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'create_incidence_rate',
@@ -393,9 +359,7 @@ export const CAPABILITIES: Capability[] = [
         },
       },
       required: ['name'],
-    },
-    requiresApproval: true,
-  },
+    },  },
 
   {
     name: 'save_cohort',
@@ -406,9 +370,7 @@ export const CAPABILITIES: Capability[] = [
         name: { type: 'string', description: "Optional clinical name to save under (defaults to the open cohort's name)." },
         description: { type: 'string', description: 'Optional description.' },
       },
-    },
-    requiresApproval: true,
-  },
+    },  },
 ]
 
 export function capabilityNames(): string[] {

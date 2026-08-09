@@ -159,13 +159,25 @@ describe('Feature Analyses Store', () => {
       expect(store.loading).toBe(true)
     })
 
-    it('skips when already loading', async () => {
+    it('shares one request between concurrent callers', async () => {
       const store = useFeatureAnalysesStore()
-      store.loading = true
+      vi.mocked(listFeatureAnalyses).mockResolvedValue(success(mockList))
 
-      await store.fetchAll()
+      await Promise.all([store.fetchAll(), store.fetchAll()])
 
-      expect(listFeatureAnalyses).not.toHaveBeenCalled()
+      expect(listFeatureAnalyses).toHaveBeenCalledTimes(1)
+      expect(store.featureAnalyses).toEqual(mockList)
+    })
+
+    it('refreshes the list when called from create, which holds loading', async () => {
+      const store = useFeatureAnalysesStore()
+      vi.mocked(createFeatureAnalysis).mockResolvedValue(success(mockFA))
+      vi.mocked(listFeatureAnalyses).mockResolvedValue(success(mockList))
+
+      await store.create(mockFA)
+
+      expect(listFeatureAnalyses).toHaveBeenCalledTimes(1)
+      expect(store.featureAnalyses).toEqual(mockList)
     })
 
     it('captures error and resets list on failure', async () => {

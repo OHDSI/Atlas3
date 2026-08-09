@@ -7,6 +7,7 @@
  * Based on: specs/001-role-permissions-management/contracts/role-api.yaml
  */
 
+import { z } from 'zod'
 import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
 import { unwrap, ApiError, parseOrThrow } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
@@ -256,22 +257,55 @@ export async function exportRole(roleId: number): Promise<ApiResult<string>> {
 }
 
 /**
+ * A member of the exported `permissions` / `users` arrays. Anything that is not
+ * a list of objects is treated as "nothing to assign" rather than a hard
+ * failure, matching what the export writes and what the importer can act on.
+ */
+const ImportAssignmentSchema = z.object({ id: z.number().nullish() }).passthrough()
+
+const RoleImportSchema = z.object({
+  role: z
+    .object({
+      name: z.string().min(1).max(255),
+      description: z.string().max(1000).nullish(),
+      permissions: z.array(ImportAssignmentSchema).catch([]),
+      users: z.array(ImportAssignmentSchema).catch([]),
+    })
+    .passthrough(),
+})
+
+/**
  * Import a role from JSON
  * Custom operation combining multiple API calls
+ *
+ * Assignments are applied after the role exists, so a failure part-way through
+ * would leave a half-configured role behind. The ApiResult<Role> contract has
+ * no room for a partial-success payload, so the created role is rolled back and
+ * the failure names what had been applied.
  */
 export async function importRole(jsonData: string): Promise<ApiResult<Role>> {
   return unwrap(async () => {
-    // Parse and validate JSON
-    const parsed = JSON.parse(jsonData)
-
-    if (!parsed.role || !parsed.role.name) {
-      throw new ApiError('Invalid role import format: missing role name', 0, null)
+    let raw: unknown
+    try {
+      raw = JSON.parse(jsonData)
+    } catch (error) {
+      throw new ApiError(
+        'Invalid role import format: not valid JSON',
+        0,
+        error instanceof Error ? error.message : String(error)
+      )
     }
+
+    const imported = parseOrThrow(
+      RoleImportSchema,
+      raw,
+      'Invalid role import format: missing role name'
+    ).role
 
     // Create the role
     const createResult = await createRole({
-      name: parsed.role.name,
-      description: parsed.role.description,
+      name: imported.name,
+      description: imported.description ?? undefined,
     })
 
     if (!createResult.success) throw createResult.error
@@ -282,24 +316,56 @@ export async function importRole(jsonData: string): Promise<ApiResult<Role>> {
     let permissionsAssigned = 0
     let usersAssigned = 0
 
-    // Assign permissions if provided
-    if (parsed.role.permissions && Array.isArray(parsed.role.permissions)) {
-      for (const perm of parsed.role.permissions) {
+    const applyAssignments = async () => {
+      for (const perm of imported.permissions) {
         if (perm.id) {
-          await assignPermissionToRole(newRole.id, perm.id)
+          const result = await assignPermissionToRole(newRole.id, perm.id)
+          if (!result.success) {
+            throw new ApiError(
+              `Failed to assign permission ${perm.id}: ${result.error.message}`,
+              result.error.status,
+              result.error.body
+            )
+          }
           permissionsAssigned++
+        }
+      }
+
+      for (const user of imported.users) {
+        if (user.id) {
+          const result = await assignUserToRole(newRole.id, user.id)
+          if (!result.success) {
+            throw new ApiError(
+              `Failed to assign user ${user.id}: ${result.error.message}`,
+              result.error.status,
+              result.error.body
+            )
+          }
+          usersAssigned++
         }
       }
     }
 
-    // Assign users if provided
-    if (parsed.role.users && Array.isArray(parsed.role.users)) {
-      for (const user of parsed.role.users) {
-        if (user.id) {
-          await assignUserToRole(newRole.id, user.id)
-          usersAssigned++
-        }
-      }
+    try {
+      await applyAssignments()
+    } catch (error) {
+      const cause = error instanceof Error ? error.message : String(error)
+      const applied = `${permissionsAssigned} permission(s) and ${usersAssigned} user(s) had been assigned`
+      const rollback = await deleteRole(newRole.id)
+      const outcome = rollback.success
+        ? `the imported role was removed (${applied})`
+        : `the imported role "${newRole.name}" (ID: ${newRole.id}) could NOT be removed and is left half-configured (${applied})`
+
+      logger.error(CONTEXT, `Role import failed: ${cause}`, {
+        roleId: newRole.id,
+        roleName: newRole.name,
+        permissionsAssigned,
+        usersAssigned,
+        rolledBack: rollback.success,
+        operation: 'IMPORT',
+      })
+
+      throw new ApiError(`${cause}; ${outcome}`, 0, null)
     }
 
     // Audit log: Role imported (FR-029)
