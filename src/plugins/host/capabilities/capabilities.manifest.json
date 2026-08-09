@@ -97,7 +97,8 @@
         "logic",
         "items"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "add_criterion",
@@ -165,7 +166,8 @@
         "group",
         "includeDescendants"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "add_exit_criterion",
@@ -242,7 +244,8 @@
       "required": [
         "strategy"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "add_inclusion_rule",
@@ -362,7 +365,8 @@
         "logicType",
         "events"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "create_characterization",
@@ -420,7 +424,8 @@
         "cohorts",
         "featureAnalyses"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "create_feature_analysis",
@@ -462,7 +467,8 @@
         "name",
         "type"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "create_incidence_rate",
@@ -556,7 +562,8 @@
       "required": [
         "name"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "create_pathway",
@@ -627,7 +634,8 @@
       "required": [
         "name"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "create_standalone_concept_set",
@@ -687,7 +695,8 @@
         "name",
         "items"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "navigate_to",
@@ -755,7 +764,8 @@
       "required": [
         "view"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "save_cohort",
@@ -772,7 +782,8 @@
           "description": "Optional description."
         }
       }
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "set_censor_event",
@@ -812,7 +823,8 @@
         "conceptName",
         "domain"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "set_entry_event",
@@ -852,7 +864,8 @@
         "conceptName",
         "domain"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "set_observation_window",
@@ -871,7 +884,8 @@
         "priorDays",
         "postDays"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "update_characterization",
@@ -969,7 +983,8 @@
       "required": [
         "id"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "update_concept_set",
@@ -1071,7 +1086,8 @@
       "required": [
         "id"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "update_feature_analysis",
@@ -1114,7 +1130,8 @@
       "required": [
         "id"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "update_incidence_rate",
@@ -1244,7 +1261,8 @@
       "required": [
         "id"
       ]
-    }
+    },
+    "requiresApproval": true
   },
   {
     "name": "update_pathway",
@@ -1354,6 +1372,7 @@
       "required": [
         "id"
       ]
-    }
+    },
+    "requiresApproval": true
   }
 ]

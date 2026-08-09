@@ -4,7 +4,7 @@ import type { WebMcpHost } from '@/plugins/host/webmcp/webmcpHost'
 import type { Capability } from '@/plugins/host/capabilities/types'
 
 const caps: Capability[] = [
-  { name: 'set_entry_event', description: 'd', schema: { type: 'object' } },
+  { name: 'set_entry_event', description: 'd', schema: { type: 'object' }, requiresApproval: true },
 ]
 function fakeHost() {
   const defs: any[] = []
