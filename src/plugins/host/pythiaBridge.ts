@@ -154,11 +154,20 @@ async function applyProposalInner(
     default: {
       const cohortStore = useCohortStore()
       const currentRoute = router.currentRoute.value
-      const onNewCohortRoute = currentRoute.name === 'cohort-new'
+      const onCohortRoute = COHORT_ROUTES.has(String(currentRoute.name))
+      // A cohort definition always begins with its entry event, so that is what
+      // marks "this is the next artifact" rather than "keep building the one on
+      // screen". Resetting on any proposal that arrived while not on
+      // /cohorts/new wiped the editor after the first save — the route is
+      // cohort-edit from then on, so the observation window cleared the entry
+      // event, and each inclusion rule cleared the rule before it. The agent
+      // could not add anything to a cohort it had just saved, and the saved
+      // definition kept only whatever the final proposal put there.
+      const startsNewDefinition = proposal.kind === 'addEntryEvent'
       // requestNewCohort (not createNewCohort) so the MOUNTED editor re-syncs:
       // the plain reset clears the store but leaves the editor's local refs
       // holding the previous cohort's criteria.
-      if (!onNewCohortRoute || startFreshCohort) {
+      if (!onCohortRoute || (startFreshCohort && startsNewDefinition)) {
         cohortStore.requestNewCohort()
         startFreshCohort = false
       }

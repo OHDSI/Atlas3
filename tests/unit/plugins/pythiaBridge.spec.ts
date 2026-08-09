@@ -625,3 +625,61 @@ describe('generateAnalysis', () => {
     expect(usePathwayStore().agentGenerationSignal).toBe(before)
   })
 })
+
+// Regression: every cohort proposal arriving while the route was not
+// /cohorts/new reset the editor first. After the first save the route is
+// cohort-edit, so the observation window wiped the entry event and each
+// inclusion rule wiped the one before it — the agent could not add anything to
+// a cohort it had just saved, and the saved definition kept only whatever the
+// last proposal happened to leave. A new definition always begins with its
+// entry event, so that is what marks the next artifact.
+describe('building on a cohort that is already saved', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    setupPythiaBridge()
+    createHostMessageBus('pythia-plugin')
+    ;(router as unknown as { currentRoute: { value: { name: string; params: object } } })
+      .currentRoute.value = { name: 'cohort-edit', params: { id: '83' } }
+  })
+
+  it('adds to the open cohort instead of resetting it', async () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    const reset = vi.spyOn(store, 'requestNewCohort')
+
+    await applyProposalDirect({
+      kind: 'setObservationPeriod',
+      observationPeriod: { priorDays: 365, postDays: 0 },
+    } as never)
+
+    expect(reset).not.toHaveBeenCalled()
+    expect(store.currentCohort?.observationPeriod?.priorDays).toBe(365)
+  })
+
+  it('keeps earlier criteria when several proposals arrive in a row', async () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+
+    await applyProposalDirect({
+      kind: 'addEntryEvent',
+      event: { id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Ibuprofen', items: [] } },
+    } as never)
+    await applyProposalDirect({
+      kind: 'setObservationPeriod',
+      observationPeriod: { priorDays: 365, postDays: 0 },
+    } as never)
+    await applyProposalDirect({
+      kind: 'addInclusionRule',
+      rule: { id: 'r1', name: 'Osteoarthritis before index', criteriaGroups: [] },
+    } as never)
+    await applyProposalDirect({
+      kind: 'addInclusionRule',
+      rule: { id: 'r2', name: 'Exclude prior GI bleed', criteriaGroups: [] },
+    } as never)
+
+    const c = store.currentCohort
+    expect(c?.entryEvents).toHaveLength(1)
+    expect(c?.observationPeriod?.priorDays).toBe(365)
+    expect(c?.inclusionRules).toHaveLength(2)
+  })
+})
