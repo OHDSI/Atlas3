@@ -9,7 +9,8 @@ const tsFiles = globSync('src/**/*.ts').filter((file) => !(
   file.startsWith('src/models/') ||
   file.startsWith('src/locales/') ||
   file === 'src/main.ts' ||
-  file === 'src/plugins/vuetify.ts'
+  file === 'src/plugins/vuetify.ts' ||
+  file === 'src/ui/chart-types.ts'
 ))
 
 const vueCandidates = globSync('src/**/*.vue').filter((file) => !(
