@@ -40,11 +40,29 @@ for (const f of files) {
       continue
     }
 
-    // Brace-less single-line form: `if (cond) expect(...)`. A trailing
-    // ` else ` on the same line means both branches are already handled.
-    const lineMatch = /^(\s*)(\} else )?if \((.+)\) (.+)$/.exec(lines[i])
-    if (!lineMatch) continue
-    const [, , , cond, body] = lineMatch
+    // Brace-less single-line form: `if (cond) expect(...)`. Finding the end
+    // of `cond` cannot be done with a single greedy or non-greedy `.+`: a
+    // greedy `(.+)\) ` backtracks to the rightmost `") "` on the line,
+    // which on `if (cond) it('...', () => { expect(foo).toBe(bar) })`
+    // swallows the whole `it(...)` call into the condition group and the
+    // `expect(` check never sees a body to inspect. A non-greedy `(.+?)\) `
+    // fails just as badly the other way on conditions with their own
+    // nested parens, e.g. `if (await x.count() > 0) ...` stops at the `)`
+    // inside `count()`. Neither can tell a condition's closing paren from
+    // any other paren without tracking depth, so scan for it directly.
+    const linePrefix = /^(\s*)(\} else )?if \(/.exec(lines[i])
+    if (!linePrefix) continue
+    const line = lines[i]
+    let depth = 1
+    let j = linePrefix[0].length
+    for (; j < line.length && depth > 0; j++) {
+      if (line[j] === '(') depth++
+      else if (line[j] === ')') depth--
+    }
+    if (depth !== 0) continue // unbalanced on this line (e.g. multi-line condition); skip
+    const cond = line.slice(linePrefix[0].length, j - 1)
+    const body = line.slice(j).replace(/^\s+/, '')
+    if (body.length === 0) continue
     if (body.startsWith('{')) continue
     if (/\belse\b/.test(body)) continue
     if (NON_ASSERTION_BODY.test(body.trim())) continue
