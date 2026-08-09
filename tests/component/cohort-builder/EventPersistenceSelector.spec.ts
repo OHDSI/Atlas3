@@ -89,27 +89,31 @@ describe('EventPersistenceSelector', () => {
   it('should emit update:modelValue when strategy button is clicked', async () => {
     const wrapper = createWrapper({ strategy: 'CONTINUOUS_OBSERVATION' })
     const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
-    const fixedDurationButton = buttons.find(btn => btn.text().includes('Fixed Duration'))
+    // This suite shallow-mounts, so AtlasButton is stubbed and renders no
+    // slot text; select by template order instead (2nd button = Fixed
+    // Duration, see EventPersistenceSelector.vue).
+    const fixedDurationButton = buttons[1]
 
-    if (fixedDurationButton) {
-      await fixedDurationButton.trigger('click')
-      const emitted = wrapper.emitted('update:modelValue')
-      expect(emitted).toBeTruthy()
-      expect((emitted?.[0]?.[0] as ExitCriteria)?.strategy).toBe('FIXED_DURATION')
-    }
+    expect(fixedDurationButton).toBeDefined()
+    await fixedDurationButton!.trigger('click')
+    const emitted = wrapper.emitted('update:modelValue')
+    expect(emitted).toBeTruthy()
+    expect((emitted?.[0]?.[0] as ExitCriteria)?.strategy).toBe('FIXED_DURATION')
   })
 
   // Validation events
   it('should emit validation-error event when strategy is changed', async () => {
     const wrapper = createWrapper({ strategy: 'CONTINUOUS_OBSERVATION' })
     const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
-    const fixedDurationButton = buttons.find(btn => btn.text().includes('Fixed Duration'))
+    // This suite shallow-mounts, so AtlasButton is stubbed and renders no
+    // slot text; select by template order instead (2nd button = Fixed
+    // Duration, see EventPersistenceSelector.vue).
+    const fixedDurationButton = buttons[1]
 
-    if (fixedDurationButton) {
-      await fixedDurationButton.trigger('click')
-      const emitted = wrapper.emitted('validation-error')
-      expect(emitted).toBeTruthy()
-    }
+    expect(fixedDurationButton).toBeDefined()
+    await fixedDurationButton!.trigger('click')
+    const emitted = wrapper.emitted('validation-error')
+    expect(emitted).toBeTruthy()
   })
 
   // Disabled state
