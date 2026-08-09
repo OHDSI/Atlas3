@@ -111,26 +111,26 @@ test.describe('Cohort Card Actions', () => {
     // Ensure no overlays are blocking
     await waitForOverlaysToClose(page)
 
-    // Look for delete button (trash icon or delete text)
-    const deleteButton = firstCard.locator('button[aria-label*="delete"], button:has(.mdi-delete)').first()
-    const hasDeleteButton = await deleteButton.count() > 0
+    // Look for delete button by accessible name (aria-label "Delete"); the
+    // icon is mdi-delete-outline, and the previous CSS selectors
+    // (button[aria-label*="delete"], .mdi-delete) never matched: CSS
+    // attribute-contains is case-sensitive against the actual "Delete"
+    // label, and .mdi-delete is a distinct class token from
+    // mdi-delete-outline, so the guarded click below had never run.
+    const deleteButton = firstCard.getByRole('button', { name: /delete/i })
+    await expect(deleteButton).toBeVisible()
+    await deleteButton.click()
+    await page.waitForTimeout(500)
 
-    if (hasDeleteButton) {
-      await deleteButton.click()
-      await page.waitForTimeout(500)
+    // Confirm in the delete dialog. Scoped to [role="dialog"]: an
+    // unscoped page-wide "Delete" text match also hits an unrelated
+    // data-source cache-delete button elsewhere on the page.
+    const confirmButton = page.locator('[role="dialog"] button:has-text("Delete")')
+    await expect(confirmButton.first()).toBeVisible()
+    await confirmButton.first().click()
+    await page.waitForTimeout(500)
 
-      // Check if confirmation dialog appears
-      const confirmButton = page.locator('button:has-text("Delete"), button:has-text("Confirm")')
-      const hasConfirm = await confirmButton.count() > 0
-
-      if (hasConfirm) {
-        await confirmButton.first().click()
-        await page.waitForTimeout(500)
-      }
-
-      // Verify delete was attempted (or gracefully handle if not implemented)
-      expect(deleteRequestMade || !hasDeleteButton).toBeTruthy()
-    }
+    expect(deleteRequestMade).toBe(true)
   })
 })
 
@@ -232,22 +232,19 @@ test.describe('Cohort Import', () => {
 
     // Wait for Import button to be visible
     const importButton = page.locator('button:has-text("Import")').first()
-    const hasImportButton = await importButton.count() > 0
+    await expect(importButton).toBeVisible()
+    await importButton.click()
+    await page.waitForTimeout(500)
 
-    if (hasImportButton) {
-      await importButton.click()
-      await page.waitForTimeout(500)
+    // Check if import dialog or file input appears
+    const dialog = page.locator('.v-dialog, [role="dialog"]')
+    const fileInput = page.locator('input[type="file"]')
 
-      // Check if import dialog or file input appears
-      const dialog = page.locator('.v-dialog, [role="dialog"]')
-      const fileInput = page.locator('input[type="file"]')
+    const hasDialog = await dialog.count() > 0
+    const hasFileInput = await fileInput.count() > 0
 
-      const hasDialog = await dialog.count() > 0
-      const hasFileInput = await fileInput.count() > 0
-
-      // Should show some import UI
-      expect(hasDialog || hasFileInput).toBeTruthy()
-    }
+    // Should show some import UI
+    expect(hasDialog || hasFileInput).toBeTruthy()
   })
 })
 
