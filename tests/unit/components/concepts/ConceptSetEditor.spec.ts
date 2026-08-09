@@ -249,9 +249,8 @@ describe('ConceptSetEditor', () => {
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const saveBtn = buttons.find(btn => btn.text().includes('Save') || btn.text().includes('Create'))
 
-    if (saveBtn) {
-      expect(saveBtn.props('disabled')).toBe(true)
-    }
+    expect(saveBtn).toBeDefined()
+    expect(saveBtn!.props('disabled')).toBe(true)
   })
 
   it('should emit update:modelValue when close button is clicked', async () => {
@@ -260,11 +259,10 @@ describe('ConceptSetEditor', () => {
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const closeBtn = buttons.find(btn => btn.props('icon') === 'mdi-close')
 
-    if (closeBtn) {
-      await closeBtn.trigger('click')
+    expect(closeBtn).toBeDefined()
+    await closeBtn!.trigger('click')
 
-      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
-    }
+    expect(wrapper.emitted('update:modelValue')).toBeTruthy()
   })
 
   it('should call store update when save is triggered in edit mode', async () => {
@@ -310,21 +308,19 @@ describe('ConceptSetEditor', () => {
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const deleteBtn = buttons.find(btn => btn.text().includes('Delete'))
 
-    if (deleteBtn) {
-      await deleteBtn.trigger('click')
-      // Native window.confirm has been replaced with a v-dialog —
-      // the click sets the dialog flag rather than emitting delete
-      // immediately.
-      expect((wrapper.vm as unknown as { showDeleteConfirm: boolean }).showDeleteConfirm).toBe(true)
-      expect(wrapper.emitted('delete')).toBeFalsy()
+    expect(deleteBtn).toBeDefined()
+    await deleteBtn!.trigger('click')
+    // Native window.confirm has been replaced with a v-dialog, the
+    // click sets the dialog flag rather than emitting delete immediately.
+    expect((wrapper.vm as unknown as { showDeleteConfirm: boolean }).showDeleteConfirm).toBe(true)
+    expect(wrapper.emitted('delete')).toBeFalsy()
 
-      // Invoking the confirm handler emits the delete event.
-      ;(wrapper.vm as unknown as { confirmDelete: () => void }).confirmDelete()
-      await wrapper.vm.$nextTick()
+    // Invoking the confirm handler emits the delete event.
+    ;(wrapper.vm as unknown as { confirmDelete: () => void }).confirmDelete()
+    await wrapper.vm.$nextTick()
 
-      expect(wrapper.emitted('delete')).toBeTruthy()
-      expect(wrapper.emitted('delete')![0]).toEqual([123])
-    }
+    expect(wrapper.emitted('delete')).toBeTruthy()
+    expect(wrapper.emitted('delete')![0]).toEqual([123])
   })
 
   it('should not emit delete when confirmation is cancelled via the dialog', async () => {
@@ -333,14 +329,13 @@ describe('ConceptSetEditor', () => {
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const deleteBtn = buttons.find(btn => btn.text().includes('Delete'))
 
-    if (deleteBtn) {
-      await deleteBtn.trigger('click')
-      // Cancel by closing the dialog without invoking confirmDelete.
-      ;(wrapper.vm as unknown as { showDeleteConfirm: boolean }).showDeleteConfirm = false
-      await wrapper.vm.$nextTick()
+    expect(deleteBtn).toBeDefined()
+    await deleteBtn!.trigger('click')
+    // Cancel by closing the dialog without invoking confirmDelete.
+    ;(wrapper.vm as unknown as { showDeleteConfirm: boolean }).showDeleteConfirm = false
+    await wrapper.vm.$nextTick()
 
-      expect(wrapper.emitted('delete')).toBeFalsy()
-    }
+    expect(wrapper.emitted('delete')).toBeFalsy()
   })
 
   it('should open confirmation dialog when closing with unsaved changes', async () => {
@@ -359,10 +354,9 @@ describe('ConceptSetEditor', () => {
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const closeBtn = buttons.find(btn => btn.props('icon') === 'mdi-close')
 
-    if (closeBtn) {
-      await closeBtn.trigger('click')
-      expect((wrapper.vm as unknown as { showCloseConfirm: boolean }).showCloseConfirm).toBe(true)
-    }
+    expect(closeBtn).toBeDefined()
+    await closeBtn!.trigger('click')
+    expect((wrapper.vm as unknown as { showCloseConfirm: boolean }).showCloseConfirm).toBe(true)
   })
 
   describe('embedded mode (#133)', () => {
@@ -568,10 +562,11 @@ describe('ConceptSetEditor', () => {
     await wrapper.setProps({ conceptSet: null })
     await wrapper.vm.$nextTick()
 
-    const textFields = wrapper.findAllComponents({ name: 'VTextField' })
-    if (textFields.length > 0) {
-      expect(textFields[0].props('modelValue')).toBe('')
-    }
+    // The inline name field is a plain input (see the title-input test
+    // above), not a VTextField.
+    const titleInput = wrapper.find('input.cs-editor__title-input')
+    expect(titleInput.exists()).toBe(true)
+    expect((titleInput.element as HTMLInputElement).value).toBe('')
   })
 
   describe('source resolution (#94)', () => {
