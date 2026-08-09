@@ -772,6 +772,17 @@ async function handleShowInfo(cohort: CohortDefinitionSummary) {
 onMounted(() => {
   fetchCohorts()
 })
+
+// Deliberate, named test surface for the import flow (as opposed to the
+// unreviewable `wrapper.vm.$.setupState` back door).
+defineExpose({
+  confirmImport,
+  canImport,
+  importName,
+  importJson,
+  importError,
+  importing,
+})
 </script>
 
 <style scoped>
