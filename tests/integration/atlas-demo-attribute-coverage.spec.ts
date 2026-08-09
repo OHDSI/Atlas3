@@ -259,21 +259,21 @@ describe('Schema Passthrough Preserves Unknown Fields', () => {
       hashCode: 12345,
     }
     const result = CharacterizationDefinitionSchema.safeParse(input)
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect((result.data as Record<string, unknown>).unknownWebAPIField).toBe('should-be-preserved')
-      expect((result.data as Record<string, unknown>).hashCode).toBe(12345)
+    if (!result.success) {
+      expect.fail(`expected schema to parse but got: ${JSON.stringify(result.error.issues)}`)
     }
+    expect((result.data as Record<string, unknown>).unknownWebAPIField).toBe('should-be-preserved')
+    expect((result.data as Record<string, unknown>).hashCode).toBe(12345)
   })
 
   it('LinkedCohortSchema preserves hasWriteAccess from WebAPI', async () => {
     const { LinkedCohortSchema } = await import('@/models/characterization.types')
     const input = { id: 1, name: 'test', hasWriteAccess: true, expressionType: 'SIMPLE_EXPRESSION' }
     const result = LinkedCohortSchema.safeParse(input)
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect((result.data as Record<string, unknown>).hasWriteAccess).toBe(true)
+    if (!result.success) {
+      expect.fail(`expected schema to parse but got: ${JSON.stringify(result.error.issues)}`)
     }
+    expect((result.data as Record<string, unknown>).hasWriteAccess).toBe(true)
   })
 
   it('FeatureAnalysisSchema preserves unknown fields', async () => {
@@ -287,10 +287,10 @@ describe('Schema Passthrough Preserves Unknown Fields', () => {
       hashCode: 999,
     }
     const result = FeatureAnalysisSchema.safeParse(input)
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect((result.data as Record<string, unknown>).hasWriteAccess).toBe(true)
-      expect((result.data as Record<string, unknown>).hashCode).toBe(999)
+    if (!result.success) {
+      expect.fail(`expected schema to parse but got: ${JSON.stringify(result.error.issues)}`)
     }
+    expect((result.data as Record<string, unknown>).hasWriteAccess).toBe(true)
+    expect((result.data as Record<string, unknown>).hashCode).toBe(999)
   })
 })
