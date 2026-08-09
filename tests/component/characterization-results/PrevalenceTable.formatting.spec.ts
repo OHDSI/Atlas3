@@ -55,6 +55,16 @@ function mountTable(
   })
 }
 
+function cellForHeader(wrapper: VueWrapper, headerLabel: string, rowIndex = 0): string {
+  const headers = wrapper.findAll('th').map((h) => h.text())
+  const colIndex = headers.findIndex((h) => h.includes(headerLabel))
+  if (colIndex === -1) {
+    throw new Error(`No header found matching "${headerLabel}"`)
+  }
+  const row = wrapper.findAll('tbody tr')[rowIndex]
+  return row.findAll('td')[colIndex]?.text() ?? ''
+}
+
 describe('PrevalenceTable value formatting', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
@@ -126,11 +136,12 @@ describe('PrevalenceTable value formatting', () => {
         { id: 1, name: 'A' },
         { id: 2, name: 'B' },
       ],
+      count: { [DEFAULT_STRATA_KEY]: { '1': 42, '2': 42 } },
       pct: { [DEFAULT_STRATA_KEY]: { '1': 10, '2': 20 } },
       stdDiff: undefined,
     })
     const wrapper = mountTable([row], row.cohorts)
-    expect(wrapper.findAll('td').map((c) => c.text())).toContain('—')
+    expect(cellForHeader(wrapper, 'Std Diff')).toBe('—')
   })
 
   it('renders an em-rule placeholder for a NaN std diff', () => {
@@ -139,12 +150,13 @@ describe('PrevalenceTable value formatting', () => {
         { id: 1, name: 'A' },
         { id: 2, name: 'B' },
       ],
+      count: { [DEFAULT_STRATA_KEY]: { '1': 42, '2': 42 } },
       pct: { [DEFAULT_STRATA_KEY]: { '1': 10, '2': 20 } },
       stdDiff: Number.NaN,
     })
     const wrapper = mountTable([row], row.cohorts)
     expect(wrapper.text()).not.toContain('NaN')
-    expect(wrapper.findAll('td').map((c) => c.text())).toContain('—')
+    expect(cellForHeader(wrapper, 'Std Diff')).toBe('—')
   })
 })
 
