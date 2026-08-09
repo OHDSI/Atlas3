@@ -416,6 +416,39 @@ watch(
   }
 )
 
+// A run started by the agent doesn't go through this component's generation
+// composable, so nothing was polling it: the page showed "No runs yet" until a
+// manual reload, making a perfectly good run look like it never happened. Poll
+// here until the newest execution reaches a terminal state.
+const AGENT_POLL_MS = 2000
+const AGENT_POLL_MAX = 150
+let agentPollTimer: ReturnType<typeof setInterval> | null = null
+
+function stopAgentPolling() {
+  if (agentPollTimer) {
+    clearInterval(agentPollTimer)
+    agentPollTimer = null
+  }
+}
+
+watch(
+  () => pathwayStore.agentGenerationSignal,
+  () => {
+    stopAgentPolling()
+    let ticks = 0
+    void refreshExecutions()
+    agentPollTimer = setInterval(async () => {
+      ticks += 1
+      await refreshExecutions()
+      const latest = executions.value?.[0]
+      const terminal = latest && ['COMPLETED', 'FAILED', 'CANCELED'].includes(latest.status)
+      if (terminal || ticks >= AGENT_POLL_MAX) stopAgentPolling()
+    }, AGENT_POLL_MS)
+  }
+)
+
+onBeforeUnmount(stopAgentPolling)
+
 onMounted(async () => {
   if (dsStore.sources.length === 0 && !dsStore.isLoading) {
     await dsStore.fetchDataSources()

@@ -153,12 +153,64 @@ export const useCohortStore = defineStore('cohort', () => {
     isDirty.value = true
   }
 
+  // Agent criteria arrive with their concept set embedded on the event and a
+  // client-side string uid. CIRCE needs an integer CodesetId plus a matching
+  // entry in the cohort's ConceptSets array — convertEventToAtlas only emits
+  // CodesetId when the id is a number, so without this the criterion saves as
+  // `CodesetId: null` with `ConceptSets: []`, i.e. "any drug exposure" instead
+  // of the drug the agent actually picked. Assign a numeric id and register it.
+  function registerEventConceptSet(event: CohortEvent | undefined) {
+    const cs = event?.conceptSet
+    if (!cs) return
+    const cohort = ensureCohort()
+    if (typeof cs.id !== 'number') {
+      const used = cohort.conceptSets
+        .map(c => (typeof c.id === 'number' ? c.id : -1))
+        .filter(n => n >= 0)
+      cs.id = used.length ? Math.max(...used) + 1 : 0
+    }
+    addConceptSetReference({
+      id: cs.id,
+      name: cs.name,
+      conceptCount: cs.conceptCount,
+      // Event items arrive already in ATLAS shape ({ concept: { CONCEPT_ID … } }),
+      // but convertInternalToAtlas reads the internal shape (item.conceptId …)
+      // and would emit CONCEPT_ID: null for every concept. Normalise here.
+      items: (cs.items ?? []).map(raw => {
+        const it = raw as Record<string, unknown>
+        const c = (it.concept ?? {}) as Record<string, unknown>
+        if (it.conceptId !== undefined) return it // already internal shape
+        return {
+          conceptId: c.CONCEPT_ID,
+          conceptName: c.CONCEPT_NAME,
+          domainId: c.DOMAIN_ID,
+          vocabularyId: c.VOCABULARY_ID,
+          conceptClassId: c.CONCEPT_CLASS_ID,
+          standardConcept: c.STANDARD_CONCEPT,
+          conceptCode: c.CONCEPT_CODE,
+          invalidReason: c.INVALID_REASON,
+          includeDescendants: it.includeDescendants ?? true,
+          isExcluded: it.isExcluded ?? false,
+          includeMapped: it.includeMapped ?? false,
+        }
+      }),
+    })
+  }
+
+  function registerRuleConceptSets(rule: InclusionRule | undefined) {
+    for (const group of rule?.criteriaGroups ?? []) {
+      for (const event of group.events ?? []) registerEventConceptSet(event)
+    }
+  }
+
   function applyProposal(proposal: AgentProposal) {
     switch (proposal.kind) {
       case 'addEntryEvent':
+        registerEventConceptSet(proposal.event)
         addEntryEvent(proposal.event)
         break
       case 'addInclusionRule':
+        registerRuleConceptSets(proposal.rule)
         addInclusionRule(proposal.rule)
         break
       case 'addConceptSet':
@@ -171,6 +223,7 @@ export const useCohortStore = defineStore('cohort', () => {
         setExitCriteria(proposal.exitCriteria)
         break
       case 'addCensoringCriterion':
+        registerEventConceptSet(proposal.event)
         addCensoringCriterion(proposal.event)
         break
       // Non-cohort proposal kinds are handled by pythiaBridge before
@@ -182,6 +235,7 @@ export const useCohortStore = defineStore('cohort', () => {
       case 'createCharacterization':
       case 'createPathway':
       case 'createIncidenceRate':
+      case 'generateAnalysis':
       case 'updateConceptSet':
       case 'updateFeatureAnalysis':
       case 'updateCharacterization':

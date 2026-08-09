@@ -1254,18 +1254,17 @@ watch(
 // (censoringCriteria starting from undefined) lose that link, so we explicitly
 // re-bind them here. Only fires on agent-driven mutations — user edits use the
 // local refs directly without bumping `agentRevision`, so no feedback loop.
-watch(
-  () => cohortStore.agentRevision,
-  () => {
-    const c = cohortStore.currentCohort
-    if (!c) return
-    entryEvents.value = c.entryEvents
-    inclusionRules.value = c.inclusionRules
-    observationPeriod.value = c.observationPeriod || { priorDays: 0, postDays: 0 }
-    exitCriteria.value = c.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
-    censoringCriteria.value = c.censoringCriteria ?? []
-  }
-)
+function syncLocalRefsFromStore() {
+  const c = cohortStore.currentCohort
+  if (!c) return
+  entryEvents.value = c.entryEvents
+  inclusionRules.value = c.inclusionRules
+  observationPeriod.value = c.observationPeriod || { priorDays: 0, postDays: 0 }
+  exitCriteria.value = c.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
+  censoringCriteria.value = c.censoringCriteria ?? []
+}
+
+watch(() => cohortStore.agentRevision, syncLocalRefsFromStore)
 
 // The host bridge asks the mounted editor to run its full WebAPI save flow.
 // Always answer the signal — handleSave no-ops when nothing is savable — so the
@@ -1364,6 +1363,15 @@ onMounted(async () => {
             existing.name !== 'New Cohort'))
       if (!hasContent) {
         cohortStore.createNewCohort()
+      } else {
+        // Pythia populated the store BEFORE this editor mounted, so the local
+        // refs below still hold their empty initial values and the criteria it
+        // added would stay invisible until the next agent mutation bumped
+        // `agentRevision` and re-bound them — which is why an agent-set entry
+        // event only appeared once the observation window was applied.
+        syncLocalRefsFromStore()
+        cohortName.value = existing.name ?? ''
+        cohortDescription.value = existing.description ?? ''
       }
     }
     loadedTags.value = []

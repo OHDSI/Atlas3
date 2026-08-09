@@ -700,6 +700,37 @@
     "requiresApproval": true
   },
   {
+    "name": "generate_analysis",
+    "description": "Run a SAVED analysis against a data source, the same as clicking Generate in the editor. Use after the analysis exists (create_pathway / create_characterization / create_incidence_rate returned an id). Results appear in the editor when the job finishes. Omit sourceKey to use the source the user is currently working against.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "analysisType": {
+          "type": "string",
+          "enum": [
+            "pathway",
+            "characterization",
+            "incidenceRate"
+          ],
+          "description": "Which kind of analysis to run. REQUIRED."
+        },
+        "analysisId": {
+          "type": "number",
+          "description": "Saved analysis id. REQUIRED."
+        },
+        "sourceKey": {
+          "type": "string",
+          "description": "CDM source key, e.g. EUNOMIA. Defaults to the current source."
+        }
+      },
+      "required": [
+        "analysisType",
+        "analysisId"
+      ]
+    },
+    "requiresApproval": true
+  },
+  {
     "name": "navigate_to",
     "description": "Suggest moving the user to a different view in ATLAS. The user sees a 5s undo toast after the navigation is applied (no approval card). Always include a one-sentence `reason` so the toast is self-explanatory. Each `view` accepts a specific set of params — see the route manifest.",
     "schema": {

@@ -619,6 +619,21 @@ export function translateCapability(
       return { kind: 'addEntryEvent', event } as unknown as AgentProposal
     }
 
+    case 'generate_analysis': {
+      const a = args as { analysisType?: string; analysisId?: number; sourceKey?: string }
+      const kinds = ['pathway', 'characterization', 'incidenceRate']
+      if (!a.analysisType || !kinds.includes(a.analysisType)) return null
+      if (typeof a.analysisId !== 'number') return null
+      return {
+        kind: 'generateAnalysis',
+        payload: {
+          analysisType: a.analysisType,
+          analysisId: a.analysisId,
+          ...(a.sourceKey ? { sourceKey: a.sourceKey } : {}),
+        },
+      } as unknown as AgentProposal
+    }
+
     case 'set_observation_window': {
       const w = args as ObservationWindowArgs
       if (typeof w.priorDays !== 'number' || typeof w.postDays !== 'number') return null

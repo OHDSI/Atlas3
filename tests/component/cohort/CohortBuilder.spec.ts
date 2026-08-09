@@ -243,6 +243,28 @@ describe('CohortBuilder', () => {
     expect((wrapper.vm as any).cohortId).toBeNull()
   })
 
+  // Regression: Pythia applies proposals to the cohort store and only then
+  // navigates to /cohorts/new. The editor mounts with the store already
+  // populated, but its local refs start empty — so an agent-set entry event
+  // stayed invisible until the NEXT agent mutation (typically the observation
+  // window) bumped agentRevision and re-bound them.
+  it('shows criteria the agent put in the store before it mounted', async () => {
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.createNewCohort()
+    store.applyProposal({
+      kind: 'addEntryEvent',
+      event: { id: 'e1', type: 'DrugExposure', name: 'Diclofenac', conceptSetId: 'cs1' },
+    } as never)
+
+    const wrapper = createWrapper()      // no id -> the "new cohort" path
+    await wrapper.vm.$nextTick()
+
+    const vm = wrapper.vm as any
+    expect(vm.entryEvents).toHaveLength(1)
+    expect(vm.entryEvents[0].name).toBe('Diclofenac')
+  })
+
   it('exposes status state via defineExpose', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()

@@ -173,6 +173,10 @@ export type AgentProposal =
       kind: 'createIncidenceRate'
       payload: IncidenceRateCreatePayload
     }
+  | {
+      kind: 'generateAnalysis'
+      payload: { analysisType: 'pathway' | 'characterization' | 'incidenceRate'; analysisId: number; sourceKey?: string }
+    }
   | { kind: 'updateConceptSet'; payload: UpdateConceptSetPayload }
   | { kind: 'updateFeatureAnalysis'; payload: UpdateFeatureAnalysisPayload }
   | { kind: 'updateCharacterization'; payload: UpdateCharacterizationPayload }

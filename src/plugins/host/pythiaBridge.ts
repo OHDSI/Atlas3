@@ -8,6 +8,7 @@ import { useCharacterizationStore } from '@/stores/characterization'
 import { usePathwayStore } from '@/stores/pathway'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { useNotifications } from '@/stores/notifications'
+import { useWebAPIStore } from '@/stores/webapi'
 import type {
   AgentProposal,
   CharacterizationCreatePayload,
@@ -26,7 +27,7 @@ import router from '@/router'
 import { createConceptSet } from '@/services/concept-set.service'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
 import { createCharacterization } from '@/services/characterization.service'
-import { createPathway } from '@/services/pathway.service'
+import { createPathway, generatePathway } from '@/services/pathway.service'
 import { createIncidenceRate } from '@/services/incidence-rate.service'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 import type {
@@ -138,6 +139,8 @@ async function applyProposalInner(
       return await handleCreatePathway(proposal.payload)
     case 'createIncidenceRate':
       return await handleCreateIncidenceRate(proposal.payload)
+    case 'generateAnalysis':
+      await handleGenerateAnalysis(proposal.payload); return
     case 'updateConceptSet':
       await handleUpdateConceptSet(proposal.payload); return
     case 'updateFeatureAnalysis':
@@ -152,8 +155,12 @@ async function applyProposalInner(
       const cohortStore = useCohortStore()
       const currentRoute = router.currentRoute.value
       const onNewCohortRoute = currentRoute.name === 'cohort-new'
-      if (!onNewCohortRoute) {
-        cohortStore.createNewCohort()
+      // requestNewCohort (not createNewCohort) so the MOUNTED editor re-syncs:
+      // the plain reset clears the store but leaves the editor's local refs
+      // holding the previous cohort's criteria.
+      if (!onNewCohortRoute || startFreshCohort) {
+        cohortStore.requestNewCohort()
+        startFreshCohort = false
       }
       cohortStore.applyProposal(proposal)
       await ensureOnCohortRoute()
@@ -185,6 +192,10 @@ async function ensureOnCohortRoute() {
   }
 }
 
+// Set once a cohort has been saved: the next artifact the agent starts must
+// begin from a blank editor even though the route (cohort-new) hasn't changed.
+let startFreshCohort = false
+
 async function handleSaveCohort(
   proposal: { name?: string; description?: string } = {}
 ): Promise<{ id?: number; name?: string } | void> {
@@ -194,7 +205,13 @@ async function handleSaveCohort(
     return
   }
   await ensureOnCohortRoute()
-  return await cohortStore.requestSave({ name: proposal.name, description: proposal.description })
+  const saved = await cohortStore.requestSave({ name: proposal.name, description: proposal.description })
+  // The cohort is committed. Whatever the agent builds next is a DIFFERENT
+  // cohort, so the editor must start blank — otherwise the next entry event is
+  // added on top of this one and the user watches a single editor accumulate
+  // three entry criteria while three separate cohorts are saved underneath.
+  if (saved?.id) startFreshCohort = true
+  return saved
 }
 
 async function handleNavigate(route: NavigateRoute) {
@@ -425,6 +442,46 @@ async function handleCreatePathway(
   } catch (err) {
     logger.error('pythiaBridge', 'createPathway failed', err)
     showSnackbar(`Failed to create pathway: ${(err as Error).message}`, 'error')
+  }
+}
+
+// Run a saved analysis, the same thing the Generate button does. The agent can
+// create an analysis but previously had no way to execute it, so every demo
+// ended with an unrun analysis the user had to kick off by hand.
+async function handleGenerateAnalysis(payload: {
+  analysisType: 'pathway' | 'characterization' | 'incidenceRate'
+  analysisId: number
+  sourceKey?: string
+}): Promise<void> {
+  // Fall back to whatever source the user is working against.
+  const webapiStore = useWebAPIStore()
+  if (!webapiStore.sources.length) await webapiStore.fetchSources().catch(() => {})
+  const sourceKey =
+    payload.sourceKey ||
+    webapiStore.selectedSource ||
+    webapiStore.sources[0]?.sourceKey ||
+    ''
+  if (!sourceKey) {
+    showSnackbar('Cannot generate: no data source selected', 'error')
+    return
+  }
+  if (payload.analysisType !== 'pathway') {
+    showSnackbar(`Generating a ${payload.analysisType} is not supported yet`, 'warning')
+    return
+  }
+  try {
+    const result = await generatePathway(payload.analysisId, sourceKey)
+    if (!result.success) {
+      showSnackbar(`Failed to start generation: ${result.error}`, 'error')
+      return
+    }
+    showSnackbar(`Generating pathway analysis against ${sourceKey}`, 'success')
+    // The workbench only polls runs it started itself, so tell it to watch this
+    // one — otherwise the page sits on "No runs yet" until a manual reload.
+    usePathwayStore().notifyAgentGeneration()
+  } catch (err) {
+    logger.error('pythiaBridge', 'generateAnalysis failed', err)
+    showSnackbar(`Failed to start generation: ${(err as Error).message}`, 'error')
   }
 }
 

@@ -497,3 +497,35 @@ describe('pythiaBridge', () => {
     expect(handleResponseSpy).toHaveBeenCalledWith('cap-cb-2', { applied: false })
   })
 })
+
+// Regression: Pythia builds several cohorts in a row without the route ever
+// changing (it stays on cohort-new). The bridge used to skip the reset in that
+// case and, when it did reset, called the store's plain createNewCohort — which
+// clears the store but leaves the MOUNTED editor's local refs alone. The user
+// watched one editor accumulate three entry criteria while three separate
+// cohorts were saved underneath.
+describe('editor starts blank for each new cohort', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    setupPythiaBridge()
+    createHostMessageBus('pythia-plugin')
+  })
+
+  it('signals the mounted editor rather than silently resetting the store', async () => {
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.createNewCohort()
+    const before = store.newCohortSignal
+
+    // Simulate ATLAS being on some other route, which always forced a reset.
+    vi.mocked(router).currentRoute = { value: { name: 'cohorts' } } as never
+    applyProposalDirect({
+      kind: 'addEntryEvent',
+      event: { id: 'e1', criteriaType: 'ConditionOccurrence', conceptSet: { id: 'x', name: 'Sinusitis', items: [] } },
+    } as never)
+
+    // requestNewCohort bumps the signal CohortBuilder watches; createNewCohort
+    // does not. That bump is the whole fix.
+    expect(store.newCohortSignal).toBeGreaterThan(before)
+  })
+})

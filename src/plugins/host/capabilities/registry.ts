@@ -245,6 +245,25 @@ export const CAPABILITIES: Capability[] = [
   },
 
   {
+    name: 'generate_analysis',
+    description: 'Run a SAVED analysis against a data source, the same as clicking Generate in the editor. Use after the analysis exists (create_pathway / create_characterization / create_incidence_rate returned an id). Results appear in the editor when the job finishes. Omit sourceKey to use the source the user is currently working against.',
+    schema: {
+      type: 'object',
+      properties: {
+        analysisType: {
+          type: 'string',
+          enum: ['pathway', 'characterization', 'incidenceRate'],
+          description: 'Which kind of analysis to run. REQUIRED.',
+        },
+        analysisId: { type: 'number', description: 'Saved analysis id. REQUIRED.' },
+        sourceKey: { type: 'string', description: 'CDM source key, e.g. EUNOMIA. Defaults to the current source.' },
+      },
+      required: ['analysisType', 'analysisId'],
+    },
+    requiresApproval: true,
+  },
+
+  {
     name: 'update_concept_set',
     description: 'Apply a partial edit to an existing standalone concept set: rename, change description, append items, or replace items. Mutates the open editor; user clicks Save to persist. Use itemsToAdd to append (skips duplicate conceptIds), items to fully replace.',
     schema: {
