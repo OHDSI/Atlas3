@@ -573,11 +573,10 @@ describe('InclusionCriteriaPanel', () => {
       vm.removeRule(999)
       await wrapper.vm.$nextTick()
 
-      if (wrapper.emitted('update:modelValue')) {
-        const emitted = wrapper.emitted('update:modelValue') as any[]
-        const rules = emitted[emitted.length - 1][0] as InclusionRule[]
-        expect(rules.length).toBe(originalLength)
-      }
+      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+      const emitted = wrapper.emitted('update:modelValue') as any[]
+      const rules = emitted[emitted.length - 1][0] as InclusionRule[]
+      expect(rules.length).toBe(originalLength)
     })
   })
 
