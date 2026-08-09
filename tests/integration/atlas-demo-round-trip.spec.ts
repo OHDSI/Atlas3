@@ -392,10 +392,8 @@ describe('Atlas Demo - Feature-Specific Compatibility', () => {
       (a: Record<string, unknown>) => a.type === 'numericRange' && a.attributeKey === 'valueAsNumber'
     )
     expect(valueAttr).toBeDefined()
-    if (valueAttr) {
-      expect((valueAttr as Record<string, unknown>).value).toBe(30)
-      expect((valueAttr as Record<string, unknown>).operator).toBe('GREATER_THAN_OR_EQUAL')
-    }
+    expect((valueAttr as Record<string, unknown>).value).toBe(30)
+    expect((valueAttr as Record<string, unknown>).operator).toBe('GREATER_THAN_OR_EQUAL')
   })
 
   it('Age attribute round-trips correctly', () => {
@@ -409,10 +407,8 @@ describe('Atlas Demo - Feature-Specific Compatibility', () => {
       (a: Record<string, unknown>) => a.type === 'numericRange' && a.attributeKey === 'age'
     )
     expect(ageAttr).toBeDefined()
-    if (ageAttr) {
-      expect((ageAttr as Record<string, unknown>).value).toBe(18)
-      expect((ageAttr as Record<string, unknown>).operator).toBe('GREATER_THAN_OR_EQUAL')
-    }
+    expect((ageAttr as Record<string, unknown>).value).toBe(18)
+    expect((ageAttr as Record<string, unknown>).operator).toBe('GREATER_THAN_OR_EQUAL')
   })
 
   it('VisitType concept array round-trips correctly', () => {
@@ -427,13 +423,12 @@ describe('Atlas Demo - Feature-Specific Compatibility', () => {
       (a: Record<string, unknown>) => a.attributeKey === 'visitType'
     )
     expect(visitTypeAttr).toBeDefined()
-    if (visitTypeAttr && (visitTypeAttr as Record<string, unknown>).type === 'concept') {
-      const concepts = (visitTypeAttr as Record<string, unknown>).concepts as Record<string, unknown>[]
-      expect(concepts?.length).toBe(2)
-      const conceptIds = concepts?.map(c => c.CONCEPT_ID || c.conceptId)
-      expect(conceptIds).toContain(9203) // Emergency Room
-      expect(conceptIds).toContain(9201) // Inpatient
-    }
+    expect((visitTypeAttr as Record<string, unknown>).type).toBe('concept')
+    const concepts = (visitTypeAttr as Record<string, unknown>).concepts as Record<string, unknown>[]
+    expect(concepts?.length).toBe(2)
+    const conceptIds = concepts?.map(c => c.CONCEPT_ID || c.conceptId)
+    expect(conceptIds).toContain(9203) // Emergency Room
+    expect(conceptIds).toContain(9201) // Inpatient
   })
 
   it('Inclusion rule temporal windows round-trip correctly', () => {
@@ -498,10 +493,8 @@ describe('Atlas Demo - Feature-Specific Compatibility', () => {
       (a: Record<string, unknown>) => a.type === 'dateRange' && a.attributeKey === 'occurrenceStartDate'
     )
     expect(dateAttr).toBeDefined()
-    if (dateAttr) {
-      expect((dateAttr as Record<string, unknown>).value).toBe('2010-10-19')
-      expect((dateAttr as Record<string, unknown>).operator).toBe('GREATER_THAN_OR_EQUAL')
-    }
+    expect((dateAttr as Record<string, unknown>).value).toBe('2010-10-19')
+    expect((dateAttr as Record<string, unknown>).operator).toBe('GREATER_THAN_OR_EQUAL')
   })
 
   it('AdditionalCriteria with EXACTLY_0 occurrence round-trips correctly', () => {
@@ -511,20 +504,21 @@ describe('Atlas Demo - Feature-Specific Compatibility', () => {
     const internal = convertAtlasToInternal(atlas as never)
 
     expect(internal.additionalCriteria).toBeDefined()
-    if (internal.additionalCriteria) {
-      expect(internal.additionalCriteria.events?.length).toBeGreaterThan(0)
+    expect(internal.additionalCriteria!.events?.length).toBeGreaterThan(0)
 
-      // Find the zero-occurrence criterion (no prior antihypertensive exposure)
-      const zeroCriterion = internal.additionalCriteria.events?.find(
-        e => e.cardinality?.type === 'EXACTLY' && e.cardinality?.count === 0
-      )
-      expect(zeroCriterion).toBeDefined()
-    }
+    // Find the zero-occurrence criterion (no prior antihypertensive exposure)
+    const zeroCriterion = internal.additionalCriteria!.events?.find(
+      e => e.cardinality?.type === 'EXACTLY' && e.cardinality?.count === 0
+    )
+    expect(zeroCriterion).toBeDefined()
   })
 
   it('CensorWindow with date offsets round-trips correctly', () => {
+    // cohort-drug-complex-age-date-censor.json's CensorWindow is actually {}
+    // (empty), so this test never exercised the field it's named after. Use
+    // the fixture that genuinely carries CensorWindow StartDate/EndDate.
     const atlas = JSON.parse(
-      readFileSync(join(DEMO_FIXTURES_DIR, 'cohort-drug-complex-age-date-censor.json'), 'utf-8')
+      readFileSync(join(DEMO_FIXTURES_DIR, 'cohort-drug-censoring-endstrategy.json'), 'utf-8')
     )
     const internal = convertAtlasToInternal(atlas as never)
 
@@ -538,9 +532,8 @@ describe('Atlas Demo - Feature-Specific Compatibility', () => {
       conceptSets: internal.conceptSets || [],
     } as CohortDefinition)
 
-    if (atlas.CensorWindow && Object.keys(atlas.CensorWindow).length > 0) {
-      expect(rt.CensorWindow).toEqual(atlas.CensorWindow)
-    }
+    expect(atlas.CensorWindow && Object.keys(atlas.CensorWindow).length > 0).toBe(true)
+    expect(rt.CensorWindow).toEqual(atlas.CensorWindow)
   })
 
   it('ProcedureOccurrence entry event round-trips correctly', () => {
@@ -741,6 +734,8 @@ describe('Atlas Demo - All Fixtures Process Without Errors', () => {
       const isDemographic = (atlas.PrimaryCriteria?.CriteriaList?.length ?? 0) === 0
       if (!isDemographic) {
         expect(internal.entryEvents?.length).toBeGreaterThan(0)
+      } else {
+        expect(internal.entryEvents?.length ?? 0).toBe(0)
       }
 
       // Internal → Atlas
@@ -758,6 +753,8 @@ describe('Atlas Demo - All Fixtures Process Without Errors', () => {
 
       if (!isDemographic) {
         expect(rt.PrimaryCriteria?.CriteriaList?.length).toBeGreaterThan(0)
+      } else {
+        expect(rt.PrimaryCriteria?.CriteriaList?.length ?? 0).toBe(0)
       }
 
       // Atlas → Internal → Atlas → Internal (double round-trip)
