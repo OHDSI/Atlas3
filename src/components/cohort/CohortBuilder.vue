@@ -729,6 +729,9 @@ let pendingNavigation: (() => void) | null = null
 // UI state
 // If we have an ID prop, start with loading=true to prevent UI from rendering before data loads
 const isLoadingCohort = ref(!!props.id)
+// Set to the id we just saved, so the props.id watcher can tell our own
+// route adoption apart from a real navigation to another cohort.
+const adoptedSavedId = ref<string | null>(null)
 const isConceptSetDialogOpen = ref(false)
 const isConceptSearchDialogOpen = ref(false)
 const selectedConceptDomainFilter = ref<string | undefined>(undefined)
@@ -1460,13 +1463,23 @@ onBeforeUnmount(() => {
   cohortStore.stopAutoSave()
 })
 
+// Adopting the id of a cohort we just saved must NOT re-fetch it. The editor
+// already holds exactly what was persisted, and the fetch is async: anything
+// added while it is in flight (the agent's next accepted proposals, or the
+// user's next edit) is silently overwritten when it resolves, and the next
+// save then persists the stale definition. That cost a full phenotype once —
+// observation window and four inclusion rules accepted on screen, none of them
+// in the saved cohort.
 watch(
   () => props.id,
   newId => {
-    if (newId) {
-      isLoadingCohort.value = true
-      loadCohort(newId)
+    if (!newId) return
+    if (adoptedSavedId.value !== null && adoptedSavedId.value === String(newId)) {
+      adoptedSavedId.value = null
+      return
     }
+    isLoadingCohort.value = true
+    loadCohort(newId)
   }
 )
 
@@ -2306,6 +2319,9 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     // away and back. Navigation must never fail the save — the cohort is
     // already persisted by this point.
     if (!props.id && saved.data.id) {
+      // Tell the props.id watcher this id change is ours, so it adopts the id
+      // without reloading over the editor state we just saved.
+      adoptedSavedId.value = String(saved.data.id)
       try {
         await router.replace(`/cohorts/${saved.data.id}`)
       } catch (navErr) {

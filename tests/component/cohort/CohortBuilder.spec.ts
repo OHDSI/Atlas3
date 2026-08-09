@@ -8,7 +8,7 @@
  * export flow, cancel routing, tag updates, and the unsaved-changes guard.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
@@ -2155,5 +2155,47 @@ describe('CohortBuilder', () => {
     spy.mockRestore()
 
     expect(result?.id).toBeDefined()
+  })
+
+  // Regression: adopting the id of the cohort we just saved used to re-run
+  // loadCohort. That fetch is async, so anything added while it was in flight —
+  // the agent's next accepted proposals — was overwritten when it resolved, and
+  // the next save persisted the stale definition. Seen live: an observation
+  // window and four inclusion rules accepted on screen, none of them in the
+  // saved cohort, which still held only the entry event.
+  it('does not reload over the editor when adopting the id of the cohort it just saved', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Adults on ibuprofen'
+    vm.entryEvents = [{ id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Ibuprofen', items: [] } }]
+    await wrapper.vm.$nextTick()
+
+    const spy = vi.spyOn(router, 'replace').mockResolvedValue(undefined as never)
+    const saved = await vm.handleSave()
+    spy.mockRestore()
+    expect(saved?.id).toBeDefined()
+
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.getCohortDefinition).mockClear()
+    // The route now carries the saved id — the same change router.replace made.
+    await wrapper.setProps({ id: String(saved.id) })
+    await flushPromises()
+
+    expect(cohortDefService.getCohortDefinition).not.toHaveBeenCalled()
+    expect(vm.entryEvents).toHaveLength(1)
+    expect(vm.cohortName).toBe('Adults on ibuprofen')
+  })
+
+  it('still loads when the route changes to a different cohort', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.getCohortDefinition).mockClear()
+
+    await wrapper.setProps({ id: '42' })
+    await flushPromises()
+
+    expect(cohortDefService.getCohortDefinition).toHaveBeenCalledWith(42)
   })
 })
