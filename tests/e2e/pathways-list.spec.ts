@@ -21,7 +21,7 @@ test.describe('Pathways list', () => {
     await page.getByTestId('pathways-search').getByRole('textbox').fill('zzzzz_no_match_zzzzz')
     // AnalysisDataTable's empty-state fallback text is overridden by the
     // shipped locale bundle's common.noData key ("No data"), not the
-    // component's inline default ("No pathways yet.") — see src/locales/en.json.
+    // component's inline default ("No pathways yet."); see src/locales/en.json.
     await expect(page.getByTestId('pathways-table').getByText(/no data/i)).toBeVisible()
   })
 })
