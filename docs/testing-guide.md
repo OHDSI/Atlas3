@@ -20,17 +20,25 @@ guard in its three formatters.
 The mutation gate does not cover the whole repository. `stryker.conf.mjs` computes its
 `mutate` list at load time and prints the counts every time it loads, so scope reduction
 is visible in every run's output rather than silent. Coverage today: all of `src`'s
-TypeScript outside the same exclusions coverage uses (180 files), plus 207 of the 336
+TypeScript outside the same exclusions coverage uses (180 files), plus 194 of the 336
 `.vue` single-file components in `src`.
 
-The other 79 `.vue` files are excluded because Stryker cannot instrument them. Stryker
-wraps every mutated literal in a call to its own injected switch function. When that
-literal sits inside `withDefaults(defineProps(), {...})` or `defineOptions({...})`, the
-injected call makes those macros reference a locally declared function, and Vue's
-`<script setup>` compiler rejects that at compile time, because both macros are hoisted
-out of `setup()`. That failure aborts the whole dry run, not just the one file, so any
-file using either pattern is excluded from the mutate target entirely rather than left
-in to bring the run down.
+The other 92 `.vue` files are excluded because Stryker cannot instrument them. Stryker
+wraps every mutated literal in a call to its own injected switch function. Several Vue
+compiler macros in `<script setup>` (`withDefaults`, `defineProps` and `defineEmits`
+called with a runtime object or array argument, `defineOptions`, `defineModel`,
+`defineSlots`) are hoisted out of `setup()`, so if a mutated literal lands inside one of
+their arguments, the injected call makes the macro reference a locally declared
+function, and Vue's compiler rejects that at compile time. That failure aborts the whole
+dry run, not just the one file, so any file using one of these forms is excluded from
+the mutate target entirely rather than left in to bring the run down. The rule lives in
+`scripts/stryker-unmutatable-macro.mjs` and is shared by `stryker.conf.mjs` and
+`npm run test:mutation:file`, so it cannot drift between the two.
+
+After adding a new component, run `npx stryker run --dryRunOnly` to check the config
+still instruments every target without doing a full mutation run. It validates the
+whole `mutate` set in one pass and is what the pull request workflow runs automatically
+via `npm run test:mutation:check`.
 
 ## Rules
 

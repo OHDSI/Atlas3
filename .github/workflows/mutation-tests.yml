@@ -29,6 +29,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify every target can be instrumented (fails if a new file breaks the gate)
+        if: github.event_name == 'pull_request'
+        run: npm run test:mutation:check
+
       - name: Run mutation tests on changed files (advisory)
         if: github.event_name == 'pull_request'
         run: npx stryker run --since=origin/${{ github.base_ref }} || true

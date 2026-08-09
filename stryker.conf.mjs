@@ -1,4 +1,5 @@
 import { globSync, readFileSync } from 'node:fs'
+import { UNMUTATABLE_MACRO } from './scripts/stryker-unmutatable-macro.mjs'
 
 const tsFiles = globSync('src/**/*.ts').filter((file) => !(
   file.endsWith('.types.ts') ||
@@ -16,12 +17,6 @@ const vueCandidates = globSync('src/**/*.vue').filter((file) => !(
   file.endsWith('.story.vue')
 ))
 
-// Stryker wraps every mutated literal in a call to its injected switch function; inside
-// withDefaults(defineProps(), {...}) or defineOptions({...}) that reference makes Vue's
-// <script setup> compiler reject the file (both macros are hoisted out of setup()),
-// which aborts the whole dry run rather than just that file's mutants, so these files
-// cannot be mutation targets at all.
-const UNMUTATABLE_MACRO = /withDefaults\(defineProps|defineOptions\(\s*\{/
 const vueExcluded = []
 const vueFiles = vueCandidates.filter((file) => {
   const isUnmutatable = UNMUTATABLE_MACRO.test(readFileSync(file, 'utf-8'))
@@ -34,7 +29,7 @@ const mutate = [...tsFiles, ...vueFiles]
 console.log(
   `[stryker.conf] mutate target: ${mutate.length} files included ` +
   `(${tsFiles.length} .ts, ${vueFiles.length}/${vueCandidates.length} .vue); ` +
-  `${vueExcluded.length} .vue excluded for withDefaults(defineProps)/defineOptions({...})`
+  `${vueExcluded.length} .vue excluded for using a compiler macro Stryker cannot instrument`
 )
 
 export default {
@@ -48,6 +43,9 @@ export default {
   incremental: true,
   incrementalFile: 'reports/mutation/stryker-incremental.json',
   timeoutMS: 60000,
+  // The instrumented dry run covers the whole existing suite across 374 mutated
+  // targets; the 5-minute default is too short for that, so it's raised here.
+  dryRunTimeoutMinutes: 20,
   concurrency: 4,
   mutate,
   thresholds: { high: 80, low: 60, break: null },
