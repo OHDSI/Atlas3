@@ -36,7 +36,8 @@ jobs:
       - name: Post the advisory score
         if: github.event_name == 'pull_request'
         run: |
-          SCORE=$(jq -r '[.files[].mutants[]] | (map(select(.status=="Killed" or .status=="Timeout")) | length) as $k | (map(select(.status!="Ignored" and .status!="CompileError")) | length) as $t | if $t == 0 then "n/a" else ($k / $t * 100 | .*100|round|./100|tostring) end' reports/mutation/mutation.json)
+          [ -f reports/mutation/mutation.json ] || { echo "Mutation run did not complete; no report to score." >> $GITHUB_STEP_SUMMARY; exit 0; }
+          SCORE=$(jq -r '[.files[].mutants[]] | (map(select(.status=="Killed" or .status=="Timeout")) | length) as $k | (map(select(.status=="Killed" or .status=="Timeout" or .status=="Survived" or .status=="NoCoverage")) | length) as $t | if $t == 0 then "n/a" else ($k / $t * 100 | .*100|round|./100|tostring) end' reports/mutation/mutation.json)
           echo "## Mutation score on changed files: ${SCORE}%" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Advisory only. The nightly full run enforces the threshold." >> $GITHUB_STEP_SUMMARY
