@@ -118,39 +118,41 @@ test.describe('Configuration Panel', () => {
   })
 
   test.describe('US3: Configure Vocabulary Schema (T106)', () => {
-    test('should edit vocabulary schema with auto-save', async ({ page }) => {
+    // blocked: src/components/config/VocabularySchemaSection.vue,
+    // src/stores/config.ts's setVocabularySchema, and
+    // src/models/config.types.ts's vocabularySchemaSchema all exist, but
+    // ConfigPanel.vue (grep-confirmed) only mounts CacheManagementSection,
+    // DataSourcesSection, TagManagementSection, and PermissionsSection.
+    // VocabularySchemaSection is never imported anywhere, so there is no
+    // "Vocabulary" section, tab, or schema input to find in the running
+    // app. Every guard below was permanently dead. Wiring the section in
+    // requires a new ConfigPanelSection tab entry, a permission gate, and
+    // i18n label review, which is a real feature decision, not a test fix.
+    test.fixme('should edit vocabulary schema with auto-save', async ({ page }) => {
       // Ensure config panel is open
       await ensurePanelOpen(page)
 
       // Navigate to vocabulary section
       const vocabularySection = page.locator('text=/Vocabulary/i').first()
-      if (await vocabularySection.isVisible().catch(() => false)) {
-        await vocabularySection.click({ force: true })
-        await page.waitForTimeout(300)
-      }
+      await vocabularySection.click({ force: true })
+      await page.waitForTimeout(300)
 
       // Find vocabulary schema input field
-      const schemaInput = page.locator('input[type="text"]').filter({ hasText: /schema/i }).or(
-        page.locator('label:has-text("Schema")').locator('..').locator('input')
-      ).first()
+      const schemaInput = page.locator('label:has-text("Schema")').locator('..').locator('input')
 
-      if (await schemaInput.isVisible().catch(() => false)) {
-        // Clear and enter new schema
-        await schemaInput.clear()
-        await schemaInput.fill('test_schema')
+      // Clear and enter new schema
+      await schemaInput.clear()
+      await schemaInput.fill('test_schema')
 
-        // Blur to trigger auto-save
-        await schemaInput.blur()
+      // Blur to trigger auto-save
+      await schemaInput.blur()
 
-        // Wait for save indicator or success message
-        await page.waitForTimeout(1500) // Wait for debounce + save
+      // Wait for save indicator or success message
+      await page.waitForTimeout(1500) // Wait for debounce + save
 
-        // Check for success toast
-        const toast = page.locator('.v-snackbar:visible, text=/updated/i, text=/saved/i')
-        if (await toast.isVisible({ timeout: 3000 }).catch(() => false)) {
-          await expect(toast).toBeVisible()
-        }
-      }
+      // Check for success toast
+      const toast = page.locator('.v-snackbar:visible, text=/updated/i, text=/saved/i')
+      await expect(toast).toBeVisible({ timeout: 3000 })
     })
 
     test('should have inputs in vocabulary section', async ({ page }) => {
@@ -211,9 +213,10 @@ test.describe('Configuration Panel', () => {
       const panel = page.locator('.v-navigation-drawer:visible').first()
       const box = await panel.boundingBox()
 
-      if (box) {
-        expect(box.width).toBeGreaterThan(300) // Should take most/all of viewport
-      }
+      // ensurePanelOpen() already asserts the panel is visible, so
+      // boundingBox() cannot genuinely be null here.
+      expect(box).not.toBeNull()
+      expect(box!.width).toBeGreaterThan(300) // Should take most/all of viewport
     })
 
     test('should adapt panel width for desktop', async ({ page }) => {
@@ -227,9 +230,8 @@ test.describe('Configuration Panel', () => {
       const panel = page.locator('.v-navigation-drawer:visible').first()
       const box = await panel.boundingBox()
 
-      if (box) {
-        expect(box.width).toBeLessThanOrEqual(1400)
-      }
+      expect(box).not.toBeNull()
+      expect(box!.width).toBeLessThanOrEqual(1400)
     })
   })
 
@@ -242,21 +244,21 @@ test.describe('Configuration Panel', () => {
       // Press Enter to open (assuming config icon gets focus)
       // This is a basic test - real keyboard nav would require more specific selectors
       const configIcon = page.locator('[aria-label="Open configuration panel"]')
-      if (await configIcon.isVisible().catch(() => false)) {
-        await configIcon.focus()
-        await page.keyboard.press('Enter')
+      await expect(configIcon).toBeVisible()
 
-        // Panel should open
-        await expect(page.locator('.v-navigation-drawer.config-panel')).toBeVisible({
-          timeout: 3000,
-        })
+      await configIcon.focus()
+      await page.keyboard.press('Enter')
 
-        // Press Escape to close
-        await page.keyboard.press('Escape')
+      // Panel should open
+      await expect(page.locator('.v-navigation-drawer.config-panel')).toBeVisible({
+        timeout: 3000,
+      })
 
-        // Panel should close
-        await page.waitForTimeout(500)
-      }
+      // Press Escape to close
+      await page.keyboard.press('Escape')
+
+      // Panel should close
+      await page.waitForTimeout(500)
     })
   })
 })
