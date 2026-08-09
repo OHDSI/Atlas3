@@ -312,12 +312,11 @@ describe('ConceptTable', () => {
     const addButton = buttons.find(btn => btn.text().includes('Add'))
 
     // Note: Items are sorted by conceptId ascending, so first item is mockConcepts[2] (192855)
-    if (addButton) {
-      await addButton.trigger('click')
+    expect(addButton).toBeDefined()
+    await addButton!.trigger('click')
 
-      expect(wrapper.emitted('add-concept')).toBeTruthy()
-      expect(wrapper.emitted('add-concept')![0]).toEqual([mockConcepts[2]])
-    }
+    expect(wrapper.emitted('add-concept')).toBeTruthy()
+    expect(wrapper.emitted('add-concept')![0]).toEqual([mockConcepts[2]])
   })
 
   it('should emit remove-concept when Remove button is clicked', async () => {
@@ -331,12 +330,11 @@ describe('ConceptTable', () => {
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const removeButton = buttons.find(btn => btn.text().includes('Remove'))
 
-    if (removeButton) {
-      await removeButton.trigger('click')
+    expect(removeButton).toBeDefined()
+    await removeButton!.trigger('click')
 
-      expect(wrapper.emitted('remove-concept')).toBeTruthy()
-      expect(wrapper.emitted('remove-concept')![0]).toEqual([mockConcepts[0]])
-    }
+    expect(wrapper.emitted('remove-concept')).toBeTruthy()
+    expect(wrapper.emitted('remove-concept')![0]).toEqual([mockConcepts[0]])
   })
 
   it('should display no data message when concepts is empty', async () => {
@@ -412,9 +410,8 @@ describe('ConceptTable', () => {
       chip.text().includes('Non-Standard')
     )
 
-    if (typeChips.length > 0) {
-      expect(typeChips[0].props('color')).toBe('primary')
-    }
+    expect(typeChips.length).toBeGreaterThan(0)
+    expect(typeChips[0].props('color')).toBe('primary')
   })
 
   it('should use info color for Classification concepts', async () => {
@@ -424,9 +421,8 @@ describe('ConceptTable', () => {
     const chips = wrapper.findAllComponents({ name: 'VChip' })
     const typeChips = chips.filter(chip => chip.text().includes('Classification'))
 
-    if (typeChips.length > 0) {
-      expect(typeChips[0].props('color')).toBe('info')
-    }
+    expect(typeChips.length).toBeGreaterThan(0)
+    expect(typeChips[0].props('color')).toBe('info')
   })
 
   it('should use success color for Valid concepts', async () => {
@@ -436,9 +432,8 @@ describe('ConceptTable', () => {
     const chips = wrapper.findAllComponents({ name: 'VChip' })
     const validChips = chips.filter(chip => chip.text().includes('Valid'))
 
-    if (validChips.length > 0) {
-      expect(validChips[0].props('color')).toBe('success')
-    }
+    expect(validChips.length).toBeGreaterThan(0)
+    expect(validChips[0].props('color')).toBe('success')
   })
 
   it('should use error color for Invalid concepts', async () => {
@@ -448,9 +443,8 @@ describe('ConceptTable', () => {
     const chips = wrapper.findAllComponents({ name: 'VChip' })
     const invalidChips = chips.filter(chip => chip.text().includes('Invalid'))
 
-    if (invalidChips.length > 0) {
-      expect(invalidChips[0].props('color')).toBe('error')
-    }
+    expect(invalidChips.length).toBeGreaterThan(0)
+    expect(invalidChips[0].props('color')).toBe('error')
   })
 
   it('should default to page 1 when not specified', () => {
