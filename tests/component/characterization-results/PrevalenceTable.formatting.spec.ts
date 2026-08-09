@@ -91,6 +91,7 @@ describe('PrevalenceTable value formatting', () => {
     const row = makeRow({ pct: { [DEFAULT_STRATA_KEY]: { '1': 'oops' as unknown as number } } })
     const wrapper = mountTable([row])
     expect(wrapper.text()).not.toContain('oops')
+    expect(wrapper.findAll('td').map((c) => c.text())).toContain('—')
   })
 
   it('renders std diff with four decimal places for two cohorts', () => {
@@ -104,6 +105,46 @@ describe('PrevalenceTable value formatting', () => {
     })
     const wrapper = mountTable([row], row.cohorts)
     expect(wrapper.text()).toContain('0.1235')
+  })
+
+  it('renders an em-rule placeholder for a non-numeric count', () => {
+    const row = makeRow({ count: { [DEFAULT_STRATA_KEY]: { '1': 'oops' as unknown as number } } })
+    const wrapper = mountTable([row])
+    expect(wrapper.findAll('td').map((c) => c.text())).toContain('—')
+  })
+
+  it('renders an em-rule placeholder for a NaN count', () => {
+    const row = makeRow({ count: { [DEFAULT_STRATA_KEY]: { '1': Number.NaN } } })
+    const wrapper = mountTable([row])
+    expect(wrapper.text()).not.toContain('NaN')
+    expect(wrapper.findAll('td').map((c) => c.text())).toContain('—')
+  })
+
+  it('renders an em-rule placeholder for a missing std diff', () => {
+    const row = makeRow({
+      cohorts: [
+        { id: 1, name: 'A' },
+        { id: 2, name: 'B' },
+      ],
+      pct: { [DEFAULT_STRATA_KEY]: { '1': 10, '2': 20 } },
+      stdDiff: undefined,
+    })
+    const wrapper = mountTable([row], row.cohorts)
+    expect(wrapper.findAll('td').map((c) => c.text())).toContain('—')
+  })
+
+  it('renders an em-rule placeholder for a NaN std diff', () => {
+    const row = makeRow({
+      cohorts: [
+        { id: 1, name: 'A' },
+        { id: 2, name: 'B' },
+      ],
+      pct: { [DEFAULT_STRATA_KEY]: { '1': 10, '2': 20 } },
+      stdDiff: Number.NaN,
+    })
+    const wrapper = mountTable([row], row.cohorts)
+    expect(wrapper.text()).not.toContain('NaN')
+    expect(wrapper.findAll('td').map((c) => c.text())).toContain('—')
   })
 })
 
