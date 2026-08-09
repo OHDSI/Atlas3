@@ -296,6 +296,53 @@ describe.skip('ConfigPanel.vue', () => {
       const drawer = wrapper.findComponent({ name: 'VNavigationDrawer' })
       expect(drawer.props('width')).toBeDefined()
     })
+
+    // Regression: drawerWidth previously returned `windowWidth - 100`
+    // regardless of breakpoint, ignoring the "85% with max 1400px, min
+    // 300px" behavior documented right above it in the component. That
+    // produced an 1820px drawer on a 1920px viewport (no cap at all) and a
+    // 275px drawer on a 375px viewport (below its own 300px floor).
+    it('caps the drawer width at 1400px on a wide desktop viewport', () => {
+      const originalWidth = window.innerWidth
+      global.innerWidth = 1920
+
+      wrapper = mount(ConfigPanel, {
+        global: {
+          plugins: [vuetify],
+          stubs: {
+            CacheManagementSection: true,
+            DataSourcesSection: true,
+            TagManagementSection: true
+          }
+        }
+      })
+
+      const drawer = wrapper.findComponent({ name: 'VNavigationDrawer' })
+      expect(drawer.props('width')).toBe(1400)
+
+      global.innerWidth = originalWidth
+    })
+
+    it('keeps the drawer at least 300px wide on a narrow mobile viewport', () => {
+      const originalWidth = window.innerWidth
+      global.innerWidth = 375
+
+      wrapper = mount(ConfigPanel, {
+        global: {
+          plugins: [vuetify],
+          stubs: {
+            CacheManagementSection: true,
+            DataSourcesSection: true,
+            TagManagementSection: true
+          }
+        }
+      })
+
+      const drawer = wrapper.findComponent({ name: 'VNavigationDrawer' })
+      expect(drawer.props('width')).toBeGreaterThanOrEqual(300)
+
+      global.innerWidth = originalWidth
+    })
   })
 
   describe('Scroll position persistence', () => {
