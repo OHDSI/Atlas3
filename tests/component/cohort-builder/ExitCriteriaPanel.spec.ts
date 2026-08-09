@@ -101,27 +101,25 @@ describe('ExitCriteriaPanel', () => {
 
     // When EventPersistenceSelector emits update, panel should propagate it
     const eventPersistence = wrapper.findComponent({ name: 'EventPersistenceSelector' })
-    if (eventPersistence.exists()) {
-      await eventPersistence.vm.$emit('update:modelValue', {
-        strategy: 'FIXED_DURATION',
-        offset: 30
-      })
-      await wrapper.vm.$nextTick()
+    expect(eventPersistence.exists()).toBe(true)
+    await eventPersistence.vm.$emit('update:modelValue', {
+      strategy: 'FIXED_DURATION',
+      offset: 30
+    })
+    await wrapper.vm.$nextTick()
 
-      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
-    }
+    expect(wrapper.emitted('update:modelValue')).toBeTruthy()
   })
 
   it('should emit updates for censoring events changes', async () => {
     const wrapper = createWrapper()
 
     const censoringEventsEditor = wrapper.findComponent({ name: 'CensoringEventsEditor' })
-    if (censoringEventsEditor.exists()) {
-      await censoringEventsEditor.vm.$emit('update:modelValue', [])
-      await wrapper.vm.$nextTick()
+    expect(censoringEventsEditor.exists()).toBe(true)
+    await censoringEventsEditor.vm.$emit('update:modelValue', [])
+    await wrapper.vm.$nextTick()
 
-      expect(wrapper.emitted('update:censoringCriteria')).toBeTruthy()
-    }
+    expect(wrapper.emitted('update:censoringCriteria')).toBeTruthy()
   })
 
   it('should handle undefined modelValue gracefully', () => {
@@ -149,20 +147,17 @@ describe('ExitCriteriaPanel', () => {
         }
       })
 
-      // EventPersistenceSelector is stubbed in shallowMount
-      // Emit validation-error from the stubbed component
       const eventPersistence = wrapper.findComponent({ name: 'EventPersistenceSelector' })
-      if (eventPersistence.exists()) {
-        const testError = [
-          { field: 'exitCriteria.conceptSet', message: 'i18n:required', severity: 'error' }
-        ]
-        await eventPersistence.vm.$emit('validation-error', testError)
-        await wrapper.vm.$nextTick()
+      expect(eventPersistence.exists()).toBe(true)
+      const testError = [
+        { field: 'exitCriteria.conceptSet', message: 'i18n:required', severity: 'error' }
+      ]
+      await eventPersistence.vm.$emit('validation-error', testError)
+      await wrapper.vm.$nextTick()
 
-        // Panel should aggregate this error
-        const aggregated = wrapper.vm.aggregatedErrors
-        expect(aggregated.some((e: any) => e.field === 'exitCriteria.conceptSet')).toBe(true)
-      }
+      // Panel should aggregate this error
+      const aggregated = wrapper.vm.aggregatedErrors
+      expect(aggregated.some((e: any) => e.field === 'exitCriteria.conceptSet')).toBe(true)
     })
 
     it('should aggregate errors from both sources simultaneously', async () => {
@@ -180,37 +175,36 @@ describe('ExitCriteriaPanel', () => {
         { field: 'censoringEvents', message: 'i18n:error2', severity: 'error' }
       ]
 
-      if (eventPersistence.exists() && censoringEvents.exists()) {
-        await eventPersistence.vm.$emit('validation-error', persistenceError)
-        await censoringEvents.vm.$emit('validation-error', censoringError)
-        await wrapper.vm.$nextTick()
+      expect(eventPersistence.exists()).toBe(true)
+      expect(censoringEvents.exists()).toBe(true)
+      await eventPersistence.vm.$emit('validation-error', persistenceError)
+      await censoringEvents.vm.$emit('validation-error', censoringError)
+      await wrapper.vm.$nextTick()
 
-        // Both errors should be aggregated
-        const aggregated = wrapper.vm.aggregatedErrors
-        expect(aggregated.length).toBe(2)
-        expect(aggregated.some((e: any) => e.field === 'exitCriteria.offset')).toBe(true)
-        expect(aggregated.some((e: any) => e.field === 'censoringEvents')).toBe(true)
-      }
+      // Both errors should be aggregated
+      const aggregated = wrapper.vm.aggregatedErrors
+      expect(aggregated.length).toBe(2)
+      expect(aggregated.some((e: any) => e.field === 'exitCriteria.offset')).toBe(true)
+      expect(aggregated.some((e: any) => e.field === 'censoringEvents')).toBe(true)
     })
 
     it('should clear aggregated errors when child emits empty array', async () => {
       const wrapper = createWrapper()
 
       const eventPersistence = wrapper.findComponent({ name: 'EventPersistenceSelector' })
-      if (eventPersistence.exists()) {
-        // Start with error
-        const error = [{ field: 'test', message: 'i18n:error', severity: 'error' }]
-        await eventPersistence.vm.$emit('validation-error', error)
-        await wrapper.vm.$nextTick()
-        expect(wrapper.vm.aggregatedErrors.length).toBeGreaterThan(0)
+      expect(eventPersistence.exists()).toBe(true)
+      // Start with error
+      const error = [{ field: 'test', message: 'i18n:error', severity: 'error' }]
+      await eventPersistence.vm.$emit('validation-error', error)
+      await wrapper.vm.$nextTick()
+      expect(wrapper.vm.aggregatedErrors.length).toBeGreaterThan(0)
 
-        // Emit empty array to clear
-        await eventPersistence.vm.$emit('validation-error', [])
-        await wrapper.vm.$nextTick()
+      // Emit empty array to clear
+      await eventPersistence.vm.$emit('validation-error', [])
+      await wrapper.vm.$nextTick()
 
-        // Should be cleared
-        expect(wrapper.vm.aggregatedErrors.filter((e: any) => e.field === 'test').length).toBe(0)
-      }
+      // Should be cleared
+      expect(wrapper.vm.aggregatedErrors.filter((e: any) => e.field === 'test').length).toBe(0)
     })
 
     it('should handle updates from parent correctly', async () => {
