@@ -98,9 +98,8 @@ describe('ConceptTable selection', () => {
     // None should be checked
     for (const cb of rowCheckboxes) {
       const input = cb.find('input[type="checkbox"]')
-      if (input.exists()) {
-        expect((input.element as HTMLInputElement).checked).toBe(false)
-      }
+      expect(input.exists()).toBe(true)
+      expect((input.element as HTMLInputElement).checked).toBe(false)
     }
   })
 
