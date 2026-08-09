@@ -641,3 +641,19 @@ describe('savePreviewAsCurrent', () => {
     expect(await store.savePreviewAsCurrent()).toBe(false)
   })
 })
+
+// A generation started by the agent does not go through the workbench's own
+// composable, so nothing polls it and the page sits on "No runs yet" until a
+// manual reload. The store carries the signal the workbench watches.
+describe('agentGenerationSignal', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('starts at zero and increments per agent-started run', () => {
+    const store = usePathwayStore()
+    expect(store.agentGenerationSignal).toBe(0)
+    store.notifyAgentGeneration()
+    expect(store.agentGenerationSignal).toBe(1)
+    store.notifyAgentGeneration()
+    expect(store.agentGenerationSignal).toBe(2)
+  })
+})

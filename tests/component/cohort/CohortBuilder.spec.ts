@@ -8,7 +8,7 @@
  * export flow, cancel routing, tag updates, and the unsaved-changes guard.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
@@ -241,6 +241,28 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     expect(wrapper.exists()).toBe(true)
     expect((wrapper.vm as any).cohortId).toBeNull()
+  })
+
+  // Regression: Pythia applies proposals to the cohort store and only then
+  // navigates to /cohorts/new. The editor mounts with the store already
+  // populated, but its local refs start empty — so an agent-set entry event
+  // stayed invisible until the NEXT agent mutation (typically the observation
+  // window) bumped agentRevision and re-bound them.
+  it('shows criteria the agent put in the store before it mounted', async () => {
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.createNewCohort()
+    store.applyProposal({
+      kind: 'addEntryEvent',
+      event: { id: 'e1', type: 'DrugExposure', name: 'Diclofenac', conceptSetId: 'cs1' },
+    } as never)
+
+    const wrapper = createWrapper()      // no id -> the "new cohort" path
+    await wrapper.vm.$nextTick()
+
+    const vm = wrapper.vm as any
+    expect(vm.entryEvents).toHaveLength(1)
+    expect(vm.entryEvents[0].name).toBe('Diclofenac')
   })
 
   it('exposes status state via defineExpose', async () => {
@@ -1270,6 +1292,41 @@ describe('CohortBuilder', () => {
     expect(cohortDefService.saveCohortDefinition).toBeDefined()
   })
 
+  // Regression: the save assembled its payload field by field and silently
+  // omitted three of them, so anything set there was accepted on screen, shown
+  // in the editor, and dropped on the way to WebAPI — including censoring
+  // events, which the agent has always been able to propose. Found by driving
+  // the real editor and reading the cohort back from the database; the unit
+  // tests missed it because they convert the store directly and never go
+  // through the editor's own payload.
+  it('handleSave sends every field the editor holds, not just some of them', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'A Cohort'
+    setup.entryEvents = [{ id: 'evt-1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'X', items: [] } }]
+    setup.censorWindow = { startDate: '2015-01-01', endDate: '2019-12-31' }
+    setup.collapseSettings = { collapseType: 'ERA', eraPad: 30 }
+    setup.censoringCriteria = [{ id: 'c1', criteriaType: 'ConditionOccurrence', conceptSet: { id: 1, name: 'Death', items: [] } }]
+    await wrapper.vm.$nextTick()
+
+    // The converter is stubbed in this spec, so assert on what the editor hands
+    // it — that is exactly where the fields were being dropped.
+    const converter = await import('@/services/atlas-converter')
+    vi.mocked(converter.convertInternalToAtlas).mockClear()
+    await setup.handleSave()
+
+    const definition = vi.mocked(converter.convertInternalToAtlas).mock.calls[0]?.[0] as unknown as {
+      censorWindow?: { startDate?: string }
+      collapseSettings?: { eraPad?: number }
+      censoringCriteria?: unknown[]
+    }
+    expect(definition, 'the save never reached the converter').toBeTruthy()
+    expect(definition.censorWindow).toMatchObject({ startDate: '2015-01-01', endDate: '2019-12-31' })
+    expect(definition.collapseSettings?.eraPad).toBe(30)
+    expect(definition.censoringCriteria).toHaveLength(1)
+  })
+
   // ---------------------------------------------------------------------------
   // handleExportCopy
   // ---------------------------------------------------------------------------
@@ -2093,5 +2150,87 @@ describe('CohortBuilder', () => {
     // State untouched, dialog stays open so the user can fix the JSON.
     expect(setup.entryEvents).toBe(entryEventsBefore)
     expect(setup.showJsonDialog).toBe(true)
+  })
+
+  // Regression: `cohortId` is derived from the route param, so a cohort saved
+  // from /cohorts/new left the editor id-less — the Generation panel kept
+  // offering "Save cohort to generate" for a cohort that had just been saved,
+  // and it could not be generated without navigating away and back.
+  it('opens the saved cohort after saving a new one', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Adults on ibuprofen'
+    vm.entryEvents = [{ id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Ibuprofen', items: [] } }]
+    await wrapper.vm.$nextTick()
+
+    const pushed: string[] = []
+    const spy = vi.spyOn(router, 'replace').mockImplementation(async (to: any) => {
+      pushed.push(typeof to === 'string' ? to : JSON.stringify(to))
+    })
+
+    await vm.handleSave()
+    spy.mockRestore()
+
+    expect(pushed.some(p => /\/cohorts\/\d+/.test(p))).toBe(true)
+  })
+
+  // The cohort is already persisted by the time we navigate, so a failed
+  // navigation must not be reported to the user as a failed save.
+  it('still reports the save as successful when opening the cohort fails', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Adults on ibuprofen'
+    vm.entryEvents = [{ id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Ibuprofen', items: [] } }]
+    await wrapper.vm.$nextTick()
+
+    const spy = vi.spyOn(router, 'replace').mockRejectedValue(new Error('navigation aborted'))
+    const result = await vm.handleSave()
+    spy.mockRestore()
+
+    expect(result?.id).toBeDefined()
+  })
+
+  // Regression: adopting the id of the cohort we just saved used to re-run
+  // loadCohort. That fetch is async, so anything added while it was in flight —
+  // the agent's next accepted proposals — was overwritten when it resolved, and
+  // the next save persisted the stale definition. Seen live: an observation
+  // window and four inclusion rules accepted on screen, none of them in the
+  // saved cohort, which still held only the entry event.
+  it('does not reload over the editor when adopting the id of the cohort it just saved', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Adults on ibuprofen'
+    vm.entryEvents = [{ id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Ibuprofen', items: [] } }]
+    await wrapper.vm.$nextTick()
+
+    const spy = vi.spyOn(router, 'replace').mockResolvedValue(undefined as never)
+    const saved = await vm.handleSave()
+    spy.mockRestore()
+    expect(saved?.id).toBeDefined()
+
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.getCohortDefinition).mockClear()
+    // The route now carries the saved id — the same change router.replace made.
+    await wrapper.setProps({ id: String(saved.id) })
+    await flushPromises()
+
+    expect(cohortDefService.getCohortDefinition).not.toHaveBeenCalled()
+    expect(vm.entryEvents).toHaveLength(1)
+    expect(vm.cohortName).toBe('Adults on ibuprofen')
+  })
+
+  it('still loads when the route changes to a different cohort', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.getCohortDefinition).mockClear()
+
+    await wrapper.setProps({ id: '42' })
+    await flushPromises()
+
+    expect(cohortDefService.getCohortDefinition).toHaveBeenCalledWith(42)
   })
 })

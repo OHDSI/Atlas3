@@ -141,7 +141,28 @@ export interface UpdateIncidenceRatePayload {
 }
 
 export type AgentProposal =
-  | { kind: 'addEntryEvent'; event: CohortEvent }
+  // `replace` distinguishes set_entry_event (which promises to replace the
+  // entry event) from add_criterion group=entry (which adds another OR'd one).
+  | { kind: 'addEntryEvent'; event: CohortEvent; replace?: boolean }
+  | { kind: 'removeInclusionRule'; match: { id?: string | number; name?: string } }
+  | { kind: 'removeEntryEvent'; match: { conceptId?: number; conceptName?: string } }
+  | {
+      kind: 'setEventLimits'
+      limits: {
+        primaryCriteriaLimit?: 'ALL' | 'FIRST' | 'LAST'
+        qualifyingLimit?: 'ALL' | 'FIRST' | 'LAST'
+        inclusionQualifyingLimit?: 'ALL' | 'FIRST' | 'LAST'
+      }
+    }
+  | { kind: 'addQualifyingCriterion'; event: CohortEvent }
+  | { kind: 'setCensorWindow'; censorWindow: { startDate?: string | null; endDate?: string | null } }
+  | { kind: 'setEraCollapse'; collapseSettings: { collapseType: string; eraPad: number } }
+  // Handled by the bridge, not the store: the saved set's concepts have to be
+  // fetched before a criterion can carry them.
+  | {
+      kind: 'useConceptSet'
+      payload: { conceptSetId: number; group?: 'entry' | 'inclusion' | 'exclusion'; name?: string }
+    }
   | { kind: 'addInclusionRule'; rule: InclusionRule }
   | { kind: 'addConceptSet'; conceptSet: ConceptSetReference }
   | { kind: 'setObservationPeriod'; observationPeriod: ObservationPeriod }
@@ -172,6 +193,10 @@ export type AgentProposal =
   | {
       kind: 'createIncidenceRate'
       payload: IncidenceRateCreatePayload
+    }
+  | {
+      kind: 'generateAnalysis'
+      payload: { analysisType: 'pathway' | 'characterization' | 'incidenceRate'; analysisId: number; sourceKey?: string }
     }
   | { kind: 'updateConceptSet'; payload: UpdateConceptSetPayload }
   | { kind: 'updateFeatureAnalysis'; payload: UpdateFeatureAnalysisPayload }
