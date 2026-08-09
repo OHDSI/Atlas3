@@ -166,8 +166,6 @@ interface Props {
   canDeleteItem?: (item: T) => boolean
 }
 
-// Stryker disable all: mutating these defaults makes defineProps() reference Stryker's
-// injected switch functions, which Vue's <script setup> compiler rejects at compile time.
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   itemsPerPage: 25,
@@ -181,7 +179,6 @@ const props = withDefaults(defineProps<Props>(), {
   canCopyItem: () => () => true,
   canDeleteItem: () => () => true,
 })
-// Stryker restore all
 
 defineEmits<{
   (e: 'open', item: T): void

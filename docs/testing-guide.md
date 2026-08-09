@@ -15,6 +15,23 @@ Worked example from this repository, measured on commit 5884245:
 of its seventy-four mutants survived, including inverting every `typeof value !== 'number'`
 guard in its three formatters.
 
+## Scope
+
+The mutation gate does not cover the whole repository. `stryker.conf.mjs` computes its
+`mutate` list at load time and prints the counts every time it loads, so scope reduction
+is visible in every run's output rather than silent. Coverage today: all of `src`'s
+TypeScript outside the same exclusions coverage uses (180 files), plus 207 of the 336
+`.vue` single-file components in `src`.
+
+The other 79 `.vue` files are excluded because Stryker cannot instrument them. Stryker
+wraps every mutated literal in a call to its own injected switch function. When that
+literal sits inside `withDefaults(defineProps(), {...})` or `defineOptions({...})`, the
+injected call makes those macros reference a locally declared function, and Vue's
+`<script setup>` compiler rejects that at compile time, because both macros are hoisted
+out of `setup()`. That failure aborts the whole dry run, not just the one file, so any
+file using either pattern is excluded from the mutate target entirely rather than left
+in to bring the run down.
+
 ## Rules
 
 1. **Assert on values, not on existence.** `expect(result).toBeDefined()` passes for
