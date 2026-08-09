@@ -105,6 +105,52 @@ describe('shapes of everything the agent injects', () => {
     expect(store.currentCohort?.entryEvents).toHaveLength(2)
   })
 
+  // "Actually, drop that one" is an obvious thing to ask an assistant that has
+  // just built you a phenotype. Without removal the agent's only honest answer
+  // was to rebuild the cohort or tell the user to edit it by hand.
+  it('remove_inclusion_rule drops the named rule and leaves the rest', () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    store.applyProposal(translateCapability('add_inclusion_rule', {
+      name: 'Osteoarthritis before index', logicType: 'ALL', events: [{ ...CONCEPT }],
+    }) as never)
+    store.applyProposal(translateCapability('add_inclusion_rule', {
+      name: 'Exclude prior GI bleed', logicType: 'AT_MOST', count: 0, events: [{ ...CONCEPT }],
+    }) as never)
+    expect(store.currentCohort?.inclusionRules).toHaveLength(2)
+
+    store.applyProposal(translateCapability('remove_inclusion_rule', {
+      name: 'Exclude prior GI bleed',
+    }) as never)
+
+    expect(store.currentCohort?.inclusionRules).toHaveLength(1)
+    expect(store.currentCohort?.inclusionRules[0].name).toBe('Osteoarthritis before index')
+  })
+
+  it('remove_inclusion_rule leaves the cohort alone when nothing matches', () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    store.applyProposal(translateCapability('add_inclusion_rule', {
+      name: 'Osteoarthritis before index', logicType: 'ALL', events: [{ ...CONCEPT }],
+    }) as never)
+    store.applyProposal(translateCapability('remove_inclusion_rule', { name: 'no such rule' }) as never)
+    expect(store.currentCohort?.inclusionRules).toHaveLength(1)
+  })
+
+  it('remove_entry_event drops the entry event built from that concept', () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    store.applyProposal(translateCapability('set_entry_event', { ...CONCEPT }) as never)
+    store.applyProposal(translateCapability('add_criterion', {
+      conceptId: 1177480, conceptName: 'Ibuprofen', domain: 'Drug', group: 'entry',
+    }) as never)
+    expect(store.currentCohort?.entryEvents).toHaveLength(2)
+
+    store.applyProposal(translateCapability('remove_entry_event', { conceptId: 1177480 }) as never)
+
+    expect(store.currentCohort?.entryEvents).toHaveLength(1)
+  })
+
   it('set_observation_window always yields a complete ObservationWindow', () => {
     const atlas = applyAndConvert('set_observation_window', { priorDays: 365, postDays: 0 })
     const pc = atlas.PrimaryCriteria as unknown as { ObservationWindow?: { PriorDays: number; PostDays: number } }

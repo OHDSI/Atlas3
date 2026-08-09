@@ -105,6 +105,41 @@ export const useCohortStore = defineStore('cohort', () => {
     isDirty.value = true
   }
 
+  // Removal by what the agent actually knows: the rule's name, or the concept
+  // it was built from. It never sees the generated ids.
+  function removeInclusionRuleBy(match: { id?: string | number; name?: string }): boolean {
+    const rules = currentCohort.value?.inclusionRules
+    if (!rules) return false
+    const wanted = (match.name ?? '').trim().toLowerCase()
+    const idx = rules.findIndex(r =>
+      (match.id !== undefined && String(r.id) === String(match.id)) ||
+      (!!wanted && String(r.name ?? '').trim().toLowerCase() === wanted))
+    if (idx < 0) return false
+    rules.splice(idx, 1)
+    isDirty.value = true
+    return true
+  }
+
+  function removeEntryEventBy(match: { conceptId?: number; conceptName?: string }): boolean {
+    const events = currentCohort.value?.entryEvents
+    if (!events) return false
+    const wantedName = (match.conceptName ?? '').trim().toLowerCase()
+    const idx = events.findIndex(e => {
+      const items = (e.conceptSet?.items ?? []) as Array<Record<string, unknown>>
+      return items.some(raw => {
+        const c = (raw.concept ?? raw) as Record<string, unknown>
+        const id = c.CONCEPT_ID ?? raw.conceptId
+        const name = String(c.CONCEPT_NAME ?? raw.conceptName ?? '').trim().toLowerCase()
+        return (match.conceptId !== undefined && Number(id) === Number(match.conceptId)) ||
+          (!!wantedName && name === wantedName)
+      })
+    })
+    if (idx < 0) return false
+    events.splice(idx, 1)
+    isDirty.value = true
+    return true
+  }
+
   function removeEntryEvent(eventId: string) {
     if (!currentCohort.value) return
 
@@ -225,6 +260,12 @@ export const useCohortStore = defineStore('cohort', () => {
         } else {
           addEntryEvent(proposal.event)
         }
+        break
+      case 'removeInclusionRule':
+        removeInclusionRuleBy(proposal.match)
+        break
+      case 'removeEntryEvent':
+        removeEntryEventBy(proposal.match)
         break
       case 'addInclusionRule':
         registerRuleConceptSets(proposal.rule)
@@ -582,6 +623,8 @@ export const useCohortStore = defineStore('cohort', () => {
     setCohort,
     createNewCohort,
     addEntryEvent,
+    removeInclusionRuleBy,
+    removeEntryEventBy,
     removeEntryEvent,
     updateEntryEvent,
     addInclusionRule,

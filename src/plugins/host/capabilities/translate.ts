@@ -622,6 +622,21 @@ export function translateCapability(
       } as unknown as AgentProposal
     }
 
+    case 'remove_inclusion_rule': {
+      const a = args as { name?: string; id?: string | number }
+      if (!a.name && a.id === undefined) return null
+      return { kind: 'removeInclusionRule', match: { name: a.name, id: a.id } } as unknown as AgentProposal
+    }
+
+    case 'remove_entry_event': {
+      const a = args as { conceptId?: number; conceptName?: string }
+      if (!a.conceptName && a.conceptId === undefined) return null
+      return {
+        kind: 'removeEntryEvent',
+        match: { conceptId: a.conceptId, conceptName: a.conceptName },
+      } as unknown as AgentProposal
+    }
+
     case 'set_entry_event': {
       const ref = args as ConceptRefArgs
       const event = buildEventFromCriterion(ref as CriterionArgs)

@@ -640,7 +640,7 @@
   },
   {
     "name": "create_standalone_concept_set",
-    "description": "Create a NEW reusable concept set on the server via WebAPI. This is the ONLY way pythia creates concept sets. The host persists it, then: if the user has a cohort open, attaches the concept set to that cohort and stays in the cohort builder; otherwise navigates to the concept-set editor. We deliberately do NOT support cohort-local (in-line) concept sets — every set is reusable across cohorts. Use a clinical, descriptive name (e.g. 'Statins', 'Inhaled corticosteroids', 'Type 2 Diabetes diagnoses').",
+    "description": "Create a NEW reusable concept set on the server via WebAPI, saved globally and usable across cohorts. This is NOT the default: criteria capabilities (set_entry_event, add_criterion, add_criteria, add_inclusion_rule) already build the concept set they need inside the cohort definition, which is what most phenotypes want. Reach for this only when the set is meant to be reused — the user asked for a standalone concept set, or the same set is needed by several cohorts or analyses. The host persists it, then attaches it to the open cohort if there is one, otherwise navigates to the concept-set editor. Use a clinical, descriptive name (e.g. 'Statins', 'Inhaled corticosteroids', 'Type 2 Diabetes diagnoses').",
     "schema": {
       "type": "object",
       "properties": {
@@ -796,6 +796,44 @@
       "required": [
         "view"
       ]
+    },
+    "requiresApproval": true
+  },
+  {
+    "name": "remove_entry_event",
+    "description": "Remove one entry event from the cohort being edited, identified by the concept it was built from. Use when the cohort qualifies on several entry events and the user wants one dropped. To replace the entry event entirely, call set_entry_event instead.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "conceptId": {
+          "type": "number",
+          "description": "Concept id of the entry event to remove."
+        },
+        "conceptName": {
+          "type": "string",
+          "description": "Concept name, if the id is not to hand."
+        }
+      },
+      "required": []
+    },
+    "requiresApproval": true
+  },
+  {
+    "name": "remove_inclusion_rule",
+    "description": "Remove an inclusion rule from the cohort being edited, by its name (as shown in the editor) or its id. Use this when the user asks to drop, delete or undo a rule you added — do not rebuild the cohort to get rid of one rule.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Exact rule name as it appears in the cohort."
+        },
+        "id": {
+          "type": "string",
+          "description": "Rule id, if you have it."
+        }
+      },
+      "required": []
     },
     "requiresApproval": true
   },

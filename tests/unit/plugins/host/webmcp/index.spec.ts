@@ -11,7 +11,7 @@ describe('initWebMcp', () => {
     const registerTool = vi.fn().mockReturnValue({ unregister: vi.fn() })
     ;(globalThis.navigator as any).modelContext = { registerTool }
     initWebMcp()
-    expect(registerTool.mock.calls.length).toBe(20)
+    expect(registerTool.mock.calls.length).toBe(22)
   })
   it('does not throw and returns a no-op disposer when registerTool throws', () => {
     const registerTool = vi.fn().mockImplementation(() => {

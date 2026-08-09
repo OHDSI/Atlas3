@@ -144,6 +144,8 @@ export type AgentProposal =
   // `replace` distinguishes set_entry_event (which promises to replace the
   // entry event) from add_criterion group=entry (which adds another OR'd one).
   | { kind: 'addEntryEvent'; event: CohortEvent; replace?: boolean }
+  | { kind: 'removeInclusionRule'; match: { id?: string | number; name?: string } }
+  | { kind: 'removeEntryEvent'; match: { conceptId?: number; conceptName?: string } }
   | { kind: 'addInclusionRule'; rule: InclusionRule }
   | { kind: 'addConceptSet'; conceptSet: ConceptSetReference }
   | { kind: 'setObservationPeriod'; observationPeriod: ObservationPeriod }
