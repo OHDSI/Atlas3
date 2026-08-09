@@ -106,3 +106,6 @@ docs/superpowers/
 
 # Differential-translation work files (transient)
 .i18n-work/
+
+reports/
+.stryker-tmp/

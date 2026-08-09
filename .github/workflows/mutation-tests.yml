@@ -1,0 +1,54 @@
+name: Mutation Tests
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run mutation tests on changed files (advisory)
+        if: github.event_name == 'pull_request'
+        run: npx stryker run --since=origin/${{ github.base_ref }} || true
+
+      - name: Post the advisory score
+        if: github.event_name == 'pull_request'
+        run: |
+          SCORE=$(jq -r '[.files[].mutants[]] | (map(select(.status=="Killed" or .status=="Timeout")) | length) as $k | (map(select(.status!="Ignored" and .status!="CompileError")) | length) as $t | if $t == 0 then "n/a" else ($k / $t * 100 | .*100|round|./100|tostring) end' reports/mutation/mutation.json)
+          echo "## Mutation score on changed files: ${SCORE}%" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Advisory only. The nightly full run enforces the threshold." >> $GITHUB_STEP_SUMMARY
+          echo "See docs/testing-guide.md for why this number matters." >> $GITHUB_STEP_SUMMARY
+
+      - name: Run full mutation tests
+        if: github.event_name != 'pull_request'
+        run: npx stryker run
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: reports/mutation/
