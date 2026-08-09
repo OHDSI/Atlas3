@@ -134,26 +134,18 @@ test.describe('Cohort List - UI Interactions', () => {
   })
 
   test('should show cohort cards in grid layout', async ({ page }) => {
-    // Wait for cohorts to load - grid may show empty state, loading, or cards
     const grid = page.locator('.cohort-grid')
-    const gridVisible = await grid.isVisible().catch(() => false)
+    await expect(grid).toBeVisible()
 
-    if (gridVisible) {
-      // Wait a bit more for cards to render
-      await page.waitForTimeout(1000)
+    const cards = page.locator('.cohort-card')
+    const emptyState = page.locator('.cohort-grid__empty')
+    const cardCount = await cards.count()
 
-      const cards = page.locator('.cohort-card')
-      const count = await cards.count()
-
-      // Cards may or may not be present depending on mock timing
-      // Empty state is also valid
-      const emptyState = page.locator('.cohort-grid__empty, [class*="empty"]')
-      const hasEmptyState = await emptyState.count() > 0
-
-      expect(count > 0 || hasEmptyState || count === 0).toBeTruthy()
+    if (cardCount === 0) {
+      await expect(emptyState).toBeVisible()
     } else {
-      // Grid may not be visible if loading or error state
-      expect(true).toBeTruthy()
+      await expect(cards.first()).toBeVisible()
+      await expect(emptyState).toHaveCount(0)
     }
   })
 })

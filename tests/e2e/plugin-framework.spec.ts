@@ -154,16 +154,10 @@ test.describe('Plugin Messaging', () => {
 
 test.describe('Plugin Authentication', () => {
   test('should provide auth context to plugins', async ({ page }) => {
+    await setupBasicMocks(page)
     await page.goto('/#/plugins/hello-world-plugin/main');
-    await page.waitForTimeout(2000);
-
-    // Check if auth context is visible in plugin
     const authStatus = page.locator('text=Authenticated:');
-    const hasAuthStatus = await authStatus.isVisible().catch(() => false);
-
-    if (hasAuthStatus) {
-      await expect(authStatus).toBeVisible();
-    }
+    await expect(authStatus).toBeVisible();
   });
 });
 

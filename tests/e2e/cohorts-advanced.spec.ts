@@ -257,20 +257,9 @@ test.describe('URL State Persistence', () => {
     await page.goto('/#/cohorts')
     await waitForPageReady(page)
 
-    // Look for the actual search input (has placeholder or aria-label for search)
     const searchInput = page.locator('input[placeholder*="earch"], input[aria-label*="earch"], .cohort-search input')
-    const hasSearch = await searchInput.count() > 0
-
-    if (hasSearch) {
-      try {
-        await searchInput.first().fill('diabetes', { timeout: 3000 })
-        await page.waitForTimeout(500)
-      } catch {
-        // Search input may not be interactable
-      }
-    }
-
-    // Test passes - this is a smoke test for search functionality
-    expect(true).toBeTruthy()
+    await expect(searchInput.first()).toBeVisible()
+    await searchInput.first().fill('diabetes')
+    await expect(searchInput.first()).toHaveValue('diabetes')
   })
 })

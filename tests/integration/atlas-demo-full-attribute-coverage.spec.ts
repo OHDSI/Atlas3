@@ -226,23 +226,3 @@ describe('Concept Set (CS) Attributes', () => {
     })
   }
 })
-
-// ─── Coverage Summary ────────────────────────────────────────────────────────
-
-describe('Attribute Coverage Summary', () => {
-  it('all 17 concept array types extract without error', () => {
-    expect(true).toBe(true) // covered by individual tests above
-  })
-
-  it('all 8 numeric range types extract without error', () => {
-    expect(true).toBe(true)
-  })
-
-  it('all 4 date range types extract without error', () => {
-    expect(true).toBe(true)
-  })
-
-  it('all 17 concept set (CS) types extract without error', () => {
-    expect(true).toBe(true)
-  })
-})
