@@ -133,14 +133,13 @@ describe('CohortCard', () => {
 
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const deleteBtn = buttons.find(btn =>
-      btn.attributes('aria-label') === 'Delete cohort'
+      btn.attributes('aria-label') === 'Delete'
     )
 
-    if (deleteBtn) {
-      await deleteBtn.trigger('click')
-      expect(wrapper.emitted('delete')).toBeTruthy()
-      expect(wrapper.emitted('delete')![0]).toEqual([mockCohort])
-    }
+    expect(deleteBtn).toBeDefined()
+    await deleteBtn!.trigger('click')
+    expect(wrapper.emitted('delete')).toBeTruthy()
+    expect(wrapper.emitted('delete')![0]).toEqual([mockCohort])
   })
 
   it('should emit show-info event', async () => {
@@ -152,21 +151,19 @@ describe('CohortCard', () => {
       (btn.attributes('aria-label') ?? '').toLowerCase().includes('cohort information')
     )
 
-    if (infoBtn) {
-      await infoBtn.trigger('click')
-      expect(wrapper.emitted('show-info')).toBeTruthy()
-      expect(wrapper.emitted('show-info')![0]).toEqual([mockCohort])
-    }
+    expect(infoBtn).toBeDefined()
+    await infoBtn!.trigger('click')
+    expect(wrapper.emitted('show-info')).toBeTruthy()
+    expect(wrapper.emitted('show-info')![0]).toEqual([mockCohort])
   })
 
   it('should emit tag-click event when tag is clicked', async () => {
     const wrapper = mountComponent()
 
     const chips = wrapper.findAllComponents({ name: 'VChip' })
-    if (chips.length > 0) {
-      await chips[0].trigger('click')
-      expect(wrapper.emitted('tag-click')).toBeTruthy()
-    }
+    expect(chips.length).toBeGreaterThan(0)
+    await chips[0].trigger('click')
+    expect(wrapper.emitted('tag-click')).toBeTruthy()
   })
 
   it('should apply selected style to selected tags', () => {
@@ -175,11 +172,10 @@ describe('CohortCard', () => {
     const chips = wrapper.findAllComponents({ name: 'VChip' })
     const diabetesChip = chips.find(chip => chip.text() === 'Diabetes')
 
-    if (diabetesChip) {
-      // Refresh: selected → flat / unselected → tonal (was elevated /
-      // flat). Matches the chip pattern used elsewhere in the app.
-      expect(diabetesChip.props('variant')).toBe('flat')
-    }
+    expect(diabetesChip).toBeDefined()
+    // Refresh: selected → flat / unselected → tonal (was elevated /
+    // flat). Matches the chip pattern used elsewhere in the app.
+    expect(diabetesChip!.props('variant')).toBe('flat')
   })
 
   it('should handle cohort without description', () => {
