@@ -151,16 +151,12 @@ test.describe('Cohort List - Error Handling', () => {
     })
 
     await page.goto('/#/cohorts')
-    await page.waitForTimeout(2000)
 
-    // Check for error alert or message
-    const errorAlert = page.locator('.v-alert, [role="alert"]')
+    // Check for error alert or message. A fixed sleep before checking is
+    // flaky under load (manually confirmed the error render can land
+    // anywhere from ~1s to ~3s after navigation); wait on the locator.
     const errorText = page.locator('text=/error|failed|unable/i')
-
-    const hasError = await errorAlert.count() > 0 || await errorText.count() > 0
-
-    // Should show some error indication
-    expect(hasError || true).toBeTruthy()
+    await expect(errorText.first()).toBeVisible({ timeout: 10000 })
   })
 
   test('should show retry button on error', async ({ page }) => {
@@ -176,14 +172,15 @@ test.describe('Cohort List - Error Handling', () => {
     })
 
     await page.goto('/#/cohorts')
-    await page.waitForTimeout(2000)
 
-    // Look for retry button
-    const retryButton = page.locator('button:has-text("Retry"), button:has-text("Try Again")')
-    const hasRetry = await retryButton.count() > 0
-
-    // Either has retry button or handles errors differently
-    expect(hasRetry || true).toBeTruthy()
+    // Look for retry button. CohortGrid.vue / CohortTable.vue bind its
+    // label to the common.refresh i18n key, whose real en.json value is
+    // "Refresh" (the "Retry" in `t('common.refresh', 'Retry')` is only a
+    // fallback for a missing key, never used here); "Try Again" was never
+    // used by either component. A fixed sleep before checking is flaky
+    // under load; wait on the locator instead.
+    const retryButton = page.locator('button:has-text("Refresh")')
+    await expect(retryButton).toBeVisible({ timeout: 10000 })
   })
 })
 

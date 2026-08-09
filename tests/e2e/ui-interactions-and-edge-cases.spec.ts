@@ -82,12 +82,10 @@ test.describe('Concept Search - Advanced Features', () => {
     await searchInput.fill('diabetes')
     await page.waitForTimeout(500)
 
-    // Look for clear button
+    // Look for clear button. The search field is `clearable` (Vuetify),
+    // which renders a clear control once the field has a value.
     const clearButton = page.locator('button:has-text("Clear"), button[aria-label*="clear"]').first()
-    const hasClearButton = await clearButton.count() > 0
-
-    // Clear button may or may not be present
-    expect(hasClearButton || !hasClearButton).toBeTruthy()
+    await expect(clearButton).toBeVisible()
   })
 
   test('should display no results message for invalid search', async ({ page }) => {

@@ -167,27 +167,22 @@ test.describe('Plugin Authentication', () => {
 });
 
 test.describe('Plugin Error Handling', () => {
-  test('should display error UI and retry button on failure', async ({ page }) => {
-    // Mock plugin load failure by navigating to invalid plugin
+  test('should display error UI on failure without a retry button for a not-found plugin', async ({ page }) => {
+    // Mock plugin load failure by navigating to invalid plugin. PluginContainer.vue
+    // (grep-confirmed) takes the "plugin not found" branch synchronously on mount but
+    // Vue still needs a tick or two to paint it, so the manually-probed real timing was
+    // ~1-3s under load; waiting on the locator itself is what removes that flakiness,
+    // not a longer fixed sleep.
     await page.goto('/#/plugins/invalid-plugin/main');
-    await page.waitForTimeout(2000);
 
-    // Check for error UI components - page may show error or redirect
     const errorHeading = page.locator('text=Plugin Failed to Load');
-    const hasError = await errorHeading.isVisible().catch(() => false);
+    await expect(errorHeading).toBeVisible({ timeout: 10000 });
 
-    if (hasError) {
-      await expect(errorHeading).toBeVisible();
-
-      // Check for retry button (may or may not be present depending on error type)
-      const retryButton = page.locator('text=Retry');
-      const hasRetry = await retryButton.isVisible().catch(() => false);
-      // Either has retry button or doesn't - both are valid error handling
-      expect(hasError || hasRetry || true).toBeTruthy();
-    } else {
-      // No error UI shown - page may have redirected or handled gracefully
-      // This is acceptable behavior
-      expect(true).toBeTruthy();
-    }
+    // PluginContainer.vue sets `recoverable: false` for a not-found plugin
+    // specifically (unlike a load/network failure), and PluginErrorUI.vue
+    // only renders its Retry button when the error is recoverable, so no
+    // Retry button is genuinely expected here.
+    const retryButton = page.locator('text=Retry');
+    await expect(retryButton).toHaveCount(0);
   });
 });
