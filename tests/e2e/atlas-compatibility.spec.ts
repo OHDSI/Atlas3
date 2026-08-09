@@ -320,32 +320,28 @@ async function captureImportedExpression(
   page: Page,
   _cohort: AtlasDemoCohort
 ): Promise<Record<string, unknown> | null> {
-  // Reload the page and intercept the GET to capture what was stored. The
-  // reload is required: without it, the detail GET that fired during the
-  // initial navigation in importCohortViaUI has already resolved by the
-  // time we start listening, so waitForResponse below observes nothing
-  // from this request and instead resolves on an unrelated GET whose body
-  // has no `expression` field.
+  // Fetch the mocked detail endpoint directly from inside the page, rather
+  // than reloading and racing a page.waitForResponse()/response.json()
+  // pair against the reload's own navigation. That approach (this
+  // function's previous shape) intermittently threw "No resource with
+  // given identifier found" under CPU load: page.reload() tears down the
+  // frame closely enough after the response fires that Chromium's
+  // DevTools protocol can evict the response body before the .json() call
+  // reads it, which silently resolved to null and made the assertions
+  // this replaced pass by skipping instead of by checking real data.
+  // fetch() from evaluate() still goes through the same page.route() mock
+  // (helpers/api-mocks.ts intercepts all requests from this page/frame),
+  // and returns already-parsed JSON over the evaluate channel instead of
+  // a live Response object, so there is no body-buffer race to lose.
   const currentUrl = page.url()
   const idMatch = currentUrl.match(/\/cohorts\/(\d+)/)
   if (!idMatch) return null
 
-  // Match the detail GET exactly (end of path or query string). A plain
-  // `includes` check also matches sibling sub-resource GETs fired on the
-  // same page load, such as .../cohortdefinition/900/version/, whose body
-  // has no `expression` field and would otherwise win the race.
-  const detailUrlPattern = new RegExp(`cohortdefinition/${idMatch[1]}(?:$|\\?)`)
-  const responsePromise = page.waitForResponse(
-    resp => detailUrlPattern.test(resp.url()) && resp.request().method() === 'GET',
-    { timeout: 10000 }
-  ).catch(() => null)
-  await page.reload()
-  await waitForPageReady(page)
-  const response = await responsePromise
+  const data = await page.evaluate(async (id) => {
+    const res = await fetch(`/WebAPI/cohortdefinition/${id}`)
+    if (!res.ok) return null
+    return res.json()
+  }, idMatch[1]) as Record<string, unknown> | null
 
-  if (response) {
-    const data = await response.json().catch(() => null)
-    return data?.expression as Record<string, unknown> | null
-  }
-  return null
+  return (data?.expression as Record<string, unknown> | undefined) ?? null
 }
