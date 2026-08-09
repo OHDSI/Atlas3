@@ -417,18 +417,18 @@ describe('useCohortValidation', () => {
       const options = createTestOptions({
         cohortName: ref(''),
       })
-      const { cancelValidation } = useCohortValidation(options)
+      const { triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
       vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
 
+      triggerValidation()
       await vi.runAllTimersAsync()
       await nextTick()
 
       const calls = vi.mocked(cohortDefService.validateCohortDefinition).mock.calls
-      if (calls.length > 0) {
-        expect(calls[0][0]).toBe('Untitled Cohort')
-      }
+      expect(calls).toHaveLength(1)
+      expect(calls[0][0]).toBe('Untitled Cohort')
     })
 
     it('should validate even when no entry events', async () => {
