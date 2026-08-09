@@ -51,6 +51,8 @@ describe('services/feature-analysis.service', () => {
       if (result.success) {
         expect(result.data).toHaveLength(2)
         expect(result.data[0].name).toBe('FA 1')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/feature-analysis?size=100000')
@@ -62,7 +64,11 @@ describe('services/feature-analysis.service', () => {
       const result = await listFeatureAnalyses()
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toHaveLength(1)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('reports a parse failure as ApiResult rather than throwing', async () => {
@@ -79,7 +85,11 @@ describe('services/feature-analysis.service', () => {
       const result = await listFeatureAnalyses()
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.message).toBe('network error')
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
+        expect(result.error.message).toBe('network error')
+      }
     })
   })
 
@@ -96,7 +106,11 @@ describe('services/feature-analysis.service', () => {
       const result = await listFeatureAnalyses()
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.status).toBe(403)
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
+        expect(result.error.status).toBe(403)
+      }
     })
 
     it('does not import the webapi barrel', async () => {
@@ -115,6 +129,8 @@ describe('services/feature-analysis.service', () => {
       if (result.success) {
         expect(result.data.name).toBe('My FA')
         expect(result.data.type).toBe('CUSTOM_FE')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
     })
 
@@ -138,7 +154,11 @@ describe('services/feature-analysis.service', () => {
       })
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.id).toBe(42)
+      if (result.success) {
+        expect(result.data.id).toBe(42)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [, init] = mockFetch.mock.calls[0]
       expect(init.method).toBe('POST')
     })
@@ -157,7 +177,9 @@ describe('services/feature-analysis.service', () => {
       const result = await createFeatureAnalysis({ name: 'x', type: 'PRESET', design: {} })
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe('Invalid response from POST /feature-analysis')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
@@ -175,7 +197,11 @@ describe('services/feature-analysis.service', () => {
       const result = await updateFeatureAnalysis({ id: 9, name: 'Updated', type: 'PRESET', design: {} })
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.id).toBe(9)
+      if (result.success) {
+        expect(result.data.id).toBe(9)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url, init] = mockFetch.mock.calls[0]
       expect(url).toContain('/feature-analysis/9')
       expect(init.method).toBe('PUT')
@@ -185,7 +211,11 @@ describe('services/feature-analysis.service', () => {
       const result = await updateFeatureAnalysis({ name: 'no id', type: 'PRESET', design: {} })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.message).toBe('updateFeatureAnalysis requires fa.id')
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
+        expect(result.error.message).toBe('updateFeatureAnalysis requires fa.id')
+      }
       expect(mockFetch).not.toHaveBeenCalled()
     })
 
@@ -195,7 +225,9 @@ describe('services/feature-analysis.service', () => {
       const result = await updateFeatureAnalysis({ id: 9, name: 'Updated', type: 'PRESET', design: {} })
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe('Invalid response from PUT /feature-analysis/9')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
@@ -232,7 +264,11 @@ describe('services/feature-analysis.service', () => {
       const result = await copyFeatureAnalysis(100)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.id).toBe(200)
+      if (result.success) {
+        expect(result.data.id).toBe(200)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url, init] = mockFetch.mock.calls[0]
       expect(url).toContain('/feature-analysis/100/copy')
       expect(init.method).toBe('GET')
@@ -244,7 +280,9 @@ describe('services/feature-analysis.service', () => {
       const result = await copyFeatureAnalysis(100)
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe('Invalid response from /feature-analysis/100/copy')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
@@ -258,28 +296,44 @@ describe('services/feature-analysis.service', () => {
       ok(true)
       const result = await featureAnalysisNameExists(0, 'foo')
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toBe(true)
+      if (result.success) {
+        expect(result.data).toBe(true)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('treats a positive number as an existing name (legacy WebAPI id-count reply)', async () => {
       ok(1)
       const result = await featureAnalysisNameExists(0, 'foo')
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toBe(true)
+      if (result.success) {
+        expect(result.data).toBe(true)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('treats zero as a non-existing name', async () => {
       ok(0)
       const result = await featureAnalysisNameExists(0, 'foo')
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toBe(false)
+      if (result.success) {
+        expect(result.data).toBe(false)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('falls back to Boolean() coercion for an unexpected response shape', async () => {
       ok(null)
       const result = await featureAnalysisNameExists(0, 'foo')
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toBe(false)
+      if (result.success) {
+        expect(result.data).toBe(false)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('encodes the name parameter', async () => {
@@ -296,7 +350,11 @@ describe('services/feature-analysis.service', () => {
       ok(['CONDITION', 'DRUG'])
       const result = await listFeatureAnalysisDomains()
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toEqual(['CONDITION', 'DRUG'])
+      if (result.success) {
+        expect(result.data).toEqual(['CONDITION', 'DRUG'])
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('reports a parse failure carrying the status and Zod issues', async () => {
@@ -305,7 +363,9 @@ describe('services/feature-analysis.service', () => {
       const result = await listFeatureAnalysisDomains()
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe('Invalid response from /feature-analysis/domains')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
@@ -327,6 +387,8 @@ describe('services/feature-analysis.service', () => {
       if (result.success) {
         expect(result.data).toHaveLength(2)
         expect(result.data[0].id).toBe(1)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
     })
 
@@ -344,7 +406,9 @@ describe('services/feature-analysis.service', () => {
       const result = await listFeatureAnalysisAggregates()
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe('Invalid response from /feature-analysis/aggregates')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
@@ -386,7 +450,9 @@ describe('services/feature-analysis.service', () => {
       const result = await getDefaultCovariateSettings(true)
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe(
           'Invalid response from /featureextraction/defaultcovariatesettings'
         )
