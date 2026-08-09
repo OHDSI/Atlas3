@@ -131,19 +131,21 @@ describe('Gap 1: EndStrategy', () => {
     fixturesWithEndStrategy.forEach(file => {
       it(`preserves EndStrategy in ${file}`, () => {
         const atlas = JSON.parse(readFileSync(join(DEMO_DIR, file), 'utf-8'))
-        if (!atlas.EndStrategy) return
+        expect(atlas.EndStrategy).toBeDefined()
 
         const { internal, back } = roundTrip(atlas)
         expect(internal.exitCriteria).toBeDefined()
         expect(back.EndStrategy).toBeDefined()
 
+        // EndStrategy is polymorphic: exactly one of DateOffset or CustomEra.
         if (atlas.EndStrategy.DateOffset) {
           expect(back.EndStrategy?.DateOffset?.DateField).toBe(atlas.EndStrategy.DateOffset.DateField)
           expect(back.EndStrategy?.DateOffset?.Offset).toBe(atlas.EndStrategy.DateOffset.Offset)
-        }
-        if (atlas.EndStrategy.CustomEra) {
+        } else if (atlas.EndStrategy.CustomEra) {
           expect(back.EndStrategy?.CustomEra?.DrugCodesetId).toBe(atlas.EndStrategy.CustomEra.DrugCodesetId)
           expect(back.EndStrategy?.CustomEra?.GapDays).toBe(atlas.EndStrategy.CustomEra.GapDays)
+        } else {
+          expect.fail(`${file} has EndStrategy but neither DateOffset nor CustomEra`)
         }
       })
     })
