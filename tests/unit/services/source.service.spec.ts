@@ -69,7 +69,11 @@ describe('SourceService', () => {
 
       expect(httpGet).toHaveBeenCalledWith('/source/sources')
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data[0]?.sourceKey).toBe('SYNPUF1K')
+      if (result.success) {
+        expect(result.data[0]?.sourceKey).toBe('SYNPUF1K')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('fails with the status when the source list is rejected', async () => {
@@ -80,7 +84,11 @@ describe('SourceService', () => {
       const result = await fetchCDMSources()
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.status).toBe(403)
+      if (result.success) {
+        expect.fail('expected fetchCDMSources to fail')
+      } else {
+        expect(result.error.status).toBe(403)
+      }
     })
 
     it('reports a malformed source list as an ApiResult failure carrying the Zod issues', async () => {

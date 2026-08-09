@@ -24,7 +24,11 @@ describe('getPerson', () => {
     const result = await getPerson('SYNPUF', 1234)
     expect(httpGet).toHaveBeenCalledWith('/SYNPUF/person/1234?cohort=0')
     expect(result.success).toBe(true)
-    if (result.success) expect(result.data.gender).toBe('FEMALE')
+    if (result.success) {
+      expect(result.data.gender).toBe('FEMALE')
+    } else {
+      expect.fail(`expected success, got ${result.error.message}`)
+    }
   })
 
   it('passes cohortId in query string when provided', async () => {
@@ -46,7 +50,11 @@ describe('getPerson', () => {
     ;(httpGet as ReturnType<typeof vi.fn>).mockRejectedValue(new ApiError('Not Found', 404, null))
     const result = await getPerson('SYNPUF', 99)
     expect(result.success).toBe(false)
-    if (!result.success) expect(result.error.status).toBe(404)
+    if (result.success) {
+      expect.fail('expected getPerson to fail')
+    } else {
+      expect(result.error.status).toBe(404)
+    }
   })
 
   it('does not map a 500 error to a 404 status even if the message mentions 404', async () => {
@@ -98,7 +106,11 @@ describe('getCohortConceptSets', () => {
     })
     const result = await getCohortConceptSets(42)
     expect(result.success).toBe(true)
-    if (result.success) expect(result.data).toHaveLength(1)
+    if (result.success) {
+      expect(result.data).toHaveLength(1)
+    } else {
+      expect.fail(`expected success, got ${result.error.message}`)
+    }
   })
 
   it('returns empty array when ConceptSets missing', async () => {
@@ -108,7 +120,11 @@ describe('getCohortConceptSets', () => {
     })
     const result = await getCohortConceptSets(1)
     expect(result.success).toBe(true)
-    if (result.success) expect(result.data).toEqual([])
+    if (result.success) {
+      expect(result.data).toEqual([])
+    } else {
+      expect.fail(`expected success, got ${result.error.message}`)
+    }
   })
 })
 
@@ -120,7 +136,11 @@ describe('getCohortConceptSets — error paths', () => {
     ;(httpGet as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('boom'))
     const result = await getCohortConceptSets(1)
     expect(result.success).toBe(false)
-    if (!result.success) expect(result.error.message).toBe('boom')
+    if (result.success) {
+      expect.fail('expected getCohortConceptSets to fail')
+    } else {
+      expect(result.error.message).toBe('boom')
+    }
   })
 
   it('returns empty array when expression is malformed JSON string', async () => {
@@ -128,6 +148,10 @@ describe('getCohortConceptSets — error paths', () => {
     ;(httpGet as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 1, name: 'x', expression: '{not json' })
     const result = await getCohortConceptSets(1)
     expect(result.success).toBe(true)
-    if (result.success) expect(result.data).toEqual([])
+    if (result.success) {
+      expect(result.data).toEqual([])
+    } else {
+      expect.fail(`expected success, got ${result.error.message}`)
+    }
   })
 })

@@ -44,7 +44,11 @@ describe('cohort-sample API client', () => {
     })
     const result = await listCohortSamples(1, 'EUNOMIA')
     expect(result.success).toBe(true)
-    if (result.success) expect(result.data.samples).toHaveLength(1)
+    if (result.success) {
+      expect(result.data.samples).toHaveLength(1)
+    } else {
+      expect.fail(`expected success, got ${result.error.message}`)
+    }
     expect(httpGetMock.mock.calls[0]![0]).toBe('/cohortsample/1/EUNOMIA')
   })
 
