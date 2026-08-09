@@ -80,7 +80,9 @@ describe('cohort-sample API client', () => {
     httpGetMock.mockResolvedValueOnce({ id: 'not-a-number', name: 'demo' })
     const result = await getCohortSample(1, 'EUNOMIA', 7)
     expect(result.success).toBe(false)
-    if (!result.success) {
+    if (result.success) {
+      expect.fail('expected the request to fail')
+    } else {
       expect(result.error.message).toBe('Invalid cohort sample response')
       expect(result.error.status).toBe(0)
       const issues = JSON.parse(result.error.body as string)
@@ -101,14 +103,20 @@ describe('cohort-sample API client', () => {
     httpPostMock.mockRejectedValueOnce(new Error('boom'))
     const result = await createCohortSample(1, 'EUNOMIA', { name: 'x', size: 1 })
     expect(result.success).toBe(false)
-    if (!result.success) expect(result.error.message).toBe('boom')
+    if (result.success) {
+      expect.fail('expected createCohortSample to fail')
+    } else {
+      expect(result.error.message).toBe('boom')
+    }
   })
 
   it('createCohortSample reports a malformed response as a failure carrying the Zod issues', async () => {
     httpPostMock.mockResolvedValueOnce({ id: 'not-a-number', name: 'demo' })
     const result = await createCohortSample(1, 'EUNOMIA', { name: 'x', size: 1 })
     expect(result.success).toBe(false)
-    if (!result.success) {
+    if (result.success) {
+      expect.fail('expected the request to fail')
+    } else {
       expect(result.error.message).toBe('Invalid cohort sample response')
       expect(result.error.status).toBe(0)
       const issues = JSON.parse(result.error.body as string)
@@ -127,7 +135,9 @@ describe('cohort-sample API client', () => {
     httpPostMock.mockResolvedValueOnce({ id: 'not-a-number', name: 'demo' })
     const result = await refreshCohortSample(1, 'EUNOMIA', 7)
     expect(result.success).toBe(false)
-    if (!result.success) {
+    if (result.success) {
+      expect.fail('expected the request to fail')
+    } else {
       expect(result.error.message).toBe('Invalid cohort sample response')
       expect(result.error.status).toBe(0)
       const issues = JSON.parse(result.error.body as string)
