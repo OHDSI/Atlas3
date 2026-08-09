@@ -250,6 +250,7 @@ describe('CohortsView cohort import', () => {
 
     await wrapper.vm.confirmImport()
 
+    expect(mockFetchCohorts).toHaveBeenCalled()
     expect(mockPush).toHaveBeenCalledWith('/cohorts/77')
     expect(wrapper.vm.showImportDialog).toBe(false)
   })
@@ -295,6 +296,25 @@ describe('CohortsView cohort import', () => {
     await wrapper.vm.confirmImport()
 
     expect(wrapper.vm.importError).toBe('Import failed. Check the JSON and try again.')
+    expect(wrapper.vm.importing).toBe(false)
+  })
+
+  it('sets importing while the save is in flight and clears it after', async () => {
+    let resolveSave: (value: unknown) => void = () => {}
+    vi.mocked(saveCohortDefinition).mockImplementation(
+      () => new Promise(resolve => { resolveSave = resolve })
+    )
+    const wrapper = mount(CohortsView, { global: { plugins: [vuetify] } })
+    wrapper.vm.importName = 'My Cohort'
+    wrapper.vm.importJson = '{"ConceptSets":[]}'
+
+    const importPromise = wrapper.vm.confirmImport()
+    await wrapper.vm.$nextTick()
+    expect(wrapper.vm.importing).toBe(true)
+
+    resolveSave({ success: true, data: { id: 77, name: 'My Cohort' } })
+    await importPromise
+
     expect(wrapper.vm.importing).toBe(false)
   })
 
