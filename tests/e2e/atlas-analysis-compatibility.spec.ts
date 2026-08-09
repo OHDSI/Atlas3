@@ -200,17 +200,16 @@ test.describe('Atlas Pathway Compatibility', () => {
     await waitForPageReady(page)
 
     const importInput = page.getByTestId('pathway-builder-import-input')
-    if (await importInput.count() > 0) {
-      await importInput.setInputFiles({
-        name: 'pathway.json',
-        mimeType: 'application/json',
-        buffer: Buffer.from(JSON.stringify(atlasDemoPathways[0])),
-      })
+    await expect(importInput).toHaveCount(1)
+    await importInput.setInputFiles({
+      name: 'pathway.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(atlasDemoPathways[0])),
+    })
 
-      // Wait for import request
-      await page.waitForTimeout(2000)
-      expect(importCalled).toBe(true)
-    }
+    // Wait for import request
+    await page.waitForTimeout(2000)
+    expect(importCalled).toBe(true)
   })
 })
 
@@ -378,16 +377,15 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
     await waitForPageReady(page)
 
     const importInput = page.getByTestId('ir-builder-import-input')
-    if (await importInput.count() > 0) {
-      await importInput.setInputFiles({
-        name: 'ir.json',
-        mimeType: 'application/json',
-        buffer: Buffer.from(JSON.stringify(ir)),
-      })
+    await expect(importInput).toHaveCount(1)
+    await importInput.setInputFiles({
+      name: 'ir.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(ir)),
+    })
 
-      await page.waitForTimeout(2000)
-      expect(importCalled).toBe(true)
-    }
+    await page.waitForTimeout(2000)
+    expect(importCalled).toBe(true)
   })
 
   test('IR list renders with Atlas demo data', async ({ page }) => {
@@ -580,16 +578,15 @@ test.describe('Atlas Characterization Compatibility', () => {
     await waitForPageReady(page)
 
     const importInput = page.getByTestId('char-builder-import-input')
-    if (await importInput.count() > 0) {
-      await importInput.setInputFiles({
-        name: 'char.json',
-        mimeType: 'application/json',
-        buffer: Buffer.from(JSON.stringify(char)),
-      })
+    await expect(importInput).toHaveCount(1)
+    await importInput.setInputFiles({
+      name: 'char.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(char)),
+    })
 
-      await page.waitForTimeout(2000)
-      expect(importCalled).toBe(true)
-    }
+    await page.waitForTimeout(2000)
+    expect(importCalled).toBe(true)
   })
 })
 
