@@ -53,9 +53,10 @@ describe('permission.service', () => {
       const result = await permissionService.fetchPermissions()
 
       expect(httpGet).toHaveBeenCalledWith('/permission/?limit=200&offset=0')
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(mockPermissions)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -65,9 +66,10 @@ describe('permission.service', () => {
       const result = await permissionService.fetchPermissions(50, 10)
 
       expect(httpGet).toHaveBeenCalledWith('/permission/?limit=50&offset=10')
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(mockPermissions)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -78,9 +80,10 @@ describe('permission.service', () => {
       const result = await permissionService.fetchPermissions(200, 0, 'Users')
 
       expect(httpGet).toHaveBeenCalledWith('/permission/?limit=200&offset=0&category=Users')
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(filteredPermissions)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -89,9 +92,10 @@ describe('permission.service', () => {
 
       const result = await permissionService.fetchPermissions()
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid permissions response format')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
@@ -100,9 +104,10 @@ describe('permission.service', () => {
 
       const result = await permissionService.fetchPermissions()
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Network error')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -114,9 +119,10 @@ describe('permission.service', () => {
       const result = await permissionService.fetchPermissionById(1)
 
       expect(httpGet).toHaveBeenCalledWith('/permission/1')
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(mockPermission)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -125,9 +131,10 @@ describe('permission.service', () => {
 
       const result = await permissionService.fetchPermissionById(1)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid permission response format')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
@@ -136,9 +143,10 @@ describe('permission.service', () => {
 
       const result = await permissionService.fetchPermissionById(999)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Permission not found')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -150,9 +158,10 @@ describe('permission.service', () => {
       const result = await permissionService.fetchAllPermissions()
 
       expect(httpGet).toHaveBeenCalledWith('/permission/?limit=500&offset=0')
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(mockPermissions)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -161,9 +170,10 @@ describe('permission.service', () => {
 
       const result = await permissionService.fetchAllPermissions()
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Server error')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
