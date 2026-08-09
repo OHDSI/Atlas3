@@ -153,7 +153,10 @@ test.describe('Plugin Messaging', () => {
 });
 
 test.describe('Plugin Authentication', () => {
-  test('should provide auth context to plugins', async ({ page }) => {
+  // fixme: hello-world-plugin's bundle is not built and no CI step builds it, the plugin UI
+  // renders "Welcome, {username}!" not "Authenticated:", and isAuthenticated is structurally
+  // always false under e2e's VITE_AUTH_ENABLED=false, so this cannot pass until those are fixed.
+  test.fixme('should provide auth context to plugins', async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/#/plugins/hello-world-plugin/main');
     const authStatus = page.locator('text=Authenticated:');

@@ -120,17 +120,22 @@ test.describe('Cohort List - UI Interactions', () => {
   })
 
   test('should display loading state while fetching cohorts', async ({ page }) => {
-    await setupBasicMocks(page)
+    await page.route('**/cohortdefinition', async (route) => {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([])
+      })
+    })
 
-    // Navigate to trigger loading
-    await page.goto('/#/cohorts', { waitUntil: 'domcontentloaded' })
+    // beforeEach already navigated to this exact URL, and browsers treat a
+    // goto to an identical hash as a no-op, so a real reload is needed to
+    // trigger a fresh fetch that the route mock above can actually delay.
+    await page.reload({ waitUntil: 'domcontentloaded' })
 
-    // Check for loading skeleton or spinner
     const skeleton = page.locator('.v-skeleton-loader, .v-progress-circular')
-    const hasLoading = await skeleton.count() > 0
-
-    // May or may not show loading depending on speed
-    expect(hasLoading || !hasLoading).toBeTruthy()
+    await expect(skeleton.first()).toBeVisible()
   })
 
   test('should show cohort cards in grid layout', async ({ page }) => {
@@ -211,12 +216,8 @@ test.describe('UI Loading States', () => {
 
     await page.goto('/#/cohorts', { waitUntil: 'domcontentloaded' })
 
-    // Check for loading state
     const loadingIndicator = page.locator('.v-skeleton-loader, .v-progress-circular, .loading')
-    const hasLoading = await loadingIndicator.count() > 0
-
-    // Loading state may appear briefly
-    expect(hasLoading || !hasLoading).toBeTruthy()
+    await expect(loadingIndicator.first()).toBeVisible()
   })
 })
 
