@@ -162,6 +162,17 @@ describe('ConceptTable', () => {
     expect(select.props('items')).toEqual([60, 120, 240])
   })
 
+  // Regression: the concept-search store defaults itemsPerPage to 25, a
+  // value outside the hardcoded [60, 120, 240] menu. The select showed
+  // "25" as selected text while its own option list never contained 25,
+  // so reopening the menu could never re-select the value already applied.
+  it('folds an off-menu itemsPerPage value into the select options', () => {
+    const wrapper = mountComponent({ itemsPerPage: 25 })
+    const select = wrapper.findComponent({ name: 'VSelect' })
+    expect(select.props('items')).toEqual([25, 60, 120, 240])
+    expect(select.props('modelValue')).toBe(25)
+  })
+
   it('should display concept type badges', () => {
     const wrapper = mountComponent({ concepts: mockConcepts })
     const chips = wrapper.findAllComponents({ name: 'VChip' })
