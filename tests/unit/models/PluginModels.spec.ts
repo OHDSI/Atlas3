@@ -1853,7 +1853,9 @@ describe('PluginModels', () => {
 
       const result = PluginManifestSchema.safeParse(manifest)
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected safeParse to fail for an invalid manifest')
+      } else {
         expect(result.error.issues.length).toBeGreaterThan(0)
         // Check that errors are reported for nested fields
         const errorPaths = result.error.issues.map(issue => issue.path.join('.'))
