@@ -16,16 +16,18 @@ test.describe('Plugin Framework', () => {
     await page.reload();
     await page.waitForTimeout(3000);
 
-    // Verify plugin framework logs (logger format: [PluginFramework] Initializing...)
-    // Also accept no log if logger is set to warn level in prod mode
+    // Verify plugin framework logs (logger format: [PluginFramework] Initializing...).
+    // The Vite dev server (playwright's webServer) always runs with
+    // import.meta.env.DEV true regardless of --mode, so src/utils/logger.ts
+    // sets its level to 'debug' and info-level logs are never suppressed
+    // here; this is not a case where the log is genuinely optional.
     const hasPluginLog = logs.some(log =>
       log.includes('[PluginFramework]') ||
       log.includes('PluginFramework') ||
       log.includes('plugin')
     );
 
-    // Test passes - plugin framework may or may not log depending on log level
-    expect(hasPluginLog || logs.length === 0 || true).toBeTruthy();
+    expect(hasPluginLog).toBe(true);
   });
 
   test('should display hello-world plugin menu item', async ({ page }) => {
@@ -58,18 +60,19 @@ test.describe('Plugin Framework', () => {
     expect(url.includes('/plugins/hello-world-plugin') || url === '/').toBeTruthy();
   });
 
-  test('should handle plugin loading states', async ({ page }) => {
+  // fixme: same root cause as 'Plugin Authentication' below: hello-world-plugin's bundle is
+  // not built and no CI step builds it, so "Loading plugin..." is confirmed (manually probed)
+  // to stay visible forever instead of resolving. The guard this replaces never actually
+  // exercised the toBeHidden() assertion because hasLoading only reads true right up to the
+  // point where the timeout would fire anyway.
+  test.fixme('should handle plugin loading states', async ({ page }) => {
     // Navigate to plugin route
     await page.goto('/#/plugins/hello-world-plugin/main');
 
     // Check for loading indicator
     const loadingIndicator = page.locator('text=Loading plugin');
-
-    // If loading indicator appears, it should disappear
-    const hasLoading = await loadingIndicator.isVisible().catch(() => false);
-    if (hasLoading) {
-      await expect(loadingIndicator).toBeHidden({ timeout: 10000 });
-    }
+    await expect(loadingIndicator).toBeVisible();
+    await expect(loadingIndicator).toBeHidden({ timeout: 10000 });
   });
 
   test('should display error UI on plugin load failure', async ({ page }) => {
@@ -122,7 +125,10 @@ test.describe('Plugin Messaging', () => {
     await setupBasicMocks(page)
   });
 
-  test('should send messages from plugin to host', async ({ page }) => {
+  // fixme: same root cause as 'Plugin Authentication' below: hello-world-plugin's bundle is
+  // not built and no CI step builds it, so the plugin content (and its "Show Notification"
+  // button) never renders; the page is stuck on "Loading plugin..." (manually probed).
+  test.fixme('should send messages from plugin to host', async ({ page }) => {
     const messages: unknown[] = [];
 
     // Listen for plugin messages
@@ -138,17 +144,13 @@ test.describe('Plugin Messaging', () => {
     await page.goto('/#/plugins/hello-world-plugin/main');
     await page.waitForTimeout(2000);
 
-    // If plugin is visible, try to trigger message
     const notificationButton = page.locator('text=Show Notification');
-    const hasButton = await notificationButton.isVisible().catch(() => false);
+    await expect(notificationButton).toBeVisible();
+    await notificationButton.click();
+    await page.waitForTimeout(500);
 
-    if (hasButton) {
-      await notificationButton.click();
-      await page.waitForTimeout(500);
-
-      // Verify message was sent (check console logs)
-      expect(logs.some(log => log.toLowerCase().includes('notification'))).toBeTruthy();
-    }
+    // Verify message was sent (check console logs)
+    expect(logs.some(log => log.toLowerCase().includes('notification'))).toBeTruthy();
   });
 });
 
