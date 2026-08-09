@@ -16,7 +16,44 @@ const files = []
 // assertion, even if the line happens to contain the substring "expect(".
 const NON_ASSERTION_BODY = /^(return|continue|break|throw)\b/
 
+// Find the balanced-paren argument list of a call whose name ends right
+// before `openParenIndex` (which must point at the opening '('). Returns
+// the argument text and the index just past the matching ')', or null if
+// the parens never balance on this line (e.g. the call spans lines).
+function readBalancedArgs(line, openParenIndex) {
+  let depth = 1
+  let j = openParenIndex + 1
+  for (; j < line.length && depth > 0; j++) {
+    if (line[j] === '(') depth++
+    else if (line[j] === ')') depth--
+  }
+  if (depth !== 0) return null
+  return { args: line.slice(openParenIndex + 1, j - 1), end: j }
+}
+
+// An expect() argument that cannot fail regardless of what it computes:
+// the literal `true`, anything OR'd with the literal `true`, or `<x> ||
+// !<x>` (in either order), which is true whenever `<x>` is defined. This
+// mirrors the guard-hiding disease the if-based checks above target, just
+// expressed without an `if` at all. Deliberately conservative: it only
+// looks at a single-line, two-operand `||` split and literal `true`/`!`
+// forms, so it won't flag `expect(a || b)` where neither side is `true`
+// or the other's negation.
+function tautologicalExpectArg(arg) {
+  const trimmed = arg.trim()
+  if (trimmed === 'true') return true
+  if (/\|\|\s*true$/.test(trimmed)) return true
+  const parts = trimmed.split('||')
+  if (parts.length === 2) {
+    const a = parts[0].trim()
+    const b = parts[1].trim()
+    if (a && b && (b === `!${a}` || a === `!${b}`)) return true
+  }
+  return false
+}
+
 const hits = []
+const tautologyHits = []
 for (const f of files) {
   // Split on \r?\n: some files in this repo use CRLF line endings, and a
   // stray trailing \r defeats a `.` / `$`-anchored regex (CR counts as a
@@ -24,6 +61,22 @@ for (const f of files) {
   // in those files from the single-line matcher below.
   const lines = fs.readFileSync(f, 'utf8').split(/\r?\n/)
   for (let i = 0; i < lines.length; i++) {
+    // Tautology scan: independent of the if-guard checks below, and not
+    // mutually exclusive with them (an expect() inside a guard body can
+    // also be individually tautological).
+    let searchFrom = 0
+    for (;;) {
+      const callIdx = lines[i].indexOf('expect(', searchFrom)
+      if (callIdx === -1) break
+      const openParenIndex = callIdx + 'expect'.length
+      const parsed = readBalancedArgs(lines[i], openParenIndex)
+      if (!parsed) break
+      if (tautologicalExpectArg(parsed.args)) {
+        tautologyHits.push(`${f}:${i + 1}  expect(${parsed.args.trim().slice(0, 90)})`)
+      }
+      searchFrom = parsed.end
+    }
+
     const braceMatch = /^(\s*)(\} else )?if \((.+)\) \{\s*$/.exec(lines[i])
     if (braceMatch) {
       const indent = braceMatch[1].length
@@ -71,5 +124,10 @@ for (const f of files) {
   }
 }
 console.log(hits.join('\n'))
+if (tautologyHits.length > 0) {
+  console.log(`\n${tautologyHits.length} tautological assertions (cannot fail):`)
+  console.log(tautologyHits.join('\n'))
+}
 console.error(`\n${hits.length} conditional-assertion guards in ${files.length} spec files`)
-process.exit(hits.length > 0 ? 1 : 0)
+console.error(`${tautologyHits.length} tautological assertions in ${files.length} spec files`)
+process.exit(hits.length > 0 || tautologyHits.length > 0 ? 1 : 0)
