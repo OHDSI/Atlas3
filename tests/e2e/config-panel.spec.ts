@@ -203,8 +203,19 @@ test.describe('Configuration Panel', () => {
 
   test.describe('Responsive Behavior', () => {
     test('should adapt panel width for mobile', async ({ page }) => {
-      // Set mobile viewport
+      // Set mobile viewport, then reload: ConfigPanel.vue's
+      // v-navigation-drawer mounts (hidden) on the initial beforeEach
+      // page.goto(), and its width only tracks window.innerWidth from that
+      // mount plus a live 'resize' listener. Setting the viewport after
+      // that mount without reloading races the resize handler against this
+      // test's own boundingBox() read: fast/light runs can measure before
+      // the listener updates the ref and silently pass on a stale desktop
+      // width, which is exactly how this test stayed green while the
+      // underlying drawerWidth formula (fixed separately in
+      // ConfigPanel.vue) ignored the viewport entirely above ~1400px.
       await page.setViewportSize({ width: 375, height: 667 })
+      await page.reload()
+      await waitForPageReady(page)
 
       // Ensure panel is open
       await ensurePanelOpen(page)
@@ -220,8 +231,11 @@ test.describe('Configuration Panel', () => {
     })
 
     test('should adapt panel width for desktop', async ({ page }) => {
-      // Set desktop viewport
+      // Set desktop viewport, then reload (see comment in the mobile case
+      // above for why this must happen before the drawer mounts).
       await page.setViewportSize({ width: 1920, height: 1080 })
+      await page.reload()
+      await waitForPageReady(page)
 
       // Ensure panel is open
       await ensurePanelOpen(page)
