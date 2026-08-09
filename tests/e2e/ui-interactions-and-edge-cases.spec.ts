@@ -34,12 +34,11 @@ test.describe('DataSources - Report Type Selector', () => {
     await page.goto('/#/datasources')
     await waitForNetworkIdle(page)
 
+    // The sibling test above already establishes the sidebar always
+    // renders with at least one item, so this is not a genuine two-state
+    // case.
     const sidebar = page.locator('.datasource-sidebar')
-    const hasSidebar = await sidebar.count() > 0
-
-    if (hasSidebar) {
-      await expect(sidebar).toBeVisible()
-    }
+    await expect(sidebar).toBeVisible()
   })
 })
 
@@ -53,13 +52,25 @@ test.describe('Concept Search - Advanced Features', () => {
   })
 
   test('should have domain filter dropdown', async ({ page }) => {
-    // Look for domain filter
-    const domainFilter = page.getByTestId('domain-filter')
-    const hasFilter = await domainFilter.count() > 0
+    // domain-filter never existed in src/ as a testid, and the facet
+    // filters (ConceptFacetFilters.vue) only mount once a search has
+    // results (v-if="!store.isEmpty" in ConceptSearch.vue) and live behind
+    // a "Filters" menu button, not a bare always-visible dropdown. Run a
+    // real search, open the menu, and look for the Domain facet control
+    // by its accessible label.
+    const searchInput = page.locator('input[type="text"]').first()
+    await searchInput.fill('diabetes')
+    await page.keyboard.press('Escape')
+    await waitForOverlaysToClose(page)
+    await searchInput.press('Enter')
+    await page.waitForSelector('table tbody tr', { timeout: 5000 })
 
-    if (hasFilter) {
-      await expect(domainFilter).toBeVisible({ timeout: 5000 })
-    }
+    const filtersButton = page.getByRole('button', { name: /^filters/i })
+    await expect(filtersButton).toBeVisible()
+    await filtersButton.click()
+
+    const domainFilter = page.getByRole('combobox', { name: 'Domain' })
+    await expect(domainFilter).toBeVisible({ timeout: 5000 })
   })
 
   test('should display clear search button after search', async ({ page }) => {
