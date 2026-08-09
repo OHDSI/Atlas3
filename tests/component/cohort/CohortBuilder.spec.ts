@@ -397,10 +397,12 @@ describe('CohortBuilder', () => {
 
   // ---------------------------------------------------------------------------
   // Concept-set / concept selection routing: each producer child emits the
-  // event CohortBuilder's template listens for, and the resulting routing
-  // state is read back through the named defineExpose contract (there is no
-  // child that observes selectedCriteriaContext/isConceptSetDialogOpen/etc,
-  // so those are the "genuinely internal" bucket from the task brief).
+  // event CohortBuilder's template listens for. Dialog visibility and the
+  // search domain filter are read back through the consumer dialog's own
+  // props (they are v-model/prop bound, so the stub reflects them exactly).
+  // selectedCriteriaContext has no such child-observable form, so it is read
+  // through the named defineExpose contract instead: the "genuinely
+  // internal" bucket from the task brief.
   // ---------------------------------------------------------------------------
 
   it('selecting a concept set for an entry event sets context to entry-event mode', async () => {
@@ -415,7 +417,6 @@ describe('CohortBuilder', () => {
       groupIndex: -1,
       eventIndex: -1,
     })
-    expect(vm.isConceptSetDialogOpen).toBe(true)
     expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(true)
   })
 
@@ -435,7 +436,7 @@ describe('CohortBuilder', () => {
       eventIndex: 2,
       eventId: null,
     })
-    expect(vm.isConceptSetDialogOpen).toBe(true)
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(true)
   })
 
   it('selecting a concept set for additional criteria sets ruleIndex -2 from a numeric arg', async () => {
@@ -470,7 +471,7 @@ describe('CohortBuilder', () => {
     const vm = wrapper.vm as any
     expect(vm.exitCriteriaSelectionType).toBe('DRUG_EXPOSURE')
     expect(vm.selectedCriteriaContext.ruleIndex).toBe(-3)
-    expect(vm.isConceptSetDialogOpen).toBe(true)
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(true)
   })
 
   it('selecting a censoring concept set for exit criteria sets selection type CENSORING_EVENT', async () => {
@@ -489,8 +490,7 @@ describe('CohortBuilder', () => {
     entryEventsList(wrapper).vm.$emit('select-concept-for-attribute', 'evt-1', 0, 'Condition')
     await wrapper.vm.$nextTick()
     const vm = wrapper.vm as any
-    expect(vm.selectedConceptDomainFilter).toBe('Condition')
-    expect(vm.isConceptSearchDialogOpen).toBe(true)
+    expect(conceptSearchDialog(wrapper).props('domainFilter')).toBe('Condition')
     expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(true)
     expect(vm.selectedCriteriaContext).toMatchObject({
       eventId: 'evt-1',
@@ -506,9 +506,9 @@ describe('CohortBuilder', () => {
     groupCriteriaUI(wrapper).vm.$emit('select-concept', { eventIndex: 4, domainFilter: 'Drug' })
     await wrapper.vm.$nextTick()
     const vm = wrapper.vm as any
-    expect(vm.selectedConceptDomainFilter).toBe('Drug')
+    expect(conceptSearchDialog(wrapper).props('domainFilter')).toBe('Drug')
     expect(vm.selectedCriteriaContext).toMatchObject({ ruleIndex: -2, eventIndex: 4 })
-    expect(vm.isConceptSearchDialogOpen).toBe(true)
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(true)
   })
 
   it('selecting a concept for inclusion criteria forwards full context', async () => {
@@ -530,7 +530,7 @@ describe('CohortBuilder', () => {
       attributeIndex: 3,
       eventId: null,
     })
-    expect(vm.selectedConceptDomainFilter).toBe('Procedure')
+    expect(conceptSearchDialog(wrapper).props('domainFilter')).toBe('Procedure')
   })
 
   // ---------------------------------------------------------------------------
@@ -542,11 +542,11 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     entryEventsList(wrapper).vm.$emit('select-concept-for-attribute', 'x', 0, undefined)
     await wrapper.vm.$nextTick()
-    expect((wrapper.vm as any).isConceptSearchDialogOpen).toBe(true)
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(true)
 
     conceptSearchDialog(wrapper).vm.$emit('concepts-selected', [])
     await wrapper.vm.$nextTick()
-    expect((wrapper.vm as any).isConceptSearchDialogOpen).toBe(false)
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(false)
   })
 
   it('merges selected concepts into an entry-event attribute', async () => {
@@ -580,7 +580,7 @@ describe('CohortBuilder', () => {
     const concepts = entryEventsList(wrapper).props('events')[0].attributes[0].concepts
     expect(concepts).toHaveLength(1)
     expect(concepts[0].CONCEPT_ID).toBe(100)
-    expect((wrapper.vm as any).isConceptSearchDialogOpen).toBe(false)
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(false)
   })
 
   it('dedupes selected concepts by CONCEPT_ID for entry events', async () => {
@@ -686,8 +686,8 @@ describe('CohortBuilder', () => {
     vm.criteriaSelectionService.requestConcepts('Gender', cb)
     await wrapper.vm.$nextTick()
 
-    expect(vm.isConceptSearchDialogOpen).toBe(true)
-    expect(vm.selectedConceptDomainFilter).toBe('Gender')
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(true)
+    expect(conceptSearchDialog(wrapper).props('domainFilter')).toBe('Gender')
     // A prior index-context is cleared so it can't hijack the result.
     expect(vm.selectedCriteriaContext).toBeNull()
 
@@ -709,7 +709,7 @@ describe('CohortBuilder', () => {
 
     expect(cb).toHaveBeenCalledTimes(1)
     expect(cb.mock.calls[0][0][0]).toMatchObject({ CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE' })
-    expect(vm.isConceptSearchDialogOpen).toBe(false)
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(false)
   })
 
   it('criteriaSelectionService.requestConceptSet opens the picker and delivers the chosen set', async () => {
@@ -721,7 +721,7 @@ describe('CohortBuilder', () => {
     vm.criteriaSelectionService.requestConceptSet(cb)
     await wrapper.vm.$nextTick()
 
-    expect(vm.isConceptSetDialogOpen).toBe(true)
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(true)
     expect(vm.selectedCriteriaContext).toBeNull()
 
     // Picking an in-definition set routes to the pending callback (not an
@@ -735,7 +735,7 @@ describe('CohortBuilder', () => {
 
     expect(cb).toHaveBeenCalledTimes(1)
     expect(cb.mock.calls[0][0]).toMatchObject({ id: 5, name: 'Diabetes' })
-    expect(vm.isConceptSetDialogOpen).toBe(false)
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false)
   })
 
   it('criteriaSelectionService.editConceptSet opens the concept-set editor', async () => {
