@@ -56,7 +56,11 @@ describe('getPerson', () => {
     )
     const result = await getPerson('SYNPUF', 1)
     expect(result.success).toBe(false)
-    if (!result.success) expect(result.error.status).toBe(500)
+    if (result.success) {
+      expect.fail('expected getPerson to fail')
+    } else {
+      expect(result.error.status).toBe(500)
+    }
   })
 })
 
@@ -81,6 +85,8 @@ describe('getCohortConceptSets', () => {
     if (result.success) {
       expect(result.data).toHaveLength(2)
       expect(result.data[0]?.name).toBe('ACE Inhibitors')
+    } else {
+      expect.fail(`expected success, got ${result.error.message}`)
     }
   })
 

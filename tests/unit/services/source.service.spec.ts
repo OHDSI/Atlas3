@@ -92,7 +92,9 @@ describe('SourceService', () => {
       const result = await fetchCDMSources()
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected fetchCDMSources to fail')
+      } else {
         expect(result.error.message).toBe('Invalid source list response')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)

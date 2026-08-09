@@ -115,6 +115,8 @@ describe('ConceptSearchService', () => {
         expect(result.data).toHaveLength(1)
         // .map() calls the function with (item, index, array)
         expect(mapConceptFromAPI).toHaveBeenCalledWith(mockResponse[0], 0, mockResponse)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
     })
 
@@ -122,7 +124,11 @@ describe('ConceptSearchService', () => {
       const result = await searchConcepts('TEST', '')
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toEqual([])
+      if (result.success) {
+        expect(result.data).toEqual([])
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       expect(mockFetch).not.toHaveBeenCalled()
     })
 
