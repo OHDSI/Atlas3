@@ -132,11 +132,10 @@ describe('DomainPrevalenceTable', () => {
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const copyButton = buttons.find(btn => btn.text().includes('Copy'))
 
-    if (copyButton) {
-      await copyButton.trigger('click')
-      await wrapper.vm.$nextTick()
-      expect(writeTextMock).toHaveBeenCalled()
-    }
+    expect(copyButton).toBeDefined()
+    await copyButton!.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(writeTextMock).toHaveBeenCalled()
   })
 
   it('should handle CSV export action', async () => {
@@ -148,11 +147,10 @@ describe('DomainPrevalenceTable', () => {
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const csvButton = buttons.find(btn => btn.text().includes('CSV'))
 
-    if (csvButton) {
-      await csvButton.trigger('click')
-      await wrapper.vm.$nextTick()
-      expect(createElementSpy).toHaveBeenCalledWith('a')
-    }
+    expect(csvButton).toBeDefined()
+    await csvButton!.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(createElementSpy).toHaveBeenCalledWith('a')
   })
 
   it('should render pagination controls', () => {
