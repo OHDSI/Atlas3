@@ -33,6 +33,8 @@
                 :tone="matchTypeTemp === 'ALL' ? undefined : 'neutral'"
                 size="sm"
                 class="flex-1 match-chip--all"
+                data-test="match-chip"
+                :data-selected="matchTypeTemp === 'ALL'"
                 @click="matchTypeTemp = 'ALL'"
               >
                 {{ t('options.all', 'All') }}
@@ -42,6 +44,8 @@
                 :tone="matchTypeTemp === 'ANY' ? undefined : 'neutral'"
                 size="sm"
                 class="flex-1 match-chip--any"
+                data-test="match-chip"
+                :data-selected="matchTypeTemp === 'ANY'"
                 @click="matchTypeTemp = 'ANY'"
               >
                 {{ t('options.any', 'Any') }}
@@ -51,6 +55,8 @@
                 :tone="matchTypeTemp === 'AT_LEAST' ? undefined : 'neutral'"
                 size="sm"
                 class="flex-1 match-chip--at_least"
+                data-test="match-chip"
+                :data-selected="matchTypeTemp === 'AT_LEAST'"
                 @click="matchTypeTemp = 'AT_LEAST'"
               >
                 {{ t('options.atLeast', 'At least') }}
@@ -60,6 +66,8 @@
                 :tone="matchTypeTemp === 'AT_MOST' ? undefined : 'neutral'"
                 size="sm"
                 class="flex-1 match-chip--at_most"
+                data-test="match-chip"
+                :data-selected="matchTypeTemp === 'AT_MOST'"
                 @click="matchTypeTemp = 'AT_MOST'"
               >
                 {{ t('options.atMost', 'At most') }}
@@ -72,6 +80,7 @@
               :label="t('columns.count', 'Count').value"
               min="1"
               class="mt-3"
+              data-test="match-count"
             />
           </v-card-text>
           <v-card-actions class="pa-2">

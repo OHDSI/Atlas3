@@ -1,8 +1,8 @@
 /**
  * GroupCriteriaUI Component Tests
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { mount, flushPromises, DOMWrapper } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import { createPinia, setActivePinia } from 'pinia'
 import * as components from 'vuetify/components'
@@ -124,10 +124,46 @@ function mountComponent(props = {}) {
   })
 }
 
+// Match type chips and the add-criteria list live inside real Vuetify menus,
+// which teleport their content to document.body once opened; a DOMWrapper is
+// needed to query that content, mirroring the pattern proven in NavBar.spec.ts.
+// A fresh group with its own `events` array is built here rather than
+// spreading mockCriteriaGroup: the component keeps the modelValue reference
+// as-is on init (no clone), so other tests mutating a shared array would
+// otherwise leak entries into these mounts.
+function mountGroup(options: { type?: CriteriaGroup['logicType'] } = {}) {
+  const { type = 'ALL' } = options
+  const group: CriteriaGroup = { id: 'match-type-group', logicType: type, events: [] }
+  return mountComponent({ modelValue: group })
+}
+
+async function openMatchTypeMenu(wrapper: ReturnType<typeof mountComponent>) {
+  await wrapper.find('.vertical-label-container').trigger('click')
+  await flushPromises()
+}
+
+async function chooseCriteriaType(wrapper: ReturnType<typeof mountComponent>, label: string) {
+  await wrapper.find('[data-testid="add-event-to-group"]').trigger('click')
+  await flushPromises()
+
+  const body = new DOMWrapper(document.body)
+  const item = body.findAll('.v-list-item').find(el => el.text().includes(label))
+  if (!item) throw new Error(`criteria type item not found: ${label}`)
+
+  await item.trigger('click')
+  await flushPromises()
+}
+
 describe('GroupCriteriaUI', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    // Vuetify menus teleport content to document.body; tear down between
+    // tests so a stale open menu can't intercept the next test's clicks.
+    document.body.innerHTML = ''
   })
 
   describe('Basic Rendering', () => {
@@ -213,6 +249,15 @@ describe('GroupCriteriaUI', () => {
       await wrapper.vm.$nextTick()
 
       expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+    })
+
+    // Folded in from the now-deleted tests/component/cohort-builder/GroupCriteriaUI.spec.ts:
+    // that file asserted this via the DOM attribute rather than the getMatchTypeDisplay() method.
+    it('sets the data-type attribute on the label to the current logic type', () => {
+      const group: CriteriaGroup = { ...mockCriteriaGroup, logicType: 'AT_LEAST', count: 2 }
+      const wrapper = mountComponent({ modelValue: group })
+      const label = wrapper.find('.match-type-label')
+      expect(label.attributes('data-type')).toBe('AT_LEAST')
     })
   })
 
@@ -655,6 +700,72 @@ describe('GroupCriteriaUI', () => {
       }
       const wrapper = mountComponent({ modelValue: group })
       expect(wrapper.exists()).toBe(true)
+    })
+  })
+
+  describe('match type selection', () => {
+    it('marks only the active match type as selected', async () => {
+      const wrapper = mountGroup({ type: 'ALL' })
+      await openMatchTypeMenu(wrapper)
+
+      const body = new DOMWrapper(document.body)
+      const all = body.find('.match-chip--all')
+      const any = body.find('.match-chip--any')
+
+      expect(all.attributes('data-selected')).toBe('true')
+      expect(any.attributes('data-selected')).toBe('false')
+    })
+
+    it('moves the selection when a different match type is chosen', async () => {
+      const wrapper = mountGroup({ type: 'ALL' })
+      await openMatchTypeMenu(wrapper)
+
+      const body = new DOMWrapper(document.body)
+      await body.find('.match-chip--any').trigger('click')
+      await wrapper.vm.$nextTick()
+
+      expect(body.find('.match-chip--any').attributes('data-selected')).toBe('true')
+      expect(body.find('.match-chip--all').attributes('data-selected')).toBe('false')
+    })
+
+    it('shows the count field only for AT_LEAST and AT_MOST', async () => {
+      for (const [type, expected] of [
+        ['ALL', false], ['ANY', false], ['AT_LEAST', true], ['AT_MOST', true],
+      ] as const) {
+        const wrapper = mountGroup({ type })
+        await openMatchTypeMenu(wrapper)
+
+        const body = new DOMWrapper(document.body)
+        expect(body.find('[data-test="match-count"]').exists()).toBe(expected)
+
+        wrapper.unmount()
+        document.body.innerHTML = ''
+      }
+    })
+  })
+
+  describe('criteria type dispatch', () => {
+    it('adds a nested group when the Group entry is chosen', async () => {
+      const wrapper = mountGroup({ type: 'ALL' })
+      await chooseCriteriaType(wrapper, 'Nested Group')
+
+      const emitted = wrapper.emitted('update:modelValue')
+      expect(emitted).toBeTruthy()
+      const updated = emitted!.at(-1)![0] as CriteriaGroup
+      expect(updated.nestedGroups).toHaveLength(1)
+      expect(updated.events).toHaveLength(0)
+    })
+
+    it('adds a plain event when a non-Group entry is chosen', async () => {
+      const wrapper = mountGroup({ type: 'ALL' })
+      await chooseCriteriaType(wrapper, 'Condition Occurrence')
+
+      const emitted = wrapper.emitted('update:modelValue')
+      expect(emitted).toBeTruthy()
+      const updated = emitted!.at(-1)![0] as CriteriaGroup
+      expect(updated.events).toHaveLength(1)
+      expect(updated.events[0].criteriaType).toBe('ConditionOccurrence')
+      expect(updated.nestedGroups ?? []).toHaveLength(0)
     })
   })
 })
