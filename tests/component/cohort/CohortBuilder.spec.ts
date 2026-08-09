@@ -2139,4 +2139,21 @@ describe('CohortBuilder', () => {
 
     expect(pushed.some(p => /\/cohorts\/\d+/.test(p))).toBe(true)
   })
+
+  // The cohort is already persisted by the time we navigate, so a failed
+  // navigation must not be reported to the user as a failed save.
+  it('still reports the save as successful when opening the cohort fails', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Adults on ibuprofen'
+    vm.entryEvents = [{ id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Ibuprofen', items: [] } }]
+    await wrapper.vm.$nextTick()
+
+    const spy = vi.spyOn(router, 'replace').mockRejectedValue(new Error('navigation aborted'))
+    const result = await vm.handleSave()
+    spy.mockRestore()
+
+    expect(result?.id).toBeDefined()
+  })
 })

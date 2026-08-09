@@ -592,4 +592,36 @@ describe('generateAnalysis', () => {
     } as never)
     expect(generatePathway).not.toHaveBeenCalled()
   })
+
+  it('says so when there is no source to run against', async () => {
+    const { useWebAPIStore } = await import('@/stores/webapi')
+    const webapi = useWebAPIStore()
+    webapi.sources = [] as never
+    webapi.selectedSource = ''
+    vi.spyOn(webapi, 'fetchSources').mockResolvedValue(undefined as never)
+    const danger = vi.spyOn(useNotifications(), 'danger')
+
+    await applyProposalDirect({
+      kind: 'generateAnalysis',
+      payload: { analysisType: 'pathway', analysisId: 12 },
+    } as never)
+
+    expect(generatePathway).not.toHaveBeenCalled()
+    expect(danger).toHaveBeenCalledWith(expect.stringContaining('no data source'))
+  })
+
+  it('surfaces a thrown generation error rather than failing silently', async () => {
+    vi.mocked(generatePathway).mockRejectedValue(new Error('gateway down'))
+    const danger = vi.spyOn(useNotifications(), 'danger')
+    const { usePathwayStore } = await import('@/stores/pathway')
+    const before = usePathwayStore().agentGenerationSignal
+
+    await applyProposalDirect({
+      kind: 'generateAnalysis',
+      payload: { analysisType: 'pathway', analysisId: 12 },
+    } as never)
+
+    expect(danger).toHaveBeenCalledWith(expect.stringContaining('gateway down'))
+    expect(usePathwayStore().agentGenerationSignal).toBe(before)
+  })
 })
