@@ -96,3 +96,55 @@ via `npm run test:mutation:check`.
 
 6. **Counting is not comparing.** Asserting `result.length === 3` leaves every field inside
    those three items unchecked. Compare the content.
+
+## Baseline
+
+Per-file worked examples, measured on commit 5884245:
+
+| File | Line coverage | Mutation score |
+|---|---|---|
+| `src/utils/list-filters.ts` | n/a | 90.24% |
+| `src/components/characterization-results/PrevalenceTable.vue` | 88.5% | 14.44% |
+
+A whole-repository run was attempted locally to establish the gate's break threshold and
+did not finish: at concurrency 2 it reached 36,667 of the 38,915 mutants in 8h21m, RAM-bound
+at around 4GB free, before its parent process exited. That partial run scored **70.3%**
+(25,788 killed, 10,853 survived, 26 timed out, out of 36,667 tested), a **94.2% sample**,
+not a completed measurement. Because 2,248 mutants were never tested, the true full-repo
+score is bounded between **66.3%** (if every untested mutant would have survived) and
+**72.1%** (if every one would have been killed). No `mutation.json` survives from that run,
+so there is no per-file breakdown to go with the 70.3% figure. Do not repeat that number as
+"the" mutation score; it is a sample, not a total.
+
+### Why the nightly run is sharded
+
+At concurrency 4 on a `ubuntu-latest` runner (4 vCPU, 16GB RAM), a full run lands near 4.5
+hours, and this repository's CI runners are killed at roughly 4 hours (GitHub's own job
+ceiling is 6). One job cannot run the whole suite. `.github/workflows/mutation-tests.yml`
+instead runs a nightly **6-way matrix**, `mutation-shard`: each shard sets
+`STRYKER_SHARD=<i>/6`, which `stryker.conf.mjs` uses to stripe the 373-file `mutate` list
+by index (`idx % 6 === i - 1`) rather than slicing it contiguously, so file-size variance
+doesn't leave one shard with all the large files. Each shard runs the full `npx stryker run`
+at `--concurrency 4` and uploads its `reports/mutation/mutation.json` as
+`mutation-report-shard-<i>`.
+
+No shard applies a break threshold: `stryker.conf.mjs` sets `thresholds.break` to `null`
+for every run, sharded or not. A single shard skewed toward low-scoring Vue templates would
+otherwise fail on its own, which is a false red, not a real signal, since the repo-wide
+score is what matters. Enforcement instead lives entirely in the `aggregate` job, which runs
+after all six shards, downloads their artifacts, sums killed/timeout/survived/noCoverage
+counts across all of them, and computes one score using Stryker's own definition:
+`totalValid = killed + timeout + survived + noCoverage`, `score = (killed + timeout) /
+totalValid`. That job fails outright, before it even computes a score, if fewer than six
+shard artifacts are present: a missing shard means part of the codebase went unmeasured, and
+silently treating that as a pass would be the exact failure this gate exists to prevent.
+
+### Threshold
+
+The `aggregate` job fails the workflow if the overall score is below **65**. This number is
+deliberately provisional: it sits two points below the proven lower bound of 66.3%, so the
+gate cannot produce a false red on its first complete nightly run no matter where the true
+score lands within the bounded range. Once a nightly run completes with all six shards
+reporting, replace 65 with that run's actual score minus two points of headroom, using the
+same rationale as any other mutation-score threshold in this repository: scores vary slightly
+run to run from timeouts on a loaded runner, and a gate that flakes gets disabled.
