@@ -89,7 +89,7 @@ describe('Round-Trip Integration Tests - Real Fixtures', () => {
     })
 
     it('all CollapseSettings values are preserved', () => {
-      fixtureFiles.forEach(filename => {
+      const results = fixtureFiles.map(filename => {
         const fixturePath = path.join(FIXTURES_DIR, filename)
         const atlasJson = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'))
 
@@ -105,10 +105,16 @@ describe('Round-Trip Integration Tests - Real Fixtures', () => {
 
         // Critical: EraPad=0 must be preserved (zero-count preservation)
         expect(backToAtlas.CollapseSettings).toEqual(atlasJson.CollapseSettings)
-        if (atlasJson.CollapseSettings.EraPad === 0) {
-          expect(backToAtlas.CollapseSettings.EraPad).toBe(0)
-        }
+        return { eraPad: atlasJson.CollapseSettings.EraPad, backEraPad: backToAtlas.CollapseSettings.EraPad }
       })
+
+      // Confirm the zero-preservation case is genuinely exercised, not just
+      // vacuously true because no fixture has EraPad=0.
+      const zeroEraPadResults = results.filter(r => r.eraPad === 0)
+      expect(zeroEraPadResults.length).toBeGreaterThan(0)
+      for (const r of zeroEraPadResults) {
+        expect(r.backEraPad).toBe(0)
+      }
     })
 
     it('all limit types are properly wrapped', () => {
@@ -132,9 +138,8 @@ describe('Round-Trip Integration Tests - Real Fixtures', () => {
 
         // Verify case: "First" not "FIRST" or "first"
         const qType = backToAtlas.QualifiedLimit.Type
-        if (qType) {
-          expect(qType).toMatch(/^[A-Z][a-z]*$/)
-        }
+        expect(qType).toBeTruthy()
+        expect(qType).toMatch(/^[A-Z][a-z]*$/)
       })
     })
   })

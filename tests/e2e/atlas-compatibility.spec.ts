@@ -144,14 +144,13 @@ test.describe('Atlas Format Compatibility - Round-Trip via UI', () => {
       (window as unknown as Record<string, string>).__clipboardData
     )
 
-    if (clipboardData) {
-      const exportedJson = JSON.parse(clipboardData)
-      // Verify essential Atlas format fields
-      expect(exportedJson).toHaveProperty('ConceptSets')
-      expect(exportedJson).toHaveProperty('PrimaryCriteria')
-      expect(exportedJson.PrimaryCriteria).toHaveProperty('CriteriaList')
-      expect(exportedJson.PrimaryCriteria).toHaveProperty('ObservationWindow')
-    }
+    expect(clipboardData).toBeTruthy()
+    const exportedJson = JSON.parse(clipboardData)
+    // Verify essential Atlas format fields
+    expect(exportedJson).toHaveProperty('ConceptSets')
+    expect(exportedJson).toHaveProperty('PrimaryCriteria')
+    expect(exportedJson.PrimaryCriteria).toHaveProperty('CriteriaList')
+    expect(exportedJson.PrimaryCriteria).toHaveProperty('ObservationWindow')
   })
 })
 
@@ -165,11 +164,10 @@ test.describe('Atlas Format Compatibility - Expression Structure Preservation', 
     await importCohortViaUI(page, cohort)
 
     const saved = await captureImportedExpression(page, cohort)
-    if (saved) {
-      const pc = saved.PrimaryCriteria as Record<string, unknown> | undefined
-      expect((pc?.CriteriaList as unknown[])?.length).toBeGreaterThan(0)
-      expect((saved.ConceptSets as unknown[])?.length).toBeGreaterThan(0)
-    }
+    expect(saved).not.toBeNull()
+    const pc = saved!.PrimaryCriteria as Record<string, unknown> | undefined
+    expect((pc?.CriteriaList as unknown[])?.length).toBeGreaterThan(0)
+    expect((saved!.ConceptSets as unknown[])?.length).toBeGreaterThan(0)
   })
 
   test('ConditionOccurrence with VisitType filter preserves concept arrays', async ({ page }) => {
@@ -177,10 +175,9 @@ test.describe('Atlas Format Compatibility - Expression Structure Preservation', 
     await importCohortViaUI(page, cohort)
 
     const saved = await captureImportedExpression(page, cohort)
-    if (saved) {
-      expect((saved.ConceptSets as unknown[])?.length).toBe(3)
-      expect((saved.InclusionRules as unknown[])?.length).toBe(3)
-    }
+    expect(saved).not.toBeNull()
+    expect((saved!.ConceptSets as unknown[])?.length).toBe(3)
+    expect((saved!.InclusionRules as unknown[])?.length).toBe(3)
   })
 
   test('DrugExposure with First flag preserves boolean attributes', async ({ page }) => {
@@ -188,13 +185,12 @@ test.describe('Atlas Format Compatibility - Expression Structure Preservation', 
     await importCohortViaUI(page, cohort)
 
     const saved = await captureImportedExpression(page, cohort)
-    if (saved) {
-      const conceptSets = saved.ConceptSets as Record<string, unknown>[]
-      expect(conceptSets?.length).toBeGreaterThan(0)
-      const aceSet = conceptSets?.[0]
-      const expr = aceSet?.expression as Record<string, unknown>
-      expect((expr?.items as unknown[])?.length).toBeGreaterThan(1)
-    }
+    expect(saved).not.toBeNull()
+    const conceptSets = saved!.ConceptSets as Record<string, unknown>[]
+    expect(conceptSets?.length).toBeGreaterThan(0)
+    const aceSet = conceptSets?.[0]
+    const expr = aceSet?.expression as Record<string, unknown>
+    expect((expr?.items as unknown[])?.length).toBeGreaterThan(1)
   })
 
   test('Complex cohort with AdditionalCriteria preserves temporal windows', async ({ page }) => {
@@ -202,9 +198,8 @@ test.describe('Atlas Format Compatibility - Expression Structure Preservation', 
     await importCohortViaUI(page, cohort)
 
     const saved = await captureImportedExpression(page, cohort)
-    if (saved) {
-      expect((saved.ConceptSets as unknown[])?.length).toBeGreaterThan(0)
-    }
+    expect(saved).not.toBeNull()
+    expect((saved!.ConceptSets as unknown[])?.length).toBeGreaterThan(0)
   })
 })
 
@@ -325,20 +320,28 @@ async function captureImportedExpression(
   page: Page,
   _cohort: AtlasDemoCohort
 ): Promise<Record<string, unknown> | null> {
-  // Reload the page and intercept the GET to capture what was stored
+  // Fetch the mocked detail endpoint directly from inside the page, rather
+  // than reloading and racing a page.waitForResponse()/response.json()
+  // pair against the reload's own navigation. That approach (this
+  // function's previous shape) intermittently threw "No resource with
+  // given identifier found" under CPU load: page.reload() tears down the
+  // frame closely enough after the response fires that Chromium's
+  // DevTools protocol can evict the response body before the .json() call
+  // reads it, which silently resolved to null and made the assertions
+  // this replaced pass by skipping instead of by checking real data.
+  // fetch() from evaluate() still goes through the same page.route() mock
+  // (helpers/api-mocks.ts intercepts all requests from this page/frame),
+  // and returns already-parsed JSON over the evaluate channel instead of
+  // a live Response object, so there is no body-buffer race to lose.
   const currentUrl = page.url()
   const idMatch = currentUrl.match(/\/cohorts\/(\d+)/)
   if (!idMatch) return null
 
-  // Wait for the builder to render, then use the GET response
-  const response = await page.waitForResponse(
-    resp => resp.url().includes(`cohortdefinition/${idMatch[1]}`) && resp.request().method() === 'GET',
-    { timeout: 5000 }
-  ).catch(() => null)
+  const data = await page.evaluate(async (id) => {
+    const res = await fetch(`/WebAPI/cohortdefinition/${id}`)
+    if (!res.ok) return null
+    return res.json()
+  }, idMatch[1]) as Record<string, unknown> | null
 
-  if (response) {
-    const data = await response.json().catch(() => null)
-    return data?.expression as Record<string, unknown> | null
-  }
-  return null
+  return (data?.expression as Record<string, unknown> | undefined) ?? null
 }

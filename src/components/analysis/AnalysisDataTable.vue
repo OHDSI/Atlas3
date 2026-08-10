@@ -63,7 +63,7 @@
     </template>
 
     <template #[`item.createdBy`]="{ item }">
-      {{ formatUser((item as Record<string, unknown>).createdBy) }}
+      {{ formatUser(userField(item, 'createdBy')) }}
     </template>
 
     <template #[`item.actions`]="{ item }">
@@ -250,6 +250,10 @@ function strField(item: T, key: string): string | undefined {
 function dateField(item: T, key: string): string | number | undefined {
   const v = (item as Record<string, unknown>)[key]
   return typeof v === 'string' || typeof v === 'number' ? v : undefined
+}
+
+function userField(item: T, key: string): unknown {
+  return (item as Record<string, unknown>)[key]
 }
 
 function formatUser(user: unknown): string {

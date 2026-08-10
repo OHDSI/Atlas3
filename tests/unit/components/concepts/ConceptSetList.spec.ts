@@ -10,6 +10,8 @@ import * as directives from 'vuetify/directives'
 import ConceptSetList from '@/components/concepts/ConceptSetList.vue'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useAuthStore } from '@/stores/auth'
+import { emptyEntityAccess } from '@/models/auth.types'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 
 vi.mock('@/composables/useI18n', async () => {
@@ -51,6 +53,18 @@ describe('ConceptSetList', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     setActivePinia(createPinia())
+    // Grant create/write access to concept sets so the add and edit
+    // action buttons render enabled by default.
+    const authStore = useAuthStore()
+    authStore.setUser({
+      login: 'tester',
+      displayName: 'tester',
+      permissionIdx: {
+        create: ['create:conceptset'],
+        write: ['write:conceptset'],
+      },
+      entityAccess: emptyEntityAccess(),
+    })
   })
 
   it('should mount successfully', () => {
@@ -156,12 +170,11 @@ describe('ConceptSetList', () => {
     const openCreateEditorSpy = vi.spyOn(store, 'openCreateEditor')
 
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const addBtn = buttons.find(btn => btn.text().includes('Add concept set'))
+    const addBtn = buttons.find(btn => btn.text().includes('New Concept Set'))
 
-    if (addBtn) {
-      await addBtn.trigger('click')
-      expect(openCreateEditorSpy).toHaveBeenCalled()
-    }
+    expect(addBtn).toBeDefined()
+    await addBtn!.trigger('click')
+    expect(openCreateEditorSpy).toHaveBeenCalled()
   })
 
   it('should display error alert when store has error', async () => {
@@ -193,21 +206,29 @@ describe('ConceptSetList', () => {
   })
 
   it('should open edit editor when edit button is clicked', async () => {
-    const wrapper = mountComponent()
     const store = useConceptSetsStore()
+    // The real fetchAll() rejects against the unmocked HTTP layer and
+    // resets conceptSets to [] once it settles, racing the loading flag
+    // back to true and hiding the action-column buttons behind
+    // VDataTable's loading rows. Stub it so the seeded fixture below is
+    // what actually renders.
+    vi.spyOn(store, 'fetchAll').mockResolvedValue()
 
-    store.filteredSets = mockConceptSets
+    const wrapper = mountComponent()
+
+    // filteredSets is a computed derived from conceptSets; assigning to it
+    // directly is a silent no-op, so seed the underlying source list instead.
+    store.conceptSets = mockConceptSets
     const openEditEditorSpy = vi.spyOn(store, 'openEditEditor')
 
     await wrapper.vm.$nextTick()
 
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const editButtons = buttons.filter(btn => btn.props('icon') === 'mdi-pencil')
+    const editButtons = buttons.filter(btn => btn.props('icon') === 'mdi-pencil-outline')
 
-    if (editButtons.length > 0) {
-      await editButtons[0].trigger('click')
-      expect(openEditEditorSpy).toHaveBeenCalledWith(123)
-    }
+    expect(editButtons.length).toBeGreaterThan(0)
+    await editButtons[0].trigger('click')
+    expect(openEditEditorSpy).toHaveBeenCalledWith(123)
   })
 
   it('should format author name from object', async () => {

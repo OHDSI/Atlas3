@@ -50,6 +50,8 @@ describe('FeatureAnalysisAggregateSchema', () => {
     if (result.success) {
       // passthrough keeps extra fields so future API additions don't break us
       expect((result.data as Record<string, unknown>).futureField).toBe('kept')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 
@@ -116,6 +118,8 @@ describe('FeatureAnalysisSchema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toHaveProperty('hasWriteAccess')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 
@@ -173,6 +177,8 @@ describe('FeatureAnalysisListItemSchema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toHaveProperty('hasWriteAccess')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 

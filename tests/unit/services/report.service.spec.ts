@@ -87,7 +87,11 @@ describe('services/report.service', () => {
         expect.any(Object)
       )
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.summary?.totalPersons).toBe(800)
+      if (result.success) {
+        expect(result.data.summary?.totalPersons).toBe(800)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('reports a network failure as ApiResult, not a thrown error', async () => {
@@ -107,7 +111,11 @@ describe('services/report.service', () => {
       const result = await getCohortReport(123, 'SYNPUF1K')
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.status).toBe(0)
+      if (result.success) {
+        expect.fail('expected getCohortReport to fail')
+      } else {
+        expect(result.error.status).toBe(0)
+      }
     })
 
     it('fails when the summary is missing', async () => {
@@ -167,7 +175,11 @@ describe('services/report.service', () => {
       const result = await getCompletedAnalyses(123, 'SYNPUF1K')
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toEqual([1, 2, 3])
+      if (result.success) {
+        expect(result.data).toEqual([1, 2, 3])
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('returns a failure ApiResult on error', async () => {
@@ -176,7 +188,11 @@ describe('services/report.service', () => {
       const result = await getCompletedAnalyses(123, 'SYNPUF1K')
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.message).toContain('Network error')
+      if (result.success) {
+        expect.fail('expected getCompletedAnalyses to fail')
+      } else {
+        expect(result.error.message).toContain('Network error')
+      }
     })
   })
 

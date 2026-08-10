@@ -62,7 +62,11 @@ describe('services/characterization.service', () => {
       const result = await listCharacterizations()
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toHaveLength(2)
+      if (result.success) {
+        expect(result.data).toHaveLength(2)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/cohort-characterization?size=10000')
     })
@@ -73,7 +77,11 @@ describe('services/characterization.service', () => {
       const result = await listCharacterizations()
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data[0].id).toBe(5)
+      if (result.success) {
+        expect(result.data[0].id).toBe(5)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('reports a parse failure as ApiResult rather than throwing', async () => {
@@ -90,7 +98,11 @@ describe('services/characterization.service', () => {
       const result = await listCharacterizations()
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.message).toBe('network error')
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
+        expect(result.error.message).toBe('network error')
+      }
     })
   })
 
@@ -107,7 +119,11 @@ describe('services/characterization.service', () => {
       const result = await getCharacterization(1)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.status).toBe(403)
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
+        expect(result.error.status).toBe(403)
+      }
     })
 
     it('does not import the webapi barrel', async () => {
@@ -123,7 +139,11 @@ describe('services/characterization.service', () => {
       const result = await getCharacterization(1)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.name).toBe('My Characterization')
+      if (result.success) {
+        expect(result.data.name).toBe('My Characterization')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/cohort-characterization/1/design')
     })
@@ -144,7 +164,11 @@ describe('services/characterization.service', () => {
       const result = await createCharacterization(validDesign)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.id).toBe(1)
+      if (result.success) {
+        expect(result.data.id).toBe(1)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url, init] = mockFetch.mock.calls[0]
       expect(url).toContain('/cohort-characterization')
       expect(init.method).toBe('POST')
@@ -156,7 +180,9 @@ describe('services/characterization.service', () => {
       const result = await createCharacterization(validDesign)
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe('Invalid response from POST /cohort-characterization')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
@@ -190,7 +216,11 @@ describe('services/characterization.service', () => {
       const result = await updateCharacterization(validDesign)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.id).toBe(1)
+      if (result.success) {
+        expect(result.data.id).toBe(1)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url, init] = mockFetch.mock.calls[0]
       expect(url).toContain('/cohort-characterization/1')
       expect(init.method).toBe('PUT')
@@ -200,7 +230,11 @@ describe('services/characterization.service', () => {
       const result = await updateCharacterization({ ...validDesign, id: undefined })
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.message).toBe('updateCharacterization requires def.id')
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
+        expect(result.error.message).toBe('updateCharacterization requires def.id')
+      }
       expect(mockFetch).not.toHaveBeenCalled()
     })
 
@@ -210,7 +244,9 @@ describe('services/characterization.service', () => {
       const result = await updateCharacterization(validDesign)
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe('Invalid response from PUT /cohort-characterization/1')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
@@ -247,7 +283,11 @@ describe('services/characterization.service', () => {
       const result = await copyCharacterization(1)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.id).toBe(99)
+      if (result.success) {
+        expect(result.data.id).toBe(99)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url, init] = mockFetch.mock.calls[0]
       expect(url).toContain('/cohort-characterization/1')
       expect(init.method).toBe('POST')
@@ -259,7 +299,9 @@ describe('services/characterization.service', () => {
       const result = await copyCharacterization(1)
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe('Invalid response from POST /cohort-characterization/1')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
@@ -273,21 +315,33 @@ describe('services/characterization.service', () => {
       ok(true)
       const result = await characterizationNameExists(0, 'name')
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toBe(true)
+      if (result.success) {
+        expect(result.data).toBe(true)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('treats a positive number as an existing name (legacy WebAPI id-count reply)', async () => {
       ok(1)
       const result = await characterizationNameExists(0, 'name')
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toBe(true)
+      if (result.success) {
+        expect(result.data).toBe(true)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('falls back to Boolean() coercion for an unexpected response shape', async () => {
       ok(null)
       const result = await characterizationNameExists(0, 'name')
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toBe(false)
+      if (result.success) {
+        expect(result.data).toBe(false)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('encodes the name parameter', async () => {
@@ -304,7 +358,11 @@ describe('services/characterization.service', () => {
       ok({ some: 'design' })
       const result = await exportCharacterization(1)
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toEqual({ some: 'design' })
+      if (result.success) {
+        expect(result.data).toEqual({ some: 'design' })
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
   })
 
@@ -315,7 +373,11 @@ describe('services/characterization.service', () => {
       const result = await importCharacterization({ raw: 'design' })
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.id).toBe(1)
+      if (result.success) {
+        expect(result.data.id).toBe(1)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url, init] = mockFetch.mock.calls[0]
       expect(url).toContain('/cohort-characterization/import')
       expect(init.method).toBe('POST')
@@ -327,7 +389,9 @@ describe('services/characterization.service', () => {
       const result = await importCharacterization({ raw: 'design' })
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe('Invalid response from POST /cohort-characterization/import')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
@@ -349,6 +413,8 @@ describe('services/characterization.service', () => {
       if (result.success) {
         expect(result.data).toHaveLength(2)
         expect(result.data[0].status).toBe('COMPLETED')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
     })
 
@@ -368,7 +434,11 @@ describe('services/characterization.service', () => {
       const result = await getCharacterizationExecution(1)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.id).toBe(1)
+      if (result.success) {
+        expect(result.data.id).toBe(1)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('reports a parse failure carrying the status and Zod issues', async () => {
@@ -377,7 +447,9 @@ describe('services/characterization.service', () => {
       const result = await getCharacterizationExecution(1)
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe(
           'Invalid response from /cohort-characterization/generation/1'
         )
@@ -395,7 +467,11 @@ describe('services/characterization.service', () => {
       const result = await generateCharacterization(1, 'CDM_A')
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.id).toBe(1)
+      if (result.success) {
+        expect(result.data.id).toBe(1)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url, init] = mockFetch.mock.calls[0]
       expect(url).toContain('/cohort-characterization/1/generation/CDM_A')
       expect(init.method).toBe('POST')
@@ -410,6 +486,8 @@ describe('services/characterization.service', () => {
       if (result.success) {
         expect(result.data.id).toBe(456)
         expect(result.data.sourceKey).toBe('CDM_A')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
     })
 
@@ -419,7 +497,11 @@ describe('services/characterization.service', () => {
       const result = await generateCharacterization(1, 'CDM_A')
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toBeNull()
+      if (result.success) {
+        expect(result.data).toBeNull()
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       expect(vi.mocked(logger.warn)).toHaveBeenCalledWith(
         'CharacterizationService',
         'Generation response from POST /cohort-characterization/1/generation/CDM_A carried no execution id',
@@ -436,6 +518,8 @@ describe('services/characterization.service', () => {
       if (result.success) {
         expect(result.data?.id).toBe(789)
         expect(result.data?.status).toBe('STARTING')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
     })
 
@@ -445,7 +529,9 @@ describe('services/characterization.service', () => {
       const result = await generateCharacterization(1, 'CDM_A')
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe(
           'Invalid response from POST /cohort-characterization/1/generation/CDM_A'
         )
@@ -474,7 +560,11 @@ describe('services/characterization.service', () => {
       ok({ some: 'snapshot' })
       const result = await getCharacterizationDesignSnapshot(99)
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toEqual({ some: 'snapshot' })
+      if (result.success) {
+        expect(result.data).toEqual({ some: 'snapshot' })
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
   })
 
@@ -483,7 +573,11 @@ describe('services/characterization.service', () => {
       ok(123)
       const result = await getCharacterizationResultCount(1)
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toBe(123)
+      if (result.success) {
+        expect(result.data).toBe(123)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('reports a non-number response as ApiResult failure', async () => {
@@ -500,7 +594,11 @@ describe('services/characterization.service', () => {
       const result = await getCharacterizationResults(1, { thresholdValuePct: 0 })
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toHaveLength(2)
+      if (result.success) {
+        expect(result.data).toHaveLength(2)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('flattens the `{ reports: [...] }` wrapper', async () => {
@@ -509,7 +607,11 @@ describe('services/characterization.service', () => {
       const result = await getCharacterizationResults(1, { thresholdValuePct: 0 })
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toHaveLength(2)
+      if (result.success) {
+        expect(result.data).toHaveLength(2)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('reports an unexpected shape as ApiResult failure carrying the offending payload', async () => {
@@ -518,7 +620,9 @@ describe('services/characterization.service', () => {
       const result = await getCharacterizationResults(1, { thresholdValuePct: 0 })
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe(
           'Invalid response from POST /cohort-characterization/generation/1/result'
         )
@@ -535,7 +639,11 @@ describe('services/characterization.service', () => {
       const result = await explorePrevalence(1, 2, 3, 4)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toEqual({ stats: 'data' })
+      if (result.success) {
+        expect(result.data).toEqual({ stats: 'data' })
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/cohort-characterization/generation/1/explore/prevalence/2/3/4')
     })

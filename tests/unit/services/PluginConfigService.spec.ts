@@ -577,15 +577,24 @@ describe('PluginConfigService', () => {
       expect(typeof unsubscribe).toBe('function')
     })
 
-    it('should remove callback when unsubscribed', () => {
+    it('should remove callback when unsubscribed', async () => {
       const callback = vi.fn()
       const unsubscribe = service.onChange(callback)
 
       unsubscribe()
 
-      // Internal listeners array should not contain the callback
-      // We can't directly test this, but unsubscribe should work
-      expect(true).toBe(true)
+      // notifyListeners only fires once a manifest has loaded; load one, then
+      // trigger it directly (it's private, only reachable via HMR in prod)
+      // and confirm the unsubscribed callback is not invoked.
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ version: '1.0', plugins: [] }),
+      })
+      await service.loadConfig()
+      ;(service as unknown as { notifyListeners: () => void }).notifyListeners()
+
+      expect(callback).not.toHaveBeenCalled()
     })
   })
 

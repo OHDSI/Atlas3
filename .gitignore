@@ -106,3 +106,9 @@ docs/superpowers/
 
 # Differential-translation work files (transient)
 .i18n-work/
+
+reports/
+.stryker-tmp/
+
+# Superpowers/SDD working artifacts (transient, not part of the product)
+.superpowers/

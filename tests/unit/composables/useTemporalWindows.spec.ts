@@ -348,19 +348,19 @@ describe('useTemporalWindows', () => {
         expect(preset).toHaveProperty('value')
         expect(typeof preset.label).toBe('string')
 
-        if (preset.value.startWindow) {
-          expect(preset.value.startWindow).toHaveProperty('days')
-          expect(preset.value.startWindow).toHaveProperty('beforeAfter')
-          expect(preset.value.startWindow).toHaveProperty('useIndexEnd')
-          expect(preset.value.startWindow).toHaveProperty('useEventEnd')
-        }
+        // Every preset defines both edges of the window; a preset that omitted
+        // one would silently disable validation for that side.
+        expect(preset.value.startWindow).toBeDefined()
+        expect(preset.value.startWindow).toHaveProperty('days')
+        expect(preset.value.startWindow).toHaveProperty('beforeAfter')
+        expect(preset.value.startWindow).toHaveProperty('useIndexEnd')
+        expect(preset.value.startWindow).toHaveProperty('useEventEnd')
 
-        if (preset.value.endWindow) {
-          expect(preset.value.endWindow).toHaveProperty('days')
-          expect(preset.value.endWindow).toHaveProperty('beforeAfter')
-          expect(preset.value.endWindow).toHaveProperty('useIndexEnd')
-          expect(preset.value.endWindow).toHaveProperty('useEventEnd')
-        }
+        expect(preset.value.endWindow).toBeDefined()
+        expect(preset.value.endWindow).toHaveProperty('days')
+        expect(preset.value.endWindow).toHaveProperty('beforeAfter')
+        expect(preset.value.endWindow).toHaveProperty('useIndexEnd')
+        expect(preset.value.endWindow).toHaveProperty('useEventEnd')
       })
     })
   })

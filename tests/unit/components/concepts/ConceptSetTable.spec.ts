@@ -123,12 +123,11 @@ describe('ConceptSetTable', () => {
 
     // Find the first descendants checkbox (there are multiple checkboxes per row)
     // Note: Items are sorted by conceptId ascending, so first item is 192855
-    if (checkboxes.length > 0) {
-      await checkboxes[0].vm.$emit('update:modelValue', false)
+    expect(checkboxes.length).toBeGreaterThan(0)
+    await checkboxes[0].vm.$emit('update:modelValue', false)
 
-      expect(wrapper.emitted('toggle:descendants')).toBeTruthy()
-      expect(wrapper.emitted('toggle:descendants')![0]).toEqual([192855])
-    }
+    expect(wrapper.emitted('toggle:descendants')).toBeTruthy()
+    expect(wrapper.emitted('toggle:descendants')![0]).toEqual([192855])
   })
 
   it('should emit toggle:mapped when mapped checkbox is clicked', async () => {
@@ -137,12 +136,11 @@ describe('ConceptSetTable', () => {
 
     // Find the mapped checkbox (second in each row)
     // Note: Items are sorted by conceptId ascending, so first item is 192855
-    if (checkboxes.length > 1) {
-      await checkboxes[1].vm.$emit('update:modelValue', true)
+    expect(checkboxes.length).toBeGreaterThan(1)
+    await checkboxes[1].vm.$emit('update:modelValue', true)
 
-      expect(wrapper.emitted('toggle:mapped')).toBeTruthy()
-      expect(wrapper.emitted('toggle:mapped')![0]).toEqual([192855])
-    }
+    expect(wrapper.emitted('toggle:mapped')).toBeTruthy()
+    expect(wrapper.emitted('toggle:mapped')![0]).toEqual([192855])
   })
 
   it('should emit toggle:exclude when exclude checkbox is clicked', async () => {
@@ -151,12 +149,11 @@ describe('ConceptSetTable', () => {
 
     // Find the exclude checkbox (third in each row)
     // Note: Items are sorted by conceptId ascending, so first item is 192855
-    if (checkboxes.length > 2) {
-      await checkboxes[2].vm.$emit('update:modelValue', true)
+    expect(checkboxes.length).toBeGreaterThan(2)
+    await checkboxes[2].vm.$emit('update:modelValue', true)
 
-      expect(wrapper.emitted('toggle:exclude')).toBeTruthy()
-      expect(wrapper.emitted('toggle:exclude')![0]).toEqual([192855])
-    }
+    expect(wrapper.emitted('toggle:exclude')).toBeTruthy()
+    expect(wrapper.emitted('toggle:exclude')![0]).toEqual([192855])
   })
 
   it('should emit remove when delete button is clicked', async () => {
@@ -165,12 +162,11 @@ describe('ConceptSetTable', () => {
     const deleteButtons = buttons.filter(btn => btn.props('icon') === 'mdi-delete-outline')
 
     // Note: Items are sorted by conceptId ascending, so first item is 192855
-    if (deleteButtons.length > 0) {
-      await deleteButtons[0].trigger('click')
+    expect(deleteButtons.length).toBeGreaterThan(0)
+    await deleteButtons[0].trigger('click')
 
-      expect(wrapper.emitted('remove')).toBeTruthy()
-      expect(wrapper.emitted('remove')![0]).toEqual([192855])
-    }
+    expect(wrapper.emitted('remove')).toBeTruthy()
+    expect(wrapper.emitted('remove')![0]).toEqual([192855])
   })
 
   it('should display concept type badges', () => {
@@ -235,9 +231,8 @@ describe('ConceptSetTable', () => {
       chip.text().includes('Non-Standard')
     )
 
-    if (typeChips.length > 0) {
-      expect(typeChips[0].props('color')).toBe('primary')
-    }
+    expect(typeChips.length).toBeGreaterThan(0)
+    expect(typeChips[0].props('color')).toBe('primary')
   })
 
   it('should use info color for Classification concepts', async () => {
@@ -247,9 +242,8 @@ describe('ConceptSetTable', () => {
     const chips = wrapper.findAllComponents({ name: 'VChip' })
     const typeChips = chips.filter(chip => chip.text().includes('Classification'))
 
-    if (typeChips.length > 0) {
-      expect(typeChips[0].props('color')).toBe('info')
-    }
+    expect(typeChips.length).toBeGreaterThan(0)
+    expect(typeChips[0].props('color')).toBe('info')
   })
 
   it('should use error color for exclude checkbox', () => {

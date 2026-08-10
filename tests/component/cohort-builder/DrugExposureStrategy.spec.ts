@@ -95,10 +95,9 @@ describe('DrugExposureStrategy', () => {
       btn.props('icon') === 'mdi-plus'
     )
 
-    if (button) {
-      await button.trigger('click')
-      expect(wrapper.emitted('select-drug-concept-set')).toBeTruthy()
-    }
+    expect(button).toBeDefined()
+    await button!.trigger('click')
+    expect(wrapper.emitted('select-drug-concept-set')).toBeTruthy()
   })
 
   it('should emit edit-drug-concept-set when chip is clicked', async () => {

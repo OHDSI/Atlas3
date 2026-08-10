@@ -101,34 +101,29 @@ describe('Pathway Edge Cases', () => {
   it('pathway with many event cohorts (>3) validates', () => {
     const pw = pathways.find(p => (p.eventCohorts as unknown[])?.length > 3)
     expect(pw).toBeDefined()
-    if (pw) {
-      const result = PathwaySchema.passthrough().safeParse(pw)
-      expect(result.success).toBe(true)
-    }
+    const result = PathwaySchema.passthrough().safeParse(pw)
+    expect(result.success).toBe(true)
   })
 
   it('pathway with allowRepeats=true validates', () => {
     const pw = pathways.find(p => p.allowRepeats === true)
-    if (pw) {
-      const result = PathwaySchema.passthrough().safeParse(pw)
-      expect(result.success).toBe(true)
-    }
+    expect(pw).toBeDefined()
+    const result = PathwaySchema.passthrough().safeParse(pw)
+    expect(result.success).toBe(true)
   })
 
   it('pathway with maxDepth != 5 validates', () => {
     const pw = pathways.find(p => (p.maxDepth as number) !== 5)
-    if (pw) {
-      const result = PathwaySchema.passthrough().safeParse(pw)
-      expect(result.success).toBe(true)
-    }
+    expect(pw).toBeDefined()
+    const result = PathwaySchema.passthrough().safeParse(pw)
+    expect(result.success).toBe(true)
   })
 
   it('pathway with large combinationWindow validates', () => {
     const pw = pathways.find(p => (p.combinationWindow as number) > 100)
-    if (pw) {
-      const result = PathwaySchema.passthrough().safeParse(pw)
-      expect(result.success).toBe(true)
-    }
+    expect(pw).toBeDefined()
+    const result = PathwaySchema.passthrough().safeParse(pw)
+    expect(result.success).toBe(true)
   })
 
   it('pathways cover diverse combinationWindow values', () => {
@@ -208,14 +203,12 @@ describe('Incidence Rate Edge Cases', () => {
       return expr.studyWindow && expr.studyWindow !== null
     })
     expect(ir).toBeDefined()
-    if (ir) {
-      const expr = ir.expression as Record<string, unknown>
-      const sw = expr.studyWindow as Record<string, unknown>
-      expect(typeof sw.startDate).toBe('string')
-      expect(typeof sw.endDate).toBe('string')
-      const result = StudyWindowSchema.safeParse(sw)
-      expect(result.success).toBe(true)
-    }
+    const expr = ir!.expression as Record<string, unknown>
+    const sw = expr.studyWindow as Record<string, unknown>
+    expect(typeof sw.startDate).toBe('string')
+    expect(typeof sw.endDate).toBe('string')
+    const result = StudyWindowSchema.safeParse(sw)
+    expect(result.success).toBe(true)
   })
 
   it('IR with null studyWindow validates', () => {
@@ -224,10 +217,8 @@ describe('Incidence Rate Edge Cases', () => {
       return expr.studyWindow === null
     })
     expect(ir).toBeDefined()
-    if (ir) {
-      const result = IncidenceRateExpressionSchema.safeParse(ir.expression)
-      expect(result.success).toBe(true)
-    }
+    const result = IncidenceRateExpressionSchema.safeParse(ir!.expression)
+    expect(result.success).toBe(true)
   })
 
   it('IR with empty outcomeIds validates', () => {
@@ -235,10 +226,9 @@ describe('Incidence Rate Edge Cases', () => {
       const expr = i.expression as Record<string, unknown>
       return (expr.outcomeIds as number[])?.length === 0
     })
-    if (ir) {
-      const result = IncidenceRateExpressionSchema.safeParse(ir.expression)
-      expect(result.success).toBe(true)
-    }
+    expect(ir).toBeDefined()
+    const result = IncidenceRateExpressionSchema.safeParse(ir!.expression)
+    expect(result.success).toBe(true)
   })
 
   it('IR with strata containing null description validates', () => {
@@ -246,10 +236,9 @@ describe('Incidence Rate Edge Cases', () => {
       const expr = i.expression as Record<string, unknown>
       return (expr.strata as Record<string, unknown>[])?.some(s => s.description === null)
     })
-    if (ir) {
-      const result = IncidenceRateExpressionSchema.safeParse(ir.expression)
-      expect(result.success).toBe(true)
-    }
+    expect(ir).toBeDefined()
+    const result = IncidenceRateExpressionSchema.safeParse(ir!.expression)
+    expect(result.success).toBe(true)
   })
 
   it('IR with multiple targets (>3) validates', () => {
@@ -258,10 +247,8 @@ describe('Incidence Rate Edge Cases', () => {
       return (expr.targetIds as number[])?.length > 3
     })
     expect(ir).toBeDefined()
-    if (ir) {
-      const result = IncidenceRateExpressionSchema.safeParse(ir.expression)
-      expect(result.success).toBe(true)
-    }
+    const result = IncidenceRateExpressionSchema.safeParse(ir!.expression)
+    expect(result.success).toBe(true)
   })
 
   it('IR with multiple outcomes (>3) validates', () => {
@@ -270,10 +257,8 @@ describe('Incidence Rate Edge Cases', () => {
       return (expr.outcomeIds as number[])?.length > 3
     })
     expect(ir).toBeDefined()
-    if (ir) {
-      const result = IncidenceRateExpressionSchema.safeParse(ir.expression)
-      expect(result.success).toBe(true)
-    }
+    const result = IncidenceRateExpressionSchema.safeParse(ir!.expression)
+    expect(result.success).toBe(true)
   })
 
   it('IR with many strata (>3) validates', () => {
@@ -282,10 +267,8 @@ describe('Incidence Rate Edge Cases', () => {
       return (expr.strata as unknown[])?.length > 3
     })
     expect(ir).toBeDefined()
-    if (ir) {
-      const result = IncidenceRateExpressionSchema.safeParse(ir.expression)
-      expect(result.success).toBe(true)
-    }
+    const result = IncidenceRateExpressionSchema.safeParse(ir!.expression)
+    expect(result.success).toBe(true)
   })
 
   it('IR with strata containing criteria validates', () => {
@@ -299,15 +282,15 @@ describe('Incidence Rate Edge Cases', () => {
         )
       })
     })
-    if (ir) {
-      const result = IncidenceRateExpressionSchema.safeParse(ir.expression)
-      expect(result.success).toBe(true)
-      const expr = ir.expression as Record<string, unknown>
-      const strata = expr.strata as Record<string, unknown>[]
-      for (const s of strata) {
-        const strataResult = StratifyRuleSchema.safeParse(s)
-        expect(strataResult.success).toBe(true)
-      }
+    expect(ir).toBeDefined()
+    const result = IncidenceRateExpressionSchema.safeParse(ir!.expression)
+    expect(result.success).toBe(true)
+    const expr = ir!.expression as Record<string, unknown>
+    const strata = expr.strata as Record<string, unknown>[]
+    expect(strata.length).toBeGreaterThan(0)
+    for (const s of strata) {
+      const strataResult = StratifyRuleSchema.safeParse(s)
+      expect(strataResult.success).toBe(true)
     }
   })
 
@@ -317,10 +300,8 @@ describe('Incidence Rate Edge Cases', () => {
       return (expr.ConceptSets as unknown[])?.length > 0
     })
     expect(ir).toBeDefined()
-    if (ir) {
-      const result = IncidenceRateExpressionSchema.safeParse(ir.expression)
-      expect(result.success).toBe(true)
-    }
+    const result = IncidenceRateExpressionSchema.safeParse(ir!.expression)
+    expect(result.success).toBe(true)
   })
 
   it('IR with inline targetCohorts preserves them via passthrough', () => {
@@ -329,13 +310,11 @@ describe('Incidence Rate Edge Cases', () => {
       return (expr.targetCohorts as unknown[])?.length > 0
     })
     expect(ir).toBeDefined()
-    if (ir) {
-      const result = IncidenceRateExpressionSchema.safeParse(ir.expression)
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect((result.data as Record<string, unknown>).targetCohorts).toBeDefined()
-      }
+    const result = IncidenceRateExpressionSchema.safeParse(ir!.expression)
+    if (!result.success) {
+      expect.fail(`expected IR expression to parse but got: ${JSON.stringify(result.error.issues)}`)
     }
+    expect((result.data as Record<string, unknown>).targetCohorts).toBeDefined()
   })
 
   it('IRs cover diverse target counts', () => {
@@ -387,52 +366,54 @@ describe('Characterization Format Compatibility', () => {
     (c.featureAnalyses as unknown[])?.length > 0
   )
 
-  if (charsWithContent.length > 0) {
-    it(`validates ${charsWithContent.length} characterizations with content against full schema`, () => {
-      for (const char of charsWithContent) {
-        const result = CharacterizationDefinitionSchema.safeParse(char)
-        if (!result.success) {
-          const issues = result.error.issues.map(
-            iss => `${iss.path.join('.')}: ${iss.message}`
-          )
-          expect.fail(
-            `CharacterizationDefinitionSchema failed for "${char.name}":\n${issues.join('\n')}`
-          )
-        }
+  it('at least one characterization has cohorts or feature analyses', () => {
+    expect(charsWithContent.length).toBeGreaterThan(0)
+  })
+
+  it(`validates ${charsWithContent.length} characterizations with content against full schema`, () => {
+    for (const char of charsWithContent) {
+      const result = CharacterizationDefinitionSchema.safeParse(char)
+      if (!result.success) {
+        const issues = result.error.issues.map(
+          iss => `${iss.path.join('.')}: ${iss.message}`
+        )
+        expect.fail(
+          `CharacterizationDefinitionSchema failed for "${char.name}":\n${issues.join('\n')}`
+        )
+      }
+    }
+  })
+
+  charsWithContent.forEach((char) => {
+    const name = (char.name as string) || 'unnamed'
+
+    it(`"${name}" has valid cohort references`, () => {
+      const cohorts = (char.cohorts || []) as Record<string, unknown>[]
+      for (const c of cohorts) {
+        expect(typeof c.id).toBe('number')
+        expect(typeof c.name).toBe('string')
       }
     })
 
-    charsWithContent.forEach((char) => {
-      const name = (char.name as string) || 'unnamed'
-
-      it(`"${name}" has valid cohort references`, () => {
-        const cohorts = (char.cohorts || []) as Record<string, unknown>[]
-        for (const c of cohorts) {
-          expect(typeof c.id).toBe('number')
-          expect(typeof c.name).toBe('string')
-        }
-      })
-
-      it(`"${name}" has valid feature analysis references`, () => {
-        const fas = (char.featureAnalyses || []) as Record<string, unknown>[]
-        for (const fa of fas) {
-          expect(typeof fa.id).toBe('number')
-          if (fa.statType) {
-            expect(['PREVALENCE', 'DISTRIBUTION']).toContain(fa.statType)
-          }
-        }
-      })
-
-      it(`"${name}" has valid strata (if present)`, () => {
-        const strata = (char.stratas || []) as Record<string, unknown>[]
-        for (const s of strata) {
-          expect(s).toHaveProperty('id')
-          expect(s).toHaveProperty('name')
-          expect(typeof s.name).toBe('string')
-        }
-      })
+    it(`"${name}" has valid feature analysis references`, () => {
+      const fas = (char.featureAnalyses || []) as Record<string, unknown>[]
+      const withStatType = fas.filter(fa => fa.statType)
+      expect(withStatType.length).toBe(fas.length)
+      for (const fa of fas) {
+        expect(typeof fa.id).toBe('number')
+        expect(['PREVALENCE', 'DISTRIBUTION']).toContain(fa.statType)
+      }
     })
-  }
+
+    it(`"${name}" has valid strata (if present)`, () => {
+      const strata = (char.stratas || []) as Record<string, unknown>[]
+      for (const s of strata) {
+        expect(s).toHaveProperty('id')
+        expect(s).toHaveProperty('name')
+        expect(typeof s.name).toBe('string')
+      }
+    })
+  })
 })
 
 describe('Characterization Edge Cases', () => {
@@ -440,42 +421,37 @@ describe('Characterization Edge Cases', () => {
 
   it('characterization with strata validates', () => {
     const char = chars.find(c => ((c.stratas || []) as unknown[]).length > 0)
-    if (char) {
-      const result = CharacterizationDefinitionSchema.safeParse(char)
-      expect(result.success).toBe(true)
-    }
+    expect(char).toBeDefined()
+    const result = CharacterizationDefinitionSchema.safeParse(char)
+    expect(result.success).toBe(true)
   })
 
   it('characterization with parameters validates', () => {
     const char = chars.find(c => ((c.parameters || []) as unknown[]).length > 0)
-    if (char) {
-      const result = CharacterizationDefinitionSchema.safeParse(char)
-      expect(result.success).toBe(true)
-    }
+    expect(char).toBeDefined()
+    const result = CharacterizationDefinitionSchema.safeParse(char)
+    expect(result.success).toBe(true)
   })
 
   it('characterization with multiple cohorts validates', () => {
     const char = chars.find(c => ((c.cohorts || []) as unknown[]).length > 1)
-    if (char) {
-      const result = CharacterizationDefinitionSchema.safeParse(char)
-      expect(result.success).toBe(true)
-    }
+    expect(char).toBeDefined()
+    const result = CharacterizationDefinitionSchema.safeParse(char)
+    expect(result.success).toBe(true)
   })
 
   it('characterization with multiple strata validates', () => {
     const char = chars.find(c => ((c.stratas || []) as unknown[]).length > 1)
-    if (char) {
-      const result = CharacterizationDefinitionSchema.safeParse(char)
-      expect(result.success).toBe(true)
-    }
+    expect(char).toBeDefined()
+    const result = CharacterizationDefinitionSchema.safeParse(char)
+    expect(result.success).toBe(true)
   })
 
   it('characterization with tags validates', () => {
     const char = chars.find(c => ((c.tags || []) as unknown[]).length > 0)
-    if (char) {
-      const result = CharacterizationDefinitionSchema.safeParse(char)
-      expect(result.success).toBe(true)
-    }
+    expect(char).toBeDefined()
+    const result = CharacterizationDefinitionSchema.safeParse(char)
+    expect(result.success).toBe(true)
   })
 
   it('characterization with DISTRIBUTION feature validates', () => {
@@ -483,26 +459,23 @@ describe('Characterization Edge Cases', () => {
       const fas = (c.featureAnalyses || []) as Record<string, unknown>[]
       return fas.some(fa => fa.statType === 'DISTRIBUTION')
     })
-    if (char) {
-      const result = CharacterizationDefinitionSchema.safeParse(char)
-      expect(result.success).toBe(true)
-    }
+    expect(char).toBeDefined()
+    const result = CharacterizationDefinitionSchema.safeParse(char)
+    expect(result.success).toBe(true)
   })
 
   it('characterization with createdBy object validates', () => {
     const char = chars.find(c => c.createdBy && typeof c.createdBy === 'object')
-    if (char) {
-      const result = CharacterizationDefinitionSchema.safeParse(char)
-      expect(result.success).toBe(true)
-    }
+    expect(char).toBeDefined()
+    const result = CharacterizationDefinitionSchema.safeParse(char)
+    expect(result.success).toBe(true)
   })
 
   it('characterization with stratifiedBy field validates', () => {
     const char = chars.find(c => c.stratifiedBy !== undefined)
-    if (char) {
-      const result = CharacterizationDefinitionSchema.safeParse(char)
-      expect(result.success).toBe(true)
-    }
+    expect(char).toBeDefined()
+    const result = CharacterizationDefinitionSchema.safeParse(char)
+    expect(result.success).toBe(true)
   })
 })
 
@@ -517,88 +490,87 @@ describe('Feature Analysis Format Compatibility', () => {
     featureAnalyses = []
   }
 
-  if (featureAnalyses.length > 0) {
-    it(`validates all ${featureAnalyses.length} feature analyses against schema`, () => {
-      for (const fa of featureAnalyses) {
-        const result = FeatureAnalysisSchema.safeParse(fa)
-        if (!result.success) {
-          const issues = result.error.issues.map(
-            iss => `${iss.path.join('.')}: ${iss.message}`
-          )
-          expect.fail(
-            `FeatureAnalysisSchema failed for "${fa.name}" (type=${fa.type}):\n${issues.join('\n')}`
-          )
-        }
+  it('fixture provides at least one feature analysis', () => {
+    expect(featureAnalyses.length).toBeGreaterThan(0)
+  })
+
+  it(`validates all ${featureAnalyses.length} feature analyses against schema`, () => {
+    for (const fa of featureAnalyses) {
+      const result = FeatureAnalysisSchema.safeParse(fa)
+      if (!result.success) {
+        const issues = result.error.issues.map(
+          iss => `${iss.path.join('.')}: ${iss.message}`
+        )
+        expect.fail(
+          `FeatureAnalysisSchema failed for "${fa.name}" (type=${fa.type}):\n${issues.join('\n')}`
+        )
       }
-    })
+    }
+  })
 
-    it('validates feature analyses as list items', () => {
-      for (const fa of featureAnalyses) {
-        const result = FeatureAnalysisListItemSchema.safeParse(fa)
-        if (!result.success) {
-          const issues = result.error.issues.map(
-            iss => `${iss.path.join('.')}: ${iss.message}`
-          )
-          expect.fail(
-            `FeatureAnalysisListItemSchema failed for "${fa.name}":\n${issues.join('\n')}`
-          )
-        }
+  it('validates feature analyses as list items', () => {
+    for (const fa of featureAnalyses) {
+      const result = FeatureAnalysisListItemSchema.safeParse(fa)
+      if (!result.success) {
+        const issues = result.error.issues.map(
+          iss => `${iss.path.join('.')}: ${iss.message}`
+        )
+        expect.fail(
+          `FeatureAnalysisListItemSchema failed for "${fa.name}":\n${issues.join('\n')}`
+        )
       }
-    })
+    }
+  })
 
-    it('covers PRESET type', () => {
-      const preset = featureAnalyses.find(fa => fa.type === 'PRESET')
-      expect(preset).toBeDefined()
-    })
+  it('covers PRESET type', () => {
+    const preset = featureAnalyses.find(fa => fa.type === 'PRESET')
+    expect(preset).toBeDefined()
+  })
 
-    it('covers CUSTOM_FE type', () => {
-      const custom = featureAnalyses.find(fa => fa.type === 'CUSTOM_FE')
-      expect(custom).toBeDefined()
-    })
+  it('covers CUSTOM_FE type', () => {
+    const custom = featureAnalyses.find(fa => fa.type === 'CUSTOM_FE')
+    expect(custom).toBeDefined()
+  })
 
-    it('covers CRITERIA_SET type', () => {
-      const criteria = featureAnalyses.find(fa => fa.type === 'CRITERIA_SET')
-      expect(criteria).toBeDefined()
-    })
+  it('covers CRITERIA_SET type', () => {
+    const criteria = featureAnalyses.find(fa => fa.type === 'CRITERIA_SET')
+    expect(criteria).toBeDefined()
+  })
 
-    it('PRESET design is a string (preset name)', () => {
-      const preset = featureAnalyses.find(fa => fa.type === 'PRESET')
-      if (preset) {
-        expect(typeof preset.design).toBe('string')
-      }
-    })
+  it('PRESET design is a string (preset name)', () => {
+    const preset = featureAnalyses.find(fa => fa.type === 'PRESET')
+    expect(preset).toBeDefined()
+    expect(typeof preset!.design).toBe('string')
+  })
 
-    it('CUSTOM_FE design is a string (SQL)', () => {
-      const custom = featureAnalyses.find(fa => fa.type === 'CUSTOM_FE')
-      if (custom) {
-        expect(typeof custom.design).toBe('string')
-      }
-    })
+  it('CUSTOM_FE design is a string (SQL)', () => {
+    const custom = featureAnalyses.find(fa => fa.type === 'CUSTOM_FE')
+    expect(custom).toBeDefined()
+    expect(typeof custom!.design).toBe('string')
+  })
 
-    it('CRITERIA_SET design is an array', () => {
-      const criteriaSet = featureAnalyses.find(fa => fa.type === 'CRITERIA_SET')
-      if (criteriaSet) {
-        expect(Array.isArray(criteriaSet.design)).toBe(true)
-      }
-    })
+  it('CRITERIA_SET design is an array', () => {
+    const criteriaSet = featureAnalyses.find(fa => fa.type === 'CRITERIA_SET')
+    expect(criteriaSet).toBeDefined()
+    expect(Array.isArray(criteriaSet!.design)).toBe(true)
+  })
 
-    it('feature analyses have valid domain values', () => {
-      const validDomains = ['CONDITION', 'DRUG', 'PROCEDURE', 'MEASUREMENT', 'OBSERVATION', 'DEVICE', 'VISIT']
-      for (const fa of featureAnalyses) {
-        if (fa.domain) {
-          expect(validDomains).toContain(fa.domain)
-        }
-      }
-    })
+  it('feature analyses have valid domain values', () => {
+    const validDomains = ['CONDITION', 'DRUG', 'PROCEDURE', 'MEASUREMENT', 'OBSERVATION', 'DEVICE', 'VISIT']
+    const withDomain = featureAnalyses.filter(fa => fa.domain)
+    expect(withDomain.length).toBe(featureAnalyses.length)
+    for (const fa of featureAnalyses) {
+      expect(validDomains).toContain(fa.domain)
+    }
+  })
 
-    it('feature analyses have valid statType values', () => {
-      for (const fa of featureAnalyses) {
-        if (fa.statType) {
-          expect(['PREVALENCE', 'DISTRIBUTION']).toContain(fa.statType)
-        }
-      }
-    })
-  }
+  it('feature analyses have valid statType values', () => {
+    const withStatType = featureAnalyses.filter(fa => fa.statType)
+    expect(withStatType.length).toBe(featureAnalyses.length)
+    for (const fa of featureAnalyses) {
+      expect(['PREVALENCE', 'DISTRIBUTION']).toContain(fa.statType)
+    }
+  })
 })
 
 // ─── Cross-Type Validation ───────────────────────────────────────────────────
@@ -609,29 +581,31 @@ describe('Cross-Type Format Consistency', () => {
   const chars = loadJSON('characterizations.json') as Record<string, unknown>[]
 
   it('all analysis types use numeric timestamps', () => {
-    for (const item of [...pathways, ...irs, ...chars]) {
-      if (item.createdDate !== undefined) {
-        expect(typeof item.createdDate).toBe('number')
-      }
-      if (item.modifiedDate !== undefined) {
-        expect(typeof item.modifiedDate).toBe('number')
-      }
+    const items = [...pathways, ...irs, ...chars]
+    for (const item of items) {
+      expect(typeof item.createdDate).toBe('number')
+    }
+    // modifiedDate is genuinely optional: some fixtures have never been edited.
+    const withModifiedDate = items.filter(item => item.modifiedDate !== undefined)
+    expect(withModifiedDate.length).toBeGreaterThan(0)
+    for (const item of withModifiedDate) {
+      expect(typeof item.modifiedDate).toBe('number')
     }
   })
 
   it('all analysis types use numeric IDs', () => {
-    for (const item of [...pathways, ...irs, ...chars]) {
-      if (item.id !== undefined) {
-        expect(typeof item.id).toBe('number')
-      }
+    const items = [...pathways, ...irs, ...chars]
+    for (const item of items) {
+      expect(item.id).toBeDefined()
+      expect(typeof item.id).toBe('number')
     }
   })
 
   it('all analysis types have consistent tags format', () => {
-    for (const item of [...pathways, ...irs, ...chars]) {
-      if (item.tags !== undefined) {
-        expect(Array.isArray(item.tags)).toBe(true)
-      }
+    const items = [...pathways, ...irs, ...chars]
+    for (const item of items) {
+      expect(item.tags).toBeDefined()
+      expect(Array.isArray(item.tags)).toBe(true)
     }
   })
 

@@ -184,6 +184,12 @@ describe('BarChart', () => {
       const wrapper = createWrapper({ loading: true, showExport: true })
       expect(wrapper.find('.chart-export-toolbar').exists()).toBe(false)
     })
+
+    it('should use image type for skeleton loader', () => {
+      const wrapper = createWrapper({ loading: true })
+      const skeleton = wrapper.findComponent({ name: 'v-skeleton-loader' })
+      expect(skeleton.props('type')).toBe('image')
+    })
   })
 
   // ============================================================================
@@ -545,6 +551,33 @@ describe('BarChart', () => {
 
       // ChartExport should exist and handle chart instance gracefully (may be null/undefined in test env)
       expect(exportComponent.exists()).toBe(true)
+    })
+
+    it('passes mismatched category and value arrays through without padding or truncating', () => {
+      const mismatchedData: BarChartData = {
+        categories: ['A', 'B', 'C'],
+        values: [10, 20],
+        unit: 'Count',
+      }
+
+      const wrapper = createWrapper({ data: mismatchedData })
+      const option = wrapper.findComponent({ name: 'VChart' }).props('option')
+
+      expect(option.xAxis.data).toEqual(['A', 'B', 'C'])
+      expect(option.series[0].data).toEqual([10, 20])
+    })
+
+    it('should handle data with negative values', () => {
+      const negativeData: BarChartData = {
+        categories: ['Negative', 'Positive'],
+        values: [-50, 100],
+      }
+
+      const wrapper = createWrapper({ data: negativeData })
+      const chart = wrapper.findComponent({ name: 'VChart' })
+
+      expect(chart.exists()).toBe(true)
+      expect(chart.props('option')).not.toEqual({})
     })
   })
 

@@ -37,16 +37,14 @@ test.describe('Concepts View - Tab Switching', () => {
 
     // Find the Concept Sets tab
     const setsTab = page.locator('.v-tab').filter({ hasText: /concept sets|sets/i }).first()
-    const hasTab = await setsTab.count() > 0
+    await expect(setsTab).toBeVisible()
 
-    if (hasTab) {
-      await setsTab.click()
-      await page.waitForTimeout(1000)
+    await setsTab.click()
+    await page.waitForTimeout(1000)
 
-      // Verify URL updated with tab parameter
-      const url = page.url()
-      expect(url.includes('tab=sets') || url.includes('sets')).toBeTruthy()
-    }
+    // Verify URL updated with tab parameter
+    const url = page.url()
+    expect(url.includes('tab=sets') || url.includes('sets')).toBeTruthy()
   })
 
   test('should persist tab selection in URL', async ({ page }) => {
@@ -89,38 +87,39 @@ test.describe('Cohort Builder - Breadcrumb Navigation', () => {
     await setupBasicMocks(page)
   })
 
-  test('should display breadcrumb navigation on cohort builder page', async ({ page }) => {
+  test('should display navigation back to cohorts list on cohort builder page', async ({ page }) => {
     await page.goto('/#/cohorts/1')
     await waitForPageReady(page)
 
-    // Check for breadcrumb (actual class is .cohort-breadcrumb from CohortBreadcrumb.vue)
-    const breadcrumb = page.locator('.cohort-breadcrumb, .cohort-builder__breadcrumb, nav[class*="breadcrumb"]')
-    const hasBreadcrumb = await breadcrumb.count() > 0
-
-    // Breadcrumb may or may not be visible depending on page load state
-    expect(hasBreadcrumb || !hasBreadcrumb).toBeTruthy()
+    // CohortBuilderView.vue passes hide-internal-breadcrumb to CohortBuilder,
+    // so the internal <cohort-breadcrumb> (CohortBreadcrumb.vue) never
+    // renders in the real app: the hero header (eyebrow + inline title)
+    // replaced it, and "back to cohorts" is now the toolbar Cancel button
+    // (CohortToolbarActions.vue, which emits 'cancel' -> handleCancel() ->
+    // router.push('/cohorts')). The old selectors targeted classes that
+    // either never existed or were style-only dead text, and the tautology
+    // assertion below them passed regardless of what was found.
+    const cancelButton = page.getByRole('button', { name: /^cancel$/i })
+    await expect(cancelButton).toBeVisible()
   })
 
-  test('should navigate back to cohorts list when clicking breadcrumb', async ({ page }) => {
+  test('should navigate back to cohorts list when clicking Cancel', async ({ page }) => {
     await page.goto('/#/cohorts/1')
     await waitForPageReady(page)
 
     // Ensure no overlays are blocking
     await waitForOverlaysToClose(page)
 
-    // Find and click the cohorts list breadcrumb item
-    const breadcrumbLink = page.locator('.cohort-builder__breadcrumb-item--link').first()
-    const hasLink = await breadcrumbLink.count() > 0
+    const cancelButton = page.getByRole('button', { name: /^cancel$/i })
+    await expect(cancelButton).toBeVisible()
 
-    if (hasLink) {
-      await breadcrumbLink.click()
-      await page.waitForTimeout(1000)
+    await cancelButton.click()
+    await page.waitForTimeout(1000)
 
-      // Verify navigation to cohorts list
-      const url = page.url()
-      expect(url).toContain('/cohorts')
-      expect(url).not.toContain('/cohorts/1')
-    }
+    // Verify navigation to cohorts list
+    const url = page.url()
+    expect(url).toContain('/cohorts')
+    expect(url).not.toContain('/cohorts/1')
   })
 })
 
@@ -156,25 +155,18 @@ test.describe('Cohort Builder - Description Field', () => {
   })
 
   test('should display and allow editing description field', async ({ page }) => {
-    // Check for description input
-    const descriptionInput = page.getByTestId('cohort-description-input')
-    const hasInput = await descriptionInput.count() > 0
+    // cohort-description-input never existed in src/; the description
+    // field is the plain subtitle input in CohortBuilderView.vue,
+    // identified elsewhere in this file (and other e2e specs) by the
+    // .cohort-builder-view__subtitle-input class.
+    const descriptionInput = page.locator('.cohort-builder-view__subtitle-input')
+    await expect(descriptionInput).toBeVisible({ timeout: 5000 })
 
-    if (hasInput) {
-      const isVisible = await descriptionInput.isVisible().catch(() => false)
+    await descriptionInput.fill('Test cohort description')
+    await page.waitForTimeout(500)
 
-      if (isVisible) {
-        // Test typing in the field
-        await descriptionInput.fill('Test cohort description')
-        await page.waitForTimeout(500)
-
-        const value = await descriptionInput.inputValue()
-        expect(value).toContain('Test cohort description')
-      } else {
-        // May be hidden on mobile - just verify it exists
-        expect(hasInput).toBeTruthy()
-      }
-    }
+    const value = await descriptionInput.inputValue()
+    expect(value).toContain('Test cohort description')
   })
 })
 
@@ -188,20 +180,17 @@ test.describe('Cohort Builder - Action Buttons', () => {
   test('should display concept sets icon/button', async ({ page }) => {
     // Check for concept sets button
     const conceptSetsBtn = page.getByTestId('concept-sets-icon')
-    const hasButton = await conceptSetsBtn.count() > 0
-
-    if (hasButton) {
-      await expect(conceptSetsBtn).toBeVisible({ timeout: 5000 })
-    }
+    await expect(conceptSetsBtn).toBeVisible({ timeout: 5000 })
   })
 
   test('should display generate button', async ({ page }) => {
-    // Check for generate button
-    const generateBtn = page.getByTestId('generate-btn')
-    const hasButton = await generateBtn.count() > 0
+    // generate-btn never existed in src/. The real generate action is
+    // data-testid="generate-all-btn" inside the collapsed-by-default
+    // "Generation" section (CohortGenerationSection.vue); expand it first.
+    const generationSection = page.getByTestId('cohort-generation-section')
+    await generationSection.getByTestId('cs-header').click()
 
-    if (hasButton) {
-      await expect(generateBtn).toBeVisible({ timeout: 5000 })
-    }
+    const generateBtn = generationSection.getByTestId('generate-all-btn')
+    await expect(generateBtn).toBeVisible({ timeout: 5000 })
   })
 })

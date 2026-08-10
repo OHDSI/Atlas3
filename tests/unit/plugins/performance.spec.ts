@@ -187,8 +187,14 @@ describe('Plugin Performance Tests', () => {
   });
 
   describe('Memory Performance', () => {
-    it('should efficiently manage plugin state', () => {
-      const initialMemory = (performance as unknown).memory?.usedJSHeapSize || 0;
+    // jsdom does not implement the non-standard performance.memory API, so this
+    // assertion can only run in a real Chromium-based environment. skipIf keeps
+    // that absence visible as a skipped test instead of a silently vanishing check.
+    const hasMemoryApi = typeof (performance as unknown as { memory?: unknown }).memory !== 'undefined';
+
+    it.skipIf(!hasMemoryApi)('should efficiently manage plugin state', () => {
+      const initialMemory = (performance as unknown as { memory: { usedJSHeapSize: number } }).memory
+        .usedJSHeapSize;
 
       // Register 100 plugins
       for (let i = 0; i < 100; i++) {
@@ -203,15 +209,14 @@ describe('Plugin Performance Tests', () => {
         registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as unknown);
       }
 
-      const finalMemory = (performance as unknown).memory?.usedJSHeapSize || 0;
+      const finalMemory = (performance as unknown as { memory: { usedJSHeapSize: number } }).memory
+        .usedJSHeapSize;
       const memoryIncrease = finalMemory - initialMemory;
 
       // Each plugin should use less than 10KB on average
-      if (initialMemory > 0) {
-        const avgPerPlugin = memoryIncrease / 100;
-        expect(avgPerPlugin).toBeLessThan(10000);
-        console.log(`Average memory per plugin: ${(avgPerPlugin / 1024).toFixed(2)}KB`);
-      }
+      const avgPerPlugin = memoryIncrease / 100;
+      expect(avgPerPlugin).toBeLessThan(10000);
+      console.log(`Average memory per plugin: ${(avgPerPlugin / 1024).toFixed(2)}KB`);
     });
   });
 });

@@ -53,9 +53,10 @@ describe('user.service', () => {
       const result = await userService.fetchUsers()
 
       expect(httpGet).toHaveBeenCalledWith('/user/?limit=50&offset=0')
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(mockUsers)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -65,9 +66,10 @@ describe('user.service', () => {
       const result = await userService.fetchUsers(100, 20)
 
       expect(httpGet).toHaveBeenCalledWith('/user/?limit=100&offset=20')
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(mockUsers)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -76,9 +78,10 @@ describe('user.service', () => {
 
       const result = await userService.fetchUsers()
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid users response format')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
@@ -87,9 +90,10 @@ describe('user.service', () => {
 
       const result = await userService.fetchUsers()
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Network error')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -101,9 +105,10 @@ describe('user.service', () => {
       const result = await userService.fetchUserById(1)
 
       expect(httpGet).toHaveBeenCalledWith('/user/1')
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(mockUser)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -112,9 +117,10 @@ describe('user.service', () => {
 
       const result = await userService.fetchUserById(1)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid user response format')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
@@ -123,9 +129,10 @@ describe('user.service', () => {
 
       const result = await userService.fetchUserById(999)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('User not found')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -137,9 +144,10 @@ describe('user.service', () => {
       const result = await userService.fetchAllUsers()
 
       expect(httpGet).toHaveBeenCalledWith('/user/?limit=1000&offset=0')
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(mockUsers)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -148,9 +156,10 @@ describe('user.service', () => {
 
       const result = await userService.fetchAllUsers()
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Server error')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })

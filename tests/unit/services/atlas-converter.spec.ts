@@ -1381,6 +1381,32 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       'PayerPlanPeriod',
     ]
 
+    // The full type -> exclude-flag-name mapping, mirroring the converter's
+    // own TYPE_EXCLUDE_KEYS table so every criteria type is actually checked
+    // instead of the three that used to be singled out (the rest ran with
+    // zero assertions and passed vacuously).
+    const typeExcludeFlagByCriteriaType: Record<string, string> = {
+      ConditionOccurrence: 'ConditionTypeExclude',
+      ConditionEra: 'EraTypeExclude',
+      DrugExposure: 'DrugTypeExclude',
+      DrugEra: 'EraTypeExclude',
+      DoseEra: 'EraTypeExclude',
+      ProcedureOccurrence: 'ProcedureTypeExclude',
+      Measurement: 'MeasurementTypeExclude',
+      Observation: 'ObservationTypeExclude',
+      ObservationPeriod: 'PeriodTypeExclude',
+      VisitOccurrence: 'VisitTypeExclude',
+      VisitDetail: 'VisitDetailTypeExclude',
+      DeviceExposure: 'DeviceTypeExclude',
+      Specimen: 'SpecimenTypeExclude',
+      Death: 'DeathTypeExclude',
+      PayerPlanPeriod: 'PeriodTypeExclude',
+    }
+
+    it('covers every criteria type under test with a known exclude flag', () => {
+      expect(criteriaTypes.every((t) => t in typeExcludeFlagByCriteriaType)).toBe(true)
+    })
+
     criteriaTypes.forEach((criteriaType) => {
       it(`adds type exclude flag for ${criteriaType}`, () => {
         const cohort = createMinimalCohort({
@@ -1397,15 +1423,9 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
         const atlasJSON = convertInternalToAtlas(cohort)
         const criteriaObj = atlasJSON.PrimaryCriteria.CriteriaList[0]?.[criteriaType]
 
-        // Check that the appropriate exclude flag exists and is false
-        if (criteriaType === 'ConditionOccurrence') {
-          expect(criteriaObj).toHaveProperty('ConditionTypeExclude', false)
-        } else if (criteriaType === 'DrugExposure') {
-          expect(criteriaObj).toHaveProperty('DrugTypeExclude', false)
-        } else if (criteriaType === 'ProcedureOccurrence') {
-          expect(criteriaObj).toHaveProperty('ProcedureTypeExclude', false)
-        }
-        // Add more specific checks as needed
+        const excludeFlag = typeExcludeFlagByCriteriaType[criteriaType]
+        expect(excludeFlag).toBeDefined()
+        expect(criteriaObj).toHaveProperty(excludeFlag as string, false)
       })
     })
 
@@ -3831,6 +3851,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       if (cs?.type === 'conceptSet') {
         expect(cs.conceptSet.id).toBe(42)
         expect(cs.isExclusion).toBe(true)
+      } else {
+        expect.fail('expected a conceptSet attribute')
       }
     })
   })
@@ -4352,6 +4374,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       if (result.type === 'temporalRelationship') {
         expect(result.temporalWindow.endWindow?.beforeAfter).toBe('BEFORE')
         expect(result.temporalWindow.endWindow?.useIndexEnd).toBe(true)
+      } else {
+        expect.fail(`expected type 'temporalRelationship', got '${result.type}'`)
       }
     })
 
@@ -4365,6 +4389,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       })
       if (result.type === 'temporalRelationship') {
         expect(result.temporalWindow.endWindow?.useEventEnd).toBe(true)
+      } else {
+        expect.fail(`expected type 'temporalRelationship', got '${result.type}'`)
       }
     })
 
@@ -4380,6 +4406,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
         expect(result.temporalWindow.endWindow?.days).toBe(null)
         expect(result.temporalWindow.startWindow?.useIndexEnd).toBe(false)
         expect(result.temporalWindow.endWindow?.useIndexEnd).toBe(false)
+      } else {
+        expect.fail(`expected type 'temporalRelationship', got '${result.type}'`)
       }
     })
   })
@@ -4539,6 +4567,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       if (cs?.type === 'conceptSet') {
         expect(cs.conceptSet.id).toBe(17)
         expect(cs.isExclusion).toBeUndefined()
+      } else {
+        expect.fail('expected a conceptSet attribute')
       }
     })
 
@@ -4931,6 +4961,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       expect(result.type).toBe('concept')
       if (result.type === 'concept') {
         expect(result.concepts).toEqual([])
+      } else {
+        expect.fail(`expected type 'concept', got '${result.type}'`)
       }
     })
 
@@ -4940,6 +4972,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       if (result.type === 'temporalRelationship') {
         expect(result.temporalWindow.startWindow).toBeUndefined()
         expect(result.temporalWindow.endWindow).toBeUndefined()
+      } else {
+        expect.fail(`expected type 'temporalRelationship', got '${result.type}'`)
       }
     })
 
@@ -4951,6 +4985,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
         expect(result.dateAdjustment.startOffset).toBe(0)
         expect(result.dateAdjustment.endWith).toBe('END_DATE')
         expect(result.dateAdjustment.endOffset).toBe(0)
+      } else {
+        expect.fail(`expected type 'dateAdjustment', got '${result.type}'`)
       }
     })
 

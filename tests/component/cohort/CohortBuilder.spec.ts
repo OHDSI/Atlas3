@@ -6,6 +6,16 @@
  * via defineExpose: lifecycle (mount with/without id), cohort load,
  * concept-set/criteria selection contexts, additional-criteria mutations,
  * export flow, cancel routing, tag updates, and the unsaved-changes guard.
+ *
+ * Every producer→handler wire-up (a child emitting an event that
+ * CohortBuilder's template listens for) is driven through that child's
+ * stub via `.vm.$emit(...)`, exactly as the real child would. State that
+ * has no child to observe or drive it through (selection routing context,
+ * pending picker callbacks, pure export/snapshot helpers, the
+ * criteria-selection provide/inject service) is reached through the
+ * named `defineExpose` contract in CohortBuilder.vue instead of Vue's
+ * private component-instance internals: a rename there is a compile
+ * error in the component file, not a silent test break.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
@@ -233,6 +243,48 @@ describe('CohortBuilder', () => {
   }
 
   // ---------------------------------------------------------------------------
+  // Child-component locators + drive helpers.
+  //
+  // Every one of these finds the exact stub the real CohortBuilder template
+  // wires a handler to, and emits the same event name/payload shape the real
+  // child would. This exercises the actual `@event="handler"` binding in the
+  // template, which a raw `setup.handler()` call never touched.
+  // ---------------------------------------------------------------------------
+
+  type Wrapper = ReturnType<typeof createWrapper>
+
+  const entryEventsList = (wrapper: Wrapper) => wrapper.findComponent({ name: 'EntryEventsList' })
+  const inclusionCriteriaPanel = (wrapper: Wrapper) =>
+    wrapper.findComponent({ name: 'InclusionCriteriaPanel' })
+  const exitCriteriaPanel = (wrapper: Wrapper) => wrapper.findComponent({ name: 'ExitCriteriaPanel' })
+  const censorWindowEditor = (wrapper: Wrapper) => wrapper.findComponent({ name: 'CensorWindowEditor' })
+  const groupCriteriaUI = (wrapper: Wrapper) => wrapper.findComponent({ name: 'GroupCriteriaUI' })
+  const conceptSetSelectionDialog = (wrapper: Wrapper) =>
+    wrapper.findComponent({ name: 'ConceptSetSelectionDialog' })
+  const conceptSearchDialog = (wrapper: Wrapper) => wrapper.findComponent({ name: 'ConceptSearchDialog' })
+  const conceptSetsListDialog = (wrapper: Wrapper) =>
+    wrapper.findComponent({ name: 'ConceptSetsListDialog' })
+  const conceptSetEditor = (wrapper: Wrapper) => wrapper.findComponent({ name: 'ConceptSetEditor' })
+  const tagSelectionDialog = (wrapper: Wrapper) => wrapper.findComponent({ name: 'TagSelectionDialog' })
+  const cohortJsonDialog = (wrapper: Wrapper) => wrapper.findComponent({ name: 'CohortJsonDialog' })
+  const cohortBreadcrumb = (wrapper: Wrapper) => wrapper.findComponent({ name: 'CohortBreadcrumb' })
+
+  /** Click the real (unstubbed) "Restrict initial events" button. */
+  async function clickAddAdditionalCriteria(wrapper: Wrapper) {
+    const btn = wrapper.find('.cohort-builder__add-additional button')
+    expect(btn.exists()).toBe(true)
+    await btn.trigger('click')
+  }
+
+  /** Emit `apply` from the stubbed CohortJsonDialog, as the real dialog does. */
+  async function applyJson(wrapper: Wrapper, json: string) {
+    const dialog = cohortJsonDialog(wrapper)
+    dialog.vm.$emit('apply', json)
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+  }
+
+  // ---------------------------------------------------------------------------
   // Lifecycle + render
   // ---------------------------------------------------------------------------
 
@@ -245,7 +297,7 @@ describe('CohortBuilder', () => {
 
   // Regression: Pythia applies proposals to the cohort store and only then
   // navigates to /cohorts/new. The editor mounts with the store already
-  // populated, but its local refs start empty — so an agent-set entry event
+  // populated, but its local refs start empty: so an agent-set entry event
   // stayed invisible until the NEXT agent mutation (typically the observation
   // window) bumped agentRevision and re-bound them.
   it('shows criteria the agent put in the store before it mounted', async () => {
@@ -260,25 +312,9 @@ describe('CohortBuilder', () => {
     const wrapper = createWrapper()      // no id -> the "new cohort" path
     await wrapper.vm.$nextTick()
 
-    const vm = wrapper.vm as any
-    expect(vm.entryEvents).toHaveLength(1)
-    expect(vm.entryEvents[0].name).toBe('Diclofenac')
-  })
-
-  it('exposes status state via defineExpose', async () => {
-    const wrapper = createWrapper()
-    await wrapper.vm.$nextTick()
-    const vm = wrapper.vm as any
-    expect(vm).toHaveProperty('totalConceptSets')
-    expect(vm).toHaveProperty('unusedConceptSetCount')
-    expect(vm).toHaveProperty('validationCount')
-    expect(vm).toHaveProperty('canSave')
-    expect(vm).toHaveProperty('handleCancel')
-    expect(vm).toHaveProperty('handleSave')
-    expect(typeof vm.openConceptSetsDialog).toBe('function')
-    expect(typeof vm.openValidationDialog).toBe('function')
-    expect(typeof vm.openVersionsDialog).toBe('function')
-    expect(typeof vm.openTagsDialog).toBe('function')
+    const events = entryEventsList(wrapper).props('events')
+    expect(events).toHaveLength(1)
+    expect(events[0].name).toBe('Diclofenac')
   })
 
   it('loadCohort populates internal state when id prop is provided', async () => {
@@ -301,13 +337,16 @@ describe('CohortBuilder', () => {
   // openXDialog handlers (exposed)
   // ---------------------------------------------------------------------------
 
-  it('openConceptSetsDialog flips showConceptSetsDialog flag', async () => {
+  it('openConceptSetsDialog opens the concept sets dialog', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
+    const dialog = conceptSetsListDialog(wrapper)
+    expect(dialog.props('modelValue')).toBe(false)
+
     ;(wrapper.vm as any).openConceptSetsDialog()
-    // Dialog visibility shows up downstream in the rendered template's
-    // model-value; we assert through the lifecycle not crashing.
-    expect(typeof (wrapper.vm as any).openConceptSetsDialog).toBe('function')
+    await wrapper.vm.$nextTick()
+
+    expect(dialog.props('modelValue')).toBe(true)
   })
 
   it('openValidationDialog/openVersionsDialog/openTagsDialog can be invoked', async () => {
@@ -320,7 +359,7 @@ describe('CohortBuilder', () => {
   })
 
   // ---------------------------------------------------------------------------
-  // handleCancel — exposed routes back to /cohorts
+  // handleCancel: exposed routes back to /cohorts
   // ---------------------------------------------------------------------------
 
   it('handleCancel routes back to /cohorts', async () => {
@@ -333,84 +372,81 @@ describe('CohortBuilder', () => {
   })
 
   // ---------------------------------------------------------------------------
-  // Export flow — buildExportCohort + exportFilename + handleExportDownload
+  // Export flow: buildExportCohort + exportFilename + handleExportDownload
   // ---------------------------------------------------------------------------
 
-  it('handleExportDownload invokes downloadAtlasJSON via EntryEventsList wiring', async () => {
-    // The export handler is wired into the toolbar (stubbed). We reach it via
-    // the rendered cohort-toolbar-actions stub's emit.
+  it('handleExportDownload invokes downloadAtlasJSON', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
     const toolbar = wrapper.findComponent({ name: 'CohortToolbarActions' })
-    if (toolbar.exists()) {
-      await toolbar.vm.$emit('export-download')
-    }
-    // Fallback path: also call the underlying functions directly through
-    // the rendered slots. The toolbar stub may not emit reliably with `true`
-    // stubs, so also confirm via a separate manual approach.
-    expect(downloadAtlasJSONSpy).toBeDefined()
+    expect(toolbar.exists()).toBe(true)
+
+    await toolbar.vm.$emit('export-download')
+    await wrapper.vm.$nextTick()
+
+    expect(downloadAtlasJSONSpy).toHaveBeenCalledTimes(1)
   })
 
   it('exportFilename builds a slug from cohortName', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    // Drive cohortName through the exposed name prop two-way binding by
-    // setting it directly via the internal ref (the script also exposes a
-    // way to bind props.name → cohortName).
     await wrapper.setProps({ name: 'My Cool Cohort!' })
     await wrapper.vm.$nextTick()
-    // Look up exposed conceptSetCount-based proxy isn't enough; we
-    // need direct access. Use $.exposed via setupState.
-    const setup = (wrapper.vm as any).$
-    // Read internal `cohortName` ref:
-    const cohortName = setup.setupState?.cohortName
-    expect(cohortName).toBe('My Cool Cohort!')
+    expect((wrapper.vm as any).cohortName).toBe('My Cool Cohort!')
   })
 
   // ---------------------------------------------------------------------------
-  // Internal setupState handler invocations
-  //
-  // We pull the raw setup state to call the non-exposed handlers directly.
+  // Concept-set / concept selection routing: each producer child emits the
+  // event CohortBuilder's template listens for. Dialog visibility and the
+  // search domain filter are read back through the consumer dialog's own
+  // props (they are v-model/prop bound, so the stub reflects them exactly).
+  // selectedCriteriaContext has no such child-observable form, so it is read
+  // through the named defineExpose contract instead: the "genuinely
+  // internal" bucket from the task brief.
   // ---------------------------------------------------------------------------
 
-  function getSetup(wrapper: ReturnType<typeof createWrapper>) {
-    return (wrapper.vm as any).$.setupState
-  }
-
-  it('handleSelectConceptSet sets context to entry-event mode', async () => {
+  it('selecting a concept set for an entry event sets context to entry-event mode', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.handleSelectConceptSet('evt-1')
-    expect(setup.selectedCriteriaContext).toEqual({
+    entryEventsList(wrapper).vm.$emit('select-concept-set', 'evt-1')
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    expect(vm.selectedCriteriaContext).toEqual({
       eventId: 'evt-1',
       ruleIndex: -1,
       groupIndex: -1,
       eventIndex: -1,
     })
-    expect(setup.isConceptSetDialogOpen).toBe(true)
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(true)
   })
 
-  it('handleSelectConceptSetForCriteria sets context to inclusion-rule mode', async () => {
+  it('selecting a concept set for inclusion criteria sets context to inclusion-rule mode', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.handleSelectConceptSetForCriteria({ ruleIndex: 0, groupIndex: 1, eventIndex: 2 })
-    expect(setup.selectedCriteriaContext).toMatchObject({
+    inclusionCriteriaPanel(wrapper).vm.$emit('select-concept-set', {
+      ruleIndex: 0,
+      groupIndex: 1,
+      eventIndex: 2,
+    })
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    expect(vm.selectedCriteriaContext).toMatchObject({
       ruleIndex: 0,
       groupIndex: 1,
       eventIndex: 2,
       eventId: null,
     })
-    expect(setup.isConceptSetDialogOpen).toBe(true)
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(true)
   })
 
-  it('handleSelectConceptSetForAdditionalCriteria sets ruleIndex -2 from numeric arg', async () => {
+  it('selecting a concept set for additional criteria sets ruleIndex -2 from a numeric arg', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.handleSelectConceptSetForAdditionalCriteria(3)
-    expect(setup.selectedCriteriaContext).toEqual({
+    await clickAddAdditionalCriteria(wrapper)
+    groupCriteriaUI(wrapper).vm.$emit('select-concept-set', 3)
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    expect(vm.selectedCriteriaContext).toEqual({
       eventId: null,
       ruleIndex: -2,
       groupIndex: 0,
@@ -418,112 +454,116 @@ describe('CohortBuilder', () => {
     })
   })
 
-  it('handleSelectConceptSetForAdditionalCriteria sets ruleIndex -2 from object arg', async () => {
+  it('selecting a concept set for additional criteria sets ruleIndex -2 from an object arg', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.handleSelectConceptSetForAdditionalCriteria({ eventIndex: 7, eventId: 'unused' })
-    expect(setup.selectedCriteriaContext).toMatchObject({ ruleIndex: -2, eventIndex: 7 })
+    await clickAddAdditionalCriteria(wrapper)
+    groupCriteriaUI(wrapper).vm.$emit('select-concept-set', { eventIndex: 7, eventId: 'unused' })
+    await wrapper.vm.$nextTick()
+    expect((wrapper.vm as any).selectedCriteriaContext).toMatchObject({ ruleIndex: -2, eventIndex: 7 })
   })
 
-  it('handleSelectDrugConceptSet sets exit-criteria selection type DRUG_EXPOSURE', async () => {
+  it('selecting a drug concept set for exit criteria sets selection type DRUG_EXPOSURE', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.handleSelectDrugConceptSet()
-    expect(setup.exitCriteriaSelectionType).toBe('DRUG_EXPOSURE')
-    expect(setup.selectedCriteriaContext.ruleIndex).toBe(-3)
-    expect(setup.isConceptSetDialogOpen).toBe(true)
+    exitCriteriaPanel(wrapper).vm.$emit('select-drug-concept-set')
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    expect(vm.exitCriteriaSelectionType).toBe('DRUG_EXPOSURE')
+    expect(vm.selectedCriteriaContext.ruleIndex).toBe(-3)
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(true)
   })
 
-  it('handleSelectCensoringConceptSet sets exit-criteria selection type CENSORING_EVENT', async () => {
+  it('selecting a censoring concept set for exit criteria sets selection type CENSORING_EVENT', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.handleSelectCensoringConceptSet()
-    expect(setup.exitCriteriaSelectionType).toBe('CENSORING_EVENT')
-    expect(setup.selectedCriteriaContext.ruleIndex).toBe(-3)
+    exitCriteriaPanel(wrapper).vm.$emit('select-censoring-concept-set')
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    expect(vm.exitCriteriaSelectionType).toBe('CENSORING_EVENT')
+    expect(vm.selectedCriteriaContext.ruleIndex).toBe(-3)
   })
 
-  it('handleSelectConceptForEntryEvent opens search dialog with domain filter', async () => {
+  it('selecting a concept for an entry-event attribute opens the search dialog with a domain filter', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.handleSelectConceptForEntryEvent('evt-1', 0, 'Condition')
-    expect(setup.selectedConceptDomainFilter).toBe('Condition')
-    expect(setup.isConceptSearchDialogOpen).toBe(true)
-    expect(setup.selectedCriteriaContext).toMatchObject({
+    entryEventsList(wrapper).vm.$emit('select-concept-for-attribute', 'evt-1', 0, 'Condition')
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    expect(conceptSearchDialog(wrapper).props('domainFilter')).toBe('Condition')
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(true)
+    expect(vm.selectedCriteriaContext).toMatchObject({
       eventId: 'evt-1',
       ruleIndex: -1,
       attributeIndex: 0,
     })
   })
 
-  it('handleSelectConceptForAdditionalCriteria sets ruleIndex -2', async () => {
+  it('selecting a concept for additional-criteria attribute sets ruleIndex -2', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.handleSelectConceptForAdditionalCriteria({ eventIndex: 4, domainFilter: 'Drug' })
-    expect(setup.selectedConceptDomainFilter).toBe('Drug')
-    expect(setup.selectedCriteriaContext).toMatchObject({ ruleIndex: -2, eventIndex: 4 })
-    expect(setup.isConceptSearchDialogOpen).toBe(true)
+    await clickAddAdditionalCriteria(wrapper)
+    groupCriteriaUI(wrapper).vm.$emit('select-concept', { eventIndex: 4, domainFilter: 'Drug' })
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    expect(conceptSearchDialog(wrapper).props('domainFilter')).toBe('Drug')
+    expect(vm.selectedCriteriaContext).toMatchObject({ ruleIndex: -2, eventIndex: 4 })
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(true)
   })
 
-  it('handleSelectConceptForCriteria forwards full context', async () => {
+  it('selecting a concept for inclusion criteria forwards full context', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.handleSelectConceptForCriteria({
+    inclusionCriteriaPanel(wrapper).vm.$emit('select-concept', {
       ruleIndex: 1,
       groupIndex: 0,
       eventIndex: 2,
       attributeIndex: 3,
       domainFilter: 'Procedure',
     })
-    expect(setup.selectedCriteriaContext).toMatchObject({
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    expect(vm.selectedCriteriaContext).toMatchObject({
       ruleIndex: 1,
       groupIndex: 0,
       eventIndex: 2,
       attributeIndex: 3,
       eventId: null,
     })
-    expect(setup.selectedConceptDomainFilter).toBe('Procedure')
+    expect(conceptSearchDialog(wrapper).props('domainFilter')).toBe('Procedure')
   })
 
   // ---------------------------------------------------------------------------
-  // handleConceptsSelected
+  // Concept search dialog resolution (handleConceptsSelected)
   // ---------------------------------------------------------------------------
 
-  it('handleConceptsSelected closes search dialog when no concepts selected', async () => {
+  it('closes the search dialog when no concepts are selected', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.isConceptSearchDialogOpen = true
-    setup.selectedCriteriaContext = { eventId: 'x', ruleIndex: -1, groupIndex: 0, eventIndex: 0 }
-    setup.handleConceptsSelected([])
-    expect(setup.isConceptSearchDialogOpen).toBe(false)
+    entryEventsList(wrapper).vm.$emit('select-concept-for-attribute', 'x', 0, undefined)
+    await wrapper.vm.$nextTick()
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(true)
+
+    conceptSearchDialog(wrapper).vm.$emit('concepts-selected', [])
+    await wrapper.vm.$nextTick()
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(false)
   })
 
-  it('handleConceptsSelected merges concepts into an entry event attribute', async () => {
+  it('merges selected concepts into an entry-event attribute', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    // Seed an entry event with a concept attribute.
-    setup.entryEvents = [
+    entryEventsList(wrapper).vm.$emit('update:events', [
       {
         id: 'evt-1',
         criteriaType: 'ConditionOccurrence',
         attributes: [{ type: 'concept', concepts: [] }],
       },
-    ]
-    setup.selectedCriteriaContext = {
-      eventId: 'evt-1',
-      ruleIndex: -1,
-      groupIndex: 0,
-      eventIndex: 0,
-      attributeIndex: 0,
-    }
-    setup.handleConceptsSelected([
+    ])
+    await wrapper.vm.$nextTick()
+    entryEventsList(wrapper).vm.$emit('select-concept-for-attribute', 'evt-1', 0, undefined)
+    await wrapper.vm.$nextTick()
+
+    conceptSearchDialog(wrapper).vm.$emit('concepts-selected', [
       {
         conceptId: 100,
         conceptName: 'Gender Male',
@@ -535,36 +575,31 @@ describe('CohortBuilder', () => {
         invalidReason: null,
       },
     ])
-    const concepts = setup.entryEvents[0].attributes[0].concepts
+    await wrapper.vm.$nextTick()
+
+    const concepts = entryEventsList(wrapper).props('events')[0].attributes[0].concepts
     expect(concepts).toHaveLength(1)
     expect(concepts[0].CONCEPT_ID).toBe(100)
-    expect(setup.isConceptSearchDialogOpen).toBe(false)
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(false)
   })
 
-  it('handleConceptsSelected dedupes by CONCEPT_ID for entry events', async () => {
+  it('dedupes selected concepts by CONCEPT_ID for entry events', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.entryEvents = [
+    entryEventsList(wrapper).vm.$emit('update:events', [
       {
         id: 'evt-1',
         criteriaType: 'ConditionOccurrence',
         attributes: [
-          {
-            type: 'concept',
-            concepts: [{ CONCEPT_ID: 100, CONCEPT_NAME: 'Existing' }],
-          },
+          { type: 'concept', concepts: [{ CONCEPT_ID: 100, CONCEPT_NAME: 'Existing' }] },
         ],
       },
-    ]
-    setup.selectedCriteriaContext = {
-      eventId: 'evt-1',
-      ruleIndex: -1,
-      groupIndex: 0,
-      eventIndex: 0,
-      attributeIndex: 0,
-    }
-    setup.handleConceptsSelected([
+    ])
+    await wrapper.vm.$nextTick()
+    entryEventsList(wrapper).vm.$emit('select-concept-for-attribute', 'evt-1', 0, undefined)
+    await wrapper.vm.$nextTick()
+
+    conceptSearchDialog(wrapper).vm.$emit('concepts-selected', [
       {
         conceptId: 100,
         conceptName: 'Dup',
@@ -576,14 +611,15 @@ describe('CohortBuilder', () => {
         invalidReason: null,
       },
     ])
-    expect(setup.entryEvents[0].attributes[0].concepts).toHaveLength(1)
+    await wrapper.vm.$nextTick()
+
+    expect(entryEventsList(wrapper).props('events')[0].attributes[0].concepts).toHaveLength(1)
   })
 
-  it('handleConceptsSelected updates inclusion-rule criteria', async () => {
+  it('updates inclusion-rule criteria when concepts are selected', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.inclusionRules = [
+    const rules = [
       {
         name: 'r1',
         description: '',
@@ -603,14 +639,18 @@ describe('CohortBuilder', () => {
         ],
       },
     ]
-    setup.selectedCriteriaContext = {
-      eventId: null,
+    inclusionCriteriaPanel(wrapper).vm.$emit('update:modelValue', rules)
+    await wrapper.vm.$nextTick()
+    inclusionCriteriaPanel(wrapper).vm.$emit('select-concept', {
       ruleIndex: 0,
       groupIndex: 0,
       eventIndex: 0,
       attributeIndex: 0,
-    }
-    setup.handleConceptsSelected([
+      domainFilter: undefined,
+    })
+    await wrapper.vm.$nextTick()
+
+    conceptSearchDialog(wrapper).vm.$emit('concepts-selected', [
       {
         conceptId: 200,
         conceptName: 'IC',
@@ -622,37 +662,38 @@ describe('CohortBuilder', () => {
         invalidReason: null,
       },
     ])
-    expect(setup.inclusionRules[0].criteriaGroups[0].events[0].attributes[0].concepts).toHaveLength(1)
+    await wrapper.vm.$nextTick()
+
+    const updatedRules = inclusionCriteriaPanel(wrapper).props('modelValue')
+    expect(updatedRules[0].criteriaGroups[0].events[0].attributes[0].concepts).toHaveLength(1)
   })
 
   // ---------------------------------------------------------------------------
   // Criteria-selection service (issue #112): descendants request the pickers
   // and CohortBuilder delivers the result back through a pending callback
-  // rather than the index-context relay.
+  // rather than the index-context relay. No stub in this shallow tree injects
+  // the service, so it is reached through the named `criteriaSelectionService`
+  // exposed for exactly this reason, instead of Vue's private provide/inject
+  // instance internals.
   // ---------------------------------------------------------------------------
 
-  it('provideCriteriaSelection.requestConcepts opens the search dialog and registers a pending callback', async () => {
+  it('criteriaSelectionService.requestConcepts opens the search dialog and registers a pending callback', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
+    const vm = wrapper.vm as any
 
     const cb = vi.fn()
-    setup.provideCriteriaSelection // touch to ensure module wired
-    const service = (wrapper.vm as any).$.provides
-    // The service is provided under the criteria-selection injection key.
-    const key = Object.getOwnPropertySymbols(service).find(
-      s => s.toString() === 'Symbol(criteria-selection)'
-    )!
-    service[key].requestConcepts('Gender', cb)
+    vm.criteriaSelectionService.requestConcepts('Gender', cb)
+    await wrapper.vm.$nextTick()
 
-    expect(setup.isConceptSearchDialogOpen).toBe(true)
-    expect(setup.selectedConceptDomainFilter).toBe('Gender')
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(true)
+    expect(conceptSearchDialog(wrapper).props('domainFilter')).toBe('Gender')
     // A prior index-context is cleared so it can't hijack the result.
-    expect(setup.selectedCriteriaContext).toBeNull()
+    expect(vm.selectedCriteriaContext).toBeNull()
 
     // Delivering the dialog result runs the pending-callback branch of
     // handleConceptsSelected (converts + hands back Atlas-format concepts).
-    setup.handleConceptsSelected([
+    conceptSearchDialog(wrapper).vm.$emit('concepts-selected', [
       {
         conceptId: 8507,
         conceptName: 'MALE',
@@ -664,126 +705,126 @@ describe('CohortBuilder', () => {
         invalidReason: null,
       },
     ])
+    await wrapper.vm.$nextTick()
+
     expect(cb).toHaveBeenCalledTimes(1)
     expect(cb.mock.calls[0][0][0]).toMatchObject({ CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE' })
-    expect(setup.isConceptSearchDialogOpen).toBe(false)
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(false)
   })
 
-  it('provideCriteriaSelection.requestConceptSet opens the picker and delivers the chosen set', async () => {
+  it('criteriaSelectionService.requestConceptSet opens the picker and delivers the chosen set', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
+    const vm = wrapper.vm as any
 
     const cb = vi.fn()
-    const service = (wrapper.vm as any).$.provides
-    const key = Object.getOwnPropertySymbols(service).find(
-      s => s.toString() === 'Symbol(criteria-selection)'
-    )!
-    service[key].requestConceptSet(cb)
+    vm.criteriaSelectionService.requestConceptSet(cb)
+    await wrapper.vm.$nextTick()
 
-    expect(setup.isConceptSetDialogOpen).toBe(true)
-    expect(setup.selectedCriteriaContext).toBeNull()
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(true)
+    expect(vm.selectedCriteriaContext).toBeNull()
 
-    // Picking an in-definition set runs assignConceptSetToContext, which
-    // routes to the pending callback (not an index context).
-    setup.handleLocalConceptSetSelected({ id: 5, name: 'Diabetes', items: [] })
+    // Picking an in-definition set routes to the pending callback (not an
+    // index context).
+    conceptSetSelectionDialog(wrapper).vm.$emit('local-concept-set-selected', {
+      id: 5,
+      name: 'Diabetes',
+      items: [],
+    })
+    await wrapper.vm.$nextTick()
+
     expect(cb).toHaveBeenCalledTimes(1)
     expect(cb.mock.calls[0][0]).toMatchObject({ id: 5, name: 'Diabetes' })
-    expect(setup.isConceptSetDialogOpen).toBe(false)
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false)
   })
 
-  it('provideCriteriaSelection.editConceptSet opens the concept-set editor', async () => {
+  it('criteriaSelectionService.editConceptSet opens the concept-set editor', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
+    const vm = wrapper.vm as any
 
-    const service = (wrapper.vm as any).$.provides
-    const key = Object.getOwnPropertySymbols(service).find(
-      s => s.toString() === 'Symbol(criteria-selection)'
-    )!
-    service[key].editConceptSet({ id: 9, name: 'Hypertension', items: [] })
+    vm.criteriaSelectionService.editConceptSet({ id: 9, name: 'Hypertension', items: [] })
+    await wrapper.vm.$nextTick()
 
-    expect(setup.conceptSetsStore.editorOpen).toBe(true)
-    expect(setup.conceptSetsStore.currentSet).toMatchObject({ id: 9, name: 'Hypertension' })
+    const { useConceptSetsStore } = await import('@/stores/concept-sets')
+    const store = useConceptSetsStore()
+    expect(store.editorOpen).toBe(true)
+    expect(store.currentSet).toMatchObject({ id: 9, name: 'Hypertension' })
   })
 
   it('a later index-context selection clears a stale pending service callback', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
+    const vm = wrapper.vm as any
 
-    const service = (wrapper.vm as any).$.provides
-    const key = Object.getOwnPropertySymbols(service).find(
-      s => s.toString() === 'Symbol(criteria-selection)'
-    )!
     const stale = vi.fn()
-    service[key].requestConceptSet(stale)
+    vm.criteriaSelectionService.requestConceptSet(stale)
 
-    // A legacy opener sets an index context — the watch must drop the stale
+    // A legacy opener sets an index context: the watch must drop the stale
     // callback so it can't swallow the next selection.
-    setup.handleSelectConceptSet('evt-1')
+    entryEventsList(wrapper).vm.$emit('select-concept-set', 'evt-1')
     await wrapper.vm.$nextTick()
-    expect(setup.pendingConceptSetCallback).toBeNull()
+    expect(vm.pendingConceptSetCallback).toBeNull()
   })
 
   // ---------------------------------------------------------------------------
   // Additional criteria
   // ---------------------------------------------------------------------------
 
-  it('addAdditionalCriteria creates an empty criteria group', async () => {
+  it('the "restrict initial events" button creates an empty criteria group', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    expect(setup.additionalCriteria).toBeUndefined()
-    setup.addAdditionalCriteria()
-    await wrapper.vm.$nextTick()
-    expect(setup.additionalCriteria).toBeDefined()
-    expect(setup.additionalCriteria.logicType).toBe('ALL')
-    expect(setup.additionalCriteria.events).toEqual([])
-    const groupEditor = wrapper.findComponent({ name: 'GroupCriteriaUI' })
+    expect(groupCriteriaUI(wrapper).exists()).toBe(false)
+
+    await clickAddAdditionalCriteria(wrapper)
+
+    const group = groupCriteriaUI(wrapper)
+    expect(group.exists()).toBe(true)
+    expect(group.props('modelValue').logicType).toBe('ALL')
+    expect(group.props('modelValue').events).toEqual([])
     const header = wrapper.find('.cohort-builder__additional-criteria-header')
-    expect(groupEditor.exists()).toBe(true)
     expect(header.exists()).toBe(true)
     expect(
-      groupEditor.element.compareDocumentPosition(header.element) & Node.DOCUMENT_POSITION_FOLLOWING
+      group.element.compareDocumentPosition(header.element) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy()
   })
 
-  it('removeAdditionalCriteria clears the criteria group', async () => {
+  it('removing additional criteria clears the criteria group', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.addAdditionalCriteria()
-    expect(setup.additionalCriteria).toBeDefined()
-    setup.removeAdditionalCriteria()
-    expect(setup.additionalCriteria).toBeUndefined()
+    await clickAddAdditionalCriteria(wrapper)
+    expect(groupCriteriaUI(wrapper).exists()).toBe(true)
+
+    groupCriteriaUI(wrapper).vm.$emit('remove')
+    await wrapper.vm.$nextTick()
+
+    expect(groupCriteriaUI(wrapper).exists()).toBe(false)
   })
 
   // ---------------------------------------------------------------------------
   // Censor window
   // ---------------------------------------------------------------------------
 
-  it('onCensorWindowUpdate sets the censor window ref', async () => {
+  it('updating the censor window sets the censor window ref', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.onCensorWindowUpdate({ daysBefore: 7, daysAfter: 14 })
-    expect(setup.censorWindow).toEqual({ daysBefore: 7, daysAfter: 14 })
+    censorWindowEditor(wrapper).vm.$emit('update:censorWindow', { daysBefore: 7, daysAfter: 14 })
+    await wrapper.vm.$nextTick()
+    expect(censorWindowEditor(wrapper).props('censorWindow')).toEqual({ daysBefore: 7, daysAfter: 14 })
   })
 
-  it('onCensorWindowUpdate sets censor window to null when undefined passed', async () => {
+  it('updating the censor window to undefined sets it to null', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.onCensorWindowUpdate(undefined)
-    expect(setup.censorWindow).toBeNull()
+    censorWindowEditor(wrapper).vm.$emit('update:censorWindow', undefined)
+    await wrapper.vm.$nextTick()
+    expect(censorWindowEditor(wrapper).props('censorWindow')).toBeNull()
   })
 
-  it('handleCensorWindowValidation does not throw', async () => {
+  it('a censor-window validation error does not throw', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    expect(() => setup.handleCensorWindowValidation()).not.toThrow()
+    expect(() => censorWindowEditor(wrapper).vm.$emit('validation-error', [])).not.toThrow()
   })
 
   // ---------------------------------------------------------------------------
@@ -793,14 +834,14 @@ describe('CohortBuilder', () => {
   it('gatherConceptSets deduplicates concept sets from entry events', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.entryEvents = [
+    entryEventsList(wrapper).vm.$emit('update:events', [
       { id: 'e1', criteriaType: 'X', attributes: [], conceptSet: { id: 1, name: 'A', items: [] } },
       { id: 'e2', criteriaType: 'X', attributes: [], conceptSet: { id: 1, name: 'A', items: [] } },
       { id: 'e3', criteriaType: 'X', attributes: [], conceptSet: { id: 2, name: 'B', items: [] } },
       { id: 'e4', criteriaType: 'X', attributes: [] },
-    ]
-    const result = setup.gatherConceptSets()
+    ])
+    await wrapper.vm.$nextTick()
+    const result = (wrapper.vm as any).gatherConceptSets()
     expect(result).toHaveLength(2)
     expect(result.map((c: any) => c.id).sort()).toEqual([1, 2])
   })
@@ -808,11 +849,12 @@ describe('CohortBuilder', () => {
   it('buildExportCohort assembles a CohortDefinition from local state', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Exported'
-    setup.cohortDescription = 'desc'
-    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
-    const def = setup.buildExportCohort()
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Exported'
+    vm.cohortDescription = 'desc'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
+    await wrapper.vm.$nextTick()
+    const def = vm.buildExportCohort()
     expect(def.name).toBe('Exported')
     expect(def.description).toBe('desc')
     expect(def.entryEvents).toHaveLength(1)
@@ -824,16 +866,17 @@ describe('CohortBuilder', () => {
     // referencing CodesetId 0 against an empty ConceptSets.
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.entryEvents = [
+    entryEventsList(wrapper).vm.$emit('update:events', [
       {
         id: 'e1',
         criteriaType: 'DrugExposure',
         attributes: [],
         conceptSet: { id: 0, name: 'Solo Concept Set', items: [{ concept: { CONCEPT_ID: 1 } }] },
       },
-    ]
-    await setup.buildCohortExpression()
+    ])
+    // The deep watch on entryEvents triggers buildCohortExpression asynchronously.
+    await wrapper.vm.$nextTick()
+    await new Promise(r => setTimeout(r, 0))
 
     const lastCall = (convertInternalToAtlas as unknown as { mock: { calls: any[][] } }).mock.calls.at(
       -1
@@ -845,26 +888,27 @@ describe('CohortBuilder', () => {
   it('exportFilename slugifies the cohort name', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'My Cool Cohort!'
-    expect(setup.exportFilename()).toBe('my_cool_cohort__cohort.json')
+    const vm = wrapper.vm as any
+    vm.cohortName = 'My Cool Cohort!'
+    expect(vm.exportFilename()).toBe('my_cool_cohort__cohort.json')
   })
 
   it('exportFilename falls back to "cohort" for an empty name', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = ''
-    expect(setup.exportFilename()).toBe('cohort_cohort.json')
+    const vm = wrapper.vm as any
+    vm.cohortName = ''
+    expect(vm.exportFilename()).toBe('cohort_cohort.json')
   })
 
   it('handleExportDownload calls downloadAtlasJSON with the built cohort + filename', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Test'
-    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
-    setup.handleExportDownload()
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Test'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
+    await wrapper.vm.$nextTick()
+    vm.handleExportDownload()
     expect(downloadAtlasJSONSpy).toHaveBeenCalled()
     const args = downloadAtlasJSONSpy.mock.calls[0]
     expect(args[1]).toBe('test_cohort.json')
@@ -878,10 +922,10 @@ describe('CohortBuilder', () => {
   it('createStateSnapshot returns a stable JSON string capturing all fields', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Snap'
-    setup.cohortDescription = 'snap-desc'
-    const snap = setup.createStateSnapshot()
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Snap'
+    vm.cohortDescription = 'snap-desc'
+    const snap = vm.createStateSnapshot()
     expect(typeof snap).toBe('string')
     const parsed = JSON.parse(snap)
     expect(parsed.name).toBe('Snap')
@@ -897,34 +941,32 @@ describe('CohortBuilder', () => {
   it('cancelLeaveUnsaved closes the unsaved-changes dialog and clears state', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.showUnsavedDialog = true
-    setup.isConfirmingNavigation = true
-    setup.cancelLeaveUnsaved()
-    expect(setup.showUnsavedDialog).toBe(false)
-    expect(setup.isConfirmingNavigation).toBe(false)
+    const vm = wrapper.vm as any
+    vm.showUnsavedDialog = true
+    vm.isConfirmingNavigation = true
+    vm.cancelLeaveUnsaved()
+    expect(vm.showUnsavedDialog).toBe(false)
+    expect(vm.isConfirmingNavigation).toBe(false)
   })
 
   it('confirmLeaveUnsaved closes the dialog and runs pending navigation', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.showUnsavedDialog = true
+    const vm = wrapper.vm as any
+    vm.showUnsavedDialog = true
     // confirmLeaveUnsaved consumes a module-local `pendingNavigation` we can't
     // easily set; assert the dialog flips off regardless.
-    setup.confirmLeaveUnsaved()
-    expect(setup.showUnsavedDialog).toBe(false)
+    vm.confirmLeaveUnsaved()
+    expect(vm.showUnsavedDialog).toBe(false)
   })
 
   // ---------------------------------------------------------------------------
   // handleTagsUpdate
   // ---------------------------------------------------------------------------
 
-  it('handleTagsUpdate writes new tags onto the current cohort in the store', async () => {
+  it('updating tags writes new tags onto the current cohort in the store', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    // Use the store from the setup
     const { useCohortStore } = await import('@/stores/cohort')
     const store = useCohortStore()
     // store.currentCohort may be undefined for a brand-new cohort with no id;
@@ -933,7 +975,8 @@ describe('CohortBuilder', () => {
       store.createNewCohort()
     }
     const tags = [{ id: 1, name: 'tag1' }, { id: 2, name: 'tag2' }]
-    setup.handleTagsUpdate(tags as any)
+    tagSelectionDialog(wrapper).vm.$emit('update:selected-tags', tags)
+    await wrapper.vm.$nextTick()
     expect(store.currentCohort?.tags).toEqual(tags)
   })
 
@@ -941,49 +984,78 @@ describe('CohortBuilder', () => {
   // handleViewConceptSet / handleCreateNewConceptSet
   // ---------------------------------------------------------------------------
 
-  it('handleViewConceptSet closes the dialog and opens the editor', async () => {
+  it('viewing a concept set closes the list dialog and opens the editor', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.showConceptSetsDialog = true
-    setup.handleViewConceptSet({ id: 1, name: 'cs', items: [] })
-    expect(setup.showConceptSetsDialog).toBe(false)
+    ;(wrapper.vm as any).openConceptSetsDialog()
+    await wrapper.vm.$nextTick()
+    expect(conceptSetsListDialog(wrapper).props('modelValue')).toBe(true)
+
+    conceptSetsListDialog(wrapper).vm.$emit('view', { id: 1, name: 'cs', items: [] })
+    await wrapper.vm.$nextTick()
+
+    expect(conceptSetsListDialog(wrapper).props('modelValue')).toBe(false)
+    const { useConceptSetsStore } = await import('@/stores/concept-sets')
+    const store = useConceptSetsStore()
+    expect(store.editorOpen).toBe(true)
   })
 
-  it('handleCreateNewConceptSet closes the selection dialog', async () => {
+  it('deleting a concept set removes it from the cohort', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.isConceptSetDialogOpen = true
-    setup.handleCreateNewConceptSet()
-    expect(setup.isConceptSetDialogOpen).toBe(false)
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.createNewCohort()
+    if (store.currentCohort) {
+      store.currentCohort.conceptSets = [{ id: 3, name: 'to-delete', items: [] }]
+    }
+    await wrapper.vm.$nextTick()
+
+    conceptSetsListDialog(wrapper).vm.$emit('delete', { id: 3, name: 'to-delete', items: [] })
+    await wrapper.vm.$nextTick()
+
+    expect(store.currentCohort?.conceptSets).toEqual([])
+  })
+
+  it('creating a new concept set closes the selection dialog', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    entryEventsList(wrapper).vm.$emit('select-concept-set', 'evt-1')
+    await wrapper.vm.$nextTick()
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(true)
+
+    conceptSetSelectionDialog(wrapper).vm.$emit('create-new')
+    await wrapper.vm.$nextTick()
+
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false)
   })
 
   // ---------------------------------------------------------------------------
-  // assignConceptSetToContext
+  // assignConceptSetToContext: exposed directly. Its branches (entry event,
+  // inclusion rule, additional criteria, exit criteria drug/censoring) are
+  // precise routing logic with no single child to drive them through; the
+  // producer→consumer round trip is covered separately above and in the
+  // concept-set-selected tests below.
   // ---------------------------------------------------------------------------
 
   it('assignConceptSetToContext attaches concept set to entry event', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.entryEvents = [{ id: 'evt-1', criteriaType: 'X', attributes: [] }]
-    setup.selectedCriteriaContext = {
-      eventId: 'evt-1',
-      ruleIndex: -1,
-      groupIndex: 0,
-      eventIndex: 0,
-    }
-    setup.assignConceptSetToContext({ id: 10, name: 'cs', items: [] } as any)
-    expect(setup.entryEvents[0].conceptSet).toEqual({ id: 10, name: 'cs', items: [] })
-    expect(setup.selectedCriteriaContext).toBeNull()
+    const vm = wrapper.vm as any
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'evt-1', criteriaType: 'X', attributes: [] }])
+    await wrapper.vm.$nextTick()
+    vm.selectedCriteriaContext = { eventId: 'evt-1', ruleIndex: -1, groupIndex: 0, eventIndex: 0 }
+    vm.assignConceptSetToContext({ id: 10, name: 'cs', items: [] })
+    await wrapper.vm.$nextTick()
+    expect(entryEventsList(wrapper).props('events')[0].conceptSet).toEqual({ id: 10, name: 'cs', items: [] })
+    expect(vm.selectedCriteriaContext).toBeNull()
   })
 
   it('assignConceptSetToContext attaches concept set to inclusion rule criteria', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.inclusionRules = [
+    const vm = wrapper.vm as any
+    inclusionCriteriaPanel(wrapper).vm.$emit('update:modelValue', [
       {
         name: 'r1',
         description: '',
@@ -996,63 +1068,76 @@ describe('CohortBuilder', () => {
           },
         ],
       },
-    ]
-    setup.selectedCriteriaContext = {
-      eventId: null,
-      ruleIndex: 0,
-      groupIndex: 0,
-      eventIndex: 0,
-    }
-    setup.assignConceptSetToContext({ id: 20, name: 'cs2', items: [] } as any)
-    expect(setup.inclusionRules[0].criteriaGroups[0].events[0].conceptSet).toEqual({
-      id: 20,
-      name: 'cs2',
-      items: [],
-    })
+    ])
+    await wrapper.vm.$nextTick()
+    vm.selectedCriteriaContext = { eventId: null, ruleIndex: 0, groupIndex: 0, eventIndex: 0 }
+    vm.assignConceptSetToContext({ id: 20, name: 'cs2', items: [] })
+    await wrapper.vm.$nextTick()
+    expect(
+      inclusionCriteriaPanel(wrapper).props('modelValue')[0].criteriaGroups[0].events[0].conceptSet
+    ).toEqual({ id: 20, name: 'cs2', items: [] })
   })
 
   it('assignConceptSetToContext attaches to exit-criteria drug exposure', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.exitCriteria = { strategy: 'CONTINUOUS_DRUG' }
-    setup.exitCriteriaSelectionType = 'DRUG_EXPOSURE'
-    setup.selectedCriteriaContext = {
-      eventId: null,
-      ruleIndex: -3,
-      groupIndex: 0,
-      eventIndex: 0,
-    }
-    setup.assignConceptSetToContext({ id: 30, name: 'cs3', items: [] } as any)
-    expect(setup.exitCriteria.conceptSet).toEqual({ id: 30, name: 'cs3', items: [] })
+    const vm = wrapper.vm as any
+    exitCriteriaPanel(wrapper).vm.$emit('update:modelValue', { strategy: 'CONTINUOUS_DRUG' })
+    await wrapper.vm.$nextTick()
+    vm.exitCriteriaSelectionType = 'DRUG_EXPOSURE'
+    vm.selectedCriteriaContext = { eventId: null, ruleIndex: -3, groupIndex: 0, eventIndex: 0 }
+    vm.assignConceptSetToContext({ id: 30, name: 'cs3', items: [] })
+    await wrapper.vm.$nextTick()
+    expect(exitCriteriaPanel(wrapper).props('modelValue').conceptSet).toEqual({
+      id: 30,
+      name: 'cs3',
+      items: [],
+    })
   })
 
   it('assignConceptSetToContext appends censoring event', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.exitCriteriaSelectionType = 'CENSORING_EVENT'
-    setup.selectedCriteriaContext = {
-      eventId: null,
-      ruleIndex: -3,
-      groupIndex: 0,
-      eventIndex: 0,
-    }
-    setup.assignConceptSetToContext({ id: 40, name: 'cs4', items: [] } as any)
-    expect(setup.censoringCriteria).toHaveLength(1)
-    expect(setup.censoringCriteria[0].conceptSet).toEqual({ id: 40, name: 'cs4', items: [] })
+    const vm = wrapper.vm as any
+    vm.exitCriteriaSelectionType = 'CENSORING_EVENT'
+    vm.selectedCriteriaContext = { eventId: null, ruleIndex: -3, groupIndex: 0, eventIndex: 0 }
+    vm.assignConceptSetToContext({ id: 40, name: 'cs4', items: [] })
+    await wrapper.vm.$nextTick()
+    const censoringCriteria = exitCriteriaPanel(wrapper).props('censoringCriteria')
+    expect(censoringCriteria).toHaveLength(1)
+    expect(censoringCriteria[0].conceptSet).toEqual({ id: 40, name: 'cs4', items: [] })
+  })
+
+  it('assignConceptSetToContext attaches concept set to additional criteria event', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    await clickAddAdditionalCriteria(wrapper)
+    groupCriteriaUI(wrapper).vm.$emit('update:modelValue', {
+      ...groupCriteriaUI(wrapper).props('modelValue'),
+      events: [{ id: 'ace-1', criteriaType: 'X', attributes: [] }],
+    })
+    await wrapper.vm.$nextTick()
+    vm.selectedCriteriaContext = { eventId: null, ruleIndex: -2, groupIndex: 0, eventIndex: 0 }
+    vm.assignConceptSetToContext({ id: 50, name: 'cs5', items: [] })
+    await wrapper.vm.$nextTick()
+    expect(groupCriteriaUI(wrapper).props('modelValue').events[0].conceptSet).toEqual({
+      id: 50,
+      name: 'cs5',
+      items: [],
+    })
   })
 
   // ---------------------------------------------------------------------------
   // handleEditConceptSet / handleConceptSetApplied (embedded editor flow)
   // ---------------------------------------------------------------------------
 
-  it('handleEditConceptSet opens the editor on a clone, leaving cohort items untouched', async () => {
+  it('editing a concept set opens the editor on a clone, leaving cohort items untouched', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
     const items = [{ conceptId: 1, includeDescendants: false }]
-    await setup.handleEditConceptSet({ id: 5, name: 'Embedded', items })
+    entryEventsList(wrapper).vm.$emit('edit-concept-set', { id: 5, name: 'Embedded', items })
+    await flushPromises()
     const { useConceptSetsStore } = await import('@/stores/concept-sets')
     const store = useConceptSetsStore()
     expect(store.editorOpen).toBe(true)
@@ -1061,34 +1146,26 @@ describe('CohortBuilder', () => {
     expect(items).toEqual([{ conceptId: 1, includeDescendants: false }])
   })
 
-  it('handleConceptSetApplied is a no-op without a matching usage or pending context', async () => {
+  it('applying concept-set changes is a no-op without a matching usage or pending context', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.selectedCriteriaContext = null
-    expect(() => setup.handleConceptSetApplied({ id: 9, name: 'x', items: [] })).not.toThrow()
+    const { useConceptSetsStore } = await import('@/stores/concept-sets')
+    const store = useConceptSetsStore()
+    store.openCreateEditor()
+    await wrapper.vm.$nextTick()
+    expect(() =>
+      conceptSetEditor(wrapper).vm.$emit('apply', { id: 9, name: 'x', items: [] })
+    ).not.toThrow()
   })
 
-  it('handleConceptSetApplied updates every usage of the id and marks the cohort dirty', async () => {
+  it('applying concept-set changes updates every usage of the id and marks the cohort dirty', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.selectedCriteriaContext = null
-    setup.entryEvents = [
-      {
-        id: 'evt-1',
-        criteriaType: 'X',
-        attributes: [],
-        conceptSet: { id: 7, name: 'Old', items: [] },
-      },
-      {
-        id: 'evt-2',
-        criteriaType: 'X',
-        attributes: [],
-        conceptSet: { id: 8, name: 'Other', items: [] },
-      },
-    ]
-    setup.inclusionRules = [
+    entryEventsList(wrapper).vm.$emit('update:events', [
+      { id: 'evt-1', criteriaType: 'X', attributes: [], conceptSet: { id: 7, name: 'Old', items: [] } },
+      { id: 'evt-2', criteriaType: 'X', attributes: [], conceptSet: { id: 8, name: 'Other', items: [] } },
+    ])
+    inclusionCriteriaPanel(wrapper).vm.$emit('update:modelValue', [
       {
         id: 'rule-1',
         name: 'r',
@@ -1097,204 +1174,183 @@ describe('CohortBuilder', () => {
             id: 'g-1',
             logicType: 'ALL',
             events: [
-              {
-                id: 'evt-3',
-                criteriaType: 'X',
-                attributes: [],
-                conceptSet: { id: 7, name: 'Old', items: [] },
-              },
+              { id: 'evt-3', criteriaType: 'X', attributes: [], conceptSet: { id: 7, name: 'Old', items: [] } },
             ],
           },
         ],
       },
-    ]
-    setup.exitCriteria = {
+    ])
+    exitCriteriaPanel(wrapper).vm.$emit('update:modelValue', {
       strategy: 'CONTINUOUS_DRUG',
       conceptSet: { id: 7, name: 'Old', items: [] },
-    }
+    })
     await wrapper.vm.$nextTick()
-    setup.loadedSnapshot = setup.createStateSnapshot()
-    expect(setup.hasUnsavedChanges).toBe(false)
+
+    const { useConceptSetsStore } = await import('@/stores/concept-sets')
+    const store = useConceptSetsStore()
+    store.openCreateEditor()
+    await wrapper.vm.$nextTick()
+
+    const vm = wrapper.vm as any
+    vm.loadedSnapshot = vm.createStateSnapshot()
+    expect(vm.hasUnsavedChanges).toBe(false)
 
     const newItems = [{ conceptId: 42 }]
-    setup.handleConceptSetApplied({ id: 7, name: 'Updated', items: newItems })
+    conceptSetEditor(wrapper).vm.$emit('apply', { id: 7, name: 'Updated', items: newItems })
+    await wrapper.vm.$nextTick()
 
-    expect(setup.entryEvents[0].conceptSet).toEqual({ id: 7, name: 'Updated', items: newItems })
-    expect(setup.entryEvents[1].conceptSet).toEqual({ id: 8, name: 'Other', items: [] })
-    expect(setup.inclusionRules[0].criteriaGroups[0].events[0].conceptSet).toEqual({
+    expect(entryEventsList(wrapper).props('events')[0].conceptSet).toEqual({
       id: 7,
       name: 'Updated',
       items: newItems,
     })
-    expect(setup.exitCriteria.conceptSet).toEqual({ id: 7, name: 'Updated', items: newItems })
-    expect(setup.hasUnsavedChanges).toBe(true)
+    expect(entryEventsList(wrapper).props('events')[1].conceptSet).toEqual({ id: 8, name: 'Other', items: [] })
+    expect(
+      inclusionCriteriaPanel(wrapper).props('modelValue')[0].criteriaGroups[0].events[0].conceptSet
+    ).toEqual({ id: 7, name: 'Updated', items: newItems })
+    expect(exitCriteriaPanel(wrapper).props('modelValue').conceptSet).toEqual({
+      id: 7,
+      name: 'Updated',
+      items: newItems,
+    })
+    expect(vm.hasUnsavedChanges).toBe(true)
   })
 
-  it('handleConceptSetApplied assigns the applied concept set to a pending entry-event context', async () => {
+  it('applying concept-set changes assigns the applied set to a pending entry-event context', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.entryEvents = [{ id: 'evt-1', criteriaType: 'X', attributes: [] }]
-    setup.selectedCriteriaContext = {
-      eventId: 'evt-1',
-      ruleIndex: -1,
-      groupIndex: 0,
-      eventIndex: 0,
-    }
-    setup.handleConceptSetApplied({ id: 77, name: 'Saved Set', items: [] })
-    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 77, name: 'Saved Set' })
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'evt-1', criteriaType: 'X', attributes: [] }])
+    await wrapper.vm.$nextTick()
+    entryEventsList(wrapper).vm.$emit('select-concept-set', 'evt-1')
+    await wrapper.vm.$nextTick()
+
+    conceptSetSelectionDialog(wrapper).vm.$emit('create-new')
+    await wrapper.vm.$nextTick()
+    const { useConceptSetsStore } = await import('@/stores/concept-sets')
+    const store = useConceptSetsStore()
+    expect(store.editorOpen).toBe(true)
+
+    conceptSetEditor(wrapper).vm.$emit('apply', { id: 77, name: 'Saved Set', items: [] })
+    await wrapper.vm.$nextTick()
+
+    expect(entryEventsList(wrapper).props('events')[0].conceptSet).toMatchObject({ id: 77, name: 'Saved Set' })
   })
 
   // ---------------------------------------------------------------------------
-  // handleConceptSetSelected (async — fetches items via store)
+  // handleConceptSetSelected (async: fetches items via store)
   // ---------------------------------------------------------------------------
 
-  it('handleConceptSetSelected returns early when context is null', async () => {
+  it('selecting a concept set from the repository is a no-op with no pending context', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.selectedCriteriaContext = null
-    await setup.handleConceptSetSelected({ id: 1, name: 'x', items: [] })
-    expect(setup.isConceptSetDialogOpen).toBe(false) // unchanged
+    conceptSetSelectionDialog(wrapper).vm.$emit('concept-set-selected', { id: 1, name: 'x', items: [] })
+    await flushPromises()
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false) // unchanged
   })
 
-  it('handleConceptSetSelected uses items inline when already populated', async () => {
+  it('selecting a concept set from the repository uses items inline when already populated', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.entryEvents = [{ id: 'evt-1', criteriaType: 'X', attributes: [] }]
-    setup.selectedCriteriaContext = {
-      eventId: 'evt-1',
-      ruleIndex: -1,
-      groupIndex: 0,
-      eventIndex: 0,
-    }
-    await setup.handleConceptSetSelected({
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'evt-1', criteriaType: 'X', attributes: [] }])
+    entryEventsList(wrapper).vm.$emit('select-concept-set', 'evt-1')
+    await wrapper.vm.$nextTick()
+
+    conceptSetSelectionDialog(wrapper).vm.$emit('concept-set-selected', {
       id: 5,
       name: 'Inline',
       items: [{ concept: { CONCEPT_ID: 99, CONCEPT_NAME: 'X' } }],
     })
-    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 0, name: 'Inline' })
-    expect(setup.isConceptSetDialogOpen).toBe(false)
+    await flushPromises()
+
+    expect(entryEventsList(wrapper).props('events')[0].conceptSet).toMatchObject({ id: 0, name: 'Inline' })
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false)
   })
 
-  it('handleConceptSetSelected fetches items from store when missing', async () => {
+  it('selecting a concept set from the repository fetches items from store when missing', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.entryEvents = [{ id: 'evt-1', criteriaType: 'X', attributes: [] }]
-    setup.selectedCriteriaContext = {
-      eventId: 'evt-1',
-      ruleIndex: -1,
-      groupIndex: 0,
-      eventIndex: 0,
-    }
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'evt-1', criteriaType: 'X', attributes: [] }])
+    entryEventsList(wrapper).vm.$emit('select-concept-set', 'evt-1')
+    await wrapper.vm.$nextTick()
+
     const { useConceptSetsStore } = await import('@/stores/concept-sets')
     const store = useConceptSetsStore()
     const fetchSpy = vi.spyOn(store, 'fetchOne').mockImplementation(async (id: number | string) => {
       store.currentSet = { id, name: 'Fetched', items: [{ concept: { CONCEPT_ID: 1 } }] } as any
     })
-    await setup.handleConceptSetSelected({ id: 6, name: 'NeedsFetch' })
+    conceptSetSelectionDialog(wrapper).vm.$emit('concept-set-selected', { id: 6, name: 'NeedsFetch' })
+    await flushPromises()
+
     expect(fetchSpy).toHaveBeenCalledWith(6)
-    expect(setup.entryEvents[0].conceptSet).toMatchObject({ id: 0, name: 'Fetched' })
+    expect(entryEventsList(wrapper).props('events')[0].conceptSet).toMatchObject({ id: 0, name: 'Fetched' })
   })
 
-  it('handleConceptSetSelected fetches items from store even when the selected concept set id is 0 (issue #144)', async () => {
+  it('selecting a concept set from the repository fetches items even when the id is 0 (issue #144)', async () => {
     // Regression test for #144: a truthy guard skips the fetch for id 0 and
     // leaves the partial reference, showing the wrong embedded concept set.
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.entryEvents = [{ id: 'evt-1', criteriaType: 'X', attributes: [] }]
-    setup.selectedCriteriaContext = {
-      eventId: 'evt-1',
-      ruleIndex: -1,
-      groupIndex: 0,
-      eventIndex: 0,
-    }
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'evt-1', criteriaType: 'X', attributes: [] }])
+    entryEventsList(wrapper).vm.$emit('select-concept-set', 'evt-1')
+    await wrapper.vm.$nextTick()
+
     const { useConceptSetsStore } = await import('@/stores/concept-sets')
     const store = useConceptSetsStore()
     const fetchSpy = vi.spyOn(store, 'fetchOne').mockImplementation(async (id: number | string) => {
       store.currentSet = { id, name: 'FirstSet', items: [{ concept: { CONCEPT_ID: 42 } }] } as any
     })
-    await setup.handleConceptSetSelected({ id: 0, name: 'FirstSet' })
+    conceptSetSelectionDialog(wrapper).vm.$emit('concept-set-selected', { id: 0, name: 'FirstSet' })
+    await flushPromises()
+
     expect(fetchSpy).toHaveBeenCalledWith(0)
-    expect(setup.entryEvents[0].conceptSet).toMatchObject({
+    expect(entryEventsList(wrapper).props('events')[0].conceptSet).toMatchObject({
       id: 0,
       name: 'FirstSet',
       items: [{ concept: { CONCEPT_ID: 42 } }],
     })
   })
 
-  // ---------------------------------------------------------------------------
-  // handleEditConceptSet (open editor)
-  // ---------------------------------------------------------------------------
-
-  it('handleEditConceptSet sets store.currentSet and opens editor', async () => {
+  it('picking a local concept set sets store.currentSet and opens editor when edited', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
     const { useConceptSetsStore } = await import('@/stores/concept-sets')
     const store = useConceptSetsStore()
-    await setup.handleEditConceptSet({ id: 12, name: 'Edited', items: [] })
+    conceptSetSelectionDialog(wrapper).vm.$emit('edit-concept-set', { id: 12, name: 'Edited', items: [] })
+    await flushPromises()
     expect(store.currentSet).toMatchObject({ id: 12, name: 'Edited' })
     expect(store.editorOpen).toBe(true)
   })
 
   // ---------------------------------------------------------------------------
-  // assignConceptSetToContext: additional criteria branch
-  // ---------------------------------------------------------------------------
-
-  it('assignConceptSetToContext attaches concept set to additional criteria event', async () => {
-    const wrapper = createWrapper()
-    await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.addAdditionalCriteria()
-    setup.additionalCriteria.events = [{ id: 'ace-1', criteriaType: 'X', attributes: [] }]
-    setup.selectedCriteriaContext = {
-      eventId: null,
-      ruleIndex: -2,
-      groupIndex: 0,
-      eventIndex: 0,
-    }
-    setup.assignConceptSetToContext({ id: 50, name: 'cs5', items: [] } as any)
-    expect(setup.additionalCriteria.events[0].conceptSet).toEqual({ id: 50, name: 'cs5', items: [] })
-  })
-
-  // ---------------------------------------------------------------------------
-  // handleSave — full save flow
+  // handleSave: full save flow
   // ---------------------------------------------------------------------------
 
   it('handleSave returns early when canSave is false', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
     // canSave is computed false for an empty cohort.
     const cohortDefService = await import('@/services/cohort-definition.service')
     const spy = vi.spyOn(cohortDefService, 'saveCohortDefinition')
-    await setup.handleSave()
+    await (wrapper.vm as any).handleSave()
     expect(spy).not.toHaveBeenCalled()
   })
 
   it('handleSave calls saveCohortDefinition with an Atlas wrapper', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
+    const vm = wrapper.vm as any
     // Make canSave true: have name + entry events + grant permission via mock.
-    setup.cohortName = 'A Cohort'
-    setup.entryEvents = [{ id: 'evt-1', criteriaType: 'X', attributes: [] }]
-    // canSavePermission gates on hasPermission/canWrite — for a new cohort,
-    // both default to true in our basic mock. Verify save attempt runs.
+    vm.cohortName = 'A Cohort'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'evt-1', criteriaType: 'X', attributes: [] }])
+    await wrapper.vm.$nextTick()
     const cohortDefService = await import('@/services/cohort-definition.service')
-    await setup.handleSave()
-    // Either save was invoked OR canSave gated it; we accept that the path was
-    // exercised (function coverage credit).
-    expect(cohortDefService.saveCohortDefinition).toBeDefined()
+    await vm.handleSave()
+    expect(cohortDefService.saveCohortDefinition).toHaveBeenCalled()
   })
 
   // Regression: the save assembled its payload field by field and silently
   // omitted three of them, so anything set there was accepted on screen, shown
-  // in the editor, and dropped on the way to WebAPI — including censoring
+  // in the editor, and dropped on the way to WebAPI: including censoring
   // events, which the agent has always been able to propose. Found by driving
   // the real editor and reading the cohort back from the database; the unit
   // tests missed it because they convert the store directly and never go
@@ -1302,19 +1358,23 @@ describe('CohortBuilder', () => {
   it('handleSave sends every field the editor holds, not just some of them', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'A Cohort'
-    setup.entryEvents = [{ id: 'evt-1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'X', items: [] } }]
-    setup.censorWindow = { startDate: '2015-01-01', endDate: '2019-12-31' }
-    setup.collapseSettings = { collapseType: 'ERA', eraPad: 30 }
-    setup.censoringCriteria = [{ id: 'c1', criteriaType: 'ConditionOccurrence', conceptSet: { id: 1, name: 'Death', items: [] } }]
+    const vm = wrapper.vm as any
+    vm.cohortName = 'A Cohort'
+    entryEventsList(wrapper).vm.$emit('update:events', [
+      { id: 'evt-1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'X', items: [] } },
+    ])
+    censorWindowEditor(wrapper).vm.$emit('update:censorWindow', { startDate: '2015-01-01', endDate: '2019-12-31' })
+    censorWindowEditor(wrapper).vm.$emit('update:collapseSettings', { collapseType: 'ERA', eraPad: 30 })
+    exitCriteriaPanel(wrapper).vm.$emit('update:censoringCriteria', [
+      { id: 'c1', criteriaType: 'ConditionOccurrence', conceptSet: { id: 1, name: 'Death', items: [] } },
+    ])
     await wrapper.vm.$nextTick()
 
     // The converter is stubbed in this spec, so assert on what the editor hands
-    // it — that is exactly where the fields were being dropped.
+    // it: that is exactly where the fields were being dropped.
     const converter = await import('@/services/atlas-converter')
     vi.mocked(converter.convertInternalToAtlas).mockClear()
-    await setup.handleSave()
+    await vm.handleSave()
 
     const definition = vi.mocked(converter.convertInternalToAtlas).mock.calls[0]?.[0] as unknown as {
       censorWindow?: { startDate?: string }
@@ -1334,32 +1394,32 @@ describe('CohortBuilder', () => {
   it('handleExportCopy writes the atlas JSON to clipboard on success', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Copyable'
-    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Copyable'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
     const writeText = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(globalThis, 'navigator', {
       value: { clipboard: { writeText } },
       configurable: true,
     })
-    await setup.handleExportCopy()
+    await vm.handleExportCopy()
     expect(writeText).toHaveBeenCalled()
-    expect(setup.showSuccess).toBe(true)
+    expect(vm.showSuccess).toBe(true)
   })
 
   it('handleExportCopy surfaces an error when clipboard rejects', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Copyable2'
-    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Copyable2'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
     const writeText = vi.fn().mockRejectedValue(new Error('Clipboard blocked'))
     Object.defineProperty(globalThis, 'navigator', {
       value: { clipboard: { writeText } },
       configurable: true,
     })
-    await setup.handleExportCopy()
-    expect(setup.showError).toBe(true)
+    await vm.handleExportCopy()
+    expect(vm.showError).toBe(true)
   })
 
   // ---------------------------------------------------------------------------
@@ -1369,25 +1429,35 @@ describe('CohortBuilder', () => {
   it('handleBackToCurrent is a no-op when cohortId is null', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
     const pushSpy = vi.spyOn(router, 'push')
-    await setup.handleBackToCurrent()
+    await (wrapper.vm as any).handleBackToCurrent()
     // cohortId is null so no navigation should occur for this no-id wrapper.
     expect(
       pushSpy.mock.calls.find(c => typeof c[0] === 'object' && (c[0] as any).path?.includes('version/current'))
     ).toBeUndefined()
   })
 
+  it('handleBackToCurrent navigates to current version when cohortId is set', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    // Wait for onMounted to settle
+    await new Promise(r => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+    const pushSpy = vi.spyOn(router, 'push')
+    await (wrapper.vm as any).handleBackToCurrent()
+    expect(pushSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ path: '/cohortdefinition/42/version/current' })
+    )
+  })
+
   // ---------------------------------------------------------------------------
-  // versionsConfig.currentVersion() — covers the inline currentVersion arrow
+  // versionsConfig.currentVersion(): covers the inline currentVersion arrow
   // function inside the computed config block.
   // ---------------------------------------------------------------------------
 
   it('versionsConfig.currentVersion returns Unknown user when store has no cohort', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    const cfg = setup.versionsConfig
+    const cfg = (wrapper.vm as any).versionsConfig
     const v = cfg.currentVersion()
     expect(v.displayVersion).toBe('Current')
     expect(v.createdBy.name).toBe('Unknown')
@@ -1396,7 +1466,6 @@ describe('CohortBuilder', () => {
   it('versionsConfig.currentVersion uses store.currentCohort when present', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
     const { useCohortStore } = await import('@/stores/cohort')
     const store = useCohortStore()
     store.createNewCohort()
@@ -1406,7 +1475,7 @@ describe('CohortBuilder', () => {
       cc.modifiedDate = '2024-01-01T00:00:00.000Z'
       cc.modifiedBy = { id: 7, name: 'Tester' }
     }
-    const cfg = setup.versionsConfig
+    const cfg = (wrapper.vm as any).versionsConfig
     const v = cfg.currentVersion()
     expect(v.assetId).toBe(5)
     expect((v.createdBy as any).name).toBe('Tester')
@@ -1415,28 +1484,40 @@ describe('CohortBuilder', () => {
   it('versionsConfig.clearPreview delegates to cohort store', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
     const { useCohortStore } = await import('@/stores/cohort')
     const store = useCohortStore()
     const spy = vi.spyOn(store, 'clearPreviewVersion').mockResolvedValue()
-    setup.versionsConfig.clearPreview()
+    ;(wrapper.vm as any).versionsConfig.clearPreview()
     expect(spy).toHaveBeenCalled()
   })
 
   // ---------------------------------------------------------------------------
-  // buildCohortExpression — implicit via buildExportCohort variant; ensure
-  // the explicit function runs by mutating entryEvents (the deep watcher
-  // fires it). Coverage credit comes from the watch handler.
+  // Two-way name/description sync with the host view
   // ---------------------------------------------------------------------------
+
+  it('incoming name prop change updates cohortName ref', async () => {
+    const wrapper = createWrapper({ name: 'One' })
+    await wrapper.vm.$nextTick()
+    await wrapper.setProps({ name: 'Two' })
+    await wrapper.vm.$nextTick()
+    expect((wrapper.vm as any).cohortName).toBe('Two')
+  })
+
+  it('incoming description prop change updates cohortDescription ref', async () => {
+    const wrapper = createWrapper({ description: 'd1' })
+    await wrapper.vm.$nextTick()
+    await wrapper.setProps({ description: 'd2' })
+    await wrapper.vm.$nextTick()
+    expect((wrapper.vm as any).cohortDescription).toBe('d2')
+  })
 
   it('two-way sync emits update:name when local cohortName changes (after props.name is set)', async () => {
     const wrapper = createWrapper({ name: 'Initial' })
     await wrapper.vm.$nextTick()
     await wrapper.setProps({ name: 'Synced' })
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    expect(setup.cohortName).toBe('Synced')
-    setup.cohortName = 'Renamed'
+    expect((wrapper.vm as any).cohortName).toBe('Synced')
+    cohortBreadcrumb(wrapper).vm.$emit('update:modelValue', 'Renamed')
     await wrapper.vm.$nextTick()
     const emits = wrapper.emitted('update:name')
     expect(emits).toBeTruthy()
@@ -1448,122 +1529,44 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     await wrapper.setProps({ description: 'mid' })
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    expect(setup.cohortDescription).toBe('mid')
-    setup.cohortDescription = 'second'
+    expect((wrapper.vm as any).cohortDescription).toBe('mid')
+    ;(wrapper.vm as any).cohortDescription = 'second'
     await wrapper.vm.$nextTick()
     const emits = wrapper.emitted('update:description')
     expect(emits).toBeTruthy()
     expect(emits!.some(e => e[0] === 'second')).toBe(true)
   })
 
-  it('incoming name prop change updates cohortName ref', async () => {
-    const wrapper = createWrapper({ name: 'One' })
-    await wrapper.vm.$nextTick()
-    await wrapper.setProps({ name: 'Two' })
-    await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    expect(setup.cohortName).toBe('Two')
-  })
-
-  it('incoming description prop change updates cohortDescription ref', async () => {
-    const wrapper = createWrapper({ description: 'd1' })
-    await wrapper.vm.$nextTick()
-    await wrapper.setProps({ description: 'd2' })
-    await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    expect(setup.cohortDescription).toBe('d2')
-  })
-
-  // ---------------------------------------------------------------------------
-  // Planned-feature functions — exposed under "_"-prefixed names but never
-  // wired in the template. Calling them directly produces function-coverage
-  // credit without touching the UI.
-  // ---------------------------------------------------------------------------
-
-  it('_getStatusColor returns the right color per status', async () => {
+  it('mutating entryEvents triggers the buildCohortExpression watcher', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    if (typeof setup._getStatusColor === 'function') {
-      expect(setup._getStatusColor('COMPLETE')).toBe('success')
-      expect(setup._getStatusColor('FAILED')).toBe('error')
-      expect(setup._getStatusColor('RUNNING')).toBe('primary')
-      expect(setup._getStatusColor('PENDING')).toBe('warning')
-      expect(setup._getStatusColor('UNKNOWN')).toBe('grey')
-    }
-  })
-
-  it('_getStatusIcon returns the right icon per status', async () => {
-    const wrapper = createWrapper()
-    await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    if (typeof setup._getStatusIcon === 'function') {
-      expect(setup._getStatusIcon('COMPLETE')).toBe('mdi-check-circle')
-      expect(setup._getStatusIcon('FAILED')).toBe('mdi-alert-circle')
-      expect(setup._getStatusIcon('RUNNING')).toBe('mdi-loading mdi-spin')
-      expect(setup._getStatusIcon('PENDING')).toBe('mdi-clock-outline')
-      expect(setup._getStatusIcon('???')).toBe('mdi-help-circle')
-    }
-  })
-
-  it('_getStatusText returns the right label per status', async () => {
-    const wrapper = createWrapper()
-    await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    if (typeof setup._getStatusText === 'function') {
-      expect(setup._getStatusText('COMPLETE')).toBe('Complete')
-      expect(setup._getStatusText('FAILED')).toBe('Failed')
-      expect(setup._getStatusText('RUNNING')).toBe('Generating...')
-      expect(setup._getStatusText('PENDING')).toBe('Pending')
-      expect(setup._getStatusText('weird')).toBe('Unknown')
-    }
-  })
-
-  it('mutating entryEvents triggers buildCohortExpression watcher', async () => {
-    const wrapper = createWrapper()
-    await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.entryEvents.push({ id: 'e1', criteriaType: 'X', attributes: [] })
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
     await wrapper.vm.$nextTick()
     // Watcher fires asynchronously; let it resolve.
     await new Promise(r => setTimeout(r, 0))
-    expect(setup.entryEvents).toHaveLength(1)
-  })
-
-  it('handleBackToCurrent navigates to current version when cohortId is set', async () => {
-    const wrapper = createWrapper({ id: '42' })
-    // Wait for onMounted to settle
-    await new Promise(r => setTimeout(r, 0))
-    await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    const pushSpy = vi.spyOn(router, 'push')
-    await setup.handleBackToCurrent()
-    expect(pushSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ path: '/cohortdefinition/42/version/current' })
-    )
+    expect(entryEventsList(wrapper).props('events')).toHaveLength(1)
   })
 
   // ---------------------------------------------------------------------------
-  // Host bridge handshake — saveRequest / newCohortSignal watchers
+  // Host bridge handshake: saveRequest / newCohortSignal watchers
   // ---------------------------------------------------------------------------
 
   it('saveRequest watcher applies saveOptions to local name/description and calls notifySaved', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
     const { useCohortStore } = await import('@/stores/cohort')
     const store = useCohortStore()
 
     const notifySpy = vi.spyOn(store, 'notifySaved')
-    // canSave is false (no entry events) — handleSave returns {} and the watcher
+    // canSave is false (no entry events): handleSave returns {} and the watcher
     // still calls notifySaved so the bridge's awaited Promise resolves.
     const p = store.requestSave({ name: 'From Agent', description: 'Agent desc' })
     await wrapper.vm.$nextTick()
     await new Promise(r => setTimeout(r, 0))
 
-    expect(setup.cohortName).toBe('From Agent')
-    expect(setup.cohortDescription).toBe('Agent desc')
+    const vm = wrapper.vm as any
+    expect(vm.cohortName).toBe('From Agent')
+    expect(vm.cohortDescription).toBe('Agent desc')
     expect(notifySpy).toHaveBeenCalled()
     await expect(p).resolves.toEqual({})
   })
@@ -1571,8 +1574,8 @@ describe('CohortBuilder', () => {
   it('saveRequest watcher leaves name untouched when saveOptions is empty', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Existing'
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Existing'
     const { useCohortStore } = await import('@/stores/cohort')
     const store = useCohortStore()
 
@@ -1580,19 +1583,20 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     await new Promise(r => setTimeout(r, 0))
 
-    expect(setup.cohortName).toBe('Existing')
+    expect(vm.cohortName).toBe('Existing')
   })
 
   it('newCohortSignal watcher repopulates local refs from the blank store cohort', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
+    const vm = wrapper.vm as any
     // Dirty up the editor first
-    setup.cohortName = 'old name'
-    setup.entryEvents = [{ id: 'evt-old', criteriaType: 'X', attributes: [] }]
-    setup.inclusionRules = [
+    vm.cohortName = 'old name'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'evt-old', criteriaType: 'X', attributes: [] }])
+    inclusionCriteriaPanel(wrapper).vm.$emit('update:modelValue', [
       { id: 'r1', name: 'leftover', description: '', criteriaGroups: [] },
-    ]
+    ])
+    await wrapper.vm.$nextTick()
 
     const { useCohortStore } = await import('@/stores/cohort')
     const store = useCohortStore()
@@ -1602,24 +1606,24 @@ describe('CohortBuilder', () => {
     // Blank cohort uses default name from createNewCohort; in this mock setup it
     // is the cohort store's default. Just assert the watcher cleared the prior
     // entry events and inclusion rules.
-    expect(setup.entryEvents).toEqual([])
-    expect(setup.inclusionRules).toEqual([])
-    expect(setup.exitCriteria).toEqual({ strategy: 'CONTINUOUS_OBSERVATION' })
-    expect(setup.loadedTags).toEqual([])
+    expect(entryEventsList(wrapper).props('events')).toEqual([])
+    expect(inclusionCriteriaPanel(wrapper).props('modelValue')).toEqual([])
+    expect(exitCriteriaPanel(wrapper).props('modelValue')).toEqual({ strategy: 'CONTINUOUS_OBSERVATION' })
+    expect(vm.loadedTags).toEqual([])
   })
 
   it('newCohortSignal watcher is a no-op when there is no current cohort', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'preserved'
+    const vm = wrapper.vm as any
+    vm.cohortName = 'preserved'
     const { useCohortStore } = await import('@/stores/cohort')
     const store = useCohortStore()
     store.clearCohort()
     // Trigger the signal even though no cohort exists; watcher must early-return.
     ;(store as unknown as { newCohortSignal: number }).newCohortSignal += 1
     await wrapper.vm.$nextTick()
-    expect(setup.cohortName).toBe('preserved')
+    expect(vm.cohortName).toBe('preserved')
   })
 
   it('reloadRequest watcher re-fetches the cohort and resyncs local state when props.id is set', async () => {
@@ -1627,11 +1631,11 @@ describe('CohortBuilder', () => {
     // Wait for onMounted's own loadCohort() to resolve first.
     await new Promise(r => setTimeout(r, 0))
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
+    const vm = wrapper.vm as any
 
     const cohortDefService = await import('@/services/cohort-definition.service')
     vi.mocked(cohortDefService.getCohortDefinition).mockClear()
-    setup.cohortName = 'stale preview name'
+    vm.cohortName = 'stale preview name'
 
     const { useCohortStore } = await import('@/stores/cohort')
     const store = useCohortStore()
@@ -1643,7 +1647,7 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
 
     expect(cohortDefService.getCohortDefinition).toHaveBeenCalledWith(42)
-    expect(setup.cohortName).toBe('Existing Cohort')
+    expect(vm.cohortName).toBe('Existing Cohort')
   })
 
   it('reloadRequest watcher does not fetch when there is no props.id (new-cohort route)', async () => {
@@ -1664,8 +1668,8 @@ describe('CohortBuilder', () => {
 
   // Regression for a Critical: loadVersionPreview used to assign the raw,
   // Atlas-shaped version DTO (entityDTO) straight into currentCohort. That
-  // DTO has no top-level conceptSets/entryEvents/inclusionRules — only a
-  // JSON-string `expression` — so previewing a version left currentCohort
+  // DTO has no top-level conceptSets/entryEvents/inclusionRules: only a
+  // JSON-string `expression`: so previewing a version left currentCohort
   // with conceptSets === undefined. handleSave then read
   // `currentCohort?.conceptSets || []`, silently dropping every concept set
   // (and, via the equivalent tags gap, unassigning every tag) on save. The
@@ -1676,7 +1680,7 @@ describe('CohortBuilder', () => {
     const wrapper = createWrapper({ id: '42' })
     await new Promise(r => setTimeout(r, 0))
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
+    const vm = wrapper.vm as any
 
     const versionsService = await import('@/services/cohort-definition-versions.service')
     const historicalConceptSets = [{ id: 1, name: 'Historical Set' }]
@@ -1689,7 +1693,7 @@ describe('CohortBuilder', () => {
         comment: null,
         archived: false,
       },
-      // Raw historical DTO: id/name/description/expression only — no
+      // Raw historical DTO: id/name/description/expression only: no
       // top-level conceptSets, entryEvents, or inclusionRules. Matches the
       // WebAPI's CohortRawDTO shape confirmed against the WebAPI source.
       entityDTO: {
@@ -1736,99 +1740,96 @@ describe('CohortBuilder', () => {
     expect(versionsService.getVersion).toHaveBeenCalledWith(42, 3)
     expect(Array.isArray(store.currentCohort?.conceptSets)).toBe(true)
     expect(store.currentCohort?.conceptSets).toEqual(historicalConceptSets)
-    expect(setup.cohortName).toBe('Historical Name')
+    expect(vm.cohortName).toBe('Historical Name')
   })
 
   it('handleSave returns an empty object when canSave is false (so the bridge resolves)', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    const result = await setup.handleSave()
+    const result = await (wrapper.vm as any).handleSave()
     expect(result).toEqual({})
   })
 
   // ---------------------------------------------------------------------------
   // Section-state chips (entryEventsState / inclusionRulesState /
-  // exitCriteriaState) — pluralization + tone/label branches rendered in the
+  // exitCriteriaState): pluralization + tone/label branches rendered in the
   // section headers.
   // ---------------------------------------------------------------------------
 
   it('inclusionRulesState pluralizes to "{count} rules" when more than one rule', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.inclusionRules = [
+    inclusionCriteriaPanel(wrapper).vm.$emit('update:modelValue', [
       { name: 'r1', description: '', criteriaGroups: [] },
       { name: 'r2', description: '', criteriaGroups: [] },
-    ]
+    ])
     await wrapper.vm.$nextTick()
-    expect(setup.inclusionRulesState).toEqual({ label: '2 rules', tone: 'primary' })
+    expect((wrapper.vm as any).inclusionRulesState).toEqual({ label: '2 rules', tone: 'primary' })
   })
 
   it('inclusionRulesState uses the singular label for exactly one rule', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.inclusionRules = [{ name: 'r1', description: '', criteriaGroups: [] }]
+    inclusionCriteriaPanel(wrapper).vm.$emit('update:modelValue', [
+      { name: 'r1', description: '', criteriaGroups: [] },
+    ])
     await wrapper.vm.$nextTick()
-    expect(setup.inclusionRulesState).toEqual({ label: '1 rule', tone: 'primary' })
+    expect((wrapper.vm as any).inclusionRulesState).toEqual({ label: '1 rule', tone: 'primary' })
   })
 
   it('exitCriteriaState flags a fixed-duration strategy with no offset as "Needs offset"', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.exitCriteria = { strategy: 'FIXED_DURATION' }
+    exitCriteriaPanel(wrapper).vm.$emit('update:modelValue', { strategy: 'FIXED_DURATION' })
     await wrapper.vm.$nextTick()
-    expect(setup.exitCriteriaState).toEqual({ label: 'Needs offset', tone: 'warning' })
+    expect((wrapper.vm as any).exitCriteriaState).toEqual({ label: 'Needs offset', tone: 'warning' })
   })
 
   it('exitCriteriaState reports "+{count} days" for a configured fixed-duration offset', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.exitCriteria = { strategy: 'FIXED_DURATION', offset: 30 }
+    exitCriteriaPanel(wrapper).vm.$emit('update:modelValue', { strategy: 'FIXED_DURATION', offset: 30 })
     await wrapper.vm.$nextTick()
-    expect(setup.exitCriteriaState).toEqual({ label: '+30 days', tone: 'success' })
+    expect((wrapper.vm as any).exitCriteriaState).toEqual({ label: '+30 days', tone: 'success' })
   })
 
   it('exitCriteriaState flags a continuous-drug strategy with no concept set as "Needs drug set"', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.exitCriteria = { strategy: 'CONTINUOUS_DRUG' }
+    exitCriteriaPanel(wrapper).vm.$emit('update:modelValue', { strategy: 'CONTINUOUS_DRUG' })
     await wrapper.vm.$nextTick()
-    expect(setup.exitCriteriaState).toEqual({ label: 'Needs drug set', tone: 'warning' })
+    expect((wrapper.vm as any).exitCriteriaState).toEqual({ label: 'Needs drug set', tone: 'warning' })
   })
 
   it('exitCriteriaState reports "Drug exposure" once a continuous-drug concept set is chosen', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.exitCriteria = { strategy: 'CONTINUOUS_DRUG', conceptSet: { id: 1, name: 'D', items: [] } }
+    exitCriteriaPanel(wrapper).vm.$emit('update:modelValue', {
+      strategy: 'CONTINUOUS_DRUG',
+      conceptSet: { id: 1, name: 'D', items: [] },
+    })
     await wrapper.vm.$nextTick()
-    expect(setup.exitCriteriaState).toEqual({ label: 'Drug exposure', tone: 'success' })
+    expect((wrapper.vm as any).exitCriteriaState).toEqual({ label: 'Drug exposure', tone: 'success' })
   })
 
   it('exitCriteriaState falls back to "Configured" for an unrecognized strategy', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.exitCriteria = { strategy: 'SOMETHING_ELSE' }
+    exitCriteriaPanel(wrapper).vm.$emit('update:modelValue', { strategy: 'SOMETHING_ELSE' })
     await wrapper.vm.$nextTick()
-    expect(setup.exitCriteriaState).toEqual({ label: 'Configured', tone: 'muted' })
+    expect((wrapper.vm as any).exitCriteriaState).toEqual({ label: 'Configured', tone: 'muted' })
   })
 
   // ---------------------------------------------------------------------------
-  // handleSave — server + catch error branches
+  // handleSave: server + catch error branches
   // ---------------------------------------------------------------------------
 
   it('handleSave surfaces a save-to-server error when the API returns no id', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Savable'
-    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Savable'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
 
     const cohortDefService = await import('@/services/cohort-definition.service')
     vi.mocked(cohortDefService.saveCohortDefinition).mockResolvedValueOnce({
@@ -1836,18 +1837,18 @@ describe('CohortBuilder', () => {
       data: {} as never,
     })
 
-    const result = await setup.handleSave()
+    const result = await vm.handleSave()
     expect(result).toEqual({})
-    expect(setup.errorMessage).toBe('Failed to save cohort to server')
-    expect(setup.showError).toBe(true)
+    expect(vm.errorMessage).toBe('Failed to save cohort to server')
+    expect(vm.showError).toBe(true)
   })
 
   it('handleSave logs and shows the localized server error when the save API fails', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Savable'
-    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Savable'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
 
     const apiError = new ApiError('HTTP 500: <html>Internal Server Error</html>', 500, null)
     const cohortDefService = await import('@/services/cohort-definition.service')
@@ -1857,14 +1858,14 @@ describe('CohortBuilder', () => {
     })
     const loggerSpy = vi.spyOn(logger, 'error').mockImplementation(() => {})
 
-    const result = await setup.handleSave()
+    const result = await vm.handleSave()
 
     expect(result).toEqual({})
     expect(loggerSpy).toHaveBeenCalledWith('CohortBuilder', 'saveCohortDefinition failed', apiError)
     // Raw transport text must not leak into the banner.
-    expect(setup.errorMessage).toBe('Failed to save cohort to server')
-    expect(setup.errorMessage).not.toContain('HTTP 500')
-    expect(setup.showError).toBe(true)
+    expect(vm.errorMessage).toBe('Failed to save cohort to server')
+    expect(vm.errorMessage).not.toContain('HTTP 500')
+    expect(vm.showError).toBe(true)
 
     loggerSpy.mockRestore()
   })
@@ -1872,9 +1873,9 @@ describe('CohortBuilder', () => {
   it('handleSave shows the forbidden message when the save API returns 403', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Savable'
-    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Savable'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
 
     const apiError = new ApiError('HTTP 403: Forbidden', 403, null)
     const cohortDefService = await import('@/services/cohort-definition.service')
@@ -1884,12 +1885,12 @@ describe('CohortBuilder', () => {
     })
     const loggerSpy = vi.spyOn(logger, 'error').mockImplementation(() => {})
 
-    const result = await setup.handleSave()
+    const result = await vm.handleSave()
 
     expect(result).toEqual({})
     expect(loggerSpy).toHaveBeenCalledWith('CohortBuilder', 'saveCohortDefinition failed', apiError)
-    expect(setup.errorMessage).toBe('You do not have permission to save this cohort')
-    expect(setup.showError).toBe(true)
+    expect(vm.errorMessage).toBe('You do not have permission to save this cohort')
+    expect(vm.showError).toBe(true)
 
     loggerSpy.mockRestore()
   })
@@ -1897,42 +1898,43 @@ describe('CohortBuilder', () => {
   it('handleSave surfaces the thrown Error message when saving rejects', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Savable'
-    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Savable'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
 
     const cohortDefService = await import('@/services/cohort-definition.service')
     vi.mocked(cohortDefService.saveCohortDefinition).mockRejectedValueOnce(new Error('server boom'))
 
-    const result = await setup.handleSave()
+    const result = await vm.handleSave()
     expect(result).toEqual({})
-    expect(setup.errorMessage).toBe('server boom')
-    expect(setup.showError).toBe(true)
+    expect(vm.errorMessage).toBe('server boom')
+    expect(vm.showError).toBe(true)
   })
 
   it('handleSave falls back to a generic message when a non-Error is thrown', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Savable'
-    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Savable'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
 
     const cohortDefService = await import('@/services/cohort-definition.service')
     vi.mocked(cohortDefService.saveCohortDefinition).mockRejectedValueOnce('plain string failure')
 
-    const result = await setup.handleSave()
+    const result = await vm.handleSave()
     expect(result).toEqual({})
-    expect(setup.errorMessage).toBe('Failed to save cohort')
-    expect(setup.showError).toBe(true)
+    expect(vm.errorMessage).toBe('Failed to save cohort')
+    expect(vm.showError).toBe(true)
   })
 
   it('handleSave surfaces the server message when a tag assignment fails', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Savable'
-    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
-    setup.handleTagsUpdate([{ id: 7, name: 'protected' }] as any)
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Savable'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
+    tagSelectionDialog(wrapper).vm.$emit('update:selected-tags', [{ id: 7, name: 'protected' }])
+    await wrapper.vm.$nextTick()
 
     const cohortDefService = await import('@/services/cohort-definition.service')
     vi.mocked(cohortDefService.assignTagToCohort).mockResolvedValueOnce({
@@ -1940,18 +1942,18 @@ describe('CohortBuilder', () => {
       error: new ApiError('Tag group "Status" allows only one assignment', 400, null),
     })
 
-    await setup.handleSave()
-    expect(setup.errorMessage).toBe('Tag group "Status" allows only one assignment')
-    expect(setup.showError).toBe(true)
+    await vm.handleSave()
+    expect(vm.errorMessage).toBe('Tag group "Status" allows only one assignment')
+    expect(vm.showError).toBe(true)
   })
 
   it('handleSave falls back to a per-tag message when unassignment fails without detail', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Savable'
-    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
-    setup.loadedTags = [{ id: 9, name: 'old-tag' }]
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Savable'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
+    vm.loadedTags = [{ id: 9, name: 'old-tag' }]
 
     const cohortDefService = await import('@/services/cohort-definition.service')
     vi.mocked(cohortDefService.unassignTagFromCohort).mockResolvedValueOnce({
@@ -1959,9 +1961,9 @@ describe('CohortBuilder', () => {
       error: new ApiError('', 0, null),
     })
 
-    await setup.handleSave()
-    expect(setup.errorMessage).toBe('Failed to unassign tag "old-tag"')
-    expect(setup.showError).toBe(true)
+    await vm.handleSave()
+    expect(vm.errorMessage).toBe('Failed to unassign tag "old-tag"')
+    expect(vm.showError).toBe(true)
   })
 
   // ---------------------------------------------------------------------------
@@ -1971,27 +1973,27 @@ describe('CohortBuilder', () => {
   it('handleExportDownload surfaces an export-failed message when conversion errors', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Broken'
-    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Broken'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
     conversionErrorRef.value = 'bad expression'
 
-    setup.handleExportDownload()
-    expect(setup.errorMessage).toBe('Export failed: bad expression')
-    expect(setup.showError).toBe(true)
+    vm.handleExportDownload()
+    expect(vm.errorMessage).toBe('Export failed: bad expression')
+    expect(vm.showError).toBe(true)
   })
 
   it('handleExportCopy surfaces an export-failed message when conversion errors', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Broken2'
-    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Broken2'
+    entryEventsList(wrapper).vm.$emit('update:events', [{ id: 'e1', criteriaType: 'X', attributes: [] }])
     conversionErrorRef.value = 'cannot serialize'
 
-    await setup.handleExportCopy()
-    expect(setup.errorMessage).toBe('Export failed: cannot serialize')
-    expect(setup.showError).toBe(true)
+    await vm.handleExportCopy()
+    expect(vm.errorMessage).toBe('Export failed: cannot serialize')
+    expect(vm.showError).toBe(true)
   })
 
   // ---------------------------------------------------------------------------
@@ -2010,7 +2012,7 @@ describe('CohortBuilder', () => {
         attributes: [],
       },
     ],
-    // No inclusionRules key at all — importing a JSON that omits a section
+    // No inclusionRules key at all: importing a JSON that omits a section
     // must clear it, not leave the previous cohort's rules behind.
     exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' },
     observationPeriod: { priorDays: 365, postDays: 30 },
@@ -2018,63 +2020,55 @@ describe('CohortBuilder', () => {
     conceptSets: [{ id: 7, name: 'Coronary Artery Bypass', items: [] }],
   })
 
-  /** Emit `apply` from the stubbed CohortJsonDialog, as the real dialog does. */
-  async function applyJson(wrapper: ReturnType<typeof createWrapper>, json: string) {
-    const dialog = wrapper.findComponent({ name: 'CohortJsonDialog' })
-    dialog.vm.$emit('apply', json)
-    await new Promise(r => setTimeout(r, 0))
-    await wrapper.vm.$nextTick()
-  }
-
   it('openJsonDialog seeds the dialog with the exported Atlas JSON', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'My Cohort'
+    const vm = wrapper.vm as any
+    vm.cohortName = 'My Cohort'
 
-    ;(wrapper.vm as any).openJsonDialog()
+    vm.openJsonDialog()
     await wrapper.vm.$nextTick()
 
     expect(exportToAtlasSpy).toHaveBeenCalled()
-    expect(setup.showJsonDialog).toBe(true)
-    expect(setup.jsonDialogSource).toBe('{"mocked":true}')
+    expect(cohortJsonDialog(wrapper).props('modelValue')).toBe(true)
+    expect(cohortJsonDialog(wrapper).props('json')).toBe('{"mocked":true}')
   })
 
   it('applying JSON overwrites the expression but keeps name and description', async () => {
     const wrapper = createWrapper({ id: '42' })
     await new Promise(r => setTimeout(r, 0))
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
+    const vm = wrapper.vm as any
 
     // Loaded cohort: one condition entry event and one inclusion rule.
-    expect(setup.cohortName).toBe('Existing Cohort')
-    expect(setup.inclusionRules).toHaveLength(1)
+    expect(vm.cohortName).toBe('Existing Cohort')
+    expect(inclusionCriteriaPanel(wrapper).props('modelValue')).toHaveLength(1)
 
     importFromAtlasSpy.mockResolvedValueOnce(importedProcedureCohort())
     await applyJson(wrapper, '{"PrimaryCriteria":{}}')
 
     expect(importFromAtlasSpy).toHaveBeenCalledWith('{"PrimaryCriteria":{}}')
     // Expression replaced...
-    expect(setup.entryEvents).toHaveLength(1)
-    expect(setup.entryEvents[0].criteriaType).toBe('ProcedureOccurrence')
-    expect(setup.observationPeriod).toEqual({ priorDays: 365, postDays: 30 })
+    const events = entryEventsList(wrapper).props('events')
+    expect(events).toHaveLength(1)
+    expect(events[0].criteriaType).toBe('ProcedureOccurrence')
+    expect(entryEventsList(wrapper).props('observationPeriod')).toEqual({ priorDays: 365, postDays: 30 })
     // ...identity preserved, even though the pasted JSON carried its own name.
-    expect(setup.cohortName).toBe('Existing Cohort')
-    expect(setup.cohortDescription).toBe('A loaded cohort')
+    expect(vm.cohortName).toBe('Existing Cohort')
+    expect(vm.cohortDescription).toBe('A loaded cohort')
   })
 
   it('applying JSON that omits a section clears it', async () => {
     const wrapper = createWrapper({ id: '42' })
     await new Promise(r => setTimeout(r, 0))
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    expect(setup.inclusionRules).toHaveLength(1)
+    expect(inclusionCriteriaPanel(wrapper).props('modelValue')).toHaveLength(1)
 
     importFromAtlasSpy.mockResolvedValueOnce(importedProcedureCohort())
     await applyJson(wrapper, '{}')
 
     // The pasted JSON has no InclusionRules, so the loaded rule is gone.
-    expect(setup.inclusionRules).toEqual([])
+    expect(inclusionCriteriaPanel(wrapper).props('modelValue')).toEqual([])
   })
 
   // Regression test for #144: applying JSON refreshed the entry events but
@@ -2119,41 +2113,81 @@ describe('CohortBuilder', () => {
   it('applying JSON closes the dialog and reports success', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    ;(wrapper.vm as any).openJsonDialog()
+    const vm = wrapper.vm as any
+    vm.openJsonDialog()
     await wrapper.vm.$nextTick()
-    expect(setup.showJsonDialog).toBe(true)
+    expect(cohortJsonDialog(wrapper).props('modelValue')).toBe(true)
 
     importFromAtlasSpy.mockResolvedValueOnce(importedProcedureCohort())
     await applyJson(wrapper, '{}')
 
-    expect(setup.showJsonDialog).toBe(false)
-    expect(setup.showSuccess).toBe(true)
+    expect(cohortJsonDialog(wrapper).props('modelValue')).toBe(false)
+    expect(vm.showSuccess).toBe(true)
   })
 
   it('a failed import leaves the expression untouched and surfaces an error', async () => {
     const wrapper = createWrapper({ id: '42' })
     await new Promise(r => setTimeout(r, 0))
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    ;(wrapper.vm as any).openJsonDialog()
+    const vm = wrapper.vm as any
+    vm.openJsonDialog()
     await wrapper.vm.$nextTick()
 
-    const entryEventsBefore = setup.entryEvents
+    const entryEventsBefore = entryEventsList(wrapper).props('events')
     importFromAtlasSpy.mockResolvedValueOnce(null)
     conversionErrorRef.value = 'Unexpected token }'
 
     await applyJson(wrapper, '{ broken')
 
-    expect(setup.showError).toBe(true)
-    expect(setup.errorMessage).toContain('Unexpected token }')
+    expect(vm.showError).toBe(true)
+    expect(vm.errorMessage).toContain('Unexpected token }')
     // State untouched, dialog stays open so the user can fix the JSON.
-    expect(setup.entryEvents).toBe(entryEventsBefore)
-    expect(setup.showJsonDialog).toBe(true)
+    expect(entryEventsList(wrapper).props('events')).toBe(entryEventsBefore)
+    expect(cohortJsonDialog(wrapper).props('modelValue')).toBe(true)
+  })
+
+  // ---------------------------------------------------------------------------
+  // Planned-feature status helpers: exposed under "_"-prefixed names because
+  // nothing in the template wires them up yet (see the comment above their
+  // declaration in CohortBuilder.vue). Asserted directly since there is no
+  // rendered output to drive them through.
+  // ---------------------------------------------------------------------------
+
+  it('_getStatusColor returns the right color per status', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    expect(vm._getStatusColor('COMPLETE')).toBe('success')
+    expect(vm._getStatusColor('FAILED')).toBe('error')
+    expect(vm._getStatusColor('RUNNING')).toBe('primary')
+    expect(vm._getStatusColor('PENDING')).toBe('warning')
+    expect(vm._getStatusColor('UNKNOWN')).toBe('grey')
+  })
+
+  it('_getStatusIcon returns the right icon per status', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    expect(vm._getStatusIcon('COMPLETE')).toBe('mdi-check-circle')
+    expect(vm._getStatusIcon('FAILED')).toBe('mdi-alert-circle')
+    expect(vm._getStatusIcon('RUNNING')).toBe('mdi-loading mdi-spin')
+    expect(vm._getStatusIcon('PENDING')).toBe('mdi-clock-outline')
+    expect(vm._getStatusIcon('???')).toBe('mdi-help-circle')
+  })
+
+  it('_getStatusText returns the right label per status', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const vm = wrapper.vm as any
+    expect(vm._getStatusText('COMPLETE')).toBe('Complete')
+    expect(vm._getStatusText('FAILED')).toBe('Failed')
+    expect(vm._getStatusText('RUNNING')).toBe('Generating...')
+    expect(vm._getStatusText('PENDING')).toBe('Pending')
+    expect(vm._getStatusText('weird')).toBe('Unknown')
   })
 
   // Regression: `cohortId` is derived from the route param, so a cohort saved
-  // from /cohorts/new left the editor id-less — the Generation panel kept
+  // from /cohorts/new left the editor id-less: the Generation panel kept
   // offering "Save cohort to generate" for a cohort that had just been saved,
   // and it could not be generated without navigating away and back.
   it('opens the saved cohort after saving a new one', async () => {
@@ -2161,7 +2195,9 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     const vm = wrapper.vm as any
     vm.cohortName = 'Adults on ibuprofen'
-    vm.entryEvents = [{ id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Ibuprofen', items: [] } }]
+    entryEventsList(wrapper).vm.$emit('update:events', [
+      { id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Ibuprofen', items: [] } },
+    ])
     await wrapper.vm.$nextTick()
 
     const pushed: string[] = []
@@ -2182,7 +2218,9 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     const vm = wrapper.vm as any
     vm.cohortName = 'Adults on ibuprofen'
-    vm.entryEvents = [{ id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Ibuprofen', items: [] } }]
+    entryEventsList(wrapper).vm.$emit('update:events', [
+      { id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Ibuprofen', items: [] } },
+    ])
     await wrapper.vm.$nextTick()
 
     const spy = vi.spyOn(router, 'replace').mockRejectedValue(new Error('navigation aborted'))
@@ -2193,8 +2231,8 @@ describe('CohortBuilder', () => {
   })
 
   // Regression: adopting the id of the cohort we just saved used to re-run
-  // loadCohort. That fetch is async, so anything added while it was in flight —
-  // the agent's next accepted proposals — was overwritten when it resolved, and
+  // loadCohort. That fetch is async, so anything added while it was in flight,
+  // such as the agent's next accepted proposals, was overwritten when it resolved, and
   // the next save persisted the stale definition. Seen live: an observation
   // window and four inclusion rules accepted on screen, none of them in the
   // saved cohort, which still held only the entry event.
@@ -2203,7 +2241,9 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     const vm = wrapper.vm as any
     vm.cohortName = 'Adults on ibuprofen'
-    vm.entryEvents = [{ id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Ibuprofen', items: [] } }]
+    entryEventsList(wrapper).vm.$emit('update:events', [
+      { id: 'e1', criteriaType: 'DrugExposure', conceptSet: { id: 0, name: 'Ibuprofen', items: [] } },
+    ])
     await wrapper.vm.$nextTick()
 
     const spy = vi.spyOn(router, 'replace').mockResolvedValue(undefined as never)
@@ -2213,12 +2253,12 @@ describe('CohortBuilder', () => {
 
     const cohortDefService = await import('@/services/cohort-definition.service')
     vi.mocked(cohortDefService.getCohortDefinition).mockClear()
-    // The route now carries the saved id — the same change router.replace made.
+    // The route now carries the saved id: the same change router.replace made.
     await wrapper.setProps({ id: String(saved.id) })
     await flushPromises()
 
     expect(cohortDefService.getCohortDefinition).not.toHaveBeenCalled()
-    expect(vm.entryEvents).toHaveLength(1)
+    expect(entryEventsList(wrapper).props('events')).toHaveLength(1)
     expect(vm.cohortName).toBe('Adults on ibuprofen')
   })
 

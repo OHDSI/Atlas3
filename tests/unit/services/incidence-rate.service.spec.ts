@@ -106,7 +106,11 @@ describe('services/incidence-rate.service', () => {
       const result = await getIncidenceRate(7)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.expression.timeAtRisk.start.DateField).toBe('StartDate')
+      if (result.success) {
+        expect(result.data.expression.timeAtRisk.start.DateField).toBe('StartDate')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/ir/7')
     })
@@ -122,7 +126,11 @@ describe('services/incidence-rate.service', () => {
       const result = await getIncidenceRate(7)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.status).toBe(403)
+      if (result.success) {
+        expect.fail('expected getIncidenceRate to fail')
+      } else {
+        expect(result.error.status).toBe(403)
+      }
     })
 
     it('synthesizes a default timeAtRisk expression when the wire payload omits it', async () => {
@@ -136,6 +144,8 @@ describe('services/incidence-rate.service', () => {
           start: { DateField: 'StartDate', Offset: 0 },
           end: { DateField: 'StartDate', Offset: 0 },
         })
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
     })
 
@@ -145,7 +155,11 @@ describe('services/incidence-rate.service', () => {
       const result = await getIncidenceRate(1)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.message).toBe('expression is not valid JSON')
+      if (result.success) {
+        expect.fail('expected getIncidenceRate to fail')
+      } else {
+        expect(result.error.message).toBe('expression is not valid JSON')
+      }
     })
   })
 
@@ -210,7 +224,9 @@ describe('services/incidence-rate.service', () => {
       const result = await deleteIncidenceRate(7)
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected deleteIncidenceRate to fail')
+      } else {
         expect(result.error.status).toBe(409)
         expect(result.error.body).toBe('incidence rate is referenced by a generation')
       }
@@ -224,7 +240,11 @@ describe('services/incidence-rate.service', () => {
       const result = await existsIncidenceRate('hello world', 0)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toBe(0)
+      if (result.success) {
+        expect(result.data).toBe(0)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/ir/0/exists?name=hello%20world')
     })
@@ -271,7 +291,9 @@ describe('services/incidence-rate.service', () => {
       const result = await listIncidenceRateInfo(7)
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected listIncidenceRateInfo to fail')
+      } else {
         expect(result.error.message).toBe('Invalid info list response')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
@@ -298,7 +320,9 @@ describe('services/incidence-rate.service', () => {
       const result = await getIncidenceRateInfoBySource(7, 'CCAE')
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected getIncidenceRateInfoBySource to fail')
+      } else {
         expect(result.error.message).toBe('Invalid info-by-source response')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
@@ -342,7 +366,11 @@ describe('services/incidence-rate.service', () => {
       const result = await cancelIncidenceRateGeneration(1, 'CCAE')
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.status).toBe(404)
+      if (result.success) {
+        expect.fail('expected cancelIncidenceRateGeneration to fail')
+      } else {
+        expect(result.error.status).toBe(404)
+      }
     })
   })
 
@@ -386,7 +414,9 @@ describe('services/incidence-rate.service', () => {
       const result = await getIncidenceRateReport(1, 'CCAE', 10, 20)
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected getIncidenceRateReport to fail')
+      } else {
         expect(result.error.message).toBe('Invalid report response')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)

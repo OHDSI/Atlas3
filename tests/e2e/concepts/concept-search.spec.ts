@@ -41,18 +41,16 @@ test.describe('Concept Search', () => {
     // Wait for search results (debounce + API call)
     await page.waitForTimeout(2000) // Wait for API call
     
-    // Check if we have results or "no data" message
+    // The mocked vocabulary search always returns non-empty diabetes
+    // results for a "diabetes" query (helpers/api-mocks.ts), so this is not
+    // a genuine two-state case.
     const rows = page.locator('table tbody tr')
     const rowCount = await rows.count()
-    
-    if (rowCount > 0) {
-      // If we have results, verify they contain "diabetes"
-      const firstRowText = await rows.first().textContent()
-      if (firstRowText && !firstRowText.includes('No records')) {
-        expect(firstRowText.toLowerCase()).toContain('diabetes')
-      }
-    }
-    
+    expect(rowCount).toBeGreaterThan(0)
+
+    const firstRowText = await rows.first().textContent()
+    expect(firstRowText?.toLowerCase()).toContain('diabetes')
+
     // Verify table structure exists (use first() since there are multiple tables on page)
     const table = page.locator('table').first()
     await expect(table).toBeVisible()
@@ -80,31 +78,52 @@ test.describe('Concept Search', () => {
     const table = page.locator('table').first()
     await expect(table).toBeVisible({ timeout: 5000 })
     
-    // If there are results, try to sort
+    // The mocked search always returns non-empty diabetes results with a
+    // rendered header row, so this is not a genuine two-state case.
     const rows = page.locator('table tbody tr')
     const rowCount = await rows.count()
-    
-    if (rowCount > 0) {
-      // Look for Name column header
-      const headers = page.locator('table thead th')
-      const headerCount = await headers.count()
-      
-      // Try to click on a sortable header if one exists
-      if (headerCount > 0) {
-        const secondHeader = headers.nth(1) // Usually the name column
-        await secondHeader.click()
-        await page.waitForTimeout(1000)
-        
-        // Verify table still has content
-        expect(await page.locator('table tbody tr').count()).toBeGreaterThanOrEqual(0)
-      }
-    }
+    expect(rowCount).toBeGreaterThan(0)
+
+    const headers = page.locator('table thead th')
+    const headerCount = await headers.count()
+    expect(headerCount).toBeGreaterThan(0)
+
+    const secondHeader = headers.nth(1) // Usually the name column
+    await secondHeader.click()
+    await page.waitForTimeout(1000)
+
+    // Verify table still has content
+    expect(await page.locator('table tbody tr').count()).toBeGreaterThan(0)
   })
 
   /**
    * Paginate through 100+ results
    */
   test('should paginate through results with 100+ items', async ({ page }) => {
+    // The fixture query router (helpers/api-mocks.ts) returns [] for any
+    // query that doesn't match diabetes/cardiovascular terms, so "disorder"
+    // always returned zero rows and every guard below was permanently dead.
+    // Serve a synthetic 120-row result set instead so pagination is
+    // actually exercised (default page size is 25, per src/stores/
+    // concept-search.ts, so this yields 5 pages).
+    const manyResults = Array.from({ length: 120 }, (_, i) => ({
+      CONCEPT_ID: 900000 + i,
+      CONCEPT_NAME: `Disorder concept ${i + 1}`,
+      CONCEPT_CODE: `D${i}`,
+      DOMAIN_ID: 'Condition',
+      VOCABULARY_ID: 'SNOMED',
+      CONCEPT_CLASS_ID: 'Clinical Finding',
+      STANDARD_CONCEPT: 'S',
+      INVALID_REASON: null,
+    }))
+    await page.route('**/WebAPI/vocabulary/*/search**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(manyResults),
+      })
+    })
+
     // Search for a common term that returns many results
     const searchInput = page.locator('input[type="text"]').first()
     await searchInput.fill('disorder') // Common medical term
@@ -115,33 +134,27 @@ test.describe('Concept Search', () => {
 
     // Search is triggered by pressing Enter on the input (no Search button)
     await searchInput.press('Enter')
-    
+
     // Wait for results
     await page.waitForTimeout(2000)
-    
-    // Check if pagination controls exist
+
+    // Pagination controls must exist for a 120-row result set
     const paginationContainer = page.locator('.v-pagination, .v-data-table-footer')
-    
-    if (await paginationContainer.count() > 0) {
-      // Get current page results
-      const rowsPage1 = page.locator('table tbody tr')
-      const page1Count = await rowsPage1.count()
-      
-      if (page1Count > 0) {
-        // Try to click next page button if it exists
-        const nextButton = page.locator('button[aria-label*="next"], .v-pagination__next').first()
-        
-        if (await nextButton.isEnabled()) {
-          await nextButton.click()
-          await page.waitForTimeout(1000)
-          
-          // Verify we still have results (might be different page)
-          const rowsPage2 = page.locator('table tbody tr')
-          expect(await rowsPage2.count()).toBeGreaterThanOrEqual(0)
-        }
-      }
-    }
-    
+    await expect(paginationContainer.first()).toBeVisible()
+
+    const rowsPage1 = page.locator('table tbody tr')
+    const page1Count = await rowsPage1.count()
+    expect(page1Count).toBeGreaterThan(0)
+
+    const nextButton = page.locator('button[aria-label*="next"], .v-pagination__next').first()
+    await expect(nextButton).toBeEnabled()
+    await nextButton.click()
+    await page.waitForTimeout(1000)
+
+    // Verify we still have results on the next page
+    const rowsPage2 = page.locator('table tbody tr')
+    expect(await rowsPage2.count()).toBeGreaterThan(0)
+
     // Test passes if we can search and get results
     expect(await page.locator('table').count()).toBeGreaterThan(0)
   })
@@ -150,30 +163,41 @@ test.describe('Concept Search', () => {
    * Test items per page selector
    */
   test('should change items per page', async ({ page }) => {
-    // Search for concepts
+    // Search for concepts. Search only fires on Enter/button click (no
+    // auto-search on typing); the previous version of this test never
+    // pressed Enter, so waitForSelector below matched the table's "no
+    // data" placeholder row, not real results, and every assertion after
+    // it was checking an empty table.
     const searchInput = page.getByPlaceholder(/search/i)
     await searchInput.fill('diabetes')
+    await page.keyboard.press('Escape')
+    await waitForOverlaysToClose(page)
+    await searchInput.press('Enter')
     await page.waitForSelector('table tbody tr', { timeout: 5000 })
-    
+
     // Count rows with default page size (25)
     let rows = page.locator('table tbody tr')
     let rowCount = await rows.count()
     expect(rowCount).toBeLessThanOrEqual(25)
-    
-    // Find items per page selector
-    const itemsPerPageSelect = page.locator('.v-select').filter({ hasText: /items per page/i })
-    
-    if (await itemsPerPageSelect.count() > 0) {
-      // Change to 50 items per page
-      await itemsPerPageSelect.click()
-      await page.getByRole('option', { name: '50' }).click()
-      await page.waitForTimeout(1000)
-      
-      // Verify more rows are displayed (if enough results exist)
-      rows = page.locator('table tbody tr')
-      rowCount = await rows.count()
-      expect(rowCount).toBeGreaterThan(0)
-    }
+
+    // Find items per page selector. The label "Items per page:" is a
+    // sibling <span>, not inside the .v-select itself, so filtering
+    // .v-select by that text never matched; the select's real menu
+    // options are 60/120/240 (ConceptTable.vue), not 50.
+    const itemsPerPageSelect = page
+      .locator('div', { hasText: /^Items per page:/ })
+      .locator('.v-select')
+      .last()
+    await expect(itemsPerPageSelect).toBeVisible()
+
+    await itemsPerPageSelect.click()
+    await page.getByRole('option', { name: '120' }).click()
+    await page.waitForTimeout(1000)
+
+    // Verify results are still displayed after the page-size change
+    rows = page.locator('table tbody tr')
+    rowCount = await rows.count()
+    expect(rowCount).toBeGreaterThan(0)
   })
 
   /**
@@ -254,16 +278,14 @@ test.describe('Concept Search', () => {
     
     // Enter less than 3 characters
     await searchInput.fill('di')
-    
-    // Check if hint or validation message appears
-    const hint = page.locator('.v-messages__message, .v-field__details')
-    const hasHint = await hint.count() > 0
-    
-    if (hasHint) {
-      const hintText = await hint.first().textContent()
-      expect(hintText).toBeTruthy()
-    }
-    
+
+    // ConceptSearch.vue renders its validation message in a plain
+    // `<p class="concept-search__hint">`, not through Vuetify's own
+    // field-message slots (.v-messages__message / .v-field__details),
+    // which this test's original selector targeted and never matched.
+    const hint = page.locator('.concept-search__hint')
+    await expect(hint).toContainText('Please enter at least 3 characters')
+
     // Enter 3+ characters should remove hint/error
     await searchInput.fill('diabetes')
     await page.waitForTimeout(500)

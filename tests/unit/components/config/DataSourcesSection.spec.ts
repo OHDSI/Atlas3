@@ -256,11 +256,10 @@ describe('DataSourcesSection.vue', () => {
       // The first source should be auto-selected, but let's trigger a change
       const radioInputs = wrapper.findAll('input[type="radio"]')
       // Find vocabulary radios (first of every 3)
-      if (radioInputs.length >= 4) {
-        await radioInputs[3].setValue(true) // Select second source's vocabulary
-        await wrapper.vm.$nextTick()
-        expect(setItemSpy).toHaveBeenCalledWith('selectedVocabulary', 'SYNPUF-5PCT')
-      }
+      expect(radioInputs.length).toBeGreaterThanOrEqual(4)
+      await radioInputs[3].setValue(true) // Select second source's vocabulary
+      await wrapper.vm.$nextTick()
+      expect(setItemSpy).toHaveBeenCalledWith('selectedVocabulary', 'SYNPUF-5PCT')
     })
   })
 
@@ -291,15 +290,13 @@ describe('DataSourcesSection.vue', () => {
 
       // Find connection button by looking for mdi-connection icon
       const icons = wrapper.findAll('.mdi-connection')
-      if (icons.length > 0) {
-        // Click the parent button
-        const btn = icons[0].element.closest('button')
-        if (btn) {
-          await btn.click()
-          await flushPromises()
-          expect(mockHttpGet).toHaveBeenCalledWith('/source/connection/OHDSI-CDMV5')
-        }
-      }
+      expect(icons.length).toBeGreaterThan(0)
+      // Click the parent button
+      const btn = icons[0].element.closest('button')
+      expect(btn).not.toBeNull()
+      await btn!.click()
+      await flushPromises()
+      expect(mockHttpGet).toHaveBeenCalledWith('/source/connection/OHDSI-CDMV5')
     })
 
     it('should call refresh cache API when refresh button clicked', async () => {
@@ -313,16 +310,14 @@ describe('DataSourcesSection.vue', () => {
 
       // Find refresh button by looking for mdi-refresh icon
       const icons = wrapper.findAll('.mdi-refresh')
-      if (icons.length > 0) {
-        // Click the parent button
-        const btn = icons[0].element.closest('button')
-        if (btn) {
-          await btn.click()
-          await flushPromises()
-          // httpPost is called with URL and optional undefined body
-          expect(mockHttpPost).toHaveBeenCalledWith('/cdmresults/OHDSI-CDMV5/clearCache', undefined)
-        }
-      }
+      expect(icons.length).toBeGreaterThan(0)
+      // Click the parent button
+      const btn = icons[0].element.closest('button')
+      expect(btn).not.toBeNull()
+      await btn!.click()
+      await flushPromises()
+      // httpPost is called with URL and optional undefined body
+      expect(mockHttpPost).toHaveBeenCalledWith('/cdmresults/OHDSI-CDMV5/clearCache', undefined)
     })
   })
 
@@ -396,14 +391,12 @@ describe('DataSourcesSection.vue', () => {
 
       // Find the button with the mdi-server icon
       const icons = wrapper.findAll('.mdi-server')
-      if (icons.length > 0) {
-        const btn = icons[0].element.closest('button')
-        if (btn) {
-          await btn.click()
-          await wrapper.vm.$nextTick()
-          expect(confirmSpy).toHaveBeenCalled()
-        }
-      }
+      expect(icons.length).toBeGreaterThan(0)
+      const btn = icons[0].element.closest('button')
+      expect(btn).not.toBeNull()
+      await btn!.click()
+      await wrapper.vm.$nextTick()
+      expect(confirmSpy).toHaveBeenCalled()
     })
   })
 
@@ -419,18 +412,17 @@ describe('DataSourcesSection.vue', () => {
 
       // Find and click connection button
       const icons = wrapper.findAll('.mdi-connection')
-      if (icons.length > 0) {
-        const btn = icons[0].element.closest('button')
-        if (btn) {
-          await btn.click()
-          await flushPromises()
-          await wrapper.vm.$nextTick()
+      expect(icons.length).toBeGreaterThan(0)
+      const btn = icons[0].element.closest('button')
+      expect(btn).not.toBeNull()
+      await btn!.click()
+      await flushPromises()
+      await wrapper.vm.$nextTick()
 
-          const snackbars = wrapper.findAllComponents({ name: 'AtlasSnackbar' })
-          const successSnackbar = snackbars.find(s => s.props('severity') === 'success')
-          expect(successSnackbar?.props('modelValue')).toBe(true)
-        }
-      }
+      const snackbars = wrapper.findAllComponents({ name: 'AtlasSnackbar' })
+      const successSnackbar = snackbars.find(s => s.props('severity') === 'success')
+      expect(successSnackbar).toBeDefined()
+      expect(successSnackbar!.props('modelValue')).toBe(true)
     })
 
     it('should show error toast on connection failure', async () => {
@@ -454,18 +446,17 @@ describe('DataSourcesSection.vue', () => {
 
       // Find and click connection button
       const icons = wrapper.findAll('.mdi-connection')
-      if (icons.length > 0) {
-        const btn = icons[0].element.closest('button')
-        if (btn) {
-          await btn.click()
-          await flushPromises()
-          await wrapper.vm.$nextTick()
+      expect(icons.length).toBeGreaterThan(0)
+      const btn = icons[0].element.closest('button')
+      expect(btn).not.toBeNull()
+      await btn!.click()
+      await flushPromises()
+      await wrapper.vm.$nextTick()
 
-          const snackbars = wrapper.findAllComponents({ name: 'AtlasSnackbar' })
-          const errorSnackbar = snackbars.find(s => s.props('severity') === 'danger')
-          expect(errorSnackbar?.props('modelValue')).toBe(true)
-        }
-      }
+      const snackbars = wrapper.findAllComponents({ name: 'AtlasSnackbar' })
+      const errorSnackbar = snackbars.find(s => s.props('severity') === 'danger')
+      expect(errorSnackbar).toBeDefined()
+      expect(errorSnackbar!.props('modelValue')).toBe(true)
     })
   })
 

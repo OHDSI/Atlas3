@@ -33,6 +33,7 @@
                 :tone="matchTypeTemp === 'ALL' ? undefined : 'neutral'"
                 size="sm"
                 class="flex-1 match-chip--all"
+                data-test="match-chip"
                 @click="matchTypeTemp = 'ALL'"
               >
                 {{ t('options.all', 'All') }}
@@ -42,6 +43,7 @@
                 :tone="matchTypeTemp === 'ANY' ? undefined : 'neutral'"
                 size="sm"
                 class="flex-1 match-chip--any"
+                data-test="match-chip"
                 @click="matchTypeTemp = 'ANY'"
               >
                 {{ t('options.any', 'Any') }}
@@ -51,6 +53,7 @@
                 :tone="matchTypeTemp === 'AT_LEAST' ? undefined : 'neutral'"
                 size="sm"
                 class="flex-1 match-chip--at_least"
+                data-test="match-chip"
                 @click="matchTypeTemp = 'AT_LEAST'"
               >
                 {{ t('options.atLeast', 'At least') }}
@@ -60,6 +63,7 @@
                 :tone="matchTypeTemp === 'AT_MOST' ? undefined : 'neutral'"
                 size="sm"
                 class="flex-1 match-chip--at_most"
+                data-test="match-chip"
                 @click="matchTypeTemp = 'AT_MOST'"
               >
                 {{ t('options.atMost', 'At most') }}
@@ -72,6 +76,7 @@
               :label="t('columns.count', 'Count').value"
               min="1"
               class="mt-3"
+              data-test="match-count"
             />
           </v-card-text>
           <v-card-actions class="pa-2">
@@ -285,7 +290,13 @@ const emit = defineEmits<{
   ]
 }>()
 
-// Local state
+// One-way-data-flow violation, known and not yet fixed: this stores the
+// parent's object by reference rather than cloning it, so every mutation of
+// localGroup writes straight into the parent's modelValue before any
+// update:modelValue is emitted. It also leaks state between tests that share
+// a fixture object, which is why GroupCriteriaUI.spec.ts fails under
+// --sequence.shuffle. Fixing it means auditing every consumer's assumption
+// about when the parent sees an edit, so it is deliberately out of scope here.
 const localGroup = ref<CriteriaGroup>(
   props.modelValue || {
     id: uuidv4(),

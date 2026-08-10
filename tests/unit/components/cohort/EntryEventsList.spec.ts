@@ -151,14 +151,19 @@ describe('EntryEventsList', () => {
   describe('Events', () => {
     it('should emit update:events when adding new event', async () => {
       const wrapper = mountComponent()
+
+      // The filter menu content is lazy: it only mounts once the
+      // "add criteria" button opens it.
+      await wrapper.find('[data-testid="add-entry-event"]').trigger('click')
+      await wrapper.vm.$nextTick()
+
       const listItems = wrapper.findAllComponents({ name: 'VListItem' })
+      expect(listItems.length).toBeGreaterThan(0)
 
-      if (listItems.length > 0) {
-        await listItems[0].trigger('click')
-        await wrapper.vm.$nextTick()
+      await listItems[0].trigger('click')
+      await wrapper.vm.$nextTick()
 
-        expect(wrapper.emitted('update:events')).toBeTruthy()
-      }
+      expect(wrapper.emitted('update:events')).toBeTruthy()
     })
   })
 })
