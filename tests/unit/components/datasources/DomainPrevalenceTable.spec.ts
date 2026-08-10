@@ -153,10 +153,21 @@ describe('DomainPrevalenceTable', () => {
     expect(createElementSpy).toHaveBeenCalledWith('a')
   })
 
-  it('should render pagination controls', () => {
-    const pagination = wrapper.findComponent({ name: 'VPagination' })
-    // Pagination may not exist if there's only one page
-    expect(pagination.exists() || true).toBe(true)
+  it('should render pagination controls once results span more than one page', () => {
+    // The default 3-row fixture fits on a single page, so AtlasPagination is
+    // not mounted (see the `v-if="totalPages > 1"` guard in the component).
+    // Use a fixture larger than the default itemsPerPage (50) to exercise it.
+    const manyRows: PrevalenceTableRow[] = Array.from({ length: 60 }, (_, i) => ({
+      conceptId: i + 1,
+      conceptName: `Test Concept ${i + 1}`,
+      personCount: 100 + i,
+      prevalence: 0.5,
+      metric: 1.5
+    }))
+    const wrapperWithManyRows = mountComponent({ data: manyRows })
+    const pagination = wrapperWithManyRows.findComponent({ name: 'VPagination' })
+    expect(pagination.exists()).toBe(true)
+    expect(pagination.props('length')).toBe(2)
   })
 
   it('should handle items per page change', async () => {

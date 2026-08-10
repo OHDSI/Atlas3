@@ -398,18 +398,26 @@ describe('TrexSQLService', () => {
 
   describe('cancelCountRequest', () => {
     it('cancels active request for source by calling abort', () => {
-      // We can't easily test internal abort controller without access to internals
-      // Just verify the function doesn't throw when canceling a non-existent request
+      const abortSpy = vi.spyOn(AbortController.prototype, 'abort')
+      vi.mocked(global.fetch).mockImplementation(() => new Promise(() => {
+        // Never resolves; getPatientCount only needs to run synchronously
+        // up to its first await to register the AbortController.
+      }))
+      getPatientCount('CDM_SOURCE', {}).catch(() => {})
+
       cancelCountRequest('CDM_SOURCE')
 
-      // No error means it handled gracefully
-      expect(true).toBe(true)
+      expect(abortSpy).toHaveBeenCalledTimes(1)
+      abortSpy.mockRestore()
     })
 
     it('does nothing for non-existent request', () => {
-      // Should not throw
+      const abortSpy = vi.spyOn(AbortController.prototype, 'abort')
+
       cancelCountRequest('NON_EXISTENT')
-      expect(true).toBe(true)
+
+      expect(abortSpy).not.toHaveBeenCalled()
+      abortSpy.mockRestore()
     })
   })
 
