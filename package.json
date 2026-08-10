@@ -38,6 +38,7 @@
     "i18n:extract": "node scripts/i18n-sync.mjs extract",
     "i18n:apply": "node scripts/i18n-sync.mjs apply",
     "i18n:bootstrap": "node scripts/i18n-sync.mjs bootstrap",
+    "test:no-conditional-assertions": "node scripts/find-conditional-assertions.mjs tests",
     "prebuild": "npm run tokens:build && npm run vendor:build && npm run generate:routes",
     "ui:dev": "histoire dev",
     "ui:build": "histoire build",
