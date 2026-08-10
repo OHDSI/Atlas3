@@ -712,8 +712,14 @@ describe('GroupCriteriaUI', () => {
       const all = body.find('.match-chip--all')
       const any = body.find('.match-chip--any')
 
-      expect(all.attributes('data-selected')).toBe('true')
-      expect(any.attributes('data-selected')).toBe('false')
+      // Assert the styling users actually see: the active chip renders
+      // :variant="tonal" in the primary colour, the inactive one renders the
+      // outlined :tone="neutral" form with no colour class. A parallel data-*
+      // mirror would stay right while these visible bindings regressed.
+      expect(all.classes()).toContain('v-btn--variant-tonal')
+      expect(all.classes()).toContain('text-primary')
+      expect(any.classes()).toContain('v-btn--variant-outlined')
+      expect(any.classes()).not.toContain('text-primary')
     })
 
     it('moves the selection when a different match type is chosen', async () => {
@@ -724,8 +730,10 @@ describe('GroupCriteriaUI', () => {
       await body.find('.match-chip--any').trigger('click')
       await wrapper.vm.$nextTick()
 
-      expect(body.find('.match-chip--any').attributes('data-selected')).toBe('true')
-      expect(body.find('.match-chip--all').attributes('data-selected')).toBe('false')
+      expect(body.find('.match-chip--any').classes()).toContain('v-btn--variant-tonal')
+      expect(body.find('.match-chip--any').classes()).toContain('text-primary')
+      expect(body.find('.match-chip--all').classes()).toContain('v-btn--variant-outlined')
+      expect(body.find('.match-chip--all').classes()).not.toContain('text-primary')
     })
 
     it('shows the count field only for AT_LEAST and AT_MOST', async () => {

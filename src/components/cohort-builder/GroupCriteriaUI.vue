@@ -34,7 +34,6 @@
                 size="sm"
                 class="flex-1 match-chip--all"
                 data-test="match-chip"
-                :data-selected="matchTypeTemp === 'ALL'"
                 @click="matchTypeTemp = 'ALL'"
               >
                 {{ t('options.all', 'All') }}
@@ -45,7 +44,6 @@
                 size="sm"
                 class="flex-1 match-chip--any"
                 data-test="match-chip"
-                :data-selected="matchTypeTemp === 'ANY'"
                 @click="matchTypeTemp = 'ANY'"
               >
                 {{ t('options.any', 'Any') }}
@@ -56,7 +54,6 @@
                 size="sm"
                 class="flex-1 match-chip--at_least"
                 data-test="match-chip"
-                :data-selected="matchTypeTemp === 'AT_LEAST'"
                 @click="matchTypeTemp = 'AT_LEAST'"
               >
                 {{ t('options.atLeast', 'At least') }}
@@ -67,7 +64,6 @@
                 size="sm"
                 class="flex-1 match-chip--at_most"
                 data-test="match-chip"
-                :data-selected="matchTypeTemp === 'AT_MOST'"
                 @click="matchTypeTemp = 'AT_MOST'"
               >
                 {{ t('options.atMost', 'At most') }}
@@ -294,7 +290,13 @@ const emit = defineEmits<{
   ]
 }>()
 
-// Local state
+// One-way-data-flow violation, known and not yet fixed: this stores the
+// parent's object by reference rather than cloning it, so every mutation of
+// localGroup writes straight into the parent's modelValue before any
+// update:modelValue is emitted. It also leaks state between tests that share
+// a fixture object, which is why GroupCriteriaUI.spec.ts fails under
+// --sequence.shuffle. Fixing it means auditing every consumer's assumption
+// about when the parent sees an edit, so it is deliberately out of scope here.
 const localGroup = ref<CriteriaGroup>(
   props.modelValue || {
     id: uuidv4(),
