@@ -11,7 +11,7 @@
       hide-details
     />
     <AtlasTextField
-      v-model="value"
+      v-model="text"
       class="text-filter__value"
       variant="outlined"
       density="compact"
@@ -25,7 +25,6 @@ import { computed, toRef } from 'vue'
 import { AtlasSelect, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { TextFilter, TextFilterOp } from '../circe.types'
-import { optionalTextBinding } from './bindings'
 
 const { t } = useI18n()
 
@@ -45,14 +44,19 @@ const operators = computed(() => [
 ])
 
 const operator = computed<TextFilterOp | undefined>({
-  get: () => modelValue.value.Op,
-  set: (value: TextFilterOp | undefined) => {
-    if (value === undefined) return
+  get: () => modelValue.value.Op ?? undefined,
+  set: (value: TextFilterOp | null | undefined) => {
+    if (value === null || value === undefined) return
     modelValue.value.Op = value
   },
 })
 
-const value = optionalTextBinding(modelValue, 'Value')
+const text = computed<string | undefined>({
+  get: () => modelValue.value.Text ?? undefined,
+  set: (value: string | null | undefined) => {
+    modelValue.value.Text = value === '' || value === null || value === undefined ? undefined : value
+  },
+})
 </script>
 
 <style scoped>

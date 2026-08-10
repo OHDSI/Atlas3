@@ -80,7 +80,7 @@ export type DateRange = z.infer<typeof DateRangeSchema>
 export type DateRangeOp = NonNullable<DateRange['Op']>
 
 export const TextFilterSchema = z.object({
-  Value: z.string().nullish(),
+  Text: z.string().nullish(),
   Op: z.enum(['endsWith', 'startsWith', 'contains', '!endsWith', '!startsWith', '!contains']).nullish(),
 })
 export type TextFilter = z.infer<typeof TextFilterSchema>
