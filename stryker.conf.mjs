@@ -33,9 +33,28 @@ const shardSpec = process.env.STRYKER_SHARD
 let mutate = fullMutate
 let shardLabel = 'full set'
 if (shardSpec) {
-  const [shardIndexRaw, shardCountRaw] = shardSpec.split('/')
-  const shardIndex = Number(shardIndexRaw)
-  const shardCount = Number(shardCountRaw)
+  // A silently-empty mutate array (from a typo'd or malformed shard spec) is the exact
+  // scope-reduction failure this sharding exists to avoid, so any unparseable or
+  // out-of-range value throws instead of quietly mutating nothing.
+  const match = /^(\d+)\/(\d+)$/.exec(shardSpec.trim())
+  if (!match) {
+    throw new Error(
+      `[stryker.conf] STRYKER_SHARD must be in the form "i/N" (1-based i, e.g. "2/6"), got: ${JSON.stringify(shardSpec)}`
+    )
+  }
+  const shardIndex = Number(match[1])
+  const shardCount = Number(match[2])
+  if (shardCount < 1) {
+    throw new Error(
+      `[stryker.conf] STRYKER_SHARD's N must be at least 1, got: ${JSON.stringify(shardSpec)}`
+    )
+  }
+  if (shardIndex < 1 || shardIndex > shardCount) {
+    throw new Error(
+      `[stryker.conf] STRYKER_SHARD's i must be between 1 and N in the form "i/N" ` +
+      `(e.g. "2/6"), got i=${shardIndex}, N=${shardCount}`
+    )
+  }
   mutate = fullMutate.filter((_, idx) => idx % shardCount === shardIndex - 1)
   shardLabel = `shard ${shardIndex}/${shardCount}`
 }

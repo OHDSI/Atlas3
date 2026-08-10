@@ -108,12 +108,12 @@ Per-file worked examples, measured on commit 5884245:
 
 A whole-repository run was attempted locally to establish the gate's break threshold and
 did not finish: at concurrency 2 it reached 36,667 of the 38,915 mutants in 8h21m, RAM-bound
-at around 4GB free, before its parent process exited. That partial run scored **70.3%**
+at around 4GB free, before its parent process exited. That partial run scored **70.4%**
 (25,788 killed, 10,853 survived, 26 timed out, out of 36,667 tested), a **94.2% sample**,
 not a completed measurement. Because 2,248 mutants were never tested, the true full-repo
 score is bounded between **66.3%** (if every untested mutant would have survived) and
 **72.1%** (if every one would have been killed). No `mutation.json` survives from that run,
-so there is no per-file breakdown to go with the 70.3% figure. Do not repeat that number as
+so there is no per-file breakdown to go with the 70.4% figure. Do not repeat that number as
 "the" mutation score; it is a sample, not a total.
 
 ### Why the nightly run is sharded
