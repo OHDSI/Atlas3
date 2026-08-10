@@ -18,29 +18,29 @@ import { z } from 'zod'
 
 export const OffsetSchema = z.object({
   Days: z.number().nullish(),
-  Coeff: z.number().optional(),
+  Coeff: z.number().nullish(),
 })
 export type Offset = z.infer<typeof OffsetSchema>
 
 export const WindowSchema = z.object({
-  Start: OffsetSchema.optional(),
-  End: OffsetSchema.optional(),
+  Start: OffsetSchema.nullish(),
+  End: OffsetSchema.nullish(),
   UseIndexEnd: z.boolean().nullish(),
   UseEventEnd: z.boolean().nullish(),
 })
 export type Window = z.infer<typeof WindowSchema>
 
 export const DateAdjustmentSchema = z.object({
-  StartWith: z.enum(['START_DATE', 'END_DATE']).optional(),
-  StartOffset: z.number().optional(),
-  EndWith: z.enum(['START_DATE', 'END_DATE']).optional(),
-  EndOffset: z.number().optional(),
+  StartWith: z.enum(['START_DATE', 'END_DATE']).nullish(),
+  StartOffset: z.number().nullish(),
+  EndWith: z.enum(['START_DATE', 'END_DATE']).nullish(),
+  EndOffset: z.number().nullish(),
 })
 export type DateAdjustment = z.infer<typeof DateAdjustmentSchema>
 
 export const OccurrenceSchema = z.object({
-  Type: z.number().optional(), // 0=EXACTLY, 1=AT_MOST, 2=AT_LEAST
-  Count: z.number().optional(),
+  Type: z.number().nullish(), // 0=EXACTLY, 1=AT_MOST, 2=AT_LEAST
+  Count: z.number().nullish(),
   IsDistinct: z.boolean().nullish(),
   CountColumn: z.enum([
     'DAYS_SUPPLY',
@@ -65,7 +65,7 @@ export type Occurrence = z.infer<typeof OccurrenceSchema>
 
 export const NumericRangeSchema = z.object({
   Value: z.number().nullish(),
-  Op: z.enum(['lt', 'lte', 'eq', '!eq', 'gt', 'gte', 'bt', '!bt']).optional(),
+  Op: z.enum(['lt', 'lte', 'eq', '!eq', 'gt', 'gte', 'bt', '!bt']).nullish(),
   Extent: z.number().nullish(),
 })
 export type NumericRange = z.infer<typeof NumericRangeSchema>
@@ -73,7 +73,7 @@ export type NumericRangeOp = NonNullable<NumericRange['Op']>
 
 export const DateRangeSchema = z.object({
   Value: z.string().nullish(),
-  Op: z.enum(['lt', 'lte', 'eq', '!eq', 'gt', 'gte', 'bt', '!bt']).optional(),
+  Op: z.enum(['lt', 'lte', 'eq', '!eq', 'gt', 'gte', 'bt', '!bt']).nullish(),
   Extent: z.string().nullish(),
 })
 export type DateRange = z.infer<typeof DateRangeSchema>
@@ -81,13 +81,13 @@ export type DateRangeOp = NonNullable<DateRange['Op']>
 
 export const TextFilterSchema = z.object({
   Value: z.string().nullish(),
-  Op: z.enum(['endsWith', 'startsWith', 'contains', '!endsWith', '!startsWith', '!contains']).optional(),
+  Op: z.enum(['endsWith', 'startsWith', 'contains', '!endsWith', '!startsWith', '!contains']).nullish(),
 })
 export type TextFilter = z.infer<typeof TextFilterSchema>
 export type TextFilterOp = NonNullable<TextFilter['Op']>
 
 export const ResultLimitSchema = z.object({
-  Type: z.enum(['All', 'First', 'Last']).optional(),
+  Type: z.enum(['All', 'First', 'Last']).nullish(),
 })
 export type ResultLimit = z.infer<typeof ResultLimitSchema>
 
@@ -130,7 +130,7 @@ export const ConceptArraySchema = z.array(ConceptSchema)
 export type ConceptArray = z.infer<typeof ConceptArraySchema>
 
 export const ConceptSetItemSchema = z.object({
-  concept: ConceptSchema.optional(),
+  concept: ConceptSchema.nullish(),
   isExcluded: z.boolean().nullish(),
   includeDescendants: z.boolean().nullish(),
   includeMapped: z.boolean().nullish(),
@@ -138,32 +138,32 @@ export const ConceptSetItemSchema = z.object({
 export type ConceptSetItem = z.infer<typeof ConceptSetItemSchema>
 
 export const ConceptSetExpressionSchema = z.object({
-  items: z.array(ConceptSetItemSchema).optional(),
+  items: z.array(ConceptSetItemSchema).nullish(),
 })
 export type ConceptSetExpression = z.infer<typeof ConceptSetExpressionSchema>
 
 export const ConceptSetSchema = z.object({
-  id: z.number().optional(),
-  name: z.string().optional(),
-  expression: ConceptSetExpressionSchema.optional(),
+  id: z.number().nullish(),
+  name: z.string().nullish(),
+  expression: ConceptSetExpressionSchema.nullish(),
 })
 export type ConceptSet = z.infer<typeof ConceptSetSchema>
 
 export const ObservationFilterSchema = z.object({
-  PriorDays: z.number().optional(),
-  PostDays: z.number().optional(),
+  PriorDays: z.number().nullish(),
+  PostDays: z.number().nullish(),
 })
 export type ObservationFilter = z.infer<typeof ObservationFilterSchema>
 
 export const PeriodSchema = z.object({
-  StartDate: z.string().optional(), // ISO 8601
-  EndDate: z.string().optional(), // ISO 8601
+  StartDate: z.string().nullish(), // ISO 8601
+  EndDate: z.string().nullish(), // ISO 8601
 })
 export type Period = z.infer<typeof PeriodSchema>
 
 export const CollapseSettingsSchema = z.object({
-  CollapseType: z.enum(['ERA']).optional(),
-  EraPad: z.number().optional(),
+  CollapseType: z.enum(['ERA']).nullish(),
+  EraPad: z.number().nullish(),
 })
 export type CollapseSettings = z.infer<typeof CollapseSettingsSchema>
 
@@ -173,16 +173,16 @@ export type CollapseSettings = z.infer<typeof CollapseSettingsSchema>
  */
 
 export const DateOffsetStrategySchema = z.object({
-  DateField: z.enum(['StartDate', 'EndDate']).optional(),
-  Offset: z.number().optional(),
+  DateField: z.enum(['StartDate', 'EndDate']).nullish(),
+  Offset: z.number().nullish(),
 })
 export type DateOffsetStrategy = z.infer<typeof DateOffsetStrategySchema>
 
 export const CustomEraStrategySchema = z.object({
   DrugCodesetId: ConceptSetIdSchema.nullish(),
-  GapDays: z.number().optional(),
-  Offset: z.number().optional(),
-  DaysSupplyOverride: z.number().optional(),
+  GapDays: z.number().nullish(),
+  Offset: z.number().nullish(),
+  DaysSupplyOverride: z.number().nullish(),
 })
 export type CustomEraStrategy = z.infer<typeof CustomEraStrategySchema>
 
@@ -622,7 +622,7 @@ export interface CriteriaGroup {
  */
 export const WindowedCriteriaSchema: z.ZodType<WindowedCriteria> = z.lazy(() =>
   z.object({
-    Criteria: CriteriaSchema.optional(),
+    Criteria: CriteriaSchema.nullish(),
     StartWindow: WindowSchema.nullish(),
     EndWindow: WindowSchema.nullish(),
     RestrictVisit: z.boolean().nullish(),
@@ -638,18 +638,18 @@ export const WindowedCriteriaSchema: z.ZodType<WindowedCriteria> = z.lazy(() =>
 export const CorelatedCriteriaSchema: z.ZodType<CorelatedCriteria> = z.lazy(() =>
   WindowedCriteriaSchema.and(
     z.object({
-      Occurrence: OccurrenceSchema.optional(),
+      Occurrence: OccurrenceSchema.nullish(),
     })
   ) as z.ZodType<CorelatedCriteria>
 )
 
 export const CriteriaGroupSchema: z.ZodType<CriteriaGroup> = z.lazy(() =>
   z.object({
-    Type: z.enum(['ALL', 'ANY', 'AT_LEAST', 'AT_MOST']).optional(),
+    Type: z.enum(['ALL', 'ANY', 'AT_LEAST', 'AT_MOST']).nullish(),
     Count: z.number().nullish(),
-    CriteriaList: z.array(CorelatedCriteriaSchema).optional(),
-    DemographicCriteriaList: z.array(DemographicCriteriaSchema).optional(),
-    Groups: z.array(CriteriaGroupSchema).optional(),
+    CriteriaList: z.array(CorelatedCriteriaSchema).nullish(),
+    DemographicCriteriaList: z.array(DemographicCriteriaSchema).nullish(),
+    Groups: z.array(CriteriaGroupSchema).nullish(),
   }) as z.ZodType<CriteriaGroup>
 )
 
@@ -657,9 +657,9 @@ export const CriteriaGroupSchema: z.ZodType<CriteriaGroup> = z.lazy(() =>
  * Inclusion Rule Schema
  */
 export const InclusionRuleSchema = z.object({
-  name: z.string().optional(),
-  description: z.string().optional(),
-  expression: CriteriaGroupSchema.optional(),
+  name: z.string().nullish(),
+  description: z.string().nullish(),
+  expression: CriteriaGroupSchema.nullish(),
 })
 export type InclusionRule = z.infer<typeof InclusionRuleSchema>
 
@@ -667,9 +667,9 @@ export type InclusionRule = z.infer<typeof InclusionRuleSchema>
  * Primary Criteria Schema
  */
 export const PrimaryCriteriaSchema = z.object({
-  CriteriaList: z.array(CriteriaSchema).optional(),
-  ObservationWindow: ObservationFilterSchema.optional(),
-  PrimaryCriteriaLimit: ResultLimitSchema.optional(),
+  CriteriaList: z.array(CriteriaSchema).nullish(),
+  ObservationWindow: ObservationFilterSchema.nullish(),
+  PrimaryCriteriaLimit: ResultLimitSchema.nullish(),
 })
 export type PrimaryCriteria = z.infer<typeof PrimaryCriteriaSchema>
 
@@ -677,17 +677,18 @@ export type PrimaryCriteria = z.infer<typeof PrimaryCriteriaSchema>
  * Cohort Expression Schema - Root Object
  */
 export const CohortExpressionSchema = z.object({
-  Title: z.string().optional(),
-  PrimaryCriteria: PrimaryCriteriaSchema.optional(),
-  AdditionalCriteria: CriteriaGroupSchema.optional(),
-  ConceptSets: z.array(ConceptSetSchema).optional(),
-  QualifiedLimit: ResultLimitSchema.optional(),
-  ExpressionLimit: ResultLimitSchema.optional(),
-  InclusionRules: z.array(InclusionRuleSchema).optional(),
-  EndStrategy: EndStrategySchema.optional(),
-  CensoringCriteria: z.array(CriteriaSchema).optional(),
-  CollapseSettings: CollapseSettingsSchema.optional(),
+  Title: z.string().nullish(),
+  PrimaryCriteria: PrimaryCriteriaSchema.nullish(),
+  AdditionalCriteria: CriteriaGroupSchema.nullish(),
+  ConceptSets: z.array(ConceptSetSchema).nullish(),
+  QualifiedLimit: ResultLimitSchema.nullish(),
+  ExpressionLimit: ResultLimitSchema.nullish(),
+  InclusionRules: z.array(InclusionRuleSchema).nullish(),
+  EndStrategy: EndStrategySchema.nullish(),
+  CensoringCriteria: z.array(CriteriaSchema).nullish(),
+  CollapseSettings: CollapseSettingsSchema.nullish(),
   CensorWindow: PeriodSchema.nullish(),
-  cdmVersionRange: z.string().optional(),
+  cdmVersionRange: z.string().nullish(),
 })
 export type CohortExpression = z.infer<typeof CohortExpressionSchema>
+
