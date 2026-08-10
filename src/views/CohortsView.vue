@@ -777,6 +777,8 @@ onMounted(() => {
 // unreviewable `wrapper.vm.$.setupState` back door).
 defineExpose({
   confirmImport,
+  handleImportCohort,
+  showImportDialog,
   canImport,
   importName,
   importJson,

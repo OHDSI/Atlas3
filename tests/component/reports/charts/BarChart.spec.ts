@@ -553,7 +553,7 @@ describe('BarChart', () => {
       expect(exportComponent.exists()).toBe(true)
     })
 
-    it('should handle data with mismatched array lengths', () => {
+    it('passes mismatched category and value arrays through without padding or truncating', () => {
       const mismatchedData: BarChartData = {
         categories: ['A', 'B', 'C'],
         values: [10, 20],
@@ -561,9 +561,10 @@ describe('BarChart', () => {
       }
 
       const wrapper = createWrapper({ data: mismatchedData })
-      const chart = wrapper.findComponent({ name: 'VChart' })
+      const option = wrapper.findComponent({ name: 'VChart' }).props('option')
 
-      expect(chart.exists()).toBe(true)
+      expect(option.xAxis.data).toEqual(['A', 'B', 'C'])
+      expect(option.series[0].data).toEqual([10, 20])
     })
 
     it('should handle data with negative values', () => {

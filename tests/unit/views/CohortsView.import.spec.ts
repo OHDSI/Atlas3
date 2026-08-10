@@ -245,6 +245,8 @@ describe('CohortsView cohort import', () => {
       data: { id: 77, name: 'My Cohort' },
     })
     const wrapper = mount(CohortsView, { global: { plugins: [vuetify] } })
+    wrapper.vm.handleImportCohort()
+    expect(wrapper.vm.showImportDialog).toBe(true)
     wrapper.vm.importName = 'My Cohort'
     wrapper.vm.importJson = '{"ConceptSets":[]}'
 
@@ -261,7 +263,7 @@ describe('CohortsView cohort import', () => {
       error: new ApiError('boom', 500, null),
     })
     const wrapper = mount(CohortsView, { global: { plugins: [vuetify] } })
-    wrapper.vm.showImportDialog = true
+    wrapper.vm.handleImportCohort()
     wrapper.vm.importName = 'My Cohort'
     wrapper.vm.importJson = '{"ConceptSets":[]}'
 
