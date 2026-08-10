@@ -38,6 +38,7 @@ function mountConfigPanel(options: any = {}) {
       ...options.global,
       stubs: {
         VNavigationDrawer: {
+          name: 'VNavigationDrawer',
           template: '<div class="v-navigation-drawer"><slot /></div>',
           props: ['modelValue', 'location', 'temporary', 'width']
         },
@@ -297,52 +298,6 @@ describe.skip('ConfigPanel.vue', () => {
       expect(drawer.props('width')).toBeDefined()
     })
 
-    // Regression: drawerWidth previously returned `windowWidth - 100`
-    // regardless of breakpoint, ignoring the "85% with max 1400px, min
-    // 300px" behavior documented right above it in the component. That
-    // produced an 1820px drawer on a 1920px viewport (no cap at all) and a
-    // 275px drawer on a 375px viewport (below its own 300px floor).
-    it('caps the drawer width at 1400px on a wide desktop viewport', () => {
-      const originalWidth = window.innerWidth
-      global.innerWidth = 1920
-
-      wrapper = mount(ConfigPanel, {
-        global: {
-          plugins: [vuetify],
-          stubs: {
-            CacheManagementSection: true,
-            DataSourcesSection: true,
-            TagManagementSection: true
-          }
-        }
-      })
-
-      const drawer = wrapper.findComponent({ name: 'VNavigationDrawer' })
-      expect(drawer.props('width')).toBe(1400)
-
-      global.innerWidth = originalWidth
-    })
-
-    it('keeps the drawer at least 300px wide on a narrow mobile viewport', () => {
-      const originalWidth = window.innerWidth
-      global.innerWidth = 375
-
-      wrapper = mount(ConfigPanel, {
-        global: {
-          plugins: [vuetify],
-          stubs: {
-            CacheManagementSection: true,
-            DataSourcesSection: true,
-            TagManagementSection: true
-          }
-        }
-      })
-
-      const drawer = wrapper.findComponent({ name: 'VNavigationDrawer' })
-      expect(drawer.props('width')).toBeGreaterThanOrEqual(300)
-
-      global.innerWidth = originalWidth
-    })
   })
 
   describe('Scroll position persistence', () => {
@@ -463,6 +418,68 @@ describe.skip('ConfigPanel.vue', () => {
       expect(sections[1].isVisible()).toBe(false)
       expect(sections[2].isVisible()).toBe(false)
     })
+  })
+})
+
+// Regression: drawerWidth previously returned `windowWidth - 100` regardless
+// of breakpoint, ignoring the "85% with max 1400px, min 300px" behavior
+// documented right above it in the component. That produced an 1820px drawer
+// on a 1920px viewport (no cap at all) and a 275px drawer on a 375px viewport
+// (below its own 300px floor).
+describe('ConfigPanel responsive drawer width', () => {
+  let wrapper: VueWrapper
+  const originalWidth = window.innerWidth
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    if (wrapper) wrapper.unmount()
+    global.innerWidth = originalWidth
+    vi.restoreAllMocks()
+  })
+
+  function widthAt(viewport: number) {
+    global.innerWidth = viewport
+    wrapper = mountConfigPanel({
+      global: {
+        stubs: {
+          CacheManagementSection: true,
+          DataSourcesSection: true,
+          TagManagementSection: true,
+        },
+      },
+    })
+    return wrapper.findComponent({ name: 'VNavigationDrawer' }).props('width')
+  }
+
+  it('caps the drawer width at 1400px on a wide desktop viewport', () => {
+    expect(widthAt(1920)).toBe(1400)
+  })
+
+  it('uses 85% of the viewport between the floor and the cap', () => {
+    expect(widthAt(1000)).toBe(850)
+  })
+
+  it('leaves a 12px gutter on each side on a mobile viewport', () => {
+    expect(widthAt(375)).toBe(351)
+  })
+
+  it('never drops below the 300px floor on a very narrow viewport', () => {
+    expect(widthAt(280)).toBe(300)
+  })
+
+  it('recalculates the width when the window is resized', async () => {
+    expect(widthAt(1920)).toBe(1400)
+
+    global.innerWidth = 1000
+    window.dispatchEvent(new Event('resize'))
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.findComponent({ name: 'VNavigationDrawer' }).props('width')).toBe(850)
   })
 })
 
