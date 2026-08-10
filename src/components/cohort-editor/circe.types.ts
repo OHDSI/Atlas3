@@ -447,6 +447,7 @@ export const ProcedureOccurrenceSchema = CriteriaBaseSchema.extend({
   ProcedureTypeExclude: z.boolean().nullish(),
   Modifier: ConceptArraySchema.nullish(),
   ModifierCS: ConceptSetSelectionSchema.nullish(),
+  Quantity: NumericRangeSchema.nullish(),
   ProcedureSourceConcept: ConceptSetIdSchema.nullish(),
   Age: NumericRangeSchema.nullish(),
   Gender: ConceptArraySchema.nullish(),
