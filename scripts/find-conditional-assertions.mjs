@@ -39,6 +39,82 @@ function readBalancedArgs(line, openParenIndex) {
 // looks at a single-line, two-operand `||` split and literal `true`/`!`
 // forms, so it won't flag `expect(a || b)` where neither side is `true`
 // or the other's negation.
+// The condition's closing paren, tracked by depth and allowed to land on a
+// later line: Prettier (printWidth 100 in .prettierrc) wraps a long condition
+// onto its own lines, and a detector that gave up on those would be disarmed
+// by a reformat rather than by an evasion. Bounded so an unbalanced '(' in a
+// string or comment cannot scan the rest of the file.
+function findConditionEnd(lines, startLine, startIdx) {
+  let depth = 1
+  for (let li = startLine; li < lines.length && li - startLine <= 20; li++) {
+    const line = lines[li]
+    for (let j = li === startLine ? startIdx : 0; j < line.length; j++) {
+      if (line[j] === '(') depth++
+      else if (line[j] === ')') {
+        depth--
+        if (depth === 0) return { line: li, index: j }
+      }
+    }
+  }
+  return null
+}
+
+function conditionText(lines, startLine, startIdx, end) {
+  if (end.line === startLine) return lines[startLine].slice(startIdx, end.index)
+  const parts = [lines[startLine].slice(startIdx)]
+  for (let j = startLine + 1; j < end.line; j++) parts.push(lines[j])
+  parts.push(lines[end.line].slice(0, end.index))
+  return parts.map((s) => s.trim()).filter(Boolean).join(' ')
+}
+
+// Index of the '}' matching the '{' at openIdx, if it closes on this same
+// line; -1 otherwise.
+function findBraceEndOnLine(line, openIdx) {
+  let depth = 1
+  for (let j = openIdx + 1; j < line.length; j++) {
+    if (line[j] === '{') depth++
+    else if (line[j] === '}') {
+      depth--
+      if (depth === 0) return j
+    }
+  }
+  return -1
+}
+
+// A braced body whose closing brace is on a later line. The block ends at the
+// first line whose '}' sits at or inside the `if`'s own indentation.
+function scanBracedBody(lines, from, indent) {
+  let hasExpect = false
+  for (let j = from; j < lines.length; j++) {
+    const cur = lines[j]
+    if (/^\s*\}/.test(cur) && cur.length - cur.trimStart().length <= indent) {
+      return { hasExpect, hasElse: /\}\s*else/.test(cur) }
+    }
+    if (cur.includes('expect(')) hasExpect = true
+  }
+  return { hasExpect, hasElse: false }
+}
+
+// Next line that carries code, skipping blanks and comment-only lines (an
+// `expect(` inside a comment is not an assertion).
+function nextCodeLine(lines, from) {
+  for (let j = from; j < lines.length; j++) {
+    const t = lines[j].trim()
+    if (t === '' || t.startsWith('//') || t.startsWith('/*') || t.startsWith('*')) continue
+    return j
+  }
+  return -1
+}
+
+function parenBalance(text) {
+  let depth = 0
+  for (const ch of text) {
+    if (ch === '(') depth++
+    else if (ch === ')') depth--
+  }
+  return depth
+}
+
 function tautologicalExpectArg(arg) {
   const trimmed = arg.trim()
   if (trimmed === 'true') return true
@@ -77,26 +153,9 @@ for (const f of files) {
       searchFrom = parsed.end
     }
 
-    const braceMatch = /^(\s*)(\} else )?if \((.+)\) \{\s*$/.exec(lines[i])
-    if (braceMatch) {
-      const indent = braceMatch[1].length
-      let hasExpect = false, hasElse = false
-      for (let j = i + 1; j < lines.length; j++) {
-        const cur = lines[j]
-        if (/^\s*\}/.test(cur) && cur.length - cur.trimStart().length <= indent) {
-          hasElse = /\}\s*else/.test(cur)
-          break
-        }
-        if (cur.includes('expect(')) hasExpect = true
-      }
-      if (hasExpect && !hasElse) hits.push(`${f}:${i + 1}  if (${braceMatch[3].slice(0, 90)})`)
-      continue
-    }
-
-    // Brace-less single-line form: `if (cond) expect(...)`. Finding the end
-    // of `cond` cannot be done with a single greedy or non-greedy `.+`: a
-    // greedy `(.+)\) ` backtracks to the rightmost `") "` on the line,
-    // which on `if (cond) it('...', () => { expect(foo).toBe(bar) })`
+    // Finding the end of `cond` cannot be done with a single greedy or
+    // non-greedy `.+`: a greedy `(.+)\) ` backtracks to the rightmost `") "`
+    // on the line, which on `if (cond) it('...', () => { expect(foo).toBe(bar) })`
     // swallows the whole `it(...)` call into the condition group and the
     // `expect(` check never sees a body to inspect. A non-greedy `(.+?)\) `
     // fails just as badly the other way on conditions with their own
@@ -105,22 +164,64 @@ for (const f of files) {
     // any other paren without tracking depth, so scan for it directly.
     const linePrefix = /^(\s*)(\} else )?if \(/.exec(lines[i])
     if (!linePrefix) continue
-    const line = lines[i]
-    let depth = 1
-    let j = linePrefix[0].length
-    for (; j < line.length && depth > 0; j++) {
-      if (line[j] === '(') depth++
-      else if (line[j] === ')') depth--
+    const indent = linePrefix[1].length
+    const end = findConditionEnd(lines, i, linePrefix[0].length)
+    if (!end) continue
+    const cond = conditionText(lines, i, linePrefix[0].length, end)
+    const report = () => hits.push(`${f}:${i + 1}  if (${cond.slice(0, 90)})`)
+
+    const condLine = lines[end.line]
+    const rest = condLine.slice(end.index + 1).replace(/^\s+/, '')
+
+    if (rest.startsWith('{')) {
+      const openIdx = condLine.length - rest.length
+      const closeIdx = findBraceEndOnLine(condLine, openIdx)
+      if (closeIdx !== -1) {
+        // Whole body on one line: `if (cond) { expect(...) }`.
+        const body = condLine.slice(openIdx + 1, closeIdx)
+        const after = condLine.slice(closeIdx + 1).trim()
+        if (/^else\b/.test(after)) continue
+        if (!body.includes('expect(')) continue
+        report()
+        continue
+      }
+      const scan = scanBracedBody(lines, end.line + 1, indent)
+      if (scan.hasExpect && !scan.hasElse) report()
+      continue
     }
-    if (depth !== 0) continue // unbalanced on this line (e.g. multi-line condition); skip
-    const cond = line.slice(linePrefix[0].length, j - 1)
-    const body = line.slice(j).replace(/^\s+/, '')
-    if (body.length === 0) continue
-    if (body.startsWith('{')) continue
-    if (/\belse\b/.test(body)) continue
-    if (NON_ASSERTION_BODY.test(body.trim())) continue
-    if (!body.includes('expect(')) continue
-    hits.push(`${f}:${i + 1}  if (${cond.slice(0, 90)})`)
+
+    if (rest.length > 0) {
+      // Brace-less single-line form: `if (cond) expect(...)`.
+      if (/\belse\b/.test(rest)) continue
+      if (NON_ASSERTION_BODY.test(rest.trim())) continue
+      if (!rest.includes('expect(')) continue
+      report()
+      continue
+    }
+
+    // Nothing after the condition: the body is on a following line, either
+    // brace-less or with the brace pushed onto its own line.
+    const bodyStart = nextCodeLine(lines, end.line + 1)
+    if (bodyStart === -1) continue
+    if (lines[bodyStart].trim().startsWith('{')) {
+      const scan = scanBracedBody(lines, bodyStart + 1, indent)
+      if (scan.hasExpect && !scan.hasElse) report()
+      continue
+    }
+    if (NON_ASSERTION_BODY.test(lines[bodyStart].trim())) continue
+    // One statement can wrap over several lines, so accumulate until its
+    // parens balance rather than looking at the first line alone.
+    let stmt = ''
+    let stmtEnd = bodyStart
+    for (let j = bodyStart; j < lines.length && j < bodyStart + 10; j++) {
+      stmt += lines[j]
+      stmtEnd = j
+      if (parenBalance(stmt) <= 0) break
+    }
+    if (!stmt.includes('expect(')) continue
+    const afterLine = nextCodeLine(lines, stmtEnd + 1)
+    if (afterLine !== -1 && /^\s*(\}\s*)?else\b/.test(lines[afterLine])) continue
+    report()
   }
 }
 console.log(hits.join('\n'))
