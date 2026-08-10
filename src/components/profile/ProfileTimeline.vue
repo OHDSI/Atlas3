@@ -42,13 +42,16 @@
 import { computed } from 'vue'
 import { useTimelineFilters } from '@/composables/useTimelineFilters'
 import { useProfileStore } from '@/stores/profile'
+import { useThemeStore } from '@/stores/theme'
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_HIGHLIGHT_COLOR, OMOP_DOMAINS } from '@/models/profile.types'
 import { AtlasCard, AtlasChip } from '@/components/ui'
+import { tokens } from '@/ui/tokens'
 import ProfileFilterChips from '@/components/profile/ProfileFilterChips.vue'
 
 const { t, tv } = useI18n()
 const store = useProfileStore()
+const themeStore = useThemeStore()
 const { chartSeries, axisExtent } = useTimelineFilters()
 
 // Minimum pixel width for point-style records so they remain
@@ -142,11 +145,14 @@ const option = computed(() => {
           ? {
               symbol: 'none',
               silent: true,
+              // '#888' clears the 3:1 mark floor on the dark surface (5.10:1) as-is.
+              // '#666' is a text label and only reaches 3.15:1 there, so dark swaps
+              // to the on-surface-variant token (7.05:1); light stays '#666'.
               lineStyle: { color: '#888', type: 'dashed', width: 1 },
               label: {
                 formatter: tv('components.profileTimeline.cohortEntry', 'Cohort entry'),
                 position: 'insideEndTop',
-                color: '#666',
+                color: themeStore.resolved === 'dark' ? tokens.colorDark.onSurfaceVariant : '#666',
               },
               data: [{ xAxis: 0 }],
             }

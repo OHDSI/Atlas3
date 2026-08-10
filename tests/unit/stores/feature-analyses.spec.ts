@@ -13,6 +13,8 @@ import type {
   FeatureAnalysisListItem,
   FeatureAnalysisAggregate,
 } from '@/models/feature-analysis.types'
+import { success, failure } from '@/types/api'
+import { ApiError } from '@/services/api-error'
 
 // Mock service layer
 vi.mock('@/services/feature-analysis.service', () => ({
@@ -45,6 +47,10 @@ import {
   listFeatureAnalysisDomains,
   listFeatureAnalysisAggregates,
 } from '@/services/feature-analysis.service'
+
+function apiErr(message: string, status = 0) {
+  return failure(new ApiError(message, status, null))
+}
 
 const mockList: FeatureAnalysisListItem[] = [
   {
@@ -136,7 +142,7 @@ describe('Feature Analyses Store', () => {
   describe('fetchAll', () => {
     it('populates list on success', async () => {
       const store = useFeatureAnalysesStore()
-      vi.mocked(listFeatureAnalyses).mockResolvedValue(mockList)
+      vi.mocked(listFeatureAnalyses).mockResolvedValue(success(mockList))
 
       await store.fetchAll()
 
@@ -153,18 +159,30 @@ describe('Feature Analyses Store', () => {
       expect(store.loading).toBe(true)
     })
 
-    it('skips when already loading', async () => {
+    it('shares one request between concurrent callers', async () => {
       const store = useFeatureAnalysesStore()
-      store.loading = true
+      vi.mocked(listFeatureAnalyses).mockResolvedValue(success(mockList))
 
-      await store.fetchAll()
+      await Promise.all([store.fetchAll(), store.fetchAll()])
 
-      expect(listFeatureAnalyses).not.toHaveBeenCalled()
+      expect(listFeatureAnalyses).toHaveBeenCalledTimes(1)
+      expect(store.featureAnalyses).toEqual(mockList)
+    })
+
+    it('refreshes the list when called from create, which holds loading', async () => {
+      const store = useFeatureAnalysesStore()
+      vi.mocked(createFeatureAnalysis).mockResolvedValue(success(mockFA))
+      vi.mocked(listFeatureAnalyses).mockResolvedValue(success(mockList))
+
+      await store.create(mockFA)
+
+      expect(listFeatureAnalyses).toHaveBeenCalledTimes(1)
+      expect(store.featureAnalyses).toEqual(mockList)
     })
 
     it('captures error and resets list on failure', async () => {
       const store = useFeatureAnalysesStore()
-      vi.mocked(listFeatureAnalyses).mockRejectedValue(new Error('Network down'))
+      vi.mocked(listFeatureAnalyses).mockResolvedValue(apiErr('Network down'))
 
       await store.fetchAll()
 
@@ -177,16 +195,16 @@ describe('Feature Analyses Store', () => {
   describe('fetchOne', () => {
     it('populates currentFA on success', async () => {
       const store = useFeatureAnalysesStore()
-      vi.mocked(getFeatureAnalysis).mockResolvedValue(mockFA)
+      vi.mocked(getFeatureAnalysis).mockResolvedValue(success(mockFA))
 
       await store.fetchOne(1)
 
       expect(store.currentFA).toEqual(mockFA)
     })
 
-    it('sets error on not found', async () => {
+    it('captures error on failure (e.g. not found)', async () => {
       const store = useFeatureAnalysesStore()
-      vi.mocked(getFeatureAnalysis).mockResolvedValue(null)
+      vi.mocked(getFeatureAnalysis).mockResolvedValue(apiErr('Feature analysis not found', 404))
 
       await store.fetchOne(999)
 
@@ -194,9 +212,9 @@ describe('Feature Analyses Store', () => {
       expect(store.currentFA).toBeNull()
     })
 
-    it('captures error on failure', async () => {
+    it('captures error on generic failure', async () => {
       const store = useFeatureAnalysesStore()
-      vi.mocked(getFeatureAnalysis).mockRejectedValue(new Error('Boom'))
+      vi.mocked(getFeatureAnalysis).mockResolvedValue(apiErr('Boom'))
 
       await store.fetchOne(1)
 
@@ -208,8 +226,8 @@ describe('Feature Analyses Store', () => {
   describe('create', () => {
     it('creates and refreshes list', async () => {
       const store = useFeatureAnalysesStore()
-      vi.mocked(createFeatureAnalysis).mockResolvedValue(mockFA)
-      vi.mocked(listFeatureAnalyses).mockResolvedValue(mockList)
+      vi.mocked(createFeatureAnalysis).mockResolvedValue(success(mockFA))
+      vi.mocked(listFeatureAnalyses).mockResolvedValue(success(mockList))
 
       const result = await store.create(mockFA)
 
@@ -219,7 +237,7 @@ describe('Feature Analyses Store', () => {
 
     it('returns null and sets error on failure', async () => {
       const store = useFeatureAnalysesStore()
-      vi.mocked(createFeatureAnalysis).mockRejectedValue(new Error('Server error'))
+      vi.mocked(createFeatureAnalysis).mockResolvedValue(apiErr('Server error'))
 
       const result = await store.create(mockFA)
 
@@ -232,8 +250,8 @@ describe('Feature Analyses Store', () => {
     it('updates and refreshes list', async () => {
       const store = useFeatureAnalysesStore()
       const updated = { ...mockFA, name: 'Renamed' }
-      vi.mocked(updateFeatureAnalysis).mockResolvedValue(updated)
-      vi.mocked(listFeatureAnalyses).mockResolvedValue(mockList)
+      vi.mocked(updateFeatureAnalysis).mockResolvedValue(success(updated))
+      vi.mocked(listFeatureAnalyses).mockResolvedValue(success(mockList))
 
       const result = await store.update(updated)
 
@@ -243,7 +261,7 @@ describe('Feature Analyses Store', () => {
 
     it('returns null and sets error on failure', async () => {
       const store = useFeatureAnalysesStore()
-      vi.mocked(updateFeatureAnalysis).mockRejectedValue(new Error('Conflict'))
+      vi.mocked(updateFeatureAnalysis).mockResolvedValue(apiErr('Conflict'))
 
       const result = await store.update(mockFA)
 
@@ -256,7 +274,7 @@ describe('Feature Analyses Store', () => {
     it('removes from list on success', async () => {
       const store = useFeatureAnalysesStore()
       store.featureAnalyses = [...mockList]
-      vi.mocked(deleteFeatureAnalysis).mockResolvedValue(undefined)
+      vi.mocked(deleteFeatureAnalysis).mockResolvedValue(success(undefined))
 
       const result = await store.remove(1)
 
@@ -268,7 +286,7 @@ describe('Feature Analyses Store', () => {
       const store = useFeatureAnalysesStore()
       store.featureAnalyses = [...mockList]
       store.currentFA = { ...mockFA }
-      vi.mocked(deleteFeatureAnalysis).mockResolvedValue(undefined)
+      vi.mocked(deleteFeatureAnalysis).mockResolvedValue(success(undefined))
 
       await store.remove(1)
 
@@ -277,7 +295,7 @@ describe('Feature Analyses Store', () => {
 
     it('returns false and sets error on failure', async () => {
       const store = useFeatureAnalysesStore()
-      vi.mocked(deleteFeatureAnalysis).mockRejectedValue(new Error('Gone'))
+      vi.mocked(deleteFeatureAnalysis).mockResolvedValue(apiErr('Gone'))
 
       const result = await store.remove(1)
 
@@ -290,8 +308,8 @@ describe('Feature Analyses Store', () => {
     it('copies, refreshes, and sets currentFA', async () => {
       const store = useFeatureAnalysesStore()
       const copied = { ...mockFA, id: 42, name: 'COPY OF Demographics PRESET' }
-      vi.mocked(copyFeatureAnalysis).mockResolvedValue(copied)
-      vi.mocked(listFeatureAnalyses).mockResolvedValue(mockList)
+      vi.mocked(copyFeatureAnalysis).mockResolvedValue(success(copied))
+      vi.mocked(listFeatureAnalyses).mockResolvedValue(success(mockList))
 
       const result = await store.copy(1)
 
@@ -301,7 +319,7 @@ describe('Feature Analyses Store', () => {
 
     it('returns null and sets error on failure', async () => {
       const store = useFeatureAnalysesStore()
-      vi.mocked(copyFeatureAnalysis).mockRejectedValue(new Error('Nope'))
+      vi.mocked(copyFeatureAnalysis).mockResolvedValue(apiErr('Nope'))
 
       const result = await store.copy(1)
 
@@ -328,7 +346,7 @@ describe('Feature Analyses Store', () => {
   describe('loadDomains', () => {
     it('populates domains on first call', async () => {
       const store = useFeatureAnalysesStore()
-      vi.mocked(listFeatureAnalysisDomains).mockResolvedValue(['Condition', 'Drug'])
+      vi.mocked(listFeatureAnalysisDomains).mockResolvedValue(success(['Condition', 'Drug']))
 
       await store.loadDomains()
 
@@ -348,7 +366,7 @@ describe('Feature Analyses Store', () => {
   describe('loadAggregates', () => {
     it('populates aggregates on first call', async () => {
       const store = useFeatureAnalysesStore()
-      vi.mocked(listFeatureAnalysisAggregates).mockResolvedValue(mockAggregates)
+      vi.mocked(listFeatureAnalysisAggregates).mockResolvedValue(success(mockAggregates))
 
       await store.loadAggregates()
 

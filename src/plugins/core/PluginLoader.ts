@@ -4,6 +4,7 @@ import { PluginInstance } from '@/models/PluginModels'
 import { logger } from '@/utils/logger'
 import { useWebAPIStore } from '@/stores/webapi'
 import { storageManager } from '@/services/auth/storageManager'
+import { ensurePluginRuntime } from './pluginRuntime'
 
 export class PluginLoader {
   private registry: PluginRegistry
@@ -39,6 +40,10 @@ export class PluginLoader {
     return new URLSearchParams()
   }
 
+  // Trust model: plugin bundles listed in plugins.json are first-party code. They
+  // are imported into the host realm (no sandbox, no origin allowlist, no SRI) and
+  // receive the session token via the getToken prop below, so an entryPoint URL is
+  // as trusted as the Atlas bundle itself.
   async loadPlugin(plugin: PluginInstance): Promise<void> {
     const { registration } = plugin
     // If entryPoint is absolute (starts with / or http), use it directly
@@ -56,7 +61,9 @@ export class PluginLoader {
 
       const startTime = performance.now()
 
+      let timedOut = false
       const timeoutId = setTimeout(() => {
+        timedOut = true
         const error = new Error(
           `Plugin ${registration.id} loading timeout after ${this.LOADING_TIMEOUT}ms`
         )
@@ -73,13 +80,22 @@ export class PluginLoader {
       }
 
       try {
-        if (!window.System) {
-          throw new Error('SystemJS is not available')
-        }
+        const System = await ensurePluginRuntime()
 
-        const importedModule = await window.System.import(pluginUrl).catch((err: Error) => {
+        const importedModule = await System.import(pluginUrl).catch((err: Error) => {
           throw new Error(`Failed to import plugin module: ${err.message}`)
         })
+
+        if (timedOut) {
+          // System.import cannot be aborted, so a module that arrives after the
+          // timeout is dropped: the error the timeout recorded stays the outcome.
+          this.loadingTimeouts.delete(registration.id)
+          logger.error(
+            'PluginLoader',
+            `Plugin ${registration.id} finished loading after its timeout; discarding`
+          )
+          return
+        }
 
         pluginModule = importedModule as typeof pluginModule
 
@@ -166,7 +182,7 @@ export class PluginLoader {
           }
         },
         1000 * (attempts + 1)
-      ) // Exponential backoff
+      )
     } else {
       this.registry.setPluginError(pluginId, error, false)
       this.retryAttempts.delete(pluginId)

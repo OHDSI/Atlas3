@@ -595,17 +595,19 @@ function validateCriteriaCriteriaJson(): boolean {
 
 async function loadDefaultCovariateSettings(temporal: boolean) {
   loadingDefaults.value = true
-  try {
-    const defaults = await getDefaultCovariateSettings(temporal)
-    presetDesignJson.value = JSON.stringify(defaults, null, 2)
+  const result = await getDefaultCovariateSettings(temporal)
+  if (result.success) {
+    presetDesignJson.value = JSON.stringify(result.data, null, 2)
     presetJsonError.value = null
     dirty.value = true
-  } catch (err) {
-    logger.error('FeatureAnalysisEditor', 'Failed to load default covariate settings', err)
-    showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
-  } finally {
-    loadingDefaults.value = false
+  } else {
+    logger.error('FeatureAnalysisEditor', 'Failed to load default covariate settings', result.error)
+    showSnackbar(
+      t('cc.fa.loadDefaultsError', 'Failed to load default covariate settings.').value,
+      'error'
+    )
   }
+  loadingDefaults.value = false
 }
 
 /**

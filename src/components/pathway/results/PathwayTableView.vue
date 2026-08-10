@@ -203,7 +203,7 @@ function exportCsv(rows: Array<Record<string, string | number>>, name: string): 
 .pathway-tables th,
 .pathway-tables td {
   padding: 6px 8px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--atlas-color-outline);
   text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -212,7 +212,7 @@ function exportCsv(rows: Array<Record<string, string | number>>, name: string): 
 }
 .pathway-tables th {
   font-weight: 600;
-  background: #f8f9fa;
+  background: var(--atlas-color-surface-variant);
   position: sticky;
   top: 0;
 }

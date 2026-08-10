@@ -43,6 +43,14 @@ vi.mock('@/stores/webapi', () => ({
   })),
 }));
 
+// Mock the runtime gate so tests control window.System directly instead of
+// racing real script injection.
+vi.mock('@/plugins/core/pluginRuntime', () => ({
+  ensurePluginRuntime: vi.fn().mockResolvedValue(undefined),
+}));
+
+import { ensurePluginRuntime } from '@/plugins/core/pluginRuntime';
+
 describe('PluginLoader', () => {
   let loader: PluginLoader;
   let registry: PluginRegistry;
@@ -81,6 +89,7 @@ describe('PluginLoader', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     setActivePinia(createPinia());
+    (ensurePluginRuntime as Mock).mockImplementation(() => Promise.resolve(window.System));
 
     registry = new PluginRegistry();
     loader = new PluginLoader(registry);
@@ -170,8 +179,9 @@ describe('PluginLoader', () => {
     });
 
     it('should throw error when SystemJS is not available', async () => {
-      // @ts-expect-error - intentionally setting to undefined
-      window.System = undefined;
+      (ensurePluginRuntime as Mock).mockRejectedValueOnce(
+        new Error('Failed to load plugin runtime: SystemJS did not initialise')
+      );
 
       await loader.loadPlugin(mockPlugin);
 
@@ -269,6 +279,28 @@ describe('PluginLoader', () => {
         }),
         true
       );
+    });
+
+    it('should discard a module that resolves after the loading timeout', async () => {
+      let resolveImport: (module: unknown) => void = () => {};
+      mockSystemImport.mockImplementationOnce(
+        () =>
+          new Promise(resolve => {
+            resolveImport = resolve;
+          })
+      );
+
+      const updateStateSpy = vi.spyOn(registry, 'updatePluginState');
+
+      loader.loadPlugin(mockPlugin).catch(() => {});
+
+      await vi.advanceTimersByTimeAsync(30000);
+
+      resolveImport(mockPluginModule);
+      await vi.advanceTimersByTimeAsync(1);
+
+      expect(updateStateSpy).not.toHaveBeenCalledWith('test-plugin', 'loaded');
+      expect(registerApplication).not.toHaveBeenCalled();
     });
 
     describe('activeWhen function', () => {
@@ -396,7 +428,7 @@ describe('PluginLoader', () => {
       expect(mockSystemImport).toHaveBeenCalledTimes(2);
     });
 
-    it('should use exponential backoff for retries', async () => {
+    it('should use linear backoff for retries', async () => {
       mockSystemImport.mockRejectedValue(new Error('Always fail'));
 
       const setTimeoutSpy = vi.spyOn(global, 'setTimeout');

@@ -113,6 +113,7 @@
 
 <script setup lang="ts">
 import { useI18n } from '@/composables/useI18n'
+import { trackChartTheme } from '@/ui/chart-config'
 import type { InclusionRuleStatistic } from '@/models/report.types'
 
 const { t } = useI18n()
@@ -146,6 +147,9 @@ function formatPercent(s: string): string {
 // success ≥ 80%, warning ≥ 40%, error otherwise. Reads the runtime
 // Vuetify theme variable so all three views stay visually consistent.
 function themeColor(token: 'success' | 'warning' | 'error', alpha: number): string {
+  // getComputedStyle is not reactive, so without this the bar tints keep the
+  // previous theme's colours until something else re-renders the row.
+  trackChartTheme()
   if (typeof window === 'undefined') return '#7BB209'
   const root = getComputedStyle(document.documentElement)
   const triplet = root.getPropertyValue(`--v-theme-${token}`).trim()
@@ -201,18 +205,18 @@ function cumulativeBarStyle(idx: number): Record<string, string> {
 .attrition-table__grid th,
 .attrition-table__grid td {
   padding: 6px 10px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid var(--atlas-color-outline-variant);
   text-align: left;
 }
 .attrition-table__grid th {
-  background: #f5f7fb;
+  background: var(--atlas-color-surface-variant);
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.74);
+  color: var(--atlas-color-on-surface);
 }
 .attrition-table__col-idx {
   width: 36px;
   text-align: right;
-  color: rgba(0, 0, 0, 0.54);
+  color: var(--atlas-color-on-surface-variant);
 }
 .attrition-table__col-num {
   width: 130px;
@@ -226,7 +230,7 @@ function cumulativeBarStyle(idx: number): Record<string, string> {
 .attrition-table__bar-track {
   width: 100%;
   height: 12px;
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--atlas-color-outline-variant);
   border-radius: 6px;
   overflow: hidden;
 }

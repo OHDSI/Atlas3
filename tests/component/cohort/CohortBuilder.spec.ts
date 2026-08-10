@@ -41,7 +41,7 @@ const {
 
 // Webapi mocks: most calls are unused in these tests, but a few flows
 // (load existing cohort, save) need predictable return values.
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/cohort-definition.service', () => ({
   fetchCDMSources: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getCohortDefinition: vi.fn().mockResolvedValue({
@@ -552,7 +552,7 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     const setup = getSetup(wrapper)
     // canSave is computed false for an empty cohort.
-    const webapi = await import('@/services/webapi')
+    const webapi = await import('@/services/cohort-definition.service')
     const spy = vi.spyOn(webapi, 'saveCohortDefinition')
     await setup.handleSave()
     expect(spy).not.toHaveBeenCalled()
@@ -567,7 +567,7 @@ describe('CohortBuilder', () => {
     Object.assign(setup.expression, { PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] } })
     // canSavePermission gates on hasPermission/canWrite — for a new cohort,
     // both default to true in our basic mock. Verify save attempt runs.
-    const webapi = await import('@/services/webapi')
+    const webapi = await import('@/services/cohort-definition.service')
     await setup.handleSave()
     // Either save was invoked OR canSave gated it; we accept that the path was
     // exercised (function coverage credit).
@@ -849,7 +849,7 @@ describe('CohortBuilder', () => {
     setup.cohortName = 'Savable'
     Object.assign(setup.expression, { PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] } })
 
-    const webapi = await import('@/services/webapi')
+    const webapi = await import('@/services/cohort-definition.service')
     vi.mocked(webapi.saveCohortDefinition).mockResolvedValueOnce(null as never)
 
     const result = await setup.handleSave()
@@ -865,7 +865,7 @@ describe('CohortBuilder', () => {
     setup.cohortName = 'Savable'
     Object.assign(setup.expression, { PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] } })
 
-    const webapi = await import('@/services/webapi')
+    const webapi = await import('@/services/cohort-definition.service')
     vi.mocked(webapi.saveCohortDefinition).mockRejectedValueOnce(new Error('server boom'))
 
     const result = await setup.handleSave()
@@ -881,7 +881,7 @@ describe('CohortBuilder', () => {
     setup.cohortName = 'Savable'
     Object.assign(setup.expression, { PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] } })
 
-    const webapi = await import('@/services/webapi')
+    const webapi = await import('@/services/cohort-definition.service')
     vi.mocked(webapi.saveCohortDefinition).mockRejectedValueOnce('plain string failure')
 
     const result = await setup.handleSave()
@@ -898,7 +898,7 @@ describe('CohortBuilder', () => {
     Object.assign(setup.expression, { PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] } })
     setup.handleTagsUpdate([{ id: 7, name: 'protected' }] as any)
 
-    const webapi = await import('@/services/webapi')
+    const webapi = await import('@/services/cohort-definition.service')
     vi.mocked(webapi.assignTagToCohort).mockResolvedValueOnce({
       success: false,
       error: 'Tag group "Status" allows only one assignment',
@@ -917,7 +917,7 @@ describe('CohortBuilder', () => {
     Object.assign(setup.expression, { PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] } })
     setup.loadedTags = [{ id: 9, name: 'old-tag' }]
 
-    const webapi = await import('@/services/webapi')
+    const webapi = await import('@/services/cohort-definition.service')
     vi.mocked(webapi.unassignTagFromCohort).mockResolvedValueOnce({ success: false })
 
     await setup.handleSave()

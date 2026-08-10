@@ -34,6 +34,32 @@ const RESOURCE_BY_KIND: Record<EntityAccessKind, string> = {
   reusable: 'reusable',
 }
 
+type AccessVerb = 'read' | 'write'
+
+function grantAllows(grant: EntityGrant | undefined, verb: AccessVerb): boolean {
+  if (!grant) return false
+  if (grant.isOwner) return true
+  if (verb === 'write') return grant.accessTypes.includes('WRITE')
+  return grant.accessTypes.includes('READ') || grant.accessTypes.includes('WRITE')
+}
+
+function entityAccessAllows(
+  authStore: ReturnType<typeof useAuthStore>,
+  kind: EntityAccessKind,
+  verb: AccessVerb,
+  id: string | number | null | undefined
+): boolean {
+  const resource = RESOURCE_BY_KIND[kind]
+  if (
+    permissionChecker.hasPermission(`${verb}:${resource}`, authStore.permissions).granted ||
+    permissionChecker.hasPermission('admin:security', authStore.permissions).granted
+  ) {
+    return true
+  }
+  if (id === null || id === undefined || id === '') return false
+  return grantAllows(authStore.entityAccess[kind][String(id)], verb)
+}
+
 export interface EntityAccessResult {
   /** User can view this entity (via global read perm, ownership, or per-entity READ grant). */
   canRead: ComputedRef<boolean>
@@ -50,7 +76,6 @@ export function useEntityAccess(
   id: MaybeRefOrGetter<string | number | null | undefined>
 ): EntityAccessResult {
   const authStore = useAuthStore()
-  const resource = RESOURCE_BY_KIND[kind]
 
   const grant = computed<EntityGrant | undefined>(() => {
     const entityId = toValue(id)
@@ -61,23 +86,9 @@ export function useEntityAccess(
 
   const isOwner = computed(() => grant.value?.isOwner === true)
 
-  const hasGlobal = (verb: 'read' | 'write') =>
-    permissionChecker.hasPermission(`${verb}:${resource}`, authStore.permissions).granted ||
-    permissionChecker.hasPermission('admin:security', authStore.permissions).granted
+  const canRead = computed(() => entityAccessAllows(authStore, kind, 'read', toValue(id)))
 
-  const canRead = computed(() => {
-    if (hasGlobal('read')) return true
-    const g = grant.value
-    if (!g) return false
-    return g.isOwner || g.accessTypes.includes('READ') || g.accessTypes.includes('WRITE')
-  })
-
-  const canWrite = computed(() => {
-    if (hasGlobal('write')) return true
-    const g = grant.value
-    if (!g) return false
-    return g.isOwner || g.accessTypes.includes('WRITE')
-  })
+  const canWrite = computed(() => entityAccessAllows(authStore, kind, 'write', toValue(id)))
 
   const canDelete = canWrite
 
@@ -91,32 +102,13 @@ export function useEntityAccess(
  */
 export function useEntityAccessFor(kind: EntityAccessKind) {
   const authStore = useAuthStore()
-  const resource = RESOURCE_BY_KIND[kind]
 
   function canRead(id: string | number | null | undefined): boolean {
-    if (
-      permissionChecker.hasPermission(`read:${resource}`, authStore.permissions).granted ||
-      permissionChecker.hasPermission('admin:security', authStore.permissions).granted
-    ) {
-      return true
-    }
-    if (id === null || id === undefined || id === '') return false
-    const g = authStore.entityAccess[kind][String(id)]
-    if (!g) return false
-    return g.isOwner || g.accessTypes.includes('READ') || g.accessTypes.includes('WRITE')
+    return entityAccessAllows(authStore, kind, 'read', id)
   }
 
   function canWrite(id: string | number | null | undefined): boolean {
-    if (
-      permissionChecker.hasPermission(`write:${resource}`, authStore.permissions).granted ||
-      permissionChecker.hasPermission('admin:security', authStore.permissions).granted
-    ) {
-      return true
-    }
-    if (id === null || id === undefined || id === '') return false
-    const g = authStore.entityAccess[kind][String(id)]
-    if (!g) return false
-    return g.isOwner || g.accessTypes.includes('WRITE')
+    return entityAccessAllows(authStore, kind, 'write', id)
   }
 
   return { canRead, canWrite, canDelete: canWrite }

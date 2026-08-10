@@ -4,8 +4,10 @@
  * Provides default configuration helpers for all chart types
  */
 
+import { shallowRef } from 'vue'
 import type { EChartsOption } from 'echarts'
 import type { BarChartData, PieChartData, LineChartData, TreemapNode } from '@/models/report.types'
+import { tokens } from './tokens'
 
 /**
  * Convert a YYYYMM code (e.g. 200301) to a UTC millisecond timestamp
@@ -95,7 +97,7 @@ function formatSINumber(value: number): string {
  * Charts that pick a single color use CHART_COLORS[0]; multi-series
  * charts cycle through the array.
  */
-export const CHART_COLORS = [
+const DEFAULT_CHART_COLORS: readonly string[] = [
   '#4e79a7', // blue
   '#f28e2c', // orange
   '#e15759', // red
@@ -107,6 +109,12 @@ export const CHART_COLORS = [
   '#9c755f', // taupe
   '#bab0ab', // warm grey
 ]
+
+// Deployments that brand Atlas override these via settings.theme (see
+// setChartPalette). Every read happens inside the option builders below, at
+// render time, so a palette applied during startup is picked up by charts
+// mounted afterwards.
+export let CHART_COLORS: readonly string[] = DEFAULT_CHART_COLORS
 
 /**
  * Single-hue gradient used by treemaps and other "color-by-value"
@@ -122,13 +130,136 @@ export const CHART_COLORS = [
  * the Atlas brand navy `#1f425a` so the gradient tails into the
  * surrounding chrome.
  */
-export const TREEMAP_GRADIENT = ['#7e9bbf', '#4e79a7', '#1f425a'] as const
+const DEFAULT_TREEMAP_GRADIENT: readonly string[] = ['#7e9bbf', '#4e79a7', '#1f425a']
+
+export let TREEMAP_GRADIENT: readonly string[] = DEFAULT_TREEMAP_GRADIENT
+
+/**
+ * Dark-surface counterparts of the Tableau palette. Each entry clears 3:1
+ * against the dark surface (#161618); the light values sit at 2.0–4.4:1 there
+ * and would read as muddy smears.
+ */
+const DARK_CHART_COLORS: readonly string[] = [
+  '#7fb3e0', // blue
+  '#f6a04d', // orange
+  '#f2777a', // red
+  '#6fd0c8', // teal
+  '#7bc96f', // green
+  '#f0d264', // mustard
+  '#c79bd1', // purple
+  '#ffb3bb', // soft coral
+  '#c49a80', // taupe
+  '#c9c2bd', // warm grey
+]
+
+// The light gradient tails into the brand navy, which disappears against a dark
+// surface at 1.95:1, so the dark ramp runs mid-blue to pale blue instead.
+const DARK_TREEMAP_GRADIENT: readonly string[] = ['#4e79a7', '#7fb3e0', '#a8cdea']
+
+// Five-stop prevalence ramp used by clinicalDomainTreemapOptions's built-in
+// visualMap color scale (cell backgrounds, not marks on the page background).
+const DEFAULT_PREVALENCE_RAMP: readonly string[] = [
+  '#e3f2fd', // Very light blue (low prevalence)
+  '#90caf9', // Light blue
+  '#42a5f5', // Medium blue
+  '#1e88e5', // Dark blue
+  '#1565c0', // Very dark blue (high prevalence)
+]
+
+const DARK_PREVALENCE_RAMP: readonly string[] = ['#1b3a5c', '#2f5d8a', '#4a86c4', '#7fb3e0', '#b3d4f0']
+
+let chartMode: 'light' | 'dark' = 'light'
+let paletteOverride: readonly string[] | null = null
+let gradientOverride: readonly string[] | null = null
+
+// The palette bindings below are plain module-level `let`s, so a chart computed
+// that reads them (directly or through an option builder) tracks nothing and
+// keeps the previous theme's colours until its data changes. Every builder
+// touches this revision so setChartTheme / setChartPalette invalidate them.
+const chartThemeRevision = shallowRef(0)
+
+/**
+ * Register the active chart theme as a reactive dependency of the caller.
+ * Call it from any computed that reads a CHART_* binding at compute time.
+ */
+export function trackChartTheme(): number {
+  return chartThemeRevision.value
+}
+
+export let CHART_TEXT: string = tokens.color.onSurface
+export let CHART_SUBTLE_TEXT: string = '#5e6470'
+export let CHART_SURFACE: string = tokens.color.surface
+export let CHART_LABEL_ON_MARK: string = '#ffffff'
+export let CHART_MUTED_TEXT: string = '#6b6b6b'
+export let CHART_GRID_BORDER: string = 'black'
+export let CHART_BOX_BORDER: string = '#333'
+export let CHART_OUTLIER_MARKER: string = 'rgba(255, 0, 0, 0.5)'
+
+function applyPalettes(): void {
+  const themeColors = chartMode === 'dark' ? DARK_CHART_COLORS : DEFAULT_CHART_COLORS
+  const themeGradient = chartMode === 'dark' ? DARK_TREEMAP_GRADIENT : DEFAULT_TREEMAP_GRADIENT
+  CHART_COLORS = paletteOverride?.length ? [...paletteOverride] : themeColors
+  TREEMAP_GRADIENT = gradientOverride?.length ? [...gradientOverride] : themeGradient
+
+  const set = chartMode === 'dark' ? tokens.colorDark : tokens.color
+  CHART_TEXT = set.onSurface
+  // #5e6470 is the light-mode axis grey; on the dark surface it sits at 3.04:1,
+  // so dark falls back to the on-surface-variant token at 7.05:1.
+  CHART_SUBTLE_TEXT = chartMode === 'dark' ? set.onSurfaceVariant : '#5e6470'
+  CHART_SURFACE = set.surface
+  // Dark marks are light fills, so their in-mark labels flip to near-black.
+  CHART_LABEL_ON_MARK = chartMode === 'dark' ? 'rgba(0,0,0,.87)' : '#ffffff'
+  // #6b6b6b is a text label (trellis section headers); needs the 4.5:1 text
+  // floor, not just the 3:1 non-text floor, so it shares onSurfaceVariant
+  // (7.05:1) with CHART_SUBTLE_TEXT rather than a dimmer border token.
+  CHART_MUTED_TEXT = chartMode === 'dark' ? set.onSurfaceVariant : '#6b6b6b'
+  // Grid frame and boxplot outlines are decorative (3:1 floor); outlineStrong
+  // clears 3.34:1 against the dark surface.
+  CHART_GRID_BORDER = chartMode === 'dark' ? set.outlineStrong : 'black'
+  CHART_BOX_BORDER = chartMode === 'dark' ? set.outlineStrong : '#333'
+  // No token is red; light stays at its pre-existing 2.44:1 (unrelated,
+  // out of scope). Dark only needs a value that clears 3:1 on its own.
+  CHART_OUTLIER_MARKER = chartMode === 'dark' ? 'rgba(255,107,107,0.7)' : 'rgba(255, 0, 0, 0.5)'
+  chartThemeRevision.value++
+}
+
+/**
+ * Override the chart palettes from `settings.theme` (chartColors /
+ * treemapGradient). Passing null or an empty array restores the theme default, so a
+ * deployment can override one palette without pinning the other.
+ */
+export function setChartPalette(palette: {
+  chartColors?: readonly string[] | null
+  treemapGradient?: readonly string[] | null
+}): void {
+  paletteOverride = palette.chartColors ?? null
+  gradientOverride = palette.treemapGradient ?? null
+  applyPalettes()
+}
+
+export function setChartTheme(mode: 'light' | 'dark'): void {
+  chartMode = mode
+  applyPalettes()
+}
+
+/**
+ * Root-level `textStyle` default for ECharts option objects. Text elements
+ * that don't set their own colour (axis names, tooltip labels ECharts draws
+ * internally, etc.) otherwise fall back to ECharts' own dark-grey default,
+ * which is invisible on the dark surface. Light omits the key entirely so
+ * light-mode options stay byte-identical to before this default existed.
+ */
+export function chartRootTextStyle(): { textStyle: { color: string } } | Record<string, never> {
+  return chartMode === 'dark' ? { textStyle: { color: CHART_TEXT } } : {}
+}
 
 /**
  * Default bar chart configuration
  */
 export function defaultBarChartOptions(data: BarChartData): EChartsOption {
+  trackChartTheme()
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -181,7 +312,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
       nameRotate: 90,
       nameGap: 40,
       nameTextStyle: {
-        color: '#5e6470',
+        color: CHART_SUBTLE_TEXT,
         fontSize: 12,
       },
       axisLabel: {
@@ -212,7 +343,9 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
  * Default pie chart configuration
  */
 export function defaultPieChartOptions(data: PieChartData[], title?: string): EChartsOption {
+  trackChartTheme()
   return {
+    ...chartRootTextStyle(),
     title: title
       ? {
           text: title,
@@ -257,7 +390,7 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
         avoidLabelOverlap: true,
         itemStyle: {
           borderRadius: 10,
-          borderColor: '#fff',
+          borderColor: CHART_SURFACE,
           borderWidth: 2,
         },
         // Percentage drawn inside the ring (no leader lines that overflow the card
@@ -266,7 +399,7 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
           show: true,
           position: 'inside',
           formatter: '{d}%',
-          color: '#fff',
+          color: CHART_LABEL_ON_MARK,
           fontSize: 11,
         },
         emphasis: {
@@ -296,7 +429,9 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
  * Default line chart configuration
  */
 export function defaultLineChartOptions(data: LineChartData, title?: string): EChartsOption {
+  trackChartTheme()
   return {
+    ...chartRootTextStyle(),
     title: title
       ? {
           text: title,
@@ -368,8 +503,10 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
  * Default treemap configuration
  */
 export function defaultTreemapOptions(data: TreemapNode[], title?: string): EChartsOption {
+  trackChartTheme()
   const { min: dataMin, max: dataMax } = extractTreemapValueRange(data)
   return {
+    ...chartRootTextStyle(),
     title: title
       ? {
           text: title,
@@ -421,7 +558,7 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
       text: [formatSINumber(dataMax), formatSINumber(dataMin)],
       textStyle: {
         fontSize: 11,
-        color: '#5e6470',
+        color: CHART_SUBTLE_TEXT,
       },
     },
     series: [
@@ -449,14 +586,19 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
           formatter: '{b}',
           overflow: 'truncate',
           ellipsis: '...',
+          // Sits on the node's own gradient-sampled fill, not the page
+          // background, so the root textStyle default (on-surface, made for
+          // text on CHART_SURFACE) would be too light against it in dark.
+          // Dark-only so light — which never set a colour here — is untouched.
+          ...(chartMode === 'dark' ? { color: CHART_LABEL_ON_MARK } : {}),
         },
         upperLabel: {
           show: true,
           height: 30,
-          color: '#fff',
+          color: CHART_LABEL_ON_MARK,
         },
         itemStyle: {
-          borderColor: '#fff',
+          borderColor: CHART_SURFACE,
           borderWidth: 2,
           gapWidth: 2,
         },
@@ -627,9 +769,9 @@ export function createResizeHandler(
 /**
  * Export chart configuration with consistent styling
  */
-export function getExportConfig(backgroundColor = '#ffffff') {
+export function getExportConfig(backgroundColor?: string) {
   return {
-    backgroundColor,
+    backgroundColor: backgroundColor ?? CHART_SURFACE,
     pixelRatio: 2, // 2x for high-DPI displays
     excludeComponents: ['toolbox'],
   }
@@ -669,7 +811,9 @@ import { logger } from '@/utils/logger'
  * Dashboard Gender Pie Chart Configuration
  */
 export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChartsOption {
+  trackChartTheme()
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'item',
       formatter: (params: unknown) => {
@@ -693,13 +837,17 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
         avoidLabelOverlap: true,
         itemStyle: {
           borderRadius: 8,
-          borderColor: '#fff',
+          borderColor: CHART_SURFACE,
           borderWidth: 2,
         },
         label: {
           show: true,
           formatter: '{b}\n{d}%',
           fontSize: 12,
+          // On the pie slice fill, not the page background — confirmed live as
+          // dark-on-dark with the root textStyle default. Dark-only override so
+          // light (which never set a colour here) stays byte-identical.
+          ...(chartMode === 'dark' ? { color: CHART_LABEL_ON_MARK } : {}),
         },
         emphasis: {
           label: {
@@ -728,6 +876,7 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
  * Dashboard Age Bar Chart Configuration
  */
 export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): EChartsOption {
+  trackChartTheme()
   const validBins = data.bins.filter(
     b => Number.isFinite(b.intervalIndex) && Number.isFinite(b.countValue) && b.countValue >= 0
   )
@@ -745,6 +894,7 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
   const axisLabel = data.xAxisLabel || 'Age'
 
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'item',
       formatter: (params: unknown) => {
@@ -844,7 +994,9 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
  * Dashboard Cumulative Observation Line Chart Configuration
  */
 export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): EChartsOption {
+  trackChartTheme()
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'axis',
       formatter: (params: unknown) => {
@@ -908,7 +1060,7 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
         focus: 'series',
         itemStyle: {
           borderWidth: 2,
-          borderColor: '#fff',
+          borderColor: CHART_SURFACE,
         },
       },
     })),
@@ -919,7 +1071,9 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
  * Dashboard Observation by Month Line Chart Configuration
  */
 export function dashboardObservationMonthLineOptions(data: DatasourceLineChartData): EChartsOption {
+  trackChartTheme()
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'axis',
       formatter: (params: unknown) => {
@@ -988,10 +1142,12 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
  * Multi-Line Chart Configuration for Data Density Reports
  */
 export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLineChartData): EChartsOption {
+  trackChartTheme()
   const isPercent = 'yAxisFormat' in data && data.yAxisFormat === 'percent'
   const formatValue = (value: number) =>
     isPercent ? `${(value * 100).toFixed(1)}%` : formatSINumber(value)
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -1060,7 +1216,7 @@ export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLin
         focus: 'series',
         itemStyle: {
           borderWidth: 2,
-          borderColor: '#fff',
+          borderColor: CHART_SURFACE,
         },
       },
     })),
@@ -1071,12 +1227,14 @@ export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLin
  * Clinical Domain Treemap Configuration
  */
 export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOption {
+  trackChartTheme()
   // Calculate prevalence range for color mapping
   const values = extractAllValues(nodes)
   const minValue = Math.min(...values)
   const maxValue = Math.max(...values)
 
   return {
+    ...chartRootTextStyle(),
     tooltip: {
       trigger: 'item',
       formatter: (params: unknown) => {
@@ -1123,16 +1281,19 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
           overflow: 'truncate',
           ellipsis: '...',
           fontSize: 12,
+          // Sits on the node's prevalence-ramp fill, not the page background;
+          // same reasoning as defaultTreemapOptions above. Dark-only.
+          ...(chartMode === 'dark' ? { color: CHART_LABEL_ON_MARK } : {}),
         },
         upperLabel: {
           show: true,
           height: 30,
-          color: '#fff',
+          color: CHART_LABEL_ON_MARK,
           fontSize: 14,
           fontWeight: 'bold',
         },
         itemStyle: {
-          borderColor: '#fff',
+          borderColor: CHART_SURFACE,
           borderWidth: 2,
           gapWidth: 2,
         },
@@ -1156,13 +1317,7 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
         visualMax: maxValue,
         visualDimension: 0,
         colorMappingBy: 'value',
-        color: [
-          '#e3f2fd', // Very light blue (low prevalence)
-          '#90caf9', // Light blue
-          '#42a5f5', // Medium blue
-          '#1e88e5', // Dark blue
-          '#1565c0', // Very dark blue (high prevalence)
-        ],
+        color: [...(chartMode === 'dark' ? DARK_PREVALENCE_RAMP : DEFAULT_PREVALENCE_RAMP)],
         data: nodes,
       },
     ],
@@ -1194,6 +1349,7 @@ export function trellisChartOptions(
   title?: string,
   maxPlotsPerRow: number = 5
 ): EChartsOption {
+  trackChartTheme()
   // Sort categories by leading numeric prefix so age brackets come
   // out 0-9, 10-19, 20-29, ..., 100-109 instead of the ASCII order
   // 0-9, 10-19, 100-109, 20-29.
@@ -1248,7 +1404,7 @@ export function trellisChartOptions(
     left: 'center',
     textStyle: {
       fontSize: 13,
-      color: '#6b6b6b',
+      color: CHART_MUTED_TEXT,
     },
   })
   gridTitles.push({
@@ -1257,7 +1413,7 @@ export function trellisChartOptions(
     left: 'center',
     textStyle: {
       fontSize: 13,
-      color: '#6b6b6b',
+      color: CHART_MUTED_TEXT,
     },
   })
 
@@ -1274,7 +1430,7 @@ export function trellisChartOptions(
       height: `${GRID_HEIGHT}%`,
       left: `${colIndex * (GRID_WIDTH + GRID_GAP) + GRID_LEFT_MARGIN}%`,
       top: `${rowTop}%`,
-      borderColor: 'black',
+      borderColor: CHART_GRID_BORDER,
       borderWidth: 1,
       containLabel: true,
     })
@@ -1349,7 +1505,7 @@ export function trellisChartOptions(
         nameTextStyle: {
           fontSize: 12,
           fontWeight: 'normal',
-          color: '#5e6470',
+          color: CHART_SUBTLE_TEXT,
         },
       }),
     })
@@ -1395,6 +1551,7 @@ export function trellisChartOptions(
   })
 
   return {
+    ...chartRootTextStyle(),
     title: title
       ? [
           {
@@ -1434,6 +1591,7 @@ export function boxPlotChartOptions(
   data: import('@/models/report.types').BoxPlotData[],
   title?: string
 ): EChartsOption {
+  trackChartTheme()
   const categories = data.map(d => d.category)
 
   // Convert data to ECharts boxplot format: [min, Q1, median, Q3, max]
@@ -1451,6 +1609,7 @@ export function boxPlotChartOptions(
   })
 
   return {
+    ...chartRootTextStyle(),
     title: title
       ? {
           text: title,
@@ -1524,7 +1683,7 @@ export function boxPlotChartOptions(
         data: boxData,
         itemStyle: {
           color: CHART_COLORS[0],
-          borderColor: '#333',
+          borderColor: CHART_BOX_BORDER,
         },
         tooltip: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1543,7 +1702,7 @@ export function boxPlotChartOptions(
         type: 'scatter',
         data: outlierData,
         itemStyle: {
-          color: 'rgba(255, 0, 0, 0.5)',
+          color: CHART_OUTLIER_MARKER,
         },
       },
     ],

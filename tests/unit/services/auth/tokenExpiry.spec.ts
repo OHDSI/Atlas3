@@ -9,8 +9,8 @@ const mockAuthStore = {
 };
 
 // Mock dependencies
-vi.mock('@/utils/jwt', () => ({
-  getTokenExpiration: vi.fn()
+vi.mock('@/services/auth/tokenManager', () => ({
+  tokenManager: { getExpirationDate: vi.fn() }
 }));
 
 vi.mock('@/stores/auth', () => ({
@@ -32,11 +32,11 @@ describe('TokenExpiryService', () => {
 
   describe('Timer setup', () => {
     it('should setup expiry warning timer for valid token', async () => {
-      const { getTokenExpiration } = await import('@/utils/jwt');
+      const { tokenManager } = await import('@/services/auth/tokenManager');
       
       // Token expires in 10 minutes
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-      vi.mocked(getTokenExpiration).mockReturnValue(expiresAt);
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expiresAt);
 
       tokenExpiryService.setupExpiryWarning('valid-token');
 
@@ -47,9 +47,9 @@ describe('TokenExpiryService', () => {
     });
 
     it('should not setup timer for invalid token', async () => {
-      const { getTokenExpiration } = await import('@/utils/jwt');
+      const { tokenManager } = await import('@/services/auth/tokenManager');
       
-      vi.mocked(getTokenExpiration).mockReturnValue(null);
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(null);
 
       tokenExpiryService.setupExpiryWarning('invalid-token');
 
@@ -59,11 +59,11 @@ describe('TokenExpiryService', () => {
     });
 
     it('should cancel existing timer when setting up new one', async () => {
-      const { getTokenExpiration } = await import('@/utils/jwt');
+      const { tokenManager } = await import('@/services/auth/tokenManager');
       
       // First token
       const expires1 = new Date(Date.now() + 10 * 60 * 1000);
-      vi.mocked(getTokenExpiration).mockReturnValue(expires1);
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expires1);
       tokenExpiryService.setupExpiryWarning('token1');
       
       const state1 = tokenExpiryService.getTimerState();
@@ -72,7 +72,7 @@ describe('TokenExpiryService', () => {
 
       // Second token (should cancel first timer)
       const expires2 = new Date(Date.now() + 15 * 60 * 1000);
-      vi.mocked(getTokenExpiration).mockReturnValue(expires2);
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expires2);
       tokenExpiryService.setupExpiryWarning('token2');
 
       const state2 = tokenExpiryService.getTimerState();
@@ -83,11 +83,11 @@ describe('TokenExpiryService', () => {
 
   describe('Warning shown at correct time', () => {
     it('should show warning 5 minutes before expiration', async () => {
-      const { getTokenExpiration } = await import('@/utils/jwt');
+      const { tokenManager } = await import('@/services/auth/tokenManager');
       
       // Token expires in 10 minutes
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-      vi.mocked(getTokenExpiration).mockReturnValue(expiresAt);
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expiresAt);
 
       tokenExpiryService.setupExpiryWarning('token');
 
@@ -105,11 +105,11 @@ describe('TokenExpiryService', () => {
     });
 
     it('should show warning immediately if token already in warning window', async () => {
-      const { getTokenExpiration } = await import('@/utils/jwt');
+      const { tokenManager } = await import('@/services/auth/tokenManager');
       
       // Token expires in 3 minutes (already past warning time)
       const expiresAt = new Date(Date.now() + 3 * 60 * 1000);
-      vi.mocked(getTokenExpiration).mockReturnValue(expiresAt);
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expiresAt);
 
       tokenExpiryService.setupExpiryWarning('token');
 
@@ -120,10 +120,10 @@ describe('TokenExpiryService', () => {
     });
 
     it('should calculate warning time correctly', async () => {
-      const { getTokenExpiration } = await import('@/utils/jwt');
+      const { tokenManager } = await import('@/services/auth/tokenManager');
       
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-      vi.mocked(getTokenExpiration).mockReturnValue(expiresAt);
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expiresAt);
 
       tokenExpiryService.setupExpiryWarning('token');
 
@@ -136,13 +136,13 @@ describe('TokenExpiryService', () => {
 
   describe('Duplicate warning prevention', () => {
     it('should not show warning twice for same token', async () => {
-      const { getTokenExpiration } = await import('@/utils/jwt');
+      const { tokenManager } = await import('@/services/auth/tokenManager');
       // Using shared mockAuthStore
       
       // mockAuthStore already defined
       
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-      vi.mocked(getTokenExpiration).mockReturnValue(expiresAt);
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expiresAt);
 
       tokenExpiryService.setupExpiryWarning('token');
 
@@ -158,10 +158,10 @@ describe('TokenExpiryService', () => {
     });
 
     it('should update warningShown flag when warning is shown', async () => {
-      const { getTokenExpiration } = await import('@/utils/jwt');
+      const { tokenManager } = await import('@/services/auth/tokenManager');
       
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-      vi.mocked(getTokenExpiration).mockReturnValue(expiresAt);
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expiresAt);
 
       tokenExpiryService.setupExpiryWarning('token');
 
@@ -176,14 +176,14 @@ describe('TokenExpiryService', () => {
     });
 
     it('should allow warning for new token after cancellation', async () => {
-      const { getTokenExpiration } = await import('@/utils/jwt');
+      const { tokenManager } = await import('@/services/auth/tokenManager');
       // Using shared mockAuthStore
       
       // mockAuthStore already defined
       
       // First token
       const expires1 = new Date(Date.now() + 10 * 60 * 1000);
-      vi.mocked(getTokenExpiration).mockReturnValue(expires1);
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expires1);
       tokenExpiryService.setupExpiryWarning('token1');
       
       await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
@@ -193,7 +193,7 @@ describe('TokenExpiryService', () => {
       tokenExpiryService.cancelExpiryWarning();
       
       const expires2 = new Date(Date.now() + 10 * 60 * 1000);
-      vi.mocked(getTokenExpiration).mockReturnValue(expires2);
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expires2);
       tokenExpiryService.setupExpiryWarning('token2');
 
       // Should allow warning for new token
@@ -204,10 +204,10 @@ describe('TokenExpiryService', () => {
 
   describe('Timer cancellation on token change', () => {
     it('should cancel timer on cancelExpiryWarning()', async () => {
-      const { getTokenExpiration } = await import('@/utils/jwt');
+      const { tokenManager } = await import('@/services/auth/tokenManager');
       
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-      vi.mocked(getTokenExpiration).mockReturnValue(expiresAt);
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expiresAt);
 
       tokenExpiryService.setupExpiryWarning('token');
       
@@ -224,13 +224,13 @@ describe('TokenExpiryService', () => {
     });
 
     it('should not trigger warning after cancellation', async () => {
-      const { getTokenExpiration } = await import('@/utils/jwt');
+      const { tokenManager } = await import('@/services/auth/tokenManager');
       // Using shared mockAuthStore
       
       // mockAuthStore already defined
       
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-      vi.mocked(getTokenExpiration).mockReturnValue(expiresAt);
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expiresAt);
 
       tokenExpiryService.setupExpiryWarning('token');
       

@@ -143,7 +143,7 @@ function handleRetry() {
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  background: var(--background-color, #fff);
+  background: var(--background-color, var(--atlas-color-surface));
   z-index: 10;
 }
 </style>

@@ -407,7 +407,7 @@ function getContrastColor(hexColor: string): string {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--atlas-color-outline-strong);
 }
 
 .v-chip {

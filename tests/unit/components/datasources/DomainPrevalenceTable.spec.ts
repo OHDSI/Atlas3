@@ -179,4 +179,15 @@ describe('DomainPrevalenceTable', () => {
     // The component uses formatNumber for personCount
     expect(wrapper.exists()).toBe(true)
   })
+
+  // Regression test for issue #151: the table view had no row-click wiring
+  // at all, so drill-down details (available from the treemap view) were
+  // unreachable when browsing via the table.
+  it('emits row-click with the concept id and name when a row is clicked (issue #151)', async () => {
+    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
+    await dataTable.vm.$emit('click:row', new Event('click'), { item: mockData[1] })
+
+    expect(wrapper.emitted('row-click')).toBeTruthy()
+    expect(wrapper.emitted('row-click')![0]).toEqual([2, 'Test Concept 2'])
+  })
 })

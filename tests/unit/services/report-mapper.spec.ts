@@ -1283,6 +1283,39 @@ describe('report-mapper', () => {
     })
   })
 
+  describe('mapTimeSeriesData', () => {
+    // Regression test for issue #153: WebAPI doesn't guarantee prevalenceByMonth
+    // is ordered chronologically, and an out-of-order series renders as a
+    // jagged/wrong-looking line chart.
+    it('sorts entries by xCalendarMonth (YYYYMM) before mapping', () => {
+      const raw = [
+        { xCalendarMonth: 202003, yPrevalence1000Pp: 3 },
+        { xCalendarMonth: 202001, yPrevalence1000Pp: 1 },
+        { xCalendarMonth: 202002, yPrevalence1000Pp: 2 },
+      ]
+
+      const result = mapTimeSeriesData(raw)
+
+      expect(result).toEqual([
+        { date: '01/2020', value: 1 },
+        { date: '02/2020', value: 2 },
+        { date: '03/2020', value: 3 },
+      ])
+    })
+
+    it('does not mutate the input array', () => {
+      const raw = [
+        { xCalendarMonth: 202002, yPrevalence1000Pp: 2 },
+        { xCalendarMonth: 202001, yPrevalence1000Pp: 1 },
+      ]
+      const rawCopy = [...raw]
+
+      mapTimeSeriesData(raw)
+
+      expect(raw).toEqual(rawCopy)
+    })
+  })
+
   describe('mapDrilldownReport', () => {
     const base = { conceptId: 123, conceptName: 'Test', conceptPath: 'Root||Test' }
 

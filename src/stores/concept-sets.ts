@@ -17,16 +17,20 @@ import type {
   ConceptSet,
   ConceptSetListItem,
   ConceptSetItem,
+  ConceptAddFlags,
   ComparisonResultItem,
   ConceptSetExpression,
 } from '@/models/concept-set.types'
 import type { Concept } from '@/models/concept-set.types'
-import type { Version, VersionedAsset } from '@/components/versions/types'
+import type { Version } from '@/components/versions/types'
 import type { Tag } from '@/models/cohort.types'
-import type { DateRange } from '@/composables/useCohorts'
+import { getUserString, isDateInRange, type DateRange } from '@/utils/list-filters'
 import { conceptToConceptSetItem, conceptSetItemToExpressionItem } from '@/utils/api-mappers'
 import { diffConceptLists } from '@/utils/concept-compare'
-import { getVersion as getVersionAPI } from '@/services/concept-set-versions.service'
+import {
+  getVersion as getVersionAPI,
+  type ConceptSetVersionedAsset,
+} from '@/services/concept-set-versions.service'
 import {
   getRecommendedConcepts,
   getConceptRecordCounts,
@@ -37,6 +41,7 @@ import {
 import { useWebAPIStore } from '@/stores/webapi'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
+import { getSourceKey } from '@/config/webapi'
 
 export interface ConceptSetFilterState {
   searchQuery: string
@@ -58,6 +63,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   const currentSet = ref<ConceptSet | null>(null)
   const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
+  let fetchAllInFlight: Promise<void> | null = null
+  // getConceptSetById takes no abort signal, so stale responses are dropped by
+  // sequence number instead.
+  let fetchOneRequestId = 0
   const filters = ref<ConceptSetFilterState>({
     searchQuery: '',
     author: '',
@@ -115,24 +124,6 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   // ============================================================================
   // Getters
   // ============================================================================
-
-  function getUserString(userValue: unknown): string {
-    if (!userValue) return ''
-    if (typeof userValue === 'string') return userValue.toLowerCase()
-    if (typeof userValue === 'object' && userValue !== null) {
-      const u = userValue as Record<string, unknown>
-      return ((u.name || u.login || u.id || '') as string).toLowerCase()
-    }
-    return ''
-  }
-
-  function isDateInRange(date: number | string | undefined, range: DateRange): boolean {
-    if (!date) return !range.from && !range.to
-    const d = new Date(date)
-    if (range.from && d < range.from) return false
-    if (range.to && d > range.to) return false
-    return true
-  }
 
   const availableTags = computed(() => {
     const tagSet = new Set<string>()
@@ -202,46 +193,58 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   /**
    * Fetch all concept sets
    */
-  async function fetchAll() {
-    // Skip if already loading to prevent concurrent calls
-    if (loading.value) {
-      return
+  async function fetchAll(): Promise<void> {
+    // Concurrent callers share the in-flight request, so awaiting fetchAll()
+    // always resolves against the response rather than the previous list.
+    if (fetchAllInFlight) {
+      return fetchAllInFlight
     }
 
     loading.value = true
     error.value = null
 
-    try {
-      conceptSets.value = await getAllConceptSets()
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch concept sets'
-      logger.error('ConceptSetsStore', 'Fetch concept sets error', err)
-      conceptSets.value = []
-    } finally {
-      loading.value = false
-    }
+    fetchAllInFlight = (async () => {
+      try {
+        conceptSets.value = await getAllConceptSets()
+      } catch (err) {
+        error.value = err instanceof Error ? err.message : 'Failed to fetch concept sets'
+        logger.error('ConceptSetsStore', 'Fetch concept sets error', err)
+        conceptSets.value = []
+      } finally {
+        fetchAllInFlight = null
+        loading.value = false
+      }
+    })()
+
+    return fetchAllInFlight
   }
 
   /**
    * Fetch a single concept set by ID with full details
    */
   async function fetchOne(id: number | string) {
+    const requestId = ++fetchOneRequestId
+
     loading.value = true
     error.value = null
 
     try {
       const set = await getConceptSetById(id)
+      if (requestId !== fetchOneRequestId) return
       if (set) {
         currentSet.value = set
       } else {
         error.value = 'Concept set not found'
       }
     } catch (err) {
+      if (requestId !== fetchOneRequestId) return
       error.value = err instanceof Error ? err.message : 'Failed to fetch concept set'
       logger.error('ConceptSetsStore', 'Fetch concept set error', err)
       currentSet.value = null
     } finally {
-      loading.value = false
+      if (requestId === fetchOneRequestId) {
+        loading.value = false
+      }
     }
   }
 
@@ -256,15 +259,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
     try {
       const created = await createConceptSet(set)
-      if (created) {
-        // Refresh the list
-        await fetchAll()
-        currentSet.value = created
-        return created
-      } else {
-        error.value = 'Failed to create concept set'
-        return null
-      }
+      // Refresh the list
+      await fetchAll()
+      currentSet.value = created
+      return created
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to create concept set'
       logger.error('ConceptSetsStore', 'Create concept set error', err)
@@ -283,15 +281,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
     try {
       const updated = await updateConceptSet(set)
-      if (updated) {
-        // Refresh the list
-        await fetchAll()
-        currentSet.value = updated
-        return updated
-      } else {
-        error.value = 'Failed to update concept set'
-        return null
-      }
+      // Refresh the list
+      await fetchAll()
+      currentSet.value = updated
+      return updated
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to update concept set'
       logger.error('ConceptSetsStore', 'Update concept set error', err)
@@ -442,7 +435,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   /**
    * Add a concept to the current concept set
    */
-  function addConceptToSet(concept: Concept) {
+  function addConceptToSet(concept: Concept, flags?: ConceptAddFlags) {
     if (!currentSet.value) {
       error.value = 'No concept set selected'
       return
@@ -455,7 +448,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
-    const item: ConceptSetItem = conceptToConceptSetItem(concept)
+    const item: ConceptSetItem = conceptToConceptSetItem(concept, flags)
     currentSet.value.items.push(item)
     error.value = null
   }
@@ -523,7 +516,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
     try {
       loading.value = true
-      const versionedAsset: VersionedAsset<ConceptSet> = await getVersionAPI(
+      const versionedAsset: ConceptSetVersionedAsset = await getVersionAPI(
         conceptSetId,
         versionNumber
       )
@@ -531,8 +524,9 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       // Set preview version metadata
       previewVersion.value = versionedAsset.versionDTO
 
-      // Replace current concept set with historical data
-      currentSet.value = versionedAsset.entityDTO
+      // Replace current concept set with historical data, including the
+      // historical items (entityDTO alone has none — see ConceptSetVersionedAsset)
+      currentSet.value = { ...versionedAsset.entityDTO, items: versionedAsset.items }
 
       // Mark as clean (read-only mode, no editing)
       isDirty.value = false
@@ -614,6 +608,9 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
     loadingRecommended.value = true
     recommendedError.value = null
+    // A 501 from one source must not leave the "not available" banner up for
+    // every later set or source — re-establish availability on each attempt.
+    isRecommendedAvailable.value = true
 
     try {
       const result = await getRecommendedConcepts(sourceKey, seed)
@@ -626,8 +623,6 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
       const existingIds = new Set((currentSet.value?.items ?? []).map(item => item.conceptId))
       const candidates = result.concepts.filter(c => !existingIds.has(c.conceptId))
-
-      isRecommendedAvailable.value = true
 
       const ids = candidates.map(c => c.conceptId)
       const counts = await getConceptRecordCounts(sourceKey, ids)
@@ -782,7 +777,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
-    const key = sourceKey || useWebAPIStore().getValidVocabularySource()
+    const key = sourceKey || useWebAPIStore().getValidVocabularySource() || getSourceKey()
     if (!key) {
       includedError.value = 'No vocabulary source available'
       return

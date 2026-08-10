@@ -3,7 +3,7 @@ import { ref, reactive, computed, nextTick } from 'vue'
 import type { CohortExpression } from '@/components/cohort-editor/circe.types'
 import type { ValidationWarning } from '@/models/cohort-validation.types'
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/cohort-definition.service', () => ({
   validateCohortDefinition: vi.fn(),
 }))
 
@@ -20,13 +20,13 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-let webapi: typeof import('@/services/webapi')
+let webapi: typeof import('@/services/cohort-definition.service')
 let useCohortValidation: typeof import('@/composables/useCohortValidation').useCohortValidation
 let CohortValidationOptions: import('@/composables/useCohortValidation').CohortValidationOptions
 
 beforeAll(async () => {
   vi.resetModules()
-  webapi = await import('@/services/webapi')
+  webapi = await import('@/services/cohort-definition.service')
   const mod = await import('@/composables/useCohortValidation')
   useCohortValidation = mod.useCohortValidation
 })

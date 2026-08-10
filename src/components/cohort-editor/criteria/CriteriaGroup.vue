@@ -5,7 +5,7 @@
     variant="outlined"
   >
     <v-card-text class="criteria-group-editor__body d-flex">
-      <v-menu
+      <AtlasMenu
         v-model="showMatchTypeMenu"
         :close-on-content-click="false"
         location="end"
@@ -28,41 +28,41 @@
         <v-card class="match-type-menu">
           <v-card-text class="pa-3">
             <div class="segmented-buttons">
-              <v-btn
+              <AtlasButton
                 :variant="groupType === 'ALL' ? 'tonal' : 'outlined'"
                 class="flex-1 match-chip--all"
                 size="small"
                 @click="groupType = 'ALL'"
               >
                 {{ t('options.all', 'All').value }}
-              </v-btn>
-              <v-btn
+              </AtlasButton>
+              <AtlasButton
                 :variant="groupType === 'ANY' ? 'tonal' : 'outlined'"
                 class="flex-1 match-chip--any"
                 size="small"
                 @click="groupType = 'ANY'"
               >
                 {{ t('options.any', 'Any').value }}
-              </v-btn>
-              <v-btn
+              </AtlasButton>
+              <AtlasButton
                 :variant="groupType === 'AT_LEAST' ? 'tonal' : 'outlined'"
                 class="flex-1 match-chip--at_least"
                 size="small"
                 @click="groupType = 'AT_LEAST'"
               >
                 {{ t('options.atLeast', 'At least').value }}
-              </v-btn>
-              <v-btn
+              </AtlasButton>
+              <AtlasButton
                 :variant="groupType === 'AT_MOST' ? 'tonal' : 'outlined'"
                 class="flex-1 match-chip--at_most"
                 size="small"
                 @click="groupType = 'AT_MOST'"
               >
                 {{ t('options.atMost', 'At most').value }}
-              </v-btn>
+              </AtlasButton>
             </div>
 
-            <v-text-field
+            <AtlasTextField
               v-if="groupType === 'AT_LEAST' || groupType === 'AT_MOST'"
               v-model="groupCount"
               class="mt-3"
@@ -74,44 +74,44 @@
             />
           </v-card-text>
         </v-card>
-      </v-menu>
+      </AtlasMenu>
 
       <div class="flex-grow-1 criteria-group-editor__content">
         <div class="group-header d-flex align-center ga-3 mb-3">
-          <v-menu>
+          <AtlasMenu>
             <template #activator="{ props: menuProps }">
-              <v-btn
+              <AtlasButton
                 v-bind="menuProps"
                 variant="outlined"
                 size="small"
                 prepend-icon="mdi-plus"
               >
                 {{ addCriteriaLabel }}
-              </v-btn>
+              </AtlasButton>
             </template>
 
-            <v-list density="compact">
-              <v-list-item
+            <AtlasList density="compact">
+              <AtlasListItem
                 v-for="criteriaType in criteriaTypeOptions"
                 :key="criteriaType.value"
                 :title="criteriaType.title"
                 @click="onAddCriteria(criteriaType.value)"
               />
-            </v-list>
-          </v-menu>
+            </AtlasList>
+          </AtlasMenu>
 
-          <v-btn
+          <AtlasButton
             variant="outlined"
             size="small"
             prepend-icon="mdi-folder-plus"
             @click="addNestedGroup"
           >
             {{ addGroupLabel }}
-          </v-btn>
+          </AtlasButton>
 
-          <v-spacer />
+          <AtlasSpacer />
 
-          <v-btn
+          <AtlasButton
             icon="mdi-delete"
             variant="text"
             color="error"
@@ -120,7 +120,7 @@
           />
         </div>
 
-        <v-alert
+        <AtlasAlert
           v-if="depth > 10"
           type="warning"
           variant="tonal"
@@ -128,7 +128,7 @@
           class="mb-3"
         >
           {{ deepNestingLabel }} ({{ depth }})
-        </v-alert>
+        </AtlasAlert>
 
         <div v-if="demographicCriteriaList.length > 0">
           <DemographicCriteria
@@ -158,14 +158,14 @@
           />
         </div>
 
-        <v-alert
+        <AtlasAlert
           v-if="demographicCriteriaList.length === 0 && criteriaList.length === 0"
           variant="tonal"
           density="compact"
           class="mb-3"
         >
           {{ noCriteriaLabel }}
-        </v-alert>
+        </AtlasAlert>
 
         <div v-if="nestedGroups.length > 0">
           <CriteriaGroup
@@ -189,6 +189,15 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import {
+  AtlasAlert,
+  AtlasButton,
+  AtlasList,
+  AtlasListItem,
+  AtlasMenu,
+  AtlasSpacer,
+  AtlasTextField,
+} from '@/components/ui'
 import type { CriteriaGroup, CorelatedCriteria as CorelatedCriteriaType, DemographicCriteria as DemographicCriteriaType } from '../circe.types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
 import { createDefaultWindow } from './window-utils'

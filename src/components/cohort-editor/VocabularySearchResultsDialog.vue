@@ -1,5 +1,5 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
     max-width="920"
     @update:model-value="emit('update:modelValue', $event)"
@@ -11,94 +11,67 @@
       </v-card-title>
 
       <v-card-text class="d-flex flex-column ga-4">
-        <v-alert
+        <AtlasAlert
           variant="tonal"
           type="info"
           density="compact"
         >
           Mock vocabulary search results. Click rows to select concepts, then add them back to the attribute.
-        </v-alert>
+        </AtlasAlert>
 
-        <v-table density="compact">
-          <thead>
-            <tr>
-              <th
-                class="text-left"
-                style="width: 56px"
-              >
-                Pick
-              </th>
-              <th class="text-left">
-                Concept
-              </th>
-              <th
-                class="text-left"
-                style="width: 110px"
-              >
-                ID
-              </th>
-              <th
-                class="text-left"
-                style="width: 120px"
-              >
-                Domain
-              </th>
-              <th
-                class="text-left"
-                style="width: 120px"
-              >
-                Vocabulary
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="concept in mockResults"
-              :key="concept.CONCEPT_ID"
-              class="concept-row"
-              @click="toggleConcept(concept)"
-            >
-              <td>
-                <v-checkbox-btn :model-value="isSelected(concept.CONCEPT_ID)" />
-              </td>
-              <td>
-                <div class="font-weight-medium">
-                  {{ concept.CONCEPT_NAME }}
-                </div>
-              </td>
-              <td>{{ concept.CONCEPT_ID }}</td>
-              <td>{{ concept.DOMAIN_ID }}</td>
-              <td>{{ concept.VOCABULARY_ID }}</td>
-            </tr>
-          </tbody>
-        </v-table>
+        <AtlasDataTable
+          :headers="headers"
+          :items="mockResults"
+          hover
+          hide-default-footer
+          :items-per-page="mockResults.length"
+          @click:row="onRowClick"
+        >
+          <template #item.pick="{ item }">
+            <AtlasCheckbox :model-value="isSelected(item.CONCEPT_ID)" />
+          </template>
+
+          <template #item.CONCEPT_NAME="{ item }">
+            <div class="font-weight-medium">
+              {{ item.CONCEPT_NAME }}
+            </div>
+          </template>
+        </AtlasDataTable>
       </v-card-text>
 
       <v-card-actions>
         <div class="text-caption text-medium-emphasis px-2">
           {{ selectedConcepts.length }} selected
         </div>
-        <v-spacer />
-        <v-btn
+        <AtlasSpacer />
+        <AtlasButton
           variant="tonal"
           @click="close"
         >
           Cancel
-        </v-btn>
-        <v-btn
+        </AtlasButton>
+        <AtlasButton
           color="primary"
           :disabled="selectedConcepts.length === 0"
           @click="confirmSelection"
         >
           Add selected
-        </v-btn>
+        </AtlasButton>
       </v-card-actions>
     </v-card>
-  </v-dialog>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import {
+  AtlasAlert,
+  AtlasButton,
+  AtlasCheckbox,
+  AtlasDataTable,
+  AtlasDialog,
+  AtlasSpacer,
+} from '@/components/ui'
 import type { Concept } from './circe.types'
 
 const props = defineProps<{
@@ -120,6 +93,14 @@ const mockResults = [
   { CONCEPT_ID: 704520, CONCEPT_NAME: 'Outpatient visit', DOMAIN_ID: 'Visit', VOCABULARY_ID: 'Visit' },
 ] satisfies Concept[]
 
+const headers = [
+  { key: 'pick', title: 'Pick', sortable: false, width: 56 },
+  { key: 'CONCEPT_NAME', title: 'Concept' },
+  { key: 'CONCEPT_ID', title: 'ID', width: 110 },
+  { key: 'DOMAIN_ID', title: 'Domain', width: 120 },
+  { key: 'VOCABULARY_ID', title: 'Vocabulary', width: 120 },
+]
+
 const selectedConcepts = ref<Concept[]>([])
 
 const selectedIds = computed(() => new Set(selectedConcepts.value.map(concept => concept.CONCEPT_ID).filter((conceptId): conceptId is number => typeof conceptId === 'number')))
@@ -138,6 +119,10 @@ function toggleConcept(concept: Concept) {
   }
 
   selectedConcepts.value = [...selectedConcepts.value, concept]
+}
+
+function onRowClick(_event: Event, payload: { item: Concept }) {
+  toggleConcept(payload.item)
 }
 
 function confirmSelection() {

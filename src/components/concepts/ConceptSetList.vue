@@ -11,26 +11,26 @@
         class="concept-set-list__filters"
         @update:filters="store.setFilters"
         @clear="store.clearFilters"
-      />
-
-      <AtlasChip
-        v-if="!store.loading && store.filteredSets.length > 0"
-        size="sm"
-        tone="primary"
-        class="concept-set-list__count"
       >
-        {{ countLabel }}
-      </AtlasChip>
+        <template #actions>
+          <AtlasChip
+            v-if="!store.loading && store.filteredSets.length > 0"
+            size="sm"
+            tone="primary"
+            class="concept-set-list__count"
+          >
+            {{ countLabel }}
+          </AtlasChip>
 
-      <AtlasSpacer />
-
-      <AtlasButton
-        icon="mdi-plus"
-        :disabled="!canCreate"
-        @click="onAddClick"
-      >
-        {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set') }}
-      </AtlasButton>
+          <AtlasButton
+            icon="mdi-plus"
+            :disabled="!canCreate"
+            @click="onAddClick"
+          >
+            {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set') }}
+          </AtlasButton>
+        </template>
+      </ConceptSetFilters>
     </div>
 
     <!-- Error Alert -->
@@ -166,7 +166,7 @@ import { formatDate } from '@/utils/date-format'
 import { tagColor, tagContrastColor } from '@/utils/tag-color'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetFilters from './ConceptSetFilters.vue'
-import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
 
 const { t } = useI18n()
 const { hasPermission } = usePermissions()

@@ -1,6 +1,6 @@
 <template>
   <div class="period-editor d-flex align-center ga-2 flex-nowrap">
-    <v-text-field
+    <AtlasTextField
       v-model="startDate"
       class="period-editor__value"
       type="date"
@@ -10,7 +10,7 @@
       :label="startLabel"
     />
     <span class="period-editor__and text-medium-emphasis">{{ andLabel }}</span>
-    <v-text-field
+    <AtlasTextField
       v-model="endDate"
       class="period-editor__value"
       type="date"
@@ -24,6 +24,7 @@
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
+import { AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { Period } from '../circe.types'
 import { optionalTextBinding } from './bindings'

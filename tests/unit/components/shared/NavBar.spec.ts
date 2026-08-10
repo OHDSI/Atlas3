@@ -2,13 +2,16 @@
  * NavBar Component Tests
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount, flushPromises } from '@vue/test-utils'
+import { mount, flushPromises, DOMWrapper } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import NavBar from '@/components/shared/NavBar.vue'
 import { generatePluginMenuItems } from '@/plugins/navigation/PluginMenuIntegration.ts'
+import { usePermissions } from '@/composables/usePermissions'
+import { usePluginMounts } from '@/composables/usePluginMounts'
+import { pluginConfigService } from '@/services/PluginConfigService'
 
 // Mock vue-router
 const mockPush = vi.fn()
@@ -27,27 +30,34 @@ vi.mock('vue-router', () => ({
 // Mock composables
 const mockLogout = vi.fn()
 const mockOpenLoginModal = vi.fn()
+const mockIsAuthenticated = ref(false)
 
 vi.mock('@/composables/useAuth', () => ({
   useAuth: () => ({
-    isAuthenticated: ref(false),
+    isAuthenticated: mockIsAuthenticated,
     userDisplayName: ref('Test User'),
     logout: mockLogout,
     openLoginModal: mockOpenLoginModal
   })
 }))
 
+const mockPermissions = {
+  hasPermission: () => true,
+  hasAnyPermission: () => true,
+  hasAllPermissions: () => true,
+  cacheHitRate: ref(0),
+  clearCache: vi.fn(),
+}
+
 // usePermissions reads from the auth store, which isn't initialised in this
-// suite; mock it to behave as an admin so the existing config-button
-// assertions keep passing.
+// suite; default it to admin so the existing config-button assertions keep
+// passing, and let individual tests override it.
 vi.mock('@/composables/usePermissions', () => ({
-  usePermissions: () => ({
-    hasPermission: () => true,
-    hasAnyPermission: () => true,
-    hasAllPermissions: () => true,
-    cacheHitRate: ref(0),
-    clearCache: vi.fn(),
-  }),
+  usePermissions: vi.fn(() => mockPermissions),
+}))
+
+vi.mock('@/composables/usePluginMounts', () => ({
+  usePluginMounts: vi.fn(() => ({ items: computed(() => []) })),
 }))
 
 vi.mock('@/composables/useI18n', () => ({
@@ -67,6 +77,20 @@ vi.mock('@/stores/ui', () => ({
     },
     openConfigPanel: mockOpenConfigPanel,
     closeConfigPanel: mockCloseConfigPanel
+  })
+}))
+
+// The nav logo swaps to a light-on-dark asset based on the resolved theme.
+const mockThemeResolved = ref<'light' | 'dark'>('light')
+
+vi.mock('@/stores/theme', () => ({
+  useThemeStore: () => ({
+    // A real Pinia store auto-unwraps refs on access; a plain mock object
+    // does not, so forward through a getter rather than exposing the ref
+    // itself (which would make `themeStore.resolved === 'dark'` always false).
+    get resolved() {
+      return mockThemeResolved.value
+    }
   })
 }))
 
@@ -100,6 +124,7 @@ vi.mock('@/services/PluginConfigService', () => ({
     showLanguageSelector: () => true,
     showConfigButton: () => true,
     showUserMenu: () => true,
+    showThemeToggle: vi.fn(() => false),
     getFeedbackUrl: () => 'https://forms.office.com/r/2JzrYy1yDP',
     getLogoNavigateTo: () => '/'
   }
@@ -131,16 +156,21 @@ vi.mock('@/components/LanguageSelector.vue', () => ({
 
 const vuetify = createVuetify({ components, directives })
 
+const mountOptions = {
+  global: {
+    plugins: [vuetify],
+    stubs: {
+      LoginModal: true,
+      LanguageSelector: true,
+      NotificationInbox: true,
+      ThemeToggle: true
+    }
+  }
+}
+
 function mountComponent(options = {}) {
   return mount(NavBar, {
-    global: {
-      plugins: [vuetify],
-      stubs: {
-        LoginModal: true,
-        LanguageSelector: true,
-        NotificationInbox: true
-      }
-    },
+    ...mountOptions,
     ...options
   })
 }
@@ -148,7 +178,12 @@ function mountComponent(options = {}) {
 describe('NavBar', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockIsAuthenticated.value = false
+    mockThemeResolved.value = 'light'
     vi.mocked(generatePluginMenuItems).mockReturnValue([])
+    vi.mocked(usePermissions).mockReturnValue(mockPermissions)
+    vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
+    vi.mocked(pluginConfigService.showThemeToggle).mockReturnValue(false)
   })
 
   describe('Component Rendering', () => {
@@ -268,6 +303,26 @@ describe('NavBar', () => {
       const wrapper = mountComponent()
       const userDiv = wrapper.find('.nav-bar__user')
       expect(userDiv.exists()).toBe(false)
+    })
+  })
+
+  describe('Theme-aware logo', () => {
+    it('uses the navy logo asset when the theme resolves to light', () => {
+      mockThemeResolved.value = 'light'
+      const wrapper = mountComponent()
+      const atlasLogo = wrapper.find('.nav-bar__logo img')
+      // vitest inlines svg imports as data URIs, so assert on the fill baked
+      // into the asset rather than a filename.
+      expect(atlasLogo.attributes('src')).toContain('1F4258')
+      expect(atlasLogo.attributes('src')).not.toContain('FFFFFF')
+    })
+
+    it('swaps to the dark logo asset when the theme resolves to dark', () => {
+      mockThemeResolved.value = 'dark'
+      const wrapper = mountComponent()
+      const atlasLogo = wrapper.find('.nav-bar__logo img')
+      expect(atlasLogo.attributes('src')).toContain('FFFFFF')
+      expect(atlasLogo.attributes('src')).not.toContain('1F4258')
     })
   })
 
@@ -427,6 +482,114 @@ describe('NavBar', () => {
       const wrapper = mountComponent()
       expect(wrapper.find('.d-none.d-md-flex').exists()).toBe(true)
       expect(wrapper.find('.d-md-none').exists()).toBe(true)
+    })
+  })
+
+  describe('Theme toggle', () => {
+    it('should not render ThemeToggle by default', () => {
+      const wrapper = mountComponent()
+      expect(wrapper.findComponent({ name: 'ThemeToggle' }).exists()).toBe(false)
+    })
+
+    it('should render ThemeToggle when enabled by deployment config', async () => {
+      vi.mocked(pluginConfigService.showThemeToggle).mockReturnValue(true)
+      const wrapper = mountComponent()
+      await flushPromises()
+      expect(wrapper.findComponent({ name: 'ThemeToggle' }).exists()).toBe(true)
+    })
+  })
+
+  describe('Plugin admin tabs', () => {
+    it('shows the config cog when a plugin supplies the only admin tab', async () => {
+      vi.mocked(usePermissions).mockReturnValue({
+        hasPermission: () => false,
+        hasAnyPermission: () => false,
+        hasAllPermissions: () => false,
+        cacheHitRate: ref(0),
+        clearCache: vi.fn(),
+      })
+      vi.mocked(usePluginMounts).mockReturnValue({
+        items: computed(() => [
+          {
+            key: 'plugin:p1:audit',
+            pluginId: 'p1',
+            itemId: 'audit',
+            surface: 'admin-tabs' as const,
+            name: 'Audit',
+            order: 10,
+            visible: true,
+          },
+        ]),
+      })
+
+      const wrapper = mount(NavBar, mountOptions)
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="nav-config"]').exists()).toBe(true)
+    })
+
+    it('hides the config cog with no permissions and no plugin tabs', async () => {
+      vi.mocked(usePermissions).mockReturnValue({
+        hasPermission: () => false,
+        hasAnyPermission: () => false,
+        hasAllPermissions: () => false,
+        cacheHitRate: ref(0),
+        clearCache: vi.fn(),
+      })
+
+      const wrapper = mount(NavBar, mountOptions)
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="nav-config"]').exists()).toBe(false)
+    })
+  })
+
+  describe('Plugin account menu', () => {
+    it('renders plugin account menu items above sign out', async () => {
+      mockIsAuthenticated.value = true
+      vi.mocked(usePluginMounts).mockImplementation((surface: string) => ({
+        items: computed(() =>
+          surface === 'account-menu'
+            ? [
+                {
+                  key: 'plugin:p1:profile',
+                  pluginId: 'p1',
+                  itemId: 'profile',
+                  surface: 'account-menu' as const,
+                  name: 'My Profile',
+                  path: 'profile',
+                  icon: 'mdi-account',
+                  order: 10,
+                  visible: true,
+                },
+              ]
+            : []
+        ),
+      }))
+
+      const wrapper = mount(NavBar, mountOptions)
+      await flushPromises()
+      await wrapper.find('.nav-bar__user button').trigger('click')
+      await flushPromises()
+
+      const body = new DOMWrapper(document.body)
+      const item = body.find('[data-testid="account-menu-plugin:p1:profile"]')
+      expect(item.exists()).toBe(true)
+
+      await item.trigger('click')
+      expect(mockPush).toHaveBeenCalledWith('/plugins/p1/profile')
+    })
+
+    it('does not render a divider when there are no plugin account items', async () => {
+      mockIsAuthenticated.value = true
+
+      const wrapper = mount(NavBar, mountOptions)
+      await flushPromises()
+      await wrapper.find('.nav-bar__user button').trigger('click')
+      await flushPromises()
+
+      const body = new DOMWrapper(document.body)
+      expect(body.find('.v-divider').exists()).toBe(false)
     })
   })
 })

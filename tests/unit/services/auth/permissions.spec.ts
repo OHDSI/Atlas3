@@ -6,6 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { permissionService } from '@/services/auth/permissions';
+import { permissionChecker } from '@/services/auth/permissionChecker';
 
 describe('PermissionService', () => {
   beforeEach(() => {
@@ -135,6 +136,50 @@ describe('PermissionService', () => {
       
       // User has specific, but requires wildcard
       expect(permissionService.hasPermission('cohort:*:get', userPerms)).toBe(false);
+    });
+  });
+
+  describe('Shiro semantics (shared with permissionChecker)', () => {
+    it('should treat a shorter granted permission as implying the missing levels', () => {
+      const userPerms = ['cohort'];
+
+      expect(permissionService.hasPermission('cohort:1:get', userPerms)).toBe(true);
+      expect(permissionService.hasPermission('cohort:read', userPerms)).toBe(true);
+      expect(permissionService.hasPermission('conceptset:1:get', userPerms)).toBe(false);
+    });
+
+    it('should match comma-separated grants', () => {
+      const userPerms = ['cohort:read,write'];
+
+      expect(permissionService.hasPermission('cohort:read', userPerms)).toBe(true);
+      expect(permissionService.hasPermission('cohort:write', userPerms)).toBe(true);
+      expect(permissionService.hasPermission('cohort:delete', userPerms)).toBe(false);
+    });
+
+    it('should reject a granted permission with extra non-wildcard levels', () => {
+      const userPerms = ['cohort:read:project1'];
+
+      expect(permissionService.hasPermission('cohort:read', userPerms)).toBe(false);
+    });
+
+    it('should agree with permissionChecker for the same inputs', () => {
+      const userPerms = ['cohort', 'conceptset:read,write', 'report:*:post'];
+      const idx = permissionChecker.buildPermissionIndex(userPerms);
+      const required = [
+        'cohort:1:get',
+        'conceptset:read',
+        'conceptset:delete',
+        'report:9:post',
+        'report:9:get',
+        'user:admin:manage',
+      ];
+
+      for (const perm of required) {
+        permissionService.clearCache();
+        expect(permissionService.hasPermission(perm, userPerms)).toBe(
+          permissionChecker.hasPermission(perm, idx).granted
+        );
+      }
     });
   });
 

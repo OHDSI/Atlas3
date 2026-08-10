@@ -1,12 +1,12 @@
 <template>
   <div class="date-offset-end-strategy">
     <div class="strategy-hint">
-      <v-icon
+      <AtlasIcon
         size="16"
         class="strategy-hint__icon"
       >
         mdi-information-outline
-      </v-icon>
+      </AtlasIcon>
       <span>Cohort exit is a fixed number of days from a date derived from the qualifying event.</span>
     </div>
 
@@ -15,24 +15,25 @@
         <div class="date-offset-end-strategy__field-label">
           Date Field
         </div>
-        <v-btn-toggle
-          v-model="dateField"
-          mandatory
-          variant="outlined"
-          density="compact"
-          divided
-          class="date-offset-end-strategy__toggle"
-        >
-          <v-btn value="StartDate">
+        <div class="date-offset-end-strategy__toggle">
+          <AtlasButton
+            :variant="dateField === 'StartDate' ? 'tonal' : 'outlined'"
+            size="small"
+            @click="dateField = 'StartDate'"
+          >
             Start Date
-          </v-btn>
-          <v-btn value="EndDate">
+          </AtlasButton>
+          <AtlasButton
+            :variant="dateField === 'EndDate' ? 'tonal' : 'outlined'"
+            size="small"
+            @click="dateField = 'EndDate'"
+          >
             End Date
-          </v-btn>
-        </v-btn-toggle>
+          </AtlasButton>
+        </div>
       </div>
 
-      <v-text-field
+      <AtlasTextField
         v-model.number="offset"
         type="number"
         label="Offset (days)"
@@ -48,6 +49,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { AtlasButton, AtlasIcon, AtlasTextField } from '@/components/ui'
 import type { DateOffsetStrategy } from '../circe.types'
 
 const props = defineProps<{
@@ -119,7 +121,14 @@ const offset = computed<number>({
   overflow: hidden;
 }
 
-.date-offset-end-strategy__toggle:deep(.v-btn) {
+.date-offset-end-strategy__toggle {
+  display: inline-flex;
+  gap: 0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.date-offset-end-strategy__toggle :deep(.atlas-button) {
   min-height: 28px;
   padding-inline: 10px;
   font-size: 12px;

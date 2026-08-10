@@ -4,8 +4,10 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { createPinia, setActivePinia } from 'pinia'
+import { ApiError } from '@/services/api-error'
+import { success, failure } from '@/types/api'
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/cohort-sample.service', () => ({
   listCohortSamples: vi.fn(),
   createCohortSample: vi.fn(),
   getCohortSample: vi.fn(),
@@ -20,7 +22,7 @@ import {
   getCohortSample,
   refreshCohortSample,
   deleteCohortSample,
-} from '@/services/webapi'
+} from '@/services/cohort-sample.service'
 
 const vuetify = createVuetify({ components, directives })
 const globalMountOpts = {
@@ -43,11 +45,9 @@ describe('CohortSamplesPanel', () => {
   })
 
   it('renders the empty state when no samples are returned', async () => {
-    vi.mocked(listCohortSamples).mockResolvedValueOnce({
-      cohortDefinitionId: 1,
-      sourceId: 1,
-      samples: [],
-    })
+    vi.mocked(listCohortSamples).mockResolvedValueOnce(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [] })
+    )
 
     const wrapper = mount(CohortSamplesPanel, {
       global: globalMountOpts,
@@ -59,15 +59,15 @@ describe('CohortSamplesPanel', () => {
   })
 
   it('shows the list when samples come back, and loads the detail when one is selected', async () => {
-    vi.mocked(listCohortSamples).mockResolvedValueOnce({
-      cohortDefinitionId: 1,
-      sourceId: 1,
-      samples: [sample],
-    })
-    vi.mocked(getCohortSample).mockResolvedValueOnce({
-      ...sample,
-      elements: [{ sampleId: 1, rank: 1, personId: '1001', genderConceptId: 8507, age: 50 }],
-    })
+    vi.mocked(listCohortSamples).mockResolvedValueOnce(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [sample] })
+    )
+    vi.mocked(getCohortSample).mockResolvedValueOnce(
+      success({
+        ...sample,
+        elements: [{ sampleId: 1, rank: 1, personId: '1001', genderConceptId: 8507, age: 50 }],
+      })
+    )
 
     const wrapper = mount(CohortSamplesPanel, {
       global: globalMountOpts,
@@ -85,12 +85,10 @@ describe('CohortSamplesPanel', () => {
   })
 
   it('refresh triggers refresh + list reload', async () => {
-    vi.mocked(listCohortSamples).mockResolvedValue({
-      cohortDefinitionId: 1,
-      sourceId: 1,
-      samples: [sample],
-    })
-    vi.mocked(refreshCohortSample).mockResolvedValueOnce(sample)
+    vi.mocked(listCohortSamples).mockResolvedValue(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [sample] })
+    )
+    vi.mocked(refreshCohortSample).mockResolvedValueOnce(success(sample))
 
     const wrapper = mount(CohortSamplesPanel, {
       global: globalMountOpts,
@@ -106,13 +104,11 @@ describe('CohortSamplesPanel', () => {
   })
 
   it('delete clears the selection and reloads the list', async () => {
-    vi.mocked(listCohortSamples).mockResolvedValue({
-      cohortDefinitionId: 1,
-      sourceId: 1,
-      samples: [sample],
-    })
-    vi.mocked(getCohortSample).mockResolvedValueOnce({ ...sample, elements: [] })
-    vi.mocked(deleteCohortSample).mockResolvedValueOnce(true)
+    vi.mocked(listCohortSamples).mockResolvedValue(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [sample] })
+    )
+    vi.mocked(getCohortSample).mockResolvedValueOnce(success({ ...sample, elements: [] }))
+    vi.mocked(deleteCohortSample).mockResolvedValueOnce(success(undefined))
 
     const wrapper = mount(CohortSamplesPanel, {
       global: globalMountOpts,
@@ -131,12 +127,12 @@ describe('CohortSamplesPanel', () => {
   })
 
   it('createCohortSample failure surfaces an error and keeps the list intact', async () => {
-    vi.mocked(listCohortSamples).mockResolvedValue({
-      cohortDefinitionId: 1,
-      sourceId: 1,
-      samples: [],
-    })
-    vi.mocked(createCohortSample).mockRejectedValueOnce(new Error('size must be smaller'))
+    vi.mocked(listCohortSamples).mockResolvedValue(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [] })
+    )
+    vi.mocked(createCohortSample).mockResolvedValueOnce(
+      failure(new ApiError('size must be smaller', 400, null))
+    )
 
     const wrapper = mount(CohortSamplesPanel, {
       global: globalMountOpts,
@@ -152,16 +148,16 @@ describe('CohortSamplesPanel', () => {
   })
 
   it('createCohortSample success closes the dialog, reloads list and selects the new sample', async () => {
-    vi.mocked(listCohortSamples).mockResolvedValue({
-      cohortDefinitionId: 1,
-      sourceId: 1,
-      samples: [sample],
-    })
-    vi.mocked(createCohortSample).mockResolvedValueOnce(sample)
-    vi.mocked(getCohortSample).mockResolvedValueOnce({
-      ...sample,
-      elements: [{ sampleId: 1, rank: 1, personId: '1001', genderConceptId: 8507, age: 50 }],
-    })
+    vi.mocked(listCohortSamples).mockResolvedValue(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [sample] })
+    )
+    vi.mocked(createCohortSample).mockResolvedValueOnce(success(sample))
+    vi.mocked(getCohortSample).mockResolvedValueOnce(
+      success({
+        ...sample,
+        elements: [{ sampleId: 1, rank: 1, personId: '1001', genderConceptId: 8507, age: 50 }],
+      })
+    )
 
     const wrapper = mount(CohortSamplesPanel, {
       global: globalMountOpts,
@@ -177,8 +173,8 @@ describe('CohortSamplesPanel', () => {
     expect(listCohortSamples).toHaveBeenCalledTimes(2) // initial + post-create reload
   })
 
-  it('falls back to the generic error message on a non-Error list rejection', async () => {
-    vi.mocked(listCohortSamples).mockRejectedValueOnce('boom')
+  it('falls back to the generic error message when the list fetch fails without a message', async () => {
+    vi.mocked(listCohortSamples).mockResolvedValueOnce(failure(new ApiError('', 0, null)))
 
     const wrapper = mount(CohortSamplesPanel, {
       global: globalMountOpts,
@@ -189,8 +185,12 @@ describe('CohortSamplesPanel', () => {
     expect(wrapper.find('[data-testid=cohort-samples-error]').text()).toContain('Failed to load samples')
   })
 
-  it('treats a null list response as an empty samples array', async () => {
-    vi.mocked(listCohortSamples).mockResolvedValueOnce(null)
+  it('shows the error banner rather than an empty list when the list fetch fails', async () => {
+    // A failed fetch must not read as "no samples" — that's precisely the
+    // null-meant-two-things bug this migration fixes.
+    vi.mocked(listCohortSamples).mockResolvedValueOnce(
+      failure(new ApiError('no read access', 403, null))
+    )
 
     const wrapper = mount(CohortSamplesPanel, {
       global: globalMountOpts,
@@ -198,16 +198,15 @@ describe('CohortSamplesPanel', () => {
     })
     await flushPromises()
 
-    expect(wrapper.find('[data-testid=cohort-samples-list-empty]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid=cohort-samples-error]').text()).toContain('no read access')
+    expect(wrapper.find('[data-testid=cohort-samples-list-empty]').exists()).toBe(false)
   })
 
-  it('falls back to the generic error message on a non-Error create rejection', async () => {
-    vi.mocked(listCohortSamples).mockResolvedValue({
-      cohortDefinitionId: 1,
-      sourceId: 1,
-      samples: [],
-    })
-    vi.mocked(createCohortSample).mockRejectedValueOnce('boom')
+  it('falls back to the generic error message when create fails without a message', async () => {
+    vi.mocked(listCohortSamples).mockResolvedValue(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [] })
+    )
+    vi.mocked(createCohortSample).mockResolvedValueOnce(failure(new ApiError('', 0, null)))
 
     const wrapper = mount(CohortSamplesPanel, {
       global: globalMountOpts,
@@ -220,15 +219,58 @@ describe('CohortSamplesPanel', () => {
     expect(wrapper.find('[data-testid=cohort-samples-error]').text()).toContain('Failed to create sample')
   })
 
+  it('shows the error banner and clears the selection when the detail fetch fails', async () => {
+    vi.mocked(listCohortSamples).mockResolvedValue(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [sample] })
+    )
+    vi.mocked(getCohortSample).mockResolvedValueOnce(
+      failure(new ApiError('sample detail is gone', 404, null))
+    )
+
+    const wrapper = mount(CohortSamplesPanel, {
+      global: globalMountOpts,
+      props: { cohortId: 1, sourceKey: 'EUNOMIA' },
+    })
+    await flushPromises()
+
+    await wrapper.find('[data-testid=cohort-samples-list-row]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid=cohort-samples-error]').text()).toContain(
+      'sample detail is gone'
+    )
+    expect(wrapper.vm.selectedSample).toBeNull()
+    expect(wrapper.find('[data-testid=cohort-sample-detail-table]').exists()).toBe(false)
+  })
+
+  it('falls back to the generic error message when the detail fetch fails without a message', async () => {
+    vi.mocked(listCohortSamples).mockResolvedValue(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [sample] })
+    )
+    vi.mocked(getCohortSample).mockResolvedValueOnce(failure(new ApiError('', 0, null)))
+
+    const wrapper = mount(CohortSamplesPanel, {
+      global: globalMountOpts,
+      props: { cohortId: 1, sourceKey: 'EUNOMIA' },
+    })
+    await flushPromises()
+
+    await wrapper.find('[data-testid=cohort-samples-list-row]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid=cohort-samples-error]').text()).toContain(
+      'Failed to load sample detail'
+    )
+    expect(wrapper.vm.selectedSample).toBeNull()
+  })
+
   it('refresh on a non-selected sample does not reload the detail view', async () => {
     const other = { ...sample, id: 99, name: 'other' }
-    vi.mocked(listCohortSamples).mockResolvedValue({
-      cohortDefinitionId: 1,
-      sourceId: 1,
-      samples: [sample, other],
-    })
-    vi.mocked(getCohortSample).mockResolvedValueOnce({ ...sample, elements: [] })
-    vi.mocked(refreshCohortSample).mockResolvedValueOnce(other)
+    vi.mocked(listCohortSamples).mockResolvedValue(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [sample, other] })
+    )
+    vi.mocked(getCohortSample).mockResolvedValueOnce(success({ ...sample, elements: [] }))
+    vi.mocked(refreshCohortSample).mockResolvedValueOnce(success(other))
 
     const wrapper = mount(CohortSamplesPanel, {
       global: globalMountOpts,

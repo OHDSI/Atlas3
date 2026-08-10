@@ -7,10 +7,14 @@
  * the consumer calls `stop()`, or the surrounding effect scope disposes.
  *
  * Uses `setTimeout` (not `setInterval`) so a slow fetch can't queue up
- * concurrent calls — the next tick is scheduled only after the previous
+ * concurrent calls: the next tick is scheduled only after the previous
  * fetch settles.
+ *
+ * `T` is whatever the fetcher returns, so callers that poll a list (or a
+ * derived summary) can use this too. When no effect scope is active (a store
+ * action, a watcher callback) the caller owns `stop()`.
  */
-import { onScopeDispose, ref, type Ref } from 'vue'
+import { getCurrentScope, onScopeDispose, ref, type Ref } from 'vue'
 
 import { logger } from '@/utils/logger'
 import type { GenerationStatus } from '@/models/characterization.types'
@@ -25,14 +29,16 @@ export function isTerminalStatus(status: GenerationStatus): boolean {
   return TERMINAL_STATUSES.includes(status)
 }
 
-export interface UseExecutionPollingOptions<T extends { status: GenerationStatus }> {
+export interface UseExecutionPollingOptions<T> {
   fetcher: () => Promise<T | null>
   isTerminal: (item: T) => boolean
   intervalMs?: number
   onUpdate?: (item: T) => void
+  /** Set false when the caller has just fetched and only wants the schedule. */
+  immediate?: boolean
 }
 
-export interface UseExecutionPollingReturn<T extends { status: GenerationStatus }> {
+export interface UseExecutionPollingReturn<T> {
   data: Ref<T | null>
   isPolling: Ref<boolean>
   start: () => Promise<void>
@@ -41,7 +47,7 @@ export interface UseExecutionPollingReturn<T extends { status: GenerationStatus 
 
 const DEFAULT_INTERVAL_MS = 3000
 
-export function useExecutionPolling<T extends { status: GenerationStatus }>(
+export function useExecutionPolling<T>(
   opts: UseExecutionPollingOptions<T>
 ): UseExecutionPollingReturn<T> {
   const data = ref<T | null>(null) as Ref<T | null>
@@ -73,7 +79,7 @@ export function useExecutionPolling<T extends { status: GenerationStatus }>(
     try {
       item = await opts.fetcher()
     } catch (error) {
-      logger.error('useExecutionPolling', 'Fetcher threw — stopping poll', error)
+      logger.error('useExecutionPolling', 'Fetcher threw, stopping poll', error)
       stop()
       return
     }
@@ -99,11 +105,15 @@ export function useExecutionPolling<T extends { status: GenerationStatus }>(
 
     // Schedule the next tick only if we're still polling.
     if (!cancelled) {
-      timeoutId = setTimeout(() => {
-        timeoutId = null
-        void tick()
-      }, intervalMs)
+      scheduleTick()
     }
+  }
+
+  function scheduleTick(): void {
+    timeoutId = setTimeout(() => {
+      timeoutId = null
+      void tick()
+    }, intervalMs)
   }
 
   async function start(): Promise<void> {
@@ -112,12 +122,18 @@ export function useExecutionPolling<T extends { status: GenerationStatus }>(
     }
     cancelled = false
     isPolling.value = true
+    if (opts.immediate === false) {
+      scheduleTick()
+      return
+    }
     await tick()
   }
 
-  onScopeDispose(() => {
-    stop()
-  })
+  if (getCurrentScope()) {
+    onScopeDispose(() => {
+      stop()
+    })
+  }
 
   return {
     data,

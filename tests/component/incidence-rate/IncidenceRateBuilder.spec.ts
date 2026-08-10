@@ -22,7 +22,7 @@ vi.mock('@/composables/useEntityAccess', () => ({
   useEntityAccess: () => ({ canWrite: { value: true }, canDelete: { value: true } }),
 }))
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/incidence-rate.service', () => ({
   getIncidenceRateReport: vi.fn().mockResolvedValue({ success: true, data: null }),
   listIncidenceRateInfo: vi.fn().mockResolvedValue({ success: true, data: [] }),
   generateIncidenceRate: vi.fn(),

@@ -5,12 +5,6 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <AtlasIcon
-          start
-          color="primary"
-        >
-          mdi-lightning-bolt
-        </AtlasIcon>
         {{ t('trexsql.cacheTitle', 'Patient Cache') }}
       </v-card-title>
 
@@ -24,7 +18,6 @@
           }}
         </p>
 
-        <!-- Loading State -->
         <div
           v-if="isLoading"
           class="d-flex align-center justify-center py-8"
@@ -36,111 +29,96 @@
           <span class="ml-3">{{ t('common.loading', 'Loading...') }}</span>
         </div>
 
-        <!-- Data Sources List -->
         <AtlasList
           v-else
           lines="two"
           class="trexsql-cache-section__list"
         >
           <AtlasListItem
-            v-for="source in dataSourcesWithStatus"
-            :key="source.sourceKey"
+            v-for="row in cacheRows"
+            :key="row.key"
             class="trexsql-cache-section__item"
+            :data-testid="`cache-row-${row.databaseCode}`"
           >
             <template #prepend>
               <AtlasAvatar
-                :color="getStatusColor(source.cacheStatus?.status)"
+                :color="getStatusColor(row)"
                 size="40"
               >
                 <AtlasIcon color="white">
-                  {{ getStatusIcon(source.cacheStatus?.status) }}
+                  {{ getStatusIcon(row) }}
                 </AtlasIcon>
               </AtlasAvatar>
             </template>
 
             <v-list-item-title class="font-weight-medium">
-              {{ source.sourceName }}
+              {{ row.title }}
             </v-list-item-title>
 
             <v-list-item-subtitle>
               <div class="d-flex align-center flex-wrap gap-2">
                 <AtlasChip
-                  :color="getStatusColor(source.cacheStatus?.status)"
+                  :color="getStatusColor(row)"
                   size="sm"
                   variant="tonal"
                 >
-                  {{ getStatusLabel(source.cacheStatus?.status) }}
+                  {{ getStatusLabel(row) }}
                 </AtlasChip>
 
-                <!-- Cache Stats -->
-                <template
-                  v-if="
-                    source.cacheStatus?.status === 'ready' || source.cacheStatus?.status === 'stale'
-                  "
+                <AtlasChip
+                  v-if="!row.hasSource"
+                  color="warning"
+                  size="sm"
+                  variant="tonal"
+                  data-testid="cache-row-orphan"
                 >
+                  {{ t('trexsql.cacheFileOrphaned', 'No dataset') }}
+                </AtlasChip>
+
+                <template v-if="row.cacheStatus?.status === 'ready' || row.cacheStatus?.status === 'stale'">
                   <span
-                    v-if="source.cacheStatus?.totalPatientCount"
+                    v-if="row.cacheStatus?.totalPatientCount"
                     class="text-body-2 text-grey-darken-1"
                   >
-                    {{ formatNumber(source.cacheStatus.totalPatientCount) }} patients
-                  </span>
-                  <span
-                    v-if="source.cacheStatus?.sizeBytes"
-                    class="text-body-2 text-grey"
-                  >
-                    ({{ formatBytes(source.cacheStatus.sizeBytes) }})
+                    {{ formatNumber(row.cacheStatus.totalPatientCount) }} patients
                   </span>
                 </template>
 
-                <!-- Last Built Date -->
                 <span
-                  v-if="source.cacheStatus?.lastBuiltAt"
-                  class="text-caption text-grey"
+                  v-if="rowSizeBytes(row)"
+                  class="text-body-2 text-grey"
                 >
-                  {{ t('trexsql.lastBuilt', 'Built') }}:
-                  {{ formatDate(source.cacheStatus.lastBuiltAt) }}
+                  {{ formatBytes(rowSizeBytes(row) as number) }}
                 </span>
 
-                <!-- Error Message -->
                 <span
-                  v-if="source.cacheStatus?.status === 'error' && source.cacheStatus?.errorMessage"
+                  v-if="row.cacheStatus?.lastBuiltAt"
+                  class="text-caption text-grey"
+                >
+                  {{ t('trexsql.built', 'Built') }}:
+                  {{ formatDate(row.cacheStatus.lastBuiltAt) }}
+                </span>
+                <span
+                  v-else-if="row.file?.lastModified"
+                  class="text-caption text-grey"
+                >
+                  {{ t('trexsql.built', 'Built') }}:
+                  {{ formatDate(new Date(row.file.lastModified).toISOString()) }}
+                </span>
+
+                <span
+                  v-if="row.cacheStatus?.status === 'error' && row.cacheStatus?.errorMessage"
                   class="text-caption text-error"
                 >
-                  {{ source.cacheStatus.errorMessage }}
+                  {{ row.cacheStatus.errorMessage }}
                 </span>
               </div>
             </v-list-item-subtitle>
 
             <template #append>
               <div class="d-flex align-center gap-2">
-                <!-- Build/Rebuild Button -->
-                <AtlasButton
-                  v-if="source.cacheStatus?.status !== 'building'"
-                  :variant="source.cacheStatus?.status === 'ready' ? 'secondary' : 'primary'"
-                  :tone="source.cacheStatus?.status === 'ready' ? 'primary' : 'success'"
-                  size="sm"
-                  :loading="buildingSource === source.sourceKey"
-                  :disabled="buildingSource !== null"
-                  @click="handleBuildCache(source.sourceKey)"
-                >
-                  <AtlasIcon start>
-                    {{
-                      source.cacheStatus?.status === 'ready' ||
-                        source.cacheStatus?.status === 'stale'
-                        ? 'mdi-refresh'
-                        : 'mdi-hammer'
-                    }}
-                  </AtlasIcon>
-                  {{
-                    source.cacheStatus?.status === 'ready' || source.cacheStatus?.status === 'stale'
-                      ? t('trexsql.rebuild', 'Rebuild')
-                      : t('trexsql.build', 'Build Cache')
-                  }}
-                </AtlasButton>
-
-                <!-- Building Progress -->
                 <div
-                  v-else
+                  v-if="row.cacheStatus?.status === 'building'"
                   class="d-flex align-center"
                 >
                   <AtlasProgressCircular
@@ -153,12 +131,40 @@
                     {{ t('trexsql.building', 'Building...') }}
                   </span>
                 </div>
+
+                <template v-else>
+                  <AtlasButton
+                    v-if="row.hasSource"
+                    :variant="row.cacheStatus?.status === 'ready' ? 'secondary' : 'primary'"
+                    :tone="row.cacheStatus?.status === 'ready' ? 'primary' : 'success'"
+                    size="sm"
+                    icon="mdi-refresh"
+                    :loading="buildingSource === row.sourceKey"
+                    :disabled="buildingSource !== null"
+                    :data-testid="`cache-update-${row.databaseCode}`"
+                    @click="handleBuildCache(row.sourceKey as string)"
+                  >
+                    {{ updateLabel(row) }}
+                  </AtlasButton>
+
+                  <AtlasButton
+                    variant="ghost"
+                    tone="danger"
+                    size="sm"
+                    icon="mdi-trash-can-outline"
+                    :loading="deleting === row.databaseCode"
+                    :disabled="buildingSource !== null || deleting !== null"
+                    :data-testid="`cache-delete-${row.databaseCode}`"
+                    @click="confirming = row"
+                  >
+                    {{ t('common.delete', 'Delete') }}
+                  </AtlasButton>
+                </template>
               </div>
             </template>
           </AtlasListItem>
 
-          <!-- Empty State -->
-          <AtlasListItem v-if="dataSourcesWithStatus.length === 0">
+          <AtlasListItem v-if="cacheRows.length === 0">
             <v-list-item-title class="text-grey">
               {{ t('trexsql.noDataSources', 'No data sources available') }}
             </v-list-item-title>
@@ -166,6 +172,45 @@
         </AtlasList>
       </v-card-text>
     </v-card>
+
+    <AtlasDialog
+      :model-value="confirming !== null"
+      :title="t('trexsql.cacheFileDeleteTitle', 'Delete cache?').value"
+      max-width="520"
+      @update:model-value="v => { if (!v) confirming = null }"
+    >
+      <p v-if="confirming">
+        {{
+          confirming.hasSource
+            ? t(
+              'trexsql.cacheFileDeleteActive',
+              'This cache is in use by a data source. Cohort counts will be slow until it is rebuilt.'
+            )
+            : t(
+              'trexsql.cacheFileDeleteOrphan',
+              'This cache has no data source. Deleting it reclaims the disk space.'
+            )
+        }}
+      </p>
+
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          data-testid="cache-delete-cancel"
+          @click="confirming = null"
+        >
+          {{ t('common.cancel', 'Cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          variant="primary"
+          tone="danger"
+          data-testid="cache-delete-confirm"
+          @click="handleDelete"
+        >
+          {{ t('common.delete', 'Delete') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
     <AtlasSnackbar
       v-model="showToast"
@@ -178,31 +223,66 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAvatar, AtlasButton, AtlasChip, AtlasIcon, AtlasList, AtlasListItem, AtlasProgressCircular, AtlasSnackbar } from '@/components/ui'
+import {
+  AtlasAvatar,
+  AtlasButton,
+  AtlasChip,
+  AtlasDialog,
+  AtlasIcon,
+  AtlasList,
+  AtlasListItem,
+  AtlasProgressCircular,
+  AtlasSnackbar,
+} from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useAuth } from '@/composables/useAuth'
 import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
 import { logger } from '@/utils/logger'
 import { listDataSources } from '@/services/datasource.service'
-import { getCacheStatus, buildCache } from '@/services/trexsql.service'
-import type { CacheStatusType, DataSourceWithCacheStatus } from '@/models/trexsql.types'
+import {
+  getCacheStatus,
+  buildCache,
+  listCacheFiles,
+  deleteCacheFile,
+  type CacheFile,
+} from '@/services/trexsql.service'
+import type { CacheStatusType, TrexSQLCacheStatus } from '@/models/trexsql.types'
 import type { DataSource } from '@/models/datasource.types'
+
+interface CacheRow {
+  key: string
+  databaseCode: string
+  title: string
+  sourceKey: string | null
+  cacheStatus: TrexSQLCacheStatus | null
+  file: CacheFile | null
+  hasSource: boolean
+}
 
 const { t, tv } = useI18n()
 const auth = useAuth()
 const { isTrexSQLEnabled, initialize: initTrexSQL } = useTrexSQLCache()
 
 const isLoading = ref(false)
-const dataSourcesWithStatus = ref<DataSourceWithCacheStatus[]>([])
+const rows = ref<CacheRow[]>([])
 const dataSourcesInfo = ref<Map<string, DataSource>>(new Map())
 const buildingSource = ref<string | null>(null)
+const deleting = ref<string | null>(null)
+const confirming = ref<CacheRow | null>(null)
 const showToast = ref(false)
 const toastMessage = ref('')
 const toastSeverity = ref<AtlasSnackbarSeverity>('success')
 
-async function loadDataSources(): Promise<void> {
+const cacheRows = computed(() =>
+  [...rows.value].sort((a, b) => {
+    const rank = (r: CacheRow) => (r.hasSource ? 0 : 1)
+    return rank(a) - rank(b) || a.title.localeCompare(b.title)
+  })
+)
+
+async function loadCaches(): Promise<void> {
   if (!isTrexSQLEnabled.value) return
 
   isLoading.value = true
@@ -214,40 +294,76 @@ async function loadDataSources(): Promise<void> {
     sources.forEach(source => infoMap.set(source.sourceKey, source))
     dataSourcesInfo.value = infoMap
 
-    const sourcesWithStatus = await Promise.all(
-      sources.map(async (source): Promise<DataSourceWithCacheStatus> => {
+    let files: CacheFile[] = []
+    try {
+      files = (await listCacheFiles()).filter(f => !f.protected)
+    } catch (error) {
+      logger.warn('TrexSQLCacheSection', 'Failed to list cache files', error)
+    }
+
+    const statuses = await Promise.all(
+      sources.map(async source => {
         try {
-          const cacheStatus = await getCacheStatus(source.sourceKey)
-          return {
-            sourceKey: source.sourceKey,
-            sourceName: source.sourceName,
-            cacheStatus,
-          }
+          return await getCacheStatus(source.sourceKey)
         } catch (error) {
           logger.warn(
             'TrexSQLCacheSection',
             `Failed to get cache status for ${source.sourceKey}`,
             error
           )
-          return {
-            sourceKey: source.sourceKey,
-            sourceName: source.sourceName,
-            cacheStatus: null,
-          }
+          return null
         }
       })
     )
 
-    dataSourcesWithStatus.value = sourcesWithStatus
+    const fileByCode = new Map(files.map(f => [f.databaseCode.toLowerCase(), f]))
+    const claimed = new Set<string>()
+
+    const sourceRows: CacheRow[] = sources.map((source, i) => {
+      const code = source.sourceKey
+      const file = fileByCode.get(code.toLowerCase()) ?? null
+      if (file) claimed.add(file.databaseCode.toLowerCase())
+      return {
+        key: `source:${source.sourceKey}`,
+        databaseCode: file?.databaseCode ?? code,
+        title: source.sourceName,
+        sourceKey: source.sourceKey,
+        cacheStatus: statuses[i] ?? null,
+        file,
+        hasSource: true,
+      }
+    })
+
+    const orphanRows: CacheRow[] = files
+      .filter(f => !claimed.has(f.databaseCode.toLowerCase()))
+      .map(f => ({
+        key: `file:${f.fileName}`,
+        databaseCode: f.databaseCode,
+        title: f.databaseCode,
+        sourceKey: null,
+        cacheStatus: null,
+        file: f,
+        hasSource: false,
+      }))
+
+    rows.value = [...sourceRows, ...orphanRows]
   } catch (error) {
-    logger.error('TrexSQLCacheSection', 'Failed to load data sources', error)
-    showNotification(
-      tv('components.config.trexsql.loadError', 'Failed to load data sources'),
-      'error'
-    )
+    logger.error('TrexSQLCacheSection', 'Failed to load caches', error)
+    showNotification(tv('components.config.trexsql.loadError', 'Failed to load data sources'), 'error')
   } finally {
     isLoading.value = false
   }
+}
+
+function rowSizeBytes(row: CacheRow): number | null {
+  return row.cacheStatus?.sizeBytes ?? row.file?.sizeBytes ?? null
+}
+
+function updateLabel(row: CacheRow): string {
+  const status = row.cacheStatus?.status
+  return status === 'ready' || status === 'stale'
+    ? t('trexsql.update', 'Update').value
+    : t('trexsql.build', 'Build Cache').value
 }
 
 function getCdmSchemaName(sourceKey: string): string | undefined {
@@ -264,14 +380,14 @@ async function handleBuildCache(sourceKey: string): Promise<void> {
     const schemaName = getCdmSchemaName(sourceKey)
     const response = await buildCache(sourceKey, schemaName)
 
-    const source = dataSourcesWithStatus.value.find(s => s.sourceKey === sourceKey)
-    if (source) {
-      source.cacheStatus = {
+    const row = rows.value.find(r => r.sourceKey === sourceKey)
+    if (row) {
+      row.cacheStatus = {
         sourceKey,
         status: 'building',
-        totalPatientCount: source.cacheStatus?.totalPatientCount ?? null,
-        lastBuiltAt: source.cacheStatus?.lastBuiltAt ?? null,
-        sizeBytes: source.cacheStatus?.sizeBytes ?? null,
+        totalPatientCount: row.cacheStatus?.totalPatientCount ?? null,
+        lastBuiltAt: row.cacheStatus?.lastBuiltAt ?? null,
+        sizeBytes: row.cacheStatus?.sizeBytes ?? null,
         errorMessage: null,
       }
     }
@@ -292,6 +408,28 @@ async function handleBuildCache(sourceKey: string): Promise<void> {
   }
 }
 
+async function handleDelete(): Promise<void> {
+  const row = confirming.value
+  if (!row) return
+
+  confirming.value = null
+  deleting.value = row.databaseCode
+
+  try {
+    await deleteCacheFile(row.databaseCode)
+    await loadCaches()
+    showNotification(tv('components.config.trexsql.deleteComplete', 'Cache deleted'), 'success')
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : tv('components.config.trexsql.deleteFailed', 'Failed to delete cache')
+    showNotification(errorMessage, 'error')
+  } finally {
+    deleting.value = null
+  }
+}
+
 async function pollCacheStatus(sourceKey: string): Promise<void> {
   const maxPolls = 120 // 10 minutes max (5 second intervals)
   let pollCount = 0
@@ -300,9 +438,9 @@ async function pollCacheStatus(sourceKey: string): Promise<void> {
     try {
       const status = await getCacheStatus(sourceKey)
 
-      const source = dataSourcesWithStatus.value.find(s => s.sourceKey === sourceKey)
-      if (source) {
-        source.cacheStatus = status
+      const row = rows.value.find(r => r.sourceKey === sourceKey)
+      if (row) {
+        row.cacheStatus = status
       }
 
       if (status.status === 'building' && pollCount < maxPolls) {
@@ -338,10 +476,15 @@ function showNotification(message: string, color: 'success' | 'error' | 'info'):
   showToast.value = true
 }
 
-function getStatusColor(status: CacheStatusType | undefined): string {
-  switch (status) {
+function effectiveStatus(row: CacheRow): CacheStatusType | undefined {
+  if (row.cacheStatus?.status) return row.cacheStatus.status
+  return row.file ? 'ready' : undefined
+}
+
+function getStatusColor(row: CacheRow): string {
+  switch (effectiveStatus(row)) {
     case 'ready':
-      return 'success'
+      return row.hasSource ? 'success' : 'warning'
     case 'building':
       return 'info'
     case 'stale':
@@ -354,8 +497,8 @@ function getStatusColor(status: CacheStatusType | undefined): string {
   }
 }
 
-function getStatusIcon(status: CacheStatusType | undefined): string {
-  switch (status) {
+function getStatusIcon(row: CacheRow): string {
+  switch (effectiveStatus(row)) {
     case 'ready':
       return 'mdi-check-circle'
     case 'building':
@@ -370,8 +513,8 @@ function getStatusIcon(status: CacheStatusType | undefined): string {
   }
 }
 
-function getStatusLabel(status: CacheStatusType | undefined): string {
-  switch (status) {
+function getStatusLabel(row: CacheRow): string {
+  switch (effectiveStatus(row)) {
     case 'ready':
       return t('trexsql.statusReady', 'Ready').value
     case 'building':
@@ -417,16 +560,15 @@ function formatDate(dateString: string): string {
 
 onMounted(async () => {
   await initTrexSQL()
-  loadDataSources()
+  loadCaches()
 })
 
-// Re-initialize TrexSQL and reload data sources when user becomes authenticated
 watch(
   () => auth.isAuthenticated.value,
   async (isAuth, wasAuth) => {
     if (isAuth && !wasAuth) {
       await initTrexSQL()
-      loadDataSources()
+      loadCaches()
     }
   }
 )
@@ -443,10 +585,18 @@ watch(
 }
 
 .trexsql-cache-section__item {
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--atlas-color-outline-strong);
   border-radius: 8px;
   margin-bottom: 12px;
-  background: #fafafa;
+  background: var(--atlas-color-surface-variant);
+}
+
+/* The avatar prepend icon is hardcoded white (see template) to sit on the
+ * success/info/warning/error status fill; every dark-mode status colour is a
+ * light tint (see DARK_CHART_COLORS-style tokens), so white drops well below
+ * the 4.5:1 floor there while near-black clears it for every status. */
+.v-theme--dark .trexsql-cache-section__item :deep(.v-avatar .v-icon) {
+  color: rgba(0, 0, 0, 0.87) !important;
 }
 
 .trexsql-cache-section__item:last-child {

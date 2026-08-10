@@ -5,7 +5,8 @@
          heading was dropped to avoid the duplicated nesting. -->
 
     <div class="analysis-list">
-      <!-- Toolbar: actions left, view-mode toggle right -->
+      <!-- Toolbar: search / filters left, view-mode toggle and the
+           primary "new" action right, all on one row. -->
       <div class="analysis-list__toolbar">
         <div class="analysis-list__actions">
           <slot name="actions" />
@@ -40,6 +41,8 @@
               <AtlasIcon>mdi-view-list</AtlasIcon>
             </AtlasButton>
           </v-btn-toggle>
+
+          <slot name="primary-action" />
         </div>
       </div>
 

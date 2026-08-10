@@ -194,6 +194,10 @@ function formatMessage(msg: ValidationMessage): string {
   font-style: italic;
 }
 
+.v-theme--dark .char-messages-tab__empty {
+  color: var(--atlas-color-success-text);
+}
+
 .char-messages-tab__group {
   display: flex;
   flex-direction: column;
@@ -207,7 +211,7 @@ function formatMessage(msg: ValidationMessage): string {
 }
 
 .char-messages-tab__list {
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--atlas-color-outline-strong);
   border-radius: 8px;
 }
 </style>

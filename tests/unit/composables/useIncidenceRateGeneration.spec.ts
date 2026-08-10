@@ -4,7 +4,7 @@ import { setActivePinia, createPinia } from 'pinia'
 beforeAll(() => { vi.useFakeTimers() })
 afterAll(() => { vi.useRealTimers() })
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/incidence-rate.service', () => ({
   generateIncidenceRate: vi.fn().mockResolvedValue({
     success: true,
     data: { id: { analysisId: 1, sourceId: 2 }, status: 'PENDING' },

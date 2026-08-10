@@ -39,10 +39,10 @@ defineProps<{ concept: Concept }>()
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--atlas-color-on-surface-variant);
   font-weight: 600;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--atlas-color-outline);
 }
 .card-body {
   padding: 16px;
@@ -56,7 +56,7 @@ defineProps<{ concept: Concept }>()
   margin: 0;
 }
 .kv dt {
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--atlas-color-on-surface-variant);
 }
 .kv dd {
   margin: 0;

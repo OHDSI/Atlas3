@@ -4,11 +4,19 @@
  */
 import { logger } from '@/utils/logger'
 import { getAppConfig } from '@/config/app-config.loader'
+import { ApiError } from '@/services/api-error'
 const MAX_RETRY_ATTEMPTS = 3
 const INITIAL_RETRY_DELAY_MS = 500
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+const IDEMPOTENT_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
+
+function mayRetry(method: string | undefined, retryNonIdempotent: boolean): boolean {
+  if (retryNonIdempotent) return true
+  return IDEMPOTENT_METHODS.has((method ?? 'GET').toUpperCase())
 }
 
 function isRetryableError(error: unknown, statusCode?: number): boolean {
@@ -72,6 +80,12 @@ export interface HttpClientOptions extends Omit<RequestInit, 'body'> {
   skipAuth?: boolean
   maxRetries?: number
   initialRetryDelay?: number
+  /**
+   * Re-sending a failed POST/PUT/DELETE can duplicate a row WebAPI already
+   * persisted, so writes are not retried by default. Set this only for an
+   * endpoint proven idempotent server-side.
+   */
+  retryNonIdempotent?: boolean
 }
 
 export interface HttpClientResponse<T> {
@@ -84,6 +98,7 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
   const url = `${getAppConfig().api.url}${endpoint}`
   const maxRetries = options.maxRetries ?? MAX_RETRY_ATTEMPTS
   const initialDelay = options.initialRetryDelay ?? INITIAL_RETRY_DELAY_MS
+  const retryAllowed = mayRetry(options.method, options.retryNonIdempotent ?? false)
   let lastError: Error | null = null
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -103,6 +118,7 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
         skipAuth: _skipAuth,
         maxRetries: _,
         initialRetryDelay: __,
+        retryNonIdempotent: ___,
         ...restOptions
       } = options
       const requestInit: RequestInit = { ...restOptions, headers }
@@ -139,8 +155,12 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
         } catch {
           // keep statusText
         }
-        const error = new Error(`HTTP ${response.status}: ${detail}`)
-        if (isRetryableError(error, response.status) && attempt < maxRetries - 1) {
+        // error.message ends up in user-facing toasts; a WebAPI error body can
+        // be a full HTML stack trace, so cap it there. `body` keeps the whole
+        // thing for logs.
+        const summary = detail.length > 300 ? `${detail.slice(0, 300)}…` : detail
+        const error = new ApiError(`HTTP ${response.status}: ${summary}`, response.status, detail)
+        if (retryAllowed && isRetryableError(error, response.status) && attempt < maxRetries - 1) {
           const delay = initialDelay * Math.pow(2, attempt)
           logger.warn(
             'HttpClient',
@@ -167,7 +187,7 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error))
 
-      if (isRetryableError(error) && attempt < maxRetries - 1) {
+      if (retryAllowed && isRetryableError(error) && attempt < maxRetries - 1) {
         const delay = initialDelay * Math.pow(2, attempt)
         logger.warn(
           'HttpClient',
@@ -179,7 +199,7 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
       }
 
       if (error instanceof TypeError) {
-        throw new Error(`Network error: ${error.message}`)
+        throw new ApiError(`Network error: ${error.message}`, 0, null)
       }
       throw error
     }
@@ -201,6 +221,18 @@ export function httpPost<T>(
   options?: Omit<HttpClientOptions, 'method' | 'body'>
 ): Promise<T> {
   return httpClient<T>(endpoint, { ...options, method: 'POST', body })
+}
+
+/**
+ * A read expressed as POST — WebAPI takes the query as a JSON body. Safe to
+ * retry, unlike a true write.
+ */
+export function httpPostRead<T>(
+  endpoint: string,
+  body?: unknown,
+  options?: Omit<HttpClientOptions, 'method' | 'body' | 'retryNonIdempotent'>
+): Promise<T> {
+  return httpClient<T>(endpoint, { ...options, method: 'POST', body, retryNonIdempotent: true })
 }
 
 export function httpPut<T>(

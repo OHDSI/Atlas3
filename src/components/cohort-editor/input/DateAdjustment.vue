@@ -1,12 +1,12 @@
 <template>
-  <v-menu
+  <AtlasMenu
     v-model="menuOpen"
     :close-on-content-click="false"
     location="bottom"
     offset="8"
   >
     <template #activator="{ props: menuProps }">
-      <v-chip
+      <AtlasChip
         v-bind="menuProps"
         class="date-adjustment-editor__chip"
         color="primary"
@@ -16,7 +16,7 @@
         variant="outlined"
       >
         {{ summaryLabel }}
-      </v-chip>
+      </AtlasChip>
     </template>
 
     <v-card
@@ -33,7 +33,7 @@
           </div>
 
           <div class="date-adjustment-editor__row d-flex ga-3 flex-wrap">
-            <v-select
+            <AtlasSelect
               v-model="modelValue.StartWith"
               class="date-adjustment-editor__select"
               :items="dateReferenceOptions"
@@ -45,7 +45,7 @@
               hide-details
             />
 
-            <v-text-field
+            <AtlasTextField
               v-model="startOffset"
               class="date-adjustment-editor__offset"
               :label="offsetDaysLabel"
@@ -58,7 +58,7 @@
           </div>
         </div>
 
-        <v-divider />
+        <AtlasDivider />
 
         <div>
           <div class="text-subtitle-2 mb-2">
@@ -66,7 +66,7 @@
           </div>
 
           <div class="date-adjustment-editor__row d-flex ga-3 flex-wrap">
-            <v-select
+            <AtlasSelect
               v-model="modelValue.EndWith"
               class="date-adjustment-editor__select"
               :items="dateReferenceOptions"
@@ -78,7 +78,7 @@
               hide-details
             />
 
-            <v-text-field
+            <AtlasTextField
               v-model="endOffset"
               class="date-adjustment-editor__offset"
               :label="offsetDaysLabel"
@@ -92,12 +92,19 @@
         </div>
       </v-card-text>
     </v-card>
-  </v-menu>
+  </AtlasMenu>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, toRef } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import {
+  AtlasChip,
+  AtlasDivider,
+  AtlasMenu,
+  AtlasSelect,
+  AtlasTextField,
+} from '@/components/ui'
 import type { DateAdjustment } from '../circe.types'
 import { numberBinding } from './bindings'
 

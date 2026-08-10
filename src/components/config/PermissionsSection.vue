@@ -16,6 +16,7 @@
           clearable
           class="permissions-section__search"
         />
+        <AtlasSpacer />
         <AtlasButton
           icon="mdi-plus"
           @click="showCreateDialog = true"
@@ -176,7 +177,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasTab, AtlasTabs, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useRoles } from '@/composables/useRoles'
@@ -275,7 +276,7 @@ onMounted(() => {
 }
 
 .permissions-section__role-list {
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--atlas-color-outline-strong);
   border-radius: 4px;
 }
 
@@ -286,6 +287,10 @@ onMounted(() => {
   padding: 16px;
   background: rgba(0, 0, 0, 0.02);
   border-radius: 4px;
+}
+
+.v-theme--dark .permissions-section__role-header {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .permissions-section__role-actions {

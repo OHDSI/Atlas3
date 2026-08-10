@@ -47,6 +47,36 @@ export interface FabMount {
   position?: FabPosition
 }
 
+export type PluginMountSurface =
+  | 'main-nav'
+  | 'datasource-sidebar'
+  | 'analysis-tabs'
+  | 'admin-tabs'
+  | 'account-menu'
+
+export interface PluginHostContext {
+  surface: PluginMountSurface
+  itemId: string
+  locale: string
+  permissions: string[]
+  sourceKey?: string
+}
+
+export interface PluginMountPoint {
+  id: string
+  surface: PluginMountSurface
+  name: string
+  icon?: string
+  path?: string
+  group?: string
+  hint?: string
+  order?: number
+  insertBefore?: string
+  insertAfter?: string
+  requiredPermissions?: string[]
+  visible?: boolean
+}
+
 export interface PluginRegistration {
   id: string
   name: string
@@ -54,6 +84,7 @@ export interface PluginRegistration {
   entryPoint: string
   menuItems: MenuItemConfiguration[]
   fabMounts?: FabMount[]
+  mountPoints?: PluginMountPoint[]
   activationConditions?: Record<string, unknown>
   metadata?: {
     author?: string
@@ -77,9 +108,14 @@ export interface PluginManifest {
     }
     theme?: {
       primaryColor?: string // Primary theme color override (hex color code, e.g., '#1f425a')
+      accentColor?: string // Accent color override (hex color code); drives --atlas-color-accent
       logoUrl?: string // Custom logo URL/path (replaces default OHDSI + ATLAS logos)
       logoNavigateTo?: string // Route to navigate to when clicking the logo (default: '/')
       landingLogoUrl?: string // Custom landing-page hero logo URL/path (replaces bundled atlas-loading.svg)
+      chartColors?: string[] // Categorical chart palette override; multi-series charts cycle through it
+      treemapGradient?: string[] // Color-by-value gradient override (light -> dark), used by treemaps
+      defaultMode?: 'light' | 'dark' | 'system' // Theme the deployment starts in
+      enableDarkMode?: boolean // Show the dark-mode toggle in the nav bar (opt-in per deployment; default: false)
     }
     header?: {
       showNavBar?: boolean // Show/hide the entire navigation bar (default: true)
@@ -206,6 +242,50 @@ export const FabMountSchema = z.object({
   position: z.enum(['bottom-right', 'bottom-left', 'top-right', 'top-left']).optional(),
 })
 
+export const PluginMountSurfaceSchema = z.enum([
+  'main-nav',
+  'datasource-sidebar',
+  'analysis-tabs',
+  'admin-tabs',
+  'account-menu',
+])
+
+// account-menu items navigate full-page: NavBar joins `path` onto
+// `/plugins/{pluginId}/` (see handleAccountItemClick), so a leading slash, a
+// `..` segment, or a URL scheme would let a manifest escape that prefix into
+// an arbitrary in-app or external destination.
+function isSafeMountPath(path: string): boolean {
+  if (path.startsWith('/') || path.startsWith('\\')) return false
+  if (path.split(/[/\\]/).includes('..')) return false
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(path)) return false
+  return true
+}
+
+export const PluginMountPointSchema = z
+  .object({
+    id: z.string().regex(/^[a-z0-9-_]+$/),
+    surface: PluginMountSurfaceSchema,
+    name: z.string().min(1),
+    icon: z.string().optional(),
+    path: z.string().optional(),
+    group: z.string().optional(),
+    hint: z.string().optional(),
+    order: z.number().optional(),
+    insertBefore: z.string().optional(),
+    insertAfter: z.string().optional(),
+    requiredPermissions: z.array(z.string()).optional(),
+    visible: z.boolean().optional(),
+  })
+  .refine(point => point.surface !== 'main-nav', {
+    message:
+      'main-nav mount points are not supported; contribute top-level navigation via menuItems instead',
+    path: ['surface'],
+  })
+  .refine(point => point.path === undefined || isSafeMountPath(point.path), {
+    message: 'path must be relative, without ".." segments or a URL scheme',
+    path: ['path'],
+  })
+
 export const PluginRegistrationSchema = z.object({
   id: z.string().regex(/^[a-z0-9-_]+$/),
   name: z.string().min(1),
@@ -213,6 +293,7 @@ export const PluginRegistrationSchema = z.object({
   entryPoint: z.string(),
   menuItems: z.array(MenuItemConfigurationSchema),
   fabMounts: z.array(FabMountSchema).optional(),
+  mountPoints: z.array(PluginMountPointSchema).optional(),
   activationConditions: z.record(z.unknown()).optional(),
   metadata: z
     .object({
@@ -248,9 +329,23 @@ export const PluginManifestSchema = z.object({
             .string()
             .regex(hexColorRegex, 'Invalid hex color for primaryColor')
             .optional(),
+          accentColor: z
+            .string()
+            .regex(hexColorRegex, 'Invalid hex color for accentColor')
+            .optional(),
           logoUrl: z.string().optional(),
           logoNavigateTo: z.string().optional(),
           landingLogoUrl: z.string().optional(),
+          chartColors: z
+            .array(z.string().regex(hexColorRegex, 'Invalid hex color in chartColors'))
+            .nonempty()
+            .optional(),
+          treemapGradient: z
+            .array(z.string().regex(hexColorRegex, 'Invalid hex color in treemapGradient'))
+            .nonempty()
+            .optional(),
+          defaultMode: z.enum(['light', 'dark', 'system']).optional(),
+          enableDarkMode: z.boolean().optional(),
         })
         .optional(),
       header: z

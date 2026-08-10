@@ -36,6 +36,7 @@
 import { computed } from 'vue'
 import type { InclusionTreemapNode } from '@/models/report.types'
 import { useI18n } from '@/composables/useI18n'
+import { trackChartTheme } from '@/ui/chart-config'
 
 const { t } = useI18n()
 
@@ -62,6 +63,9 @@ const hasData = computed(() => {
 // error (red) when most/all rules fail. Reads the runtime CSS variable
 // so it tracks the active Vuetify theme.
 function themeColor(token: 'success' | 'warning' | 'error', alpha: number): string {
+  // getComputedStyle is a one-shot read, so the computeds calling this need an
+  // explicit reactive dependency on the active theme to rebuild after a switch.
+  trackChartTheme()
   if (typeof window === 'undefined') return '#7BB209'
   const root = getComputedStyle(document.documentElement)
   const triplet = root.getPropertyValue(`--v-theme-${token}`).trim()
@@ -79,6 +83,18 @@ function failuresFromName(name: string, ruleCount: number): number {
   let zeros = 0
   for (const ch of name) if (ch === '0') zeros++
   return Math.min(zeros, ruleCount)
+}
+
+// In-tile label sits on a 60%-alpha status tint over the chart's own
+// background — reads the live on-surface var the same way themeColor()
+// does so the label stays legible against a dark surface.
+function themeOnSurfaceColor(alpha: number): string {
+  trackChartTheme()
+  if (typeof window === 'undefined') return `rgba(0, 0, 0, ${alpha})`
+  const root = getComputedStyle(document.documentElement)
+  const triplet = root.getPropertyValue('--v-theme-on-surface').trim()
+  if (!triplet) return `rgba(0, 0, 0, ${alpha})`
+  return `rgba(${triplet}, ${alpha})`
 }
 
 function colorForLeaf(name: string): string {
@@ -164,7 +180,7 @@ const chartOption = computed(() => {
             info.data?._friendly || info.name,
           fontSize: 11,
           lineHeight: 14,
-          color: 'rgba(0, 0, 0, 0.82)',
+          color: themeOnSurfaceColor(0.82),
         },
         data: root.children?.map(decorate) ?? [],
       },
@@ -191,7 +207,7 @@ const legend = computed(() => {
   display: flex;
   gap: 16px;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.66);
+  color: var(--atlas-color-on-surface-variant);
   margin-top: 8px;
   flex-wrap: wrap;
 }

@@ -170,8 +170,39 @@
     "requiresApproval": true
   },
   {
+    "name": "add_demographic_criterion",
+    "description": "Restrict the cohort by age or sex — the criteria that have no concept set. Use for \"adults\", \"age 18 and over\", \"women aged 40 to 70\": pass minAge / maxAge in years and/or sex. Without this a cohort NAMED for adults contains children, because nothing in the definition says otherwise. Added as an inclusion rule, which is where CIRCE keeps demographic criteria.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "minAge": {
+          "type": "number",
+          "description": "Lowest age in years, inclusive. 18 for adults."
+        },
+        "maxAge": {
+          "type": "number",
+          "description": "Highest age in years, inclusive."
+        },
+        "sex": {
+          "type": "string",
+          "enum": [
+            "male",
+            "female"
+          ],
+          "description": "Restrict to one sex. Omit for any."
+        },
+        "name": {
+          "type": "string",
+          "description": "Rule name shown in the editor. Defaults to a label like \"Age 18+\"."
+        }
+      },
+      "required": []
+    },
+    "requiresApproval": true
+  },
+  {
     "name": "add_exit_criterion",
-    "description": "Define how a patient exits the cohort. Strategy: end_of_observation = end of continuous observation period; fixed_duration = N days after entry; continuous_drug = persistence-window-driven exit; custom_event = exit on a clinical event.",
+    "description": "Define how a patient exits the cohort. Strategy: end_of_observation = end of continuous observation period; fixed_duration = N days after entry; continuous_drug = persistence-window-driven exit.",
     "schema": {
       "type": "object",
       "properties": {
@@ -180,8 +211,7 @@
           "enum": [
             "end_of_observation",
             "fixed_duration",
-            "continuous_drug",
-            "custom_event"
+            "continuous_drug"
           ]
         },
         "offset": {
@@ -239,7 +269,7 @@
             "conceptName",
             "domain"
           ],
-          "description": "Concept defining the exit event (for continuous_drug or custom_event)"
+          "description": "Drug concept whose exposure eras define the exit (for continuous_drug)"
         }
       },
       "required": [
@@ -365,6 +395,47 @@
         "name",
         "logicType",
         "events"
+      ]
+    },
+    "requiresApproval": true
+  },
+  {
+    "name": "add_qualifying_criterion",
+    "description": "Restrict the ENTRY EVENT itself rather than the person — the editor's \"Restrict initial events\". Use when the qualifying event must coincide with something, e.g. an inpatient visit, a diagnosis recorded on the same admission. Distinct from add_criterion, which qualifies the person over a window.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "conceptId": {
+          "type": "number"
+        },
+        "conceptName": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string",
+          "enum": [
+            "Condition",
+            "Drug",
+            "Procedure",
+            "Measurement",
+            "Observation",
+            "Visit",
+            "Device",
+            "Specimen"
+          ]
+        },
+        "includeDescendants": {
+          "type": "boolean"
+        },
+        "isExcluded": {
+          "type": "boolean",
+          "description": "Optional exclusion flag for concept-set items"
+        }
+      },
+      "required": [
+        "conceptId",
+        "conceptName",
+        "domain"
       ]
     },
     "requiresApproval": true
@@ -640,7 +711,7 @@
   },
   {
     "name": "create_standalone_concept_set",
-    "description": "Create a NEW reusable concept set on the server via WebAPI. This is the ONLY way pythia creates concept sets. The host persists it, then: if the user has a cohort open, attaches the concept set to that cohort and stays in the cohort builder; otherwise navigates to the concept-set editor. We deliberately do NOT support cohort-local (in-line) concept sets — every set is reusable across cohorts. Use a clinical, descriptive name (e.g. 'Statins', 'Inhaled corticosteroids', 'Type 2 Diabetes diagnoses').",
+    "description": "Create a NEW reusable concept set on the server via WebAPI, saved globally and usable across cohorts. This is NOT the default: criteria capabilities (set_entry_event, add_criterion, add_criteria, add_inclusion_rule) already build the concept set they need inside the cohort definition, which is what most phenotypes want. Reach for this only when the set is meant to be reused — the user asked for a standalone concept set, or the same set is needed by several cohorts or analyses. The host persists it, then attaches it to the open cohort if there is one, otherwise navigates to the concept-set editor. Use a clinical, descriptive name (e.g. 'Statins', 'Inhaled corticosteroids', 'Type 2 Diabetes diagnoses').",
     "schema": {
       "type": "object",
       "properties": {
@@ -695,6 +766,37 @@
       "required": [
         "name",
         "items"
+      ]
+    },
+    "requiresApproval": true
+  },
+  {
+    "name": "generate_analysis",
+    "description": "Run a SAVED analysis against a data source, the same as clicking Generate in the editor. Use after the analysis exists (create_pathway / create_characterization / create_incidence_rate returned an id). Results appear in the editor when the job finishes. Omit sourceKey to use the source the user is currently working against.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "analysisType": {
+          "type": "string",
+          "enum": [
+            "pathway",
+            "characterization",
+            "incidenceRate"
+          ],
+          "description": "Which kind of analysis to run. REQUIRED."
+        },
+        "analysisId": {
+          "type": "number",
+          "description": "Saved analysis id. REQUIRED."
+        },
+        "sourceKey": {
+          "type": "string",
+          "description": "CDM source key, e.g. EUNOMIA. Defaults to the current source."
+        }
+      },
+      "required": [
+        "analysisType",
+        "analysisId"
       ]
     },
     "requiresApproval": true
@@ -769,6 +871,44 @@
     "requiresApproval": true
   },
   {
+    "name": "remove_entry_event",
+    "description": "Remove one entry event from the cohort being edited, identified by the concept it was built from. Use when the cohort qualifies on several entry events and the user wants one dropped. To replace the entry event entirely, call set_entry_event instead.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "conceptId": {
+          "type": "number",
+          "description": "Concept id of the entry event to remove."
+        },
+        "conceptName": {
+          "type": "string",
+          "description": "Concept name, if the id is not to hand."
+        }
+      },
+      "required": []
+    },
+    "requiresApproval": true
+  },
+  {
+    "name": "remove_inclusion_rule",
+    "description": "Remove an inclusion rule from the cohort being edited, by its name (as shown in the editor) or its id. Use this when the user asks to drop, delete or undo a rule you added — do not rebuild the cohort to get rid of one rule.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Exact rule name as it appears in the cohort."
+        },
+        "id": {
+          "type": "string",
+          "description": "Rule id, if you have it."
+        }
+      },
+      "required": []
+    },
+    "requiresApproval": true
+  },
+  {
     "name": "save_cohort",
     "description": "Persist the CURRENTLY OPEN cohort to the WebAPI so it gets a stable id. Call this AFTER the user has accepted the cohort's entry event + criteria, and BEFORE creating any analysis (incidence rate / pathway / characterization) that must reference this cohort by id — analyses can only target SAVED cohorts. Returns the saved cohort id. Optional name/description override the open cohort's current values.",
     "schema": {
@@ -828,6 +968,25 @@
     "requiresApproval": true
   },
   {
+    "name": "set_censor_window",
+    "description": "Bound the study period with fixed dates (YYYY-MM-DD): nobody is followed before startDate or after endDate, whatever their observation. Use when the user names a study window ('2015 to 2019') — without it the cohort spans the whole database and the counts answer a different question.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "startDate": {
+          "type": "string",
+          "description": "Earliest date to include, YYYY-MM-DD."
+        },
+        "endDate": {
+          "type": "string",
+          "description": "Latest date to include, YYYY-MM-DD."
+        }
+      },
+      "required": []
+    },
+    "requiresApproval": true
+  },
+  {
     "name": "set_entry_event",
     "description": "Set the cohort's primary qualifying entry event. Replaces any existing entry event.",
     "schema": {
@@ -865,6 +1024,61 @@
         "conceptName",
         "domain"
       ]
+    },
+    "requiresApproval": true
+  },
+  {
+    "name": "set_era_collapse",
+    "description": "Gap in days below which two stretches of cohort membership are merged into one era (the editor's era collapse). Default 0 — a person who leaves and re-enters counts as two episodes. Raise it when brief gaps should not split a person's follow-up.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "gapDays": {
+          "type": "number",
+          "description": "Merge stretches separated by fewer than this many days."
+        }
+      },
+      "required": [
+        "gapDays"
+      ]
+    },
+    "requiresApproval": true
+  },
+  {
+    "name": "set_event_limits",
+    "description": "Choose which qualifying events count, per person. 'first' is the new-user / first-diagnosis design — one row per person at their earliest qualifying event; 'all' (the default) puts a person in the cohort once per qualifying event, so counts mean episodes rather than people. Set this deliberately whenever the design is about new users or incident disease; phenotype_patterns reports what accepted definitions of the condition use.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "entryEvents": {
+          "type": "string",
+          "enum": [
+            "first",
+            "all",
+            "last"
+          ],
+          "description": "Which entry events qualify a person ('Cohort entry on' in the editor)."
+        },
+        "qualifyingEvents": {
+          "type": "string",
+          "enum": [
+            "first",
+            "all",
+            "last"
+          ],
+          "description": "Which qualifying events the inclusion rules apply to ('Apply rules to')."
+        },
+        "inclusionRuleEvents": {
+          "type": "string",
+          "enum": [
+            "first",
+            "all",
+            "last"
+          ],
+          "description": "Which events remain after the inclusion rules are applied."
+        }
+      },
+      "required": []
     },
     "requiresApproval": true
   },
@@ -1372,6 +1586,36 @@
       },
       "required": [
         "id"
+      ]
+    },
+    "requiresApproval": true
+  },
+  {
+    "name": "use_concept_set",
+    "description": "Use an EXISTING saved concept set in the cohort being built, by its id from search_existing_concept_sets. Prefer this over rebuilding the same set concept by concept: it reuses the definition the user already curated, and stays in step with it. The host reads the saved set's concepts and adds the criterion. Use group 'entry' for a qualifying event, 'inclusion' to require it, 'exclusion' to require its absence.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "conceptSetId": {
+          "type": "number",
+          "description": "Id of the saved concept set (from search_existing_concept_sets)."
+        },
+        "group": {
+          "type": "string",
+          "enum": [
+            "entry",
+            "inclusion",
+            "exclusion"
+          ],
+          "description": "Where the criterion goes. Defaults to 'inclusion'."
+        },
+        "name": {
+          "type": "string",
+          "description": "Rule name to show in the editor. Defaults to the concept set name."
+        }
+      },
+      "required": [
+        "conceptSetId"
       ]
     },
     "requiresApproval": true

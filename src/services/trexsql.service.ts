@@ -128,7 +128,18 @@ function mapCacheStatusResponse(
   }
 }
 
-export async function getCacheStatus(sourceKey: string): Promise<TrexSQLCacheStatus> {
+// `cacheExists && !cacheAttached` reports as "error", but that combination is
+// also the momentary state during a benign attach retry, when the cache is built
+// and about to become healthy. Treating it as terminal makes every consumer — the
+// data-source list, the live count gate, the config page — give up on a cache that
+// works seconds later. Re-check a bounded number of times before believing it.
+const CACHE_STATUS_ERROR_RETRIES = 5
+const CACHE_STATUS_RETRY_DELAY_MS = 2500
+
+export async function getCacheStatus(
+  sourceKey: string,
+  attempt = 0
+): Promise<TrexSQLCacheStatus> {
   const url = `${getBaseUrl()}/trexsql/${sourceKey}/cache/status`
 
   try {
@@ -164,12 +175,14 @@ export async function getCacheStatus(sourceKey: string): Promise<TrexSQLCacheSta
     const data = await response.json()
 
     const result = TrexSQLCacheStatusSchema.safeParse(data)
-    if (result.success) {
-      return result.data
+    const status = result.success ? result.data : mapCacheStatusResponse(sourceKey, data)
+
+    if (status.status === 'error' && attempt < CACHE_STATUS_ERROR_RETRIES) {
+      await new Promise(resolve => setTimeout(resolve, CACHE_STATUS_RETRY_DELAY_MS))
+      return getCacheStatus(sourceKey, attempt + 1)
     }
 
-    const mappedStatus = mapCacheStatusResponse(sourceKey, data)
-    return mappedStatus
+    return status
   } catch (error) {
     logger.error('TrexSQL', 'Failed to get cache status', { sourceKey, error })
     throw error
@@ -256,6 +269,55 @@ export async function getPatientCount(
     throw error
   } finally {
     activeCountRequests.delete(sourceKey)
+  }
+}
+
+export interface CacheFile {
+  fileName: string
+  databaseCode: string
+  sizeBytes: number
+  lastModified: number | null
+  attached: boolean
+  /** No data source references this cache any more — safe to reclaim. */
+  orphaned: boolean
+  /** Not a dataset cache (job registry, FHIR database); listed but undeletable. */
+  protected: boolean
+}
+
+/**
+ * Every cache file on disk, including ones whose dataset has been deleted.
+ * Keyed by file rather than by source, which is the only way orphans surface —
+ * the per-source endpoints can't resolve them and answer 404.
+ */
+export async function listCacheFiles(): Promise<CacheFile[]> {
+  const url = `${getBaseUrl()}/trexsql/cache/files`
+  const authHeader = await getAuthHeader()
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json', ...authHeader },
+  })
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '')
+    throw new Error(`Failed to list cache files: ${response.status} ${detail}`.trim())
+  }
+
+  const data = (await response.json()) as { files?: unknown }
+  return Array.isArray(data.files) ? (data.files as CacheFile[]) : []
+}
+
+/** Delete a cache by database code. Works whether or not a source still exists. */
+export async function deleteCacheFile(databaseCode: string): Promise<void> {
+  const url = `${getBaseUrl()}/trexsql/cache/files/${encodeURIComponent(databaseCode)}`
+  const authHeader = await getAuthHeader()
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...authHeader },
+  })
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '')
+    throw new Error(`Failed to delete cache: ${response.status} ${detail}`.trim())
   }
 }
 

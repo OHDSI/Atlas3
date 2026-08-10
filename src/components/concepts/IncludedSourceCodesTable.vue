@@ -56,7 +56,7 @@
         <template #item.domainId="{ item }">
           <AtlasChip
             v-if="item.domainId"
-            :color="getDomainColor(item.domainId)"
+            :color="getDomainColor(item.domainId, themeStore.resolved)"
             size="xs"
             variant="tonal"
           >
@@ -116,9 +116,11 @@ import {
   AtlasSkeleton,
 } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
+import { useThemeStore } from '@/stores/theme'
 
 const { t } = useI18n()
 const store = useConceptSetsStore()
+const themeStore = useThemeStore()
 
 interface Props {
   active: boolean

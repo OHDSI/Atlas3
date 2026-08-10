@@ -1,7 +1,7 @@
 <template>
   <div class="concept-array d-flex flex-column ga-3">
     <div class="concept-array__toolbar d-flex flex-wrap align-center ga-2">
-      <v-chip
+      <AtlasChip
         v-if="binding?.exclude"
         class="concept-array__exclude-chip"
         :color="binding?.exclude?.value ? 'warning' : 'primary'"
@@ -11,7 +11,7 @@
         @click="toggleExclude"
       >
         {{ binding?.exclude?.value ? notAnyOfLabel : anyOfLabel }}
-      </v-chip>
+      </AtlasChip>
 
       <AtlasButton
         variant="secondary"
@@ -25,7 +25,7 @@
     </div>
 
     <div class="concept-array__content d-flex flex-wrap align-center ga-2">
-      <v-chip
+      <AtlasChip
         v-for="concept in selectedConcepts"
         :key="conceptKey(concept)"
         closable
@@ -35,7 +35,7 @@
         @click:close="removeConcept(concept.CONCEPT_ID)"
       >
         {{ conceptLabel(concept) }}
-      </v-chip>
+      </AtlasChip>
 
       <span
         v-if="selectedConcepts.length === 0"
@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { AtlasButton } from '@/components/ui'
+import { AtlasButton, AtlasChip } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '../circe.types'
 import type { ConceptArrayBinding } from '../criteria/criteria-editor.types'

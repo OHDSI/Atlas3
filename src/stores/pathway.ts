@@ -7,7 +7,7 @@ import {
   PATHWAY_AUTO_SAVE_INTERVAL_MS,
 } from '@/models/pathway.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
-import { getPathway, assignPathwayTag, unassignPathwayTag } from '@/services/webapi'
+import { getPathway, assignPathwayTag, unassignPathwayTag } from '@/services/pathway.service'
 import type { Tag } from '@/models/webapi.types'
 import { getPathwayVersion } from '@/services/pathway-versions.service'
 import { logger } from '@/utils/logger'
@@ -39,6 +39,13 @@ export const usePathwayStore = defineStore('pathway', () => {
   const previewVersion = ref<Version | null>(null)
   const validationErrors = ref<PathwayValidationError[]>([])
   const isReadOnly = ref(false)
+  // Bumped when the agent starts a generation outside the workbench's own
+  // Generate button. The workbench watches this and picks up polling, so an
+  // agent-started run reports its progress and results like any other.
+  const agentGenerationSignal = ref(0)
+  function notifyAgentGeneration() {
+    agentGenerationSignal.value++
+  }
 
   const isPreviewMode = computed(() => previewVersion.value !== null)
   const hasErrors = computed(() => validationErrors.value.some(e => e.severity === 'error'))
@@ -145,8 +152,36 @@ export const usePathwayStore = defineStore('pathway', () => {
     }
   }
 
-  function clearPreviewVersion() {
+  async function clearPreviewVersion(): Promise<void> {
+    const id = currentPathway.value?.id
+    if (id) {
+      await loadPathway(id)
+      return
+    }
     previewVersion.value = null
+  }
+
+  async function savePreviewAsCurrent(): Promise<boolean> {
+    if (!previewVersion.value || !currentPathway.value?.id) {
+      logger.error('PathwayStore', 'Cannot save preview: not in preview mode')
+      return false
+    }
+
+    try {
+      const { savePathway } = await import('@/services/pathway.service')
+      const result = await savePathway(currentPathway.value.id, currentPathway.value)
+
+      if (!result.success) {
+        logger.error('PathwayStore', 'Failed to save preview as current', result.error)
+        return false
+      }
+
+      previewVersion.value = null
+      return true
+    } catch (error) {
+      logger.error('PathwayStore', 'Failed to save preview as current', error)
+      return false
+    }
   }
 
   let autoSaveTimer: ReturnType<typeof setInterval> | null = null
@@ -232,21 +267,29 @@ export const usePathwayStore = defineStore('pathway', () => {
 
   async function addTag(tag: Tag): Promise<boolean> {
     if (!currentPathway.value?.id) return false
-    const ok = await assignPathwayTag(currentPathway.value.id, tag.id!)
-    if (ok && !currentPathway.value.tags.some(t => t.id === tag.id)) {
+    const result = await assignPathwayTag(currentPathway.value.id, tag.id!)
+    if (!result.success) {
+      logger.error('Pathway', 'addTag failed', result.error)
+      return false
+    }
+    if (!currentPathway.value.tags.some(t => t.id === tag.id)) {
       currentPathway.value.tags.push(tag)
       // intentionally do NOT mark dirty — tag mutations are metadata
     }
-    return ok
+    return true
   }
 
   async function removeTag(tagId: number): Promise<boolean> {
     if (!currentPathway.value?.id) return false
-    const ok = await unassignPathwayTag(currentPathway.value.id, tagId)
-    if (ok && currentPathway.value) {
+    const result = await unassignPathwayTag(currentPathway.value.id, tagId)
+    if (!result.success) {
+      logger.error('Pathway', 'removeTag failed', result.error)
+      return false
+    }
+    if (currentPathway.value) {
       currentPathway.value.tags = currentPathway.value.tags.filter(t => t.id !== tagId)
     }
-    return ok
+    return true
   }
 
   async function syncTags(newTags: Tag[]): Promise<void> {
@@ -341,6 +384,8 @@ export const usePathwayStore = defineStore('pathway', () => {
   }
 
   return {
+    agentGenerationSignal,
+    notifyAgentGeneration,
     currentPathway,
     isDirty,
     lastAutoSave,
@@ -365,6 +410,7 @@ export const usePathwayStore = defineStore('pathway', () => {
     loadPathway,
     loadVersionPreview,
     clearPreviewVersion,
+    savePreviewAsCurrent,
     saveToDraft,
     restoreFromDraft,
     clearDraft,

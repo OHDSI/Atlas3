@@ -26,6 +26,7 @@ public/config-local.json
 # Built plugin parcels — produced by `npm run build` in each
 # plugins-dev/<plugin>/ directory. Source lives in plugins-dev/.
 public/plugins/
+public/vendor/*.js
 histoire-dist/
 
 # Testing

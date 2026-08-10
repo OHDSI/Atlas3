@@ -81,7 +81,7 @@ watch(() => [props.conceptId, props.primarySourceKey], ensureCounts)
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--atlas-color-on-surface-variant);
   margin-bottom: 6px;
 }
 .stat-big {
@@ -92,7 +92,7 @@ watch(() => [props.conceptId, props.primarySourceKey], ensureCounts)
 }
 .stat-sub {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--atlas-color-on-surface-variant);
   font-variant-numeric: tabular-nums;
   margin-top: 4px;
 }

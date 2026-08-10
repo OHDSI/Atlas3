@@ -147,6 +147,10 @@ function handleGoBack() {
   background: rgba(0, 0, 0, 0.05);
 }
 
+.v-theme--dark .error-boundary {
+  background: rgba(255, 255, 255, 0.05);
+}
+
 .error-details {
   background: rgba(0, 0, 0, 0.05);
   padding: 12px;
@@ -155,5 +159,9 @@ function handleGoBack() {
   overflow-x: auto;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.v-theme--dark .error-details {
+  background: rgba(255, 255, 255, 0.05);
 }
 </style>

@@ -25,15 +25,15 @@
               density="compact"
               divided
             >
-              <v-btn value="First">
+              <AtlasButton value="First">
                 {{ earliestLabel }}
-              </v-btn>
-              <v-btn value="All">
+              </AtlasButton>
+              <AtlasButton value="All">
                 {{ allLabel }}
-              </v-btn>
-              <v-btn value="Last">
+              </AtlasButton>
+              <AtlasButton value="Last">
                 {{ latestLabel }}
-              </v-btn>
+              </AtlasButton>
             </v-btn-toggle>
           </div>
         </div>
@@ -51,56 +51,56 @@
 
             <div class="events-container__body">
               <div class="entry-events-toolbar">
-                <v-menu>
+                <AtlasMenu>
                   <template #activator="{ props: menuProps }">
-                    <v-btn
+                    <AtlasButton
                       v-bind="menuProps"
                       variant="outlined"
                       size="small"
                       prepend-icon="mdi-plus"
                     >
                       {{ addCriteriaLabel }}
-                    </v-btn>
+                    </AtlasButton>
                   </template>
 
-                  <v-list density="compact">
-                    <v-list-item
+                  <AtlasList density="compact">
+                    <AtlasListItem
                       v-for="type in criteriaTypes"
                       :key="type"
                       :title="type"
                       @click="addPrimaryCriteria(type)"
                     />
-                  </v-list>
-                </v-menu>
+                  </AtlasList>
+                </AtlasMenu>
 
-                <v-spacer />
+                <AtlasSpacer />
 
-                <v-menu
+                <AtlasMenu
                   :close-on-content-click="false"
                   location="bottom end"
                   offset="8"
                 >
                   <template #activator="{ props: chipProps }">
-                    <v-chip
+                    <AtlasChip
                       v-bind="chipProps"
                       class="obs-period-chip"
                       tone="warning"
                       variant="outlined"
                       size="small"
                     >
-                      <v-icon
+                      <AtlasIcon
                         start
                         size="small"
                       >
                         mdi-clock-outline
-                      </v-icon>
+                      </AtlasIcon>
                       <span class="d-none d-md-inline">
                         {{ continuousObservationLabel }}: {{ observationPriorDays }}d {{ t('options.before', 'before').value }} · {{ observationPostDays }}d {{ t('options.after', 'after').value }}
                       </span>
                       <span class="d-md-none">
                         {{ observationPriorDays }}d / {{ observationPostDays }}d
                       </span>
-                    </v-chip>
+                    </AtlasChip>
                   </template>
 
                   <v-card
@@ -111,7 +111,7 @@
                       {{ continuousObservationLabel }}
                     </v-card-title>
                     <v-card-text class="obs-period-popover__fields">
-                      <v-text-field
+                      <AtlasTextField
                         v-model="observationPriorDays"
                         type="number"
                         variant="outlined"
@@ -120,7 +120,7 @@
                         min="0"
                         :label="daysBeforeLabel"
                       />
-                      <v-text-field
+                      <AtlasTextField
                         v-model="observationPostDays"
                         type="number"
                         variant="outlined"
@@ -131,11 +131,11 @@
                       />
                     </v-card-text>
                   </v-card>
-                </v-menu>
+                </AtlasMenu>
               </div>
 
               <div class="entry-events-list">
-                <v-alert
+                <AtlasAlert
                   v-if="!entryCriteria.length"
                   type="info"
                   variant="tonal"
@@ -143,7 +143,7 @@
                   class="mb-3"
                 >
                   {{ noPrimaryCriteriaLabel }}
-                </v-alert>
+                </AtlasAlert>
 
                 <CriteriaRenderer
                   v-for="(criteria, index) in entryCriteria"
@@ -158,14 +158,14 @@
                 />
 
                 <div class="additional-criteria-section mt-4">
-                  <v-btn
+                  <AtlasButton
                     v-if="!expression.AdditionalCriteria"
                     variant="outlined"
                     prepend-icon="mdi-filter-plus"
                     @click="addAdditionalCriteria"
                   >
                     {{ restrictInitialEventsLabel }}
-                  </v-btn>
+                  </AtlasButton>
 
                   <CriteriaGroup
                     v-else
@@ -192,15 +192,15 @@
                       density="compact"
                       divided
                     >
-                      <v-btn value="First">
+                      <AtlasButton value="First">
                         {{ earliestLabel }}
-                      </v-btn>
-                      <v-btn value="All">
+                      </AtlasButton>
+                      <AtlasButton value="All">
                         {{ allLabel }}
-                      </v-btn>
-                      <v-btn value="Last">
+                      </AtlasButton>
+                      <AtlasButton value="Last">
                         {{ latestLabel }}
-                      </v-btn>
+                      </AtlasButton>
                     </v-btn-toggle>
                   </div>
                 </div>
@@ -276,6 +276,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import {
+  AtlasButton,
+  AtlasAlert,
+  AtlasChip,
+  AtlasIcon,
+  AtlasList,
+  AtlasListItem,
+  AtlasMenu,
+  AtlasSpacer,
+  AtlasTextField,
+} from '@/components/ui'
 import CriteriaRenderer from './criteria/CriteriaRenderer.vue'
 import CriteriaGroup from './criteria/CriteriaGroup.vue'
 import InclusionRulesPanel from './inclusion-rules/InclusionRulesPanel.vue'

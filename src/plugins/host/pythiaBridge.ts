@@ -7,7 +7,8 @@ import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
 import { useCharacterizationStore } from '@/stores/characterization'
 import { usePathwayStore } from '@/stores/pathway'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
-import { useUIStore } from '@/stores/ui'
+import { useNotifications } from '@/stores/notifications'
+import { useWebAPIStore } from '@/stores/webapi'
 import type {
   AgentProposal,
   CharacterizationCreatePayload,
@@ -23,11 +24,14 @@ import type {
   UpdatePathwayPayload,
 } from '@/models/agent.types'
 import router from '@/router'
-import { createConceptSet } from '@/services/concept-set.service'
+import { createConceptSet, getConceptSetById } from '@/services/concept-set.service'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
 import { createCharacterization } from '@/services/characterization.service'
-import { createPathway, createIncidenceRate } from '@/services/webapi'
+import { createPathway, generatePathway } from '@/services/pathway.service'
+import { createIncidenceRate } from '@/services/incidence-rate.service'
 import type { ConceptSetItem } from '@/models/concept-set.types'
+import type { CohortEvent, ConceptSetReference, CriteriaGroup } from '@/models/cohort.types'
+import { ensureUniqueConceptSetId } from '@/utils/concept-set-id'
 import type {
   FeatureAnalysis,
   FeatureAnalysisType,
@@ -39,6 +43,7 @@ import type { Pathway } from '@/models/pathway.types'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
 import { logger } from '@/utils/logger'
 import { applyCapability, type ApplyResult } from './capabilities/apply'
+import { domainToCriteriaType } from './capabilities/translate'
 
 const PLUGIN_ID = 'pythia-plugin'
 
@@ -129,6 +134,8 @@ async function applyProposalInner(
       return await handleSaveCohort(proposal)
     case 'createStandaloneConceptSet':
       return await handleCreateStandaloneConceptSet(proposal.conceptSet)
+    case 'useConceptSet':
+      return await handleUseConceptSet(proposal.payload)
     case 'createFeatureAnalysis':
       return await handleCreateFeatureAnalysis(proposal.payload)
     case 'createCharacterization':
@@ -137,6 +144,8 @@ async function applyProposalInner(
       return await handleCreatePathway(proposal.payload)
     case 'createIncidenceRate':
       return await handleCreateIncidenceRate(proposal.payload)
+    case 'generateAnalysis':
+      await handleGenerateAnalysis(proposal.payload); return
     case 'updateConceptSet':
       await handleUpdateConceptSet(proposal.payload); return
     case 'updateFeatureAnalysis':
@@ -150,14 +159,81 @@ async function applyProposalInner(
     default: {
       const cohortStore = useCohortStore()
       const currentRoute = router.currentRoute.value
-      const onNewCohortRoute = currentRoute.name === 'cohort-new'
-      if (!onNewCohortRoute) {
-        cohortStore.createNewCohort()
+      // Still sitting on the cohort we just saved, so an entry event now means
+      // "the next cohort" rather than "edit this one".
+      const routeCohortId = Number(
+        (currentRoute.params as { id?: string } | undefined)?.id ?? NaN,
+      )
+      const onJustSavedCohort = savedCohortId !== null && routeCohortId === savedCohortId
+      // A cohort definition always begins with its entry event, so that is what
+      // marks "this is the next artifact" rather than "keep building the one on
+      // screen". Resetting on any proposal that arrived while not on
+      // /cohorts/new wiped the editor after the first save — the route is
+      // cohort-edit from then on, so the observation window cleared the entry
+      // event, and each inclusion rule cleared the rule before it. The agent
+      // could not add anything to a cohort it had just saved, and the saved
+      // definition kept only whatever the final proposal put there.
+      const startsNewDefinition = proposal.kind === 'addEntryEvent'
+      // requestNewCohort (not createNewCohort) so the MOUNTED editor re-syncs:
+      // the plain reset clears the store but leaves the editor's local refs
+      // holding the previous cohort's criteria.
+      // Reset only when there is nothing to keep, or when the agent is starting
+      // the next cohort after saving one. Resetting because the route happens
+      // not to be /cohorts/new discards whatever is open — the cohort the user
+      // is editing, or work in progress while they looked something up on
+      // another page.
+      if (!cohortStore.currentCohort || (onJustSavedCohort && startsNewDefinition)) {
+        cohortStore.requestNewCohort()
+        savedCohortId = null
       }
+      adoptProposalConceptSets(proposal)
       cohortStore.applyProposal(proposal)
       await ensureOnCohortRoute()
       return
     }
+  }
+}
+
+function groupEvents(group: CriteriaGroup): CohortEvent[] {
+  return [...group.events, ...(group.nestedGroups ?? []).flatMap(groupEvents)]
+}
+
+// A proposal's concept sets arrive with client-side UUID ids, but the Atlas
+// converter only emits a CodesetId for numeric ones, so without this every
+// agent-added criterion would save with `CodesetId: null` and lose its
+// concepts. Mirrors the builder's assignConceptSetToContext: allocate an id
+// that is unique within the cohort, then register the set on the cohort so
+// ConceptSets[] and the criteria agree.
+function adoptProposalConceptSets(proposal: AgentProposal): void {
+  const owners: Array<{ conceptSet?: ConceptSetReference }> = []
+  switch (proposal.kind) {
+    case 'addEntryEvent':
+    case 'addCensoringCriterion':
+      owners.push(proposal.event)
+      break
+    case 'addInclusionRule':
+      owners.push(...proposal.rule.criteriaGroups.flatMap(groupEvents))
+      break
+    case 'setExitCriteria':
+      owners.push(proposal.exitCriteria)
+      break
+    case 'addConceptSet':
+      owners.push(proposal)
+      break
+    default:
+      return
+  }
+
+  const cohortStore = useCohortStore()
+  // An addConceptSet proposal registers itself once the caller applies it.
+  const register = proposal.kind !== 'addConceptSet'
+  const existing: ConceptSetReference[] = [...(cohortStore.currentCohort?.conceptSets ?? [])]
+  for (const owner of owners) {
+    if (!owner.conceptSet) continue
+    const ref = ensureUniqueConceptSetId(owner.conceptSet, existing)
+    owner.conceptSet = ref
+    if (!existing.some(cs => cs.id === ref.id)) existing.push(ref)
+    if (register) cohortStore.applyProposal({ kind: 'addConceptSet', conceptSet: ref })
   }
 }
 
@@ -184,6 +260,90 @@ async function ensureOnCohortRoute() {
   }
 }
 
+// Id of the cohort the agent last saved. The next artifact it starts must begin
+// from a blank editor even though the route (cohort-new) hasn't changed — but
+// only while that same cohort is still the one on screen. As a bare flag this
+// survived any navigation, so opening an existing cohort and asking the agent
+// to change its entry event wiped the cohort the user had just opened.
+let savedCohortId: number | null = null
+
+// Reuse a concept set the user already curated instead of rebuilding it concept
+// by concept. Circe resolves criteria against the sets embedded in the cohort
+// expression, so "reuse" means copying the saved set's concepts in — keeping its
+// name and id so the cohort still reads as that set.
+async function handleUseConceptSet(payload: {
+  conceptSetId: number
+  group?: 'entry' | 'inclusion' | 'exclusion'
+  name?: string
+}): Promise<{ id?: number | string; name?: string } | void> {
+  if (payload?.conceptSetId === undefined) return
+  let set
+  try {
+    set = await getConceptSetById(payload.conceptSetId)
+  } catch (err) {
+    logger.error('pythiaBridge', 'useConceptSet: fetch failed', err)
+    showSnackbar(`Could not read concept set ${payload.conceptSetId}`, 'error')
+    return
+  }
+  // getConceptSetById returns the set with its concepts flattened onto `items`
+  // in the editor's internal shape, which is what the cohort store expects.
+  const items = (set?.items ?? []) as unknown as Array<Record<string, unknown>>
+  if (!set || items.length === 0) {
+    // An empty set would silently match nobody, so refuse rather than attach it.
+    showSnackbar(
+      set ? `Concept set "${set.name}" has no concepts` : `Concept set ${payload.conceptSetId} not found`,
+      'error',
+    )
+    return
+  }
+
+  const first = items[0] as Record<string, unknown>
+  const nested = (first.concept ?? {}) as Record<string, unknown>
+  const domain = String(first.domainId ?? nested.DOMAIN_ID ?? '')
+  const group = payload.group ?? 'inclusion'
+  const conceptSet = {
+    id: set.id,
+    name: set.name,
+    conceptCount: items.length,
+    items,
+  }
+  const event: Record<string, unknown> = {
+    id: `use-${set.id}-${Date.now()}`,
+    criteriaType: domainToCriteriaType(domain),
+    conceptSet,
+  }
+
+  const cohortStore = useCohortStore()
+  if (!cohortStore.currentCohort) cohortStore.requestNewCohort()
+
+  if (group === 'entry') {
+    cohortStore.applyProposal({ kind: 'addEntryEvent', event } as never)
+  } else {
+    const excluded = group === 'exclusion'
+    cohortStore.applyProposal({
+      kind: 'addInclusionRule',
+      rule: {
+        id: `use-rule-${set.id}-${Date.now()}`,
+        name: payload.name || (excluded ? `Exclude: ${set.name}` : set.name),
+        criteriaGroups: [
+          {
+            id: `use-group-${set.id}`,
+            logicType: 'ALL',
+            events: [
+              excluded
+                ? { ...event, cardinality: { type: 'EXACTLY', count: 0, countingMethod: 'ALL' } }
+                : event,
+            ],
+          },
+        ],
+      },
+    } as never)
+  }
+  await ensureOnCohortRoute()
+  showSnackbar(`Using concept set "${set.name}" (${items.length} concepts)`, 'success')
+  return { id: set.id, name: set.name }
+}
+
 async function handleSaveCohort(
   proposal: { name?: string; description?: string } = {}
 ): Promise<{ id?: number; name?: string } | void> {
@@ -193,7 +353,13 @@ async function handleSaveCohort(
     return
   }
   await ensureOnCohortRoute()
-  return await cohortStore.requestSave({ name: proposal.name, description: proposal.description })
+  const saved = await cohortStore.requestSave({ name: proposal.name, description: proposal.description })
+  // The cohort is committed. Whatever the agent builds next is a DIFFERENT
+  // cohort, so the editor must start blank — otherwise the next entry event is
+  // added on top of this one and the user watches a single editor accumulate
+  // three entry criteria while three separate cohorts are saved underneath.
+  if (saved?.id) savedCohortId = Number(saved.id)
+  return saved
 }
 
 async function handleNavigate(route: NavigateRoute) {
@@ -208,7 +374,7 @@ async function handleNavigate(route: NavigateRoute) {
     cohortStore.requestNewCohort()
   }
   try {
-    router.push({ name: route.name, params: route.params ?? {} })
+    await router.push({ name: route.name, params: route.params ?? {} })
   } catch (err) {
     logger.warn('pythiaBridge', 'navigate failed', { route, err })
     showSnackbar('Could not navigate to that view', 'error')
@@ -241,13 +407,22 @@ async function handleCreateStandaloneConceptSet(
     includeMapped: false,
   }))
 
-  const created = await createConceptSet({
-    name: payload.name,
-    description: payload.description ?? '',
-    items: conceptSetItems,
-  })
+  let created
+  try {
+    created = await createConceptSet({
+      name: payload.name,
+      description: payload.description ?? '',
+      items: conceptSetItems,
+    })
+  } catch (err) {
+    showSnackbar(
+      err instanceof Error ? err.message : 'Failed to create concept set',
+      'error'
+    )
+    return
+  }
 
-  if (!created || created.id === undefined || created.id === null) {
+  if (created.id === undefined || created.id === null) {
     showSnackbar('Failed to create concept set', 'error')
     return
   }
@@ -270,14 +445,19 @@ async function handleCreateStandaloneConceptSet(
   //   concept-set editor" — the user explicitly wanted a standalone set.
   const cohortStore = useCohortStore()
   if (cohortStore.currentCohort) {
-    cohortStore.applyProposal({
+    const proposal: AgentProposal = {
       kind: 'addConceptSet',
       conceptSet: {
         id: created.id as number,
         name: created.name,
         conceptCount: created.items?.length ?? 0,
+        // Without the concepts themselves the set lands in the cohort empty, so
+        // anything referencing it matches nobody while the cohort still builds.
+        items: created.items ?? [],
       },
-    } as never)
+    }
+    adoptProposalConceptSets(proposal)
+    cohortStore.applyProposal(proposal)
     await ensureOnCohortRoute()
     showSnackbar(
       `Concept set "${created.name}" created and attached to the cohort`,
@@ -323,19 +503,20 @@ async function handleCreateFeatureAnalysis(
     // CRITERIA_SET. Default to an empty string if the model omits it.
     design: (payload.design ?? '') as FeatureAnalysis['design'],
   }
-  try {
-    const created = await createFeatureAnalysis(fa)
-    if (!created?.id) {
-      showSnackbar('Failed to create feature analysis', 'error')
-      return
-    }
-    showSnackbar(`Feature analysis "${created.name}" created`, 'success')
-    await navigateToEditor('feature-analysis-edit', created.id)
-    return { id: created.id, name: created.name }
-  } catch (err) {
-    logger.error('pythiaBridge', 'createFeatureAnalysis failed', err)
-    showSnackbar(`Failed to create feature analysis: ${(err as Error).message}`, 'error')
+  const result = await createFeatureAnalysis(fa)
+  if (!result.success) {
+    logger.error('pythiaBridge', 'createFeatureAnalysis failed', result.error)
+    showSnackbar(`Failed to create feature analysis: ${result.error.message}`, 'error')
+    return
   }
+  const created = result.data
+  if (!created?.id) {
+    showSnackbar('Failed to create feature analysis', 'error')
+    return
+  }
+  showSnackbar(`Feature analysis "${created.name}" created`, 'success')
+  await navigateToEditor('feature-analysis-edit', created.id)
+  return { id: created.id, name: created.name }
 }
 
 async function handleCreateCharacterization(
@@ -366,19 +547,20 @@ async function handleCreateCharacterization(
     })),
     stratas: [],
   }
-  try {
-    const created = await createCharacterization(def)
-    if (!created?.id) {
-      showSnackbar('Failed to create characterization', 'error')
-      return
-    }
-    showSnackbar(`Characterization "${created.name}" created`, 'success')
-    await navigateToEditor('characterization-edit', created.id)
-    return { id: created.id, name: created.name }
-  } catch (err) {
-    logger.error('pythiaBridge', 'createCharacterization failed', err)
-    showSnackbar(`Failed to create characterization: ${(err as Error).message}`, 'error')
+  const result = await createCharacterization(def)
+  if (!result.success) {
+    logger.error('pythiaBridge', 'createCharacterization failed', result.error)
+    showSnackbar(`Failed to create characterization: ${result.error.message}`, 'error')
+    return
   }
+  const created = result.data
+  if (!created?.id) {
+    showSnackbar('Failed to create characterization', 'error')
+    return
+  }
+  showSnackbar(`Characterization "${created.name}" created`, 'success')
+  await navigateToEditor('characterization-edit', created.id)
+  return { id: created.id, name: created.name }
 }
 
 async function handleCreatePathway(
@@ -403,7 +585,7 @@ async function handleCreatePathway(
   try {
     const result = await createPathway(pathway)
     if (!result.success || !result.data?.id) {
-      const msg = result.success ? 'no id returned' : result.error
+      const msg = result.success ? 'no id returned' : result.error.message
       showSnackbar(`Failed to create pathway: ${msg}`, 'error')
       return
     }
@@ -413,6 +595,46 @@ async function handleCreatePathway(
   } catch (err) {
     logger.error('pythiaBridge', 'createPathway failed', err)
     showSnackbar(`Failed to create pathway: ${(err as Error).message}`, 'error')
+  }
+}
+
+// Run a saved analysis, the same thing the Generate button does. The agent can
+// create an analysis but previously had no way to execute it, so every demo
+// ended with an unrun analysis the user had to kick off by hand.
+async function handleGenerateAnalysis(payload: {
+  analysisType: 'pathway' | 'characterization' | 'incidenceRate'
+  analysisId: number
+  sourceKey?: string
+}): Promise<void> {
+  // Fall back to whatever source the user is working against.
+  const webapiStore = useWebAPIStore()
+  if (!webapiStore.sources.length) await webapiStore.fetchSources().catch(() => {})
+  const sourceKey =
+    payload.sourceKey ||
+    webapiStore.selectedSource ||
+    webapiStore.sources[0]?.sourceKey ||
+    ''
+  if (!sourceKey) {
+    showSnackbar('Cannot generate: no data source selected', 'error')
+    return
+  }
+  if (payload.analysisType !== 'pathway') {
+    showSnackbar(`Generating a ${payload.analysisType} is not supported yet`, 'warning')
+    return
+  }
+  try {
+    const result = await generatePathway(payload.analysisId, sourceKey)
+    if (!result.success) {
+      showSnackbar(`Failed to start generation: ${result.error}`, 'error')
+      return
+    }
+    showSnackbar(`Generating pathway analysis against ${sourceKey}`, 'success')
+    // The workbench only polls runs it started itself, so tell it to watch this
+    // one — otherwise the page sits on "No runs yet" until a manual reload.
+    usePathwayStore().notifyAgentGeneration()
+  } catch (err) {
+    logger.error('pythiaBridge', 'generateAnalysis failed', err)
+    showSnackbar(`Failed to start generation: ${(err as Error).message}`, 'error')
   }
 }
 
@@ -446,7 +668,7 @@ async function handleCreateIncidenceRate(
   try {
     const result = await createIncidenceRate(ir)
     if (!result.success || !result.data?.id) {
-      const msg = result.success ? 'no id returned' : result.error
+      const msg = result.success ? 'no id returned' : result.error.message
       showSnackbar(`Failed to create incidence rate: ${msg}`, 'error')
       return
     }
@@ -836,13 +1058,13 @@ function handleSnackbar(payload: { message: string; type?: string }) {
   showSnackbar(payload.message, payload.type ?? 'info')
 }
 
+// The UI store never defined showSnackbar, so every message the bridge raised
+// fell through to a log line the user never saw. Route them to the
+// notification store that AtlasNotificationHost actually renders.
 function showSnackbar(message: string, type: string = 'info') {
-  const ui = useUIStore()
-  const fn = (ui as unknown as { showSnackbar?: (msg: string, t?: string) => void })
-    .showSnackbar
-  if (typeof fn === 'function') {
-    fn(message, type)
-  } else {
-    logger.info('pythiaBridge', 'snackbar', { message, type })
-  }
+  const notify = useNotifications()
+  if (type === 'error') notify.danger(message)
+  else if (type === 'success') notify.success(message)
+  else if (type === 'warning') notify.warning(message)
+  else notify.info(message)
 }

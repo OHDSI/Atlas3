@@ -75,9 +75,13 @@ function formatTimestamp(timestamp?: Date): string {
   margin: 1rem 0;
 }
 
+.v-theme--dark .error-message {
+  color: var(--atlas-color-danger-text);
+}
+
 .error-details {
   text-align: left;
-  background: #f5f5f5;
+  background: var(--atlas-color-surface-variant);
   padding: 1rem;
   border-radius: 4px;
   margin: 1rem 0;

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import type { Concept } from '@/models/concept-set.types'
+import { ApiError } from '@/services/api-error'
 
 vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
@@ -107,8 +108,8 @@ describe('Concept Search Store', () => {
     it('should search for concepts successfully', async () => {
       const store = useConceptSearchStore()
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
-        concepts: mockConcepts,
-        total: mockConcepts.length,
+        success: true,
+        data: mockConcepts,
       })
 
       await store.search('diabetes')
@@ -134,9 +135,10 @@ describe('Concept Search Store', () => {
 
     it('should surface generic errors', async () => {
       const store = useConceptSearchStore()
-      vi.mocked(conceptSearchService.searchConcepts).mockRejectedValue(
-        new Error('Network error')
-      )
+      vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
+        success: false,
+        error: new ApiError('Network error', 0, null),
+      })
 
       await store.search('diabetes')
 
@@ -148,9 +150,10 @@ describe('Concept Search Store', () => {
 
     it('should map 403 errors to an access-denied message', async () => {
       const store = useConceptSearchStore()
-      vi.mocked(conceptSearchService.searchConcepts).mockRejectedValue(
-        new Error('Request failed with status 403')
-      )
+      vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
+        success: false,
+        error: new ApiError('Request failed with status 403', 403, null),
+      })
 
       await store.search('diabetes')
 
@@ -159,7 +162,11 @@ describe('Concept Search Store', () => {
 
     it('should coerce non-Error throws via String()', async () => {
       const store = useConceptSearchStore()
-      vi.mocked(conceptSearchService.searchConcepts).mockRejectedValue('boom')
+      vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
+        success: true,
+        data: mockConcepts,
+      })
+      vi.mocked(conceptSearchService.getConceptRecordCounts).mockRejectedValue('boom')
 
       await store.search('diabetes')
 
@@ -172,8 +179,8 @@ describe('Concept Search Store', () => {
       } as unknown as ReturnType<typeof webapiStoreModule.useWebAPIStore>)
       vi.mocked(webapiConfig.getSourceKey).mockReturnValue('FALLBACK_SRC')
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
-        concepts: mockConcepts,
-        total: mockConcepts.length,
+        success: true,
+        data: mockConcepts,
       })
 
       const store = useConceptSearchStore()
@@ -197,8 +204,8 @@ describe('Concept Search Store', () => {
 
     it('should reset to first page on new search', async () => {
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
-        concepts: mockConcepts,
-        total: mockConcepts.length,
+        success: true,
+        data: mockConcepts,
       })
 
       const store = useConceptSearchStore()
@@ -211,8 +218,8 @@ describe('Concept Search Store', () => {
 
     it('should populate record counts onto returned concepts', async () => {
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
-        concepts: mockConcepts,
-        total: mockConcepts.length,
+        success: true,
+        data: mockConcepts,
       })
       vi.mocked(conceptSearchService.getConceptRecordCounts).mockResolvedValue(
         new Map([
@@ -232,8 +239,8 @@ describe('Concept Search Store', () => {
 
     it('should yield undefined record-count fields when source returns no data for the concept', async () => {
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
-        concepts: mockConcepts,
-        total: mockConcepts.length,
+        success: true,
+        data: mockConcepts,
       })
       vi.mocked(conceptSearchService.getConceptRecordCounts).mockResolvedValue(new Map())
 
@@ -247,8 +254,8 @@ describe('Concept Search Store', () => {
   describe('Sorting', () => {
     beforeEach(async () => {
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
-        concepts: mockConcepts,
-        total: mockConcepts.length,
+        success: true,
+        data: mockConcepts,
       })
       const store = useConceptSearchStore()
       await store.search('diabetes')
@@ -307,8 +314,8 @@ describe('Concept Search Store', () => {
         { ...mockConcepts[2], conceptName: 'Z Concept' },
       ]
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
-        concepts: conceptsWithNull,
-        total: conceptsWithNull.length,
+        success: true,
+        data: conceptsWithNull,
       })
       await store.search('test')
       store.updateSort('conceptName', false)
@@ -326,8 +333,8 @@ describe('Concept Search Store', () => {
         { ...mockConcepts[1], invalidReason: { bar: 2 } as unknown as null },
       ]
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
-        concepts: oddConcepts as Concept[],
-        total: oddConcepts.length,
+        success: true,
+        data: oddConcepts as Concept[],
       })
       await store.search('test')
       store.updateSort('invalidReason', false)
@@ -350,8 +357,8 @@ describe('Concept Search Store', () => {
       }))
 
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
-        concepts: manyConcepts,
-        total: manyConcepts.length,
+        success: true,
+        data: manyConcepts,
       })
       const store = useConceptSearchStore()
       await store.search('test')
@@ -389,8 +396,8 @@ describe('Concept Search Store', () => {
   describe('Clear Search', () => {
     it('should clear all search state', async () => {
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
-        concepts: mockConcepts,
-        total: mockConcepts.length,
+        success: true,
+        data: mockConcepts,
       })
 
       const store = useConceptSearchStore()
@@ -410,8 +417,8 @@ describe('Concept Search Store', () => {
   describe('Debounced Search', () => {
     it('should debounce search calls', async () => {
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
-        concepts: mockConcepts,
-        total: mockConcepts.length,
+        success: true,
+        data: mockConcepts,
       })
       const store = useConceptSearchStore()
 
@@ -429,8 +436,8 @@ describe('Concept Search Store', () => {
   describe('Edge Cases', () => {
     it('should handle empty search results', async () => {
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
-        concepts: [],
-        total: 0,
+        success: true,
+        data: [],
       })
 
       const store = useConceptSearchStore()

@@ -351,6 +351,31 @@ describe('AuthService', () => {
       const authStore = useAuthStore()
       expect(authStore.token).toBeNull()
     })
+
+    it('should send an Authorization header when a token is present', async () => {
+      vi.mocked(storageManager.getAuthClient).mockReturnValue('DB')
+      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) })
+
+      await authService.logout()
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('user/logout'),
+        expect.objectContaining({ headers: { Authorization: 'Bearer existing-token' } })
+      )
+    })
+
+    it('should omit the Authorization header when there is no token', async () => {
+      const authStore = useAuthStore()
+      authStore.clearAuth()
+      vi.mocked(storageManager.getAuthClient).mockReturnValue('SAML')
+      mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve({}) })
+
+      await authService.logout()
+
+      for (const call of mockFetch.mock.calls) {
+        expect(call[1]?.headers).toEqual({})
+      }
+    })
   })
 
   describe('refreshToken', () => {

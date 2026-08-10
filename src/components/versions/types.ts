@@ -81,6 +81,40 @@ export interface VersionsConfig {
 }
 
 /**
+ * Route path segment for each asset type's version-preview route
+ * (/<segment>/:id/version/:version). assetType doesn't always match the URL
+ * segment (e.g. 'ir' routes live under /incidence-rates/...) - kept
+ * explicit and typed as a Record so a *missing* entry fails type-checking;
+ * a *wrong* segment value still only fails at runtime (or in
+ * tests/unit/router/versions-navigation.spec.ts, which resolves every entry
+ * against the real route table).
+ */
+export const ASSET_ROUTE_SEGMENT: Record<VersionsConfig['assetType'], string> = {
+  cohortdefinition: 'cohortdefinition',
+  conceptset: 'conceptset',
+  'pathway-analysis': 'pathway-analysis',
+  ir: 'incidence-rates',
+}
+
+/**
+ * Route path segment for the plain "view this asset" route
+ * (/<segment>/:id), used to navigate to a newly-copied asset. This is a
+ * *different* segment than ASSET_ROUTE_SEGMENT for cohortdefinition and
+ * pathway-analysis (e.g. cohorts live at /cohorts/:id, not
+ * /cohortdefinition/:id - that path is version-preview-only).
+ *
+ * Concept sets have no id-addressable route at all: ConceptSetEditor opens
+ * via conceptSetsStore state (editorOpen/currentSet), not a URL param, so
+ * there is intentionally no 'conceptset' entry here - pushing to any URL
+ * for it would be a dead link regardless of which segment was chosen.
+ */
+export const ASSET_DETAIL_ROUTE_SEGMENT: Partial<Record<VersionsConfig['assetType'], string>> = {
+  cohortdefinition: 'cohorts',
+  'pathway-analysis': 'pathways',
+  ir: 'incidence-rates',
+}
+
+/**
  * Request payload for updating version comment
  */
 export interface CommentUpdatePayload {

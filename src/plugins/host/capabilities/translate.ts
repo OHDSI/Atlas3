@@ -1,4 +1,5 @@
 import type { AgentProposal } from '@/models/agent.types'
+import type { ExitStrategy } from '@/models/cohort.types'
 import routeManifest from '@/router/routes.manifest.json'
 
 interface ConceptRefArgs {
@@ -22,17 +23,12 @@ interface ObservationWindowArgs {
 }
 
 interface ExitCriterionArgs {
-  strategy?: 'end_of_observation' | 'fixed_duration' | 'continuous_drug' | 'custom_event'
+  strategy?: 'end_of_observation' | 'fixed_duration' | 'continuous_drug'
   offset?: number
   dateField?: 'START_DATE' | 'END_DATE'
   persistenceWindow?: number
   surveillanceWindow?: number
   concept?: ConceptRefArgs
-}
-
-interface ConceptSetArgs {
-  name?: string
-  items?: ConceptRefArgs[]
 }
 
 interface AgentTemporalWindow {
@@ -120,7 +116,6 @@ interface CreateIncidenceRateArgs {
 type ProposalArgs = CriterionArgs &
   ObservationWindowArgs &
   ExitCriterionArgs &
-  ConceptSetArgs &
   InclusionRuleArgs &
   NavigateArgs &
   StandaloneConceptSetArgs &
@@ -159,7 +154,7 @@ function uid(): string {
 // occurrence count is EXACTLY 0. Shared by every exclusion path below.
 const ZERO_OCCURRENCE_CARDINALITY = { type: 'EXACTLY', count: 0, countingMethod: 'ALL' } as const
 
-function domainToCriteriaType(domain: string | undefined): string {
+export function domainToCriteriaType(domain: string | undefined): string {
   switch (domain) {
     case 'Condition': return 'ConditionOccurrence'
     case 'Drug': return 'DrugExposure'
@@ -209,31 +204,52 @@ function deriveRuleName(items: CriterionArgs[], group?: string, logic?: string):
   return `${groupLabel}: ${names[0]}${join}${names[1]} (+${names.length - 2} more)`
 }
 
+// Every criterion the agent injects references its concepts by CodesetId, so
+// the set has to carry the concept itself. Shared by entry/inclusion events and
+// by the exit criterion, which used to build a named but empty set.
+//
+// The id is a placeholder: the host bridge swaps it for a cohort-unique numeric
+// one before the proposal reaches the store, because only numeric ids survive
+// Atlas conversion as a CodesetId.
+//
+// Items use the internal ConceptSetItem shape, which is what the cohort builder,
+// extractConceptSets and the Atlas converter all read. The metadata the agent
+// cannot know is a placeholder; the concept-set editor re-resolves it on load.
+function embeddedConceptSet(c: {
+  conceptId: number
+  conceptName: string
+  domain?: string
+  includeDescendants?: boolean
+  isExcluded?: boolean
+}): Record<string, unknown> {
+  return {
+    id: uid(),
+    name: c.conceptName,
+    conceptCount: 1,
+    items: [
+      {
+        conceptId: c.conceptId,
+        conceptName: c.conceptName,
+        conceptCode: '',
+        domainId: c.domain ?? '',
+        vocabularyId: '',
+        conceptClassId: '',
+        standardConcept: 'S',
+        invalidReason: null,
+        includeDescendants: c.includeDescendants ?? true,
+        isExcluded: c.isExcluded ?? false,
+        includeMapped: false,
+      },
+    ],
+  }
+}
+
 function buildEventFromCriterion(args: CriterionArgs): Record<string, unknown> | null {
   if (!args.conceptId || !args.conceptName) return null
   const event: Record<string, unknown> = {
     id: uid(),
     criteriaType: domainToCriteriaType(args.domain),
-    conceptSet: {
-      id: uid(),
-      name: args.conceptName,
-      conceptCount: 1,
-      // Embed the concept item directly. Without this, the cohort builder
-      // renders the criterion with an empty concept set and the user sees
-      // "nothing was added".
-      items: [
-        {
-          concept: {
-            CONCEPT_ID: args.conceptId,
-            CONCEPT_NAME: args.conceptName,
-            DOMAIN_ID: args.domain ?? '',
-          },
-          includeDescendants: args.includeDescendants ?? true,
-          isExcluded: args.isExcluded ?? false,
-          includeMapped: false,
-        },
-      ],
-    },
+    conceptSet: embeddedConceptSet(args as Parameters<typeof embeddedConceptSet>[0]),
   }
   if (args.operator && typeof args.value === 'number') {
     event.measurementOperator = args.operator
@@ -500,29 +516,6 @@ function buildUpdateIncidenceRateProposal(args: ProposalArgs): AgentProposal | n
   } as unknown as AgentProposal
 }
 
-function buildConceptSetProposal(args: ConceptSetArgs): AgentProposal | null {
-  // Embeds a concept set into the open cohort; create_standalone_concept_set
-  // saves one as its own artifact instead.
-  if (!args.items?.length) return null
-  const items = args.items
-    .filter(it => typeof it.conceptId === 'number' && typeof it.conceptName === 'string')
-    .map(it => ({
-      conceptId: it.conceptId as number,
-      conceptName: it.conceptName as string,
-      domain: it.domain,
-      includeDescendants: it.includeDescendants ?? true,
-      isExcluded: it.isExcluded ?? false,
-    }))
-  if (items.length === 0) return null
-  return {
-    kind: 'addConceptSet',
-    conceptSet: {
-      name: args.name,
-      items,
-    },
-  } as unknown as AgentProposal
-}
-
 function buildStandaloneConceptSetProposal(args: StandaloneConceptSetArgs): AgentProposal | null {
   if (!args.name || !args.items?.length) return null
   return {
@@ -612,11 +605,142 @@ export function translateCapability(
       } as unknown as AgentProposal
     }
 
+    case 'add_qualifying_criterion': {
+      const event = buildEventFromCriterion(args as CriterionArgs)
+      if (!event) return null
+      return { kind: 'addQualifyingCriterion', event } as unknown as AgentProposal
+    }
+
+    case 'set_censor_window': {
+      const a = args as { startDate?: string; endDate?: string }
+      const iso = /^\d{4}-\d{2}-\d{2}$/
+      const startDate = typeof a.startDate === 'string' && iso.test(a.startDate) ? a.startDate : undefined
+      const endDate = typeof a.endDate === 'string' && iso.test(a.endDate) ? a.endDate : undefined
+      if (!startDate && !endDate) return null
+      return {
+        kind: 'setCensorWindow',
+        censorWindow: { startDate: startDate ?? null, endDate: endDate ?? null },
+      } as unknown as AgentProposal
+    }
+
+    case 'set_era_collapse': {
+      const a = args as { gapDays?: number }
+      if (typeof a.gapDays !== 'number' || a.gapDays < 0) return null
+      return {
+        kind: 'setEraCollapse',
+        collapseSettings: { collapseType: 'ERA', eraPad: a.gapDays },
+      } as unknown as AgentProposal
+    }
+
+    case 'set_event_limits': {
+      const a = args as { entryEvents?: string; qualifyingEvents?: string; inclusionRuleEvents?: string }
+      const norm = (v?: string) => {
+        const u = String(v ?? '').toUpperCase()
+        return u === 'FIRST' || u === 'ALL' || u === 'LAST' ? (u as 'FIRST' | 'ALL' | 'LAST') : undefined
+      }
+      const primaryCriteriaLimit = norm(a.entryEvents)
+      const qualifyingLimit = norm(a.qualifyingEvents)
+      const inclusionQualifyingLimit = norm(a.inclusionRuleEvents)
+      if (!primaryCriteriaLimit && !qualifyingLimit && !inclusionQualifyingLimit) return null
+      return {
+        kind: 'setEventLimits',
+        limits: { primaryCriteriaLimit, qualifyingLimit, inclusionQualifyingLimit },
+      } as unknown as AgentProposal
+    }
+
+    case 'add_demographic_criterion': {
+      const a = args as { minAge?: number; maxAge?: number; sex?: string; name?: string }
+      const hasMin = typeof a.minAge === 'number'
+      const hasMax = typeof a.maxAge === 'number'
+      const sex = a.sex === 'male' || a.sex === 'female' ? a.sex : undefined
+      if (!hasMin && !hasMax && !sex) return null
+
+      const attributes: Record<string, unknown>[] = []
+      if (hasMin && hasMax) {
+        attributes.push({ type: 'numericRange', attributeKey: 'age', operator: 'BETWEEN', value: a.minAge, extent: a.maxAge })
+      } else if (hasMin) {
+        attributes.push({ type: 'numericRange', attributeKey: 'age', operator: 'GREATER_THAN_OR_EQUAL', value: a.minAge })
+      } else if (hasMax) {
+        attributes.push({ type: 'numericRange', attributeKey: 'age', operator: 'LESS_THAN_OR_EQUAL', value: a.maxAge })
+      }
+      if (sex) {
+        // The OMOP gender concepts are fixed CDM vocabulary, not something the
+        // model should be recalling or searching for per source.
+        const concept = sex === 'male'
+          ? { CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE', DOMAIN_ID: 'Gender' }
+          : { CONCEPT_ID: 8532, CONCEPT_NAME: 'FEMALE', DOMAIN_ID: 'Gender' }
+        attributes.push({ type: 'concept', attributeKey: 'gender', concepts: [concept] })
+      }
+
+      const label = [
+        hasMin && hasMax ? `Age ${a.minAge}-${a.maxAge}` : hasMin ? `Age ${a.minAge}+` : hasMax ? `Age up to ${a.maxAge}` : null,
+        sex === 'male' ? 'Male' : sex === 'female' ? 'Female' : null,
+      ].filter(Boolean).join(', ')
+
+      // CIRCE keeps demographics out of PrimaryCriteria: they belong to a
+      // group's DemographicCriteriaList, so this is always an inclusion rule.
+      // (convertInternalToAtlas asserts this — a Demographic event routed to the
+      // entry-event list throws rather than silently producing a criterion CIRCE
+      // cannot read.)
+      const event = { id: uid(), criteriaType: 'Demographic', attributes }
+      return {
+        kind: 'addInclusionRule',
+        rule: {
+          id: uid(),
+          name: (typeof a.name === 'string' && a.name.trim()) || label,
+          criteriaGroups: [{ id: uid(), logicType: 'ALL', events: [event] }],
+        },
+      } as unknown as AgentProposal
+    }
+
+    case 'use_concept_set': {
+      const a = args as { conceptSetId?: number; group?: string; name?: string }
+      if (a.conceptSetId === undefined) return null
+      const group = a.group === 'entry' || a.group === 'exclusion' ? a.group : 'inclusion'
+      return {
+        kind: 'useConceptSet',
+        payload: { conceptSetId: Number(a.conceptSetId), group, name: a.name },
+      } as unknown as AgentProposal
+    }
+
+    case 'remove_inclusion_rule': {
+      const a = args as { name?: string; id?: string | number }
+      if (!a.name && a.id === undefined) return null
+      return { kind: 'removeInclusionRule', match: { name: a.name, id: a.id } } as unknown as AgentProposal
+    }
+
+    case 'remove_entry_event': {
+      const a = args as { conceptId?: number; conceptName?: string }
+      if (!a.conceptName && a.conceptId === undefined) return null
+      return {
+        kind: 'removeEntryEvent',
+        match: { conceptId: a.conceptId, conceptName: a.conceptName },
+      } as unknown as AgentProposal
+    }
+
     case 'set_entry_event': {
       const ref = args as ConceptRefArgs
       const event = buildEventFromCriterion(ref as CriterionArgs)
       if (!event) return null
-      return { kind: 'addEntryEvent', event } as unknown as AgentProposal
+      // The capability's contract is "replaces any existing entry event". Without
+      // this the store appended, so changing the entry event left the cohort
+      // qualifying on either one — twice the population, no error anywhere.
+      return { kind: 'addEntryEvent', event, replace: true } as unknown as AgentProposal
+    }
+
+    case 'generate_analysis': {
+      const a = args as { analysisType?: string; analysisId?: number; sourceKey?: string }
+      const kinds = ['pathway', 'characterization', 'incidenceRate']
+      if (!a.analysisType || !kinds.includes(a.analysisType)) return null
+      if (typeof a.analysisId !== 'number') return null
+      return {
+        kind: 'generateAnalysis',
+        payload: {
+          analysisType: a.analysisType,
+          analysisId: a.analysisId,
+          ...(a.sourceKey ? { sourceKey: a.sourceKey } : {}),
+        },
+      } as unknown as AgentProposal
     }
 
     case 'set_observation_window': {
@@ -630,24 +754,25 @@ export function translateCapability(
 
     case 'add_exit_criterion': {
       const e = args as ExitCriterionArgs
-      const strategyMap: Record<string, string> = {
+      // CIRCE's EndStrategy is polymorphic over DateOffset | CustomEra only, so
+      // there is nothing to map an event-driven exit onto. Anything outside this
+      // map is rejected rather than silently degraded to end-of-observation.
+      const strategyMap: Record<NonNullable<ExitCriterionArgs['strategy']>, ExitStrategy> = {
         end_of_observation: 'CONTINUOUS_OBSERVATION',
         fixed_duration: 'FIXED_DURATION',
         continuous_drug: 'CONTINUOUS_DRUG',
-        custom_event: 'CUSTOM_EVENT',
       }
       const strategy = strategyMap[e.strategy ?? 'end_of_observation']
+      if (!strategy) return null
       const exitCriteria: Record<string, unknown> = { strategy }
       if (typeof e.offset === 'number') exitCriteria.offset = e.offset
       if (e.dateField) exitCriteria.dateField = e.dateField
       if (typeof e.persistenceWindow === 'number') exitCriteria.persistenceWindow = e.persistenceWindow
       if (typeof e.surveillanceWindow === 'number') exitCriteria.surveillanceWindow = e.surveillanceWindow
       if (e.concept?.conceptId && e.concept?.conceptName) {
-        exitCriteria.conceptSet = {
-          id: uid(),
-          name: e.concept.conceptName,
-          conceptCount: 1,
-        }
+        exitCriteria.conceptSet = embeddedConceptSet(
+          e.concept as Parameters<typeof embeddedConceptSet>[0],
+        )
       }
       return { kind: 'setCohortExit', exitCriteria } as unknown as AgentProposal
     }
@@ -667,9 +792,6 @@ export function translateCapability(
         name: typeof args.name === 'string' ? args.name : undefined,
         description: typeof args.description === 'string' ? args.description : undefined,
       } as AgentProposal
-
-    case 'create_concept_set':
-      return buildConceptSetProposal(args as ConceptSetArgs)
 
     case 'create_standalone_concept_set':
       return buildStandaloneConceptSetProposal(args as StandaloneConceptSetArgs)

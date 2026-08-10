@@ -68,6 +68,38 @@ describe('translateCapability', () => {
     expect((p as { exitCriteria: { strategy: string } }).exitCriteria.strategy).toBe('CONTINUOUS_DRUG')
   })
 
+  it('add_exit_criterion embeds the exit concept set with its item', () => {
+    const p: any = translateCapability('add_exit_criterion', {
+      strategy: 'continuous_drug',
+      persistenceWindow: 30,
+      concept: { conceptId: 1503297, conceptName: 'Metformin', domain: 'Drug' },
+    })
+    expect(p.exitCriteria.conceptSet.name).toBe('Metformin')
+    expect(p.exitCriteria.conceptSet.items).toEqual([
+      expect.objectContaining({ conceptId: 1503297, conceptName: 'Metformin', domainId: 'Drug' }),
+    ])
+  })
+
+  it('add_exit_criterion rejects a strategy CIRCE cannot represent', () => {
+    expect(translateCapability('add_exit_criterion', { strategy: 'custom_event' })).toBeNull()
+  })
+
+  it('criterion concept sets embed items in the internal ConceptSetItem shape', () => {
+    const p: any = translateCapability('add_criterion', {
+      conceptId: 201826,
+      conceptName: 'Type 2 diabetes mellitus',
+      domain: 'Condition',
+      includeDescendants: true,
+    })
+    expect(p.event.conceptSet.items[0]).toMatchObject({
+      conceptId: 201826,
+      conceptName: 'Type 2 diabetes mellitus',
+      domainId: 'Condition',
+      includeDescendants: true,
+      isExcluded: false,
+    })
+  })
+
   it('set_censor_event → addCensoringCriterion', () => {
     const p = translateCapability('set_censor_event', {
       conceptId: 4099154,
@@ -76,18 +108,6 @@ describe('translateCapability', () => {
       includeDescendants: true,
     })
     expect(p?.kind).toBe('addCensoringCriterion')
-  })
-
-  it('create_concept_set → addConceptSet with items', () => {
-    const p = translateCapability('create_concept_set', {
-      name: 'NSAIDs',
-      items: [
-        { conceptId: 1, conceptName: 'Ibuprofen', domain: 'Drug' },
-        { conceptId: 2, conceptName: 'Naproxen', domain: 'Drug' },
-      ],
-    })
-    expect(p?.kind).toBe('addConceptSet')
-    expect((p as { conceptSet: { items: unknown[] } }).conceptSet.items).toHaveLength(2)
   })
 
   it('add_inclusion_rule → addInclusionRule with logicType', () => {
@@ -109,8 +129,13 @@ describe('translateCapability', () => {
     expect(translateCapability('not_a_tool', {})).toBeNull()
   })
 
-  it('returns null for create_concept_set with no items', () => {
-    expect(translateCapability('create_concept_set', { name: 'empty' })).toBeNull()
+  it('returns null for create_concept_set, which is no longer a capability', () => {
+    expect(
+      translateCapability('create_concept_set', {
+        name: 'NSAIDs',
+        items: [{ conceptId: 1, conceptName: 'Ibuprofen', domain: 'Drug' }],
+      })
+    ).toBeNull()
   })
 
   it('create_feature_analysis → createFeatureAnalysis', () => {
@@ -490,5 +515,47 @@ describe('translateCapability — create_standalone_concept_set', () => {
     expect(
       translateCapability('create_standalone_concept_set', { name: 'x' })
     ).toBeNull()
+  })
+})
+
+describe('translateCapability: generate_analysis', () => {
+  it('translates a pathway run, carrying an explicit source key', () => {
+    const p = translateCapability('generate_analysis', {
+      analysisType: 'pathway',
+      analysisId: 12,
+      sourceKey: 'EUNOMIA',
+    })
+    expect(p?.kind).toBe('generateAnalysis')
+    expect((p as any).payload).toEqual({
+      analysisType: 'pathway',
+      analysisId: 12,
+      sourceKey: 'EUNOMIA',
+    })
+  })
+
+  it('omits sourceKey when the agent did not name one', () => {
+    const p = translateCapability('generate_analysis', {
+      analysisType: 'characterization',
+      analysisId: 3,
+    })
+    expect((p as any).payload).toEqual({ analysisType: 'characterization', analysisId: 3 })
+  })
+
+  it('accepts every supported analysis type', () => {
+    for (const analysisType of ['pathway', 'characterization', 'incidenceRate']) {
+      const p = translateCapability('generate_analysis', { analysisType, analysisId: 1 })
+      expect(p?.kind).toBe('generateAnalysis')
+    }
+  })
+
+  // A bad reference must not become a proposal: the user would be asked to
+  // approve running "something", and the bridge would have nothing to run.
+  it('rejects an unknown analysis type', () => {
+    expect(translateCapability('generate_analysis', { analysisType: 'cohort', analysisId: 1 })).toBeNull()
+  })
+
+  it('rejects a missing or non-numeric analysis id', () => {
+    expect(translateCapability('generate_analysis', { analysisType: 'pathway' })).toBeNull()
+    expect(translateCapability('generate_analysis', { analysisType: 'pathway', analysisId: '12' })).toBeNull()
   })
 })

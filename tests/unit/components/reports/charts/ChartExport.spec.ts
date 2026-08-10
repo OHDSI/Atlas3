@@ -3,9 +3,23 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import * as echarts from 'echarts/core'
+import { BarChart } from 'echarts/charts'
+import { GridComponent } from 'echarts/components'
 import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
+import { setChartTheme } from '@/ui/chart-config'
+
+// The app registers these globally in main.ts; the off-screen SVG exporter
+// reuses that registration, so the spec has to mirror it to get real output.
+echarts.use([BarChart, GridComponent])
 
 const vuetify = createVuetify({ components, directives })
+
+const CHART_OPTION = {
+  xAxis: { type: 'category', data: ['a', 'b'] },
+  yAxis: { type: 'value' },
+  series: [{ type: 'bar', data: [1, 2] }],
+}
 
 function mountComponent(props: Record<string, unknown> = {}) {
   return mount(ChartExport, {
@@ -29,10 +43,16 @@ function mountComponent(props: Record<string, unknown> = {}) {
 function createMockChartInstance(options: {
   getDataURL?: () => string
   renderToSVGString?: () => string | undefined
+  getOption?: () => unknown
+  getWidth?: () => number
+  getHeight?: () => number
 } = {}) {
   return {
     getDataURL: options.getDataURL || vi.fn(() => 'data:image/png;base64,mockData'),
-    renderToSVGString: options.renderToSVGString
+    renderToSVGString: options.renderToSVGString,
+    getOption: options.getOption || vi.fn(() => CHART_OPTION),
+    getWidth: options.getWidth || vi.fn(() => 600),
+    getHeight: options.getHeight || vi.fn(() => 400)
   }
 }
 
@@ -70,6 +90,7 @@ describe('ChartExport', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    setChartTheme('light')
   })
 
   describe('Rendering', () => {
@@ -105,6 +126,8 @@ describe('ChartExport', () => {
       const pngButton = wrapper.findAll('button')[0]
       await pngButton.trigger('click')
 
+      // Background tracks the active chart theme (see CHART_SURFACE); the
+      // rest of the export options are fixed and predate the theme work.
       expect(chartInstance.getDataURL).toHaveBeenCalledWith({
         type: 'png',
         pixelRatio: 2,
@@ -112,6 +135,21 @@ describe('ChartExport', () => {
       })
       expect(mockLink.download).toBe('test-chart.png')
       expect(mockLink.click).toHaveBeenCalled()
+    })
+
+    it('should export PNG with the dark surface as background when the dark theme is active', async () => {
+      setChartTheme('dark')
+      const chartInstance = createMockChartInstance()
+      const wrapper = mountComponent({ chartInstance, filename: 'test-chart' })
+
+      const pngButton = wrapper.findAll('button')[0]
+      await pngButton.trigger('click')
+
+      expect(chartInstance.getDataURL).toHaveBeenCalledWith({
+        type: 'png',
+        pixelRatio: 2,
+        backgroundColor: '#161618'
+      })
     })
 
     it('should emit export-start and export-success events', async () => {
@@ -192,21 +230,21 @@ describe('ChartExport', () => {
       expect(wrapper.emitted('export-success')![0]).toEqual(['svg', 'svg-test.svg'])
     })
 
-    it('should fallback to PNG when SVG renderer not available', async () => {
+    it('should render SVG off-screen when renderToSVGString is unavailable', async () => {
       const chartInstance = createMockChartInstance({
         renderToSVGString: undefined
       })
-      const wrapper = mountComponent({ chartInstance, filename: 'fallback-test' })
+      const wrapper = mountComponent({ chartInstance, filename: 'offscreen-test' })
 
       const svgButton = wrapper.findAll('button')[1]
       await svgButton.trigger('click')
 
-      // Should fall back to PNG export
-      expect(chartInstance.getDataURL).toHaveBeenCalled()
-      expect(mockLink.download).toBe('fallback-test.png')
+      expect(chartInstance.getDataURL).not.toHaveBeenCalled()
+      expect(mockLink.download).toBe('offscreen-test.svg')
+      expect(wrapper.emitted('export-success')![0]).toEqual(['svg', 'offscreen-test.svg'])
     })
 
-    it('should fallback to PNG when renderToSVGString returns empty', async () => {
+    it('should render SVG off-screen when renderToSVGString returns empty', async () => {
       const chartInstance = createMockChartInstance({
         renderToSVGString: vi.fn(() => '')
       })
@@ -215,13 +253,54 @@ describe('ChartExport', () => {
       const svgButton = wrapper.findAll('button')[1]
       await svgButton.trigger('click')
 
-      // Empty string is falsy, so should fallback to PNG
-      expect(chartInstance.getDataURL).toHaveBeenCalled()
+      expect(chartInstance.getDataURL).not.toHaveBeenCalled()
+      expect(mockLink.download).toBe('empty-svg.svg')
     })
 
-    it('should emit export-error on SVG failure', async () => {
+    it('should render SVG off-screen when renderToSVGString throws (canvas renderer)', async () => {
+      // Regression test for issue #149: with the default ECharts canvas
+      // renderer, renderToSVGString exists on the prototype but throws
+      // "a.renderToString is not a function" when it delegates to the canvas
+      // painter. Clicking SVG must still yield an .svg file, not a PNG.
       const chartInstance = createMockChartInstance({
-        renderToSVGString: vi.fn(() => { throw new Error('SVG failed') })
+        renderToSVGString: vi.fn(() => { throw new TypeError('a.renderToString is not a function') })
+      })
+      const wrapper = mountComponent({ chartInstance, filename: 'canvas-chart' })
+
+      const svgButton = wrapper.findAll('button')[1]
+      await svgButton.trigger('click')
+
+      expect(chartInstance.getDataURL).not.toHaveBeenCalled()
+      expect(mockLink.download).toBe('canvas-chart.svg')
+      expect(wrapper.emitted('export-error')).toBeFalsy()
+      expect(wrapper.emitted('export-success')![0]).toEqual(['svg', 'canvas-chart.svg'])
+    })
+
+    it('should download real SVG markup, not a PNG data URL', async () => {
+      const blobTypes: string[] = []
+      globalThis.URL.createObjectURL = vi.fn((blob: Blob) => {
+        blobTypes.push(blob.type)
+        return 'blob:mock-url'
+      }) as unknown as typeof URL.createObjectURL
+
+      const chartInstance = createMockChartInstance({
+        renderToSVGString: vi.fn(() => { throw new TypeError('a.renderToString is not a function') })
+      })
+      const wrapper = mountComponent({ chartInstance, filename: 'blob-check' })
+
+      await wrapper.findAll('button')[1].trigger('click')
+
+      expect(blobTypes).toContain('image/svg+xml;charset=utf-8')
+      expect(blobTypes.some(type => type.includes('png'))).toBe(false)
+      expect(mockLink.href).toBe('blob:mock-url')
+      expect(mockLink.href).not.toContain('data:image/png')
+      expect(mockLink.download).toBe('blob-check.svg')
+    })
+
+    it('should emit export-error when the off-screen SVG render also fails', async () => {
+      const chartInstance = createMockChartInstance({
+        renderToSVGString: vi.fn(() => { throw new Error('SVG failed') }),
+        getOption: vi.fn(() => { throw new Error('cannot read option') })
       })
       const wrapper = mountComponent({ chartInstance })
 
@@ -230,6 +309,7 @@ describe('ChartExport', () => {
 
       expect(wrapper.emitted('export-error')).toBeTruthy()
       expect(wrapper.emitted('export-error')![0][0]).toBe('svg')
+      expect(wrapper.emitted('export-success')).toBeFalsy()
     })
 
     it('should not export when no chart instance', async () => {

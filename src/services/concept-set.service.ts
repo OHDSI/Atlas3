@@ -14,73 +14,20 @@ import {
   type ConceptSetAPIResponse,
 } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
-import { getAppConfig } from '@/config/app-config.loader'
-
-function getBaseUrl(): string {
-  return getAppConfig().api.url
-}
-
-async function getAuthToken(): Promise<string | null> {
-  try {
-    const { useAuthStore } = await import('@/stores/auth')
-    return useAuthStore().token
-  } catch {
-    return null
-  }
-}
+import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
+import { getSourceKey } from '@/config/webapi'
 
 /**
- * Internal fetch wrapper with error handling
+ * Prefer the source key validated against the sources the server actually
+ * reports; the unvalidated localStorage value is only a fallback for the
+ * window before the store has loaded them.
  */
-async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${getBaseUrl()}${endpoint}`
-
-  // Get auth token
-  const token = await getAuthToken()
-  const authHeaders: Record<string, string> = {}
-  if (token) {
-    authHeaders['Authorization'] = `Bearer ${token}`
-  }
-
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders,
-      ...options?.headers,
-    },
-  })
-
-  if (!response.ok) {
-    // Surface the server's error body (e.g. WebAPI's "Current data source does
-    // not contain required concepts …") instead of the bare status text, which
-    // alone is useless for diagnosing why a concept set won't resolve.
-    let detail = response.statusText
-    try {
-      const text = await response.text()
-      if (text) {
-        try {
-          detail = (JSON.parse(text) as { message?: string }).message ?? text
-        } catch {
-          detail = text
-        }
-      }
-    } catch {
-      // keep statusText
-    }
-    throw new Error(`HTTP ${response.status}: ${detail}`)
-  }
-
-  // Handle 204 No Content
-  if (response.status === 204) {
-    return null as T
-  }
-
+async function resolveSourceKey(): Promise<string> {
   try {
-    return (await response.json()) as T
-  } catch (parseError) {
-    logger.error('ConceptSet', 'Failed to parse JSON response', parseError)
-    throw new Error('Invalid response format')
+    const { useWebAPIStore } = await import('@/stores/webapi')
+    return useWebAPIStore().getValidVocabularySource() || getSourceKey()
+  } catch {
+    return getSourceKey()
   }
 }
 
@@ -90,18 +37,20 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
  */
 export async function getAllConceptSets(): Promise<ConceptSetListItem[]> {
   try {
-    const data = await fetchJSON<unknown>('/conceptset')
+    const data = await httpGet<unknown>('/conceptset')
     const parsed = ConceptSetListResponseSchema.safeParse(data)
 
     if (!parsed.success) {
       logger.error('ConceptSet', 'Concept set list validation error', parsed.error)
-      return []
+      throw new Error('Invalid concept set list response')
     }
 
     return parsed.data
   } catch (error) {
+    // A failed fetch is not "no concept sets" - propagate so the store's
+    // error state renders instead of an empty list.
     logger.error('ConceptSet', 'Failed to fetch concept sets', error)
-    return []
+    throw error
   }
 }
 
@@ -115,10 +64,12 @@ export async function getConceptSetById(
   options?: { rethrow?: boolean }
 ): Promise<ConceptSet | null> {
   try {
+    const sourceKey = await resolveSourceKey()
+
     // Fetch metadata and expression separately
     const [metadata, expression] = await Promise.all([
-      fetchJSON<ConceptSetAPIMetadata>(`/conceptset/${id}`),
-      fetchJSON<ConceptSetAPIExpression>(`/conceptset/${id}/expression`),
+      httpGet<ConceptSetAPIMetadata>(`/conceptset/${id}`),
+      httpGet<ConceptSetAPIExpression>(`/conceptset/${id}/expression/${sourceKey}`),
     ])
 
     // Combine metadata and expression
@@ -145,17 +96,14 @@ export async function getConceptSetById(
  */
 export async function createConceptSet(
   conceptSet: Omit<ConceptSet, 'id' | 'createdDate' | 'createdBy' | 'modifiedDate' | 'modifiedBy'>
-): Promise<ConceptSet | null> {
+): Promise<ConceptSet> {
   try {
     const metadataPayload = {
       name: conceptSet.name,
       description: conceptSet.description,
     }
 
-    const data = await fetchJSON<ConceptSetAPIResponse>('/conceptset', {
-      method: 'POST',
-      body: JSON.stringify(metadataPayload),
-    })
+    const data = await httpPost<ConceptSetAPIResponse>('/conceptset', metadataPayload)
 
     if ((conceptSet.items?.length || 0) > 0 && data.id) {
       const itemsPayload = (conceptSet.items || []).map(item => ({
@@ -165,14 +113,12 @@ export async function createConceptSet(
         includeMapped: item.includeMapped ? 1 : 0,
       }))
 
-      await fetchJSON(`/conceptset/${data.id}/items`, {
-        method: 'PUT',
-        body: JSON.stringify(itemsPayload),
-      })
+      await httpPut(`/conceptset/${data.id}/items`, itemsPayload)
 
+      const sourceKey = await resolveSourceKey()
       const [updatedMetadata, updatedExpression] = await Promise.all([
-        fetchJSON<ConceptSetAPIMetadata>(`/conceptset/${data.id}`),
-        fetchJSON<ConceptSetAPIExpression>(`/conceptset/${data.id}/expression`),
+        httpGet<ConceptSetAPIMetadata>(`/conceptset/${data.id}`),
+        httpGet<ConceptSetAPIExpression>(`/conceptset/${data.id}/expression/${sourceKey}`),
       ])
 
       return mapConceptSetFromAPI({
@@ -183,8 +129,10 @@ export async function createConceptSet(
 
     return mapConceptSetFromAPI(data)
   } catch (error) {
+    // Propagate: the server's error detail (the shared client surfaces the body)
+    // is what the user needs; a bare null reduced every failure to a generic toast.
     logger.error('ConceptSet', 'Failed to create concept set', error)
-    return null
+    throw error
   }
 }
 
@@ -193,7 +141,7 @@ export async function createConceptSet(
  * @param conceptSet Concept set with id
  * @returns Updated concept set
  */
-export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptSet | null> {
+export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptSet> {
   if (!conceptSet.id) {
     throw new Error('Concept set ID is required for update')
   }
@@ -205,10 +153,7 @@ export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptS
       description: conceptSet.description,
     }
 
-    await fetchJSON<ConceptSetAPIResponse>(`/conceptset/${conceptSet.id}`, {
-      method: 'PUT',
-      body: JSON.stringify(metadataPayload),
-    })
+    await httpPut<ConceptSetAPIResponse>(`/conceptset/${conceptSet.id}`, metadataPayload)
 
     const itemsPayload = (conceptSet.items || []).map(item => ({
       conceptId: item.conceptId,
@@ -217,14 +162,12 @@ export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptS
       includeMapped: item.includeMapped ? 1 : 0,
     }))
 
-    await fetchJSON(`/conceptset/${conceptSet.id}/items`, {
-      method: 'PUT',
-      body: JSON.stringify(itemsPayload),
-    })
+    await httpPut(`/conceptset/${conceptSet.id}/items`, itemsPayload)
 
+    const sourceKey = await resolveSourceKey()
     const [updatedMetadata, updatedExpression] = await Promise.all([
-      fetchJSON<ConceptSetAPIMetadata>(`/conceptset/${conceptSet.id}`),
-      fetchJSON<ConceptSetAPIExpression>(`/conceptset/${conceptSet.id}/expression`),
+      httpGet<ConceptSetAPIMetadata>(`/conceptset/${conceptSet.id}`),
+      httpGet<ConceptSetAPIExpression>(`/conceptset/${conceptSet.id}/expression/${sourceKey}`),
     ])
 
     return mapConceptSetFromAPI({
@@ -233,7 +176,7 @@ export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptS
     })
   } catch (error) {
     logger.error('ConceptSet', `Failed to update concept set ${conceptSet.id}`, error)
-    return null
+    throw error
   }
 }
 
@@ -244,9 +187,7 @@ export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptS
  */
 export async function deleteConceptSet(id: number | string): Promise<boolean> {
   try {
-    await fetchJSON(`/conceptset/${id}`, {
-      method: 'DELETE',
-    })
+    await httpDelete(`/conceptset/${id}`)
     return true
   } catch (error) {
     logger.error('ConceptSet', `Failed to delete concept set ${id}`, error)
@@ -263,10 +204,7 @@ export async function assignTagToConceptSet(
   tagId: number
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await fetchJSON(`/conceptset/${id}/tag/`, {
-      method: 'POST',
-      body: JSON.stringify(tagId),
-    })
+    await httpPost(`/conceptset/${id}/tag/`, tagId)
     return { success: true }
   } catch (error) {
     logger.error('ConceptSet', `Failed to assign tag ${tagId} to concept set ${id}`, error)
@@ -283,9 +221,7 @@ export async function unassignTagFromConceptSet(
   tagId: number
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await fetchJSON(`/conceptset/${id}/tag/${tagId}`, {
-      method: 'DELETE',
-    })
+    await httpDelete(`/conceptset/${id}/tag/${tagId}`)
     return { success: true }
   } catch (error) {
     logger.error('ConceptSet', `Failed to unassign tag ${tagId} from concept set ${id}`, error)

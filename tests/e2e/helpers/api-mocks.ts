@@ -13,8 +13,7 @@ import {
   mockDashboardReport,
   mockPersonReport,
   mockDiabetesConcepts,
-  mockCardiovascularConcepts,
-  createConceptSearchResponse
+  mockCardiovascularConcepts
 } from '../fixtures'
 
 // In-memory store for cohorts — persists data between requests.
@@ -326,23 +325,46 @@ export async function setupBasicMocks(page: Page) {
 
   // Mock vocabulary search endpoint (concept search)
   await page.route('**/WebAPI/vocabulary/*/search**', async (route: Route) => {
+    // The app POSTs { QUERY: ... }; older callers used ?query=. Support both.
     const url = route.request().url()
     const searchParams = new URLSearchParams(url.split('?')[1] || '')
-    const query = searchParams.get('query')?.toLowerCase() || ''
+    let query = searchParams.get('query')?.toLowerCase() || ''
+    if (!query) {
+      try {
+        const body = route.request().postDataJSON() as { QUERY?: string } | null
+        query = (body?.QUERY || '').toLowerCase()
+      } catch {
+        query = ''
+      }
+    }
 
     let results = mockDiabetesConcepts
     if (query.includes('cardio') || query.includes('hypert') || query.includes('heart')) {
       results = mockCardiovascularConcepts
     } else if (query.includes('diabet')) {
       results = mockDiabetesConcepts
+    } else if (query) {
+      results = []
     }
 
-    const _response = createConceptSearchResponse(results, 20, 0)
+    // The app validates against WebAPI's raw uppercase field names
+    // (ConceptSearchResponseSchema); the camelCase fixture shape fails that
+    // parse and used to make every search silently return zero rows.
+    const webApiShape = results.map(c => ({
+      CONCEPT_ID: c.conceptId,
+      CONCEPT_NAME: c.conceptName,
+      CONCEPT_CODE: c.conceptCode,
+      DOMAIN_ID: c.domainId,
+      VOCABULARY_ID: c.vocabularyId,
+      CONCEPT_CLASS_ID: c.conceptClassId,
+      STANDARD_CONCEPT: c.standardConcept,
+      INVALID_REASON: c.invalidReason
+    }))
 
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(results)
+      body: JSON.stringify(webApiShape)
     })
   })
 
@@ -488,6 +510,138 @@ export async function setupBasicMocks(page: Page) {
   // Mock characterization design snapshot
   await page.route('**/cohort-characterization/*/design', async (route: Route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
+  })
+}
+
+// Fixed instant every analysis-list mock renders against, so the relative
+// "modified 2 days ago" cells in AnalysisDataTable stay byte-stable instead of
+// drifting with the wall clock. 2026-01-15T12:00:00Z.
+const FIXED_NOW = 1768478400000
+const DAY = 86400000
+
+/**
+ * Mock the three analysis-hub list endpoints — characterizations, pathways and
+ * incidence rates.
+ *
+ * Without these, those routes fall through the Vite dev server's `/WebAPI`
+ * proxy (vite.config.ts) to whatever is listening on localhost:8080. On a
+ * developer box running WebAPI that renders live rows; in CI nothing is
+ * listening, the proxy returns ECONNREFUSED and the pages render their loading
+ * or error state instead. Screenshots and axe scans captured under one of those
+ * conditions can never reproduce under the other.
+ *
+ * Also pins the clock, because AnalysisDataTable renders modified/created as
+ * relative time. Call after setupBasicMocks and before page.goto.
+ */
+export async function setupAnalysisListMocks(page: Page) {
+  await page.clock.setFixedTime(new Date(FIXED_NOW))
+
+  // The three list endpoints do not agree on a user shape: characterizations
+  // parses createdBy with UserRefSchema (login/name), incidence rates with the
+  // stricter userSchema (numeric id + name). A wrong shape fails Zod and the
+  // view renders its error state instead of rows.
+  const owner = { login: 'atlas', name: 'ATLAS' }
+  const strictOwner = { id: 1, name: 'ATLAS' }
+
+  await page.route('**/cohort-characterization?size=*', async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([
+        {
+          id: 1,
+          name: 'Diabetes baseline characterization',
+          description: 'Demographics and comorbidities at index',
+          tags: [],
+          cohorts: [],
+          featureAnalyses: [],
+          createdBy: owner,
+          createdDate: FIXED_NOW - 30 * DAY,
+          modifiedDate: FIXED_NOW - 2 * DAY,
+        },
+        {
+          id: 2,
+          name: 'Hypertension treatment characterization',
+          description: 'Drug exposure summary',
+          tags: [],
+          cohorts: [],
+          featureAnalyses: [],
+          createdBy: owner,
+          createdDate: FIXED_NOW - 60 * DAY,
+          modifiedDate: FIXED_NOW - 10 * DAY,
+        },
+      ]),
+    })
+  })
+
+  await page.route('**/pathway-analysis?size=*', async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        content: [
+          {
+            id: 1,
+            name: 'Type 2 diabetes treatment pathway',
+            description: 'First-line therapy sequences',
+            targetCohorts: [],
+            eventCohorts: [],
+            combinationWindow: 30,
+            minCellCount: 5,
+            maxDepth: 5,
+            allowRepeats: false,
+            tags: [],
+            createdBy: owner,
+            createdDate: FIXED_NOW - 45 * DAY,
+            modifiedDate: FIXED_NOW - 5 * DAY,
+          },
+        ],
+        totalElements: 1,
+      }),
+    })
+  })
+
+  await page.route('**/ir/', async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([
+        {
+          id: 1,
+          name: 'Incidence of acute myocardial infarction',
+          description: 'Per 1000 person-years',
+          tags: [],
+          createdBy: strictOwner,
+          createdDate: FIXED_NOW - 90 * DAY,
+          modifiedDate: FIXED_NOW - 7 * DAY,
+        },
+      ]),
+    })
+  })
+}
+
+/**
+ * Force the nav bar's theme toggle to render regardless of the shipped
+ * deployment config. `settings.theme.enableDarkMode` defaults to false in
+ * plugins.json (dark mode is opt-in per deployment) — the dark-mode specs
+ * need the toggle visible to exercise it, so they patch the manifest
+ * response instead of flipping the shipped default. Call after
+ * setupBasicMocks/setupDatasourcesMocks and before page.goto.
+ */
+export async function enableDarkModeToggle(page: Page) {
+  // Read the shipped manifest from disk rather than route.fetch()-ing it: that
+  // round-trip races the plugin config loader's own timeout under load, and a
+  // manifest that arrives late leaves the nav without a theme toggle at all.
+  const manifestPath = resolve(
+    dirname(fileURLToPath(import.meta.url)),
+    '../../../public/config/plugins.json',
+  )
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+  manifest.settings = manifest.settings ?? {}
+  manifest.settings.theme = { ...manifest.settings.theme, enableDarkMode: true }
+
+  await page.route('**/config/plugins.json', async (route: Route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', json: manifest })
   })
 }
 

@@ -7,7 +7,10 @@
  * Based on: specs/001-role-permissions-management/contracts/role-api.yaml
  */
 
-import { fetchJSON } from './webapi'
+import { z } from 'zod'
+import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
+import { unwrap, ApiError, parseOrThrow } from '@/services/api-error'
+import { type ApiResult } from '@/types/api'
 import {
   RawRoleSchema,
   RoleListSchema,
@@ -18,11 +21,10 @@ import {
   type RoleUpdate,
   type Permission,
   type User,
-  type ApiResult,
-  success,
-  failure,
 } from '@/models/role.types'
 import { logger } from '@/utils/logger'
+
+const CONTEXT = 'RoleService'
 
 // ============================================================================
 // Role CRUD Operations
@@ -32,21 +34,10 @@ import { logger } from '@/utils/logger'
  * Fetch all roles
  */
 export async function fetchRoles(): Promise<ApiResult<Role[]>> {
-  try {
-    const data = await fetchJSON<unknown>('/role/')
-    const parsed = RoleListSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error('RoleService', 'Roles validation error', parsed.error)
-      return failure('Invalid roles response format')
-    }
-
-    return success(parsed.data)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch roles'
-    logger.error('RoleService', 'Failed to fetch roles', error)
-    return failure(message)
-  }
+  return unwrap(async () => {
+    const data = await httpGet<unknown>('/role/')
+    return parseOrThrow(RoleListSchema, data, 'Invalid roles response format')
+  }, CONTEXT)
 }
 
 /**
@@ -54,21 +45,10 @@ export async function fetchRoles(): Promise<ApiResult<Role[]>> {
  * GET /role/{roleId}
  */
 export async function fetchRoleById(roleId: number): Promise<ApiResult<Role>> {
-  try {
-    const data = await fetchJSON<unknown>(`/role/${roleId}`)
-    const parsed = RawRoleSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error('RoleService', 'Role validation error', parsed.error)
-      return failure('Invalid role response format')
-    }
-
-    return success(parsed.data)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch role'
-    logger.error('RoleService', `Failed to fetch role ${roleId}`, error)
-    return failure(message)
-  }
+  return unwrap(async () => {
+    const data = await httpGet<unknown>(`/role/${roleId}`)
+    return parseOrThrow(RawRoleSchema, data, 'Invalid role response format')
+  }, CONTEXT)
 }
 
 /**
@@ -76,32 +56,19 @@ export async function fetchRoleById(roleId: number): Promise<ApiResult<Role>> {
  * POST /role/
  */
 export async function createRole(payload: RoleCreate): Promise<ApiResult<Role>> {
-  try {
-    const data = await fetchJSON<unknown>('/role/', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    })
-
-    const parsed = RawRoleSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error('RoleService', 'Create role validation error', parsed.error)
-      return failure('Invalid role response format')
-    }
+  return unwrap(async () => {
+    const data = await httpPost<unknown>('/role/', payload)
+    const parsed = parseOrThrow(RawRoleSchema, data, 'Invalid role response format')
 
     // Audit log: Role created (FR-029)
-    logger.info('RoleService', `Role created: "${parsed.data.name}" (ID: ${parsed.data.id})`, {
-      roleId: parsed.data.id,
-      roleName: parsed.data.name,
+    logger.info(CONTEXT, `Role created: "${parsed.name}" (ID: ${parsed.id})`, {
+      roleId: parsed.id,
+      roleName: parsed.name,
       operation: 'CREATE',
     })
 
-    return success(parsed.data)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to create role'
-    logger.error('RoleService', 'Failed to create role', error)
-    return failure(message)
-  }
+    return parsed
+  }, CONTEXT)
 }
 
 /**
@@ -109,33 +76,20 @@ export async function createRole(payload: RoleCreate): Promise<ApiResult<Role>> 
  * PUT /role/{roleId}
  */
 export async function updateRole(roleId: number, payload: RoleUpdate): Promise<ApiResult<Role>> {
-  try {
-    const data = await fetchJSON<unknown>(`/role/${roleId}`, {
-      method: 'PUT',
-      body: JSON.stringify(payload),
-    })
-
-    const parsed = RawRoleSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error('RoleService', 'Update role validation error', parsed.error)
-      return failure('Invalid role response format')
-    }
+  return unwrap(async () => {
+    const data = await httpPut<unknown>(`/role/${roleId}`, payload)
+    const parsed = parseOrThrow(RawRoleSchema, data, 'Invalid role response format')
 
     // Audit log: Role updated (FR-029)
-    logger.info('RoleService', `Role updated: "${parsed.data.name}" (ID: ${roleId})`, {
+    logger.info(CONTEXT, `Role updated: "${parsed.name}" (ID: ${roleId})`, {
       roleId,
-      roleName: parsed.data.name,
+      roleName: parsed.name,
       operation: 'UPDATE',
       changes: payload,
     })
 
-    return success(parsed.data)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to update role'
-    logger.error('RoleService', `Failed to update role ${roleId}`, error)
-    return failure(message)
-  }
+    return parsed
+  }, CONTEXT)
 }
 
 /**
@@ -143,23 +97,15 @@ export async function updateRole(roleId: number, payload: RoleUpdate): Promise<A
  * DELETE /role/{roleId}
  */
 export async function deleteRole(roleId: number): Promise<ApiResult<void>> {
-  try {
-    await fetchJSON(`/role/${roleId}`, {
-      method: 'DELETE',
-    })
+  return unwrap(async () => {
+    await httpDelete(`/role/${roleId}`)
 
     // Audit log: Role deleted (FR-029)
-    logger.info('RoleService', `Role deleted (ID: ${roleId})`, {
+    logger.info(CONTEXT, `Role deleted (ID: ${roleId})`, {
       roleId,
       operation: 'DELETE',
     })
-
-    return success(undefined)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to delete role'
-    logger.error('RoleService', `Failed to delete role ${roleId}`, error)
-    return failure(message)
-  }
+  }, CONTEXT)
 }
 
 // ============================================================================
@@ -171,21 +117,10 @@ export async function deleteRole(roleId: number): Promise<ApiResult<void>> {
  * GET /role/{roleId}/permissions
  */
 export async function getRolePermissions(roleId: number): Promise<ApiResult<Permission[]>> {
-  try {
-    const data = await fetchJSON<unknown>(`/role/${roleId}/permissions`)
-    const parsed = PermissionListSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error('RoleService', 'Role permissions validation error', parsed.error)
-      return failure('Invalid permissions response format')
-    }
-
-    return success(parsed.data)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch role permissions'
-    logger.error('RoleService', `Failed to fetch permissions for role ${roleId}`, error)
-    return failure(message)
-  }
+  return unwrap(async () => {
+    const data = await httpGet<unknown>(`/role/${roleId}/permissions`)
+    return parseOrThrow(PermissionListSchema, data, 'Invalid permissions response format')
+  }, CONTEXT)
 }
 
 /**
@@ -196,28 +131,16 @@ export async function assignPermissionToRole(
   roleId: number,
   permissionId: number
 ): Promise<ApiResult<void>> {
-  try {
-    await fetchJSON(`/role/${roleId}/permissions/${permissionId}`, {
-      method: 'PUT',
-    })
+  return unwrap(async () => {
+    await httpPut(`/role/${roleId}/permissions/${permissionId}`)
 
     // Audit log: Permission assigned (FR-029)
-    logger.info('RoleService', `Permission ${permissionId} assigned to role ${roleId}`, {
+    logger.info(CONTEXT, `Permission ${permissionId} assigned to role ${roleId}`, {
       roleId,
       permissionId,
       operation: 'ASSIGN_PERMISSION',
     })
-
-    return success(undefined)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to assign permission to role'
-    logger.error(
-      'RoleService',
-      `Failed to assign permission ${permissionId} to role ${roleId}`,
-      error
-    )
-    return failure(message)
-  }
+  }, CONTEXT)
 }
 
 /**
@@ -228,28 +151,16 @@ export async function removePermissionFromRole(
   roleId: number,
   permissionId: number
 ): Promise<ApiResult<void>> {
-  try {
-    await fetchJSON(`/role/${roleId}/permissions/${permissionId}`, {
-      method: 'DELETE',
-    })
+  return unwrap(async () => {
+    await httpDelete(`/role/${roleId}/permissions/${permissionId}`)
 
     // Audit log: Permission removed (FR-029)
-    logger.info('RoleService', `Permission ${permissionId} removed from role ${roleId}`, {
+    logger.info(CONTEXT, `Permission ${permissionId} removed from role ${roleId}`, {
       roleId,
       permissionId,
       operation: 'REMOVE_PERMISSION',
     })
-
-    return success(undefined)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to remove permission from role'
-    logger.error(
-      'RoleService',
-      `Failed to remove permission ${permissionId} from role ${roleId}`,
-      error
-    )
-    return failure(message)
-  }
+  }, CONTEXT)
 }
 
 // ============================================================================
@@ -261,21 +172,10 @@ export async function removePermissionFromRole(
  * GET /role/{roleId}/users
  */
 export async function getRoleUsers(roleId: number): Promise<ApiResult<User[]>> {
-  try {
-    const data = await fetchJSON<unknown>(`/role/${roleId}/users`)
-    const parsed = UserListSchema.safeParse(data)
-
-    if (!parsed.success) {
-      logger.error('RoleService', 'Role users validation error', parsed.error)
-      return failure('Invalid users response format')
-    }
-
-    return success(parsed.data)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch role users'
-    logger.error('RoleService', `Failed to fetch users for role ${roleId}`, error)
-    return failure(message)
-  }
+  return unwrap(async () => {
+    const data = await httpGet<unknown>(`/role/${roleId}/users`)
+    return parseOrThrow(UserListSchema, data, 'Invalid users response format')
+  }, CONTEXT)
 }
 
 /**
@@ -283,24 +183,16 @@ export async function getRoleUsers(roleId: number): Promise<ApiResult<User[]>> {
  * PUT /role/{roleId}/users/{userId}
  */
 export async function assignUserToRole(roleId: number, userId: number): Promise<ApiResult<void>> {
-  try {
-    await fetchJSON(`/role/${roleId}/users/${userId}`, {
-      method: 'PUT',
-    })
+  return unwrap(async () => {
+    await httpPut(`/role/${roleId}/users/${userId}`)
 
     // Audit log: User assigned (FR-029)
-    logger.info('RoleService', `User ${userId} assigned to role ${roleId}`, {
+    logger.info(CONTEXT, `User ${userId} assigned to role ${roleId}`, {
       roleId,
       userId,
       operation: 'ASSIGN_USER',
     })
-
-    return success(undefined)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to assign user to role'
-    logger.error('RoleService', `Failed to assign user ${userId} to role ${roleId}`, error)
-    return failure(message)
-  }
+  }, CONTEXT)
 }
 
 /**
@@ -308,24 +200,16 @@ export async function assignUserToRole(roleId: number, userId: number): Promise<
  * DELETE /role/{roleId}/users/{userId}
  */
 export async function removeUserFromRole(roleId: number, userId: number): Promise<ApiResult<void>> {
-  try {
-    await fetchJSON(`/role/${roleId}/users/${userId}`, {
-      method: 'DELETE',
-    })
+  return unwrap(async () => {
+    await httpDelete(`/role/${roleId}/users/${userId}`)
 
     // Audit log: User removed (FR-029)
-    logger.info('RoleService', `User ${userId} removed from role ${roleId}`, {
+    logger.info(CONTEXT, `User ${userId} removed from role ${roleId}`, {
       roleId,
       userId,
       operation: 'REMOVE_USER',
     })
-
-    return success(undefined)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to remove user from role'
-    logger.error('RoleService', `Failed to remove user ${userId} from role ${roleId}`, error)
-    return failure(message)
-  }
+  }, CONTEXT)
 }
 
 // ============================================================================
@@ -337,24 +221,18 @@ export async function removeUserFromRole(roleId: number, userId: number): Promis
  * Custom operation combining multiple API calls
  */
 export async function exportRole(roleId: number): Promise<ApiResult<string>> {
-  try {
+  return unwrap(async () => {
     // Fetch role details
     const roleResult = await fetchRoleById(roleId)
-    if (!roleResult.isSuccess) {
-      return failure(roleResult.message)
-    }
+    if (!roleResult.success) throw roleResult.error
 
     // Fetch role permissions
     const permissionsResult = await getRolePermissions(roleId)
-    if (!permissionsResult.isSuccess) {
-      return failure(permissionsResult.message)
-    }
+    if (!permissionsResult.success) throw permissionsResult.error
 
     // Fetch role users
     const usersResult = await getRoleUsers(roleId)
-    if (!usersResult.isSuccess) {
-      return failure(usersResult.message)
-    }
+    if (!usersResult.success) throw usersResult.error
 
     // Build export object
     const exportData = {
@@ -374,36 +252,63 @@ export async function exportRole(roleId: number): Promise<ApiResult<string>> {
       },
     }
 
-    return success(JSON.stringify(exportData, null, 2))
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to export role'
-    logger.error('RoleService', `Failed to export role ${roleId}`, error)
-    return failure(message)
-  }
+    return JSON.stringify(exportData, null, 2)
+  }, CONTEXT)
 }
+
+/**
+ * A member of the exported `permissions` / `users` arrays. Anything that is not
+ * a list of objects is treated as "nothing to assign" rather than a hard
+ * failure, matching what the export writes and what the importer can act on.
+ */
+const ImportAssignmentSchema = z.object({ id: z.number().nullish() }).passthrough()
+
+const RoleImportSchema = z.object({
+  role: z
+    .object({
+      name: z.string().min(1).max(255),
+      description: z.string().max(1000).nullish(),
+      permissions: z.array(ImportAssignmentSchema).catch([]),
+      users: z.array(ImportAssignmentSchema).catch([]),
+    })
+    .passthrough(),
+})
 
 /**
  * Import a role from JSON
  * Custom operation combining multiple API calls
+ *
+ * Assignments are applied after the role exists, so a failure part-way through
+ * would leave a half-configured role behind. The ApiResult<Role> contract has
+ * no room for a partial-success payload, so the created role is rolled back and
+ * the failure names what had been applied.
  */
 export async function importRole(jsonData: string): Promise<ApiResult<Role>> {
-  try {
-    // Parse and validate JSON
-    const parsed = JSON.parse(jsonData)
-
-    if (!parsed.role || !parsed.role.name) {
-      return failure('Invalid role import format: missing role name')
+  return unwrap(async () => {
+    let raw: unknown
+    try {
+      raw = JSON.parse(jsonData)
+    } catch (error) {
+      throw new ApiError(
+        'Invalid role import format: not valid JSON',
+        0,
+        error instanceof Error ? error.message : String(error)
+      )
     }
+
+    const imported = parseOrThrow(
+      RoleImportSchema,
+      raw,
+      'Invalid role import format: missing role name'
+    ).role
 
     // Create the role
     const createResult = await createRole({
-      name: parsed.role.name,
-      description: parsed.role.description,
+      name: imported.name,
+      description: imported.description ?? undefined,
     })
 
-    if (!createResult.isSuccess) {
-      return failure(createResult.message)
-    }
+    if (!createResult.success) throw createResult.error
 
     const newRole = createResult.data
 
@@ -411,28 +316,60 @@ export async function importRole(jsonData: string): Promise<ApiResult<Role>> {
     let permissionsAssigned = 0
     let usersAssigned = 0
 
-    // Assign permissions if provided
-    if (parsed.role.permissions && Array.isArray(parsed.role.permissions)) {
-      for (const perm of parsed.role.permissions) {
+    const applyAssignments = async () => {
+      for (const perm of imported.permissions) {
         if (perm.id) {
-          await assignPermissionToRole(newRole.id, perm.id)
+          const result = await assignPermissionToRole(newRole.id, perm.id)
+          if (!result.success) {
+            throw new ApiError(
+              `Failed to assign permission ${perm.id}: ${result.error.message}`,
+              result.error.status,
+              result.error.body
+            )
+          }
           permissionsAssigned++
         }
       }
-    }
 
-    // Assign users if provided
-    if (parsed.role.users && Array.isArray(parsed.role.users)) {
-      for (const user of parsed.role.users) {
+      for (const user of imported.users) {
         if (user.id) {
-          await assignUserToRole(newRole.id, user.id)
+          const result = await assignUserToRole(newRole.id, user.id)
+          if (!result.success) {
+            throw new ApiError(
+              `Failed to assign user ${user.id}: ${result.error.message}`,
+              result.error.status,
+              result.error.body
+            )
+          }
           usersAssigned++
         }
       }
     }
 
+    try {
+      await applyAssignments()
+    } catch (error) {
+      const cause = error instanceof Error ? error.message : String(error)
+      const applied = `${permissionsAssigned} permission(s) and ${usersAssigned} user(s) had been assigned`
+      const rollback = await deleteRole(newRole.id)
+      const outcome = rollback.success
+        ? `the imported role was removed (${applied})`
+        : `the imported role "${newRole.name}" (ID: ${newRole.id}) could NOT be removed and is left half-configured (${applied})`
+
+      logger.error(CONTEXT, `Role import failed: ${cause}`, {
+        roleId: newRole.id,
+        roleName: newRole.name,
+        permissionsAssigned,
+        usersAssigned,
+        rolledBack: rollback.success,
+        operation: 'IMPORT',
+      })
+
+      throw new ApiError(`${cause}; ${outcome}`, 0, null)
+    }
+
     // Audit log: Role imported (FR-029)
-    logger.info('RoleService', `Role imported: "${newRole.name}" (ID: ${newRole.id})`, {
+    logger.info(CONTEXT, `Role imported: "${newRole.name}" (ID: ${newRole.id})`, {
       roleId: newRole.id,
       roleName: newRole.name,
       permissionsAssigned,
@@ -440,10 +377,6 @@ export async function importRole(jsonData: string): Promise<ApiResult<Role>> {
       operation: 'IMPORT',
     })
 
-    return success(newRole)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to import role'
-    logger.error('RoleService', 'Failed to import role', error)
-    return failure(message)
-  }
+    return newRole
+  }, CONTEXT)
 }

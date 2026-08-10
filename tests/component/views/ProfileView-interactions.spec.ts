@@ -41,7 +41,7 @@ vi.mock('@/services/profile.service', () => ({
   }),
   getCohortConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }))
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/source.service', () => ({
   fetchCDMSources: vi.fn().mockResolvedValue({
     success: true,
     data: [

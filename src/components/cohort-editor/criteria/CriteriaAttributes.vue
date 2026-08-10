@@ -27,13 +27,13 @@
       >
         <div class="attribute-title">
           <span>{{ row.label }}</span>
-          <v-tooltip
+          <AtlasTooltip
             v-if="row.description"
             location="top"
             max-width="320"
           >
             <template #activator="{ props: tooltipProps }">
-              <v-icon
+              <AtlasIcon
                 v-bind="tooltipProps"
                 icon="mdi-help-circle-outline"
                 size="14"
@@ -41,7 +41,7 @@
               />
             </template>
             <span>{{ row.description }}</span>
-          </v-tooltip>
+          </AtlasTooltip>
         </div>
 
         <div
@@ -55,7 +55,7 @@
         </div>
 
         <div class="attribute-actions">
-          <v-btn
+          <AtlasButton
             icon="mdi-delete"
             variant="text"
             color="error"
@@ -70,6 +70,7 @@
 
 <script setup lang="ts">
 import { markRaw } from 'vue'
+import { AtlasButton, AtlasIcon, AtlasTooltip } from '@/components/ui'
 import ConceptArray from '../input/ConceptArray.vue'
 import DateAdjustment from '../input/DateAdjustment.vue'
 import DateRange from '../input/DateRange.vue'

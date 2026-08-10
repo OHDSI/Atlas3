@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { ref, nextTick } from 'vue'
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/incidence-rate.service', () => ({
   getIncidenceRateReport: vi.fn().mockResolvedValue({
     success: true,
     data: {
@@ -11,12 +11,12 @@ vi.mock('@/services/webapi', () => ({
   }),
 }))
 
-let webapi: typeof import('@/services/webapi')
+let webapi: typeof import('@/services/incidence-rate.service')
 let useIncidenceRateReport: typeof import('@/composables/useIncidenceRateReport').useIncidenceRateReport
 
 beforeAll(async () => {
   vi.resetModules()
-  webapi = await import('@/services/webapi')
+  webapi = await import('@/services/incidence-rate.service')
   ;({ useIncidenceRateReport } = await import('@/composables/useIncidenceRateReport'))
 })
 

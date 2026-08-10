@@ -3,7 +3,7 @@
  * Manages current cohort definition state
  */
 import { defineStore } from 'pinia'
-import { ref, computed, watch, type WatchStopHandle } from 'vue'
+import { ref, computed } from 'vue'
 import type {
   CohortDefinition,
 } from '@/models/cohort.types'
@@ -50,6 +50,8 @@ export const useCohortStore = defineStore('cohort', () => {
 
   // Version preview state (T013)
   const previewVersion = ref<Version | null>(null)
+  const reloadRequest = ref(0)
+  const reloadVersion = ref<number | null>(null)
 
   // Validation state
   const validationErrors = ref<ValidationError[]>([])
@@ -65,8 +67,6 @@ export const useCohortStore = defineStore('cohort', () => {
   // Auto-save timer
   let autoSaveTimer: ReturnType<typeof setInterval> | null = null
   let retryTimer: ReturnType<typeof setTimeout> | null = null
-  let watchHandle: WatchStopHandle | null = null
-
   // Getters
   const hasValidationErrors = computed(() => {
     return validationErrors.value.some(err => err.severity === 'error')
@@ -209,10 +209,17 @@ export const useCohortStore = defineStore('cohort', () => {
       case 'updateCharacterization':
       case 'updatePathway':
       case 'updateIncidenceRate':
+      case 'removeInclusionRule':
+      case 'removeEntryEvent':
+      case 'setEventLimits':
+      case 'addQualifyingCriterion':
+      case 'setCensorWindow':
+      case 'setEraCollapse':
+      case 'useConceptSet':
+      case 'generateAnalysis':
         return
       default: {
-        const exhaustive: never = proposal
-        logger.warn('CohortStore', 'Unknown agent proposal', exhaustive)
+        logger.warn('CohortStore', 'Unknown agent proposal', proposal)
         return
       }
     }
@@ -242,22 +249,35 @@ export const useCohortStore = defineStore('cohort', () => {
   // The mounted editor reads this when it answers a save request — a cohort
   // built programmatically otherwise has no name and the editor refuses to save.
   const saveOptions = ref<{ name?: string; description?: string }>({})
-  let saveResolver: ((r: { id?: number; name?: string }) => void) | null = null
+  type SaveRequestResult = { id?: number; name?: string; timedOut?: boolean }
+  type PendingSaveRequest = {
+    resolve: (r: SaveRequestResult) => void
+    timeoutId: ReturnType<typeof setTimeout>
+  }
+  const pendingSaveRequests: PendingSaveRequest[] = []
 
-  function requestSave(opts: { name?: string; description?: string } = {}): Promise<{ id?: number; name?: string }> {
+  function requestSave(opts: { name?: string; description?: string } = {}): Promise<SaveRequestResult> {
     return new Promise(resolve => {
       saveOptions.value = opts
-      saveResolver = resolve
       saveRequest.value++
-      // Never hang the caller if no editor is mounted to answer the signal.
-      setTimeout(() => notifySaved(), 8000)
+      const pendingRequest: PendingSaveRequest = {
+        resolve,
+        timeoutId: setTimeout(() => {
+          const index = pendingSaveRequests.indexOf(pendingRequest)
+          if (index === -1) return
+          pendingSaveRequests.splice(index, 1)
+          resolve({ timedOut: true })
+        }, 8000),
+      }
+      pendingSaveRequests.push(pendingRequest)
     })
   }
 
-  function notifySaved(result: { id?: number; name?: string } = {}) {
-    const resolve = saveResolver
-    saveResolver = null
-    resolve?.(result)
+  function notifySaved(result: SaveRequestResult = {}) {
+    const pendingRequest = pendingSaveRequests.shift()
+    if (!pendingRequest) return
+    clearTimeout(pendingRequest.timeoutId)
+    pendingRequest.resolve(result)
   }
 
   function requestNewCohort() {
@@ -324,13 +344,6 @@ export const useCohortStore = defineStore('cohort', () => {
       logger.debug('CohortStore', 'Auto-save stopped')
     }
   }
-
-  // Watch for changes and trigger auto-save timer
-  watchHandle = watch(isDirty, dirty => {
-    if (dirty) {
-      startAutoSave()
-    }
-  })
 
   // Validation logic
   function validateCohort() {
@@ -527,16 +540,14 @@ export const useCohortStore = defineStore('cohort', () => {
 
     try {
       const cohortId = currentCohort.value.id
-      const versionedAsset: VersionedAsset<CohortDefinition> = await getVersionAPI(
-        cohortId,
-        versionNumber
-      )
+      const versionedAsset = (await getVersionAPI<CohortDefinition>(cohortId, versionNumber)) as VersionedAsset<CohortDefinition>
 
       // Set preview version metadata
       previewVersion.value = versionedAsset.versionDTO
 
-      // Replace current cohort with historical data
-      currentCohort.value = versionedAsset.entityDTO
+      // Signal the mounted editor to fetch and hydrate the historical version.
+      reloadVersion.value = versionNumber
+      reloadRequest.value++
 
       // Mark as clean (read-only mode, no editing)
       isDirty.value = false
@@ -553,15 +564,12 @@ export const useCohortStore = defineStore('cohort', () => {
    * Returns to normal editing mode
    */
   async function clearPreviewVersion(): Promise<void> {
-    const wasPreviewingId = currentCohort.value?.id
-
     // Clear preview state
     previewVersion.value = null
 
-    // Reload current version if we were previewing
-    if (wasPreviewingId) {
-      await loadCohort(wasPreviewingId)
-    }
+    // Signal the editor to reload the current cohort version.
+    reloadVersion.value = null
+    reloadRequest.value++
 
     logger.debug('CohortStore', 'Preview cleared, returned to current version')
   }
@@ -582,16 +590,17 @@ export const useCohortStore = defineStore('cohort', () => {
     }
 
     try {
-      // Save the current (historical) data as new version
-      const success = await saveCohort()
+      // Ask the mounted editor to persist the current view of the cohort.
+      const result = await requestSave()
 
-      if (success) {
-        // Clear preview state after successful save
-        previewVersion.value = null
-        logger.debug('CohortStore', 'Preview saved as current version')
+      if (result.timedOut) {
+        return false
       }
 
-      return success
+      // Clear preview state after successful save.
+      previewVersion.value = null
+      logger.debug('CohortStore', 'Preview saved as current version')
+      return true
     } catch (error) {
       logger.error('CohortStore', 'Failed to save preview as current', error)
       return false
@@ -600,10 +609,6 @@ export const useCohortStore = defineStore('cohort', () => {
 
   // Cleanup function
   function dispose() {
-    if (watchHandle) {
-      watchHandle()
-      watchHandle = null
-    }
     stopAutoSave()
     cancelRetry()
   }
@@ -614,6 +619,8 @@ export const useCohortStore = defineStore('cohort', () => {
     isDirty,
     lastAutoSave,
     previewVersion,
+    reloadRequest,
+    reloadVersion,
     validationErrors,
     isReadOnly,
     retryState,

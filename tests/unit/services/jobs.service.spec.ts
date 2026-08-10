@@ -165,7 +165,7 @@ describe('JobsService', () => {
       const result = await getJobs()
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain('Invalid job executions response format')
+      if (!result.success) expect(result.error.message).toContain('Invalid job executions response format')
     })
 
     it('returns failure on network error', async () => {
@@ -175,7 +175,7 @@ describe('JobsService', () => {
       const result = await getJobs()
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Network error')
+      if (!result.success) expect(result.error.message).toBe('Network error')
     })
 
     it('handles empty response', async () => {
@@ -199,109 +199,43 @@ describe('JobsService', () => {
     })
   })
 
-  describe('cache jobs merge', () => {
-    it('merges bao cache jobs into the results when the cache endpoint returns { jobs: [...] }', async () => {
+  describe('cache builds', () => {
+    // trexsql writes its own cacheGeneration Spring Batch execution, so the
+    // build already arrives with every other job. It is also still in
+    // trexsql's own registry; reading both would list each build twice.
+    it('lists a cache build once, from the Spring Batch endpoint only', async () => {
       const { httpGet } = await import('@/services/http-client')
-      // First call: /job/execution returns an empty list.
-      // Second call: /trexsql/cache/jobs returns a cache job that should be
-      // transformed into a synthetic Job entry.
-      vi.mocked(httpGet)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce({
-          jobs: [
+      vi.mocked(httpGet).mockImplementation(async (url: string) => {
+        if (url.includes('/job/execution')) {
+          return [
             {
-              databaseCode: 'SYNPUF1K',
-              sourceKey: 'SYNPUF1K',
-              status: 'COMPLETE',
-              startTime: '2024-01-01T00:00:00Z',
-              endTime: '2024-01-01T01:00:00Z',
-              totalTables: 10,
-              completedTables: 10,
+              executionId: 54,
+              jobInstance: { name: 'cacheGeneration' },
+              status: 'COMPLETED',
+              startDate: '2026-08-06T10:00:00Z',
             },
+          ]
+        }
+        // The registry still holds the same build. If it were merged in, the
+        // assertions below would see two.
+        return {
+          jobs: [
+            { databaseCode: 'EUNOMIA', sourceKey: 'EUNOMIA', status: 'COMPLETE' },
           ],
-        })
+        }
+      })
 
       const result = await getJobs()
 
       expect(result.success).toBe(true)
       expect(result.data).toHaveLength(1)
-      expect(result.data![0].type).toBe('cacheGeneration')
-      expect(result.data![0].status).toBe('COMPLETED')
-      expect(result.data![0].name).toContain('SYNPUF1K')
-    })
 
-    it('skips cache jobs that are missing databaseCode / sourceKey', async () => {
-      const { httpGet } = await import('@/services/http-client')
-      vi.mocked(httpGet)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce({
-          jobs: [
-            // No databaseCode / sourceKey → transformCacheJob returns null.
-            { status: 'RUNNING' },
-            // Valid one.
-            { databaseCode: 'DB1', status: 'RUNNING' },
-          ],
-        })
-
-      const result = await getJobs()
-      expect(result.success).toBe(true)
-      expect(result.data).toHaveLength(1)
-      expect(result.data![0].name).toContain('DB1')
-    })
-
-    it('parses numeric (microsecond / millisecond / second) timestamps on cache jobs', async () => {
-      const { httpGet } = await import('@/services/http-client')
-      vi.mocked(httpGet)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce({
-          jobs: [
-            {
-              databaseCode: 'DB-US', // microseconds
-              status: 'RUNNING',
-              startTime: '1700000000000000',
-            },
-            {
-              databaseCode: 'DB-MS', // milliseconds
-              status: 'RUNNING',
-              startTime: '1700000000000',
-            },
-            {
-              databaseCode: 'DB-S', // seconds
-              status: 'RUNNING',
-              startTime: '1700000000',
-            },
-            {
-              databaseCode: 'DB-EMPTY', // empty timestamp
-              status: 'RUNNING',
-              startTime: '   ',
-            },
-          ],
-        })
-
-      const result = await getJobs()
-      expect(result.success).toBe(true)
-      expect(result.data).toHaveLength(4)
-    })
-
-    it('treats a failing cache-jobs fetch as non-fatal and still returns batch jobs', async () => {
-      const { httpGet } = await import('@/services/http-client')
-      vi.mocked(httpGet)
-        .mockResolvedValueOnce([
-          {
-            executionId: 1,
-            status: 'COMPLETED',
-            startDate: Date.now(),
-            jobInstance: { name: 'generateCohort' },
-          },
-        ])
-        .mockRejectedValueOnce(new Error('bao down'))
-
-      const result = await getJobs()
-      expect(result.success).toBe(true)
-      expect(result.data).toHaveLength(1)
+      const urls = vi.mocked(httpGet).mock.calls.map(c => c[0])
+      expect(urls).toHaveLength(1)
+      expect(urls[0]).toContain('/job/execution')
+      expect(urls.some(u => u.includes('/trexsql/cache/jobs'))).toBe(false)
     })
   })
-
   describe('jobsService singleton', () => {
     it('exports getJobs function', () => {
       expect(jobsService.getJobs).toBe(getJobs)

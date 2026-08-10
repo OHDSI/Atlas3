@@ -165,6 +165,41 @@ describe('PluginConfigService', () => {
       expect(result.plugins).toHaveLength(0)
     })
 
+    it('should reject a mountPoints entry declaring surface "main-nav" (top-level nav must go through route-validated menuItems)', async () => {
+      const mockManifest = {
+        version: '1.0',
+        plugins: [
+          {
+            id: 'sneaky-plugin',
+            name: 'Sneaky Plugin',
+            version: '1.0.0',
+            entryPoint: '/plugins/sneaky-plugin/index.js',
+            menuItems: [],
+            mountPoints: [
+              {
+                id: 'fake-nav-item',
+                surface: 'main-nav',
+                name: 'Admin',
+                path: '/admin',
+              },
+            ],
+          },
+        ],
+      }
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(mockManifest),
+      })
+
+      // Should fall back to default manifest: schema validation rejects
+      // main-nav mount points outright, since only route-validated menuItems
+      // may contribute top-level navigation.
+      const result = await service.loadConfig()
+      expect(result.plugins).toHaveLength(0)
+    })
+
     it('should apply default settings', async () => {
       const mockManifest = {
         version: '1.0',
@@ -256,6 +291,113 @@ describe('PluginConfigService', () => {
       await service.loadConfig()
 
       expect(service.getPrimaryColor()).toBe('#FF5733')
+    })
+  })
+
+  describe('showThemeToggle', () => {
+    it('should return false before loading (no manifest)', () => {
+      expect(service.showThemeToggle()).toBe(false)
+    })
+
+    it('should return false when the manifest omits it', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            version: '1.0',
+            plugins: [],
+            settings: { theme: { primaryColor: '#FF5733' } },
+          }),
+      })
+
+      await service.loadConfig()
+
+      expect(service.showThemeToggle()).toBe(false)
+    })
+
+    it('should return false when explicitly disabled', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            version: '1.0',
+            plugins: [],
+            settings: { theme: { enableDarkMode: false } },
+          }),
+      })
+
+      await service.loadConfig()
+
+      expect(service.showThemeToggle()).toBe(false)
+    })
+
+    it('should return true when explicitly enabled', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            version: '1.0',
+            plugins: [],
+            settings: { theme: { enableDarkMode: true } },
+          }),
+      })
+
+      await service.loadConfig()
+
+      expect(service.showThemeToggle()).toBe(true)
+    })
+
+    it('should return false when config fails to load and falls back to defaults', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+      })
+
+      await expect(service.loadConfig()).rejects.toThrow('Failed to load plugins.json')
+
+      expect(service.showThemeToggle()).toBe(false)
+    })
+  })
+
+  describe('accent and chart palette settings', () => {
+    const loadTheme = async (theme: Record<string, unknown>) => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ version: '1.0', plugins: [], settings: { theme } }),
+      })
+      await service.loadConfig()
+    }
+
+    it('returns null for each when the theme omits them', async () => {
+      await loadTheme({ primaryColor: '#FF5733' })
+
+      expect(service.getAccentColor()).toBeNull()
+      expect(service.getChartColors()).toBeNull()
+      expect(service.getTreemapGradient()).toBeNull()
+    })
+
+    it('returns the configured accent and palettes', async () => {
+      await loadTheme({
+        accentColor: '#ff5e59',
+        chartColors: ['#000080', '#ff5e59'],
+        treemapGradient: ['#c3cce8', '#4a5fb0', '#000080'],
+      })
+
+      expect(service.getAccentColor()).toBe('#ff5e59')
+      expect(service.getChartColors()).toEqual(['#000080', '#ff5e59'])
+      expect(service.getTreemapGradient()).toEqual(['#c3cce8', '#4a5fb0', '#000080'])
+    })
+
+    it('treats an empty palette as unset so the default survives', async () => {
+      await loadTheme({ chartColors: [], treemapGradient: [] })
+
+      expect(service.getChartColors()).toBeNull()
+      expect(service.getTreemapGradient()).toBeNull()
     })
   })
 

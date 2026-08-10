@@ -6,7 +6,7 @@
     <AtlasChip
       v-for="entry in domainEntries"
       :key="entry.domain"
-      :color="getDomainColor(entry.domain)"
+      :color="getDomainColor(entry.domain, themeStore.resolved)"
       :variant="entry.active ? 'flat' : 'outlined'"
       size="sm"
       :data-test="entry.active ? 'profile-chip-active' : `profile-chip-${entry.domain}`"
@@ -24,9 +24,11 @@
 import { computed } from 'vue'
 import { AtlasChip } from '@/components/ui'
 import { useProfileStore } from '@/stores/profile'
+import { useThemeStore } from '@/stores/theme'
 import { getDomainColor } from '@/utils/domain-colors'
 
 const store = useProfileStore()
+const themeStore = useThemeStore()
 
 interface DomainEntry {
   domain: string

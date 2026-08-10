@@ -28,14 +28,18 @@ export function useCharacterizationResults() {
     error.value = null
     loading.value = true
     try {
-      const [exec, count, raw] = await Promise.all([
+      const [execResult, countResult, resultsResult] = await Promise.all([
         getCharacterizationExecution(executionId),
         getCharacterizationResultCount(executionId),
         getCharacterizationResults(executionId, {}),
       ])
-      const mapped = mapCharacterizationResults(raw)
-      execution.value = exec
-      resultCount.value = count
+      if (!execResult.success) throw execResult.error
+      if (!countResult.success) throw countResult.error
+      if (!resultsResult.success) throw resultsResult.error
+
+      const mapped = mapCharacterizationResults(resultsResult.data)
+      execution.value = execResult.data
+      resultCount.value = countResult.data
       prevalence.value = mapped.prevalence
       distribution.value = mapped.distribution
       return true

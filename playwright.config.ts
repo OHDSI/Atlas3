@@ -13,10 +13,30 @@ export default defineConfig({
   timeout: 60000, // 60 seconds per test
   expect: {
     timeout: 10000, // 10 seconds for expect assertions
+    // Visual regression testing config (Task T141)
+    //
+    // page.toHaveScreenshot() reads its defaults from expect.toHaveScreenshot,
+    // not expect.toMatchSnapshot (that key only applies to the generic
+    // expect(value).toMatchSnapshot() buffer/string matcher — a different API
+    // that nothing in this suite calls). With the tolerance parked under the
+    // wrong key, every toHaveScreenshot() call that doesn't pass its own
+    // per-call options (dark-mode-visual.spec.ts's dark-mode screenshots) fell
+    // back to Playwright's built-in default of zero pixel tolerance instead of
+    // the loose comparison intended here — enough anti-aliasing/chart-render
+    // jitter to flake routes that never touched the mock change in this diff
+    // (e.g. landing/cohorts/pathways failing at ~0.01% pixel diff).
+    toHaveScreenshot: {
+      threshold: 0.3, // 30% per-pixel colour difference allowed (Material Design will differ from reference)
+      maxDiffPixels: 1000,
+    },
   },
 
   use: {
     baseURL: 'http://localhost:5173',
+    // CI runs in a UTC container. Time-axis charts tick on local midnight, so
+    // without this the data-sources dashboard renders different axis labels for
+    // anyone outside UTC and their screenshots never match the baselines.
+    timezoneId: 'UTC',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     actionTimeout: 10000, // 10 seconds for actions
@@ -44,14 +64,8 @@ export default defineConfig({
     // Use --mode test to load .env.test with auth disabled for E2E tests
     command: 'npm run dev -- --mode test',
     url: 'http://localhost:5173',
-    reuseExistingServer: true,
-  },
-
-  // Visual regression testing config (Task T141)
-  expect: {
-    toMatchSnapshot: {
-      threshold: 0.3, // 30% difference allowed (Material Design will differ from reference)
-      maxDiffPixels: 1000,
-    },
+    // Attaching to a dev server someone left running on another branch silently
+    // tests that branch's code — never do it in CI or when recording baselines.
+    reuseExistingServer: !process.env.CI,
   },
 })

@@ -102,10 +102,10 @@ module.exports = {
       { element: 'v-icon',              message: 'Use <AtlasIcon> from @/components/ui' },
     ],
 
-    'no-restricted-imports': ['off', {
+    'no-restricted-imports': ['error', {
       patterns: [{
-        group: ['@/components/ui/*', '!@/components/ui/index'],
-        message: 'Import Atlas* components from @/components/ui (the barrel), not deep paths',
+        group: ['@/services/webapi', '@/services/webapi.ts'],
+        message: 'webapi.ts was split by domain — import from the specific service (cohort-definition, report, pathway, incidence-rate, concept-search, source, …)',
       }],
     }],
   },

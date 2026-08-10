@@ -1,6 +1,6 @@
 <template>
   <div class="date-range d-flex align-center ga-2 flex-nowrap">
-    <v-select
+    <AtlasSelect
       v-model="operator"
       class="date-range__operator"
       :items="operators"
@@ -10,7 +10,7 @@
       density="compact"
       hide-details
     />
-    <v-text-field
+    <AtlasTextField
       v-model="value"
       class="date-range__value"
       type="date"
@@ -20,7 +20,7 @@
     />
     <template v-if="operator === 'bt' || operator === '!bt'">
       <span class="date-range__and text-medium-emphasis">{{ andLabel }}</span>
-      <v-text-field
+      <AtlasTextField
         v-model="extent"
         class="date-range__extent"
         type="date"
@@ -34,6 +34,7 @@
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
+import { AtlasSelect, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { DateRange, DateRangeOp } from '../circe.types'
 import { optionalTextBinding } from './bindings'

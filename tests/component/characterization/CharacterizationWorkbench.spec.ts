@@ -6,15 +6,22 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
+import { useCharacterizationStore } from '@/stores/characterization'
 
+// vi.mock factories are hoisted above imports, so the ApiResult shape is
+// inlined here rather than built via the `success()` helper.
 vi.mock('@/services/characterization.service', () => ({
-  getCharacterizationExecution: vi.fn().mockResolvedValue({ id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0 }),
-  getCharacterizationResultCount: vi.fn().mockResolvedValue(0),
-  getCharacterizationResults: vi.fn().mockResolvedValue([]),
-  listCharacterizationExecutions: vi.fn().mockResolvedValue([
-    { id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0 }
-  ]),
-  getCharacterizationExecutions: vi.fn().mockResolvedValue([]),
+  getCharacterizationExecution: vi.fn().mockResolvedValue({
+    success: true,
+    data: { id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0 },
+  }),
+  getCharacterizationResultCount: vi.fn().mockResolvedValue({ success: true, data: 0 }),
+  getCharacterizationResults: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  listCharacterizationExecutions: vi.fn().mockResolvedValue({
+    success: true,
+    data: [{ id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0 }],
+  }),
+  getCharacterizationExecutions: vi.fn().mockResolvedValue({ success: true, data: [] }),
   generateCharacterization: vi.fn(),
   cancelCharacterizationGeneration: vi.fn(),
   getCharacterization: vi.fn(),
@@ -89,5 +96,52 @@ describe('CharacterizationWorkbench', () => {
     expect(w.findComponent({ name: 'ConfigureInspector' }).props('open')).toBe(true)
     await w.findComponent({ name: 'ConfigureInspector' }).vm.$emit('close')
     expect(w.findComponent({ name: 'ConfigureInspector' }).props('open')).toBe(false)
+  })
+
+  it('run with a returned execution pins the run query and starts polling', async () => {
+    const router = makeRouter()
+    await router.push('/characterizations/5')
+    const store = useCharacterizationStore()
+    const runSpy = vi.spyOn(store, 'runExecution').mockResolvedValue({
+      id: 42, sourceKey: 'CCAE', status: 'PENDING', startTime: 0, executionDuration: 0,
+    })
+    const pollSpy = vi.spyOn(store, 'pollExecution').mockImplementation(() => {})
+    const w = mount(CharacterizationWorkbench, {
+      global: { plugins: [router, vuetify], stubs },
+      props: { modelValue: baseDraft(), characterizationId: 5,
+               availableCohorts: [], availableFeatureAnalyses: [] },
+    })
+    await flushPromises()
+
+    // Spy only after the mount-time watchers have finished replacing the query.
+    const replaceSpy = vi.spyOn(router, 'replace')
+    await w.findComponent({ name: 'DataSourceRunTable' }).vm.$emit('run', 'CCAE')
+    await flushPromises()
+
+    expect(runSpy).toHaveBeenCalledWith(5, 'CCAE')
+    expect(replaceSpy).toHaveBeenCalledWith({ query: expect.objectContaining({ run: '42' }) })
+    expect(pollSpy).toHaveBeenCalledWith(42, expect.any(Function))
+  })
+
+  it('run that resolves null neither pins the run query nor starts polling', async () => {
+    const router = makeRouter()
+    await router.push('/characterizations/5')
+    const store = useCharacterizationStore()
+    const runSpy = vi.spyOn(store, 'runExecution').mockResolvedValue(null)
+    const pollSpy = vi.spyOn(store, 'pollExecution').mockImplementation(() => {})
+    const w = mount(CharacterizationWorkbench, {
+      global: { plugins: [router, vuetify], stubs },
+      props: { modelValue: baseDraft(), characterizationId: 5,
+               availableCohorts: [], availableFeatureAnalyses: [] },
+    })
+    await flushPromises()
+
+    const replaceSpy = vi.spyOn(router, 'replace')
+    await w.findComponent({ name: 'DataSourceRunTable' }).vm.$emit('run', 'CCAE')
+    await flushPromises()
+
+    expect(runSpy).toHaveBeenCalledWith(5, 'CCAE')
+    expect(replaceSpy).not.toHaveBeenCalled()
+    expect(pollSpy).not.toHaveBeenCalled()
   })
 })

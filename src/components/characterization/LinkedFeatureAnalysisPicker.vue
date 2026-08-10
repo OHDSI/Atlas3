@@ -259,12 +259,12 @@ function updateFlag(id: number, flag: 'includeAnnual' | 'includeTemporal', value
 
 .linked-fa-picker__empty {
   padding: 12px 0;
-  color: #666;
+  color: var(--atlas-color-on-surface-variant);
   font-style: italic;
 }
 
 .linked-fa-picker__list {
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--atlas-color-outline-strong);
   border-radius: 8px;
 }
 

@@ -16,7 +16,7 @@
       ref="headerRef"
       class="rule-detail__header"
     >
-      <v-menu
+      <AtlasMenu
         :close-on-content-click="false"
         location="bottom start"
         :min-width="menuMinWidth"
@@ -41,7 +41,7 @@
 
         <v-card rounded="lg">
           <v-card-text class="rule-detail__edit-menu-body">
-            <v-text-field
+            <AtlasTextField
               :model-value="rule?.name ?? ''"
               :label="t('cohortDefinitions.ruleName', 'Rule name').value"
               variant="outlined"
@@ -50,7 +50,8 @@
               autofocus
               @update:model-value="val => { if (rule) rule.name = String(val).trim() || undefined }"
             />
-            <v-textarea
+            <AtlasTextField
+              multiline
               :model-value="rule?.description ?? ''"
               :label="t('cohortDefinitions.ruleDescription', 'Description').value"
               variant="outlined"
@@ -62,10 +63,10 @@
             />
           </v-card-text>
         </v-card>
-      </v-menu>
+      </AtlasMenu>
 
       <div class="rule-detail__header-actions">
-        <v-btn
+        <AtlasButton
           variant="text"
           size="small"
           icon="mdi-delete"
@@ -82,14 +83,14 @@
         v-if="expressionGroup === null"
         class="rule-detail__empty-groups"
       >
-        <v-btn
+        <AtlasButton
           variant="outlined"
           size="small"
           prepend-icon="mdi-plus"
           @click="addExpressionGroup"
         >
           {{ t('inclusionRail.addCriteriaGroup', 'Add Group Criteria to Inclusion Rule').value }}
-        </v-btn>
+        </AtlasButton>
       </div>
 
       <CriteriaGroup
@@ -108,6 +109,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { AtlasButton, AtlasMenu, AtlasTextField } from '@/components/ui'
 import CriteriaGroup from '../criteria/CriteriaGroup.vue'
 import type { CriteriaGroup as CriteriaGroupType, InclusionRule } from '../circe.types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from '../criteria/criteria-editor.types'

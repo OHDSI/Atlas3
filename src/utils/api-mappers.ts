@@ -104,6 +104,30 @@ export function conceptToConceptSetItem(
 }
 
 /**
+ * Map a WebAPI concept set expression (shared by the current-version and
+ * per-version expression endpoints) to ConceptSetItem[]
+ */
+export function mapExpressionItemsFromAPI(
+  expression: ConceptSetAPIExpression | undefined
+): ConceptSetItem[] {
+  return (
+    expression?.items?.map(item => ({
+      conceptId: item.concept.CONCEPT_ID,
+      conceptName: item.concept.CONCEPT_NAME,
+      conceptCode: item.concept.CONCEPT_CODE,
+      domainId: item.concept.DOMAIN_ID,
+      vocabularyId: item.concept.VOCABULARY_ID,
+      conceptClassId: item.concept.CONCEPT_CLASS_ID,
+      standardConcept: item.concept.STANDARD_CONCEPT,
+      invalidReason: item.concept.INVALID_REASON,
+      isExcluded: item.isExcluded,
+      includeDescendants: item.includeDescendants,
+      includeMapped: item.includeMapped,
+    })) || []
+  )
+}
+
+/**
  * Map WebAPI concept set response to ConceptSet interface
  */
 export function mapConceptSetFromAPI(raw: ConceptSetAPIResponse): ConceptSet {
@@ -123,20 +147,7 @@ export function mapConceptSetFromAPI(raw: ConceptSetAPIResponse): ConceptSet {
     modifiedBy: getLogin(raw.modifiedBy),
     shared: raw.shared ?? false,
     tags: raw.tags ?? [],
-    items:
-      raw.expression?.items?.map(item => ({
-        conceptId: item.concept.CONCEPT_ID,
-        conceptName: item.concept.CONCEPT_NAME,
-        conceptCode: item.concept.CONCEPT_CODE,
-        domainId: item.concept.DOMAIN_ID,
-        vocabularyId: item.concept.VOCABULARY_ID,
-        conceptClassId: item.concept.CONCEPT_CLASS_ID,
-        standardConcept: item.concept.STANDARD_CONCEPT,
-        invalidReason: item.concept.INVALID_REASON,
-        isExcluded: item.isExcluded,
-        includeDescendants: item.includeDescendants,
-        includeMapped: item.includeMapped,
-      })) || [],
+    items: mapExpressionItemsFromAPI(raw.expression),
   }
 }
 

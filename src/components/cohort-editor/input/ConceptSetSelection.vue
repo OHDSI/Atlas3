@@ -1,6 +1,6 @@
 <template>
   <div class="concept-set-selection">
-    <v-chip
+    <AtlasChip
       v-if="modelValue.IsExclusion !== undefined"
       class="concept-set-selection__exclude-chip"
       :color="modelValue.IsExclusion ? 'warning' : 'primary'"
@@ -10,7 +10,7 @@
       @click="toggleExclude"
     >
       {{ modelValue.IsExclusion ? notAnyOfLabel : anyOfLabel }}
-    </v-chip>
+    </AtlasChip>
 
     <EventConceptSet
       :concept-sets="conceptSets"
@@ -29,6 +29,7 @@
 
 <script setup lang="ts">
 import { computed, toRefs } from 'vue'
+import { AtlasChip } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import EventConceptSet from './EventConceptSet.vue'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from '../criteria/criteria-editor.types'

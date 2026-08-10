@@ -12,7 +12,9 @@ import {
   getAllCacheStatuses,
   isCacheReady,
   cancelCountRequest,
-  cancelAllCountRequests
+  cancelAllCountRequests,
+  listCacheFiles,
+  deleteCacheFile
 } from '@/services/trexsql.service'
 
 // Mock logger
@@ -218,10 +220,59 @@ describe('TrexSQLService', () => {
         })
       } as Response)
 
-      const result = await getCacheStatus('CDM_SOURCE')
+      // A persistent error is retried before it is believed; drive the backoff
+      // with fake timers so the assertion does not wait out the real delays.
+      vi.useFakeTimers()
+      try {
+        const pending = getCacheStatus('CDM_SOURCE')
+        await vi.runAllTimersAsync()
+        const result = await pending
 
-      expect(result.status).toBe('error')
-      expect(result.errorMessage).toBe('Cache attachment failed')
+        expect(result.status).toBe('error')
+        expect(result.errorMessage).toBe('Cache attachment failed')
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('re-checks a transient error and returns the recovered status', async () => {
+      const errorResponse = {
+        ok: true,
+        json: async () => ({
+          sourceKey: 'CDM_SOURCE',
+          cacheExists: true,
+          cacheAttached: false,
+          activeJob: false,
+          errorMessage: 'Cache attachment failed'
+        })
+      } as Response
+      const readyResponse = {
+        ok: true,
+        json: async () => ({
+          sourceKey: 'CDM_SOURCE',
+          cacheExists: true,
+          cacheAttached: true,
+          activeJob: false
+        })
+      } as Response
+
+      // trexsql reports cacheExists && !cacheAttached mid attach-retry; the next
+      // poll shows it healthy, and that recovery is what callers must observe.
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce(errorResponse)
+        .mockResolvedValue(readyResponse)
+
+      vi.useFakeTimers()
+      try {
+        const pending = getCacheStatus('CDM_SOURCE')
+        await vi.runAllTimersAsync()
+        const result = await pending
+
+        expect(result.status).toBe('ready')
+        expect(vi.mocked(global.fetch).mock.calls.length).toBeGreaterThan(1)
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it('throws on other errors', async () => {
@@ -549,6 +600,73 @@ describe('TrexSQLService', () => {
       await first
       expect(firstAborted).toBe(true)
       expect(second.entryEventCount).toBe(1)
+    })
+  })
+
+  describe('cache files', () => {
+    it('returns the files the endpoint reports', async () => {
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          cachePath: '/usr/src/data/cache',
+          files: [
+            {
+              fileName: 'orphan.db',
+              databaseCode: 'orphan',
+              sizeBytes: 12288,
+              lastModified: 1,
+              attached: false,
+              orphaned: true,
+              protected: false
+            }
+          ]
+        })
+      } as Response)
+
+      const files = await listCacheFiles()
+
+      expect(files).toHaveLength(1)
+      expect(files[0].orphaned).toBe(true)
+      expect(vi.mocked(global.fetch).mock.calls[0][0]).toContain('/trexsql/cache/files')
+    })
+
+    it('returns an empty list when the payload has no files array', async () => {
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: true,
+        json: async () => ({})
+      } as Response)
+
+      await expect(listCacheFiles()).resolves.toEqual([])
+    })
+
+    it('surfaces the server body when listing fails', async () => {
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: async () => 'boom'
+      } as Response)
+
+      await expect(listCacheFiles()).rejects.toThrow(/500 boom/)
+    })
+
+    it('deletes by database code', async () => {
+      vi.mocked(global.fetch).mockResolvedValue({ ok: true } as Response)
+
+      await deleteCacheFile('cdm_demo')
+
+      const [url, init] = vi.mocked(global.fetch).mock.calls[0]
+      expect(url).toContain('/trexsql/cache/files/cdm_demo')
+      expect((init as RequestInit).method).toBe('DELETE')
+    })
+
+    it('rejects when the delete is refused', async () => {
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: false,
+        status: 400,
+        text: async () => 'Refusing to delete protected file: FHIR.db'
+      } as Response)
+
+      await expect(deleteCacheFile('FHIR')).rejects.toThrow(/protected file/)
     })
   })
 })

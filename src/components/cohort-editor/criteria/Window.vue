@@ -6,18 +6,18 @@
   >
     <v-card-text>
       <div class="window-editor__row">
-        <v-chip
+        <AtlasChip
           class="window-editor__chip"
           color="primary"
           variant="tonal"
           @click="toggleEventAnchor"
         >
           {{ eventAnchorLabel }}
-        </v-chip>
+        </AtlasChip>
 
         <span class="window-editor__connector">{{ betweenLabel }}</span>
 
-        <v-menu
+        <AtlasMenu
           v-model="startDaysMenu"
           :close-on-content-click="false"
           location="bottom"
@@ -25,7 +25,7 @@
           width="260"
         >
           <template #activator="{ props: menuProps }">
-            <v-chip
+            <AtlasChip
               class="window-editor__chip"
               color="primary"
               variant="tonal"
@@ -34,14 +34,14 @@
             >
               {{ startDaysLabel }}
 
-              <v-icon
+              <AtlasIcon
                 v-if="hasStartDays"
                 class="window-editor__clear-icon"
                 icon="mdi-close"
                 size="14"
                 @click.stop="clearDays('Start')"
               />
-            </v-chip>
+            </AtlasChip>
           </template>
 
           <v-card
@@ -49,7 +49,7 @@
             rounded="lg"
           >
             <v-card-text class="pa-3">
-              <v-text-field
+              <AtlasTextField
                 v-model="startDaysValue"
                 :label="daysLabel"
                 type="number"
@@ -63,20 +63,20 @@
               />
             </v-card-text>
           </v-card>
-        </v-menu>
+        </AtlasMenu>
 
-        <v-chip
+        <AtlasChip
           class="window-editor__chip"
           color="primary"
           variant="tonal"
           @click="toggleStartDirection"
         >
           {{ startDirectionLabel }}
-        </v-chip>
+        </AtlasChip>
 
         <span class="window-editor__connector">{{ andLabel }}</span>
 
-        <v-menu
+        <AtlasMenu
           v-model="endDaysMenu"
           :close-on-content-click="false"
           location="bottom"
@@ -84,7 +84,7 @@
           width="260"
         >
           <template #activator="{ props: menuProps }">
-            <v-chip
+            <AtlasChip
               class="window-editor__chip"
               color="primary"
               variant="tonal"
@@ -93,14 +93,14 @@
             >
               {{ endDaysLabel }}
 
-              <v-icon
+              <AtlasIcon
                 v-if="hasEndDays"
                 class="window-editor__clear-icon"
                 icon="mdi-close"
                 size="14"
                 @click.stop="clearDays('End')"
               />
-            </v-chip>
+            </AtlasChip>
           </template>
 
           <v-card
@@ -108,7 +108,7 @@
             rounded="lg"
           >
             <v-card-text class="pa-3">
-              <v-text-field
+              <AtlasTextField
                 v-model="endDaysValue"
                 :label="daysLabel"
                 type="number"
@@ -122,25 +122,25 @@
               />
             </v-card-text>
           </v-card>
-        </v-menu>
+        </AtlasMenu>
 
-        <v-chip
+        <AtlasChip
           class="window-editor__chip"
           color="primary"
           variant="tonal"
           @click="toggleEndDirection"
         >
           {{ endDirectionLabel }}
-        </v-chip>
+        </AtlasChip>
 
-        <v-chip
+        <AtlasChip
           class="window-editor__chip"
           color="primary"
           variant="tonal"
           @click="toggleIndexAnchor"
         >
           {{ indexAnchorLabel }}
-        </v-chip>
+        </AtlasChip>
 
         <slot name="actions" />
       </div>
@@ -151,6 +151,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import {
+  AtlasChip,
+  AtlasIcon,
+  AtlasMenu,
+  AtlasTextField,
+} from '@/components/ui'
 import type { Window } from '../circe.types'
 
 defineOptions({ name: 'Window' })

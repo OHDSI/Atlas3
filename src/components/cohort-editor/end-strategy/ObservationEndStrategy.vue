@@ -1,12 +1,12 @@
 <template>
   <div class="observation-end-strategy">
     <div class="strategy-hint">
-      <v-icon
+      <AtlasIcon
         size="16"
         class="strategy-hint__icon"
       >
         mdi-information-outline
-      </v-icon>
+      </AtlasIcon>
       <span>Cohort members exit when their continuous observation period ends. No additional configuration is needed.</span>
     </div>
   </div>
@@ -14,6 +14,7 @@
 
 <script setup lang="ts">
 // No props or emits — purely informational
+import { AtlasIcon } from '@/components/ui'
 </script>
 
 <style scoped>

@@ -37,14 +37,34 @@
       {{ store.error }}
     </AtlasAlert>
 
+    <ConceptFacetFilters
+      v-if="!store.isEmpty"
+      :facet-options="store.facetOptions"
+      :selected="store.selectedFacets"
+      :active-filter-count="store.activeFacetCount"
+      class="mb-4"
+      @update:facet="({ key, values }) => store.setFacet(key, values)"
+      @clear="store.clearFacets()"
+    />
+
+    <ConceptAddOptions
+      v-if="!store.isEmpty"
+      v-model="addFlags"
+      :selected-count="selected.length"
+      class="mb-4"
+      @add="onAddSelected"
+    />
+
     <!-- Results Table with Add/Remove buttons -->
     <ConceptTable
+      v-model:selected="selected"
       :concepts="store.concepts"
       :loading="store.loading"
       :total-items="store.totalCount"
       :page="store.page"
       :items-per-page="store.itemsPerPage"
       :show-add-button="true"
+      :selectable="true"
       :concepts-in-set="conceptsInSet"
       @update:page="onPageChange"
       @update:items-per-page="onItemsPerPageChange"
@@ -62,7 +82,9 @@ import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import ConceptTable from './ConceptTable.vue'
-import type { Concept } from '@/models/concept-set.types'
+import ConceptFacetFilters from './ConceptFacetFilters.vue'
+import ConceptAddOptions from './ConceptAddOptions.vue'
+import type { Concept, ConceptAddFlags } from '@/models/concept-set.types'
 
 const { t, tv } = useI18n()
 
@@ -78,7 +100,8 @@ const conceptSetsStore = useConceptSetsStore()
 // ============================================================================
 
 const emit = defineEmits<{
-  'add-concept': [concept: Concept]
+  'add-concept': [concept: Concept, flags: Required<ConceptAddFlags>]
+  'add-concepts': [concepts: Concept[], flags: Required<ConceptAddFlags>]
   'remove-concept': [concept: Concept]
   'view-concept': [payload: { conceptId: number; sourceKey: string }]
 }>()
@@ -88,6 +111,15 @@ const emit = defineEmits<{
 // ============================================================================
 
 const searchInput = ref<string>('')
+const selected = ref<number[]>([])
+
+// Sticky across searches on purpose: the point of the add box is to set the
+// intent once and then collect concepts over several queries.
+const addFlags = ref<Required<ConceptAddFlags>>({
+  isExcluded: false,
+  includeDescendants: false,
+  includeMapped: false,
+})
 
 // ============================================================================
 // Computed
@@ -151,7 +183,19 @@ function onItemsPerPageChange(itemsPerPage: number) {
 }
 
 function onAddConcept(concept: Concept) {
-  emit('add-concept', concept)
+  emit('add-concept', concept, addFlags.value)
+}
+
+function onAddSelected() {
+  const ids = new Set(selected.value)
+  if (ids.size === 0) return
+
+  emit(
+    'add-concepts',
+    store.allConcepts.filter(c => ids.has(c.conceptId)),
+    addFlags.value
+  )
+  selected.value = []
 }
 
 function onRemoveConcept(concept: Concept) {

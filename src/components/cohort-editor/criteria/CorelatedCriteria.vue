@@ -5,7 +5,7 @@
     variant="outlined"
   >
     <v-card-text class="corelated-criteria-editor__body d-flex">
-      <v-menu
+      <AtlasMenu
         v-model="showOccurrenceMenu"
         :close-on-content-click="false"
         location="end"
@@ -28,33 +28,33 @@
         <v-card class="occurrence-menu">
           <v-card-text class="pa-3">
             <div class="segmented-buttons">
-              <v-btn
+              <AtlasButton
                 :variant="occurrenceTypeKey === 'EXACTLY' ? 'tonal' : 'outlined'"
                 class="flex-1 occurrence-chip--exactly"
                 size="small"
                 @click="occurrenceTypeKey = 'EXACTLY'"
               >
                 {{ exactLabel }}
-              </v-btn>
-              <v-btn
+              </AtlasButton>
+              <AtlasButton
                 :variant="occurrenceTypeKey === 'AT_LEAST' ? 'tonal' : 'outlined'"
                 class="flex-1 occurrence-chip--at_least"
                 size="small"
                 @click="occurrenceTypeKey = 'AT_LEAST'"
               >
                 {{ atLeastLabel }}
-              </v-btn>
-              <v-btn
+              </AtlasButton>
+              <AtlasButton
                 :variant="occurrenceTypeKey === 'AT_MOST' ? 'tonal' : 'outlined'"
                 class="flex-1 occurrence-chip--at_most"
                 size="small"
                 @click="occurrenceTypeKey = 'AT_MOST'"
               >
                 {{ atMostLabel }}
-              </v-btn>
+              </AtlasButton>
             </div>
 
-            <v-text-field
+            <AtlasTextField
               v-model="occurrenceCount"
               class="mt-3"
               density="compact"
@@ -65,7 +65,7 @@
             />
 
             <div class="corelated-criteria-editor__distinct mt-3">
-              <v-chip
+              <AtlasChip
                 class="corelated-criteria-editor__distinct-chip"
                 :variant="isDistinct ? 'tonal' : 'outlined'"
                 :color="isDistinct ? 'success' : 'primary'"
@@ -73,9 +73,9 @@
                 @click="toggleDistinct"
               >
                 {{ distinctLabel }}
-              </v-chip>
+              </AtlasChip>
 
-              <v-select
+              <AtlasSelect
                 v-if="isDistinct"
                 v-model="distinctCountColumn"
                 class="mt-3"
@@ -90,7 +90,7 @@
             </div>
           </v-card-text>
         </v-card>
-      </v-menu>
+      </AtlasMenu>
 
       <div class="flex-grow-1 corelated-criteria-editor__content">
         <CriteriaRenderer
@@ -103,7 +103,7 @@
           @clear-concept-set="emit('clear-concept-set')"
         />
 
-        <v-menu
+        <AtlasMenu
           v-model="showWindowMenu"
           :close-on-content-click="false"
           location="bottom"
@@ -111,7 +111,7 @@
         >
           <template #activator="{ props: menuProps }">
             <div class="corelated-criteria-editor__temporal mt-3">
-              <v-chip
+              <AtlasChip
                 class="corelated-criteria-editor__window-chip"
                 color="primary"
                 prepend-icon="mdi-calendar-range"
@@ -119,7 +119,7 @@
                 v-bind="menuProps"
               >
                 {{ windowSummaryLabel }}
-              </v-chip>
+              </AtlasChip>
             </div>
           </template>
 
@@ -128,7 +128,7 @@
             rounded="lg"
           >
             <v-card-text class="d-flex flex-column ga-4">
-              <v-select
+              <AtlasSelect
                 :items="windowPresetOptions"
                 item-title="label"
                 item-value="label"
@@ -148,7 +148,7 @@
 
                 <Window :window="props.criteria.EndWindow">
                   <template #actions>
-                    <v-btn
+                    <AtlasButton
                       icon="mdi-delete"
                       color="error"
                       variant="text"
@@ -161,43 +161,43 @@
             </v-card-text>
 
             <v-card-actions>
-              <v-btn
+              <AtlasButton
                 v-if="!props.criteria.EndWindow"
                 variant="tonal"
                 @click="ensureEndWindow()"
               >
                 {{ addTimeBoxLabel }}
-              </v-btn>
+              </AtlasButton>
 
-              <v-spacer />
+              <AtlasSpacer />
 
-              <v-btn
+              <AtlasButton
                 variant="text"
                 @click="showWindowMenu = false"
               >
                 {{ closeLabel }}
-              </v-btn>
+              </AtlasButton>
             </v-card-actions>
           </v-card>
-        </v-menu>
+        </AtlasMenu>
 
         <div class="corelated-criteria-editor__flags mt-3">
-          <v-chip
+          <AtlasChip
             class="mr-2"
             :variant="restrictVisit ? 'tonal' : 'outlined'"
             :color="restrictVisit ? 'success' : 'primary'"
             @click="restrictVisit = !restrictVisit"
           >
             {{ restrictVisitLabel }}
-          </v-chip>
+          </AtlasChip>
 
-          <v-chip
+          <AtlasChip
             :variant="ignoreObservationPeriod ? 'tonal' : 'outlined'"
             :color="ignoreObservationPeriod ? 'success' : 'primary'"
             @click="ignoreObservationPeriod = !ignoreObservationPeriod"
           >
             {{ ignoreObservationLabel }}
-          </v-chip>
+          </AtlasChip>
         </div>
       </div>
     </v-card-text>
@@ -207,6 +207,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import {
+  AtlasButton,
+  AtlasChip,
+  AtlasMenu,
+  AtlasSelect,
+  AtlasSpacer,
+  AtlasTextField,
+} from '@/components/ui'
 import CriteriaRenderer from './CriteriaRenderer.vue'
 import Window from './Window.vue'
 import type { CorelatedCriteria, Criteria, Occurrence } from '../circe.types'

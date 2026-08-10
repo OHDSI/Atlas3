@@ -4,7 +4,7 @@
       v-if="modelValue.length === 0"
       class="inclusion-rules-panel__empty"
     >
-      <v-icon
+      <AtlasIcon
         icon="mdi-filter-variant-plus"
         class="inclusion-rules-panel__empty-icon"
       />
@@ -56,23 +56,29 @@
         <div class="inclusion-rules-panel__limit-label">
           {{ limitIncludedEventsLabel }}
         </div>
-        <v-btn-toggle
-          v-model="expressionLimitType"
-          mandatory
-          variant="outlined"
-          density="compact"
-          divided
-        >
-          <v-btn value="First">
+        <div class="inclusion-rules-panel__limit-toggle">
+          <AtlasButton
+            :variant="expressionLimitType === 'First' ? 'tonal' : 'outlined'"
+            size="small"
+            @click="expressionLimitType = 'First'"
+          >
             {{ earliestLabel }}
-          </v-btn>
-          <v-btn value="All">
+          </AtlasButton>
+          <AtlasButton
+            :variant="expressionLimitType === 'All' ? 'tonal' : 'outlined'"
+            size="small"
+            @click="expressionLimitType = 'All'"
+          >
             {{ allLabel }}
-          </v-btn>
-          <v-btn value="Last">
+          </AtlasButton>
+          <AtlasButton
+            :variant="expressionLimitType === 'Last' ? 'tonal' : 'outlined'"
+            size="small"
+            @click="expressionLimitType = 'Last'"
+          >
             {{ latestLabel }}
-          </v-btn>
-        </v-btn-toggle>
+          </AtlasButton>
+        </div>
       </div>
     </template>
   </div>
@@ -80,7 +86,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { AtlasButton } from '@/components/ui'
+import { AtlasButton, AtlasIcon } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { CriteriaGroup, InclusionRule, ResultLimit } from '../circe.types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from '../criteria/criteria-editor.types'

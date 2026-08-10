@@ -21,9 +21,9 @@
         />
       </div>
 
-      <v-spacer />
+      <AtlasSpacer />
 
-      <v-menu
+      <AtlasMenu
         :close-on-content-click="true"
         location="bottom end"
         offset="8"
@@ -41,18 +41,18 @@
           </AtlasButton>
         </template>
 
-        <v-list density="compact">
-          <v-list-item
+        <AtlasList density="compact">
+          <AtlasListItem
             v-for="attr in availableAttributes"
             :key="attr.key"
             :title="attr.label"
             :subtitle="attr.description"
             @click="addAttribute(attr)"
           />
-        </v-list>
-      </v-menu>
+        </AtlasList>
+      </AtlasMenu>
 
-      <v-btn
+      <AtlasButton
         icon="mdi-delete"
         variant="text"
         color="error"
@@ -61,7 +61,7 @@
       />
     </v-card-text>
 
-    <v-divider />
+    <AtlasDivider />
 
     <v-card-text>
       <CriteriaAttributes
@@ -77,7 +77,14 @@
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
-import { AtlasButton } from '@/components/ui'
+import {
+  AtlasButton,
+  AtlasDivider,
+  AtlasList,
+  AtlasListItem,
+  AtlasMenu,
+  AtlasSpacer,
+} from '@/components/ui'
 import type { Criteria, ConceptSetSelection, DateRange, NumericRange, TextFilter } from '../circe.types'
 import EventConceptSet from '../input/EventConceptSet.vue'
 import CriteriaAttributes from './CriteriaAttributes.vue'

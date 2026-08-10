@@ -1,17 +1,17 @@
 <template>
   <div class="custom-era-end-strategy">
     <div class="strategy-hint">
-      <v-icon
+      <AtlasIcon
         size="16"
         class="strategy-hint__icon"
       >
         mdi-information-outline
-      </v-icon>
+      </AtlasIcon>
       <span>Cohort exit is based on continuous drug exposure, allowing configurable gaps between exposures.</span>
     </div>
 
     <div class="custom-era-end-strategy__concept-set mt-4">
-      <v-btn
+      <AtlasButton
         v-if="drugConceptSet === undefined"
         variant="outlined"
         size="small"
@@ -19,9 +19,9 @@
         @click="emit('select-concept-set', selectionTarget)"
       >
         Select Drug Concept Set
-      </v-btn>
+      </AtlasButton>
 
-      <v-chip
+      <AtlasChip
         v-else
         closable
         color="primary"
@@ -31,12 +31,12 @@
         @click:close="clearConceptSet"
       >
         {{ drugConceptSet.name }}
-      </v-chip>
+      </AtlasChip>
     </div>
 
     <template v-if="drugConceptSet !== undefined">
       <div class="custom-era-end-strategy__fields mt-4">
-        <v-text-field
+        <AtlasTextField
           v-model.number="gapDays"
           type="number"
           label="Gap Days"
@@ -46,7 +46,7 @@
           min="0"
         />
 
-        <v-text-field
+        <AtlasTextField
           v-model.number="offset"
           type="number"
           label="Offset (days)"
@@ -56,7 +56,7 @@
           min="0"
         />
 
-        <v-text-field
+        <AtlasTextField
           v-model.number="daysSupplyOverride"
           type="number"
           label="Days Supply Override"
@@ -68,12 +68,12 @@
       </div>
 
       <div class="strategy-hint strategy-hint--secondary mt-3">
-        <v-icon
+        <AtlasIcon
           size="16"
           class="strategy-hint__icon"
         >
           mdi-information-outline
-        </v-icon>
+        </AtlasIcon>
         <span>If days supply is missing from the records, the system assumes 1 day per exposure.</span>
       </div>
     </template>
@@ -82,6 +82,12 @@
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
+import {
+  AtlasButton,
+  AtlasChip,
+  AtlasIcon,
+  AtlasTextField,
+} from '@/components/ui'
 import type { CustomEraStrategy } from '../circe.types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from '../criteria/criteria-editor.types'
 

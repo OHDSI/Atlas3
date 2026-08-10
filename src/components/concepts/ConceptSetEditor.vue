@@ -104,6 +104,7 @@
               variant="ghost"
               tone="danger"
               :disabled="loading || !canDelete"
+              data-testid="conceptset-delete"
               @click="onDelete"
             >
               {{ t('common.delete', 'Delete') }}
@@ -239,7 +240,7 @@
               class="cs-editor__paste-btn"
               @click="showSourceCodeDialog = true"
             >
-              {{ t('cs.manager.importSourceCodes', 'Import codes') }}
+              {{ t('cs.manager.importSourceCodesButton', 'Import by source code') }}
             </AtlasButton>
 
             <AtlasButton
@@ -295,6 +296,7 @@
               <v-window-item value="search">
                 <ConceptSearchInline
                   @add-concept="onAddConcept"
+                  @add-concepts="onAddConcepts"
                   @remove-concept="onRemoveConcept"
                   @view-concept="onViewConcept"
                 />
@@ -667,7 +669,7 @@ import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useNotifications } from '@/stores/notifications'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
-import type { ConceptSet, Concept, ConceptSetItem } from '@/models/concept-set.types'
+import type { ConceptSet, Concept, ConceptSetItem, ConceptAddFlags } from '@/models/concept-set.types'
 import type { VersionsConfig, VersionsTableItem, User } from '@/components/versions/types'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import type { Tag } from '@/models/cohort.types'
@@ -870,7 +872,7 @@ const eyebrowText = computed(() => {
 const nameError = computed(() => {
   const v = form.value.name
   if (!v || v.trim().length === 0) {
-    return t('commonErrors.required', 'Name is required').value
+    return t('commonErrors.nameRequired', 'Name is required').value
   }
   if (v.length > 255) {
     return t('commonErrors.lengthValidation', 'Name must be between 1 and 255 characters').value
@@ -1035,6 +1037,13 @@ async function onSave() {
   try {
     let result
 
+    // Snapshot before the save: persisting mutates the store's concept set, which
+    // re-runs the props.conceptSet watcher and resets both refs to the still
+    // tag-less persisted value. Reading them after the await would diff nothing,
+    // so a newly added tag would never be assigned.
+    const tagsBeforeSave = [...loadedTags.value]
+    const tagsToPersist = [...selectedTags.value]
+
     if (isEditMode.value && props.conceptSet?.id) {
       result = await store.update({
         ...props.conceptSet,
@@ -1051,13 +1060,13 @@ async function onSave() {
     if (result) {
       const savedId = result?.id
       if (savedId !== undefined && savedId !== null) {
-        const tagResult = await store.syncTags(savedId, loadedTags.value, selectedTags.value)
+        const tagResult = await store.syncTags(savedId, tagsBeforeSave, tagsToPersist)
         if (!tagResult.success) {
           notify.danger(tv('conceptSets.tagUpdateFailed', 'Failed to update tags'), {
             message: tagResult.error,
           })
         }
-        loadedTags.value = [...selectedTags.value]
+        loadedTags.value = [...tagsToPersist]
       }
       hasUnsavedChanges.value = false
       emit('save')
@@ -1118,8 +1127,15 @@ function confirmDelete() {
 // Concept Building Methods
 // ============================================================================
 
-function onAddConcept(concept: Concept) {
-  store.addConceptToSet(concept)
+function onAddConcept(concept: Concept, flags?: ConceptAddFlags) {
+  store.addConceptToSet(concept, flags)
+  hasUnsavedChanges.value = true
+}
+
+function onAddConcepts(concepts: Concept[], flags?: ConceptAddFlags) {
+  for (const concept of concepts) {
+    store.addConceptToSet(concept, flags)
+  }
   hasUnsavedChanges.value = true
 }
 
@@ -1170,6 +1186,16 @@ function applyConceptsToSet(concepts: Concept[]) {
 // Bulk paste IDs
 // ============================================================================
 
+// Re-resolving is required after any edit, so reset the resolved/unresolved
+// state when the textarea changes. Keeps the action button showing "Resolve"
+// until the user re-validates the (possibly corrected) input.
+watch(pasteInput, () => {
+  if (pasteResolved.value.length || pasteUnresolved.value.length) {
+    pasteResolved.value = []
+    pasteUnresolved.value = []
+  }
+})
+
 async function resolvePastedIds() {
   const ids = parsePastedIds(pasteInput.value)
   if (ids.length === 0) {
@@ -1213,6 +1239,14 @@ function closePasteDialog() {
 // ============================================================================
 // Import by source code
 // ============================================================================
+
+// Same reset as pasteInput above: a corrected code should re-enable resolving.
+watch(sourceCodeInput, () => {
+  if (sourceCodeResolved.value.length || sourceCodeUnresolved.value.length) {
+    sourceCodeResolved.value = []
+    sourceCodeUnresolved.value = []
+  }
+})
 
 async function resolvePastedSourceCodes() {
   const codes = parsePastedSourceCodes(sourceCodeInput.value)
@@ -1370,7 +1404,7 @@ function closeJsonDialog() {
   font-weight: 400;
 }
 .cs-editor__title-input:hover {
-  border-bottom-color: rgba(0, 0, 0, 0.12);
+  border-bottom-color: var(--atlas-color-outline);
 }
 .cs-editor__title-input:focus-visible {
   outline: 2px solid rgb(var(--v-theme-primary));

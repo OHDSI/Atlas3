@@ -29,8 +29,6 @@ const loadingError = ref<string | null>(null)
 
 async function load() {
   loadingError.value = null
-  // Version preview: handled by router beforeEnter; if currentIR is set in preview mode, do nothing.
-  if (store.isPreviewMode && store.currentIR) return
 
   const idStr = props.id ?? (route.params.id as string | undefined)
   if (!idStr || idStr === 'new') {
@@ -40,9 +38,27 @@ async function load() {
     }
     return
   }
+
   const id = Number(idStr)
-  const ok = await store.loadIR(id)
-  if (!ok)
+  const version = route.params.version as string | undefined
+  if (version && version !== 'current') {
+    // The route's beforeEnter already loaded this preview - don't fetch twice.
+    if (
+      store.isPreviewMode &&
+      store.currentIR?.id === id &&
+      store.previewVersion?.version === Number(version)
+    ) {
+      return
+    }
+    if (!(await store.loadVersionPreview(id, Number(version)))) {
+      loadingError.value = t(
+        'incidenceRate.editor.loadError',
+        'Failed to load incidence rate'
+      ).value
+    }
+    return
+  }
+  if (!(await store.loadIR(id)))
     loadingError.value = t('incidenceRate.editor.loadError', 'Failed to load incidence rate').value
 }
 
@@ -53,16 +69,22 @@ onMounted(async () => {
 
 onBeforeUnmount(() => store.stopAutoSave())
 
-watch(() => route.params.id, load)
+// Two separate sources, not one getter returning a fresh array: the array
+// form re-fires on every route.params object replacement even when both
+// values are unchanged.
+watch([() => route.params.id, () => route.params.version], load)
 </script>
 
 <style scoped>
 .state {
   padding: 24px;
   text-align: center;
-  color: #888;
+  color: var(--atlas-color-on-surface-variant);
 }
 .state.error {
   color: #c00;
+}
+.v-theme--dark .state.error {
+  color: var(--atlas-color-danger-text);
 }
 </style>

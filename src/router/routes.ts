@@ -114,6 +114,12 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/IncidenceRatesView.vue'),
         meta: { requiresAuth: true, titleKey: 'route.incidenceRates.title', agentVisible: true, agentLabel: 'Incidence rates' },
       },
+      {
+        path: 'x/:pluginId/:itemId',
+        name: 'analysis-plugin',
+        component: () => import('@/views/AnalysisHubView.vue'),
+        meta: { requiresAuth: true, titleKey: 'route.analysis.title', agentVisible: false },
+      },
     ],
   },
   // Route aliases: keep legacy list URLs mapped to Analysis Hub child routes.
@@ -266,7 +272,7 @@ export const routes: RouteRecordRaw[] = [
       const versionParam = to.params.version as string
       const idParam = Number(to.params.id)
       if (versionParam === 'current') {
-        pathwayStore.clearPreviewVersion()
+        await pathwayStore.clearPreviewVersion()
       } else if (Number.isFinite(idParam)) {
         const versionNumber = parseInt(versionParam)
         if (!isNaN(versionNumber)) {
@@ -312,7 +318,7 @@ export const routes: RouteRecordRaw[] = [
       const versionParam = to.params.version as string
       const idParam = Number(to.params.id)
       if (versionParam === 'current') {
-        irStore.clearPreviewVersion()
+        await irStore.clearPreviewVersion()
       } else if (Number.isFinite(idParam)) {
         const v = parseInt(versionParam)
         if (!isNaN(v)) {
@@ -374,10 +380,10 @@ export const routes: RouteRecordRaw[] = [
     meta: { isOpenIDCallback: true, agentVisible: false },
   },
   {
-    path: '/:client/:token/:redirectUrl?',
-    name: 'oauth-token',
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
     component: () => import('@/views/LandingView.vue'),
-    meta: { isOAuthCallback: true, agentVisible: false },
+    meta: { agentVisible: false },
   },
   ...generatePluginRoutes(),
 ]

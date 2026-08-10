@@ -1,7 +1,17 @@
 <template>
   <div class="recommend-tab">
     <AtlasAlert
-      v-if="!store.isRecommendedAvailable"
+      v-if="store.recommendedError"
+      severity="danger"
+      :closable="true"
+      class="mb-4"
+      @close="store.recommendedError = null"
+    >
+      {{ store.recommendedError }}
+    </AtlasAlert>
+
+    <AtlasAlert
+      v-else-if="!store.isRecommendedAvailable"
       severity="info"
       class="mb-4"
       data-testid="recommend-not-available"
@@ -12,16 +22,6 @@
           'Recommendations are not available. The PHOEBE 2.0 vocabulary tables are required to generate recommendations.'
         )
       }}
-    </AtlasAlert>
-
-    <AtlasAlert
-      v-else-if="store.recommendedError"
-      severity="danger"
-      :closable="true"
-      class="mb-4"
-      @close="store.recommendedError = null"
-    >
-      {{ store.recommendedError }}
     </AtlasAlert>
 
     <AtlasAlert
@@ -63,37 +63,12 @@
       </div>
 
       <div class="recommend-tab__bar-right">
-        <v-checkbox-btn
-          v-model="addDescendants"
-          :label="t('cs.conceptAddBox.descendants', 'Descendants').value"
-          density="compact"
-          hide-details
+        <ConceptAddOptions
+          v-model="addFlags"
+          :selected-count="selected.length"
+          :disabled="store.loadingRecommended"
+          @add="onAddSelected"
         />
-        <v-checkbox-btn
-          v-model="addMapped"
-          :label="t('cs.conceptAddBox.mapped', 'Mapped').value"
-          density="compact"
-          hide-details
-        />
-        <v-checkbox-btn
-          v-model="addExclude"
-          :label="t('cs.conceptAddBox.exclude', 'Exclude').value"
-          density="compact"
-          hide-details
-        />
-        <AtlasButton
-          size="sm"
-          icon="mdi-plus"
-          :disabled="selected.length === 0 || store.loadingRecommended"
-          data-testid="recommend-add-selected"
-          @click="onAddSelected"
-        >
-          {{ t('cs.conceptPicker.addSelected', 'Add Selected') }}
-          <span
-            v-if="selected.length > 0"
-            class="ml-1"
-          >({{ selected.length }})</span>
-        </AtlasButton>
       </div>
     </div>
 
@@ -144,7 +119,8 @@ import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
 import ConceptTable from './ConceptTable.vue'
-import type { Concept } from '@/models/concept-set.types'
+import ConceptAddOptions from './ConceptAddOptions.vue'
+import type { Concept, ConceptAddFlags } from '@/models/concept-set.types'
 
 const { t } = useI18n()
 
@@ -172,9 +148,11 @@ const selected = ref<number[]>([])
 const page = ref(1)
 const itemsPerPage = ref(60)
 
-const addDescendants = ref(false)
-const addMapped = ref(false)
-const addExclude = ref(false)
+const addFlags = ref<Required<ConceptAddFlags>>({
+  isExcluded: false,
+  includeDescendants: false,
+  includeMapped: false,
+})
 
 const hasSeed = computed(() => {
   const items = store.currentSet?.items ?? []
@@ -219,15 +197,8 @@ function onAddSelected() {
   let added = 0
   for (const concept of picked) {
     const beforeCount = store.currentSet?.items.length ?? 0
-    store.addConceptToSet(concept)
-    const afterCount = store.currentSet?.items.length ?? 0
-    if (afterCount === beforeCount) continue
-
-    // toggleConceptFlag flips; freshly-added items have flags=false, so one
-    // toggle sets them true.
-    if (addDescendants.value) store.toggleConceptFlag(concept.conceptId, 'includeDescendants')
-    if (addMapped.value) store.toggleConceptFlag(concept.conceptId, 'includeMapped')
-    if (addExclude.value) store.toggleConceptFlag(concept.conceptId, 'isExcluded')
+    store.addConceptToSet(concept, addFlags.value)
+    if ((store.currentSet?.items.length ?? 0) === beforeCount) continue
     added += 1
   }
 

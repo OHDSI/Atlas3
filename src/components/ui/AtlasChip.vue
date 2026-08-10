@@ -7,7 +7,7 @@
     :prepend-icon="prependIcon"
     density="compact"
     v-bind="forwardAttrs"
-    @click="$emit('click', $event)"
+    v-on="clickListeners"
     @click:close="$emit('close', $event)"
   >
     <slot />
@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue'
+import { computed, useAttrs, getCurrentInstance } from 'vue'
 
 export type AtlasChipTone = 'neutral' | 'primary' | 'info' | 'success' | 'warning' | 'danger'
 export type AtlasChipSize = 'xs' | 'sm' | 'md'
@@ -36,12 +36,23 @@ const props = withDefaults(defineProps<Props>(), {
   prependIcon: undefined,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   click: [event: MouseEvent | KeyboardEvent]
   close: [event: MouseEvent | KeyboardEvent]
 }>()
 
 defineOptions({ inheritAttrs: false })
+
+// Vuetify's v-chip renders itself as clickable (pointer cursor + ripple) whenever a
+// click listener is bound, even a no-op one. Only forward the listener when the
+// consumer actually listens for 'click', so purely informational chips (e.g.
+// vocabulary/domain badges) don't look interactive when they aren't.
+const instance = getCurrentInstance()
+const clickListeners = computed(() =>
+  instance?.vnode.props?.onClick
+    ? { click: (event: MouseEvent | KeyboardEvent) => emit('click', event) }
+    : {},
+)
 
 const TONE_COLOR: Record<AtlasChipTone, string | undefined> = {
   neutral: undefined,

@@ -56,6 +56,8 @@ import {
   listFeatureAnalysisAggregates,
 } from '@/services/feature-analysis.service'
 import FeatureAnalysisEditorView from '@/views/FeatureAnalysisEditorView.vue'
+import { success, failure } from '@/types/api'
+import { ApiError } from '@/services/api-error'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -134,8 +136,8 @@ describe('FeatureAnalysisEditorView', () => {
     vi.clearAllMocks()
 
     // Default lookup-data stubs so onMounted lookups resolve cleanly.
-    vi.mocked(listFeatureAnalysisDomains).mockResolvedValue(['Demographics', 'Condition'])
-    vi.mocked(listFeatureAnalysisAggregates).mockResolvedValue([])
+    vi.mocked(listFeatureAnalysisDomains).mockResolvedValue(success(['Demographics', 'Condition']))
+    vi.mocked(listFeatureAnalysisAggregates).mockResolvedValue(success([]))
   })
 
   afterEach(() => {
@@ -176,7 +178,7 @@ describe('FeatureAnalysisEditorView', () => {
   })
 
   it('hydrates fields from store in edit mode', async () => {
-    vi.mocked(getFeatureAnalysis).mockResolvedValue(sampleFA)
+    vi.mocked(getFeatureAnalysis).mockResolvedValue(success(sampleFA))
 
     mounted = await mountEditor('/feature-analyses/42', { id: '42' })
     await flushPromises()
@@ -202,7 +204,7 @@ describe('FeatureAnalysisEditorView', () => {
   })
 
   it('"Load default covariate settings" populates the JSON textarea', async () => {
-    vi.mocked(getDefaultCovariateSettings).mockResolvedValue({ temporal: false, useDemographicsGender: true })
+    vi.mocked(getDefaultCovariateSettings).mockResolvedValue(success({ temporal: false, useDemographicsGender: true }))
 
     mounted = await mountEditor('/feature-analyses/new')
 
@@ -220,8 +222,38 @@ describe('FeatureAnalysisEditorView', () => {
     expect(presetTextarea.value).toContain('useDemographicsGender')
   })
 
+  it('a failed "Load default covariate settings" shows the load-defaults error, not the save error', async () => {
+    vi.mocked(getDefaultCovariateSettings).mockResolvedValue(
+      failure(new ApiError('HTTP 500: boom', 500, null))
+    )
+
+    mounted = await mountEditor('/feature-analyses/new')
+
+    const btn = mounted.wrapper.get(
+      '[data-testid="feature-analysis-editor-preset-default"]'
+    ).element as HTMLButtonElement
+    btn.click()
+    await flushPromises()
+
+    const snackbar = mounted.wrapper.findComponent({ name: 'AtlasSnackbar' })
+    // 'cc.fa.loadDefaultsError'
+    expect(snackbar.props('text')).toBe('Failed to load default covariate settings.')
+    // ...and not 'cc.fa.saveError', which this branch used to reuse.
+    expect(snackbar.props('text')).not.toBe(
+      'An error occurred while attempting to save a feature analysis.'
+    )
+    expect(snackbar.props('severity')).toBe('danger')
+    expect(snackbar.props('modelValue')).toBe(true)
+
+    // The textarea must stay untouched on failure.
+    const presetTextarea = mounted.wrapper.find(
+      '[data-testid="feature-analysis-editor-preset-json"] textarea'
+    ).element as HTMLTextAreaElement
+    expect(presetTextarea.value).not.toContain('useDemographicsGender')
+  })
+
   it('Save in new mode calls createFeatureAnalysis', async () => {
-    vi.mocked(createFeatureAnalysis).mockResolvedValue({ ...sampleFA, id: 99 })
+    vi.mocked(createFeatureAnalysis).mockResolvedValue(success({ ...sampleFA, id: 99 }))
 
     mounted = await mountEditor('/feature-analyses/new')
 
@@ -244,8 +276,8 @@ describe('FeatureAnalysisEditorView', () => {
   })
 
   it('Save in edit mode calls updateFeatureAnalysis', async () => {
-    vi.mocked(getFeatureAnalysis).mockResolvedValue(sampleFA)
-    vi.mocked(updateFeatureAnalysis).mockResolvedValue({ ...sampleFA, name: 'Renamed FA' })
+    vi.mocked(getFeatureAnalysis).mockResolvedValue(success(sampleFA))
+    vi.mocked(updateFeatureAnalysis).mockResolvedValue(success({ ...sampleFA, name: 'Renamed FA' }))
 
     mounted = await mountEditor('/feature-analyses/42', { id: '42' })
     await flushPromises()

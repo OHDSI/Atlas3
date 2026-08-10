@@ -25,9 +25,9 @@
         </div>
       </div>
 
-      <v-spacer />
+      <AtlasSpacer />
 
-      <v-btn
+      <AtlasButton
         icon="mdi-delete"
         variant="text"
         color="error"
@@ -40,6 +40,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { AtlasButton, AtlasSpacer } from '@/components/ui'
 import { getCriteriaWrapperKey, type Criteria, type CriteriaWrapperKey } from '../circe.types'
 import ConditionEra from './ConditionEra.vue'
 import ConditionOccurrence from './ConditionOccurrence.vue'

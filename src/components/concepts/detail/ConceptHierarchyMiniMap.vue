@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { AtlasCard } from '@/components/ui'
+import ConceptHierarchyDialog from '@/components/concepts/detail/ConceptHierarchyDialog.vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import type { Concept } from '@/models/concept-set.types'
@@ -14,6 +15,7 @@ const props = defineProps<{
   parents: RelatedConcept[]
   children: RelatedConcept[]
   sourceKey?: string
+  loadFailed?: boolean
 }>()
 
 // Prefer the explicit sourceKey prop (the drawer renders this component over
@@ -27,24 +29,13 @@ const sourceKey = computed(
 
 const conceptDrawer = useConceptDetailDrawerStore()
 
-// "View full" opens the in-place concept-detail drawer (an overlay) for this
-// concept instead of routing to a stand-alone page — that keeps the user in
-// the cohort editor flow. We hide the link when the drawer is already showing
-// this exact concept, since clicking it there would be a confusing no-op.
-const isInDrawerForThisConcept = computed(
-  () =>
-    conceptDrawer.isOpen &&
-    conceptDrawer.sourceKey === sourceKey.value &&
-    conceptDrawer.conceptId === props.concept.conceptId
-)
+const canViewFull = computed(() => !!sourceKey.value && !!props.concept.conceptId)
 
-const canViewFull = computed(
-  () => !!sourceKey.value && !!props.concept.conceptId && !isInDrawerForThisConcept.value
-)
+const dialogOpen = ref(false)
 
 function viewFull() {
-  if (!canViewFull.value) return
-  conceptDrawer.open(sourceKey.value, props.concept.conceptId)
+  if (!sourceKey.value) return
+  dialogOpen.value = true
 }
 
 // Jumping to a parent/child concept opens it in the same side-panel drawer
@@ -74,11 +65,18 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
         class="view-full"
         data-testid="view-full"
         @click.prevent="viewFull"
-      >{{ t('components.conceptDetail.viewFull', 'View full').value }} →</a>
+      >{{ t('components.conceptHierarchyDialog.viewFullHierarchy', 'View full hierarchy').value }} →</a>
     </header>
     <div class="card-body">
       <p
-        v-if="isEmpty"
+        v-if="loadFailed"
+        class="empty"
+        data-testid="minimap-load-failed"
+      >
+        {{ t('components.conceptDetail.hierarchyLoadFailed', 'Could not load the hierarchy for this concept.').value }}
+      </p>
+      <p
+        v-else-if="isEmpty"
         class="empty"
       >
         {{ t('components.conceptDetail.noHierarchyForConcept', 'No hierarchy found for this concept.').value }}
@@ -130,6 +128,11 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
       </template>
     </div>
   </AtlasCard>
+  <ConceptHierarchyDialog
+    v-model="dialogOpen"
+    :concept="concept"
+    :source-key="sourceKey"
+  />
 </template>
 
 <style scoped>
@@ -137,10 +140,10 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--atlas-color-on-surface-variant);
   font-weight: 600;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--atlas-color-outline);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -155,9 +158,9 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
 .card-body { padding: 16px; }
 .tree { list-style: none; padding: 0; margin: 0; font-size: 13px; }
 .node { display: flex; align-items: center; gap: 4px; padding: 2px 0; }
-.node.faded { color: rgba(0, 0, 0, 0.6); }
+.node.faded { color: var(--atlas-color-on-surface-variant); }
 .node.current {
-  background: rgba(25, 118, 210, 0.12);
+  background: var(--atlas-color-primary-tint);
   color: rgb(var(--v-theme-primary));
   font-weight: 600;
   padding: 4px 6px;
@@ -165,8 +168,8 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
   margin: 2px 0;
 }
 .node.child { padding-left: 16px; }
-.node.muted { color: rgba(0, 0, 0, 0.4); padding-left: 16px; font-size: 11px; }
-.chev { width: 14px; color: rgba(0, 0, 0, 0.4); flex-shrink: 0; }
+.node.muted { color: var(--atlas-color-on-surface-variant); padding-left: 16px; font-size: 11px; }
+.chev { width: 14px; color: var(--atlas-color-on-surface-variant); flex-shrink: 0; }
 .node-link {
   color: inherit;
   text-decoration: none;
@@ -175,5 +178,5 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
   text-overflow: ellipsis;
 }
 .node-link:hover { text-decoration: underline; }
-.empty { color: rgba(0, 0, 0, 0.6); font-size: 12px; margin: 0; }
+.empty { color: var(--atlas-color-on-surface-variant); font-size: 12px; margin: 0; }
 </style>

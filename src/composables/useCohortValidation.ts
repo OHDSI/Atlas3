@@ -1,7 +1,7 @@
 import { ref, computed, watch, type Ref, type ComputedRef, onUnmounted } from 'vue'
 import type { ConceptSetReference } from '@/models/cohort.types'
 import type { ValidationWarning, ValidationSeverity } from '@/models/cohort-validation.types'
-import { validateCohortDefinition } from '@/services/webapi'
+import { validateCohortDefinition } from '@/services/cohort-definition.service'
 import { logger } from '@/utils/logger'
 import type { CohortExpression } from '@/components/cohort-editor/circe.types'
 import { findUsedConceptSetIds } from '@/components/cohort-editor/concept-set-usage'

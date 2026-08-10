@@ -11,23 +11,23 @@
       {{ titleLabel }}
     </div>
     <div class="event-concept-set-field__input">
-      <v-btn
+      <AtlasButton
         v-if="!selectedConceptSet"
         variant="outlined"
         size="small"
         :data-testid="props.pickerTestId"
         @click="emit('select', selectionTarget)"
       >
-        <v-icon
+        <AtlasIcon
           start
           size="small"
         >
           mdi-plus
-        </v-icon>
+        </AtlasIcon>
         {{ selectLabel }}
-      </v-btn>
+      </AtlasButton>
 
-      <v-chip
+      <AtlasChip
         v-else
         closable
         color="primary"
@@ -38,13 +38,14 @@
         @click:close="clearConceptSet"
       >
         {{ selectedConceptSet.name }}
-      </v-chip>
+      </AtlasChip>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
+import { AtlasButton, AtlasChip, AtlasIcon } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from '../criteria/criteria-editor.types'
 import type { ConceptSetSelection } from '../circe.types'

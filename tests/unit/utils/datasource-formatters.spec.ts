@@ -103,6 +103,30 @@ describe('Data Source Formatters', () => {
       expect(result.tableRows[0].metric).toBe(30)
     })
 
+    it('should drop the leading "NA||NA||..." hierarchy prefix in tableRows, matching the treemap (issue #152)', () => {
+      const conceptPath =
+        'NA||NA||NA||Systematic Nomenclature of Medicine - Clinical Terms (IHTSDO) 162673000: General examination of patient'
+      const raw = [{ conceptId: 1, conceptPath, numPersons: 100, percentPersons: 10, recordsPerPerson: 2 }]
+
+      const result = transformClinicalDomainReport(raw, 'conditionOccurrence')
+
+      const expected = 'Systematic Nomenclature of Medicine - Clinical Terms (IHTSDO) 162673000: General examination of patient'
+      expect(result.tableRows[0].conceptName).toBe(expected)
+      // Previously only the treemap parsed this; tableRows showed the raw,
+      // unparsed conceptPath (with all "||" separators visible). Keep both in sync.
+      expect(result.treemapNodes[0].name).toBe(expected)
+    })
+
+    it('falls back to the whole string when conceptPath has no "||" separator', () => {
+      const raw = [
+        { conceptId: 1, conceptPath: 'Plain Concept Name', numPersons: 100, percentPersons: 10, recordsPerPerson: 2 },
+      ]
+
+      const result = transformClinicalDomainReport(raw, 'conditionOccurrence')
+
+      expect(result.tableRows[0].conceptName).toBe('Plain Concept Name')
+    })
+
     it('should aggregate large datasets', () => {
       // Create 15000 items
       const raw = Array(15000).fill(null).map((_, i) => ({
@@ -161,7 +185,7 @@ describe('Data Source Formatters', () => {
       const csv = exportTableToCSV(rows, 'Records Per Person')
 
       expect(csv).toContain('Concept ID,Name,Person Count,Prevalence (%),Records Per Person')
-      expect(csv).toContain('1,"Condition A",100,10.50,2.50')
+      expect(csv).toContain('1,Condition A,100,10.50,2.50')
     })
 
     it('should escape quotes in concept names', () => {

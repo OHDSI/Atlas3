@@ -222,6 +222,6 @@ function handleClose() {
   width: 24px;
   height: 24px;
   border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--atlas-color-outline-strong);
 }
 </style>

@@ -306,9 +306,18 @@ export interface VocabularySchemaConfig {
 /**
  * Configuration Panel State interface - manages UI state for the panel
  */
+export type ConfigPanelSection =
+  | 'cache'
+  | 'sources'
+  | 'vocabulary'
+  | 'tags'
+  | 'permissions'
+  | 'jobs'
+  | `plugin:${string}:${string}`
+
 export interface ConfigPanelState {
   isOpen: boolean
-  activeSection: 'cache' | 'sources' | 'vocabulary' | 'tags' | 'permissions' | 'jobs'
+  activeSection: ConfigPanelSection
   scrollPosition: number
 }
 

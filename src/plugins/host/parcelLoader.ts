@@ -3,6 +3,7 @@ import { pluginRegistry } from '@/plugins/core/PluginRegistry'
 import { storageManager } from '@/services/auth/storageManager'
 import { useLocaleStore } from '@/stores/locale'
 import { logger } from '@/utils/logger'
+import { ensurePluginRuntime } from '@/plugins/core/pluginRuntime'
 
 function buildI18n() {
   const localeStore = useLocaleStore()
@@ -27,8 +28,9 @@ interface PluginModule {
   update?: (props: unknown) => Promise<void>
 }
 
-interface ParcelHandle {
+export interface ParcelHandle {
   unmount(): Promise<unknown>
+  update?(props: Record<string, unknown>): Promise<unknown>
   mountPromise: Promise<unknown>
 }
 
@@ -71,11 +73,9 @@ async function loadModule(pluginId: string): Promise<PluginModule> {
   const url = pluginEntryUrl(instance.registration.entryPoint)
   injectPluginStylesheet(pluginId, instance.registration.entryPoint)
 
-  if (!window.System) {
-    throw new Error('SystemJS is not available')
-  }
+  const System = await ensurePluginRuntime()
 
-  const promise = window.System.import<PluginModule>(url).then(mod => {
+  const promise = System.import<PluginModule>(url).then(mod => {
     if (!mod.bootstrap || !mod.mount || !mod.unmount) {
       throw new Error(`Plugin ${pluginId} is missing required lifecycle methods`)
     }
@@ -89,7 +89,8 @@ async function loadModule(pluginId: string): Promise<PluginModule> {
 
 export async function mountPluginParcel(
   pluginId: string,
-  domElement: HTMLElement
+  domElement: HTMLElement,
+  extraProps: Record<string, unknown> = {}
 ): Promise<ParcelHandle> {
   const instance = pluginRegistry.getPlugin(pluginId)
   if (!instance) throw new Error(`Plugin ${pluginId} is not registered`)
@@ -106,6 +107,7 @@ export async function mountPluginParcel(
     locale: document.documentElement.lang || 'en',
     isAtlas: true,
     t: buildI18n(),
+    ...extraProps,
   }
 
   logger.debug('parcelLoader', `Mounting parcel for ${pluginId}`)

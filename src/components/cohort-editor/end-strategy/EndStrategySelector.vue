@@ -4,25 +4,29 @@
       <div class="end-strategy-selector__label">
         Strategy
       </div>
-      <v-btn-toggle
-        :model-value="currentStrategyType"
-        mandatory
-        variant="outlined"
-        density="compact"
-        divided
-        class="end-strategy-selector__toggle"
-        @update:model-value="changeStrategy"
-      >
-        <v-btn value="observation">
+      <div class="end-strategy-selector__toggle">
+        <AtlasButton
+          :variant="currentStrategyType === 'observation' ? 'tonal' : 'outlined'"
+          size="small"
+          @click="changeStrategy('observation')"
+        >
           Continuous Observation
-        </v-btn>
-        <v-btn value="dateOffset">
+        </AtlasButton>
+        <AtlasButton
+          :variant="currentStrategyType === 'dateOffset' ? 'tonal' : 'outlined'"
+          size="small"
+          @click="changeStrategy('dateOffset')"
+        >
           Fixed Duration
-        </v-btn>
-        <v-btn value="customEra">
+        </AtlasButton>
+        <AtlasButton
+          :variant="currentStrategyType === 'customEra' ? 'tonal' : 'outlined'"
+          size="small"
+          @click="changeStrategy('customEra')"
+        >
           Drug Exposure
-        </v-btn>
-      </v-btn-toggle>
+        </AtlasButton>
+      </div>
     </div>
 
     <ObservationEndStrategy v-if="currentStrategyType === 'observation'" />
@@ -45,6 +49,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { AtlasButton } from '@/components/ui'
 import type { DateOffsetStrategy, CustomEraStrategy, EndStrategy } from '../circe.types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from '../criteria/criteria-editor.types'
 import ObservationEndStrategy from './ObservationEndStrategy.vue'
@@ -117,29 +122,19 @@ function changeStrategy(type: string) {
   white-space: nowrap;
 }
 
-.end-strategy-selector__toggle :deep(.v-btn-toggle) {
+.end-strategy-selector__toggle {
+  display: inline-flex;
   border-radius: 999px;
   overflow: hidden;
 }
 
-.end-strategy-selector__toggle :deep(.v-btn-toggle > .v-btn) {
+.end-strategy-selector__toggle :deep(.atlas-button) {
   min-width: 0;
-  border-radius: 0 !important;
   min-height: 28px;
   padding-inline: 12px;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
-}
-
-.end-strategy-selector__toggle :deep(.v-btn-toggle > .v-btn:first-child) {
-  border-top-left-radius: 999px !important;
-  border-bottom-left-radius: 999px !important;
-}
-
-.end-strategy-selector__toggle :deep(.v-btn-toggle > .v-btn:last-child) {
-  border-top-right-radius: 999px !important;
-  border-bottom-right-radius: 999px !important;
 }
 </style>

@@ -96,6 +96,7 @@
       :items-per-page-options="[25, 50, 75, 100, { value: -1, title: t('datatable.language.all', 'All').value }]"
       class="elevation-1"
       @update:items-per-page="handleItemsPerPageChange"
+      @click:row="onRowClick"
     >
       <template #item.conceptId="{ item }">
         {{ item.conceptId }}
@@ -148,6 +149,10 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+const emit = defineEmits<{
+  'row-click': [conceptId: number, conceptName: string]
+}>()
 
 const search = ref('')
 const currentPage = ref(1)
@@ -254,6 +259,10 @@ const tableStatusText = computed(() => {
     }
   )
 })
+
+function onRowClick(_event: Event, { item }: { item: PrevalenceTableRow }) {
+  emit('row-click', item.conceptId, item.conceptName)
+}
 
 function handleItemsPerPageChange(value: number) {
   itemsPerPage.value = value

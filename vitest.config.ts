@@ -20,7 +20,6 @@ export default defineConfig({
       'node_modules/',
       'vue-mri-ui-lib/',
       'tests/e2e/**',
-      'scripts/__tests__/**',  // TODO: Fix vitest es-module handling in node environment
     ],
     reporters: ['default', 'junit'],
     outputFile: {
@@ -72,16 +71,14 @@ export default defineConfig({
         'src/App.vue',
         // Vuetify configuration only - no testable logic
         'src/plugins/vuetify.ts',
-        // Router configuration - tested via integration/e2e tests
-        'src/router/index.ts',
         // Histoire story files - dev-time visual docs, not runtime code
         'src/components/ui/**/*.story.vue',
       ],
       thresholds: {
-        lines: 91,
-        statements: 91,
+        lines: 92,
+        statements: 92,
         branches: 86,
-        functions: 77,
+        functions: 78,
       },
     },
   },

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { ApiError } from '@/services/api-error'
 
 const pushMock = vi.fn()
 
@@ -7,7 +8,7 @@ vi.mock('vue-router', () => ({
   useRouter: () => ({ push: pushMock }),
 }))
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/incidence-rate.service', () => ({
   createIncidenceRate: vi.fn(),
   saveIncidenceRate: vi.fn(),
   copyIncidenceRate: vi.fn(),
@@ -31,13 +32,13 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-let webapi: typeof import('@/services/webapi')
+let webapi: typeof import('@/services/incidence-rate.service')
 let useIncidenceRateBuilder: typeof import('@/composables/useIncidenceRateBuilder').useIncidenceRateBuilder
 let useIncidenceRateStore: typeof import('@/stores/incidence-rate').useIncidenceRateStore
 
 beforeAll(async () => {
   vi.resetModules()
-  webapi = await import('@/services/webapi')
+  webapi = await import('@/services/incidence-rate.service')
   ;({ useIncidenceRateBuilder } = await import('@/composables/useIncidenceRateBuilder'))
   ;({ useIncidenceRateStore } = await import('@/stores/incidence-rate'))
 })
@@ -108,7 +109,7 @@ describe('useIncidenceRateBuilder', () => {
       const store = useIncidenceRateStore()
       store.setIR(makeValidIR())
 
-      vi.mocked(webapi.existsIncidenceRate).mockResolvedValue(1)
+      vi.mocked(webapi.existsIncidenceRate).mockResolvedValue({ success: true, data: 1 })
 
       const { save, feedback } = useIncidenceRateBuilder()
       const ok = await save()
@@ -118,11 +119,32 @@ describe('useIncidenceRateBuilder', () => {
       expect(webapi.existsIncidenceRate).toHaveBeenCalledWith('Test IR', 0)
     })
 
+    it('still saves when the uniqueness check itself fails', async () => {
+      const store = useIncidenceRateStore()
+      store.setIR(makeValidIR())
+
+      vi.mocked(webapi.existsIncidenceRate).mockResolvedValue({
+        success: false,
+        error: new ApiError('Server error', 500, null),
+      })
+      vi.mocked(webapi.createIncidenceRate).mockResolvedValue({
+        success: true,
+        data: { ...makeValidIR(), id: 99 },
+      })
+
+      const { save, feedback } = useIncidenceRateBuilder()
+      const ok = await save()
+
+      expect(ok).toBe(true)
+      expect(feedback.value?.color).toBe('success')
+      expect(webapi.createIncidenceRate).toHaveBeenCalled()
+    })
+
     it('creates a new IR when no id is set', async () => {
       const store = useIncidenceRateStore()
       store.setIR(makeValidIR())
 
-      vi.mocked(webapi.existsIncidenceRate).mockResolvedValue(0)
+      vi.mocked(webapi.existsIncidenceRate).mockResolvedValue({ success: true, data: 0 })
       vi.mocked(webapi.createIncidenceRate).mockResolvedValue({
         success: true,
         data: { ...makeValidIR(), id: 99 },
@@ -144,7 +166,7 @@ describe('useIncidenceRateBuilder', () => {
       const ir = makeValidIR({ id: 5 })
       store.setIR(ir)
 
-      vi.mocked(webapi.existsIncidenceRate).mockResolvedValue(0)
+      vi.mocked(webapi.existsIncidenceRate).mockResolvedValue({ success: true, data: 0 })
       vi.mocked(webapi.saveIncidenceRate).mockResolvedValue({
         success: true,
         data: { ...ir },
@@ -163,10 +185,10 @@ describe('useIncidenceRateBuilder', () => {
       const store = useIncidenceRateStore()
       store.setIR(makeValidIR({ id: 5 }))
 
-      vi.mocked(webapi.existsIncidenceRate).mockResolvedValue(0)
+      vi.mocked(webapi.existsIncidenceRate).mockResolvedValue({ success: true, data: 0 })
       vi.mocked(webapi.saveIncidenceRate).mockResolvedValue({
         success: false,
-        error: 'Server error',
+        error: new ApiError('Server error', 0, null),
       })
 
       const { save, feedback } = useIncidenceRateBuilder()
@@ -195,7 +217,7 @@ describe('useIncidenceRateBuilder', () => {
       store.setIR(makeValidIR({ id: 5 }))
       vi.mocked(webapi.copyIncidenceRate).mockResolvedValue({
         success: false,
-        error: 'Bad copy',
+        error: new ApiError('Bad copy', 0, null),
       })
 
       const { copy, feedback } = useIncidenceRateBuilder()
@@ -239,19 +261,22 @@ describe('useIncidenceRateBuilder', () => {
     it('returns false and notifies when delete fails', async () => {
       const store = useIncidenceRateStore()
       store.setIR(makeValidIR({ id: 5 }))
-      vi.mocked(webapi.deleteIncidenceRate).mockResolvedValue(false)
+      vi.mocked(webapi.deleteIncidenceRate).mockResolvedValue({
+        success: false,
+        error: new ApiError('conflict', 409, null),
+      })
 
       const { remove, feedback } = useIncidenceRateBuilder()
       const ok = await remove()
 
       expect(ok).toBe(false)
-      expect(feedback.value).toEqual({ message: 'Delete failed', color: 'error' })
+      expect(feedback.value).toEqual({ message: 'Delete failed: conflict', color: 'error' })
     })
 
     it('deletes and navigates to listing on success', async () => {
       const store = useIncidenceRateStore()
       store.setIR(makeValidIR({ id: 5 }))
-      vi.mocked(webapi.deleteIncidenceRate).mockResolvedValue(true)
+      vi.mocked(webapi.deleteIncidenceRate).mockResolvedValue({ success: true, data: undefined })
 
       const { remove, feedback } = useIncidenceRateBuilder()
       const ok = await remove()

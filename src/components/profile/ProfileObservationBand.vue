@@ -27,7 +27,7 @@
             y="0"
             :width="Math.max(1, x(b.x2) - x(b.x1))"
             height="12"
-            fill="#b7cbdc"
+            class="profile-obs-band__bar"
             opacity="0.7"
           />
         </svg>
@@ -105,6 +105,9 @@ const bands = computed(() => store.observationBands)
 
 .profile-obs-band {
   width: 100%;
+}
+.profile-obs-band__bar {
+  fill: #b7cbdc;
 }
 .profile-obs-band__empty {
   display: flex;

@@ -9,27 +9,27 @@
     </p>
 
     <div class="mt-3">
-      <v-menu location="bottom start">
+      <AtlasMenu location="bottom start">
         <template #activator="{ props: menuProps }">
-          <v-btn
+          <AtlasButton
             v-bind="menuProps"
             variant="outlined"
             size="small"
             prepend-icon="mdi-plus"
           >
             Add Censoring Event
-          </v-btn>
+          </AtlasButton>
         </template>
 
-        <v-list density="compact">
-          <v-list-item
+        <AtlasList density="compact">
+          <AtlasListItem
             v-for="type in criteriaTypes"
             :key="type"
             :title="type"
             @click="addCriteria(type)"
           />
-        </v-list>
-      </v-menu>
+        </AtlasList>
+      </AtlasMenu>
     </div>
 
     <div
@@ -56,18 +56,25 @@
       v-else
       class="censoring-criteria-editor__empty mt-3"
     >
-      <v-icon
+      <AtlasIcon
         size="16"
         class="censoring-criteria-editor__empty-icon"
       >
         mdi-information-outline
-      </v-icon>
+      </AtlasIcon>
       <span>No censoring events defined. Cohort exit is determined only by the end strategy above.</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import {
+  AtlasButton,
+  AtlasIcon,
+  AtlasList,
+  AtlasListItem,
+  AtlasMenu,
+} from '@/components/ui'
 import type { Criteria } from '../circe.types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from '../criteria/criteria-editor.types'
 import CriteriaRenderer from '../criteria/CriteriaRenderer.vue'

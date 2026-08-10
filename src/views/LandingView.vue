@@ -287,7 +287,7 @@ onMounted(() => {
 .landing__feature-title {
   font-size: 14px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--atlas-color-on-surface);
 }
 
 .landing__feature-description {

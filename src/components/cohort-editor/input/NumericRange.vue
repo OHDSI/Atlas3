@@ -1,6 +1,6 @@
 <template>
   <div class="numeric-range d-flex align-center ga-2 flex-nowrap">
-    <v-select
+    <AtlasSelect
       v-model="operator"
       class="numeric-range__operator"
       :items="operators"
@@ -10,7 +10,7 @@
       density="compact"
       hide-details
     />
-    <v-text-field
+    <AtlasTextField
       v-model="value"
       class="numeric-range__value"
       type="number"
@@ -18,7 +18,7 @@
       density="compact"
       hide-details
     />
-    <v-text-field
+    <AtlasTextField
       v-if="operator === 'bt' || operator === '!bt'"
       v-model="extent"
       class="numeric-range__extent"
@@ -32,6 +32,7 @@
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
+import { AtlasSelect, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { NumericRange, NumericRangeOp } from '../circe.types'
 import { optionalNumberBinding } from './bindings'

@@ -2,8 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { usePathwayStore } from '@/stores/pathway'
 import { PATHWAY_DEFAULTS, PATHWAY_AUTO_SAVE_INTERVAL_MS } from '@/models/pathway.types'
+import { ApiError } from '@/services/api-error'
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/pathway.service', () => ({
   getPathway: vi.fn().mockResolvedValue({
     success: true,
     data: {
@@ -12,9 +13,9 @@ vi.mock('@/services/webapi', () => ({
       combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
     },
   }),
-  existsPathway: vi.fn().mockResolvedValue(0),
-  assignPathwayTag: vi.fn().mockResolvedValue(true),
-  unassignPathwayTag: vi.fn().mockResolvedValue(true),
+  existsPathway: vi.fn().mockResolvedValue({ success: true, data: 0 }),
+  assignPathwayTag: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+  unassignPathwayTag: vi.fn().mockResolvedValue({ success: true, data: undefined }),
 }))
 
 vi.mock('@/services/pathway-versions.service', () => ({
@@ -281,7 +282,7 @@ describe('pathway store — load/preview lifecycle', () => {
   beforeEach(async () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-    const webapi = await import('@/services/webapi')
+    const webapi = await import('@/services/pathway.service')
     vi.mocked(webapi.getPathway).mockResolvedValue({
       success: true,
       data: {
@@ -293,7 +294,7 @@ describe('pathway store — load/preview lifecycle', () => {
   })
 
   it('loadPathway returns false on failure and logs', async () => {
-    const webapi = await import('@/services/webapi')
+    const webapi = await import('@/services/pathway.service')
     vi.mocked(webapi.getPathway).mockResolvedValueOnce({
       success: false,
       error: 'not found',
@@ -319,8 +320,9 @@ describe('pathway store — load/preview lifecycle', () => {
     expect(ok).toBe(true)
     expect(s.isPreviewMode).toBe(true)
     expect(s.currentPathway?.name).toBe('Versioned')
-    s.clearPreviewVersion()
+    await s.clearPreviewVersion()
     expect(s.isPreviewMode).toBe(false)
+    expect(s.currentPathway?.name).toBe('Loaded')
   })
 
   it('loadVersionPreview returns false on exception', async () => {
@@ -447,9 +449,9 @@ describe('pathway store — tags', () => {
   beforeEach(async () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-    const webapi = await import('@/services/webapi')
-    vi.mocked(webapi.assignPathwayTag).mockResolvedValue(true)
-    vi.mocked(webapi.unassignPathwayTag).mockResolvedValue(true)
+    const webapi = await import('@/services/pathway.service')
+    vi.mocked(webapi.assignPathwayTag).mockResolvedValue({ success: true, data: undefined })
+    vi.mocked(webapi.unassignPathwayTag).mockResolvedValue({ success: true, data: undefined })
   })
 
   it('addTag returns false when no pathway id', async () => {
@@ -481,8 +483,11 @@ describe('pathway store — tags', () => {
   })
 
   it('addTag returns false when API call fails (does not push)', async () => {
-    const webapi = await import('@/services/webapi')
-    vi.mocked(webapi.assignPathwayTag).mockResolvedValueOnce(false)
+    const webapi = await import('@/services/pathway.service')
+    vi.mocked(webapi.assignPathwayTag).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('conflict', 409, null),
+    })
     const s = usePathwayStore()
     s.createNewPathway()
     s.currentPathway!.id = 7
@@ -512,8 +517,11 @@ describe('pathway store — tags', () => {
   })
 
   it('removeTag returns false on API failure', async () => {
-    const webapi = await import('@/services/webapi')
-    vi.mocked(webapi.unassignPathwayTag).mockResolvedValueOnce(false)
+    const webapi = await import('@/services/pathway.service')
+    vi.mocked(webapi.unassignPathwayTag).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('conflict', 409, null),
+    })
     const s = usePathwayStore()
     s.createNewPathway()
     s.currentPathway!.id = 7
@@ -591,5 +599,61 @@ describe('pathway store — canSave / canGenerate', () => {
     expect(s.isPreviewMode).toBe(true)
     expect(s.canSave).toBe(false)
     expect(s.canGenerate).toBe(false)
+  })
+})
+
+describe('savePreviewAsCurrent', () => {
+  it('PUTs the previewed pathway and clears preview on success', async () => {
+    const savePathway = vi.fn().mockResolvedValue({
+      success: true,
+      data: { id: 4, name: 'P' },
+    })
+    vi.doMock('@/services/pathway.service', () => ({ savePathway }))
+
+    const { usePathwayStore } = await import('@/stores/pathway')
+    const store = usePathwayStore()
+    store.currentPathway = { id: 4, name: 'P' } as never
+    store.previewVersion = { version: 2 } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(true)
+    expect(savePathway).toHaveBeenCalledWith(4, store.currentPathway)
+    expect(store.previewVersion).toBeNull()
+  })
+
+  it('keeps preview state when the server rejects the save', async () => {
+    const savePathway = vi.fn().mockResolvedValue({ success: false, error: 'nope' })
+    vi.doMock('@/services/pathway.service', () => ({ savePathway }))
+
+    const { usePathwayStore } = await import('@/stores/pathway')
+    const store = usePathwayStore()
+    store.currentPathway = { id: 4, name: 'P' } as never
+    store.previewVersion = { version: 2 } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(false)
+    expect(store.previewVersion).not.toBeNull()
+  })
+
+  it('refuses when not in preview mode', async () => {
+    const { usePathwayStore } = await import('@/stores/pathway')
+    const store = usePathwayStore()
+    store.currentPathway = { id: 4, name: 'P' } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(false)
+  })
+})
+
+// A generation started by the agent does not go through the workbench's own
+// composable, so nothing polls it and the page sits on "No runs yet" until a
+// manual reload. The store carries the signal the workbench watches.
+describe('agentGenerationSignal', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('starts at zero and increments per agent-started run', () => {
+    const store = usePathwayStore()
+    expect(store.agentGenerationSignal).toBe(0)
+    store.notifyAgentGeneration()
+    expect(store.agentGenerationSignal).toBe(1)
+    store.notifyAgentGeneration()
+    expect(store.agentGenerationSignal).toBe(2)
   })
 })

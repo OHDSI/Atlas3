@@ -1,11 +1,12 @@
 /**
  * Permission Service
  *
- * Handles permission checking with Apache Shiro-style wildcard matching.
- * Implements LRU cache with TTL for performance optimization.
+ * Flat-array facade over the Apache Shiro matcher in permissionChecker,
+ * with an LRU/TTL cache for performance optimization.
  */
 
 import type { PermissionRule, PermissionCache, PermissionCacheEntry } from '@/types/auth'
+import { permissionChecker } from '@/services/auth/permissionChecker'
 
 class PermissionService {
   private cache: PermissionCache = {
@@ -34,19 +35,6 @@ class PermissionService {
 
     this.cache.totalMisses++
 
-    // Check for exact match
-    if (userPermissions.includes(requiredPermission)) {
-      this.cacheResult(requiredPermission, true)
-      return true
-    }
-
-    // Check for global wildcard
-    if (userPermissions.includes('*')) {
-      this.cacheResult(requiredPermission, true)
-      return true
-    }
-
-    // Check each user permission for wildcard match
     const result = userPermissions.some(userPerm =>
       this.checkWildcardMatch(userPerm, requiredPermission)
     )
@@ -60,38 +48,12 @@ class PermissionService {
   /**
    * Check wildcard match between user permission and required permission
    *
-   * Implements Apache Shiro-style pattern matching with colon separator.
-   *
    * @param userPerm - User's permission (may contain wildcards)
    * @param requiredPerm - Required permission (typically specific)
    * @returns true if user permission matches required permission
    */
   checkWildcardMatch(userPerm: string, requiredPerm: string): boolean {
-    // Exact match
-    if (userPerm === requiredPerm) return true
-
-    // Global wildcard in user permission
-    if (userPerm === '*') return true
-
-    const userLevels = userPerm.split(':')
-    const requiredLevels = requiredPerm.split(':')
-
-    // Compare each level
-    for (let i = 0; i < Math.max(userLevels.length, requiredLevels.length); i++) {
-      const userLevel = userLevels[i] || ''
-      const requiredLevel = requiredLevels[i] || ''
-
-      // User has wildcard at this level - match
-      if (userLevel === '*') continue
-
-      // Exact match at this level - continue
-      if (userLevel === requiredLevel) continue
-
-      // No match at this level - fail
-      return false
-    }
-
-    return true
+    return permissionChecker.checkPermission(requiredPerm, userPerm)
   }
 
   /**

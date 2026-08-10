@@ -108,7 +108,7 @@ const { t } = useI18n()
   height: 8px;
   border-radius: 50%;
   background: rgb(var(--v-theme-primary));
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--atlas-color-surface) 90%, transparent);
   pointer-events: none;
 }
 </style>

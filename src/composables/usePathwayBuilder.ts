@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePathwayStore } from '@/stores/pathway'
-import { createPathway, savePathway, copyPathway, deletePathway } from '@/services/webapi'
+import { createPathway, savePathway, copyPathway, deletePathway } from '@/services/pathway.service'
 import type { Pathway } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
 
@@ -46,7 +46,7 @@ export function usePathwayBuilder() {
       ? await savePathway(id, store.currentPathway)
       : await createPathway(store.currentPathway)
     if (!result.success) {
-      notify(`Save failed: ${result.error}`, 'error')
+      notify(`Save failed: ${result.error.message}`, 'error')
       return null
     }
     store.setPathway(result.data)
@@ -64,7 +64,7 @@ export function usePathwayBuilder() {
     if (!id) return null
     const result = await copyPathway(id)
     if (!result.success) {
-      notify(`Copy failed: ${result.error}`, 'error')
+      notify(`Copy failed: ${result.error.message}`, 'error')
       logger.error('PathwayBuilder', 'copy failed', result.error)
       return null
     }
@@ -75,14 +75,15 @@ export function usePathwayBuilder() {
   async function remove(): Promise<boolean> {
     const id = store.currentPathway?.id
     if (!id) return false
-    const ok = await deletePathway(id)
-    if (ok) {
+    const result = await deletePathway(id)
+    if (result.success) {
       notify('Pathway deleted', 'success')
       router.push('/pathways')
     } else {
-      notify('Delete failed', 'error')
+      notify(`Delete failed: ${result.error.message}`, 'error')
+      logger.error('PathwayBuilder', 'delete failed', result.error)
     }
-    return ok
+    return result.success
   }
 
   return { save, copy, remove, feedback }

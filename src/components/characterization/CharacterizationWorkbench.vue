@@ -158,7 +158,7 @@ import { useCharacterizationStore } from '@/stores/characterization'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { useCharacterizationResults } from '@/composables/useCharacterizationResults'
 import { isTerminalStatus } from '@/composables/useExecutionPolling'
-import { getCohortGenerationInfo } from '@/services/webapi'
+import { getCohortGenerationInfo } from '@/services/cohort-definition.service'
 import { logger } from '@/utils/logger'
 import {
   DEFAULT_TABLE1_CONFIG, DEFAULT_TABLE1_FILTERS,
@@ -378,7 +378,7 @@ async function handleRun(sourceKey: string): Promise<void> {
   if (props.characterizationId == null) return
   try {
     const exec = await store.runExecution(props.characterizationId, sourceKey)
-    onRunStarted(exec)
+    if (exec) onRunStarted(exec)
   } catch (err) {
     logger.error('CharacterizationWorkbench', 'Run failed', err)
     const msg = err instanceof Error ? err.message : tv('cc.fa.runError', 'Failed to start generation')
@@ -522,7 +522,7 @@ function onExport(): void {
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 600;
-  color: #fff;
+  color: var(--atlas-color-on-primary);
   cursor: pointer;
   align-self: flex-start;
 }

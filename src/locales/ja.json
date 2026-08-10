@@ -1510,6 +1510,7 @@
       "description": "生成されたコホートから抽出された対象者のランダムな選択で、年齢と性別で任意に絞り込めます。",
       "newSample": "新規サンプル",
       "failedToLoadSamples": "サンプルの読み込みに失敗しました",
+      "failedToLoadSampleDetail": "サンプル詳細の読み込みに失敗しました",
       "failedToCreateSample": "サンプルの作成に失敗しました"
     },
     "cohortSampleDetail": {
@@ -1671,7 +1672,8 @@
       "searching": "コンセプトを検索中...",
       "foundResults": "{count} 件の結果が見つかりました",
       "conceptMeta": "ID: {id} | コード: {code} | ドメイン: {domain}",
-      "enterSearchTerm": "コンセプトを検索するには検索語を入力してください"
+      "enterSearchTerm": "コンセプトを検索するには検索語を入力してください",
+      "searchFailed": "コンセプトの検索に失敗しました"
     },
     "cohortBuilder": {
       "stateRequired": "必須",
@@ -1688,8 +1690,11 @@
       "stateDrugExposure": "薬剤曝露",
       "stateConfigured": "設定済み",
       "saveToServerError": "コホートをサーバーに保存できませんでした",
+      "saveForbidden": "このコホートを保存する権限がありません",
       "saveSuccess": "コホートを保存しました",
       "saveError": "コホートを保存できませんでした",
+      "loadForbidden": "このコホートを開く権限がありません",
+      "loadError": "コホートの読み込みに失敗しました",
       "exportFailed": "エクスポートに失敗しました: {error}",
       "exportDownloaded": "コホート JSON をダウンロードしました",
       "copiedToClipboard": "コホート JSON をクリップボードにコピーしました",
@@ -2143,7 +2148,8 @@
         "export": {
           "title": "デザインをエクスポート",
           "description": "デザインを JSON としてダウンロードします。",
-          "download": "デザイン JSON をダウンロード"
+          "download": "デザイン JSON をダウンロード",
+          "exportError": "エクスポートに失敗しました。"
         },
         "import": {
           "title": "デザインをインポート",
@@ -3859,6 +3865,8 @@
   },
   "cohortDefinitions": {
     "closeYourCurrentCohort": "新しいコホート定義を作成する前に、現在のコホート定義を閉じてください",
+    "copyLoadForbidden": "このコホートを読み取る権限がありません。",
+    "deleteError": "コホートの削除に失敗しました。",
     "cohort": {
       "modals": {
         "analysisTypes": {
@@ -5972,5 +5980,11 @@
       "title": "ロールと権限の管理",
       "subtitle": "ユーザーロールの管理、権限の割り当て、システム機能へのアクセス制御を行います。"
     }
+  },
+  "theme": {
+    "label": "テーマ",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム"
   }
 }

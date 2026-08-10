@@ -104,6 +104,13 @@ const treemapNodes = computed<TreemapNode[]>(() => {
   border-radius: 3px;
   background: linear-gradient(to right, #7e9bbf, #4e79a7, #1f425a);
 }
+
+/* Mirrors chart-config.ts's DARK_TREEMAP_GRADIENT: the light ramp's navy
+   end sits at 1.71:1 on the dark surface (near-invisible), so dark runs
+   mid-blue to pale blue instead, matching the treemap's own dark colours. */
+.v-theme--dark .ir-treemap__legend-bar {
+  background: linear-gradient(to right, #4e79a7, #7fb3e0, #a8cdea);
+}
 .ir-treemap__legend-label {
   font-weight: 600;
   font-size: 10px;

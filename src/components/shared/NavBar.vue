@@ -119,6 +119,12 @@
         <!-- Language Selector -->
         <LanguageSelector v-if="showLanguageSelector" />
 
+        <!-- Theme (light / dark / system): opt-in per deployment -->
+        <ThemeToggle
+          v-if="showThemeToggle"
+          data-testid="nav-theme"
+        />
+
         <!-- Docs (user manual) -->
         <AtlasIconButton
           icon="mdi-book-open-page-variant-outline"
@@ -150,6 +156,7 @@
           v-bind="{ ariaLabel: t('config.accessibility.openPanel', 'Open configuration panel').value }"
           variant="text"
           size="sm"
+          data-testid="nav-config"
           @click="handleConfigClick"
         />
 
@@ -185,6 +192,20 @@
               </AtlasButton>
             </template>
             <AtlasList>
+              <AtlasListItem
+                v-for="item in accountMenuItems"
+                :key="item.key"
+                :data-testid="`account-menu-${item.key}`"
+                @click="handleAccountItemClick(item)"
+              >
+                <template #prepend>
+                  <AtlasIcon>{{ item.icon ?? 'mdi-puzzle-outline' }}</AtlasIcon>
+                </template>
+                <v-list-item-title>
+                  {{ item.name }}
+                </v-list-item-title>
+              </AtlasListItem>
+              <AtlasDivider v-if="accountMenuItems.length" />
               <AtlasListItem @click="handleLogout">
                 <template #prepend>
                   <AtlasIcon>mdi-logout</AtlasIcon>
@@ -205,13 +226,14 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
 import { usePermissions } from '@/composables/usePermissions'
 import { useUIStore } from '@/stores/ui'
+import { usePluginMounts } from '@/composables/usePluginMounts'
 import { getAuthConfig } from '@/config/auth.config'
 import {
   generatePluginMenuItems,
@@ -223,8 +245,11 @@ import { logger } from '@/utils/logger'
 import LoginModal from '@/components/auth/LoginModal.vue'
 import LanguageSelector from '@/components/LanguageSelector.vue'
 import NotificationInbox from '@/components/shared/NotificationInbox.vue'
+import ThemeToggle from './ThemeToggle.vue'
 import logoSvg from '@/assets/icons/atlas-text.svg'
+import logoDarkSvg from '@/assets/icons/atlas-text-dark.svg'
 import logoOhdsiOnlyPng from '@/assets/icons/OHDSI logo only - colored.png'
+import { useThemeStore } from '@/stores/theme'
 
 interface NavigationItem {
   id: string
@@ -240,16 +265,24 @@ const { t } = useI18n()
 const { hasAnyPermission } = usePermissions()
 const uiStore = useUIStore()
 
+const { items: adminTabMounts } = usePluginMounts('admin-tabs')
+const { items: accountMenuItems } = usePluginMounts('account-menu')
+
 // Hide the cog icon entirely for users without any admin permission. Mirrors
 // the per-tab gating in ConfigPanel — if every section would be hidden, the
 // entry point shouldn't be visible at all. Jobs now has its own nav entry
-// (hasJobsAccess) and is no longer gating the cog.
-const hasAnyAdminAccess = computed(() =>
-  hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security'])
+// (hasJobsAccess) and is no longer gating the cog. Plugin-contributed admin
+// tabs also keep the cog visible, even with no core admin permission.
+const hasAnyAdminAccess = computed(
+  () =>
+    hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security']) ||
+    adminTabMounts.value.length > 0
 )
 const hasJobsAccess = computed(() => hasAnyPermission(['job:execution:get']))
 
-const logoSrc = logoSvg
+// The brand navy logo measures 1.70:1 on the dark surface — effectively invisible.
+const themeStore = useThemeStore()
+const logoSrc = computed(() => (themeStore.resolved === 'dark' ? logoDarkSvg : logoSvg))
 const logoOhdsiOnlySrc = logoOhdsiOnlyPng
 const customLogoUrl = ref<string | null>(null)
 
@@ -257,6 +290,7 @@ const showFeedbackButton = ref(true)
 const showLanguageSelector = ref(true)
 const showConfigButton = ref(true)
 const showUserMenu = ref(true)
+const showThemeToggle = ref(false)
 const feedbackUrl = ref('https://forms.office.com/r/2JzrYy1yDP')
 const logoNavigateTo = ref('/')
 
@@ -365,6 +399,11 @@ const handleNavClick = async (item: NavigationItem) => {
   router.push(item.route)
 }
 
+function handleAccountItemClick(item: { pluginId: string; path?: string }) {
+  const suffix = item.path ?? ''
+  router.push(`/plugins/${item.pluginId}/${suffix}`.replace(/\/+$/, ''))
+}
+
 async function handleLogout() {
   try {
     await auth.logout()
@@ -409,6 +448,7 @@ onMounted(() => {
   showLanguageSelector.value = pluginConfigService.showLanguageSelector()
   showConfigButton.value = pluginConfigService.showConfigButton()
   showUserMenu.value = pluginConfigService.showUserMenu()
+  showThemeToggle.value = pluginConfigService.showThemeToggle()
   feedbackUrl.value = pluginConfigService.getFeedbackUrl()
   logoNavigateTo.value = pluginConfigService.getLogoNavigateTo()
 
@@ -418,6 +458,7 @@ onMounted(() => {
     showLanguageSelector.value = pluginConfigService.showLanguageSelector()
     showConfigButton.value = pluginConfigService.showConfigButton()
     showUserMenu.value = pluginConfigService.showUserMenu()
+    showThemeToggle.value = pluginConfigService.showThemeToggle()
     feedbackUrl.value = pluginConfigService.getFeedbackUrl()
     logoNavigateTo.value = pluginConfigService.getLogoNavigateTo()
   })

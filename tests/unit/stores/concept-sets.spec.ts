@@ -21,6 +21,7 @@ vi.mock('@/services/concept-search.service', () => ({
   getConceptRecordCounts: vi.fn(),
   compareConceptSets: vi.fn(),
   getMappedSourceCodes: vi.fn(),
+  resolveConceptSetExpression: vi.fn(),
 }))
 
 vi.mock('@/utils/api-mappers', () => ({
@@ -80,6 +81,7 @@ import {
   getConceptRecordCounts,
   compareConceptSets,
   getMappedSourceCodes,
+  resolveConceptSetExpression,
 } from '@/services/concept-search.service'
 import type { ComparisonResultItem } from '@/models/concept-set.types'
 
@@ -225,13 +227,22 @@ describe('Concept Sets Store', () => {
       expect(store.loading).toBe(false)
     })
 
-    it('should not fetch if already loading', async () => {
+    it('should share the in-flight request with concurrent callers', async () => {
       const store = useConceptSetsStore()
-      store.loading = true
+      let resolveFetch: (value: typeof mockConceptSetList) => void = () => {}
+      vi.mocked(getAllConceptSets).mockImplementation(
+        () => new Promise(resolve => { resolveFetch = resolve })
+      )
 
-      await store.fetchAll()
+      const first = store.fetchAll()
+      const second = store.fetchAll()
+      resolveFetch(mockConceptSetList)
+      await Promise.all([first, second])
 
-      expect(getAllConceptSets).not.toHaveBeenCalled()
+      expect(getAllConceptSets).toHaveBeenCalledTimes(1)
+      // The second caller awaited the real response instead of resolving
+      // against the previous (empty) list.
+      expect(store.conceptSets).toEqual(mockConceptSetList)
     })
   })
 
@@ -264,6 +275,25 @@ describe('Concept Sets Store', () => {
       expect(store.error).toBe('Network error')
       expect(store.currentSet).toBeNull()
     })
+
+    it('should ignore a slow response from a superseded request', async () => {
+      const store = useConceptSetsStore()
+      const older = { ...mockConceptSet, id: 1, name: 'Older' } as ConceptSet
+      const newer = { ...mockConceptSet, id: 2, name: 'Newer' } as ConceptSet
+      let resolveOlder: (value: ConceptSet) => void = () => {}
+      vi.mocked(getConceptSetById)
+        .mockImplementationOnce(() => new Promise(resolve => { resolveOlder = resolve }))
+        .mockResolvedValueOnce(newer)
+
+      const first = store.fetchOne(1)
+      const second = store.fetchOne(2)
+      await second
+      resolveOlder(older)
+      await first
+
+      expect(store.currentSet).toEqual(newer)
+      expect(store.loading).toBe(false)
+    })
   })
 
   describe('create Action', () => {
@@ -277,16 +307,6 @@ describe('Concept Sets Store', () => {
 
       expect(result).toEqual({ ...newSet, id: 4 })
       expect(store.currentSet).toEqual({ ...newSet, id: 4 })
-    })
-
-    it('should handle create failure', async () => {
-      const store = useConceptSetsStore()
-      vi.mocked(createConceptSet).mockResolvedValue(null)
-
-      const result = await store.create({ name: 'New Set', items: [] })
-
-      expect(result).toBeNull()
-      expect(store.error).toBe('Failed to create concept set')
     })
 
     it('should handle create error', async () => {
@@ -311,16 +331,6 @@ describe('Concept Sets Store', () => {
 
       expect(result).toEqual(updatedSet)
       expect(store.currentSet).toEqual(updatedSet)
-    })
-
-    it('should handle update failure', async () => {
-      const store = useConceptSetsStore()
-      vi.mocked(updateConceptSet).mockResolvedValue(null)
-
-      const result = await store.update(mockConceptSet)
-
-      expect(result).toBeNull()
-      expect(store.error).toBe('Failed to update concept set')
     })
 
     it('should handle update error', async () => {
@@ -827,6 +837,62 @@ describe('Concept Sets Store', () => {
       expect(store.loadingRecommended).toBe(false)
     })
 
+    it('should clear a previous unavailable flag once a later load succeeds', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Test', items: [makeItem(1)] }
+
+      vi.mocked(getRecommendedConcepts).mockResolvedValue({ available: false, concepts: [] })
+      await store.loadRecommendedConcepts('NO_PHOEBE')
+      expect(store.isRecommendedAvailable).toBe(false)
+
+      vi.mocked(getRecommendedConcepts).mockResolvedValue({
+        available: true,
+        concepts: [makeRecommended(10)],
+      })
+      vi.mocked(getConceptRecordCounts).mockResolvedValue(new Map())
+      await store.loadRecommendedConcepts('HAS_PHOEBE')
+
+      expect(store.isRecommendedAvailable).toBe(true)
+      expect(store.recommendedConcepts.map((c) => c.conceptId)).toEqual([10])
+    })
+
+    it('should surface a later failure as an error rather than keeping the unavailable flag', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Test', items: [makeItem(1)] }
+
+      vi.mocked(getRecommendedConcepts).mockResolvedValue({ available: false, concepts: [] })
+      await store.loadRecommendedConcepts('NO_PHOEBE')
+      expect(store.isRecommendedAvailable).toBe(false)
+
+      vi.mocked(getRecommendedConcepts).mockRejectedValue(new Error('boom'))
+      await store.loadRecommendedConcepts('HAS_PHOEBE')
+
+      expect(store.isRecommendedAvailable).toBe(true)
+      expect(store.recommendedError).toContain('boom')
+    })
+
+    it('should drop a previous unavailable flag while the next load is in flight', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Test', items: [makeItem(1)] }
+
+      vi.mocked(getRecommendedConcepts).mockResolvedValue({ available: false, concepts: [] })
+      await store.loadRecommendedConcepts('NO_PHOEBE')
+      expect(store.isRecommendedAvailable).toBe(false)
+
+      let resolve: (v: { available: true; concepts: Concept[] }) => void = () => {}
+      const pending = new Promise<{ available: true; concepts: Concept[] }>((r) => {
+        resolve = r
+      })
+      vi.mocked(getRecommendedConcepts).mockReturnValue(pending)
+      vi.mocked(getConceptRecordCounts).mockResolvedValue(new Map())
+
+      const inFlight = store.loadRecommendedConcepts('HAS_PHOEBE')
+      expect(store.isRecommendedAvailable).toBe(true)
+
+      resolve({ available: true, concepts: [] })
+      await inFlight
+    })
+
     it('should toggle loadingRecommended true during call and false in finally', async () => {
       const store = useConceptSetsStore()
       store.currentSet = { name: 'Test', items: [makeItem(1)] }
@@ -1034,6 +1100,47 @@ describe('Concept Sets Store', () => {
     })
   })
 
+  describe('resolveIncluded', () => {
+    it('falls back to the configured default source when no vocabulary source is selected yet (#158)', async () => {
+      // Regression test: when opened without an injected sourceKey and before any
+      // WebAPI vocabulary source has been loaded/selected (e.g. the concept set
+      // editor embedded in the cohort builder), the debounced auto-resolve used to
+      // call resolveIncluded() with no argument and only fall back to
+      // webapiStore.getValidVocabularySource(), which returns null in this state.
+      // That left includedItems (and therefore the Source Codes tab) empty even
+      // though the concept set has items. It must now also fall back to
+      // getSourceKey()'s configured default.
+      localStorage.removeItem('selectedVocabulary')
+      const store = useConceptSetsStore()
+      store.currentSet = {
+        name: 'Test',
+        items: [{
+          conceptId: 201826,
+          conceptName: 'Type 2 diabetes',
+          conceptCode: '44054006',
+          domainId: 'Condition',
+          vocabularyId: 'SNOMED',
+          conceptClassId: 'Clinical Finding',
+          standardConcept: 'S',
+          invalidReason: null,
+          isExcluded: false,
+          includeDescendants: false,
+          includeMapped: false,
+        }],
+      }
+      vi.mocked(resolveConceptSetExpression).mockResolvedValue([])
+
+      await store.resolveIncluded()
+
+      expect(resolveConceptSetExpression).toHaveBeenCalledWith(
+        'SYNPUF1K',
+        expect.anything(),
+        expect.any(AbortSignal),
+      )
+      expect(store.includedError).toBeNull()
+    })
+  })
+
   describe('resolveSourceCodes', () => {
     const mappedConcept = (id: number): Concept => ({
       conceptId: id,
@@ -1128,17 +1235,84 @@ describe('Concept Sets Store', () => {
         comment: null,
         archived: false,
       }
-      const historicalSet = { ...mockConceptSet, name: 'Historical Set' }
+      // entityDTO never carries items (WebAPI's ConceptSetDTO has none) - the
+      // service returns them as a sibling field, mirroring ConceptSetVersionedAsset
+      const historicalEntity = { id: 1, name: 'Historical Set' }
+      const historicalItems: ConceptSetItem[] = [
+        {
+          conceptId: 999,
+          conceptName: 'Historical concept',
+          conceptCode: 'H1',
+          domainId: 'Condition',
+          vocabularyId: 'SNOMED',
+          conceptClassId: 'Clinical Finding',
+          standardConcept: 'S',
+          invalidReason: null,
+          isExcluded: false,
+          includeDescendants: true,
+          includeMapped: false,
+        },
+      ]
       vi.mocked(mockGetConceptSetVersion).mockResolvedValueOnce({
         versionDTO,
-        entityDTO: historicalSet,
+        entityDTO: historicalEntity,
+        items: historicalItems,
       })
 
       await store.loadVersionPreview(3)
 
       expect(store.previewVersion).toEqual(versionDTO)
       expect(store.currentSet?.name).toBe('Historical Set')
+      expect(store.currentSet?.items).toEqual(historicalItems)
       expect(store.isDirty).toBe(false)
+    })
+
+    it('savePreviewAsCurrent sends the historical items to the update service', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = mockConceptSet
+
+      const versionDTO = {
+        version: 3,
+        assetId: 1,
+        createdBy: { id: 1, name: 'User', email: 'u@test.com' },
+        createdDate: '2024-01-01T00:00:00Z',
+        comment: null,
+        archived: false,
+      }
+      const historicalItems: ConceptSetItem[] = [
+        {
+          conceptId: 999,
+          conceptName: 'Historical concept',
+          conceptCode: 'H1',
+          domainId: 'Condition',
+          vocabularyId: 'SNOMED',
+          conceptClassId: 'Clinical Finding',
+          standardConcept: 'S',
+          invalidReason: null,
+          isExcluded: false,
+          includeDescendants: true,
+          includeMapped: false,
+        },
+      ]
+      vi.mocked(mockGetConceptSetVersion).mockResolvedValueOnce({
+        versionDTO,
+        entityDTO: { id: 1, name: 'Historical Set' },
+        items: historicalItems,
+      })
+      vi.mocked(updateConceptSet).mockResolvedValueOnce({
+        id: 1,
+        name: 'Historical Set',
+        items: historicalItems,
+      })
+      vi.mocked(getAllConceptSets).mockResolvedValueOnce([])
+
+      await store.loadVersionPreview(3)
+      const result = await store.savePreviewAsCurrent()
+
+      expect(result).toBe(true)
+      expect(updateConceptSet).toHaveBeenCalledWith(
+        expect.objectContaining({ items: historicalItems })
+      )
     })
 
     it('loadVersionPreview rethrows on service error', async () => {

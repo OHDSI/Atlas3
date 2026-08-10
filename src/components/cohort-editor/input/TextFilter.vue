@@ -1,6 +1,6 @@
 <template>
   <div class="text-filter d-flex align-center ga-2 flex-nowrap">
-    <v-select
+    <AtlasSelect
       v-model="operator"
       class="text-filter__operator"
       :items="operators"
@@ -10,7 +10,7 @@
       density="compact"
       hide-details
     />
-    <v-text-field
+    <AtlasTextField
       v-model="value"
       class="text-filter__value"
       variant="outlined"
@@ -22,6 +22,7 @@
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
+import { AtlasSelect, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { TextFilter, TextFilterOp } from '../circe.types'
 import { optionalTextBinding } from './bindings'

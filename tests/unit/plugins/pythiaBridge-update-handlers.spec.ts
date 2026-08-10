@@ -20,8 +20,10 @@ vi.mock('@/services/feature-analysis.service', () => ({
 vi.mock('@/services/characterization.service', () => ({
   createCharacterization: vi.fn(),
 }))
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/pathway.service', () => ({
   createPathway: vi.fn(),
+}))
+vi.mock('@/services/incidence-rate.service', () => ({
   createIncidenceRate: vi.fn(),
 }))
 
@@ -29,8 +31,10 @@ import router from '@/router'
 import { createConceptSet } from '@/services/concept-set.service'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
 import { createCharacterization } from '@/services/characterization.service'
-import { createPathway, createIncidenceRate } from '@/services/webapi'
+import { createPathway } from '@/services/pathway.service'
+import { createIncidenceRate } from '@/services/incidence-rate.service'
 import { setupPythiaBridge } from '@/plugins/host/pythiaBridge'
+import { ApiError } from '@/services/api-error'
 import { useCohortStore } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
@@ -841,10 +845,13 @@ describe('pythiaBridge update-existing handlers', () => {
 
   it('createFeatureAnalysis → service returns no id → no navigate', async () => {
     vi.mocked(createFeatureAnalysis).mockResolvedValue({
-      id: undefined as unknown as number,
-      name: 'no id',
-      type: 'PRESET',
-      design: '',
+      success: true,
+      data: {
+        id: undefined as unknown as number,
+        name: 'no id',
+        type: 'PRESET',
+        design: '',
+      },
     } as never)
 
     dispatchPluginMessage({
@@ -864,8 +871,11 @@ describe('pythiaBridge update-existing handlers', () => {
     expect(router.push).not.toHaveBeenCalled()
   })
 
-  it('createFeatureAnalysis → service throws → snackbar error, no navigate', async () => {
-    vi.mocked(createFeatureAnalysis).mockRejectedValue(new Error('boom'))
+  it('createFeatureAnalysis → service fails → snackbar error, no navigate', async () => {
+    vi.mocked(createFeatureAnalysis).mockResolvedValue({
+      success: false,
+      error: new ApiError('boom', 0, null),
+    } as never)
 
     dispatchPluginMessage({
       type: 'cohort.applyProposal',

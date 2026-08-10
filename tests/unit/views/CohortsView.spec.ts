@@ -34,12 +34,16 @@ vi.mock('@/composables/usePagination', () => ({
 }))
 
 // Mock webapi services
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/cohort-definition.service', () => ({
   deleteCohort: vi.fn(),
   getCohortDefinition: vi.fn(),
   getCohortPrintFriendly: vi.fn(),
   saveCohortDefinition: vi.fn()
 }))
+
+import { success, failure } from '@/types/api'
+import { ApiError } from '@/services/api-error'
+import { logger } from '@/utils/logger'
 
 // Mock logger
 vi.mock('@/utils/logger', () => ({
@@ -91,7 +95,7 @@ vi.mock('@/components/cohort/CohortPagination.vue', () => ({
 vi.mock('@/components/cohort/CohortFilters.vue', () => ({
   default: {
     name: 'CohortFilters',
-    template: '<div class="cohort-filters-mock"></div>',
+    template: '<div class="cohort-filters-mock"><slot name="actions" /></div>',
     props: ['filters', 'availableTags', 'availableAuthors', 'activeFilterCount']
   }
 }))
@@ -104,7 +108,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
-import { deleteCohort, getCohortDefinition, getCohortPrintFriendly, saveCohortDefinition } from '@/services/webapi'
+import { deleteCohort, getCohortDefinition, getCohortPrintFriendly, saveCohortDefinition } from '@/services/cohort-definition.service'
 
 // Create mock implementations
 const mockPush = vi.fn()
@@ -498,7 +502,7 @@ describe('CohortsView.vue', () => {
     })
 
     it('should call deleteCohort service on confirm', async () => {
-      vi.mocked(deleteCohort).mockResolvedValue(undefined)
+      vi.mocked(deleteCohort).mockResolvedValue(success(undefined))
       wrapper.vm.selectedCohort = mockCohort
       wrapper.vm.showDeleteDialog = true
       await wrapper.vm.$nextTick()
@@ -509,7 +513,7 @@ describe('CohortsView.vue', () => {
     })
 
     it('should refresh cohorts after successful delete', async () => {
-      vi.mocked(deleteCohort).mockResolvedValue(undefined)
+      vi.mocked(deleteCohort).mockResolvedValue(success(undefined))
       wrapper.vm.selectedCohort = mockCohort
       wrapper.vm.showDeleteDialog = true
       await wrapper.vm.$nextTick()
@@ -520,7 +524,7 @@ describe('CohortsView.vue', () => {
     })
 
     it('should close dialog after successful delete', async () => {
-      vi.mocked(deleteCohort).mockResolvedValue(undefined)
+      vi.mocked(deleteCohort).mockResolvedValue(success(undefined))
       wrapper.vm.selectedCohort = mockCohort
       wrapper.vm.showDeleteDialog = true
 
@@ -543,14 +547,42 @@ describe('CohortsView.vue', () => {
       expect(wrapper.vm.deleting).toBe(true)
     })
 
-    it('should handle delete errors gracefully', async () => {
-      const error = new Error('Delete failed')
-      vi.mocked(deleteCohort).mockRejectedValue(error)
+    it('does not close the dialog or refetch when deleteCohort reports a failure ApiResult', async () => {
+      vi.mocked(deleteCohort).mockResolvedValue(failure(new ApiError('Delete failed', 409, null)))
       wrapper.vm.selectedCohort = mockCohort
+      wrapper.vm.showDeleteDialog = true
+      await wrapper.vm.$nextTick()
+      mockFetchCohorts.mockClear() // clear the call from mount
 
       await wrapper.vm.confirmDelete()
 
       expect(wrapper.vm.deleting).toBe(false)
+      // A failed delete must not read as a successful one: the dialog stays
+      // open, the selection is kept, and the list is not refetched (which
+      // would otherwise silently imply the cohort is gone).
+      expect(wrapper.vm.showDeleteDialog).toBe(true)
+      expect(wrapper.vm.selectedCohort).toEqual(mockCohort)
+      expect(mockFetchCohorts).not.toHaveBeenCalled()
+      expect(vi.mocked(logger.error)).toHaveBeenCalledWith(
+        'CohortsView',
+        'Failed to delete cohort',
+        expect.objectContaining({ message: 'Delete failed' })
+      )
+    })
+
+    it('handles a thrown/rejected deleteCohort gracefully (defense in depth)', async () => {
+      const error = new Error('network down')
+      vi.mocked(deleteCohort).mockRejectedValue(error)
+      wrapper.vm.selectedCohort = mockCohort
+      wrapper.vm.showDeleteDialog = true
+      await wrapper.vm.$nextTick()
+      mockFetchCohorts.mockClear() // clear the call from mount
+
+      await wrapper.vm.confirmDelete()
+
+      expect(wrapper.vm.deleting).toBe(false)
+      expect(wrapper.vm.showDeleteDialog).toBe(true)
+      expect(mockFetchCohorts).not.toHaveBeenCalled()
     })
   })
 
@@ -582,8 +614,8 @@ describe('CohortsView.vue', () => {
     })
 
     it('fetches the full definition and saves a copy with a "(copy)" name', async () => {
-      vi.mocked(getCohortDefinition).mockResolvedValue(mockDefinition as any)
-      vi.mocked(saveCohortDefinition).mockResolvedValue({ id: 99, name: 'Diabetes Cohort (copy)' } as any)
+      vi.mocked(getCohortDefinition).mockResolvedValue(success(mockDefinition as any))
+      vi.mocked(saveCohortDefinition).mockResolvedValue(success({ id: 99, name: 'Diabetes Cohort (copy)' } as any))
 
       await wrapper.vm.handleCopyClick(mockCohort)
 
@@ -601,8 +633,8 @@ describe('CohortsView.vue', () => {
     })
 
     it('navigates to the new cohort and refreshes the list on success', async () => {
-      vi.mocked(getCohortDefinition).mockResolvedValue(mockDefinition as any)
-      vi.mocked(saveCohortDefinition).mockResolvedValue({ id: 99, name: 'Diabetes Cohort (copy)' } as any)
+      vi.mocked(getCohortDefinition).mockResolvedValue(success(mockDefinition as any))
+      vi.mocked(saveCohortDefinition).mockResolvedValue(success({ id: 99, name: 'Diabetes Cohort (copy)' } as any))
 
       await wrapper.vm.handleCopyClick(mockCohort)
 
@@ -615,8 +647,8 @@ describe('CohortsView.vue', () => {
         mockCohort,
         createMockCohort(2, { name: 'Diabetes Cohort (copy)' }),
       ]
-      vi.mocked(getCohortDefinition).mockResolvedValue(mockDefinition as any)
-      vi.mocked(saveCohortDefinition).mockResolvedValue({ id: 99, name: 'Diabetes Cohort (copy 2)' } as any)
+      vi.mocked(getCohortDefinition).mockResolvedValue(success(mockDefinition as any))
+      vi.mocked(saveCohortDefinition).mockResolvedValue(success({ id: 99, name: 'Diabetes Cohort (copy 2)' } as any))
 
       await wrapper.vm.handleCopyClick(mockCohort)
 
@@ -630,20 +662,20 @@ describe('CohortsView.vue', () => {
       vi.mocked(getCohortDefinition).mockImplementation(
         () => new Promise(resolve => { resolveFetch = resolve })
       )
-      vi.mocked(saveCohortDefinition).mockResolvedValue({ id: 99, name: 'copy' } as any)
+      vi.mocked(saveCohortDefinition).mockResolvedValue(success({ id: 99, name: 'copy' } as any))
 
       const copyPromise = wrapper.vm.handleCopyClick(mockCohort)
       await wrapper.vm.$nextTick()
       expect(wrapper.vm.copyingId).toBe(mockCohort.id)
 
-      resolveFetch(mockDefinition)
+      resolveFetch(success(mockDefinition))
       await copyPromise
 
       expect(wrapper.vm.copyingId).toBeNull()
     })
 
     it('does not call saveCohortDefinition when the definition fails to load', async () => {
-      vi.mocked(getCohortDefinition).mockResolvedValue(null)
+      vi.mocked(getCohortDefinition).mockResolvedValue(failure(new ApiError('not found', 404, null)))
 
       await wrapper.vm.handleCopyClick(mockCohort)
 
@@ -652,8 +684,8 @@ describe('CohortsView.vue', () => {
     })
 
     it('does not navigate when the save fails', async () => {
-      vi.mocked(getCohortDefinition).mockResolvedValue(mockDefinition as any)
-      vi.mocked(saveCohortDefinition).mockResolvedValue(null as any)
+      vi.mocked(getCohortDefinition).mockResolvedValue(success(mockDefinition as any))
+      vi.mocked(saveCohortDefinition).mockResolvedValue(failure(new ApiError('save failed', 500, null)))
 
       await wrapper.vm.handleCopyClick(mockCohort)
 
@@ -689,8 +721,8 @@ describe('CohortsView.vue', () => {
     })
 
     it('should open cohort info dialog when handleShowInfo is called', async () => {
-      vi.mocked(getCohortDefinition).mockResolvedValue(mockAtlasDefinition)
-      vi.mocked(getCohortPrintFriendly).mockResolvedValue(mockHtml)
+      vi.mocked(getCohortDefinition).mockResolvedValue(success(mockAtlasDefinition as any))
+      vi.mocked(getCohortPrintFriendly).mockResolvedValue(success(mockHtml))
 
       await wrapper.vm.handleShowInfo(mockCohort)
       await wrapper.vm.$nextTick()
@@ -709,8 +741,8 @@ describe('CohortsView.vue', () => {
     })
 
     it('should fetch and display cohort print-friendly HTML', async () => {
-      vi.mocked(getCohortDefinition).mockResolvedValue(mockAtlasDefinition)
-      vi.mocked(getCohortPrintFriendly).mockResolvedValue(mockHtml)
+      vi.mocked(getCohortDefinition).mockResolvedValue(success(mockAtlasDefinition as any))
+      vi.mocked(getCohortPrintFriendly).mockResolvedValue(success(mockHtml))
 
       await wrapper.vm.handleShowInfo(mockCohort)
       await wrapper.vm.$nextTick()
@@ -733,8 +765,8 @@ describe('CohortsView.vue', () => {
     })
 
     it('should close cohort info dialog when close button clicked', async () => {
-      vi.mocked(getCohortDefinition).mockResolvedValue(mockAtlasDefinition)
-      vi.mocked(getCohortPrintFriendly).mockResolvedValue(mockHtml)
+      vi.mocked(getCohortDefinition).mockResolvedValue(success(mockAtlasDefinition as any))
+      vi.mocked(getCohortPrintFriendly).mockResolvedValue(success(mockHtml))
 
       await wrapper.vm.handleShowInfo(mockCohort)
       await wrapper.vm.$nextTick()
@@ -934,8 +966,8 @@ describe('CohortsView.vue', () => {
 
     it('should handle show info action from table', async () => {
       const mockCohort = createMockCohort(1)
-      vi.mocked(getCohortDefinition).mockResolvedValue({ id: 1 } as any)
-      vi.mocked(getCohortPrintFriendly).mockResolvedValue('<h1>Info</h1>')
+      vi.mocked(getCohortDefinition).mockResolvedValue(success({ id: 1 } as any))
+      vi.mocked(getCohortPrintFriendly).mockResolvedValue(success('<h1>Info</h1>'))
 
       const table = wrapper.findComponent({ name: 'CohortTable' })
       await table.vm.$emit('show-info', mockCohort)

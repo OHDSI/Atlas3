@@ -68,6 +68,17 @@
             </AtlasIcon>
             {{ t('configuration.roles.tabs.permissions', 'Permissions').value }}
           </AtlasTab>
+          <AtlasTab
+            v-for="tab in pluginTabs"
+            :key="tab.key"
+            :value="tab.key"
+            :data-testid="`config-tab-${tab.key}`"
+          >
+            <AtlasIcon start>
+              {{ tab.icon ?? 'mdi-puzzle-outline' }}
+            </AtlasIcon>
+            {{ tab.name }}
+          </AtlasTab>
         </AtlasTabs>
 
         <!-- Scrollable Content -->
@@ -108,6 +119,20 @@
             <PermissionsSection />
           </div>
 
+          <div
+            v-for="tab in pluginTabs"
+            v-show="activeSection === tab.key"
+            :key="tab.key"
+            class="config-section"
+          >
+            <PluginParcelOutlet
+              v-if="activeSection === tab.key"
+              :plugin-id="tab.pluginId"
+              :item-id="tab.itemId"
+              surface="admin-tabs"
+            />
+          </div>
+
           <!-- All admin sections hidden — show a friendly placeholder. -->
           <div
             v-if="!hasAnyAdminTab"
@@ -134,6 +159,9 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useUIStore } from '@/stores/ui'
 import { usePermissions } from '@/composables/usePermissions'
+import { usePluginMounts } from '@/composables/usePluginMounts'
+import PluginParcelOutlet from '@/plugins/components/PluginParcelOutlet.vue'
+import type { ConfigPanelSection } from '@/models/config.types'
 import CacheManagementSection from './CacheManagementSection.vue'
 import DataSourcesSection from './DataSourcesSection.vue'
 import TagManagementSection from './TagManagementSection.vue'
@@ -142,6 +170,7 @@ import PermissionsSection from './PermissionsSection.vue'
 const { t, tv } = useI18n()
 const uiStore = useUIStore()
 const { hasPermission } = usePermissions()
+const { items: pluginTabs } = usePluginMounts('admin-tabs')
 
 // Admin-only sections: hidden entirely from users without the matching admin
 // permission, per the rule that admin functionality should disappear for
@@ -156,7 +185,8 @@ const hasAnyAdminTab = computed(
     canSeeCache.value ||
     canSeeSources.value ||
     canSeeTags.value ||
-    canSeePermissions.value
+    canSeePermissions.value ||
+    pluginTabs.value.length > 0
 )
 
 // Reactive state from UI store
@@ -171,12 +201,31 @@ const isOpen = computed({
   },
 })
 
+// Fallback target for a stale `plugin:x:y` section (e.g. the plugin was
+// unregistered while the drawer was closed): the first section this user can
+// actually see, in the same order the tab strip renders them. Landing on
+// 'cache' unconditionally would trade one blank pane for another if the user
+// lacks admin:cache; falling through core tabs before plugin tabs keeps the
+// choice meaningful, and if nothing is visible the no-access alert takes over
+// regardless of which value we return here.
+const fallbackSection = computed<ConfigPanelSection>(() => {
+  if (canSeeCache.value) return 'cache'
+  if (canSeeSources.value) return 'sources'
+  if (canSeeTags.value) return 'tags'
+  if (canSeePermissions.value) return 'permissions'
+  return (pluginTabs.value[0]?.key as ConfigPanelSection | undefined) ?? 'cache'
+})
+
 const activeSection = computed({
-  get: () =>
-    uiStore.configPanelState.activeSection === 'vocabulary'
-      ? 'sources'
-      : uiStore.configPanelState.activeSection,
-  set: (value: 'cache' | 'sources' | 'tags' | 'permissions' | 'jobs') => {
+  get: () => {
+    const stored = uiStore.configPanelState.activeSection
+    if (stored === 'vocabulary') return 'sources'
+    if (stored.startsWith('plugin:') && !pluginTabs.value.some(tab => tab.key === stored)) {
+      return fallbackSection.value
+    }
+    return stored
+  },
+  set: (value: ConfigPanelSection) => {
     // Map 'sources' to 'vocabulary' for the store
     const storeValue = value === 'sources' ? 'vocabulary' : value
     uiStore.setConfigPanelSection(storeValue)

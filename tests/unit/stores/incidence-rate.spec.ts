@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { ApiError } from '@/services/api-error'
 
-vi.mock('@/services/webapi', () => ({
+vi.mock('@/services/incidence-rate.service', () => ({
   getIncidenceRate: vi.fn(),
-  assignIncidenceRateTag: vi.fn().mockResolvedValue(true),
-  unassignIncidenceRateTag: vi.fn().mockResolvedValue(true),
+  assignIncidenceRateTag: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+  unassignIncidenceRateTag: vi.fn().mockResolvedValue({ success: true, data: undefined }),
 }))
 
 vi.mock('@/services/incidence-rate-versions.service', () => ({
@@ -20,14 +21,14 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-let webapi: typeof import('@/services/webapi')
+let webapi: typeof import('@/services/incidence-rate.service')
 let versions: typeof import('@/services/incidence-rate-versions.service')
 let useIncidenceRateStore: typeof import('@/stores/incidence-rate').useIncidenceRateStore
 let IR_AUTO_SAVE_INTERVAL_MS: typeof import('@/models/incidence-rate.types').IR_AUTO_SAVE_INTERVAL_MS
 
 beforeAll(async () => {
   vi.resetModules()
-  webapi = await import('@/services/webapi')
+  webapi = await import('@/services/incidence-rate.service')
   versions = await import('@/services/incidence-rate-versions.service')
   ;({ useIncidenceRateStore } = await import('@/stores/incidence-rate'))
   ;({ IR_AUTO_SAVE_INTERVAL_MS } = await import('@/models/incidence-rate.types'))
@@ -162,12 +163,27 @@ describe('incidence-rate store', () => {
         tags: [],
       } as never,
     })
+    // clearPreviewVersion now reloads the current entity (id 1), so it needs
+    // a successful getIncidenceRate response the same way loadPathway's does.
+    vi.mocked(webapi.getIncidenceRate).mockResolvedValueOnce({
+      success: true,
+      data: {
+        id: 1, name: 'Current',
+        expression: {
+          ConceptSets: [], targetIds: [], outcomeIds: [],
+          timeAtRisk: { start: { DateField: 'StartDate', Offset: 0 }, end: { DateField: 'EndDate', Offset: 0 } },
+          strata: [],
+        },
+        tags: [],
+      } as never,
+    })
     const s = useIncidenceRateStore()
     await s.loadVersionPreview(1, 2)
     expect(s.isPreviewMode).toBe(true)
     expect(s.currentIR?.name).toBe('V')
-    s.clearPreviewVersion()
+    await s.clearPreviewVersion()
     expect(s.isPreviewMode).toBe(false)
+    expect(s.currentIR?.name).toBe('Current')
   })
 
   it('addTag does not mark dirty (metadata only)', async () => {
@@ -468,8 +484,8 @@ describe('incidence-rate store — validation studyWindow + edge cases', () => {
 
 describe('incidence-rate store — tags', () => {
   beforeEach(() => {
-    vi.mocked(webapi.assignIncidenceRateTag).mockResolvedValue(true)
-    vi.mocked(webapi.unassignIncidenceRateTag).mockResolvedValue(true)
+    vi.mocked(webapi.assignIncidenceRateTag).mockResolvedValue({ success: true, data: undefined })
+    vi.mocked(webapi.unassignIncidenceRateTag).mockResolvedValue({ success: true, data: undefined })
   })
 
   it('addTag returns false without id', async () => {
@@ -490,7 +506,10 @@ describe('incidence-rate store — tags', () => {
   })
 
   it('addTag returns false on API failure', async () => {
-    vi.mocked(webapi.assignIncidenceRateTag).mockResolvedValueOnce(false)
+    vi.mocked(webapi.assignIncidenceRateTag).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('conflict', 409, null),
+    })
     const s = useIncidenceRateStore()
     s.createNewIR()
     s.currentIR!.id = 7
@@ -520,7 +539,10 @@ describe('incidence-rate store — tags', () => {
   })
 
   it('removeTag returns false on API failure', async () => {
-    vi.mocked(webapi.unassignIncidenceRateTag).mockResolvedValueOnce(false)
+    vi.mocked(webapi.unassignIncidenceRateTag).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('conflict', 409, null),
+    })
     const s = useIncidenceRateStore()
     s.createNewIR()
     s.currentIR!.id = 7
@@ -647,6 +669,46 @@ describe('incidence-rate store — UI state setters and computed', () => {
   it('exposes RATE_MULTIPLIER_OPTIONS for convenience', () => {
     const s = useIncidenceRateStore()
     expect(Array.isArray(s.RATE_MULTIPLIER_OPTIONS)).toBe(true)
+  })
+})
+
+describe('savePreviewAsCurrent', () => {
+  it('PUTs the previewed IR and clears preview on success', async () => {
+    const saveIncidenceRate = vi.fn().mockResolvedValue({
+      success: true,
+      data: { id: 4, name: 'P' },
+    })
+    vi.doMock('@/services/incidence-rate.service', () => ({ saveIncidenceRate }))
+
+    const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
+    const store = useIncidenceRateStore()
+    store.currentIR = { id: 4, name: 'P' } as never
+    store.previewVersion = { version: 2 } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(true)
+    expect(saveIncidenceRate).toHaveBeenCalledWith(4, store.currentIR)
+    expect(store.previewVersion).toBeNull()
+  })
+
+  it('keeps preview state when the server rejects the save', async () => {
+    const saveIncidenceRate = vi.fn().mockResolvedValue({ success: false, error: 'nope' })
+    vi.doMock('@/services/incidence-rate.service', () => ({ saveIncidenceRate }))
+
+    const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
+    const store = useIncidenceRateStore()
+    store.currentIR = { id: 4, name: 'P' } as never
+    store.previewVersion = { version: 2 } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(false)
+    expect(store.previewVersion).not.toBeNull()
+  })
+
+  it('refuses when not in preview mode', async () => {
+    const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
+    const store = useIncidenceRateStore()
+    store.currentIR = { id: 4, name: 'P' } as never
+
+    expect(await store.savePreviewAsCurrent()).toBe(false)
   })
 })
 

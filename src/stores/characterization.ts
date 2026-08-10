@@ -41,6 +41,7 @@ export const useCharacterizationStore = defineStore('characterization', () => {
   const characterizations = ref<CharacterizationListItem[]>([])
   const currentCharacterization = ref<CharacterizationDefinition | null>(null)
   const loading = ref<boolean>(false)
+  let fetchAllInFlight: Promise<void> | null = null
   const error = ref<string | null>(null)
   const filterTerm = ref<string>('')
 
@@ -79,25 +80,34 @@ export const useCharacterizationStore = defineStore('characterization', () => {
 
   /**
    * Fetch all characterizations.
-   * Skip if already loading to prevent concurrent calls.
+   * Concurrent callers share the in-flight request, so awaiting fetchAll()
+   * always resolves against the response rather than the previous list.
    */
-  async function fetchAll() {
-    if (loading.value) {
-      return
+  async function fetchAll(): Promise<void> {
+    if (fetchAllInFlight) {
+      return fetchAllInFlight
     }
 
     loading.value = true
     error.value = null
 
-    try {
-      characterizations.value = await listCharacterizations()
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch characterizations'
-      logger.error('CharacterizationStore', 'Fetch characterizations error', err)
-      characterizations.value = []
-    } finally {
-      loading.value = false
-    }
+    fetchAllInFlight = (async () => {
+      try {
+        const result = await listCharacterizations()
+        if (result.success) {
+          characterizations.value = result.data
+        } else {
+          error.value = result.error.message
+          logger.error('CharacterizationStore', 'Fetch characterizations error', result.error)
+          characterizations.value = []
+        }
+      } finally {
+        fetchAllInFlight = null
+        loading.value = false
+      }
+    })()
+
+    return fetchAllInFlight
   }
 
   /**
@@ -107,21 +117,15 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     loading.value = true
     error.value = null
 
-    try {
-      const cc = await getCharacterization(id)
-      if (cc) {
-        currentCharacterization.value = cc
-      } else {
-        error.value = 'Characterization not found'
-        currentCharacterization.value = null
-      }
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch characterization'
-      logger.error('CharacterizationStore', 'Fetch characterization error', err)
+    const result = await getCharacterization(id)
+    if (result.success) {
+      currentCharacterization.value = result.data
+    } else {
+      error.value = result.error.message
+      logger.error('CharacterizationStore', 'Fetch characterization error', result.error)
       currentCharacterization.value = null
-    } finally {
-      loading.value = false
     }
+    loading.value = false
   }
 
   /**
@@ -133,22 +137,17 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     loading.value = true
     error.value = null
 
-    try {
-      const created = await createCharacterization(def)
-      if (created) {
-        await fetchAll()
-        currentCharacterization.value = created
-        return created
-      }
-      error.value = 'Failed to create characterization'
-      return null
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to create characterization'
-      logger.error('CharacterizationStore', 'Create characterization error', err)
-      return null
-    } finally {
+    const result = await createCharacterization(def)
+    if (result.success) {
+      await fetchAll()
+      currentCharacterization.value = result.data
       loading.value = false
+      return result.data
     }
+    error.value = result.error.message
+    logger.error('CharacterizationStore', 'Create characterization error', result.error)
+    loading.value = false
+    return null
   }
 
   /**
@@ -160,22 +159,17 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     loading.value = true
     error.value = null
 
-    try {
-      const updated = await updateCharacterization(def)
-      if (updated) {
-        await fetchAll()
-        currentCharacterization.value = updated
-        return updated
-      }
-      error.value = 'Failed to update characterization'
-      return null
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to update characterization'
-      logger.error('CharacterizationStore', 'Update characterization error', err)
-      return null
-    } finally {
+    const result = await updateCharacterization(def)
+    if (result.success) {
+      await fetchAll()
+      currentCharacterization.value = result.data
       loading.value = false
+      return result.data
     }
+    error.value = result.error.message
+    logger.error('CharacterizationStore', 'Update characterization error', result.error)
+    loading.value = false
+    return null
   }
 
   /**
@@ -185,20 +179,19 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     loading.value = true
     error.value = null
 
-    try {
-      await deleteCharacterization(id)
+    const result = await deleteCharacterization(id)
+    if (result.success) {
       characterizations.value = characterizations.value.filter(cc => cc.id !== id)
       if (currentCharacterization.value?.id === id) {
         currentCharacterization.value = null
       }
-      return true
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to delete characterization'
-      logger.error('CharacterizationStore', 'Delete characterization error', err)
-      return false
-    } finally {
       loading.value = false
+      return true
     }
+    error.value = result.error.message
+    logger.error('CharacterizationStore', 'Delete characterization error', result.error)
+    loading.value = false
+    return false
   }
 
   /**
@@ -208,22 +201,17 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     loading.value = true
     error.value = null
 
-    try {
-      const copied = await copyCharacterization(id)
-      if (copied) {
-        await fetchAll()
-        currentCharacterization.value = copied
-        return copied
-      }
-      error.value = 'Failed to copy characterization'
-      return null
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to copy characterization'
-      logger.error('CharacterizationStore', 'Copy characterization error', err)
-      return null
-    } finally {
+    const result = await copyCharacterization(id)
+    if (result.success) {
+      await fetchAll()
+      currentCharacterization.value = result.data
       loading.value = false
+      return result.data
     }
+    error.value = result.error.message
+    logger.error('CharacterizationStore', 'Copy characterization error', result.error)
+    loading.value = false
+    return null
   }
 
   /**
@@ -279,16 +267,15 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     executionsLoading.value = true
     executionsError.value = null
 
-    try {
-      const list = await listCharacterizationExecutions(characterizationId)
-      executions.value = [...list].sort(sortByStartTimeDesc)
-    } catch (err) {
-      executionsError.value = err instanceof Error ? err.message : 'Failed to load executions'
-      logger.error('CharacterizationStore', 'Load executions error', err)
+    const result = await listCharacterizationExecutions(characterizationId)
+    if (result.success) {
+      executions.value = [...result.data].sort(sortByStartTimeDesc)
+    } else {
+      executionsError.value = result.error.message
+      logger.error('CharacterizationStore', 'Load executions error', result.error)
       executions.value = []
-    } finally {
-      executionsLoading.value = false
     }
+    executionsLoading.value = false
   }
 
   /**
@@ -298,27 +285,33 @@ export const useCharacterizationStore = defineStore('characterization', () => {
   async function runExecution(
     characterizationId: number,
     sourceKey: string
-  ): Promise<CharacterizationExecution> {
+  ): Promise<CharacterizationExecution | null> {
     executionsError.value = null
 
-    try {
-      const created = await generateCharacterization(characterizationId, sourceKey)
-
-      // Replace any existing execution with the same generation id; otherwise prepend.
-      const existingIdx =
-        created.id != null ? executions.value.findIndex(e => e.id === created.id) : -1
-      if (existingIdx >= 0) {
-        executions.value.splice(existingIdx, 1, created)
-      } else {
-        executions.value = [created, ...executions.value]
-      }
-
-      return created
-    } catch (err) {
-      executionsError.value = err instanceof Error ? err.message : 'Failed to start generation'
-      logger.error('CharacterizationStore', 'Run execution error', err)
-      throw err
+    const result = await generateCharacterization(characterizationId, sourceKey)
+    if (!result.success) {
+      executionsError.value = result.error.message
+      logger.error('CharacterizationStore', 'Run execution error', result.error)
+      throw new Error(result.error.message)
     }
+
+    const created = result.data
+    // Started, but the response carried nothing trackable - fall back to the
+    // canonical list instead of inserting/polling a synthetic row.
+    if (created === null) {
+      await loadExecutions(characterizationId)
+      return null
+    }
+    // Replace any existing execution with the same generation id; otherwise prepend.
+    const existingIdx =
+      created.id != null ? executions.value.findIndex(e => e.id === created.id) : -1
+    if (existingIdx >= 0) {
+      executions.value.splice(existingIdx, 1, created)
+    } else {
+      executions.value = [created, ...executions.value]
+    }
+
+    return created
   }
 
   /**
@@ -332,17 +325,16 @@ export const useCharacterizationStore = defineStore('characterization', () => {
   ): Promise<void> {
     executionsError.value = null
 
-    try {
-      await cancelCharacterizationGeneration(characterizationId, sourceKey)
-      if (generationId != null) {
-        stopPolling(generationId)
-      }
-      await loadExecutions(characterizationId)
-    } catch (err) {
-      executionsError.value = err instanceof Error ? err.message : 'Failed to cancel generation'
-      logger.error('CharacterizationStore', 'Cancel execution error', err)
-      throw err
+    const result = await cancelCharacterizationGeneration(characterizationId, sourceKey)
+    if (!result.success) {
+      executionsError.value = result.error.message
+      logger.error('CharacterizationStore', 'Cancel execution error', result.error)
+      throw new Error(result.error.message)
     }
+    if (generationId != null) {
+      stopPolling(generationId)
+    }
+    await loadExecutions(characterizationId)
   }
 
   function updateExecutionInList(updated: CharacterizationExecution): void {
@@ -378,8 +370,9 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     scope.run(() => {
       const polling = useExecutionPolling<CharacterizationExecution>({
         fetcher: async () => {
-          const item = await getCharacterizationExecution(generationId)
-          return item
+          const result = await getCharacterizationExecution(generationId)
+          if (!result.success) throw result.error
+          return result.data
         },
         isTerminal: item => isTerminalStatus(item.status),
         onUpdate: item => {

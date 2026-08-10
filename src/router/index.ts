@@ -6,7 +6,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
-import { useLocaleStore } from '@/stores/locale'
+import { useI18n } from '@/composables/useI18n'
 import { getAuthConfig } from '@/config/auth.config'
 import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
@@ -57,7 +57,7 @@ router.beforeEach(
 
       // Validate route exists to prevent open redirect
       const resolved = router.resolve(targetRoute)
-      if (resolved.matched.length === 0) {
+      if (resolved.matched.length === 0 || resolved.name === 'not-found') {
         logger.warn('Router', `Deeplink: invalid route ${targetRoute}, ignoring`)
         next()
         return
@@ -110,63 +110,6 @@ router.beforeEach(async (to, _from, next) => {
         const userInfo = await authService.fetchUserInfo()
         authStore.setUser(userInfo)
         authStore.setAuthClient('OpenID')
-
-        // Restore destination URL or redirect to home
-        const destination = sessionStorage.getItem('oauth_redirect_destination')
-        sessionStorage.removeItem('oauth_redirect_destination')
-
-        next(destination || '/')
-        return
-      }
-
-      // Check for token in URL path parameters (WebAPI pattern: /:client/:token/:redirectUrl?)
-      const tokenFromPath = to.params.token as string
-      const clientFromPath = to.params.client as string
-      const redirectUrlFromPath = to.params.redirectUrl as string
-
-      if (tokenFromPath) {
-        logger.info('Router', 'Token received in URL path (WebAPI pattern)')
-        logger.debug('Router', 'OAuth details', {
-          client: clientFromPath,
-          redirectUrl: redirectUrlFromPath,
-        })
-
-        authStore.setToken(tokenFromPath)
-
-        // Fetch user info
-        const { authService } = await import('@/services/auth/authService')
-        const userInfo = await authService.fetchUserInfo()
-        authStore.setUser(userInfo)
-        authStore.setAuthClient(clientFromPath || 'OpenID')
-
-        // Use redirectUrl from path or restore from sessionStorage
-        let destination = redirectUrlFromPath ? decodeURIComponent(redirectUrlFromPath) : null
-        if (!destination) {
-          destination = sessionStorage.getItem('oauth_redirect_destination')
-          sessionStorage.removeItem('oauth_redirect_destination')
-        }
-
-        // If destination matches the base path, redirect to root to avoid duplication
-        const basePath = import.meta.env.BASE_URL.replace(/\/$/, '')
-        if (destination === basePath || destination === `${basePath}/`) {
-          destination = '/'
-        }
-
-        next(destination || '/')
-        return
-      }
-
-      // Check for token in URL query parameters (some OAuth providers use this)
-      const token = to.query.token as string
-
-      if (token) {
-        logger.info('Router', 'Token received in URL query')
-        authStore.setToken(token)
-
-        // Fetch user info
-        const { authService } = await import('@/services/auth/authService')
-        const userInfo = await authService.fetchUserInfo()
-        authStore.setUser(userInfo)
 
         // Restore destination URL or redirect to home
         const destination = sessionStorage.getItem('oauth_redirect_destination')
@@ -291,21 +234,7 @@ function applyDocumentTitle(route: RouteLocationNormalized): void {
   }
   let label: string = titleKey
   try {
-    const localeStore = useLocaleStore()
-    const translations = localeStore.translations as Record<string, unknown>
-    const segments = titleKey.split('.')
-    let value: unknown = translations
-    for (const seg of segments) {
-      if (value && typeof value === 'object') {
-        value = (value as Record<string, unknown>)[seg]
-      } else {
-        value = undefined
-        break
-      }
-    }
-    if (typeof value === 'string' && value.length > 0) {
-      label = value
-    }
+    label = useI18n().tv(titleKey)
   } catch {
     // Pinia not yet installed (e.g. early in bootstrap or in isolated tests);
     // fall back to the title key itself.
@@ -317,6 +246,9 @@ router.afterEach((to: RouteLocationNormalized) => {
   applyDocumentTitle(to)
 })
 
+// This module is evaluated before Pinia is installed (main.ts imports the router
+// at load time), so the locale store cannot be watched from here; the store
+// dispatches `locale-changed` for exactly this case.
 if (typeof window !== 'undefined' && window.addEventListener) {
   window.addEventListener('locale-changed', () => {
     applyDocumentTitle(router.currentRoute.value)

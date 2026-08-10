@@ -3,6 +3,7 @@
  *
  * Discriminated union types for explicit error handling in API calls.
  */
+import type { ApiError } from '@/services/api-error'
 
 /**
  * Represents the result of an API call that can either succeed with data
@@ -33,7 +34,7 @@
  */
 export type ApiResult<T> =
   | { success: true; data: T }
-  | { success: false; error: string; code?: string }
+  | { success: false; error: ApiError }
 
 /**
  * Tracks active requests for cancellation on navigation.
@@ -55,6 +56,6 @@ export function success<T>(data: T): ApiResult<T> {
 /**
  * Helper function to create a failed API result.
  */
-export function failure<T>(error: string, code?: string): ApiResult<T> {
-  return code ? { success: false, error, code } : { success: false, error }
+export function failure<T>(error: ApiError): ApiResult<T> {
+  return { success: false, error }
 }

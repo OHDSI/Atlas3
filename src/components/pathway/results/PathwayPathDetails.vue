@@ -78,6 +78,6 @@ const rows = computed(() =>
 .path-details th,
 .path-details td {
   padding: 4px 8px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--atlas-color-outline);
 }
 </style>

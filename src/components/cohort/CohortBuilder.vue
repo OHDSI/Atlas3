@@ -239,7 +239,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useCohortValidation } from '@/composables/useCohortValidation'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
-import { getCohortDefinition } from '@/services/webapi'
+import { getCohortDefinition } from '@/services/cohort-definition.service'
 import { getConceptSetById } from '@/services/concept-set.service'
 import type { CohortDefinition, ConceptSetReference } from '@/models/cohort.types'
 import type { Concept } from '@/models/event.types'
@@ -778,13 +778,15 @@ async function loadCohort(id: string) {
   isLoadingCohort.value = true
   try {
     const numericId = parseInt(id, 10)
-    const atlasCohort = await getCohortDefinition(numericId)
+    const atlasCohortResult = await getCohortDefinition(numericId)
 
-    if (!atlasCohort) {
+    if (!atlasCohortResult.success) {
       logger.error('CohortBuilder', `Failed to load cohort ${id}`)
       isLoadingCohort.value = false
       return
     }
+
+    const atlasCohort = atlasCohortResult.data
 
     // Validate & parse with Circe schema (expression is already a CohortExpression object)
     const parseResult = CohortExpressionSchema.safeParse(atlasCohort.expression ?? {})
@@ -1015,7 +1017,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
   if (!canSave.value) return {}
 
   const { saveCohortDefinition, assignTagToCohort, unassignTagFromCohort } = await import(
-    '@/services/webapi'
+    '@/services/cohort-definition.service'
   )
 
   // Deep-clone the expression for save (don't mutate live state)
@@ -1046,16 +1048,24 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
   }
 
   try {
-    const savedCohort = await saveCohortDefinition(atlasDefinition)
+    const savedCohortResult = await saveCohortDefinition(atlasDefinition)
 
-    if (!savedCohort || !savedCohort.id) {
+    if (!savedCohortResult.success) {
+      errorMessage.value = tv('components.cohortBuilder.saveToServerError', 'Failed to save cohort to server')
+      showError.value = true
+      return {}
+    }
+
+    const savedCohort = savedCohortResult.data
+    const savedId = savedCohort.id
+
+    if (savedId === undefined) {
       errorMessage.value = tv('components.cohortBuilder.saveToServerError', 'Failed to save cohort to server')
       showError.value = true
       return {}
     }
 
     // Sync tags via separate API calls
-    const savedId = savedCohort.id
     const currentTags = cohortTags.value
     const previousTags = loadedTags.value
     const tagsToAdd = currentTags.filter(cur => !previousTags.some(p => p.id === cur.id))
@@ -1063,21 +1073,27 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     const tagFailures: string[] = []
 
     for (const tag of tagsToAdd) {
-      if (tag.id) {
-        const result = await assignTagToCohort(savedId, tag.id)
-        if (!result.success) {
-          logger.warn('CohortBuilder', `Failed to assign tag ${tag.id}`, result.error)
-          tagFailures.push(result.error ?? `Failed to assign tag "${tag.name}"`)
-        }
+      const tagId = tag.id
+      if (tagId === undefined) {
+        continue
+      }
+
+      const result = await assignTagToCohort(savedId, tagId)
+      if (!result.success) {
+        logger.warn('CohortBuilder', `Failed to assign tag ${tagId}`, result.error)
+        tagFailures.push(result.error.message || `Failed to assign tag "${tag.name}"`)
       }
     }
     for (const tag of tagsToRemove) {
-      if (tag.id) {
-        const result = await unassignTagFromCohort(savedId, tag.id)
-        if (!result.success) {
-          logger.warn('CohortBuilder', `Failed to unassign tag ${tag.id}`, result.error)
-          tagFailures.push(result.error ?? `Failed to unassign tag "${tag.name}"`)
-        }
+      const tagId = tag.id
+      if (tagId === undefined) {
+        continue
+      }
+
+      const result = await unassignTagFromCohort(savedId, tagId)
+      if (!result.success) {
+        logger.warn('CohortBuilder', `Failed to unassign tag ${tagId}`, result.error)
+        tagFailures.push(result.error.message || `Failed to unassign tag "${tag.name}"`)
       }
     }
 

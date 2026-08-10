@@ -162,7 +162,7 @@ function summarizeCriteria(sample: CohortSample): string {
   cursor: pointer;
 }
 .cohort-samples-list__row--selected {
-  background: rgba(31, 66, 90, 0.06);
+  background: color-mix(in srgb, var(--atlas-color-primary) 6%, transparent);
 }
 .cohort-samples-list__name {
   color: rgb(var(--v-theme-primary));
@@ -173,7 +173,7 @@ function summarizeCriteria(sample: CohortSample): string {
   text-decoration: underline;
 }
 .cohort-samples-list__criteria {
-  color: rgba(0, 0, 0, 0.66);
+  color: var(--atlas-color-on-surface-variant);
   font-size: 13px;
 }
 </style>

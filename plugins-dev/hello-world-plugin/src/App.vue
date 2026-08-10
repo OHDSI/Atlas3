@@ -25,6 +25,10 @@
         Welcome, {{ authContext.user?.username }}!
       </AtlasAlert>
 
+      <p data-testid="hello-host-context">
+        {{ hostContext?.sourceKey ?? 'no source' }}
+      </p>
+
       <AtlasCard
         padding="md"
         style="margin-bottom:16px;"
@@ -86,8 +90,9 @@ import { AtlasButton, AtlasCard, AtlasAlert } from '@ohdsi/atlas-ui';
 
 interface AuthContext { isAuthenticated: boolean; user?: { id: number; username: string; permissions: string[] } }
 interface MessageBus { send: (type: string, payload: unknown) => void; request: (type: string, payload: unknown) => Promise<unknown> }
+interface HostContext { surface: string; itemId: string; locale: string; permissions: string[]; sourceKey?: string }
 
-const props = defineProps<{ name: string; authContext: AuthContext; messageBus: MessageBus }>();
+const props = defineProps<{ name: string; authContext: AuthContext; messageBus: MessageBus; hostContext?: HostContext }>();
 const theme = ref<'light' | 'dark'>('light');
 const counter = ref(0);
 const lastMessage = ref('');
