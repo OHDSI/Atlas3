@@ -85,10 +85,10 @@ import {
   AtlasMenu,
   AtlasSpacer,
 } from '@/components/ui'
-import type { Criteria, ConceptSetSelection, DateRange, NumericRange, TextFilter } from '../circe.types'
+import type { Criteria, CriteriaGroup, ConceptSetSelection, DateAdjustment, DateRange, NumericRange, TextFilter } from '../circe.types'
 import EventConceptSet from '../input/EventConceptSet.vue'
 import CriteriaAttributes from './CriteriaAttributes.vue'
-import { createConceptSetComponentProps, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget, CriteriaAttributeSpec } from './criteria-editor.types'
 
 const props = defineProps<{
@@ -192,6 +192,22 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete observationData.value.ValueAsNumber
     },
     isActive: () => 'ValueAsNumber' in observationData.value,
+  },
+  {
+    key: 'DateAdjustment',
+    label: 'Date Adjustment',
+    description: 'Adjust event dates',
+    kind: 'dateAdjustment',
+    componentProps: () => createSchemaFieldProps(
+      ensureObjectField(observationData.value, 'DateAdjustment', createDefaultDateAdjustment) as DateAdjustment
+    ),
+    init: () => {
+      ensureObjectField(observationData.value, 'DateAdjustment', createDefaultDateAdjustment)
+    },
+    clear: () => {
+      delete observationData.value.DateAdjustment
+    },
+    isActive: () => 'DateAdjustment' in observationData.value,
   },
   {
     key: 'ValueAsString',
@@ -472,6 +488,22 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete observationData.value.VisitTypeCS
     },
     isActive: () => 'VisitTypeCS' in observationData.value,
+  },
+  {
+    key: 'CorrelatedCriteria',
+    label: 'Nested Criteria',
+    description: 'Add nested criteria group',
+    kind: 'criteriaGroup',
+    componentProps: () => ({
+      group: ensureObjectField(observationData.value, 'CorrelatedCriteria', () => ({})) as CriteriaGroup,
+    }),
+    init: () => {
+      ensureObjectField(observationData.value, 'CorrelatedCriteria', () => ({}))
+    },
+    clear: () => {
+      delete observationData.value.CorrelatedCriteria
+    },
+    isActive: () => 'CorrelatedCriteria' in observationData.value,
   },
 ])
 

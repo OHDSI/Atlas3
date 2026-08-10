@@ -86,10 +86,10 @@ import {
   AtlasSpacer,
 } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
-import type { Criteria, ConceptSetSelection, DateRange, NumericRange, TextFilter } from '../circe.types'
+import type { Criteria, CriteriaGroup, ConceptSetSelection, DateAdjustment, DateRange, NumericRange, TextFilter } from '../circe.types'
 import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget, CriteriaAttributeSpec } from './criteria-editor.types'
 import CriteriaAttributes from './CriteriaAttributes.vue'
-import { createConceptSetComponentProps, createConceptSetModel, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createConceptSetModel, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 import EventConceptSet from '../input/EventConceptSet.vue'
 
 const props = defineProps<{
@@ -327,6 +327,22 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     isActive: () => 'SourceId' in specimenData.value,
   },
   {
+    key: 'DateAdjustment',
+    label: 'Date Adjustment',
+    description: 'Adjust event dates',
+    kind: 'dateAdjustment',
+    componentProps: () => createSchemaFieldProps(
+      ensureObjectField(specimenData.value, 'DateAdjustment', createDefaultDateAdjustment) as DateAdjustment
+    ),
+    init: () => {
+      ensureObjectField(specimenData.value, 'DateAdjustment', createDefaultDateAdjustment)
+    },
+    clear: () => {
+      delete specimenData.value.DateAdjustment
+    },
+    isActive: () => 'DateAdjustment' in specimenData.value,
+  },
+  {
     key: 'SpecimenSourceConcept',
     label: 'Specimen Source Concept',
     description: 'Filter by specimen source concept',
@@ -399,6 +415,22 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete specimenData.value.GenderCS
     },
     isActive: () => 'GenderCS' in specimenData.value,
+  },
+  {
+    key: 'CorrelatedCriteria',
+    label: 'Nested Criteria',
+    description: 'Add nested criteria group',
+    kind: 'criteriaGroup',
+    componentProps: () => ({
+      group: ensureObjectField(specimenData.value, 'CorrelatedCriteria', () => ({})) as CriteriaGroup,
+    }),
+    init: () => {
+      ensureObjectField(specimenData.value, 'CorrelatedCriteria', () => ({}))
+    },
+    clear: () => {
+      delete specimenData.value.CorrelatedCriteria
+    },
+    isActive: () => 'CorrelatedCriteria' in specimenData.value,
   },
 ])
 

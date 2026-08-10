@@ -86,10 +86,10 @@ import {
   AtlasSpacer,
 } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
-import type { Criteria, ConceptSetSelection, DateRange, NumericRange } from '../circe.types'
+import type { Criteria, CriteriaGroup, ConceptSetSelection, DateAdjustment, DateRange, NumericRange } from '../circe.types'
 import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget, CriteriaAttributeSpec } from './criteria-editor.types'
 import CriteriaAttributes from './CriteriaAttributes.vue'
-import { createConceptSetComponentProps, createConceptSetModel, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createConceptSetModel, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 import EventConceptSet from '../input/EventConceptSet.vue'
 
 const props = defineProps<{
@@ -231,6 +231,22 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete visitOccurrenceData.value.VisitLength
     },
     isActive: () => 'VisitLength' in visitOccurrenceData.value,
+  },
+  {
+    key: 'DateAdjustment',
+    label: 'Date Adjustment',
+    description: 'Adjust event dates',
+    kind: 'dateAdjustment',
+    componentProps: () => createSchemaFieldProps(
+      ensureObjectField(visitOccurrenceData.value, 'DateAdjustment', createDefaultDateAdjustment) as DateAdjustment
+    ),
+    init: () => {
+      ensureObjectField(visitOccurrenceData.value, 'DateAdjustment', createDefaultDateAdjustment)
+    },
+    clear: () => {
+      delete visitOccurrenceData.value.DateAdjustment
+    },
+    isActive: () => 'DateAdjustment' in visitOccurrenceData.value,
   },
   {
     key: 'Age',
@@ -381,6 +397,22 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete visitOccurrenceData.value.PlaceOfServiceLocation
     },
     isActive: () => 'PlaceOfServiceLocation' in visitOccurrenceData.value,
+  },
+  {
+    key: 'CorrelatedCriteria',
+    label: 'Nested Criteria',
+    description: 'Add nested criteria group',
+    kind: 'criteriaGroup',
+    componentProps: () => ({
+      group: ensureObjectField(visitOccurrenceData.value, 'CorrelatedCriteria', () => ({})) as CriteriaGroup,
+    }),
+    init: () => {
+      ensureObjectField(visitOccurrenceData.value, 'CorrelatedCriteria', () => ({}))
+    },
+    clear: () => {
+      delete visitOccurrenceData.value.CorrelatedCriteria
+    },
+    isActive: () => 'CorrelatedCriteria' in visitOccurrenceData.value,
   },
 ])
 
