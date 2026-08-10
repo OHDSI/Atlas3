@@ -25,11 +25,24 @@ const vueFiles = vueCandidates.filter((file) => {
   return !isUnmutatable
 })
 
-const mutate = [...tsFiles, ...vueFiles]
+const fullMutate = [...tsFiles, ...vueFiles]
+
+// File sizes vary wildly, so a contiguous slice would put all the huge files in one
+// shard. Striping by index across the full list balances shard runtime instead.
+const shardSpec = process.env.STRYKER_SHARD
+let mutate = fullMutate
+let shardLabel = 'full set'
+if (shardSpec) {
+  const [shardIndexRaw, shardCountRaw] = shardSpec.split('/')
+  const shardIndex = Number(shardIndexRaw)
+  const shardCount = Number(shardCountRaw)
+  mutate = fullMutate.filter((_, idx) => idx % shardCount === shardIndex - 1)
+  shardLabel = `shard ${shardIndex}/${shardCount}`
+}
 
 console.log(
-  `[stryker.conf] mutate target: ${mutate.length} files included ` +
-  `(${tsFiles.length} .ts, ${vueFiles.length}/${vueCandidates.length} .vue); ` +
+  `[stryker.conf] mutate target: ${mutate.length} files included (${shardLabel} of ` +
+  `${fullMutate.length} total: ${tsFiles.length} .ts, ${vueFiles.length}/${vueCandidates.length} .vue); ` +
   `${vueExcluded.length} .vue excluded for using a compiler macro Stryker cannot instrument`
 )
 
@@ -44,7 +57,7 @@ export default {
   incremental: true,
   incrementalFile: 'reports/mutation/stryker-incremental.json',
   timeoutMS: 60000,
-  // The instrumented dry run covers the whole existing suite across 374 mutated
+  // The instrumented dry run covers the whole existing suite across 373 mutated
   // targets; the 5-minute default is too short for that, so it's raised here.
   dryRunTimeoutMinutes: 20,
   concurrency: 4,
