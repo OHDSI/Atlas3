@@ -81,10 +81,6 @@ test.describe('Characterization workbench', () => {
     await expect(page.getByTestId('characterizations-table')).toBeVisible()
     const firstRow = page.getByTestId('characterizations-table-row-name').first()
     await firstRow.click()
-    // AnalysisBuilderShell never actually stamps its `testid` prop onto its
-    // own root (only onto the conditional back/error sub-elements), so
-    // "char-builder" is not a real testid anywhere in the DOM -- verify
-    // navigation via the name field's value instead.
     await expect(page.getByTestId('char-builder-name')).toHaveValue('Diabetes baseline characterization')
     await expect(page.getByTestId('char-builder-workbench')).toBeVisible()
     await expect(page.getByTestId('char-toolbar-mode-table1')).toBeVisible()
