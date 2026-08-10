@@ -1,6 +1,7 @@
 # Testing guide
 
-Two gates protect this suite. They measure different things and neither replaces the other.
+Three gates protect this suite. They measure different things and none of them replaces
+another.
 
 **Coverage** (`npm run test:coverage`, thresholds in `vitest.config.ts`) proves a line was
 reached. Mounting a component lights up most of its lines for free, so a high coverage
@@ -9,6 +10,11 @@ number says nothing about whether anything was checked.
 **Mutation score** (`npm run test:mutation`) changes the source, re-runs the tests and
 asks whether they noticed. A test that mounts a component and asserts it rendered will
 not notice, so it scores zero regardless of the coverage it produces.
+
+**Conditional assertions** (`npm run test:no-conditional-assertions`) is a static scan, not
+a test run. It refuses assertions that can silently disappear at runtime. It is the only
+one of the three that blocks every pull request; see
+[The conditional-assertion gate](#the-conditional-assertion-gate) below.
 
 Worked example from this repository, measured on commit 5884245:
 `PrevalenceTable.vue` had 88.5% line coverage and a 14.44% mutation score. Sixty-one
@@ -66,12 +72,80 @@ still instruments every target without doing a full mutation run. It validates t
 whole `mutate` set in one pass and is what the pull request workflow runs automatically
 via `npm run test:mutation:check`.
 
+## The conditional-assertion gate
+
+`scripts/find-conditional-assertions.mjs` scans every `*.spec.ts` / `*.test.ts` under
+`tests/` and exits non-zero on a hit. `.github/workflows/unit-tests.yml` runs it as
+"Fail on silently-vanishing test assertions", **before** the coverage run, so a pull
+request that trips it goes red without any test executing.
+
+Run it locally with:
+
+    npm run test:no-conditional-assertions
+
+### What it catches
+
+1. **Unconditional-assertion guards.** An `if` whose body contains `expect(` and which has
+   no `else` branch. All of these forms are caught, including the ones Prettier produces
+   on its own at `printWidth: 100`:
+
+       if (attr) expect(attr.value).toBe(30)
+       if (attr) { expect(attr.value).toBe(30) }
+       if (attr)
+         expect(attr.value).toBe(30)
+       if (attr) {
+         expect(attr.value).toBe(30)
+       }
+       if (
+         attr && attr.value
+       ) {
+         expect(attr.value).toBe(30)
+       }
+
+2. **Tautological assertions.** An `expect()` whose argument cannot be false: the literal
+   `true`, anything OR'd with the literal `true`, and `x || !x` in either order.
+
+### What it deliberately does not catch
+
+The rule is conservative, because a gate that produces false reds gets disabled. It will
+not flag broader always-true expressions such as `expect(a || b >= 0)`, nor a tautology
+assembled across several lines, nor an assertion hidden behind a helper function or a
+ternary. It only reads single-line, two-operand `||` splits and literal `true` / `!` forms.
+A clean run means no assertion matches those shapes. It does not mean every assertion in
+the suite can fail.
+
+Guards where the `if` body is a `return`, `continue`, `break` or `throw` are not flagged:
+those are control flow, not vanishing assertions.
+
+### How to fix a hit
+
+For a guard, remove the condition and assert the value directly. If you genuinely cannot,
+because the narrowing is needed for TypeScript or the shape is legitimately one of two
+things, give the `if` an `else` that fails loudly with a diagnostic:
+
+    if (attr) {
+      expect(attr.value).toBe(30)
+    } else {
+      expect.fail(`expected an attr, got ${JSON.stringify(list)}`)
+    }
+
+The gate treats an `if` with an `else` as satisfied, because with an `else` the assertion
+cannot vanish. Do not add an empty `else` to silence it; that is the same defect with more
+lines.
+
+For a tautology, assert the value the expression was supposed to be checking.
+
 ## Rules
 
 1. **Assert on values, not on existence.** `expect(result).toBeDefined()` passes for
-   `null`, `0`, `''` and a wrong answer. Assert what the value should be.
+   `null`, `0`, `''` and a wrong answer. Assert what the value should be. It is fine as a
+   narrowing step, which is how this suite uses it at roughly sixty sites, but only when
+   the very next lines assert a value:
+   `expect(row).toBeDefined(); expect(row!.name).toBe('Diabetes')`. On its own it is not a
+   test.
 
-2. **Never make an assertion conditional.** This pattern is banned:
+2. **Never make an assertion conditional.** This pattern is banned, and
+   `npm run test:no-conditional-assertions` fails the build on it:
 
        const attr = find(...)
        if (attr) {
@@ -142,7 +216,7 @@ silently treating that as a pass would be the exact failure this gate exists to 
 ### Threshold
 
 The `aggregate` job fails the workflow if the overall score is below **65**. This number is
-deliberately provisional: it sits two points below the proven lower bound of 66.3%, so the
+deliberately provisional: it sits 1.3 points below the proven lower bound of 66.3%, so the
 gate cannot produce a false red on its first complete nightly run no matter where the true
 score lands within the bounded range. Once a nightly run completes with all six shards
 reporting, replace 65 with that run's actual score minus two points of headroom, using the
