@@ -9,7 +9,7 @@ import type {
 } from '@/models/cohort.types'
 import type { AgentProposal } from '@/models/agent.types'
 import type { Criteria } from '@/components/cohort-editor/circe.types'
-import type { Version, VersionedAsset } from '@/components/versions/types'
+import type { Version } from '@/components/versions/types'
 import { saveCohortToCache, getCohortFromCache, deleteCohortFromCache } from '@/utils/cohort-cache'
 import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
 import { logger } from '@/utils/logger'
@@ -540,7 +540,7 @@ export const useCohortStore = defineStore('cohort', () => {
 
     try {
       const cohortId = currentCohort.value.id
-      const versionedAsset = (await getVersionAPI<CohortDefinition>(cohortId, versionNumber)) as VersionedAsset<CohortDefinition>
+      const versionedAsset = await getVersionAPI(cohortId, versionNumber)
 
       // Set preview version metadata
       previewVersion.value = versionedAsset.versionDTO
