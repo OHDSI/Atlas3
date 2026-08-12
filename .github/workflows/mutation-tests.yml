@@ -1,0 +1,171 @@
+name: Mutation Tests
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutation-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify every target can be instrumented (fails if a new file breaks the gate)
+        run: npm run test:mutation:check
+
+      - name: Run mutation tests on changed files (advisory)
+        run: npx stryker run --since=origin/${{ github.base_ref }} || true
+
+      - name: Post the advisory score
+        run: |
+          [ -f reports/mutation/mutation.json ] || { echo "Mutation run did not complete; no report to score." >> $GITHUB_STEP_SUMMARY; exit 0; }
+          SCORE=$(jq -r '[.files[].mutants[]] | (map(select(.status=="Killed" or .status=="Timeout")) | length) as $k | (map(select(.status=="Killed" or .status=="Timeout" or .status=="Survived" or .status=="NoCoverage")) | length) as $t | if $t == 0 then "n/a" else ($k / $t * 100 | .*100|round|./100|tostring) end' reports/mutation/mutation.json)
+          echo "## Mutation score on changed files: ${SCORE}%" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Advisory only. The nightly sharded run enforces the threshold." >> $GITHUB_STEP_SUMMARY
+          echo "See docs/testing-guide.md for why this number matters." >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: reports/mutation/
+
+  mutation-shard:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # No --break override needed: stryker.conf.mjs sets thresholds.break to null, so no
+      # single shard can ever fail on score. A shard skewed toward low-scoring Vue templates
+      # would otherwise produce a false red; the real repo-wide number, and the only place
+      # that enforces it, lives in the aggregate job below.
+      - name: Run mutation tests for this shard
+        env:
+          STRYKER_SHARD: ${{ matrix.shard }}/6
+        run: npx stryker run --concurrency 4
+
+      - name: Upload shard mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report-shard-${{ matrix.shard }}
+          path: reports/mutation/mutation.json
+
+  aggregate:
+    needs: mutation-shard
+    if: always() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all shard reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: mutation-report-shard-*
+          path: shard-reports
+
+      - name: Verify all six shards reported
+        run: |
+          COUNT=$(find shard-reports -mindepth 1 -maxdepth 1 -type d | wc -l)
+          echo "Found ${COUNT} shard report directories."
+          if [ "$COUNT" -ne 6 ]; then
+            echo "## Mutation gate: FAILED (incomplete)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Expected 6 shard reports, found ${COUNT}. Part of the codebase went unmeasured; a missing shard cannot be treated as a pass." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Aggregate scores and enforce the threshold
+        run: |
+          THRESHOLD=65
+          echo "| Shard | Killed | Timeout | Survived | NoCoverage | Total valid | Score |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---:|---:|---:|---:|---:|---:|" >> $GITHUB_STEP_SUMMARY
+
+          TOTAL_KILLED=0
+          TOTAL_TIMEOUT=0
+          TOTAL_SURVIVED=0
+          TOTAL_NOCOV=0
+
+          for dir in shard-reports/mutation-report-shard-*; do
+            SHARD_NAME=$(basename "$dir" | sed 's/mutation-report-shard-//')
+            REPORT="$dir/mutation.json"
+            if [ ! -f "$REPORT" ]; then
+              echo "## Mutation gate: FAILED (missing report)" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "Shard ${SHARD_NAME} uploaded no mutation.json." >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+
+            COUNTS=$(jq -r '[.files[].mutants[]] | (map(select(.status=="Killed")) | length) as $killed | (map(select(.status=="Timeout")) | length) as $timeout | (map(select(.status=="Survived")) | length) as $survived | (map(select(.status=="NoCoverage")) | length) as $nocov | "\($killed) \($timeout) \($survived) \($nocov)"' "$REPORT")
+            read -r KILLED TIMEOUT SURVIVED NOCOV <<< "$COUNTS"
+
+            TOTAL_KILLED=$((TOTAL_KILLED + KILLED))
+            TOTAL_TIMEOUT=$((TOTAL_TIMEOUT + TIMEOUT))
+            TOTAL_SURVIVED=$((TOTAL_SURVIVED + SURVIVED))
+            TOTAL_NOCOV=$((TOTAL_NOCOV + NOCOV))
+
+            SHARD_VALID=$((KILLED + TIMEOUT + SURVIVED + NOCOV))
+            if [ "$SHARD_VALID" -eq 0 ]; then
+              SHARD_SCORE="n/a"
+            else
+              SHARD_SCORE=$(awk -v k="$KILLED" -v t="$TIMEOUT" -v v="$SHARD_VALID" 'BEGIN { printf "%.2f", (k + t) / v * 100 }')
+            fi
+            echo "| ${SHARD_NAME} | ${KILLED} | ${TIMEOUT} | ${SURVIVED} | ${NOCOV} | ${SHARD_VALID} | ${SHARD_SCORE}% |" >> $GITHUB_STEP_SUMMARY
+          done
+
+          TOTAL_VALID=$((TOTAL_KILLED + TOTAL_TIMEOUT + TOTAL_SURVIVED + TOTAL_NOCOV))
+          if [ "$TOTAL_VALID" -eq 0 ]; then
+            echo "## Mutation gate: FAILED (no mutants tested)" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          OVERALL_SCORE=$(awk -v k="$TOTAL_KILLED" -v t="$TOTAL_TIMEOUT" -v v="$TOTAL_VALID" 'BEGIN { printf "%.2f", (k + t) / v * 100 }')
+
+          echo "| **Overall** | ${TOTAL_KILLED} | ${TOTAL_TIMEOUT} | ${TOTAL_SURVIVED} | ${TOTAL_NOCOV} | ${TOTAL_VALID} | **${OVERALL_SCORE}%** |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Threshold: ${THRESHOLD}%. See docs/testing-guide.md for how this number was set." >> $GITHUB_STEP_SUMMARY
+
+          PASSES=$(awk -v s="$OVERALL_SCORE" -v thr="$THRESHOLD" 'BEGIN { print (s >= thr) ? "1" : "0" }')
+          if [ "$PASSES" -ne 1 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Mutation score below configured threshold.**" >> $GITHUB_STEP_SUMMARY
+            echo "Overall score ${OVERALL_SCORE}% is below the ${THRESHOLD}% threshold." >&2
+            exit 1
+          fi

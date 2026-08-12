@@ -211,7 +211,7 @@
         <span class="text-body-2">{{ t('components.conceptTable.itemsPerPage', 'Items per page:').value }}</span>
         <AtlasSelect
           :model-value="itemsPerPage"
-          :items="[60, 120, 240]"
+          :items="itemsPerPageOptions"
           variant="outlined"
           hide-details
           style="width: 80px"
@@ -425,6 +425,16 @@ const headers = computed(() => {
 
 const totalPages = computed(() => {
   return Math.ceil(props.totalItems / props.itemsPerPage)
+})
+
+// The itemsPerPage prop can arrive set to a value outside the standard
+// menu (e.g. the concept-search store defaults to 25, not one of
+// 60/120/240): without folding it in, the select showed "25" as selected
+// text while its own <option> list never contained 25, so reopening the
+// menu could never re-select the value already in effect.
+const itemsPerPageOptions = computed(() => {
+  const options = new Set([60, 120, 240, props.itemsPerPage])
+  return [...options].sort((a, b) => a - b)
 })
 
 const selectedSet = computed(() => new Set(props.selected))

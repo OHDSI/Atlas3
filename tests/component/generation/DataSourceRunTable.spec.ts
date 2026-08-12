@@ -157,3 +157,82 @@ describe('DataSourceRunTable', () => {
     expect(w.text()).toContain('Save the design first')
   })
 })
+
+describe('DataSourceRunTable extensions', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  // Fixtures mirror the pre-merge tests/unit/components spec: sourceName
+  // equals sourceKey here (unlike SOURCES above), which is what exercises
+  // the showKey=false branch of the source-cell template.
+  const EXT_SOURCES: RunTableSource[] = [
+    { sourceKey: 'CCAE', sourceName: 'CCAE' },
+    { sourceKey: 'MDCR', sourceName: 'MDCR' },
+  ]
+  const EXT_EXECUTIONS: RunTableExecution[] = [
+    { id: 1, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 1, endTime: 2, personCount: 8420 },
+    { id: 2, sourceKey: 'MDCR', status: 'RUNNING', startTime: 3 },
+  ]
+
+  function mountExtTable(props: Record<string, unknown> = {}) {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const authStore = useAuthStore()
+    authStore.setUser({
+      login: 'tester',
+      displayName: 'tester',
+      permissionIdx: { admin: ['admin:source'] },
+      entityAccess: emptyEntityAccess(),
+    })
+    return mount(DataSourceRunTable, {
+      global: { plugins: [vuetify, pinia] },
+      props: {
+        sources: EXT_SOURCES,
+        executions: EXT_EXECUTIONS,
+        ...props,
+      },
+    })
+  }
+
+  it('omits Patients column by default', () => {
+    const w = mountExtTable()
+    expect(w.text()).not.toMatch(/Patients/)
+  })
+
+  it('renders Patients column when showPatientCount=true', () => {
+    const w = mountExtTable({ showPatientCount: true })
+    expect(w.text()).toMatch(/Patients/)
+    expect(w.text()).toContain('8,420')
+  })
+
+  it('renders extraActions buttons and emits extra-action with key+sourceKey', async () => {
+    const w = mountExtTable({
+      extraActions: [
+        { key: 'inclusion', label: 'Inclusion report' },
+        { key: 'samples', label: 'Samples' },
+      ],
+    })
+    const incBtn = w.find('[data-testid="row-extra-inclusion-CCAE"]')
+    expect(incBtn.exists()).toBe(true)
+    await incBtn.trigger('click')
+    const events = w.emitted('extra-action')
+    expect(events?.[0]).toEqual(['inclusion', 'CCAE'])
+  })
+
+  it('respects extraActions disabledWhen', () => {
+    const w = mountExtTable({
+      extraActions: [
+        { key: 'samples', label: 'Samples', disabledWhen: (r) => r.latestStatus !== 'COMPLETED' },
+      ],
+    })
+    const ccae = w.find('[data-testid="row-extra-samples-CCAE"]')
+    const mdcr = w.find('[data-testid="row-extra-samples-MDCR"]')
+    expect(ccae.attributes('disabled')).toBeUndefined()
+    expect(mdcr.attributes('disabled')).toBeDefined()
+  })
+
+  it('passes hideCancel through to row', () => {
+    const w = mountExtTable({ hideCancel: true })
+    const mdcrBtn = w.find('[data-testid="run-btn-MDCR"]')
+    expect(mdcrBtn.text()).not.toMatch(/Cancel/i)
+  })
+})

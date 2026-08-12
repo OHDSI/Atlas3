@@ -32,7 +32,10 @@
       <slot name="actions" />
     </template>
 
-    <div class="builder-shell">
+    <div
+      class="builder-shell"
+      :data-testid="testid"
+    >
       <div
         v-if="$slots.banner"
         class="builder-shell__banner"

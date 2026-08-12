@@ -234,7 +234,7 @@ import { logger } from '@/utils/logger'
 import { useCohortStore } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
-import { provideCriteriaSelection } from '@/composables/useCriteriaSelection'
+import { provideCriteriaSelection, type CriteriaSelectionService } from '@/composables/useCriteriaSelection'
 import { useI18n } from '@/composables/useI18n'
 import { useCohortValidation } from '@/composables/useCohortValidation'
 import { usePermissions } from '@/composables/usePermissions'
@@ -384,20 +384,25 @@ const selectedConceptDomainFilter = ref<string | undefined>(undefined)
 // directly to activeCsTarget instead.
 const pendingConceptsCallback = ref<((concepts: Concept[]) => void) | null>(null)
 
-provideCriteriaSelection({
-  requestConceptSet(_onSelect) {
+// Named so it can be part of the defineExpose contract below: descendant
+// components reach it via inject (useCriteriaSelection), but nothing in this
+// shallow-mounted tree does, so tests exercise it through the same named
+// object rather than reaching into Vue's private instance-provides field.
+const criteriaSelectionService: CriteriaSelectionService = {
+  requestConceptSet(_onSelect: (conceptSet: ConceptSetReference) => void) {
     // not used by CohortExpressionEditor — concept-set events flow through
     // @select-concept-set → openConceptSetSelection → activeCsTarget
   },
-  requestConcepts(domainFilter, onSelect) {
+  requestConcepts(domainFilter: string | undefined, onSelect: (concepts: Concept[]) => void) {
     pendingConceptsCallback.value = onSelect
     selectedConceptDomainFilter.value = domainFilter
     isConceptSearchDialogOpen.value = true
   },
-  editConceptSet(conceptSet) {
+  editConceptSet(conceptSet: { id: number | string; name: string; items?: unknown[] }) {
     handleEditConceptSet(conceptSet)
   },
-})
+}
+provideCriteriaSelection(criteriaSelectionService)
 
 const showError = ref(false)
 const errorMessage = ref('')
@@ -1241,7 +1246,8 @@ async function _handleGenerate() {
   }
 }
 
-// @ts-expect-error - Helper for planned generation feature
+// Helper for planned generation feature, not yet wired into the template,
+// but exposed below so the contract that will drive it can be verified now.
 function _getStatusColor(status: string): string {
   switch (status) {
     case 'COMPLETE':
@@ -1257,7 +1263,8 @@ function _getStatusColor(status: string): string {
   }
 }
 
-// @ts-expect-error - Helper for planned generation feature
+// Helper for planned generation feature, not yet wired into the template,
+// but exposed below so the contract that will drive it can be verified now.
 function _getStatusIcon(status: string): string {
   switch (status) {
     case 'COMPLETE':
@@ -1273,7 +1280,8 @@ function _getStatusIcon(status: string): string {
   }
 }
 
-// @ts-expect-error - Helper for planned generation feature
+// Helper for planned generation feature, not yet wired into the template,
+// but exposed below so the contract that will drive it can be verified now.
 function _getStatusText(status: string): string {
   switch (status) {
     case 'COMPLETE':
@@ -1325,6 +1333,31 @@ defineExpose({
   handleExportDownload,
   handleExportCopy,
   openJsonDialog,
+  // Test-support contract: routing/UI state and pure helpers that have no
+  // child component to observe or drive them through. Named here instead of
+  // reached via Vue's private `$.setupState`/`$.provides`, so a rename shows
+  // up as a compile error in this file rather than a silent test break.
+  cohortName,
+  cohortDescription,
+  pendingConceptsCallback,
+  loadedTags,
+  loadedSnapshot,
+  isConfirmingNavigation,
+  showUnsavedDialog,
+  errorMessage,
+  successMessage,
+  showError,
+  showSuccess,
+  criteriaSelectionService,
+  exportFilename,
+  createStateSnapshot,
+  confirmLeaveUnsaved,
+  cancelLeaveUnsaved,
+  handleBackToCurrent,
+  versionsConfig,
+  _getStatusColor,
+  _getStatusIcon,
+  _getStatusText,
   // Existing expose (criteria editor / inclusion panel) is
   // re-declared here because defineExpose may only be called
   // once per component.

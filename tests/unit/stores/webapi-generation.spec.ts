@@ -43,26 +43,21 @@ describe('WebAPI Store - Generation Polling', () => {
       const sourceService = await import('@/services/source.service')
       vi.mocked(sourceService.fetchCDMSources).mockResolvedValue({ success: true, data: mockSources })
 
-      // Assume fetchSources action exists
-      if ('fetchSources' in store) {
-        await (store as unknown).fetchSources()
+      await (store as unknown).fetchSources()
 
-        expect(store.sources).toEqual(mockSources)
-        expect(store.selectedSource).toBe('SYNPUF1K') // Auto-selected first
-      }
+      expect(store.sources).toEqual(mockSources)
+      expect(store.selectedSource).toBe('SYNPUF1K') // Auto-selected first
     })
 
     it('should set loading state during fetch', async () => {
       const sourceService = await import('@/services/source.service')
       vi.mocked(sourceService.fetchCDMSources).mockResolvedValue({ success: true, data: [] })
 
-      if ('fetchSources' in store) {
-        const fetchPromise = (store as unknown).fetchSources()
-        expect(store.isLoadingSources).toBe(true)
+      const fetchPromise = (store as unknown).fetchSources()
+      expect(store.isLoadingSources).toBe(true)
 
-        await fetchPromise
-        expect(store.isLoadingSources).toBe(false)
-      }
+      await fetchPromise
+      expect(store.isLoadingSources).toBe(false)
     })
   })
 
@@ -78,13 +73,11 @@ describe('WebAPI Store - Generation Polling', () => {
       const cohortDefService = await import('@/services/cohort-definition.service')
       vi.mocked(cohortDefService.generateCohort).mockResolvedValue(success(mockJob))
 
-      if ('generateCohort' in store) {
-        await (store as unknown).generateCohort(123, 'SYNPUF1K')
+      await (store as unknown).generateCohort(123, 'SYNPUF1K')
 
-        const job = store.getJobById(1)
-        expect(job).toEqual(mockJob)
-        expect(job?.status).toBe('PENDING')
-      }
+      const job = store.getJobById(1)
+      expect(job).toEqual(mockJob)
+      expect(job?.status).toBe('PENDING')
     })
 
     it('should return null on generation error', async () => {
@@ -93,10 +86,8 @@ describe('WebAPI Store - Generation Polling', () => {
         failure(new ApiError('Generation request failed', 500, null))
       )
 
-      if ('generateCohort' in store) {
-        const result = await (store as unknown).generateCohort(123, 'SYNPUF1K')
-        expect(result).toBeNull()
-      }
+      const result = await (store as unknown).generateCohort(123, 'SYNPUF1K')
+      expect(result).toBeNull()
     })
   })
 

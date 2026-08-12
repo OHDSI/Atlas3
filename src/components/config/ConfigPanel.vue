@@ -240,10 +240,25 @@ const scrollContainer = ref<HTMLElement>()
 
 /**
  * Computed drawer width - responsive based on viewport size
- * Mobile (≤768px): Use pixel value to avoid percentage issues
+ * Mobile (≤768px): viewport minus a 12px gutter on each side, floored at 300px
  * Tablet/Desktop: 85% with max 1400px, min 300px
+ *
+ * The 300px floor wins below a 300px viewport, so the drawer overflows there.
+ * That is accepted: no supported target is that narrow, and a drawer narrower
+ * than 300px cannot lay out its tab strip.
+ *
+ * Regression: this previously returned `windowWidth.value - 100` regardless
+ * of breakpoint, which does not implement the behavior documented above at
+ * all. On a 1920px viewport that produced an 1820px drawer with no cap, and
+ * on a 375px viewport it produced 275px, below the doc's own 300px floor.
  */
-const drawerWidth = computed(() => windowWidth.value - 100)
+const drawerWidth = computed(() => {
+  const w = windowWidth.value
+  if (w <= 768) {
+    return Math.max(w - 24, 300)
+  }
+  return Math.min(Math.max(w * 0.85, 300), 1400)
+})
 
 /**
  * Handle window resize to update drawer width

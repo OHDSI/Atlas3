@@ -165,7 +165,11 @@ describe('JobsService', () => {
       const result = await getJobs()
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.message).toContain('Invalid job executions response format')
+      if (result.success) {
+        expect.fail('expected getJobs to fail')
+      } else {
+        expect(result.error.message).toContain('Invalid job executions response format')
+      }
     })
 
     it('returns failure on network error', async () => {
@@ -175,7 +179,11 @@ describe('JobsService', () => {
       const result = await getJobs()
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.message).toBe('Network error')
+      if (result.success) {
+        expect.fail('expected getJobs to fail')
+      } else {
+        expect(result.error.message).toBe('Network error')
+      }
     })
 
     it('handles empty response', async () => {

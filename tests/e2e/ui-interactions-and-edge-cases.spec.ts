@@ -34,12 +34,11 @@ test.describe('DataSources - Report Type Selector', () => {
     await page.goto('/#/datasources')
     await waitForNetworkIdle(page)
 
+    // The sibling test above already establishes the sidebar always
+    // renders with at least one item, so this is not a genuine two-state
+    // case.
     const sidebar = page.locator('.datasource-sidebar')
-    const hasSidebar = await sidebar.count() > 0
-
-    if (hasSidebar) {
-      await expect(sidebar).toBeVisible()
-    }
+    await expect(sidebar).toBeVisible()
   })
 })
 
@@ -53,13 +52,25 @@ test.describe('Concept Search - Advanced Features', () => {
   })
 
   test('should have domain filter dropdown', async ({ page }) => {
-    // Look for domain filter
-    const domainFilter = page.getByTestId('domain-filter')
-    const hasFilter = await domainFilter.count() > 0
+    // domain-filter never existed in src/ as a testid, and the facet
+    // filters (ConceptFacetFilters.vue) only mount once a search has
+    // results (v-if="!store.isEmpty" in ConceptSearch.vue) and live behind
+    // a "Filters" menu button, not a bare always-visible dropdown. Run a
+    // real search, open the menu, and look for the Domain facet control
+    // by its accessible label.
+    const searchInput = page.locator('input[type="text"]').first()
+    await searchInput.fill('diabetes')
+    await page.keyboard.press('Escape')
+    await waitForOverlaysToClose(page)
+    await searchInput.press('Enter')
+    await page.waitForSelector('table tbody tr', { timeout: 5000 })
 
-    if (hasFilter) {
-      await expect(domainFilter).toBeVisible({ timeout: 5000 })
-    }
+    const filtersButton = page.getByRole('button', { name: /^filters/i })
+    await expect(filtersButton).toBeVisible()
+    await filtersButton.click()
+
+    const domainFilter = page.getByRole('combobox', { name: 'Domain' })
+    await expect(domainFilter).toBeVisible({ timeout: 5000 })
   })
 
   test('should display clear search button after search', async ({ page }) => {
@@ -71,12 +82,10 @@ test.describe('Concept Search - Advanced Features', () => {
     await searchInput.fill('diabetes')
     await page.waitForTimeout(500)
 
-    // Look for clear button
+    // Look for clear button. The search field is `clearable` (Vuetify),
+    // which renders a clear control once the field has a value.
     const clearButton = page.locator('button:has-text("Clear"), button[aria-label*="clear"]').first()
-    const hasClearButton = await clearButton.count() > 0
-
-    // Clear button may or may not be present
-    expect(hasClearButton || !hasClearButton).toBeTruthy()
+    await expect(clearButton).toBeVisible()
   })
 
   test('should display no results message for invalid search', async ({ page }) => {
@@ -120,40 +129,37 @@ test.describe('Cohort List - UI Interactions', () => {
   })
 
   test('should display loading state while fetching cohorts', async ({ page }) => {
-    await setupBasicMocks(page)
+    await page.route('**/cohortdefinition', async (route) => {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([])
+      })
+    })
 
-    // Navigate to trigger loading
-    await page.goto('/#/cohorts', { waitUntil: 'domcontentloaded' })
+    // beforeEach already navigated to this exact URL, and browsers treat a
+    // goto to an identical hash as a no-op, so a real reload is needed to
+    // trigger a fresh fetch that the route mock above can actually delay.
+    await page.reload({ waitUntil: 'domcontentloaded' })
 
-    // Check for loading skeleton or spinner
     const skeleton = page.locator('.v-skeleton-loader, .v-progress-circular')
-    const hasLoading = await skeleton.count() > 0
-
-    // May or may not show loading depending on speed
-    expect(hasLoading || !hasLoading).toBeTruthy()
+    await expect(skeleton.first()).toBeVisible()
   })
 
   test('should show cohort cards in grid layout', async ({ page }) => {
-    // Wait for cohorts to load - grid may show empty state, loading, or cards
     const grid = page.locator('.cohort-grid')
-    const gridVisible = await grid.isVisible().catch(() => false)
+    await expect(grid).toBeVisible()
 
-    if (gridVisible) {
-      // Wait a bit more for cards to render
-      await page.waitForTimeout(1000)
+    const cards = page.locator('.cohort-card')
+    const emptyState = page.locator('.cohort-grid__empty')
+    const cardCount = await cards.count()
 
-      const cards = page.locator('.cohort-card')
-      const count = await cards.count()
-
-      // Cards may or may not be present depending on mock timing
-      // Empty state is also valid
-      const emptyState = page.locator('.cohort-grid__empty, [class*="empty"]')
-      const hasEmptyState = await emptyState.count() > 0
-
-      expect(count > 0 || hasEmptyState || count === 0).toBeTruthy()
+    if (cardCount === 0) {
+      await expect(emptyState).toBeVisible()
     } else {
-      // Grid may not be visible if loading or error state
-      expect(true).toBeTruthy()
+      await expect(cards.first()).toBeVisible()
+      await expect(emptyState).toHaveCount(0)
     }
   })
 })
@@ -219,12 +225,8 @@ test.describe('UI Loading States', () => {
 
     await page.goto('/#/cohorts', { waitUntil: 'domcontentloaded' })
 
-    // Check for loading state
     const loadingIndicator = page.locator('.v-skeleton-loader, .v-progress-circular, .loading')
-    const hasLoading = await loadingIndicator.count() > 0
-
-    // Loading state may appear briefly
-    expect(hasLoading || !hasLoading).toBeTruthy()
+    await expect(loadingIndicator.first()).toBeVisible()
   })
 })
 

@@ -43,7 +43,9 @@ describe('services/cohort-definition.service', () => {
       const result = await getCohortDefinition(1)
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.status).toBe(403)
         expect(result.error.body).toBe('no read access')
       }
@@ -60,7 +62,11 @@ describe('services/cohort-definition.service', () => {
       const result = await getCohortDefinition(1)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.status).toBe(404)
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
+        expect(result.error.status).toBe(404)
+      }
     })
 
     it('returns the definition on success', async () => {
@@ -72,7 +78,11 @@ describe('services/cohort-definition.service', () => {
       const result = await getCohortDefinition(1)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.name).toBe('C')
+      if (result.success) {
+        expect(result.data.name).toBe('C')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
   })
 
@@ -159,7 +169,11 @@ describe('services/cohort-definition.service', () => {
       const result = await assignTagToCohort(1, 10)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.message).toBe('network error')
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
+        expect(result.error.message).toBe('network error')
+      }
     })
 
     it('unassignTagFromCohort DELETEs the tag and reports success', async () => {
@@ -196,6 +210,8 @@ describe('services/cohort-definition.service', () => {
         expect(result.data.cohortDefinitionId).toBe(123)
         expect(result.data.sourceKey).toBe('SYNPUF1K')
         expect(result.data.status).toBe('PENDING')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
     })
 
@@ -231,7 +247,11 @@ describe('services/cohort-definition.service', () => {
       const result = await generateCohort(123, 'SYNPUF1K')
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.status).toBe(expected)
+      if (result.success) {
+        expect(result.data.status).toBe(expected)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('defaults an unrecognized job status to PENDING rather than throwing', async () => {
@@ -243,7 +263,11 @@ describe('services/cohort-definition.service', () => {
       const result = await generateCohort(123, 'SYNPUF1K')
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.status).toBe('PENDING')
+      if (result.success) {
+        expect(result.data.status).toBe('PENDING')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('maps executionId to the job id', async () => {
@@ -255,7 +279,11 @@ describe('services/cohort-definition.service', () => {
       const result = await generateCohort(123, 'SYNPUF1K')
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.id).toBe(789)
+      if (result.success) {
+        expect(result.data.id).toBe(789)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('falls back to a generated id when executionId is absent', async () => {
@@ -267,7 +295,11 @@ describe('services/cohort-definition.service', () => {
       const result = await generateCohort(123, 'SYNPUF1K')
 
       expect(result.success).toBe(true)
-      if (result.success) expect(typeof result.data.id).toBe('number')
+      if (result.success) {
+        expect(typeof result.data.id).toBe('number')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('converts startDate/endDate to ISO startTime/endTime', async () => {
@@ -288,6 +320,8 @@ describe('services/cohort-definition.service', () => {
       if (result.success) {
         expect(result.data.startTime).toBe(new Date('2026-01-01T00:00:00.000Z').toISOString())
         expect(result.data.endTime).toBe(new Date('2026-01-02T00:00:00.000Z').toISOString())
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
     })
 
@@ -303,6 +337,8 @@ describe('services/cohort-definition.service', () => {
       if (result.success) {
         expect(result.data.startTime).toBeUndefined()
         expect(result.data.endTime).toBeUndefined()
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
     })
   })
@@ -318,7 +354,11 @@ describe('services/cohort-definition.service', () => {
       const result = await getCohortGenerationInfo(123)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toHaveLength(1)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('throws an ApiError on an invalid response shape rather than silently failing', async () => {
@@ -357,7 +397,11 @@ describe('services/cohort-definition.service', () => {
       const result = await getCohortGenerationInfo(123)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data[0].status).toBe(expected)
+      if (result.success) {
+        expect(result.data[0].status).toBe(expected)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('normalizes an unrecognized raw status to PENDING rather than failing validation', async () => {
@@ -372,7 +416,11 @@ describe('services/cohort-definition.service', () => {
       const result = await getCohortGenerationInfo(123)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data[0].status).toBe('PENDING')
+      if (result.success) {
+        expect(result.data[0].status).toBe('PENDING')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
   })
 
@@ -386,7 +434,11 @@ describe('services/cohort-definition.service', () => {
       const result = await getCohorts()
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toHaveLength(1)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('reports a malformed cohort in the list as ApiResult failure carrying the Zod issues', async () => {
@@ -398,7 +450,9 @@ describe('services/cohort-definition.service', () => {
       const result = await getCohorts()
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe('Invalid cohort list response format')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
@@ -417,7 +471,11 @@ describe('services/cohort-definition.service', () => {
       const result = await validateCohortDefinition('Test', {})
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data.warnings).toHaveLength(1)
+      if (result.success) {
+        expect(result.data.warnings).toHaveLength(1)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
     })
 
     it('reports a network failure as ApiResult instead of masking it as a synthetic warning', async () => {
@@ -426,7 +484,11 @@ describe('services/cohort-definition.service', () => {
       const result = await validateCohortDefinition('Test', {})
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.message).toBe('Network error')
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
+        expect(result.error.message).toBe('Network error')
+      }
     })
   })
 
@@ -440,7 +502,11 @@ describe('services/cohort-definition.service', () => {
       const result = await getCohortPrintFriendly({ expression: {} } as never)
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toContain('Report')
+      if (result.success) {
+        expect(result.data).toContain('Report')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url, options] = mockFetch.mock.calls[0]
       expect(url).toContain('/cohortdefinition/printfriendly/cohort')
       expect(options.method).toBe('POST')
@@ -456,7 +522,11 @@ describe('services/cohort-definition.service', () => {
       const result = await getCohortPrintFriendly({} as never)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.status).toBe(500)
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
+        expect(result.error.status).toBe(500)
+      }
     })
 
     it('parses a stringified expression on a wrapper before sending it', async () => {
@@ -488,7 +558,9 @@ describe('services/cohort-definition.service', () => {
       const result = await getCohortPrintFriendly({ expression: {} } as never)
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected the result to fail')
+      } else {
         expect(result.error.message).toBe('Invalid response format')
         expect(result.error.status).toBe(0)
       }

@@ -8,7 +8,7 @@
  * export flow, cancel routing, tag updates, and the unsaved-changes guard.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
@@ -148,6 +148,7 @@ vi.mock('@/services/atlas-converter', () => ({
   convertInternalToAtlas: vi.fn(() => ({ mocked: 'atlas-expression' })),
 }))
 
+import { ApiError } from '@/services/api-error'
 import CohortBuilder from '@/components/cohort/CohortBuilder.vue'
 
 const vuetify = createVuetify({
@@ -216,6 +217,15 @@ describe('CohortBuilder', () => {
     })
   }
 
+  type Wrapper = ReturnType<typeof createWrapper>
+
+  const conceptSetsListDialog = (wrapper: Wrapper) =>
+    wrapper.findComponent({ name: 'ConceptSetsListDialog' })
+  const conceptSearchDialog = (wrapper: Wrapper) =>
+    wrapper.findComponent({ name: 'ConceptSearchDialog' })
+  const tagSelectionDialog = (wrapper: Wrapper) =>
+    wrapper.findComponent({ name: 'TagSelectionDialog' })
+
   // ---------------------------------------------------------------------------
   // Lifecycle + render
   // ---------------------------------------------------------------------------
@@ -263,13 +273,16 @@ describe('CohortBuilder', () => {
   // openXDialog handlers (exposed)
   // ---------------------------------------------------------------------------
 
-  it('openConceptSetsDialog flips showConceptSetsDialog flag', async () => {
+  it('openConceptSetsDialog opens the concept sets dialog', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
+    const dialog = conceptSetsListDialog(wrapper)
+    expect(dialog.props('modelValue')).toBe(false)
+
     ;(wrapper.vm as any).openConceptSetsDialog()
-    // Dialog visibility shows up downstream in the rendered template's
-    // model-value; we assert through the lifecycle not crashing.
-    expect(typeof (wrapper.vm as any).openConceptSetsDialog).toBe('function')
+    await wrapper.vm.$nextTick()
+
+    expect(dialog.props('modelValue')).toBe(true)
   })
 
   it('openValidationDialog/openVersionsDialog/openTagsDialog can be invoked', async () => {
@@ -301,17 +314,9 @@ describe('CohortBuilder', () => {
   it('exportFilename builds a slug from cohortName', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    // Drive cohortName through the exposed name prop two-way binding by
-    // setting it directly via the internal ref (the script also exposes a
-    // way to bind props.name → cohortName).
     await wrapper.setProps({ name: 'My Cool Cohort!' })
     await wrapper.vm.$nextTick()
-    // Look up exposed conceptSetCount-based proxy isn't enough; we
-    // need direct access. Use $.exposed via setupState.
-    const setup = (wrapper.vm as any).$
-    // Read internal `cohortName` ref:
-    const cohortName = setup.setupState?.cohortName
-    expect(cohortName).toBe('My Cool Cohort!')
+    expect((wrapper.vm as any).cohortName).toBe('My Cool Cohort!')
   })
 
   // ---------------------------------------------------------------------------
@@ -328,14 +333,17 @@ describe('CohortBuilder', () => {
   // handleConceptsSelected
   // ---------------------------------------------------------------------------
 
-  it('handleConceptsSelected closes search dialog when no concepts selected', async () => {
+  it('closes the search dialog when no concepts are selected', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.isConceptSearchDialogOpen = true
-    setup.selectedCriteriaContext = { eventId: 'x', ruleIndex: -1, groupIndex: 0, eventIndex: 0 }
-    setup.handleConceptsSelected([])
-    expect(setup.isConceptSearchDialogOpen).toBe(false)
+    const vm = wrapper.vm as any
+    vm.criteriaSelectionService.requestConcepts(undefined, vi.fn())
+    await wrapper.vm.$nextTick()
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(true)
+
+    conceptSearchDialog(wrapper).vm.$emit('concepts-selected', [])
+    await wrapper.vm.$nextTick()
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(false)
   })
 
   // ---------------------------------------------------------------------------
@@ -344,26 +352,21 @@ describe('CohortBuilder', () => {
   // rather than the index-context relay.
   // ---------------------------------------------------------------------------
 
-  it('provideCriteriaSelection.requestConcepts opens the search dialog and registers a pending callback', async () => {
+  it('criteriaSelectionService.requestConcepts opens the search dialog and registers a pending callback', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
+    const vm = wrapper.vm as any
 
     const cb = vi.fn()
-    setup.provideCriteriaSelection // touch to ensure module wired
-    const service = (wrapper.vm as any).$.provides
-    // The service is provided under the criteria-selection injection key.
-    const key = Object.getOwnPropertySymbols(service).find(
-      s => s.toString() === 'Symbol(criteria-selection)'
-    )!
-    service[key].requestConcepts('Gender', cb)
+    vm.criteriaSelectionService.requestConcepts('Gender', cb)
+    await wrapper.vm.$nextTick()
 
-    expect(setup.isConceptSearchDialogOpen).toBe(true)
-    expect(setup.selectedConceptDomainFilter).toBe('Gender')
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(true)
+    expect(conceptSearchDialog(wrapper).props('domainFilter')).toBe('Gender')
 
     // Delivering the dialog result runs the pending-callback branch of
     // handleConceptsSelected (converts + hands back Atlas-format concepts).
-    setup.handleConceptsSelected([
+    conceptSearchDialog(wrapper).vm.$emit('concepts-selected', [
       {
         conceptId: 8507,
         conceptName: 'MALE',
@@ -375,24 +378,28 @@ describe('CohortBuilder', () => {
         invalidReason: null,
       },
     ])
+    await wrapper.vm.$nextTick()
+
     expect(cb).toHaveBeenCalledTimes(1)
     expect(cb.mock.calls[0][0][0]).toMatchObject({ CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE' })
-    expect(setup.isConceptSearchDialogOpen).toBe(false)
+    expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(false)
   })
 
-  it('provideCriteriaSelection.editConceptSet opens the concept-set editor', async () => {
+  it('criteriaSelectionService.editConceptSet opens the concept-set editor', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
 
-    const service = (wrapper.vm as any).$.provides
-    const key = Object.getOwnPropertySymbols(service).find(
-      s => s.toString() === 'Symbol(criteria-selection)'
-    )!
-    service[key].editConceptSet({ id: 9, name: 'Hypertension', items: [] })
+    ;(wrapper.vm as any).criteriaSelectionService.editConceptSet({
+      id: 9,
+      name: 'Hypertension',
+      items: [],
+    })
+    await wrapper.vm.$nextTick()
 
-    expect(setup.conceptSetsStore.editorOpen).toBe(true)
-    expect(setup.conceptSetsStore.currentSet).toMatchObject({ id: 9, name: 'Hypertension' })
+    const { useConceptSetsStore } = await import('@/stores/concept-sets')
+    const store = useConceptSetsStore()
+    expect(store.editorOpen).toBe(true)
+    expect(store.currentSet).toMatchObject({ id: 9, name: 'Hypertension' })
   })
 
   // ---------------------------------------------------------------------------
@@ -402,17 +409,17 @@ describe('CohortBuilder', () => {
   it('exportFilename slugifies the cohort name', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'My Cool Cohort!'
-    expect(setup.exportFilename()).toBe('my_cool_cohort__cohort.json')
+    const vm = wrapper.vm as any
+    vm.cohortName = 'My Cool Cohort!'
+    expect(vm.exportFilename()).toBe('my_cool_cohort__cohort.json')
   })
 
   it('exportFilename falls back to "cohort" for an empty name', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = ''
-    expect(setup.exportFilename()).toBe('cohort_cohort.json')
+    const vm = wrapper.vm as any
+    vm.cohortName = ''
+    expect(vm.exportFilename()).toBe('cohort_cohort.json')
   })
 
   // ---------------------------------------------------------------------------
@@ -422,10 +429,10 @@ describe('CohortBuilder', () => {
   it('createStateSnapshot returns a stable JSON string capturing all fields', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.cohortName = 'Snap'
-    setup.cohortDescription = 'snap-desc'
-    const snap = setup.createStateSnapshot()
+    const vm = wrapper.vm as any
+    vm.cohortName = 'Snap'
+    vm.cohortDescription = 'snap-desc'
+    const snap = vm.createStateSnapshot()
     expect(typeof snap).toBe('string')
     const parsed = JSON.parse(snap)
     expect(parsed.name).toBe('Snap')
@@ -440,34 +447,32 @@ describe('CohortBuilder', () => {
   it('cancelLeaveUnsaved closes the unsaved-changes dialog and clears state', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.showUnsavedDialog = true
-    setup.isConfirmingNavigation = true
-    setup.cancelLeaveUnsaved()
-    expect(setup.showUnsavedDialog).toBe(false)
-    expect(setup.isConfirmingNavigation).toBe(false)
+    const vm = wrapper.vm as any
+    vm.showUnsavedDialog = true
+    vm.isConfirmingNavigation = true
+    vm.cancelLeaveUnsaved()
+    expect(vm.showUnsavedDialog).toBe(false)
+    expect(vm.isConfirmingNavigation).toBe(false)
   })
 
   it('confirmLeaveUnsaved closes the dialog and runs pending navigation', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.showUnsavedDialog = true
+    const vm = wrapper.vm as any
+    vm.showUnsavedDialog = true
     // confirmLeaveUnsaved consumes a module-local `pendingNavigation` we can't
     // easily set; assert the dialog flips off regardless.
-    setup.confirmLeaveUnsaved()
-    expect(setup.showUnsavedDialog).toBe(false)
+    vm.confirmLeaveUnsaved()
+    expect(vm.showUnsavedDialog).toBe(false)
   })
 
   // ---------------------------------------------------------------------------
   // handleTagsUpdate
   // ---------------------------------------------------------------------------
 
-  it('handleTagsUpdate writes new tags onto the current cohort in the store', async () => {
+  it('updating tags writes new tags onto the current cohort in the store', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    // Use the store from the setup
     const { useCohortStore } = await import('@/stores/cohort')
     const store = useCohortStore()
     // store.currentCohort may be undefined for a brand-new cohort with no id;
@@ -476,7 +481,8 @@ describe('CohortBuilder', () => {
       store.createNewCohort()
     }
     const tags = [{ id: 1, name: 'tag1' }, { id: 2, name: 'tag2' }]
-    setup.handleTagsUpdate(tags as any)
+    tagSelectionDialog(wrapper).vm.$emit('update:selected-tags', tags)
+    await wrapper.vm.$nextTick()
     expect(store.currentCohort?.tags).toEqual(tags)
   })
 
@@ -484,13 +490,20 @@ describe('CohortBuilder', () => {
   // handleViewConceptSet / handleCreateNewConceptSet
   // ---------------------------------------------------------------------------
 
-  it('handleViewConceptSet closes the dialog and opens the editor', async () => {
+  it('viewing a concept set closes the list dialog and opens the editor', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.showConceptSetsDialog = true
-    setup.handleViewConceptSet({ id: 1, name: 'cs', items: [] })
-    expect(setup.showConceptSetsDialog).toBe(false)
+    ;(wrapper.vm as any).openConceptSetsDialog()
+    await wrapper.vm.$nextTick()
+    expect(conceptSetsListDialog(wrapper).props('modelValue')).toBe(true)
+
+    conceptSetsListDialog(wrapper).vm.$emit('view', { id: 1, name: 'cs', items: [] })
+    await wrapper.vm.$nextTick()
+
+    expect(conceptSetsListDialog(wrapper).props('modelValue')).toBe(false)
+    const { useConceptSetsStore } = await import('@/stores/concept-sets')
+    const store = useConceptSetsStore()
+    expect(store.editorOpen).toBe(true)
   })
 
   it('handleCreateNewConceptSet closes the selection dialog', async () => {
@@ -565,13 +578,9 @@ describe('CohortBuilder', () => {
     // Make canSave true: have name + entry events + grant permission via mock.
     setup.cohortName = 'A Cohort'
     Object.assign(setup.expression, { PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] } })
-    // canSavePermission gates on hasPermission/canWrite — for a new cohort,
-    // both default to true in our basic mock. Verify save attempt runs.
     const webapi = await import('@/services/cohort-definition.service')
     await setup.handleSave()
-    // Either save was invoked OR canSave gated it; we accept that the path was
-    // exercised (function coverage credit).
-    expect(webapi.saveCohortDefinition).toBeDefined()
+    expect(webapi.saveCohortDefinition).toHaveBeenCalled()
   })
 
   // ---------------------------------------------------------------------------
@@ -721,48 +730,42 @@ describe('CohortBuilder', () => {
   })
 
   // ---------------------------------------------------------------------------
-  // Planned-feature functions — exposed under "_"-prefixed names but never
-  // wired in the template. Calling them directly produces function-coverage
-  // credit without touching the UI.
+  // Planned-feature status helpers: exposed under "_"-prefixed names because
+  // nothing in the template wires them up yet. Asserted directly since there is
+  // no rendered output to drive them through.
   // ---------------------------------------------------------------------------
 
   it('_getStatusColor returns the right color per status', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    if (typeof setup._getStatusColor === 'function') {
-      expect(setup._getStatusColor('COMPLETE')).toBe('success')
-      expect(setup._getStatusColor('FAILED')).toBe('error')
-      expect(setup._getStatusColor('RUNNING')).toBe('primary')
-      expect(setup._getStatusColor('PENDING')).toBe('warning')
-      expect(setup._getStatusColor('UNKNOWN')).toBe('grey')
-    }
+    const vm = wrapper.vm as any
+    expect(vm._getStatusColor('COMPLETE')).toBe('success')
+    expect(vm._getStatusColor('FAILED')).toBe('error')
+    expect(vm._getStatusColor('RUNNING')).toBe('primary')
+    expect(vm._getStatusColor('PENDING')).toBe('warning')
+    expect(vm._getStatusColor('UNKNOWN')).toBe('grey')
   })
 
   it('_getStatusIcon returns the right icon per status', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    if (typeof setup._getStatusIcon === 'function') {
-      expect(setup._getStatusIcon('COMPLETE')).toBe('mdi-check-circle')
-      expect(setup._getStatusIcon('FAILED')).toBe('mdi-alert-circle')
-      expect(setup._getStatusIcon('RUNNING')).toBe('mdi-loading mdi-spin')
-      expect(setup._getStatusIcon('PENDING')).toBe('mdi-clock-outline')
-      expect(setup._getStatusIcon('???')).toBe('mdi-help-circle')
-    }
+    const vm = wrapper.vm as any
+    expect(vm._getStatusIcon('COMPLETE')).toBe('mdi-check-circle')
+    expect(vm._getStatusIcon('FAILED')).toBe('mdi-alert-circle')
+    expect(vm._getStatusIcon('RUNNING')).toBe('mdi-loading mdi-spin')
+    expect(vm._getStatusIcon('PENDING')).toBe('mdi-clock-outline')
+    expect(vm._getStatusIcon('???')).toBe('mdi-help-circle')
   })
 
   it('_getStatusText returns the right label per status', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    if (typeof setup._getStatusText === 'function') {
-      expect(setup._getStatusText('COMPLETE')).toBe('Complete')
-      expect(setup._getStatusText('FAILED')).toBe('Failed')
-      expect(setup._getStatusText('RUNNING')).toBe('Generating...')
-      expect(setup._getStatusText('PENDING')).toBe('Pending')
-      expect(setup._getStatusText('weird')).toBe('Unknown')
-    }
+    const vm = wrapper.vm as any
+    expect(vm._getStatusText('COMPLETE')).toBe('Complete')
+    expect(vm._getStatusText('FAILED')).toBe('Failed')
+    expect(vm._getStatusText('RUNNING')).toBe('Generating...')
+    expect(vm._getStatusText('PENDING')).toBe('Pending')
+    expect(vm._getStatusText('weird')).toBe('Unknown')
   })
 
   it('handleBackToCurrent navigates to current version when cohortId is set', async () => {
@@ -850,11 +853,36 @@ describe('CohortBuilder', () => {
     Object.assign(setup.expression, { PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] } })
 
     const webapi = await import('@/services/cohort-definition.service')
-    vi.mocked(webapi.saveCohortDefinition).mockResolvedValueOnce(null as never)
+    vi.mocked(webapi.saveCohortDefinition).mockResolvedValueOnce({
+      success: true,
+      data: {} as never,
+    })
 
     const result = await setup.handleSave()
     expect(result).toEqual({})
     expect(setup.errorMessage).toBe('Failed to save cohort to server')
+    expect(setup.showError).toBe(true)
+  })
+
+  it('handleSave shows the localized server error when the save API fails', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Savable'
+    Object.assign(setup.expression, { PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] } })
+
+    const webapi = await import('@/services/cohort-definition.service')
+    vi.mocked(webapi.saveCohortDefinition).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('HTTP 500: <html>Internal Server Error</html>', 500, null),
+    })
+
+    const result = await setup.handleSave()
+
+    expect(result).toEqual({})
+    // Raw transport text must not leak into the banner.
+    expect(setup.errorMessage).toBe('Failed to save cohort to server')
+    expect(setup.errorMessage).not.toContain('HTTP 500')
     expect(setup.showError).toBe(true)
   })
 
@@ -896,12 +924,13 @@ describe('CohortBuilder', () => {
     const setup = getSetup(wrapper)
     setup.cohortName = 'Savable'
     Object.assign(setup.expression, { PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] } })
-    setup.handleTagsUpdate([{ id: 7, name: 'protected' }] as any)
+    tagSelectionDialog(wrapper).vm.$emit('update:selected-tags', [{ id: 7, name: 'protected' }])
+    await wrapper.vm.$nextTick()
 
     const webapi = await import('@/services/cohort-definition.service')
     vi.mocked(webapi.assignTagToCohort).mockResolvedValueOnce({
       success: false,
-      error: 'Tag group "Status" allows only one assignment',
+      error: new ApiError('Tag group "Status" allows only one assignment', 400, null),
     })
 
     await setup.handleSave()
@@ -918,7 +947,10 @@ describe('CohortBuilder', () => {
     setup.loadedTags = [{ id: 9, name: 'old-tag' }]
 
     const webapi = await import('@/services/cohort-definition.service')
-    vi.mocked(webapi.unassignTagFromCohort).mockResolvedValueOnce({ success: false })
+    vi.mocked(webapi.unassignTagFromCohort).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('', 0, null),
+    })
 
     await setup.handleSave()
     expect(setup.errorMessage).toBe('Failed to unassign tag "old-tag"')
@@ -962,6 +994,18 @@ describe('CohortBuilder', () => {
 
     expect(setup.showJsonDialog).toBe(false)
     expect(setup.showSuccess).toBe(true)
+  })
+
+  it('still loads when the route changes to a different cohort', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const webapi = await import('@/services/cohort-definition.service')
+    vi.mocked(webapi.getCohortDefinition).mockClear()
+
+    await wrapper.setProps({ id: '42' })
+    await flushPromises()
+
+    expect(webapi.getCohortDefinition).toHaveBeenCalledWith(42)
   })
 
   it('applying invalid JSON surfaces an error and keeps dialog open', async () => {

@@ -61,6 +61,17 @@ describe('AnalysisBuilderShell interactions', () => {
     vi.clearAllMocks()
   })
 
+  it('stamps the testid prop onto its own root, not only onto sub-elements', () => {
+    const wrapper = mountIt({ testid: 'char-builder', title: 'X' })
+    const root = wrapper.find('.builder-shell')
+    expect(root.attributes('data-testid')).toBe('char-builder')
+  })
+
+  it('leaves the root without a data-testid when no testid prop is given', () => {
+    const wrapper = mountIt({ title: 'X' })
+    expect(wrapper.find('.builder-shell').attributes('data-testid')).toBeUndefined()
+  })
+
   it('emits back when the back button is clicked', async () => {
     const wrapper = mountIt({ testid: 'shell', title: 'X' })
     const backBtn = wrapper.find('[data-testid="shell-back"]')

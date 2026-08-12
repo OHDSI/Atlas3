@@ -67,7 +67,11 @@ describe('services/pathway.service', () => {
       const result = await listPathways()
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toHaveLength(1)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/pathway-analysis?size=10000')
     })
@@ -86,7 +90,11 @@ describe('services/pathway.service', () => {
       const result = await listPathways()
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.message).toBe('network error')
+      if (result.success) {
+        expect.fail('expected listPathways to fail')
+      } else {
+        expect(result.error.message).toBe('network error')
+      }
     })
 
     it('carries both the page and array Zod issues when neither shape parses', async () => {
@@ -95,7 +103,9 @@ describe('services/pathway.service', () => {
       const result = await listPathways()
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected listPathways to fail')
+      } else {
         expect(result.error.message).toBe('Invalid pathway list response')
         expect(result.error.status).toBe(0)
         const body = JSON.parse(result.error.body as string)
@@ -185,7 +195,9 @@ describe('services/pathway.service', () => {
       const result = await deletePathway(1)
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected deletePathway to fail')
+      } else {
         expect(result.error.status).toBe(409)
         expect(result.error.body).toBe('pathway is referenced by a generation')
       }
@@ -199,7 +211,11 @@ describe('services/pathway.service', () => {
       const result = await existsPathway('My Pathway')
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toBe(0)
+      if (result.success) {
+        expect(result.data).toBe(0)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/pathway-analysis/0/exists?name=My%20Pathway')
     })
@@ -235,7 +251,11 @@ describe('services/pathway.service', () => {
       const result = await assignPathwayTag(1, 7)
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.status).toBe(400)
+      if (result.success) {
+        expect.fail('expected assignPathwayTag to fail')
+      } else {
+        expect(result.error.status).toBe(400)
+      }
     })
 
     it('unassignPathwayTag DELETEs /pathway-analysis/:id/tag/:tagId', async () => {
@@ -369,6 +389,8 @@ describe('services/pathway.service', () => {
         expect(result.data?.id).toBe(456)
         expect(result.data?.status).toBe('STARTING')
         expect(result.data?.sourceKey).toBe('cdm')
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
     })
 
@@ -378,7 +400,11 @@ describe('services/pathway.service', () => {
       const result = await generatePathway(1, 'cdm')
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toBeNull()
+      if (result.success) {
+        expect(result.data).toBeNull()
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       expect(vi.mocked(logger.warn)).toHaveBeenCalledWith(
         'PathwayService',
         'Generate response carried no execution id',
@@ -392,7 +418,9 @@ describe('services/pathway.service', () => {
       const result = await generatePathway(1, 'cdm')
 
       expect(result.success).toBe(false)
-      if (!result.success) {
+      if (result.success) {
+        expect.fail('expected generatePathway to fail')
+      } else {
         expect(result.error.message).toBe('Invalid generate response')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
@@ -422,7 +450,11 @@ describe('services/pathway.service', () => {
       const result = await cancelPathwayGeneration(1, 'cdm')
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.status).toBe(404)
+      if (result.success) {
+        expect.fail('expected cancelPathwayGeneration to fail')
+      } else {
+        expect(result.error.status).toBe(404)
+      }
     })
 
     it('getPathwayDesignByGeneration GETs /generation/:gid/design', async () => {

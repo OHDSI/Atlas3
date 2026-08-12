@@ -88,9 +88,10 @@ describe('role.service', () => {
       const result = await roleService.fetchRoles()
 
       expect(httpGet).toHaveBeenCalledWith('/role/')
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(mockRoles)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -99,9 +100,10 @@ describe('role.service', () => {
 
       const result = await roleService.fetchRoles()
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid roles response format')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
@@ -110,9 +112,10 @@ describe('role.service', () => {
 
       const result = await roleService.fetchRoles()
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Network error')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -124,9 +127,10 @@ describe('role.service', () => {
       const result = await roleService.fetchRoleById(1)
 
       expect(httpGet).toHaveBeenCalledWith('/role/1')
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(mockRole)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -135,9 +139,10 @@ describe('role.service', () => {
 
       const result = await roleService.fetchRoleById(1)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid role response format')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
@@ -146,9 +151,10 @@ describe('role.service', () => {
 
       const result = await roleService.fetchRoleById(999)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Role not found')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -173,9 +179,10 @@ describe('role.service', () => {
       const result = await roleService.createRole(createPayload)
 
       expect(httpPost).toHaveBeenCalledWith('/role/', createPayload)
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(createdRole)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -189,9 +196,10 @@ describe('role.service', () => {
 
       const result = await roleService.createRole(createPayload)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid role response format')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
@@ -205,9 +213,10 @@ describe('role.service', () => {
 
       const result = await roleService.createRole(createPayload)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Duplicate role name')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -230,9 +239,10 @@ describe('role.service', () => {
       const result = await roleService.updateRole(1, updatePayload)
 
       expect(httpPut).toHaveBeenCalledWith('/role/1', updatePayload)
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(updatedRole)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -245,9 +255,10 @@ describe('role.service', () => {
 
       const result = await roleService.updateRole(1, updatePayload)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid role response format')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
@@ -260,9 +271,10 @@ describe('role.service', () => {
 
       const result = await roleService.updateRole(1, updatePayload)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Update failed')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -282,9 +294,10 @@ describe('role.service', () => {
 
       const result = await roleService.deleteRole(1)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Delete failed')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -296,9 +309,10 @@ describe('role.service', () => {
       const result = await roleService.getRolePermissions(1)
 
       expect(httpGet).toHaveBeenCalledWith('/role/1/permissions')
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(mockPermissions)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -307,9 +321,10 @@ describe('role.service', () => {
 
       const result = await roleService.getRolePermissions(1)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid permissions response format')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
@@ -318,9 +333,10 @@ describe('role.service', () => {
 
       const result = await roleService.getRolePermissions(1)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Permissions fetch failed')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -340,9 +356,10 @@ describe('role.service', () => {
 
       const result = await roleService.assignPermissionToRole(1, 2)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Assignment failed')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -362,9 +379,10 @@ describe('role.service', () => {
 
       const result = await roleService.removePermissionFromRole(1, 2)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Removal failed')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -376,9 +394,10 @@ describe('role.service', () => {
       const result = await roleService.getRoleUsers(1)
 
       expect(httpGet).toHaveBeenCalledWith('/role/1/users')
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data).toEqual(mockUsers)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -387,9 +406,10 @@ describe('role.service', () => {
 
       const result = await roleService.getRoleUsers(1)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid users response format')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
@@ -398,9 +418,10 @@ describe('role.service', () => {
 
       const result = await roleService.getRoleUsers(1)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Users fetch failed')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -420,9 +441,10 @@ describe('role.service', () => {
 
       const result = await roleService.assignUserToRole(1, 2)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Assignment failed')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -442,9 +464,10 @@ describe('role.service', () => {
 
       const result = await roleService.removeUserFromRole(1, 2)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Removal failed')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -458,12 +481,13 @@ describe('role.service', () => {
 
       const result = await roleService.exportRole(1)
 
-      expect(result.success).toBe(true)
       if (result.success) {
         const exportData = JSON.parse(result.data)
         expect(exportData.role.name).toBe('Admin')
         expect(exportData.role.permissions).toHaveLength(2)
         expect(exportData.role.users).toHaveLength(2)
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
 
@@ -472,9 +496,10 @@ describe('role.service', () => {
 
       const result = await roleService.exportRole(999)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Role not found')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -506,9 +531,10 @@ describe('role.service', () => {
 
       const result = await roleService.importRole(importData)
 
-      expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data.name).toBe('Imported Role')
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
       expect(httpPost).toHaveBeenCalledTimes(1)
       expect(httpPut).toHaveBeenCalledTimes(3)
@@ -531,9 +557,10 @@ describe('role.service', () => {
 
       const result = await roleService.importRole(invalidData)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid role import format: missing role name')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
@@ -549,9 +576,10 @@ describe('role.service', () => {
 
       const result = await roleService.importRole(importData)
 
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Role already exists')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -563,99 +591,110 @@ describe('role.service', () => {
     it('fetchRoles stringifies a non-Error rejection', async () => {
       vi.mocked(httpGet).mockRejectedValue('boom')
       const result = await roleService.fetchRoles()
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('boom')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
     it('fetchRoleById stringifies a non-Error rejection', async () => {
       vi.mocked(httpGet).mockRejectedValue({ code: 500 })
       const result = await roleService.fetchRoleById(1)
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('[object Object]')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
     it('createRole stringifies a non-Error rejection', async () => {
       vi.mocked(httpPost).mockRejectedValue('failure')
       const result = await roleService.createRole({ name: 'X', description: '' })
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('failure')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
     it('updateRole stringifies a non-Error rejection', async () => {
       vi.mocked(httpPut).mockRejectedValue('failure')
       const result = await roleService.updateRole(1, { name: 'X' })
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('failure')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
     it('deleteRole stringifies a non-Error rejection', async () => {
       vi.mocked(httpDelete).mockRejectedValue('failure')
       const result = await roleService.deleteRole(1)
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('failure')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
     it('getRolePermissions stringifies a non-Error rejection', async () => {
       vi.mocked(httpGet).mockRejectedValue('failure')
       const result = await roleService.getRolePermissions(1)
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('failure')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
     it('assignPermissionToRole stringifies a non-Error rejection', async () => {
       vi.mocked(httpPut).mockRejectedValue('failure')
       const result = await roleService.assignPermissionToRole(1, 2)
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('failure')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
     it('removePermissionFromRole stringifies a non-Error rejection', async () => {
       vi.mocked(httpDelete).mockRejectedValue('failure')
       const result = await roleService.removePermissionFromRole(1, 2)
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('failure')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
     it('getRoleUsers stringifies a non-Error rejection', async () => {
       vi.mocked(httpGet).mockRejectedValue('failure')
       const result = await roleService.getRoleUsers(1)
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('failure')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
     it('assignUserToRole stringifies a non-Error rejection', async () => {
       vi.mocked(httpPut).mockRejectedValue('failure')
       const result = await roleService.assignUserToRole(1, 2)
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('failure')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
     it('removeUserFromRole stringifies a non-Error rejection', async () => {
       vi.mocked(httpDelete).mockRejectedValue('failure')
       const result = await roleService.removeUserFromRole(1, 2)
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('failure')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
@@ -664,9 +703,10 @@ describe('role.service', () => {
       const importData = JSON.stringify({ role: { name: 'X' } })
       vi.mocked(httpPost).mockRejectedValue({ unexpected: true })
       const result = await roleService.importRole(importData)
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('[object Object]')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -678,9 +718,10 @@ describe('role.service', () => {
         .mockResolvedValueOnce({ malformed: true }) // getRolePermissions validation fails
 
       const result = await roleService.exportRole(1)
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid permissions response format')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
 
@@ -691,9 +732,10 @@ describe('role.service', () => {
         .mockResolvedValueOnce({ malformed: true }) // getRoleUsers
 
       const result = await roleService.exportRole(1)
-      expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid users response format')
+      } else {
+        expect.fail(`expected failure but got success with data: ${JSON.stringify(result.data)}`)
       }
     })
   })
@@ -710,12 +752,13 @@ describe('role.service', () => {
         .mockResolvedValueOnce(mockUsers)
 
       const result = await roleService.exportRole(1)
-      expect(result.success).toBe(true)
       if (result.success) {
         const exported = JSON.parse(result.data)
         // first permission falls back to value
         expect(exported.role.permissions[0].permission).toBe('user:*:read')
         expect(exported.role.permissions[1].permission).toBe('role:*:read')
+      } else {
+        expect.fail(`expected success but got error: ${result.error.message}`)
       }
     })
   })
