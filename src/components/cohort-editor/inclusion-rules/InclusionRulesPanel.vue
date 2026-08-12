@@ -58,22 +58,22 @@
         </div>
         <div class="inclusion-rules-panel__limit-toggle">
           <AtlasButton
-            :variant="expressionLimitType === 'First' ? 'tonal' : 'outlined'"
-            size="small"
+            :variant="expressionLimitType === 'First' ? 'tonal' : 'secondary'"
+            size="sm"
             @click="expressionLimitType = 'First'"
           >
             {{ earliestLabel }}
           </AtlasButton>
           <AtlasButton
-            :variant="expressionLimitType === 'All' ? 'tonal' : 'outlined'"
-            size="small"
+            :variant="expressionLimitType === 'All' ? 'tonal' : 'secondary'"
+            size="sm"
             @click="expressionLimitType = 'All'"
           >
             {{ allLabel }}
           </AtlasButton>
           <AtlasButton
-            :variant="expressionLimitType === 'Last' ? 'tonal' : 'outlined'"
-            size="small"
+            :variant="expressionLimitType === 'Last' ? 'tonal' : 'secondary'"
+            size="sm"
             @click="expressionLimitType = 'Last'"
           >
             {{ latestLabel }}
@@ -100,7 +100,7 @@ type LimitType = 'First' | 'All' | 'Last'
 interface Props {
   modelValue: InclusionRule[]
   conceptSets: ConceptSetOption[]
-  expressionLimit?: ResultLimit
+  expressionLimit?: ResultLimit | null
 }
 
 const props = defineProps<Props>()

@@ -29,25 +29,25 @@
           <v-card-text class="pa-3">
             <div class="segmented-buttons">
               <AtlasButton
-                :variant="occurrenceTypeKey === 'EXACTLY' ? 'tonal' : 'outlined'"
+                :variant="occurrenceTypeKey === 'EXACTLY' ? 'tonal' : 'secondary'"
                 class="flex-1 occurrence-chip--exactly"
-                size="small"
+                size="sm"
                 @click="occurrenceTypeKey = 'EXACTLY'"
               >
                 {{ exactLabel }}
               </AtlasButton>
               <AtlasButton
-                :variant="occurrenceTypeKey === 'AT_LEAST' ? 'tonal' : 'outlined'"
+                :variant="occurrenceTypeKey === 'AT_LEAST' ? 'tonal' : 'secondary'"
                 class="flex-1 occurrence-chip--at_least"
-                size="small"
+                size="sm"
                 @click="occurrenceTypeKey = 'AT_LEAST'"
               >
                 {{ atLeastLabel }}
               </AtlasButton>
               <AtlasButton
-                :variant="occurrenceTypeKey === 'AT_MOST' ? 'tonal' : 'outlined'"
+                :variant="occurrenceTypeKey === 'AT_MOST' ? 'tonal' : 'secondary'"
                 class="flex-1 occurrence-chip--at_most"
-                size="small"
+                size="sm"
                 @click="occurrenceTypeKey = 'AT_MOST'"
               >
                 {{ atMostLabel }}
@@ -81,7 +81,7 @@
                 class="mt-3"
                 density="compact"
                 hide-details
-                :items="distinctColumnOptions"
+                :items="[...distinctColumnOptions]"
                 item-title="label"
                 item-value="value"
                 :label="distinctByLabel"
@@ -136,7 +136,7 @@
                 variant="outlined"
                 density="compact"
                 hide-details
-                @update:model-value="applyWindowPresetByLabel"
+                @update:model-value="(value) => applyWindowPresetByLabel(typeof value === 'string' ? value : null)"
               />
 
               <Window :window="ensureStartWindow()" />
@@ -151,8 +151,8 @@
                     <AtlasButton
                       icon="mdi-delete"
                       color="error"
-                      variant="text"
-                      size="small"
+                      variant="ghost"
+                      size="sm"
                       @click="removeEndWindow"
                     />
                   </template>
@@ -172,7 +172,7 @@
               <AtlasSpacer />
 
               <AtlasButton
-                variant="text"
+                variant="ghost"
                 @click="showWindowMenu = false"
               >
                 {{ closeLabel }}
@@ -366,7 +366,7 @@ function toggleDistinct() {
   }
 }
 
-function occurrenceTypeFromValue(value: number | undefined): 'EXACTLY' | 'AT_LEAST' | 'AT_MOST' {
+function occurrenceTypeFromValue(value: number | null | undefined): 'EXACTLY' | 'AT_LEAST' | 'AT_MOST' {
   switch (value) {
     case 1:
       return 'AT_MOST'

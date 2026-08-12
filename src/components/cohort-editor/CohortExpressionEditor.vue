@@ -160,7 +160,7 @@
                 <div class="additional-criteria-section mt-4">
                   <AtlasButton
                     v-if="!expression.AdditionalCriteria"
-                    variant="outlined"
+                    variant="secondary"
                     prepend-icon="mdi-filter-plus"
                     @click="addAdditionalCriteria"
                   >

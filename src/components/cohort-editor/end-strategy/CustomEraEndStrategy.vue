@@ -13,8 +13,8 @@
     <div class="custom-era-end-strategy__concept-set mt-4">
       <AtlasButton
         v-if="drugConceptSet === undefined"
-        variant="outlined"
-        size="small"
+        variant="secondary"
+        size="sm"
         prepend-icon="mdi-plus"
         @click="emit('select-concept-set', selectionTarget)"
       >

@@ -57,7 +57,7 @@
               variant="outlined"
               density="compact"
               hide-details
-              rows="2"
+              :rows="2"
               auto-grow
               @update:model-value="val => { if (rule) rule.description = String(val).trim() || undefined }"
             />
@@ -67,8 +67,8 @@
 
       <div class="rule-detail__header-actions">
         <AtlasButton
-          variant="text"
-          size="small"
+          variant="ghost"
+          size="sm"
           icon="mdi-delete"
           color="error"
           :title="t('common.delete', 'Delete rule').value"
@@ -84,8 +84,8 @@
         class="rule-detail__empty-groups"
       >
         <AtlasButton
-          variant="outlined"
-          size="small"
+          variant="secondary"
+          size="sm"
           prepend-icon="mdi-plus"
           @click="addExpressionGroup"
         >

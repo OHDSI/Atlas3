@@ -7,7 +7,7 @@
         :color="binding?.exclude?.value ? 'warning' : 'primary'"
         variant="tonal"
         label
-        size="small"
+        size="sm"
         @click="toggleExclude"
       >
         {{ binding?.exclude?.value ? notAnyOfLabel : anyOfLabel }}
@@ -29,7 +29,7 @@
         v-for="concept in selectedConcepts"
         :key="conceptKey(concept)"
         closable
-        size="small"
+        size="sm"
         tone="primary"
         variant="outlined"
         @click:close="removeConcept(concept.CONCEPT_ID)"

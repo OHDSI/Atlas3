@@ -29,33 +29,33 @@
           <v-card-text class="pa-3">
             <div class="segmented-buttons">
               <AtlasButton
-                :variant="groupType === 'ALL' ? 'tonal' : 'outlined'"
+                :variant="groupType === 'ALL' ? 'tonal' : 'secondary'"
                 class="flex-1 match-chip--all"
-                size="small"
+                size="sm"
                 @click="groupType = 'ALL'"
               >
                 {{ t('options.all', 'All').value }}
               </AtlasButton>
               <AtlasButton
-                :variant="groupType === 'ANY' ? 'tonal' : 'outlined'"
+                :variant="groupType === 'ANY' ? 'tonal' : 'secondary'"
                 class="flex-1 match-chip--any"
-                size="small"
+                size="sm"
                 @click="groupType = 'ANY'"
               >
                 {{ t('options.any', 'Any').value }}
               </AtlasButton>
               <AtlasButton
-                :variant="groupType === 'AT_LEAST' ? 'tonal' : 'outlined'"
+                :variant="groupType === 'AT_LEAST' ? 'tonal' : 'secondary'"
                 class="flex-1 match-chip--at_least"
-                size="small"
+                size="sm"
                 @click="groupType = 'AT_LEAST'"
               >
                 {{ t('options.atLeast', 'At least').value }}
               </AtlasButton>
               <AtlasButton
-                :variant="groupType === 'AT_MOST' ? 'tonal' : 'outlined'"
+                :variant="groupType === 'AT_MOST' ? 'tonal' : 'secondary'"
                 class="flex-1 match-chip--at_most"
-                size="small"
+                size="sm"
                 @click="groupType = 'AT_MOST'"
               >
                 {{ t('options.atMost', 'At most').value }}
@@ -101,8 +101,8 @@
           </AtlasMenu>
 
           <AtlasButton
-            variant="outlined"
-            size="small"
+            variant="secondary"
+            size="sm"
             prepend-icon="mdi-folder-plus"
             @click="addNestedGroup"
           >
@@ -113,9 +113,9 @@
 
           <AtlasButton
             icon="mdi-delete"
-            variant="text"
+            variant="ghost"
             color="error"
-            size="small"
+            size="sm"
             @click="emit('remove')"
           />
         </div>

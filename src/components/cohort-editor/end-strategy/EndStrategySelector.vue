@@ -6,22 +6,22 @@
       </div>
       <div class="end-strategy-selector__toggle">
         <AtlasButton
-          :variant="currentStrategyType === 'observation' ? 'tonal' : 'outlined'"
-          size="small"
+          :variant="currentStrategyType === 'observation' ? 'tonal' : 'secondary'"
+          size="sm"
           @click="changeStrategy('observation')"
         >
           Continuous Observation
         </AtlasButton>
         <AtlasButton
-          :variant="currentStrategyType === 'dateOffset' ? 'tonal' : 'outlined'"
-          size="small"
+          :variant="currentStrategyType === 'dateOffset' ? 'tonal' : 'secondary'"
+          size="sm"
           @click="changeStrategy('dateOffset')"
         >
           Fixed Duration
         </AtlasButton>
         <AtlasButton
-          :variant="currentStrategyType === 'customEra' ? 'tonal' : 'outlined'"
-          size="small"
+          :variant="currentStrategyType === 'customEra' ? 'tonal' : 'secondary'"
+          size="sm"
           @click="changeStrategy('customEra')"
         >
           Drug Exposure
@@ -59,7 +59,7 @@ import CustomEraEndStrategy from './CustomEraEndStrategy.vue'
 type EndStrategyType = 'observation' | 'dateOffset' | 'customEra'
 
 const props = defineProps<{
-  endStrategy: EndStrategy | undefined
+  endStrategy: EndStrategy | null | undefined
   conceptSets: ConceptSetOption[]
 }>()
 

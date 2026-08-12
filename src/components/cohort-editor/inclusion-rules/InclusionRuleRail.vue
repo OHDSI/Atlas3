@@ -159,7 +159,7 @@ function summaryFor(rule: InclusionRule): string {
   return `${groupLabel} · ${critLabel}`
 }
 
-function countExpression(group: CriteriaGroup | undefined): { groups: number; criteria: number; total: number } {
+function countExpression(group: CriteriaGroup | null | undefined): { groups: number; criteria: number; total: number } {
   if (!group) {
     return { groups: 0, criteria: 0, total: 0 }
   }

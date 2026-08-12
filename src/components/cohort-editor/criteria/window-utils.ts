@@ -124,14 +124,14 @@ function buildPreset(label: string, startWindow: Window, endWindow?: Window): Wi
   }
 }
 
-function cloneEndpoint(endpoint: Offset | undefined, defaultCoeff: number): Offset {
+function cloneEndpoint(endpoint: Offset | null | undefined, defaultCoeff: number): Offset {
   return {
     Days: endpoint?.Days ?? null,
     Coeff: endpoint?.Coeff ?? defaultCoeff,
   }
 }
 
-function formatEndpoint(endpoint: Offset | undefined): string {
+function formatEndpoint(endpoint: Offset | null | undefined): string {
   const { t } = useI18n()
 
   if (!endpoint) {

@@ -13,8 +13,8 @@
     <div class="event-concept-set-field__input">
       <AtlasButton
         v-if="!selectedConceptSet"
-        variant="outlined"
-        size="small"
+        variant="secondary"
+        size="sm"
         :data-testid="props.pickerTestId"
         @click="emit('select', selectionTarget)"
       >

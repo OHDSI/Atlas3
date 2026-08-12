@@ -17,15 +17,15 @@
         </div>
         <div class="date-offset-end-strategy__toggle">
           <AtlasButton
-            :variant="dateField === 'StartDate' ? 'tonal' : 'outlined'"
-            size="small"
+            :variant="dateField === 'StartDate' ? 'tonal' : 'secondary'"
+            size="sm"
             @click="dateField = 'StartDate'"
           >
             Start Date
           </AtlasButton>
           <AtlasButton
-            :variant="dateField === 'EndDate' ? 'tonal' : 'outlined'"
-            size="small"
+            :variant="dateField === 'EndDate' ? 'tonal' : 'secondary'"
+            size="sm"
             @click="dateField = 'EndDate'"
           >
             End Date
