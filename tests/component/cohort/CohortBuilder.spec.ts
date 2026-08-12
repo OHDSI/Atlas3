@@ -225,6 +225,10 @@ describe('CohortBuilder', () => {
     wrapper.findComponent({ name: 'ConceptSearchDialog' })
   const tagSelectionDialog = (wrapper: Wrapper) =>
     wrapper.findComponent({ name: 'TagSelectionDialog' })
+  const conceptSetSelectionDialog = (wrapper: Wrapper) =>
+    wrapper.findComponent({ name: 'ConceptSetSelectionDialog' })
+  const conceptSetEditor = (wrapper: Wrapper) => wrapper.findComponent({ name: 'ConceptSetEditor' })
+  const cohortJsonDialog = (wrapper: Wrapper) => wrapper.findComponent({ name: 'CohortJsonDialog' })
 
   // ---------------------------------------------------------------------------
   // Lifecycle + render
@@ -506,13 +510,18 @@ describe('CohortBuilder', () => {
     expect(store.editorOpen).toBe(true)
   })
 
-  it('handleCreateNewConceptSet closes the selection dialog', async () => {
+  it('creating a new concept set closes the selection dialog', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
     const setup = getSetup(wrapper)
     setup.isConceptSetDialogOpen = true
-    setup.handleCreateNewConceptSet()
-    expect(setup.isConceptSetDialogOpen).toBe(false)
+    await wrapper.vm.$nextTick()
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(true)
+
+    conceptSetSelectionDialog(wrapper).vm.$emit('create-new')
+    await wrapper.vm.$nextTick()
+
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false)
   })
 
   // ---------------------------------------------------------------------------
@@ -533,25 +542,33 @@ describe('CohortBuilder', () => {
     expect(items).toEqual([{ conceptId: 1, includeDescendants: false }])
   })
 
-  it('handleConceptSetApplied is a no-op without a matching usage or pending context', async () => {
+  it('applying concept-set changes is a no-op without a matching usage or pending context', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
-    setup.selectedCriteriaContext = null
-    expect(() => setup.handleConceptSetApplied({ id: 9, name: 'x', items: [] })).not.toThrow()
+    const { useConceptSetsStore } = await import('@/stores/concept-sets')
+    const store = useConceptSetsStore()
+    store.openCreateEditor()
+    await wrapper.vm.$nextTick()
+    expect(() =>
+      conceptSetEditor(wrapper).vm.$emit('apply', { id: 9, name: 'x', items: [] })
+    ).not.toThrow()
   })
 
   // ---------------------------------------------------------------------------
   // handleEditConceptSet (open editor)
   // ---------------------------------------------------------------------------
 
-  it('handleEditConceptSet sets store.currentSet and opens editor', async () => {
+  it('picking a local concept set sets store.currentSet and opens editor when edited', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
     const { useConceptSetsStore } = await import('@/stores/concept-sets')
     const store = useConceptSetsStore()
-    await setup.handleEditConceptSet({ id: 12, name: 'Edited', items: [] })
+    conceptSetSelectionDialog(wrapper).vm.$emit('edit-concept-set', {
+      id: 12,
+      name: 'Edited',
+      items: [],
+    })
+    await flushPromises()
     expect(store.currentSet).toMatchObject({ id: 12, name: 'Edited' })
     expect(store.editorOpen).toBe(true)
   })
@@ -962,9 +979,8 @@ describe('CohortBuilder', () => {
   // ---------------------------------------------------------------------------
 
   /** Emit `apply` from the stubbed CohortJsonDialog, as the real dialog does. */
-  async function applyJson(wrapper: ReturnType<typeof createWrapper>, json: string) {
-    const dialog = wrapper.findComponent({ name: 'CohortJsonDialog' })
-    dialog.vm.$emit('apply', json)
+  async function applyJson(wrapper: Wrapper, json: string) {
+    cohortJsonDialog(wrapper).vm.$emit('apply', json)
     await new Promise(r => setTimeout(r, 0))
     await wrapper.vm.$nextTick()
   }
@@ -974,12 +990,18 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     const setup = getSetup(wrapper)
     setup.cohortName = 'My Cohort'
+    Object.assign(setup.expression, {
+      PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] },
+    })
 
     ;(wrapper.vm as any).openJsonDialog()
     await wrapper.vm.$nextTick()
 
-    expect(setup.showJsonDialog).toBe(true)
-    expect(() => JSON.parse(setup.jsonDialogSource)).not.toThrow()
+    const dialog = cohortJsonDialog(wrapper)
+    expect(dialog.props('modelValue')).toBe(true)
+    expect(JSON.parse(dialog.props('json') as string)).toMatchObject({
+      PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] },
+    })
   })
 
   it('applying JSON closes the dialog and reports success', async () => {
@@ -988,11 +1010,11 @@ describe('CohortBuilder', () => {
     const setup = getSetup(wrapper)
     ;(wrapper.vm as any).openJsonDialog()
     await wrapper.vm.$nextTick()
-    expect(setup.showJsonDialog).toBe(true)
+    expect(cohortJsonDialog(wrapper).props('modelValue')).toBe(true)
 
     await applyJson(wrapper, '{}')
 
-    expect(setup.showJsonDialog).toBe(false)
+    expect(cohortJsonDialog(wrapper).props('modelValue')).toBe(false)
     expect(setup.showSuccess).toBe(true)
   })
 
