@@ -10,6 +10,7 @@ import type {
 import type { AgentProposal } from '@/models/agent.types'
 import type { Criteria } from '@/components/cohort-editor/circe.types'
 import type { Version } from '@/components/versions/types'
+import type { CohortExpression } from '@/components/cohort-editor/circe.types'
 import { saveCohortToCache, getCohortFromCache, deleteCohortFromCache } from '@/utils/cohort-cache'
 import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
 import { logger } from '@/utils/logger'
@@ -86,6 +87,7 @@ export const useCohortStore = defineStore('cohort', () => {
   function createNewCohort() {
     currentCohort.value = {
       name: 'New Cohort',
+      expression: {} as CohortExpression,
     }
     isDirty.value = false
     clearDraft()

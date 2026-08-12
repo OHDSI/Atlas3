@@ -3,8 +3,13 @@ import { ref, reactive, computed, nextTick } from 'vue'
 import type { CohortExpression } from '@/components/cohort-editor/circe.types'
 import type { ValidationWarning } from '@/models/cohort-validation.types'
 
+const validateCohortDefinitionMock = vi.fn()
+const originalMockResolvedValue = validateCohortDefinitionMock.mockResolvedValue.bind(validateCohortDefinitionMock)
+validateCohortDefinitionMock.mockResolvedValue = ((value: unknown) =>
+  originalMockResolvedValue({ success: true, data: value })) as typeof validateCohortDefinitionMock.mockResolvedValue
+
 vi.mock('@/services/cohort-definition.service', () => ({
-  validateCohortDefinition: vi.fn(),
+  validateCohortDefinition: validateCohortDefinitionMock,
 }))
 
 vi.mock('@/services/concept-set.service', () => ({
@@ -351,11 +356,12 @@ describe('useCohortValidation', () => {
       const options = createTestOptions({
         cohortName: ref(''),
       })
-      const { cancelValidation } = useCohortValidation(options)
+      const { triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
       vi.mocked(webapi.validateCohortDefinition).mockClear()
 
+      triggerValidation()
       await vi.runAllTimersAsync()
       await nextTick()
 

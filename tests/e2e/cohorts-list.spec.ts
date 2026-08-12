@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from './helpers/api-mocks'
 import { waitForNetworkIdle, waitForOverlaysToClose, waitForPageReady } from './helpers/wait-utils'
+import { mockCohortsLarge } from './fixtures/cohorts'
 
 /**
  * E2E tests for Cohorts List feature
@@ -145,6 +146,26 @@ test.describe('Cohorts List', () => {
   })
 
   test('should paginate through cohorts', async ({ page }) => {
+    // The shared beforeEach fixture (mockCohorts) has only 5 entries, fewer
+    // than any items-per-page option, so pagination controls never have a
+    // second page to move to. Serve mockCohortsLarge (100 items, built
+    // specifically "for pagination testing") instead, so this test
+    // actually exercises the next/prev flow rather than skipping it.
+    await page.route('**/cohortdefinition', async (route) => {
+      const url = route.request().url()
+      if (url.match(/cohortdefinition$/) && route.request().method() === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(mockCohortsLarge),
+        })
+      } else {
+        await route.continue()
+      }
+    })
+    await page.reload()
+    await waitForPageReady(page)
+
     // Wait for pagination controls to appear
     const pagination = page.locator('.cohort-pagination')
     await expect(pagination).toBeVisible({ timeout: 10000 })
@@ -152,27 +173,23 @@ test.describe('Cohorts List', () => {
     // Vuetify v-pagination renders prev/next as `.v-pagination__next button`
     // and only mounts when there's more than one page of results.
     const nextButton = pagination.locator('.v-pagination__next button')
-    if (await nextButton.count() === 0) {
-      test.skip(true, 'fewer than two pages of cohorts available')
-      return
-    }
+    await expect(nextButton).toHaveCount(1)
+    await expect(nextButton).toBeEnabled()
 
-    if (await nextButton.isEnabled()) {
-      const firstCardPage1 = await page.locator('.cohort-card').first().locator('.cohort-card__title').textContent()
+    const firstCardPage1 = await page.locator('.cohort-card').first().locator('.cohort-card__title').textContent()
 
-      await nextButton.click()
-      await waitForNetworkIdle(page)
+    await nextButton.click()
+    await waitForNetworkIdle(page)
 
-      const firstCardPage2 = await page.locator('.cohort-card').first().locator('.cohort-card__title').textContent()
-      expect(firstCardPage1).not.toBe(firstCardPage2)
+    const firstCardPage2 = await page.locator('.cohort-card').first().locator('.cohort-card__title').textContent()
+    expect(firstCardPage1).not.toBe(firstCardPage2)
 
-      const prevButton = pagination.locator('.v-pagination__prev button')
-      await prevButton.click()
-      await waitForNetworkIdle(page)
+    const prevButton = pagination.locator('.v-pagination__prev button')
+    await prevButton.click()
+    await waitForNetworkIdle(page)
 
-      const firstCardBack = await page.locator('.cohort-card').first().locator('.cohort-card__title').textContent()
-      expect(firstCardBack).toBe(firstCardPage1)
-    }
+    const firstCardBack = await page.locator('.cohort-card').first().locator('.cohort-card__title').textContent()
+    expect(firstCardBack).toBe(firstCardPage1)
   })
 
   test('should change items per page', async ({ page }) => {

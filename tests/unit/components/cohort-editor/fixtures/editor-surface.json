@@ -1,0 +1,89 @@
+{
+  "conceptSets": [
+    {
+      "id": 11,
+      "name": "Female Concepts"
+    },
+    {
+      "id": 42,
+      "name": "Hypertension Concept Set"
+    }
+  ],
+  "criteriaGroup": {
+    "Type": "AT_LEAST",
+    "Count": 2,
+    "CriteriaList": [
+      {
+        "Occurrence": {
+          "Type": 1,
+          "Count": 3,
+          "IsDistinct": true,
+          "CountColumn": "VISIT_ID"
+        },
+        "StartWindow": {
+          "Start": {
+            "Days": -7
+          },
+          "End": {
+            "Days": 0
+          },
+          "UseIndexEnd": true,
+          "UseEventEnd": false
+        },
+        "RestrictVisit": true,
+        "IgnoreObservationPeriod": true,
+        "Criteria": {
+          "ConditionOccurrence": {
+            "CodesetId": 42,
+            "Age": {
+              "Value": 45,
+              "Op": "gte",
+              "Extent": null
+            },
+            "GenderCS": {
+              "CodesetId": 11,
+              "IsExclusion": false
+            },
+            "ConditionStatus": [
+              {
+                "CONCEPT_ID": 101,
+                "CONCEPT_NAME": "Status A",
+                "CONCEPT_CODE": "A",
+                "STANDARD_CONCEPT": "S",
+                "STANDARD_CONCEPT_CAPTION": null,
+                "VOCABULARY_ID": "Test",
+                "DOMAIN_ID": "Condition",
+                "CONCEPT_CLASS_ID": "Class",
+                "INVALID_REASON": null,
+                "VALID_START_DATE": null,
+                "VALID_END_DATE": null,
+                "INVALID_REASON_CAPTION": null
+              }
+            ],
+            "OccurrenceStartDate": {
+              "Value": "2026-03-01",
+              "Op": "gte",
+              "Extent": null
+            },
+            "DateAdjustment": {
+              "StartWith": "START_DATE",
+              "StartOffset": 0,
+              "EndWith": "END_DATE",
+              "EndOffset": 0
+            }
+          }
+        }
+      }
+    ],
+    "DemographicCriteriaList": [],
+    "Groups": [
+      {
+        "Type": "ANY",
+        "Count": 1,
+        "CriteriaList": [],
+        "DemographicCriteriaList": [],
+        "Groups": []
+      }
+    ]
+  }
+}

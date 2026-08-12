@@ -74,10 +74,8 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
 
     // Verify the cohort details are loaded
     // Look for the cohort name input field
-    const nameInput = page.getByTestId('cohort-name-input')
-    if (await nameInput.isVisible()) {
-      await expect(nameInput).toBeVisible()
-    }
+    const nameInput = page.locator('.cohort-builder-view__title-input')
+    await expect(nameInput).toBeVisible()
 
     // Check for unsaved changes indicator
     // Common patterns: disabled save button, no "Save" button being enabled, no dirty flag
@@ -147,37 +145,33 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
     await page.waitForTimeout(1000)
 
     // Verify cohort loaded
-    const nameInput = page.getByTestId('cohort-name-input')
-    if (await nameInput.isVisible()) {
-      await expect(nameInput).toBeVisible()
-    }
+    const nameInput = page.locator('.cohort-builder-view__title-input')
+    await expect(nameInput).toBeVisible()
 
     // Wait for the page to fully load and render
     await page.waitForTimeout(500)
 
     // Try to find and click the save button
-    // Note: In a real UI, we might need to make a change first to enable save
     const saveButton = page.getByRole('button', { name: /^save$/i })
+    await expect(saveButton).toBeVisible()
+    await expect(saveButton).toBeEnabled()
 
-    if (await saveButton.isVisible() && await saveButton.isEnabled()) {
-      // Save the cohort without making changes
-      await saveButton.click()
-      await page.waitForTimeout(500)
+    // Save the cohort without making changes
+    await saveButton.click()
+    await page.waitForTimeout(500)
 
-      // Verify the saved data matches the original
-      if (savedCohortData) {
-        // Check that critical attributes are preserved
-        const savedExpression = (savedCohortData.expression as Record<string, unknown>) || {}
+    // Verify the saved data matches the original
+    expect(savedCohortData).not.toBeNull()
+    // Check that critical attributes are preserved
+    const savedExpression = (savedCohortData!.expression as Record<string, unknown>) || {}
 
-        expect(savedExpression.expressionType).toBe(sampleCohort.expressionType)
-        expect(savedExpression.cdmVersionRange).toBe(sampleCohort.cdmVersionRange)
-        expect(savedExpression.CollapseSettings).toEqual(sampleCohort.CollapseSettings)
+    expect(savedExpression.expressionType).toBe(sampleCohort.expressionType)
+    expect(savedExpression.cdmVersionRange).toBe(sampleCohort.cdmVersionRange)
+    expect(savedExpression.CollapseSettings).toEqual(sampleCohort.CollapseSettings)
 
-        // Verify QualifiedLimit and ExpressionLimit (Phase 2 attributes)
-        expect(savedExpression.QualifiedLimit).toEqual(sampleCohort.QualifiedLimit)
-        expect(savedExpression.ExpressionLimit).toEqual(sampleCohort.ExpressionLimit)
-      }
-    }
+    // Verify QualifiedLimit and ExpressionLimit (Phase 2 attributes)
+    expect(savedExpression.QualifiedLimit).toEqual(sampleCohort.QualifiedLimit)
+    expect(savedExpression.ExpressionLimit).toEqual(sampleCohort.ExpressionLimit)
 
     // Take a screenshot
     await page.screenshot({

@@ -256,15 +256,11 @@ describe('RolePermissionsTab interactions', () => {
     // Find the AtlasChip with value="config" and emit its click via v-chip-group.
     // Simplest: locate the chip-group and emit update:modelValue directly.
     const chipGroup = wrapper.findComponent({ name: 'VChipGroup' })
-    if (chipGroup.exists()) {
-      chipGroup.vm.$emit('update:modelValue', 'config')
-      await wrapper.vm.$nextTick()
-      const codes = wrapper.findAll('.role-permissions-tab__permission-code').map(c => c.text())
-      expect(codes).toEqual(['config:*:get'])
-    } else {
-      // Chip-group failed to render in test env - skip the assertion
-      expect(true).toBe(true)
-    }
+    expect(chipGroup.exists()).toBe(true)
+    chipGroup.vm.$emit('update:modelValue', 'config')
+    await wrapper.vm.$nextTick()
+    const codes = wrapper.findAll('.role-permissions-tab__permission-code').map(c => c.text())
+    expect(codes).toEqual(['config:*:get'])
   })
 
   it('reloads on roleId prop change', async () => {

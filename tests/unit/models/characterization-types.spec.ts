@@ -30,6 +30,8 @@ describe('LinkedCohortSchema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toHaveProperty('expressionType')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 
@@ -58,6 +60,8 @@ describe('LinkedFeatureAnalysisSchema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toHaveProperty('futureField')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 
@@ -86,6 +90,8 @@ describe('StratumSchema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toHaveProperty('futureField')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 
@@ -110,6 +116,8 @@ describe('CharacterizationParameterSchema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toHaveProperty('futureField')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 
@@ -156,6 +164,8 @@ describe('CharacterizationDefinitionSchema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toHaveProperty('hasWriteAccess')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 
@@ -194,6 +204,8 @@ describe('CharacterizationListItemSchema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toHaveProperty('hasWriteAccess')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 
@@ -251,6 +263,8 @@ describe('CharacterizationExecutionSchema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toHaveProperty('executionId')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 
@@ -295,6 +309,8 @@ describe('PrevalenceStatSchema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toHaveProperty('futureField')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 
@@ -357,6 +373,8 @@ describe('DistributionStatSchema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toHaveProperty('futureField')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 
@@ -427,6 +445,8 @@ describe('ComparativeDistributionStatSchema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toHaveProperty('futureField')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 
@@ -473,6 +493,8 @@ describe('TemporalDataPointSchema', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data).toHaveProperty('futureField')
+    } else {
+      expect.fail('expected safeParse to succeed')
     }
   })
 

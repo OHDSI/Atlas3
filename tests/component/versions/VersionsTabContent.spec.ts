@@ -121,7 +121,11 @@ describe('VersionsTabContent handleCopy dispatch', () => {
 
       expect(copyServices[assetType]).toHaveBeenCalledWith(42, 3)
       for (const [otherType, fn] of Object.entries(copyServices)) {
-        if (otherType !== assetType) expect(fn).not.toHaveBeenCalled()
+        if (otherType === assetType) {
+          expect(fn).toHaveBeenCalledWith(42, 3)
+        } else {
+          expect(fn).not.toHaveBeenCalled()
+        }
       }
 
       wrapper.unmount()

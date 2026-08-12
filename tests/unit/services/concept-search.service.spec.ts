@@ -115,6 +115,8 @@ describe('ConceptSearchService', () => {
         expect(result.data).toHaveLength(1)
         // .map() calls the function with (item, index, array)
         expect(mapConceptFromAPI).toHaveBeenCalledWith(mockResponse[0], 0, mockResponse)
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
     })
 
@@ -122,7 +124,11 @@ describe('ConceptSearchService', () => {
       const result = await searchConcepts('TEST', '')
 
       expect(result.success).toBe(true)
-      if (result.success) expect(result.data).toEqual([])
+      if (result.success) {
+        expect(result.data).toEqual([])
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       expect(mockFetch).not.toHaveBeenCalled()
     })
 
@@ -172,7 +178,11 @@ describe('ConceptSearchService', () => {
       const result = await searchConcepts('TEST', 'test')
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.message).toBe('Invalid concept search response format')
+      if (result.success) {
+        expect.fail('expected searchConcepts to fail')
+      } else {
+        expect(result.error.message).toBe('Invalid concept search response format')
+      }
     })
 
     it('fails with the status when the search is rejected', async () => {
@@ -186,14 +196,22 @@ describe('ConceptSearchService', () => {
       const result = await searchConcepts('TEST', 'diabetes')
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.status).toBe(403)
+      if (result.success) {
+        expect.fail('expected searchConcepts to fail')
+      } else {
+        expect(result.error.status).toBe(403)
+      }
     })
 
     it('fails with an error for an invalid sourceKey', async () => {
       const result = await searchConcepts('', 'diabetes')
 
       expect(result.success).toBe(false)
-      if (!result.success) expect(result.error.message).toContain('Invalid vocabulary source')
+      if (result.success) {
+        expect.fail('expected searchConcepts to fail')
+      } else {
+        expect(result.error.message).toContain('Invalid vocabulary source')
+      }
       expect(mockFetch).not.toHaveBeenCalled()
     })
   })

@@ -69,7 +69,11 @@ describe('getInclusionRuleReport', () => {
 
     const result = await getInclusionRuleReport(1, 'EUNOMIA')
     expect(result.success).toBe(false)
-    if (!result.success) expect(result.error.status).toBe(0)
+    if (result.success) {
+      expect.fail('expected getInclusionRuleReport to fail')
+    } else {
+      expect(result.error.status).toBe(0)
+    }
   })
 
   it('returns a report with treemap=null when treemapData is malformed JSON', async () => {
@@ -101,6 +105,10 @@ describe('getInclusionRuleReport', () => {
     const result = await getInclusionRuleReport(1, 'SYNPUF1K', 1)
 
     expect(result.success).toBe(false)
-    if (!result.success) expect(result.error.status).toBe(403)
+    if (result.success) {
+      expect.fail('expected getInclusionRuleReport to fail')
+    } else {
+      expect(result.error.status).toBe(403)
+    }
   })
 })

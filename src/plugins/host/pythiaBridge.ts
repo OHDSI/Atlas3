@@ -227,7 +227,9 @@ function adoptProposalConceptSets(proposal: AgentProposal): void {
   const cohortStore = useCohortStore()
   // An addConceptSet proposal registers itself once the caller applies it.
   const register = proposal.kind !== 'addConceptSet'
-  const existing: ConceptSetReference[] = [...(cohortStore.currentCohort?.conceptSets ?? [])]
+  const existing: ConceptSetReference[] = (cohortStore.currentCohort?.expression.ConceptSets ?? [])
+    .filter(cs => cs.id !== undefined && cs.id !== null)
+    .map(cs => ({ id: cs.id, name: cs.name ?? '' }))
   for (const owner of owners) {
     if (!owner.conceptSet) continue
     const ref = ensureUniqueConceptSetId(owner.conceptSet, existing)

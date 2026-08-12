@@ -72,32 +72,33 @@ describe('LanguageSelector', () => {
   it('should change locale when item clicked', async () => {
     const wrapper = mountComponent()
 
-    // Find list items
-    const listItems = wrapper.findAllComponents({ name: 'VListItem' })
+    // VMenu content is lazy: it only mounts once the activator opens the menu
+    await wrapper.findComponent({ name: 'VBtn' }).trigger('click')
+    await wrapper.vm.$nextTick()
 
-    if (listItems.length > 0) {
-      // Click on Spanish
-      const spanishItem = listItems.find(item => item.attributes('data-locale') === 'es')
-      if (spanishItem) {
-        await spanishItem.trigger('click')
-        expect(mockChangeLocale).toHaveBeenCalledWith('es')
-      }
-    }
+    const listItems = wrapper.findAllComponents({ name: 'VListItem' })
+    expect(listItems.length).toBe(3)
+
+    const spanishItem = listItems.find(item => item.attributes('data-locale') === 'es')
+    expect(spanishItem).toBeDefined()
+    await spanishItem!.trigger('click')
+    expect(mockChangeLocale).toHaveBeenCalledWith('es')
   })
 
   it('should not change locale if same locale clicked', async () => {
     const wrapper = mountComponent()
 
-    const listItems = wrapper.findAllComponents({ name: 'VListItem' })
+    await wrapper.findComponent({ name: 'VBtn' }).trigger('click')
+    await wrapper.vm.$nextTick()
 
-    if (listItems.length > 0) {
-      // Click on English (current locale)
-      const englishItem = listItems.find(item => item.attributes('data-locale') === 'en')
-      if (englishItem) {
-        await englishItem.trigger('click')
-        expect(mockChangeLocale).not.toHaveBeenCalled()
-      }
-    }
+    const listItems = wrapper.findAllComponents({ name: 'VListItem' })
+    expect(listItems.length).toBe(3)
+
+    // Click on English (current locale)
+    const englishItem = listItems.find(item => item.attributes('data-locale') === 'en')
+    expect(englishItem).toBeDefined()
+    await englishItem!.trigger('click')
+    expect(mockChangeLocale).not.toHaveBeenCalled()
   })
 
   it('should have icon button variant', () => {

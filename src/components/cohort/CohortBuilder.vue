@@ -377,6 +377,18 @@ const isLoadingCohort = ref(!!props.id)
 const isConceptSetDialogOpen = ref(false)
 const isConceptSearchDialogOpen = ref(false)
 const selectedConceptDomainFilter = ref<string | undefined>(undefined)
+type SelectionContext = {
+  eventId?: string | null
+  ruleIndex: number
+  groupIndex: number
+  eventIndex: number
+  nestedEventIndex?: number
+  attributeIndex?: number
+}
+
+const selectedCriteriaContext = ref<SelectionContext | null>(null)
+const exitCriteriaSelectionType = ref<'DRUG_EXPOSURE' | 'CENSORING_EVENT' | null>(null)
+const pendingConceptSetCallback = ref<((cs: ConceptSetReference) => void) | null>(null)
 
 // ── Criteria selection service ────────────────────────────────────────────────
 // ConceptArray.vue components at any depth request concepts through this
@@ -384,21 +396,41 @@ const selectedConceptDomainFilter = ref<string | undefined>(undefined)
 // directly to activeCsTarget instead.
 const pendingConceptsCallback = ref<((concepts: Concept[]) => void) | null>(null)
 
-provideCriteriaSelection({
-  requestConceptSet(_onSelect) {
-    // not used by CohortExpressionEditor — concept-set events flow through
-    // @select-concept-set → openConceptSetSelection → activeCsTarget
+function clearPendingSelectionCallbacks() {
+  pendingConceptSetCallback.value = null
+  pendingConceptsCallback.value = null
+}
+
+// A legacy opener setting an index context supersedes any service request
+// still pending from a cancelled dialog — otherwise the stale callback would
+// swallow the next selection.
+watch(selectedCriteriaContext, context => {
+  if (context) clearPendingSelectionCallbacks()
+})
+
+// Named so it can be part of the defineExpose contract below: descendant
+// components reach it via inject (useCriteriaSelection), but nothing in this
+// shallow-mounted tree does, so tests exercise it through the same named
+// object rather than reaching into Vue's private instance-provides field.
+const criteriaSelectionService = {
+  requestConceptSet(onSelect: (cs: ConceptSetReference) => void) {
+    clearPendingSelectionCallbacks()
+    selectedCriteriaContext.value = null
+    pendingConceptSetCallback.value = onSelect
+    isConceptSetDialogOpen.value = true
   },
-  requestConcepts(domainFilter, onSelect) {
+  requestConcepts(domainFilter: string | undefined, onSelect: (concepts: Concept[]) => void) {
+    clearPendingSelectionCallbacks()
+    selectedCriteriaContext.value = null
     pendingConceptsCallback.value = onSelect
     selectedConceptDomainFilter.value = domainFilter
     isConceptSearchDialogOpen.value = true
   },
-  editConceptSet(conceptSet) {
+  editConceptSet(conceptSet: { id: number | string; name: string; items?: unknown[] }) {
     handleEditConceptSet(conceptSet)
   },
-})
-
+}
+provideCriteriaSelection(criteriaSelectionService)
 const showError = ref(false)
 const errorMessage = ref('')
 const showSuccess = ref(false)
@@ -499,7 +531,7 @@ function createStateSnapshot(): string {
     name: cohortName.value,
     description: cohortDescription.value,
     tags: cohortTags.value,
-    expression: toRaw(expression),
+    expression: toRaw(expression.value),
   })
 }
 
@@ -512,6 +544,60 @@ const hasUnsavedChanges = computed(() => {
 
 /** Pre-populated concept list for the concept search dialog (no-op in new flow) */
 const currentlySelectedConcepts = computed(() => [])
+
+type SectionState = {
+  label: string
+  tone: 'muted' | 'primary' | 'success' | 'warning'
+}
+
+const inclusionRulesState = computed<SectionState>(() => {
+  const count = expression.value.InclusionRules?.length ?? 0
+  return count > 0 ? { label: String(count), tone: 'primary' } : { label: 'Optional', tone: 'muted' }
+})
+
+const exitCriteriaState = computed<SectionState>(() => {
+  const count = expression.value.CensoringCriteria?.length ?? 0
+  return count > 0 ? { label: String(count), tone: 'primary' } : { label: 'Optional', tone: 'muted' }
+})
+
+function gatherConceptSets(): ConceptSetReference[] {
+  const conceptSets = expression.value.ConceptSets ?? []
+  const unique = new Map<number | string, ConceptSetReference>()
+  for (const set of conceptSets) {
+    if (set?.id === undefined || set?.id === null) continue
+    unique.set(set.id, { id: set.id, name: set.name ?? '', conceptCount: set.expression?.items?.length })
+  }
+  return [...unique.values()]
+}
+
+function buildExportCohort(): Record<string, unknown> {
+  return {
+    id: props.id ? Number(props.id) : undefined,
+    name: cohortName.value,
+    description: cohortDescription.value,
+    expression: JSON.parse(JSON.stringify(toRaw(expression.value))),
+    conceptSets: gatherConceptSets(),
+    entryEvents: expression.value.PrimaryCriteria?.CriteriaList ?? [],
+    primaryCriteriaLimit: expression.value.PrimaryCriteria?.PrimaryCriteriaLimit?.Type,
+    qualifyingLimit: expression.value.ExpressionLimit?.Type,
+    inclusionQualifyingLimit: expression.value.QualifiedLimit?.Type,
+    inclusionRules: expression.value.InclusionRules ?? [],
+    censoringCriteria: expression.value.CensoringCriteria ?? [],
+    observationPeriod: expression.value.PrimaryCriteria?.ObservationWindow ?? null,
+  }
+}
+
+function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
+  if (pendingConceptSetCallback.value) {
+    const callback = pendingConceptSetCallback.value
+    clearPendingSelectionCallbacks()
+    callback(conceptSetRef)
+    return
+  }
+
+  selectedCriteriaContext.value = null
+  exitCriteriaSelectionType.value = null
+}
 // Versions configuration
 const versionsConfig = computed<VersionsConfig>(() => {
   return {
@@ -781,7 +867,7 @@ async function loadCohort(id: string) {
     }
 
     const atlasCohort = atlasCohortResult.data
-    if (atlasCohort.expressionType != "SIMPLE_EXPRESSION") {
+    if (atlasCohort.expressionType && atlasCohort.expressionType != "SIMPLE_EXPRESSION") {
       logger.error('CohortBuilder', `Unsupported expression type: ${atlasCohort.expressionType}`)
       return
     }
@@ -1016,7 +1102,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
   )
 
   // Deep-clone the expression for save (don't mutate live state)
-  const expressionForSave = JSON.parse(JSON.stringify(toRaw(expression))) as CohortExpression
+  const expressionForSave = JSON.parse(JSON.stringify(toRaw(expression.value))) as CohortExpression
 
   // Hydrate concept set items from API for any sets that lack them
   if (expressionForSave.ConceptSets) {
@@ -1177,12 +1263,12 @@ function exportFilename(): string {
  * Open the JSON dialog seeded with the current expression.
  */
 function openJsonDialog() {
-  jsonDialogSource.value = JSON.stringify(toRaw(expression), null, 2)
+  jsonDialogSource.value = JSON.stringify(toRaw(expression.value), null, 2)
   showJsonDialog.value = true
 }
 
 function handleExportDownload() {
-  const json = JSON.stringify(toRaw(expression), null, 2)
+  const json = JSON.stringify(toRaw(expression.value), null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -1195,7 +1281,7 @@ function handleExportDownload() {
 }
 
 async function handleExportCopy() {
-  const json = JSON.stringify(toRaw(expression), null, 2)
+  const json = JSON.stringify(toRaw(expression.value), null, 2)
   try {
     await navigator.clipboard.writeText(json)
     successMessage.value = tv(
@@ -1237,7 +1323,8 @@ async function _handleGenerate() {
   }
 }
 
-// @ts-expect-error - Helper for planned generation feature
+// Helper for planned generation feature, not yet wired into the template,
+// but exposed below so the contract that will drive it can be verified now.
 function _getStatusColor(status: string): string {
   switch (status) {
     case 'COMPLETE':
@@ -1253,7 +1340,8 @@ function _getStatusColor(status: string): string {
   }
 }
 
-// @ts-expect-error - Helper for planned generation feature
+// Helper for planned generation feature, not yet wired into the template,
+// but exposed below so the contract that will drive it can be verified now.
 function _getStatusIcon(status: string): string {
   switch (status) {
     case 'COMPLETE':
@@ -1269,7 +1357,8 @@ function _getStatusIcon(status: string): string {
   }
 }
 
-// @ts-expect-error - Helper for planned generation feature
+// Helper for planned generation feature, not yet wired into the template,
+// but exposed below so the contract that will drive it can be verified now.
 function _getStatusText(status: string): string {
   switch (status) {
     case 'COMPLETE':
@@ -1321,6 +1410,39 @@ defineExpose({
   handleExportDownload,
   handleExportCopy,
   openJsonDialog,
+  // Test-support contract: routing/UI state and pure helpers that have no
+  // child component to observe or drive them through. Named here instead of
+  // reached via Vue's private `$.setupState`/`$.provides`, so a rename shows
+  // up as a compile error in this file rather than a silent test break.
+  cohortName,
+  cohortDescription,
+  selectedCriteriaContext,
+  exitCriteriaSelectionType,
+  pendingConceptSetCallback,
+  pendingConceptsCallback,
+  loadedTags,
+  loadedSnapshot,
+  isConfirmingNavigation,
+  showUnsavedDialog,
+  errorMessage,
+  successMessage,
+  showError,
+  showSuccess,
+  criteriaSelectionService,
+  gatherConceptSets,
+  buildExportCohort,
+  exportFilename,
+  createStateSnapshot,
+  confirmLeaveUnsaved,
+  cancelLeaveUnsaved,
+  handleBackToCurrent,
+  assignConceptSetToContext,
+  versionsConfig,
+  inclusionRulesState,
+  exitCriteriaState,
+  _getStatusColor,
+  _getStatusIcon,
+  _getStatusText,
   // Existing expose (criteria editor / inclusion panel) is
   // re-declared here because defineExpose may only be called
   // once per component.

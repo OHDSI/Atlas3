@@ -46,7 +46,9 @@ describe('unwrap', () => {
     }, 'Test')
 
     expect(result.success).toBe(false)
-    if (!result.success) {
+    if (result.success) {
+      expect.fail('expected unwrap to fail')
+    } else {
       expect(result.error.status).toBe(403)
       expect(result.error.message).toBe('Forbidden')
     }
@@ -58,7 +60,11 @@ describe('unwrap', () => {
     }, 'Test')
 
     expect(result.success).toBe(false)
-    if (!result.success) expect(result.error.message).toBe('boom')
+    if (result.success) {
+      expect.fail('expected unwrap to fail')
+    } else {
+      expect(result.error.message).toBe('boom')
+    }
   })
 })
 
