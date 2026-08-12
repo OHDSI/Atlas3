@@ -331,8 +331,16 @@ const form = reactive({
   checkConnection: false,
 })
 
-const keyfile = ref<File[]>([])
-const keytabFile = ref<File[]>([])
+// v-file-input models a single File unless `multiple` is set, so these hold
+// either shape depending on the Vuetify version.
+type FileModel = File | File[] | null
+const keyfile = ref<FileModel>(null)
+const keytabFile = ref<FileModel>(null)
+
+function selectedFile(model: FileModel): File | undefined {
+  if (!model) return undefined
+  return Array.isArray(model) ? model[0] : model
+}
 
 // Daimon configuration
 const daimonEnabled = reactive<Record<DaimonType, boolean>>({
@@ -404,8 +412,8 @@ function resetForm() {
   form.krbAdminServer = ''
   form.checkConnection = false
   loadedSourceId.value = null
-  keyfile.value = []
-  keytabFile.value = []
+  keyfile.value = null
+  keytabFile.value = null
 
   // Reset daimons
   for (const type of DAIMON_TYPES) {
@@ -491,11 +499,10 @@ async function handleSave() {
   try {
     const request = buildRequest()
     const file =
-      showBigQuery.value && keyfile.value.length > 0
-        ? keyfile.value[0]
-        : showKerberos.value && form.krbAuthMethod === 'KEYTAB' && keytabFile.value.length > 0
-          ? keytabFile.value[0]
-          : undefined
+      (showBigQuery.value ? selectedFile(keyfile.value) : undefined) ??
+      (showKerberos.value && form.krbAuthMethod === 'KEYTAB'
+        ? selectedFile(keytabFile.value)
+        : undefined)
 
     if (isEditing.value && loadedSourceId.value != null) {
       await updateSource(loadedSourceId.value, request, file)

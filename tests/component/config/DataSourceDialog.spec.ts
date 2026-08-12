@@ -79,7 +79,7 @@ async function mountDialog(sourceKey: string | null) {
   return wrapper
 }
 
-async function fillRequiredFields(wrapper: VueWrapper) {
+async function fillRequiredFields(wrapper: VueWrapper, dialect = 'POSTGRESQL') {
   const byLabel = (name: string, label: string) =>
     wrapper.findAllComponents({ name }).find(c => c.props('label') === label)!
 
@@ -88,7 +88,7 @@ async function fillRequiredFields(wrapper: VueWrapper) {
   await byLabel('AtlasTextField', 'configuration.viewEdit.connectionString.label').setValue(
     'jdbc:postgresql://localhost:5432/newdb'
   )
-  await byLabel('AtlasSelect', 'configuration.viewEdit.dialect.label').setValue('POSTGRESQL')
+  await byLabel('AtlasSelect', 'configuration.viewEdit.dialect.label').setValue(dialect)
   await flushPromises()
 }
 
@@ -128,6 +128,24 @@ describe('DataSourceDialog save', () => {
       dialect: 'POSTGRESQL',
     })
     expect(wrapper.emitted('saved')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('sends the BigQuery keyfile through', async () => {
+    const wrapper = await mountDialog(null)
+    await fillRequiredFields(wrapper, 'BIGQUERY')
+
+    const keyfile = new File(['{"type":"service_account"}'], 'key.json', {
+      type: 'application/json',
+    })
+    // v-file-input without `multiple` models one File, not a list of them.
+    await wrapper.findComponent({ name: 'VFileInput' }).setValue(keyfile)
+    await flushPromises()
+
+    await clickSave(wrapper)
+
+    expect(createSource).toHaveBeenCalledTimes(1)
+    expect(createSource.mock.calls[0][1]).toBe(keyfile)
     wrapper.unmount()
   })
 
