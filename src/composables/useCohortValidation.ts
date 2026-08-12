@@ -3,7 +3,7 @@ import type { ConceptSetReference } from '@/models/cohort.types'
 import type { ValidationWarning, ValidationSeverity } from '@/models/cohort-validation.types'
 import { validateCohortDefinition } from '@/services/cohort-definition.service'
 import { logger } from '@/utils/logger'
-import type { CohortExpression } from '@/components/cohort-editor/circe.types'
+import type { CohortExpression, ConceptSet } from '@/components/cohort-editor/circe.types'
 import { findUsedConceptSetIds } from '@/components/cohort-editor/concept-set-usage'
 
 export interface CohortValidationOptions {
@@ -66,8 +66,8 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
 
   const usedConceptSets = computed<ConceptSetReference[]>(() => {
     const usedIds = findUsedConceptSetIds(options.expression)
-    return (options.expression.ConceptSets ?? [])
-      .filter(cs => cs.id !== undefined && usedIds.has(cs.id))
+    return (options.expression.ConceptSets ?? [] as ConceptSet[])
+      .filter(cs => cs.id != null && usedIds.has(cs.id))
       .map(cs => ({ id: cs.id!, name: cs.name ?? '' }))
   })
 
@@ -77,7 +77,11 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
       _isValidatingInternal.value = true
       const nameForValidation = cohortName.value || 'Untitled Cohort'
       const result = await validateCohortDefinition(nameForValidation, options.expression)
-      validationWarnings.value = result.warnings || []
+      if (result.success) {
+        validationWarnings.value = result.data.warnings ?? []
+      } else {
+        validationWarnings.value = []
+      }
     } catch (error) {
       logger.error('CohortValidation', 'Failed to validate cohort', error)
       validationWarnings.value = []

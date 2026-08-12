@@ -370,6 +370,7 @@ import {
 import { logger } from '@/utils/logger'
 import { AtlasAlert, AtlasButton, AtlasChip, AtlasDialog, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
+import type { CohortExpression } from '@/components/cohort-editor/circe.types'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
@@ -575,10 +576,10 @@ async function confirmImport() {
     const result = await saveCohortDefinition({
       name: importName.value.trim(),
       expressionType: 'SIMPLE_EXPRESSION',
-      expression: parsed as object,
+      expression: parsed as CohortExpression,
     })
 
-    if (!result || !result.id) {
+    if (!result.success || !result.data.id) {
       importError.value = t(
         'cohortDefinitions.importFailed',
         'Import failed. Check the JSON and try again.'
@@ -588,7 +589,7 @@ async function confirmImport() {
 
     closeImportDialog()
     await fetchCohorts()
-    router.push(`/cohorts/${result.id}`)
+    router.push(`/cohorts/${result.data.id}`)
   } catch (err) {
     logger.error('CohortsView', 'Failed to import cohort', err)
     importError.value = t(
@@ -639,12 +640,12 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
 
     const created = await saveCohortDefinition({
       name: buildCopyName(cohort.name),
-      description: definition.description,
+      description: definition.data.description,
       expressionType: 'SIMPLE_EXPRESSION',
-      expression: definition.expression ?? {},
+      expression: definition.data.expression,
     })
 
-    if (!created?.id) {
+    if (!created.success || !created.data.id) {
       showSnackbar(
         t('cohortDefinitions.copyError', 'Failed to copy the cohort.').value,
         'danger'
@@ -653,7 +654,7 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
     }
 
     await fetchCohorts()
-    router.push(`/cohorts/${created.id}`)
+    router.push(`/cohorts/${created.data.id}`)
   } catch (err) {
     logger.error('CohortsView', 'Failed to copy cohort', err)
     showSnackbar(t('cohortDefinitions.copyError', 'Failed to copy the cohort.').value, 'danger')
@@ -721,9 +722,9 @@ async function handleShowInfo(cohort: CohortDefinitionSummary) {
   try {
     // Fetch the full cohort definition
     const atlasDefinition = await getCohortDefinition(cohort.id)
-    if (atlasDefinition) {
+    if (atlasDefinition.success) {
       // Get print-friendly HTML
-      const html = await getCohortPrintFriendly(atlasDefinition)
+      const html = await getCohortPrintFriendly(atlasDefinition.data.expression)
       cohortInfoHtml.value = html
     }
   } catch (error) {

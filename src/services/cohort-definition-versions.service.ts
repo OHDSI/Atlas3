@@ -7,7 +7,8 @@ import { createVersionsService } from '@/services/versions-service.factory'
 import { commentUpdateSchema } from '@/components/versions/schemas'
 import type { Version, VersionedAsset, CommentUpdatePayload } from '@/components/versions/types'
 import type { CohortDefinition } from '@/models/cohort.types'
-import type { AtlasCohortDefinitionInput } from '@/models/atlas.types'
+import type { RawCohortDefinition } from '@/models/atlas.types'
+import { normalizeRawCohortDefinition } from '@/services/cohort-definition.service'
 
 // entityDTO is the raw Atlas-shaped DTO (expression as a JSON string), for
 // which there is no Zod schema in src/models - CohortDefinition describes the
@@ -52,23 +53,10 @@ export function getVersion(
   cohortDefinitionId: number,
   versionNumber: number
 ): Promise<VersionedAsset<CohortDefinition>> {
-  return service.getVersion<AtlasCohortDefinitionInput>(cohortDefinitionId, versionNumber).then(asset => {
-    const entityDTO =
-      typeof asset.entityDTO === 'object' && asset.entityDTO !== null && 'expression' in asset.entityDTO
-        ? {
-            ...asset.entityDTO,
-            expression:
-              typeof asset.entityDTO.expression === 'string'
-                ? JSON.parse(asset.entityDTO.expression)
-                : asset.entityDTO.expression,
-          }
-        : (asset.entityDTO as CohortDefinition)
-
-    return {
-      ...asset,
-      entityDTO,
-    }
-  })
+  return service.getVersion<RawCohortDefinition>(cohortDefinitionId, versionNumber).then(asset => ({
+    ...asset,
+    entityDTO: normalizeRawCohortDefinition(asset.entityDTO),
+  }))
 }
 
 /**

@@ -228,7 +228,7 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasDialog, AtlasIcon, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer } from '@/components/ui'
-import { ref, computed, onMounted, onBeforeUnmount, watch, toRef, reactive, shallowRef, toRaw } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, toRef, shallowRef, toRaw } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
 import { useCohortStore } from '@/stores/cohort'
@@ -315,14 +315,14 @@ const { t, tv } = useI18n()
 // ── Core expression state (Phase 4) ──────────────────────────────────────────
 // Single reactive CohortExpression replaces 10+ individual refs.
 function defaultExpression(): CohortExpression { return {} }
-const expression = reactive<CohortExpression>(defaultExpression())
+const expression = ref<CohortExpression>(defaultExpression())
 
 // Target that receives a concept set id when the dialog confirms a selection.
 const activeCsTarget = shallowRef<ConceptSetSelectionTarget | null>(null)
 
 // Concept sets formatted for CohortExpressionEditor and ConceptSetSelectionDialog.
 const conceptSetOptions = computed<ConceptSetOption[]>(() =>
-  (expression.ConceptSets ?? [])
+  (expression.value.ConceptSets ?? [])
     .filter(cs => cs.id !== undefined)
     .map(cs => ({ id: cs.id!, name: cs.name ?? '' }))
 )
@@ -347,7 +347,7 @@ function convertCirceItemToAtlas(item: CirceConceptSetItem): ConceptSetItem {
 
 /** expressionConceptSets as ConceptSetReference[] for dialogs that need id+name+items */
 const expressionConceptSets = computed<ConceptSetReference[]>(() =>
-  (expression.ConceptSets ?? [])
+  (expression.value.ConceptSets ?? [])
     .filter(cs => cs.id !== undefined)
     .map(cs => ({
       id: cs.id!,
@@ -454,7 +454,7 @@ const {
   triggerValidation,
   cancelValidation,
 } = useCohortValidation({
-  expression,
+  expression: expression.value,
   cohortName,
   cohortDescription,
   cohortId,
@@ -471,7 +471,7 @@ const canSavePermission = computed(() =>
 )
 
 const canSave = computed(() => {
-  const hasEntryEvents = (expression.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0
+  const hasEntryEvents = (expression.value.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0
   return cohortName.value.trim().length > 0 && hasEntryEvents && canSavePermission.value
 })
 
@@ -505,7 +505,7 @@ function createStateSnapshot(): string {
 
 const hasUnsavedChanges = computed(() => {
   if (!loadedSnapshot.value) {
-    return cohortName.value.trim().length > 0 || (expression.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0
+    return cohortName.value.trim().length > 0 || (expression.value.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0
   }
   return createStateSnapshot() !== loadedSnapshot.value
 })
@@ -600,11 +600,7 @@ watch(
 watch(() => cohortStore.agentRevision, () => {
   const storeExpr = cohortStore.currentCohort?.expression
   if (!storeExpr) return
-  // Update local reactive expression in-place (preserves proxy reactivity)
-  for (const key of Object.keys(expression)) {
-    delete (expression as Record<string, unknown>)[key]
-  }
-  Object.assign(expression, toRaw(storeExpr))
+  expression.value = storeExpr;
 })
 
 // The host bridge asks the mounted editor to run its full WebAPI save flow.
@@ -630,9 +626,7 @@ watch(
   () => cohortStore.newCohortSignal,
   () => {
     cancelValidation()
-    for (const key of Object.keys(expression)) {
-      delete (expression as Record<string, unknown>)[key]
-    }
+    expression.value = defaultExpression();
     cohortName.value = ''
     cohortDescription.value = ''
     loadedTags.value = []
@@ -787,9 +781,13 @@ async function loadCohort(id: string) {
     }
 
     const atlasCohort = atlasCohortResult.data
+    if (atlasCohort.expressionType != "SIMPLE_EXPRESSION") {
+      logger.error('CohortBuilder', `Unsupported expression type: ${atlasCohort.expressionType}`)
+      return
+    }
 
-    // Validate & parse with Circe schema (expression is already a CohortExpression object)
-    const parseResult = CohortExpressionSchema.safeParse(atlasCohort.expression ?? {})
+    // Validate & normalize with Circe schema before hydrating the editor.
+    const parseResult = CohortExpressionSchema.safeParse(atlasCohort.expression)
     if (!parseResult.success) {
       logger.error('CohortBuilder', 'Failed to parse cohort expression', parseResult.error)
       showError.value = true
@@ -800,10 +798,7 @@ async function loadCohort(id: string) {
 
     // Reset expression in-place
     cancelValidation()
-    for (const key of Object.keys(expression)) {
-      delete (expression as Record<string, unknown>)[key]
-    }
-    Object.assign(expression, parseResult.data)
+    expression.value = parseResult.data
 
     // Minimal store update — include expression so pythiaBridge and agent proposals
     // can read structure (entryEventCount, inclusionRuleCount, etc.) without re-parsing.
@@ -897,9 +892,9 @@ async function handleConceptSetSelected(conceptSet: {
   // Mint a new internal ID to avoid conflicts
   const internalId = nextConceptSetId(conceptSetOptions.value.filter(cs => cs.id !== undefined) as Pick<ConceptSetReference, 'id'>[])
 
-  if (!expression.ConceptSets) expression.ConceptSets = []
+  if (!expression.value.ConceptSets) expression.value.ConceptSets = []
   const circeItems = (fullItems as ConceptSetItem[]).map(convertAtlasItemToCirce)
-  expression.ConceptSets.push({ id: internalId, name: conceptSet.name, expression: { items: circeItems } })
+  expression.value.ConceptSets.push({ id: internalId, name: conceptSet.name, expression: { items: circeItems } })
 
   if (activeCsTarget.value) {
     activeCsTarget.value.targetRef.value = internalId
@@ -953,11 +948,11 @@ function handleViewConceptSet(conceptSet: {
  */
 function handleDeleteConceptSet(conceptSet: ConceptSetReference) {
   if (conceptSet.id === undefined || conceptSet.id === null) return
-  const idx = (expression.ConceptSets ?? []).findIndex(cs => cs.id === conceptSet.id)
+  const idx = (expression.value.ConceptSets ?? []).findIndex(cs => cs.id === conceptSet.id)
   if (idx !== -1) {
-    expression.ConceptSets!.splice(idx, 1)
+    expression.value.ConceptSets!.splice(idx, 1)
   }
-  unassignConceptSetId(expression, conceptSet.id as number)
+  unassignConceptSetId(expression.value, conceptSet.id as number)
 }
 
 /**
@@ -995,16 +990,16 @@ function handleConceptSetApplied(set: { id?: number | string; name: string; item
   const items = JSON.parse(JSON.stringify(set.items ?? [])) as ConceptSetItem[]
 
   const finalId = set.id === undefined || set.id === null
-    ? nextConceptSetId((expression.ConceptSets ?? []).filter(cs => cs.id !== undefined) as Pick<ConceptSetReference, 'id'>[])
+    ? nextConceptSetId((expression.value.ConceptSets ?? []).filter(cs => cs.id !== undefined) as Pick<ConceptSetReference, 'id'>[])
     : (set.id as number)
 
-  if (!expression.ConceptSets) expression.ConceptSets = []
-  const existingIdx = expression.ConceptSets.findIndex(cs => cs.id === finalId)
+  if (!expression.value.ConceptSets) expression.value.ConceptSets = []
+  const existingIdx = expression.value.ConceptSets.findIndex(cs => cs.id === finalId)
   const circeItems = items.map(convertAtlasItemToCirce)
   if (existingIdx !== -1) {
-    expression.ConceptSets[existingIdx] = { id: finalId, name: set.name, expression: { items: circeItems } }
+    expression.value.ConceptSets[existingIdx] = { id: finalId, name: set.name, expression: { items: circeItems } }
   } else {
-    expression.ConceptSets.push({ id: finalId, name: set.name, expression: { items: circeItems } })
+    expression.value.ConceptSets.push({ id: finalId, name: set.name, expression: { items: circeItems } })
   }
 
   if (activeCsTarget.value) {
@@ -1109,6 +1104,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
       name: cohortName.value,
       description: cohortDescription.value || '',
       tags: cohortTags.value,
+      expression: expressionForSave,
     }
     cohortStore.setCohort(minimalDef)
     cohortStore.markClean()
@@ -1159,10 +1155,10 @@ async function handleApplyJson(json: string) {
   }
 
   cancelValidation()
-  for (const key of Object.keys(expression)) {
-    delete (expression as Record<string, unknown>)[key]
+  for (const key of Object.keys(expression.value)) {
+    delete (expression.value as Record<string, unknown>)[key]
   }
-  Object.assign(expression, result.data)
+  Object.assign(expression.value, result.data)
 
   showJsonDialog.value = false
   successMessage.value = tv(
