@@ -293,6 +293,7 @@ describe('shapes of everything the agent injects', () => {
   it.fails('the qualifying criterion carries a resolvable concept set', () => {
     const expr = applyAndParse('add_qualifying_criterion', { ...CONCEPT })
     expect(expr.ConceptSets ?? []).toHaveLength(1)
+    expect(expr.ConceptSets?.[0]?.expression?.items).toHaveLength(1)
   })
 
   // A study window is a claim about what the numbers mean; without it the
