@@ -14,7 +14,7 @@ import { getVersion as getVersionAPI } from '@/services/cohort-definition-versio
 import { logger } from '@/utils/logger'
 
 const STORAGE_KEY = 'atlas3_cohort_draft'
-const AUTO_SAVE_INTERVAL_MS = 30000 // 30 seconds
+export const AUTO_SAVE_INTERVAL_MS = 30000 // 30 seconds
 
 // Exponential backoff retry configuration
 const RETRY_CONFIG = {

@@ -705,6 +705,8 @@ onMounted(async () => {
 
   // Add beforeunload handler to warn when closing tab/window with unsaved changes
   window.addEventListener('beforeunload', handleBeforeUnload)
+
+  cohortStore.startAutoSave()
 })
 
 // Navigation guard to prevent losing unsaved changes. The confirm
