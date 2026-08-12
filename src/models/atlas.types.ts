@@ -5,10 +5,21 @@ export type AtlasCohortDefinition = Omit<CohortDefinition, 'expression'> & {
   expression?: string | CohortExpression
 }
 
-export type AtlasCohortDefinitionInput = AtlasCohortDefinition | CohortExpression
+export interface AtlasCohortDefinitionWrapper {
+  id?: number
+  name?: string
+  description?: string
+  tags?: Array<{ id?: number; name: string; color?: string }>
+  expression: AtlasCohortDefinition | string
+}
+
+export type AtlasCohortDefinitionInput = AtlasCohortDefinition | AtlasCohortDefinitionWrapper
 
 export function isAtlasCohortDefinitionWrapper(
-  value: AtlasCohortDefinitionInput
-): value is AtlasCohortDefinition {
-  return typeof value === 'object' && value !== null && 'name' in value && 'expression' in value
+  input: AtlasCohortDefinitionInput
+): input is AtlasCohortDefinitionWrapper {
+  return (
+    'expression' in input &&
+    (typeof input.expression === 'object' || typeof input.expression === 'string')
+  )
 }
