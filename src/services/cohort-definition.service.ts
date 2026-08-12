@@ -5,13 +5,15 @@
  */
 import { logger } from '@/utils/logger'
 import { httpGet, httpPost, httpPut, httpDelete, httpPostRead, getBaseUrl } from '@/services/http-client'
-import { unwrap, ApiError, parseOrThrow } from '@/services/api-error'
+import { unwrap, ApiError, parseOrThrow, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import {
   type AtlasCohortDefinition,
   type AtlasCohortDefinitionInput,
+  type AtlasCohortDefinitionWrapper,
   isAtlasCohortDefinitionWrapper,
 } from '@/models/atlas.types'
+import { CohortExpressionSchema, type CohortExpression } from '@/components/cohort-editor/circe.types'
 import {
   CohortGenerationInfoListSchema,
   CohortDefinitionListSchema,
@@ -24,13 +26,41 @@ import type { ValidationResponse } from '@/models/cohort-validation.types'
 
 const CONTEXT = 'CohortDefinitionService'
 
+export type CohortDefinitionWithExpression = Omit<AtlasCohortDefinitionWrapper, 'expression'> & {
+  expression?: CohortExpression
+}
+
+const EXPRESSION_PARSE_FAILED = 'Cohort expression failed validation'
+const EXPRESSION_PARSE_STATUS = 422
+
 /**
  * Get cohort definition by ID
  * Endpoint: GET /cohortdefinition/{id}
  */
-export async function getCohortDefinition(id: number): Promise<ApiResult<AtlasCohortDefinition>> {
+export async function getCohortDefinition(
+  id: number
+): Promise<ApiResult<CohortDefinitionWithExpression>> {
   return unwrap(async () => {
-    return await httpGet<AtlasCohortDefinition>(`/cohortdefinition/${id}`)
+    const raw = await httpGet<AtlasCohortDefinitionInput>(`/cohortdefinition/${id}`)
+    if (!isAtlasCohortDefinitionWrapper(raw)) return { ...raw, expression: undefined }
+
+    // WebAPI serialises `expression` as a JSON string; the editor works on the parsed
+    // circe object, so this is the only place the two representations meet.
+    let source: unknown = raw.expression
+    if (typeof source === 'string') {
+      try {
+        source = JSON.parse(source)
+      } catch (err) {
+        throw new ApiError(EXPRESSION_PARSE_FAILED, EXPRESSION_PARSE_STATUS, String(err))
+      }
+    }
+
+    const parsed = CohortExpressionSchema.safeParse(source)
+    if (!parsed.success) {
+      throw new ApiError(EXPRESSION_PARSE_FAILED, EXPRESSION_PARSE_STATUS, zodIssues(parsed.error))
+    }
+
+    return { ...raw, expression: parsed.data }
   }, CONTEXT)
 }
 

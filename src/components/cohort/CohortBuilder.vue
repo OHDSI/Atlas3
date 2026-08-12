@@ -788,43 +788,39 @@ async function loadCohort(id: string) {
     const atlasCohortResult = await getCohortDefinition(numericId)
 
     if (!atlasCohortResult.success) {
-      logger.error('CohortBuilder', `Failed to load cohort ${id}`)
+      logger.error('CohortBuilder', `Failed to load cohort ${id}`, atlasCohortResult.error)
+      showError.value = true
+      errorMessage.value =
+        atlasCohortResult.error.status === 422
+          ? tv('components.cohortBuilder.parseError', 'Failed to parse cohort definition')
+          : tv('components.cohortBuilder.loadError', 'Failed to load cohort')
       isLoadingCohort.value = false
       return
     }
 
     const atlasCohort = atlasCohortResult.data
-
-    // Validate & parse with Circe schema (expression is already a CohortExpression object)
-    const parseResult = CohortExpressionSchema.safeParse(atlasCohort.expression ?? {})
-    if (!parseResult.success) {
-      logger.error('CohortBuilder', 'Failed to parse cohort expression', parseResult.error)
-      showError.value = true
-      errorMessage.value = tv('components.cohortBuilder.parseError', 'Failed to parse cohort definition')
-      isLoadingCohort.value = false
-      return
-    }
+    const loadedExpression = atlasCohort.expression ?? {}
 
     // Reset expression in-place
     cancelValidation()
     for (const key of Object.keys(expression)) {
       delete (expression as Record<string, unknown>)[key]
     }
-    Object.assign(expression, parseResult.data)
+    Object.assign(expression, loadedExpression)
 
     // Minimal store update — include expression so pythiaBridge and agent proposals
     // can read structure (entryEventCount, inclusionRuleCount, etc.) without re-parsing.
     const cohortDef: CohortDefinition = {
       id: atlasCohort.id,
-      name: atlasCohort.name,
+      name: atlasCohort.name ?? '',
       description: atlasCohort.description || '',
       tags: atlasCohort.tags || [],
-      expression: parseResult.data,
+      expression: loadedExpression,
     }
     cohortStore.setCohort(cohortDef)
     cohortStore.markClean()
 
-    cohortName.value = atlasCohort.name
+    cohortName.value = atlasCohort.name ?? ''
     cohortDescription.value = atlasCohort.description || ''
     loadedTags.value = [...(atlasCohort.tags || [])]
     loadedSnapshot.value = createStateSnapshot()

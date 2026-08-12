@@ -45,24 +45,27 @@ vi.mock('@/services/cohort-definition.service', () => ({
   fetchCDMSources: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getCohortDefinition: vi.fn().mockResolvedValue({
-    id: 42,
-    name: 'Existing Cohort',
-    description: 'A loaded cohort',
-    tags: [],
-    expression: JSON.stringify({
-      ConceptSets: [],
-      PrimaryCriteria: {
-        CriteriaList: [{ ConditionOccurrence: {} }],
-        ObservationWindow: { PriorDays: 0, PostDays: 0 },
-        PrimaryCriteriaLimit: { Type: 'First' },
+    success: true,
+    data: {
+      id: 42,
+      name: 'Existing Cohort',
+      description: 'A loaded cohort',
+      tags: [],
+      expression: {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [{ ConditionOccurrence: {} }],
+          ObservationWindow: { PriorDays: 0, PostDays: 0 },
+          PrimaryCriteriaLimit: { Type: 'First' },
+        },
+        QualifiedLimit: { Type: 'First' },
+        ExpressionLimit: { Type: 'First' },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
       },
-      QualifiedLimit: { Type: 'First' },
-      ExpressionLimit: { Type: 'First' },
-      InclusionRules: [],
-      CensoringCriteria: [],
-      CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
-      CensorWindow: {},
-    }),
+    },
   }),
   saveCohortDefinition: vi.fn().mockResolvedValue({ id: 99, name: 'Saved' }),
   assignTagToCohort: vi.fn().mockResolvedValue({ success: true }),
@@ -265,6 +268,23 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     const vm = wrapper.vm as any
     expect(vm.cohortId).toBe(42)
+  })
+
+  it('shows a load error when the stored expression fails validation', async () => {
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.getCohortDefinition).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('Cohort expression failed validation', 422, null),
+    })
+
+    const wrapper = createWrapper({ id: '1' })
+    await flushPromises()
+
+    const errorSnackbar = wrapper
+      .findAllComponents({ name: 'AtlasSnackbar' })
+      .find(s => s.props('severity') === 'danger')
+    expect(errorSnackbar?.props('modelValue')).toBe(true)
+    expect(errorSnackbar?.props('text')).toContain('Failed to parse cohort definition')
   })
 
   it('canSave is false when name is empty', async () => {

@@ -7,7 +7,7 @@ import { createVersionsService } from '@/services/versions-service.factory'
 import { commentUpdateSchema } from '@/components/versions/schemas'
 import type { Version, VersionedAsset, CommentUpdatePayload } from '@/components/versions/types'
 import type { CohortDefinition } from '@/models/cohort.types'
-import type { AtlasCohortDefinitionInput } from '@/models/atlas.types'
+import { type AtlasCohortDefinitionInput, isAtlasCohortDefinitionWrapper } from '@/models/atlas.types'
 
 // entityDTO is the raw Atlas-shaped DTO (expression as a JSON string), for
 // which there is no Zod schema in src/models - CohortDefinition describes the
@@ -51,18 +51,17 @@ export function getVersions(cohortDefinitionId: number): Promise<Version[]> {
 export function getVersion(
   cohortDefinitionId: number,
   versionNumber: number
-): Promise<VersionedAsset<CohortDefinition>> {
+): Promise<VersionedAsset<AtlasCohortDefinitionInput>> {
   return service.getVersion<AtlasCohortDefinitionInput>(cohortDefinitionId, versionNumber).then(asset => {
-    const entityDTO =
-      typeof asset.entityDTO === 'object' && asset.entityDTO !== null && 'expression' in asset.entityDTO
-        ? {
-            ...asset.entityDTO,
-            expression:
-              typeof asset.entityDTO.expression === 'string'
-                ? JSON.parse(asset.entityDTO.expression)
-                : asset.entityDTO.expression,
-          }
-        : (asset.entityDTO as CohortDefinition)
+    const entityDTO = isAtlasCohortDefinitionWrapper(asset.entityDTO)
+      ? {
+          ...asset.entityDTO,
+          expression:
+            typeof asset.entityDTO.expression === 'string'
+              ? JSON.parse(asset.entityDTO.expression)
+              : asset.entityDTO.expression,
+        }
+      : asset.entityDTO
 
     return {
       ...asset,
