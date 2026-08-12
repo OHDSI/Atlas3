@@ -29,11 +29,13 @@ const CONCEPT = {
   includeDescendants: true,
 }
 
-// createNewCohort() (unlike setCohort()) does not initialise `expression` -- only
-// the mounted CohortBuilder gives the store a real expression object, by copying
-// its own local one in on the first save. A proposal applied to a store-only
-// cohort therefore needs its own seed, matching what the mounted editor would
-// already have provided.
+// T13 (src/stores/cohort.ts:97): every applyProposal mutation early-returns
+// when currentCohort has no expression, but createNewCohort() (line 86) never
+// creates one -- so a proposal applied to a freshly-created cohort is a silent
+// no-op while apply.ts still reports `{applied: true}`. Seed one here to match
+// what the mounted CohortBuilder would already have provided by the time an
+// agent proposal arrives, so these tests can exercise the criteria-mutation
+// logic instead of uniformly hitting this guard.
 function newCohort() {
   const store = useCohortStore()
   store.createNewCohort()
@@ -59,19 +61,10 @@ function everyConcept(expr: CohortExpression) {
 describe('shapes of everything the agent injects', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  // T13: addEntryEvent, addCensoringCriterion and setCohortExit read the
-  // proposal's criteriaType (or exit strategy) but never look at the embedded
-  // conceptSet the event carries. The store never assigns it a numeric id and
-  // never pushes it into expression.ConceptSets, so the criterion ends up with
-  // no CodesetId at all -- the concept-set registration that used to run for
-  // every criterion is gone from the rewritten store. Fixed in Phase 3.
-  const conceptSetCapabilities: Array<[string, Record<string, unknown>]> = [
-    ['set_entry_event', { ...CONCEPT }],
-    ['add_exit_criterion', { strategy: 'continuous_drug', persistenceWindow: 30, concept: { ...CONCEPT } }],
-    ['set_censor_event', { ...CONCEPT }],
-  ]
-
-  it.fails.each(conceptSetCapabilities)('%s produces concepts with a real CONCEPT_ID', (cap, args) => {
+  // Shared bodies for the it.fails.each groups below, so the same assertions
+  // can be reused verbatim across capability groups that fail for different,
+  // specifically-diagnosed reasons.
+  function assertProducesConceptsWithRealConceptId(cap: string, args: Record<string, unknown>) {
     const expr = applyAndParse(cap, args)
     const concepts = everyConcept(expr)
     expect(concepts.length, 'no concept sets were emitted at all').toBeGreaterThan(0)
@@ -83,9 +76,9 @@ describe('shapes of everything the agent injects', () => {
       expect(c.CONCEPT_NAME).toBe(CONCEPT.conceptName)
       expect(c.DOMAIN_ID, `${cap} lost the domain`).toBe(CONCEPT.domain)
     }
-  })
+  }
 
-  it.fails.each(conceptSetCapabilities)('%s gives every criterion a resolvable CodesetId', (cap, args) => {
+  function assertGivesResolvableCodesetId(cap: string, args: Record<string, unknown>) {
     const expr = applyAndParse(cap, args)
     const setIds = (expr.ConceptSets ?? []).map(cs => cs.id)
     const json = JSON.stringify(expr)
@@ -100,7 +93,39 @@ describe('shapes of everything the agent injects', () => {
     for (const m of matches) {
       expect(setIds, `${cap} referenced a codeset that is not defined`).toContain(Number(m[1]))
     }
-  })
+  }
+
+  // T14 (src/stores/cohort.ts:112): addEntryEvent and addCensoringCriterion
+  // read only the proposal's criteriaType and push a bare `{[criteriaType]: {}}`,
+  // dropping the embedded conceptSet and attributes entirely -- the criterion
+  // never gets a CodesetId and nothing lands in expression.ConceptSets, while
+  // agentRevision/markDirty still run. Fixed in Phase 3.
+  const entryEventConceptSetCapabilities: Array<[string, Record<string, unknown>]> = [
+    ['set_entry_event', { ...CONCEPT }],
+    ['set_censor_event', { ...CONCEPT }],
+  ]
+
+  it.fails.each(entryEventConceptSetCapabilities)(
+    '%s produces concepts with a real CONCEPT_ID', assertProducesConceptsWithRealConceptId)
+  it.fails.each(entryEventConceptSetCapabilities)(
+    '%s gives every criterion a resolvable CodesetId', assertGivesResolvableCodesetId)
+
+  // T15 (src/stores/cohort.ts:174): the CONTINUOUS_DRUG branch of setCohortExit
+  // has three bugs -- GapDays reads `surveillanceWindow` while
+  // `persistenceWindow` is ignored (Atlas 2.15 binds Persistence to GapDays and
+  // Surveillance to Offset); `typeof ec.conceptSet?.id === 'number'` never
+  // passes because translate.ts always supplies a string uid, so DrugCodesetId
+  // is dropped every time; and translate's 'CUSTOM_EVENT' strategy matches no
+  // case in this switch yet still bumps agentRevision and marks the cohort
+  // dirty. Fixed in Phase 3.
+  const exitStrategyCapabilities: Array<[string, Record<string, unknown>]> = [
+    ['add_exit_criterion', { strategy: 'continuous_drug', persistenceWindow: 30, concept: { ...CONCEPT } }],
+  ]
+
+  it.fails.each(exitStrategyCapabilities)(
+    '%s produces concepts with a real CONCEPT_ID', assertProducesConceptsWithRealConceptId)
+  it.fails.each(exitStrategyCapabilities)(
+    '%s gives every criterion a resolvable CodesetId', assertGivesResolvableCodesetId)
 
   // T14: addInclusionRule keeps the rule's name/description but drops
   // rule.criteriaGroups entirely (see the comment in src/stores/cohort.ts), so
@@ -113,36 +138,17 @@ describe('shapes of everything the agent injects', () => {
     ['add_criteria', { name: 'Batch', events: [{ ...CONCEPT }] }],
   ]
 
-  it.fails.each(inclusionRuleCapabilities)('%s produces concepts with a real CONCEPT_ID', (cap, args) => {
-    const expr = applyAndParse(cap, args)
-    const concepts = everyConcept(expr)
-    expect(concepts.length, 'no concept sets were emitted at all').toBeGreaterThan(0)
-    for (const cs of expr.ConceptSets ?? []) {
-      expect(cs.expression?.items?.length, `${cap} emitted a concept set with no items`).toBeGreaterThan(0)
-    }
-    for (const c of concepts) {
-      expect(c.CONCEPT_ID, `${cap} emitted a concept with no CONCEPT_ID`).toBe(CONCEPT.conceptId)
-      expect(c.CONCEPT_NAME).toBe(CONCEPT.conceptName)
-      expect(c.DOMAIN_ID, `${cap} lost the domain`).toBe(CONCEPT.domain)
-    }
-  })
+  it.fails.each(inclusionRuleCapabilities)(
+    '%s produces concepts with a real CONCEPT_ID', assertProducesConceptsWithRealConceptId)
+  it.fails.each(inclusionRuleCapabilities)(
+    '%s gives every criterion a resolvable CodesetId', assertGivesResolvableCodesetId)
 
-  it.fails.each(inclusionRuleCapabilities)('%s gives every criterion a resolvable CodesetId', (cap, args) => {
-    const expr = applyAndParse(cap, args)
-    const setIds = (expr.ConceptSets ?? []).map(cs => cs.id)
-    const json = JSON.stringify(expr)
-    const matches = [...json.matchAll(/"(?:Drug)?CodesetId":\s*(\d+)/g)]
-    expect(matches.length, `${cap} never assigned a CodesetId`).toBeGreaterThan(0)
-    for (const m of matches) {
-      expect(setIds, `${cap} referenced a codeset that is not defined`).toContain(Number(m[1]))
-    }
-  })
-
-  // T13: addEntryEvent ignores `proposal.replace`. The capability says
-  // "Replaces any existing entry event", but the store appends unconditionally:
-  // asking the agent to change the entry event leaves the cohort qualifying on
-  // either drug -- roughly twice the population, with nothing failing and both
-  // events sitting in the editor looking deliberate. Fixed in Phase 3.
+  // No review thread: addEntryEvent ignores `proposal.replace` entirely. The
+  // capability says "Replaces any existing entry event", but the store appends
+  // unconditionally: asking the agent to change the entry event leaves the
+  // cohort qualifying on either drug -- roughly twice the population, with
+  // nothing failing and both events sitting in the editor looking deliberate.
+  // Not covered by T13/T14/T15; needs its own thread before Phase 3.
   it.fails('set_entry_event replaces the entry event rather than adding a second', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('set_entry_event', { ...CONCEPT }) as never)
@@ -162,9 +168,11 @@ describe('shapes of everything the agent injects', () => {
     expect(store.currentCohort?.expression?.PrimaryCriteria?.CriteriaList).toHaveLength(2)
   })
 
-  // T15: removeInclusionRule is not wired into applyProposal's switch at all --
-  // the store silently no-ops it, so a named rule is never removed. Fixed in
-  // Phase 3.
+  // No review thread: removeInclusionRule is not wired into applyProposal's
+  // switch at all -- the store silently no-ops it while apply.ts reports
+  // success, so a named rule is never removed. Related to T15's CUSTOM_EVENT
+  // clause (unmatched kinds still bump agentRevision and mark the cohort
+  // dirty) but not covered by any existing thread.
   it.fails('remove_inclusion_rule drops the named rule and leaves the rest', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('add_inclusion_rule', {
@@ -192,7 +200,9 @@ describe('shapes of everything the agent injects', () => {
     expect(store.currentCohort?.expression?.InclusionRules).toHaveLength(1)
   })
 
-  // T15: removeEntryEvent is not wired into applyProposal either.
+  // No review thread: removeEntryEvent is not wired into applyProposal either.
+  // Related to T15's CUSTOM_EVENT clause but not covered by any existing
+  // thread.
   it.fails('remove_entry_event drops the entry event built from that concept', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('set_entry_event', { ...CONCEPT }) as never)
@@ -245,9 +255,10 @@ describe('shapes of everything the agent injects', () => {
     expect(translateCapability('add_demographic_criterion', {})).toBeNull()
   })
 
-  // T15: setEventLimits is not wired into applyProposal -- the store silently
-  // no-ops it, so PrimaryCriteriaLimit/QualifiedLimit/ExpressionLimit are never
-  // set. Fixed in Phase 3.
+  // No review thread: setEventLimits is not wired into applyProposal at all --
+  // the store silently no-ops it, so PrimaryCriteriaLimit/QualifiedLimit/
+  // ExpressionLimit are never set. Related to T15's CUSTOM_EVENT clause but
+  // not covered by any existing thread.
   it.fails('set_event_limits restricts entry to the first qualifying event', () => {
     const expr = applyAndParse('set_event_limits', { entryEvents: 'first' })
     expect(expr.PrimaryCriteria?.PrimaryCriteriaLimit?.Type).toBe('First')
@@ -269,7 +280,9 @@ describe('shapes of everything the agent injects', () => {
     expect(translateCapability('set_event_limits', { entryEvents: 'earliest-ish' })).toBeNull()
   })
 
-  // T15: addQualifyingCriterion is not wired into applyProposal.
+  // No review thread: addQualifyingCriterion is not wired into applyProposal.
+  // Related to T15's CUSTOM_EVENT clause but not covered by any existing
+  // thread.
   it.fails('add_qualifying_criterion restricts the entry event itself', () => {
     const expr = applyAndParse('add_qualifying_criterion', { ...CONCEPT })
     expect(expr.AdditionalCriteria?.CriteriaList).toHaveLength(1)
@@ -284,7 +297,9 @@ describe('shapes of everything the agent injects', () => {
 
   // A study window is a claim about what the numbers mean; without it the
   // cohort silently spans the whole database.
-  // T15: setCensorWindow is not wired into applyProposal.
+  // No review thread: setCensorWindow is not wired into applyProposal.
+  // Related to T15's CUSTOM_EVENT clause but not covered by any existing
+  // thread.
   it.fails('set_censor_window bounds the study period', () => {
     const expr = applyAndParse('set_censor_window', { startDate: '2015-01-01', endDate: '2019-12-31' })
     expect(expr.CensorWindow).toMatchObject({ StartDate: '2015-01-01', EndDate: '2019-12-31' })
@@ -294,12 +309,15 @@ describe('shapes of everything the agent injects', () => {
     expect(translateCapability('set_censor_window', { startDate: 'last January' })).toBeNull()
   })
 
-  // T15: setEraCollapse is not wired into applyProposal.
+  // No review thread: setEraCollapse is not wired into applyProposal.
+  // Related to T15's CUSTOM_EVENT clause but not covered by any existing
+  // thread.
   it.fails('set_era_collapse merges brief gaps in follow-up', () => {
     const expr = applyAndParse('set_era_collapse', { gapDays: 30 })
     expect(expr.CollapseSettings).toMatchObject({ CollapseType: 'ERA', EraPad: 30 })
   })
 
+  // No review thread: same setEventLimits gap as above, for ExpressionLimit.
   it.fails('set_event_limits also covers what survives the inclusion rules', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('set_event_limits', { inclusionRuleEvents: 'first' }) as never)

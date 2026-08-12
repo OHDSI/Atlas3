@@ -4,10 +4,13 @@ import { useCohortStore } from '@/stores/cohort'
 import type { AgentProposal } from '@/models/agent.types'
 import { CohortExpressionSchema } from '@/components/cohort-editor/circe.types'
 
-// createNewCohort() (unlike setCohort()) does not initialise `expression` -- only
-// the mounted CohortBuilder gives the store a real expression object. A proposal
-// applied to a store-only cohort needs its own seed, matching what the mounted
-// editor would already have provided.
+// T13 (src/stores/cohort.ts:97): every applyProposal mutation early-returns
+// when currentCohort has no expression, but createNewCohort() (line 86) never
+// creates one -- so a proposal applied to a freshly-created cohort is a silent
+// no-op while apply.ts still reports `{applied: true}`. Seed one here to match
+// what the mounted CohortBuilder would already have provided by the time an
+// agent proposal arrives, so these tests can exercise the criteria-mutation
+// logic instead of uniformly hitting this guard.
 function newCohort() {
   const store = useCohortStore()
   store.createNewCohort()
@@ -213,13 +216,15 @@ describe('useCohortStore.applyProposal', () => {
 // "any drug exposure" rather than the drug the agent chose. That used to
 // silently produce meaningless analyses.
 //
-// T13: applyProposal's addEntryEvent case reads only `event.criteriaType` and
-// pushes an empty wrapper (`{ DrugExposure: {} }`); it never looks at
-// `event.conceptSet`. The registration this block guards is real — it happens
-// in pythiaBridge's adoptProposalConceptSets, which runs *before*
-// cohortStore.applyProposal in production — but the store's own applyProposal,
-// called directly here, does not do it. Fixed in Phase 3 (either move the
-// registration into the store, or accept it only ever runs through the bridge).
+// T14 (src/stores/cohort.ts:112): applyProposal's addEntryEvent case reads
+// only `event.criteriaType` and pushes an empty wrapper (`{ DrugExposure: {} }`);
+// it never looks at `event.conceptSet`, so the concept set and attributes are
+// dropped and agentRevision/markDirty still run. The registration this block
+// guards is real — it happens in pythiaBridge's adoptProposalConceptSets,
+// which runs *before* cohortStore.applyProposal in production — but the
+// store's own applyProposal, called directly here, does not do it. Fixed in
+// Phase 3 (either move the registration into the store, or accept it only
+// ever runs through the bridge).
 describe('applyProposal registers concept sets embedded on agent events', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -260,9 +265,9 @@ describe('applyProposal registers concept sets embedded on agent events', () => 
     expect(item?.concept?.CONCEPT_NAME).toBe('Amoxicillin')
   })
 
-  // Compounds T13 (addEntryEvent drops the conceptSet) with T14 (addInclusionRule
-  // drops criteriaGroups, so the second criterion's conceptSet never even reaches
-  // the store).
+  // T14 on both counts: addEntryEvent drops the first criterion's conceptSet,
+  // and addInclusionRule drops criteriaGroups entirely, so the second
+  // criterion's conceptSet never even reaches the store.
   it.fails('assigns distinct ids across several criteria', () => {
     const store = newCohort()
     store.applyProposal({
@@ -328,7 +333,7 @@ describe('agent-built cohort serialises to valid CIRCE', () => {
     }
   })
 
-  // T13: the criterion is added (above), but its embedded conceptSet is
+  // T14: the criterion is added (above), but its embedded conceptSet is
   // dropped — no CodesetId, no ConceptSets entry. Fixed in Phase 3.
   it.fails('emits a matching CodesetId and a concept set carrying the concept', () => {
     const store = newCohort()
