@@ -40,6 +40,13 @@ describe('Cohort Store', () => {
       expect(store.isDirty).toBe(false)
     })
 
+    it('exposes no cohort cache surface', () => {
+      const store = useCohortStore()
+      expect('loadCohort' in store).toBe(false)
+      expect('getCachedCohort' in store).toBe(false)
+      expect('deleteCachedCohort' in store).toBe(false)
+    })
+
   })
 
   describe('Create New Cohort', () => {

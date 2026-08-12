@@ -10,7 +10,6 @@ import type {
 import type { AgentProposal } from '@/models/agent.types'
 import type { Criteria } from '@/components/cohort-editor/circe.types'
 import type { Version } from '@/components/versions/types'
-import { saveCohortToCache, getCohortFromCache, deleteCohortFromCache } from '@/utils/cohort-cache'
 import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
 import { logger } from '@/utils/logger'
 
@@ -378,48 +377,6 @@ export const useCohortStore = defineStore('cohort', () => {
     return delay
   }
 
-  // Load cohort with caching and retry
-  async function loadCohort(cohortId: number | string): Promise<CohortDefinition | null> {
-    try {
-      // TODO: Replace with actual WebAPI call
-      // For now, try to load from cache
-      const cachedCohort = await getCohortFromCache(cohortId)
-
-      if (cachedCohort) {
-        setCohort(cachedCohort)
-        logger.debug('CohortStore', `Loaded cohort ${cohortId} from cache`)
-        return cachedCohort
-      }
-
-      // If not in cache, would normally fetch from WebAPI here
-      logger.warn('CohortStore', `Cohort ${cohortId} not found in cache and WebAPI not implemented`)
-      return null
-    } catch (error) {
-      logger.error('CohortStore', 'Failed to load cohort:', error)
-
-      // Try to get from cache as fallback
-      return await getCachedCohort(cohortId)
-    }
-  }
-
-  // Get cohort from cache (fallback when WebAPI fails)
-  async function getCachedCohort(cohortId: number | string): Promise<CohortDefinition | null> {
-    try {
-      const cachedCohort = await getCohortFromCache(cohortId)
-
-      if (cachedCohort) {
-        logger.debug('CohortStore', `Loaded cohort ${cohortId} from cache (fallback mode)`)
-        setCohort(cachedCohort)
-        return cachedCohort
-      }
-
-      return null
-    } catch (error) {
-      logger.error('CohortStore', 'Failed to retrieve cached cohort:', error)
-      return null
-    }
-  }
-
   // Save cohort with retry logic
   async function saveCohort(): Promise<boolean> {
     if (!currentCohort.value) {
@@ -450,11 +407,6 @@ export const useCohortStore = defineStore('cohort', () => {
       retryState.value.isRetrying = true
 
       // TODO: Replace with actual WebAPI save call
-      // For now, just cache the cohort
-      // Convert to plain object to avoid Pinia reactive proxy issues
-      const plainCohort = JSON.parse(JSON.stringify(currentCohort.value))
-      await saveCohortToCache(plainCohort, 'local')
-
       logger.info('CohortStore', 'Cohort saved successfully')
       markClean()
       retryState.value.isRetrying = false
@@ -513,16 +465,6 @@ export const useCohortStore = defineStore('cohort', () => {
     }
 
     logger.debug('CohortStore', 'Retry cancelled')
-  }
-
-  // Delete cohort from cache
-  async function deleteCachedCohort(cohortId: number | string): Promise<void> {
-    try {
-      await deleteCohortFromCache(cohortId)
-      logger.debug('CohortStore', `Cohort ${cohortId} deleted from cache`)
-    } catch (error) {
-      logger.error('CohortStore', 'Failed to delete cached cohort:', error)
-    }
   }
 
   // Version preview actions (T014-T016)
@@ -649,12 +591,9 @@ export const useCohortStore = defineStore('cohort', () => {
     stopAutoSave,
     // Validation
     validateCohort,
-    // Caching and retry
-    loadCohort,
-    getCachedCohort,
+    // Save and retry
     saveCohort,
     cancelRetry,
-    deleteCachedCohort,
     // Version preview (T014-T016)
     loadVersionPreview,
     clearPreviewVersion,
