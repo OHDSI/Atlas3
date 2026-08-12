@@ -7,12 +7,8 @@ import { logger } from '@/utils/logger'
 import { httpGet, httpPost, httpPut, httpDelete, httpPostRead, getBaseUrl } from '@/services/http-client'
 import { unwrap, ApiError, parseOrThrow, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
-import {
-  type AtlasCohortDefinitionInput,
-  type AtlasCohortDefinitionWrapper,
-  isAtlasCohortDefinitionWrapper,
-} from '@/models/atlas.types'
-import { CohortExpressionSchema, type CohortExpression } from '@/components/cohort-editor/circe.types'
+import type { RawCohortDefinition } from '@/models/atlas.types'
+import type { CohortDefinition } from '@/models/cohort.types'
 import {
   CohortGenerationInfoListSchema,
   CohortDefinitionListSchema,
@@ -22,44 +18,39 @@ import {
   type CohortDefinitionSummary,
 } from '@/models/webapi.types'
 import type { ValidationResponse } from '@/models/cohort-validation.types'
+import { CohortExpressionSchema, type CohortExpression } from '@/components/cohort-editor/circe.types'
 
 const CONTEXT = 'CohortDefinitionService'
 
-export type CohortDefinitionWithExpression = Omit<AtlasCohortDefinitionWrapper, 'expression'> & {
-  expression?: CohortExpression
-}
-
 const EXPRESSION_PARSE_FAILED = 'Cohort expression failed validation'
 const EXPRESSION_PARSE_STATUS = 422
+
+export function normalizeRawCohortDefinition(raw: RawCohortDefinition): CohortDefinition {
+  // WebAPI serialises `expression` as a JSON string; the editor works on the parsed
+  // circe object, so this is the only place the two representations meet.
+  let source: unknown
+  try {
+    source = JSON.parse(raw.expression)
+  } catch (err) {
+    throw new ApiError(EXPRESSION_PARSE_FAILED, EXPRESSION_PARSE_STATUS, String(err))
+  }
+
+  const parsed = CohortExpressionSchema.safeParse(source)
+  if (!parsed.success) {
+    throw new ApiError(EXPRESSION_PARSE_FAILED, EXPRESSION_PARSE_STATUS, zodIssues(parsed.error))
+  }
+
+  return { ...raw, expression: parsed.data as CohortExpression }
+}
 
 /**
  * Get cohort definition by ID
  * Endpoint: GET /cohortdefinition/{id}
  */
-export async function getCohortDefinition(
-  id: number
-): Promise<ApiResult<CohortDefinitionWithExpression>> {
+export async function getCohortDefinition(id: number): Promise<ApiResult<CohortDefinition>> {
   return unwrap(async () => {
-    const raw = await httpGet<AtlasCohortDefinitionInput>(`/cohortdefinition/${id}`)
-    if (!isAtlasCohortDefinitionWrapper(raw)) return { ...raw, expression: undefined }
-
-    // WebAPI serialises `expression` as a JSON string; the editor works on the parsed
-    // circe object, so this is the only place the two representations meet.
-    let source: unknown = raw.expression
-    if (typeof source === 'string') {
-      try {
-        source = JSON.parse(source)
-      } catch (err) {
-        throw new ApiError(EXPRESSION_PARSE_FAILED, EXPRESSION_PARSE_STATUS, String(err))
-      }
-    }
-
-    const parsed = CohortExpressionSchema.safeParse(source)
-    if (!parsed.success) {
-      throw new ApiError(EXPRESSION_PARSE_FAILED, EXPRESSION_PARSE_STATUS, zodIssues(parsed.error))
-    }
-
-    return { ...raw, expression: parsed.data }
+    const raw = await httpGet<RawCohortDefinition>(`/cohortdefinition/${id}`)
+    return normalizeRawCohortDefinition(raw)
   }, CONTEXT)
 }
 
@@ -71,7 +62,7 @@ export interface CohortSavePayload {
   name: string
   description?: string
   expressionType?: string
-  expression: object // Must be object, not stringified JSON
+  expression: CohortExpression
 }
 
 /**
@@ -80,13 +71,13 @@ export interface CohortSavePayload {
  */
 export async function saveCohortDefinition(
   cohort: CohortSavePayload
-): Promise<ApiResult<CohortSavePayload>> {
+): Promise<ApiResult<CohortDefinition>> {
   return unwrap(async () => {
     logger.debug(CONTEXT, 'Saving cohort definition', { id: cohort.id, name: cohort.name })
     if (cohort.id) {
-      return await httpPut<CohortSavePayload>(`/cohortdefinition/${cohort.id}`, cohort)
+      return await httpPut<CohortDefinition>(`/cohortdefinition/${cohort.id}`, cohort)
     }
-    return await httpPost<CohortSavePayload>('/cohortdefinition', cohort)
+    return await httpPost<CohortDefinition>('/cohortdefinition', cohort)
   }, CONTEXT)
 }
 
@@ -220,27 +211,14 @@ export async function validateCohortDefinition(
  * JSON-parses the response body) and talks to fetch directly.
  */
 export async function getCohortPrintFriendly(
-  cohortDefinition: AtlasCohortDefinitionInput | CohortDefinitionWithExpression
+  cohortDefinition: CohortExpression
 ): Promise<ApiResult<string>> {
   return unwrap(async () => {
     const baseUrl = getBaseUrl()
     const url = `${baseUrl}/cohortdefinition/printfriendly/cohort?format=html`
     const locale = localStorage.getItem('locale') || 'en'
 
-    // The cohort definition from WebAPI has structure: { id, name, description, expression: {...} }
-    // The printfriendly endpoint expects just the expression property
-    let payload: unknown
-
-    if (isAtlasCohortDefinitionWrapper(cohortDefinition)) {
-      payload = cohortDefinition.expression
-    } else {
-      payload = cohortDefinition
-    }
-
-    // If expression is a string, parse it first
-    if (typeof payload === 'string') {
-      payload = JSON.parse(payload)
-    }
+    const payload = cohortDefinition
 
     // Get auth token for the request
     let authHeader: string | undefined

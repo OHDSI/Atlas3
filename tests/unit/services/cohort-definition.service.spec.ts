@@ -72,7 +72,7 @@ describe('services/cohort-definition.service', () => {
     it('returns the definition on success', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        text: async () => JSON.stringify({ id: 1, name: 'C', expression: { ConceptSets: [] } }),
+        text: async () => JSON.stringify({ id: 1, name: 'C', expression: JSON.stringify({ ConceptSets: [] }) }),
       })
 
       const result = await getCohortDefinition(1)
@@ -80,6 +80,7 @@ describe('services/cohort-definition.service', () => {
       expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data.name).toBe('C')
+        expect(result.data.expression).toMatchObject({ ConceptSets: [] })
       } else {
         expect.fail(`expected success, got ${result.error.message}`)
       }
@@ -138,7 +139,7 @@ describe('services/cohort-definition.service', () => {
       }
     })
 
-    it('passes through a definition that carries no expression', async () => {
+    it('reports a definition that carries no expression as a 422', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: async () => JSON.stringify({ id: 1, name: 'Demo' }),
@@ -146,12 +147,9 @@ describe('services/cohort-definition.service', () => {
 
       const result = await getCohortDefinition(1)
 
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.name).toBe('Demo')
-        expect(result.data.expression).toBeUndefined()
-      } else {
-        expect.fail(`expected success, got ${result.error.message}`)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.status).toBe(422)
       }
     })
   })
@@ -599,10 +597,10 @@ describe('services/cohort-definition.service', () => {
       }
     })
 
-    it('parses a stringified expression on a wrapper before sending it', async () => {
+    it('sends the expression it is given as the request body', async () => {
       mockFetch.mockResolvedValueOnce({ ok: true, text: async () => '<html></html>' })
 
-      await getCohortPrintFriendly({ expression: JSON.stringify({ ConceptSets: [] }) } as never)
+      await getCohortPrintFriendly({ ConceptSets: [] } as never)
 
       const [, options] = mockFetch.mock.calls[0]
       expect(JSON.parse(options.body as string)).toEqual({ ConceptSets: [] })

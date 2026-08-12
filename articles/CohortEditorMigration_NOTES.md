@@ -3,12 +3,16 @@
 ## Overview
 
 This document describes the migration from the legacy `cohort-builder` component
-layer to the `cohort-editor` components that use native circe types.  The goal
-was to make `StrataEditor` (Characterization subgroup analyses) and
+layer to the `cohort-editor` components that work directly against the native
+circe object model. The goal was to remove the mapping layer and the
+event-driven synchronization path, and instead let Vue components mutate the
+reactive circe cohort expression object in place.
+
+The migration also made `StrataEditor` (Characterization subgroup analyses) and
 `IncidenceRateStratifyRuleEditor` first-class consumers of the same criteria
-editing infrastructure already used by `CohortExpressionEditor` — eliminating
-duplicate implementations and aligning the data model with what the WebAPI
-actually produces and consumes.
+editing infrastructure already used by `CohortExpressionEditor`. That shared
+infrastructure is schema-backed: the TypeScript types in `circe.types.ts` mirror
+the circe-be Java classes and are used directly by the editors.
 
 ---
 
@@ -37,20 +41,30 @@ These components used a hand-written TypeScript interface from
 produced by circe-be / WebAPI (`Type`, `CriteriaList`, `Groups`), which meant
 every consumer needed to translate between the two representations.
 
+The legacy editors also relied on event-based mutation patterns: components
+emitted updates, parent components copied the data back into the document, and
+concept set selection used stored paths to find the field to assign. That model
+made the UI more generic, but it also spread ownership of the underlying
+criteria object across multiple layers.
+
 ### The Cohort Editor
 
 The newer `cohort-editor` folder was built to serve `CohortExpressionEditor`
 and defined:
 
-- **`circe.types.ts`** — Zod schemas that mirror the circe-be Java model
-  exactly.  TypeScript types are inferred from the schemas so the type
-  definition and runtime validation stay in sync.
+- **`circe.types.ts`** — Zod schemas that faithfully represent the circe-be
+  Java model. TypeScript types are inferred from the schemas so the type
+  definition and runtime validation stay in sync with the WebAPI payload.
+- **Domain-specific criteria editors** — Components such as
+  `ConditionOccurrence.vue`, `DrugExposure.vue`, `Observation.vue`, and the
+  other criteria editors own the fields for their specific domain directly.
+  They mutate the underlying circe object graph in place rather than routing
+  through a generic attribute-card abstraction.
 - **`CriteriaGroup.vue`** — A recursive criteria group editor that accepts a
   `CriteriaGroup` object by reference and mutates it in-place using Vue
-  reactivity.  Handles `CriteriaList`, `DemographicCriteriaList`, and nested
-  `Groups` recursively.
+  reactivity. It is one piece of the system, not the center of the migration.
 - **`CorelatedCriteria.vue` / `DemographicCriteria.vue`** — Individual criteria
-  row editors wired up through the group.
+  row editors that operate directly on the circe object model.
 - **`criteria-editor.types.ts`** — Supporting types for concept set selection
   (`ConceptSetOption`, `ConceptSetSelectionTarget`).
 
@@ -58,10 +72,15 @@ and defined:
 
 ## What Changed
 
-### 1. Unified Type System
+### 1. Native Circe Model as the Type Authority
 
-The legacy `CriteriaGroup` from `cohort.types.ts` was retired in favor of the
-circe-native `CriteriaGroup` from `cohort-editor/circe.types.ts`.
+The legacy `cohort.types.ts` mapping layer was retired in favor of the
+schema-backed circe model from `cohort-editor/circe.types.ts`.
+
+Those Zod schemas mirror the circe-be Java classes directly, so the TypeScript
+types are a faithful representation of the WebAPI payload rather than a local
+editor-only abstraction. That change matters across the entire cohort editor,
+not just for `CriteriaGroup`.
 
 **Before:**
 ```typescript
@@ -76,7 +95,7 @@ interface CriteriaGroup {
 
 **After:**
 ```typescript
-// src/components/cohort-editor/circe.types.ts  (Zod-inferred)
+// src/components/cohort-editor/circe.types.ts  (Zod-inferred from circe-be)
 interface CriteriaGroup {
   Type?: 'ALL' | 'ANY' | 'AT_LEAST' | 'AT_MOST'
   Count?: number
@@ -87,16 +106,48 @@ interface CriteriaGroup {
 ```
 
 The PascalCase names match the Jackson serialization output of circe-be
-directly.  No translation layer is needed anywhere on the round-trip path.
+directly. No translation layer is needed anywhere on the round-trip path.
+
+### 2. Direct Object-Model Mutation
+
+The old event/copy/update flow was replaced by direct mutation of the reactive
+circe cohort expression document. A component owns a subset of the object graph
+and updates that subset in place.
+
+That means:
+
+- no mapped intermediate model;
+- no "copy to local state, emit update, reapply in parent" loop;
+- no path-based lookup when the user selects a concept set;
+- no extra translation step between the UI and the WebAPI payload.
+
+Concept set selection now emits a reference to the target field so the dialog
+can assign the selected codeset ID directly to the right property.
+
+### 3. Domain-Specific Criteria Editors
+
+Instead of a generic `CriteriaEventCard` that rendered arbitrary attributes from
+an attribute spec, the migration moved logic into criteria-specific editors.
+Each editor now declares the fields that belong to that domain explicitly.
+
+That makes the UI easier to understand and the data model harder to misuse:
+
+- `ConditionOccurrence.vue` owns condition-specific fields.
+- `DrugExposure.vue` owns drug-specific fields.
+- `Observation.vue` owns observation-specific fields.
+- `VisitOccurrence.vue` owns visit-occurrence-specific fields.
+
+`CriteriaGroup.vue` remains important, but it is the recursive container that
+hosts those editors rather than the primary focus of the migration.
 
 The model types in `characterization.types.ts` and `incidence-rate.types.ts`
 were updated to reference `CriteriaGroupSchema` from `circe.types.ts`, giving
 them Zod-backed runtime validation as a side effect.
 
-### 2. Component Replacement
+### 4. Component Replacement
 
-`GroupCriteriaUI` and its full dependency tree were replaced by the single
-`CriteriaGroup.vue` component from the cohort editor.
+`GroupCriteriaUI` and its supporting mapping/event layer were replaced by the
+`cohort-editor` components that operate directly on the circe object model.
 
 The key behavioral difference is the ownership model:
 
@@ -107,10 +158,11 @@ changes back to the document.  This required a synchronization layer and
 created extra mutation boundaries.
 
 **Circe model (direct document mutation):**  
-`CriteriaGroup` receives a reference to the actual `CriteriaGroup` object in
-the document and mutates its properties directly using Vue computed setters and
-array operations.  The reactive document is the single source of truth.  No
-intermediate event path is needed for field-level changes.
+Components receive references into the actual circe cohort expression object
+and mutate those properties directly using Vue computed setters, array
+operations, and field-level refs. The reactive document is the single source of
+truth. No intermediate mapping layer or field-translation step is needed for
+field-level changes.
 
 This aligns directly with principles 1, 2, and 17 from
 [Document_Editor_HOWTO.md](Document_Editor_HOWTO.md):
@@ -118,7 +170,7 @@ This aligns directly with principles 1, 2, and 17 from
 > *Components directly edit the portion of the document they own.*  
 > *Prefer less synchronization over more synchronization.*
 
-### 3. Concept Set Selection Redesign
+### 5. Concept Set Selection Redesign
 
 The legacy `useCriteriaGroupPicker` composable used a tree-traversal approach:
 when a concept set was chosen, it walked the criteria tree to find the target
@@ -147,7 +199,7 @@ making the nested ref inaccessible.  Keeping it as a plain mutable variable
 avoids that interaction while still being correct for its lifecycle (it is only
 meaningful during an active selection operation).
 
-### 4. StrataEditor
+### 6. StrataEditor
 
 `StrataEditor.vue` (Characterization subgroup analyses) was rewritten to use
 `CriteriaGroup` for per-stratum criteria editing.  Because the criteria group
@@ -166,7 +218,7 @@ The `hasCriteria()` helper was updated to check `CriteriaList.length +
 DemographicCriteriaList.length` against the circe shape instead of the old
 `events.length`.
 
-### 5. IncidenceRateStratifyRuleEditor
+### 7. IncidenceRateStratifyRuleEditor
 
 `IncidenceRateStratifyRuleEditor.vue` follows a simpler pattern: it maintains a
 local `reactive<CriteriaGroup>` copy of the rule's `expression` field and
@@ -213,26 +265,31 @@ separate TypeScript representations in the codebase.  Any component or store
 that touched both the cohort editor and the characterization/incidence-rate
 editors had to be aware of both shapes and manage the mapping.
 
-After the migration, `CriteriaGroup` from `circe.types.ts` is the only
-definition.  It is also Zod-backed, so the same schema is used for
-deserialization and runtime validation — not just for TypeScript type checking.
+After the migration, `circe.types.ts` is the single source of truth for the
+native circe model used by the cohort editor. The schemas are Zod-backed, so
+the same definitions are used for deserialization, runtime validation, and
+TypeScript inference — not just for type checking.
 
 ### Faithful Round-Trip
 
 Because the circe types use the same PascalCase field names as the WebAPI JSON
-payload, a `CriteriaGroup` object can be serialized directly without any
-transformation.  The stratify rule expression in an Incidence Rate analysis, or
-the criteria object on a Characterization stratum, travels from WebAPI → Pinia
-store → component → WebAPI without any renaming or remapping.
+payload, the cohort expression round-trips directly without a translation
+layer. The JSON received from the server has the same structure the editor uses
+internally, and the same object model is written back to the server on save.
+
+That is what makes the round-trip "faithful": when the user loads a cohort,
+edits it, and saves it again, the editor should preserve the structure and
+meaning of the circe object graph rather than converting it into a separate
+intermediate model that could drop or rename fields.
 
 ### Recursive Editor Reuse
 
-`CriteriaGroup.vue` is a self-contained recursive component.  Any editor that
-works with a `CriteriaGroup` gets full support for nested groups,
-`DemographicCriteria`, all OMOP domain criteria types, time-window constraints,
-occurrence counts, and concept set selection — for free.  Adding a new OMOP
-domain criteria type to `CriteriaGroup` automatically becomes available in
-every feature that uses it.
+The cohort editor components are reusable because they share the same circe
+object model. Any editor that works with a `CriteriaGroup` gets full support
+for nested groups, `DemographicCriteria`, all OMOP domain criteria types,
+time-window constraints, occurrence counts, and concept set selection — for
+free. Adding a new OMOP domain criteria type to the shared circe schemas makes
+it available in every feature that consumes them.
 
 ### Alignment with Document Editor Principles
 
@@ -286,6 +343,12 @@ src/
 ---
 
 ## Key Composable: `useCirceConceptSetPicker`
+
+This composable is key because it replaces the legacy path-based concept set
+selection flow with direct field references into the circe object model. It is
+the small piece that makes concept set selection work without a traversal layer:
+the editor hands it a target ref, and the picker writes the selected codeset ID
+straight into the live cohort expression document.
 
 ```typescript
 export function useCirceConceptSetPicker(opts: {

@@ -58,23 +58,23 @@
         </div>
         <div class="inclusion-rules-panel__limit-toggle">
           <AtlasButton
-            :variant="expressionLimitType === 'First' ? 'tonal' : 'secondary'"
+            :variant="props.expressionLimit.Type === 'First' ? 'tonal' : 'secondary'"
             size="sm"
-            @click="expressionLimitType = 'First'"
+            @click="props.expressionLimit.Type = 'First'"
           >
             {{ earliestLabel }}
           </AtlasButton>
           <AtlasButton
-            :variant="expressionLimitType === 'All' ? 'tonal' : 'secondary'"
+            :variant="props.expressionLimit.Type === 'All' ? 'tonal' : 'secondary'"
             size="sm"
-            @click="expressionLimitType = 'All'"
+            @click="props.expressionLimit.Type = 'All'"
           >
             {{ allLabel }}
           </AtlasButton>
           <AtlasButton
-            :variant="expressionLimitType === 'Last' ? 'tonal' : 'secondary'"
+            :variant="props.expressionLimit.Type === 'Last' ? 'tonal' : 'secondary'"
             size="sm"
-            @click="expressionLimitType = 'Last'"
+            @click="props.expressionLimit.Type = 'Last'"
           >
             {{ latestLabel }}
           </AtlasButton>
@@ -95,19 +95,18 @@ import InclusionRuleDetail from './InclusionRuleDetail.vue'
 
 const { t } = useI18n()
 
-type LimitType = 'First' | 'All' | 'Last'
-
 interface Props {
   modelValue: InclusionRule[]
   conceptSets: ConceptSetOption[]
-  expressionLimit?: ResultLimit | null
+  expressionLimit: NonNullable<ResultLimit> & {
+    Type: NonNullable<ResultLimit['Type']>
+  }
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: InclusionRule[]]
-  'update:expressionLimit': [value: ResultLimit]
   'select-concept-set': [target: ConceptSetSelectionTarget | undefined]
   'edit-concept-set': [target: ConceptSetSelectionTarget | undefined]
   'clear-concept-set': []
@@ -117,11 +116,6 @@ const limitIncludedEventsLabel = computed(() => t('inclusionPanel.limitIncludedE
 const earliestLabel = computed(() => t('options.earliest', 'Earliest').value)
 const allLabel = computed(() => t('options.all', 'All').value)
 const latestLabel = computed(() => t('options.latest', 'Latest').value)
-
-const expressionLimitType = computed<LimitType>({
-  get: () => props.expressionLimit?.Type ?? 'All',
-  set: value => emit('update:expressionLimit', { Type: value }),
-})
 
 const selectedIndex = ref<number | null>(props.modelValue.length > 0 ? 0 : null)
 

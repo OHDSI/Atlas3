@@ -1,0 +1,214 @@
+{
+  "cdmVersionRange": ">=5.0.0",
+  "PrimaryCriteria": {
+    "CriteriaList": [
+      {
+        "ProcedureOccurrence": {
+          "CodesetId": 0,
+          "First": true,
+          "ProcedureTypeExclude": false,
+          "Age": {
+            "Value": 18,
+            "Op": "bt",
+            "Extent": 50
+          },
+          "Gender": [
+            {
+              "CONCEPT_ID": 8532,
+              "CONCEPT_NAME": "FEMALE",
+              "CONCEPT_CODE": "F",
+              "STANDARD_CONCEPT": null,
+              "STANDARD_CONCEPT_CAPTION": null,
+              "VOCABULARY_ID": "Gender",
+              "DOMAIN_ID": "Gender",
+              "CONCEPT_CLASS_ID": null,
+              "INVALID_REASON": null,
+              "VALID_START_DATE": null,
+              "VALID_END_DATE": null,
+              "INVALID_REASON_CAPTION": null
+            }
+          ]
+        }
+      },
+      {
+        "DeviceExposure": {
+          "CodesetId": 1,
+          "First": true,
+          "DeviceTypeExclude": false,
+          "Age": {
+            "Value": 18,
+            "Op": "bt",
+            "Extent": 50
+          }
+        }
+      },
+      {
+        "DrugExposure": {
+          "CodesetId": 2,
+          "First": true,
+          "DrugTypeExclude": false,
+          "Age": {
+            "Value": 18,
+            "Op": "bt",
+            "Extent": 50
+          }
+        }
+      }
+    ],
+    "ObservationWindow": {
+      "PriorDays": 240,
+      "PostDays": 0
+    },
+    "PrimaryCriteriaLimit": {
+      "Type": "First"
+    }
+  },
+  "AdditionalCriteria": {
+    "Type": "ALL",
+    "CriteriaList": [
+      {
+        "Criteria": {
+          "ConditionOccurrence": {
+            "CodesetId": 3,
+            "ConditionTypeExclude": false,
+            "Age": {
+              "Value": 45,
+              "Op": "gte"
+            },
+            "OccurrenceStartDate": {
+              "Value": "2024-01-01",
+              "Op": "gte"
+            }
+          }
+        },
+        "StartWindow": {
+          "Start": {
+            "Days": 7,
+            "Coeff": -1
+          },
+          "End": {
+            "Days": 14,
+            "Coeff": 1
+          },
+          "UseIndexEnd": false,
+          "UseEventEnd": false
+        },
+        "RestrictVisit": false,
+        "IgnoreObservationPeriod": false,
+        "Occurrence": {
+          "Type": 2,
+          "Count": 1,
+          "IsDistinct": false
+        }
+      }
+    ],
+    "DemographicCriteriaList": [],
+    "Groups": [
+      {
+        "Type": "ANY",
+        "Count": 1,
+        "CriteriaList": [
+          {
+            "Criteria": {
+              "DrugEra": {
+                "CodesetId": 8
+              }
+            },
+            "StartWindow": {
+              "Start": {
+                "Coeff": -1
+              },
+              "End": {
+                "Days": 0,
+                "Coeff": 1
+              },
+              "UseIndexEnd": false,
+              "UseEventEnd": false
+            },
+            "RestrictVisit": false,
+            "IgnoreObservationPeriod": false,
+            "Occurrence": {
+              "Type": 2,
+              "Count": 1,
+              "IsDistinct": false
+            }
+          }
+        ],
+        "DemographicCriteriaList": [],
+        "Groups": []
+      }
+    ]
+  },
+  "ConceptSets": [
+    { "id": 0, "name": "Procedure concepts" },
+    { "id": 1, "name": "Device concepts" },
+    { "id": 2, "name": "Drug concepts" },
+    { "id": 3, "name": "Condition concepts" },
+    { "id": 8, "name": "Drug era concepts" }
+  ],
+  "QualifiedLimit": {
+    "Type": "All"
+  },
+  "ExpressionLimit": {
+    "Type": "First"
+  },
+  "InclusionRules": [
+    {
+      "name": "has condition exclusion",
+      "expression": {
+        "Type": "ALL",
+        "CriteriaList": [
+          {
+            "Criteria": {
+              "ConditionOccurrence": {
+                "CodesetId": 3,
+                "ConditionTypeExclude": false
+              }
+            },
+            "StartWindow": {
+              "Start": {
+                "Days": 42,
+                "Coeff": -1
+              },
+              "End": {
+                "Days": 1,
+                "Coeff": -1
+              }
+            },
+            "RestrictVisit": false,
+            "IgnoreObservationPeriod": false,
+            "Occurrence": {
+              "Type": 0,
+              "Count": 0,
+              "IsDistinct": false
+            }
+          }
+        ],
+        "DemographicCriteriaList": [],
+        "Groups": []
+      }
+    }
+  ],
+  "CensoringCriteria": [
+    {
+      "DrugExposure": {
+        "CodesetId": 2,
+        "DrugTypeExclude": false
+      }
+    }
+  ],
+  "CollapseSettings": {
+    "CollapseType": "ERA",
+    "EraPad": 0
+  },
+  "EndStrategy": {
+    "DateOffset": {
+      "DateField": "StartDate",
+      "Offset": 30
+    }
+  },
+  "CensorWindow": {
+    "StartDate": "2025-01-01",
+    "EndDate": "2025-12-31"
+  }
+}

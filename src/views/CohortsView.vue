@@ -370,6 +370,7 @@ import {
 import { logger } from '@/utils/logger'
 import { AtlasAlert, AtlasButton, AtlasChip, AtlasDialog, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
+import type { CohortExpression } from '@/components/cohort-editor/circe.types'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
@@ -576,7 +577,7 @@ async function confirmImport() {
     const result = await saveCohortDefinition({
       name: importName.value.trim(),
       expressionType: 'SIMPLE_EXPRESSION',
-      expression: parsed as object,
+      expression: parsed as CohortExpression,
     })
 
     if (!result.success || !result.data.id) {
@@ -647,7 +648,7 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
       name: buildCopyName(cohort.name),
       description: definition.description,
       expressionType: 'SIMPLE_EXPRESSION',
-      expression: definition.expression ?? {},
+      expression: definition.expression,
     })
 
     if (!created.success || !created.data.id) {
@@ -738,7 +739,7 @@ async function handleShowInfo(cohort: CohortDefinitionSummary) {
     const definitionResult = await getCohortDefinition(cohort.id)
     if (requestId !== cohortInfoRequestId) return
     if (definitionResult.success) {
-      const htmlResult = await getCohortPrintFriendly(definitionResult.data)
+      const htmlResult = await getCohortPrintFriendly(definitionResult.data.expression)
       if (requestId !== cohortInfoRequestId) return
       cohortInfoHtml.value = htmlResult.success ? htmlResult.data : null
     } else {

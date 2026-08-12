@@ -28,10 +28,8 @@ export interface CohortUser {
 /**
  * Mirrors Java's CohortDTO shape for all in-memory usage.
  *
- * GET /cohortdefinition/{id} returns CohortRawDTO (expression as JSON string); webapi.ts
- * parses it into a typed CohortExpression before returning this type to callers.
- * PUT /cohortdefinition/{id} accepts CohortDTO where expression is a serialized object;
- * webapi.ts serializes expression back to JSON string in the save payload.
+ * Atlas3 uses this normalized shape everywhere; the service layer handles
+ * raw WebAPI DTO conversion at the boundary.
  */
 export interface CohortDefinition {
   id?: number
@@ -48,8 +46,8 @@ export interface CohortDefinition {
   readAccess?: boolean
   /** CommonEntityExtDTO tags. */
   tags?: Tag[]
-  /** Parsed Circe CohortExpression. Serialized to JSON string only at the API boundary (save). */
-  expression?: CohortExpression
+  /** Parsed Circe CohortExpression. */
+  expression: CohortExpression
   /** e.g. 'SIMPLE_EXPRESSION' */
   expressionType?: string
 }

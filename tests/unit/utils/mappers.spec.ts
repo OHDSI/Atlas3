@@ -135,11 +135,6 @@ describe('Cardinality Mappers', () => {
     })
   })
 
-  describe.skip('agreement with atlas-converter (removed in Phase 6)', () => {
-    it('should produce the same Occurrence.Type as convertInternalToAtlas for every cardinality type', () => {
-      // test removed — atlas-converter deleted in Phase 6
-    })
-  })
 })
 
 describe('Attribute Key Mappers', () => {

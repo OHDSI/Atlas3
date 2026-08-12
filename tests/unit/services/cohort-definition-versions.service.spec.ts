@@ -112,7 +112,7 @@ describe('CohortDefinitionVersionsService', () => {
         entityDTO: {
           id: 123,
           name: 'Test Cohort',
-          expression: {}
+          expression: JSON.stringify({ ConceptSets: [], PrimaryCriteria: { CriteriaList: [] } })
         }
       }
 
@@ -123,6 +123,10 @@ describe('CohortDefinitionVersionsService', () => {
       expect(httpGet).toHaveBeenCalledWith('/cohortdefinition/123/version/2')
       expect(result.versionDTO.version).toBe(2)
       expect(result.entityDTO.id).toBe(123)
+      expect(result.entityDTO.expression).toEqual({
+        ConceptSets: [],
+        PrimaryCriteria: { CriteriaList: [] },
+      })
     })
 
     it('throws on validation error', async () => {

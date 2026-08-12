@@ -228,7 +228,7 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasDialog, AtlasIcon, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer } from '@/components/ui'
-import { ref, computed, onMounted, onBeforeUnmount, watch, toRef, reactive, shallowRef, toRaw } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, toRef, shallowRef, toRaw } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
 import { useCohortStore } from '@/stores/cohort'
@@ -315,14 +315,23 @@ const { t, tv } = useI18n()
 // ── Core expression state (Phase 4) ──────────────────────────────────────────
 // Single reactive CohortExpression replaces 10+ individual refs.
 function defaultExpression(): CohortExpression { return {} }
-const expression = reactive<CohortExpression>(defaultExpression())
+const expression = ref<CohortExpression>(defaultExpression())
+
+// useCohortValidation captures the expression object by identity, so every
+// wholesale swap (load, agent proposal, new-cohort signal, apply-JSON) has to
+// refill the existing object rather than assign a new one to the ref.
+function replaceExpression(next: CohortExpression) {
+  const target = expression.value as Record<string, unknown>
+  for (const key of Object.keys(target)) delete target[key]
+  Object.assign(target, next)
+}
 
 // Target that receives a concept set id when the dialog confirms a selection.
 const activeCsTarget = shallowRef<ConceptSetSelectionTarget | null>(null)
 
 // Concept sets formatted for CohortExpressionEditor and ConceptSetSelectionDialog.
 const conceptSetOptions = computed<ConceptSetOption[]>(() =>
-  (expression.ConceptSets ?? [])
+  (expression.value.ConceptSets ?? [])
     .filter(cs => cs.id !== undefined)
     .map(cs => ({ id: cs.id!, name: cs.name ?? '' }))
 )
@@ -347,7 +356,7 @@ function convertCirceItemToAtlas(item: CirceConceptSetItem): ConceptSetItem {
 
 /** expressionConceptSets as ConceptSetReference[] for dialogs that need id+name+items */
 const expressionConceptSets = computed<ConceptSetReference[]>(() =>
-  (expression.ConceptSets ?? [])
+  (expression.value.ConceptSets ?? [])
     .filter(cs => cs.id !== undefined)
     .map(cs => ({
       id: cs.id!,
@@ -377,7 +386,6 @@ const isLoadingCohort = ref(!!props.id)
 const isConceptSetDialogOpen = ref(false)
 const isConceptSearchDialogOpen = ref(false)
 const selectedConceptDomainFilter = ref<string | undefined>(undefined)
-
 // ── Criteria selection service ────────────────────────────────────────────────
 // ConceptArray.vue components at any depth request concepts through this
 // service. Concept-set selection flows via @select-concept-set events
@@ -459,7 +467,7 @@ const {
   triggerValidation,
   cancelValidation,
 } = useCohortValidation({
-  expression,
+  expression: expression.value,
   cohortName,
   cohortDescription,
   cohortId,
@@ -476,7 +484,7 @@ const canSavePermission = computed(() =>
 )
 
 const canSave = computed(() => {
-  const hasEntryEvents = (expression.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0
+  const hasEntryEvents = (expression.value.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0
   return cohortName.value.trim().length > 0 && hasEntryEvents && canSavePermission.value
 })
 
@@ -504,19 +512,20 @@ function createStateSnapshot(): string {
     name: cohortName.value,
     description: cohortDescription.value,
     tags: cohortTags.value,
-    expression: toRaw(expression),
+    expression: toRaw(expression.value),
   })
 }
 
 const hasUnsavedChanges = computed(() => {
   if (!loadedSnapshot.value) {
-    return cohortName.value.trim().length > 0 || (expression.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0
+    return cohortName.value.trim().length > 0 || (expression.value.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0
   }
   return createStateSnapshot() !== loadedSnapshot.value
 })
 
 /** Pre-populated concept list for the concept search dialog (no-op in new flow) */
 const currentlySelectedConcepts = computed(() => [])
+
 // Versions configuration
 const versionsConfig = computed<VersionsConfig>(() => {
   return {
@@ -605,11 +614,7 @@ watch(
 watch(() => cohortStore.agentRevision, () => {
   const storeExpr = cohortStore.currentCohort?.expression
   if (!storeExpr) return
-  // Update local reactive expression in-place (preserves proxy reactivity)
-  for (const key of Object.keys(expression)) {
-    delete (expression as Record<string, unknown>)[key]
-  }
-  Object.assign(expression, toRaw(storeExpr))
+  replaceExpression(storeExpr)
 })
 
 // The host bridge asks the mounted editor to run its full WebAPI save flow.
@@ -635,9 +640,7 @@ watch(
   () => cohortStore.newCohortSignal,
   () => {
     cancelValidation()
-    for (const key of Object.keys(expression)) {
-      delete (expression as Record<string, unknown>)[key]
-    }
+    replaceExpression(defaultExpression())
     cohortName.value = ''
     cohortDescription.value = ''
     loadedTags.value = []
@@ -799,14 +802,19 @@ async function loadCohort(id: string) {
     }
 
     const atlasCohort = atlasCohortResult.data
-    const loadedExpression = atlasCohort.expression ?? {}
-
-    // Reset expression in-place
-    cancelValidation()
-    for (const key of Object.keys(expression)) {
-      delete (expression as Record<string, unknown>)[key]
+    if (atlasCohort.expressionType && atlasCohort.expressionType !== 'SIMPLE_EXPRESSION') {
+      logger.error('CohortBuilder', `Unsupported expression type: ${atlasCohort.expressionType}`)
+      showError.value = true
+      errorMessage.value = tv('components.cohortBuilder.loadError', 'Failed to load cohort')
+      isLoadingCohort.value = false
+      return
     }
-    Object.assign(expression, loadedExpression)
+
+    // The service already parsed and validated the expression at the API boundary.
+    const loadedExpression = atlasCohort.expression
+
+    cancelValidation()
+    replaceExpression(loadedExpression)
 
     // Minimal store update — include expression so pythiaBridge and agent proposals
     // can read structure (entryEventCount, inclusionRuleCount, etc.) without re-parsing.
@@ -900,9 +908,9 @@ async function handleConceptSetSelected(conceptSet: {
   // Mint a new internal ID to avoid conflicts
   const internalId = nextConceptSetId(conceptSetOptions.value.filter(cs => cs.id !== undefined) as Pick<ConceptSetReference, 'id'>[])
 
-  if (!expression.ConceptSets) expression.ConceptSets = []
+  if (!expression.value.ConceptSets) expression.value.ConceptSets = []
   const circeItems = (fullItems as ConceptSetItem[]).map(convertAtlasItemToCirce)
-  expression.ConceptSets.push({ id: internalId, name: conceptSet.name, expression: { items: circeItems } })
+  expression.value.ConceptSets.push({ id: internalId, name: conceptSet.name, expression: { items: circeItems } })
 
   if (activeCsTarget.value) {
     activeCsTarget.value.targetRef.value = internalId
@@ -956,11 +964,11 @@ function handleViewConceptSet(conceptSet: {
  */
 function handleDeleteConceptSet(conceptSet: ConceptSetReference) {
   if (conceptSet.id === undefined || conceptSet.id === null) return
-  const idx = (expression.ConceptSets ?? []).findIndex(cs => cs.id === conceptSet.id)
+  const idx = (expression.value.ConceptSets ?? []).findIndex(cs => cs.id === conceptSet.id)
   if (idx !== -1) {
-    expression.ConceptSets!.splice(idx, 1)
+    expression.value.ConceptSets!.splice(idx, 1)
   }
-  unassignConceptSetId(expression, conceptSet.id as number)
+  unassignConceptSetId(expression.value, conceptSet.id as number)
 }
 
 /**
@@ -998,16 +1006,16 @@ function handleConceptSetApplied(set: { id?: number | string; name: string; item
   const items = JSON.parse(JSON.stringify(set.items ?? [])) as ConceptSetItem[]
 
   const finalId = set.id === undefined || set.id === null
-    ? nextConceptSetId((expression.ConceptSets ?? []).filter(cs => cs.id !== undefined) as Pick<ConceptSetReference, 'id'>[])
+    ? nextConceptSetId((expression.value.ConceptSets ?? []).filter(cs => cs.id !== undefined) as Pick<ConceptSetReference, 'id'>[])
     : (set.id as number)
 
-  if (!expression.ConceptSets) expression.ConceptSets = []
-  const existingIdx = expression.ConceptSets.findIndex(cs => cs.id === finalId)
+  if (!expression.value.ConceptSets) expression.value.ConceptSets = []
+  const existingIdx = expression.value.ConceptSets.findIndex(cs => cs.id === finalId)
   const circeItems = items.map(convertAtlasItemToCirce)
   if (existingIdx !== -1) {
-    expression.ConceptSets[existingIdx] = { id: finalId, name: set.name, expression: { items: circeItems } }
+    expression.value.ConceptSets[existingIdx] = { id: finalId, name: set.name, expression: { items: circeItems } }
   } else {
-    expression.ConceptSets.push({ id: finalId, name: set.name, expression: { items: circeItems } })
+    expression.value.ConceptSets.push({ id: finalId, name: set.name, expression: { items: circeItems } })
   }
 
   if (activeCsTarget.value) {
@@ -1024,7 +1032,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
   )
 
   // Deep-clone the expression for save (don't mutate live state)
-  const expressionForSave = JSON.parse(JSON.stringify(toRaw(expression))) as CohortExpression
+  const expressionForSave = JSON.parse(JSON.stringify(toRaw(expression.value))) as CohortExpression
 
   // Hydrate concept set items from API for any sets that lack them
   if (expressionForSave.ConceptSets) {
@@ -1112,6 +1120,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
       name: cohortName.value,
       description: cohortDescription.value || '',
       tags: cohortTags.value,
+      expression: expressionForSave,
     }
     cohortStore.setCohort(minimalDef)
     cohortStore.markClean()
@@ -1162,10 +1171,7 @@ async function handleApplyJson(json: string) {
   }
 
   cancelValidation()
-  for (const key of Object.keys(expression)) {
-    delete (expression as Record<string, unknown>)[key]
-  }
-  Object.assign(expression, result.data)
+  replaceExpression(result.data)
 
   showJsonDialog.value = false
   successMessage.value = tv(
@@ -1184,12 +1190,12 @@ function exportFilename(): string {
  * Open the JSON dialog seeded with the current expression.
  */
 function openJsonDialog() {
-  jsonDialogSource.value = JSON.stringify(toRaw(expression), null, 2)
+  jsonDialogSource.value = JSON.stringify(toRaw(expression.value), null, 2)
   showJsonDialog.value = true
 }
 
 function handleExportDownload() {
-  const json = JSON.stringify(toRaw(expression), null, 2)
+  const json = JSON.stringify(toRaw(expression.value), null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -1202,7 +1208,7 @@ function handleExportDownload() {
 }
 
 async function handleExportCopy() {
-  const json = JSON.stringify(toRaw(expression), null, 2)
+  const json = JSON.stringify(toRaw(expression.value), null, 2)
   try {
     await navigator.clipboard.writeText(json)
     successMessage.value = tv(

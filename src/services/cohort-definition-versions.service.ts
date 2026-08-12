@@ -7,7 +7,8 @@ import { createVersionsService } from '@/services/versions-service.factory'
 import { commentUpdateSchema } from '@/components/versions/schemas'
 import type { Version, VersionedAsset, CommentUpdatePayload } from '@/components/versions/types'
 import type { CohortDefinition } from '@/models/cohort.types'
-import { type AtlasCohortDefinitionInput, isAtlasCohortDefinitionWrapper } from '@/models/atlas.types'
+import type { RawCohortDefinition } from '@/models/atlas.types'
+import { normalizeRawCohortDefinition } from '@/services/cohort-definition.service'
 
 // entityDTO is the raw Atlas-shaped DTO (expression as a JSON string), for
 // which there is no Zod schema in src/models - CohortDefinition describes the
@@ -40,10 +41,9 @@ export function getVersions(cohortDefinitionId: number): Promise<Version[]> {
 /**
  * Get a specific version of a cohort definition
  *
- * `entityDTO` is the raw Atlas-shaped DTO the WebAPI returns for a historical
- * version (id/name/description/expression-as-JSON-string), not an internal
- * `CohortDefinition`. Callers must run it through the same
- * convertAtlasToInternal path used for the current-version WebAPI fetch.
+ * The WebAPI returns the historical version with `expression` as a JSON string;
+ * it is normalised here so callers get the same parsed `CohortDefinition` shape
+ * as the current-version fetch.
  * @param cohortDefinitionId Cohort definition ID
  * @param versionNumber Version number to retrieve
  * @returns Versioned asset containing version metadata and historical data
@@ -51,23 +51,11 @@ export function getVersions(cohortDefinitionId: number): Promise<Version[]> {
 export function getVersion(
   cohortDefinitionId: number,
   versionNumber: number
-): Promise<VersionedAsset<AtlasCohortDefinitionInput>> {
-  return service.getVersion<AtlasCohortDefinitionInput>(cohortDefinitionId, versionNumber).then(asset => {
-    const entityDTO = isAtlasCohortDefinitionWrapper(asset.entityDTO)
-      ? {
-          ...asset.entityDTO,
-          expression:
-            typeof asset.entityDTO.expression === 'string'
-              ? JSON.parse(asset.entityDTO.expression)
-              : asset.entityDTO.expression,
-        }
-      : asset.entityDTO
-
-    return {
-      ...asset,
-      entityDTO,
-    }
-  })
+): Promise<VersionedAsset<CohortDefinition>> {
+  return service.getVersion<RawCohortDefinition>(cohortDefinitionId, versionNumber).then(asset => ({
+    ...asset,
+    entityDTO: normalizeRawCohortDefinition(asset.entityDTO),
+  }))
 }
 
 /**
