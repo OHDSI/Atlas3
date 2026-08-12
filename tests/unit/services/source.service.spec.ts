@@ -48,6 +48,38 @@ describe('SourceService', () => {
     global.fetch = vi.fn()
   })
 
+  // WebAPI resolves @RequestPart("source") SourceRequest through its message
+  // converters, so the part has to carry an application/json content type —
+  // an untyped part is rejected with HttpMediaTypeNotSupportedException just
+  // like a plain JSON request body is.
+  async function sourcePartOf(init: RequestInit) {
+    expect(init.body).toBeInstanceOf(FormData)
+    const part = (init.body as FormData).get('source')
+    expect(part).toBeInstanceOf(Blob)
+    const blob = part as Blob
+    expect(blob.type).toBe('application/json')
+    const text = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result))
+      reader.onerror = () => reject(reader.error)
+      reader.readAsText(blob)
+    })
+    return JSON.parse(text)
+  }
+
+  function mockFetchOnce(response: Record<string, unknown>) {
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      json: async () => response
+    } as Response)
+  }
+
+  function lastFetchCall() {
+    const calls = vi.mocked(global.fetch).mock.calls
+    expect(calls).toHaveLength(1)
+    return calls[0] as [string, RequestInit]
+  }
+
   describe('fetchCDMSources', () => {
     // http-client is module-mocked above (vi.mock('@/services/http-client', ...)),
     // so these stub httpGet directly rather than the raw fetch response the
@@ -144,16 +176,14 @@ describe('SourceService', () => {
   })
 
   describe('createSource', () => {
-    it('creates a source without keyfile', async () => {
+    it('creates a source without keyfile as multipart form data', async () => {
       const { httpPost } = await import('@/services/http-client')
-      const mockResponse = {
+      mockFetchOnce({
         sourceId: 2,
         sourceName: 'New Source',
         sourceDialect: 'postgresql',
         sourceKey: 'NEW_SOURCE'
-      }
-
-      vi.mocked(httpPost).mockResolvedValue(mockResponse)
+      })
 
       const result = await createSource({
         name: 'New Source',
@@ -162,24 +192,29 @@ describe('SourceService', () => {
         connectionString: 'jdbc:postgresql://localhost:5432/newdb'
       })
 
-      expect(httpPost).toHaveBeenCalledWith('/source', expect.objectContaining({
+      expect(httpPost).not.toHaveBeenCalled()
+      const [url, init] = lastFetchCall()
+      expect(url).toBe('/WebAPI/source')
+      expect(init.method).toBe('POST')
+      // The browser has to set multipart/form-data itself so the body carries
+      // a boundary.
+      expect((init.headers as Record<string, string>)['Content-Type']).toBeUndefined()
+      expect(await sourcePartOf(init)).toMatchObject({
         sourceName: 'New Source',
         sourceDialect: 'postgresql',
         sourceKey: 'NEW_SOURCE'
-      }))
+      })
+      expect((init.body as FormData).get('keyfile')).toBeNull()
       expect(result.sourceId).toBe(2)
     })
 
     it('creates a source with username and password', async () => {
-      const { httpPost } = await import('@/services/http-client')
-      const mockResponse = {
+      mockFetchOnce({
         sourceId: 3,
         sourceName: 'Auth Source',
         sourceDialect: 'postgresql',
         sourceKey: 'AUTH_SOURCE'
-      }
-
-      vi.mocked(httpPost).mockResolvedValue(mockResponse)
+      })
 
       await createSource({
         name: 'Auth Source',
@@ -190,22 +225,20 @@ describe('SourceService', () => {
         password: 'secret'
       })
 
-      expect(httpPost).toHaveBeenCalledWith('/source', expect.objectContaining({
+      const [, init] = lastFetchCall()
+      expect(await sourcePartOf(init)).toMatchObject({
         username: 'admin',
         password: 'secret'
-      }))
+      })
     })
 
     it('creates a source with daimons', async () => {
-      const { httpPost } = await import('@/services/http-client')
-      const mockResponse = {
+      mockFetchOnce({
         sourceId: 4,
         sourceName: 'Full Source',
         sourceDialect: 'postgresql',
         sourceKey: 'FULL_SOURCE'
-      }
-
-      vi.mocked(httpPost).mockResolvedValue(mockResponse)
+      })
 
       await createSource({
         name: 'Full Source',
@@ -218,23 +251,20 @@ describe('SourceService', () => {
         ]
       })
 
-      expect(httpPost).toHaveBeenCalledWith('/source', expect.objectContaining({
-        daimons: expect.arrayContaining([
-          expect.objectContaining({ daimonType: 'CDM', tableQualifier: 'cdm' })
-        ])
-      }))
+      const [, init] = lastFetchCall()
+      expect((await sourcePartOf(init)).daimons).toEqual([
+        { daimonType: 'CDM', tableQualifier: 'cdm', priority: 0 },
+        { daimonType: 'Vocabulary', tableQualifier: 'vocab', priority: 1 }
+      ])
     })
 
     it('creates a source with Kerberos settings', async () => {
-      const { httpPost } = await import('@/services/http-client')
-      const mockResponse = {
+      mockFetchOnce({
         sourceId: 5,
         sourceName: 'Kerb Source',
         sourceDialect: 'impala',
         sourceKey: 'KERB_SOURCE'
-      }
-
-      vi.mocked(httpPost).mockResolvedValue(mockResponse)
+      })
 
       await createSource({
         name: 'Kerb Source',
@@ -245,10 +275,11 @@ describe('SourceService', () => {
         krbAdminServer: 'kdc.example.com'
       })
 
-      expect(httpPost).toHaveBeenCalledWith('/source', expect.objectContaining({
+      const [, init] = lastFetchCall()
+      expect(await sourcePartOf(init)).toMatchObject({
         krbAuthMethod: 'KEYTAB',
         krbAdminServer: 'kdc.example.com'
-      }))
+      })
     })
 
     it('creates a source with keyfile using multipart form', async () => {
@@ -284,8 +315,7 @@ describe('SourceService', () => {
     })
 
     it('throws on network error', async () => {
-      const { httpPost } = await import('@/services/http-client')
-      vi.mocked(httpPost).mockRejectedValue(new Error('Server error'))
+      vi.mocked(global.fetch).mockRejectedValue(new Error('Server error'))
 
       await expect(createSource({
         name: 'Fail Source',
@@ -297,16 +327,14 @@ describe('SourceService', () => {
   })
 
   describe('updateSource', () => {
-    it('updates a source without keyfile', async () => {
+    it('updates a source without keyfile as multipart form data', async () => {
       const { httpPut } = await import('@/services/http-client')
-      const mockResponse = {
+      mockFetchOnce({
         sourceId: 1,
         sourceName: 'Updated Source',
         sourceDialect: 'postgresql',
         sourceKey: 'UPDATED_SOURCE'
-      }
-
-      vi.mocked(httpPut).mockResolvedValue(mockResponse)
+      })
 
       const result = await updateSource(1, {
         name: 'Updated Source',
@@ -315,9 +343,14 @@ describe('SourceService', () => {
         connectionString: 'jdbc:postgresql://localhost:5432/updated'
       })
 
-      expect(httpPut).toHaveBeenCalledWith('/source/1', expect.objectContaining({
+      expect(httpPut).not.toHaveBeenCalled()
+      const [url, init] = lastFetchCall()
+      // Keyed on the numeric sourceId, not the string sourceKey.
+      expect(url).toBe('/WebAPI/source/1')
+      expect(init.method).toBe('PUT')
+      expect(await sourcePartOf(init)).toMatchObject({
         sourceName: 'Updated Source'
-      }))
+      })
       expect(result.sourceName).toBe('Updated Source')
     })
 
@@ -354,8 +387,7 @@ describe('SourceService', () => {
     })
 
     it('throws on network error', async () => {
-      const { httpPut } = await import('@/services/http-client')
-      vi.mocked(httpPut).mockRejectedValue(new Error('Update failed'))
+      vi.mocked(global.fetch).mockRejectedValue(new Error('Update failed'))
 
       await expect(updateSource(1, {
         name: 'Fail Update',

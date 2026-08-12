@@ -315,8 +315,8 @@ const isFormValid = ref(false)
 const isSaving = ref(false)
 const isDeleting = ref(false)
 const showDeleteConfirm = ref(false)
-// Numeric id of the loaded source — WebAPI's delete endpoint is keyed on
-// sourceId, not the string sourceKey.
+// Numeric id of the loaded source — WebAPI's update and delete endpoints are
+// keyed on sourceId, not the string sourceKey.
 const loadedSourceId = ref<number | null>(null)
 
 const form = reactive({
@@ -497,8 +497,8 @@ async function handleSave() {
           ? keytabFile.value[0]
           : undefined
 
-    if (isEditing.value && props.sourceKey) {
-      await updateSource(props.sourceKey, request, file)
+    if (isEditing.value && loadedSourceId.value != null) {
+      await updateSource(loadedSourceId.value, request, file)
     } else {
       await createSource(request, file)
     }
