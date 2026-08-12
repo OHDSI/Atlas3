@@ -15,8 +15,11 @@ export interface AtlasCohortDefinitionWrapper {
 
 export type AtlasCohortDefinitionInput = AtlasCohortDefinition | AtlasCohortDefinitionWrapper
 
+// Takes `object` rather than AtlasCohortDefinitionInput so callers holding a
+// parsed-expression variant of a definition can still ask the question; the
+// check is purely structural.
 export function isAtlasCohortDefinitionWrapper(
-  input: AtlasCohortDefinitionInput
+  input: object
 ): input is AtlasCohortDefinitionWrapper {
   return (
     'expression' in input &&

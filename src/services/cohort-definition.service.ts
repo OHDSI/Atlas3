@@ -8,7 +8,6 @@ import { httpGet, httpPost, httpPut, httpDelete, httpPostRead, getBaseUrl } from
 import { unwrap, ApiError, parseOrThrow, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import {
-  type AtlasCohortDefinition,
   type AtlasCohortDefinitionInput,
   type AtlasCohortDefinitionWrapper,
   isAtlasCohortDefinitionWrapper,
@@ -221,7 +220,7 @@ export async function validateCohortDefinition(
  * JSON-parses the response body) and talks to fetch directly.
  */
 export async function getCohortPrintFriendly(
-  cohortDefinition: AtlasCohortDefinitionInput
+  cohortDefinition: AtlasCohortDefinitionInput | CohortDefinitionWithExpression
 ): Promise<ApiResult<string>> {
   return unwrap(async () => {
     const baseUrl = getBaseUrl()
@@ -230,7 +229,7 @@ export async function getCohortPrintFriendly(
 
     // The cohort definition from WebAPI has structure: { id, name, description, expression: {...} }
     // The printfriendly endpoint expects just the expression property
-    let payload: AtlasCohortDefinition | string
+    let payload: unknown
 
     if (isAtlasCohortDefinitionWrapper(cohortDefinition)) {
       payload = cohortDefinition.expression
@@ -240,7 +239,7 @@ export async function getCohortPrintFriendly(
 
     // If expression is a string, parse it first
     if (typeof payload === 'string') {
-      payload = JSON.parse(payload) as AtlasCohortDefinition
+      payload = JSON.parse(payload)
     }
 
     // Get auth token for the request

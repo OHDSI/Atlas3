@@ -67,10 +67,10 @@ vi.mock('@/services/cohort-definition.service', () => ({
       },
     },
   }),
-  saveCohortDefinition: vi.fn().mockResolvedValue({ id: 99, name: 'Saved' }),
-  assignTagToCohort: vi.fn().mockResolvedValue({ success: true }),
-  unassignTagFromCohort: vi.fn().mockResolvedValue({ success: true }),
-  validateCohortDefinition: vi.fn().mockResolvedValue({ warnings: [], errors: [] }),
+  saveCohortDefinition: vi.fn().mockResolvedValue({ success: true, data: { id: 99, name: 'Saved' } }),
+  assignTagToCohort: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+  unassignTagFromCohort: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+  validateCohortDefinition: vi.fn().mockResolvedValue({ success: true, data: { warnings: [] } }),
 }))
 
 vi.mock('@/services/concept-set.service', () => ({

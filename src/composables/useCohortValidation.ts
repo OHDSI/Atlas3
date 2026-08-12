@@ -66,9 +66,9 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
 
   const usedConceptSets = computed<ConceptSetReference[]>(() => {
     const usedIds = findUsedConceptSetIds(options.expression)
-    return (options.expression.ConceptSets ?? [])
-      .filter(cs => cs.id !== undefined && usedIds.has(cs.id))
-      .map(cs => ({ id: cs.id!, name: cs.name ?? '' }))
+    return (options.expression.ConceptSets ?? []).flatMap(cs =>
+      typeof cs.id === 'number' && usedIds.has(cs.id) ? [{ id: cs.id, name: cs.name ?? '' }] : []
+    )
   })
 
   async function validateCohort() {
@@ -77,7 +77,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
       _isValidatingInternal.value = true
       const nameForValidation = cohortName.value || 'Untitled Cohort'
       const result = await validateCohortDefinition(nameForValidation, options.expression)
-      validationWarnings.value = result.warnings || []
+      validationWarnings.value = result.success ? (result.data.warnings ?? []) : []
     } catch (error) {
       logger.error('CohortValidation', 'Failed to validate cohort', error)
       validationWarnings.value = []

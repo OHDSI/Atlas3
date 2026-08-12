@@ -214,7 +214,7 @@ function adoptProposalConceptSets(proposal: AgentProposal): void {
     case 'addInclusionRule':
       owners.push(...proposal.rule.criteriaGroups.flatMap(groupEvents))
       break
-    case 'setExitCriteria':
+    case 'setCohortExit':
       owners.push(proposal.exitCriteria)
       break
     case 'addConceptSet':
@@ -227,7 +227,11 @@ function adoptProposalConceptSets(proposal: AgentProposal): void {
   const cohortStore = useCohortStore()
   // An addConceptSet proposal registers itself once the caller applies it.
   const register = proposal.kind !== 'addConceptSet'
-  const existing: ConceptSetReference[] = [...(cohortStore.currentCohort?.conceptSets ?? [])]
+  // The cohort's own sets live in the circe expression. Entries without a
+  // numeric id occupy no CodesetId, so they can't collide with a new one.
+  const existing: ConceptSetReference[] = (
+    cohortStore.currentCohort?.expression?.ConceptSets ?? []
+  ).flatMap(cs => (typeof cs.id === 'number' ? [{ id: cs.id, name: cs.name ?? '' }] : []))
   for (const owner of owners) {
     if (!owner.conceptSet) continue
     const ref = ensureUniqueConceptSetId(owner.conceptSet, existing)

@@ -418,6 +418,7 @@ const importing = ref(false)
 const showCohortInfoDialog = ref(false)
 const cohortInfoHtml = ref<string | null>(null)
 const loadingCohortInfo = ref(false)
+let cohortInfoRequestId = 0
 
 // Copy-cohort state
 const copyingId = ref<number | null>(null)
@@ -578,7 +579,7 @@ async function confirmImport() {
       expression: parsed as object,
     })
 
-    if (!result || !result.id) {
+    if (!result.success || !result.data.id) {
       importError.value = t(
         'cohortDefinitions.importFailed',
         'Import failed. Check the JSON and try again.'
@@ -588,7 +589,7 @@ async function confirmImport() {
 
     closeImportDialog()
     await fetchCohorts()
-    router.push(`/cohorts/${result.id}`)
+    router.push(`/cohorts/${result.data.id}`)
   } catch (err) {
     logger.error('CohortsView', 'Failed to import cohort', err)
     importError.value = t(
@@ -628,14 +629,19 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
   copyingId.value = cohort.id
 
   try {
-    const definition = await getCohortDefinition(cohort.id)
-    if (!definition) {
-      showSnackbar(
-        t('cohortDefinitions.copyLoadError', 'Failed to load the cohort to copy.').value,
-        'danger'
-      )
+    const loaded = await getCohortDefinition(cohort.id)
+    if (!loaded.success) {
+      const message =
+        loaded.error.status === 403
+          ? t(
+              'cohortDefinitions.copyLoadForbidden',
+              'You do not have permission to read this cohort.'
+            ).value
+          : t('cohortDefinitions.copyLoadError', 'Failed to load the cohort to copy.').value
+      showSnackbar(message, 'danger')
       return
     }
+    const definition = loaded.data
 
     const created = await saveCohortDefinition({
       name: buildCopyName(cohort.name),
@@ -644,7 +650,7 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
       expression: definition.expression ?? {},
     })
 
-    if (!created?.id) {
+    if (!created.success || !created.data.id) {
       showSnackbar(
         t('cohortDefinitions.copyError', 'Failed to copy the cohort.').value,
         'danger'
@@ -653,7 +659,7 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
     }
 
     await fetchCohorts()
-    router.push(`/cohorts/${created.id}`)
+    router.push(`/cohorts/${created.data.id}`)
   } catch (err) {
     logger.error('CohortsView', 'Failed to copy cohort', err)
     showSnackbar(t('cohortDefinitions.copyError', 'Failed to copy the cohort.').value, 'danger')
@@ -693,7 +699,13 @@ async function confirmDelete() {
   deleting.value = true
 
   try {
-    await deleteCohort(selectedCohort.value.id)
+    const result = await deleteCohort(selectedCohort.value.id)
+
+    if (!result.success) {
+      logger.error('CohortsView', 'Failed to delete cohort', result.error)
+      showSnackbar(t('cohortDefinitions.deleteError', 'Failed to delete the cohort.').value, 'danger')
+      return
+    }
 
     // Refresh cohort list
     await fetchCohorts()
@@ -703,7 +715,7 @@ async function confirmDelete() {
     selectedCohort.value = null
   } catch (err) {
     logger.error('CohortsView', 'Failed to delete cohort', err)
-    // Error handling could be enhanced with a snackbar notification
+    showSnackbar(t('cohortDefinitions.deleteError', 'Failed to delete the cohort.').value, 'danger')
   } finally {
     deleting.value = false
   }
@@ -713,24 +725,33 @@ async function confirmDelete() {
  * Show cohort info dialog and fetch print-friendly HTML
  */
 async function handleShowInfo(cohort: CohortDefinitionSummary) {
+  // Clicking through cohorts faster than the network would otherwise land an
+  // earlier cohort's HTML in the dialog of the one now selected.
+  const requestId = ++cohortInfoRequestId
+
   selectedCohort.value = cohort
   showCohortInfoDialog.value = true
   loadingCohortInfo.value = true
   cohortInfoHtml.value = null
 
   try {
-    // Fetch the full cohort definition
-    const atlasDefinition = await getCohortDefinition(cohort.id)
-    if (atlasDefinition) {
-      // Get print-friendly HTML
-      const html = await getCohortPrintFriendly(atlasDefinition)
-      cohortInfoHtml.value = html
+    const definitionResult = await getCohortDefinition(cohort.id)
+    if (requestId !== cohortInfoRequestId) return
+    if (definitionResult.success) {
+      const htmlResult = await getCohortPrintFriendly(definitionResult.data)
+      if (requestId !== cohortInfoRequestId) return
+      cohortInfoHtml.value = htmlResult.success ? htmlResult.data : null
+    } else {
+      logger.error('CohortsView', 'Failed to fetch cohort definition', definitionResult.error)
     }
   } catch (error) {
+    if (requestId !== cohortInfoRequestId) return
     logger.error('CohortsView', 'Failed to fetch cohort print-friendly view', error)
     cohortInfoHtml.value = null
   } finally {
-    loadingCohortInfo.value = false
+    if (requestId === cohortInfoRequestId) {
+      loadingCohortInfo.value = false
+    }
   }
 }
 
