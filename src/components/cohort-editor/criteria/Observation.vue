@@ -215,10 +215,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by text value',
     kind: 'textFilter',
     componentProps: () => createSchemaFieldProps(
-      ensureObjectField(observationData.value, 'ValueAsString', () => ({ Value: '', Op: 'contains' })) as TextFilter
+      ensureObjectField(observationData.value, 'ValueAsString', () => ({ Text: '', Op: 'contains' })) as TextFilter
     ),
     init: () => {
-      ensureObjectField(observationData.value, 'ValueAsString', () => ({ Value: '', Op: 'contains' }))
+      ensureObjectField(observationData.value, 'ValueAsString', () => ({ Text: '', Op: 'contains' }))
     },
     clear: () => {
       delete observationData.value.ValueAsString
