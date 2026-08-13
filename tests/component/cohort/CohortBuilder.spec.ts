@@ -796,6 +796,52 @@ describe('CohortBuilder', () => {
     expect(actions.props('isPreviewingVersion')).toBe(true)
   })
 
+  it('ignores a preview belonging to another cohort when mounting on a new one', async () => {
+    // previewVersion survives unmount, so opening a different cohort from the
+    // list while a preview is active must still fetch that cohort.
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.setCohort({
+      id: 5,
+      name: 'Historical Cohort',
+      description: '',
+      expression: historicalExpression,
+    } as never)
+    store.previewVersion = { ...historicalVersionDTO, assetId: 5 }
+
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    const wrapper = createWrapper({ id: '7' })
+    await flushPromises()
+
+    expect(cohortDefService.getCohortDefinition).toHaveBeenCalledWith(7)
+    expect(renderedExpression(wrapper).PrimaryCriteria.CriteriaList).toEqual([
+      { ConditionOccurrence: {} },
+    ])
+  })
+
+  it('keeps the preview when the id prop changes into a previewed cohort', async () => {
+    const wrapper = createWrapper({ id: '5' })
+    await flushPromises()
+
+    // The route guard installs cohort 7's preview before the props watcher runs.
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.setCohort({
+      id: 7,
+      name: 'Historical Cohort',
+      description: '',
+      expression: historicalExpression,
+    } as never)
+    store.previewVersion = { ...historicalVersionDTO, assetId: 7 }
+
+    await wrapper.setProps({ id: '7' })
+    await flushPromises()
+
+    expect(renderedExpression(wrapper).PrimaryCriteria.CriteriaList).toEqual(
+      historicalExpression.PrimaryCriteria.CriteriaList
+    )
+  })
+
   it('leaving a preview restores the current definition', async () => {
     const { useCohortStore } = await import('@/stores/cohort')
     const store = useCohortStore()

@@ -786,7 +786,7 @@ watch(
   newId => {
     if (newId) {
       isLoadingCohort.value = true
-      loadCohort(newId)
+      syncToStoreDefinition()
     }
   }
 )
@@ -856,11 +856,15 @@ function applyDefinition(def: CohortDefinition) {
 // A preview keeps the same :id, so neither onMounted nor the props.id watcher
 // re-runs; reloadRequest is the store's signal that the definition changed
 // underneath us — entering a preview, or leaving one for the current version.
+// Nothing clears previewVersion on unmount, so it may belong to a cohort other
+// than the one we are editing; adopt it only when the ids agree.
 function syncToStoreDefinition() {
-  if (cohortStore.previewVersion) {
-    const previewed = cohortStore.currentCohort
-    if (previewed) applyDefinition(previewed)
-  } else if (props.id) {
+  if (!props.id) return
+
+  const previewed = cohortStore.currentCohort
+  if (cohortStore.previewVersion && previewed?.id === Number(props.id)) {
+    applyDefinition(previewed)
+  } else {
     loadCohort(props.id)
   }
 }

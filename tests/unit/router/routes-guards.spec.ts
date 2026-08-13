@@ -114,6 +114,13 @@ describe('version-preview beforeEnter guards', () => {
       expect(cohortStore.loadVersionPreview).not.toHaveBeenCalled()
       expect(cohortStore.clearPreviewVersion).not.toHaveBeenCalled()
     })
+
+    it('omits a non-numeric :id so the store can fall back to the open cohort', async () => {
+      cohortStore.loadVersionPreview.mockResolvedValue(undefined)
+      const r = makeRouter()
+      await r.push('/cohortdefinition/abc/version/7')
+      expect(cohortStore.loadVersionPreview).toHaveBeenCalledWith(7, undefined)
+    })
   })
 
   describe('conceptset-version-preview', () => {
