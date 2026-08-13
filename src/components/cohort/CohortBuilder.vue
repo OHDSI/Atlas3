@@ -317,9 +317,9 @@ const { t, tv } = useI18n()
 function defaultExpression(): CohortExpression { return {} }
 const expression = ref<CohortExpression>(defaultExpression())
 
-// useCohortValidation captures the expression object by identity, so every
-// wholesale swap (load, new-cohort signal, apply-JSON) has to refill the
-// existing object rather than assign a new one to the ref.
+// The store hands out `currentCohort.expression` as the object itself, not this
+// ref, so every wholesale swap (load, new-cohort signal, apply-JSON) has to
+// refill the existing object rather than assign a new one to the ref.
 function replaceExpression(next: CohortExpression) {
   const target = expression.value as Record<string, unknown>
   // The store hands definitions to the editor by installing them into this very
@@ -476,7 +476,7 @@ const {
   triggerValidation,
   cancelValidation,
 } = useCohortValidation({
-  expression: expression.value,
+  expression,
   cohortName,
   cohortDescription,
   cohortId,

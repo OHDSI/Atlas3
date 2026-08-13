@@ -65,9 +65,9 @@ export const useCohortStore = defineStore('cohort', () => {
 
   /**
    * Point `currentCohort.expression` at the attached document, first moving any
-   * definition the caller supplied into it. The move is in place: the editor's
-   * validation and its own template capture the expression object by identity,
-   * so replacing the instance would silently detach them.
+   * definition the caller supplied into it. The move is in place: consumers hold
+   * the expression object itself rather than the ref, so replacing the instance
+   * would silently detach them.
    */
   function adoptDocument() {
     const attached = cohortDocument.value

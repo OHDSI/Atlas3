@@ -15,22 +15,30 @@
         <div class="date-offset-end-strategy__field-label">
           Date Field
         </div>
-        <div class="date-offset-end-strategy__toggle">
+        <v-btn-toggle
+          class="date-offset-end-strategy__toggle"
+          :model-value="dateField"
+          mandatory
+          variant="outlined"
+          density="compact"
+          divided
+          @update:model-value="dateField = $event"
+        >
           <AtlasButton
-            :variant="dateField === 'StartDate' ? 'tonal' : 'secondary'"
+            toggle
+            value="StartDate"
             size="sm"
-            @click="dateField = 'StartDate'"
           >
             Start Date
           </AtlasButton>
           <AtlasButton
-            :variant="dateField === 'EndDate' ? 'tonal' : 'secondary'"
+            toggle
+            value="EndDate"
             size="sm"
-            @click="dateField = 'EndDate'"
           >
             End Date
           </AtlasButton>
-        </div>
+        </v-btn-toggle>
       </div>
 
       <AtlasTextField
@@ -121,19 +129,34 @@ const offset = computed<number>({
   overflow: hidden;
 }
 
-.date-offset-end-strategy__toggle {
-  display: inline-flex;
-  gap: 0;
-  border-radius: 999px;
-  overflow: hidden;
+.date-offset-end-strategy__toggle :deep(.v-btn-toggle > .v-btn) {
+  border-radius: 0 !important;
+  min-width: 0;
+  padding: 0 12px;
+  height: 26px !important;
+  background: transparent !important;
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
-.date-offset-end-strategy__toggle :deep(.atlas-button) {
-  min-height: 28px;
-  padding-inline: 10px;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
+.date-offset-end-strategy__toggle :deep(.v-btn-toggle > .v-btn:first-child) {
+  border-top-left-radius: 999px !important;
+  border-bottom-left-radius: 999px !important;
+}
+
+.date-offset-end-strategy__toggle :deep(.v-btn-toggle > .v-btn:last-child) {
+  border-top-right-radius: 999px !important;
+  border-bottom-right-radius: 999px !important;
+}
+
+.date-offset-end-strategy__toggle :deep(.v-btn-toggle .v-btn:hover:not(.v-btn--active)) {
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.date-offset-end-strategy__toggle :deep(.v-btn-toggle .v-btn--active) {
+  background: rgb(var(--v-theme-surface)) !important;
+  color: rgb(var(--v-theme-primary)) !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
 }
 </style>

@@ -4,29 +4,37 @@
       <div class="end-strategy-selector__label">
         Strategy
       </div>
-      <div class="end-strategy-selector__toggle">
+      <v-btn-toggle
+        :model-value="currentStrategyType"
+        mandatory
+        density="compact"
+        variant="outlined"
+        divided
+        class="end-strategy-selector__toggle"
+        @update:model-value="changeStrategy"
+      >
         <AtlasButton
-          :variant="currentStrategyType === 'observation' ? 'tonal' : 'secondary'"
+          toggle
+          value="observation"
           size="sm"
-          @click="changeStrategy('observation')"
         >
           Continuous Observation
         </AtlasButton>
         <AtlasButton
-          :variant="currentStrategyType === 'dateOffset' ? 'tonal' : 'secondary'"
+          toggle
+          value="dateOffset"
           size="sm"
-          @click="changeStrategy('dateOffset')"
         >
           Fixed Duration
         </AtlasButton>
         <AtlasButton
-          :variant="currentStrategyType === 'customEra' ? 'tonal' : 'secondary'"
+          toggle
+          value="customEra"
           size="sm"
-          @click="changeStrategy('customEra')"
         >
           Drug Exposure
         </AtlasButton>
-      </div>
+      </v-btn-toggle>
     </div>
 
     <ObservationEndStrategy v-if="currentStrategyType === 'observation'" />
@@ -90,8 +98,8 @@ const customEraStrategy = computed((): CustomEraStrategy | undefined => {
   return undefined
 })
 
-function changeStrategy(type: string) {
-  switch (type as EndStrategyType) {
+function changeStrategy(type: EndStrategyType | null) {
+  switch (type) {
     case 'observation':
       emit('update:endStrategy', undefined)
       break
@@ -123,18 +131,50 @@ function changeStrategy(type: string) {
 }
 
 .end-strategy-selector__toggle {
-  display: inline-flex;
   border-radius: 999px;
   overflow: hidden;
 }
 
-.end-strategy-selector__toggle :deep(.atlas-button) {
+.end-strategy-selector__toggle :deep(.v-btn-toggle > .v-btn) {
   min-width: 0;
+  border-radius: 0 !important;
   min-height: 28px;
-  padding-inline: 12px;
+  padding-inline: 10px;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
+}
+
+.end-strategy-selector__toggle :deep(.v-btn-toggle .v-btn) {
+  border-radius: 999px !important;
+  border: 0 !important;
+  min-width: 0;
+  padding: 0 12px;
+  height: 26px !important;
+  background: transparent !important;
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.end-strategy-selector__toggle :deep(.v-btn-toggle .v-btn:hover:not(.v-btn--active)) {
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.end-strategy-selector__toggle :deep(.v-btn-toggle .v-btn--active) {
+  background: rgb(var(--v-theme-surface)) !important;
+  color: rgb(var(--v-theme-primary)) !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+}
+
+.end-strategy-selector__toggle :deep(.v-btn-toggle > .v-btn:first-child) {
+  border-top-left-radius: 999px !important;
+  border-bottom-left-radius: 999px !important;
+}
+
+.end-strategy-selector__toggle :deep(.v-btn-toggle > .v-btn:last-child) {
+  border-top-right-radius: 999px !important;
+  border-bottom-right-radius: 999px !important;
 }
 </style>
