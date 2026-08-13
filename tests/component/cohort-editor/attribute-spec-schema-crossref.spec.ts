@@ -5,11 +5,12 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { z } from 'zod'
-import { CriteriaSchemaMap, type CriteriaWrapperKey } from '@/components/cohort-editor/circe.types'
+import { CriteriaSchemaMap, DemographicCriteriaSchema, type CriteriaWrapperKey } from '@/components/cohort-editor/circe.types'
 import type { CriteriaAttributeSpec } from '@/components/cohort-editor/criteria/criteria-editor.types'
 import ConditionEra from '@/components/cohort-editor/criteria/ConditionEra.vue'
 import ConditionOccurrence from '@/components/cohort-editor/criteria/ConditionOccurrence.vue'
 import Death from '@/components/cohort-editor/criteria/Death.vue'
+import DemographicCriteria from '@/components/cohort-editor/criteria/DemographicCriteria.vue'
 import DeviceExposure from '@/components/cohort-editor/criteria/DeviceExposure.vue'
 import DoseEra from '@/components/cohort-editor/criteria/DoseEra.vue'
 import DrugEra from '@/components/cohort-editor/criteria/DrugEra.vue'
@@ -27,7 +28,14 @@ const vuetify = createVuetify({ components, directives })
 
 type Editor = Record<string, unknown>
 
-const EDITORS: Record<CriteriaWrapperKey, Editor | null> = {
+interface Target {
+  schema: z.ZodObject<z.ZodRawShape>
+  component: Editor | null
+  /** Criteria editors take the Jackson wrapper; the demographic editor takes the payload itself. */
+  wrapperKey: string | null
+}
+
+const CRITERIA_EDITORS: Record<CriteriaWrapperKey, Editor | null> = {
   ConditionEra,
   ConditionOccurrence,
   Death,
@@ -44,6 +52,21 @@ const EDITORS: Record<CriteriaWrapperKey, Editor | null> = {
   Specimen,
   VisitDetail,
   VisitOccurrence,
+}
+
+const TARGETS: Record<string, Target> = {
+  ...Object.fromEntries(
+    Object.entries(CRITERIA_EDITORS).map(([domain, component]) => [domain, {
+      schema: CriteriaSchemaMap[domain as CriteriaWrapperKey] as z.ZodObject<z.ZodRawShape>,
+      component,
+      wrapperKey: domain,
+    }]),
+  ),
+  DemographicCriteria: {
+    schema: DemographicCriteriaSchema,
+    component: DemographicCriteria,
+    wrapperKey: null,
+  },
 }
 
 /**
@@ -121,24 +144,24 @@ function specsOf(wrapper: { vm: unknown }): CriteriaAttributeSpec[] {
  * first has created the field, so a shape defect in only one of them would hide.
  */
 function writesOf(
-  Component: Editor,
-  domain: CriteriaWrapperKey,
+  target: Target,
   apply: (spec: CriteriaAttributeSpec) => void,
 ): { data: Record<string, unknown>, specKeys: string[] } {
-  const criteria = { [domain]: {} } as Record<string, Record<string, unknown>>
-  const wrapper = mount(Component, {
+  const data: Record<string, unknown> = {}
+  const criteria = target.wrapperKey ? { [target.wrapperKey]: data } : data
+  const wrapper = mount(target.component as Editor, {
     global: { plugins: [vuetify, createPinia()] },
     props: { criteria, conceptSets: [] },
   })
   const specs = specsOf(wrapper)
   for (const spec of specs) apply(spec)
   wrapper.unmount()
-  return { data: criteria[domain], specKeys: specs.map(spec => spec.key) }
+  return { data, specKeys: specs.map(spec => spec.key) }
 }
 
-function surfaceOf(Component: Editor, domain: CriteriaWrapperKey) {
-  const fromInit = writesOf(Component, domain, spec => spec.init())
-  const fromProps = writesOf(Component, domain, spec => spec.componentProps?.())
+function surfaceOf(target: Target) {
+  const fromInit = writesOf(target, spec => spec.init())
+  const fromProps = writesOf(target, spec => spec.componentProps?.())
   return {
     specKeys: fromInit.specKeys,
     written: [fromInit.data, fromProps.data],
@@ -146,23 +169,28 @@ function surfaceOf(Component: Editor, domain: CriteriaWrapperKey) {
   }
 }
 
-const SURFACE = Object.fromEntries(
-  Object.entries(EDITORS)
-    .filter(([, Component]) => Component !== null)
-    .map(([domain, Component]) => [domain, surfaceOf(Component as Editor, domain as CriteriaWrapperKey)]),
-) as Record<CriteriaWrapperKey, ReturnType<typeof surfaceOf>>
+const SURFACE: Record<string, ReturnType<typeof surfaceOf>> = Object.fromEntries(
+  Object.entries(TARGETS)
+    .filter(([, target]) => target.component !== null)
+    .map(([name, target]) => [name, surfaceOf(target)]),
+)
 
-const EDITOR_DOMAINS = Object.keys(SURFACE) as CriteriaWrapperKey[]
+const EDITOR_NAMES = Object.keys(SURFACE)
 
-function shapeKeys(domain: CriteriaWrapperKey): string[] {
-  const schema = CriteriaSchemaMap[domain] as z.ZodObject<z.ZodRawShape>
-  return Object.keys(schema.shape)
+function shapeKeys(name: string): string[] {
+  return Object.keys((TARGETS[name] as Target).schema.shape)
 }
 
-describe.each(EDITOR_DOMAINS)('%s attribute specs against the schema', domain => {
+function surfaceFor(name: string): ReturnType<typeof surfaceOf> {
+  const surface = SURFACE[name]
+  if (!surface) throw new Error(`no attribute-spec surface captured for ${name}`)
+  return surface
+}
+
+describe.each(EDITOR_NAMES)('%s attribute specs against the schema', domain => {
   it('writes only fields the domain schema models', () => {
     const modelled = shapeKeys(domain)
-    const unmodelled = [...new Set(SURFACE[domain].writtenKeys)]
+    const unmodelled = [...new Set(surfaceFor(domain).writtenKeys)]
       .filter(key => !modelled.includes(key))
       .sort()
 
@@ -170,10 +198,10 @@ describe.each(EDITOR_DOMAINS)('%s attribute specs against the schema', domain =>
   })
 
   it('writes nested shapes the domain schema keeps through a parse', () => {
-    const schema = CriteriaSchemaMap[domain]
+    const schema = (TARGETS[domain] as Target).schema
     const stripped = new Set<string>()
 
-    for (const data of SURFACE[domain].written) {
+    for (const data of surfaceFor(domain).written) {
       const result = schema.safeParse(data)
       expect(result.success, `${domain} attribute specs write a value its schema rejects: ${
         result.success ? '' : JSON.stringify(result.error.issues)
@@ -190,8 +218,8 @@ describe('schema fields no attribute spec surfaces', () => {
   it('matches the pinned list of known gaps', () => {
     const unsurfaced: string[] = []
 
-    for (const domain of Object.keys(EDITORS) as CriteriaWrapperKey[]) {
-      const surface = SURFACE[domain] as ReturnType<typeof surfaceOf> | undefined
+    for (const domain of Object.keys(TARGETS)) {
+      const surface = SURFACE[domain]
       const surfaced = surface
         ? new Set([...surface.specKeys, ...surface.writtenKeys, ...HEADER_BOUND_FIELDS])
         : new Set<string>()
