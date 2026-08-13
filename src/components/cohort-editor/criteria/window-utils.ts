@@ -60,24 +60,19 @@ export function getWindowPresetOptions(): WindowPresetOption[] {
       undefined
     ),
     buildPreset(t('components.temporalWindowEditor.onIndexDate', 'On index date').value,
-      createWindow(0, 'after', 0, 'after'),
-      createWindow(0, 'after', 0, 'after')
+      createWindow(0, 'before', 0, 'after')
     ),
     buildPreset(t('components.temporalWindowEditor.acuteFollowUp', 'Acute follow-up (0 to 30 days after)').value,
-      createWindow(0, 'after', 0, 'after'),
-      undefined
+      createWindow(0, 'after', 30, 'after')
     ),
     buildPreset(t('components.temporalWindowEditor.ninetyDayFollowUp', '90-day follow-up (0 to 90 days after)').value,
-      createWindow(0, 'after', 0, 'after'),
       createWindow(0, 'after', 90, 'after')
     ),
     buildPreset(t('components.temporalWindowEditor.oneYearFollowUp', '1-year follow-up (0 to 365 days after)').value,
-      createWindow(0, 'after', 0, 'after'),
       createWindow(0, 'after', 365, 'after')
     ),
     buildPreset(t('components.temporalWindowEditor.allTimeAfterIndex', 'All time after index').value,
-      createWindow(0, 'after', 0, 'after'),
-      undefined
+      createWindow(0, 'after', null, 'after')
     ),buildPreset(t('components.temporalWindowEditor.eventOverlapsWithIndex', 'event overlapps with index').value,
       createWindow(0, 'after', null, 'after',false, true),
       createWindow(null, 'before', 0, 'after',true, false)

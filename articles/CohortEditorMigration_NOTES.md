@@ -35,11 +35,34 @@ group editing were:
 | `EventConceptSetField.vue` | Concept set picker field on a card |
 | `useCriteriaGroupPicker.ts` | Composable managing concept set dialog state |
 
-These components used a hand-written TypeScript interface from
-`src/models/cohort.types.ts` with camelCase property names (`logicType`,
-`events`, `nestedGroups`).  That shape did not match the PascalCase JSON
-produced by circe-be / WebAPI (`Type`, `CriteriaList`, `Groups`), which meant
-every consumer needed to translate between the two representations.
+Those components did not edit CIRCE directly.  They worked against the Atlas
+internal cohort model defined in `src/models/cohort.types.ts`, and the rest of
+the application treated that model as the editor-facing contract.
+
+That legacy model deliberately flattened and reshaped the native CIRCE object
+graph into UI-friendly, camelCase structures:
+
+- `CriteriaGroup` used `logicType`, `count`, `qualifyingLimit`, `events`, and
+  `nestedGroups`.
+- `CohortEvent` represented one editable event card and carried
+  `criteriaType`, `conceptSet`, `sourceConceptId`, `cardinality`,
+  `temporalWindow`, `endTemporalWindow`, `attributes`, `nestedCriteria`,
+  `restrictVisit`, `ignoreObservationPeriod`, `dateAdjustment`, and
+  `typeExclude`.
+- `ExitCriteria` modeled end-strategy choices such as
+  `CONTINUOUS_OBSERVATION`, `FIXED_DURATION`, and `CONTINUOUS_DRUG`.
+- `ConceptSetReference` was a UI convenience shape used by selectors and
+  validation code, not the native CIRCE concept-set structure.
+
+The conversion boundary sat in the host/store layer, where the WebAPI payload
+was translated into those internal Atlas shapes for editing and then mapped
+back again for save operations.  The mapping and translation code lived around
+the cohort service layer and host capability translation utilities, so the UI
+was never mutating the native CIRCE document directly.
+
+This shape diverged from the PascalCase JSON produced by circe-be / WebAPI
+(`Type`, `CriteriaList`, `Groups`), which meant every consumer needed to
+translate between the two representations.
 
 The legacy editors also relied on event-based mutation patterns: components
 emitted updates, parent components copied the data back into the document, and
@@ -74,7 +97,7 @@ and defined:
 
 ### 1. Native Circe Model as the Type Authority
 
-The legacy `cohort.types.ts` mapping layer was retired in favor of the
+The legacy Atlas-internal mapping layer was retired in favor of the
 schema-backed circe model from `cohort-editor/circe.types.ts`.
 
 Those Zod schemas mirror the circe-be Java classes directly, so the TypeScript
