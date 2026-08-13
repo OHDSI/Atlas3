@@ -8,6 +8,7 @@ import {
   conceptToConceptSetItem,
   mapConceptSetFromAPI,
   mapConceptSetToAPI,
+  normalizeInvalidReason,
   type ConceptSetAPIResponse
 } from '@/utils/api-mappers'
 import type { Concept, ConceptSet } from '@/models/concept-set.types'
@@ -196,6 +197,52 @@ describe('API Mappers', () => {
       const result = mapConceptSetFromAPI(apiResponse)
 
       expect(result.shared).toBe(false)
+    })
+
+    it('should normalize the "V" (valid) sentinel to null so valid concepts are not flagged as invalid (#221)', () => {
+      const apiResponse: ConceptSetAPIResponse = {
+        id: 1,
+        name: 'Test',
+        expression: {
+          items: [
+            {
+              concept: {
+                CONCEPT_ID: 8560,
+                CONCEPT_NAME: 'Valid Concept',
+                CONCEPT_CODE: 'VC',
+                DOMAIN_ID: 'Condition',
+                VOCABULARY_ID: 'SNOMED',
+                CONCEPT_CLASS_ID: 'Finding',
+                STANDARD_CONCEPT: 'S',
+                INVALID_REASON: 'V'
+              },
+              isExcluded: false,
+              includeDescendants: false,
+              includeMapped: false
+            }
+          ]
+        }
+      }
+
+      const result = mapConceptSetFromAPI(apiResponse)
+
+      expect(result.items[0].invalidReason).toBeNull()
+    })
+  })
+
+  describe('normalizeInvalidReason', () => {
+    it('should treat the "V" sentinel as valid (null)', () => {
+      expect(normalizeInvalidReason('V')).toBeNull()
+    })
+
+    it('should treat null/undefined as valid (null)', () => {
+      expect(normalizeInvalidReason(null)).toBeNull()
+      expect(normalizeInvalidReason(undefined)).toBeNull()
+    })
+
+    it('should pass through a real invalid reason unchanged', () => {
+      expect(normalizeInvalidReason('D')).toBe('D')
+      expect(normalizeInvalidReason('U')).toBe('U')
     })
   })
 

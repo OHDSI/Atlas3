@@ -1360,6 +1360,40 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       // Number ID should be preserved
       expect(atlasJSON.ConceptSets[1]?.id).toBe(5)
     })
+
+    it('round-trips a valid concept without it coming back flagged as invalid (#221)', () => {
+      // WebAPI's concept-set-expression format uses the literal string "V"
+      // (not null) for a valid concept's INVALID_REASON. Export already
+      // relies on that sentinel; import must undo it, or every concept set
+      // item that has round-tripped through Atlas JSON renders as invalid.
+      const cohort = createMinimalCohort({
+        conceptSets: [
+          {
+            id: 1,
+            name: 'Test',
+            items: [
+              {
+                conceptId: 8560,
+                conceptName: 'Valid Concept',
+                domainId: 'Condition',
+                vocabularyId: 'SNOMED',
+                conceptClassId: 'Finding',
+                invalidReason: null,
+                includeDescendants: false,
+                isExcluded: false,
+                includeMapped: false,
+              },
+            ],
+          },
+        ],
+      })
+
+      const atlasJSON = convertInternalToAtlas(cohort)
+      expect(atlasJSON.ConceptSets[0]?.expression.items[0]?.concept.INVALID_REASON).toBe('V')
+
+      const converted = convertAtlasToInternal(atlasJSON)
+      expect(converted.conceptSets?.[0]?.items[0]?.invalidReason).toBeNull()
+    })
   })
 
   describe('Event Type Exclude Flags', () => {
