@@ -50,7 +50,6 @@ export const useCohortStore = defineStore('cohort', () => {
   // Version preview state (T013)
   const previewVersion = ref<Version | null>(null)
   const reloadRequest = ref(0)
-  const reloadVersion = ref<number | null>(null)
 
   // Validation state
   const validationErrors = ref<ValidationError[]>([])
@@ -474,22 +473,27 @@ export const useCohortStore = defineStore('cohort', () => {
    * Load a specific version for preview
    * Fetches the historical version data and sets it as current with preview flag
    * @param versionNumber - The version number to load
+   * @param cohortId - Cohort to load from; required when no cohort is open yet
+   *                   (a bookmarked version URL previews before the editor mounts)
    */
-  async function loadVersionPreview(versionNumber: number): Promise<void> {
-    if (!currentCohort.value?.id) {
+  async function loadVersionPreview(versionNumber: number, cohortId?: number): Promise<void> {
+    const id = cohortId ?? currentCohort.value?.id
+    if (!id) {
       logger.error('CohortStore', 'Cannot load version preview: no current cohort ID')
       throw new Error('No current cohort ID')
     }
 
     try {
-      const cohortId = currentCohort.value.id
-      const versionedAsset = await getVersionAPI(cohortId, versionNumber)
+      const versionedAsset = await getVersionAPI(id, versionNumber)
 
       // Set preview version metadata
       previewVersion.value = versionedAsset.versionDTO
 
-      // Signal the mounted editor to fetch and hydrate the historical version.
-      reloadVersion.value = versionNumber
+      // The version response already carries the historical definition, parsed.
+      setCohort({ ...versionedAsset.entityDTO, id: versionedAsset.entityDTO.id ?? id })
+
+      // Signal the mounted editor to re-read the definition: the preview routes
+      // keep the same :id, so its own load triggers never fire.
       reloadRequest.value++
 
       // Mark as clean (read-only mode, no editing)
@@ -511,7 +515,6 @@ export const useCohortStore = defineStore('cohort', () => {
     previewVersion.value = null
 
     // Signal the editor to reload the current cohort version.
-    reloadVersion.value = null
     reloadRequest.value++
 
     logger.debug('CohortStore', 'Preview cleared, returned to current version')
@@ -563,7 +566,6 @@ export const useCohortStore = defineStore('cohort', () => {
     lastAutoSave,
     previewVersion,
     reloadRequest,
-    reloadVersion,
     validationErrors,
     isReadOnly,
     retryState,

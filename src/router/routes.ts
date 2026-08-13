@@ -192,7 +192,7 @@ export const routes: RouteRecordRaw[] = [
         const versionNumber = parseInt(versionParam)
         if (!isNaN(versionNumber)) {
           try {
-            await cohortStore.loadVersionPreview(versionNumber)
+            await cohortStore.loadVersionPreview(versionNumber, Number(to.params.id))
           } catch (error) {
             logger.error('Router', 'Failed to load version preview', error)
             // Continue navigation anyway - let the view handle the error

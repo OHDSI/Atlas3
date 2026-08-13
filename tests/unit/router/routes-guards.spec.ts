@@ -88,7 +88,9 @@ describe('version-preview beforeEnter guards', () => {
       cohortStore.loadVersionPreview.mockResolvedValue(undefined)
       const r = makeRouter()
       await r.push('/cohortdefinition/42/version/7')
-      expect(cohortStore.loadVersionPreview).toHaveBeenCalledWith(7)
+      // The cohort id comes from the route so a bookmarked version URL can
+      // preview before any cohort is open.
+      expect(cohortStore.loadVersionPreview).toHaveBeenCalledWith(7, 42)
     })
 
     it('clears the preview when :version is "current"', async () => {

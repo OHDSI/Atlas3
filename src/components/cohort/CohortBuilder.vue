@@ -499,6 +499,10 @@ const isPreviewingVersion = computed(() => {
 async function handleBackToCurrent(): Promise<void> {
   if (!cohortId.value) return
 
+  // Vue Router does not re-run beforeEnter when only :version changes, so the
+  // route's guard never sees this transition — clear the preview here instead.
+  await cohortStore.clearPreviewVersion()
+
   await router.push({
     path: `/cohortdefinition/${cohortId.value}/version/current`,
   })
@@ -667,7 +671,9 @@ function handleTagsUpdate(newTags: Tag[]) {
 onMounted(async () => {
   // Start loading cohort definition immediately (don't await)
   if (props.id) {
-    loadCohort(props.id)
+    // A bookmarked version URL previews before we mount: the store already holds
+    // the historical definition, and fetching the current one would clobber it.
+    syncToStoreDefinition()
   } else {
     const restored = cohortStore.restoreFromDraft()
     if (!restored) {
@@ -815,11 +821,6 @@ async function loadCohort(id: string) {
     }
 
     // The service already parsed and validated the expression at the API boundary.
-    const loadedExpression = atlasCohort.expression
-
-    cancelValidation()
-    replaceExpression(loadedExpression)
-
     // Minimal store update — include expression so pythiaBridge and agent proposals
     // can read structure (entryEventCount, inclusionRuleCount, etc.) without re-parsing.
     const cohortDef: CohortDefinition = {
@@ -827,23 +828,44 @@ async function loadCohort(id: string) {
       name: atlasCohort.name ?? '',
       description: atlasCohort.description || '',
       tags: atlasCohort.tags || [],
-      expression: loadedExpression,
+      expression: atlasCohort.expression,
     }
     cohortStore.setCohort(cohortDef)
     cohortStore.markClean()
 
-    cohortName.value = atlasCohort.name ?? ''
-    cohortDescription.value = atlasCohort.description || ''
-    loadedTags.value = [...(atlasCohort.tags || [])]
-    loadedSnapshot.value = createStateSnapshot()
-    isLoadingCohort.value = false
-
-    triggerValidation()
+    applyDefinition(cohortDef)
   } catch (error) {
     logger.error('CohortBuilder', `Error loading cohort ${id}`, error)
     isLoadingCohort.value = false
   }
 }
+
+// The one place a whole definition reaches the editor, whether it came from the
+// current-version fetch above or from a version preview the store already holds.
+function applyDefinition(def: CohortDefinition) {
+  cancelValidation()
+  replaceExpression(def.expression ?? defaultExpression())
+  cohortName.value = def.name ?? ''
+  cohortDescription.value = def.description || ''
+  loadedTags.value = [...(def.tags || [])]
+  loadedSnapshot.value = createStateSnapshot()
+  isLoadingCohort.value = false
+  triggerValidation()
+}
+
+// A preview keeps the same :id, so neither onMounted nor the props.id watcher
+// re-runs; reloadRequest is the store's signal that the definition changed
+// underneath us — entering a preview, or leaving one for the current version.
+function syncToStoreDefinition() {
+  if (cohortStore.previewVersion) {
+    const previewed = cohortStore.currentCohort
+    if (previewed) applyDefinition(previewed)
+  } else if (props.id) {
+    loadCohort(props.id)
+  }
+}
+
+watch(() => cohortStore.reloadRequest, syncToStoreDefinition)
 
 // ── Concept set selection (Phase 4) ────────────────────────────────────────
 // CohortExpressionEditor emits @select-concept-set / @edit-concept-set with a

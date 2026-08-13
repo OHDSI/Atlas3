@@ -715,6 +715,111 @@ describe('CohortBuilder', () => {
   })
 
   // ---------------------------------------------------------------------------
+  // Version preview — the editor must render the historical definition, not the
+  // current one, on both the warm (already mounted) and cold (bookmarked URL)
+  // paths. Mirrors the live difference on cohort 1: v1 has DrugEra/AgeAtStart
+  // and no EndStrategy, current has ConditionOccurrence and an EndStrategy.
+  // ---------------------------------------------------------------------------
+
+  const historicalExpression = {
+    ConceptSets: [],
+    PrimaryCriteria: {
+      CriteriaList: [{ DrugEra: { AgeAtStart: { Op: 'gte', Value: 16 } } }],
+      ObservationWindow: { PriorDays: 0, PostDays: 0 },
+      PrimaryCriteriaLimit: { Type: 'First' },
+    },
+    InclusionRules: [],
+  }
+
+  const historicalVersionDTO = {
+    version: 1,
+    assetId: 42,
+    createdBy: { id: 1, name: 'U', email: 'u@test.com' },
+    createdDate: '2024-01-01T00:00:00Z',
+    comment: null,
+    archived: false,
+  }
+
+  const renderedExpression = (wrapper: Wrapper) =>
+    wrapper.findComponent({ name: 'CohortExpressionEditor' }).props('expression') as any
+
+  it('renders the historical expression when a preview starts while the editor is open', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await flushPromises()
+    expect(renderedExpression(wrapper).PrimaryCriteria.CriteriaList).toEqual([
+      { ConditionOccurrence: {} },
+    ])
+
+    const versionsService = await import('@/services/cohort-definition-versions.service')
+    vi.mocked(versionsService.getVersion).mockResolvedValueOnce({
+      versionDTO: historicalVersionDTO,
+      entityDTO: {
+        id: 42,
+        name: 'Historical Cohort',
+        description: '',
+        expression: historicalExpression,
+      },
+    } as never)
+
+    const { useCohortStore } = await import('@/stores/cohort')
+    await useCohortStore().loadVersionPreview(1)
+    await flushPromises()
+
+    expect(renderedExpression(wrapper).PrimaryCriteria.CriteriaList).toEqual(
+      historicalExpression.PrimaryCriteria.CriteriaList
+    )
+    expect((wrapper.vm as any).isPreviewingVersion).toBe(true)
+  })
+
+  it('renders the historical expression on a cold load and disables save', async () => {
+    // The router guard populates the store before the editor mounts when a
+    // version URL is opened directly.
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.setCohort({
+      id: 42,
+      name: 'Historical Cohort',
+      description: '',
+      expression: historicalExpression,
+    } as never)
+    store.previewVersion = historicalVersionDTO
+
+    const wrapper = createWrapper({ id: '42' })
+    await flushPromises()
+
+    expect(renderedExpression(wrapper).PrimaryCriteria.CriteriaList).toEqual(
+      historicalExpression.PrimaryCriteria.CriteriaList
+    )
+    expect(renderedExpression(wrapper).EndStrategy).toBeUndefined()
+
+    const actions = wrapper.findComponent({ name: 'CohortToolbarActions' })
+    expect(actions.props('isPreviewingVersion')).toBe(true)
+  })
+
+  it('leaving a preview restores the current definition', async () => {
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.setCohort({
+      id: 42,
+      name: 'Historical Cohort',
+      description: '',
+      expression: historicalExpression,
+    } as never)
+    store.previewVersion = historicalVersionDTO
+
+    const wrapper = createWrapper({ id: '42' })
+    await flushPromises()
+
+    await (wrapper.vm as any).$.setupState.handleBackToCurrent()
+    await flushPromises()
+
+    expect(store.previewVersion).toBeNull()
+    expect(renderedExpression(wrapper).PrimaryCriteria.CriteriaList).toEqual([
+      { ConditionOccurrence: {} },
+    ])
+  })
+
+  // ---------------------------------------------------------------------------
   // buildCohortExpression — implicit via buildExportCohort variant; ensure
   // the explicit function runs by mutating entryEvents (the deep watcher
   // fires it). Coverage credit comes from the watch handler.
