@@ -93,6 +93,27 @@ describe('the attached cohort document', () => {
     expect(store.currentCohort?.expression).toBe(document.value)
   })
 
+  it('a new editor does not adopt the expression of the session that just closed', () => {
+    const store = useCohortStore()
+    const closing = ref<CohortExpression>({})
+    store.attachExpression(closing)
+    store.setCohort({
+      id: 1,
+      name: 'Cohort 1',
+      expression: { InclusionRules: [{ name: 'Belongs to cohort 1' }] },
+    })
+    expect(closing.value.InclusionRules).toHaveLength(1)
+
+    store.detachExpression(closing)
+
+    const opening = ref<CohortExpression>({})
+    store.attachExpression(opening)
+
+    expect(opening.value).toEqual({})
+    // The metadata outlives the editor: pythiaBridge navigates back by id.
+    expect(store.currentCohort?.id).toBe(1)
+  })
+
   it('detaching only clears the attachment made by that editor', () => {
     const { store, document } = openEditor({})
     const other = ref<CohortExpression>({})

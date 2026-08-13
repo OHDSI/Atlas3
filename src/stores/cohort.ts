@@ -90,10 +90,16 @@ export const useCohortStore = defineStore('cohort', () => {
   /**
    * Pass the editor's own ref so that an incoming editor which attached before
    * the outgoing one unmounted is not detached by it.
+   *
+   * The metadata outlives the editor — pythiaBridge navigates back to the cohort
+   * by id — but the expression does not: the next editor adopts whatever
+   * `currentCohort.expression` holds, so leaving the closed session's document
+   * there opens New Cohort on the previous cohort's criteria.
    */
   function detachExpression(expression?: Ref<CohortExpression>) {
     if (expression && cohortDocument.value !== expression) return
     cohortDocument.value = null
+    if (currentCohort.value) delete currentCohort.value.expression
   }
 
   // Version preview state (T013)

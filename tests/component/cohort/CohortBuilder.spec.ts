@@ -1342,6 +1342,31 @@ describe('CohortBuilder — one document, shared with the store', () => {
     ])
   })
 
+  it('a New Cohort editor opened after another cohort starts blank', async () => {
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+
+    const loaded = mountBuilder({ id: '42' })
+    await flushPromises()
+    expect(
+      setupOf(loaded).expression.PrimaryCriteria?.CriteriaList?.length
+    ).toBeGreaterThan(0)
+
+    setupOf(loaded).expression.InclusionRules = [{ name: 'Belongs to cohort 42' }]
+
+    // Back to the list, then New Cohort: nothing resets the store in between.
+    loaded.unmount()
+
+    const fresh = mountBuilder()
+    await flushPromises()
+
+    const expression = setupOf(fresh).expression
+    expect(expression.PrimaryCriteria?.CriteriaList ?? []).toHaveLength(0)
+    expect(expression.InclusionRules ?? []).toHaveLength(0)
+    // And the store follows the new editor, not the one that closed.
+    expect(store.currentCohort?.expression).toBe(expression)
+  })
+
   it('saving does not blind the agent bridge', async () => {
     const wrapper = mountBuilder()
     await wrapper.vm.$nextTick()
