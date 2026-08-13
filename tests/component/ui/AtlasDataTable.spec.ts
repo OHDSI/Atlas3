@@ -58,6 +58,43 @@ describe('AtlasDataTable', () => {
     expect(dt.props('page')).toBe(2)
   })
 
+  it('does not bind page/items-per-page onto v-data-table when the caller never passed them (#203, #222)', () => {
+    // Vuetify's `useProxiedModel` treats a model as externally controlled when
+    // the vnode carries BOTH the prop key and an `onUpdate:` listener. This
+    // wrapper always attaches the listeners, so binding the props
+    // unconditionally (with numeric defaults) made every table controlled —
+    // including callers that never round-trip page state, whose pager was then
+    // pinned to a value that never changed.
+    const wrapper = mountWith()
+    const dt = wrapper.findComponent({ name: 'VDataTable' })
+    // $props always has every declared prop key (Vue's props system), so it
+    // can't tell us what the caller actually bound. Vuetify's own
+    // "controlled" check reads the raw vnode props instead — that's what
+    // must NOT contain `page`/`itemsPerPage` here.
+    const vnodeProps = (dt.vm.$.vnode.props ?? {}) as Record<string, unknown>
+    expect(Object.prototype.hasOwnProperty.call(vnodeProps, 'page')).toBe(false)
+    expect(Object.prototype.hasOwnProperty.call(vnodeProps, 'itemsPerPage')).toBe(false)
+  })
+
+  it('paginates on its own when the caller does not manage page state (#203, #222)', async () => {
+    const many = Array.from({ length: 25 }, (_, i) => ({ name: `row-${i}`, value: i }))
+    const wrapper = mount(AtlasDataTable, {
+      global: { plugins: [vuetify] },
+      props: { headers: HEADERS, items: many },
+    })
+
+    expect(wrapper.findAll('tbody tr')).toHaveLength(10)
+    expect(wrapper.text()).toContain('row-0')
+
+    const next = wrapper.findAll('.v-pagination__next button, button[aria-label*="Next"]')
+    expect(next.length).toBeGreaterThan(0)
+    await next[0]!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('row-10')
+    expect(wrapper.text()).not.toContain('row-0')
+  })
+
   it('forwards sortBy', () => {
     const sortBy = [{ key: 'name', order: 'asc' as const }]
     const wrapper = mountWith({ sortBy })
