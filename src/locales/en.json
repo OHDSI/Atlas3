@@ -1802,6 +1802,7 @@
       "saveError": "Failed to save cohort",
       "loadForbidden": "You do not have permission to open this cohort",
       "loadError": "Failed to load cohort",
+      "parseError": "Failed to parse cohort definition",
       "exportFailed": "Export failed: {error}",
       "exportDownloaded": "Cohort JSON downloaded",
       "copiedToClipboard": "Cohort JSON copied to clipboard",

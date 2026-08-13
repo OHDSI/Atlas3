@@ -113,44 +113,6 @@ vi.mock('@/composables/useEntityAccess', async () => {
   }
 })
 
-// convertAtlasToInternal is what loadCohort feeds the expression into. Keep
-// a simple identity-ish stub so we can confirm load() populates local refs.
-vi.mock('@/services/atlas-converter', () => ({
-  convertAtlasToInternal: vi.fn(() => ({
-    entryEvents: [{ id: 'evt-1', criteriaType: 'ConditionOccurrence', attributes: [] }],
-    inclusionRules: [
-      {
-        name: 'Rule 1',
-        description: '',
-        criteriaGroups: [
-          {
-            id: 'group-1',
-            logicType: 'ALL',
-            qualifyingLimit: 'ALL',
-            events: [
-              {
-                id: 'inc-evt-1',
-                criteriaType: 'ConditionOccurrence',
-                attributes: [
-                  { type: 'concept', concepts: [] },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    ],
-    exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' },
-    observationPeriod: { priorDays: 1, postDays: 2 },
-    qualifyingLimit: 'ALL',
-    primaryCriteriaLimit: 'First',
-    inclusionQualifyingLimit: 'ALL',
-    additionalCriteria: undefined,
-    conceptSets: [],
-  })),
-  convertInternalToAtlas: vi.fn(() => ({ mocked: 'atlas-expression' })),
-}))
-
 import { ApiError } from '@/services/api-error'
 import CohortBuilder from '@/components/cohort/CohortBuilder.vue'
 
@@ -614,10 +576,47 @@ describe('CohortBuilder', () => {
     const setup = getSetup(wrapper)
     // Make canSave true: have name + entry events + grant permission via mock.
     setup.cohortName = 'A Cohort'
-    Object.assign(setup.expression, { PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] } })
+    setup.cohortDescription = 'Described'
+    Object.assign(setup.expression, {
+      PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] },
+      // No items: handleSave must hydrate them from the concept set service
+      // before the definition goes to the server.
+      ConceptSets: [{ id: 7, name: 'Unhydrated', expression: { items: [] } }],
+    })
     const webapi = await import('@/services/cohort-definition.service')
+    const conceptSetService = await import('@/services/concept-set.service')
     await setup.handleSave()
-    expect(webapi.saveCohortDefinition).toHaveBeenCalled()
+
+    expect(webapi.saveCohortDefinition).toHaveBeenCalledTimes(1)
+    const payload = vi.mocked(webapi.saveCohortDefinition).mock.calls[0][0] as any
+    expect(payload).toMatchObject({
+      id: undefined,
+      name: 'A Cohort',
+      description: 'Described',
+      expressionType: 'SIMPLE_EXPRESSION',
+    })
+    expect(payload.expression.PrimaryCriteria.CriteriaList).toEqual([{ ConditionOccurrence: {} }])
+    expect(conceptSetService.getConceptSetById).toHaveBeenCalledWith(7)
+    expect(payload.expression.ConceptSets[0].expression.items).toHaveLength(1)
+  })
+
+  it('handleSave leaves concept sets that already carry their items alone', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'A Cohort'
+    const hydrated = { concept: { CONCEPT_ID: 42, CONCEPT_NAME: 'Already here' } }
+    Object.assign(setup.expression, {
+      PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] },
+      ConceptSets: [{ id: 7, name: 'Hydrated', expression: { items: [hydrated] } }],
+    })
+    const webapi = await import('@/services/cohort-definition.service')
+    const conceptSetService = await import('@/services/concept-set.service')
+    await setup.handleSave()
+
+    expect(conceptSetService.getConceptSetById).not.toHaveBeenCalled()
+    const payload = vi.mocked(webapi.saveCohortDefinition).mock.calls[0][0] as any
+    expect(payload.expression.ConceptSets[0].expression.items).toEqual([hydrated])
   })
 
   // ---------------------------------------------------------------------------
