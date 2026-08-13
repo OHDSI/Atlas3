@@ -1,4 +1,4 @@
-import { ref, computed, watch, type Ref, type ComputedRef, onUnmounted } from 'vue'
+import { ref, computed, watch, unref, type Ref, type ComputedRef, type MaybeRef, onUnmounted } from 'vue'
 import type { ConceptSetReference } from '@/models/cohort.types'
 import type { ValidationWarning, ValidationSeverity } from '@/models/cohort-validation.types'
 import { validateCohortDefinition } from '@/services/cohort-definition.service'
@@ -7,8 +7,8 @@ import type { CohortExpression, ConceptSet } from '@/components/cohort-editor/ci
 import { findUsedConceptSetIds } from '@/components/cohort-editor/concept-set-usage'
 
 export interface CohortValidationOptions {
-  /** Reactive CohortExpression object (pass the result of reactive<CohortExpression>()) */
-  expression: CohortExpression
+  /** CohortExpression source; accepts either a ref or a reactive object */
+  expression: MaybeRef<CohortExpression>
   cohortName: Ref<string>
   cohortDescription: Ref<string>
   cohortId: ComputedRef<number | null>
@@ -65,8 +65,9 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
   })
 
   const usedConceptSets = computed<ConceptSetReference[]>(() => {
-    const usedIds = findUsedConceptSetIds(options.expression)
-    return (options.expression.ConceptSets ?? [] as ConceptSet[])
+    const expressionValue = unref(options.expression)
+    const usedIds = findUsedConceptSetIds(expressionValue)
+    return (expressionValue.ConceptSets ?? [] as ConceptSet[])
       .filter(cs => cs.id != null && usedIds.has(cs.id))
       .map(cs => ({ id: cs.id!, name: cs.name ?? '' }))
   })
@@ -76,7 +77,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
       _isValidatingFlag = true
       _isValidatingInternal.value = true
       const nameForValidation = cohortName.value || 'Untitled Cohort'
-      const result = await validateCohortDefinition(nameForValidation, options.expression)
+      const result = await validateCohortDefinition(nameForValidation, unref(options.expression))
       if (result.success) {
         validationWarnings.value = result.data.warnings ?? []
       } else {
@@ -109,7 +110,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
   }
 
   const stopWatch = watch(
-    [() => options.expression, cohortName, cohortDescription],
+    [() => unref(options.expression), cohortName, cohortDescription],
     () => { triggerValidation() },
     { deep: true }
   )

@@ -29,25 +29,25 @@
           <v-card-text class="pa-3">
             <div class="segmented-buttons">
               <AtlasButton
-                :variant="occurrenceTypeKey === 'EXACTLY' ? 'tonal' : 'outlined'"
+                :variant="occurrenceTypeKey === 'EXACTLY' ? 'tonal' : 'secondary'"
                 class="flex-1 occurrence-chip--exactly"
-                size="small"
+                size="sm"
                 @click="occurrenceTypeKey = 'EXACTLY'"
               >
                 {{ exactLabel }}
               </AtlasButton>
               <AtlasButton
-                :variant="occurrenceTypeKey === 'AT_LEAST' ? 'tonal' : 'outlined'"
+                :variant="occurrenceTypeKey === 'AT_LEAST' ? 'tonal' : 'secondary'"
                 class="flex-1 occurrence-chip--at_least"
-                size="small"
+                size="sm"
                 @click="occurrenceTypeKey = 'AT_LEAST'"
               >
                 {{ atLeastLabel }}
               </AtlasButton>
               <AtlasButton
-                :variant="occurrenceTypeKey === 'AT_MOST' ? 'tonal' : 'outlined'"
+                :variant="occurrenceTypeKey === 'AT_MOST' ? 'tonal' : 'secondary'"
                 class="flex-1 occurrence-chip--at_most"
-                size="small"
+                size="sm"
                 @click="occurrenceTypeKey = 'AT_MOST'"
               >
                 {{ atMostLabel }}
@@ -151,8 +151,8 @@
                     <AtlasButton
                       icon="mdi-delete"
                       color="error"
-                      variant="text"
-                      size="small"
+                      variant="ghost"
+                      size="sm"
                       @click="removeEndWindow"
                     />
                   </template>
@@ -172,7 +172,7 @@
               <AtlasSpacer />
 
               <AtlasButton
-                variant="text"
+                variant="ghost"
                 @click="showWindowMenu = false"
               >
                 {{ closeLabel }}
@@ -222,6 +222,12 @@ import type { ConceptSetOption, ConceptSetSelectionTarget } from './criteria-edi
 import { createDefaultWindow, formatWindowExpression, getWindowPresetOptions, cloneWindow, type WindowPresetValue } from './window-utils'
 import { numberBinding } from '../input/bindings'
 
+type OccurrenceTypeOption = Omit<Occurrence, 'Type' | 'Count' | 'IsDistinct'> & {
+  Type: NonNullable<Occurrence['Type']>
+  Count: NonNullable<Occurrence['Count']>
+  IsDistinct: NonNullable<Occurrence['IsDistinct']>
+}
+
 defineOptions({ name: 'CorelatedCriteria' })
 
 const props = defineProps<{
@@ -247,10 +253,10 @@ const innerCriteria = computed<Criteria>(() => {
     props.criteria.Criteria = { ConditionOccurrence: {} }
   }
 
-  return props.criteria.Criteria
+  return props.criteria.Criteria as Criteria
 })
 
-const occurrence = computed<Occurrence>(() => ensureOccurrence())
+const occurrence = computed<OccurrenceTypeOption>(() => ensureOccurrence())
 
 const occurrenceTypeKey = computed<'EXACTLY' | 'AT_LEAST' | 'AT_MOST'>({
   get: () => occurrenceTypeFromValue(occurrence.value.Type),
@@ -279,6 +285,11 @@ const distinctCountColumn = computed<Occurrence['CountColumn']>({
     occurrence.value.CountColumn = value
   },
 })
+
+type DistinctCountColumnOption = {
+  label: string
+  value: NonNullable<Occurrence['CountColumn']>
+}
 
 const occurrenceLabel = computed(() => {
   const labelByType = {
@@ -326,11 +337,11 @@ const exactLabel = computed(() => t('options.exactly', 'Exactly').value)
 const atLeastLabel = computed(() => t('options.atLeast', 'At least').value)
 const atMostLabel = computed(() => t('options.atMost', 'At most').value)
 
-const distinctColumnOptions = [
+const distinctColumnOptions: DistinctCountColumnOption[] = [
   { label: 'Start Date', value: 'START_DATE' },
   { label: 'Standard Concept', value: 'DOMAIN_CONCEPT' },
   { label: 'Visit', value: 'VISIT_ID' },
-] as const
+]
 
 const restrictVisit = computed({
   get: () => props.criteria.RestrictVisit ?? false,
@@ -346,7 +357,7 @@ const ignoreObservationPeriod = computed({
   },
 })
 
-function ensureOccurrence() {
+function ensureOccurrence(): OccurrenceTypeOption {
   if (!props.criteria.Occurrence) {
     props.criteria.Occurrence = {
       Type: 2,
@@ -355,7 +366,7 @@ function ensureOccurrence() {
     }
   }
 
-  return props.criteria.Occurrence
+  return props.criteria.Occurrence as OccurrenceTypeOption
 }
 
 function toggleDistinct() {
@@ -420,8 +431,8 @@ function applyWindowPreset(preset: WindowPresetValue | null) {
   }
 }
 
-function applyWindowPresetByLabel(label: string | null) {
-  if (!label) {
+function applyWindowPresetByLabel(label: unknown) {
+  if (typeof label !== 'string' || !label) {
     return
   }
 

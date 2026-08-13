@@ -486,7 +486,7 @@ const {
   triggerValidation,
   cancelValidation,
 } = useCohortValidation({
-  expression: expression.value,
+  expression,
   cohortName,
   cohortDescription,
   cohortId,

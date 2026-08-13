@@ -42,7 +42,7 @@ describe('useCohortValidation', () => {
       cohortName: ref('Test Cohort'),
       cohortDescription: ref('Test Description'),
       cohortId: computed(() => null),
-      expression: reactive<CohortExpression>({}),
+      expression: ref<CohortExpression>({}),
       debounceDelay: 100,
       ...overrides,
     }
@@ -326,6 +326,31 @@ describe('useCohortValidation', () => {
 
       const sharedSets = usedConceptSets.value.filter(cs => cs.name === 'Shared Set')
       expect(sharedSets).toHaveLength(1)
+    })
+
+    it('should follow expression ref replacement when the cohort expression is reloaded', async () => {
+      const expression = ref<CohortExpression>({
+        ConceptSets: [{ id: 1, name: 'Initial Set' }],
+        PrimaryCriteria: {
+          CriteriaList: [{ ConditionOccurrence: { CodesetId: 1 } }],
+        },
+      })
+      const options = createTestOptions({ expression })
+      const { usedConceptSets } = useCohortValidation(options)
+
+      expect(usedConceptSets.value.some(cs => cs.name === 'Initial Set')).toBe(true)
+
+      expression.value = {
+        ConceptSets: [{ id: 2, name: 'Reloaded Set' }],
+        PrimaryCriteria: {
+          CriteriaList: [{ DrugExposure: { CodesetId: 2 } }],
+        },
+      }
+
+      await nextTick()
+
+      expect(usedConceptSets.value.some(cs => cs.name === 'Reloaded Set')).toBe(true)
+      expect(usedConceptSets.value.some(cs => cs.name === 'Initial Set')).toBe(false)
     })
   })
 
