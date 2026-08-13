@@ -586,6 +586,15 @@ export const useCohortStore = defineStore('cohort', () => {
   }
 
   /**
+   * Drop preview state for a caller that is already loading a definition.
+   * clearPreviewVersion would bump reloadRequest and send the editor back
+   * through the very load that is asking for the preview to end.
+   */
+  function discardPreview(): void {
+    previewVersion.value = null
+  }
+
+  /**
    * Save the currently previewed version as the new current version
    * Creates a new version with the historical data
    */
@@ -668,6 +677,7 @@ export const useCohortStore = defineStore('cohort', () => {
     // Version preview (T014-T016)
     loadVersionPreview,
     clearPreviewVersion,
+    discardPreview,
     savePreviewAsCurrent,
     // Cleanup
     dispose,

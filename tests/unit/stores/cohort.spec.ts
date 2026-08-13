@@ -678,6 +678,26 @@ describe('Cohort Store', () => {
       expect(store.reloadRequest).toBe(before + 1)
     })
 
+    it('discardPreview clears preview state without signalling a reload', () => {
+      const store = useCohortStore()
+      store.setCohort(baseCohort)
+      store.previewVersion = {
+        version: 1,
+        assetId: 10,
+        createdBy: { id: 1, name: 'U', email: 'u@test.com' },
+        createdDate: '2024-01-01T00:00:00Z',
+        comment: null,
+        archived: false,
+      }
+
+      const before = store.reloadRequest
+
+      store.discardPreview()
+
+      expect(store.previewVersion).toBeNull()
+      expect(store.reloadRequest).toBe(before)
+    })
+
     it('savePreviewAsCurrent returns false when not in preview mode', async () => {
       const store = useCohortStore()
       const result = await store.savePreviewAsCurrent()

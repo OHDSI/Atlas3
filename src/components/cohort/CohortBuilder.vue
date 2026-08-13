@@ -503,11 +503,12 @@ const canSave = computed(() => {
   return cohortName.value.trim().length > 0 && hasEntryEvents && canSavePermission.value
 })
 
-// Preview mode state. Nothing clears previewVersion when the editor unmounts,
-// so a stale preview from another cohort would otherwise put this editor into
-// read-only preview chrome — a blank New Cohort under "Previewing version 1"
-// with Save disabled. Adopt a preview only when it belongs to the open cohort,
-// the same check syncToStoreDefinition applies before it renders one.
+// Preview mode state. A preview installed for another cohort survives until
+// this editor loads its own definition, and the first render happens before
+// that; without the id check the editor would flash read-only preview chrome —
+// a blank cohort under "Previewing version 1" with Save disabled. Adopt a
+// preview only when it belongs to the open cohort, the same check
+// syncToStoreDefinition applies before it renders one.
 const isPreviewingVersion = computed(() => {
   if (!cohortStore.previewVersion) return false
   return cohortId.value !== null && cohortStore.currentCohort?.id === cohortId.value
@@ -879,8 +880,12 @@ function applyDefinition(def: CohortDocument) {
 // A preview keeps the same :id, so neither onMounted nor the props.id watcher
 // re-runs; reloadRequest is the store's signal that the definition changed
 // underneath us — entering a preview, or leaving one for the current version.
-// Nothing clears previewVersion on unmount, so it may belong to a cohort other
-// than the one we are editing; adopt it only when the ids agree.
+// A preview may belong to a cohort other than the one we are editing; adopt it
+// only when the ids agree, and end it otherwise. Ending it here rather than on
+// unmount is what the sibling stores do (pathway.loadPathway,
+// incidenceRate.createNewIR) and is the only safe moment: the version route's
+// beforeEnter installs the preview *before* the outgoing editor unmounts, so an
+// unmount hook would throw away the preview the guard had just loaded.
 function syncToStoreDefinition() {
   if (!props.id) return
 
@@ -888,6 +893,7 @@ function syncToStoreDefinition() {
   if (cohortStore.previewVersion && previewed?.id === Number(props.id)) {
     applyDefinition(previewed)
   } else {
+    cohortStore.discardPreview()
     loadCohort(props.id)
   }
 }

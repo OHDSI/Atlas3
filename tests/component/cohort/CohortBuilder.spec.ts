@@ -1283,6 +1283,49 @@ describe('CohortBuilder', () => {
     ])
   })
 
+  // Preview cohort 5 v1 → back to the list → open cohort 7: the preview chrome
+  // followed the user onto a cohort that was never previewed.
+  it('ends the preview when the next editor opens a different cohort', async () => {
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+
+    const first = createWrapper({ id: '5' })
+    await flushPromises()
+    store.currentCohort!.id = 5
+    store.previewVersion = { ...historicalVersionDTO, assetId: 5 }
+    await first.vm.$nextTick()
+    expect(first.find('.cohort-builder__preview-banner').exists()).toBe(true)
+    first.unmount()
+
+    const second = createWrapper({ id: '7' })
+    await flushPromises()
+
+    expect(store.previewVersion).toBeNull()
+    expect(getSetup(second).isPreviewingVersion).toBe(false)
+    expect(second.find('.cohort-builder__preview-banner').exists()).toBe(false)
+    expect(second.findComponent({ name: 'CohortToolbarActions' }).props('isPreviewingVersion')).toBe(
+      false
+    )
+  })
+
+  it('ends the preview when the id prop moves to a cohort that is not previewed', async () => {
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+
+    const wrapper = createWrapper({ id: '5' })
+    await flushPromises()
+    store.currentCohort!.id = 5
+    store.previewVersion = { ...historicalVersionDTO, assetId: 5 }
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.cohort-builder__preview-banner').exists()).toBe(true)
+
+    await wrapper.setProps({ id: '7' })
+    await flushPromises()
+
+    expect(store.previewVersion).toBeNull()
+    expect(wrapper.find('.cohort-builder__preview-banner').exists()).toBe(false)
+  })
+
   // ---------------------------------------------------------------------------
   // buildCohortExpression — implicit via buildExportCohort variant; ensure
   // the explicit function runs by mutating entryEvents (the deep watcher
