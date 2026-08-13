@@ -131,12 +131,12 @@
               <AtlasSelect
                 :items="windowPresetOptions"
                 item-title="label"
-                item-value="label"
+                item-value="value"
                 :label="quickPresetsLabel"
                 variant="outlined"
                 density="compact"
                 hide-details
-                @update:model-value="(value) => applyWindowPresetByLabel(typeof value === 'string' ? value : null)"
+                @update:model-value="(value) => applyWindowPreset(value as WindowPresetValue | null)"
               />
 
               <Window :window="ensureStartWindow()" />
@@ -429,19 +429,6 @@ function applyWindowPreset(preset: WindowPresetValue | null) {
   } else {
     delete props.criteria.EndWindow
   }
-}
-
-function applyWindowPresetByLabel(label: unknown) {
-  if (typeof label !== 'string' || !label) {
-    return
-  }
-
-  const preset = windowPresetOptions.find(option => option.label === label)
-  if (!preset) {
-    return
-  }
-
-  applyWindowPreset(preset.value)
 }
 </script>
 
