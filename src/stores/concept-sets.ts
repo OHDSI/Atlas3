@@ -235,6 +235,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
         currentSet.value = set
       } else {
         error.value = 'Concept set not found'
+        currentSet.value = null
       }
     } catch (err) {
       if (requestId !== fetchOneRequestId) return

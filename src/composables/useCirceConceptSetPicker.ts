@@ -1,6 +1,7 @@
 import { computed, ref, type Ref } from 'vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSet, ConceptSetItem } from '@/components/cohort-editor/circe.types'
+import type { ConceptSetItem as AtlasConceptSetItem } from '@/models/concept-set.types'
 import type {
   ConceptSetOption,
   ConceptSetSelectionTarget,
@@ -43,6 +44,24 @@ export function useCirceConceptSetPicker(opts: {
       .map(cs => ({ id: cs.id, name: cs.name ?? '' })),
   )
 
+  function convertAtlasItemToCirce(item: AtlasConceptSetItem): ConceptSetItem {
+    return {
+      concept: {
+        CONCEPT_ID: item.conceptId,
+        CONCEPT_NAME: item.conceptName,
+        CONCEPT_CODE: item.conceptCode,
+        STANDARD_CONCEPT: item.standardConcept,
+        INVALID_REASON: item.invalidReason,
+        DOMAIN_ID: item.domainId,
+        VOCABULARY_ID: item.vocabularyId,
+        CONCEPT_CLASS_ID: item.conceptClassId,
+      },
+      isExcluded: item.isExcluded,
+      includeDescendants: item.includeDescendants,
+      includeMapped: item.includeMapped,
+    }
+  }
+
   function openSelection(target: ConceptSetSelectionTarget | undefined) {
     activeRequest = target ? { targetRef: target.targetRef } : null
     dialogOpen.value = !!target
@@ -82,10 +101,10 @@ export function useCirceConceptSetPicker(opts: {
 
     // Fetch full items for repository imports, then materialize the chosen set
     // into the cohort expression before completing the shared assignment step.
-    let items = conceptSet.items ?? []
+    let items: AtlasConceptSetItem[] = (conceptSet.items ?? []) as AtlasConceptSetItem[]
     if (items.length === 0 && numericId != null) {
       await conceptSetsStore.fetchOne(numericId)
-      if (conceptSetsStore.currentSet?.id !== undefined) {
+      if (conceptSetsStore.currentSet?.id === numericId) {
         items = conceptSetsStore.currentSet.items ?? []
       }
     }
@@ -95,8 +114,7 @@ export function useCirceConceptSetPicker(opts: {
       opts.addConceptSet({
         id: numericId,
         name: conceptSet.name,
-        // items come from ConceptSetsStore which matches the circe ConceptSetItem shape.
-        expression: { items: items as ConceptSetItem[] },
+        expression: { items: items.map(convertAtlasItemToCirce) },
       })
     }
 
