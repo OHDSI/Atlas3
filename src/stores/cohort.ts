@@ -258,8 +258,9 @@ export const useCohortStore = defineStore('cohort', () => {
         )
         break
       }
-      // Non-cohort proposal kinds are handled by pythiaBridge before
-      // reaching the cohort store. Ignore here.
+      // Non-cohort proposal kinds. pythiaBridge routes these to their own
+      // handler and they never reach this switch in practice; reaching one
+      // here means the bridge was bypassed, so refuse rather than pretend.
       case 'navigate':
       case 'saveCohort':
       case 'createStandaloneConceptSet':
@@ -272,14 +273,19 @@ export const useCohortStore = defineStore('cohort', () => {
       case 'updateCharacterization':
       case 'updatePathway':
       case 'updateIncidenceRate':
+      case 'useConceptSet':
+      case 'generateAnalysis':
+        return { applied: false, reason: 'unsupported-kind' }
+      // Cohort kinds translate.ts emits that nothing implements yet. The
+      // bridge does not intercept them, so the agent's change is genuinely
+      // dropped — the refusal is what keeps that visible.
       case 'removeInclusionRule':
       case 'removeEntryEvent':
       case 'setEventLimits':
       case 'addQualifyingCriterion':
       case 'setCensorWindow':
       case 'setEraCollapse':
-      case 'useConceptSet':
-      case 'generateAnalysis':
+        logger.warn('CohortStore', `Cohort proposal "${proposal.kind}" is not implemented yet`)
         return { applied: false, reason: 'unsupported-kind' }
       default: {
         logger.warn('CohortStore', 'Unknown agent proposal', proposal)
