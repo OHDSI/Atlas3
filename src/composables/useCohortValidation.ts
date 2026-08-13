@@ -85,11 +85,18 @@ export function extractConceptSets(
   // those made a genuinely-used concept set look unused (#205) and dropped
   // it from the `ConceptSets` array sent for server-side validation (#200).
   function collectFromEvent(event: CohortEvent) {
-    if (event.conceptSet) {
+    // A newly-added criterion is seeded with a placeholder concept set
+    // reference (id null, name "Select concept set...") rather than leaving
+    // `conceptSet` unset (see GroupCriteriaUI.vue). A bare truthiness check
+    // folded that placeholder into the used-concept-sets list, which then
+    // got serialized with a fabricated array-index id that could collide
+    // with a real, already-selected concept set's id and produce a
+    // duplicate-looking "Select Concept Set..." validation warning (#214).
+    if (event.conceptSet && event.conceptSet.id != null) {
       conceptSetsMap.set(event.conceptSet.id, event.conceptSet)
     }
     for (const attribute of event.attributes ?? []) {
-      if (attribute.type === 'conceptSet' && attribute.conceptSet) {
+      if (attribute.type === 'conceptSet' && attribute.conceptSet && attribute.conceptSet.id != null) {
         conceptSetsMap.set(attribute.conceptSet.id, attribute.conceptSet)
       }
     }
@@ -113,7 +120,7 @@ export function extractConceptSets(
     rule.criteriaGroups.forEach(collectFromGroup)
   })
 
-  if (exitCriteria?.conceptSet) {
+  if (exitCriteria?.conceptSet && exitCriteria.conceptSet.id != null) {
     conceptSetsMap.set(exitCriteria.conceptSet.id, exitCriteria.conceptSet)
   }
   exitCriteria?.censoringEvents?.forEach(collectFromEvent)

@@ -117,4 +117,25 @@ describe('extractConceptSets', () => {
 
     expect((result.map(r => r.id) as number[]).sort((a, b) => a - b)).toEqual([9, 10])
   })
+
+  it('ignores the "Select concept set..." placeholder seeded on a freshly-added criterion (#214)', () => {
+    // GroupCriteriaUI seeds new criteria with a placeholder concept set
+    // reference (id null) instead of leaving conceptSet unset. Treating that
+    // placeholder as a real, used concept set got it serialized with a
+    // fabricated id that could collide with a genuinely-selected concept
+    // set's real id downstream.
+    const real: ConceptSetReference = { id: 3, name: 'Diabetes', items: [] }
+    const placeholder = { id: null as unknown as number, name: 'Select concept set...', items: [] }
+
+    const result = extractConceptSets(
+      [event('e1', real), event('e2', placeholder)],
+      undefined,
+      [],
+      emptyExit,
+      []
+    )
+
+    expect(result).toHaveLength(1)
+    expect(result[0]?.id).toBe(3)
+  })
 })
