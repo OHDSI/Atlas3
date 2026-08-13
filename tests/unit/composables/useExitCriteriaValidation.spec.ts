@@ -102,7 +102,9 @@ describe('useExitCriteriaValidation', () => {
 
       expect(findings).toHaveLength(1)
       expect(findings[0]!.message).toContain('Offset')
-      expect(findings[0]!.severity).toBe('CRITICAL')
+      // circe's ExitCriteriaDaysOffsetCheck overrides BaseCheck's CRITICAL down to
+      // WARNING, so this finding must never reach CRITICAL and disable generation.
+      expect(findings[0]!.severity).toBe('WARNING')
     })
 
     it('reports a finding when Offset is explicitly null', () => {
@@ -118,6 +120,26 @@ describe('useExitCriteriaValidation', () => {
       const { validateEndStrategy } = useExitCriteriaValidation()
 
       expect(validateEndStrategy({ DateOffset: { DateField: 'EndDate', Offset: 0 } })).toEqual([])
+    })
+  })
+
+  // ATLAS 2.15 has no client-side exit-criteria check at all: CustomEraStrategy.js is a
+  // plain observable model and cohort-definition-manager.js#diagnose posts straight to
+  // checkV2. Both findings therefore originate in circe, and our local copies exist only
+  // to skip the round trip — so they must carry circe's severities verbatim.
+  describe('severity parity with circe (ATLAS 2.15 checkV2)', () => {
+    it('matches ExitCriteriaCheck, which inherits BaseCheck.defineSeverity() = CRITICAL', () => {
+      const { validateEndStrategy } = useExitCriteriaValidation()
+
+      expect(validateEndStrategy({ CustomEra: {} })[0]!.severity).toBe('CRITICAL')
+    })
+
+    it('matches ExitCriteriaDaysOffsetCheck, which overrides defineSeverity() to WARNING', () => {
+      const { validateEndStrategy } = useExitCriteriaValidation()
+
+      expect(validateEndStrategy({ DateOffset: { DateField: 'StartDate' } })[0]!.severity).toBe(
+        'WARNING'
+      )
     })
   })
 

@@ -718,6 +718,34 @@ describe('CohortBuilder', () => {
     expect(payload.expression.ConceptSets[0].expression.items).toEqual([hydrated])
   })
 
+  // ATLAS 2.15 does not gate saving on validation: cohort-definition-manager.js builds
+  // canSave from edit permission, dirty state and name correctness only, and save() runs
+  // just a name-uniqueness check. criticalCount gates canGenerate instead. A cohort whose
+  // CustomEra exit strategy has no drug concept set is savable there, so it is here too.
+  it('saves a cohort carrying a CRITICAL exit-criteria finding, as ATLAS 2.15 does', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Incomplete exit criteria'
+    Object.assign(setup.expression, {
+      PrimaryCriteria: { CriteriaList: [{ DrugExposure: {} }] },
+      EndStrategy: { CustomEra: { GapDays: 30, Offset: 0 } },
+    })
+    await wrapper.vm.$nextTick()
+
+    const { validateEndStrategy } = await import('@/composables/useExitCriteriaValidation')
+      .then(m => m.useExitCriteriaValidation())
+    expect(validateEndStrategy(setup.expression.EndStrategy)[0]!.severity).toBe('CRITICAL')
+
+    expect(setup.canSave).toBe(true)
+    const webapi = await import('@/services/cohort-definition.service')
+    await setup.handleSave()
+
+    expect(webapi.saveCohortDefinition).toHaveBeenCalledTimes(1)
+    const payload = vi.mocked(webapi.saveCohortDefinition).mock.calls[0][0] as any
+    expect(payload.expression.EndStrategy).toEqual({ CustomEra: { GapDays: 30, Offset: 0 } })
+  })
+
   // ---------------------------------------------------------------------------
   // Post-save route adoption
   // ---------------------------------------------------------------------------

@@ -1,18 +1,18 @@
 import type { CohortExpression, EndStrategy } from '@/components/cohort-editor/circe.types'
-import type { ValidationWarning } from '@/models/cohort-validation.types'
+import type { ValidationSeverity, ValidationWarning } from '@/models/cohort-validation.types'
 
-// These gaps are rejected by the WebAPI SQL generator, not by checkV2, so a cohort
-// with one saves cleanly and only fails later at generation time.
-const EXIT_CRITERIA_SEVERITY = 'CRITICAL' as const
-
+// checkV2 already reports both of these through circe's Checker, so the severities
+// here mirror what the server assigns: ExitCriteriaCheck inherits BaseCheck's
+// CRITICAL, while ExitCriteriaDaysOffsetCheck overrides it down to WARNING. Running
+// them locally only removes the round-trip latency; it must not change the verdict.
 const MISSING_DRUG_CODESET =
   'Continuous Exposure Persistence exit strategy is missing its drug concept set (DrugCodesetId). Cohort SQL generation will fail until one is selected.'
 
 const MISSING_DATE_OFFSET =
   'Fixed Duration Persistence exit strategy is missing its number of days offset (Offset). Cohort SQL generation will fail until one is entered.'
 
-function warning(message: string): ValidationWarning {
-  return { type: 'DefaultWarning', severity: EXIT_CRITERIA_SEVERITY, message }
+function warning(severity: ValidationSeverity, message: string): ValidationWarning {
+  return { type: 'DefaultWarning', severity, message }
 }
 
 export interface ExitCriteriaValidationReturn {
@@ -26,12 +26,12 @@ export function useExitCriteriaValidation(): ExitCriteriaValidationReturn {
 
     if ('CustomEra' in endStrategy) {
       const customEra = endStrategy.CustomEra
-      return customEra?.DrugCodesetId == null ? [warning(MISSING_DRUG_CODESET)] : []
+      return customEra?.DrugCodesetId == null ? [warning('CRITICAL', MISSING_DRUG_CODESET)] : []
     }
 
     if ('DateOffset' in endStrategy) {
       const dateOffset = endStrategy.DateOffset
-      return dateOffset?.Offset == null ? [warning(MISSING_DATE_OFFSET)] : []
+      return dateOffset?.Offset == null ? [warning('WARNING', MISSING_DATE_OFFSET)] : []
     }
 
     return []
