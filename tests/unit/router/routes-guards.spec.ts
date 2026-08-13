@@ -101,11 +101,16 @@ describe('version-preview beforeEnter guards', () => {
       expect(cohortStore.loadVersionPreview).not.toHaveBeenCalled()
     })
 
-    it('continues navigation when loadVersionPreview rejects', async () => {
+    // Continuing to the version route would render the *current* version with no
+    // preview banner, no error and a URL still claiming /version/7 — the editor
+    // has no preview-failure handling of its own. Send the user to the plain
+    // editor so the URL matches what is on screen.
+    it('redirects to the plain cohort editor when loadVersionPreview rejects', async () => {
       cohortStore.loadVersionPreview.mockRejectedValue(new Error('load failed'))
       const r = makeRouter()
       await r.push('/cohortdefinition/42/version/7')
-      expect(r.currentRoute.value.name).toBe('cohort-version-preview')
+      expect(r.currentRoute.value.name).toBe('cohort-edit')
+      expect(r.currentRoute.value.params.id).toBe('42')
     })
 
     it('ignores a non-numeric :version (no store call)', async () => {

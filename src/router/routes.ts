@@ -199,7 +199,18 @@ export const routes: RouteRecordRaw[] = [
             )
           } catch (error) {
             logger.error('Router', 'Failed to load version preview', error)
-            // Continue navigation anyway - let the view handle the error
+            // The editor has no preview-failure handling: continuing here would
+            // render the current version with no banner and no error under a URL
+            // still claiming /version/N. Drop to the plain editor so the URL
+            // matches what is on screen.
+            next({
+              name: 'cohort-edit',
+              params: { id: to.params.id },
+              query: to.query,
+              hash: to.hash,
+              replace: true,
+            })
+            return
           }
         }
       }
