@@ -231,7 +231,7 @@ import { AtlasButton, AtlasDialog, AtlasIcon, AtlasProgressCircular, AtlasSnackb
 import { ref, computed, onMounted, onBeforeUnmount, watch, toRef, shallowRef, toRaw } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
-import { useCohortStore } from '@/stores/cohort'
+import { useCohortStore, type CohortDocument } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
 import { provideCriteriaSelection, type CriteriaSelectionService } from '@/composables/useCriteriaSelection'
@@ -318,13 +318,22 @@ function defaultExpression(): CohortExpression { return {} }
 const expression = ref<CohortExpression>(defaultExpression())
 
 // useCohortValidation captures the expression object by identity, so every
-// wholesale swap (load, agent proposal, new-cohort signal, apply-JSON) has to
-// refill the existing object rather than assign a new one to the ref.
+// wholesale swap (load, new-cohort signal, apply-JSON) has to refill the
+// existing object rather than assign a new one to the ref.
 function replaceExpression(next: CohortExpression) {
   const target = expression.value as Record<string, unknown>
+  // The store hands definitions to the editor by installing them into this very
+  // object, so `next` is regularly the document itself; clearing it first would
+  // then delete the definition we were asked to install.
+  if (toRaw(next) === toRaw(expression.value)) return
   for (const key of Object.keys(target)) delete target[key]
   Object.assign(target, next)
 }
+
+// The store holds a reference to this object for as long as the editor is
+// mounted, so agent proposals and user edits meet in one document.
+cohortStore.attachExpression(expression)
+onBeforeUnmount(() => cohortStore.detachExpression(expression))
 
 // Target that receives a concept set id when the dialog confirms a selection.
 const activeCsTarget = shallowRef<ConceptSetSelectionTarget | null>(null)
@@ -614,17 +623,6 @@ watch(
   { immediate: true }
 )
 
-// Reconnected now that store's currentCohort carries a typed CohortExpression.
-// When the AI agent calls applyProposal (e.g. addInclusionRule, setObservationPeriod),
-// the store mutates currentCohort.expression and bumps agentRevision.
-// We re-sync our local reactive `expression` in-place so CohortExpressionEditor
-// sees the change without a full component reload.
-watch(() => cohortStore.agentRevision, () => {
-  const storeExpr = cohortStore.currentCohort?.expression
-  if (!storeExpr) return
-  replaceExpression(storeExpr)
-})
-
 // The host bridge asks the mounted editor to run its full WebAPI save flow.
 // Always answer the signal — handleSave no-ops when nothing is savable — so the
 // bridge's awaited requestSave() resolves either way.
@@ -643,12 +641,13 @@ watch(
   }
 )
 
-// Reset to a blank cohort in place when the new-cohort signal fires.
+// Reset to a blank cohort in place when the new-cohort signal fires. The
+// expression is already blank: createNewCohort clears the attached document
+// synchronously, before any proposal the caller applies after requesting it.
 watch(
   () => cohortStore.newCohortSignal,
   () => {
     cancelValidation()
-    replaceExpression(defaultExpression())
     cohortName.value = ''
     cohortDescription.value = ''
     loadedTags.value = []
@@ -842,7 +841,7 @@ async function loadCohort(id: string) {
 
 // The one place a whole definition reaches the editor, whether it came from the
 // current-version fetch above or from a version preview the store already holds.
-function applyDefinition(def: CohortDefinition) {
+function applyDefinition(def: CohortDocument) {
   cancelValidation()
   replaceExpression(def.expression ?? defaultExpression())
   cohortName.value = def.name ?? ''
@@ -1145,14 +1144,15 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
 
     loadedTags.value = [...currentTags]
 
-    const minimalDef: CohortDefinition = {
+    // No expression: the store already references the live document, and
+    // handing it the save-time clone would replace what the user sees with a
+    // snapshot taken before the request went out.
+    cohortStore.setCohort({
       id: savedCohort.id,
       name: cohortName.value,
       description: cohortDescription.value || '',
       tags: cohortTags.value,
-      expression: expressionForSave,
-    }
-    cohortStore.setCohort(minimalDef)
+    })
     cohortStore.markClean()
     cohortStore.clearDraft()
     loadedSnapshot.value = createStateSnapshot()
@@ -1337,8 +1337,8 @@ function _getStatusText(status: string): string {
 // time, so a parent reading `builderRef.canSave` gets a number.
 defineExpose({
   // Status state
-  totalConceptSets: computed(() => (cohortStore.currentCohort?.expression?.ConceptSets?.length || 0)),
-  unusedConceptSetCount: computed(() => (cohortStore.currentCohort?.expression?.ConceptSets?.length || 0) - usedConceptSets.value.length),
+  totalConceptSets: computed(() => expression.value.ConceptSets?.length || 0),
+  unusedConceptSetCount: computed(() => (expression.value.ConceptSets?.length || 0) - usedConceptSets.value.length),
   validationCount: computed(() => validationWarnings.value.length),
   validationColor: computed(() => highestSeverityColor.value),
   isValidating,

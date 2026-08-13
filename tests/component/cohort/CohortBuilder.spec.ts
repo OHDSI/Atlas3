@@ -1289,3 +1289,77 @@ describe('CohortBuilder', () => {
     expect(vm.hasUnsavedChanges).toBe(true)
   })
 })
+
+// One cohort document: the editor owns the CohortExpression instance and the
+// store holds a reference to it. These two guard the defects that the previous
+// copy-based reconciliation caused.
+describe('CohortBuilder — one document, shared with the store', () => {
+  let router: ReturnType<typeof createRouter>
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/', component: { template: '<div>Home</div>' } },
+        { path: '/cohorts', component: { template: '<div>Cohorts</div>' } },
+        { path: '/cohorts/:id?', component: { template: '<div>Cohort</div>' } },
+      ],
+    })
+    vi.clearAllMocks()
+  })
+
+  const mountBuilder = (props: Record<string, unknown> = {}) =>
+    mount(CohortBuilder, {
+      props,
+      global: { plugins: [vuetify, router], stubs: childStubs },
+      attachTo: document.body,
+    })
+
+  const setupOf = (wrapper: ReturnType<typeof mountBuilder>) =>
+    (wrapper.vm as any).$.setupState
+
+  it('an agent proposal does not discard a locally created inclusion rule', async () => {
+    const wrapper = mountBuilder()
+    await wrapper.vm.$nextTick()
+    const setup = setupOf(wrapper)
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+
+    // The user creates a rule in the UI before the agent says anything.
+    setup.expression.InclusionRules = [{ name: 'User rule' }]
+    await wrapper.vm.$nextTick()
+
+    store.applyProposal({
+      kind: 'addInclusionRule',
+      rule: { name: 'Agent rule', description: '' },
+    } as never)
+    await wrapper.vm.$nextTick()
+
+    expect((setup.expression.InclusionRules ?? []).map((r: any) => r.name)).toEqual([
+      'User rule',
+      'Agent rule',
+    ])
+  })
+
+  it('saving does not blind the agent bridge', async () => {
+    const wrapper = mountBuilder()
+    await wrapper.vm.$nextTick()
+    const setup = setupOf(wrapper)
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+
+    setup.cohortName = 'Savable'
+    Object.assign(setup.expression, {
+      PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] },
+    })
+    await setup.handleSave()
+    await flushPromises()
+
+    // Editing continues after the save; the bridge reads the store.
+    setup.expression.InclusionRules = [{ name: 'Added after the save' }]
+    await wrapper.vm.$nextTick()
+
+    expect(store.currentCohort?.expression?.InclusionRules).toHaveLength(1)
+  })
+})

@@ -1,26 +1,55 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { ref } from 'vue'
 import { useCohortStore } from '@/stores/cohort'
 import type { AgentProposal } from '@/models/agent.types'
-import { CohortExpressionSchema } from '@/components/cohort-editor/circe.types'
+import { CohortExpressionSchema, type CohortExpression } from '@/components/cohort-editor/circe.types'
 
-// T13 (src/stores/cohort.ts:97): every applyProposal mutation early-returns
-// when currentCohort has no expression, but createNewCohort() (line 86) never
-// creates one -- so a proposal applied to a freshly-created cohort is a silent
-// no-op while apply.ts still reports `{applied: true}`. Seed one here to match
-// what the mounted CohortBuilder would already have provided by the time an
-// agent proposal arrives, so these tests can exercise the criteria-mutation
-// logic instead of uniformly hitting this guard.
+// applyProposal mutates the document the mounted editor lends to the store, so
+// every test that expects a proposal to land has to attach one first.
+function openCohort(expression: CohortExpression = {}) {
+  const store = useCohortStore()
+  store.setCohort({ name: 'Test' })
+  store.attachExpression(ref(expression))
+  return store
+}
+
+// Stand in for the mounted CohortBuilder, which lends its expression object to
+// the store; without an attached document every proposal is rejected.
 function newCohort() {
   const store = useCohortStore()
   store.createNewCohort()
-  store.currentCohort!.expression = {}
+  store.attachExpression(ref<CohortExpression>({}))
   return store
 }
 
 describe('useCohortStore.applyProposal', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+  })
+
+  it('a proposal with no document attached reports failure rather than silently succeeding', () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+
+    expect(
+      store.applyProposal({
+        kind: 'addEntryEvent',
+        event: { id: 'e1', criteriaType: 'ConditionOccurrence' } as never,
+      })
+    ).toMatchObject({ applied: false })
+  })
+
+  it('a proposal after the editor detaches reports failure', () => {
+    const store = openCohort({})
+    store.detachExpression()
+
+    expect(
+      store.applyProposal({
+        kind: 'addEntryEvent',
+        event: { id: 'e1', criteriaType: 'ConditionOccurrence' } as never,
+      })
+    ).toMatchObject({ applied: false })
   })
 
   it('is a no-op when no cohort exists (expression is absent)', () => {
@@ -36,8 +65,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('addEntryEvent pushes a ConditionOccurrence wrapper to PrimaryCriteria.CriteriaList', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
     expect(store.isDirty).toBe(false)
 
     store.applyProposal({
@@ -52,8 +80,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('addEntryEvent appends multiple events to PrimaryCriteria.CriteriaList', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
 
     store.applyProposal({ kind: 'addEntryEvent', event: { id: 'e1', criteriaType: 'ConditionOccurrence' } as never })
     store.applyProposal({ kind: 'addEntryEvent', event: { id: 'e2', criteriaType: 'DrugExposure' } as never })
@@ -64,8 +91,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('addInclusionRule appends to expression.InclusionRules', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
 
     store.applyProposal({
       kind: 'addInclusionRule',
@@ -79,8 +105,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('addConceptSet pushes to expression.ConceptSets', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
 
     store.applyProposal({ kind: 'addConceptSet', conceptSet: { id: 42, name: 'NSAIDs' } as never })
 
@@ -90,8 +115,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('addConceptSet deduplicates by id', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
     const conceptSet = { id: 42, name: 'NSAIDs' } as never
 
     store.applyProposal({ kind: 'addConceptSet', conceptSet })
@@ -101,8 +125,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('setObservationPeriod sets expression.PrimaryCriteria.ObservationWindow', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
 
     store.applyProposal({
       kind: 'setObservationPeriod',
@@ -116,8 +139,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('setCohortExit CONTINUOUS_OBSERVATION clears EndStrategy', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: { EndStrategy: { DateOffset: { Offset: 30 } } } })
+    const store = openCohort({ EndStrategy: { DateOffset: { Offset: 30 } } })
 
     store.applyProposal({
       kind: 'setCohortExit',
@@ -128,8 +150,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('setCohortExit FIXED_DURATION sets DateOffset EndStrategy', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
 
     store.applyProposal({
       kind: 'setCohortExit',
@@ -142,8 +163,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('addCensoringCriterion appends a Death wrapper to expression.CensoringCriteria', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
 
     store.applyProposal({
       kind: 'addCensoringCriterion',
@@ -157,8 +177,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('isDirty flips on every mutating proposal', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
     store.markClean()
 
     store.applyProposal({
@@ -168,44 +187,36 @@ describe('useCohortStore.applyProposal', () => {
     expect(store.isDirty).toBe(true)
   })
 
-  it('agentRevision increments on every mutating proposal', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
-    expect(store.agentRevision).toBe(0)
+  it('reports applied for every mutating proposal', () => {
+    const store = openCohort({})
 
-    store.applyProposal({
-      kind: 'setObservationPeriod',
-      observationPeriod: { priorDays: 365, postDays: 30 },
-    })
-    expect(store.agentRevision).toBe(1)
+    expect(
+      store.applyProposal({
+        kind: 'setObservationPeriod',
+        observationPeriod: { priorDays: 365, postDays: 30 },
+      })
+    ).toEqual({ applied: true })
 
-    store.applyProposal({
-      kind: 'setCohortExit',
-      exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' } as never,
-    })
-    expect(store.agentRevision).toBe(2)
+    expect(
+      store.applyProposal({
+        kind: 'setCohortExit',
+        exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' } as never,
+      })
+    ).toEqual({ applied: true })
   })
 
-  it('agentRevision does NOT increment on direct markDirty mutations', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
-    const before = store.agentRevision
+  it('non-cohort proposal kinds (navigate, saveCohort, etc.) report unsupported and leave the cohort clean', () => {
+    const store = openCohort({})
+    store.markClean()
 
-    // Direct mutation outside applyProposal should not bump agentRevision
-    store.markDirty()
+    expect(
+      store.applyProposal({ kind: 'navigate', route: { name: 'cohorts' } } as AgentProposal)
+    ).toEqual({ applied: false, reason: 'unsupported-kind' })
+    expect(
+      store.applyProposal({ kind: 'saveCohort' } as AgentProposal)
+    ).toEqual({ applied: false, reason: 'unsupported-kind' })
 
-    expect(store.agentRevision).toBe(before)
-  })
-
-  it('non-cohort proposal kinds (navigate, saveCohort, etc.) do not increment agentRevision', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
-    const before = store.agentRevision
-
-    store.applyProposal({ kind: 'navigate', route: { name: 'cohorts' } } as AgentProposal)
-    store.applyProposal({ kind: 'saveCohort' } as AgentProposal)
-
-    expect(store.agentRevision).toBe(before)
+    expect(store.isDirty).toBe(false)
   })
 })
 
@@ -219,7 +230,8 @@ describe('useCohortStore.applyProposal', () => {
 // T14 (src/stores/cohort.ts:112): applyProposal's addEntryEvent case reads
 // only `event.criteriaType` and pushes an empty wrapper (`{ DrugExposure: {} }`);
 // it never looks at `event.conceptSet`, so the concept set and attributes are
-// dropped and agentRevision/markDirty still run. The registration this block
+// dropped while the proposal still reports applied and marks the cohort
+// dirty. The registration this block
 // guards is real — it happens in pythiaBridge's adoptProposalConceptSets,
 // which runs *before* cohortStore.applyProposal in production — but the
 // store's own applyProposal, called directly here, does not do it. Fixed in

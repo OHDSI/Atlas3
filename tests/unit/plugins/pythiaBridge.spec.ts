@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { ref } from 'vue'
+import type { CohortExpression } from '@/components/cohort-editor/circe.types'
 
 vi.mock('@/router', () => ({
   default: {
@@ -428,10 +430,67 @@ describe('pythiaBridge', () => {
     })
 
     await flush()
-    // setObservationPeriod is a no-op in Circe-native; only verify the bus responds
+    // No editor is mounted, so there is no document to write the window into and
+    // the capability reports the failure rather than a success nobody can see.
     expect(handleResponseSpy).toHaveBeenCalledWith(
       'cap-cb-1',
+      expect.objectContaining({ applied: false, kind: 'setObservationPeriod' })
+    )
+  })
+
+  it('capability.apply reports applied:true once an editor has attached a document', async () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    store.attachExpression(ref<CohortExpression>({}))
+
+    const bus = getHostMessageBus('pythia-plugin')
+    const handleResponseSpy = vi.spyOn(bus!, 'handleResponse')
+
+    dispatchPluginMessage({
+      type: 'capability.apply',
+      sourcePluginId: 'pythia-plugin',
+      payload: { name: 'set_observation_window', args: { priorDays: 90, postDays: 45 } },
+      callbackId: 'cap-cb-attached',
+      timestamp: new Date(),
+    })
+
+    await flush()
+    expect(handleResponseSpy).toHaveBeenCalledWith(
+      'cap-cb-attached',
       expect.objectContaining({ applied: true, kind: 'setObservationPeriod' })
+    )
+    expect(store.currentCohort?.expression?.PrimaryCriteria?.ObservationWindow).toEqual({
+      PriorDays: 90,
+      PostDays: 45,
+    })
+  })
+
+  // T13: with no cohort editor mounted there is no document to mutate, so the
+  // capability must report failure instead of toasting success at the user.
+  it('capability.apply reports applied:false when no cohort editor is open', async () => {
+    const bus = getHostMessageBus('pythia-plugin')
+    const handleResponseSpy = vi.spyOn(bus!, 'handleResponse')
+
+    dispatchPluginMessage({
+      type: 'capability.apply',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        name: 'set_entry_event',
+        args: {
+          conceptId: 40481087,
+          conceptName: 'Viral sinusitis',
+          domain: 'Condition',
+          includeDescendants: true,
+        },
+      },
+      callbackId: 'cap-cb-no-editor',
+      timestamp: new Date(),
+    })
+
+    await flush()
+    expect(handleResponseSpy).toHaveBeenCalledWith(
+      'cap-cb-no-editor',
+      expect.objectContaining({ applied: false })
     )
   })
 

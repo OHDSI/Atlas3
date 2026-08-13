@@ -1,3 +1,4 @@
+import { nextTick } from 'vue'
 import type { HostMessage } from '@/models/PluginModels'
 import { getHostMessageBus } from '@/plugins/messaging/HostMessageBus'
 import { useCohortStore } from '@/stores/cohort'
@@ -46,6 +47,14 @@ import { applyCapability, type ApplyResult } from './capabilities/apply'
 import { domainToCriteriaType } from './capabilities/translate'
 
 const PLUGIN_ID = 'pythia-plugin'
+
+// `applied: false` is only ever set when the proposal was rejected outright, so
+// the capability layer can stop reporting success for a change nothing made.
+export interface ProposalOutcome {
+  id?: number | string
+  name?: string
+  applied?: boolean
+}
 
 let installed = false
 
@@ -102,7 +111,7 @@ async function handleApplyProposal(
 
 export async function applyProposalDirect(
   proposal: AgentProposal
-): Promise<{ id?: number | string; name?: string } | void> {
+): Promise<ProposalOutcome | void> {
   return applyProposalInner({ proposal })
 }
 
@@ -123,7 +132,7 @@ async function handleCapabilityApply(
 
 async function applyProposalInner(
   payload: { proposal: AgentProposal }
-): Promise<{ id?: number | string; name?: string } | void> {
+): Promise<ProposalOutcome | void> {
   if (!payload?.proposal) return
   const proposal = payload.proposal
   switch (proposal.kind) {
@@ -186,11 +195,28 @@ async function applyProposalInner(
         cohortStore.requestNewCohort()
         savedCohortId = null
       }
-      adoptProposalConceptSets(proposal)
-      cohortStore.applyProposal(proposal)
+      // Route first: the cohort document belongs to the mounted editor, so the
+      // proposal has nothing to write into until the editor is on screen.
       await ensureOnCohortRoute()
+      await waitForCohortDocument()
+      adoptProposalConceptSets(proposal)
+      const result = cohortStore.applyProposal(proposal)
+      if (result.reason === 'no-document') {
+        showSnackbar('Open a cohort before asking for changes to one', 'error')
+        return { applied: false }
+      }
       return
     }
+  }
+}
+
+// The editor attaches its document while mounting, which the router only
+// schedules; a proposal that arrives from another view would otherwise reach an
+// empty slot and be rejected.
+async function waitForCohortDocument(ticks = 3): Promise<void> {
+  const cohortStore = useCohortStore()
+  for (let i = 0; i < ticks && !cohortStore.hasCohortDocument; i++) {
+    await nextTick()
   }
 }
 
@@ -319,6 +345,8 @@ async function handleUseConceptSet(payload: {
 
   const cohortStore = useCohortStore()
   if (!cohortStore.currentCohort) cohortStore.requestNewCohort()
+  await ensureOnCohortRoute()
+  await waitForCohortDocument()
 
   if (group === 'entry') {
     cohortStore.applyProposal({ kind: 'addEntryEvent', event } as never)
@@ -343,7 +371,6 @@ async function handleUseConceptSet(payload: {
       },
     } as never)
   }
-  await ensureOnCohortRoute()
   showSnackbar(`Using concept set "${set.name}" (${items.length} concepts)`, 'success')
   return { id: set.id, name: set.name }
 }

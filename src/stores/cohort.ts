@@ -3,7 +3,7 @@
  * Manages current cohort definition state
  */
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, shallowRef, computed, type Ref, type ShallowRef } from 'vue'
 import type {
   CohortDefinition,
 } from '@/models/cohort.types'
@@ -30,6 +30,20 @@ interface ValidationError {
   severity: 'error' | 'warning'
 }
 
+/**
+ * The cohort as the store knows it: metadata it owns, plus a reference to the
+ * expression the mounted editor owns. `expression` is absent while no editor is
+ * attached, which is why it is optional here but required on CohortDefinition.
+ */
+export type CohortDocument = Omit<CohortDefinition, 'expression'> & {
+  expression?: CohortExpression
+}
+
+export interface ProposalResult {
+  applied: boolean
+  reason?: 'no-document' | 'unsupported-kind'
+}
+
 interface RetryState {
   attempt: number
   nextRetryAt: Date | null
@@ -38,14 +52,49 @@ interface RetryState {
 
 export const useCohortStore = defineStore('cohort', () => {
   // State
-  const currentCohort = ref<CohortDefinition | null>(null)
+  const currentCohort = ref<CohortDocument | null>(null)
   const isDirty = ref(false)
   const lastAutoSave = ref<Date | null>(null)
-  // Bumped every time `applyProposal` mutates the cohort. Components that hold
-  // their own local copies of `currentCohort.*` (e.g. CohortBuilder) watch this
-  // counter and re-sync; they don't watch `currentCohort` itself, which would
-  // create a feedback loop with their own user-edit writes.
-  const agentRevision = ref(0)
+
+  // The one cohort document. The mounted editor owns the instance and lends it
+  // here for the lifetime of the editing session; the store never makes a copy,
+  // so an agent proposal and a keystroke in the UI land in the same object and
+  // neither can overwrite the other.
+  const cohortDocument: ShallowRef<Ref<CohortExpression> | null> = shallowRef(null)
+  const hasCohortDocument = computed(() => cohortDocument.value !== null)
+
+  /**
+   * Point `currentCohort.expression` at the attached document, first moving any
+   * definition the caller supplied into it. The move is in place: the editor's
+   * validation and its own template capture the expression object by identity,
+   * so replacing the instance would silently detach them.
+   */
+  function adoptDocument() {
+    const attached = cohortDocument.value
+    if (!attached) return
+
+    const incoming = currentCohort.value?.expression
+    if (incoming && incoming !== attached.value) {
+      const target = attached.value as Record<string, unknown>
+      for (const key of Object.keys(target)) delete target[key]
+      Object.assign(target, incoming)
+    }
+    if (currentCohort.value) currentCohort.value.expression = attached.value
+  }
+
+  function attachExpression(expression: Ref<CohortExpression>) {
+    cohortDocument.value = expression
+    adoptDocument()
+  }
+
+  /**
+   * Pass the editor's own ref so that an incoming editor which attached before
+   * the outgoing one unmounted is not detached by it.
+   */
+  function detachExpression(expression?: Ref<CohortExpression>) {
+    if (expression && cohortDocument.value !== expression) return
+    cohortDocument.value = null
+  }
 
   // Version preview state (T013)
   const previewVersion = ref<Version | null>(null)
@@ -75,8 +124,12 @@ export const useCohortStore = defineStore('cohort', () => {
   })
 
   // Actions
-  function setCohort(cohort: CohortDefinition) {
-    currentCohort.value = cohort
+
+  // Copied rather than stored by reference so that adoptDocument's rewrite of
+  // `expression` cannot reach back into the caller's own definition object.
+  function setCohort(cohort: CohortDocument) {
+    currentCohort.value = { ...cohort }
+    adoptDocument()
     isDirty.value = false
     validateCohort()
   }
@@ -86,29 +139,37 @@ export const useCohortStore = defineStore('cohort', () => {
       name: 'New Cohort',
       expression: {} as CohortExpression,
     }
+    adoptDocument()
     isDirty.value = false
     clearDraft()
   }
 
-  function applyProposal(proposal: AgentProposal) {
+  function applyProposal(proposal: AgentProposal): ProposalResult {
+    const expression = cohortDocument.value?.value
+    if (!expression) {
+      logger.error(
+        'CohortStore',
+        `Cannot apply "${proposal?.kind}": no cohort document is attached (no editor is open)`
+      )
+      return { applied: false, reason: 'no-document' }
+    }
+
     switch (proposal.kind) {
       case 'setObservationPeriod': {
-        if (!currentCohort.value?.expression) return
-        if (!currentCohort.value.expression.PrimaryCriteria) {
-          currentCohort.value.expression.PrimaryCriteria = {}
+        if (!expression.PrimaryCriteria) {
+          expression.PrimaryCriteria = {}
         }
-        currentCohort.value.expression.PrimaryCriteria.ObservationWindow = {
+        expression.PrimaryCriteria.ObservationWindow = {
           PriorDays: proposal.observationPeriod.priorDays,
           PostDays: proposal.observationPeriod.postDays,
         }
         break
       }
       case 'addInclusionRule': {
-        if (!currentCohort.value?.expression) return
-        if (!currentCohort.value.expression.InclusionRules) {
-          currentCohort.value.expression.InclusionRules = []
+        if (!expression.InclusionRules) {
+          expression.InclusionRules = []
         }
-        currentCohort.value.expression.InclusionRules.push({
+        expression.InclusionRules.push({
           name: proposal.rule.name,
           description: proposal.rule.description,
           // CriteriaGroup expression left empty — agent must follow up with
@@ -117,16 +178,15 @@ export const useCohortStore = defineStore('cohort', () => {
         break
       }
       case 'addConceptSet': {
-        if (!currentCohort.value?.expression) return
-        if (!currentCohort.value.expression.ConceptSets) {
-          currentCohort.value.expression.ConceptSets = []
+        if (!expression.ConceptSets) {
+          expression.ConceptSets = []
         }
         const cs = proposal.conceptSet
         if (typeof cs.id === 'number') {
           // Deduplicate: skip if a concept set with the same id already exists.
-          const already = currentCohort.value.expression.ConceptSets.some(s => s.id === cs.id)
+          const already = expression.ConceptSets.some(s => s.id === cs.id)
           if (!already) {
-            currentCohort.value.expression.ConceptSets.push({ id: cs.id, name: cs.name })
+            expression.ConceptSets.push({ id: cs.id, name: cs.name })
           }
         }
         break
@@ -139,28 +199,26 @@ export const useCohortStore = defineStore('cohort', () => {
           logger.warn('CohortStore', 'addEntryEvent: Demographic not supported in PrimaryCriteria.CriteriaList')
           break
         }
-        if (!currentCohort.value?.expression) return
-        if (!currentCohort.value.expression.PrimaryCriteria) {
-          currentCohort.value.expression.PrimaryCriteria = {}
+        if (!expression.PrimaryCriteria) {
+          expression.PrimaryCriteria = {}
         }
-        if (!currentCohort.value.expression.PrimaryCriteria.CriteriaList) {
-          currentCohort.value.expression.PrimaryCriteria.CriteriaList = []
+        if (!expression.PrimaryCriteria.CriteriaList) {
+          expression.PrimaryCriteria.CriteriaList = []
         }
-        currentCohort.value.expression.PrimaryCriteria.CriteriaList.push(
+        expression.PrimaryCriteria.CriteriaList.push(
           { [criteriaType]: {} } as Criteria
         )
         break
       }
       case 'setCohortExit': {
-        if (!currentCohort.value?.expression) return
         const ec = proposal.exitCriteria
         switch (ec.strategy) {
           case 'CONTINUOUS_OBSERVATION':
             // Default Circe behavior: no EndStrategy means observation period end.
-            delete currentCohort.value.expression.EndStrategy
+            delete expression.EndStrategy
             break
           case 'FIXED_DURATION':
-            currentCohort.value.expression.EndStrategy = {
+            expression.EndStrategy = {
               DateOffset: {
                 DateField: ec.dateField === 'END_DATE' ? 'EndDate' : 'StartDate',
                 Offset: ec.offset ?? 0,
@@ -168,7 +226,7 @@ export const useCohortStore = defineStore('cohort', () => {
             }
             break
           case 'CONTINUOUS_DRUG':
-            currentCohort.value.expression.EndStrategy = {
+            expression.EndStrategy = {
               CustomEra: {
                 DrugCodesetId: typeof ec.conceptSet?.id === 'number' ? ec.conceptSet.id : undefined,
                 GapDays: ec.surveillanceWindow ?? 0,
@@ -185,11 +243,10 @@ export const useCohortStore = defineStore('cohort', () => {
           logger.warn('CohortStore', 'addCensoringCriterion: Demographic not supported in CensoringCriteria')
           break
         }
-        if (!currentCohort.value?.expression) return
-        if (!currentCohort.value.expression.CensoringCriteria) {
-          currentCohort.value.expression.CensoringCriteria = []
+        if (!expression.CensoringCriteria) {
+          expression.CensoringCriteria = []
         }
-        currentCohort.value.expression.CensoringCriteria.push(
+        expression.CensoringCriteria.push(
           { [criteriaType]: {} } as Criteria
         )
         break
@@ -216,14 +273,14 @@ export const useCohortStore = defineStore('cohort', () => {
       case 'setEraCollapse':
       case 'useConceptSet':
       case 'generateAnalysis':
-        return
+        return { applied: false, reason: 'unsupported-kind' }
       default: {
         logger.warn('CohortStore', 'Unknown agent proposal', proposal)
-        return
+        return { applied: false, reason: 'unsupported-kind' }
       }
     }
-    agentRevision.value++
     markDirty()
+    return { applied: true }
   }
 
   function clearCohort() {
@@ -310,6 +367,7 @@ export const useCohortStore = defineStore('cohort', () => {
       const draftData = JSON.parse(draftJson)
       if (draftData.cohort) {
         currentCohort.value = draftData.cohort
+        adoptDocument()
         isDirty.value = true // Mark as dirty since it's a draft
         logger.debug('CohortStore', 'Draft restored from', draftData.timestamp)
         return true
@@ -569,13 +627,16 @@ export const useCohortStore = defineStore('cohort', () => {
     validationErrors,
     isReadOnly,
     retryState,
-    agentRevision,
     saveRequest,
     newCohortSignal,
     saveOptions,
     // Getters
     hasValidationErrors,
     canSave,
+    hasCohortDocument,
+    // Document ownership
+    attachExpression,
+    detachExpression,
     // Actions
     setCohort,
     createNewCohort,

@@ -18,6 +18,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { ref } from 'vue'
 import { translateCapability } from '@/plugins/host/capabilities/translate'
 import { useCohortStore } from '@/stores/cohort'
 import { CohortExpressionSchema, type CohortExpression } from '@/components/cohort-editor/circe.types'
@@ -29,17 +30,12 @@ const CONCEPT = {
   includeDescendants: true,
 }
 
-// T13 (src/stores/cohort.ts:97): every applyProposal mutation early-returns
-// when currentCohort has no expression, but createNewCohort() (line 86) never
-// creates one -- so a proposal applied to a freshly-created cohort is a silent
-// no-op while apply.ts still reports `{applied: true}`. Seed one here to match
-// what the mounted CohortBuilder would already have provided by the time an
-// agent proposal arrives, so these tests can exercise the criteria-mutation
-// logic instead of uniformly hitting this guard.
+// Stand in for the mounted CohortBuilder, which lends its expression object to
+// the store; without an attached document every proposal is rejected.
 function newCohort() {
   const store = useCohortStore()
   store.createNewCohort()
-  store.currentCohort!.expression = {}
+  store.attachExpression(ref<CohortExpression>({}))
   return store
 }
 
@@ -99,7 +95,7 @@ describe('shapes of everything the agent injects', () => {
   // read only the proposal's criteriaType and push a bare `{[criteriaType]: {}}`,
   // dropping the embedded conceptSet and attributes entirely -- the criterion
   // never gets a CodesetId and nothing lands in expression.ConceptSets, while
-  // agentRevision/markDirty still run. Fixed in Phase 3.
+  // the proposal still reports applied and marks the cohort dirty. Fixed in Phase 3.
   const entryEventConceptSetCapabilities: Array<[string, Record<string, unknown>]> = [
     ['set_entry_event', { ...CONCEPT }],
     ['set_censor_event', { ...CONCEPT }],
@@ -116,7 +112,7 @@ describe('shapes of everything the agent injects', () => {
   // Surveillance to Offset); `typeof ec.conceptSet?.id === 'number'` never
   // passes because translate.ts always supplies a string uid, so DrugCodesetId
   // is dropped every time; and translate's 'CUSTOM_EVENT' strategy matches no
-  // case in this switch yet still bumps agentRevision and marks the cohort
+  // case in this switch yet still reports applied and marks the cohort
   // dirty. Fixed in Phase 3.
   const exitStrategyCapabilities: Array<[string, Record<string, unknown>]> = [
     ['add_exit_criterion', { strategy: 'continuous_drug', persistenceWindow: 30, concept: { ...CONCEPT } }],
@@ -171,7 +167,7 @@ describe('shapes of everything the agent injects', () => {
   // No review thread: removeInclusionRule is not wired into applyProposal's
   // switch at all -- the store silently no-ops it while apply.ts reports
   // success, so a named rule is never removed. Related to T15's CUSTOM_EVENT
-  // clause (unmatched kinds still bump agentRevision and mark the cohort
+  // clause (unmatched kinds still report applied and mark the cohort
   // dirty) but not covered by any existing thread.
   it.fails('remove_inclusion_rule drops the named rule and leaves the rest', () => {
     const store = newCohort()
