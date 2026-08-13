@@ -157,6 +157,13 @@ describe('Performance Tests - Large Cohort (Edge Case)', () => {
     const numTests = 5
     const results: number[] = []
 
+    // Warm up outside the measured set. The first normalize pays JIT and Zod
+    // schema cold-start cost several times the steady-state figure, which as
+    // one outlier among five samples skews every statistic below.
+    for (let i = 0; i < 3; i++) {
+      normalizeRawCohortDefinition(toRaw(generateLargeCohort()))
+    }
+
     for (let i = 0; i < numTests; i++) {
       const largeCohort = generateLargeCohort()
 
@@ -182,11 +189,15 @@ describe('Performance Tests - Large Cohort (Edge Case)', () => {
 
     expect(avgTime).toBeLessThan(PERFORMANCE_TARGET_MS)
 
-    // Low-millisecond timings are inherently noisy (GC pauses, JIT warmup),
-    // not a sign of a regression -- observed stdDev/avgTime on this box runs
-    // ~0.2-0.7. 1.5x avgTime leaves headroom over that range while still
-    // catching timing that has gone genuinely erratic.
-    expect(stdDev).toBeLessThan(avgTime * 1.5)
+    // Assert on the fastest sample rather than on the spread. A stdDev bound
+    // detects no regression at all -- a uniform slowdown scales stdDev and
+    // avgTime together, leaving the ratio flat -- while over five samples the
+    // ratio is set by wherever a GC pause happens to land (measured 0.16-1.05
+    // on this box, against a hard maximum of 2.0 for five samples). The
+    // minimum, by contrast, is the sample least polluted by pauses, so it
+    // tracks real cost: measured 2.7-3.7ms idle and 6.2-12.8ms with the suite
+    // running in parallel.
+    expect(minTime).toBeLessThan(PERFORMANCE_TARGET_MS / 2)
   })
 
   it('measures repeated validation of large cohorts', () => {
@@ -240,27 +251,34 @@ describe('Performance Tests - Large Cohort (Edge Case)', () => {
     const largeRaw = toRaw(largeCohort)
 
     // A single call is too small (sub-millisecond) for performance.now()'s
-    // clock resolution to measure reliably, which makes a one-shot ratio
-    // wildly noisy. Average over repeated calls, after a warmup that absorbs
-    // JIT/module cold-start cost, to get a stable signal.
-    const iterations = 20
+    // clock resolution to measure reliably, so the simple cohort is timed in
+    // batches. Batches are kept short and repeated, and the *minimum*
+    // per-iteration time wins: preemption and GC can only add time, so across
+    // enough short windows at least one lands clean and the minimum estimates
+    // intrinsic cost without the drift a mean picks up when the suite runs in
+    // parallel.
+    const simpleIterations = 100
+    const largeIterations = 1
+    const repetitions = 25
+
     for (let i = 0; i < 3; i++) {
       normalizeRawCohortDefinition(simpleRaw)
       normalizeRawCohortDefinition(largeRaw)
     }
 
-    const simpleRunStart = performance.now()
-    for (let i = 0; i < iterations; i++) normalizeRawCohortDefinition(simpleRaw)
-    const simpleTime = (performance.now() - simpleRunStart) / iterations
+    let simpleTime = Infinity
+    let largeTime = Infinity
+    for (let rep = 0; rep < repetitions; rep++) {
+      const simpleRunStart = performance.now()
+      for (let i = 0; i < simpleIterations; i++) normalizeRawCohortDefinition(simpleRaw)
+      simpleTime = Math.min(simpleTime, (performance.now() - simpleRunStart) / simpleIterations)
 
-    const largeRunStart = performance.now()
-    for (let i = 0; i < iterations; i++) normalizeRawCohortDefinition(largeRaw)
-    const largeTime = (performance.now() - largeRunStart) / iterations
+      const largeRunStart = performance.now()
+      for (let i = 0; i < largeIterations; i++) normalizeRawCohortDefinition(largeRaw)
+      largeTime = Math.min(largeTime, (performance.now() - largeRunStart) / largeIterations)
+    }
 
-    // Guard against a literal zero denominator (e.g. a clock-resolution tie).
-    // Observed simpleTime on this box is ~0.01-0.3ms, well above this floor,
-    // so it does not soften the ratio in practice.
-    const performanceRatio = largeTime / Math.max(simpleTime, 0.001)
+    const performanceRatio = largeTime / simpleTime
 
     console.log(`\n[Performance] Comparison:`)
     console.log(`  - Typical cohort: ${simpleTime.toFixed(3)}ms`)
@@ -273,9 +291,10 @@ describe('Performance Tests - Large Cohort (Edge Case)', () => {
     // The large fixture isn't just 50x the concept sets: each of its 100
     // criteria carries its own nested union-matched sub-schema (Occurrence,
     // StartWindow, etc.), so the schema has proportionally more to validate
-    // per item too. Observed ratio is consistently ~150-260x on this box.
-    // 500x stays well clear of that stable range while still catching
-    // genuinely superlinear (e.g. quadratic) blowups.
-    expect(performanceRatio).toBeLessThan(500)
+    // per item too. Measured 228-248x idle and 215-399x with ten copies of
+    // this file running at once; the bound sits 1.75x above that worst
+    // parallel reading, which still leaves it an order of magnitude below the
+    // thousands a quadratic blowup would produce.
+    expect(performanceRatio).toBeLessThan(700)
   })
 })
