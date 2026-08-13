@@ -1897,6 +1897,44 @@ describe('CohortBuilder', () => {
     expect(webapi.getCohortDefinition).toHaveBeenCalledWith(42)
   })
 
+  // loadCohort is async and un-awaited, so responses can land out of order. Since
+  // a failed load blanks the editor and swaps in the error panel, a superseded
+  // failure arriving last would erase a cohort that loaded perfectly well —
+  // reachable by a slow 404 followed by a route change, or by clicking Retry
+  // twice.
+  it('ignores a superseded failed load that lands after a later cohort loaded', async () => {
+    const webapi = await import('@/services/cohort-definition.service')
+    const successResponse = await webapi.getCohortDefinition(42)
+    let failSlowLoad: () => void = () => {}
+    vi.mocked(webapi.getCohortDefinition).mockImplementation(((id: number) => {
+      if (id === 7) {
+        return new Promise(resolve => {
+          failSlowLoad = () => resolve({ success: false, error: { status: 404 } })
+        })
+      }
+      return Promise.resolve(successResponse)
+    }) as any)
+
+    try {
+      const wrapper = createWrapper({ id: '7' })
+      await flushPromises()
+
+      await wrapper.setProps({ id: '42' })
+      await flushPromises()
+
+      const setup = getSetup(wrapper)
+      expect(setup.cohortName).toBe('Existing Cohort')
+
+      failSlowLoad()
+      await flushPromises()
+
+      expect(setup.loadError).toBeNull()
+      expect(setup.cohortName).toBe('Existing Cohort')
+    } finally {
+      vi.mocked(webapi.getCohortDefinition).mockResolvedValue(successResponse as any)
+    }
+  })
+
   it('applying invalid JSON surfaces an error and keeps dialog open', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()

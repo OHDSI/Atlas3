@@ -866,12 +866,20 @@ function retryLoad() {
   syncToStoreDefinition()
 }
 
+// Loads are async and un-awaited by their callers, so responses can land out of
+// order. Since a failure now blanks the editor, a superseded one arriving last
+// would erase a cohort that loaded fine — a slow 404 followed by a route change,
+// or a second Retry click. Only the newest request may write.
+let latestLoadToken = 0
+
 async function loadCohort(id: string) {
+  const loadToken = ++latestLoadToken
   isLoadingCohort.value = true
   loadError.value = null
   try {
     const numericId = parseInt(id, 10)
     const atlasCohortResult = await getCohortDefinition(numericId)
+    if (loadToken !== latestLoadToken) return
 
     if (!atlasCohortResult.success) {
       logger.error('CohortBuilder', `Failed to load cohort ${id}`, atlasCohortResult.error)
@@ -906,6 +914,7 @@ async function loadCohort(id: string) {
     applyDefinition(cohortDef)
   } catch (error) {
     logger.error('CohortBuilder', `Error loading cohort ${id}`, error)
+    if (loadToken !== latestLoadToken) return
     failLoad(tv('components.cohortBuilder.loadError', 'Failed to load cohort'))
   }
 }
@@ -938,6 +947,7 @@ function syncToStoreDefinition() {
 
   const previewed = cohortStore.currentCohort
   if (cohortStore.previewVersion && previewed?.id === Number(props.id)) {
+    latestLoadToken++
     applyDefinition(previewed)
   } else {
     cohortStore.discardPreview()
