@@ -59,7 +59,7 @@ function collectDiffs(original: unknown, parsed: unknown, path: string, out: Set
 
 /**
  * Field-level diff between the stored cohort and what the schema gives back.
- * Deliberately compares the raw parse output — no defaults are spread in, because
+ * Deliberately compares the raw parse output, with no defaults spread in, because
  * that is exactly what would mask the data-loss bugs this harness exists to catch.
  */
 function roundTripDiff(original: Record<string, unknown>): string[] {
