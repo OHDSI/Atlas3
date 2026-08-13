@@ -41,7 +41,46 @@ export type CohortDocument = Omit<CohortDefinition, 'expression'> & {
 
 export interface ProposalResult {
   applied: boolean
-  reason?: 'no-document' | 'unsupported-kind'
+  reason?: 'no-document' | 'unsupported-kind' | 'no-match'
+}
+
+const RESULT_LIMIT_TYPES = { ALL: 'All', FIRST: 'First', LAST: 'Last' } as const
+
+// ATLAS 2.15's InputTypes/Window and InputTypes/Occurrence defaults: a
+// qualifying criterion starts out unbounded on both sides of the index date and
+// requires at least one occurrence.
+function defaultQualifyingWindow() {
+  return {
+    Start: { Days: null, Coeff: -1 as const },
+    End: { Days: null, Coeff: 1 as const },
+    UseIndexEnd: false,
+    UseEventEnd: false,
+  }
+}
+
+// A criterion names its concepts only through CodesetId, so resolving one back
+// to a concept means walking the expression's ConceptSets.
+function codesetIdsMatching(
+  expression: CohortExpression,
+  match: { conceptId?: number; conceptName?: string }
+): Set<number> {
+  const wanted = match.conceptName?.trim().toLowerCase()
+  const ids = new Set<number>()
+  for (const set of expression.ConceptSets ?? []) {
+    const hit = (set.expression?.items ?? []).some(item => {
+      const concept = item.concept
+      if (!concept) return false
+      if (match.conceptId !== undefined && concept.CONCEPT_ID === match.conceptId) return true
+      return wanted !== undefined && concept.CONCEPT_NAME?.trim().toLowerCase() === wanted
+    })
+    if (hit && typeof set.id === 'number') ids.add(set.id)
+  }
+  return ids
+}
+
+function criterionCodesetId(criteria: Criteria): number | undefined {
+  const body = Object.values(criteria)[0] as { CodesetId?: number | null } | undefined
+  return typeof body?.CodesetId === 'number' ? body.CodesetId : undefined
 }
 
 interface RetryState {
@@ -276,17 +315,104 @@ export const useCohortStore = defineStore('cohort', () => {
       case 'useConceptSet':
       case 'generateAnalysis':
         return { applied: false, reason: 'unsupported-kind' }
-      // Cohort kinds translate.ts emits that nothing implements yet. The
-      // bridge does not intercept them, so the agent's change is genuinely
-      // dropped — the refusal is what keeps that visible.
-      case 'removeInclusionRule':
-      case 'removeEntryEvent':
-      case 'setEventLimits':
-      case 'addQualifyingCriterion':
-      case 'setCensorWindow':
-      case 'setEraCollapse':
-        logger.warn('CohortStore', `Cohort proposal "${proposal.kind}" is not implemented yet`)
-        return { applied: false, reason: 'unsupported-kind' }
+      case 'setEventLimits': {
+        const { primaryCriteriaLimit, qualifyingLimit, inclusionQualifyingLimit } = proposal.limits
+        if (!primaryCriteriaLimit && !qualifyingLimit && !inclusionQualifyingLimit) {
+          logger.warn('CohortStore', 'setEventLimits: no limit was named')
+          return { applied: false, reason: 'unsupported-kind' }
+        }
+        if (primaryCriteriaLimit) {
+          if (!expression.PrimaryCriteria) {
+            expression.PrimaryCriteria = {}
+          }
+          expression.PrimaryCriteria.PrimaryCriteriaLimit = {
+            Type: RESULT_LIMIT_TYPES[primaryCriteriaLimit],
+          }
+        }
+        if (qualifyingLimit) {
+          expression.QualifiedLimit = { Type: RESULT_LIMIT_TYPES[qualifyingLimit] }
+        }
+        if (inclusionQualifyingLimit) {
+          expression.ExpressionLimit = { Type: RESULT_LIMIT_TYPES[inclusionQualifyingLimit] }
+        }
+        break
+      }
+      case 'setCensorWindow': {
+        const { startDate, endDate } = proposal.censorWindow
+        if (!startDate && !endDate) {
+          logger.warn('CohortStore', 'setCensorWindow: neither bound was given')
+          return { applied: false, reason: 'unsupported-kind' }
+        }
+        // A censor window is one claim about the study period, so an unnamed
+        // bound means "open", not "keep whatever was there".
+        expression.CensorWindow = {
+          ...(startDate ? { StartDate: startDate } : {}),
+          ...(endDate ? { EndDate: endDate } : {}),
+        }
+        break
+      }
+      case 'setEraCollapse': {
+        const { collapseType, eraPad } = proposal.collapseSettings
+        if (collapseType !== 'ERA') {
+          logger.warn('CohortStore', `setEraCollapse: circe has no "${collapseType}" collapse rule`)
+          return { applied: false, reason: 'unsupported-kind' }
+        }
+        expression.CollapseSettings = { CollapseType: 'ERA', EraPad: eraPad }
+        break
+      }
+      case 'addQualifyingCriterion': {
+        const criteriaType = proposal.event.criteriaType
+        if (criteriaType === 'Demographic') {
+          logger.warn('CohortStore', 'addQualifyingCriterion: Demographic qualifiers are not supported')
+          return { applied: false, reason: 'unsupported-kind' }
+        }
+        if (!expression.AdditionalCriteria) {
+          expression.AdditionalCriteria = { Type: 'ALL', CriteriaList: [] }
+        }
+        if (!expression.AdditionalCriteria.CriteriaList) {
+          expression.AdditionalCriteria.CriteriaList = []
+        }
+        expression.AdditionalCriteria.CriteriaList.push({
+          Criteria: { [criteriaType]: {} } as Criteria,
+          StartWindow: defaultQualifyingWindow(),
+          Occurrence: { Type: 2, Count: 1 },
+          RestrictVisit: false,
+          IgnoreObservationPeriod: false,
+        })
+        break
+      }
+      case 'removeInclusionRule': {
+        const name = proposal.match.name?.trim()
+        if (!name) {
+          // Circe inclusion rules carry a name and nothing else, so an id has
+          // nothing to match against — guessing at a list index would remove
+          // whichever rule happened to sit there.
+          logger.warn('CohortStore', 'removeInclusionRule: a circe inclusion rule has no id to match')
+          return { applied: false, reason: 'unsupported-kind' }
+        }
+        const rules = expression.InclusionRules ?? []
+        const kept = rules.filter(rule => rule.name?.trim() !== name)
+        if (kept.length === rules.length) {
+          return { applied: false, reason: 'no-match' }
+        }
+        expression.InclusionRules = kept
+        break
+      }
+      case 'removeEntryEvent': {
+        const codesetIds = codesetIdsMatching(expression, proposal.match)
+        const criteriaList = expression.PrimaryCriteria?.CriteriaList ?? []
+        const kept = criteriaList.filter(criteria => {
+          const codesetId = criterionCodesetId(criteria)
+          return codesetId === undefined || !codesetIds.has(codesetId)
+        })
+        if (kept.length === criteriaList.length) {
+          return { applied: false, reason: 'no-match' }
+        }
+        // The concept set stays: inclusion rules and censoring criteria may
+        // still reference the same CodesetId.
+        expression.PrimaryCriteria!.CriteriaList = kept
+        break
+      }
       default: {
         logger.warn('CohortStore', 'Unknown agent proposal', proposal)
         return { applied: false, reason: 'unsupported-kind' }

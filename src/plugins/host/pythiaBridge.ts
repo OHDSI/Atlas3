@@ -1,7 +1,7 @@
 import { nextTick } from 'vue'
 import type { HostMessage } from '@/models/PluginModels'
 import { getHostMessageBus } from '@/plugins/messaging/HostMessageBus'
-import { useCohortStore } from '@/stores/cohort'
+import { useCohortStore, type ProposalResult } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
@@ -54,6 +54,12 @@ export interface ProposalOutcome {
   id?: number | string
   name?: string
   applied?: boolean
+}
+
+const REFUSAL_MESSAGES: Record<NonNullable<ProposalResult['reason']>, string> = {
+  'no-document': 'Open a cohort before asking for changes to one',
+  'unsupported-kind': 'ATLAS cannot make that change to a cohort yet',
+  'no-match': 'Nothing in the cohort matched that change, so it was left as it was',
 }
 
 let installed = false
@@ -202,12 +208,7 @@ async function applyProposalInner(
       adoptProposalConceptSets(proposal)
       const result = cohortStore.applyProposal(proposal)
       if (!result.applied) {
-        showSnackbar(
-          result.reason === 'no-document'
-            ? 'Open a cohort before asking for changes to one'
-            : 'ATLAS cannot make that change to a cohort yet',
-          'error'
-        )
+        showSnackbar(REFUSAL_MESSAGES[result.reason ?? 'unsupported-kind'], 'error')
         return { applied: false }
       }
       return { applied: true }

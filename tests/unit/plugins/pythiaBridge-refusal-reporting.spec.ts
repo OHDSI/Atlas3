@@ -69,6 +69,23 @@ describe('pythiaBridge reports refusals rather than silent success', () => {
     ])
   })
 
+  it('a removal that matched nothing is reported as a miss, not as a change', async () => {
+    attachEditor()
+
+    const res = await applyProposalDirect({
+      kind: 'removeInclusionRule',
+      match: { name: 'no such rule' },
+    } as AgentProposal)
+
+    expect(res).toEqual({ applied: false })
+    expect(severities()).toEqual([
+      {
+        severity: 'danger',
+        title: 'Nothing in the cohort matched that change, so it was left as it was',
+      },
+    ])
+  })
+
   it('a cohort proposal the store applies still reports success', async () => {
     attachEditor()
 

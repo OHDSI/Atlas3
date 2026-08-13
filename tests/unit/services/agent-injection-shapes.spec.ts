@@ -164,12 +164,7 @@ describe('shapes of everything the agent injects', () => {
     expect(store.currentCohort?.expression?.PrimaryCriteria?.CriteriaList).toHaveLength(2)
   })
 
-  // No review thread: removeInclusionRule sits in applyProposal's explicit
-  // ignore group (src/stores/cohort.ts:262), which returns
-  // { applied: false, reason: 'unsupported-kind' } before markDirty runs. The
-  // refusal is honest and apply.ts surfaces it, but a named rule still cannot
-  // be removed.
-  it.fails('remove_inclusion_rule drops the named rule and leaves the rest', () => {
+  it('remove_inclusion_rule drops the named rule and leaves the rest', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('add_inclusion_rule', {
       name: 'Osteoarthritis before index', logicType: 'ALL', events: [{ ...CONCEPT }],
@@ -196,8 +191,12 @@ describe('shapes of everything the agent injects', () => {
     expect(store.currentCohort?.expression?.InclusionRules).toHaveLength(1)
   })
 
-  // No review thread: removeEntryEvent is in the same explicit ignore group --
-  // refused as unsupported-kind, so the entry event stays.
+  // T14: removeEntryEvent matches a criterion by resolving its CodesetId back
+  // through ConceptSets, but addEntryEvent drops the event's concept set, so
+  // nothing here carries a codeset to match on and the removal finds no target.
+  // The match itself is covered directly in
+  // tests/unit/stores/cohort-applyProposal-unimplemented-kinds.spec.ts.
+  // Fixed in Phase 3, with addEntryEvent.
   it.fails('remove_entry_event drops the entry event built from that concept', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('set_entry_event', { ...CONCEPT }) as never)
@@ -250,20 +249,17 @@ describe('shapes of everything the agent injects', () => {
     expect(translateCapability('add_demographic_criterion', {})).toBeNull()
   })
 
-  // No review thread: setEventLimits is in the explicit ignore group --
-  // refused as unsupported-kind, so PrimaryCriteriaLimit/QualifiedLimit/
-  // ExpressionLimit are never set.
-  it.fails('set_event_limits restricts entry to the first qualifying event', () => {
+  it('set_event_limits restricts entry to the first qualifying event', () => {
     const expr = applyAndParse('set_event_limits', { entryEvents: 'first' })
     expect(expr.PrimaryCriteria?.PrimaryCriteriaLimit?.Type).toBe('First')
   })
 
-  it.fails('sets which qualifying events the rules apply to', () => {
+  it('sets which qualifying events the rules apply to', () => {
     const expr = applyAndParse('set_event_limits', { qualifyingEvents: 'first' })
     expect(expr.QualifiedLimit?.Type).toBe('First')
   })
 
-  it.fails('leaves the other limit alone when only one is given', () => {
+  it('leaves the other limit alone when only one is given', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('set_event_limits', { entryEvents: 'first' }) as never)
     expect(store.currentCohort!.expression!.PrimaryCriteria?.PrimaryCriteriaLimit?.Type).toBe('First')
@@ -274,15 +270,17 @@ describe('shapes of everything the agent injects', () => {
     expect(translateCapability('set_event_limits', { entryEvents: 'earliest-ish' })).toBeNull()
   })
 
-  // No review thread: addQualifyingCriterion is in the explicit ignore group --
-  // refused as unsupported-kind, so AdditionalCriteria is never populated.
-  it.fails('add_qualifying_criterion restricts the entry event itself', () => {
+  it('add_qualifying_criterion restricts the entry event itself', () => {
     const expr = applyAndParse('add_qualifying_criterion', { ...CONCEPT })
     expect(expr.AdditionalCriteria?.CriteriaList).toHaveLength(1)
     // and it must not have landed among the entry events instead
     expect(expr.PrimaryCriteria?.CriteriaList ?? []).toHaveLength(0)
   })
 
+  // T14: addQualifyingCriterion builds the criterion the same way addEntryEvent
+  // does, so it inherits the same drop -- the event's concept set never reaches
+  // expression.ConceptSets and the criterion gets no CodesetId. Fixed in
+  // Phase 3, with addEntryEvent.
   it.fails('the qualifying criterion carries a resolvable concept set', () => {
     const expr = applyAndParse('add_qualifying_criterion', { ...CONCEPT })
     expect(expr.ConceptSets ?? []).toHaveLength(1)
@@ -291,9 +289,7 @@ describe('shapes of everything the agent injects', () => {
 
   // A study window is a claim about what the numbers mean; without it the
   // cohort silently spans the whole database.
-  // No review thread: setCensorWindow is in the explicit ignore group --
-  // refused as unsupported-kind, so CensorWindow is never set.
-  it.fails('set_censor_window bounds the study period', () => {
+  it('set_censor_window bounds the study period', () => {
     const expr = applyAndParse('set_censor_window', { startDate: '2015-01-01', endDate: '2019-12-31' })
     expect(expr.CensorWindow).toMatchObject({ StartDate: '2015-01-01', EndDate: '2019-12-31' })
   })
@@ -302,15 +298,12 @@ describe('shapes of everything the agent injects', () => {
     expect(translateCapability('set_censor_window', { startDate: 'last January' })).toBeNull()
   })
 
-  // No review thread: setEraCollapse is in the explicit ignore group --
-  // refused as unsupported-kind, so CollapseSettings is never set.
-  it.fails('set_era_collapse merges brief gaps in follow-up', () => {
+  it('set_era_collapse merges brief gaps in follow-up', () => {
     const expr = applyAndParse('set_era_collapse', { gapDays: 30 })
     expect(expr.CollapseSettings).toMatchObject({ CollapseType: 'ERA', EraPad: 30 })
   })
 
-  // No review thread: same setEventLimits gap as above, for ExpressionLimit.
-  it.fails('set_event_limits also covers what survives the inclusion rules', () => {
+  it('set_event_limits also covers what survives the inclusion rules', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('set_event_limits', { inclusionRuleEvents: 'first' }) as never)
     expect(store.currentCohort?.expression?.ExpressionLimit?.Type).toBe('First')
