@@ -4,7 +4,7 @@
  * tests/unit/components/cohort-builder/GroupCriteriaUI.spec.ts onto
  * cohort-editor/criteria/CriteriaGroup.vue, which now owns Type/Count.
  *
- * Two cases are `it.fails`. They exercise thread T18: the editor defaults the
+ * The `it.fails` cases exercise thread T18: the editor defaults the
  * group Type for display only, so a group can reach the server with no Type at
  * all, and an "At least" group can reach it with no Count -- which circe turns
  * into `HAVING COUNT(...) >= null`.

@@ -4,8 +4,8 @@
  * EndWindowEditor spec beside it) onto cohort-editor/criteria/Window.vue,
  * criteria/window-utils.ts and the window menu in criteria/CorelatedCriteria.vue.
  *
- * Two preset cases are `it.fails`. They exercise thread T17: two of the quick
- * presets produce windows that contradict the label the user picked.
+ * Some of the `it.fails` cases exercise thread T17: quick presets that
+ * produce windows contradicting the label the user picked.
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -284,7 +284,7 @@ describe('Window editor', () => {
     expect(chips(wrapper)[CHIP.startDays]!.text()).toBe('all days')
   })
 
-  it('clears a day count from the chip without opening the editor', async () => {
+  it('clears a day count by clicking the chip\'s clear icon', async () => {
     const window: WindowModel = { Start: { Days: 30, Coeff: -1 }, End: { Days: 30, Coeff: 1 } }
     const wrapper = mountWindow(window)
 

@@ -22,10 +22,10 @@ const FIXTURES_DIR = path.join(__dirname, '../integration/fixtures/atlas-cohorts
 
 // Schema validation of a typical cohort is sub-millisecond once the schema
 // module is warm (observed under vitest: ~0.1-0.2ms per call, ~0.9ms on the
-// very first, cold call). 25ms is roughly an order of magnitude above that
-// cold-call worst case: tight enough to catch a real regression (e.g. an
-// accidentally quadratic schema refinement) without being so lenient it
-// never fires.
+// very first, cold call). 25ms is a regression tripwire, not a performance
+// target -- roughly 125-250x the typical warm call and ~28x the cold-call
+// worst case, tight enough to catch a real regression (e.g. an accidentally
+// quadratic schema refinement) without being so lenient it never fires.
 const PERFORMANCE_TARGET_MS = 25
 
 function toRaw(atlasJson: unknown): { id: number; name: string; expression: string } {

@@ -82,16 +82,16 @@ const HEADER_BOUND_FIELDS = ['CodesetId']
  * generation, so every entry is a known gap rather than an accepted design.
  */
 const KNOWN_UNSURFACED: readonly string[] = [
-  'DoseEra.DateAdjustment',
-  'DrugEra.DateAdjustment',
-  'DrugExposure.VisitType',
-  'DrugExposure.VisitTypeCS',
-  'LocationRegion.CodesetId',
-  'LocationRegion.CorrelatedCriteria',
-  'LocationRegion.DateAdjustment',
-  'LocationRegion.EndDate',
-  'LocationRegion.StartDate',
-  'Measurement.DateAdjustment',
+  'DoseEra.DateAdjustment', // gap: DoseEra.vue has no DateAdjustment control
+  'DrugEra.DateAdjustment', // gap: DrugEra.vue has no DateAdjustment control
+  'DrugExposure.VisitType', // gap: DrugExposure.vue has no VisitType control (it does surface DateAdjustment)
+  'DrugExposure.VisitTypeCS', // gap: DrugExposure.vue has no VisitTypeCS control
+  'LocationRegion.CodesetId', // no editor: CRITERIA_EDITORS maps LocationRegion to null
+  'LocationRegion.CorrelatedCriteria', // no editor: CRITERIA_EDITORS maps LocationRegion to null
+  'LocationRegion.DateAdjustment', // no editor: CRITERIA_EDITORS maps LocationRegion to null
+  'LocationRegion.EndDate', // no editor: CRITERIA_EDITORS maps LocationRegion to null
+  'LocationRegion.StartDate', // no editor: CRITERIA_EDITORS maps LocationRegion to null
+  'Measurement.DateAdjustment', // gap: Measurement.vue has no DateAdjustment control (it does surface VisitType/VisitTypeCS)
 ]
 
 function sortedStringify(value: unknown): string {

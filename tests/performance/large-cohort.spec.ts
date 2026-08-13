@@ -182,9 +182,11 @@ describe('Performance Tests - Large Cohort (Edge Case)', () => {
 
     expect(avgTime).toBeLessThan(PERFORMANCE_TARGET_MS)
 
-    // Allow generous variation: low-millisecond timings are inherently noisy
-    // (GC pauses, JIT warmup), not a sign of a regression.
-    expect(stdDev).toBeLessThan(avgTime * 2)
+    // Low-millisecond timings are inherently noisy (GC pauses, JIT warmup),
+    // not a sign of a regression -- observed stdDev/avgTime on this box runs
+    // ~0.2-0.7. 1.5x avgTime leaves headroom over that range while still
+    // catching timing that has gone genuinely erratic.
+    expect(stdDev).toBeLessThan(avgTime * 1.5)
   })
 
   it('measures repeated validation of large cohorts', () => {
@@ -255,8 +257,10 @@ describe('Performance Tests - Large Cohort (Edge Case)', () => {
     for (let i = 0; i < iterations; i++) normalizeRawCohortDefinition(largeRaw)
     const largeTime = (performance.now() - largeRunStart) / iterations
 
-    // Guard against a near-zero denominator making the ratio meaningless.
-    const performanceRatio = largeTime / Math.max(simpleTime, 0.01)
+    // Guard against a literal zero denominator (e.g. a clock-resolution tie).
+    // Observed simpleTime on this box is ~0.01-0.3ms, well above this floor,
+    // so it does not soften the ratio in practice.
+    const performanceRatio = largeTime / Math.max(simpleTime, 0.001)
 
     console.log(`\n[Performance] Comparison:`)
     console.log(`  - Typical cohort: ${simpleTime.toFixed(3)}ms`)
