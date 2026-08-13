@@ -7,7 +7,7 @@
  * concept-set/criteria selection contexts, additional-criteria mutations,
  * export flow, cancel routing, tag updates, and the unsaved-changes guard.
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
@@ -114,6 +114,7 @@ vi.mock('@/composables/useEntityAccess', async () => {
 })
 
 import { ApiError } from '@/services/api-error'
+import { useCohortStore, AUTO_SAVE_INTERVAL_MS } from '@/stores/cohort'
 import CohortBuilder from '@/components/cohort/CohortBuilder.vue'
 
 const vuetify = createVuetify({
@@ -249,10 +250,108 @@ describe('CohortBuilder', () => {
     expect(errorSnackbar?.props('text')).toContain('Failed to parse cohort definition')
   })
 
+  it('shows the generic load error when the fetch fails for a non-422 reason', async () => {
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.getCohortDefinition).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('HTTP 500: <html>Internal Server Error</html>', 500, null),
+    })
+
+    const wrapper = createWrapper({ id: '1' })
+    await flushPromises()
+
+    const errorSnackbar = wrapper
+      .findAllComponents({ name: 'AtlasSnackbar' })
+      .find(s => s.props('severity') === 'danger')
+    expect(errorSnackbar?.props('modelValue')).toBe(true)
+    expect(errorSnackbar?.props('text')).toBe('Failed to load cohort')
+    // Raw transport text must not leak into the banner.
+    expect(errorSnackbar?.props('text')).not.toContain('HTTP 500')
+    expect(getSetup(wrapper).isLoadingCohort).toBe(false)
+  })
+
+  it('refuses to load a definition whose expression type is not a simple expression', async () => {
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.getCohortDefinition).mockResolvedValueOnce({
+      success: true,
+      data: {
+        id: 5,
+        name: 'Imported Cohort',
+        description: '',
+        tags: [],
+        expressionType: 'CONCEPT_SET_EXPRESSION',
+        expression: { ConceptSets: [], InclusionRules: [] },
+      },
+    })
+
+    const wrapper = createWrapper({ id: '5' })
+    await flushPromises()
+
+    const errorSnackbar = wrapper
+      .findAllComponents({ name: 'AtlasSnackbar' })
+      .find(s => s.props('severity') === 'danger')
+    expect(errorSnackbar?.props('modelValue')).toBe(true)
+    expect(errorSnackbar?.props('text')).toBe('Failed to load cohort')
+    const setup = getSetup(wrapper)
+    expect(setup.isLoadingCohort).toBe(false)
+    expect(setup.cohortName).toBe('')
+  })
+
   it('canSave is false when name is empty', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
     expect((wrapper.vm as any).canSave).toBe(false)
+  })
+
+  // ---------------------------------------------------------------------------
+  // Auto-save lifecycle — the editor owns the store's draft timer
+  // ---------------------------------------------------------------------------
+
+  describe('auto-save lifecycle', () => {
+    const DRAFT_KEY = 'atlas3_cohort_draft'
+
+    beforeEach(() => {
+      sessionStorage.clear()
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+      sessionStorage.clear()
+    })
+
+    it('starts the store auto-save on mount so drafts reach sessionStorage', async () => {
+      const cohortStore = useCohortStore()
+      const startSpy = vi.spyOn(cohortStore, 'startAutoSave')
+
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      expect(startSpy).toHaveBeenCalledTimes(1)
+
+      cohortStore.markDirty()
+      sessionStorage.removeItem(DRAFT_KEY)
+      await vi.advanceTimersByTimeAsync(AUTO_SAVE_INTERVAL_MS)
+
+      expect(sessionStorage.getItem(DRAFT_KEY)).not.toBeNull()
+      wrapper.unmount()
+    })
+
+    it('stops the auto-save on unmount so no draft is written afterwards', async () => {
+      const cohortStore = useCohortStore()
+      const stopSpy = vi.spyOn(cohortStore, 'stopAutoSave')
+
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      cohortStore.markDirty()
+
+      wrapper.unmount()
+      expect(stopSpy).toHaveBeenCalledTimes(1)
+
+      sessionStorage.removeItem(DRAFT_KEY)
+      await vi.advanceTimersByTimeAsync(AUTO_SAVE_INTERVAL_MS * 2)
+
+      expect(sessionStorage.getItem(DRAFT_KEY)).toBeNull()
+    })
   })
 
   // ---------------------------------------------------------------------------

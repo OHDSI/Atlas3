@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
 import { ref, reactive, computed, nextTick } from 'vue'
+import { ApiError } from '@/services/api-error'
 import type { CohortExpression } from '@/components/cohort-editor/circe.types'
 import type { ValidationWarning } from '@/models/cohort-validation.types'
 
@@ -425,6 +426,46 @@ describe('useCohortValidation', () => {
       await nextTick()
 
       expect(validationWarnings.value).toEqual(warnings)
+    })
+
+    it('should drop stale warnings when the API returns a failed result', async () => {
+      const warnings: ValidationWarning[] = [
+        { type: 'DefaultWarning', severity: 'WARNING', message: 'Stale warning' },
+      ]
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
+
+      const options = createTestOptions()
+      const { validationWarnings, isValidating, triggerValidation, cancelValidation } =
+        useCohortValidation(options)
+
+      cancelValidation()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
+
+      const hasStaleWarning = () =>
+        validationWarnings.value.some(w => w.message === 'Stale warning')
+
+      triggerValidation()
+      await vi.runAllTimersAsync()
+      await nextTick()
+      expect(hasStaleWarning()).toBe(true)
+
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+        success: false,
+        error: new ApiError('HTTP 500: <html>Internal Server Error</html>', 500, null),
+      })
+
+      triggerValidation()
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      expect(hasStaleWarning()).toBe(false)
+      expect(isValidating.value).toBe(false)
+
+      // A failed result is not a thrown error: it must resolve through the
+      // success ternary, never the catch block that logs.
+      const { logger } = await import('@/utils/logger')
+      expect(logger.error).not.toHaveBeenCalled()
     })
 
     it('should clear warnings when validation fails', async () => {
