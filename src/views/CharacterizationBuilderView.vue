@@ -501,7 +501,11 @@ async function handleSave() {
           t('characterizations.editor.saveSuccess', 'Characterization saved').value,
           'success'
         )
-        store.markClean()
+        // Unlike the update branch, there was previously no hydrateFrom() call
+        // here, so draft.value.id (and therefore draftId/isEditing) stayed
+        // null after the very first save. Generate stayed disabled forever
+        // because its gate checks characterizationId == null (#223).
+        hydrateFrom(created)
         await router.push(`/characterizations/${created.id}`)
       } else {
         showSnackbar(t('cc.fa.saveError', 'Failed to save characterization').value, 'error')
