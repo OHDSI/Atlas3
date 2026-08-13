@@ -843,6 +843,77 @@ describe('CohortBuilder', () => {
     }
   })
 
+  // The gap the CRITICAL count alone cannot cover: validation is debounced by
+  // 2000ms, so for the first seconds of every cohort criticalCount is 0 because
+  // nothing has been checked, not because nothing is wrong. The generation
+  // section must be told the difference or it offers Generate on a broken design.
+  it('reports the design as unvalidated before the first check resolves, though its CRITICAL count is still 0', async () => {
+    const webapi = await import('@/services/cohort-definition.service')
+    vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({
+      success: true,
+      data: {
+        warnings: [
+          {
+            type: 'DefaultWarning',
+            severity: 'CRITICAL',
+            message: 'Drug concept set must be selected at Exit Criteria.',
+          },
+        ],
+      },
+    })
+    vi.useFakeTimers()
+    try {
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      const setup = getSetup(wrapper)
+      setup.cohortName = 'Incomplete exit criteria'
+      Object.assign(setup.expression, {
+        PrimaryCriteria: { CriteriaList: [{ DrugExposure: {} }] },
+        EndStrategy: { CustomEra: { GapDays: 30, Offset: 0 } },
+      })
+      await wrapper.vm.$nextTick()
+      await vi.advanceTimersByTimeAsync(500)
+
+      const section = wrapper.findComponent({ name: 'CohortGenerationSection' })
+      expect(section.props('criticalCount')).toBe(0)
+      expect(section.props('validationStatus')).not.toBe('validated')
+
+      await vi.advanceTimersByTimeAsync(3000)
+      expect(section.props('criticalCount')).toBeGreaterThan(0)
+      expect(section.props('validationStatus')).toBe('validated')
+    } finally {
+      vi.useRealTimers()
+      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({
+        success: true,
+        data: { warnings: [] },
+      })
+    }
+  })
+
+  it('marks the generation section validated once a clean check resolves', async () => {
+    vi.useFakeTimers()
+    try {
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      const setup = getSetup(wrapper)
+      setup.cohortName = 'Complete exit criteria'
+      Object.assign(setup.expression, {
+        PrimaryCriteria: { CriteriaList: [{ DrugExposure: {} }] },
+        EndStrategy: { CustomEra: { DrugCodesetId: 3, GapDays: 30, Offset: 0 } },
+      })
+      await wrapper.vm.$nextTick()
+
+      const section = wrapper.findComponent({ name: 'CohortGenerationSection' })
+      expect(section.props('validationStatus')).toBe('unvalidated')
+
+      await vi.advanceTimersByTimeAsync(3000)
+      expect(section.props('validationStatus')).toBe('validated')
+      expect(section.props('criticalCount')).toBe(0)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('reports no CRITICAL count to the generation section for a valid design', async () => {
     vi.useFakeTimers()
     try {

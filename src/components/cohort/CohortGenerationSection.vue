@@ -101,6 +101,7 @@ import { AtlasAlert, AtlasButton, AtlasTooltip } from '@/components/ui'
 import AtlasSwitch from '@/components/ui/AtlasSwitch.vue'
 import type { AtlasChipTone } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
+import type { ValidationStatus } from '@/composables/useCohortValidation'
 import { useSourceAccessFor } from '@/composables/useEntityAccess'
 import { useWebAPIStore } from '@/stores/webapi'
 import AtlasCollapsibleSection from '@/components/ui/AtlasCollapsibleSection.vue'
@@ -121,9 +122,15 @@ interface Props {
   criticalCount?: number
   /** Whether the editor holds edits that have not been saved to WebAPI. */
   isDirty?: boolean
+  /** Whether criticalCount reflects a completed check. See generateBlocked. */
+  validationStatus?: ValidationStatus
 }
 
-const props = withDefaults(defineProps<Props>(), { criticalCount: 0, isDirty: false })
+const props = withDefaults(defineProps<Props>(), {
+  criticalCount: 0,
+  isDirty: false,
+  validationStatus: 'unvalidated',
+})
 
 const { t } = useI18n()
 const route = useRoute()
@@ -233,12 +240,19 @@ const defaultExpanded = computed(() => false)
 // cohort-definition-manager.js canGenerate is `!(isDirty || isNew) &&
 // hasInitialEvent && criticalCount() <= 0`. Generating while dirty would run the
 // last saved expression, not the one on screen. `isNew` is the cohortId === null
-// case below. generateDisabledReason keeps 2.15's precedence: invalid, then dirty.
-const generateBlocked = computed(() => props.criticalCount > 0 || props.isDirty)
+// case below. criticalCount is 0 until the first validation round-trip resolves,
+// so it alone would open the gate on an unchecked design; validationStatus keeps
+// it shut until the count means something. generateDisabledReason keeps 2.15's
+// precedence (invalid, then dirty) and reports the transient wait last, since
+// 2.15's disabledReasons has no term for it.
+const generateBlocked = computed(
+  () => props.criticalCount > 0 || props.isDirty || props.validationStatus !== 'validated'
+)
 
 const generateDisabledReason = computed(() => {
   if (props.criticalCount > 0) return t('const.disabledReason.invalidDesign').value
   if (props.isDirty) return t('const.disabledReason.dirty').value
+  if (props.validationStatus !== 'validated') return t('common.loadingWithDots', 'Loading...').value
   return undefined
 })
 

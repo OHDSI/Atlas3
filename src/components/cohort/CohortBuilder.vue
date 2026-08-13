@@ -38,6 +38,7 @@
       v-if="!loadError"
       :cohort-id="cohortId"
       :critical-count="criticalValidationCount"
+      :validation-status="validationStatus"
       :is-dirty="hasUnsavedChanges"
     />
 
@@ -498,6 +499,7 @@ watch(cohortDescription, val => {
 const {
   validationWarnings,
   isValidating,
+  validationStatus,
   highestSeverityColor,
   groupedWarningsBySeverity,
   usedConceptSets,
