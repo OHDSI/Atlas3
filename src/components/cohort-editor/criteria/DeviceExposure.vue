@@ -307,10 +307,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by unique device identifier',
     kind: 'textFilter',
     componentProps: () => createSchemaFieldProps(
-      ensureObjectField(deviceExposureData.value, 'UniqueDeviceId', () => ({ Text: '', Op: 'contains' })) as TextFilter
+      ensureObjectField(deviceExposureData.value, 'UniqueDeviceId', (): TextFilter => ({ Text: '', Op: 'contains' })) as TextFilter
     ),
     init: () => {
-      ensureObjectField(deviceExposureData.value, 'UniqueDeviceId', () => ({ Text: '', Op: 'contains' }))
+      ensureObjectField(deviceExposureData.value, 'UniqueDeviceId', (): TextFilter => ({ Text: '', Op: 'contains' }))
     },
     clear: () => {
       delete deviceExposureData.value.UniqueDeviceId

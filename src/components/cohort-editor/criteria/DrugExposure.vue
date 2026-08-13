@@ -278,10 +278,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by stop reason text',
     kind: 'textFilter',
     componentProps: () => createSchemaFieldProps(
-      ensureObjectField(drugExposureData.value, 'StopReason', () => ({ Text: '', Op: 'contains' })) as TextFilter
+      ensureObjectField(drugExposureData.value, 'StopReason', (): TextFilter => ({ Text: '', Op: 'contains' })) as TextFilter
     ),
     init: () => {
-      ensureObjectField(drugExposureData.value, 'StopReason', () => ({ Text: '', Op: 'contains' }))
+      ensureObjectField(drugExposureData.value, 'StopReason', (): TextFilter => ({ Text: '', Op: 'contains' }))
     },
     clear: () => {
       delete drugExposureData.value.StopReason
@@ -434,10 +434,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by lot number',
     kind: 'textFilter',
     componentProps: () => createSchemaFieldProps(
-      ensureObjectField(drugExposureData.value, 'LotNumber', () => ({ Text: '', Op: 'contains' })) as TextFilter
+      ensureObjectField(drugExposureData.value, 'LotNumber', (): TextFilter => ({ Text: '', Op: 'contains' })) as TextFilter
     ),
     init: () => {
-      ensureObjectField(drugExposureData.value, 'LotNumber', () => ({ Text: '', Op: 'contains' }))
+      ensureObjectField(drugExposureData.value, 'LotNumber', (): TextFilter => ({ Text: '', Op: 'contains' }))
     },
     clear: () => {
       delete drugExposureData.value.LotNumber

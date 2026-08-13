@@ -316,10 +316,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by specimen source ID',
     kind: 'textFilter',
     componentProps: () => createSchemaFieldProps(
-      ensureObjectField(specimenData.value, 'SourceId', () => ({ Text: '', Op: 'contains' })) as TextFilter
+      ensureObjectField(specimenData.value, 'SourceId', (): TextFilter => ({ Text: '', Op: 'contains' })) as TextFilter
     ),
     init: () => {
-      ensureObjectField(specimenData.value, 'SourceId', () => ({ Text: '', Op: 'contains' }))
+      ensureObjectField(specimenData.value, 'SourceId', (): TextFilter => ({ Text: '', Op: 'contains' }))
     },
     clear: () => {
       delete specimenData.value.SourceId
