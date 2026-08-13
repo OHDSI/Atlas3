@@ -620,6 +620,112 @@ describe('CohortBuilder', () => {
   })
 
   // ---------------------------------------------------------------------------
+  // Post-save route adoption
+  // ---------------------------------------------------------------------------
+
+  /** Make canSave true, then save. Returns the handleSave result. */
+  async function saveNewCohort(wrapper: Wrapper) {
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Adults on ibuprofen'
+    Object.assign(setup.expression, {
+      PrimaryCriteria: { CriteriaList: [{ DrugExposure: {} }] },
+    })
+    await wrapper.vm.$nextTick()
+    return setup.handleSave()
+  }
+
+  // Regression: `cohortId` is derived from the route param, so a cohort saved
+  // from /cohorts/new left the editor id-less: the Generation panel kept
+  // offering "Save cohort to generate", the versions panel stayed disabled,
+  // and a second Save created a duplicate cohort instead of updating this one.
+  it('opens the saved cohort after saving a new one', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+
+    const replaced: string[] = []
+    const spy = vi.spyOn(router, 'replace').mockImplementation(async to => {
+      replaced.push(typeof to === 'string' ? to : JSON.stringify(to))
+    })
+    await saveNewCohort(wrapper)
+    spy.mockRestore()
+
+    expect(replaced).toEqual(['/cohorts/99'])
+  })
+
+  it('does not re-route when saving a cohort that already has an id', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await flushPromises()
+
+    const spy = vi.spyOn(router, 'replace').mockResolvedValue(undefined)
+    await saveNewCohort(wrapper)
+    expect(spy).not.toHaveBeenCalled()
+    spy.mockRestore()
+  })
+
+  // The cohort is already persisted by the time we navigate, so a failed
+  // navigation must not be reported to the user as a failed save.
+  it('still reports the save as successful when opening the cohort fails', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+
+    const spy = vi.spyOn(router, 'replace').mockRejectedValue(new Error('navigation aborted'))
+    const result = await saveNewCohort(wrapper)
+    spy.mockRestore()
+
+    expect(result?.id).toBe(99)
+    expect(getSetup(wrapper).showSuccess).toBe(true)
+  })
+
+  // Regression: adopting the id of the cohort we just saved used to re-run
+  // loadCohort. That fetch is async, so anything added while it was in flight —
+  // the agent's next accepted proposal, the user's next edit — was silently
+  // overwritten when it resolved, and the next save persisted the stale
+  // definition. Seen live: an observation window and four inclusion rules
+  // accepted on screen, none of them in the saved cohort.
+  it('does not reload over the editor when adopting the id of the cohort it just saved', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+
+    const spy = vi.spyOn(router, 'replace').mockResolvedValue(undefined)
+    const saved = await saveNewCohort(wrapper)
+    spy.mockRestore()
+    expect(saved?.id).toBe(99)
+
+    const webapi = await import('@/services/cohort-definition.service')
+    vi.mocked(webapi.getCohortDefinition).mockClear()
+    // The route now carries the saved id: the same change router.replace made.
+    await wrapper.setProps({ id: String(saved.id) })
+    await flushPromises()
+
+    const setup = getSetup(wrapper)
+    expect(webapi.getCohortDefinition).not.toHaveBeenCalled()
+    expect(setup.expression.PrimaryCriteria.CriteriaList).toHaveLength(1)
+    expect(setup.cohortName).toBe('Adults on ibuprofen')
+    expect(setup.cohortId).toBe(99)
+  })
+
+  // The skip is armed for exactly one id change. Navigating on to a different
+  // cohort afterwards must load normally.
+  it('loads normally when the route moves on from the just-saved cohort', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+
+    const spy = vi.spyOn(router, 'replace').mockResolvedValue(undefined)
+    await saveNewCohort(wrapper)
+    spy.mockRestore()
+
+    const webapi = await import('@/services/cohort-definition.service')
+    await wrapper.setProps({ id: '99' })
+    await flushPromises()
+    vi.mocked(webapi.getCohortDefinition).mockClear()
+
+    await wrapper.setProps({ id: '7' })
+    await flushPromises()
+
+    expect(webapi.getCohortDefinition).toHaveBeenCalledWith(7)
+  })
+
+  // ---------------------------------------------------------------------------
   // handleExportCopy
   // ---------------------------------------------------------------------------
 

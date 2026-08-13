@@ -392,6 +392,9 @@ let pendingNavigation: (() => void) | null = null
 
 // If we have an ID prop, start with loading=true to prevent UI from rendering before data loads
 const isLoadingCohort = ref(!!props.id)
+// Set to the id we just saved, so the props.id watcher can tell our own route
+// adoption apart from a real navigation to another cohort.
+const adoptedSavedId = ref<string | null>(null)
 const isConceptSetDialogOpen = ref(false)
 const isConceptSearchDialogOpen = ref(false)
 const selectedConceptDomainFilter = ref<string | undefined>(undefined)
@@ -780,13 +783,22 @@ onBeforeUnmount(() => {
   cohortStore.cancelRetry()
 })
 
+// Adopting the id of the cohort we just saved must not re-run loadCohort. That
+// fetch is async, so anything added while it was in flight (an accepted agent
+// proposal, the user's next edit) is silently overwritten when it resolves, and
+// the next save then persists the stale definition. That cost a full phenotype
+// once — observation window and four inclusion rules accepted on screen, none of
+// them in the saved cohort.
 watch(
   () => props.id,
   newId => {
-    if (newId) {
-      isLoadingCohort.value = true
-      syncToStoreDefinition()
+    if (!newId) return
+    if (adoptedSavedId.value !== null && adoptedSavedId.value === String(newId)) {
+      adoptedSavedId.value = null
+      return
     }
+    isLoadingCohort.value = true
+    syncToStoreDefinition()
   }
 )
 
@@ -1159,6 +1171,21 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
 
     successMessage.value = tv('components.cohortBuilder.saveSuccess', 'Cohort saved successfully')
     showSuccess.value = true
+
+    // Adopt the new id in the route. `cohortId` is derived from props.id, so a
+    // cohort saved from /cohorts/new stayed id-less in the editor: the
+    // Generation panel kept offering "Save cohort to generate", the versions
+    // panel stayed disabled, and a second Save created a duplicate cohort.
+    // Navigation must never fail the save — the cohort is already persisted.
+    if (!props.id) {
+      adoptedSavedId.value = String(savedId)
+      try {
+        await router.replace(`/cohorts/${savedId}`)
+      } catch (navErr) {
+        adoptedSavedId.value = null
+        logger.warn('CohortBuilder', 'Saved, but could not open the saved cohort', navErr)
+      }
+    }
     return { id: savedCohort.id, name: cohortName.value }
   } catch (error) {
     logger.error('CohortBuilder', 'Failed to save cohort', error)
