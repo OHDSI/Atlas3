@@ -128,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, toRaw } from 'vue'
+import { ref, computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
 import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
@@ -157,8 +157,8 @@ const { t, tv } = useI18n()
 const dialogOpen = ref(false)
 const editingStratumId = ref<string | null>(null)
 
-// Reactive object mutated in-place by CriteriaGroup.vue.
-const editingGroup = reactive<CriteriaGroupType>({})
+// Scratch object mutated in-place by CriteriaGroup.vue while the dialog is open.
+const editingGroup = ref<CriteriaGroupType>({})
 
 const dialogStratum = computed<Stratum | null>(() => {
   if (!editingStratumId.value) return null
@@ -188,13 +188,9 @@ const { dialogOpen: csDialogOpen, conceptSetOptions, onSelectConceptSet, onConce
 function openCriteriaDialog(id: string) {
   const stratum = props.modelValue.find(s => s.id === id)
   const existing = stratum?.criteria ?? { Type: 'ALL', CriteriaList: [] }
-  // Deep-clone into the reactive object so CriteriaGroup mutations stay local
+  // Deep-clone into the scratch ref so CriteriaGroup mutations stay local
   // until the dialog is closed and changes are emitted to the parent.
-  const cloned = JSON.parse(JSON.stringify(existing)) as CriteriaGroupType
-  for (const key of Object.keys(editingGroup)) {
-    delete (editingGroup as Record<string, unknown>)[key]
-  }
-  Object.assign(editingGroup, cloned)
+  editingGroup.value = JSON.parse(JSON.stringify(existing)) as CriteriaGroupType
   editingStratumId.value = id
   dialogOpen.value = true
 }
@@ -203,7 +199,7 @@ function onDialogClose() {
   const id = editingStratumId.value
   if (id) {
     const next = props.modelValue.map(s =>
-      s.id === id ? { ...s, criteria: toRaw(editingGroup) } : s,
+      s.id === id ? { ...s, criteria: JSON.parse(JSON.stringify(editingGroup.value)) } : s,
     )
     emit('update:modelValue', next)
   }

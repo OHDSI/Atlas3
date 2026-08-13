@@ -133,7 +133,7 @@
         <div v-if="demographicCriteriaList.length > 0">
           <DemographicCriteria
             v-for="(criteriaItem, index) in demographicCriteriaList"
-            :key="`demographic-criteria-${index}`"
+            :key="getObjectKey(criteriaItem)"
             :criteria="criteriaItem"
             :concept-sets="conceptSets"
             class="mb-3"
@@ -147,7 +147,7 @@
         <div v-if="criteriaList.length > 0">
           <CorelatedCriteria
             v-for="(criteriaItem, index) in criteriaList"
-            :key="`criteria-${index}`"
+            :key="getObjectKey(criteriaItem)"
             :criteria="criteriaItem"
             :concept-sets="conceptSets"
             class="mb-3"
@@ -170,7 +170,7 @@
         <div v-if="nestedGroups.length > 0">
           <CriteriaGroup
             v-for="(nestedGroup, index) in nestedGroups"
-            :key="`group-${index}`"
+            :key="getObjectKey(nestedGroup)"
             :group="nestedGroup"
             :concept-sets="conceptSets"
             class="mb-3"
@@ -200,6 +200,7 @@ import {
 } from '@/components/ui'
 import type { CriteriaGroup, CorelatedCriteria as CorelatedCriteriaType, DemographicCriteria as DemographicCriteriaType } from '../circe.types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
+import { createObjectKeyGenerator } from './criteria-editor-helper'
 import { createDefaultWindow } from './window-utils'
 import CorelatedCriteria from './CorelatedCriteria.vue'
 import DemographicCriteria from './DemographicCriteria.vue'
@@ -225,6 +226,7 @@ const { t } = useI18n()
 
 const depth = computed(() => props.depth ?? 0)
 const showMatchTypeMenu = ref(false)
+const getObjectKey = createObjectKeyGenerator()
 
 const groupType = computed({
   get: () => props.group.Type ?? 'ALL',

@@ -88,7 +88,7 @@ import {
 } from '@/components/ui'
 import EventConceptSet from '../input/EventConceptSet.vue'
 import CriteriaAttributes from './CriteriaAttributes.vue'
-import { createConceptSetComponentProps, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createConceptSetModel, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget, CriteriaAttributeSpec } from './criteria-editor.types'
 import type { Criteria, CriteriaGroup, ConceptSetSelection, DateAdjustment, DateRange, NumericRange } from '../circe.types'
 
@@ -127,7 +127,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deathData.value.Age
     },
-    isActive: () => 'Age' in deathData.value,
+    isActive: () => deathData.value.Age != null,
   },
   {
     key: 'Gender',
@@ -145,7 +145,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deathData.value.Gender
     },
-    isActive: () => 'Gender' in deathData.value,
+    isActive: () => deathData.value.Gender != null,
   },
   {
     key: 'GenderCS',
@@ -165,7 +165,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deathData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in deathData.value,
+    isActive: () => deathData.value.GenderCS != null,
   },
   {
     key: 'OccurrenceStartDate',
@@ -181,7 +181,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deathData.value.OccurrenceStartDate
     },
-    isActive: () => 'OccurrenceStartDate' in deathData.value,
+    isActive: () => deathData.value.OccurrenceStartDate != null,
   },
   {
     key: 'DateAdjustment',
@@ -197,7 +197,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deathData.value.DateAdjustment
     },
-    isActive: () => 'DateAdjustment' in deathData.value,
+    isActive: () => deathData.value.DateAdjustment != null,
   },
   {
     key: 'DeathType',
@@ -218,7 +218,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete deathData.value.DeathType
       delete deathData.value.DeathTypeExclude
     },
-    isActive: () => 'DeathType' in deathData.value || 'DeathTypeExclude' in deathData.value,
+    isActive: () => deathData.value.DeathType != null || deathData.value.DeathTypeExclude != null,
   },
   {
     key: 'DeathTypeCS',
@@ -238,7 +238,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deathData.value.DeathTypeCS
     },
-    isActive: () => 'DeathTypeCS' in deathData.value,
+    isActive: () => deathData.value.DeathTypeCS != null,
   },
   {
     key: 'DeathSourceConcept',
@@ -258,7 +258,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deathData.value.DeathSourceConcept
     },
-    isActive: () => 'DeathSourceConcept' in deathData.value,
+    isActive: () => deathData.value.DeathSourceConcept != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -274,7 +274,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deathData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in deathData.value,
+    isActive: () => deathData.value.CorrelatedCriteria != null,
   },
 ])
 
@@ -290,23 +290,11 @@ const deathData = computed<Record<string, any>>(() => {
   return criteria.Death
 })
 
-const deathConceptSetModel = {
-  get CodesetId() {
-    return deathData.value.CodesetId
-  },
-  set CodesetId(value: number | undefined) {
-    deathData.value.CodesetId = value
-  },
-} as ConceptSetSelection
+const death = () => deathData.value
 
-const deathSourceConceptModel = {
-  get CodesetId() {
-    return deathData.value.DeathSourceConcept
-  },
-  set CodesetId(value: number | undefined) {
-    deathData.value.DeathSourceConcept = value
-  },
-} as ConceptSetSelection
+const deathConceptSetModel = createConceptSetModel(death, 'CodesetId') as ConceptSetSelection
+
+const deathSourceConceptModel = createConceptSetModel(death, 'DeathSourceConcept') as ConceptSetSelection
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

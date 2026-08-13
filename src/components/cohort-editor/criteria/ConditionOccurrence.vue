@@ -92,7 +92,7 @@ import type { ConceptSetOption, ConceptSetSelectionTarget } from './criteria-edi
 import CriteriaAttributes from './CriteriaAttributes.vue'
 import type { ConceptArrayBinding, CriteriaAttributeSpec } from './criteria-editor.types'
 import type { ConceptSetSelection, DateAdjustment, DateRange, NumericRange, TextFilter } from '../circe.types'
-import { createConceptSetComponentProps, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createConceptSetModel, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 
 const props = defineProps<{
   criteria: Criteria
@@ -147,7 +147,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.Age
     },
-    isActive: () => 'Age' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.Age != null,
   },
   {
     key: 'Gender',
@@ -165,7 +165,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.Gender
     },
-    isActive: () => 'Gender' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.Gender != null,
   },
   {
     key: 'GenderCS',
@@ -185,7 +185,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.GenderCS != null,
   },
   {
     key: 'ConditionStatus',
@@ -203,7 +203,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.ConditionStatus
     },
-    isActive: () => 'ConditionStatus' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.ConditionStatus != null,
   },
   {
     key: 'ConditionStatusCS',
@@ -223,7 +223,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.ConditionStatusCS
     },
-    isActive: () => 'ConditionStatusCS' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.ConditionStatusCS != null,
   },
   {
     key: 'OccurrenceStartDate',
@@ -239,7 +239,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.OccurrenceStartDate
     },
-    isActive: () => 'OccurrenceStartDate' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.OccurrenceStartDate != null,
   },
   {
     key: 'OccurrenceEndDate',
@@ -255,7 +255,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.OccurrenceEndDate
     },
-    isActive: () => 'OccurrenceEndDate' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.OccurrenceEndDate != null,
   },
   {
     key: 'DateAdjustment',
@@ -271,7 +271,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.DateAdjustment
     },
-    isActive: () => 'DateAdjustment' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.DateAdjustment != null,
   },
   {
     key: 'ConditionType',
@@ -292,7 +292,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete conditionOccurrenceData.value.ConditionType
       delete conditionOccurrenceData.value.ConditionTypeExclude
     },
-    isActive: () => 'ConditionType' in conditionOccurrenceData.value || 'ConditionTypeExclude' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.ConditionType != null || conditionOccurrenceData.value.ConditionTypeExclude != null,
   },
   {
     key: 'ConditionTypeCS',
@@ -312,7 +312,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.ConditionTypeCS
     },
-    isActive: () => 'ConditionTypeCS' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.ConditionTypeCS != null,
   },
   {
     key: 'VisitType',
@@ -330,7 +330,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.VisitType
     },
-    isActive: () => 'VisitType' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.VisitType != null,
   },
   {
     key: 'VisitTypeCS',
@@ -350,7 +350,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.VisitTypeCS
     },
-    isActive: () => 'VisitTypeCS' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.VisitTypeCS != null,
   },
   {
     key: 'StopReason',
@@ -366,7 +366,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.StopReason
     },
-    isActive: () => 'StopReason' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.StopReason != null,
   },
   {
     key: 'ProviderSpecialty',
@@ -384,7 +384,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.ProviderSpecialty
     },
-    isActive: () => 'ProviderSpecialty' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.ProviderSpecialty != null,
   },
   {
     key: 'ProviderSpecialtyCS',
@@ -404,7 +404,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.ProviderSpecialtyCS
     },
-    isActive: () => 'ProviderSpecialtyCS' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.ProviderSpecialtyCS != null,
   },
   {
     key: 'ConditionSourceConcept',
@@ -424,7 +424,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.ConditionSourceConcept
     },
-    isActive: () => 'ConditionSourceConcept' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.ConditionSourceConcept != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -440,7 +440,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in conditionOccurrenceData.value,
+    isActive: () => conditionOccurrenceData.value.CorrelatedCriteria != null,
   },
 ])
 
@@ -458,23 +458,11 @@ const conditionOccurrenceData = computed<Record<string, any>>(() => {
   return criteria.ConditionOccurrence
 })
 
-const conditionOccurrenceConceptSetModel = {
-  get CodesetId() {
-    return conditionOccurrenceData.value.CodesetId
-  },
-  set CodesetId(value: number | undefined) {
-    conditionOccurrenceData.value.CodesetId = value
-  },
-} as ConceptSetSelection
+const conditionOccurrence = () => conditionOccurrenceData.value
 
-const conditionSourceConceptModel = {
-  get CodesetId() {
-    return conditionOccurrenceData.value.ConditionSourceConcept
-  },
-  set CodesetId(value: number | undefined) {
-    conditionOccurrenceData.value.ConditionSourceConcept = value
-  },
-} as ConceptSetSelection
+const conditionOccurrenceConceptSetModel = createConceptSetModel(conditionOccurrence, 'CodesetId') as ConceptSetSelection
+
+const conditionSourceConceptModel = createConceptSetModel(conditionOccurrence, 'ConditionSourceConcept') as ConceptSetSelection
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

@@ -1,6 +1,8 @@
 import type { Ref } from 'vue'
 import type { Concept } from '../circe.types'
 
+export type ModelAccessor<T> = () => T
+
 export type CriteriaFieldKind =
   | 'numericRange'
   | 'conceptSet'

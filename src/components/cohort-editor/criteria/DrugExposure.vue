@@ -88,7 +88,7 @@ import {
 import type { Criteria, CriteriaGroup, ConceptSetSelection, DateAdjustment, DateRange, NumericRange, TextFilter } from '../circe.types'
 import EventConceptSet from '../input/EventConceptSet.vue'
 import CriteriaAttributes from './CriteriaAttributes.vue'
-import { createConceptSetComponentProps, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createConceptSetModel, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
 import type { CriteriaAttributeSpec } from './criteria-editor.types'
 
@@ -143,7 +143,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.Age
     },
-    isActive: () => 'Age' in drugExposureData.value,
+    isActive: () => drugExposureData.value.Age != null,
   },
   {
     key: 'Gender',
@@ -161,7 +161,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.Gender
     },
-    isActive: () => 'Gender' in drugExposureData.value,
+    isActive: () => drugExposureData.value.Gender != null,
   },
   {
     key: 'GenderCS',
@@ -181,7 +181,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in drugExposureData.value,
+    isActive: () => drugExposureData.value.GenderCS != null,
   },
   {
     key: 'DateAdjustment',
@@ -197,7 +197,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.DateAdjustment
     },
-    isActive: () => 'DateAdjustment' in drugExposureData.value,
+    isActive: () => drugExposureData.value.DateAdjustment != null,
   },
   {
     key: 'OccurrenceStartDate',
@@ -213,7 +213,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.OccurrenceStartDate
     },
-    isActive: () => 'OccurrenceStartDate' in drugExposureData.value,
+    isActive: () => drugExposureData.value.OccurrenceStartDate != null,
   },
   {
     key: 'OccurrenceEndDate',
@@ -229,7 +229,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.OccurrenceEndDate
     },
-    isActive: () => 'OccurrenceEndDate' in drugExposureData.value,
+    isActive: () => drugExposureData.value.OccurrenceEndDate != null,
   },
   {
     key: 'DrugType',
@@ -250,7 +250,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete drugExposureData.value.DrugType
       delete drugExposureData.value.DrugTypeExclude
     },
-    isActive: () => 'DrugType' in drugExposureData.value || 'DrugTypeExclude' in drugExposureData.value,
+    isActive: () => drugExposureData.value.DrugType != null || drugExposureData.value.DrugTypeExclude != null,
   },
   {
     key: 'DrugTypeCS',
@@ -270,7 +270,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.DrugTypeCS
     },
-    isActive: () => 'DrugTypeCS' in drugExposureData.value,
+    isActive: () => drugExposureData.value.DrugTypeCS != null,
   },
   {
     key: 'StopReason',
@@ -286,7 +286,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.StopReason
     },
-    isActive: () => 'StopReason' in drugExposureData.value,
+    isActive: () => drugExposureData.value.StopReason != null,
   },
   {
     key: 'Refills',
@@ -302,7 +302,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.Refills
     },
-    isActive: () => 'Refills' in drugExposureData.value,
+    isActive: () => drugExposureData.value.Refills != null,
   },
   {
     key: 'Quantity',
@@ -318,7 +318,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.Quantity
     },
-    isActive: () => 'Quantity' in drugExposureData.value,
+    isActive: () => drugExposureData.value.Quantity != null,
   },
   {
     key: 'DaysSupply',
@@ -334,7 +334,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.DaysSupply
     },
-    isActive: () => 'DaysSupply' in drugExposureData.value,
+    isActive: () => drugExposureData.value.DaysSupply != null,
   },
   {
     key: 'RouteConcept',
@@ -352,7 +352,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.RouteConcept
     },
-    isActive: () => 'RouteConcept' in drugExposureData.value,
+    isActive: () => drugExposureData.value.RouteConcept != null,
   },
   {
     key: 'RouteConceptCS',
@@ -372,7 +372,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.RouteConceptCS
     },
-    isActive: () => 'RouteConceptCS' in drugExposureData.value,
+    isActive: () => drugExposureData.value.RouteConceptCS != null,
   },
   {
     key: 'EffectiveDrugDose',
@@ -388,7 +388,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.EffectiveDrugDose
     },
-    isActive: () => 'EffectiveDrugDose' in drugExposureData.value,
+    isActive: () => drugExposureData.value.EffectiveDrugDose != null,
   },
   {
     key: 'DoseUnit',
@@ -406,7 +406,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.DoseUnit
     },
-    isActive: () => 'DoseUnit' in drugExposureData.value,
+    isActive: () => drugExposureData.value.DoseUnit != null,
   },
   {
     key: 'DoseUnitCS',
@@ -426,7 +426,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.DoseUnitCS
     },
-    isActive: () => 'DoseUnitCS' in drugExposureData.value,
+    isActive: () => drugExposureData.value.DoseUnitCS != null,
   },
   {
     key: 'LotNumber',
@@ -442,7 +442,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.LotNumber
     },
-    isActive: () => 'LotNumber' in drugExposureData.value,
+    isActive: () => drugExposureData.value.LotNumber != null,
   },
   {
     key: 'ProviderSpecialty',
@@ -460,7 +460,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.ProviderSpecialty
     },
-    isActive: () => 'ProviderSpecialty' in drugExposureData.value,
+    isActive: () => drugExposureData.value.ProviderSpecialty != null,
   },
   {
     key: 'ProviderSpecialtyCS',
@@ -480,7 +480,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.ProviderSpecialtyCS
     },
-    isActive: () => 'ProviderSpecialtyCS' in drugExposureData.value,
+    isActive: () => drugExposureData.value.ProviderSpecialtyCS != null,
   },
   {
     key: 'DrugSourceConcept',
@@ -500,7 +500,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.DrugSourceConcept
     },
-    isActive: () => 'DrugSourceConcept' in drugExposureData.value,
+    isActive: () => drugExposureData.value.DrugSourceConcept != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -516,7 +516,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in drugExposureData.value,
+    isActive: () => drugExposureData.value.CorrelatedCriteria != null,
   },
 ])
 
@@ -532,23 +532,11 @@ const drugExposureData = computed<Record<string, any>>(() => {
   return criteria.DrugExposure
 })
 
-const drugExposureConceptSetModel = {
-  get CodesetId() {
-    return drugExposureData.value.CodesetId
-  },
-  set CodesetId(value: number | undefined) {
-    drugExposureData.value.CodesetId = value
-  },
-} as ConceptSetSelection
+const drugExposure = () => drugExposureData.value
 
-const drugSourceConceptModel = {
-  get CodesetId() {
-    return drugExposureData.value.DrugSourceConcept
-  },
-  set CodesetId(value: number | undefined) {
-    drugExposureData.value.DrugSourceConcept = value
-  },
-} as ConceptSetSelection
+const drugExposureConceptSetModel = createConceptSetModel(drugExposure, 'CodesetId') as ConceptSetSelection
+
+const drugSourceConceptModel = createConceptSetModel(drugExposure, 'DrugSourceConcept') as ConceptSetSelection
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

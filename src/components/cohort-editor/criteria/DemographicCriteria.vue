@@ -98,6 +98,10 @@ const selectConceptSetLabel = computed(() => 'Select Concept Set')
 
 const demographicData = computed<Record<string, any>>(() => props.criteria as Record<string, any>)
 
+function hasAttribute(key: string): boolean {
+  return demographicData.value[key] != null
+}
+
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {
     key: 'Age',
@@ -113,7 +117,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete demographicData.value.Age
     },
-    isActive: () => 'Age' in demographicData.value,
+    isActive: () => hasAttribute('Age'),
   },
   {
     key: 'Gender',
@@ -131,7 +135,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete demographicData.value.Gender
     },
-    isActive: () => 'Gender' in demographicData.value,
+    isActive: () => hasAttribute('Gender'),
   },
   {
     key: 'GenderCS',
@@ -151,7 +155,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete demographicData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in demographicData.value,
+    isActive: () => hasAttribute('GenderCS'),
   },
   {
     key: 'Race',
@@ -169,7 +173,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete demographicData.value.Race
     },
-    isActive: () => 'Race' in demographicData.value,
+    isActive: () => hasAttribute('Race'),
   },
   {
     key: 'RaceCS',
@@ -189,7 +193,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete demographicData.value.RaceCS
     },
-    isActive: () => 'RaceCS' in demographicData.value,
+    isActive: () => hasAttribute('RaceCS'),
   },
   {
     key: 'Ethnicity',
@@ -207,7 +211,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete demographicData.value.Ethnicity
     },
-    isActive: () => 'Ethnicity' in demographicData.value,
+    isActive: () => hasAttribute('Ethnicity'),
   },
   {
     key: 'EthnicityCS',
@@ -227,7 +231,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete demographicData.value.EthnicityCS
     },
-    isActive: () => 'EthnicityCS' in demographicData.value,
+    isActive: () => hasAttribute('EthnicityCS'),
   },
   {
     key: 'OccurrenceStartDate',
@@ -243,7 +247,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete demographicData.value.OccurrenceStartDate
     },
-    isActive: () => 'OccurrenceStartDate' in demographicData.value,
+    isActive: () => hasAttribute('OccurrenceStartDate'),
   },
   {
     key: 'OccurrenceEndDate',
@@ -259,7 +263,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete demographicData.value.OccurrenceEndDate
     },
-    isActive: () => 'OccurrenceEndDate' in demographicData.value,
+    isActive: () => hasAttribute('OccurrenceEndDate'),
   },
 ])
 

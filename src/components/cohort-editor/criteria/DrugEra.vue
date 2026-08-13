@@ -87,7 +87,7 @@ import {
 import type { Criteria, CriteriaGroup, DateRange, NumericRange, ConceptSetSelection } from '../circe.types'
 import EventConceptSet from '../input/EventConceptSet.vue'
 import CriteriaAttributes from './CriteriaAttributes.vue'
-import { createConceptSetComponentProps, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createConceptSetModel, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
 import type { CriteriaAttributeSpec } from './criteria-editor.types'
 
@@ -134,7 +134,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugEraData.value.AgeAtStart
     },
-    isActive: () => 'AgeAtStart' in drugEraData.value,
+    isActive: () => drugEraData.value.AgeAtStart != null,
   },
   {
     key: 'AgeAtEnd',
@@ -150,7 +150,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugEraData.value.AgeAtEnd
     },
-    isActive: () => 'AgeAtEnd' in drugEraData.value,
+    isActive: () => drugEraData.value.AgeAtEnd != null,
   },
   {
     key: 'Gender',
@@ -168,7 +168,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugEraData.value.Gender
     },
-    isActive: () => 'Gender' in drugEraData.value,
+    isActive: () => drugEraData.value.Gender != null,
   },
   {
     key: 'GenderCS',
@@ -188,7 +188,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugEraData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in drugEraData.value,
+    isActive: () => drugEraData.value.GenderCS != null,
   },
   {
     key: 'EraStartDate',
@@ -204,7 +204,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugEraData.value.EraStartDate
     },
-    isActive: () => 'EraStartDate' in drugEraData.value,
+    isActive: () => drugEraData.value.EraStartDate != null,
   },
   {
     key: 'EraEndDate',
@@ -220,7 +220,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugEraData.value.EraEndDate
     },
-    isActive: () => 'EraEndDate' in drugEraData.value,
+    isActive: () => drugEraData.value.EraEndDate != null,
   },
   {
     key: 'OccurrenceCount',
@@ -236,7 +236,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugEraData.value.OccurrenceCount
     },
-    isActive: () => 'OccurrenceCount' in drugEraData.value,
+    isActive: () => drugEraData.value.OccurrenceCount != null,
   },
   {
     key: 'GapDays',
@@ -252,7 +252,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugEraData.value.GapDays
     },
-    isActive: () => 'GapDays' in drugEraData.value,
+    isActive: () => drugEraData.value.GapDays != null,
   },
   {
     key: 'EraLength',
@@ -268,7 +268,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugEraData.value.EraLength
     },
-    isActive: () => 'EraLength' in drugEraData.value,
+    isActive: () => drugEraData.value.EraLength != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -284,7 +284,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugEraData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in drugEraData.value,
+    isActive: () => drugEraData.value.CorrelatedCriteria != null,
   },
 ])
 
@@ -300,14 +300,9 @@ const drugEraData = computed<Record<string, any>>(() => {
   return criteria.DrugEra
 })
 
-const drugEraConceptSetModel = {
-  get CodesetId() {
-    return drugEraData.value.CodesetId
-  },
-  set CodesetId(value: number | undefined) {
-    drugEraData.value.CodesetId = value
-  },
-} as ConceptSetSelection
+const drugEra = () => drugEraData.value
+
+const drugEraConceptSetModel = createConceptSetModel(drugEra, 'CodesetId') as ConceptSetSelection
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

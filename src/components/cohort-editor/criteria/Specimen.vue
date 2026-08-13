@@ -137,7 +137,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.OccurrenceStartDate
     },
-    isActive: () => 'OccurrenceStartDate' in specimenData.value,
+    isActive: () => specimenData.value.OccurrenceStartDate != null,
   },
   {
     key: 'SpecimenType',
@@ -158,7 +158,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete specimenData.value.SpecimenType
       delete specimenData.value.SpecimenTypeExclude
     },
-    isActive: () => 'SpecimenType' in specimenData.value || 'SpecimenTypeExclude' in specimenData.value,
+    isActive: () => specimenData.value.SpecimenType != null || specimenData.value.SpecimenTypeExclude != null,
   },
   {
     key: 'SpecimenTypeCS',
@@ -178,7 +178,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.SpecimenTypeCS
     },
-    isActive: () => 'SpecimenTypeCS' in specimenData.value,
+    isActive: () => specimenData.value.SpecimenTypeCS != null,
   },
   {
     key: 'Quantity',
@@ -194,7 +194,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.Quantity
     },
-    isActive: () => 'Quantity' in specimenData.value,
+    isActive: () => specimenData.value.Quantity != null,
   },
   {
     key: 'Unit',
@@ -212,7 +212,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.Unit
     },
-    isActive: () => 'Unit' in specimenData.value,
+    isActive: () => specimenData.value.Unit != null,
   },
   {
     key: 'UnitCS',
@@ -232,7 +232,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.UnitCS
     },
-    isActive: () => 'UnitCS' in specimenData.value,
+    isActive: () => specimenData.value.UnitCS != null,
   },
   {
     key: 'AnatomicSite',
@@ -250,7 +250,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.AnatomicSite
     },
-    isActive: () => 'AnatomicSite' in specimenData.value,
+    isActive: () => specimenData.value.AnatomicSite != null,
   },
   {
     key: 'AnatomicSiteCS',
@@ -270,7 +270,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.AnatomicSiteCS
     },
-    isActive: () => 'AnatomicSiteCS' in specimenData.value,
+    isActive: () => specimenData.value.AnatomicSiteCS != null,
   },
   {
     key: 'DiseaseStatus',
@@ -288,7 +288,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.DiseaseStatus
     },
-    isActive: () => 'DiseaseStatus' in specimenData.value,
+    isActive: () => specimenData.value.DiseaseStatus != null,
   },
   {
     key: 'DiseaseStatusCS',
@@ -308,7 +308,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.DiseaseStatusCS
     },
-    isActive: () => 'DiseaseStatusCS' in specimenData.value,
+    isActive: () => specimenData.value.DiseaseStatusCS != null,
   },
   {
     key: 'SourceId',
@@ -324,7 +324,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.SourceId
     },
-    isActive: () => 'SourceId' in specimenData.value,
+    isActive: () => specimenData.value.SourceId != null,
   },
   {
     key: 'DateAdjustment',
@@ -340,7 +340,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.DateAdjustment
     },
-    isActive: () => 'DateAdjustment' in specimenData.value,
+    isActive: () => specimenData.value.DateAdjustment != null,
   },
   {
     key: 'SpecimenSourceConcept',
@@ -348,7 +348,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by specimen source concept',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(specimenData.value, 'SpecimenSourceConcept') as ConceptSetSelection,
+      createConceptSetModel(specimen, 'SpecimenSourceConcept') as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
@@ -360,7 +360,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.SpecimenSourceConcept
     },
-    isActive: () => 'SpecimenSourceConcept' in specimenData.value,
+    isActive: () => specimenData.value.SpecimenSourceConcept != null,
   },
   {
     key: 'Age',
@@ -376,7 +376,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.Age
     },
-    isActive: () => 'Age' in specimenData.value,
+    isActive: () => specimenData.value.Age != null,
   },
   {
     key: 'Gender',
@@ -394,7 +394,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.Gender
     },
-    isActive: () => 'Gender' in specimenData.value,
+    isActive: () => specimenData.value.Gender != null,
   },
   {
     key: 'GenderCS',
@@ -414,7 +414,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in specimenData.value,
+    isActive: () => specimenData.value.GenderCS != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -430,7 +430,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in specimenData.value,
+    isActive: () => specimenData.value.CorrelatedCriteria != null,
   },
 ])
 
@@ -446,14 +446,9 @@ const specimenData = computed<Record<string, any>>(() => {
   return criteria.Specimen
 })
 
-const specimenConceptSetModel = {
-  get CodesetId() {
-    return specimenData.value.CodesetId
-  },
-  set CodesetId(value: number | undefined) {
-    specimenData.value.CodesetId = value
-  },
-} as ConceptSetSelection
+const specimen = () => specimenData.value
+
+const specimenConceptSetModel = createConceptSetModel(specimen, 'CodesetId') as ConceptSetSelection
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

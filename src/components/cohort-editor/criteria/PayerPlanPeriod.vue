@@ -126,7 +126,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.PeriodStartDate
     },
-    isActive: () => 'PeriodStartDate' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.PeriodStartDate != null,
   },
   {
     key: 'PeriodEndDate',
@@ -142,7 +142,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.PeriodEndDate
     },
-    isActive: () => 'PeriodEndDate' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.PeriodEndDate != null,
   },
   {
     key: 'UserDefinedPeriod',
@@ -158,7 +158,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.UserDefinedPeriod
     },
-    isActive: () => 'UserDefinedPeriod' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.UserDefinedPeriod != null,
   },
   {
     key: 'PeriodLength',
@@ -174,7 +174,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.PeriodLength
     },
-    isActive: () => 'PeriodLength' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.PeriodLength != null,
   },
   {
     key: 'AgeAtStart',
@@ -190,7 +190,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.AgeAtStart
     },
-    isActive: () => 'AgeAtStart' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.AgeAtStart != null,
   },
   {
     key: 'AgeAtEnd',
@@ -206,7 +206,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.AgeAtEnd
     },
-    isActive: () => 'AgeAtEnd' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.AgeAtEnd != null,
   },
   {
     key: 'Gender',
@@ -224,7 +224,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.Gender
     },
-    isActive: () => 'Gender' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.Gender != null,
   },
   {
     key: 'GenderCS',
@@ -244,7 +244,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.GenderCS != null,
   },
   {
     key: 'PayerConcept',
@@ -252,7 +252,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by payer concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriodData.value, 'PayerConcept') as ConceptSetSelection,
+      createConceptSetModel(payerPlanPeriod, 'PayerConcept') as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
@@ -264,7 +264,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.PayerConcept
     },
-    isActive: () => 'PayerConcept' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.PayerConcept != null,
   },
   {
     key: 'PlanConcept',
@@ -272,7 +272,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by plan concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriodData.value, 'PlanConcept') as ConceptSetSelection,
+      createConceptSetModel(payerPlanPeriod, 'PlanConcept') as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
@@ -284,7 +284,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.PlanConcept
     },
-    isActive: () => 'PlanConcept' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.PlanConcept != null,
   },
   {
     key: 'SponsorConcept',
@@ -292,7 +292,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by sponsor concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriodData.value, 'SponsorConcept') as ConceptSetSelection,
+      createConceptSetModel(payerPlanPeriod, 'SponsorConcept') as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
@@ -304,7 +304,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.SponsorConcept
     },
-    isActive: () => 'SponsorConcept' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.SponsorConcept != null,
   },
   {
     key: 'StopReasonConcept',
@@ -312,7 +312,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by stop reason concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriodData.value, 'StopReasonConcept') as ConceptSetSelection,
+      createConceptSetModel(payerPlanPeriod, 'StopReasonConcept') as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
@@ -324,7 +324,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.StopReasonConcept
     },
-    isActive: () => 'StopReasonConcept' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.StopReasonConcept != null,
   },
   {
     key: 'PayerSourceConcept',
@@ -332,7 +332,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by payer source concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriodData.value, 'PayerSourceConcept') as ConceptSetSelection,
+      createConceptSetModel(payerPlanPeriod, 'PayerSourceConcept') as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
@@ -344,7 +344,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.PayerSourceConcept
     },
-    isActive: () => 'PayerSourceConcept' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.PayerSourceConcept != null,
   },
   {
     key: 'PlanSourceConcept',
@@ -352,7 +352,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by plan source concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriodData.value, 'PlanSourceConcept') as ConceptSetSelection,
+      createConceptSetModel(payerPlanPeriod, 'PlanSourceConcept') as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
@@ -364,7 +364,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.PlanSourceConcept
     },
-    isActive: () => 'PlanSourceConcept' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.PlanSourceConcept != null,
   },
   {
     key: 'SponsorSourceConcept',
@@ -372,7 +372,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by sponsor source concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriodData.value, 'SponsorSourceConcept') as ConceptSetSelection,
+      createConceptSetModel(payerPlanPeriod, 'SponsorSourceConcept') as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
@@ -384,7 +384,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.SponsorSourceConcept
     },
-    isActive: () => 'SponsorSourceConcept' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.SponsorSourceConcept != null,
   },
   {
     key: 'StopReasonSourceConcept',
@@ -392,7 +392,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by stop reason source concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriodData.value, 'StopReasonSourceConcept') as ConceptSetSelection,
+      createConceptSetModel(payerPlanPeriod, 'StopReasonSourceConcept') as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
@@ -404,7 +404,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.StopReasonSourceConcept
     },
-    isActive: () => 'StopReasonSourceConcept' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.StopReasonSourceConcept != null,
   },
   {
     key: 'DateAdjustment',
@@ -420,7 +420,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.DateAdjustment
     },
-    isActive: () => 'DateAdjustment' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.DateAdjustment != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -436,7 +436,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in payerPlanPeriodData.value,
+    isActive: () => payerPlanPeriodData.value.CorrelatedCriteria != null,
   },
 ])
 
@@ -451,6 +451,8 @@ const payerPlanPeriodData = computed<Record<string, any>>(() => {
   }
   return criteria.PayerPlanPeriod
 })
+
+const payerPlanPeriod = () => payerPlanPeriodData.value
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

@@ -122,7 +122,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationPeriodData.value.PeriodStartDate
     },
-    isActive: () => 'PeriodStartDate' in observationPeriodData.value,
+    isActive: () => observationPeriodData.value.PeriodStartDate != null,
   },
   {
     key: 'PeriodEndDate',
@@ -138,7 +138,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationPeriodData.value.PeriodEndDate
     },
-    isActive: () => 'PeriodEndDate' in observationPeriodData.value,
+    isActive: () => observationPeriodData.value.PeriodEndDate != null,
   },
   {
     key: 'UserDefinedPeriod',
@@ -154,7 +154,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationPeriodData.value.UserDefinedPeriod
     },
-    isActive: () => 'UserDefinedPeriod' in observationPeriodData.value,
+    isActive: () => observationPeriodData.value.UserDefinedPeriod != null,
   },
   {
     key: 'PeriodType',
@@ -172,7 +172,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationPeriodData.value.PeriodType
     },
-    isActive: () => 'PeriodType' in observationPeriodData.value,
+    isActive: () => observationPeriodData.value.PeriodType != null,
   },
   {
     key: 'PeriodTypeCS',
@@ -192,7 +192,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationPeriodData.value.PeriodTypeCS
     },
-    isActive: () => 'PeriodTypeCS' in observationPeriodData.value,
+    isActive: () => observationPeriodData.value.PeriodTypeCS != null,
   },
   {
     key: 'PeriodLength',
@@ -208,7 +208,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationPeriodData.value.PeriodLength
     },
-    isActive: () => 'PeriodLength' in observationPeriodData.value,
+    isActive: () => observationPeriodData.value.PeriodLength != null,
   },
   {
     key: 'DateAdjustment',
@@ -224,7 +224,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationPeriodData.value.DateAdjustment
     },
-    isActive: () => 'DateAdjustment' in observationPeriodData.value,
+    isActive: () => observationPeriodData.value.DateAdjustment != null,
   },
   {
     key: 'AgeAtStart',
@@ -240,7 +240,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationPeriodData.value.AgeAtStart
     },
-    isActive: () => 'AgeAtStart' in observationPeriodData.value,
+    isActive: () => observationPeriodData.value.AgeAtStart != null,
   },
   {
     key: 'AgeAtEnd',
@@ -256,7 +256,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationPeriodData.value.AgeAtEnd
     },
-    isActive: () => 'AgeAtEnd' in observationPeriodData.value,
+    isActive: () => observationPeriodData.value.AgeAtEnd != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -272,7 +272,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationPeriodData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in observationPeriodData.value,
+    isActive: () => observationPeriodData.value.CorrelatedCriteria != null,
   },
 ])
 
