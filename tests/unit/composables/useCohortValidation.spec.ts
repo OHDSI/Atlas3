@@ -486,6 +486,49 @@ describe('useCohortValidation', () => {
       expect(cohortDefService.validateCohortDefinition).toHaveBeenCalledTimes(1)
     })
 
+    it('validates the new definition even when the previous request is still in flight', async () => {
+      // A slow check for cohort A must not swallow the trigger for cohort B, or
+      // B is never checked and A's response marks it validated on arrival.
+      let resolveFirst: (value: { success: true; data: { warnings: ValidationWarning[] } }) => void
+      const first = new Promise<{ success: true; data: { warnings: ValidationWarning[] } }>(
+        resolve => {
+          resolveFirst = resolve
+        }
+      )
+      vi.mocked(cohortDefService.validateCohortDefinition).mockReturnValueOnce(first)
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+        success: true,
+        data: { warnings: [{ type: 'DefaultWarning', severity: 'INFO', message: 'second' }] },
+      })
+
+      const options = createTestOptions()
+      const { validationWarnings, validationStatus, triggerValidation, resetValidation } =
+        useCohortValidation(options)
+
+      resetValidation()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+
+      triggerValidation()
+      await vi.advanceTimersByTimeAsync(100)
+      expect(validationStatus.value).toBe('validating')
+
+      triggerValidation()
+      await vi.advanceTimersByTimeAsync(100)
+
+      expect(cohortDefService.validateCohortDefinition).toHaveBeenCalledTimes(2)
+
+      resolveFirst!({
+        success: true,
+        data: { warnings: [{ type: 'DefaultWarning', severity: 'CRITICAL', message: 'first' }] },
+      })
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      // The superseded response must not win the write, nor mark the new
+      // definition validated on its way out.
+      expect(validationWarnings.value.map(w => w.message)).toEqual(['second'])
+    })
+
     it('should validate with placeholder name when cohort name is empty', async () => {
       vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
       const options = createTestOptions({

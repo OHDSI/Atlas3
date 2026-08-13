@@ -47,7 +47,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
   const validationWarnings = ref<ValidationWarning[]>([])
   const _isValidatingInternal = ref(false)
   const _hasValidatedOnce = ref(false)
-  let _isValidatingFlag = false
+  let _currentRunId = 0
   let validationDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
   const isValidating = computed(() => _isValidatingInternal.value)
@@ -92,9 +92,13 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     )
   })
 
+  // Every run carries a token so a response that a later run has superseded is
+  // dropped rather than written. Without it a slow check for the previous
+  // definition would land last and mark the current one validated against
+  // warnings that were never computed for it.
   async function validateCohort() {
+    const runId = ++_currentRunId
     try {
-      _isValidatingFlag = true
       _isValidatingInternal.value = true
       const nameForValidation = cohortName.value || 'Untitled Cohort'
       // The local rules answer before, and without, the server; checkV2 runs the
@@ -103,19 +107,21 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
       // CRITICAL count the generate gate reads.
       validationWarnings.value = validateExitCriteria(unref(options.expression))
       const result = await validateCohortDefinition(nameForValidation, unref(options.expression))
+      if (runId !== _currentRunId) return
       if (result.success) validationWarnings.value = result.data.warnings ?? []
     } catch (error) {
       logger.error('CohortValidation', 'Failed to validate cohort', error)
+      if (runId !== _currentRunId) return
       validationWarnings.value = validateExitCriteria(unref(options.expression))
     } finally {
-      _isValidatingFlag = false
-      _isValidatingInternal.value = false
-      _hasValidatedOnce.value = true
+      if (runId === _currentRunId) {
+        _isValidatingInternal.value = false
+        _hasValidatedOnce.value = true
+      }
     }
   }
 
   function triggerValidation() {
-    if (_isValidatingFlag) return
     if (validationDebounceTimer) clearTimeout(validationDebounceTimer)
     validationDebounceTimer = setTimeout(() => { validateCohort() }, debounceDelay)
   }
@@ -137,7 +143,9 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
   // reading `validated` + zero CRITICALs opens on a design nothing has checked.
   function resetValidation() {
     cancelValidation()
+    _currentRunId++
     validationWarnings.value = []
+    _isValidatingInternal.value = false
     _hasValidatedOnce.value = false
   }
 
