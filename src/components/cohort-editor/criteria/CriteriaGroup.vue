@@ -82,8 +82,8 @@
             <template #activator="{ props: menuProps }">
               <AtlasButton
                 v-bind="menuProps"
-                variant="outlined"
-                size="small"
+                variant="secondary"
+                size="sm"
                 prepend-icon="mdi-plus"
               >
                 {{ addCriteriaLabel }}
