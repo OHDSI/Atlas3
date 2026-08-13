@@ -1642,6 +1642,50 @@ describe('CohortBuilder', () => {
     expect(setup.showError).toBe(true)
   })
 
+  // Tag syncs are independent of each other, so N tag changes must cost one
+  // round-trip, not N.
+  it('handleSave issues every tag call in one round-trip', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await flushPromises()
+    const setup = getSetup(wrapper)
+    setup.loadedTags = [{ id: 9, name: 'old-tag' }]
+    tagSelectionDialog(wrapper).vm.$emit('update:selected-tags', [
+      { id: 7, name: 'a' },
+      { id: 8, name: 'b' },
+    ])
+    await wrapper.vm.$nextTick()
+
+    const inFlight: string[] = []
+    let release!: () => void
+    const gate = new Promise<void>(resolve => {
+      release = resolve
+    })
+    const webapi = await import('@/services/cohort-definition.service')
+    const hold = (label: string) => async (_cohortId: number, tagId: number) => {
+      inFlight.push(`${label}:${tagId}`)
+      await gate
+      return { success: true as const, data: undefined }
+    }
+    vi.mocked(webapi.assignTagToCohort)
+      .mockImplementationOnce(hold('assign'))
+      .mockImplementationOnce(hold('assign'))
+    vi.mocked(webapi.unassignTagFromCohort).mockImplementationOnce(hold('unassign'))
+
+    const saving = setup.handleSave()
+    try {
+      await flushPromises()
+      expect(inFlight).toEqual(['assign:7', 'assign:8', 'unassign:9'])
+    } finally {
+      // Drain the gate and the queued one-shot implementations, or a failure
+      // here leaks a permanently pending tag call into the next test.
+      release()
+      await saving
+      const succeed = { success: true as const, data: undefined }
+      vi.mocked(webapi.assignTagToCohort).mockReset().mockResolvedValue(succeed)
+      vi.mocked(webapi.unassignTagFromCohort).mockReset().mockResolvedValue(succeed)
+    }
+  })
+
   it('handleSave falls back to a per-tag message when unassignment fails without detail', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()

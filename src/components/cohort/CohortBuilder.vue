@@ -1186,29 +1186,32 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     const tagsToRemove = previousTags.filter(p => !currentTags.some(cur => cur.id === p.id))
     const tagFailures: string[] = []
 
-    for (const tag of tagsToAdd) {
-      const tagId = tag.id
-      if (tagId === undefined) {
-        continue
-      }
+    // The tag calls are independent of each other, so they go out together:
+    // awaiting them one at a time cost a round-trip per changed tag.
+    const tagSyncs = [
+      ...tagsToAdd.map(tag => ({ tag, action: 'assign' as const })),
+      ...tagsToRemove.map(tag => ({ tag, action: 'unassign' as const })),
+    ].filter(sync => sync.tag.id !== undefined)
 
-      const result = await assignTagToCohort(savedId, tagId)
-      if (!result.success) {
-        logger.warn('CohortBuilder', `Failed to assign tag ${tagId}`, result.error)
-        tagFailures.push(result.error.message || `Failed to assign tag "${tag.name}"`)
-      }
-    }
-    for (const tag of tagsToRemove) {
-      const tagId = tag.id
-      if (tagId === undefined) {
-        continue
-      }
+    const outcomes = await Promise.allSettled(
+      tagSyncs.map(async ({ tag, action }) => ({
+        tag,
+        action,
+        result:
+          action === 'assign'
+            ? await assignTagToCohort(savedId, tag.id!)
+            : await unassignTagFromCohort(savedId, tag.id!),
+      }))
+    )
 
-      const result = await unassignTagFromCohort(savedId, tagId)
-      if (!result.success) {
-        logger.warn('CohortBuilder', `Failed to unassign tag ${tagId}`, result.error)
-        tagFailures.push(result.error.message || `Failed to unassign tag "${tag.name}"`)
-      }
+    for (const outcome of outcomes) {
+      // A rejection is a transport failure, not a per-tag one: rethrow so the
+      // save's own catch reports it, as it did when these were awaited inline.
+      if (outcome.status === 'rejected') throw outcome.reason
+      const { tag, action, result } = outcome.value
+      if (result.success) continue
+      logger.warn('CohortBuilder', `Failed to ${action} tag ${tag.id}`, result.error)
+      tagFailures.push(result.error.message || `Failed to ${action} tag "${tag.name}"`)
     }
 
     if (tagFailures.length > 0) {
