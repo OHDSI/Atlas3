@@ -17,7 +17,26 @@
       v-if="cohortId !== null && sources.length > 0"
       #actions
     >
+      <AtlasTooltip
+        v-if="hasCriticalFindings"
+        location="top"
+      >
+        <template #activator="{ props: tipProps }">
+          <span v-bind="tipProps">
+            <AtlasButton
+              size="sm"
+              variant="primary"
+              :disabled="true"
+              data-testid="generate-all-btn"
+            >
+              {{ t('cohortDefinitions.generation.section.generateAll', 'Generate all').value }}
+            </AtlasButton>
+          </span>
+        </template>
+        <span>{{ invalidDesignReason }}</span>
+      </AtlasTooltip>
       <AtlasButton
+        v-else
         size="sm"
         variant="primary"
         :disabled="!canGenerateAll"
@@ -47,6 +66,8 @@
       :loading="false"
       :show-patient-count="true"
       :hide-cancel="true"
+      :run-disabled="hasCriticalFindings"
+      :run-disabled-reason="invalidDesignReason"
       :extra-actions="extraActions"
       @run="onRun"
       @show-history="onShowHistory"
@@ -76,7 +97,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { AtlasAlert, AtlasButton } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasTooltip } from '@/components/ui'
 import AtlasSwitch from '@/components/ui/AtlasSwitch.vue'
 import type { AtlasChipTone } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
@@ -96,11 +117,13 @@ import { logger } from '@/utils/logger'
 
 interface Props {
   cohortId: number | null
+  /** Number of CRITICAL validation findings on the current design. */
+  criticalCount?: number
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), { criticalCount: 0 })
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const webapiStore = useWebAPIStore()
@@ -204,8 +227,15 @@ function formatRelative(ms: number): string {
 
 const defaultExpanded = computed(() => false)
 
+// ATLAS 2.15 gates generation (not saving) on the design being valid:
+// cohort-definition-manager.js canGenerate requires `criticalCount() <= 0`
+// and reports disabledReasons.INVALID_DESIGN when it is not.
+const hasCriticalFindings = computed(() => props.criticalCount > 0)
+const invalidDesignReason = tv('const.disabledReason.invalidDesign', 'Design is not valid')
+
 const canGenerateAll = computed(() => {
   if (props.cohortId === null) return false
+  if (hasCriticalFindings.value) return false
   return sources.value.some(s => {
     if (!sourceAccess.canWrite(s.sourceKey)) return false
     const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
@@ -214,7 +244,7 @@ const canGenerateAll = computed(() => {
 })
 
 async function generateAll() {
-  if (props.cohortId === null) return
+  if (props.cohortId === null || hasCriticalFindings.value) return
   for (const s of sources.value) {
     if (!sourceAccess.canWrite(s.sourceKey)) continue
     const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
@@ -228,7 +258,7 @@ async function generateAll() {
 }
 
 async function onRun(sourceKey: string) {
-  if (props.cohortId === null) return
+  if (props.cohortId === null || hasCriticalFindings.value) return
   try {
     await webapiStore.generateCohort(props.cohortId, sourceKey)
   } catch (error) {

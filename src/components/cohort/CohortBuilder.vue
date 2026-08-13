@@ -34,7 +34,10 @@
       </AtlasButton>
     </div>
 
-    <CohortGenerationSection :cohort-id="cohortId" />
+    <CohortGenerationSection
+      :cohort-id="cohortId"
+      :critical-count="criticalValidationCount"
+    />
 
     <!-- Toolbar (status + actions) — hidden when the host view
          renders its own copy in the hero header. State stays here;
@@ -475,6 +478,7 @@ const {
   validationWarnings,
   isValidating,
   highestSeverityColor,
+  groupedWarningsBySeverity,
   usedConceptSets,
   triggerValidation,
   cancelValidation,
@@ -484,6 +488,8 @@ const {
   cohortDescription,
   cohortId,
 })
+
+const criticalValidationCount = computed(() => groupedWarningsBySeverity.value.CRITICAL.length)
 
 // Permission gating for save: a *new* cohort needs `create:cohort-definition`,
 // editing an existing one needs write access on that specific entity (which

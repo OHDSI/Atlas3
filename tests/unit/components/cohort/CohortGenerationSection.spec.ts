@@ -48,7 +48,8 @@ const mdcr = { sourceId: 2, sourceKey: 'MDCR', sourceName: 'MDCR', sourceDialect
 function mountSection(
   props: Record<string, unknown>,
   jobs: Array<Record<string, unknown>> = [],
-  sourcesList: Array<Record<string, unknown>> = []
+  sourcesList: Array<Record<string, unknown>> = [],
+  stubs: Record<string, unknown> = {}
 ) {
   setActivePinia(createPinia())
   const store = useWebAPIStore()
@@ -61,9 +62,17 @@ function mountSection(
     attachTo: document.body,
     global: {
       plugins: [vuetify, router],
+      stubs,
     },
     props: { cohortId: 1, ...props },
   })
+}
+
+const tooltipStub = {
+  AtlasTooltip: {
+    name: 'AtlasTooltip',
+    template: '<div class="tt-stub"><slot name="activator" :props="{}" /><slot /></div>',
+  },
 }
 
 describe('CohortGenerationSection', () => {
@@ -136,5 +145,49 @@ describe('CohortGenerationSection', () => {
     await flushPromises()
     expect(wrapper.find('[data-testid="row-extra-inclusion-CCAE"]').attributes('disabled')).toBeDefined()
     expect(wrapper.find('[data-testid="row-extra-samples-CCAE"]').attributes('disabled')).toBeDefined()
+  })
+})
+
+describe('CohortGenerationSection — CRITICAL design findings block generation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    document.body.innerHTML = ''
+  })
+
+  it('disables per-source Generate and explains why when a CRITICAL finding exists', async () => {
+    const wrapper = mountSection({ cohortId: 1, criticalCount: 1 }, [], [ccae], tooltipStub)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('Design is not valid')
+  })
+
+  it('disables Generate all when a CRITICAL finding exists', async () => {
+    const wrapper = mountSection({ cohortId: 1, criticalCount: 2 }, [], [ccae, mdcr], tooltipStub)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('does not call generateCohort for a design with a CRITICAL finding', async () => {
+    const wrapper = mountSection({ cohortId: 1, criticalCount: 1 }, [], [ccae], tooltipStub)
+    await flushPromises()
+    const store = useWebAPIStore()
+    const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
+    await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
+    await wrapper.find('[data-testid="generate-all-btn"]').trigger('click')
+    await flushPromises()
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('allows generation when findings are only WARNING or INFO', async () => {
+    const wrapper = mountSection({ cohortId: 1, criticalCount: 0 }, [], [ccae], tooltipStub)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.text()).not.toContain('Design is not valid')
+    const store = useWebAPIStore()
+    const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
+    await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
+    await flushPromises()
+    expect(spy).toHaveBeenCalledWith(1, 'CCAE')
   })
 })

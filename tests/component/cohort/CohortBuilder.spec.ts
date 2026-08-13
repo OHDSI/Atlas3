@@ -746,6 +746,52 @@ describe('CohortBuilder', () => {
     expect(payload.expression.EndStrategy).toEqual({ CustomEra: { GapDays: 30, Offset: 0 } })
   })
 
+  // The other half of the 2.15 contract: the same CRITICAL finding that leaves save
+  // alone must reach CohortGenerationSection, whose canGenerate mirrors
+  // cohort-definition-manager.js `criticalCount() <= 0`.
+  it('hands the CRITICAL count to the generation section while save stays enabled', async () => {
+    vi.useFakeTimers()
+    try {
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      const setup = getSetup(wrapper)
+      setup.cohortName = 'Incomplete exit criteria'
+      Object.assign(setup.expression, {
+        PrimaryCriteria: { CriteriaList: [{ DrugExposure: {} }] },
+        EndStrategy: { CustomEra: { GapDays: 30, Offset: 0 } },
+      })
+      await wrapper.vm.$nextTick()
+      await vi.advanceTimersByTimeAsync(3000)
+
+      const section = wrapper.findComponent({ name: 'CohortGenerationSection' })
+      expect(section.props('criticalCount')).toBeGreaterThan(0)
+      expect(setup.canSave).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('reports no CRITICAL count to the generation section for a valid design', async () => {
+    vi.useFakeTimers()
+    try {
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      const setup = getSetup(wrapper)
+      setup.cohortName = 'Complete exit criteria'
+      Object.assign(setup.expression, {
+        PrimaryCriteria: { CriteriaList: [{ DrugExposure: {} }] },
+        EndStrategy: { CustomEra: { DrugCodesetId: 3, GapDays: 30, Offset: 0 } },
+      })
+      await wrapper.vm.$nextTick()
+      await vi.advanceTimersByTimeAsync(3000)
+
+      const section = wrapper.findComponent({ name: 'CohortGenerationSection' })
+      expect(section.props('criticalCount')).toBe(0)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   // ---------------------------------------------------------------------------
   // Post-save route adoption
   // ---------------------------------------------------------------------------
