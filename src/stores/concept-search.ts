@@ -49,7 +49,14 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
 
   const totalCount = computed(() => facets.filteredConcepts.value.length)
 
-  // Client-side pagination and sorting
+  // Sorted (but NOT paginated) results. `ConceptTable` forwards this list to
+  // `AtlasDataTable`/`v-data-table` together with `page`/`itemsPerPage`, and
+  // `v-data-table` does its own slicing for the current page. Slicing here as
+  // well used to double-paginate: page 1 happened to look correct because the
+  // first `itemsPerPage` items of an already-`itemsPerPage`-sized array is
+  // that same array, but page 2 sliced an out-of-range window from an array
+  // that only ever contained one page's worth of items, silently returning
+  // nothing (see #201/#203).
   const concepts = computed(() => {
     const sorted = [...facets.filteredConcepts.value]
 
@@ -75,11 +82,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
       })
     }
 
-    // Apply pagination
-    const start = (page.value - 1) * itemsPerPage.value
-    const end = start + itemsPerPage.value
-
-    return sorted.slice(start, end)
+    return sorted
   })
 
   // `isEmpty` reflects whether the search returned ANY results (`allConcepts`),

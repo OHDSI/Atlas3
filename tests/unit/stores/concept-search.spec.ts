@@ -364,23 +364,29 @@ describe('Concept Search Store', () => {
       await store.search('test')
     })
 
-    it('should paginate results with default page size', () => {
+    it('should expose the full sorted result set for the table to paginate, not a pre-sliced page', () => {
+      // `AtlasDataTable`/`v-data-table` receives `store.concepts` together
+      // with `page`/`itemsPerPage` and slices it itself. If the store also
+      // sliced, the table would slice an already-page-sized array a second
+      // time (see #201/#203).
       const store = useConceptSearchStore()
 
-      expect(store.concepts.length).toBe(25)
+      expect(store.concepts.length).toBe(100)
       expect(store.concepts[0].conceptId).toBe(1)
-      expect(store.concepts[24].conceptId).toBe(25)
+      expect(store.concepts[99].conceptId).toBe(100)
       expect(store.totalCount).toBe(100)
     })
 
-    it('should navigate to different pages', () => {
+    it('should not truncate or reorder the sorted list when navigating to a later page (#201/#203 regression)', () => {
       const store = useConceptSearchStore()
 
       store.updatePagination(2, 25)
-      expect(store.concepts[0].conceptId).toBe(26)
+      expect(store.concepts.length).toBe(100)
+      expect(store.concepts[25].conceptId).toBe(26)
 
-      store.updatePagination(3, 25)
-      expect(store.concepts[0].conceptId).toBe(51)
+      store.updatePagination(4, 25)
+      expect(store.concepts.length).toBe(100)
+      expect(store.concepts[99].conceptId).toBe(100)
     })
 
     it('should compute page range text', () => {
