@@ -3,33 +3,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { z } from 'zod'
 import * as circe from '@/components/cohort-editor/circe.types'
-
-/**
- * `z.lazy(() => …)` calls its getter on every `.schema` access, handing back a fresh
- * schema instance each time. Everything here keys visited-sets and labels on schema
- * identity, so the resolved instance has to be memoised or recursive schemas expand
- * forever.
- */
-const lazyCache = new Map<z.ZodTypeAny, z.ZodTypeAny>()
-
-function resolveLazy(lazy: z.ZodLazy<z.ZodTypeAny>): z.ZodTypeAny {
-  const cached = lazyCache.get(lazy)
-  if (cached) return cached
-  const inner = lazy.schema as z.ZodTypeAny
-  lazyCache.set(lazy, inner)
-  return inner
-}
-
-function unwrap(schema: z.ZodTypeAny): z.ZodTypeAny {
-  let current = schema
-  for (;;) {
-    if (current instanceof z.ZodOptional || current instanceof z.ZodNullable) current = current.unwrap()
-    else if (current instanceof z.ZodDefault) current = current.removeDefault()
-    else if (current instanceof z.ZodEffects) current = current.innerType()
-    else if (current instanceof z.ZodLazy) current = resolveLazy(current)
-    else return current
-  }
-}
+import { isObjectSchema, shapeOf, synthesise, unwrap } from '../../helpers/circe-schema-walk'
 
 const exportedName = new Map<z.ZodTypeAny, string>()
 for (const [name, value] of Object.entries(circe)) {
@@ -51,14 +25,6 @@ function labelOf(schema: z.ZodObject<z.ZodRawShape>): string {
   const label = keys.length === 1 ? `${keys[0]}Wrapper` : `Anonymous${anonymousLabels.size}`
   anonymousLabels.set(schema, label)
   return label
-}
-
-function isObjectSchema(schema: z.ZodTypeAny): schema is z.ZodObject<z.ZodRawShape> {
-  return schema instanceof z.ZodObject
-}
-
-function shapeOf(schema: z.ZodObject<z.ZodRawShape>): Record<string, z.ZodTypeAny> {
-  return schema.shape as Record<string, z.ZodTypeAny>
 }
 
 interface SchemaSurface {
@@ -108,64 +74,6 @@ function describeSchema(root: z.ZodTypeAny): SchemaSurface {
 
   walk(root)
   return { slots, fieldNames, maxBranching }
-}
-
-/**
- * How deep a recursive schema may be re-entered. Two is enough to reach the slots that
- * only exist under nesting (a criteria group inside a criteria group), and stops the
- * CriteriaGroup/CorelatedCriteria/Criteria cycle from expanding without bound.
- */
-const MAX_RECURSION = 2
-
-/**
- * Builds a value for `schema` from its Zod type alone, populating every field of every
- * object it reaches. `variant` selects which arm of each union and which member of each
- * enum is taken, so running every variant covers all of them.
- */
-function synthesise(schema: z.ZodTypeAny, variant: number, seen: ReadonlyMap<z.ZodTypeAny, number>): unknown {
-  const depths = new Map(seen)
-  let current = schema
-  for (;;) {
-    if (current instanceof z.ZodOptional || current instanceof z.ZodNullable) current = current.unwrap()
-    else if (current instanceof z.ZodDefault) current = current.removeDefault()
-    else if (current instanceof z.ZodEffects) current = current.innerType()
-    else if (current instanceof z.ZodLazy) {
-      const depth = depths.get(current) ?? 0
-      if (depth >= MAX_RECURSION) return undefined
-      depths.set(current, depth + 1)
-      current = resolveLazy(current)
-    } else break
-  }
-
-  if (isObjectSchema(current)) {
-    const value: Record<string, unknown> = {}
-    for (const [key, field] of Object.entries(shapeOf(current))) {
-      const fieldValue = synthesise(field, variant, depths)
-      if (fieldValue !== undefined) value[key] = fieldValue
-    }
-    return value
-  }
-  if (current instanceof z.ZodArray) {
-    const item = synthesise(current.element as z.ZodTypeAny, variant, depths)
-    return item === undefined ? [] : [item]
-  }
-  if (current instanceof z.ZodUnion) {
-    const options = current.options as z.ZodTypeAny[]
-    return synthesise(options[variant % options.length]!, variant, depths)
-  }
-  if (current instanceof z.ZodIntersection) {
-    const left = synthesise(current._def.left as z.ZodTypeAny, variant, depths)
-    const right = synthesise(current._def.right as z.ZodTypeAny, variant, depths)
-    return { ...(left as object), ...(right as object) }
-  }
-  if (current instanceof z.ZodEnum) {
-    const options = current.options as string[]
-    return options[variant % options.length]
-  }
-  if (current instanceof z.ZodString) return `synthetic-${variant}`
-  if (current instanceof z.ZodNumber) return variant + 1
-  if (current instanceof z.ZodBoolean) return variant % 2 === 0
-  return undefined
 }
 
 /** Records which schema slots a concrete expression actually populates. */
@@ -249,7 +157,7 @@ const SURFACE = describeSchema(circe.CohortExpressionSchema)
 
 const SYNTHETIC = Array.from(
   { length: SURFACE.maxBranching },
-  (_unused, variant) => synthesise(circe.CohortExpressionSchema, variant, new Map()) as Record<string, unknown>,
+  (_unused, variant) => synthesise(circe.CohortExpressionSchema, { variant }) as Record<string, unknown>,
 )
 
 /**
