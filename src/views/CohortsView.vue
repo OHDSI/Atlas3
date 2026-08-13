@@ -38,52 +38,51 @@
     </template>
 
     <div class="cohorts-view">
-      <!-- Toolbar: primary actions on the left, status chip + filters
-           toggle on the right. Sits flush on the page card surface
-           with no inner v-card wrapper. -->
+      <!-- Toolbar: search + filters on the left, status chip in the
+           middle, primary actions right-aligned on the same row. Sits
+           flush on the page card surface with no inner v-card wrapper. -->
       <div class="cohorts-view__toolbar">
-        <AtlasButton
-          icon="mdi-plus"
-          :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
-          :disabled="!canCreateCohort"
-          @click="handleCreateCohort"
+        <cohort-filters
+          :filters="filters"
+          :available-tags="availableTags"
+          :available-authors="availableAuthors"
+          :active-filter-count="activeFilterCount"
+          class="cohorts-view__filters"
+          @update:filters="filters = $event"
+          @clear="clearFilters"
         >
-          {{ t('cohortDefinitions.newDefinition', 'New cohort') }}
-        </AtlasButton>
+          <template #actions>
+            <AtlasChip
+              v-if="!loading && filteredCohorts.length > 0"
+              size="sm"
+              tone="primary"
+              class="cohorts-view__count"
+            >
+              {{ countLabel }}
+            </AtlasChip>
 
-        <AtlasButton
-          variant="secondary"
-          icon="mdi-upload-outline"
-          :aria-label="t('common.import', 'Import cohort from JSON').value"
-          :disabled="!canCreateCohort"
-          data-testid="import-cohort-btn"
-          @click="handleImportCohort"
-        >
-          {{ t('common.import', 'Import') }}
-        </AtlasButton>
+            <AtlasButton
+              variant="secondary"
+              icon="mdi-upload-outline"
+              :aria-label="t('common.import', 'Import cohort from JSON').value"
+              :disabled="!canCreateCohort"
+              data-testid="import-cohort-btn"
+              @click="handleImportCohort"
+            >
+              {{ t('common.import', 'Import') }}
+            </AtlasButton>
 
-        <AtlasChip
-          v-if="!loading && filteredCohorts.length > 0"
-          size="sm"
-          tone="primary"
-          class="cohorts-view__count"
-        >
-          {{ countLabel }}
-        </AtlasChip>
-
-        <AtlasSpacer />
+            <AtlasButton
+              icon="mdi-plus"
+              :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
+              :disabled="!canCreateCohort"
+              @click="handleCreateCohort"
+            >
+              {{ t('cohortDefinitions.newDefinition', 'New cohort') }}
+            </AtlasButton>
+          </template>
+        </cohort-filters>
       </div>
-
-      <!-- Filters -->
-      <cohort-filters
-        :filters="filters"
-        :available-tags="availableTags"
-        :available-authors="availableAuthors"
-        :active-filter-count="activeFilterCount"
-        class="cohorts-view__filters"
-        @update:filters="filters = $event"
-        @clear="clearFilters"
-      />
 
       <!-- Filtering indicator -->
       <div
@@ -798,7 +797,7 @@ defineExpose({
 }
 
 .cohorts-view__filters {
-  margin-bottom: 16px;
+  flex: 1 1 auto;
 }
 
 .cohorts-view__pagination {
