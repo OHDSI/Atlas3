@@ -437,10 +437,6 @@ const isConfirmingNavigation = ref(false) // Flag to prevent double confirmation
 // Snapshot of the loaded/saved state for change detection
 const loadedSnapshot = ref<string | null>(null)
 
-// Generation state
-const selectedSourceKey = ref<string | null>(null)
-const generationError = ref<string | null>(null)
-
 const cohortId = computed(() => (props.id ? Number(props.id) : null))
 
 // Two-way sync with the parent's inline-edit name + description
@@ -731,12 +727,7 @@ onMounted(async () => {
     // Load all concept sets from the API so user can select any system concept set
     conceptSetsStore.fetchAll(),
     // Load CDM sources for generation
-    webapiStore.fetchSources().then(() => {
-      // Auto-select first source if available
-      if (webapiStore.sourcesList.length > 0 && !selectedSourceKey.value) {
-        selectedSourceKey.value = webapiStore.sourcesList[0]?.sourceKey || null
-      }
-    }),
+    webapiStore.fetchSources(),
   ])
 
   // Add beforeunload handler to warn when closing tab/window with unsaved changes
@@ -1298,33 +1289,6 @@ async function handleExportCopy() {
     logger.error('CohortBuilder', 'Clipboard copy failed', err)
     errorMessage.value = tv('components.cohortBuilder.copyFailed', 'Could not copy to clipboard')
     showError.value = true
-  }
-}
-
-// Generation functions
-// @ts-expect-error - Planned feature, not yet implemented in UI
-async function _handleGenerate() {
-  if (!cohortId.value || !selectedSourceKey.value) {
-    generationError.value = 'Please save the cohort and select a data source first'
-    return
-  }
-
-  try {
-    generationError.value = null
-
-    // Start generation
-    const job = await webapiStore.generateCohort(cohortId.value, selectedSourceKey.value)
-
-    if (!job) {
-      generationError.value = 'Failed to start cohort generation'
-      return
-    }
-
-    successMessage.value = 'Cohort generation started'
-    showSuccess.value = true
-  } catch (error) {
-    generationError.value = error instanceof Error ? error.message : 'Generation failed'
-    logger.error('CohortBuilder', 'Generation error', error)
   }
 }
 
