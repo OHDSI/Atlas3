@@ -309,7 +309,10 @@ describe('DataSourcesView', () => {
 
   describe('Loading States', () => {
     it('should show skeleton loader when report is loading', async () => {
-      const mockSource = createMockDataSource({ sourceKey: 'TEST' })
+      // sourceId must be pinned non-zero: createMockDataSource randomises it,
+      // and the store's `if (selectedSourceId.value)` guards treat 0 as "no
+      // source selected", so a random 0 silently skips the report fetch.
+      const mockSource = createMockDataSource({ sourceKey: 'TEST', sourceId: 1 })
       mockListDataSources.mockResolvedValue([mockSource])
 
       let resolveReport: (value: any) => void
@@ -325,16 +328,9 @@ describe('DataSourcesView', () => {
       // Start the report fetch (don't await - we want to check loading state)
       const fetchPromise = store.selectReportType('dashboard')
 
-      // The report promise stays unresolved, so this polls until the
-      // skeleton has actually rendered rather than racing a single flush.
-      await vi.waitFor(
-        async () => {
-          await wrapper.vm.$nextTick()
-          const hasSkeleton = wrapper.findComponent({ name: 'VSkeletonLoader' }).exists()
-          expect(hasSkeleton).toBe(true)
-        },
-        { timeout: 5000, interval: 50 }
-      )
+      expect(store.loading.report).toBe(true)
+      await wrapper.vm.$nextTick()
+      expect(wrapper.findComponent({ name: 'VSkeletonLoader' }).exists()).toBe(true)
 
       resolveReport!({ summary: { sourceName: 'Test', personCount: 100 }, genderDistribution: [], ageDistribution: { categories: [], series: [] }, cumulativeObservation: { categories: [], series: [] }, observationByMonth: { categories: [], series: [] } })
       await fetchPromise
@@ -344,7 +340,9 @@ describe('DataSourcesView', () => {
 
   describe('Report Rendering', () => {
     it('should render DashboardReport when dashboard data is available', async () => {
-      const mockSource = createMockDataSource({ sourceKey: 'TEST' })
+      // Pinned non-zero for the same reason as the skeleton test above: the
+      // store reads sourceId 0 as "no source selected".
+      const mockSource = createMockDataSource({ sourceKey: 'TEST', sourceId: 1 })
       const mockReport: DashboardReport = {
         summary: { sourceName: 'Test', personCount: 1000 },
         genderDistribution: [],
@@ -363,16 +361,9 @@ describe('DataSourcesView', () => {
       store.selectedSourceId = mockSource.sourceId
       await store.selectReportType('dashboard')
 
-      // Wait for component to update with retry logic for CI stability
-      await vi.waitFor(
-        async () => {
-          await flushPromises()
-          await wrapper.vm.$nextTick()
-          const dashboardReport = wrapper.findComponent({ name: 'DashboardReport' })
-          expect(dashboardReport.exists()).toBe(true)
-        },
-        { timeout: 5000, interval: 100 }
-      )
+      await flushPromises()
+      expect(store.currentReport?.type).toBe('dashboard')
+      expect(wrapper.findComponent({ name: 'DashboardReport' }).exists()).toBe(true)
     })
   })
 
