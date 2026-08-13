@@ -305,15 +305,15 @@ async function handleUseConceptSet(payload: {
   conceptSetId: number
   group?: 'entry' | 'inclusion' | 'exclusion'
   name?: string
-}): Promise<{ id?: number | string; name?: string } | void> {
-  if (payload?.conceptSetId === undefined) return
+}): Promise<ProposalOutcome | void> {
+  if (payload?.conceptSetId === undefined) return { applied: false }
   let set
   try {
     set = await getConceptSetById(payload.conceptSetId)
   } catch (err) {
     logger.error('pythiaBridge', 'useConceptSet: fetch failed', err)
     showSnackbar(`Could not read concept set ${payload.conceptSetId}`, 'error')
-    return
+    return { applied: false }
   }
   // getConceptSetById returns the set with its concepts flattened onto `items`
   // in the editor's internal shape, which is what the cohort store expects.
@@ -324,7 +324,7 @@ async function handleUseConceptSet(payload: {
       set ? `Concept set "${set.name}" has no concepts` : `Concept set ${payload.conceptSetId} not found`,
       'error',
     )
-    return
+    return { applied: false }
   }
 
   const first = items[0] as Record<string, unknown>
@@ -348,11 +348,12 @@ async function handleUseConceptSet(payload: {
   await ensureOnCohortRoute()
   await waitForCohortDocument()
 
+  let result
   if (group === 'entry') {
-    cohortStore.applyProposal({ kind: 'addEntryEvent', event } as never)
+    result = cohortStore.applyProposal({ kind: 'addEntryEvent', event } as never)
   } else {
     const excluded = group === 'exclusion'
-    cohortStore.applyProposal({
+    result = cohortStore.applyProposal({
       kind: 'addInclusionRule',
       rule: {
         id: `use-rule-${set.id}-${Date.now()}`,
@@ -370,6 +371,15 @@ async function handleUseConceptSet(payload: {
         ],
       },
     } as never)
+  }
+  if (!result.applied) {
+    if (result.reason === 'no-document') {
+      showSnackbar('Open a cohort before asking for changes to one', 'error')
+    } else {
+      logger.error('pythiaBridge', `useConceptSet: proposal rejected (${result.reason})`)
+      showSnackbar(`Could not add concept set "${set.name}" to the cohort`, 'error')
+    }
+    return { applied: false }
   }
   showSnackbar(`Using concept set "${set.name}" (${items.length} concepts)`, 'success')
   return { id: set.id, name: set.name }
