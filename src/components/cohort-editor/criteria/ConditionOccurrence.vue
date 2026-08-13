@@ -358,10 +358,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by stop reason text',
     kind: 'textFilter',
     componentProps: () => createSchemaFieldProps(
-      ensureObjectField(conditionOccurrenceData.value, 'StopReason', () => ({ Value: '', Op: 'contains' })) as TextFilter
+      ensureObjectField(conditionOccurrenceData.value, 'StopReason', (): TextFilter => ({ Text: '', Op: 'contains' })) as TextFilter
     ),
     init: () => {
-      ensureObjectField(conditionOccurrenceData.value, 'StopReason', () => ({ Value: '', Op: 'contains' }))
+      ensureObjectField(conditionOccurrenceData.value, 'StopReason', (): TextFilter => ({ Text: '', Op: 'contains' }))
     },
     clear: () => {
       delete conditionOccurrenceData.value.StopReason

@@ -41,10 +41,9 @@ export function getVersions(cohortDefinitionId: number): Promise<Version[]> {
 /**
  * Get a specific version of a cohort definition
  *
- * `entityDTO` is the raw Atlas-shaped DTO the WebAPI returns for a historical
- * version (id/name/description/expression-as-JSON-string), not an internal
- * `CohortDefinition`. Callers must run it through the same
- * convertAtlasToInternal path used for the current-version WebAPI fetch.
+ * The WebAPI returns the historical version with `expression` as a JSON string;
+ * it is normalised here so callers get the same parsed `CohortDefinition` shape
+ * as the current-version fetch.
  * @param cohortDefinitionId Cohort definition ID
  * @param versionNumber Version number to retrieve
  * @returns Versioned asset containing version metadata and historical data

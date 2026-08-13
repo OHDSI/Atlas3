@@ -54,9 +54,9 @@
 
       <AtlasButton
         icon="mdi-delete"
-        variant="text"
+        variant="ghost"
         color="error"
-        size="small"
+        size="sm"
         @click="emit('remove')"
       />
     </v-card-text>
@@ -316,10 +316,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by specimen source ID',
     kind: 'textFilter',
     componentProps: () => createSchemaFieldProps(
-      ensureObjectField(specimenData.value, 'SourceId', () => ({ Value: '', Op: 'contains' })) as TextFilter
+      ensureObjectField(specimenData.value, 'SourceId', (): TextFilter => ({ Text: '', Op: 'contains' })) as TextFilter
     ),
     init: () => {
-      ensureObjectField(specimenData.value, 'SourceId', () => ({ Value: '', Op: 'contains' }))
+      ensureObjectField(specimenData.value, 'SourceId', (): TextFilter => ({ Text: '', Op: 'contains' }))
     },
     clear: () => {
       delete specimenData.value.SourceId

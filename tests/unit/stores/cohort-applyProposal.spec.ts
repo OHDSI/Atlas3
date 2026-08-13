@@ -1,11 +1,55 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { ref } from 'vue'
 import { useCohortStore } from '@/stores/cohort'
 import type { AgentProposal } from '@/models/agent.types'
+import { CohortExpressionSchema, type CohortExpression } from '@/components/cohort-editor/circe.types'
+
+// applyProposal mutates the document the mounted editor lends to the store, so
+// every test that expects a proposal to land has to attach one first.
+function openCohort(expression: CohortExpression = {}) {
+  const store = useCohortStore()
+  store.setCohort({ name: 'Test' })
+  store.attachExpression(ref(expression))
+  return store
+}
+
+// Stand in for the mounted CohortBuilder, which lends its expression object to
+// the store; without an attached document every proposal is rejected.
+function newCohort() {
+  const store = useCohortStore()
+  store.createNewCohort()
+  store.attachExpression(ref<CohortExpression>({}))
+  return store
+}
 
 describe('useCohortStore.applyProposal', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+  })
+
+  it('a proposal with no document attached reports failure rather than silently succeeding', () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+
+    expect(
+      store.applyProposal({
+        kind: 'addEntryEvent',
+        event: { id: 'e1', criteriaType: 'ConditionOccurrence' } as never,
+      })
+    ).toMatchObject({ applied: false })
+  })
+
+  it('a proposal after the editor detaches reports failure', () => {
+    const store = openCohort({})
+    store.detachExpression()
+
+    expect(
+      store.applyProposal({
+        kind: 'addEntryEvent',
+        event: { id: 'e1', criteriaType: 'ConditionOccurrence' } as never,
+      })
+    ).toMatchObject({ applied: false })
   })
 
   it('is a no-op when no cohort exists (expression is absent)', () => {
@@ -21,8 +65,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('addEntryEvent pushes a ConditionOccurrence wrapper to PrimaryCriteria.CriteriaList', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
     expect(store.isDirty).toBe(false)
 
     store.applyProposal({
@@ -37,8 +80,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('addEntryEvent appends multiple events to PrimaryCriteria.CriteriaList', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
 
     store.applyProposal({ kind: 'addEntryEvent', event: { id: 'e1', criteriaType: 'ConditionOccurrence' } as never })
     store.applyProposal({ kind: 'addEntryEvent', event: { id: 'e2', criteriaType: 'DrugExposure' } as never })
@@ -49,8 +91,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('addInclusionRule appends to expression.InclusionRules', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
 
     store.applyProposal({
       kind: 'addInclusionRule',
@@ -64,8 +105,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('addConceptSet pushes to expression.ConceptSets', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
 
     store.applyProposal({ kind: 'addConceptSet', conceptSet: { id: 42, name: 'NSAIDs' } as never })
 
@@ -75,8 +115,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('addConceptSet deduplicates by id', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
     const conceptSet = { id: 42, name: 'NSAIDs' } as never
 
     store.applyProposal({ kind: 'addConceptSet', conceptSet })
@@ -86,8 +125,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('setObservationPeriod sets expression.PrimaryCriteria.ObservationWindow', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
 
     store.applyProposal({
       kind: 'setObservationPeriod',
@@ -101,8 +139,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('setCohortExit CONTINUOUS_OBSERVATION clears EndStrategy', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: { EndStrategy: { DateOffset: { Offset: 30 } } } })
+    const store = openCohort({ EndStrategy: { DateOffset: { Offset: 30 } } })
 
     store.applyProposal({
       kind: 'setCohortExit',
@@ -113,8 +150,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('setCohortExit FIXED_DURATION sets DateOffset EndStrategy', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
 
     store.applyProposal({
       kind: 'setCohortExit',
@@ -127,8 +163,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('addCensoringCriterion appends a Death wrapper to expression.CensoringCriteria', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
 
     store.applyProposal({
       kind: 'addCensoringCriterion',
@@ -142,8 +177,7 @@ describe('useCohortStore.applyProposal', () => {
   })
 
   it('isDirty flips on every mutating proposal', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
+    const store = openCohort({})
     store.markClean()
 
     store.applyProposal({
@@ -153,44 +187,204 @@ describe('useCohortStore.applyProposal', () => {
     expect(store.isDirty).toBe(true)
   })
 
-  it('agentRevision increments on every mutating proposal', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
-    expect(store.agentRevision).toBe(0)
+  it('reports applied for every mutating proposal', () => {
+    const store = openCohort({})
 
-    store.applyProposal({
-      kind: 'setObservationPeriod',
-      observationPeriod: { priorDays: 365, postDays: 30 },
-    })
-    expect(store.agentRevision).toBe(1)
+    expect(
+      store.applyProposal({
+        kind: 'setObservationPeriod',
+        observationPeriod: { priorDays: 365, postDays: 30 },
+      })
+    ).toEqual({ applied: true })
 
-    store.applyProposal({
-      kind: 'setCohortExit',
-      exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' } as never,
-    })
-    expect(store.agentRevision).toBe(2)
+    expect(
+      store.applyProposal({
+        kind: 'setCohortExit',
+        exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' } as never,
+      })
+    ).toEqual({ applied: true })
   })
 
-  it('agentRevision does NOT increment on direct markDirty mutations', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
-    const before = store.agentRevision
+  it('non-cohort proposal kinds (navigate, saveCohort, etc.) report unsupported and leave the cohort clean', () => {
+    const store = openCohort({})
+    store.markClean()
 
-    // Direct mutation outside applyProposal should not bump agentRevision
-    store.markDirty()
+    expect(
+      store.applyProposal({ kind: 'navigate', route: { name: 'cohorts' } } as AgentProposal)
+    ).toEqual({ applied: false, reason: 'unsupported-kind' })
+    expect(
+      store.applyProposal({ kind: 'saveCohort' } as AgentProposal)
+    ).toEqual({ applied: false, reason: 'unsupported-kind' })
 
-    expect(store.agentRevision).toBe(before)
-  })
-
-  it('non-cohort proposal kinds (navigate, saveCohort, etc.) do not increment agentRevision', () => {
-    const store = useCohortStore()
-    store.setCohort({ name: 'Test', expression: {} })
-    const before = store.agentRevision
-
-    store.applyProposal({ kind: 'navigate', route: { name: 'cohorts' } } as AgentProposal)
-    store.applyProposal({ kind: 'saveCohort' } as AgentProposal)
-
-    expect(store.agentRevision).toBe(before)
+    expect(store.isDirty).toBe(false)
   })
 })
 
+// Regression: agent criteria carry their concept set inline on the event with a
+// client-side string uid. A criterion's CodesetId is only meaningful once that
+// id is a number registered in expression.ConceptSets — so without registration
+// every agent-built cohort saved as `CodesetId: null` + `ConceptSets: []`, i.e.
+// "any drug exposure" rather than the drug the agent chose. That used to
+// silently produce meaningless analyses.
+//
+// T14 (src/stores/cohort.ts:112): applyProposal's addEntryEvent case reads
+// only `event.criteriaType` and pushes an empty wrapper (`{ DrugExposure: {} }`);
+// it never looks at `event.conceptSet`, so the concept set and attributes are
+// dropped while the proposal still reports applied and marks the cohort
+// dirty. The registration this block
+// guards is real — it happens in pythiaBridge's adoptProposalConceptSets,
+// which runs *before* cohortStore.applyProposal in production — but the
+// store's own applyProposal, called directly here, does not do it. Fixed in
+// Phase 3 (either move the registration into the store, or accept it only
+// ever runs through the bridge).
+describe('applyProposal registers concept sets embedded on agent events', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  const eventWithConceptSet = (name: string, conceptId: number) => ({
+    id: `evt-${conceptId}`,
+    criteriaType: 'DrugExposure',
+    conceptSet: {
+      id: 'client-uuid-not-a-number',
+      name,
+      conceptCount: 1,
+      items: [{ concept: { CONCEPT_ID: conceptId, CONCEPT_NAME: name } }],
+    },
+  })
+
+  it.fails('gives the entry event a numeric CodesetId and registers the set', () => {
+    const store = newCohort()
+    store.applyProposal({
+      kind: 'addEntryEvent',
+      event: eventWithConceptSet('Amoxicillin', 1713671),
+    } as never)
+
+    const expr = store.currentCohort!.expression!
+    const criterion = expr.PrimaryCriteria?.CriteriaList?.[0] as
+      | Record<string, { CodesetId?: number }>
+      | undefined
+    const codesetId = criterion?.DrugExposure?.CodesetId
+    expect(typeof codesetId).toBe('number')
+    expect(expr.ConceptSets).toHaveLength(1)
+    expect(expr.ConceptSets![0].name).toBe('Amoxicillin')
+    // the criterion and the registered set must agree
+    expect(expr.ConceptSets![0].id).toBe(codesetId)
+    // and the concept itself must survive in the shape CIRCE reads, otherwise
+    // the saved ConceptSets carry CONCEPT_ID: null
+    const item = expr.ConceptSets![0].expression?.items?.[0]
+    expect(item?.concept?.CONCEPT_ID).toBe(1713671)
+    expect(item?.concept?.CONCEPT_NAME).toBe('Amoxicillin')
+  })
+
+  // T14 on both counts: addEntryEvent drops the first criterion's conceptSet,
+  // and addInclusionRule drops criteriaGroups entirely, so the second
+  // criterion's conceptSet never even reaches the store.
+  it.fails('assigns distinct ids across several criteria', () => {
+    const store = newCohort()
+    store.applyProposal({
+      kind: 'addEntryEvent',
+      event: eventWithConceptSet('Amoxicillin', 1713671),
+    } as never)
+    store.applyProposal({
+      kind: 'addInclusionRule',
+      rule: {
+        id: 'r1',
+        name: 'On doxycycline',
+        criteriaGroups: [
+          { id: 'g1', logicType: 'ALL', events: [eventWithConceptSet('Doxycycline', 1738521)] },
+        ],
+      },
+    } as never)
+
+    const ids = (store.currentCohort!.expression!.ConceptSets ?? []).map(cs => cs.id)
+    expect(ids).toHaveLength(2)
+    expect(new Set(ids).size).toBe(2)
+    expect(ids.every(id => typeof id === 'number')).toBe(true)
+  })
+})
+
+// End-to-end of the serialisation path: store.currentCohort.expression is what
+// actually gets POSTed to WebAPI. Before a past fix this produced
+// `CodesetId: null` + `ConceptSets: []`; after the first fix it produced a
+// ConceptSets entry whose concept was all nulls. Assert the real JSON — and
+// that it validates as a well-formed CIRCE expression.
+describe('agent-built cohort serialises to valid CIRCE', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('adds exactly one criterion to PrimaryCriteria.CriteriaList', () => {
+    const store = newCohort()
+    store.applyProposal({
+      kind: 'addEntryEvent',
+      event: {
+        id: 'evt-1',
+        criteriaType: 'DrugExposure',
+        conceptSet: {
+          id: 'client-uuid',
+          name: 'Amoxicillin',
+          conceptCount: 1,
+          items: [
+            {
+              concept: {
+                CONCEPT_ID: 1713671,
+                CONCEPT_NAME: 'Amoxicillin',
+                DOMAIN_ID: 'Drug',
+              },
+              includeDescendants: true,
+              isExcluded: false,
+            },
+          ],
+        },
+      },
+    } as never)
+
+    const parsed = CohortExpressionSchema.safeParse(store.currentCohort?.expression)
+    expect(parsed.success).toBe(true)
+    if (parsed.success) {
+      expect(parsed.data.PrimaryCriteria?.CriteriaList).toHaveLength(1)
+    }
+  })
+
+  // T14: the criterion is added (above), but its embedded conceptSet is
+  // dropped — no CodesetId, no ConceptSets entry. Fixed in Phase 3.
+  it.fails('emits a matching CodesetId and a concept set carrying the concept', () => {
+    const store = newCohort()
+    store.applyProposal({
+      kind: 'addEntryEvent',
+      event: {
+        id: 'evt-1',
+        criteriaType: 'DrugExposure',
+        conceptSet: {
+          id: 'client-uuid',
+          name: 'Amoxicillin',
+          conceptCount: 1,
+          items: [
+            {
+              concept: {
+                CONCEPT_ID: 1713671,
+                CONCEPT_NAME: 'Amoxicillin',
+                DOMAIN_ID: 'Drug',
+              },
+              includeDescendants: true,
+              isExcluded: false,
+            },
+          ],
+        },
+      },
+    } as never)
+
+    const expr = store.currentCohort!.expression!
+    const criteria = expr.PrimaryCriteria?.CriteriaList as
+      | Array<Record<string, { CodesetId?: number }>>
+      | undefined
+    const codesetId = criteria?.[0]?.DrugExposure?.CodesetId
+    const conceptSets = expr.ConceptSets ?? []
+
+    expect(typeof codesetId).toBe('number')
+    expect(conceptSets).toHaveLength(1)
+    expect(conceptSets[0].id).toBe(codesetId)
+    const concept = conceptSets[0].expression?.items?.[0]?.concept
+    expect(concept?.CONCEPT_ID).toBe(1713671)
+    expect(concept?.CONCEPT_NAME).toBe('Amoxicillin')
+  })
+})

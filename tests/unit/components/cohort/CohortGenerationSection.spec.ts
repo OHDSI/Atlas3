@@ -48,7 +48,8 @@ const mdcr = { sourceId: 2, sourceKey: 'MDCR', sourceName: 'MDCR', sourceDialect
 function mountSection(
   props: Record<string, unknown>,
   jobs: Array<Record<string, unknown>> = [],
-  sourcesList: Array<Record<string, unknown>> = []
+  sourcesList: Array<Record<string, unknown>> = [],
+  stubs: Record<string, unknown> = {}
 ) {
   setActivePinia(createPinia())
   const store = useWebAPIStore()
@@ -61,9 +62,20 @@ function mountSection(
     attachTo: document.body,
     global: {
       plugins: [vuetify, router],
+      stubs,
     },
-    props: { cohortId: 1, ...props },
+    // validationStatus defaults to 'validated' here so the cases that are not
+    // about the validation gate keep exercising the enabled path; the gate's own
+    // cases pass it explicitly.
+    props: { cohortId: 1, validationStatus: 'validated', ...props },
   })
+}
+
+const tooltipStub = {
+  AtlasTooltip: {
+    name: 'AtlasTooltip',
+    template: '<div class="tt-stub"><slot name="activator" :props="{}" /><slot /></div>',
+  },
 }
 
 describe('CohortGenerationSection', () => {
@@ -136,5 +148,198 @@ describe('CohortGenerationSection', () => {
     await flushPromises()
     expect(wrapper.find('[data-testid="row-extra-inclusion-CCAE"]').attributes('disabled')).toBeDefined()
     expect(wrapper.find('[data-testid="row-extra-samples-CCAE"]').attributes('disabled')).toBeDefined()
+  })
+})
+
+describe('CohortGenerationSection — CRITICAL design findings block generation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    document.body.innerHTML = ''
+  })
+
+  it('disables per-source Generate and explains why when a CRITICAL finding exists', async () => {
+    const wrapper = mountSection({ cohortId: 1, criticalCount: 1 }, [], [ccae], tooltipStub)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('Design is not valid')
+  })
+
+  it('disables Generate all when a CRITICAL finding exists', async () => {
+    const wrapper = mountSection({ cohortId: 1, criticalCount: 2 }, [], [ccae, mdcr], tooltipStub)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('does not call generateCohort for a design with a CRITICAL finding', async () => {
+    const wrapper = mountSection({ cohortId: 1, criticalCount: 1 }, [], [ccae], tooltipStub)
+    await flushPromises()
+    const store = useWebAPIStore()
+    const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
+    await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
+    await wrapper.find('[data-testid="generate-all-btn"]').trigger('click')
+    await flushPromises()
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('allows generation when findings are only WARNING or INFO', async () => {
+    const wrapper = mountSection({ cohortId: 1, criticalCount: 0 }, [], [ccae], tooltipStub)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.text()).not.toContain('Design is not valid')
+    const store = useWebAPIStore()
+    const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
+    await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
+    await flushPromises()
+    expect(spy).toHaveBeenCalledWith(1, 'CCAE')
+  })
+})
+
+// ATLAS 2.15 cohort-definition-manager.js canGenerate is
+// `!(isDirty || isNew) && hasInitialEvent && criticalCount() <= 0`; without the
+// isDirty term WebAPI would generate the last saved expression while the editor
+// shows the edited one.
+describe('CohortGenerationSection — unsaved changes block generation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    document.body.innerHTML = ''
+  })
+
+  it('disables per-source Generate and explains why when the design is dirty', async () => {
+    const wrapper = mountSection({ cohortId: 1, isDirty: true }, [], [ccae], tooltipStub)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('Save changes before generate')
+  })
+
+  it('disables Generate all when the design is dirty', async () => {
+    const wrapper = mountSection({ cohortId: 1, isDirty: true }, [], [ccae, mdcr], tooltipStub)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('does not call generateCohort for a dirty design', async () => {
+    const wrapper = mountSection({ cohortId: 1, isDirty: true }, [], [ccae], tooltipStub)
+    await flushPromises()
+    const store = useWebAPIStore()
+    const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
+    await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
+    await wrapper.find('[data-testid="generate-all-btn"]').trigger('click')
+    await flushPromises()
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('allows generation once the saved cohort is clean', async () => {
+    const wrapper = mountSection({ cohortId: 1, isDirty: false }, [], [ccae], tooltipStub)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.text()).not.toContain('Save changes before generate')
+    const store = useWebAPIStore()
+    const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
+    await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
+    await flushPromises()
+    expect(spy).toHaveBeenCalledWith(1, 'CCAE')
+  })
+
+  it('reports the invalid design before the dirty flag, as 2.15 orders them', async () => {
+    const wrapper = mountSection(
+      { cohortId: 1, isDirty: true, criticalCount: 1 },
+      [],
+      [ccae],
+      tooltipStub
+    )
+    await flushPromises()
+    expect(wrapper.text()).toContain('Design is not valid')
+    expect(wrapper.text()).not.toContain('Save changes before generate')
+  })
+})
+
+// criticalCount is 0 until the first validateCohortDefinition round-trip resolves
+// (behind a 2000ms debounce), so a gate reading only criticalCount opens for the
+// first seconds of every cohort, whatever is wrong with it. validationStatus
+// separates "nothing found" from "nothing checked".
+describe('CohortGenerationSection — unvalidated designs block generation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    document.body.innerHTML = ''
+  })
+
+  it('disables Generate before the first validation completes, despite a zero CRITICAL count', async () => {
+    const wrapper = mountSection(
+      { cohortId: 1, criticalCount: 0, isDirty: false, validationStatus: 'unvalidated' },
+      [],
+      [ccae],
+      tooltipStub
+    )
+    await flushPromises()
+    expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.findComponent({ name: 'DataSourceRunTable' }).props('runDisabledReason')).toBe(
+      'Loading...'
+    )
+  })
+
+  it('disables Generate while a validation request is in flight', async () => {
+    const wrapper = mountSection(
+      { cohortId: 1, criticalCount: 0, isDirty: false, validationStatus: 'validating' },
+      [],
+      [ccae],
+      tooltipStub
+    )
+    await flushPromises()
+    expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('does not call generateCohort before the design has been validated', async () => {
+    const wrapper = mountSection(
+      { cohortId: 1, criticalCount: 0, isDirty: false, validationStatus: 'unvalidated' },
+      [],
+      [ccae],
+      tooltipStub
+    )
+    await flushPromises()
+    const store = useWebAPIStore()
+    const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
+    await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
+    await wrapper.find('[data-testid="generate-all-btn"]').trigger('click')
+    await flushPromises()
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('releases Generate once validation resolves clean', async () => {
+    const wrapper = mountSection(
+      { cohortId: 1, criticalCount: 0, isDirty: false, validationStatus: 'unvalidated' },
+      [],
+      [ccae],
+      tooltipStub
+    )
+    await flushPromises()
+    await wrapper.setProps({ validationStatus: 'validated' })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeUndefined()
+    const store = useWebAPIStore()
+    const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
+    await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
+    await flushPromises()
+    expect(spy).toHaveBeenCalledWith(1, 'CCAE')
+  })
+
+  // ATLAS 2.15 has no term for "not checked yet" (js/const.js disabledReasons), so
+  // its invalid-then-dirty precedence stays intact and the transient reason is
+  // reported only when it is the sole blocker.
+  it('reports the dirty flag ahead of the pending validation', async () => {
+    const wrapper = mountSection(
+      { cohortId: 1, criticalCount: 0, isDirty: true, validationStatus: 'unvalidated' },
+      [],
+      [ccae],
+      tooltipStub
+    )
+    await flushPromises()
+    expect(wrapper.findComponent({ name: 'DataSourceRunTable' }).props('runDisabledReason')).toBe(
+      'Save changes before generate'
+    )
   })
 })

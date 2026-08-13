@@ -709,7 +709,11 @@ describe('CohortsView.vue', () => {
 
   describe('Cohort Info Dialog', () => {
     const mockCohort = createMockCohort(1)
-    const mockAtlasDefinition = { id: 1, name: 'Test' }
+    const mockAtlasDefinition = {
+      id: 1,
+      name: 'Test',
+      expression: { ConceptSets: [], PrimaryCriteria: { CriteriaList: [] } },
+    }
     const mockHtml = '<h1>Test Cohort Info</h1>'
 
     beforeEach(() => {
@@ -748,7 +752,7 @@ describe('CohortsView.vue', () => {
       await wrapper.vm.$nextTick()
 
       expect(getCohortDefinition).toHaveBeenCalledWith(mockCohort.id)
-      expect(getCohortPrintFriendly).toHaveBeenCalledWith(mockAtlasDefinition)
+      expect(getCohortPrintFriendly).toHaveBeenCalledWith(mockAtlasDefinition.expression)
       expect(wrapper.vm.cohortInfoHtml).toBe(mockHtml)
       expect(wrapper.vm.loadingCohortInfo).toBe(false)
     })

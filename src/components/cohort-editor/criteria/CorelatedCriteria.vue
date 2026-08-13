@@ -81,7 +81,7 @@
                 class="mt-3"
                 density="compact"
                 hide-details
-                :items="distinctColumnOptions"
+                :items="[...distinctColumnOptions]"
                 item-title="label"
                 item-value="value"
                 :label="distinctByLabel"
@@ -136,7 +136,7 @@
                 variant="outlined"
                 density="compact"
                 hide-details
-                @update:model-value="applyWindowPresetByLabel"
+                @update:model-value="(value) => applyWindowPresetByLabel(typeof value === 'string' ? value : null)"
               />
 
               <Window :window="ensureStartWindow()" />
@@ -377,7 +377,7 @@ function toggleDistinct() {
   }
 }
 
-function occurrenceTypeFromValue(value: number | undefined): 'EXACTLY' | 'AT_LEAST' | 'AT_MOST' {
+function occurrenceTypeFromValue(value: number | null | undefined): 'EXACTLY' | 'AT_LEAST' | 'AT_MOST' {
   switch (value) {
     case 1:
       return 'AT_MOST'

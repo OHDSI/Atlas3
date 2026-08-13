@@ -60,7 +60,7 @@ const operators = computed(() => [
 
 const andLabel = computed(() => t('common.and', 'and').value)
 
-const operator = computed<DateRangeOp | undefined>({
+const operator = computed<DateRangeOp | null | undefined>({
   get: () => modelValue.value.Op,
   set: value => {
     modelValue.value.Op = value

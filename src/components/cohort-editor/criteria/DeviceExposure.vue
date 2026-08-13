@@ -54,9 +54,9 @@
 
       <AtlasButton
         icon="mdi-delete"
-        variant="text"
+        variant="ghost"
         color="error"
-        size="small"
+        size="sm"
         @click="emit('remove')"
       />
     </v-card-text>
@@ -87,7 +87,7 @@ import {
 } from '@/components/ui'
 import EventConceptSet from '../input/EventConceptSet.vue'
 import CriteriaAttributes from './CriteriaAttributes.vue'
-import { createConceptSetComponentProps, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createConceptSetModel, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget, CriteriaAttributeSpec } from './criteria-editor.types'
 import type { Criteria, CriteriaGroup, ConceptSetSelection, DateAdjustment, DateRange, NumericRange, TextFilter } from '../circe.types'
 
@@ -307,10 +307,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by unique device identifier',
     kind: 'textFilter',
     componentProps: () => createSchemaFieldProps(
-      ensureObjectField(deviceExposureData.value, 'UniqueDeviceId', () => ({ Value: '', Op: 'contains' })) as TextFilter
+      ensureObjectField(deviceExposureData.value, 'UniqueDeviceId', (): TextFilter => ({ Text: '', Op: 'contains' })) as TextFilter
     ),
     init: () => {
-      ensureObjectField(deviceExposureData.value, 'UniqueDeviceId', () => ({ Value: '', Op: 'contains' }))
+      ensureObjectField(deviceExposureData.value, 'UniqueDeviceId', (): TextFilter => ({ Text: '', Op: 'contains' }))
     },
     clear: () => {
       delete deviceExposureData.value.UniqueDeviceId

@@ -1,6 +1,7 @@
+import { nextTick } from 'vue'
 import type { HostMessage } from '@/models/PluginModels'
 import { getHostMessageBus } from '@/plugins/messaging/HostMessageBus'
-import { useCohortStore } from '@/stores/cohort'
+import { useCohortStore, type ProposalResult } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
@@ -46,6 +47,20 @@ import { applyCapability, type ApplyResult } from './capabilities/apply'
 import { domainToCriteriaType } from './capabilities/translate'
 
 const PLUGIN_ID = 'pythia-plugin'
+
+// `applied: false` is only ever set when the proposal was rejected outright, so
+// the capability layer can stop reporting success for a change nothing made.
+export interface ProposalOutcome {
+  id?: number | string
+  name?: string
+  applied?: boolean
+}
+
+const REFUSAL_MESSAGES: Record<NonNullable<ProposalResult['reason']>, string> = {
+  'no-document': 'Open a cohort before asking for changes to one',
+  'unsupported-kind': 'ATLAS cannot make that change to a cohort yet',
+  'no-match': 'Nothing in the cohort matched that change, so it was left as it was',
+}
 
 let installed = false
 
@@ -102,7 +117,7 @@ async function handleApplyProposal(
 
 export async function applyProposalDirect(
   proposal: AgentProposal
-): Promise<{ id?: number | string; name?: string } | void> {
+): Promise<ProposalOutcome | void> {
   return applyProposalInner({ proposal })
 }
 
@@ -123,7 +138,7 @@ async function handleCapabilityApply(
 
 async function applyProposalInner(
   payload: { proposal: AgentProposal }
-): Promise<{ id?: number | string; name?: string } | void> {
+): Promise<ProposalOutcome | void> {
   if (!payload?.proposal) return
   const proposal = payload.proposal
   switch (proposal.kind) {
@@ -147,15 +162,15 @@ async function applyProposalInner(
     case 'generateAnalysis':
       await handleGenerateAnalysis(proposal.payload); return
     case 'updateConceptSet':
-      await handleUpdateConceptSet(proposal.payload); return
+      return await handleUpdateConceptSet(proposal.payload)
     case 'updateFeatureAnalysis':
-      await handleUpdateFeatureAnalysis(proposal.payload); return
+      return await handleUpdateFeatureAnalysis(proposal.payload)
     case 'updateCharacterization':
-      await handleUpdateCharacterization(proposal.payload); return
+      return await handleUpdateCharacterization(proposal.payload)
     case 'updatePathway':
-      await handleUpdatePathway(proposal.payload); return
+      return await handleUpdatePathway(proposal.payload)
     case 'updateIncidenceRate':
-      await handleUpdateIncidenceRate(proposal.payload); return
+      return await handleUpdateIncidenceRate(proposal.payload)
     default: {
       const cohortStore = useCohortStore()
       const currentRoute = router.currentRoute.value
@@ -186,11 +201,28 @@ async function applyProposalInner(
         cohortStore.requestNewCohort()
         savedCohortId = null
       }
-      adoptProposalConceptSets(proposal)
-      cohortStore.applyProposal(proposal)
+      // Route first: the cohort document belongs to the mounted editor, so the
+      // proposal has nothing to write into until the editor is on screen.
       await ensureOnCohortRoute()
-      return
+      await waitForCohortDocument()
+      adoptProposalConceptSets(proposal)
+      const result = cohortStore.applyProposal(proposal)
+      if (!result.applied) {
+        showSnackbar(REFUSAL_MESSAGES[result.reason ?? 'unsupported-kind'], 'error')
+        return { applied: false }
+      }
+      return { applied: true }
     }
+  }
+}
+
+// The editor attaches its document while mounting, which the router only
+// schedules; a proposal that arrives from another view would otherwise reach an
+// empty slot and be rejected.
+async function waitForCohortDocument(ticks = 3): Promise<void> {
+  const cohortStore = useCohortStore()
+  for (let i = 0; i < ticks && !cohortStore.hasCohortDocument; i++) {
+    await nextTick()
   }
 }
 
@@ -214,7 +246,7 @@ function adoptProposalConceptSets(proposal: AgentProposal): void {
     case 'addInclusionRule':
       owners.push(...proposal.rule.criteriaGroups.flatMap(groupEvents))
       break
-    case 'setExitCriteria':
+    case 'setCohortExit':
       owners.push(proposal.exitCriteria)
       break
     case 'addConceptSet':
@@ -227,9 +259,11 @@ function adoptProposalConceptSets(proposal: AgentProposal): void {
   const cohortStore = useCohortStore()
   // An addConceptSet proposal registers itself once the caller applies it.
   const register = proposal.kind !== 'addConceptSet'
-  const existing: ConceptSetReference[] = (cohortStore.currentCohort?.expression.ConceptSets ?? [])
-    .filter(cs => cs.id !== undefined && cs.id !== null)
-    .map(cs => ({ id: cs.id, name: cs.name ?? '' }))
+  // The cohort's own sets live in the circe expression. Entries without a
+  // numeric id occupy no CodesetId, so they can't collide with a new one.
+  const existing: ConceptSetReference[] = (
+    cohortStore.currentCohort?.expression?.ConceptSets ?? []
+  ).flatMap(cs => (typeof cs.id === 'number' ? [{ id: cs.id, name: cs.name ?? '' }] : []))
   for (const owner of owners) {
     if (!owner.conceptSet) continue
     const ref = ensureUniqueConceptSetId(owner.conceptSet, existing)
@@ -277,15 +311,15 @@ async function handleUseConceptSet(payload: {
   conceptSetId: number
   group?: 'entry' | 'inclusion' | 'exclusion'
   name?: string
-}): Promise<{ id?: number | string; name?: string } | void> {
-  if (payload?.conceptSetId === undefined) return
+}): Promise<ProposalOutcome | void> {
+  if (payload?.conceptSetId === undefined) return { applied: false }
   let set
   try {
     set = await getConceptSetById(payload.conceptSetId)
   } catch (err) {
     logger.error('pythiaBridge', 'useConceptSet: fetch failed', err)
     showSnackbar(`Could not read concept set ${payload.conceptSetId}`, 'error')
-    return
+    return { applied: false }
   }
   // getConceptSetById returns the set with its concepts flattened onto `items`
   // in the editor's internal shape, which is what the cohort store expects.
@@ -296,7 +330,7 @@ async function handleUseConceptSet(payload: {
       set ? `Concept set "${set.name}" has no concepts` : `Concept set ${payload.conceptSetId} not found`,
       'error',
     )
-    return
+    return { applied: false }
   }
 
   const first = items[0] as Record<string, unknown>
@@ -317,12 +351,15 @@ async function handleUseConceptSet(payload: {
 
   const cohortStore = useCohortStore()
   if (!cohortStore.currentCohort) cohortStore.requestNewCohort()
+  await ensureOnCohortRoute()
+  await waitForCohortDocument()
 
+  let result
   if (group === 'entry') {
-    cohortStore.applyProposal({ kind: 'addEntryEvent', event } as never)
+    result = cohortStore.applyProposal({ kind: 'addEntryEvent', event } as never)
   } else {
     const excluded = group === 'exclusion'
-    cohortStore.applyProposal({
+    result = cohortStore.applyProposal({
       kind: 'addInclusionRule',
       rule: {
         id: `use-rule-${set.id}-${Date.now()}`,
@@ -341,7 +378,15 @@ async function handleUseConceptSet(payload: {
       },
     } as never)
   }
-  await ensureOnCohortRoute()
+  if (!result.applied) {
+    if (result.reason === 'no-document') {
+      showSnackbar('Open a cohort before asking for changes to one', 'error')
+    } else {
+      logger.error('pythiaBridge', `useConceptSet: proposal rejected (${result.reason})`)
+      showSnackbar(`Could not add concept set "${set.name}" to the cohort`, 'error')
+    }
+    return { applied: false }
+  }
   showSnackbar(`Using concept set "${set.name}" (${items.length} concepts)`, 'success')
   return { id: set.id, name: set.name }
 }
@@ -385,7 +430,7 @@ async function handleNavigate(route: NavigateRoute) {
 
 async function handleCreateStandaloneConceptSet(
   payload: StandaloneConceptSetPayload
-): Promise<{ id?: number | string; name?: string } | void> {
+): Promise<ProposalOutcome | void> {
   if (!payload?.name || !Array.isArray(payload.items) || payload.items.length === 0) {
     showSnackbar('Concept set is missing a name or items', 'error')
     return
@@ -459,8 +504,20 @@ async function handleCreateStandaloneConceptSet(
       },
     }
     adoptProposalConceptSets(proposal)
-    cohortStore.applyProposal(proposal)
+    const attached = cohortStore.applyProposal(proposal)
     await ensureOnCohortRoute()
+    if (!attached.applied) {
+      logger.error(
+        'pythiaBridge',
+        `createStandaloneConceptSet: attach rejected (${attached.reason})`
+      )
+      // The set itself exists, so hand its id back — only the attach failed.
+      showSnackbar(
+        `Concept set "${created.name}" was created but could not be attached to the cohort`,
+        'error'
+      )
+      return { id: created.id, name: created.name, applied: false }
+    }
     showSnackbar(
       `Concept set "${created.name}" created and attached to the cohort`,
       'success'
@@ -795,17 +852,17 @@ async function ensureConceptSetLoaded(id: number) {
   }
 }
 
-async function handleUpdateConceptSet(payload: UpdateConceptSetPayload) {
+async function handleUpdateConceptSet(payload: UpdateConceptSetPayload): Promise<ProposalOutcome> {
   if (typeof payload?.id !== 'number') {
     showSnackbar('Update concept set is missing an id', 'error')
-    return
+    return { applied: false }
   }
   try {
     await ensureConceptSetLoaded(payload.id)
     const store = useConceptSetsStore()
     if (!store.currentSet) {
       showSnackbar('Could not load concept set for editing', 'error')
-      return
+      return { applied: false }
     }
     // Translate StandaloneConceptSetItem into the editor's full ConceptSetItem shape.
     const toEditorItems = (its: NonNullable<UpdateConceptSetPayload['items']>): ConceptSetItem[] =>
@@ -836,10 +893,13 @@ async function handleUpdateConceptSet(payload: UpdateConceptSetPayload) {
       showSnackbar(`Concept set "${store.currentSet.name}" updated — review and Save`, 'success')
     } else {
       showSnackbar('No changes to apply', 'info')
+      return { applied: false }
     }
+    return { applied: true }
   } catch (err) {
     logger.error('pythiaBridge', 'updateConceptSet failed', err)
     showSnackbar(`Failed to update concept set: ${(err as Error).message}`, 'error')
+    return { applied: false }
   }
 }
 
@@ -850,17 +910,17 @@ async function ensureFeatureAnalysisLoaded(id: number) {
   }
 }
 
-async function handleUpdateFeatureAnalysis(payload: UpdateFeatureAnalysisPayload) {
+async function handleUpdateFeatureAnalysis(payload: UpdateFeatureAnalysisPayload): Promise<ProposalOutcome> {
   if (typeof payload?.id !== 'number') {
     showSnackbar('Update feature analysis is missing an id', 'error')
-    return
+    return { applied: false }
   }
   try {
     await ensureFeatureAnalysisLoaded(payload.id)
     const store = useFeatureAnalysesStore()
     if (!store.currentFA) {
       showSnackbar('Could not load feature analysis for editing', 'error')
-      return
+      return { applied: false }
     }
     const applied = store.applyProposal({
       name: payload.name,
@@ -879,10 +939,13 @@ async function handleUpdateFeatureAnalysis(payload: UpdateFeatureAnalysisPayload
       showSnackbar(`Feature analysis "${store.currentFA.name}" updated — review and Save`, 'success')
     } else {
       showSnackbar('No changes to apply', 'info')
+      return { applied: false }
     }
+    return { applied: true }
   } catch (err) {
     logger.error('pythiaBridge', 'updateFeatureAnalysis failed', err)
     showSnackbar(`Failed to update feature analysis: ${(err as Error).message}`, 'error')
+    return { applied: false }
   }
 }
 
@@ -893,17 +956,17 @@ async function ensureCharacterizationLoaded(id: number) {
   }
 }
 
-async function handleUpdateCharacterization(payload: UpdateCharacterizationPayload) {
+async function handleUpdateCharacterization(payload: UpdateCharacterizationPayload): Promise<ProposalOutcome> {
   if (typeof payload?.id !== 'number') {
     showSnackbar('Update characterization is missing an id', 'error')
-    return
+    return { applied: false }
   }
   try {
     await ensureCharacterizationLoaded(payload.id)
     const store = useCharacterizationStore()
     if (!store.currentCharacterization) {
       showSnackbar('Could not load characterization for editing', 'error')
-      return
+      return { applied: false }
     }
     const applied = store.applyProposal({
       name: payload.name,
@@ -928,10 +991,13 @@ async function handleUpdateCharacterization(payload: UpdateCharacterizationPaylo
       )
     } else {
       showSnackbar('No changes to apply', 'info')
+      return { applied: false }
     }
+    return { applied: true }
   } catch (err) {
     logger.error('pythiaBridge', 'updateCharacterization failed', err)
     showSnackbar(`Failed to update characterization: ${(err as Error).message}`, 'error')
+    return { applied: false }
   }
 }
 
@@ -942,17 +1008,17 @@ async function ensurePathwayLoaded(id: number) {
   }
 }
 
-async function handleUpdatePathway(payload: UpdatePathwayPayload) {
+async function handleUpdatePathway(payload: UpdatePathwayPayload): Promise<ProposalOutcome> {
   if (typeof payload?.id !== 'number') {
     showSnackbar('Update pathway is missing an id', 'error')
-    return
+    return { applied: false }
   }
   try {
     await ensurePathwayLoaded(payload.id)
     const store = usePathwayStore()
     if (!store.currentPathway) {
       showSnackbar('Could not load pathway for editing', 'error')
-      return
+      return { applied: false }
     }
     // Pathway store accepts a Zod-passthrough cohort ref (open shape with
     // optional transport fields). Our UpdatePathwayPayload uses the strict
@@ -969,10 +1035,13 @@ async function handleUpdatePathway(payload: UpdatePathwayPayload) {
       showSnackbar(`Pathway "${store.currentPathway.name}" updated — review and Save`, 'success')
     } else {
       showSnackbar('No changes to apply', 'info')
+      return { applied: false }
     }
+    return { applied: true }
   } catch (err) {
     logger.error('pythiaBridge', 'updatePathway failed', err)
     showSnackbar(`Failed to update pathway: ${(err as Error).message}`, 'error')
+    return { applied: false }
   }
 }
 
@@ -983,17 +1052,17 @@ async function ensureIncidenceRateLoaded(id: number) {
   }
 }
 
-async function handleUpdateIncidenceRate(payload: UpdateIncidenceRatePayload) {
+async function handleUpdateIncidenceRate(payload: UpdateIncidenceRatePayload): Promise<ProposalOutcome> {
   if (typeof payload?.id !== 'number') {
     showSnackbar('Update incidence rate is missing an id', 'error')
-    return
+    return { applied: false }
   }
   try {
     await ensureIncidenceRateLoaded(payload.id)
     const store = useIncidenceRateStore()
     if (!store.currentIR) {
       showSnackbar('Could not load incidence rate for editing', 'error')
-      return
+      return { applied: false }
     }
     const applied = store.applyProposal(payload)
     if (applied) {
@@ -1008,10 +1077,13 @@ async function handleUpdateIncidenceRate(payload: UpdateIncidenceRatePayload) {
       )
     } else {
       showSnackbar('No changes to apply', 'info')
+      return { applied: false }
     }
+    return { applied: true }
   } catch (err) {
     logger.error('pythiaBridge', 'updateIncidenceRate failed', err)
     showSnackbar(`Failed to update incidence rate: ${(err as Error).message}`, 'error')
+    return { applied: false }
   }
 }
 

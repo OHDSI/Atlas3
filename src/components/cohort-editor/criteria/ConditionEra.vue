@@ -88,7 +88,7 @@ import {
 import type { Criteria, CriteriaGroup, DateAdjustment, DateRange, NumericRange, ConceptSetSelection } from '../circe.types'
 import EventConceptSet from '../input/EventConceptSet.vue'
 import CriteriaAttributes from './CriteriaAttributes.vue'
-import { createConceptSetComponentProps, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createConceptSetModel, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
 import type { CriteriaAttributeSpec } from './criteria-editor.types'
 

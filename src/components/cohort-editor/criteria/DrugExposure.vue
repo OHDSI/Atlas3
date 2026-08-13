@@ -53,9 +53,9 @@
 
       <AtlasButton
         icon="mdi-delete"
-        variant="text"
+        variant="ghost"
         color="error"
-        size="small"
+        size="sm"
         @click="emit('remove')"
       />
     </v-card-text>
@@ -88,7 +88,7 @@ import {
 import type { Criteria, CriteriaGroup, ConceptSetSelection, DateAdjustment, DateRange, NumericRange, TextFilter } from '../circe.types'
 import EventConceptSet from '../input/EventConceptSet.vue'
 import CriteriaAttributes from './CriteriaAttributes.vue'
-import { createConceptSetComponentProps, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createConceptSetModel, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
 import type { CriteriaAttributeSpec } from './criteria-editor.types'
 
@@ -278,10 +278,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by stop reason text',
     kind: 'textFilter',
     componentProps: () => createSchemaFieldProps(
-      ensureObjectField(drugExposureData.value, 'StopReason', () => ({ Value: '', Op: 'contains' })) as TextFilter
+      ensureObjectField(drugExposureData.value, 'StopReason', (): TextFilter => ({ Text: '', Op: 'contains' })) as TextFilter
     ),
     init: () => {
-      ensureObjectField(drugExposureData.value, 'StopReason', () => ({ Value: '', Op: 'contains' }))
+      ensureObjectField(drugExposureData.value, 'StopReason', (): TextFilter => ({ Text: '', Op: 'contains' }))
     },
     clear: () => {
       delete drugExposureData.value.StopReason
@@ -434,10 +434,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by lot number',
     kind: 'textFilter',
     componentProps: () => createSchemaFieldProps(
-      ensureObjectField(drugExposureData.value, 'LotNumber', () => ({ Value: '', Op: 'contains' })) as TextFilter
+      ensureObjectField(drugExposureData.value, 'LotNumber', (): TextFilter => ({ Text: '', Op: 'contains' })) as TextFilter
     ),
     init: () => {
-      ensureObjectField(drugExposureData.value, 'LotNumber', () => ({ Value: '', Op: 'contains' }))
+      ensureObjectField(drugExposureData.value, 'LotNumber', (): TextFilter => ({ Text: '', Op: 'contains' }))
     },
     clear: () => {
       delete drugExposureData.value.LotNumber

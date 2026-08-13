@@ -114,16 +114,7 @@
     "CollapseType": "ERA",
     "EraPad": 30
   },
-  "CensorWindow": {
-    "StartDate": {
-      "DateField": "START_DATE",
-      "Offset": 0
-    },
-    "EndDate": {
-      "DateField": "END_DATE",
-      "Offset": 730
-    }
-  },
+  "CensorWindow": {},
   "InclusionRules": [
     {
       "name": "Has statin exposure within 30 days",

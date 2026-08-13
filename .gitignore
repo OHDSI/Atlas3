@@ -102,3 +102,4 @@ reports/
 
 # Superpowers/SDD working artifacts (transient, not part of the product)
 .superpowers/
+tests/e2e/.test-results/

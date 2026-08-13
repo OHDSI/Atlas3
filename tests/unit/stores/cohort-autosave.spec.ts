@@ -4,8 +4,12 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useCohortStore } from '@/stores/cohort'
+import { useCohortStore, AUTO_SAVE_INTERVAL_MS } from '@/stores/cohort'
 import type { CohortDefinition } from '@/models/cohort.types'
+
+function makeCohort(): CohortDefinition {
+  return { name: 'Test Cohort' }
+}
 
 describe('Cohort Store - Auto-Save and Draft Management', () => {
   let store: ReturnType<typeof useCohortStore>
@@ -277,54 +281,30 @@ describe('Cohort Store - Auto-Save and Draft Management', () => {
     })
   })
 
-  describe('auto-save on dirty state change', () => {
-    it('should automatically start auto-save when cohort becomes dirty', async () => {
-      const cohort: CohortDefinition = {
-        name: 'Test Cohort',
-        entryEvents: [],
-        qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-      }
+  describe('auto-save ownership', () => {
+    // The timer is owned by the mounted editor (CohortBuilder starts it in onMounted,
+    // stops it in onBeforeUnmount), not by dirty state. Arming it from markDirty() would
+    // leak an interval whenever the cohort is mutated with no editor mounted to stop it,
+    // e.g. an agent proposal applied against a background store.
+    it('does not write a draft when the cohort is merely marked dirty', async () => {
+      store.setCohort(makeCohort())
+      store.markDirty()
 
-      store.setCohort(cohort)
+      await vi.advanceTimersByTimeAsync(AUTO_SAVE_INTERVAL_MS + 1000)
 
-      // Wait for next tick to allow watcher to run
-      await vi.advanceTimersByTimeAsync(0)
-
-      store.markDirty() // This should trigger auto-save
-
-      // Wait for watcher to trigger
-      await vi.advanceTimersByTimeAsync(0)
-
-      // Fast-forward 30 seconds
-      await vi.advanceTimersByTimeAsync(30000)
-
-      const savedData = sessionStorage.getItem('atlas3_cohort_draft')
-      expect(savedData).toBeTruthy()
+      expect(sessionStorage.getItem('atlas3_cohort_draft')).toBeNull()
     })
 
-    it('should auto-save when adding a primary criterion via proposal', async () => {
-      // createNewCohort sets name only; applyProposal needs expression to exist
-      store.setCohort({ name: 'New Cohort', expression: {} })
+    it('writes a draft on the interval once the editor has started autosave', async () => {
+      store.setCohort(makeCohort())
+      store.startAutoSave()
+      store.markDirty()
 
-      // Wait for next tick
-      await vi.advanceTimersByTimeAsync(0)
+      await vi.advanceTimersByTimeAsync(AUTO_SAVE_INTERVAL_MS + 1000)
 
-      // addEntryEvent proposal mutates expression.PrimaryCriteria.CriteriaList
-      store.applyProposal({ kind: 'addEntryEvent', event: { id: '1', criteriaType: 'ConditionOccurrence' } })
-
-      // Wait for watcher to trigger
-      await vi.advanceTimersByTimeAsync(0)
-
-      // Fast-forward 30 seconds
-      await vi.advanceTimersByTimeAsync(30000)
-
-      const savedData = sessionStorage.getItem('atlas3_cohort_draft')
-      expect(savedData).toBeTruthy()
-
-      const parsed = JSON.parse(savedData!)
-      expect(parsed.cohort.expression.PrimaryCriteria.CriteriaList).toHaveLength(1)
+      const draft = sessionStorage.getItem('atlas3_cohort_draft')
+      expect(draft).toBeTruthy()
+      expect(JSON.parse(draft as string).cohort.name).toBe('Test Cohort')
     })
   })
 

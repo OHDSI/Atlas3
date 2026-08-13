@@ -5,7 +5,7 @@
  */
 import { logger } from '@/utils/logger'
 import { httpGet, httpPost, httpPut, httpDelete, httpPostRead, getBaseUrl } from '@/services/http-client'
-import { unwrap, ApiError, parseOrThrow } from '@/services/api-error'
+import { unwrap, ApiError, parseOrThrow, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import type { RawCohortDefinition } from '@/models/atlas.types'
 import type { CohortDefinition } from '@/models/cohort.types'
@@ -22,18 +22,31 @@ import { CohortExpressionSchema, type CohortExpression } from '@/components/coho
 
 const CONTEXT = 'CohortDefinitionService'
 
+const EXPRESSION_PARSE_FAILED = 'Cohort expression failed validation'
+const EXPRESSION_PARSE_STATUS = 422
+
+export function normalizeRawCohortDefinition(raw: RawCohortDefinition): CohortDefinition {
+  // WebAPI serialises `expression` as a JSON string; the editor works on the parsed
+  // circe object, so this is the only place the two representations meet.
+  let source: unknown
+  try {
+    source = JSON.parse(raw.expression)
+  } catch (err) {
+    throw new ApiError(EXPRESSION_PARSE_FAILED, EXPRESSION_PARSE_STATUS, String(err))
+  }
+
+  const parsed = CohortExpressionSchema.safeParse(source)
+  if (!parsed.success) {
+    throw new ApiError(EXPRESSION_PARSE_FAILED, EXPRESSION_PARSE_STATUS, zodIssues(parsed.error))
+  }
+
+  return { ...raw, expression: parsed.data as CohortExpression }
+}
+
 /**
  * Get cohort definition by ID
  * Endpoint: GET /cohortdefinition/{id}
  */
-export function normalizeRawCohortDefinition(raw: RawCohortDefinition): CohortDefinition {
-  const expression = CohortExpressionSchema.parse(JSON.parse(raw.expression)) as CohortExpression
-  return {
-    ...raw,
-    expression,
-  }
-}
-
 export async function getCohortDefinition(id: number): Promise<ApiResult<CohortDefinition>> {
   return unwrap(async () => {
     const raw = await httpGet<RawCohortDefinition>(`/cohortdefinition/${id}`)
@@ -55,16 +68,19 @@ export interface CohortSavePayload {
 /**
  * Save cohort definition (create or update)
  * Endpoint: POST /cohortdefinition (create) or PUT /cohortdefinition/{id} (update)
+ *
+ * The response echoes the stored DTO, so `expression` comes back as a JSON
+ * string; callers that need the parsed form must run normalizeRawCohortDefinition.
  */
 export async function saveCohortDefinition(
   cohort: CohortSavePayload
-): Promise<ApiResult<CohortDefinition>> {
+): Promise<ApiResult<RawCohortDefinition>> {
   return unwrap(async () => {
     logger.debug(CONTEXT, 'Saving cohort definition', { id: cohort.id, name: cohort.name })
     if (cohort.id) {
-      return await httpPut<CohortDefinition>(`/cohortdefinition/${cohort.id}`, cohort)
+      return await httpPut<RawCohortDefinition>(`/cohortdefinition/${cohort.id}`, cohort)
     }
-    return await httpPost<CohortDefinition>('/cohortdefinition', cohort)
+    return await httpPost<RawCohortDefinition>('/cohortdefinition', cohort)
   }, CONTEXT)
 }
 

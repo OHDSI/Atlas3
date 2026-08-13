@@ -53,9 +53,9 @@
 
       <AtlasButton
         icon="mdi-delete"
-        variant="text"
+        variant="ghost"
         color="error"
-        size="small"
+        size="sm"
         @click="emit('remove')"
       />
     </v-card-text>
@@ -87,7 +87,7 @@ import {
 import type { Criteria, CriteriaGroup, DateRange, NumericRange, ConceptSetSelection } from '../circe.types'
 import EventConceptSet from '../input/EventConceptSet.vue'
 import CriteriaAttributes from './CriteriaAttributes.vue'
-import { createConceptSetComponentProps, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createConceptSetModel, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
 import type { CriteriaAttributeSpec } from './criteria-editor.types'
 

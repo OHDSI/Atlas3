@@ -54,9 +54,9 @@
 
       <AtlasButton
         icon="mdi-delete"
-        variant="text"
+        variant="ghost"
         color="error"
-        size="small"
+        size="sm"
         @click="emit('remove')"
       />
     </v-card-text>
@@ -88,7 +88,7 @@ import {
 import type { Criteria, CriteriaGroup, ConceptSetSelection, DateAdjustment, DateRange, NumericRange, TextFilter } from '../circe.types'
 import EventConceptSet from '../input/EventConceptSet.vue'
 import CriteriaAttributes from './CriteriaAttributes.vue'
-import { createConceptSetComponentProps, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createConceptSetModel, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget, CriteriaAttributeSpec } from './criteria-editor.types'
 
 const props = defineProps<{
@@ -215,10 +215,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by text value',
     kind: 'textFilter',
     componentProps: () => createSchemaFieldProps(
-      ensureObjectField(observationData.value, 'ValueAsString', () => ({ Value: '', Op: 'contains' })) as TextFilter
+      ensureObjectField(observationData.value, 'ValueAsString', (): TextFilter => ({ Text: '', Op: 'contains' })) as TextFilter
     ),
     init: () => {
-      ensureObjectField(observationData.value, 'ValueAsString', () => ({ Value: '', Op: 'contains' }))
+      ensureObjectField(observationData.value, 'ValueAsString', (): TextFilter => ({ Text: '', Op: 'contains' }))
     },
     clear: () => {
       delete observationData.value.ValueAsString

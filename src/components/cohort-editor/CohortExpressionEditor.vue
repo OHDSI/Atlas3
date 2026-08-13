@@ -55,8 +55,8 @@
                   <template #activator="{ props: menuProps }">
                     <AtlasButton
                       v-bind="menuProps"
-                      variant="outlined"
-                      size="small"
+                      variant="secondary"
+                      size="sm"
                       prepend-icon="mdi-plus"
                     >
                       {{ addCriteriaLabel }}
@@ -86,7 +86,7 @@
                       class="obs-period-chip"
                       tone="warning"
                       variant="outlined"
-                      size="small"
+                      size="sm"
                     >
                       <AtlasIcon
                         start
@@ -160,6 +160,7 @@
                 <div class="additional-criteria-section mt-4">
                   <AtlasButton
                     v-if="!expression.AdditionalCriteria"
+                    variant="secondary"
                     prepend-icon="mdi-filter-plus"
                     @click="addAdditionalCriteria"
                   >

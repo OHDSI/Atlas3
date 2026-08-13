@@ -70,16 +70,7 @@
     "CollapseType": "ERA",
     "EraPad": 14
   },
-  "CensorWindow": {
-    "StartDate": {
-      "DateField": "START_DATE",
-      "Offset": 0
-    },
-    "EndDate": {
-      "DateField": "END_DATE",
-      "Offset": 180
-    }
-  },
+  "CensorWindow": {},
   "InclusionRules": [
     {
       "name": "Has anticoagulant exposure",

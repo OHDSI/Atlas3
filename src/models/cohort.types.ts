@@ -85,9 +85,6 @@ export interface PaginationState {
   totalItems: number
 }
 
-// ─── Criteria type enumeration ──────────────────────────────────────────────
-// Used by CriteriaEventCard and circe-criteria constants.
-
 export type CriteriaType =
   | 'ConditionOccurrence'
   | 'ConditionEra'

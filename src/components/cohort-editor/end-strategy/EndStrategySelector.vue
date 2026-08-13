@@ -14,18 +14,21 @@
         @update:model-value="changeStrategy"
       >
         <AtlasButton
+          toggle
           value="observation"
           size="sm"
         >
           Continuous Observation
         </AtlasButton>
         <AtlasButton
+          toggle
           value="dateOffset"
           size="sm"
         >
           Fixed Duration
         </AtlasButton>
         <AtlasButton
+          toggle
           value="customEra"
           size="sm"
         >
@@ -64,7 +67,7 @@ import CustomEraEndStrategy from './CustomEraEndStrategy.vue'
 type EndStrategyType = 'observation' | 'dateOffset' | 'customEra'
 
 const props = defineProps<{
-  endStrategy: EndStrategy | undefined
+  endStrategy: EndStrategy | null | undefined
   conceptSets: ConceptSetOption[]
 }>()
 

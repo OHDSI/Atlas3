@@ -40,6 +40,13 @@ describe('Cohort Store', () => {
       expect(store.isDirty).toBe(false)
     })
 
+    it('exposes no cohort cache surface', () => {
+      const store = useCohortStore()
+      expect('loadCohort' in store).toBe(false)
+      expect('getCachedCohort' in store).toBe(false)
+      expect('deleteCachedCohort' in store).toBe(false)
+    })
+
   })
 
   describe('Create New Cohort', () => {
@@ -597,7 +604,7 @@ describe('Cohort Store', () => {
       await expect(store.loadVersionPreview(1)).rejects.toThrow('No current cohort ID')
     })
 
-    it('loadVersionPreview sets previewVersion and signals the editor to reload that version', async () => {
+    it('loadVersionPreview sets previewVersion and installs the historical definition', async () => {
       const store = useCohortStore()
       store.setCohort(baseCohort)
 
@@ -609,23 +616,39 @@ describe('Cohort Store', () => {
         comment: null,
         archived: false,
       }
-      // entityDTO is the raw Atlas-shaped DTO (id/name/description/expression),
-      // not an internal CohortDefinition — the store no longer touches it
-      // directly; the mounted editor fetches + converts + resyncs via the
-      // reloadRequest/reloadVersion signal below.
+      // The versions service normalises entityDTO before it gets here, so its
+      // expression is already a parsed CohortExpression.
       vi.mocked(mockGetVersion).mockResolvedValueOnce({
         versionDTO,
-        entityDTO: { id: 10, name: 'Historical Cohort', description: '', expression: '{}' },
-      })
+        entityDTO: {
+          id: 10,
+          name: 'Historical Cohort',
+          description: '',
+          expression: { InclusionRules: [] },
+        },
+      } as never)
 
       const before = store.reloadRequest
 
       await store.loadVersionPreview(2)
 
       expect(store.previewVersion).toEqual(versionDTO)
-      expect(store.reloadVersion).toBe(2)
       expect(store.reloadRequest).toBe(before + 1)
-      expect(store.currentCohort?.name).toBe('Test Cohort')
+      expect(store.currentCohort?.name).toBe('Historical Cohort')
+      expect(store.currentCohort?.expression).toEqual({ InclusionRules: [] })
+    })
+
+    it('loads a version preview when no cohort is open yet', async () => {
+      vi.mocked(mockGetVersion).mockResolvedValueOnce({
+        versionDTO: { version: 1, assetId: 1 } as never,
+        entityDTO: { id: 1, name: 'Demo', expression: { ConceptSets: [] } } as never,
+      })
+      const store = useCohortStore()
+
+      await store.loadVersionPreview(1, 1)
+
+      expect(store.previewVersion?.version).toBe(1)
+      expect(store.currentCohort?.expression).toEqual({ ConceptSets: [] })
     })
 
     it('loadVersionPreview rethrows on service error', async () => {
@@ -653,6 +676,26 @@ describe('Cohort Store', () => {
 
       expect(store.previewVersion).toBeNull()
       expect(store.reloadRequest).toBe(before + 1)
+    })
+
+    it('discardPreview clears preview state without signalling a reload', () => {
+      const store = useCohortStore()
+      store.setCohort(baseCohort)
+      store.previewVersion = {
+        version: 1,
+        assetId: 10,
+        createdBy: { id: 1, name: 'U', email: 'u@test.com' },
+        createdDate: '2024-01-01T00:00:00Z',
+        comment: null,
+        archived: false,
+      }
+
+      const before = store.reloadRequest
+
+      store.discardPreview()
+
+      expect(store.previewVersion).toBeNull()
+      expect(store.reloadRequest).toBe(before)
     })
 
     it('savePreviewAsCurrent returns false when not in preview mode', async () => {

@@ -138,11 +138,11 @@ const summaryLabel = computed(() => {
   return `${summaryStartLabel.value}: ${formatDateReference(modelValue.value.StartWith)} ${formatOffset(modelValue.value.StartOffset)}, ${summaryEndLabel.value}: ${formatDateReference(modelValue.value.EndWith)} ${formatOffset(modelValue.value.EndOffset)}`
 })
 
-function formatDateReference(value: 'START_DATE' | 'END_DATE' | undefined) {
+function formatDateReference(value: 'START_DATE' | 'END_DATE' | null | undefined) {
   return value === 'END_DATE' ? summaryEndLabel.value : summaryStartLabel.value
 }
 
-function formatOffset(value: number | undefined) {
+function formatOffset(value: number | null | undefined) {
   const offset = value ?? 0
   const sign = offset < 0 ? '-' : '+'
   return `${sign}${Math.abs(offset)}${t('common.daysAbbr', 'd').value}`

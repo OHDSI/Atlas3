@@ -50,16 +50,7 @@
     "CollapseType": "ERA",
     "EraPad": 180
   },
-  "CensorWindow": {
-    "StartDate": {
-      "DateField": "START_DATE",
-      "Offset": 0
-    },
-    "EndDate": {
-      "DateField": "END_DATE",
-      "Offset": 90
-    }
-  },
+  "CensorWindow": {},
   "InclusionRules": [],
   "CensoringCriteria": []
 }

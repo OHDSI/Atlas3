@@ -6,7 +6,7 @@
       :color="modelValue.IsExclusion ? 'warning' : 'primary'"
       variant="tonal"
       label
-      size="small"
+      size="sm"
       @click="toggleExclude"
     >
       {{ modelValue.IsExclusion ? notAnyOfLabel : anyOfLabel }}

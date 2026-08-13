@@ -3,8 +3,9 @@ import type { ConceptSetReference } from '@/models/cohort.types'
 import type { ValidationWarning, ValidationSeverity } from '@/models/cohort-validation.types'
 import { validateCohortDefinition } from '@/services/cohort-definition.service'
 import { logger } from '@/utils/logger'
-import type { CohortExpression, ConceptSet } from '@/components/cohort-editor/circe.types'
+import type { CohortExpression } from '@/components/cohort-editor/circe.types'
 import { findUsedConceptSetIds } from '@/components/cohort-editor/concept-set-usage'
+import { useExitCriteriaValidation } from '@/composables/useExitCriteriaValidation'
 
 export interface CohortValidationOptions {
   /** CohortExpression source; accepts either a ref or a reactive object */
@@ -15,9 +16,20 @@ export interface CohortValidationOptions {
   debounceDelay?: number
 }
 
+/**
+ * `unvalidated`: no validation attempt has completed yet, so the current
+ * warning list (empty on init) says nothing about the cohort's design.
+ * `validating`: a request is in flight. `validated`: at least one attempt
+ * (success, checkV2 failure, or thrown error) has completed and the warning
+ * list reflects its outcome. Callers gating an action on "no CRITICAL
+ * findings" must treat `unvalidated` as not-yet-cleared, not as clean.
+ */
+export type ValidationStatus = 'unvalidated' | 'validating' | 'validated'
+
 export interface CohortValidationReturn {
   validationWarnings: Ref<ValidationWarning[]>
   isValidating: ComputedRef<boolean>
+  validationStatus: ComputedRef<ValidationStatus>
   groupedWarningsBySeverity: ComputedRef<Record<ValidationSeverity, ValidationWarning[]>>
   highestSeverity: ComputedRef<ValidationSeverity | null>
   highestSeverityColor: ComputedRef<string>
@@ -25,17 +37,25 @@ export interface CohortValidationReturn {
   triggerValidation: () => void
   cancelValidation: () => void
   clearWarnings: () => void
+  resetValidation: () => void
 }
 
 export function useCohortValidation(options: CohortValidationOptions): CohortValidationReturn {
   const { cohortName, cohortDescription, debounceDelay = 2000 } = options
+  const { validateExpression: validateExitCriteria } = useExitCriteriaValidation()
 
   const validationWarnings = ref<ValidationWarning[]>([])
   const _isValidatingInternal = ref(false)
-  let _isValidatingFlag = false
+  const _hasValidatedOnce = ref(false)
+  let _currentRunId = 0
   let validationDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
   const isValidating = computed(() => _isValidatingInternal.value)
+
+  const validationStatus = computed<ValidationStatus>(() => {
+    if (_isValidatingInternal.value) return 'validating'
+    return _hasValidatedOnce.value ? 'validated' : 'unvalidated'
+  })
 
   const groupedWarningsBySeverity = computed(() => {
     const grouped: Record<ValidationSeverity, ValidationWarning[]> = {
@@ -67,33 +87,41 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
   const usedConceptSets = computed<ConceptSetReference[]>(() => {
     const expressionValue = unref(options.expression)
     const usedIds = findUsedConceptSetIds(expressionValue)
-    return (expressionValue.ConceptSets ?? [] as ConceptSet[])
-      .filter(cs => cs.id != null && usedIds.has(cs.id))
-      .map(cs => ({ id: cs.id!, name: cs.name ?? '' }))
+    return (expressionValue.ConceptSets ?? []).flatMap(cs =>
+      typeof cs.id === 'number' && usedIds.has(cs.id) ? [{ id: cs.id, name: cs.name ?? '' }] : []
+    )
   })
 
+  // Every run carries a token so a response that a later run has superseded is
+  // dropped rather than written. Without it a slow check for the previous
+  // definition would land last and mark the current one validated against
+  // warnings that were never computed for it.
   async function validateCohort() {
+    const runId = ++_currentRunId
     try {
-      _isValidatingFlag = true
       _isValidatingInternal.value = true
       const nameForValidation = cohortName.value || 'Untitled Cohort'
+      // The local rules answer before, and without, the server; checkV2 runs the
+      // same circe checks, so its response replaces them rather than adding to
+      // them. Concatenating would report one defect twice and double the
+      // CRITICAL count the generate gate reads.
+      validationWarnings.value = validateExitCriteria(unref(options.expression))
       const result = await validateCohortDefinition(nameForValidation, unref(options.expression))
-      if (result.success) {
-        validationWarnings.value = result.data.warnings ?? []
-      } else {
-        validationWarnings.value = []
-      }
+      if (runId !== _currentRunId) return
+      if (result.success) validationWarnings.value = result.data.warnings ?? []
     } catch (error) {
       logger.error('CohortValidation', 'Failed to validate cohort', error)
-      validationWarnings.value = []
+      if (runId !== _currentRunId) return
+      validationWarnings.value = validateExitCriteria(unref(options.expression))
     } finally {
-      _isValidatingFlag = false
-      _isValidatingInternal.value = false
+      if (runId === _currentRunId) {
+        _isValidatingInternal.value = false
+        _hasValidatedOnce.value = true
+      }
     }
   }
 
   function triggerValidation() {
-    if (_isValidatingFlag) return
     if (validationDebounceTimer) clearTimeout(validationDebounceTimer)
     validationDebounceTimer = setTimeout(() => { validateCohort() }, debounceDelay)
   }
@@ -107,6 +135,18 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
 
   function clearWarnings() {
     validationWarnings.value = []
+  }
+
+  // The composable outlives the definition it validated — the editor stays
+  // mounted across a version preview and across a change of :id. Callers
+  // installing a whole new definition must drop the previous verdict, or a gate
+  // reading `validated` + zero CRITICALs opens on a design nothing has checked.
+  function resetValidation() {
+    cancelValidation()
+    _currentRunId++
+    validationWarnings.value = []
+    _isValidatingInternal.value = false
+    _hasValidatedOnce.value = false
   }
 
   const stopWatch = watch(
@@ -123,6 +163,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
   return {
     validationWarnings,
     isValidating,
+    validationStatus,
     groupedWarningsBySeverity,
     highestSeverity,
     highestSeverityColor,
@@ -130,5 +171,6 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     triggerValidation,
     cancelValidation,
     clearWarnings,
+    resetValidation,
   }
 }

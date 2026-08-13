@@ -3,20 +3,18 @@
  * Manages current cohort definition state
  */
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, shallowRef, computed, type Ref, type ShallowRef } from 'vue'
 import type {
   CohortDefinition,
 } from '@/models/cohort.types'
 import type { AgentProposal } from '@/models/agent.types'
-import type { Criteria } from '@/components/cohort-editor/circe.types'
+import type { Criteria, CohortExpression } from '@/components/cohort-editor/circe.types'
 import type { Version } from '@/components/versions/types'
-import type { CohortExpression } from '@/components/cohort-editor/circe.types'
-import { saveCohortToCache, getCohortFromCache, deleteCohortFromCache } from '@/utils/cohort-cache'
 import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
 import { logger } from '@/utils/logger'
 
 const STORAGE_KEY = 'atlas3_cohort_draft'
-const AUTO_SAVE_INTERVAL_MS = 30000 // 30 seconds
+export const AUTO_SAVE_INTERVAL_MS = 30000 // 30 seconds
 
 // Exponential backoff retry configuration
 const RETRY_CONFIG = {
@@ -32,6 +30,59 @@ interface ValidationError {
   severity: 'error' | 'warning'
 }
 
+/**
+ * The cohort as the store knows it: metadata it owns, plus a reference to the
+ * expression the mounted editor owns. `expression` is absent while no editor is
+ * attached, which is why it is optional here but required on CohortDefinition.
+ */
+export type CohortDocument = Omit<CohortDefinition, 'expression'> & {
+  expression?: CohortExpression
+}
+
+export interface ProposalResult {
+  applied: boolean
+  reason?: 'no-document' | 'unsupported-kind' | 'no-match'
+}
+
+const RESULT_LIMIT_TYPES = { ALL: 'All', FIRST: 'First', LAST: 'Last' } as const
+
+// ATLAS 2.15's InputTypes/Window and InputTypes/Occurrence defaults: a
+// qualifying criterion starts out unbounded on both sides of the index date and
+// requires at least one occurrence.
+function defaultQualifyingWindow() {
+  return {
+    Start: { Days: null, Coeff: -1 as const },
+    End: { Days: null, Coeff: 1 as const },
+    UseIndexEnd: false,
+    UseEventEnd: false,
+  }
+}
+
+// A criterion names its concepts only through CodesetId, so resolving one back
+// to a concept means walking the expression's ConceptSets.
+function codesetIdsMatching(
+  expression: CohortExpression,
+  match: { conceptId?: number; conceptName?: string }
+): Set<number> {
+  const wanted = match.conceptName?.trim().toLowerCase()
+  const ids = new Set<number>()
+  for (const set of expression.ConceptSets ?? []) {
+    const hit = (set.expression?.items ?? []).some(item => {
+      const concept = item.concept
+      if (!concept) return false
+      if (match.conceptId !== undefined && concept.CONCEPT_ID === match.conceptId) return true
+      return wanted !== undefined && concept.CONCEPT_NAME?.trim().toLowerCase() === wanted
+    })
+    if (hit && typeof set.id === 'number') ids.add(set.id)
+  }
+  return ids
+}
+
+function criterionCodesetId(criteria: Criteria): number | undefined {
+  const body = Object.values(criteria)[0] as { CodesetId?: number | null } | undefined
+  return typeof body?.CodesetId === 'number' ? body.CodesetId : undefined
+}
+
 interface RetryState {
   attempt: number
   nextRetryAt: Date | null
@@ -40,19 +91,59 @@ interface RetryState {
 
 export const useCohortStore = defineStore('cohort', () => {
   // State
-  const currentCohort = ref<CohortDefinition | null>(null)
+  const currentCohort = ref<CohortDocument | null>(null)
   const isDirty = ref(false)
   const lastAutoSave = ref<Date | null>(null)
-  // Bumped every time `applyProposal` mutates the cohort. Components that hold
-  // their own local copies of `currentCohort.*` (e.g. CohortBuilder) watch this
-  // counter and re-sync; they don't watch `currentCohort` itself, which would
-  // create a feedback loop with their own user-edit writes.
-  const agentRevision = ref(0)
+
+  // The one cohort document. The mounted editor owns the instance and lends it
+  // here for the lifetime of the editing session; the store never makes a copy,
+  // so an agent proposal and a keystroke in the UI land in the same object and
+  // neither can overwrite the other.
+  const cohortDocument: ShallowRef<Ref<CohortExpression> | null> = shallowRef(null)
+  const hasCohortDocument = computed(() => cohortDocument.value !== null)
+
+  /**
+   * Point `currentCohort.expression` at the attached document, first moving any
+   * definition the caller supplied into it. The move is in place: consumers hold
+   * the expression object itself rather than the ref, so replacing the instance
+   * would silently detach them.
+   */
+  function adoptDocument() {
+    const attached = cohortDocument.value
+    if (!attached) return
+
+    const incoming = currentCohort.value?.expression
+    if (incoming && incoming !== attached.value) {
+      const target = attached.value as Record<string, unknown>
+      for (const key of Object.keys(target)) delete target[key]
+      Object.assign(target, incoming)
+    }
+    if (currentCohort.value) currentCohort.value.expression = attached.value
+  }
+
+  function attachExpression(expression: Ref<CohortExpression>) {
+    cohortDocument.value = expression
+    adoptDocument()
+  }
+
+  /**
+   * Pass the editor's own ref so that an incoming editor which attached before
+   * the outgoing one unmounted is not detached by it.
+   *
+   * The metadata outlives the editor — pythiaBridge navigates back to the cohort
+   * by id — but the expression does not: the next editor adopts whatever
+   * `currentCohort.expression` holds, so leaving the closed session's document
+   * there opens New Cohort on the previous cohort's criteria.
+   */
+  function detachExpression(expression?: Ref<CohortExpression>) {
+    if (expression && cohortDocument.value !== expression) return
+    cohortDocument.value = null
+    if (currentCohort.value) delete currentCohort.value.expression
+  }
 
   // Version preview state (T013)
   const previewVersion = ref<Version | null>(null)
   const reloadRequest = ref(0)
-  const reloadVersion = ref<number | null>(null)
 
   // Validation state
   const validationErrors = ref<ValidationError[]>([])
@@ -78,8 +169,12 @@ export const useCohortStore = defineStore('cohort', () => {
   })
 
   // Actions
-  function setCohort(cohort: CohortDefinition) {
-    currentCohort.value = cohort
+
+  // Copied rather than stored by reference so that adoptDocument's rewrite of
+  // `expression` cannot reach back into the caller's own definition object.
+  function setCohort(cohort: CohortDocument) {
+    currentCohort.value = { ...cohort }
+    adoptDocument()
     isDirty.value = false
     validateCohort()
   }
@@ -89,29 +184,38 @@ export const useCohortStore = defineStore('cohort', () => {
       name: 'New Cohort',
       expression: {} as CohortExpression,
     }
+    previewVersion.value = null
+    adoptDocument()
     isDirty.value = false
     clearDraft()
   }
 
-  function applyProposal(proposal: AgentProposal) {
+  function applyProposal(proposal: AgentProposal): ProposalResult {
+    const expression = cohortDocument.value?.value
+    if (!expression) {
+      logger.error(
+        'CohortStore',
+        `Cannot apply "${proposal?.kind}": no cohort document is attached (no editor is open)`
+      )
+      return { applied: false, reason: 'no-document' }
+    }
+
     switch (proposal.kind) {
       case 'setObservationPeriod': {
-        if (!currentCohort.value?.expression) return
-        if (!currentCohort.value.expression.PrimaryCriteria) {
-          currentCohort.value.expression.PrimaryCriteria = {}
+        if (!expression.PrimaryCriteria) {
+          expression.PrimaryCriteria = {}
         }
-        currentCohort.value.expression.PrimaryCriteria.ObservationWindow = {
+        expression.PrimaryCriteria.ObservationWindow = {
           PriorDays: proposal.observationPeriod.priorDays,
           PostDays: proposal.observationPeriod.postDays,
         }
         break
       }
       case 'addInclusionRule': {
-        if (!currentCohort.value?.expression) return
-        if (!currentCohort.value.expression.InclusionRules) {
-          currentCohort.value.expression.InclusionRules = []
+        if (!expression.InclusionRules) {
+          expression.InclusionRules = []
         }
-        currentCohort.value.expression.InclusionRules.push({
+        expression.InclusionRules.push({
           name: proposal.rule.name,
           description: proposal.rule.description,
           // CriteriaGroup expression left empty — agent must follow up with
@@ -120,16 +224,15 @@ export const useCohortStore = defineStore('cohort', () => {
         break
       }
       case 'addConceptSet': {
-        if (!currentCohort.value?.expression) return
-        if (!currentCohort.value.expression.ConceptSets) {
-          currentCohort.value.expression.ConceptSets = []
+        if (!expression.ConceptSets) {
+          expression.ConceptSets = []
         }
         const cs = proposal.conceptSet
         if (typeof cs.id === 'number') {
           // Deduplicate: skip if a concept set with the same id already exists.
-          const already = currentCohort.value.expression.ConceptSets.some(s => s.id === cs.id)
+          const already = expression.ConceptSets.some(s => s.id === cs.id)
           if (!already) {
-            currentCohort.value.expression.ConceptSets.push({ id: cs.id, name: cs.name })
+            expression.ConceptSets.push({ id: cs.id, name: cs.name })
           }
         }
         break
@@ -142,28 +245,26 @@ export const useCohortStore = defineStore('cohort', () => {
           logger.warn('CohortStore', 'addEntryEvent: Demographic not supported in PrimaryCriteria.CriteriaList')
           break
         }
-        if (!currentCohort.value?.expression) return
-        if (!currentCohort.value.expression.PrimaryCriteria) {
-          currentCohort.value.expression.PrimaryCriteria = {}
+        if (!expression.PrimaryCriteria) {
+          expression.PrimaryCriteria = {}
         }
-        if (!currentCohort.value.expression.PrimaryCriteria.CriteriaList) {
-          currentCohort.value.expression.PrimaryCriteria.CriteriaList = []
+        if (!expression.PrimaryCriteria.CriteriaList) {
+          expression.PrimaryCriteria.CriteriaList = []
         }
-        currentCohort.value.expression.PrimaryCriteria.CriteriaList.push(
+        expression.PrimaryCriteria.CriteriaList.push(
           { [criteriaType]: {} } as Criteria
         )
         break
       }
       case 'setCohortExit': {
-        if (!currentCohort.value?.expression) return
         const ec = proposal.exitCriteria
         switch (ec.strategy) {
           case 'CONTINUOUS_OBSERVATION':
             // Default Circe behavior: no EndStrategy means observation period end.
-            delete currentCohort.value.expression.EndStrategy
+            delete expression.EndStrategy
             break
           case 'FIXED_DURATION':
-            currentCohort.value.expression.EndStrategy = {
+            expression.EndStrategy = {
               DateOffset: {
                 DateField: ec.dateField === 'END_DATE' ? 'EndDate' : 'StartDate',
                 Offset: ec.offset ?? 0,
@@ -171,7 +272,7 @@ export const useCohortStore = defineStore('cohort', () => {
             }
             break
           case 'CONTINUOUS_DRUG':
-            currentCohort.value.expression.EndStrategy = {
+            expression.EndStrategy = {
               CustomEra: {
                 DrugCodesetId: typeof ec.conceptSet?.id === 'number' ? ec.conceptSet.id : undefined,
                 GapDays: ec.surveillanceWindow ?? 0,
@@ -188,17 +289,17 @@ export const useCohortStore = defineStore('cohort', () => {
           logger.warn('CohortStore', 'addCensoringCriterion: Demographic not supported in CensoringCriteria')
           break
         }
-        if (!currentCohort.value?.expression) return
-        if (!currentCohort.value.expression.CensoringCriteria) {
-          currentCohort.value.expression.CensoringCriteria = []
+        if (!expression.CensoringCriteria) {
+          expression.CensoringCriteria = []
         }
-        currentCohort.value.expression.CensoringCriteria.push(
+        expression.CensoringCriteria.push(
           { [criteriaType]: {} } as Criteria
         )
         break
       }
-      // Non-cohort proposal kinds are handled by pythiaBridge before
-      // reaching the cohort store. Ignore here.
+      // Non-cohort proposal kinds. pythiaBridge routes these to their own
+      // handler and they never reach this switch in practice; reaching one
+      // here means the bridge was bypassed, so refuse rather than pretend.
       case 'navigate':
       case 'saveCohort':
       case 'createStandaloneConceptSet':
@@ -211,22 +312,114 @@ export const useCohortStore = defineStore('cohort', () => {
       case 'updateCharacterization':
       case 'updatePathway':
       case 'updateIncidenceRate':
-      case 'removeInclusionRule':
-      case 'removeEntryEvent':
-      case 'setEventLimits':
-      case 'addQualifyingCriterion':
-      case 'setCensorWindow':
-      case 'setEraCollapse':
       case 'useConceptSet':
       case 'generateAnalysis':
-        return
+        return { applied: false, reason: 'unsupported-kind' }
+      case 'setEventLimits': {
+        const { primaryCriteriaLimit, qualifyingLimit, inclusionQualifyingLimit } = proposal.limits
+        if (!primaryCriteriaLimit && !qualifyingLimit && !inclusionQualifyingLimit) {
+          logger.warn('CohortStore', 'setEventLimits: no limit was named')
+          return { applied: false, reason: 'unsupported-kind' }
+        }
+        if (primaryCriteriaLimit) {
+          if (!expression.PrimaryCriteria) {
+            expression.PrimaryCriteria = {}
+          }
+          expression.PrimaryCriteria.PrimaryCriteriaLimit = {
+            Type: RESULT_LIMIT_TYPES[primaryCriteriaLimit],
+          }
+        }
+        if (qualifyingLimit) {
+          expression.QualifiedLimit = { Type: RESULT_LIMIT_TYPES[qualifyingLimit] }
+        }
+        if (inclusionQualifyingLimit) {
+          expression.ExpressionLimit = { Type: RESULT_LIMIT_TYPES[inclusionQualifyingLimit] }
+        }
+        break
+      }
+      case 'setCensorWindow': {
+        const { startDate, endDate } = proposal.censorWindow
+        if (!startDate && !endDate) {
+          logger.warn('CohortStore', 'setCensorWindow: neither bound was given')
+          return { applied: false, reason: 'unsupported-kind' }
+        }
+        // A censor window is one claim about the study period, so an unnamed
+        // bound means "open", not "keep whatever was there".
+        expression.CensorWindow = {
+          ...(startDate ? { StartDate: startDate } : {}),
+          ...(endDate ? { EndDate: endDate } : {}),
+        }
+        break
+      }
+      case 'setEraCollapse': {
+        const { collapseType, eraPad } = proposal.collapseSettings
+        if (collapseType !== 'ERA') {
+          logger.warn('CohortStore', `setEraCollapse: circe has no "${collapseType}" collapse rule`)
+          return { applied: false, reason: 'unsupported-kind' }
+        }
+        expression.CollapseSettings = { CollapseType: 'ERA', EraPad: eraPad }
+        break
+      }
+      case 'addQualifyingCriterion': {
+        const criteriaType = proposal.event.criteriaType
+        if (criteriaType === 'Demographic') {
+          logger.warn('CohortStore', 'addQualifyingCriterion: Demographic qualifiers are not supported')
+          return { applied: false, reason: 'unsupported-kind' }
+        }
+        if (!expression.AdditionalCriteria) {
+          expression.AdditionalCriteria = { Type: 'ALL', CriteriaList: [] }
+        }
+        if (!expression.AdditionalCriteria.CriteriaList) {
+          expression.AdditionalCriteria.CriteriaList = []
+        }
+        expression.AdditionalCriteria.CriteriaList.push({
+          Criteria: { [criteriaType]: {} } as Criteria,
+          StartWindow: defaultQualifyingWindow(),
+          Occurrence: { Type: 2, Count: 1 },
+          RestrictVisit: false,
+          IgnoreObservationPeriod: false,
+        })
+        break
+      }
+      case 'removeInclusionRule': {
+        const name = proposal.match.name?.trim()
+        if (!name) {
+          // Circe inclusion rules carry a name and nothing else, so an id has
+          // nothing to match against — guessing at a list index would remove
+          // whichever rule happened to sit there.
+          logger.warn('CohortStore', 'removeInclusionRule: a circe inclusion rule has no id to match')
+          return { applied: false, reason: 'unsupported-kind' }
+        }
+        const rules = expression.InclusionRules ?? []
+        const kept = rules.filter(rule => rule.name?.trim() !== name)
+        if (kept.length === rules.length) {
+          return { applied: false, reason: 'no-match' }
+        }
+        expression.InclusionRules = kept
+        break
+      }
+      case 'removeEntryEvent': {
+        const codesetIds = codesetIdsMatching(expression, proposal.match)
+        const criteriaList = expression.PrimaryCriteria?.CriteriaList ?? []
+        const kept = criteriaList.filter(criteria => {
+          const codesetId = criterionCodesetId(criteria)
+          return codesetId === undefined || !codesetIds.has(codesetId)
+        })
+        if (kept.length === criteriaList.length) {
+          return { applied: false, reason: 'no-match' }
+        }
+        // The concept set stays: inclusion rules and censoring criteria may
+        // still reference the same CodesetId.
+        expression.PrimaryCriteria!.CriteriaList = kept
+        break
+      }
       default: {
         logger.warn('CohortStore', 'Unknown agent proposal', proposal)
-        return
+        return { applied: false, reason: 'unsupported-kind' }
       }
     }
-    agentRevision.value++
     markDirty()
+    return { applied: true }
   }
 
   function clearCohort() {
@@ -313,6 +506,7 @@ export const useCohortStore = defineStore('cohort', () => {
       const draftData = JSON.parse(draftJson)
       if (draftData.cohort) {
         currentCohort.value = draftData.cohort
+        adoptDocument()
         isDirty.value = true // Mark as dirty since it's a draft
         logger.debug('CohortStore', 'Draft restored from', draftData.timestamp)
         return true
@@ -380,48 +574,6 @@ export const useCohortStore = defineStore('cohort', () => {
     return delay
   }
 
-  // Load cohort with caching and retry
-  async function loadCohort(cohortId: number | string): Promise<CohortDefinition | null> {
-    try {
-      // TODO: Replace with actual WebAPI call
-      // For now, try to load from cache
-      const cachedCohort = await getCohortFromCache(cohortId)
-
-      if (cachedCohort) {
-        setCohort(cachedCohort)
-        logger.debug('CohortStore', `Loaded cohort ${cohortId} from cache`)
-        return cachedCohort
-      }
-
-      // If not in cache, would normally fetch from WebAPI here
-      logger.warn('CohortStore', `Cohort ${cohortId} not found in cache and WebAPI not implemented`)
-      return null
-    } catch (error) {
-      logger.error('CohortStore', 'Failed to load cohort:', error)
-
-      // Try to get from cache as fallback
-      return await getCachedCohort(cohortId)
-    }
-  }
-
-  // Get cohort from cache (fallback when WebAPI fails)
-  async function getCachedCohort(cohortId: number | string): Promise<CohortDefinition | null> {
-    try {
-      const cachedCohort = await getCohortFromCache(cohortId)
-
-      if (cachedCohort) {
-        logger.debug('CohortStore', `Loaded cohort ${cohortId} from cache (fallback mode)`)
-        setCohort(cachedCohort)
-        return cachedCohort
-      }
-
-      return null
-    } catch (error) {
-      logger.error('CohortStore', 'Failed to retrieve cached cohort:', error)
-      return null
-    }
-  }
-
   // Save cohort with retry logic
   async function saveCohort(): Promise<boolean> {
     if (!currentCohort.value) {
@@ -452,11 +604,6 @@ export const useCohortStore = defineStore('cohort', () => {
       retryState.value.isRetrying = true
 
       // TODO: Replace with actual WebAPI save call
-      // For now, just cache the cohort
-      // Convert to plain object to avoid Pinia reactive proxy issues
-      const plainCohort = JSON.parse(JSON.stringify(currentCohort.value))
-      await saveCohortToCache(plainCohort, 'local')
-
       logger.info('CohortStore', 'Cohort saved successfully')
       markClean()
       retryState.value.isRetrying = false
@@ -517,38 +664,33 @@ export const useCohortStore = defineStore('cohort', () => {
     logger.debug('CohortStore', 'Retry cancelled')
   }
 
-  // Delete cohort from cache
-  async function deleteCachedCohort(cohortId: number | string): Promise<void> {
-    try {
-      await deleteCohortFromCache(cohortId)
-      logger.debug('CohortStore', `Cohort ${cohortId} deleted from cache`)
-    } catch (error) {
-      logger.error('CohortStore', 'Failed to delete cached cohort:', error)
-    }
-  }
-
   // Version preview actions (T014-T016)
 
   /**
    * Load a specific version for preview
    * Fetches the historical version data and sets it as current with preview flag
    * @param versionNumber - The version number to load
+   * @param cohortId - Cohort to load from; required when no cohort is open yet
+   *                   (a bookmarked version URL previews before the editor mounts)
    */
-  async function loadVersionPreview(versionNumber: number): Promise<void> {
-    if (!currentCohort.value?.id) {
+  async function loadVersionPreview(versionNumber: number, cohortId?: number): Promise<void> {
+    const id = cohortId ?? currentCohort.value?.id
+    if (!id) {
       logger.error('CohortStore', 'Cannot load version preview: no current cohort ID')
       throw new Error('No current cohort ID')
     }
 
     try {
-      const cohortId = currentCohort.value.id
-      const versionedAsset = await getVersionAPI(cohortId, versionNumber)
+      const versionedAsset = await getVersionAPI(id, versionNumber)
 
       // Set preview version metadata
       previewVersion.value = versionedAsset.versionDTO
 
-      // Signal the mounted editor to fetch and hydrate the historical version.
-      reloadVersion.value = versionNumber
+      // The version response already carries the historical definition, parsed.
+      setCohort({ ...versionedAsset.entityDTO, id: versionedAsset.entityDTO.id ?? id })
+
+      // Signal the mounted editor to re-read the definition: the preview routes
+      // keep the same :id, so its own load triggers never fire.
       reloadRequest.value++
 
       // Mark as clean (read-only mode, no editing)
@@ -570,10 +712,18 @@ export const useCohortStore = defineStore('cohort', () => {
     previewVersion.value = null
 
     // Signal the editor to reload the current cohort version.
-    reloadVersion.value = null
     reloadRequest.value++
 
     logger.debug('CohortStore', 'Preview cleared, returned to current version')
+  }
+
+  /**
+   * Drop preview state for a caller that is already loading a definition.
+   * clearPreviewVersion would bump reloadRequest and send the editor back
+   * through the very load that is asking for the preview to end.
+   */
+  function discardPreview(): void {
+    previewVersion.value = null
   }
 
   /**
@@ -622,17 +772,19 @@ export const useCohortStore = defineStore('cohort', () => {
     lastAutoSave,
     previewVersion,
     reloadRequest,
-    reloadVersion,
     validationErrors,
     isReadOnly,
     retryState,
-    agentRevision,
     saveRequest,
     newCohortSignal,
     saveOptions,
     // Getters
     hasValidationErrors,
     canSave,
+    hasCohortDocument,
+    // Document ownership
+    attachExpression,
+    detachExpression,
     // Actions
     setCohort,
     createNewCohort,
@@ -651,15 +803,13 @@ export const useCohortStore = defineStore('cohort', () => {
     stopAutoSave,
     // Validation
     validateCohort,
-    // Caching and retry
-    loadCohort,
-    getCachedCohort,
+    // Save and retry
     saveCohort,
     cancelRetry,
-    deleteCachedCohort,
     // Version preview (T014-T016)
     loadVersionPreview,
     clearPreviewVersion,
+    discardPreview,
     savePreviewAsCurrent,
     // Cleanup
     dispose,

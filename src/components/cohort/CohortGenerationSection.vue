@@ -17,7 +17,26 @@
       v-if="cohortId !== null && sources.length > 0"
       #actions
     >
+      <AtlasTooltip
+        v-if="generateBlocked"
+        location="top"
+      >
+        <template #activator="{ props: tipProps }">
+          <span v-bind="tipProps">
+            <AtlasButton
+              size="sm"
+              variant="primary"
+              :disabled="true"
+              data-testid="generate-all-btn"
+            >
+              {{ t('cohortDefinitions.generation.section.generateAll', 'Generate all').value }}
+            </AtlasButton>
+          </span>
+        </template>
+        <span>{{ generateDisabledReason }}</span>
+      </AtlasTooltip>
       <AtlasButton
+        v-else
         size="sm"
         variant="primary"
         :disabled="!canGenerateAll"
@@ -47,6 +66,8 @@
       :loading="false"
       :show-patient-count="true"
       :hide-cancel="true"
+      :run-disabled="generateBlocked"
+      :run-disabled-reason="generateDisabledReason"
       :extra-actions="extraActions"
       @run="onRun"
       @show-history="onShowHistory"
@@ -76,10 +97,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { AtlasAlert, AtlasButton } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasTooltip } from '@/components/ui'
 import AtlasSwitch from '@/components/ui/AtlasSwitch.vue'
 import type { AtlasChipTone } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
+import type { ValidationStatus } from '@/composables/useCohortValidation'
 import { useSourceAccessFor } from '@/composables/useEntityAccess'
 import { useWebAPIStore } from '@/stores/webapi'
 import AtlasCollapsibleSection from '@/components/ui/AtlasCollapsibleSection.vue'
@@ -96,9 +118,19 @@ import { logger } from '@/utils/logger'
 
 interface Props {
   cohortId: number | null
+  /** Number of CRITICAL validation findings on the current design. */
+  criticalCount?: number
+  /** Whether the editor holds edits that have not been saved to WebAPI. */
+  isDirty?: boolean
+  /** Whether criticalCount reflects a completed check. See generateBlocked. */
+  validationStatus?: ValidationStatus
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  criticalCount: 0,
+  isDirty: false,
+  validationStatus: 'unvalidated',
+})
 
 const { t } = useI18n()
 const route = useRoute()
@@ -204,8 +236,29 @@ function formatRelative(ms: number): string {
 
 const defaultExpanded = computed(() => false)
 
+// ATLAS 2.15 gates generation (not saving) on the design being valid and saved:
+// cohort-definition-manager.js canGenerate is `!(isDirty || isNew) &&
+// hasInitialEvent && criticalCount() <= 0`. Generating while dirty would run the
+// last saved expression, not the one on screen. `isNew` is the cohortId === null
+// case below. criticalCount is 0 until the first validation round-trip resolves,
+// so it alone would open the gate on an unchecked design; validationStatus keeps
+// it shut until the count means something. generateDisabledReason keeps 2.15's
+// precedence (invalid, then dirty) and reports the transient wait last, since
+// 2.15's disabledReasons has no term for it.
+const generateBlocked = computed(
+  () => props.criticalCount > 0 || props.isDirty || props.validationStatus !== 'validated'
+)
+
+const generateDisabledReason = computed(() => {
+  if (props.criticalCount > 0) return t('const.disabledReason.invalidDesign').value
+  if (props.isDirty) return t('const.disabledReason.dirty').value
+  if (props.validationStatus !== 'validated') return t('common.loadingWithDots', 'Loading...').value
+  return undefined
+})
+
 const canGenerateAll = computed(() => {
   if (props.cohortId === null) return false
+  if (generateBlocked.value) return false
   return sources.value.some(s => {
     if (!sourceAccess.canWrite(s.sourceKey)) return false
     const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
@@ -214,7 +267,7 @@ const canGenerateAll = computed(() => {
 })
 
 async function generateAll() {
-  if (props.cohortId === null) return
+  if (props.cohortId === null || generateBlocked.value) return
   for (const s of sources.value) {
     if (!sourceAccess.canWrite(s.sourceKey)) continue
     const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
@@ -228,7 +281,7 @@ async function generateAll() {
 }
 
 async function onRun(sourceKey: string) {
-  if (props.cohortId === null) return
+  if (props.cohortId === null || generateBlocked.value) return
   try {
     await webapiStore.generateCohort(props.cohortId, sourceKey)
   } catch (error) {

@@ -34,7 +34,13 @@
       </AtlasButton>
     </div>
 
-    <CohortGenerationSection :cohort-id="cohortId" />
+    <CohortGenerationSection
+      v-if="!loadError"
+      :cohort-id="cohortId"
+      :critical-count="criticalValidationCount"
+      :validation-status="validationStatus"
+      :is-dirty="hasUnsavedChanges"
+    />
 
     <!-- Toolbar (status + actions) — hidden when the host view
          renders its own copy in the hero header. State stays here;
@@ -98,8 +104,28 @@
       @apply="handleApplyJson"
     />
 
+    <AtlasAlert
+      v-if="loadError"
+      class="cohort-builder__load-error"
+      severity="danger"
+      :title="loadError"
+    >
+      <template #actions>
+        <AtlasButton
+          size="sm"
+          variant="ghost"
+          @click="retryLoad"
+        >
+          {{ t('common.retry', 'Retry') }}
+        </AtlasButton>
+      </template>
+    </AtlasAlert>
+
     <!-- Step rail: delegated to CohortExpressionEditor (Phase 4) -->
-    <div class="cohort-builder__steps">
+    <div
+      v-else
+      class="cohort-builder__steps"
+    >
       <CohortExpressionEditor
         :expression="expression"
         :concept-sets="conceptSetOptions"
@@ -227,14 +253,14 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDialog, AtlasIcon, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDialog, AtlasIcon, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount, watch, toRef, shallowRef, toRaw } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
-import { useCohortStore } from '@/stores/cohort'
+import { useCohortStore, type CohortDocument } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
-import { provideCriteriaSelection } from '@/composables/useCriteriaSelection'
+import { provideCriteriaSelection, type CriteriaSelectionService } from '@/composables/useCriteriaSelection'
 import { useI18n } from '@/composables/useI18n'
 import { useCohortValidation } from '@/composables/useCohortValidation'
 import { usePermissions } from '@/composables/usePermissions'
@@ -317,6 +343,24 @@ const { t, tv } = useI18n()
 function defaultExpression(): CohortExpression { return {} }
 const expression = ref<CohortExpression>(defaultExpression())
 
+// The store hands out `currentCohort.expression` as the object itself, not this
+// ref, so every wholesale swap (load, new-cohort signal, apply-JSON) has to
+// refill the existing object rather than assign a new one to the ref.
+function replaceExpression(next: CohortExpression) {
+  const target = expression.value as Record<string, unknown>
+  // The store hands definitions to the editor by installing them into this very
+  // object, so `next` is regularly the document itself; clearing it first would
+  // then delete the definition we were asked to install.
+  if (toRaw(next) === toRaw(expression.value)) return
+  for (const key of Object.keys(target)) delete target[key]
+  Object.assign(target, next)
+}
+
+// The store holds a reference to this object for as long as the editor is
+// mounted, so agent proposals and user edits meet in one document.
+cohortStore.attachExpression(expression)
+onBeforeUnmount(() => cohortStore.detachExpression(expression))
+
 // Target that receives a concept set id when the dialog confirms a selection.
 const activeCsTarget = shallowRef<ConceptSetSelectionTarget | null>(null)
 
@@ -374,54 +418,31 @@ let pendingNavigation: (() => void) | null = null
 
 // If we have an ID prop, start with loading=true to prevent UI from rendering before data loads
 const isLoadingCohort = ref(!!props.id)
+// Set when a fetch for props.id fails; the definition surface is replaced by
+// the failure rather than by the last cohort that loaded successfully.
+const loadError = ref<string | null>(null)
+// Set to the id we just saved, so the props.id watcher can tell our own route
+// adoption apart from a real navigation to another cohort.
+const adoptedSavedId = ref<string | null>(null)
 const isConceptSetDialogOpen = ref(false)
 const isConceptSearchDialogOpen = ref(false)
 const selectedConceptDomainFilter = ref<string | undefined>(undefined)
-type SelectionContext = {
-  eventId?: string | null
-  ruleIndex: number
-  groupIndex: number
-  eventIndex: number
-  nestedEventIndex?: number
-  attributeIndex?: number
-}
-
-const selectedCriteriaContext = ref<SelectionContext | null>(null)
-const exitCriteriaSelectionType = ref<'DRUG_EXPOSURE' | 'CENSORING_EVENT' | null>(null)
-const pendingConceptSetCallback = ref<((cs: ConceptSetReference) => void) | null>(null)
-
 // ── Criteria selection service ────────────────────────────────────────────────
 // ConceptArray.vue components at any depth request concepts through this
 // service. Concept-set selection flows via @select-concept-set events
 // directly to activeCsTarget instead.
 const pendingConceptsCallback = ref<((concepts: Concept[]) => void) | null>(null)
 
-function clearPendingSelectionCallbacks() {
-  pendingConceptSetCallback.value = null
-  pendingConceptsCallback.value = null
-}
-
-// A legacy opener setting an index context supersedes any service request
-// still pending from a cancelled dialog — otherwise the stale callback would
-// swallow the next selection.
-watch(selectedCriteriaContext, context => {
-  if (context) clearPendingSelectionCallbacks()
-})
-
 // Named so it can be part of the defineExpose contract below: descendant
 // components reach it via inject (useCriteriaSelection), but nothing in this
 // shallow-mounted tree does, so tests exercise it through the same named
 // object rather than reaching into Vue's private instance-provides field.
-const criteriaSelectionService = {
-  requestConceptSet(onSelect: (cs: ConceptSetReference) => void) {
-    clearPendingSelectionCallbacks()
-    selectedCriteriaContext.value = null
-    pendingConceptSetCallback.value = onSelect
-    isConceptSetDialogOpen.value = true
+const criteriaSelectionService: CriteriaSelectionService = {
+  requestConceptSet(_onSelect: (conceptSet: ConceptSetReference) => void) {
+    // not used by CohortExpressionEditor — concept-set events flow through
+    // @select-concept-set → openConceptSetSelection → activeCsTarget
   },
   requestConcepts(domainFilter: string | undefined, onSelect: (concepts: Concept[]) => void) {
-    clearPendingSelectionCallbacks()
-    selectedCriteriaContext.value = null
     pendingConceptsCallback.value = onSelect
     selectedConceptDomainFilter.value = domainFilter
     isConceptSearchDialogOpen.value = true
@@ -431,6 +452,7 @@ const criteriaSelectionService = {
   },
 }
 provideCriteriaSelection(criteriaSelectionService)
+
 const showError = ref(false)
 const errorMessage = ref('')
 const showSuccess = ref(false)
@@ -439,10 +461,6 @@ const isConfirmingNavigation = ref(false) // Flag to prevent double confirmation
 
 // Snapshot of the loaded/saved state for change detection
 const loadedSnapshot = ref<string | null>(null)
-
-// Generation state
-const selectedSourceKey = ref<string | null>(null)
-const generationError = ref<string | null>(null)
 
 const cohortId = computed(() => (props.id ? Number(props.id) : null))
 
@@ -481,16 +499,21 @@ watch(cohortDescription, val => {
 const {
   validationWarnings,
   isValidating,
+  validationStatus,
   highestSeverityColor,
+  groupedWarningsBySeverity,
   usedConceptSets,
   triggerValidation,
   cancelValidation,
+  resetValidation,
 } = useCohortValidation({
   expression,
   cohortName,
   cohortDescription,
   cohortId,
 })
+
+const criticalValidationCount = computed(() => groupedWarningsBySeverity.value.CRITICAL.length)
 
 // Permission gating for save: a *new* cohort needs `create:cohort-definition`,
 // editing an existing one needs write access on that specific entity (which
@@ -507,9 +530,15 @@ const canSave = computed(() => {
   return cohortName.value.trim().length > 0 && hasEntryEvents && canSavePermission.value
 })
 
-// Preview mode state
+// Preview mode state. A preview installed for another cohort survives until
+// this editor loads its own definition, and the first render happens before
+// that; without the id check the editor would flash read-only preview chrome —
+// a blank cohort under "Previewing version 1" with Save disabled. Adopt a
+// preview only when it belongs to the open cohort, the same check
+// syncToStoreDefinition applies before it renders one.
 const isPreviewingVersion = computed(() => {
-  return !!cohortStore.previewVersion
+  if (!cohortStore.previewVersion) return false
+  return cohortId.value !== null && cohortStore.currentCohort?.id === cohortId.value
 })
 
 /**
@@ -517,6 +546,10 @@ const isPreviewingVersion = computed(() => {
  */
 async function handleBackToCurrent(): Promise<void> {
   if (!cohortId.value) return
+
+  // Vue Router does not re-run beforeEnter when only :version changes, so the
+  // route's guard never sees this transition — clear the preview here instead.
+  await cohortStore.clearPreviewVersion()
 
   await router.push({
     path: `/cohortdefinition/${cohortId.value}/version/current`,
@@ -526,12 +559,16 @@ async function handleBackToCurrent(): Promise<void> {
 /**
  * Create a snapshot of the current cohort state for change detection
  */
+// Reads the reactive `expression`, not toRaw(expression): stringifying the proxy
+// walks every nested property and so registers a deep dependency. Without it the
+// hasUnsavedChanges computed below caches forever and the navigation guards that
+// depend on it never fire after an in-place criteria edit.
 function createStateSnapshot(): string {
   return JSON.stringify({
     name: cohortName.value,
     description: cohortDescription.value,
     tags: cohortTags.value,
-    expression: toRaw(expression.value),
+    expression: expression.value,
   })
 }
 
@@ -545,59 +582,6 @@ const hasUnsavedChanges = computed(() => {
 /** Pre-populated concept list for the concept search dialog (no-op in new flow) */
 const currentlySelectedConcepts = computed(() => [])
 
-type SectionState = {
-  label: string
-  tone: 'muted' | 'primary' | 'success' | 'warning'
-}
-
-const inclusionRulesState = computed<SectionState>(() => {
-  const count = expression.value.InclusionRules?.length ?? 0
-  return count > 0 ? { label: String(count), tone: 'primary' } : { label: 'Optional', tone: 'muted' }
-})
-
-const exitCriteriaState = computed<SectionState>(() => {
-  const count = expression.value.CensoringCriteria?.length ?? 0
-  return count > 0 ? { label: String(count), tone: 'primary' } : { label: 'Optional', tone: 'muted' }
-})
-
-function gatherConceptSets(): ConceptSetReference[] {
-  const conceptSets = expression.value.ConceptSets ?? []
-  const unique = new Map<number | string, ConceptSetReference>()
-  for (const set of conceptSets) {
-    if (set?.id === undefined || set?.id === null) continue
-    unique.set(set.id, { id: set.id, name: set.name ?? '', conceptCount: set.expression?.items?.length })
-  }
-  return [...unique.values()]
-}
-
-function buildExportCohort(): Record<string, unknown> {
-  return {
-    id: props.id ? Number(props.id) : undefined,
-    name: cohortName.value,
-    description: cohortDescription.value,
-    expression: JSON.parse(JSON.stringify(toRaw(expression.value))),
-    conceptSets: gatherConceptSets(),
-    entryEvents: expression.value.PrimaryCriteria?.CriteriaList ?? [],
-    primaryCriteriaLimit: expression.value.PrimaryCriteria?.PrimaryCriteriaLimit?.Type,
-    qualifyingLimit: expression.value.ExpressionLimit?.Type,
-    inclusionQualifyingLimit: expression.value.QualifiedLimit?.Type,
-    inclusionRules: expression.value.InclusionRules ?? [],
-    censoringCriteria: expression.value.CensoringCriteria ?? [],
-    observationPeriod: expression.value.PrimaryCriteria?.ObservationWindow ?? null,
-  }
-}
-
-function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
-  if (pendingConceptSetCallback.value) {
-    const callback = pendingConceptSetCallback.value
-    clearPendingSelectionCallbacks()
-    callback(conceptSetRef)
-    return
-  }
-
-  selectedCriteriaContext.value = null
-  exitCriteriaSelectionType.value = null
-}
 // Versions configuration
 const versionsConfig = computed<VersionsConfig>(() => {
   return {
@@ -678,17 +662,6 @@ watch(
   { immediate: true }
 )
 
-// Reconnected now that store's currentCohort carries a typed CohortExpression.
-// When the AI agent calls applyProposal (e.g. addInclusionRule, setObservationPeriod),
-// the store mutates currentCohort.expression and bumps agentRevision.
-// We re-sync our local reactive `expression` in-place so CohortExpressionEditor
-// sees the change without a full component reload.
-watch(() => cohortStore.agentRevision, () => {
-  const storeExpr = cohortStore.currentCohort?.expression
-  if (!storeExpr) return
-  expression.value = storeExpr;
-})
-
 // The host bridge asks the mounted editor to run its full WebAPI save flow.
 // Always answer the signal — handleSave no-ops when nothing is savable — so the
 // bridge's awaited requestSave() resolves either way.
@@ -707,12 +680,13 @@ watch(
   }
 )
 
-// Reset to a blank cohort in place when the new-cohort signal fires.
+// Reset to a blank cohort in place when the new-cohort signal fires. The
+// expression is already blank: createNewCohort clears the attached document
+// synchronously, before any proposal the caller applies after requesting it.
 watch(
   () => cohortStore.newCohortSignal,
   () => {
     cancelValidation()
-    expression.value = defaultExpression();
     cohortName.value = ''
     cohortDescription.value = ''
     loadedTags.value = []
@@ -735,24 +709,35 @@ function handleTagsUpdate(newTags: Tag[]) {
 onMounted(async () => {
   // Start loading cohort definition immediately (don't await)
   if (props.id) {
-    loadCohort(props.id)
+    // A bookmarked version URL previews before we mount: the store already holds
+    // the historical definition, and fetching the current one would clobber it.
+    syncToStoreDefinition()
   } else {
     const restored = cohortStore.restoreFromDraft()
     if (!restored) {
       // If pythia (or any other code path) has already populated
       // currentCohort with actual content right before navigating us to
       // /cohorts/new, don't clobber it. Only initialise a fresh blank
-      // cohort when there's truly nothing to preserve.
+      // cohort when there's truly nothing to preserve. Content means an
+      // expression: a leftover name is not content, it is the previous
+      // editing session's metadata, which detachExpression deliberately
+      // leaves behind for pythiaBridge to navigate back by id.
       const existing = cohortStore.currentCohort
       const hasContent =
         existing != null &&
         ((existing.expression?.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0 ||
           (existing.expression?.InclusionRules?.length ?? 0) > 0 ||
-          (existing.expression?.ConceptSets?.length ?? 0) > 0 ||
-          (typeof existing.name === 'string' &&
-            existing.name.trim().length > 0 &&
-            existing.name !== 'New Cohort'))
-      if (!hasContent) {
+          (existing.expression?.ConceptSets?.length ?? 0) > 0)
+      if (hasContent) {
+        // The content is new but the identity is not. Left in place, the
+        // previous cohort's name and tags render over a blank editor and
+        // handleSave assigns every one of those tags to the cohort it
+        // creates, because loadedTags starts empty.
+        existing.id = undefined
+        existing.name = 'New Cohort'
+        existing.description = ''
+        existing.tags = []
+      } else {
         cohortStore.createNewCohort()
       }
     }
@@ -770,16 +755,13 @@ onMounted(async () => {
     // Load all concept sets from the API so user can select any system concept set
     conceptSetsStore.fetchAll(),
     // Load CDM sources for generation
-    webapiStore.fetchSources().then(() => {
-      // Auto-select first source if available
-      if (webapiStore.sourcesList.length > 0 && !selectedSourceKey.value) {
-        selectedSourceKey.value = webapiStore.sourcesList[0]?.sourceKey || null
-      }
-    }),
+    webapiStore.fetchSources(),
   ])
 
   // Add beforeunload handler to warn when closing tab/window with unsaved changes
   window.addEventListener('beforeunload', handleBeforeUnload)
+
+  cohortStore.startAutoSave()
 })
 
 // Navigation guard to prevent losing unsaved changes. The confirm
@@ -841,83 +823,139 @@ onBeforeUnmount(() => {
   cohortStore.cancelRetry()
 })
 
+// Adopting the id of the cohort we just saved must not re-run loadCohort. That
+// fetch is async, so anything added while it was in flight (an accepted agent
+// proposal, the user's next edit) is silently overwritten when it resolves, and
+// the next save then persists the stale definition. That cost a full phenotype
+// once — observation window and four inclusion rules accepted on screen, none of
+// them in the saved cohort.
 watch(
   () => props.id,
   newId => {
-    if (newId) {
-      isLoadingCohort.value = true
-      loadCohort(newId)
+    if (!newId) return
+    if (adoptedSavedId.value !== null && adoptedSavedId.value === String(newId)) {
+      adoptedSavedId.value = null
+      return
     }
+    isLoadingCohort.value = true
+    syncToStoreDefinition()
   }
 )
 
 // Watch for changes to cohort definition and rebuild expression with concept set items
 // (removed in Phase 4 — useCohortValidation now watches expression directly)
 
+// A failed load must take the previous cohort's definition off screen with it:
+// the header already names the cohort we failed to fetch, so leaving the last
+// one rendered attributes its criteria to a cohort that never had them.
+function failLoad(message: string) {
+  resetValidation()
+  loadError.value = message
+  errorMessage.value = message
+  showError.value = true
+  replaceExpression(defaultExpression())
+  cohortName.value = ''
+  cohortDescription.value = ''
+  loadedTags.value = []
+  loadedSnapshot.value = null
+  cohortStore.clearCohort()
+  isLoadingCohort.value = false
+}
+
+function retryLoad() {
+  syncToStoreDefinition()
+}
+
+// Loads are async and un-awaited by their callers, so responses can land out of
+// order. Since a failure now blanks the editor, a superseded one arriving last
+// would erase a cohort that loaded fine — a slow 404 followed by a route change,
+// or a second Retry click. Only the newest request may write.
+let latestLoadToken = 0
+
 async function loadCohort(id: string) {
+  const loadToken = ++latestLoadToken
   isLoadingCohort.value = true
+  loadError.value = null
   try {
     const numericId = parseInt(id, 10)
     const atlasCohortResult = await getCohortDefinition(numericId)
+    if (loadToken !== latestLoadToken) return
 
     if (!atlasCohortResult.success) {
       logger.error('CohortBuilder', `Failed to load cohort ${id}`, atlasCohortResult.error)
-      showError.value = true
-      errorMessage.value = atlasCohortResult.error.message || tv('components.cohortBuilder.parseError', 'Failed to load cohort definition')
-      isLoadingCohort.value = false
+      failLoad(
+        atlasCohortResult.error.status === 422
+          ? tv('components.cohortBuilder.parseError', 'Failed to parse cohort definition')
+          : tv('components.cohortBuilder.loadError', 'Failed to load cohort')
+      )
       return
     }
 
     const atlasCohort = atlasCohortResult.data
-    if (atlasCohort.expressionType && atlasCohort.expressionType != "SIMPLE_EXPRESSION") {
+    if (atlasCohort.expressionType && atlasCohort.expressionType !== 'SIMPLE_EXPRESSION') {
       logger.error('CohortBuilder', `Unsupported expression type: ${atlasCohort.expressionType}`)
-      showError.value = true
-      errorMessage.value = tv(
-        'components.cohortBuilder.parseError',
-        'Unsupported cohort expression type'
-      )
-      isLoadingCohort.value = false
+      failLoad(tv('components.cohortBuilder.loadError', 'Failed to load cohort'))
       return
     }
 
-    // Validate & normalize with Circe schema before hydrating the editor.
-    const parseResult = CohortExpressionSchema.safeParse(atlasCohort.expression)
-    if (!parseResult.success) {
-      logger.error('CohortBuilder', 'Failed to parse cohort expression', parseResult.error)
-      showError.value = true
-      errorMessage.value = tv('components.cohortBuilder.parseError', 'Failed to parse cohort definition')
-      isLoadingCohort.value = false
-      return
-    }
-
-    // Reset expression in-place
-    cancelValidation()
-    expression.value = parseResult.data
-
+    // The service already parsed and validated the expression at the API boundary.
     // Minimal store update — include expression so pythiaBridge and agent proposals
     // can read structure (entryEventCount, inclusionRuleCount, etc.) without re-parsing.
     const cohortDef: CohortDefinition = {
       id: atlasCohort.id,
-      name: atlasCohort.name,
+      name: atlasCohort.name ?? '',
       description: atlasCohort.description || '',
       tags: atlasCohort.tags || [],
-      expression: parseResult.data,
+      expression: atlasCohort.expression,
     }
     cohortStore.setCohort(cohortDef)
     cohortStore.markClean()
 
-    cohortName.value = atlasCohort.name
-    cohortDescription.value = atlasCohort.description || ''
-    loadedTags.value = [...(atlasCohort.tags || [])]
-    loadedSnapshot.value = createStateSnapshot()
-    isLoadingCohort.value = false
-
-    triggerValidation()
+    applyDefinition(cohortDef)
   } catch (error) {
     logger.error('CohortBuilder', `Error loading cohort ${id}`, error)
-    isLoadingCohort.value = false
+    if (loadToken !== latestLoadToken) return
+    failLoad(tv('components.cohortBuilder.loadError', 'Failed to load cohort'))
   }
 }
+
+// The one place a whole definition reaches the editor, whether it came from the
+// current-version fetch above or from a version preview the store already holds.
+function applyDefinition(def: CohortDocument) {
+  resetValidation()
+  loadError.value = null
+  replaceExpression(def.expression ?? defaultExpression())
+  cohortName.value = def.name ?? ''
+  cohortDescription.value = def.description || ''
+  loadedTags.value = [...(def.tags || [])]
+  loadedSnapshot.value = createStateSnapshot()
+  isLoadingCohort.value = false
+  triggerValidation()
+}
+
+// A preview keeps the same :id, so neither onMounted nor the props.id watcher
+// re-runs; reloadRequest is the store's signal that the definition changed
+// underneath us — entering a preview, or leaving one for the current version.
+// A preview may belong to a cohort other than the one we are editing; adopt it
+// only when the ids agree, and end it otherwise. Ending it here rather than on
+// unmount is what the sibling stores do (pathway.loadPathway,
+// incidenceRate.createNewIR) and is the only safe moment: the version route's
+// beforeEnter installs the preview *before* the outgoing editor unmounts, so an
+// unmount hook would throw away the preview the guard had just loaded.
+function syncToStoreDefinition() {
+  if (!props.id) return
+
+  const previewed = cohortStore.currentCohort
+  if (cohortStore.previewVersion && previewed?.id === Number(props.id)) {
+    latestLoadToken++
+    applyDefinition(previewed)
+  } else {
+    cohortStore.discardPreview()
+    loadCohort(props.id)
+  }
+}
+
+watch(() => cohortStore.reloadRequest, syncToStoreDefinition)
 
 // ── Concept set selection (Phase 4) ────────────────────────────────────────
 // CohortExpressionEditor emits @select-concept-set / @edit-concept-set with a
@@ -1161,29 +1199,32 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     const tagsToRemove = previousTags.filter(p => !currentTags.some(cur => cur.id === p.id))
     const tagFailures: string[] = []
 
-    for (const tag of tagsToAdd) {
-      const tagId = tag.id
-      if (tagId === undefined) {
-        continue
-      }
+    // The tag calls are independent of each other, so they go out together:
+    // awaiting them one at a time cost a round-trip per changed tag.
+    const tagSyncs = [
+      ...tagsToAdd.map(tag => ({ tag, action: 'assign' as const })),
+      ...tagsToRemove.map(tag => ({ tag, action: 'unassign' as const })),
+    ].filter(sync => sync.tag.id !== undefined)
 
-      const result = await assignTagToCohort(savedId, tagId)
-      if (!result.success) {
-        logger.warn('CohortBuilder', `Failed to assign tag ${tagId}`, result.error)
-        tagFailures.push(result.error.message || `Failed to assign tag "${tag.name}"`)
-      }
-    }
-    for (const tag of tagsToRemove) {
-      const tagId = tag.id
-      if (tagId === undefined) {
-        continue
-      }
+    const outcomes = await Promise.allSettled(
+      tagSyncs.map(async ({ tag, action }) => ({
+        tag,
+        action,
+        result:
+          action === 'assign'
+            ? await assignTagToCohort(savedId, tag.id!)
+            : await unassignTagFromCohort(savedId, tag.id!),
+      }))
+    )
 
-      const result = await unassignTagFromCohort(savedId, tagId)
-      if (!result.success) {
-        logger.warn('CohortBuilder', `Failed to unassign tag ${tagId}`, result.error)
-        tagFailures.push(result.error.message || `Failed to unassign tag "${tag.name}"`)
-      }
+    for (const outcome of outcomes) {
+      // A rejection is a transport failure, not a per-tag one: rethrow so the
+      // save's own catch reports it, as it did when these were awaited inline.
+      if (outcome.status === 'rejected') throw outcome.reason
+      const { tag, action, result } = outcome.value
+      if (result.success) continue
+      logger.warn('CohortBuilder', `Failed to ${action} tag ${tag.id}`, result.error)
+      tagFailures.push(result.error.message || `Failed to ${action} tag "${tag.name}"`)
     }
 
     if (tagFailures.length > 0) {
@@ -1193,20 +1234,36 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
 
     loadedTags.value = [...currentTags]
 
-    const minimalDef: CohortDefinition = {
+    // No expression: the store already references the live document, and
+    // handing it the save-time clone would replace what the user sees with a
+    // snapshot taken before the request went out.
+    cohortStore.setCohort({
       id: savedCohort.id,
       name: cohortName.value,
       description: cohortDescription.value || '',
       tags: cohortTags.value,
-      expression: expressionForSave,
-    }
-    cohortStore.setCohort(minimalDef)
+    })
     cohortStore.markClean()
     cohortStore.clearDraft()
     loadedSnapshot.value = createStateSnapshot()
 
     successMessage.value = tv('components.cohortBuilder.saveSuccess', 'Cohort saved successfully')
     showSuccess.value = true
+
+    // Adopt the new id in the route. `cohortId` is derived from props.id, so a
+    // cohort saved from /cohorts/new stayed id-less in the editor: the
+    // Generation panel kept offering "Save cohort to generate", the versions
+    // panel stayed disabled, and a second Save created a duplicate cohort.
+    // Navigation must never fail the save — the cohort is already persisted.
+    if (!props.id) {
+      adoptedSavedId.value = String(savedId)
+      try {
+        await router.replace(`/cohorts/${savedId}`)
+      } catch (navErr) {
+        adoptedSavedId.value = null
+        logger.warn('CohortBuilder', 'Saved, but could not open the saved cohort', navErr)
+      }
+    }
     return { id: savedCohort.id, name: cohortName.value }
   } catch (error) {
     logger.error('CohortBuilder', 'Failed to save cohort', error)
@@ -1249,10 +1306,7 @@ async function handleApplyJson(json: string) {
   }
 
   cancelValidation()
-  for (const key of Object.keys(expression.value)) {
-    delete (expression.value as Record<string, unknown>)[key]
-  }
-  Object.assign(expression.value, result.data)
+  replaceExpression(result.data)
 
   showJsonDialog.value = false
   successMessage.value = tv(
@@ -1301,33 +1355,6 @@ async function handleExportCopy() {
     logger.error('CohortBuilder', 'Clipboard copy failed', err)
     errorMessage.value = tv('components.cohortBuilder.copyFailed', 'Could not copy to clipboard')
     showError.value = true
-  }
-}
-
-// Generation functions
-// @ts-expect-error - Planned feature, not yet implemented in UI
-async function _handleGenerate() {
-  if (!cohortId.value || !selectedSourceKey.value) {
-    generationError.value = 'Please save the cohort and select a data source first'
-    return
-  }
-
-  try {
-    generationError.value = null
-
-    // Start generation
-    const job = await webapiStore.generateCohort(cohortId.value, selectedSourceKey.value)
-
-    if (!job) {
-      generationError.value = 'Failed to start cohort generation'
-      return
-    }
-
-    successMessage.value = 'Cohort generation started'
-    showSuccess.value = true
-  } catch (error) {
-    generationError.value = error instanceof Error ? error.message : 'Generation failed'
-    logger.error('CohortBuilder', 'Generation error', error)
   }
 }
 
@@ -1388,8 +1415,8 @@ function _getStatusText(status: string): string {
 // time, so a parent reading `builderRef.canSave` gets a number.
 defineExpose({
   // Status state
-  totalConceptSets: computed(() => (cohortStore.currentCohort?.expression?.ConceptSets?.length || 0)),
-  unusedConceptSetCount: computed(() => (cohortStore.currentCohort?.expression?.ConceptSets?.length || 0) - usedConceptSets.value.length),
+  totalConceptSets: computed(() => expression.value.ConceptSets?.length || 0),
+  unusedConceptSetCount: computed(() => (expression.value.ConceptSets?.length || 0) - usedConceptSets.value.length),
   validationCount: computed(() => validationWarnings.value.length),
   validationColor: computed(() => highestSeverityColor.value),
   isValidating,
@@ -1424,9 +1451,6 @@ defineExpose({
   // up as a compile error in this file rather than a silent test break.
   cohortName,
   cohortDescription,
-  selectedCriteriaContext,
-  exitCriteriaSelectionType,
-  pendingConceptSetCallback,
   pendingConceptsCallback,
   loadedTags,
   loadedSnapshot,
@@ -1437,17 +1461,12 @@ defineExpose({
   showError,
   showSuccess,
   criteriaSelectionService,
-  gatherConceptSets,
-  buildExportCohort,
   exportFilename,
   createStateSnapshot,
   confirmLeaveUnsaved,
   cancelLeaveUnsaved,
   handleBackToCurrent,
-  assignConceptSetToContext,
   versionsConfig,
-  inclusionRulesState,
-  exitCriteriaState,
   _getStatusColor,
   _getStatusIcon,
   _getStatusText,
@@ -1929,6 +1948,10 @@ defineExpose({
   font-weight: normal;
   font-size: 0.9em;
   margin-left: 4px;
+}
+
+.cohort-builder__load-error {
+  margin: 8px 0 16px;
 }
 
 .cohort-builder__preview-banner {

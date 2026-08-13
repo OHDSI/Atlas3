@@ -25,12 +25,14 @@
           @update:model-value="dateField = $event"
         >
           <AtlasButton
+            toggle
             value="StartDate"
             size="sm"
           >
             Start Date
           </AtlasButton>
           <AtlasButton
+            toggle
             value="EndDate"
             size="sm"
           >
