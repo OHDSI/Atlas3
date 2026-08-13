@@ -726,6 +726,96 @@ describe('CohortBuilder', () => {
   })
 
   // ---------------------------------------------------------------------------
+  // Leftovers from the previously open cohort
+  // ---------------------------------------------------------------------------
+
+  it('ignores a version preview that belongs to a different cohort', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await flushPromises()
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    const setup = getSetup(wrapper)
+
+    store.previewVersion = { version: 1 } as never
+    await wrapper.vm.$nextTick()
+    expect(setup.isPreviewingVersion).toBe(true)
+
+    // The preview was left behind by another cohort's editor: nothing clears
+    // previewVersion outside /version/current and Back-to-current.
+    store.currentCohort!.id = 5
+    await wrapper.vm.$nextTick()
+    expect(setup.isPreviewingVersion).toBe(false)
+  })
+
+  it('a New Cohort route is never in preview mode', async () => {
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.setCohort({ id: 5, name: 'Previewed elsewhere' })
+    store.previewVersion = { version: 1 } as never
+
+    const wrapper = createWrapper()
+    await flushPromises()
+
+    expect(getSetup(wrapper).isPreviewingVersion).toBe(false)
+    expect(store.previewVersion).toBeNull()
+  })
+
+  it('a New Cohort route does not inherit the previous cohort tags', async () => {
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.setCohort({ id: 5, name: 'Diabetes', description: 'prior', tags: [{ id: 3, name: 'Cardio' }] })
+
+    const wrapper = createWrapper()
+    await flushPromises()
+    const setup = getSetup(wrapper)
+
+    expect(setup.cohortTags).toEqual([])
+    expect(setup.cohortName).toBe('')
+    expect(store.currentCohort?.id).toBeUndefined()
+  })
+
+  // Regression: handleSave diffs cohortTags against loadedTags, which is empty
+  // on a new cohort — so every inherited tag was assigned to the cohort the
+  // save had just created.
+  it('does not assign the previous cohort tags to a newly created cohort', async () => {
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.setCohort({ id: 5, name: 'Diabetes', tags: [{ id: 3, name: 'Cardio' }] })
+
+    const wrapper = createWrapper()
+    await flushPromises()
+    const webapi = await import('@/services/cohort-definition.service')
+    const spy = vi.spyOn(router, 'replace').mockResolvedValue(undefined)
+    await saveNewCohort(wrapper)
+    spy.mockRestore()
+
+    expect(webapi.saveCohortDefinition).toHaveBeenCalled()
+    expect(webapi.assignTagToCohort).not.toHaveBeenCalled()
+  })
+
+  // The other half of the same check: content that pythia put into the store
+  // right before routing us here must survive, even though the identity that
+  // came with it must not.
+  it('keeps in-flight content on a New Cohort route while dropping the stale identity', async () => {
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.setCohort({
+      id: 5,
+      name: 'Diabetes',
+      tags: [{ id: 3, name: 'Cardio' }],
+      expression: { PrimaryCriteria: { CriteriaList: [{ DrugExposure: {} }] } } as never,
+    })
+
+    const wrapper = createWrapper()
+    await flushPromises()
+    const setup = getSetup(wrapper)
+
+    expect(setup.expression.PrimaryCriteria.CriteriaList).toHaveLength(1)
+    expect(setup.cohortTags).toEqual([])
+    expect(store.currentCohort?.id).toBeUndefined()
+  })
+
+  // ---------------------------------------------------------------------------
   // handleExportCopy
   // ---------------------------------------------------------------------------
 

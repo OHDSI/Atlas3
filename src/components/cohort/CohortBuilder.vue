@@ -500,9 +500,14 @@ const canSave = computed(() => {
   return cohortName.value.trim().length > 0 && hasEntryEvents && canSavePermission.value
 })
 
-// Preview mode state
+// Preview mode state. Nothing clears previewVersion when the editor unmounts,
+// so a stale preview from another cohort would otherwise put this editor into
+// read-only preview chrome — a blank New Cohort under "Previewing version 1"
+// with Save disabled. Adopt a preview only when it belongs to the open cohort,
+// the same check syncToStoreDefinition applies before it renders one.
 const isPreviewingVersion = computed(() => {
-  return !!cohortStore.previewVersion
+  if (!cohortStore.previewVersion) return false
+  return cohortId.value !== null && cohortStore.currentCohort?.id === cohortId.value
 })
 
 /**
@@ -682,17 +687,26 @@ onMounted(async () => {
       // If pythia (or any other code path) has already populated
       // currentCohort with actual content right before navigating us to
       // /cohorts/new, don't clobber it. Only initialise a fresh blank
-      // cohort when there's truly nothing to preserve.
+      // cohort when there's truly nothing to preserve. Content means an
+      // expression: a leftover name is not content, it is the previous
+      // editing session's metadata, which detachExpression deliberately
+      // leaves behind for pythiaBridge to navigate back by id.
       const existing = cohortStore.currentCohort
       const hasContent =
         existing != null &&
         ((existing.expression?.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0 ||
           (existing.expression?.InclusionRules?.length ?? 0) > 0 ||
-          (existing.expression?.ConceptSets?.length ?? 0) > 0 ||
-          (typeof existing.name === 'string' &&
-            existing.name.trim().length > 0 &&
-            existing.name !== 'New Cohort'))
-      if (!hasContent) {
+          (existing.expression?.ConceptSets?.length ?? 0) > 0)
+      if (hasContent) {
+        // The content is new but the identity is not. Left in place, the
+        // previous cohort's name and tags render over a blank editor and
+        // handleSave assigns every one of those tags to the cohort it
+        // creates, because loadedTags starts empty.
+        existing.id = undefined
+        existing.name = 'New Cohort'
+        existing.description = ''
+        existing.tags = []
+      } else {
         cohortStore.createNewCohort()
       }
     }

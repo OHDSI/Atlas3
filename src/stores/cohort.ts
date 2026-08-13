@@ -145,6 +145,7 @@ export const useCohortStore = defineStore('cohort', () => {
       name: 'New Cohort',
       expression: {} as CohortExpression,
     }
+    previewVersion.value = null
     adoptDocument()
     isDirty.value = false
     clearDraft()
