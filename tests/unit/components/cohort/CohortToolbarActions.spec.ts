@@ -226,6 +226,13 @@ describe('CohortToolbarActions', () => {
       expect(wrapper.find('[data-testid="export-btn"]').exists()).toBe(true)
     })
 
+    it('uses a download icon, not a share icon, since the menu only offers download/copy/view-JSON actions (#219)', () => {
+      const wrapper = mountComponent()
+      const exportBtn = wrapper.find('[data-testid="export-btn"]')
+      expect(exportBtn.html()).toContain('mdi-download')
+      expect(exportBtn.html()).not.toContain('mdi-export-variant')
+    })
+
     it('emits export-download when the JSON download item is clicked', async () => {
       const wrapper = mountComponent({}, { attachTo: document.body })
       await wrapper.find('[data-testid="export-btn"]').trigger('click')
