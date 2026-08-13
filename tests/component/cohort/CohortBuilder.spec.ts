@@ -935,6 +935,71 @@ describe('CohortBuilder', () => {
     }
   })
 
+  // The gate is per-editor, not per-mount: an editor that already validated one
+  // definition keeps that verdict when a *different* definition is installed
+  // into it (version preview, Back to current, /cohorts/A -> /cohorts/B). For the
+  // debounce plus the round-trip the section would otherwise read the previous
+  // definition's CRITICAL count as this one's, with hasUnsavedChanges false
+  // because applyDefinition took a fresh snapshot — Generate enabled on a design
+  // nothing has checked.
+  it('re-opens the unvalidated window when a second definition is installed in the same editor', async () => {
+    const webapi = await import('@/services/cohort-definition.service')
+    vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({
+      success: true,
+      data: {
+        warnings: [
+          {
+            type: 'DefaultWarning',
+            severity: 'CRITICAL',
+            message: 'Drug concept set must be selected at Exit Criteria.',
+          },
+        ],
+      },
+    })
+    vi.useFakeTimers()
+    try {
+      const wrapper = createWrapper({ id: '42' })
+      await vi.advanceTimersByTimeAsync(3000)
+
+      const section = wrapper.findComponent({ name: 'CohortGenerationSection' })
+      expect(section.props('validationStatus')).toBe('validated')
+      expect(section.props('criticalCount')).toBeGreaterThan(0)
+
+      const store = useCohortStore()
+      store.setCohort({
+        id: 42,
+        name: 'Version 1',
+        description: '',
+        tags: [],
+        expression: {
+          ConceptSets: [],
+          PrimaryCriteria: {
+            CriteriaList: [{ DrugExposure: {} }],
+            ObservationWindow: { PriorDays: 0, PostDays: 0 },
+            PrimaryCriteriaLimit: { Type: 'First' },
+          },
+          InclusionRules: [],
+        },
+      } as any)
+      store.previewVersion = { version: 1, assetId: 42 } as any
+      store.reloadRequest++
+      await flushPromises()
+
+      expect(section.props('validationStatus')).not.toBe('validated')
+      expect(section.props('criticalCount')).toBe(0)
+
+      await vi.advanceTimersByTimeAsync(3000)
+      expect(section.props('validationStatus')).toBe('validated')
+      expect(section.props('criticalCount')).toBeGreaterThan(0)
+    } finally {
+      vi.useRealTimers()
+      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({
+        success: true,
+        data: { warnings: [] },
+      })
+    }
+  })
+
   // The isDirty half of 2.15's canGenerate: unsaved edits must reach the
   // generation section, which blocks the run, while save stays enabled.
   it('hands unsaved-change state to the generation section while save stays enabled', async () => {

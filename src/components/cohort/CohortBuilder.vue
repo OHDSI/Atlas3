@@ -505,6 +505,7 @@ const {
   usedConceptSets,
   triggerValidation,
   cancelValidation,
+  resetValidation,
 } = useCohortValidation({
   expression,
   cohortName,
@@ -848,7 +849,7 @@ watch(
 // the header already names the cohort we failed to fetch, so leaving the last
 // one rendered attributes its criteria to a cohort that never had them.
 function failLoad(message: string) {
-  cancelValidation()
+  resetValidation()
   loadError.value = message
   errorMessage.value = message
   showError.value = true
@@ -912,7 +913,7 @@ async function loadCohort(id: string) {
 // The one place a whole definition reaches the editor, whether it came from the
 // current-version fetch above or from a version preview the store already holds.
 function applyDefinition(def: CohortDocument) {
-  cancelValidation()
+  resetValidation()
   loadError.value = null
   replaceExpression(def.expression ?? defaultExpression())
   cohortName.value = def.name ?? ''

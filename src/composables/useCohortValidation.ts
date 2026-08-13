@@ -37,6 +37,7 @@ export interface CohortValidationReturn {
   triggerValidation: () => void
   cancelValidation: () => void
   clearWarnings: () => void
+  resetValidation: () => void
 }
 
 export function useCohortValidation(options: CohortValidationOptions): CohortValidationReturn {
@@ -130,6 +131,16 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     validationWarnings.value = []
   }
 
+  // The composable outlives the definition it validated — the editor stays
+  // mounted across a version preview and across a change of :id. Callers
+  // installing a whole new definition must drop the previous verdict, or a gate
+  // reading `validated` + zero CRITICALs opens on a design nothing has checked.
+  function resetValidation() {
+    cancelValidation()
+    validationWarnings.value = []
+    _hasValidatedOnce.value = false
+  }
+
   const stopWatch = watch(
     [() => unref(options.expression), cohortName, cohortDescription],
     () => { triggerValidation() },
@@ -152,5 +163,6 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     triggerValidation,
     cancelValidation,
     clearWarnings,
+    resetValidation,
   }
 }

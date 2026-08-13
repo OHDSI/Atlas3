@@ -150,6 +150,37 @@ describe('useCohortValidation', () => {
 
       expect(validationStatus.value).toBe('validated')
     })
+
+    it('returns to unvalidated when resetValidation is called for a new definition', async () => {
+      // The composable outlives the definition it validated: the editor stays
+      // mounted across a version preview or a change of :id. Without a reset the
+      // previous definition's verdict and warning list keep answering for the
+      // new one.
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+        success: true,
+        data: {
+          warnings: [
+            { type: 'DefaultWarning', severity: 'CRITICAL', message: 'broken' },
+          ] as ValidationWarning[],
+        },
+      })
+
+      const options = createTestOptions()
+      const { validationStatus, validationWarnings, triggerValidation, resetValidation } =
+        useCohortValidation(options)
+
+      triggerValidation()
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      expect(validationStatus.value).toBe('validated')
+      expect(validationWarnings.value).toHaveLength(1)
+
+      resetValidation()
+
+      expect(validationStatus.value).toBe('unvalidated')
+      expect(validationWarnings.value).toEqual([])
+    })
   })
 
   describe('groupedWarningsBySeverity', () => {
