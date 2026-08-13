@@ -106,14 +106,14 @@ describe('shapes of everything the agent injects', () => {
   it.fails.each(entryEventConceptSetCapabilities)(
     '%s gives every criterion a resolvable CodesetId', assertGivesResolvableCodesetId)
 
-  // T15 (src/stores/cohort.ts:174): the CONTINUOUS_DRUG branch of setCohortExit
-  // has three bugs -- GapDays reads `surveillanceWindow` while
+  // T15 (src/stores/cohort.ts:219): the CONTINUOUS_DRUG branch of setCohortExit
+  // has two bugs -- GapDays reads `surveillanceWindow` while
   // `persistenceWindow` is ignored (Atlas 2.15 binds Persistence to GapDays and
-  // Surveillance to Offset); `typeof ec.conceptSet?.id === 'number'` never
+  // Surveillance to Offset), and `typeof ec.conceptSet?.id === 'number'` never
   // passes because translate.ts always supplies a string uid, so DrugCodesetId
-  // is dropped every time; and translate's 'CUSTOM_EVENT' strategy matches no
-  // case in this switch yet still reports applied and marks the cohort
-  // dirty. Fixed in Phase 3.
+  // is dropped every time. The three strategies themselves
+  // (CONTINUOUS_OBSERVATION, FIXED_DURATION, CONTINUOUS_DRUG) are all matched.
+  // Fixed in Phase 3.
   const exitStrategyCapabilities: Array<[string, Record<string, unknown>]> = [
     ['add_exit_criterion', { strategy: 'continuous_drug', persistenceWindow: 30, concept: { ...CONCEPT } }],
   ]
@@ -164,11 +164,11 @@ describe('shapes of everything the agent injects', () => {
     expect(store.currentCohort?.expression?.PrimaryCriteria?.CriteriaList).toHaveLength(2)
   })
 
-  // No review thread: removeInclusionRule is not wired into applyProposal's
-  // switch at all -- the store silently no-ops it while apply.ts reports
-  // success, so a named rule is never removed. Related to T15's CUSTOM_EVENT
-  // clause (unmatched kinds still report applied and mark the cohort
-  // dirty) but not covered by any existing thread.
+  // No review thread: removeInclusionRule sits in applyProposal's explicit
+  // ignore group (src/stores/cohort.ts:262), which returns
+  // { applied: false, reason: 'unsupported-kind' } before markDirty runs. The
+  // refusal is honest and apply.ts surfaces it, but a named rule still cannot
+  // be removed.
   it.fails('remove_inclusion_rule drops the named rule and leaves the rest', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('add_inclusion_rule', {
@@ -196,9 +196,8 @@ describe('shapes of everything the agent injects', () => {
     expect(store.currentCohort?.expression?.InclusionRules).toHaveLength(1)
   })
 
-  // No review thread: removeEntryEvent is not wired into applyProposal either.
-  // Related to T15's CUSTOM_EVENT clause but not covered by any existing
-  // thread.
+  // No review thread: removeEntryEvent is in the same explicit ignore group --
+  // refused as unsupported-kind, so the entry event stays.
   it.fails('remove_entry_event drops the entry event built from that concept', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('set_entry_event', { ...CONCEPT }) as never)
@@ -251,10 +250,9 @@ describe('shapes of everything the agent injects', () => {
     expect(translateCapability('add_demographic_criterion', {})).toBeNull()
   })
 
-  // No review thread: setEventLimits is not wired into applyProposal at all --
-  // the store silently no-ops it, so PrimaryCriteriaLimit/QualifiedLimit/
-  // ExpressionLimit are never set. Related to T15's CUSTOM_EVENT clause but
-  // not covered by any existing thread.
+  // No review thread: setEventLimits is in the explicit ignore group --
+  // refused as unsupported-kind, so PrimaryCriteriaLimit/QualifiedLimit/
+  // ExpressionLimit are never set.
   it.fails('set_event_limits restricts entry to the first qualifying event', () => {
     const expr = applyAndParse('set_event_limits', { entryEvents: 'first' })
     expect(expr.PrimaryCriteria?.PrimaryCriteriaLimit?.Type).toBe('First')
@@ -276,9 +274,8 @@ describe('shapes of everything the agent injects', () => {
     expect(translateCapability('set_event_limits', { entryEvents: 'earliest-ish' })).toBeNull()
   })
 
-  // No review thread: addQualifyingCriterion is not wired into applyProposal.
-  // Related to T15's CUSTOM_EVENT clause but not covered by any existing
-  // thread.
+  // No review thread: addQualifyingCriterion is in the explicit ignore group --
+  // refused as unsupported-kind, so AdditionalCriteria is never populated.
   it.fails('add_qualifying_criterion restricts the entry event itself', () => {
     const expr = applyAndParse('add_qualifying_criterion', { ...CONCEPT })
     expect(expr.AdditionalCriteria?.CriteriaList).toHaveLength(1)
@@ -294,9 +291,8 @@ describe('shapes of everything the agent injects', () => {
 
   // A study window is a claim about what the numbers mean; without it the
   // cohort silently spans the whole database.
-  // No review thread: setCensorWindow is not wired into applyProposal.
-  // Related to T15's CUSTOM_EVENT clause but not covered by any existing
-  // thread.
+  // No review thread: setCensorWindow is in the explicit ignore group --
+  // refused as unsupported-kind, so CensorWindow is never set.
   it.fails('set_censor_window bounds the study period', () => {
     const expr = applyAndParse('set_censor_window', { startDate: '2015-01-01', endDate: '2019-12-31' })
     expect(expr.CensorWindow).toMatchObject({ StartDate: '2015-01-01', EndDate: '2019-12-31' })
@@ -306,9 +302,8 @@ describe('shapes of everything the agent injects', () => {
     expect(translateCapability('set_censor_window', { startDate: 'last January' })).toBeNull()
   })
 
-  // No review thread: setEraCollapse is not wired into applyProposal.
-  // Related to T15's CUSTOM_EVENT clause but not covered by any existing
-  // thread.
+  // No review thread: setEraCollapse is in the explicit ignore group --
+  // refused as unsupported-kind, so CollapseSettings is never set.
   it.fails('set_era_collapse merges brief gaps in follow-up', () => {
     const expr = applyAndParse('set_era_collapse', { gapDays: 30 })
     expect(expr.CollapseSettings).toMatchObject({ CollapseType: 'ERA', EraPad: 30 })
