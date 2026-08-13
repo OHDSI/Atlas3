@@ -156,15 +156,15 @@ async function applyProposalInner(
     case 'generateAnalysis':
       await handleGenerateAnalysis(proposal.payload); return
     case 'updateConceptSet':
-      await handleUpdateConceptSet(proposal.payload); return
+      return await handleUpdateConceptSet(proposal.payload)
     case 'updateFeatureAnalysis':
-      await handleUpdateFeatureAnalysis(proposal.payload); return
+      return await handleUpdateFeatureAnalysis(proposal.payload)
     case 'updateCharacterization':
-      await handleUpdateCharacterization(proposal.payload); return
+      return await handleUpdateCharacterization(proposal.payload)
     case 'updatePathway':
-      await handleUpdatePathway(proposal.payload); return
+      return await handleUpdatePathway(proposal.payload)
     case 'updateIncidenceRate':
-      await handleUpdateIncidenceRate(proposal.payload); return
+      return await handleUpdateIncidenceRate(proposal.payload)
     default: {
       const cohortStore = useCohortStore()
       const currentRoute = router.currentRoute.value
@@ -201,11 +201,16 @@ async function applyProposalInner(
       await waitForCohortDocument()
       adoptProposalConceptSets(proposal)
       const result = cohortStore.applyProposal(proposal)
-      if (result.reason === 'no-document') {
-        showSnackbar('Open a cohort before asking for changes to one', 'error')
+      if (!result.applied) {
+        showSnackbar(
+          result.reason === 'no-document'
+            ? 'Open a cohort before asking for changes to one'
+            : 'ATLAS cannot make that change to a cohort yet',
+          'error'
+        )
         return { applied: false }
       }
-      return
+      return { applied: true }
     }
   }
 }
@@ -424,7 +429,7 @@ async function handleNavigate(route: NavigateRoute) {
 
 async function handleCreateStandaloneConceptSet(
   payload: StandaloneConceptSetPayload
-): Promise<{ id?: number | string; name?: string } | void> {
+): Promise<ProposalOutcome | void> {
   if (!payload?.name || !Array.isArray(payload.items) || payload.items.length === 0) {
     showSnackbar('Concept set is missing a name or items', 'error')
     return
@@ -498,8 +503,20 @@ async function handleCreateStandaloneConceptSet(
       },
     }
     adoptProposalConceptSets(proposal)
-    cohortStore.applyProposal(proposal)
+    const attached = cohortStore.applyProposal(proposal)
     await ensureOnCohortRoute()
+    if (!attached.applied) {
+      logger.error(
+        'pythiaBridge',
+        `createStandaloneConceptSet: attach rejected (${attached.reason})`
+      )
+      // The set itself exists, so hand its id back — only the attach failed.
+      showSnackbar(
+        `Concept set "${created.name}" was created but could not be attached to the cohort`,
+        'error'
+      )
+      return { id: created.id, name: created.name, applied: false }
+    }
     showSnackbar(
       `Concept set "${created.name}" created and attached to the cohort`,
       'success'
@@ -834,17 +851,17 @@ async function ensureConceptSetLoaded(id: number) {
   }
 }
 
-async function handleUpdateConceptSet(payload: UpdateConceptSetPayload) {
+async function handleUpdateConceptSet(payload: UpdateConceptSetPayload): Promise<ProposalOutcome> {
   if (typeof payload?.id !== 'number') {
     showSnackbar('Update concept set is missing an id', 'error')
-    return
+    return { applied: false }
   }
   try {
     await ensureConceptSetLoaded(payload.id)
     const store = useConceptSetsStore()
     if (!store.currentSet) {
       showSnackbar('Could not load concept set for editing', 'error')
-      return
+      return { applied: false }
     }
     // Translate StandaloneConceptSetItem into the editor's full ConceptSetItem shape.
     const toEditorItems = (its: NonNullable<UpdateConceptSetPayload['items']>): ConceptSetItem[] =>
@@ -875,10 +892,13 @@ async function handleUpdateConceptSet(payload: UpdateConceptSetPayload) {
       showSnackbar(`Concept set "${store.currentSet.name}" updated — review and Save`, 'success')
     } else {
       showSnackbar('No changes to apply', 'info')
+      return { applied: false }
     }
+    return { applied: true }
   } catch (err) {
     logger.error('pythiaBridge', 'updateConceptSet failed', err)
     showSnackbar(`Failed to update concept set: ${(err as Error).message}`, 'error')
+    return { applied: false }
   }
 }
 
@@ -889,17 +909,17 @@ async function ensureFeatureAnalysisLoaded(id: number) {
   }
 }
 
-async function handleUpdateFeatureAnalysis(payload: UpdateFeatureAnalysisPayload) {
+async function handleUpdateFeatureAnalysis(payload: UpdateFeatureAnalysisPayload): Promise<ProposalOutcome> {
   if (typeof payload?.id !== 'number') {
     showSnackbar('Update feature analysis is missing an id', 'error')
-    return
+    return { applied: false }
   }
   try {
     await ensureFeatureAnalysisLoaded(payload.id)
     const store = useFeatureAnalysesStore()
     if (!store.currentFA) {
       showSnackbar('Could not load feature analysis for editing', 'error')
-      return
+      return { applied: false }
     }
     const applied = store.applyProposal({
       name: payload.name,
@@ -918,10 +938,13 @@ async function handleUpdateFeatureAnalysis(payload: UpdateFeatureAnalysisPayload
       showSnackbar(`Feature analysis "${store.currentFA.name}" updated — review and Save`, 'success')
     } else {
       showSnackbar('No changes to apply', 'info')
+      return { applied: false }
     }
+    return { applied: true }
   } catch (err) {
     logger.error('pythiaBridge', 'updateFeatureAnalysis failed', err)
     showSnackbar(`Failed to update feature analysis: ${(err as Error).message}`, 'error')
+    return { applied: false }
   }
 }
 
@@ -932,17 +955,17 @@ async function ensureCharacterizationLoaded(id: number) {
   }
 }
 
-async function handleUpdateCharacterization(payload: UpdateCharacterizationPayload) {
+async function handleUpdateCharacterization(payload: UpdateCharacterizationPayload): Promise<ProposalOutcome> {
   if (typeof payload?.id !== 'number') {
     showSnackbar('Update characterization is missing an id', 'error')
-    return
+    return { applied: false }
   }
   try {
     await ensureCharacterizationLoaded(payload.id)
     const store = useCharacterizationStore()
     if (!store.currentCharacterization) {
       showSnackbar('Could not load characterization for editing', 'error')
-      return
+      return { applied: false }
     }
     const applied = store.applyProposal({
       name: payload.name,
@@ -967,10 +990,13 @@ async function handleUpdateCharacterization(payload: UpdateCharacterizationPaylo
       )
     } else {
       showSnackbar('No changes to apply', 'info')
+      return { applied: false }
     }
+    return { applied: true }
   } catch (err) {
     logger.error('pythiaBridge', 'updateCharacterization failed', err)
     showSnackbar(`Failed to update characterization: ${(err as Error).message}`, 'error')
+    return { applied: false }
   }
 }
 
@@ -981,17 +1007,17 @@ async function ensurePathwayLoaded(id: number) {
   }
 }
 
-async function handleUpdatePathway(payload: UpdatePathwayPayload) {
+async function handleUpdatePathway(payload: UpdatePathwayPayload): Promise<ProposalOutcome> {
   if (typeof payload?.id !== 'number') {
     showSnackbar('Update pathway is missing an id', 'error')
-    return
+    return { applied: false }
   }
   try {
     await ensurePathwayLoaded(payload.id)
     const store = usePathwayStore()
     if (!store.currentPathway) {
       showSnackbar('Could not load pathway for editing', 'error')
-      return
+      return { applied: false }
     }
     // Pathway store accepts a Zod-passthrough cohort ref (open shape with
     // optional transport fields). Our UpdatePathwayPayload uses the strict
@@ -1008,10 +1034,13 @@ async function handleUpdatePathway(payload: UpdatePathwayPayload) {
       showSnackbar(`Pathway "${store.currentPathway.name}" updated — review and Save`, 'success')
     } else {
       showSnackbar('No changes to apply', 'info')
+      return { applied: false }
     }
+    return { applied: true }
   } catch (err) {
     logger.error('pythiaBridge', 'updatePathway failed', err)
     showSnackbar(`Failed to update pathway: ${(err as Error).message}`, 'error')
+    return { applied: false }
   }
 }
 
@@ -1022,17 +1051,17 @@ async function ensureIncidenceRateLoaded(id: number) {
   }
 }
 
-async function handleUpdateIncidenceRate(payload: UpdateIncidenceRatePayload) {
+async function handleUpdateIncidenceRate(payload: UpdateIncidenceRatePayload): Promise<ProposalOutcome> {
   if (typeof payload?.id !== 'number') {
     showSnackbar('Update incidence rate is missing an id', 'error')
-    return
+    return { applied: false }
   }
   try {
     await ensureIncidenceRateLoaded(payload.id)
     const store = useIncidenceRateStore()
     if (!store.currentIR) {
       showSnackbar('Could not load incidence rate for editing', 'error')
-      return
+      return { applied: false }
     }
     const applied = store.applyProposal(payload)
     if (applied) {
@@ -1047,10 +1076,13 @@ async function handleUpdateIncidenceRate(payload: UpdateIncidenceRatePayload) {
       )
     } else {
       showSnackbar('No changes to apply', 'info')
+      return { applied: false }
     }
+    return { applied: true }
   } catch (err) {
     logger.error('pythiaBridge', 'updateIncidenceRate failed', err)
     showSnackbar(`Failed to update incidence rate: ${(err as Error).message}`, 'error')
+    return { applied: false }
   }
 }
 
