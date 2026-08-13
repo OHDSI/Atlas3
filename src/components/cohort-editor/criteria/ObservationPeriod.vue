@@ -276,6 +276,9 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
 ])
 
+// Exposed so the attribute-spec/schema cross-reference test can reach the spec list.
+defineExpose({ attributeSpecs })
+
 const activeAttributes = computed(() => attributeSpecs.value.filter(attribute => attribute.isActive()))
 const availableAttributes = computed(() => attributeSpecs.value.filter(attribute => !attribute.isActive()))
 const canAddAttribute = computed(() => availableAttributes.value.length > 0)
