@@ -1062,4 +1062,79 @@ describe('CohortBuilder', () => {
     expect(setup.showError).toBe(true)
     expect(setup.showJsonDialog).toBe(true)
   })
+
+  // ---------------------------------------------------------------------------
+  // hasUnsavedChanges — dirty tracking after a cohort has been loaded
+  // ---------------------------------------------------------------------------
+
+  /** Mount with an id and wait for onMounted's loadCohort() to seed loadedSnapshot. */
+  async function mountLoaded() {
+    const wrapper = createWrapper({ id: '42' })
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+    return wrapper
+  }
+
+  it('hasUnsavedChanges is false immediately after a cohort loads', async () => {
+    const wrapper = await mountLoaded()
+    const vm = wrapper.vm as any
+    expect(vm.loadedSnapshot).toBeTypeOf('string')
+    expect(vm.hasUnsavedChanges).toBe(false)
+  })
+
+  it('hasUnsavedChanges flips when a deep criteria value is edited in place', async () => {
+    const wrapper = await mountLoaded()
+    const vm = wrapper.vm as any
+    const setup = getSetup(wrapper)
+
+    // Read once first so the computed caches — the regression this guards is a
+    // cached computed that never re-evaluates because it read a non-reactive
+    // snapshot of the expression.
+    expect(vm.hasUnsavedChanges).toBe(false)
+
+    setup.expression.PrimaryCriteria.ObservationWindow.PriorDays = 365
+    await wrapper.vm.$nextTick()
+
+    expect(vm.hasUnsavedChanges).toBe(true)
+  })
+
+  it('hasUnsavedChanges flips when a nested criteria object is pushed in place', async () => {
+    const wrapper = await mountLoaded()
+    const vm = wrapper.vm as any
+    const setup = getSetup(wrapper)
+
+    expect(vm.hasUnsavedChanges).toBe(false)
+
+    setup.expression.PrimaryCriteria.CriteriaList.push({ ProcedureOccurrence: {} })
+    await wrapper.vm.$nextTick()
+
+    expect(vm.hasUnsavedChanges).toBe(true)
+  })
+
+  it('hasUnsavedChanges flips after applying JSON over a loaded cohort', async () => {
+    const wrapper = await mountLoaded()
+    const vm = wrapper.vm as any
+
+    expect(vm.hasUnsavedChanges).toBe(false)
+
+    await applyJson(
+      wrapper,
+      JSON.stringify({
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [{ ProcedureOccurrence: {} }],
+          ObservationWindow: { PriorDays: 0, PostDays: 0 },
+          PrimaryCriteriaLimit: { Type: 'First' },
+        },
+        QualifiedLimit: { Type: 'First' },
+        ExpressionLimit: { Type: 'First' },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      })
+    )
+
+    expect(vm.hasUnsavedChanges).toBe(true)
+  })
 })

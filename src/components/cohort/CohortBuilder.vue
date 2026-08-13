@@ -507,12 +507,16 @@ async function handleBackToCurrent(): Promise<void> {
 /**
  * Create a snapshot of the current cohort state for change detection
  */
+// Reads the reactive `expression`, not toRaw(expression): stringifying the proxy
+// walks every nested property and so registers a deep dependency. Without it the
+// hasUnsavedChanges computed below caches forever and the navigation guards that
+// depend on it never fire after an in-place criteria edit.
 function createStateSnapshot(): string {
   return JSON.stringify({
     name: cohortName.value,
     description: cohortDescription.value,
     tags: cohortTags.value,
-    expression: toRaw(expression.value),
+    expression: expression.value,
   })
 }
 
