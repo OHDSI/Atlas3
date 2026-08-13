@@ -5,6 +5,7 @@ import { validateCohortDefinition } from '@/services/cohort-definition.service'
 import { logger } from '@/utils/logger'
 import type { CohortExpression } from '@/components/cohort-editor/circe.types'
 import { findUsedConceptSetIds } from '@/components/cohort-editor/concept-set-usage'
+import { useExitCriteriaValidation } from '@/composables/useExitCriteriaValidation'
 
 export interface CohortValidationOptions {
   /** CohortExpression source; accepts either a ref or a reactive object */
@@ -29,6 +30,7 @@ export interface CohortValidationReturn {
 
 export function useCohortValidation(options: CohortValidationOptions): CohortValidationReturn {
   const { cohortName, cohortDescription, debounceDelay = 2000 } = options
+  const { validateExpression: validateExitCriteria } = useExitCriteriaValidation()
 
   const validationWarnings = ref<ValidationWarning[]>([])
   const _isValidatingInternal = ref(false)
@@ -77,11 +79,13 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
       _isValidatingFlag = true
       _isValidatingInternal.value = true
       const nameForValidation = cohortName.value || 'Untitled Cohort'
+      const localWarnings = validateExitCriteria(unref(options.expression))
       const result = await validateCohortDefinition(nameForValidation, unref(options.expression))
-      validationWarnings.value = result.success ? (result.data.warnings ?? []) : []
+      const serverWarnings = result.success ? (result.data.warnings ?? []) : []
+      validationWarnings.value = [...localWarnings, ...serverWarnings]
     } catch (error) {
       logger.error('CohortValidation', 'Failed to validate cohort', error)
-      validationWarnings.value = []
+      validationWarnings.value = validateExitCriteria(unref(options.expression))
     } finally {
       _isValidatingFlag = false
       _isValidatingInternal.value = false
