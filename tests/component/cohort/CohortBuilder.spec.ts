@@ -750,6 +750,19 @@ describe('CohortBuilder', () => {
   // alone must reach CohortGenerationSection, whose canGenerate mirrors
   // cohort-definition-manager.js `criticalCount() <= 0`.
   it('hands the CRITICAL count to the generation section while save stays enabled', async () => {
+    const webapi = await import('@/services/cohort-definition.service')
+    vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({
+      success: true,
+      data: {
+        warnings: [
+          {
+            type: 'DefaultWarning',
+            severity: 'CRITICAL',
+            message: 'Drug concept set must be selected at Exit Criteria.',
+          },
+        ],
+      },
+    })
     vi.useFakeTimers()
     try {
       const wrapper = createWrapper()
@@ -768,6 +781,10 @@ describe('CohortBuilder', () => {
       expect(setup.canSave).toBe(true)
     } finally {
       vi.useRealTimers()
+      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({
+        success: true,
+        data: { warnings: [] },
+      })
     }
   })
 

@@ -79,10 +79,13 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
       _isValidatingFlag = true
       _isValidatingInternal.value = true
       const nameForValidation = cohortName.value || 'Untitled Cohort'
-      const localWarnings = validateExitCriteria(unref(options.expression))
+      // The local rules answer before, and without, the server; checkV2 runs the
+      // same circe checks, so its response replaces them rather than adding to
+      // them. Concatenating would report one defect twice and double the
+      // CRITICAL count the generate gate reads.
+      validationWarnings.value = validateExitCriteria(unref(options.expression))
       const result = await validateCohortDefinition(nameForValidation, unref(options.expression))
-      const serverWarnings = result.success ? (result.data.warnings ?? []) : []
-      validationWarnings.value = [...localWarnings, ...serverWarnings]
+      if (result.success) validationWarnings.value = result.data.warnings ?? []
     } catch (error) {
       logger.error('CohortValidation', 'Failed to validate cohort', error)
       validationWarnings.value = validateExitCriteria(unref(options.expression))

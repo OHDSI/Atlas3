@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vite
 import { ref, computed, nextTick } from 'vue'
 import type { CohortExpression, EndStrategy } from '@/components/cohort-editor/circe.types'
 import type { ValidationWarning } from '@/models/cohort-validation.types'
+import { ApiError } from '@/services/api-error'
 
 vi.mock('@/services/cohort-definition.service', () => ({
   validateCohortDefinition: vi.fn(),
@@ -187,8 +188,8 @@ describe('exit criteria rules surface through useCohortValidation', () => {
 
   it('exposes an incomplete CustomEra strategy as a CRITICAL warning in the UI-facing state', async () => {
     vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
-      success: true,
-      data: { warnings: [] },
+      success: false,
+      error: new ApiError('Service unavailable', 503, null),
     })
 
     const options = createOptions({ EndStrategy: { CustomEra: { GapDays: 30 } } })
@@ -210,7 +211,42 @@ describe('exit criteria rules surface through useCohortValidation', () => {
     cancelValidation()
   })
 
-  it('exposes an incomplete DateOffset strategy alongside server warnings', async () => {
+  // checkV2 runs circe's ExitCriteriaCheck itself (ExitCriteriaCheck.java), so
+  // keeping the local finding after the server answers would show the same
+  // defect twice and double the CRITICAL count the generate gate reads.
+  it('reports one finding, not two, when checkV2 reports the same defect', async () => {
+    const serverWarnings: ValidationWarning[] = [
+      {
+        type: 'DefaultWarning',
+        severity: 'CRITICAL',
+        message: 'Drug concept set must be selected at Exit Criteria.',
+      },
+    ]
+    vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+      success: true,
+      data: { warnings: serverWarnings },
+    })
+
+    const options = createOptions({ EndStrategy: { CustomEra: { GapDays: 30 } } })
+    const { validationWarnings, groupedWarningsBySeverity, cancelValidation } =
+      useCohortValidation(options)
+
+    cancelValidation()
+    options.cohortName.value = 'Changed Name'
+    await nextTick()
+    await vi.runAllTimersAsync()
+    await nextTick()
+
+    expect(validationWarnings.value).toHaveLength(1)
+    expect(validationWarnings.value[0]!.message).toBe(
+      'Drug concept set must be selected at Exit Criteria.'
+    )
+    expect(groupedWarningsBySeverity.value.CRITICAL).toHaveLength(1)
+
+    cancelValidation()
+  })
+
+  it('replaces the local findings with the server list once checkV2 answers', async () => {
     const serverWarnings: ValidationWarning[] = [
       { type: 'DefaultWarning', severity: 'INFO', message: 'Server note' },
     ]
@@ -228,9 +264,7 @@ describe('exit criteria rules surface through useCohortValidation', () => {
     await vi.runAllTimersAsync()
     await nextTick()
 
-    expect(validationWarnings.value).toHaveLength(2)
-    expect(validationWarnings.value.some(w => w.message.includes('Offset'))).toBe(true)
-    expect(validationWarnings.value.some(w => w.message === 'Server note')).toBe(true)
+    expect(validationWarnings.value).toEqual(serverWarnings)
 
     cancelValidation()
   })
