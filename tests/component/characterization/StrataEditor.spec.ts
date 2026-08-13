@@ -39,7 +39,12 @@ function mountEditor(initial: Stratum[] = []) {
     global: {
       plugins: [vuetify],
       stubs: {
-        CriteriaGroup: true,
+        CriteriaGroup: {
+          name: 'CriteriaGroup',
+          props: ['group'],
+          template:
+            '<button data-testid="criteria-group-mutate" @click="group.Type = \'MUTATED\'; group.CriteriaList = [{ Type: \'ATOMIC\', ConceptSets: [], Codesets: [], ExitCriteria: null, InclusionRules: [] }]">mutate</button>',
+        },
         AtlasDialog: {
           name: 'AtlasDialog',
           template: '<div><slot /><slot name="actions" /></div>',
@@ -119,5 +124,53 @@ describe('StrataEditor', () => {
     expect(emitted).toBeTruthy()
     const next = emitted![0]![0] as Stratum[]
     expect(next[0]!.criteria).toBeDefined()
+  })
+
+  it('keeps each stratum criteria isolated across dialog opens', async () => {
+    const initial: Stratum[] = [
+      {
+        id: 'a',
+        name: 'A',
+        criteria: {
+          Type: 'ALL',
+          CriteriaList: [{ Type: 'ATOMIC', ConceptSets: [], Codesets: [], ExitCriteria: null, InclusionRules: [] }],
+        },
+      },
+      {
+        id: 'b',
+        name: 'B',
+        criteria: {
+          Type: 'ANY',
+          CriteriaList: [
+            { Type: 'ATOMIC', ConceptSets: [], Codesets: [], ExitCriteria: null, InclusionRules: [] },
+            { Type: 'ATOMIC', ConceptSets: [], Codesets: [], ExitCriteria: null, InclusionRules: [] },
+          ],
+        },
+      },
+    ]
+    wrapper = mountEditor(initial)
+
+    await wrapper.get('[data-testid="strata-editor-edit-criteria-0"]').trigger('click')
+    await flushPromises()
+    await wrapper.get('[data-testid="criteria-group-mutate"]').trigger('click')
+    const closeBtn = wrapper.findAll('button').find(b => b.text().toLowerCase().includes('close'))
+    if (closeBtn) {
+      await closeBtn.trigger('click')
+    }
+    await flushPromises()
+
+    await wrapper.get('[data-testid="strata-editor-edit-criteria-1"]').trigger('click')
+    await flushPromises()
+
+    const strata = wrapper.props('modelValue') as Stratum[]
+    expect(strata[0]!.criteria).toMatchObject({
+      Type: 'MUTATED',
+      CriteriaList: [{ Type: 'ATOMIC' }],
+    })
+    expect(strata[1]!.criteria).toMatchObject({
+      Type: 'ANY',
+      CriteriaList: expect.any(Array),
+    })
+    expect((strata[1]!.criteria as CriteriaGroup).CriteriaList).toHaveLength(2)
   })
 })

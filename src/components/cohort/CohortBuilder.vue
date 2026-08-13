@@ -861,7 +861,9 @@ async function loadCohort(id: string) {
     const atlasCohortResult = await getCohortDefinition(numericId)
 
     if (!atlasCohortResult.success) {
-      logger.error('CohortBuilder', `Failed to load cohort ${id}`)
+      logger.error('CohortBuilder', `Failed to load cohort ${id}`, atlasCohortResult.error)
+      showError.value = true
+      errorMessage.value = atlasCohortResult.error.message || tv('components.cohortBuilder.parseError', 'Failed to load cohort definition')
       isLoadingCohort.value = false
       return
     }
@@ -869,6 +871,12 @@ async function loadCohort(id: string) {
     const atlasCohort = atlasCohortResult.data
     if (atlasCohort.expressionType && atlasCohort.expressionType != "SIMPLE_EXPRESSION") {
       logger.error('CohortBuilder', `Unsupported expression type: ${atlasCohort.expressionType}`)
+      showError.value = true
+      errorMessage.value = tv(
+        'components.cohortBuilder.parseError',
+        'Unsupported cohort expression type'
+      )
+      isLoadingCohort.value = false
       return
     }
 

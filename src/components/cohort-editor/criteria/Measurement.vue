@@ -135,7 +135,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.OccurrenceStartDate
     },
-    isActive: () => 'OccurrenceStartDate' in measurementData.value,
+    isActive: () => measurementData.value.OccurrenceStartDate != null,
   },
   {
     key: 'MeasurementType',
@@ -156,7 +156,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete measurementData.value.MeasurementType
       delete measurementData.value.MeasurementTypeExclude
     },
-    isActive: () => 'MeasurementType' in measurementData.value || 'MeasurementTypeExclude' in measurementData.value,
+    isActive: () => measurementData.value.MeasurementType != null || measurementData.value.MeasurementTypeExclude != null,
   },
   {
     key: 'MeasurementTypeCS',
@@ -176,7 +176,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.MeasurementTypeCS
     },
-    isActive: () => 'MeasurementTypeCS' in measurementData.value,
+    isActive: () => measurementData.value.MeasurementTypeCS != null,
   },
   {
     key: 'Operator',
@@ -194,7 +194,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.Operator
     },
-    isActive: () => 'Operator' in measurementData.value,
+    isActive: () => measurementData.value.Operator != null,
   },
   {
     key: 'OperatorCS',
@@ -214,7 +214,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.OperatorCS
     },
-    isActive: () => 'OperatorCS' in measurementData.value,
+    isActive: () => measurementData.value.OperatorCS != null,
   },
   {
     key: 'ValueAsNumber',
@@ -230,7 +230,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.ValueAsNumber
     },
-    isActive: () => 'ValueAsNumber' in measurementData.value,
+    isActive: () => measurementData.value.ValueAsNumber != null,
   },
   {
     key: 'ValueAsConcept',
@@ -248,7 +248,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.ValueAsConcept
     },
-    isActive: () => 'ValueAsConcept' in measurementData.value,
+    isActive: () => measurementData.value.ValueAsConcept != null,
   },
   {
     key: 'ValueAsConceptCS',
@@ -268,7 +268,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.ValueAsConceptCS
     },
-    isActive: () => 'ValueAsConceptCS' in measurementData.value,
+    isActive: () => measurementData.value.ValueAsConceptCS != null,
   },
   {
     key: 'Unit',
@@ -286,7 +286,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.Unit
     },
-    isActive: () => 'Unit' in measurementData.value,
+    isActive: () => measurementData.value.Unit != null,
   },
   {
     key: 'UnitCS',
@@ -306,7 +306,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.UnitCS
     },
-    isActive: () => 'UnitCS' in measurementData.value,
+    isActive: () => measurementData.value.UnitCS != null,
   },
   {
     key: 'RangeLow',
@@ -322,7 +322,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.RangeLow
     },
-    isActive: () => 'RangeLow' in measurementData.value,
+    isActive: () => measurementData.value.RangeLow != null,
   },
   {
     key: 'RangeHigh',
@@ -338,7 +338,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.RangeHigh
     },
-    isActive: () => 'RangeHigh' in measurementData.value,
+    isActive: () => measurementData.value.RangeHigh != null,
   },
   {
     key: 'RangeLowRatio',
@@ -354,7 +354,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.RangeLowRatio
     },
-    isActive: () => 'RangeLowRatio' in measurementData.value,
+    isActive: () => measurementData.value.RangeLowRatio != null,
   },
   {
     key: 'RangeHighRatio',
@@ -370,7 +370,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.RangeHighRatio
     },
-    isActive: () => 'RangeHighRatio' in measurementData.value,
+    isActive: () => measurementData.value.RangeHighRatio != null,
   },
   {
     key: 'Abnormal',
@@ -382,7 +382,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.Abnormal
     },
-    isActive: () => measurementData.value.Abnormal === true,
+    isActive: () => measurementData.value.Abnormal != null,
   },
   {
     key: 'MeasurementSourceConcept',
@@ -402,7 +402,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.MeasurementSourceConcept
     },
-    isActive: () => 'MeasurementSourceConcept' in measurementData.value,
+    isActive: () => measurementData.value.MeasurementSourceConcept != null,
   },
   {
     key: 'Age',
@@ -418,7 +418,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.Age
     },
-    isActive: () => 'Age' in measurementData.value,
+    isActive: () => measurementData.value.Age != null,
   },
   {
     key: 'Gender',
@@ -436,7 +436,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.Gender
     },
-    isActive: () => 'Gender' in measurementData.value,
+    isActive: () => measurementData.value.Gender != null,
   },
   {
     key: 'GenderCS',
@@ -456,7 +456,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in measurementData.value,
+    isActive: () => measurementData.value.GenderCS != null,
   },
   {
     key: 'ProviderSpecialty',
@@ -474,7 +474,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.ProviderSpecialty
     },
-    isActive: () => 'ProviderSpecialty' in measurementData.value,
+    isActive: () => measurementData.value.ProviderSpecialty != null,
   },
   {
     key: 'ProviderSpecialtyCS',
@@ -494,7 +494,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.ProviderSpecialtyCS
     },
-    isActive: () => 'ProviderSpecialtyCS' in measurementData.value,
+    isActive: () => measurementData.value.ProviderSpecialtyCS != null,
   },
   {
     key: 'VisitType',
@@ -512,7 +512,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.VisitType
     },
-    isActive: () => 'VisitType' in measurementData.value,
+    isActive: () => measurementData.value.VisitType != null,
   },
   {
     key: 'VisitTypeCS',
@@ -532,7 +532,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.VisitTypeCS
     },
-    isActive: () => 'VisitTypeCS' in measurementData.value,
+    isActive: () => measurementData.value.VisitTypeCS != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -548,7 +548,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in measurementData.value,
+    isActive: () => measurementData.value.CorrelatedCriteria != null,
   },
 ])
 
@@ -564,23 +564,11 @@ const measurementData = computed<Record<string, any>>(() => {
   return criteria.Measurement
 })
 
-const measurementConceptSetModel = {
-  get CodesetId() {
-    return measurementData.value.CodesetId
-  },
-  set CodesetId(value: number | undefined) {
-    measurementData.value.CodesetId = value
-  },
-} as ConceptSetSelection
+const measurement = () => measurementData.value
 
-const measurementSourceConceptModel = {
-  get CodesetId() {
-    return measurementData.value.MeasurementSourceConcept
-  },
-  set CodesetId(value: number | undefined) {
-    measurementData.value.MeasurementSourceConcept = value
-  },
-} as ConceptSetSelection
+const measurementConceptSetModel = createConceptSetModel(measurement, 'CodesetId') as ConceptSetSelection
+
+const measurementSourceConceptModel = createConceptSetModel(measurement, 'MeasurementSourceConcept') as ConceptSetSelection
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

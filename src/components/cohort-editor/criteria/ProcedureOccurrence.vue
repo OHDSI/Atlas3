@@ -137,7 +137,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.OccurrenceStartDate
     },
-    isActive: () => 'OccurrenceStartDate' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.OccurrenceStartDate != null,
   },
   {
     key: 'ProcedureType',
@@ -158,7 +158,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete procedureOccurrenceData.value.ProcedureType
       delete procedureOccurrenceData.value.ProcedureTypeExclude
     },
-    isActive: () => 'ProcedureType' in procedureOccurrenceData.value || 'ProcedureTypeExclude' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.ProcedureType != null || procedureOccurrenceData.value.ProcedureTypeExclude != null,
   },
   {
     key: 'ProcedureTypeCS',
@@ -178,7 +178,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.ProcedureTypeCS
     },
-    isActive: () => 'ProcedureTypeCS' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.ProcedureTypeCS != null,
   },
   {
     key: 'Modifier',
@@ -196,7 +196,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.Modifier
     },
-    isActive: () => 'Modifier' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.Modifier != null,
   },
   {
     key: 'ModifierCS',
@@ -216,7 +216,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.ModifierCS
     },
-    isActive: () => 'ModifierCS' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.ModifierCS != null,
   },
   {
     key: 'Quantity',
@@ -232,7 +232,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.Quantity
     },
-    isActive: () => 'Quantity' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.Quantity != null,
   },
   {
     key: 'ProcedureSourceConcept',
@@ -240,7 +240,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by procedure source concept',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(procedureOccurrenceData.value, 'ProcedureSourceConcept') as ConceptSetSelection,
+      createConceptSetModel(procedureOccurrence, 'ProcedureSourceConcept') as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
@@ -252,7 +252,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.ProcedureSourceConcept
     },
-    isActive: () => 'ProcedureSourceConcept' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.ProcedureSourceConcept != null,
   },
   {
     key: 'Age',
@@ -268,7 +268,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.Age
     },
-    isActive: () => 'Age' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.Age != null,
   },
   {
     key: 'Gender',
@@ -286,7 +286,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.Gender
     },
-    isActive: () => 'Gender' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.Gender != null,
   },
   {
     key: 'GenderCS',
@@ -306,7 +306,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.GenderCS != null,
   },
   {
     key: 'ProviderSpecialty',
@@ -324,7 +324,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.ProviderSpecialty
     },
-    isActive: () => 'ProviderSpecialty' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.ProviderSpecialty != null,
   },
   {
     key: 'ProviderSpecialtyCS',
@@ -344,7 +344,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.ProviderSpecialtyCS
     },
-    isActive: () => 'ProviderSpecialtyCS' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.ProviderSpecialtyCS != null,
   },
   {
     key: 'VisitType',
@@ -362,7 +362,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.VisitType
     },
-    isActive: () => 'VisitType' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.VisitType != null,
   },
   {
     key: 'VisitTypeCS',
@@ -382,7 +382,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.VisitTypeCS
     },
-    isActive: () => 'VisitTypeCS' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.VisitTypeCS != null,
   },
   {
     key: 'DateAdjustment',
@@ -398,7 +398,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.DateAdjustment
     },
-    isActive: () => 'DateAdjustment' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.DateAdjustment != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -414,7 +414,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in procedureOccurrenceData.value,
+    isActive: () => procedureOccurrenceData.value.CorrelatedCriteria != null,
   },
 ])
 
@@ -430,7 +430,9 @@ const procedureOccurrenceData = computed<Record<string, any>>(() => {
   return criteria.ProcedureOccurrence
 })
 
-const procedureOccurrenceConceptSetModel = createConceptSetModel(procedureOccurrenceData.value, 'CodesetId') as ConceptSetSelection
+const procedureOccurrence = () => procedureOccurrenceData.value
+
+const procedureOccurrenceConceptSetModel = createConceptSetModel(procedureOccurrence, 'CodesetId') as ConceptSetSelection
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

@@ -1,5 +1,21 @@
 import type { ConceptSetSelection, DateAdjustment } from '../circe.types'
-import type { ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
+import type { ConceptSetOption, ConceptSetSelectionTarget, ModelAccessor } from './criteria-editor.types'
+
+export function createObjectKeyGenerator() {
+  const keys = new WeakMap<object, number>()
+  let nextKey = 0
+
+  return (object: object) => {
+    let key = keys.get(object)
+
+    if (key === undefined) {
+      key = nextKey++
+      keys.set(object, key)
+    }
+
+    return key
+  }
+}
 
 export function createConceptSetComponentProps(
   modelValue: ConceptSetSelection,
@@ -22,13 +38,13 @@ export function createSchemaFieldProps<T extends Record<string, any>>(modelValue
   return { modelValue }
 }
 
-export function createConceptSetModel<T extends Record<string, any>>(target: T, fieldKey: keyof T & string) {
+export function createConceptSetModel<T extends Record<string, any>>(target: ModelAccessor<T>, fieldKey: keyof T & string) {
   return {
     get CodesetId() {
-      return target[fieldKey] as number | undefined
+      return target()[fieldKey] as number | undefined
     },
     set CodesetId(value: number | undefined) {
-      (target as Record<string, any>)[fieldKey] = value
+      (target() as Record<string, any>)[fieldKey] = value
     },
   }
 }

@@ -53,9 +53,9 @@
 
       <AtlasButton
         icon="mdi-delete"
-        variant="text"
+        variant="ghost"
         color="error"
-        size="small"
+        size="sm"
         @click="emit('remove')"
       />
     </v-card-text>
@@ -139,7 +139,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionEraData.value.AgeAtStart
     },
-    isActive: () => 'AgeAtStart' in conditionEraData.value,
+    isActive: () => conditionEraData.value.AgeAtStart != null,
   },
   {
     key: 'AgeAtEnd',
@@ -155,7 +155,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionEraData.value.AgeAtEnd
     },
-    isActive: () => 'AgeAtEnd' in conditionEraData.value,
+    isActive: () => conditionEraData.value.AgeAtEnd != null,
   },
   {
     key: 'Gender',
@@ -173,7 +173,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionEraData.value.Gender
     },
-    isActive: () => 'Gender' in conditionEraData.value,
+    isActive: () => conditionEraData.value.Gender != null,
   },
   {
     key: 'GenderCS',
@@ -193,7 +193,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionEraData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in conditionEraData.value,
+    isActive: () => conditionEraData.value.GenderCS != null,
   },
   {
     key: 'EraStartDate',
@@ -209,7 +209,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionEraData.value.EraStartDate
     },
-    isActive: () => 'EraStartDate' in conditionEraData.value,
+    isActive: () => conditionEraData.value.EraStartDate != null,
   },
   {
     key: 'EraEndDate',
@@ -225,7 +225,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionEraData.value.EraEndDate
     },
-    isActive: () => 'EraEndDate' in conditionEraData.value,
+    isActive: () => conditionEraData.value.EraEndDate != null,
   },
   {
     key: 'DateAdjustment',
@@ -241,7 +241,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionEraData.value.DateAdjustment
     },
-    isActive: () => 'DateAdjustment' in conditionEraData.value,
+    isActive: () => conditionEraData.value.DateAdjustment != null,
   },
   {
     key: 'OccurrenceCount',
@@ -257,7 +257,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionEraData.value.OccurrenceCount
     },
-    isActive: () => 'OccurrenceCount' in conditionEraData.value,
+    isActive: () => conditionEraData.value.OccurrenceCount != null,
   },
   {
     key: 'EraLength',
@@ -273,7 +273,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionEraData.value.EraLength
     },
-    isActive: () => 'EraLength' in conditionEraData.value,
+    isActive: () => conditionEraData.value.EraLength != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -289,7 +289,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionEraData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in conditionEraData.value,
+    isActive: () => conditionEraData.value.CorrelatedCriteria != null,
   },
 ])
 
@@ -307,14 +307,9 @@ const conditionEraData = computed<Record<string, any>>(() => {
   return criteria.ConditionEra
 })
 
-const conditionEraConceptSetModel = {
-  get CodesetId() {
-    return conditionEraData.value.CodesetId
-  },
-  set CodesetId(value: number | undefined) {
-    conditionEraData.value.CodesetId = value
-  },
-} as ConceptSetSelection
+const conditionEra = () => conditionEraData.value
+
+const conditionEraConceptSetModel = createConceptSetModel(conditionEra, 'CodesetId') as ConceptSetSelection
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

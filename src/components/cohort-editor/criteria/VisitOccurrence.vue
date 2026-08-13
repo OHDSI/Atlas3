@@ -137,7 +137,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.OccurrenceStartDate
     },
-    isActive: () => 'OccurrenceStartDate' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.OccurrenceStartDate != null,
   },
   {
     key: 'OccurrenceEndDate',
@@ -153,7 +153,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.OccurrenceEndDate
     },
-    isActive: () => 'OccurrenceEndDate' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.OccurrenceEndDate != null,
   },
   {
     key: 'VisitType',
@@ -174,7 +174,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete visitOccurrenceData.value.VisitType
       delete visitOccurrenceData.value.VisitTypeExclude
     },
-    isActive: () => 'VisitType' in visitOccurrenceData.value || 'VisitTypeExclude' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.VisitType != null || visitOccurrenceData.value.VisitTypeExclude != null,
   },
   {
     key: 'VisitTypeCS',
@@ -194,7 +194,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.VisitTypeCS
     },
-    isActive: () => 'VisitTypeCS' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.VisitTypeCS != null,
   },
   {
     key: 'VisitSourceConcept',
@@ -202,7 +202,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by visit source concept',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(visitOccurrenceData.value, 'VisitSourceConcept') as ConceptSetSelection,
+      createConceptSetModel(visitOccurrence, 'VisitSourceConcept') as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
@@ -214,7 +214,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.VisitSourceConcept
     },
-    isActive: () => 'VisitSourceConcept' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.VisitSourceConcept != null,
   },
   {
     key: 'VisitLength',
@@ -230,7 +230,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.VisitLength
     },
-    isActive: () => 'VisitLength' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.VisitLength != null,
   },
   {
     key: 'DateAdjustment',
@@ -246,7 +246,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.DateAdjustment
     },
-    isActive: () => 'DateAdjustment' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.DateAdjustment != null,
   },
   {
     key: 'Age',
@@ -262,7 +262,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.Age
     },
-    isActive: () => 'Age' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.Age != null,
   },
   {
     key: 'Gender',
@@ -280,7 +280,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.Gender
     },
-    isActive: () => 'Gender' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.Gender != null,
   },
   {
     key: 'GenderCS',
@@ -300,7 +300,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.GenderCS != null,
   },
   {
     key: 'ProviderSpecialty',
@@ -318,7 +318,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.ProviderSpecialty
     },
-    isActive: () => 'ProviderSpecialty' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.ProviderSpecialty != null,
   },
   {
     key: 'ProviderSpecialtyCS',
@@ -338,7 +338,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.ProviderSpecialtyCS
     },
-    isActive: () => 'ProviderSpecialtyCS' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.ProviderSpecialtyCS != null,
   },
   {
     key: 'PlaceOfService',
@@ -356,7 +356,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.PlaceOfService
     },
-    isActive: () => 'PlaceOfService' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.PlaceOfService != null,
   },
   {
     key: 'PlaceOfServiceCS',
@@ -376,7 +376,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.PlaceOfServiceCS
     },
-    isActive: () => 'PlaceOfServiceCS' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.PlaceOfServiceCS != null,
   },
   {
     key: 'PlaceOfServiceLocation',
@@ -384,7 +384,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by place of service location',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(visitOccurrenceData.value, 'PlaceOfServiceLocation') as ConceptSetSelection,
+      createConceptSetModel(visitOccurrence, 'PlaceOfServiceLocation') as ConceptSetSelection,
       props.conceptSets,
       'Select Source Concept',
       target => emit('select-concept-set', target),
@@ -396,7 +396,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.PlaceOfServiceLocation
     },
-    isActive: () => 'PlaceOfServiceLocation' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.PlaceOfServiceLocation != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -412,7 +412,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in visitOccurrenceData.value,
+    isActive: () => visitOccurrenceData.value.CorrelatedCriteria != null,
   },
 ])
 
@@ -428,14 +428,9 @@ const visitOccurrenceData = computed<Record<string, any>>(() => {
   return criteria.VisitOccurrence
 })
 
-const visitOccurrenceConceptSetModel = {
-  get CodesetId() {
-    return visitOccurrenceData.value.CodesetId
-  },
-  set CodesetId(value: number | undefined) {
-    visitOccurrenceData.value.CodesetId = value
-  },
-} as ConceptSetSelection
+const visitOccurrence = () => visitOccurrenceData.value
+
+const visitOccurrenceConceptSetModel = createConceptSetModel(visitOccurrence, 'CodesetId') as ConceptSetSelection
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

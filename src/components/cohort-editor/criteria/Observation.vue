@@ -134,7 +134,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.OccurrenceStartDate
     },
-    isActive: () => 'OccurrenceStartDate' in observationData.value,
+    isActive: () => observationData.value.OccurrenceStartDate != null,
   },
   {
     key: 'ObservationType',
@@ -155,7 +155,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete observationData.value.ObservationType
       delete observationData.value.ObservationTypeExclude
     },
-    isActive: () => 'ObservationType' in observationData.value || 'ObservationTypeExclude' in observationData.value,
+    isActive: () => observationData.value.ObservationType != null || observationData.value.ObservationTypeExclude != null,
   },
   {
     key: 'ObservationTypeCS',
@@ -175,7 +175,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.ObservationTypeCS
     },
-    isActive: () => 'ObservationTypeCS' in observationData.value,
+    isActive: () => observationData.value.ObservationTypeCS != null,
   },
   {
     key: 'ValueAsNumber',
@@ -191,7 +191,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.ValueAsNumber
     },
-    isActive: () => 'ValueAsNumber' in observationData.value,
+    isActive: () => observationData.value.ValueAsNumber != null,
   },
   {
     key: 'DateAdjustment',
@@ -207,7 +207,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.DateAdjustment
     },
-    isActive: () => 'DateAdjustment' in observationData.value,
+    isActive: () => observationData.value.DateAdjustment != null,
   },
   {
     key: 'ValueAsString',
@@ -223,7 +223,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.ValueAsString
     },
-    isActive: () => 'ValueAsString' in observationData.value,
+    isActive: () => observationData.value.ValueAsString != null,
   },
   {
     key: 'ValueAsConcept',
@@ -241,7 +241,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.ValueAsConcept
     },
-    isActive: () => 'ValueAsConcept' in observationData.value,
+    isActive: () => observationData.value.ValueAsConcept != null,
   },
   {
     key: 'ValueAsConceptCS',
@@ -261,7 +261,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.ValueAsConceptCS
     },
-    isActive: () => 'ValueAsConceptCS' in observationData.value,
+    isActive: () => observationData.value.ValueAsConceptCS != null,
   },
   {
     key: 'Qualifier',
@@ -279,7 +279,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.Qualifier
     },
-    isActive: () => 'Qualifier' in observationData.value,
+    isActive: () => observationData.value.Qualifier != null,
   },
   {
     key: 'QualifierCS',
@@ -299,7 +299,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.QualifierCS
     },
-    isActive: () => 'QualifierCS' in observationData.value,
+    isActive: () => observationData.value.QualifierCS != null,
   },
   {
     key: 'Unit',
@@ -317,7 +317,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.Unit
     },
-    isActive: () => 'Unit' in observationData.value,
+    isActive: () => observationData.value.Unit != null,
   },
   {
     key: 'UnitCS',
@@ -337,7 +337,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.UnitCS
     },
-    isActive: () => 'UnitCS' in observationData.value,
+    isActive: () => observationData.value.UnitCS != null,
   },
   {
     key: 'ObservationSourceConcept',
@@ -357,7 +357,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.ObservationSourceConcept
     },
-    isActive: () => 'ObservationSourceConcept' in observationData.value,
+    isActive: () => observationData.value.ObservationSourceConcept != null,
   },
   {
     key: 'Age',
@@ -373,7 +373,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.Age
     },
-    isActive: () => 'Age' in observationData.value,
+    isActive: () => observationData.value.Age != null,
   },
   {
     key: 'Gender',
@@ -391,7 +391,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.Gender
     },
-    isActive: () => 'Gender' in observationData.value,
+    isActive: () => observationData.value.Gender != null,
   },
   {
     key: 'GenderCS',
@@ -411,7 +411,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in observationData.value,
+    isActive: () => observationData.value.GenderCS != null,
   },
   {
     key: 'ProviderSpecialty',
@@ -429,7 +429,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.ProviderSpecialty
     },
-    isActive: () => 'ProviderSpecialty' in observationData.value,
+    isActive: () => observationData.value.ProviderSpecialty != null,
   },
   {
     key: 'ProviderSpecialtyCS',
@@ -449,7 +449,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.ProviderSpecialtyCS
     },
-    isActive: () => 'ProviderSpecialtyCS' in observationData.value,
+    isActive: () => observationData.value.ProviderSpecialtyCS != null,
   },
   {
     key: 'VisitType',
@@ -467,7 +467,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.VisitType
     },
-    isActive: () => 'VisitType' in observationData.value,
+    isActive: () => observationData.value.VisitType != null,
   },
   {
     key: 'VisitTypeCS',
@@ -487,7 +487,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.VisitTypeCS
     },
-    isActive: () => 'VisitTypeCS' in observationData.value,
+    isActive: () => observationData.value.VisitTypeCS != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -503,7 +503,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in observationData.value,
+    isActive: () => observationData.value.CorrelatedCriteria != null,
   },
 ])
 
@@ -519,23 +519,11 @@ const observationData = computed<Record<string, any>>(() => {
   return criteria.Observation
 })
 
-const observationConceptSetModel = {
-  get CodesetId() {
-    return observationData.value.CodesetId
-  },
-  set CodesetId(value: number | undefined) {
-    observationData.value.CodesetId = value
-  },
-} as ConceptSetSelection
+const observation = () => observationData.value
 
-const observationSourceConceptModel = {
-  get CodesetId() {
-    return observationData.value.ObservationSourceConcept
-  },
-  set CodesetId(value: number | undefined) {
-    observationData.value.ObservationSourceConcept = value
-  },
-} as ConceptSetSelection
+const observationConceptSetModel = createConceptSetModel(observation, 'CodesetId') as ConceptSetSelection
+
+const observationSourceConceptModel = createConceptSetModel(observation, 'ObservationSourceConcept') as ConceptSetSelection
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

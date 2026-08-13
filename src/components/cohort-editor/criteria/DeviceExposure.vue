@@ -134,7 +134,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.Age
     },
-    isActive: () => 'Age' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.Age != null,
   },
   {
     key: 'Gender',
@@ -152,7 +152,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.Gender
     },
-    isActive: () => 'Gender' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.Gender != null,
   },
   {
     key: 'GenderCS',
@@ -172,7 +172,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.GenderCS != null,
   },
   {
     key: 'OccurrenceStartDate',
@@ -188,7 +188,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.OccurrenceStartDate
     },
-    isActive: () => 'OccurrenceStartDate' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.OccurrenceStartDate != null,
   },
   {
     key: 'OccurrenceEndDate',
@@ -204,7 +204,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.OccurrenceEndDate
     },
-    isActive: () => 'OccurrenceEndDate' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.OccurrenceEndDate != null,
   },
   {
     key: 'DateAdjustment',
@@ -220,7 +220,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.DateAdjustment
     },
-    isActive: () => 'DateAdjustment' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.DateAdjustment != null,
   },
   {
     key: 'DeviceType',
@@ -241,7 +241,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete deviceExposureData.value.DeviceType
       delete deviceExposureData.value.DeviceTypeExclude
     },
-    isActive: () => 'DeviceType' in deviceExposureData.value || 'DeviceTypeExclude' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.DeviceType != null || deviceExposureData.value.DeviceTypeExclude != null,
   },
   {
     key: 'DeviceTypeCS',
@@ -261,7 +261,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.DeviceTypeCS
     },
-    isActive: () => 'DeviceTypeCS' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.DeviceTypeCS != null,
   },
   {
     key: 'VisitType',
@@ -279,7 +279,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.VisitType
     },
-    isActive: () => 'VisitType' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.VisitType != null,
   },
   {
     key: 'VisitTypeCS',
@@ -299,7 +299,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.VisitTypeCS
     },
-    isActive: () => 'VisitTypeCS' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.VisitTypeCS != null,
   },
   {
     key: 'UniqueDeviceId',
@@ -315,7 +315,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.UniqueDeviceId
     },
-    isActive: () => 'UniqueDeviceId' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.UniqueDeviceId != null,
   },
   {
     key: 'Quantity',
@@ -331,7 +331,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.Quantity
     },
-    isActive: () => 'Quantity' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.Quantity != null,
   },
   {
     key: 'DeviceSourceConcept',
@@ -351,7 +351,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.DeviceSourceConcept
     },
-    isActive: () => 'DeviceSourceConcept' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.DeviceSourceConcept != null,
   },
   {
     key: 'ProviderSpecialty',
@@ -369,7 +369,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.ProviderSpecialty
     },
-    isActive: () => 'ProviderSpecialty' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.ProviderSpecialty != null,
   },
   {
     key: 'ProviderSpecialtyCS',
@@ -389,7 +389,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.ProviderSpecialtyCS
     },
-    isActive: () => 'ProviderSpecialtyCS' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.ProviderSpecialtyCS != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -405,7 +405,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in deviceExposureData.value,
+    isActive: () => deviceExposureData.value.CorrelatedCriteria != null,
   },
 ])
 
@@ -421,23 +421,11 @@ const deviceExposureData = computed<Record<string, any>>(() => {
   return criteria.DeviceExposure
 })
 
-const deviceExposureConceptSetModel = {
-  get CodesetId() {
-    return deviceExposureData.value.CodesetId
-  },
-  set CodesetId(value: number | undefined) {
-    deviceExposureData.value.CodesetId = value
-  },
-} as ConceptSetSelection
+const deviceExposure = () => deviceExposureData.value
 
-const deviceSourceConceptModel = {
-  get CodesetId() {
-    return deviceExposureData.value.DeviceSourceConcept
-  },
-  set CodesetId(value: number | undefined) {
-    deviceExposureData.value.DeviceSourceConcept = value
-  },
-} as ConceptSetSelection
+const deviceExposureConceptSetModel = createConceptSetModel(deviceExposure, 'CodesetId') as ConceptSetSelection
+
+const deviceSourceConceptModel = createConceptSetModel(deviceExposure, 'DeviceSourceConcept') as ConceptSetSelection
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

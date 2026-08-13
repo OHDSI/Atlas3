@@ -4,7 +4,7 @@ import { z } from 'zod'
  * Zod schema for User entity
  */
 export const userSchema = z.object({
-  id: z.number().int().positive(),
+  id: z.number().int(),
   name: z.string().min(1),
   email: z.string().email().optional(),
 })

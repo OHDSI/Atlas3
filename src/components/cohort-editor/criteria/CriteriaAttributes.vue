@@ -4,66 +4,68 @@
       v-for="row in attributes"
       :key="row.key"
     >
-      <div
-        v-if="row.kind === 'criteriaGroup'"
-        class="attribute-container attribute-container--group mb-2"
-      >
-        <component
-          :is="componentFor(row.kind)"
-          v-bind="row.componentProps ? row.componentProps() : {}"
-          class="attribute-group-editor"
-          :concept-sets="conceptSets"
-          @remove="removeRow(row.key)"
-          @select-concept-set="emit('select-concept-set', $event)"
-          @edit-concept-set="emit('edit-concept-set', $event)"
-          @clear-concept-set="emit('clear-concept-set')"
-        />
-      </div>
-
-      <div
-        v-else
-        class="attribute-container mb-2"
-        :class="{ 'attribute-container--label-only': !row.kind }"
-      >
-        <div class="attribute-title">
-          <span>{{ row.label }}</span>
-          <AtlasTooltip
-            v-if="row.description"
-            location="top"
-            max-width="320"
-          >
-            <template #activator="{ props: tooltipProps }">
-              <AtlasIcon
-                v-bind="tooltipProps"
-                icon="mdi-help-circle-outline"
-                size="14"
-                class="attribute-title__help"
-              />
-            </template>
-            <span>{{ row.description }}</span>
-          </AtlasTooltip>
-        </div>
-
+      <template v-if="row.isActive()">
         <div
-          v-if="row.kind"
-          class="attribute-input"
+          v-if="row.kind === 'criteriaGroup'"
+          class="attribute-container attribute-container--group mb-2"
         >
           <component
             :is="componentFor(row.kind)"
             v-bind="row.componentProps ? row.componentProps() : {}"
+            class="attribute-group-editor"
+            :concept-sets="conceptSets"
+            @remove="removeRow(row.key)"
+            @select-concept-set="emit('select-concept-set', $event)"
+            @edit-concept-set="emit('edit-concept-set', $event)"
+            @clear-concept-set="emit('clear-concept-set')"
           />
         </div>
 
-        <div class="attribute-actions">
-          <AtlasButton
-            icon="mdi-delete"
-            variant="text"
-            color="error"
-            size="small"
-            @click="removeRow(row.key)"
-          />
+        <div
+          v-else
+          class="attribute-container mb-2"
+          :class="{ 'attribute-container--label-only': !row.kind }"
+        >
+          <div class="attribute-title">
+            <span>{{ row.label }}</span>
+            <AtlasTooltip
+              v-if="row.description"
+              location="top"
+              max-width="320"
+            >
+              <template #activator="{ props: tooltipProps }">
+                <AtlasIcon
+                  v-bind="tooltipProps"
+                  icon="mdi-help-circle-outline"
+                  size="14"
+                  class="attribute-title__help"
+                />
+              </template>
+              <span>{{ row.description }}</span>
+            </AtlasTooltip>
+          </div>
+
+          <div
+            v-if="row.kind"
+            class="attribute-input"
+          >
+            <component
+              :is="componentFor(row.kind)"
+              v-bind="row.componentProps ? row.componentProps() : {}"
+            />
+          </div>
+
+          <div class="attribute-actions">
+            <AtlasButton
+              icon="mdi-delete"
+              variant="ghost"
+              color="error"
+              size="sm"
+              @click="removeRow(row.key)"
+            />
+          </div>
         </div>
-      </div>
+      </template>
     </template>
   </div>
 </template>

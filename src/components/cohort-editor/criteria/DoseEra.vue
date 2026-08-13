@@ -134,7 +134,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete doseEraData.value.AgeAtStart
     },
-    isActive: () => 'AgeAtStart' in doseEraData.value,
+    isActive: () => doseEraData.value.AgeAtStart != null,
   },
   {
     key: 'AgeAtEnd',
@@ -150,7 +150,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete doseEraData.value.AgeAtEnd
     },
-    isActive: () => 'AgeAtEnd' in doseEraData.value,
+    isActive: () => doseEraData.value.AgeAtEnd != null,
   },
   {
     key: 'Gender',
@@ -168,7 +168,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete doseEraData.value.Gender
     },
-    isActive: () => 'Gender' in doseEraData.value,
+    isActive: () => doseEraData.value.Gender != null,
   },
   {
     key: 'GenderCS',
@@ -188,7 +188,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete doseEraData.value.GenderCS
     },
-    isActive: () => 'GenderCS' in doseEraData.value,
+    isActive: () => doseEraData.value.GenderCS != null,
   },
   {
     key: 'EraStartDate',
@@ -204,7 +204,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete doseEraData.value.EraStartDate
     },
-    isActive: () => 'EraStartDate' in doseEraData.value,
+    isActive: () => doseEraData.value.EraStartDate != null,
   },
   {
     key: 'EraEndDate',
@@ -220,7 +220,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete doseEraData.value.EraEndDate
     },
-    isActive: () => 'EraEndDate' in doseEraData.value,
+    isActive: () => doseEraData.value.EraEndDate != null,
   },
   {
     key: 'DoseValue',
@@ -236,7 +236,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete doseEraData.value.DoseValue
     },
-    isActive: () => 'DoseValue' in doseEraData.value,
+    isActive: () => doseEraData.value.DoseValue != null,
   },
   {
     key: 'EraLength',
@@ -252,7 +252,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete doseEraData.value.EraLength
     },
-    isActive: () => 'EraLength' in doseEraData.value,
+    isActive: () => doseEraData.value.EraLength != null,
   },
   {
     key: 'Unit',
@@ -270,7 +270,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete doseEraData.value.Unit
     },
-    isActive: () => 'Unit' in doseEraData.value,
+    isActive: () => doseEraData.value.Unit != null,
   },
   {
     key: 'UnitCS',
@@ -290,7 +290,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete doseEraData.value.UnitCS
     },
-    isActive: () => 'UnitCS' in doseEraData.value,
+    isActive: () => doseEraData.value.UnitCS != null,
   },
   {
     key: 'CorrelatedCriteria',
@@ -306,7 +306,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete doseEraData.value.CorrelatedCriteria
     },
-    isActive: () => 'CorrelatedCriteria' in doseEraData.value,
+    isActive: () => doseEraData.value.CorrelatedCriteria != null,
   },
 ])
 
@@ -322,14 +322,9 @@ const doseEraData = computed<Record<string, any>>(() => {
   return criteria.DoseEra
 })
 
-const doseEraConceptSetModel = {
-  get CodesetId() {
-    return doseEraData.value.CodesetId
-  },
-  set CodesetId(value: number | undefined) {
-    doseEraData.value.CodesetId = value
-  },
-} as ConceptSetSelection
+const doseEra = () => doseEraData.value
+
+const doseEraConceptSetModel = createConceptSetModel(doseEra, 'CodesetId') as ConceptSetSelection
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()
