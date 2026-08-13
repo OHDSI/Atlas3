@@ -191,3 +191,63 @@ describe('CohortGenerationSection — CRITICAL design findings block generation'
     expect(spy).toHaveBeenCalledWith(1, 'CCAE')
   })
 })
+
+// ATLAS 2.15 cohort-definition-manager.js canGenerate is
+// `!(isDirty || isNew) && hasInitialEvent && criticalCount() <= 0`; without the
+// isDirty term WebAPI would generate the last saved expression while the editor
+// shows the edited one.
+describe('CohortGenerationSection — unsaved changes block generation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    document.body.innerHTML = ''
+  })
+
+  it('disables per-source Generate and explains why when the design is dirty', async () => {
+    const wrapper = mountSection({ cohortId: 1, isDirty: true }, [], [ccae], tooltipStub)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('Save changes before generate')
+  })
+
+  it('disables Generate all when the design is dirty', async () => {
+    const wrapper = mountSection({ cohortId: 1, isDirty: true }, [], [ccae, mdcr], tooltipStub)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('does not call generateCohort for a dirty design', async () => {
+    const wrapper = mountSection({ cohortId: 1, isDirty: true }, [], [ccae], tooltipStub)
+    await flushPromises()
+    const store = useWebAPIStore()
+    const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
+    await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
+    await wrapper.find('[data-testid="generate-all-btn"]').trigger('click')
+    await flushPromises()
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('allows generation once the saved cohort is clean', async () => {
+    const wrapper = mountSection({ cohortId: 1, isDirty: false }, [], [ccae], tooltipStub)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.text()).not.toContain('Save changes before generate')
+    const store = useWebAPIStore()
+    const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
+    await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
+    await flushPromises()
+    expect(spy).toHaveBeenCalledWith(1, 'CCAE')
+  })
+
+  it('reports the invalid design before the dirty flag, as 2.15 orders them', async () => {
+    const wrapper = mountSection(
+      { cohortId: 1, isDirty: true, criticalCount: 1 },
+      [],
+      [ccae],
+      tooltipStub
+    )
+    await flushPromises()
+    expect(wrapper.text()).toContain('Design is not valid')
+    expect(wrapper.text()).not.toContain('Save changes before generate')
+  })
+})

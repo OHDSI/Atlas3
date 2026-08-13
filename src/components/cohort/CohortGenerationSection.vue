@@ -18,7 +18,7 @@
       #actions
     >
       <AtlasTooltip
-        v-if="hasCriticalFindings"
+        v-if="generateBlocked"
         location="top"
       >
         <template #activator="{ props: tipProps }">
@@ -33,7 +33,7 @@
             </AtlasButton>
           </span>
         </template>
-        <span>{{ invalidDesignReason }}</span>
+        <span>{{ generateDisabledReason }}</span>
       </AtlasTooltip>
       <AtlasButton
         v-else
@@ -66,8 +66,8 @@
       :loading="false"
       :show-patient-count="true"
       :hide-cancel="true"
-      :run-disabled="hasCriticalFindings"
-      :run-disabled-reason="invalidDesignReason"
+      :run-disabled="generateBlocked"
+      :run-disabled-reason="generateDisabledReason"
       :extra-actions="extraActions"
       @run="onRun"
       @show-history="onShowHistory"
@@ -119,11 +119,13 @@ interface Props {
   cohortId: number | null
   /** Number of CRITICAL validation findings on the current design. */
   criticalCount?: number
+  /** Whether the editor holds edits that have not been saved to WebAPI. */
+  isDirty?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), { criticalCount: 0 })
+const props = withDefaults(defineProps<Props>(), { criticalCount: 0, isDirty: false })
 
-const { t, tv } = useI18n()
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const webapiStore = useWebAPIStore()
@@ -227,15 +229,22 @@ function formatRelative(ms: number): string {
 
 const defaultExpanded = computed(() => false)
 
-// ATLAS 2.15 gates generation (not saving) on the design being valid:
-// cohort-definition-manager.js canGenerate requires `criticalCount() <= 0`
-// and reports disabledReasons.INVALID_DESIGN when it is not.
-const hasCriticalFindings = computed(() => props.criticalCount > 0)
-const invalidDesignReason = tv('const.disabledReason.invalidDesign', 'Design is not valid')
+// ATLAS 2.15 gates generation (not saving) on the design being valid and saved:
+// cohort-definition-manager.js canGenerate is `!(isDirty || isNew) &&
+// hasInitialEvent && criticalCount() <= 0`. Generating while dirty would run the
+// last saved expression, not the one on screen. `isNew` is the cohortId === null
+// case below. generateDisabledReason keeps 2.15's precedence: invalid, then dirty.
+const generateBlocked = computed(() => props.criticalCount > 0 || props.isDirty)
+
+const generateDisabledReason = computed(() => {
+  if (props.criticalCount > 0) return t('const.disabledReason.invalidDesign').value
+  if (props.isDirty) return t('const.disabledReason.dirty').value
+  return undefined
+})
 
 const canGenerateAll = computed(() => {
   if (props.cohortId === null) return false
-  if (hasCriticalFindings.value) return false
+  if (generateBlocked.value) return false
   return sources.value.some(s => {
     if (!sourceAccess.canWrite(s.sourceKey)) return false
     const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
@@ -244,7 +253,7 @@ const canGenerateAll = computed(() => {
 })
 
 async function generateAll() {
-  if (props.cohortId === null || hasCriticalFindings.value) return
+  if (props.cohortId === null || generateBlocked.value) return
   for (const s of sources.value) {
     if (!sourceAccess.canWrite(s.sourceKey)) continue
     const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
@@ -258,7 +267,7 @@ async function generateAll() {
 }
 
 async function onRun(sourceKey: string) {
-  if (props.cohortId === null || hasCriticalFindings.value) return
+  if (props.cohortId === null || generateBlocked.value) return
   try {
     await webapiStore.generateCohort(props.cohortId, sourceKey)
   } catch (error) {

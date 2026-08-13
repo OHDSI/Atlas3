@@ -792,6 +792,39 @@ describe('CohortBuilder', () => {
     }
   })
 
+  // The isDirty half of 2.15's canGenerate: unsaved edits must reach the
+  // generation section, which blocks the run, while save stays enabled.
+  it('hands unsaved-change state to the generation section while save stays enabled', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Edited cohort'
+    Object.assign(setup.expression, {
+      PrimaryCriteria: { CriteriaList: [{ DrugExposure: {} }] },
+    })
+    await wrapper.vm.$nextTick()
+
+    const section = wrapper.findComponent({ name: 'CohortGenerationSection' })
+    expect(section.props('isDirty')).toBe(true)
+    expect(setup.canSave).toBe(true)
+  })
+
+  it('reports a saved cohort as clean to the generation section', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Saved cohort'
+    Object.assign(setup.expression, {
+      PrimaryCriteria: { CriteriaList: [{ DrugExposure: {} }] },
+    })
+    await wrapper.vm.$nextTick()
+    setup.loadedSnapshot = setup.createStateSnapshot()
+    await wrapper.vm.$nextTick()
+
+    const section = wrapper.findComponent({ name: 'CohortGenerationSection' })
+    expect(section.props('isDirty')).toBe(false)
+  })
+
   // ---------------------------------------------------------------------------
   // Post-save route adoption
   // ---------------------------------------------------------------------------

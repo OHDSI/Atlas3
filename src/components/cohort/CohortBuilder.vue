@@ -37,6 +37,7 @@
     <CohortGenerationSection
       :cohort-id="cohortId"
       :critical-count="criticalValidationCount"
+      :is-dirty="hasUnsavedChanges"
     />
 
     <!-- Toolbar (status + actions) — hidden when the host view
