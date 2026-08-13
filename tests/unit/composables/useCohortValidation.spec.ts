@@ -67,6 +67,89 @@ describe('useCohortValidation', () => {
 
       expect(isValidating.value).toBe(false)
     })
+
+    it('should initialize with validationStatus as unvalidated', () => {
+      const options = createTestOptions()
+      const { validationStatus } = useCohortValidation(options)
+
+      expect(validationStatus.value).toBe('unvalidated')
+    })
+  })
+
+  describe('validationStatus', () => {
+    it('distinguishes a never-validated cohort from one that validated clean', async () => {
+      // Both states present zero warnings; a boolean in-flight flag cannot
+      // tell them apart, which is exactly the bug a gate reading zero
+      // findings as "safe to generate" would fall for.
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+        success: true,
+        data: { warnings: [] },
+      })
+
+      const options = createTestOptions()
+      const { validationStatus, validationWarnings, triggerValidation, cancelValidation } =
+        useCohortValidation(options)
+
+      cancelValidation()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+        success: true,
+        data: { warnings: [] },
+      })
+
+      expect(validationWarnings.value).toEqual([])
+      expect(validationStatus.value).toBe('unvalidated')
+
+      triggerValidation()
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      expect(validationWarnings.value).toEqual([])
+      expect(validationStatus.value).toBe('validated')
+    })
+
+    it('reports validating while a validation request is in flight', async () => {
+      let resolveValidation: (value: { success: true; data: { warnings: ValidationWarning[] } }) => void
+      const pending = new Promise<{ success: true; data: { warnings: ValidationWarning[] } }>(resolve => {
+        resolveValidation = resolve
+      })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockReturnValue(pending)
+
+      const options = createTestOptions()
+      const { validationStatus, triggerValidation, cancelValidation } = useCohortValidation(options)
+
+      cancelValidation()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockReturnValue(pending)
+
+      triggerValidation()
+      await vi.advanceTimersByTimeAsync(100)
+
+      expect(validationStatus.value).toBe('validating')
+
+      resolveValidation!({ success: true, data: { warnings: [] } })
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      expect(validationStatus.value).toBe('validated')
+    })
+
+    it('marks validationStatus as validated after a failed request resolves (fallback ran)', async () => {
+      vi.mocked(cohortDefService.validateCohortDefinition).mockRejectedValue(new Error('API Error'))
+
+      const options = createTestOptions()
+      const { validationStatus, triggerValidation, cancelValidation } = useCohortValidation(options)
+
+      cancelValidation()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockRejectedValue(new Error('API Error'))
+
+      triggerValidation()
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      expect(validationStatus.value).toBe('validated')
+    })
   })
 
   describe('groupedWarningsBySeverity', () => {

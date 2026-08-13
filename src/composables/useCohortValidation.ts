@@ -16,9 +16,20 @@ export interface CohortValidationOptions {
   debounceDelay?: number
 }
 
+/**
+ * `unvalidated`: no validation attempt has completed yet, so the current
+ * warning list (empty on init) says nothing about the cohort's design.
+ * `validating`: a request is in flight. `validated`: at least one attempt
+ * (success, checkV2 failure, or thrown error) has completed and the warning
+ * list reflects its outcome. Callers gating an action on "no CRITICAL
+ * findings" must treat `unvalidated` as not-yet-cleared, not as clean.
+ */
+export type ValidationStatus = 'unvalidated' | 'validating' | 'validated'
+
 export interface CohortValidationReturn {
   validationWarnings: Ref<ValidationWarning[]>
   isValidating: ComputedRef<boolean>
+  validationStatus: ComputedRef<ValidationStatus>
   groupedWarningsBySeverity: ComputedRef<Record<ValidationSeverity, ValidationWarning[]>>
   highestSeverity: ComputedRef<ValidationSeverity | null>
   highestSeverityColor: ComputedRef<string>
@@ -34,10 +45,16 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
 
   const validationWarnings = ref<ValidationWarning[]>([])
   const _isValidatingInternal = ref(false)
+  const _hasValidatedOnce = ref(false)
   let _isValidatingFlag = false
   let validationDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
   const isValidating = computed(() => _isValidatingInternal.value)
+
+  const validationStatus = computed<ValidationStatus>(() => {
+    if (_isValidatingInternal.value) return 'validating'
+    return _hasValidatedOnce.value ? 'validated' : 'unvalidated'
+  })
 
   const groupedWarningsBySeverity = computed(() => {
     const grouped: Record<ValidationSeverity, ValidationWarning[]> = {
@@ -92,6 +109,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     } finally {
       _isValidatingFlag = false
       _isValidatingInternal.value = false
+      _hasValidatedOnce.value = true
     }
   }
 
@@ -126,6 +144,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
   return {
     validationWarnings,
     isValidating,
+    validationStatus,
     groupedWarningsBySeverity,
     highestSeverity,
     highestSeverityColor,
