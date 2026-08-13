@@ -68,16 +68,19 @@ export interface CohortSavePayload {
 /**
  * Save cohort definition (create or update)
  * Endpoint: POST /cohortdefinition (create) or PUT /cohortdefinition/{id} (update)
+ *
+ * The response echoes the stored DTO, so `expression` comes back as a JSON
+ * string; callers that need the parsed form must run normalizeRawCohortDefinition.
  */
 export async function saveCohortDefinition(
   cohort: CohortSavePayload
-): Promise<ApiResult<CohortDefinition>> {
+): Promise<ApiResult<RawCohortDefinition>> {
   return unwrap(async () => {
     logger.debug(CONTEXT, 'Saving cohort definition', { id: cohort.id, name: cohort.name })
     if (cohort.id) {
-      return await httpPut<CohortDefinition>(`/cohortdefinition/${cohort.id}`, cohort)
+      return await httpPut<RawCohortDefinition>(`/cohortdefinition/${cohort.id}`, cohort)
     }
-    return await httpPost<CohortDefinition>('/cohortdefinition', cohort)
+    return await httpPost<RawCohortDefinition>('/cohortdefinition', cohort)
   }, CONTEXT)
 }
 
