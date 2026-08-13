@@ -35,6 +35,7 @@
     </div>
 
     <CohortGenerationSection
+      v-if="!loadError"
       :cohort-id="cohortId"
       :critical-count="criticalValidationCount"
       :is-dirty="hasUnsavedChanges"
@@ -102,8 +103,28 @@
       @apply="handleApplyJson"
     />
 
+    <AtlasAlert
+      v-if="loadError"
+      class="cohort-builder__load-error"
+      severity="danger"
+      :title="loadError"
+    >
+      <template #actions>
+        <AtlasButton
+          size="sm"
+          variant="ghost"
+          @click="retryLoad"
+        >
+          {{ t('common.retry', 'Retry') }}
+        </AtlasButton>
+      </template>
+    </AtlasAlert>
+
     <!-- Step rail: delegated to CohortExpressionEditor (Phase 4) -->
-    <div class="cohort-builder__steps">
+    <div
+      v-else
+      class="cohort-builder__steps"
+    >
       <CohortExpressionEditor
         :expression="expression"
         :concept-sets="conceptSetOptions"
@@ -231,7 +252,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDialog, AtlasIcon, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDialog, AtlasIcon, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount, watch, toRef, shallowRef, toRaw } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
@@ -396,6 +417,9 @@ let pendingNavigation: (() => void) | null = null
 
 // If we have an ID prop, start with loading=true to prevent UI from rendering before data loads
 const isLoadingCohort = ref(!!props.id)
+// Set when a fetch for props.id fails; the definition surface is replaced by
+// the failure rather than by the last cohort that loaded successfully.
+const loadError = ref<string | null>(null)
 // Set to the id we just saved, so the props.id watcher can tell our own route
 // adoption apart from a real navigation to another cohort.
 const adoptedSavedId = ref<string | null>(null)
@@ -818,29 +842,48 @@ watch(
 // Watch for changes to cohort definition and rebuild expression with concept set items
 // (removed in Phase 4 — useCohortValidation now watches expression directly)
 
+// A failed load must take the previous cohort's definition off screen with it:
+// the header already names the cohort we failed to fetch, so leaving the last
+// one rendered attributes its criteria to a cohort that never had them.
+function failLoad(message: string) {
+  cancelValidation()
+  loadError.value = message
+  errorMessage.value = message
+  showError.value = true
+  replaceExpression(defaultExpression())
+  cohortName.value = ''
+  cohortDescription.value = ''
+  loadedTags.value = []
+  loadedSnapshot.value = null
+  cohortStore.clearCohort()
+  isLoadingCohort.value = false
+}
+
+function retryLoad() {
+  syncToStoreDefinition()
+}
+
 async function loadCohort(id: string) {
   isLoadingCohort.value = true
+  loadError.value = null
   try {
     const numericId = parseInt(id, 10)
     const atlasCohortResult = await getCohortDefinition(numericId)
 
     if (!atlasCohortResult.success) {
       logger.error('CohortBuilder', `Failed to load cohort ${id}`, atlasCohortResult.error)
-      showError.value = true
-      errorMessage.value =
+      failLoad(
         atlasCohortResult.error.status === 422
           ? tv('components.cohortBuilder.parseError', 'Failed to parse cohort definition')
           : tv('components.cohortBuilder.loadError', 'Failed to load cohort')
-      isLoadingCohort.value = false
+      )
       return
     }
 
     const atlasCohort = atlasCohortResult.data
     if (atlasCohort.expressionType && atlasCohort.expressionType !== 'SIMPLE_EXPRESSION') {
       logger.error('CohortBuilder', `Unsupported expression type: ${atlasCohort.expressionType}`)
-      showError.value = true
-      errorMessage.value = tv('components.cohortBuilder.loadError', 'Failed to load cohort')
-      isLoadingCohort.value = false
+      failLoad(tv('components.cohortBuilder.loadError', 'Failed to load cohort'))
       return
     }
 
@@ -860,7 +903,7 @@ async function loadCohort(id: string) {
     applyDefinition(cohortDef)
   } catch (error) {
     logger.error('CohortBuilder', `Error loading cohort ${id}`, error)
-    isLoadingCohort.value = false
+    failLoad(tv('components.cohortBuilder.loadError', 'Failed to load cohort'))
   }
 }
 
@@ -868,6 +911,7 @@ async function loadCohort(id: string) {
 // current-version fetch above or from a version preview the store already holds.
 function applyDefinition(def: CohortDocument) {
   cancelValidation()
+  loadError.value = null
   replaceExpression(def.expression ?? defaultExpression())
   cohortName.value = def.name ?? ''
   cohortDescription.value = def.description || ''
@@ -1888,6 +1932,10 @@ defineExpose({
   font-weight: normal;
   font-size: 0.9em;
   margin-left: 4px;
+}
+
+.cohort-builder__load-error {
+  margin: 8px 0 16px;
 }
 
 .cohort-builder__preview-banner {

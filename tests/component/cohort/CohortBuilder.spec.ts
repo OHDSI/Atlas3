@@ -297,6 +297,61 @@ describe('CohortBuilder', () => {
     expect(setup.cohortName).toBe('')
   })
 
+  it('drops the previous definition and shows an error state when the next load fails', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await flushPromises()
+    expect(renderedExpression(wrapper).PrimaryCriteria.CriteriaList).toEqual([
+      { ConditionOccurrence: {} },
+    ])
+
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.getCohortDefinition).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('Cohort definition not found', 404, null),
+    })
+
+    await wrapper.setProps({ id: '7' })
+    await flushPromises()
+
+    const loadError = wrapper.find('.cohort-builder__load-error')
+    expect(loadError.exists()).toBe(true)
+    expect(loadError.text()).toContain('Failed to load cohort')
+    // Cohort 42's criteria must not stay on screen under cohort 7's header.
+    expect(wrapper.findComponent({ name: 'CohortExpressionEditor' }).exists()).toBe(false)
+
+    const setup = getSetup(wrapper)
+    expect(setup.cohortName).toBe('')
+    expect(setup.isLoadingCohort).toBe(false)
+    const { useCohortStore } = await import('@/stores/cohort')
+    expect(useCohortStore().currentCohort).toBeNull()
+
+    // A load that succeeds afterwards clears the error state again.
+    await wrapper.setProps({ id: '42' })
+    await flushPromises()
+    expect(wrapper.find('.cohort-builder__load-error').exists()).toBe(false)
+    expect(renderedExpression(wrapper).PrimaryCriteria.CriteriaList).toEqual([
+      { ConditionOccurrence: {} },
+    ])
+  })
+
+  it('reports a load that throws instead of leaving the previous definition on screen', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await flushPromises()
+
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.getCohortDefinition).mockRejectedValueOnce(new Error('network down'))
+
+    await wrapper.setProps({ id: '7' })
+    await flushPromises()
+
+    expect(wrapper.find('.cohort-builder__load-error').exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'CohortExpressionEditor' }).exists()).toBe(false)
+    const setup = getSetup(wrapper)
+    expect(setup.showError).toBe(true)
+    expect(setup.errorMessage).toBe('Failed to load cohort')
+    expect(setup.isLoadingCohort).toBe(false)
+  })
+
   it('canSave is false when name is empty', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
