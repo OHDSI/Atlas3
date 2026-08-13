@@ -129,9 +129,9 @@
       <CohortExpressionEditor
         :expression="expression"
         :concept-sets="conceptSetOptions"
-        @select-concept-set="openConceptSetSelection($event)"
-        @edit-concept-set="openConceptSetSelection($event)"
-        @clear-concept-set="activeCsTarget = null"
+        @select-concept-set="onSelectConceptSet"
+        @edit-concept-set="onSelectConceptSet"
+        @clear-concept-set="cancelSelection"
       />
     </div>
     <!-- /.cohort-builder__steps -->
@@ -142,8 +142,8 @@
     <concept-set-selection-dialog
       v-model="isConceptSetDialogOpen"
       :local-concept-sets="expressionConceptSets"
-      @local-concept-set-selected="handleLocalConceptSetSelected"
-      @concept-set-selected="handleConceptSetSelected"
+      @local-concept-set-selected="onLocalConceptSetSelected"
+      @concept-set-selected="onConceptSetSelected"
       @edit-concept-set="handleEditConceptSet"
       @create-new="handleCreateNewConceptSet"
     />
@@ -164,7 +164,10 @@
       embedded
       @update:model-value="
         value => {
-          if (!value) conceptSetsStore.closeEditor()
+          if (!value) {
+            conceptSetsStore.closeEditor()
+            cancelSelection()
+          }
         }
       "
       @apply="handleConceptSetApplied"
@@ -254,13 +257,14 @@
 
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasDialog, AtlasIcon, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer } from '@/components/ui'
-import { ref, computed, onMounted, onBeforeUnmount, watch, toRef, shallowRef, toRaw } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, toRef, toRaw } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
 import { useCohortStore, type CohortDocument } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
 import { provideCriteriaSelection, type CriteriaSelectionService } from '@/composables/useCriteriaSelection'
+import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
 import { useI18n } from '@/composables/useI18n'
 import { useCohortValidation } from '@/composables/useCohortValidation'
 import { usePermissions } from '@/composables/usePermissions'
@@ -276,7 +280,6 @@ import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
 import CohortExpressionEditor from '@/components/cohort-editor/CohortExpressionEditor.vue'
 import { CohortExpressionSchema } from '@/components/cohort-editor/circe.types'
 import type { CohortExpression, ConceptSetItem as CirceConceptSetItem } from '@/components/cohort-editor/circe.types'
-import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/cohort-editor/criteria/criteria-editor.types'
 import { unassignConceptSetId } from '@/components/cohort-editor/concept-set-usage'
 import CohortGenerationSection from './CohortGenerationSection.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
@@ -287,7 +290,7 @@ import CohortBreadcrumb from './CohortBreadcrumb.vue'
 import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
-import { hasNumericConceptSetId, nextConceptSetId } from '@/utils/concept-set-id'
+import { nextConceptSetId } from '@/utils/concept-set-id'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import CohortJsonDialog from './CohortJsonDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
@@ -361,16 +364,6 @@ function replaceExpression(next: CohortExpression) {
 cohortStore.attachExpression(expression)
 onBeforeUnmount(() => cohortStore.detachExpression(expression))
 
-// Target that receives a concept set id when the dialog confirms a selection.
-const activeCsTarget = shallowRef<ConceptSetSelectionTarget | null>(null)
-
-// Concept sets formatted for CohortExpressionEditor and ConceptSetSelectionDialog.
-const conceptSetOptions = computed<ConceptSetOption[]>(() =>
-  (expression.value.ConceptSets ?? [])
-    .filter(cs => cs.id !== undefined)
-    .map(cs => ({ id: cs.id!, name: cs.name ?? '' }))
-)
-
 /** Map a Circe concept set item (nested UPPERCASE concept) → flat camelCase ConceptSetItem for the UI. */
 function convertCirceItemToAtlas(item: CirceConceptSetItem): ConceptSetItem {
   const c = item.concept
@@ -400,6 +393,23 @@ const expressionConceptSets = computed<ConceptSetReference[]>(() =>
     }))
 )
 
+  const {
+    dialogOpen: isConceptSetDialogOpen,
+    conceptSetOptions,
+    onSelectConceptSet,
+    onLocalConceptSetSelected,
+    onConceptSetSelected,
+    hideSelectionDialog,
+    resolveSelection,
+    cancelSelection,
+  } = useCirceConceptSetPicker({
+    getConceptSets: () => expression.value.ConceptSets ?? [],
+    addConceptSet: (cs) => {
+      if (!expression.value.ConceptSets) expression.value.ConceptSets = []
+      expression.value.ConceptSets.push(cs)
+    },
+  })
+
 // Core metadata state
 const cohortName = ref('')
 const cohortDescription = ref('')
@@ -424,13 +434,12 @@ const loadError = ref<string | null>(null)
 // Set to the id we just saved, so the props.id watcher can tell our own route
 // adoption apart from a real navigation to another cohort.
 const adoptedSavedId = ref<string | null>(null)
-const isConceptSetDialogOpen = ref(false)
 const isConceptSearchDialogOpen = ref(false)
 const selectedConceptDomainFilter = ref<string | undefined>(undefined)
 // ── Criteria selection service ────────────────────────────────────────────────
 // ConceptArray.vue components at any depth request concepts through this
-// service. Concept-set selection flows via @select-concept-set events
-// directly to activeCsTarget instead.
+// service. Concept-set selection flows through useCirceConceptSetPicker so the
+// dialog/request lifecycle stays centralized.
 const pendingConceptsCallback = ref<((concepts: Concept[]) => void) | null>(null)
 
 // Named so it can be part of the defineExpose contract below: descendant
@@ -438,9 +447,9 @@ const pendingConceptsCallback = ref<((concepts: Concept[]) => void) | null>(null
 // shallow-mounted tree does, so tests exercise it through the same named
 // object rather than reaching into Vue's private instance-provides field.
 const criteriaSelectionService: CriteriaSelectionService = {
-  requestConceptSet(_onSelect: (conceptSet: ConceptSetReference) => void) {
-    // not used by CohortExpressionEditor — concept-set events flow through
-    // @select-concept-set → openConceptSetSelection → activeCsTarget
+  requestConceptSet() {
+    // not used by CohortExpressionEditor — concept-set events flow through the
+    // centralized useCirceConceptSetPicker request lifecycle.
   },
   requestConcepts(domainFilter: string | undefined, onSelect: (concepts: Concept[]) => void) {
     pendingConceptsCallback.value = onSelect
@@ -957,15 +966,6 @@ function syncToStoreDefinition() {
 
 watch(() => cohortStore.reloadRequest, syncToStoreDefinition)
 
-// ── Concept set selection (Phase 4) ────────────────────────────────────────
-// CohortExpressionEditor emits @select-concept-set / @edit-concept-set with a
-// ConceptSetSelectionTarget. We record it in activeCsTarget so the result of
-// the dialog can be written directly back into expression.
-function openConceptSetSelection(target: ConceptSetSelectionTarget | undefined) {
-  activeCsTarget.value = target ?? null
-  if (target) isConceptSetDialogOpen.value = true
-}
-
 function handleConceptsSelected(
   concepts: Array<{
     conceptId: number
@@ -1002,52 +1002,6 @@ function handleConceptsSelected(
   isConceptSearchDialogOpen.value = false
 }
 /**
- * Called when user selects an existing concept set from the dialog (repository import path).
- * Mints a new internal ID, adds to expression.ConceptSets, assigns to activeCsTarget.
- */
-async function handleConceptSetSelected(conceptSet: {
-  id: number | string
-  name: string
-  items?: unknown[]
-}) {
-  if (!conceptSet) return
-
-  // Fetch the full concept set with items if we only have a reference
-  let fullItems: unknown[] = conceptSet.items || []
-  if (conceptSet.id && fullItems.length === 0) {
-    await conceptSetsStore.fetchOne(conceptSet.id)
-    if (conceptSetsStore.currentSet?.id !== undefined) {
-      fullItems = conceptSetsStore.currentSet.items || []
-    }
-  }
-
-  // Mint a new internal ID to avoid conflicts
-  const internalId = nextConceptSetId(conceptSetOptions.value.filter(cs => cs.id !== undefined) as Pick<ConceptSetReference, 'id'>[])
-
-  if (!expression.value.ConceptSets) expression.value.ConceptSets = []
-  const circeItems = (fullItems as ConceptSetItem[]).map(convertAtlasItemToCirce)
-  expression.value.ConceptSets.push({ id: internalId, name: conceptSet.name, expression: { items: circeItems } })
-
-  if (activeCsTarget.value) {
-    activeCsTarget.value.targetRef.value = internalId
-    activeCsTarget.value = null
-  }
-
-  isConceptSetDialogOpen.value = false
-}
-
-/**
- * Called when the user picks a concept set that's already embedded in the
- * definition. Writes the id directly to the active target.
- */
-function handleLocalConceptSetSelected(conceptSet: ConceptSetReference) {
-  if (!conceptSet || !hasNumericConceptSetId(conceptSet) || !activeCsTarget.value) return
-  activeCsTarget.value.targetRef.value = conceptSet.id as number
-  isConceptSetDialogOpen.value = false
-  activeCsTarget.value = null
-}
-
-/**
  * Called when user clicks "Edit" on a concept set (from chip or dialog)
  */
 async function handleEditConceptSet(conceptSet: {
@@ -1055,7 +1009,7 @@ async function handleEditConceptSet(conceptSet: {
   name: string
   items?: unknown[]
 }) {
-  isConceptSetDialogOpen.value = false
+  hideSelectionDialog()
   conceptSetsStore.openEmbeddedEditor({
     id: conceptSet.id,
     name: conceptSet.name,
@@ -1091,7 +1045,7 @@ function handleDeleteConceptSet(conceptSet: ConceptSetReference) {
  * Called when user clicks "Create New" in the dialog
  */
 function handleCreateNewConceptSet() {
-  isConceptSetDialogOpen.value = false
+  hideSelectionDialog()
   conceptSetsStore.openCreateEditor()
 }
 
@@ -1116,7 +1070,8 @@ function convertAtlasItemToCirce(item: ConceptSetItem) {
 
 /**
  * Called when the embedded editor applies its changes. Upserts the concept set
- * into expression.ConceptSets; if activeCsTarget is still set, assigns the id.
+ * into expression.ConceptSets and resolves the active selection request when
+ * the editor was opened from a concept-set selection flow.
  */
 function handleConceptSetApplied(set: { id?: number | string; name: string; items?: unknown[] }) {
   const items = JSON.parse(JSON.stringify(set.items ?? [])) as ConceptSetItem[]
@@ -1134,10 +1089,7 @@ function handleConceptSetApplied(set: { id?: number | string; name: string; item
     expression.value.ConceptSets.push({ id: finalId, name: set.name, expression: { items: circeItems } })
   }
 
-  if (activeCsTarget.value) {
-    activeCsTarget.value.targetRef.value = finalId
-    activeCsTarget.value = null
-  }
+  resolveSelection(finalId)
 }
 
 async function handleSave(): Promise<{ id?: number; name?: string }> {

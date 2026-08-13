@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSet, ConceptSetItem } from '@/components/cohort-editor/circe.types'
 import type {
@@ -29,8 +29,12 @@ export function useCirceConceptSetPicker(opts: {
   const conceptSetsStore = useConceptSetsStore()
 
   const dialogOpen = ref(false)
+  interface SelectionRequest {
+    targetRef: Ref<number | null | undefined>
+  }
+
   // Not reactive — captured only during an async selection operation.
-  let activeTarget: ConceptSetSelectionTarget | null = null
+  let activeRequest: SelectionRequest | null = null
 
   const conceptSetOptions = computed<ConceptSetOption[]>(() =>
     opts
@@ -39,9 +43,25 @@ export function useCirceConceptSetPicker(opts: {
       .map(cs => ({ id: cs.id, name: cs.name ?? '' })),
   )
 
-  function onSelectConceptSet(target: ConceptSetSelectionTarget | undefined) {
-    activeTarget = target ?? null
-    dialogOpen.value = true
+  function openSelection(target: ConceptSetSelectionTarget | undefined) {
+    activeRequest = target ? { targetRef: target.targetRef } : null
+    dialogOpen.value = !!target
+  }
+
+  function hideSelectionDialog() {
+    dialogOpen.value = false
+  }
+
+  function cancelSelection() {
+    activeRequest = null
+    dialogOpen.value = false
+  }
+
+  function resolveSelection(selectedId: number) {
+    if (!activeRequest) return
+    activeRequest.targetRef.value = selectedId
+    activeRequest = null
+    dialogOpen.value = false
   }
 
   async function onConceptSetSelected(conceptSet: {
@@ -49,15 +69,19 @@ export function useCirceConceptSetPicker(opts: {
     name: string
     items?: unknown[]
   }) {
-    const target = activeTarget
-    if (!target) {
+    if (!activeRequest) {
       dialogOpen.value = false
       return
     }
 
     const numericId = typeof conceptSet.id === 'string' ? Number(conceptSet.id) : conceptSet.id
+    if (typeof numericId !== 'number' || Number.isNaN(numericId)) {
+      cancelSelection()
+      return
+    }
 
-    // Fetch full items if not provided, matching CohortBuilder behavior.
+    // Fetch full items for repository imports, then materialize the chosen set
+    // into the cohort expression before completing the shared assignment step.
     let items = conceptSet.items ?? []
     if (items.length === 0 && numericId != null) {
       await conceptSetsStore.fetchOne(numericId)
@@ -76,17 +100,36 @@ export function useCirceConceptSetPicker(opts: {
       })
     }
 
-    // Write the chosen ID directly into the CriteriaGroup's field ref.
-    target.targetRef.value = numericId
+    resolveSelection(numericId)
+  }
 
-    activeTarget = null
-    dialogOpen.value = false
+  function onLocalConceptSetSelected(conceptSet: {
+    id: number | string
+    name: string
+    items?: unknown[]
+  }) {
+    if (!activeRequest) {
+      cancelSelection()
+      return
+    }
+
+    const numericId = typeof conceptSet.id === 'string' ? Number(conceptSet.id) : conceptSet.id
+    if (typeof numericId !== 'number' || Number.isNaN(numericId)) {
+      cancelSelection()
+      return
+    }
+
+    resolveSelection(numericId)
   }
 
   return {
     dialogOpen,
     conceptSetOptions,
-    onSelectConceptSet,
+    onSelectConceptSet: openSelection,
+    onLocalConceptSetSelected,
     onConceptSetSelected,
+    hideSelectionDialog,
+    resolveSelection,
+    cancelSelection,
   }
 }
