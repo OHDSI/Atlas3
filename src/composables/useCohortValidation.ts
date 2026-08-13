@@ -78,44 +78,47 @@ export function extractConceptSets(
   // first and leaving criteria pointing at a CodesetId that no longer exists.
   const conceptSetsMap = new Map<number | string, ConceptSetReference>()
 
-  // Extract from entry events
-  entryEvents.forEach(event => {
+  // Mirrors the recursive walk in `utils/concept-set-usages.ts`: a concept
+  // set can be referenced not just on `event.conceptSet`, but on a
+  // `conceptSet`-type attribute (e.g. VisitTypeCS) or inside a correlated
+  // "with" sub-criteria group (`event.nestedCriteria`). Missing either of
+  // those made a genuinely-used concept set look unused (#205) and dropped
+  // it from the `ConceptSets` array sent for server-side validation (#200).
+  function collectFromEvent(event: CohortEvent) {
     if (event.conceptSet) {
       conceptSetsMap.set(event.conceptSet.id, event.conceptSet)
     }
-  })
-
-  // Extract from additional criteria
-  if (additionalCriteria?.events) {
-    additionalCriteria.events.forEach(event => {
-      if (event.conceptSet) {
-        conceptSetsMap.set(event.conceptSet.id, event.conceptSet)
+    for (const attribute of event.attributes ?? []) {
+      if (attribute.type === 'conceptSet' && attribute.conceptSet) {
+        conceptSetsMap.set(attribute.conceptSet.id, attribute.conceptSet)
       }
-    })
+    }
+    if (event.nestedCriteria) {
+      collectFromGroup(event.nestedCriteria)
+    }
   }
 
-  // Extract from inclusion rules
+  function collectFromGroup(group: CriteriaGroup) {
+    group.events.forEach(collectFromEvent)
+    group.nestedGroups?.forEach(collectFromGroup)
+  }
+
+  entryEvents.forEach(collectFromEvent)
+
+  if (additionalCriteria) {
+    collectFromGroup(additionalCriteria)
+  }
+
   inclusionRules.forEach(rule => {
-    rule.criteriaGroups.forEach(group => {
-      group.events.forEach(event => {
-        if (event.conceptSet) {
-          conceptSetsMap.set(event.conceptSet.id, event.conceptSet)
-        }
-      })
-    })
+    rule.criteriaGroups.forEach(collectFromGroup)
   })
 
-  // Extract from exit criteria (drug exposure)
   if (exitCriteria?.conceptSet) {
     conceptSetsMap.set(exitCriteria.conceptSet.id, exitCriteria.conceptSet)
   }
+  exitCriteria?.censoringEvents?.forEach(collectFromEvent)
 
-  // Extract from censoring criteria
-  censoringCriteria.forEach(event => {
-    if (event.conceptSet) {
-      conceptSetsMap.set(event.conceptSet.id, event.conceptSet)
-    }
-  })
+  censoringCriteria.forEach(collectFromEvent)
 
   return Array.from(conceptSetsMap.values())
 }
