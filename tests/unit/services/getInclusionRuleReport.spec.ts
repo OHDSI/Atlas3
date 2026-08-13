@@ -111,4 +111,62 @@ describe('getInclusionRuleReport', () => {
       expect(result.error.status).toBe(403)
     }
   })
+
+  it('still returns the summary and inclusion rule stats when treemapData is omitted (#202)', async () => {
+    // The server omits treemapData when there is nothing to plot. Requiring
+    // it in the schema used to fail validation for the whole envelope and
+    // discard an otherwise valid, non-empty report.
+    mockFetch.mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          summary: { baseCount: 65660, finalCount: 65660, lostCount: 0, percentMatched: '100.00' },
+          inclusionRuleStats: [
+            {
+              id: 0,
+              name: 'Rule A',
+              countSatisfying: 65660,
+              percentSatisfying: '100.00',
+              percentExcluded: '0.00',
+            },
+          ],
+        }),
+    })
+
+    const result = await getInclusionRuleReport(1, 'EUNOMIA', 1)
+
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect(result.data.summary.finalCount).toBe(65660)
+    expect(result.data.inclusionRuleStats).toHaveLength(1)
+    expect(result.data.treemap).toBeNull()
+  })
+
+  it('still returns the summary and inclusion rule stats when treemapData is null (#202)', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          summary: { baseCount: 100, finalCount: 80, lostCount: 20, percentMatched: '80.00' },
+          inclusionRuleStats: [
+            {
+              id: 0,
+              name: 'Rule A',
+              countSatisfying: 80,
+              percentSatisfying: '80.00',
+              percentExcluded: '20.00',
+            },
+          ],
+          treemapData: null,
+        }),
+    })
+
+    const result = await getInclusionRuleReport(1, 'EUNOMIA', 1)
+
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect(result.data.summary.finalCount).toBe(80)
+    expect(result.data.inclusionRuleStats).toHaveLength(1)
+    expect(result.data.treemap).toBeNull()
+  })
 })
