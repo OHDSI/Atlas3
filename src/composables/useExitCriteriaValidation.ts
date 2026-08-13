@@ -8,8 +8,10 @@ import type { ValidationSeverity, ValidationWarning } from '@/models/cohort-vali
 const MISSING_DRUG_CODESET =
   'Continuous Exposure Persistence exit strategy is missing its drug concept set (DrugCodesetId). Cohort SQL generation will fail until one is selected.'
 
+// Not a generation failure: DateOffsetStrategy.java declares `public int offset = 0`,
+// so an absent Offset deserializes to 0 and the SQL still builds.
 const MISSING_DATE_OFFSET =
-  'Fixed Duration Persistence exit strategy is missing its number of days offset (Offset). Cohort SQL generation will fail until one is entered.'
+  'Fixed Duration Persistence exit strategy is missing its number of days offset (Offset). It is treated as 0 days, so the cohort exit may not be the window you intended.'
 
 function warning(severity: ValidationSeverity, message: string): ValidationWarning {
   return { type: 'DefaultWarning', severity, message }
