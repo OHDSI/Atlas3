@@ -118,10 +118,7 @@ describe('services/cohort-definition.service', () => {
 
       const result = await getCohortDefinition(1)
 
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.error.status).toBe(422)
-      }
+      expect(result).toMatchObject({ success: false, error: { status: 422 } })
     })
 
     it('reports an expression that fails circe validation as a 422', async () => {
@@ -133,10 +130,7 @@ describe('services/cohort-definition.service', () => {
 
       const result = await getCohortDefinition(1)
 
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.error.status).toBe(422)
-      }
+      expect(result).toMatchObject({ success: false, error: { status: 422 } })
     })
 
     it('reports a definition that carries no expression as a 422', async () => {
@@ -147,10 +141,7 @@ describe('services/cohort-definition.service', () => {
 
       const result = await getCohortDefinition(1)
 
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.error.status).toBe(422)
-      }
+      expect(result).toMatchObject({ success: false, error: { status: 422 } })
     })
   })
 

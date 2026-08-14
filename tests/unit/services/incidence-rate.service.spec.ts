@@ -102,10 +102,7 @@ describe('services/incidence-rate.service', () => {
 
       const result = await listIncidenceRates()
 
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data[0]?.createdBy?.id).toBe(-1)
-      }
+      expect(result).toMatchObject({ success: true, data: [{ createdBy: { id: -1 } }] })
     })
 
     it('returns failure on parse error', async () => {

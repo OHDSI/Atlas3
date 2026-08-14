@@ -338,11 +338,11 @@ describe('agent-built cohort serialises to valid CIRCE', () => {
       },
     } as never)
 
-    const parsed = CohortExpressionSchema.safeParse(store.currentCohort?.expression)
-    expect(parsed.success).toBe(true)
-    if (parsed.success) {
-      expect(parsed.data.PrimaryCriteria?.CriteriaList).toHaveLength(1)
-    }
+    // parse rather than safeParse: a schema violation throws and fails the test
+    // on the spot, which is the same assertion the success check made, and it
+    // narrows the result so the length check needs no guard.
+    const parsed = CohortExpressionSchema.parse(store.currentCohort?.expression)
+    expect(parsed.PrimaryCriteria?.CriteriaList).toHaveLength(1)
   })
 
   // T14: the criterion is added (above), but its embedded conceptSet is

@@ -31,17 +31,24 @@ const VARIANTS = ['primary', 'secondary', 'tonal', 'danger', 'ghost', 'link']
 const SIZES = ['xs', 'sm', 'md', 'lg']
 const CHIP_SIZES = ['xs', 'sm', 'md']
 
-function expectAtlasVocabulary(wrapper: VueWrapper) {
-  for (const button of wrapper.findAllComponents(AtlasButton)) {
-    const { variant, size } = button.props()
-    if (variant !== undefined) expect(VARIANTS).toContain(variant)
-    if (size !== undefined) expect(SIZES).toContain(size)
-  }
+// Only values the editor actually sets are constrained: an unset prop means the
+// wrapper supplies its own default, which is part of the vocabulary by
+// construction. Collecting the off-vocabulary values and asserting the list is
+// empty keeps the assertion unconditional and names every offender at once.
+function offVocabulary(props: Array<Record<string, unknown>>, key: string, allowed: readonly string[]) {
+  return props
+    .map(p => p[key])
+    .filter((value): value is string => value !== undefined)
+    .filter(value => !allowed.includes(value))
+}
 
-  for (const chip of wrapper.findAllComponents(AtlasChip)) {
-    const { size } = chip.props()
-    if (size !== undefined) expect(CHIP_SIZES).toContain(size)
-  }
+function expectAtlasVocabulary(wrapper: VueWrapper) {
+  const buttons = wrapper.findAllComponents(AtlasButton).map(b => b.props() as Record<string, unknown>)
+  const chips = wrapper.findAllComponents(AtlasChip).map(c => c.props() as Record<string, unknown>)
+
+  expect(offVocabulary(buttons, 'variant', VARIANTS)).toEqual([])
+  expect(offVocabulary(buttons, 'size', SIZES)).toEqual([])
+  expect(offVocabulary(chips, 'size', CHIP_SIZES)).toEqual([])
 }
 
 const EDITORS = [
