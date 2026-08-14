@@ -127,7 +127,7 @@ describe('ConceptSetTable', () => {
     await checkboxes[0].vm.$emit('update:modelValue', false)
 
     expect(wrapper.emitted('toggle:descendants')).toBeTruthy()
-    expect(wrapper.emitted('toggle:descendants')![0]).toEqual([192855])
+    expect(wrapper.emitted('toggle:descendants')![0]![0]).toMatchObject({ conceptId: 192855 })
   })
 
   it('should emit toggle:mapped when mapped checkbox is clicked', async () => {
@@ -140,7 +140,7 @@ describe('ConceptSetTable', () => {
     await checkboxes[1].vm.$emit('update:modelValue', true)
 
     expect(wrapper.emitted('toggle:mapped')).toBeTruthy()
-    expect(wrapper.emitted('toggle:mapped')![0]).toEqual([192855])
+    expect(wrapper.emitted('toggle:mapped')![0]![0]).toMatchObject({ conceptId: 192855 })
   })
 
   it('should emit toggle:exclude when exclude checkbox is clicked', async () => {
@@ -153,7 +153,7 @@ describe('ConceptSetTable', () => {
     await checkboxes[2].vm.$emit('update:modelValue', true)
 
     expect(wrapper.emitted('toggle:exclude')).toBeTruthy()
-    expect(wrapper.emitted('toggle:exclude')![0]).toEqual([192855])
+    expect(wrapper.emitted('toggle:exclude')![0]![0]).toMatchObject({ conceptId: 192855 })
   })
 
   it('should emit remove when delete button is clicked', async () => {
@@ -166,7 +166,7 @@ describe('ConceptSetTable', () => {
     await deleteButtons[0].trigger('click')
 
     expect(wrapper.emitted('remove')).toBeTruthy()
-    expect(wrapper.emitted('remove')![0]).toEqual([192855])
+    expect(wrapper.emitted('remove')![0]![0]).toMatchObject({ conceptId: 192855 })
   })
 
   it('should display concept type badges', () => {

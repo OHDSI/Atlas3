@@ -554,48 +554,52 @@ describe('ConceptSetEditor', () => {
     const wrapper = mountComponent({ conceptSet: mockConceptSet })
     const store = useConceptSetsStore()
     store.currentSet = mockConceptSet
-    const toggleFlagSpy = vi.spyOn(store, 'toggleConceptFlag')
+    const toggleFlagSpy = vi.spyOn(store, 'toggleConceptItemFlag')
+    const row = store.currentSet!.items[0]!
 
     // Component is stubbed, so we can manually call the handler
-    await wrapper.vm.onToggleDescendants(313217)
+    await wrapper.vm.onToggleDescendants(row)
 
-    expect(toggleFlagSpy).toHaveBeenCalledWith(313217, 'includeDescendants')
+    expect(toggleFlagSpy).toHaveBeenCalledWith(row, 'includeDescendants')
   })
 
   it('should toggle mapped when ConceptSetTable emits toggle:mapped', async () => {
     const wrapper = mountComponent({ conceptSet: mockConceptSet })
     const store = useConceptSetsStore()
     store.currentSet = mockConceptSet
-    const toggleFlagSpy = vi.spyOn(store, 'toggleConceptFlag')
+    const toggleFlagSpy = vi.spyOn(store, 'toggleConceptItemFlag')
+    const row = store.currentSet!.items[0]!
 
     // Component is stubbed, so we can manually call the handler
-    await wrapper.vm.onToggleMapped(313217)
+    await wrapper.vm.onToggleMapped(row)
 
-    expect(toggleFlagSpy).toHaveBeenCalledWith(313217, 'includeMapped')
+    expect(toggleFlagSpy).toHaveBeenCalledWith(row, 'includeMapped')
   })
 
   it('should toggle exclude when ConceptSetTable emits toggle:exclude', async () => {
     const wrapper = mountComponent({ conceptSet: mockConceptSet })
     const store = useConceptSetsStore()
     store.currentSet = mockConceptSet
-    const toggleFlagSpy = vi.spyOn(store, 'toggleConceptFlag')
+    const toggleFlagSpy = vi.spyOn(store, 'toggleConceptItemFlag')
+    const row = store.currentSet!.items[0]!
 
     // Component is stubbed, so we can manually call the handler
-    await wrapper.vm.onToggleExclude(313217)
+    await wrapper.vm.onToggleExclude(row)
 
-    expect(toggleFlagSpy).toHaveBeenCalledWith(313217, 'isExcluded')
+    expect(toggleFlagSpy).toHaveBeenCalledWith(row, 'isExcluded')
   })
 
   it('should remove concept when ConceptSetTable emits remove', async () => {
     const wrapper = mountComponent({ conceptSet: mockConceptSet })
     const store = useConceptSetsStore()
     store.currentSet = mockConceptSet
-    const removeConceptSpy = vi.spyOn(store, 'removeConceptFromSet')
+    const removeConceptSpy = vi.spyOn(store, 'removeConceptItem')
+    const row = store.currentSet!.items[0]!
 
     // Component is stubbed, so we can manually call the handler
-    await wrapper.vm.onRemoveFromSet(313217)
+    await wrapper.vm.onRemoveFromSet(row)
 
-    expect(removeConceptSpy).toHaveBeenCalledWith(313217)
+    expect(removeConceptSpy).toHaveBeenCalledWith(row)
   })
 
   it('should display item count in selected tab', async () => {
@@ -782,7 +786,6 @@ describe('ConceptSetEditor', () => {
       const store = useConceptSetsStore()
       store.currentSet = { name: 'Set', items: [] }
       const addSpy = vi.spyOn(store, 'addConceptToSet')
-      const toggleSpy = vi.spyOn(store, 'toggleConceptFlag')
 
       const vm = wrapper.vm as unknown as {
         jsonInput: string
@@ -816,9 +819,17 @@ describe('ConceptSetEditor', () => {
       expect(vm.jsonItems).toHaveLength(1)
 
       vm.applyJsonItems()
-      expect(addSpy).toHaveBeenCalledWith(expect.objectContaining({ conceptId: 201826 }))
-      // includeDescendants flag should be restored via toggle.
-      expect(toggleSpy).toHaveBeenCalledWith(201826, 'includeDescendants')
+      // The imported flags now go in with the add rather than being toggled on
+      // afterwards, so a concept absent from the set lands in one step (#226).
+      expect(addSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ conceptId: 201826 }),
+        expect.objectContaining({ includeDescendants: true })
+      )
+      expect(store.currentSet?.items).toHaveLength(1)
+      expect(store.currentSet?.items[0]).toMatchObject({
+        conceptId: 201826,
+        includeDescendants: true,
+      })
     })
 
     it('does not flip the flags of a concept already in the set on re-import', () => {

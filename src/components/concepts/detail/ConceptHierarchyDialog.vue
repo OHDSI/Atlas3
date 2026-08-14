@@ -228,8 +228,8 @@ const visibleById = computed(() => {
 
 const selectedVisible = computed(() => selected.value.filter(id => visibleById.value.has(id)))
 
-// addConceptToSet silently refuses duplicates, so count what actually landed
-// rather than what was ticked.
+// addConceptToSet refuses a row that repeats a concept AND its flags, so count
+// what actually landed rather than what was ticked.
 function onAdd() {
   if (!conceptSets.currentSet) return
   const lookup = visibleById.value
