@@ -144,3 +144,71 @@ describe('LinkedCohortPicker', () => {
     })
   })
 })
+
+/**
+ * Issue #215: the cohort selector showed names only. In a deployment with 20k+
+ * definitions the id is how you tell two similarly-named cohorts apart, and it
+ * is what people search by.
+ */
+describe('LinkedCohortPicker cohort id (#215)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    document.body.innerHTML = ''
+  })
+
+  const openDialog = async (wrapper: ReturnType<typeof mountPicker>) => {
+    await wrapper.get('[data-testid="linked-cohort-picker-add"]').trigger('click')
+    await flushPromises()
+  }
+
+  const tableText = () =>
+    Array.from(
+      document.querySelectorAll('[data-testid="linked-cohort-picker-table"] tbody tr')
+    ).map(row => row.textContent ?? '')
+
+  it('shows an ID column in the selector, ahead of the name', async () => {
+    const wrapper = mountPicker([])
+    await openDialog(wrapper)
+
+    const headers = Array.from(
+      document.querySelectorAll('[data-testid="linked-cohort-picker-table"] thead th')
+    ).map(th => th.textContent?.trim() ?? '')
+
+    // Case-insensitive: the label comes from the shared columns.id key, which
+    // renders "Id", and asserting the exact casing here would pin a translation
+    // rather than the column being present. show-select puts a checkbox column
+    // first, so the id is the first data column.
+    const labels = headers.filter(Boolean).map(h => h.toLowerCase())
+    expect(labels.slice(0, 2).join('|')).toContain('id')
+    expect(labels.some(h => h.includes('name'))).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('shows each selectable cohort with its id', async () => {
+    const wrapper = mountPicker([])
+    await openDialog(wrapper)
+
+    expect(tableText().some(text => text.includes('1') && text.includes('Diabetes'))).toBe(true)
+    wrapper.unmount()
+  })
+
+  // The point of the issue: finding a cohort by the identifier people quote.
+  it('finds a cohort by typing its id', async () => {
+    const wrapper = mountPicker([])
+    await openDialog(wrapper)
+
+    wrapper.vm.search = '3'
+    await flushPromises()
+
+    expect(tableText().some(text => text.includes('Asthma'))).toBe(true)
+    expect(tableText().some(text => text.includes('Diabetes'))).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('keeps the id visible on a linked cohort, not just while choosing it', () => {
+    const wrapper = mountPicker([{ id: 2, name: 'Hypertension' }])
+
+    expect(wrapper.get('[data-testid="linked-cohort-picker-id-2"]').text()).toContain('2')
+    wrapper.unmount()
+  })
+})

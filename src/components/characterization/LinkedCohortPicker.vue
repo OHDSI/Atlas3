@@ -48,6 +48,9 @@
         <v-list-item-title>
           {{ cohort.name }}
         </v-list-item-title>
+        <v-list-item-subtitle :data-testid="`linked-cohort-picker-id-${cohort.id}`">
+          {{ t('columns.id', 'ID').value }} {{ cohort.id }}
+        </v-list-item-subtitle>
         <template #append>
           <AtlasIconButton
             icon="mdi-close"
@@ -132,8 +135,12 @@ const dialogOpen = ref(false)
 const selectedIds = ref<number[]>([])
 const search = ref('')
 
+// The id leads, as it does in the cohort list: in a deployment with tens of
+// thousands of definitions it is how you tell two similarly-named cohorts apart,
+// and it is what people search by (#215).
 const dialogHeaders = computed(() => [
-  { title: t('cc.viewEdit.results.filters.cohorts', 'Linked Cohorts').value, key: 'name' },
+  { title: t('columns.id', 'ID').value, key: 'id', width: '90px' },
+  { title: t('columns.name', 'Name').value, key: 'name' },
 ])
 
 const selectableItems = computed(() => {
