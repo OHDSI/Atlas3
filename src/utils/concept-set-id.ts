@@ -29,8 +29,10 @@ export function hasRealConceptSetId(ref: Pick<ConceptSetReference, 'id'>): boole
  * selectable. But this returns false for placeholder ids (undefined), which is correct
  * since those haven't been assigned yet.
  */
-export function hasNumericConceptSetId(ref: Pick<ConceptSetReference, 'id'>): boolean {
-  return typeof ref.id === 'number' && Number.isFinite(ref.id) && ref.id >= 0
+export function hasNumericConceptSetId(
+  ref: Pick<ConceptSetReference, 'id'> | null | undefined
+): boolean {
+  return !!ref && typeof ref.id === 'number' && Number.isFinite(ref.id) && ref.id >= 0
 }
 
 /**

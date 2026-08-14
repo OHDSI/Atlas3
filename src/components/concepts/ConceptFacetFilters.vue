@@ -1,6 +1,19 @@
 <template>
   <div class="concept-facet-filters">
     <div class="concept-facet-filters__bar">
+      <AtlasTextField
+        :model-value="resultFilter"
+        :label="filterResultsLabel"
+        density="compact"
+        variant="outlined"
+        hide-details
+        clearable
+        prepend-inner-icon="mdi-magnify"
+        class="concept-facet-filters__text"
+        data-testid="concept-result-filter"
+        @update:model-value="(v: string | number) => emit('update:resultFilter', String(v ?? ''))"
+      />
+
       <AtlasMenu
         v-model="menuOpen"
         :close-on-content-click="false"
@@ -105,21 +118,24 @@ import {
   type FacetKey,
   type FacetOption,
 } from '@/composables/useConceptFacets'
-import { AtlasAutocomplete, AtlasButton, AtlasCard, AtlasChip, AtlasMenu, AtlasSpacer } from '@/components/ui'
+import { AtlasAutocomplete, AtlasButton, AtlasCard, AtlasChip, AtlasMenu, AtlasSpacer, AtlasTextField } from '@/components/ui'
 
 interface Props {
   facetOptions: Record<FacetKey, FacetOption[]>
   selected: Record<FacetKey, string[]>
   activeFilterCount: number
+  resultFilter?: string
   facets?: Pick<FacetDefinition, 'key' | 'label'>[]
 }
 
 interface Emits {
   (e: 'update:facet', payload: { key: FacetKey; values: string[] }): void
+  (e: 'update:resultFilter', value: string): void
   (e: 'clear'): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  resultFilter: '',
   facets: () => CONCEPT_FACETS,
 })
 const emit = defineEmits<Emits>()
@@ -127,6 +143,7 @@ const { t } = useI18n()
 
 const filtersLabel = t('common.filters', 'Filters')
 const clearAllLabel = t('search.clearAllSelections', 'Clear all')
+const filterResultsLabel = t('search.filterResults', 'Filter results')
 const menuOpen = ref(false)
 
 // Translate facet labels via the existing column i18n keys.
@@ -180,6 +197,11 @@ function removeValue(key: FacetKey, value: string) {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.concept-facet-filters__text {
+  max-width: 260px;
+  flex: 1 1 200px;
 }
 
 .concept-facet-filters__count {

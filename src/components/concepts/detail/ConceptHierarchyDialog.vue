@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import {
   AtlasDialog,
@@ -83,6 +83,31 @@ const classFilter = ref<string | null>(null)
 const domainFilter = ref<string | null>(null)
 const vocabularyFilter = ref<string | null>(null)
 const view = ref<'tree' | 'flat'>('tree')
+const switchingView = ref(false)
+
+/**
+ * Switching view re-renders every row, which takes seconds on a concept with
+ * a large subtree and looked like nothing had happened, so the button got
+ * clicked again (#207).
+ *
+ * The yield matters: flipping `view` in the same tick that sets the flag lets
+ * Vue batch both, and the expensive render blocks the frame, so the spinner
+ * never reaches the screen. Handing control back to the event loop first lets
+ * it paint before the work starts.
+ */
+async function setView(next: 'tree' | 'flat') {
+  // The guard is not redundant with the buttons' disabled state: a click can
+  // land in the window between setting the flag and the DOM reflecting it.
+  if (next === view.value || switchingView.value) return
+
+  switchingView.value = true
+  await nextTick()
+  await new Promise(resolve => setTimeout(resolve, 0))
+
+  view.value = next
+  await nextTick()
+  switchingView.value = false
+}
 
 const anchorDescendants = computed(() =>
   hierarchy.value.filter(c => c.relationships.some(r => r.relationshipName === 'Has descendant of'))
@@ -228,8 +253,8 @@ const visibleById = computed(() => {
 
 const selectedVisible = computed(() => selected.value.filter(id => visibleById.value.has(id)))
 
-// addConceptToSet silently refuses duplicates, so count what actually landed
-// rather than what was ticked.
+// addConceptToSet refuses a row that repeats a concept AND its flags, so count
+// what actually landed rather than what was ticked.
 function onAdd() {
   if (!conceptSets.currentSet) return
   const lookup = visibleById.value
@@ -391,8 +416,9 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
             type="button"
             :class="{ on: view === 'tree' }"
             :aria-pressed="view === 'tree'"
+            :disabled="switchingView"
             data-testid="hierarchy-view-tree"
-            @click="view = 'tree'"
+            @click="setView('tree')"
           >
             {{ t('components.conceptHierarchyDialog.treeView', 'Tree').value }}
           </button>
@@ -400,8 +426,9 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
             type="button"
             :class="{ on: view === 'flat' }"
             :aria-pressed="view === 'flat'"
+            :disabled="switchingView"
             data-testid="hierarchy-view-flat"
-            @click="view = 'flat'"
+            @click="setView('flat')"
           >
             {{ t('components.conceptHierarchyDialog.flatView', 'Flat').value }}
           </button>
@@ -426,6 +453,21 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
           </tr>
         </thead>
         <tbody>
+          <tr
+            v-if="switchingView"
+            data-testid="hierarchy-view-switching"
+          >
+            <td colspan="8">
+              <AtlasProgressCircular
+                indeterminate
+                size="16"
+              />
+              <span class="view-switching__label">
+                {{ t('components.conceptHierarchyDialog.switchingView', 'Rebuilding the list…').value }}
+              </span>
+            </td>
+          </tr>
+
           <tr class="section-row">
             <td colspan="8">
               {{ t('components.conceptHierarchyDialog.ancestors', 'Ancestors').value }}
@@ -492,7 +534,7 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
           </tr>
 
           <template
-            v-for="{ row, depth, key } in treeRows"
+            v-for="{ row, depth, key } in (switchingView ? [] : treeRows)"
             :key="key"
           >
             <ConceptHierarchyRow
@@ -587,6 +629,7 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
 .ancestor { opacity: 0.8; }
 .anchor { background: var(--atlas-color-primary-tint); font-weight: 600; }
 .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.view-switching__label { margin-inline-start: 8px; font-size: 12px; }
 .view-toggle button { border: 1px solid rgba(0, 0, 0, 0.25); background: none; padding: 2px 10px; font-size: 12px; }
 .view-toggle button.on { background: var(--atlas-color-primary-tint-strong); font-weight: 600; }
 .dialog-footer { border-top: 1px solid var(--atlas-color-outline); padding-top: 10px; margin-top: 10px; }

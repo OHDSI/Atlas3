@@ -21,6 +21,11 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
   const allConcepts = ref<Concept[]>([]) // All search results
   const loading = ref<boolean>(false)
   const loadingRecordCounts = ref<boolean>(false)
+  // Which source the record/person counts come from. Independent of the
+  // vocabulary source: the vocabulary knows the concepts, a Results source
+  // knows how often they occur in that data (#228). Null means "follow the
+  // vocabulary source", which is what this did before the picker existed.
+  const recordCountSourceKey = ref<string | null>(null)
   const error = ref<string | null>(null)
 
   // Pagination state
@@ -42,6 +47,11 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
     },
     { deep: true }
   )
+
+  // Same for the free-text filter over the returned rows.
+  watch(facets.textFilter, () => {
+    page.value = 1
+  })
 
   // ============================================================================
   // Getters
@@ -132,19 +142,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
       // A new query changes the available value space — drop stale facets.
       facets.clearFilters()
 
-      loadingRecordCounts.value = true
-      const conceptIds = result.data.map(c => c.conceptId)
-      const recordCounts = await getConceptRecordCounts(sourceKey, conceptIds)
-
-      allConcepts.value = result.data.map(concept => ({
-        ...concept,
-        recordCount: recordCounts.get(concept.conceptId)?.recordCount,
-        descendantRecordCount: recordCounts.get(concept.conceptId)?.descendantRecordCount,
-        personCount: recordCounts.get(concept.conceptId)?.personCount,
-        descendantPersonCount: recordCounts.get(concept.conceptId)?.descendantPersonCount,
-      }))
-
-      loadingRecordCounts.value = false
+      await loadRecordCounts(recordCountSourceKey.value ?? sourceKey)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err)
       error.value = errorMessage.includes('403')
@@ -154,6 +152,47 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
       allConcepts.value = []
       loading.value = false
       loadingRecordCounts.value = false
+    }
+  }
+
+  /**
+   * Refresh the record and person counts on the current results from one
+   * source, leaving the concepts themselves alone.
+   */
+  async function loadRecordCounts(sourceKey: string): Promise<void> {
+    const current = allConcepts.value
+    if (current.length === 0) return
+
+    loadingRecordCounts.value = true
+    try {
+      const recordCounts = await getConceptRecordCounts(
+        sourceKey,
+        current.map(c => c.conceptId)
+      )
+
+      allConcepts.value = current.map(concept => ({
+        ...concept,
+        recordCount: recordCounts.get(concept.conceptId)?.recordCount,
+        descendantRecordCount: recordCounts.get(concept.conceptId)?.descendantRecordCount,
+        personCount: recordCounts.get(concept.conceptId)?.personCount,
+        descendantPersonCount: recordCounts.get(concept.conceptId)?.descendantPersonCount,
+      }))
+    } finally {
+      loadingRecordCounts.value = false
+    }
+  }
+
+  /**
+   * Point the counts at a different source and refresh them in place. Failing
+   * to reach one source must not blank the results, which are still valid.
+   */
+  async function setRecordCountSource(sourceKey: string): Promise<void> {
+    recordCountSourceKey.value = sourceKey
+    try {
+      await loadRecordCounts(sourceKey)
+    } catch (err) {
+      logger.error('ConceptSearchStore', 'Failed to load record counts', err)
+      error.value = 'Failed to load record counts for the selected source.'
     }
   }
 
@@ -200,6 +239,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
     allConcepts,
     loading,
     loadingRecordCounts,
+    recordCountSourceKey,
     error,
     page,
     itemsPerPage,
@@ -215,7 +255,9 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
     facetOptions: facets.facetOptions,
     selectedFacets: facets.selected,
     activeFacetCount: facets.activeFilterCount,
+    resultFilter: facets.textFilter,
     setFacet: facets.setFacet,
+    setResultFilter: facets.setTextFilter,
     clearFacets: facets.clearFilters,
 
     // Actions
@@ -223,6 +265,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
     debouncedSearch,
     updateSort,
     updatePagination,
+    setRecordCountSource,
     clearSearch,
   }
 })

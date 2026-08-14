@@ -49,8 +49,10 @@
       :facet-options="store.facetOptions"
       :selected="store.selectedFacets"
       :active-filter-count="store.activeFacetCount"
+      :result-filter="store.resultFilter"
       class="concept-search__filters"
       @update:facet="({ key, values }) => store.setFacet(key, values)"
+      @update:result-filter="(v: string) => store.setResultFilter(v)"
       @clear="store.clearFacets()"
     />
 
@@ -61,6 +63,26 @@
       class="concept-search__add-options"
       @add="onAddSelected"
     />
+
+    <!-- Which source the record/person counts come from (#228). -->
+    <div
+      v-if="!store.isEmpty && recordCountSources.length > 0"
+      class="concept-search__count-source"
+    >
+      <AtlasSelect
+        :model-value="effectiveRecordCountSource"
+        :items="recordCountSources"
+        item-title="sourceName"
+        item-value="sourceKey"
+        :label="viewCountsForLabel"
+        density="compact"
+        variant="outlined"
+        hide-details
+        :loading="store.loadingRecordCounts"
+        data-testid="record-count-source"
+        @update:model-value="(v: unknown) => store.setRecordCountSource(String(v))"
+      />
+    </div>
 
     <!-- Results Table -->
     <ConceptTable
@@ -92,7 +114,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { AtlasAlert, AtlasSnackbar, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasSelect, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import { useConceptSetsStore } from '@/stores/concept-sets'
@@ -114,6 +136,18 @@ const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
 const selectedSourceKey = computed(
   () => webapiStore.getValidVocabularySource() || getSourceKey() || '',
+)
+
+const viewCountsForLabel = t('search.viewCountMessage', 'View record count for:')
+
+// Only sources that can actually report counts. Offering a vocabulary-only
+// source here would just blank the count columns.
+const recordCountSources = computed(() => webapiStore.resultsSources)
+
+// Until the user picks one, counts come from whichever source the search used,
+// which is what happened before this picker existed.
+const effectiveRecordCountSource = computed(
+  () => store.recordCountSourceKey ?? selectedSourceKey.value,
 )
 
 // Concepts already present in the current (in-progress) set — drives the

@@ -1159,23 +1159,26 @@ function onRemoveConcept(concept: Concept) {
   hasUnsavedChanges.value = true
 }
 
-function onRemoveFromSet(conceptId: number) {
-  store.removeConceptFromSet(conceptId)
+// These address one row rather than a concept id: the same concept can hold
+// several rows with different flags, and removing or toggling by id would take
+// its siblings with it (#226).
+function onRemoveFromSet(item: ConceptSetItem) {
+  store.removeConceptItem(item)
   hasUnsavedChanges.value = true
 }
 
-function onToggleDescendants(conceptId: number) {
-  store.toggleConceptFlag(conceptId, 'includeDescendants')
+function onToggleDescendants(item: ConceptSetItem) {
+  store.toggleConceptItemFlag(item, 'includeDescendants')
   hasUnsavedChanges.value = true
 }
 
-function onToggleMapped(conceptId: number) {
-  store.toggleConceptFlag(conceptId, 'includeMapped')
+function onToggleMapped(item: ConceptSetItem) {
+  store.toggleConceptItemFlag(item, 'includeMapped')
   hasUnsavedChanges.value = true
 }
 
-function onToggleExclude(conceptId: number) {
-  store.toggleConceptFlag(conceptId, 'isExcluded')
+function onToggleExclude(item: ConceptSetItem) {
+  store.toggleConceptItemFlag(item, 'isExcluded')
   hasUnsavedChanges.value = true
 }
 
@@ -1337,22 +1340,17 @@ function parseJsonImport() {
 }
 
 function applyJsonItems() {
-  // Add each concept then align its flags to the imported values. A new concept
-  // is created with flags=false; an already-present concept is left in place
-  // (`addConceptToSet` no-ops on duplicates). The store only exposes a *toggle*,
-  // so we toggle only when the current value differs from the imported one —
-  // setting flags absolutely. A blind `if (item.flag) toggle(...)` would instead
-  // FLIP an existing concept's flags on re-import, silently destroying the
-  // user's settings.
+  // Import stays a merge of one row per concept: align an existing row's flags
+  // to the imported values, and only add when the concept is absent. Adding
+  // unconditionally would now append a second row whenever the imported flags
+  // differ from the ones already stored (#226).
   for (const item of jsonItems.value) {
-    store.addConceptToSet(item)
     const current = store.currentSet?.items.find(i => i.conceptId === item.conceptId)
-    if (!current) continue
-    if (current.isExcluded !== item.isExcluded) store.toggleConceptFlag(item.conceptId, 'isExcluded')
-    if (current.includeDescendants !== item.includeDescendants)
-      store.toggleConceptFlag(item.conceptId, 'includeDescendants')
-    if (current.includeMapped !== item.includeMapped)
-      store.toggleConceptFlag(item.conceptId, 'includeMapped')
+    if (current) {
+      store.setConceptItemFlags(current, item)
+    } else {
+      store.addConceptToSet(item, item)
+    }
   }
   hasUnsavedChanges.value = true
   activeTab.value = 'selected'

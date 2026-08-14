@@ -95,15 +95,27 @@ describe('addConceptToSet — add-time flags (#163)', () => {
     })
   })
 
-  it('still rejects a duplicate regardless of the flags supplied', () => {
+  // ATLAS 2.x pushes items without deduplicating, and resolution is a DISTINCT
+  // union of the includes minus the excludes, so "include descendants of X"
+  // plus "exclude X" is how a set says "X's descendants but not X" (#226).
+  it('accepts the same concept again under a different set of flags', () => {
     const s = store()
     s.addConceptToSet(concept, { includeDescendants: true })
     s.addConceptToSet(concept, { isExcluded: true })
 
+    expect(s.currentSet?.items).toHaveLength(2)
+    expect(s.currentSet?.items[0]).toMatchObject({ includeDescendants: true, isExcluded: false })
+    expect(s.currentSet?.items[1]).toMatchObject({ includeDescendants: false, isExcluded: true })
+    expect(s.error).toBeNull()
+  })
+
+  it('still refuses an exact repeat of the same concept and flags', () => {
+    const s = store()
+    s.addConceptToSet(concept, { includeDescendants: true })
+    s.addConceptToSet(concept, { includeDescendants: true })
+
     expect(s.currentSet?.items).toHaveLength(1)
-    expect(s.currentSet?.items[0]?.includeDescendants).toBe(true)
-    expect(s.currentSet?.items[0]?.isExcluded).toBe(false)
-    expect(s.error).toBe('Concept already exists in this set')
+    expect(s.error).toBe('Concept already exists in this set with the same options')
   })
 
   it('keeps flags independent per concept', () => {

@@ -442,16 +442,33 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
-    const exists = currentSet.value.items.some(item => item.conceptId === concept.conceptId)
+    const item: ConceptSetItem = conceptToConceptSetItem(concept, flags)
 
-    if (exists) {
-      error.value = 'Concept already exists in this set'
+    // One concept may appear more than once with different flags. "Include
+    // descendants of X" plus "exclude X" is how a set expresses "X's
+    // descendants but not X itself", which ATLAS 2.x supports (it pushes items
+    // without deduplicating, and resolution is a DISTINCT union of the
+    // includes minus the excludes). Only an exact repeat of the same flag
+    // combination is a no-op worth refusing (#226).
+    if (currentSet.value.items.some(existing => hasSameFlags(existing, item))) {
+      error.value = 'Concept already exists in this set with the same options'
       return
     }
 
-    const item: ConceptSetItem = conceptToConceptSetItem(concept, flags)
     currentSet.value.items.push(item)
     error.value = null
+  }
+
+  // Items reaching the store from an expression payload can carry the flags
+  // unset rather than false, so compare them normalized. Otherwise an existing
+  // row would read as "different flags" and get a pointless twin.
+  function hasSameFlags(a: ConceptSetItem, b: ConceptSetItem): boolean {
+    return (
+      a.conceptId === b.conceptId &&
+      !a.isExcluded === !b.isExcluded &&
+      !a.includeDescendants === !b.includeDescendants &&
+      !a.includeMapped === !b.includeMapped
+    )
   }
 
   /**
@@ -468,6 +485,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
   /**
    * Toggle concept flags (descendants, mapped, exclude)
+   *
+   * Addresses the first row for the concept. Since a concept can now hold more
+   * than one row, prefer `toggleConceptItemFlag` wherever the specific row is
+   * known.
    */
   function toggleConceptFlag(
     conceptId: number,
@@ -483,6 +504,81 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     if (item) {
       item[flag] = !item[flag]
     }
+  }
+
+  /**
+   * Remove one specific row. A concept can appear more than once with
+   * different flags, so removing by concept id alone would take its siblings
+   * with it (#226).
+   */
+  function removeConceptItem(target: ConceptSetItem) {
+    if (!currentSet.value) {
+      error.value = 'No concept set selected'
+      return
+    }
+
+    const index = indexOfItem(target)
+    if (index !== -1) {
+      currentSet.value.items.splice(index, 1)
+    }
+  }
+
+  /**
+   * Toggle a flag on one specific row, leaving that concept's other rows
+   * alone. Refuses a toggle that would make the row an exact copy of a
+   * sibling, which `addConceptToSet` would equally have refused.
+   */
+  function toggleConceptItemFlag(
+    target: ConceptSetItem,
+    flag: 'includeDescendants' | 'includeMapped' | 'isExcluded'
+  ) {
+    if (!currentSet.value) {
+      error.value = 'No concept set selected'
+      return
+    }
+
+    const index = indexOfItem(target)
+    if (index === -1) return
+
+    const item = currentSet.value.items[index]
+    if (!item) return
+
+    const updated: ConceptSetItem = { ...item, [flag]: !item[flag] }
+    if (currentSet.value.items.some((other, i) => i !== index && hasSameFlags(other, updated))) {
+      error.value = 'Another entry for this concept already uses those options'
+      return
+    }
+
+    item[flag] = !item[flag]
+    error.value = null
+  }
+
+  /**
+   * Set all three flags on one specific row at once.
+   */
+  function setConceptItemFlags(target: ConceptSetItem, flags: ConceptAddFlags) {
+    if (!currentSet.value) {
+      error.value = 'No concept set selected'
+      return
+    }
+
+    const item = currentSet.value.items[indexOfItem(target)]
+    if (!item) return
+
+    if (flags.isExcluded !== undefined) item.isExcluded = flags.isExcluded
+    if (flags.includeDescendants !== undefined) item.includeDescendants = flags.includeDescendants
+    if (flags.includeMapped !== undefined) item.includeMapped = flags.includeMapped
+  }
+
+  /**
+   * Locate a row by object identity, falling back to its concept-and-flags
+   * signature for callers holding a copy rather than the stored object.
+   */
+  function indexOfItem(target: ConceptSetItem): number {
+    const items = currentSet.value?.items ?? []
+    const byReference = items.indexOf(target)
+    if (byReference !== -1) return byReference
+    return items.findIndex(item => hasSameFlags(item, target))
   }
 
   /**
@@ -1006,6 +1102,9 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     removeConceptFromSet,
     toggleConceptFlag,
     isConceptInSet,
+    removeConceptItem,
+    toggleConceptItemFlag,
+    setConceptItemFlags,
 
     // Pythia agent partial-update entry-point
     applyProposal,
