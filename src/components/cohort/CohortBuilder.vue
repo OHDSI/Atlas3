@@ -2056,7 +2056,7 @@ function handleConceptSetApplied(set: { id?: number | string; name: string; item
     : set.id
 
   const updated: ConceptSetReference = { id: finalId, name: set.name, items }
-  
+
   // Update all criteria that reference this concept set
   updateConceptSetUsages(
     {
@@ -2074,9 +2074,31 @@ function handleConceptSetApplied(set: { id?: number | string; name: string; item
   exitCriteria.value = { ...exitCriteria.value }
   censoringCriteria.value = [...censoringCriteria.value]
 
+  // Keep the cohort's canonical `conceptSets[]` (what `ConceptSetsListDialog`
+  // and the concept-set list read) in sync unconditionally. A pure rename
+  // via the pencil icon has no `selectedCriteriaContext`/
+  // `pendingConceptSetCallback`, so gating this behind that check (as
+  // before) left the canonical array on the old name after every criteria
+  // reference had already been updated by `updateConceptSetUsages` (#212).
+  upsertConceptSetInCohort(updated)
+
   if (selectedCriteriaContext.value || pendingConceptSetCallback.value) {
     // Assign the concept set (now with final ID) to the context
     assignConceptSetToContext(updated)
+  }
+}
+
+/**
+ * Add-or-replace a concept set in the cohort's canonical `conceptSets[]`,
+ * keyed by id.
+ */
+function upsertConceptSetInCohort(conceptSetRef: ConceptSetReference) {
+  if (!cohortStore.currentCohort) return
+  const existingIndex = cohortStore.currentCohort.conceptSets.findIndex(cs => cs.id === conceptSetRef.id)
+  if (existingIndex === -1) {
+    cohortStore.currentCohort.conceptSets.push(conceptSetRef)
+  } else {
+    cohortStore.currentCohort.conceptSets[existingIndex] = conceptSetRef
   }
 }
 
@@ -2091,17 +2113,10 @@ function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
   if (!hasRealConceptSetId(conceptSetRef)) {
     conceptSetRef = ensureUniqueConceptSetId(conceptSetRef, cohortStore.currentCohort?.conceptSets || [])
   }
-  
+
   // Add the concept set to the cohort's conceptSets array. This happens on apply/import,
   // not during creation. Cancel just closes the editor without reaching here.
-  if (cohortStore.currentCohort) {
-    const existingIndex = cohortStore.currentCohort.conceptSets.findIndex(cs => cs.id === conceptSetRef.id)
-    if (existingIndex === -1) {
-      cohortStore.currentCohort.conceptSets.push(conceptSetRef)
-    } else {
-      cohortStore.currentCohort.conceptSets[existingIndex] = conceptSetRef
-    }
-  }
+  upsertConceptSetInCohort(conceptSetRef)
 
   // Service path (issue #112): deliver to the requesting component, which
   // embeds the reference itself at whatever nesting depth it lives.

@@ -1216,6 +1216,45 @@ describe('CohortBuilder', () => {
     expect(vm.hasUnsavedChanges).toBe(true)
   })
 
+  it('handleConceptSetApplied keeps cohort.conceptSets in sync on a pure rename with no selection context (#212)', async () => {
+    // Renaming via the pencil icon sets neither `selectedCriteriaContext` nor
+    // `pendingConceptSetCallback`. Before the fix, only the per-criterion
+    // `event.conceptSet` copies were updated (via `updateConceptSetUsages`),
+    // leaving the cohort's canonical `conceptSets[]` — what
+    // `ConceptSetsListDialog` reads — on the old name.
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.createNewCohort()
+    if (store.currentCohort) {
+      store.currentCohort.conceptSets = [{ id: 7, name: 'Old Name', items: [] }]
+    }
+    entryEventsList(wrapper).vm.$emit('update:events', [
+      { id: 'evt-1', criteriaType: 'X', attributes: [], conceptSet: { id: 7, name: 'Old Name', items: [] } },
+    ])
+    await wrapper.vm.$nextTick()
+
+    // The pencil in the concept sets list opens the editor with no criteria
+    // selection context and no pending callback.
+    ;(wrapper.vm as any).openConceptSetsDialog()
+    await wrapper.vm.$nextTick()
+    conceptSetsListDialog(wrapper).vm.$emit('view', { id: 7, name: 'Old Name', items: [] })
+    await wrapper.vm.$nextTick()
+
+    conceptSetEditor(wrapper).vm.$emit('apply', { id: 7, name: 'Renamed', items: [] })
+    await wrapper.vm.$nextTick()
+
+    expect(entryEventsList(wrapper).props('events')[0].conceptSet).toMatchObject({
+      id: 7,
+      name: 'Renamed',
+    })
+    expect(store.currentCohort?.conceptSets.find(cs => cs.id === 7)).toMatchObject({
+      id: 7,
+      name: 'Renamed',
+    })
+  })
+
   it('applying concept-set changes assigns the applied set to a pending entry-event context', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
