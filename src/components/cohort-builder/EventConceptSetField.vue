@@ -12,7 +12,7 @@
     </div>
     <div class="event-concept-set-field__input">
       <AtlasButton
-        v-if="!conceptSet || (conceptSet.id == null)"
+        v-if="!conceptSet || !hasNumericConceptSetId(conceptSet)"
         variant="secondary"
         size="sm"
         density="compact"
@@ -41,6 +41,7 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasChip, AtlasIcon } from '@/components/ui'
+import { hasNumericConceptSetId } from '@/utils/concept-set-id'
 import { useI18n } from '@/composables/useI18n'
 
 const { t } = useI18n()

@@ -63,7 +63,7 @@
             <!-- Concept Set Attributes -->
             <template v-else-if="attribute.type === 'conceptSet'">
               <AtlasButton
-                v-if="!attribute.conceptSet || !attribute.conceptSet.id"
+                v-if="!attribute.conceptSet || !hasNumericConceptSetId(attribute.conceptSet)"
                 variant="secondary"
                 size="sm"
                 data-testid="attribute-concept-set-picker"
@@ -345,6 +345,7 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasCheckbox, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { hasNumericConceptSetId } from '@/utils/concept-set-id'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
