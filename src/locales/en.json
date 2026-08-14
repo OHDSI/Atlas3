@@ -2902,7 +2902,8 @@
     "advancedOptions": "Advanced Options",
     "buttonTitle": "Search",
     "classification": "Classification",
-    "clearAllSelections": "Clear All Selections",
+    "filterResults": "Filter results",
+      "clearAllSelections": "Clear All Selections",
     "domains": "Domains",
     "headingTitle": "Search",
     "loadingMessage": {

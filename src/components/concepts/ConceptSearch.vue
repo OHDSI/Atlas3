@@ -49,8 +49,10 @@
       :facet-options="store.facetOptions"
       :selected="store.selectedFacets"
       :active-filter-count="store.activeFacetCount"
+      :result-filter="store.resultFilter"
       class="concept-search__filters"
       @update:facet="({ key, values }) => store.setFacet(key, values)"
+      @update:result-filter="(v: string) => store.setResultFilter(v)"
       @clear="store.clearFacets()"
     />
 
