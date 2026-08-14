@@ -127,7 +127,7 @@ watch(() => [props.sourceKey, props.conceptId], load)
 
         <DrilldownDetails
           v-if="domainPath(concept.domainId)"
-          :data="store.drilldownBySource.get(props.sourceKey) ?? null"
+          :data="store.getDrilldown(props.sourceKey, concept.conceptId)"
           :loading="store.isDrilldownLoading"
           :concept-name="concept.conceptName"
           :domain="(domainPath(concept.domainId) as Domain) ?? 'condition'"
