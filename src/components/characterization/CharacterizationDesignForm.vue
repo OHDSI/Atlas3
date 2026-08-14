@@ -11,6 +11,7 @@
     <LinkedFeatureAnalysisPicker
       :model-value="draft.featureAnalyses"
       :available-feature-analyses="availableFeatureAnalyses"
+      :current-user-login="currentUserLogin"
       @update:model-value="v => updateField('featureAnalyses', v)"
     />
 
@@ -28,6 +29,7 @@
 <script setup lang="ts">
 import { AtlasDivider } from '@/components/ui'
 import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import LinkedCohortPicker from './LinkedCohortPicker.vue'
 import LinkedFeatureAnalysisPicker from './LinkedFeatureAnalysisPicker.vue'
 import StrataEditor from './StrataEditor.vue'
@@ -40,6 +42,11 @@ const props = defineProps<{
   availableCohorts: CohortDefinitionSummary[]
   availableFeatureAnalyses: FeatureAnalysisListItem[]
 }>()
+
+// Sourced here rather than in the picker so the picker stays presentational and
+// its consumers do not need a Pinia instance just to render a list.
+const authStore = useAuthStore()
+const currentUserLogin = computed(() => authStore.user?.login)
 
 const emit = defineEmits<{ 'update:modelValue': [value: CharacterizationDefinition] }>()
 
