@@ -1,116 +1,28 @@
+<!--
+  ConceptFacetFilters
+
+  The concept-search flavour of AtlasFacetFilterBar: same bar, but with the
+  concept facet set as its default and the column i18n keys the concept views
+  already use. The bar itself is shared, so a list that needs the same filtering
+  (e.g. the characterization feature-analysis picker) does not have to
+  reimplement it.
+-->
 <template>
-  <div class="concept-facet-filters">
-    <div class="concept-facet-filters__bar">
-      <AtlasTextField
-        :model-value="resultFilter"
-        :label="filterResultsLabel"
-        density="compact"
-        variant="outlined"
-        hide-details
-        clearable
-        prepend-inner-icon="mdi-magnify"
-        class="concept-facet-filters__text"
-        data-testid="concept-result-filter"
-        @update:model-value="(v: string | number) => emit('update:resultFilter', String(v ?? ''))"
-      />
-
-      <AtlasMenu
-        v-model="menuOpen"
-        :close-on-content-click="false"
-        location="bottom end"
-        offset="8"
-      >
-        <template #activator="{ props: activatorProps }">
-          <AtlasButton
-            v-bind="activatorProps"
-            variant="secondary"
-            icon="mdi-filter-variant"
-            class="concept-facet-filters__menu-btn"
-          >
-            {{ filtersLabel }}
-            <AtlasChip
-              v-if="activeFilterCount > 0"
-              size="sm"
-              variant="flat"
-              tone="primary"
-              class="concept-facet-filters__count"
-            >
-              {{ activeFilterCount }}
-            </AtlasChip>
-          </AtlasButton>
-        </template>
-
-        <AtlasCard
-          padding="none"
-          class="concept-facet-filters__menu-card"
-        >
-          <div class="concept-facet-filters__menu-header">
-            <span class="text-eyebrow">{{ filtersLabel }}</span>
-            <AtlasSpacer />
-            <AtlasButton
-              :disabled="activeFilterCount === 0"
-              variant="ghost"
-              size="sm"
-              @click="emit('clear')"
-            >
-              {{ clearAllLabel }}
-            </AtlasButton>
-          </div>
-
-          <div class="concept-facet-filters__menu-body">
-            <AtlasAutocomplete
-              v-for="facet in facets"
-              :key="facet.key"
-              :model-value="selectionFor(facet.key)"
-              :items="itemsFor(facet.key)"
-              item-title="label"
-              item-value="value"
-              :label="facetLabel(facet.key)"
-              chips
-              closable-chips
-              multiple
-              clearable
-              variant="outlined"
-              hide-details
-              @update:model-value="(v) => onUpdate(facet.key, v as string[])"
-            />
-          </div>
-        </AtlasCard>
-      </AtlasMenu>
-    </div>
-
-    <div
-      v-if="activeFilterCount > 0"
-      class="concept-facet-filters__active"
-    >
-      <template
-        v-for="facet in facets"
-        :key="`chips-${facet.key}`"
-      >
-        <AtlasChip
-          v-for="value in selectionFor(facet.key)"
-          :key="`${facet.key}-${value}`"
-          size="sm"
-          closable
-          @close="removeValue(facet.key, value)"
-        >
-          {{ facetLabel(facet.key) }}: {{ value }}
-        </AtlasChip>
-      </template>
-      <AtlasButton
-        variant="ghost"
-        size="sm"
-        icon="mdi-close"
-        @click="emit('clear')"
-      >
-        {{ clearAllLabel }}
-      </AtlasButton>
-    </div>
-  </div>
+  <AtlasFacetFilterBar
+    :facet-options="facetOptions"
+    :selected="selected"
+    :active-filter-count="activeFilterCount"
+    :facets="facets"
+    :result-filter="resultFilter"
+    :facet-label="facetLabel"
+    text-field-test-id="concept-result-filter"
+    @update:facet="payload => emit('update:facet', payload)"
+    @update:result-filter="value => emit('update:resultFilter', value)"
+    @clear="emit('clear')"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import {
   CONCEPT_FACETS,
@@ -118,7 +30,7 @@ import {
   type FacetKey,
   type FacetOption,
 } from '@/composables/useConceptFacets'
-import { AtlasAutocomplete, AtlasButton, AtlasCard, AtlasChip, AtlasMenu, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import AtlasFacetFilterBar from '@/components/ui/AtlasFacetFilterBar.vue'
 
 interface Props {
   facetOptions: Record<FacetKey, FacetOption[]>
@@ -141,12 +53,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 const { t } = useI18n()
 
-const filtersLabel = t('common.filters', 'Filters')
-const clearAllLabel = t('search.clearAllSelections', 'Clear all')
-const filterResultsLabel = t('search.filterResults', 'Filter results')
-const menuOpen = ref(false)
-
-// Translate facet labels via the existing column i18n keys.
+// Concept facets reuse the column labels the concept tables already translate.
 const labelKeys: Record<string, [string, string]> = {
   vocabularyId: ['columns.vocabulary', 'Vocabulary'],
   domainId: ['columns.domain', 'Domain'],
@@ -161,86 +68,4 @@ function facetLabel(key: FacetKey): string {
   if (entry) return t(entry[0], entry[1]).value
   return props.facets.find(f => f.key === key)?.label ?? key
 }
-
-function selectionFor(key: FacetKey): string[] {
-  return props.selected[key] ?? []
-}
-
-// Facet counts are cross-facet, so a still-selected value can drop out of
-// facetOptions[key] (count 0). Re-add such values so their menu chips keep
-// a resolvable title.
-function itemsFor(key: FacetKey) {
-  const options = props.facetOptions[key] ?? []
-  const present = new Set(options.map(o => o.value))
-  const missing = selectionFor(key)
-    .filter(v => !present.has(v))
-    .map(v => ({ value: v, label: v, count: 0 }))
-  return [...options, ...missing]
-}
-
-function onUpdate(key: FacetKey, values: string[]) {
-  emit('update:facet', { key, values })
-}
-
-function removeValue(key: FacetKey, value: string) {
-  emit('update:facet', { key, values: selectionFor(key).filter(v => v !== value) })
-}
 </script>
-
-<style scoped>
-.concept-facet-filters {
-  width: 100%;
-}
-
-.concept-facet-filters__bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.concept-facet-filters__text {
-  max-width: 260px;
-  flex: 1 1 200px;
-}
-
-.concept-facet-filters__count {
-  margin-inline-start: 8px;
-  height: 18px !important;
-  font-size: 11px !important;
-}
-
-.concept-facet-filters__menu-card {
-  width: 420px;
-  max-width: 90vw;
-}
-
-.concept-facet-filters__menu-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgb(var(--v-theme-outline-variant, 224, 224, 224));
-}
-
-.concept-facet-filters__menu-body {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.concept-facet-filters__active {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-@media (max-width: 600px) {
-  .concept-facet-filters__menu-card {
-    width: 320px;
-  }
-}
-</style>

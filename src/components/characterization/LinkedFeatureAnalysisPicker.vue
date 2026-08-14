@@ -93,21 +93,25 @@
       @close="dialogOpen = false"
     >
       <div class="linked-fa-picker__dialog-body">
-        <AtlasTextField
-          v-model="search"
-          :label="t('common.search', 'Search').value"
-          prepend-icon="mdi-magnify"
-          variant="outlined"
-          hide-details
-          clearable
+        <!-- Same filtering the concept list offers, and the same facets Atlas
+             2.15 puts on this dialog: a library of a thousand-odd analyses is
+             not searchable by name alone (#216). -->
+        <AtlasFacetFilterBar
+          :facet-options="facetOptions"
+          :selected="selected"
+          :active-filter-count="activeFilterCount"
+          :facets="facets"
+          :result-filter="textFilter"
           class="mb-3"
-          data-testid="linked-fa-picker-search"
+          text-field-test-id="linked-fa-picker-search"
+          @update:facet="({ key, values }) => setFacet(key, values)"
+          @update:result-filter="setTextFilter"
+          @clear="clearFilters"
         />
         <AtlasDataTable
           v-model="selectedIds"
           :headers="dialogHeaders"
           :items="selectableItems"
-          :search="search"
           item-value="id"
           show-select
           data-testid="linked-fa-picker-table"
@@ -134,16 +138,28 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasCheckbox, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasDataTable, AtlasDialog, AtlasFacetFilterBar, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
+import { useConceptFacets } from '@/composables/useConceptFacets'
+import {
+  featureAnalysisFacets,
+  featureAnalysisSearchText,
+} from '@/composables/useFeatureAnalysisFacets'
 import type { LinkedFeatureAnalysis } from '@/models/characterization.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
 
 const props = defineProps<{
   modelValue: LinkedFeatureAnalysis[]
   availableFeatureAnalyses: FeatureAnalysisListItem[]
+  /**
+   * Login of the signed-in user, for the My designs / Other designs facet.
+   * A prop rather than a store read so this stays a presentational component:
+   * reaching for Pinia here would make every consumer's test install it just to
+   * render a list.
+   */
+  currentUserLogin?: string
 }>()
 
 const emit = defineEmits<{
@@ -154,7 +170,31 @@ const { t, tv } = useI18n()
 
 const dialogOpen = ref(false)
 const selectedIds = ref<number[]>([])
-const search = ref('')
+
+// The analyses this dialog can offer: everything not already linked.
+const unlinkedAnalyses = computed(() => {
+  const linkedIds = new Set(props.modelValue.map(fa => fa.id))
+  return props.availableFeatureAnalyses.filter(fa => !linkedIds.has(fa.id))
+})
+
+// `now` is captured when the dialog opens rather than read per render, so a row
+// cannot drift between the Created/Updated buckets while the dialog is open.
+const facetNow = ref(0)
+
+const facets = computed(() =>
+  featureAnalysisFacets({ currentUserLogin: props.currentUserLogin, now: facetNow.value })
+)
+
+const {
+  selected,
+  textFilter,
+  facetOptions,
+  filteredConcepts: filteredAnalyses,
+  activeFilterCount,
+  setFacet,
+  setTextFilter,
+  clearFilters,
+} = useConceptFacets(unlinkedAnalyses, facets, featureAnalysisSearchText)
 
 const dialogHeaders = computed(() => [
   { title: t('columns.name', 'Name').value, key: 'name' },
@@ -165,17 +205,14 @@ const dialogHeaders = computed(() => [
   },
 ])
 
-const selectableItems = computed(() => {
-  const linkedIds = new Set(props.modelValue.map(fa => fa.id))
-  return props.availableFeatureAnalyses
-    .filter(fa => !linkedIds.has(fa.id))
-    .map(fa => ({
-      id: fa.id,
-      name: fa.name,
-      type: fa.type,
-      description: fa.description ?? '',
-    }))
-})
+const selectableItems = computed(() =>
+  filteredAnalyses.value.map(fa => ({
+    id: fa.id,
+    name: fa.name,
+    type: fa.type,
+    description: fa.description ?? '',
+  }))
+)
 
 function displayName(fa: LinkedFeatureAnalysis): string {
   if (fa.name && fa.name.length > 0) return fa.name
@@ -194,7 +231,8 @@ function displaySubtitle(fa: LinkedFeatureAnalysis): string {
 
 function openDialog() {
   selectedIds.value = []
-  search.value = ''
+  clearFilters()
+  facetNow.value = Date.now()
   dialogOpen.value = true
 }
 

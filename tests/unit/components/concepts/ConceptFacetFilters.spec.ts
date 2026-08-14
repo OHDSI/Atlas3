@@ -43,19 +43,19 @@ describe('ConceptFacetFilters', () => {
 
   it('renders the Filters menu button', () => {
     const wrapper = mountComponent()
-    expect(wrapper.find('.concept-facet-filters__bar').exists()).toBe(true)
+    expect(wrapper.find('.facet-filter-bar__bar').exists()).toBe(true)
     expect(wrapper.text()).toContain('Filters')
   })
 
   it('shows the active-count badge when filters are active', () => {
     const wrapper = mountComponent({ activeFilterCount: 2 })
-    expect(wrapper.find('.concept-facet-filters__count').text()).toBe('2')
+    expect(wrapper.find('.facet-filter-bar__count').text()).toBe('2')
   })
 
   it('renders an active chip per selected value and emits update:facet on close', async () => {
     const selected = { ...emptySelected, vocabularyId: ['SNOMED'] }
     const wrapper = mountComponent({ selected, activeFilterCount: 1 })
-    const chips = wrapper.findAll('.concept-facet-filters__active .v-chip')
+    const chips = wrapper.findAll('.facet-filter-bar__active .v-chip')
     expect(chips.length).toBeGreaterThan(0)
     expect(wrapper.text()).toContain('SNOMED')
   })
@@ -63,7 +63,7 @@ describe('ConceptFacetFilters', () => {
   it('emits update:facet with the value removed when an active chip is closed', async () => {
     const selected = { ...emptySelected, vocabularyId: ['SNOMED'] }
     const wrapper = mountComponent({ selected, activeFilterCount: 1 })
-    const active = wrapper.find('.concept-facet-filters__active')
+    const active = wrapper.find('.facet-filter-bar__active')
     expect(active.exists()).toBe(true)
 
     const chip = active.find('.v-chip')

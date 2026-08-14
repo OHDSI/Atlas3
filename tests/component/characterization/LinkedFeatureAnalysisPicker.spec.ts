@@ -126,7 +126,9 @@ describe('LinkedFeatureAnalysisPicker', () => {
       await wrapper.get('[data-testid="linked-fa-picker-add"]').trigger('click')
       await flushPromises()
 
-      wrapper.vm.search = 'comorbid'
+      // Driven through the filter bar rather than a local ref, so this also
+      // covers the picker's handler wiring.
+      wrapper.findComponent({ name: 'AtlasFacetFilterBar' }).vm.$emit('update:resultFilter', 'comorbid')
       await flushPromises()
 
       const rows = document.querySelectorAll('[data-testid="linked-fa-picker-table"] tbody tr')
@@ -135,5 +137,95 @@ describe('LinkedFeatureAnalysisPicker', () => {
       expect(rowText.some(text => text?.includes('Demographics'))).toBe(false)
       wrapper.unmount()
     })
+  })
+})
+
+/**
+ * Issue #216: the dialog offered only a text box over a library that runs to
+ * ~1,400 analyses in a real deployment. These cover the facets themselves
+ * narrowing the table, which is what text search alone could not do.
+ */
+describe('LinkedFeatureAnalysisPicker facets (#216)', () => {
+  const openDialog = async (wrapper: ReturnType<typeof mount>) => {
+    await wrapper.get('[data-testid="linked-fa-picker-add"]').trigger('click')
+    await flushPromises()
+  }
+
+  const rowText = () =>
+    Array.from(document.querySelectorAll('[data-testid="linked-fa-picker-table"] tbody tr')).map(
+      row => row.textContent ?? ''
+    )
+
+  const filterBar = (wrapper: ReturnType<typeof mount>) =>
+    wrapper.findComponent({ name: 'AtlasFacetFilterBar' })
+
+  it('offers the six facets Atlas 2.15 offers', async () => {
+    const wrapper = mountPicker([])
+    await openDialog(wrapper)
+
+    const facets = filterBar(wrapper).props('facets') as Array<{ key: string }>
+
+    expect(facets.map(f => f.key)).toEqual([
+      'type', 'domain', 'created', 'updated', 'author', 'designs',
+    ])
+    wrapper.unmount()
+  })
+
+  it('narrows the table to the selected type', async () => {
+    const wrapper = mountPicker([])
+    await openDialog(wrapper)
+
+    filterBar(wrapper).vm.$emit('update:facet', { key: 'type', values: ['Criteria set'] })
+    await flushPromises()
+
+    expect(rowText().some(text => text.includes('Comorbidities'))).toBe(true)
+    expect(rowText().some(text => text.includes('Demographics'))).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('counts each facet option against the rows currently shown', async () => {
+    const wrapper = mountPicker([])
+    await openDialog(wrapper)
+
+    const options = filterBar(wrapper).props('facetOptions') as Record<
+      string,
+      Array<{ value: string; label: string; count: number }>
+    >
+
+    // The same "value (count)" form 2.15 shows beside each facet value.
+    expect(options.type).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ value: 'Criteria set', count: 1, label: 'Criteria set (1)' }),
+        expect.objectContaining({ value: 'Preset', count: 1, label: 'Preset (1)' }),
+      ])
+    )
+    wrapper.unmount()
+  })
+
+  it('does not offer an analysis that is already linked', async () => {
+    const wrapper = mountPicker([{ id: 11 } as LinkedFeatureAnalysis])
+    await openDialog(wrapper)
+
+    const options = filterBar(wrapper).props('facetOptions') as Record<string, Array<{ value: string }>>
+
+    expect(options.type.map(o => o.value)).toEqual(['Preset'])
+    wrapper.unmount()
+  })
+
+  it('clears the filters again when the dialog is reopened', async () => {
+    const wrapper = mountPicker([])
+    await openDialog(wrapper)
+
+    filterBar(wrapper).vm.$emit('update:facet', { key: 'type', values: ['Criteria set'] })
+    await flushPromises()
+    expect(filterBar(wrapper).props('activeFilterCount')).toBe(1)
+
+    // Reopening runs the same reset the Cancel path leaves it in; the dialog's
+    // own buttons are teleported out of the wrapper, so this drives it from the
+    // Add button that opens it.
+    await openDialog(wrapper)
+
+    expect(filterBar(wrapper).props('activeFilterCount')).toBe(0)
+    wrapper.unmount()
   })
 })
