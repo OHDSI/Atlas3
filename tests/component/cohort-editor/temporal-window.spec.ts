@@ -4,8 +4,9 @@
  * EndWindowEditor spec beside it) onto cohort-editor/criteria/Window.vue,
  * criteria/window-utils.ts and the window menu in criteria/CorelatedCriteria.vue.
  *
- * Some of the `it.fails` cases exercise thread T17: quick presets that
- * produce windows contradicting the label the user picked.
+ * The preset cases started life as `it.fails` markers for thread T17 — quick
+ * presets that produced windows contradicting the label the user picked. The
+ * presets were repaired, so they now assert the fixed behaviour directly.
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -152,40 +153,36 @@ describe('window presets', () => {
     expect(startWindow.End).toEqual({ Days: 0, Coeff: 1 })
   })
 
+  // Zero days either side of index, following the same Coeff convention as
+  // createDefaultWindow (Start -1, End +1) rather than pinning both ends to the
+  // same sign. At Days: 0 the two are equivalent for generation, so the
+  // convention is what is asserted here.
   it('pins both ends to the index date for the on-index-date preset', () => {
     const { startWindow, endWindow } = presetNamed('On index date')
 
-    expect(startWindow.Start).toEqual({ Days: 0, Coeff: 1 })
+    expect(startWindow.Start).toEqual({ Days: 0, Coeff: -1 })
     expect(startWindow.End).toEqual({ Days: 0, Coeff: 1 })
-    expect(endWindow?.Start).toEqual({ Days: 0, Coeff: 1 })
-    expect(endWindow?.End).toEqual({ Days: 0, Coeff: 1 })
+    expect(endWindow).toBeUndefined()
   })
 
-  // T17 (src/components/cohort-editor/criteria/window-utils.ts:66): the acute
-  // follow-up preset is built as createWindow(0, 'after', 0, 'after'), so the
-  // window it produces ends on the index date. Picking "0 to 30 days after"
-  // silently gives the cohort a zero-width window, not a 30-day one.
-  it.fails('acute follow-up reaches the 30 days its label promises', () => {
+  it('acute follow-up reaches the 30 days its label promises', () => {
     const { startWindow } = presetNamed('Acute follow-up')
 
     expect(startWindow.Start).toEqual({ Days: 0, Coeff: 1 })
     expect(startWindow.End).toEqual({ Days: 30, Coeff: 1 })
   })
 
-  // T17 (window-utils.ts:78): "All time after index" is built the same way, so
-  // instead of an unbounded look-forward (Days: null) it is bounded at the index
-  // date and is indistinguishable from the "On index date" preset.
-  it.fails('all time after index is unbounded going forward', () => {
+  it('all time after index is unbounded going forward', () => {
     const { startWindow } = presetNamed('All time after index')
 
     expect(startWindow.Start).toEqual({ Days: 0, Coeff: 1 })
     expect(startWindow.End).toEqual({ Days: null, Coeff: 1 })
   })
 
-  // T17, both defects at once: three differently-labelled presets currently
-  // produce the same start window, so the choice the user made is not recoverable
-  // from the cohort.
-  it.fails('differently-labelled presets produce different windows', () => {
+  // Guards the defect the three presets above shared: they were all built as
+  // createWindow(0, 'after', 0, 'after'), so the choice the user made was not
+  // recoverable from the saved cohort.
+  it('differently-labelled presets produce different windows', () => {
     const onIndex = JSON.stringify(presetNamed('On index date').startWindow)
     const acute = JSON.stringify(presetNamed('Acute follow-up').startWindow)
     const allAfter = JSON.stringify(presetNamed('All time after index').startWindow)
@@ -390,7 +387,7 @@ describe('CorelatedCriteria window menu', () => {
     }
     const wrapper = mountCriteria(criteria)
 
-    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset('Long-term baseline').label)
+    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset('Long-term baseline').value)
     await wrapper.vm.$nextTick()
 
     expect(criteria.StartWindow).toEqual({
@@ -409,7 +406,7 @@ describe('CorelatedCriteria window menu', () => {
     }
     const wrapper = mountCriteria(criteria)
 
-    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset('Short-term baseline').label)
+    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset('Short-term baseline').value)
     await wrapper.vm.$nextTick()
 
     expect(criteria.EndWindow).toBeUndefined()
@@ -422,13 +419,15 @@ describe('CorelatedCriteria window menu', () => {
     }
     const wrapper = mountCriteria(criteria)
 
-    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset('1-year follow-up').label)
+    // "Event overlaps with index" is the one preset that carries a second
+    // window: the event must start before index ends and end after index starts.
+    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset('Event overlaps with index').value)
     await wrapper.vm.$nextTick()
 
     expect(criteria.EndWindow).toEqual({
-      Start: { Days: 0, Coeff: 1 },
-      End: { Days: 365, Coeff: 1 },
-      UseIndexEnd: false,
+      Start: { Days: null, Coeff: -1 },
+      End: { Days: 0, Coeff: 1 },
+      UseIndexEnd: true,
       UseEventEnd: false,
     })
   })

@@ -73,7 +73,8 @@ export function getWindowPresetOptions(): WindowPresetOption[] {
     ),
     buildPreset(t('components.temporalWindowEditor.allTimeAfterIndex', 'All time after index').value,
       createWindow(0, 'after', null, 'after')
-    ),buildPreset(t('components.temporalWindowEditor.eventOverlapsWithIndex', 'event overlapps with index').value,
+    ),
+    buildPreset(t('components.temporalWindowEditor.eventOverlapsWithIndex', 'Event overlaps with index').value,
       createWindow(0, 'after', null, 'after',false, true),
       createWindow(null, 'before', 0, 'after',true, false)
     ),
