@@ -206,6 +206,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { ATLAS_TO_CARDINALITY, cardinalityToAtlas } from '@/utils/mappers'
 import { useI18n } from '@/composables/useI18n'
 import {
   AtlasButton,
@@ -259,9 +260,11 @@ const innerCriteria = computed<Criteria>(() => {
 const occurrence = computed<OccurrenceTypeOption>(() => ensureOccurrence())
 
 const occurrenceTypeKey = computed<'EXACTLY' | 'AT_LEAST' | 'AT_MOST'>({
-  get: () => occurrenceTypeFromValue(occurrence.value.Type),
+  // ATLAS_TO_CARDINALITY / cardinalityToAtlas already own the 0/1/2 <-> name
+  // mapping for the CIRCE Occurrence.Type enum; a second copy here drifts.
+  get: () => ATLAS_TO_CARDINALITY[(occurrence.value.Type ?? 0) as 0 | 1 | 2] ?? 'EXACTLY',
   set: value => {
-    occurrence.value.Type = occurrenceTypeToValue(value)
+    occurrence.value.Type = cardinalityToAtlas(value)
   },
 })
 
@@ -374,30 +377,6 @@ function toggleDistinct() {
 
   if (isDistinct.value && !distinctCountColumn.value) {
     distinctCountColumn.value = 'DOMAIN_CONCEPT'
-  }
-}
-
-function occurrenceTypeFromValue(value: number | null | undefined): 'EXACTLY' | 'AT_LEAST' | 'AT_MOST' {
-  switch (value) {
-    case 1:
-      return 'AT_MOST'
-    case 2:
-      return 'AT_LEAST'
-    case 0:
-    default:
-      return 'EXACTLY'
-  }
-}
-
-function occurrenceTypeToValue(value: 'EXACTLY' | 'AT_LEAST' | 'AT_MOST'): number {
-  switch (value) {
-    case 'AT_MOST':
-      return 1
-    case 'AT_LEAST':
-      return 2
-    case 'EXACTLY':
-    default:
-      return 0
   }
 }
 
