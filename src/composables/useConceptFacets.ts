@@ -43,16 +43,44 @@ export const CONCEPT_FACETS: FacetDefinition<Concept>[] = [
   { key: 'invalidReason', label: 'Validity', display: c => (c.invalidReason ? 'Invalid' : 'Valid') },
 ]
 
+/**
+ * Fields a free-text filter matches against, mirroring the columns the results
+ * table shows. ATLAS 2.x offers the same narrowing as a "Filter:" box over the
+ * rows already returned.
+ */
+export function conceptSearchText(c: Concept): string {
+  return [
+    String(c.conceptId ?? ''),
+    c.conceptName ?? '',
+    c.conceptCode ?? '',
+    c.domainId ?? '',
+    c.vocabularyId ?? '',
+    c.conceptClassId ?? '',
+  ].join(' ')
+}
+
 export function useConceptFacets<T = Concept>(
   concepts: Ref<T[]>,
-  definitions: MaybeRefOrGetter<FacetDefinition<T>[]> = CONCEPT_FACETS as FacetDefinition<T>[]
+  definitions: MaybeRefOrGetter<FacetDefinition<T>[]> = CONCEPT_FACETS as FacetDefinition<T>[],
+  searchText: (item: T) => string = conceptSearchText as unknown as (item: T) => string
 ) {
   const selected = ref<Record<FacetKey, string[]>>({})
+  const textFilter = ref<string>('')
 
   const facets = computed(() => toValue(definitions))
+  const normalizedText = computed(() => textFilter.value.trim().toLowerCase())
 
   function selectionFor(key: FacetKey): string[] {
     return selected.value[key] ?? []
+  }
+
+  /**
+   * Applied everywhere the facet selections are, so the option counts describe
+   * the rows actually on screen rather than the whole result set.
+   */
+  function matchesText(item: T): boolean {
+    if (!normalizedText.value) return true
+    return searchText(item).toLowerCase().includes(normalizedText.value)
   }
 
   /** Does an item pass every facet's selection except the excluded one? */
@@ -66,14 +94,16 @@ export function useConceptFacets<T = Concept>(
     return true
   }
 
-  const filteredConcepts = computed(() => concepts.value.filter(c => matchesExcept(c, null)))
+  const filteredConcepts = computed(() =>
+    concepts.value.filter(c => matchesText(c) && matchesExcept(c, null))
+  )
 
   const facetOptions = computed<Record<FacetKey, FacetOption[]>>(() => {
     const result: Record<FacetKey, FacetOption[]> = {}
     for (const facet of facets.value) {
       const counts = new Map<string, number>()
       for (const c of concepts.value) {
-        if (!matchesExcept(c, facet.key)) continue
+        if (!matchesText(c) || !matchesExcept(c, facet.key)) continue
         const value = facet.display(c)
         counts.set(value, (counts.get(value) ?? 0) + 1)
       }
@@ -84,17 +114,33 @@ export function useConceptFacets<T = Concept>(
     return result
   })
 
-  const activeFilterCount = computed(() =>
-    facets.value.reduce((n, f) => n + (selectionFor(f.key).length > 0 ? 1 : 0), 0)
+  const activeFilterCount = computed(
+    () =>
+      facets.value.reduce((n, f) => n + (selectionFor(f.key).length > 0 ? 1 : 0), 0) +
+      (normalizedText.value ? 1 : 0)
   )
 
   function setFacet(key: FacetKey, values: string[]) {
     selected.value = { ...selected.value, [key]: values }
   }
 
-  function clearFilters() {
-    selected.value = {}
+  function setTextFilter(value: string) {
+    textFilter.value = value
   }
 
-  return { selected, facetOptions, filteredConcepts, activeFilterCount, setFacet, clearFilters }
+  function clearFilters() {
+    selected.value = {}
+    textFilter.value = ''
+  }
+
+  return {
+    selected,
+    textFilter,
+    facetOptions,
+    filteredConcepts,
+    activeFilterCount,
+    setFacet,
+    setTextFilter,
+    clearFilters,
+  }
 }

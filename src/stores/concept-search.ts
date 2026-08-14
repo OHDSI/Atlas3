@@ -43,6 +43,11 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
     { deep: true }
   )
 
+  // Same for the free-text filter over the returned rows.
+  watch(facets.textFilter, () => {
+    page.value = 1
+  })
+
   // ============================================================================
   // Getters
   // ============================================================================
@@ -215,7 +220,9 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
     facetOptions: facets.facetOptions,
     selectedFacets: facets.selected,
     activeFacetCount: facets.activeFilterCount,
+    resultFilter: facets.textFilter,
     setFacet: facets.setFacet,
+    setResultFilter: facets.setTextFilter,
     clearFacets: facets.clearFilters,
 
     // Actions
