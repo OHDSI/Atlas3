@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { z } from 'zod'
-import * as circe from '@/components/cohort-editor/circe.types'
+import * as circe from '@/models/circe-types'
 import { isObjectSchema, shapeOf, synthesise, unwrap } from '../../helpers/circe-schema-walk'
 
 const exportedName = new Map<z.ZodTypeAny, string>()

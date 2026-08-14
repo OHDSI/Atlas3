@@ -291,12 +291,12 @@ import {
   CRITERIA_TYPE_BY_KEY,
   EDITABLE_CRITERIA_TYPES,
   type EditableCriteriaKey,
-} from './criteria/criteria-registry'
-import CriteriaRenderer from './criteria/CriteriaRenderer.vue'
-import CriteriaGroup from './criteria/CriteriaGroup.vue'
+} from '@/components/circe/criteria/criteria-registry'
+import CriteriaRenderer from '@/components/circe/criteria/CriteriaRenderer.vue'
+import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import InclusionRulesPanel from './inclusion-rules/InclusionRulesPanel.vue'
 import EndStrategyPanel from './end-strategy/EndStrategyPanel.vue'
-import CensorWindowEditor from '@/components/cohort-editor/CensorWindowEditor.vue'
+import CensorWindowEditor from './CensorWindowEditor.vue'
 import type {
   CohortExpression,
   Criteria,
@@ -305,11 +305,11 @@ import type {
   ObservationFilter,
   PrimaryCriteria,
   ResultLimit,
-} from './circe.types'
+} from '@/models/circe-types'
 import type {
   ConceptSetOption,
   ConceptSetSelectionTarget,
-} from './criteria/criteria-editor.types'
+} from '@/components/circe/criteria/criteria-editor.types'
 
 /**
  * This component always presents editing controls for these portions

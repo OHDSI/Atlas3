@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
 import { ref, computed, nextTick } from 'vue'
-import type { CohortExpression, EndStrategy } from '@/components/cohort-editor/circe.types'
+import type { CohortExpression, EndStrategy } from '@/models/circe-types'
 import type { ValidationWarning } from '@/models/cohort-validation.types'
 import { ApiError } from '@/services/api-error'
 

@@ -152,7 +152,7 @@ import DataSourceRunTable, {
 import PreviousRunsDialog from '@/components/generation/PreviousRunsDialog.vue'
 import { IR_TERMINAL_STATUSES } from '@/models/incidence-rate.types'
 import { arrayToCsv, downloadCsv } from '@/utils/csv'
-import type { ConceptSet } from '@/components/cohort-editor/circe.types'
+import type { ConceptSet } from '@/models/circe-types'
 import type { StratifyRule } from '@/models/incidence-rate.types'
 import type { GenerationStatus } from '@/models/characterization.types'
 

@@ -23,7 +23,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { ref } from 'vue'
 import { translateCapability } from '@/plugins/host/capabilities/translate'
 import { useCohortStore } from '@/stores/cohort'
-import { CohortExpressionSchema, type CohortExpression } from '@/components/cohort-editor/circe.types'
+import { CohortExpressionSchema, type CohortExpression } from '@/models/circe-types'
 
 const CONCEPT = {
   conceptId: 40481087,

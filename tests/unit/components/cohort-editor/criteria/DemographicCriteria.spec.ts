@@ -4,7 +4,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
-import DemographicCriteria from '@/components/cohort-editor/criteria/DemographicCriteria.vue'
+import DemographicCriteria from '@/components/circe/criteria/DemographicCriteria.vue'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../../helpers/i18n-mock')

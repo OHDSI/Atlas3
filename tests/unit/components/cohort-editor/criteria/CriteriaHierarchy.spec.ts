@@ -4,9 +4,9 @@ import { nextTick } from 'vue'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import CriteriaGroup from '@/components/cohort-editor/criteria/CriteriaGroup.vue'
-import CorelatedCriteria from '@/components/cohort-editor/criteria/CorelatedCriteria.vue'
-import ConditionOccurrence from '@/components/cohort-editor/criteria/ConditionOccurrence.vue'
+import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
+import CorelatedCriteria from '@/components/circe/criteria/CorelatedCriteria.vue'
+import ConditionOccurrence from '@/components/circe/criteria/ConditionOccurrence.vue'
 import fixture from '../fixtures/editor-surface.json'
 
 vi.mock('@/composables/useI18n', async () => {

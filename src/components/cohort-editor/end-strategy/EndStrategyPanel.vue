@@ -27,8 +27,8 @@
 </template>
 
 <script setup lang="ts">
-import type { CohortExpression } from '../circe.types'
-import type { ConceptSetOption, ConceptSetSelectionTarget } from '../criteria/criteria-editor.types'
+import type { CohortExpression } from '@/models/circe-types'
+import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 import EndStrategySelector from './EndStrategySelector.vue'
 import CensoringCriteriaEditor from './CensoringCriteriaEditor.vue'
 

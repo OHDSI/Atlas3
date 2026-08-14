@@ -11,8 +11,8 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import ConceptSetSelection from '@/components/cohort-editor/input/ConceptSetSelection.vue'
-import type { ConceptSetSelection as Selection } from '@/components/cohort-editor/circe.types'
+import ConceptSetSelection from '@/components/circe/input/ConceptSetSelection.vue'
+import type { ConceptSetSelection as Selection } from '@/models/circe-types'
 
 const vuetify = createVuetify({ components, directives })
 

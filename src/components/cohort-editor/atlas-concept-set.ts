@@ -15,7 +15,7 @@
  * CohortBuilder. Whichever one a caller happened to reach determined whether the
  * items survived, so it is shared here.
  */
-import type { ConceptSetItem as CirceConceptSetItem, ConceptSet } from './circe.types'
+import type { ConceptSetItem as CirceConceptSetItem, ConceptSet } from '@/models/circe-types'
 
 /** The flat item shape used throughout the Atlas-facing side of the app. */
 export interface AtlasConceptSetItem {

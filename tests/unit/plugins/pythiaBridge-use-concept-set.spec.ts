@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { ref } from 'vue'
-import type { CohortExpression } from '@/components/cohort-editor/circe.types'
+import type { CohortExpression } from '@/models/circe-types'
 
 vi.mock('@/router', () => ({
   default: {

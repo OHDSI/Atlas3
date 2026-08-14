@@ -12,7 +12,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { normalizeForCirce, DEFAULT_RANGE_OP } from '@/components/cohort-editor/normalize'
-import { CohortExpressionSchema, type CohortExpression } from '@/components/cohort-editor/circe.types'
+import { CohortExpressionSchema, type CohortExpression } from '@/models/circe-types'
 
 interface PhenotypeFixture {
   cohortId: string

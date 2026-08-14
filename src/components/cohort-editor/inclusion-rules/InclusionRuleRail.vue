@@ -61,7 +61,7 @@
 import { ref } from 'vue'
 import { AtlasButton } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
-import type { CriteriaGroup, InclusionRule } from '../circe.types'
+import type { CriteriaGroup, InclusionRule } from '@/models/circe-types'
 
 const { t } = useI18n()
 

@@ -18,7 +18,7 @@ import {
   type CohortDefinitionSummary,
 } from '@/models/webapi.types'
 import type { ValidationResponse } from '@/models/cohort-validation.types'
-import { CohortExpressionSchema, type CohortExpression } from '@/components/cohort-editor/circe.types'
+import { CohortExpressionSchema, type CohortExpression } from '@/models/circe-types'
 
 const CONTEXT = 'CohortDefinitionService'
 

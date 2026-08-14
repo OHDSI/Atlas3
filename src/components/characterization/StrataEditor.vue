@@ -133,10 +133,10 @@ import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
 import { AtlasButton, AtlasChip, AtlasDialog, AtlasIconButton, AtlasSwitch, AtlasTextField } from '@/components/ui'
-import CriteriaGroup from '@/components/cohort-editor/criteria/CriteriaGroup.vue'
+import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
 import type { Stratum, CriteriaGroup as CriteriaGroupType } from '@/models/characterization.types'
-import type { ConceptSet } from '@/components/cohort-editor/circe.types'
+import type { ConceptSet } from '@/models/circe-types'
 
 const props = defineProps<{
   modelValue: Stratum[]

@@ -13,8 +13,8 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import DateAdjustment from '@/components/cohort-editor/input/DateAdjustment.vue'
-import type { DateAdjustment as DateAdjustmentModel } from '@/components/cohort-editor/circe.types'
+import DateAdjustment from '@/components/circe/input/DateAdjustment.vue'
+import type { DateAdjustment as DateAdjustmentModel } from '@/models/circe-types'
 
 const vuetify = createVuetify({ components, directives })
 

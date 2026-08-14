@@ -58,8 +58,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { AtlasButton } from '@/components/ui'
-import type { DateOffsetStrategy, CustomEraStrategy, EndStrategy } from '../circe.types'
-import type { ConceptSetOption, ConceptSetSelectionTarget } from '../criteria/criteria-editor.types'
+import type { DateOffsetStrategy, CustomEraStrategy, EndStrategy } from '@/models/circe-types'
+import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 import ObservationEndStrategy from './ObservationEndStrategy.vue'
 import DateOffsetEndStrategy from './DateOffsetEndStrategy.vue'
 import CustomEraEndStrategy from './CustomEraEndStrategy.vue'

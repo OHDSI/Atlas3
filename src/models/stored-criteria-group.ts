@@ -23,7 +23,7 @@
  * `CriteriaGroup | undefined`, which is what its types already claim.
  */
 import { z } from 'zod'
-import { CriteriaGroupSchema } from '@/components/cohort-editor/circe.types'
+import { CriteriaGroupSchema } from '@/models/circe-types'
 import { logger } from '@/utils/logger'
 
 const CONTEXT = 'StoredCriteriaGroup'

@@ -14,8 +14,8 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import CorelatedCriteria from '@/components/cohort-editor/criteria/CorelatedCriteria.vue'
-import type { CorelatedCriteria as CorelatedCriteriaModel } from '@/components/cohort-editor/circe.types'
+import CorelatedCriteria from '@/components/circe/criteria/CorelatedCriteria.vue'
+import type { CorelatedCriteria as CorelatedCriteriaModel } from '@/models/circe-types'
 
 const vuetify = createVuetify({ components, directives })
 

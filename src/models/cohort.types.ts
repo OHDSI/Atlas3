@@ -4,7 +4,7 @@
  */
 
 import type { Cardinality, TemporalWindow, EventAttribute, DateAdjustment } from './event.types'
-import type { CohortExpression } from '@/components/cohort-editor/circe.types'
+import type { CohortExpression } from '@/models/circe-types'
 
 /**
  * Tag for cohort organization and filtering

@@ -1,7 +1,7 @@
 import type { AgentProposal } from '@/models/agent.types'
 import type { ExitStrategy } from '@/models/cohort.types'
 import routeManifest from '@/router/routes.manifest.json'
-import { criteriaTypeForDomain } from '@/components/cohort-editor/criteria/criteria-registry'
+import { criteriaTypeForDomain } from '@/components/circe/criteria/criteria-registry'
 import { logger } from '@/utils/logger'
 
 interface ConceptRefArgs {

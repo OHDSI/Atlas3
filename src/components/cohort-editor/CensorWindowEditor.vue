@@ -80,7 +80,7 @@
 import { ref, computed, watch } from 'vue'
 import { AtlasAlert, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
-import type { Period, CollapseSettings } from './circe.types'
+import type { Period, CollapseSettings } from '@/models/circe-types'
 import type { ValidationError } from '@/models/validation.types'
 
 const { t } = useI18n()

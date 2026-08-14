@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { CohortExpressionSchema } from '@/components/cohort-editor/circe.types'
+import { CohortExpressionSchema } from '@/models/circe-types'
 import { normalizeRawCohortDefinition } from '@/services/cohort-definition.service'
 
 // Large-cohort schema validation is still low-single-digit milliseconds in

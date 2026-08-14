@@ -10,7 +10,7 @@ import {
   translateAgentCriteriaGroups,
   registerConceptSets,
 } from '@/stores/agent-proposal-circe'
-import type { ConceptSet } from '@/components/cohort-editor/circe.types'
+import type { ConceptSet } from '@/models/circe-types'
 import type { CohortEvent, CriteriaGroup } from '@/models/cohort.types'
 
 const drugEvent = (name: string, conceptId: number, id: number | string = 'client-uuid') =>

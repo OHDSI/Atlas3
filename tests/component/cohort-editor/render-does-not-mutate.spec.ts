@@ -18,12 +18,12 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import CriteriaGroup from '@/components/cohort-editor/criteria/CriteriaGroup.vue'
-import CorelatedCriteria from '@/components/cohort-editor/criteria/CorelatedCriteria.vue'
+import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
+import CorelatedCriteria from '@/components/circe/criteria/CorelatedCriteria.vue'
 import type {
   CriteriaGroup as GroupModel,
   CorelatedCriteria as CorelatedModel,
-} from '@/components/cohort-editor/circe.types'
+} from '@/models/circe-types'
 
 const vuetify = createVuetify({ components, directives })
 

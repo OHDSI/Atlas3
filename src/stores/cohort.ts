@@ -8,7 +8,7 @@ import type {
   CohortDefinition,
 } from '@/models/cohort.types'
 import type { AgentProposal } from '@/models/agent.types'
-import type { Criteria, CohortExpression } from '@/components/cohort-editor/circe.types'
+import type { Criteria, CohortExpression } from '@/models/circe-types'
 import type { Version } from '@/components/versions/types'
 import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
 import { logger } from '@/utils/logger'

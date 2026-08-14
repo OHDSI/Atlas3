@@ -110,9 +110,9 @@
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { AtlasButton, AtlasMenu, AtlasTextField } from '@/components/ui'
-import CriteriaGroup from '../criteria/CriteriaGroup.vue'
-import type { CriteriaGroup as CriteriaGroupType, InclusionRule } from '../circe.types'
-import type { ConceptSetOption, ConceptSetSelectionTarget } from '../criteria/criteria-editor.types'
+import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
+import type { CriteriaGroup as CriteriaGroupType, InclusionRule } from '@/models/circe-types'
+import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 
 const { t } = useI18n()
 

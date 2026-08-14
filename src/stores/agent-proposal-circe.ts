@@ -28,7 +28,7 @@ import type {
   DemographicCriteria,
   NumericRange,
   CriteriaGroup as CirceCriteriaGroup,
-} from '@/components/cohort-editor/circe.types'
+} from '@/models/circe-types'
 import type { CohortEvent, CriteriaGroup as AtlasCriteriaGroup } from '@/models/cohort.types'
 import type { NumericOperator } from '@/models/event.types'
 

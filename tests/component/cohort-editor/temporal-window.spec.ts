@@ -14,18 +14,18 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import WindowEditor from '@/components/cohort-editor/criteria/Window.vue'
-import CorelatedCriteria from '@/components/cohort-editor/criteria/CorelatedCriteria.vue'
+import WindowEditor from '@/components/circe/criteria/Window.vue'
+import CorelatedCriteria from '@/components/circe/criteria/CorelatedCriteria.vue'
 import {
   cloneWindow,
   createDefaultWindow,
   formatWindowExpression,
   getWindowPresetOptions,
-} from '@/components/cohort-editor/criteria/window-utils'
+} from '@/components/circe/criteria/window-utils'
 import type {
   CorelatedCriteria as CorelatedCriteriaModel,
   Window as WindowModel,
-} from '@/components/cohort-editor/circe.types'
+} from '@/models/circe-types'
 
 const vuetify = createVuetify({ components, directives })
 

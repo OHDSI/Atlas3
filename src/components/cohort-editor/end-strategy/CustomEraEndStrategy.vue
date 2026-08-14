@@ -88,8 +88,8 @@ import {
   AtlasIcon,
   AtlasTextField,
 } from '@/components/ui'
-import type { CustomEraStrategy } from '../circe.types'
-import type { ConceptSetOption, ConceptSetSelectionTarget } from '../criteria/criteria-editor.types'
+import type { CustomEraStrategy } from '@/models/circe-types'
+import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 
 const props = defineProps<{
   strategy: CustomEraStrategy

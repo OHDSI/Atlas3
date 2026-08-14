@@ -22,7 +22,7 @@ import {
   ConceptSetSelectionSchema,
   type CohortExpression,
   type ConceptSetSelection,
-} from './circe.types'
+} from '@/models/circe-types'
 import { walkSchema } from './schema-walk'
 
 /**

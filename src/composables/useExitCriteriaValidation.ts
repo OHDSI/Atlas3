@@ -1,4 +1,4 @@
-import type { CohortExpression, EndStrategy } from '@/components/cohort-editor/circe.types'
+import type { CohortExpression, EndStrategy } from '@/models/circe-types'
 import type { ValidationSeverity, ValidationWarning } from '@/models/cohort-validation.types'
 
 // checkV2 already reports both of these through circe's Checker, so the severities

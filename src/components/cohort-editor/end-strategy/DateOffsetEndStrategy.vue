@@ -58,7 +58,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { AtlasButton, AtlasIcon, AtlasTextField } from '@/components/ui'
-import type { DateOffsetStrategy } from '../circe.types'
+import type { DateOffsetStrategy } from '@/models/circe-types'
 
 const props = defineProps<{
   strategy: DateOffsetStrategy

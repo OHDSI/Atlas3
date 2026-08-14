@@ -4,15 +4,17 @@
 
 This document describes the migration from the legacy `cohort-builder` component
 layer to the `cohort-editor` components that work directly against the native
-circe object model. The goal was to remove the mapping layer and the
-event-driven synchronization path, and instead let Vue components mutate the
-reactive circe cohort expression object in place.
+circe object model. The direct plan is to move the shared Circe UI into a
+single `circe` tree, keep the model authority in `models/circe-types.ts`, and
+let Vue components mutate the reactive circe cohort expression object in place
+without rebuilding a new mapping layer.
 
 The migration also made `StrataEditor` (Characterization subgroup analyses) and
 `IncidenceRateStratifyRuleEditor` first-class consumers of the same criteria
 editing infrastructure already used by `CohortExpressionEditor`. That shared
-infrastructure is schema-backed: the TypeScript types in `circe.types.ts` mirror
-the circe-be Java classes and are used directly by the editors.
+infrastructure is schema-backed: the TypeScript types in
+`models/circe-types.ts` mirror the circe-be Java classes and are used directly
+by the editors.
 
 ---
 
@@ -98,7 +100,7 @@ and defined:
 ### 1. Native Circe Model as the Type Authority
 
 The legacy Atlas-internal mapping layer was retired in favor of the
-schema-backed circe model from `cohort-editor/circe.types.ts`.
+schema-backed circe model from `models/circe-types.ts`.
 
 Those Zod schemas mirror the circe-be Java classes directly, so the TypeScript
 types are a faithful representation of the WebAPI payload rather than a local
@@ -118,7 +120,7 @@ interface CriteriaGroup {
 
 **After:**
 ```typescript
-// src/components/cohort-editor/circe.types.ts  (Zod-inferred from circe-be)
+// src/models/circe-types.ts  (Zod-inferred from circe-be)
 interface CriteriaGroup {
   Type?: 'ALL' | 'ANY' | 'AT_LEAST' | 'AT_MOST'
   Count?: number
@@ -130,6 +132,46 @@ interface CriteriaGroup {
 
 The PascalCase names match the Jackson serialization output of circe-be
 directly. No translation layer is needed anywhere on the round-trip path.
+
+### 1a. Direct Folder Sweep
+
+The shortest migration path is now a direct move of the shared Circe editor
+contents rather than another staged rewrite:
+
+- Move the contents of `src/components/cohort-editor/input/` into
+  `src/components/circe/input/`.
+- Move the contents of `src/components/cohort-editor/criteria/` into
+  `src/components/circe/criteria/`.
+- Move `circe-types.ts` into `src/models/` and treat it as the canonical model
+  module for any code that needs to cross out of the Circe editor tree.
+- If a `src/models/circe-types.ts` file already exists, pause and diff the two
+  versions first rather than overwriting it; the goal is to preserve the
+  missing pieces and reconcile the definitions, not to blindly replace them.
+
+In practice, the `cohort-editor` layer is the transition point to collapse.
+The target layout is the shared `src/components/circe/` tree, with a single
+model module in `src/models/circe-types.ts`.
+
+Within the Circe tree, imports should stay local:
+
+- files under `src/components/circe/criteria/` should import siblings via
+  `../input` or `./...` as appropriate;
+- files under `src/components/circe/input/` should import siblings via local
+  relative paths;
+- anything in `src/components/circe` that needs the model layer should import
+  `@/models/circe-types.ts` instead of reaching outside the tree with a long
+  relative path.
+
+Import boundaries outside the Circe tree are stricter:
+
+- components outside `src/components/circe/` should cross into Circe with
+  `@/components/circe/...` rather than deep relative paths;
+- `src/components/cohort-editor` may keep local references to its own
+  subfolders such as `inclusion-rules`, `end-strategy`, `concept-set-usage`,
+  and `normalize`, but any Circe dependency should use the `@/components/circe`
+  alias;
+- the same rule applies to other non-Circe consumers such as characterization
+  and incidence-rate components.
 
 ### 2. Direct Object-Model Mutation
 
@@ -143,6 +185,10 @@ That means:
 - no "copy to local state, emit update, reapply in parent" loop;
 - no path-based lookup when the user selects a concept set;
 - no extra translation step between the UI and the WebAPI payload.
+
+The same rule applies to the folder move: the `circe` UI should own its own
+local editor wiring and only cross the boundary to `models/circe-types.ts` when
+it needs the shared schema types.
 
 Concept set selection now emits a reference to the target field so the dialog
 can assign the selected codeset ID directly to the right property.
@@ -338,9 +384,9 @@ src/
   components/
     ConfigurationWarningBanner.vue        ← moved from cohort-builder/
     cohort-builder/                       ← DELETED (folder empty after move)
-    cohort-editor/
-      circe.types.ts                      ← authoritative CriteriaGroup type
+    circe/
       CohortExpressionEditor.vue
+      input/
       criteria/
         CriteriaGroup.vue                 ← shared recursive group editor
         CorelatedCriteria.vue
@@ -359,9 +405,28 @@ src/
     (useCriteriaGroupPicker.ts deleted)
 
   models/
-    characterization.types.ts            ← Stratum.criteria: CriteriaGroup (circe)
-    incidence-rate.types.ts              ← StratifyRule.expression: CriteriaGroup (circe)
+     circe-types.ts                        ← authoritative CriteriaGroup type
+     characterization.types.ts             ← Stratum.criteria: CriteriaGroup (circe)
+     incidence-rate.types.ts               ← StratifyRule.expression: CriteriaGroup (circe)
 ```
+
+  ### Direct Migration Order
+
+  1. Move the shared input helpers from `src/components/cohort-editor/input/` to
+    `src/components/circe/input/` and fix internal imports so they stay within
+    `src/components/circe/input`.
+  2. Move the shared criteria editors from `src/components/cohort-editor/criteria/`
+    to `src/components/circe/criteria/` and fix their sibling imports to use
+    `../input` and `./...` only.
+  3. Move `circe-types.ts` into `src/models/` if it is not already there, or
+    reconcile it with the existing file if one already exists.
+  4. Update the `src/components/circe` components that need schema types to
+    import `@/models/circe-types.ts`.
+  5. Sweep the downstream consumers (`characterization`, `incidence-rate`, and
+    tests) so they point at the moved Circe modules without introducing new
+    cross-tree relative imports.
+  6. Run the narrow tests for the moved Circe files first, then widen to the
+    consumers once the folder move settles.
 
 ---
 

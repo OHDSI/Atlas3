@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { z } from 'zod'
-import { CohortExpressionSchema } from '@/components/cohort-editor/circe.types'
+import { CohortExpressionSchema } from '@/models/circe-types'
 
 interface PhenotypeFixture {
   cohortId: string

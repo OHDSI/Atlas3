@@ -10,8 +10,8 @@ import {
   CRITERIA_TYPE_BY_KEY,
   EDITABLE_CRITERIA_TYPES,
   criteriaTypeForDomain,
-} from '@/components/cohort-editor/criteria/criteria-registry'
-import { CriteriaSchemaMap, CriteriaSchema } from '@/components/cohort-editor/circe.types'
+} from '@/components/circe/criteria/criteria-registry'
+import { CriteriaSchemaMap, CriteriaSchema } from '@/models/circe-types'
 
 describe('the registry covers the schema', () => {
   it('describes every criteria type the schema defines', () => {

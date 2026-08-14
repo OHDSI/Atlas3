@@ -6,10 +6,10 @@
  */
 import { z } from 'zod'
 import { TagSchema } from '@/models/webapi.types'
-import { ConceptSetSchema } from '@/components/cohort-editor/circe.types'
+import { ConceptSetSchema } from '@/models/circe-types'
 import { StoredCriteriaGroupSchema } from '@/models/stored-criteria-group'
 import { userSchema } from '@/components/versions/schemas'
-import type { CriteriaGroup } from '@/components/cohort-editor/circe.types'
+import type { CriteriaGroup } from '@/models/circe-types'
 
 // ─── building blocks ──────────────────────────────────────────────────────
 

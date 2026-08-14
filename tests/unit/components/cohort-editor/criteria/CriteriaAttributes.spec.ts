@@ -4,8 +4,8 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
-import CriteriaAttributes from '@/components/cohort-editor/criteria/CriteriaAttributes.vue'
-import type { CriteriaAttributeSpec } from '@/components/cohort-editor/criteria/criteria-editor.types'
+import CriteriaAttributes from '@/components/circe/criteria/CriteriaAttributes.vue'
+import type { CriteriaAttributeSpec } from '@/components/circe/criteria/criteria-editor.types'
 
 const vuetify = createVuetify({ components, directives })
 

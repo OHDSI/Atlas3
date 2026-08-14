@@ -75,9 +75,9 @@ import {
   AtlasListItem,
   AtlasMenu,
 } from '@/components/ui'
-import type { Criteria } from '../circe.types'
-import type { ConceptSetOption, ConceptSetSelectionTarget } from '../criteria/criteria-editor.types'
-import CriteriaRenderer from '../criteria/CriteriaRenderer.vue'
+import type { Criteria } from '@/models/circe-types'
+import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
+import CriteriaRenderer from '@/components/circe/criteria/CriteriaRenderer.vue'
 
 const props = defineProps<{
   modelValue: Criteria[]

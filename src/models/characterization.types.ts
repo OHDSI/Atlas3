@@ -14,7 +14,7 @@ import type { Tag } from './cohort.types'
 import type { FeatureAnalysisType } from './feature-analysis.types'
 import { FeatureAnalysisTypeSchema } from './feature-analysis.types'
 import { StoredCriteriaGroupSchema } from '@/models/stored-criteria-group'
-import type { CriteriaGroup, ConceptSet } from '@/components/cohort-editor/circe.types'
+import type { CriteriaGroup, ConceptSet } from '@/models/circe-types'
 
 // Re-export so consumers of Stratum can import CriteriaGroup and ConceptSet from one place.
 export type { CriteriaGroup, ConceptSet }

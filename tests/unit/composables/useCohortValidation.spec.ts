@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
 import { ref, reactive, computed, nextTick } from 'vue'
 import { ApiError } from '@/services/api-error'
-import type { CohortExpression } from '@/components/cohort-editor/circe.types'
+import type { CohortExpression } from '@/models/circe-types'
 import type { ValidationWarning } from '@/models/cohort-validation.types'
 
 vi.mock('@/services/cohort-definition.service', () => ({

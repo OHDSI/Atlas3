@@ -9,7 +9,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { ref } from 'vue'
 import { useCohortStore } from '@/stores/cohort'
 import type { AgentProposal } from '@/models/agent.types'
-import { CohortExpressionSchema, type CohortExpression } from '@/components/cohort-editor/circe.types'
+import { CohortExpressionSchema, type CohortExpression } from '@/models/circe-types'
 
 function openCohort(expression: CohortExpression = {}) {
   const store = useCohortStore()

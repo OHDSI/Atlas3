@@ -22,7 +22,7 @@ import { useI18n } from '@/composables/useI18n'
 import { AtlasDialog } from '@/components/ui'
 import IncidenceRateStratifyRuleEditor from '@/components/incidence-rate/IncidenceRateStratifyRuleEditor.vue'
 import type { StratifyRule } from '@/models/incidence-rate.types'
-import type { ConceptSet } from '@/components/cohort-editor/circe.types'
+import type { ConceptSet } from '@/models/circe-types'
 
 defineProps<{
   modelValue: boolean

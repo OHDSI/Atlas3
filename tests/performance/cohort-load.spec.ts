@@ -15,7 +15,7 @@
 import { describe, it, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
-import { CohortExpressionSchema } from '@/components/cohort-editor/circe.types'
+import { CohortExpressionSchema } from '@/models/circe-types'
 import { normalizeRawCohortDefinition } from '@/services/cohort-definition.service'
 
 const FIXTURES_DIR = path.join(__dirname, '../integration/fixtures/atlas-cohorts')

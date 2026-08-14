@@ -37,7 +37,7 @@ import {
   type CriteriaGroup,
   type DateRange,
   type NumericRange,
-} from './circe.types'
+} from '@/models/circe-types'
 import { walkSchema } from './schema-walk'
 
 /** Group match type circe-be assumes when none is given (mirrors Atlas 2.15). */

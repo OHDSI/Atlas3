@@ -13,7 +13,7 @@ import * as directives from 'vuetify/directives'
 
 import StrataEditor from '@/components/characterization/StrataEditor.vue'
 import type { Stratum } from '@/models/characterization.types'
-import type { CriteriaGroup } from '@/components/cohort-editor/circe.types'
+import type { CriteriaGroup } from '@/models/circe-types'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../helpers/i18n-mock')

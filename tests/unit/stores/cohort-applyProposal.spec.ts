@@ -3,7 +3,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { ref } from 'vue'
 import { useCohortStore } from '@/stores/cohort'
 import type { AgentProposal } from '@/models/agent.types'
-import { CohortExpressionSchema, type CohortExpression } from '@/components/cohort-editor/circe.types'
+import { CohortExpressionSchema, type CohortExpression } from '@/models/circe-types'
 
 // applyProposal mutates the document the mounted editor lends to the store, so
 // every test that expects a proposal to land has to attach one first.

@@ -88,8 +88,8 @@
 import { computed, ref, watch } from 'vue'
 import { AtlasButton, AtlasIcon } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
-import type { CriteriaGroup, InclusionRule, ResultLimit } from '../circe.types'
-import type { ConceptSetOption, ConceptSetSelectionTarget } from '../criteria/criteria-editor.types'
+import type { CriteriaGroup, InclusionRule, ResultLimit } from '@/models/circe-types'
+import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 import InclusionRuleRail from './InclusionRuleRail.vue'
 import InclusionRuleDetail from './InclusionRuleDetail.vue'
 

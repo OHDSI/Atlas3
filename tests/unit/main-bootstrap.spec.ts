@@ -109,6 +109,8 @@ vi.mock('@/config/auth.config', () => ({
 
 describe('main.ts bootstrap', () => {
   it('applies the resolved theme to the chart palette at bootstrap', async () => {
+    vi.resetModules()
+
     const { setChartTheme } = await import('@/ui/chart-config')
 
     await import('@/main')

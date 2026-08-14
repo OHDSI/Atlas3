@@ -1,12 +1,12 @@
 import { computed, ref, type Ref } from 'vue'
 import { convertAtlasItemToCirce } from '@/components/cohort-editor/atlas-concept-set'
 import { useConceptSetsStore } from '@/stores/concept-sets'
-import type { ConceptSet } from '@/components/cohort-editor/circe.types'
+import type { ConceptSet } from '@/models/circe-types'
 import type { ConceptSetItem as AtlasConceptSetItem } from '@/models/concept-set.types'
 import type {
   ConceptSetOption,
   ConceptSetSelectionTarget,
-} from '@/components/cohort-editor/criteria/criteria-editor.types'
+} from '@/components/circe/criteria/criteria-editor.types'
 
 /**
  * Concept-set picker for editors that use the circe-native CriteriaGroup

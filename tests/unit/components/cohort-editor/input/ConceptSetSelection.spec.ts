@@ -4,8 +4,8 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import ConceptSetSelection from '@/components/cohort-editor/input/ConceptSetSelection.vue'
-import type { ConceptSetSelectionTarget } from '@/components/cohort-editor/criteria/criteria-editor.types'
+import ConceptSetSelection from '@/components/circe/input/ConceptSetSelection.vue'
+import type { ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../../helpers/i18n-mock')

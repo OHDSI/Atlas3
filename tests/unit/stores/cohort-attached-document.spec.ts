@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { ref, nextTick, computed } from 'vue'
 import { useCohortStore } from '@/stores/cohort'
-import type { CohortExpression } from '@/components/cohort-editor/circe.types'
+import type { CohortExpression } from '@/models/circe-types'
 
 /**
  * The editor owns the CohortExpression instance and lends it to the store, so

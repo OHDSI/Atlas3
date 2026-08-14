@@ -33,9 +33,9 @@ import { reactive, watch } from 'vue'
 import { AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
-import CriteriaGroup from '@/components/cohort-editor/criteria/CriteriaGroup.vue'
+import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
-import type { CriteriaGroup as CriteriaGroupType, ConceptSet } from '@/components/cohort-editor/circe.types'
+import type { CriteriaGroup as CriteriaGroupType, ConceptSet } from '@/models/circe-types'
 import type { StratifyRule } from '@/models/incidence-rate.types'
 
 const { rule, conceptSets } = defineProps<{

@@ -9,7 +9,7 @@ import {
   ConditionOccurrenceSchema,
   CriteriaSchema,
   type CohortExpression,
-} from '@/components/cohort-editor/circe.types'
+} from '@/models/circe-types'
 import { synthesise } from '../../helpers/circe-schema-walk'
 
 const sorted = (ids: Iterable<number>): number[] => [...ids].sort((a, b) => a - b)
