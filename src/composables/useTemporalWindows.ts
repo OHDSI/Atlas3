@@ -96,14 +96,19 @@ export function useTemporalWindows() {
 
     // Both windows - format as range
     if (startWindow && endWindow) {
-      // Check if "any time before"
-      if (startWindow.days === null && startWindow.beforeAfter === 'BEFORE') {
-        return 'Any time before index'
+      // Collapsing the range to a single phrase is only correct when NEITHER
+      // end is bounded. Doing it as soon as one side was "all time" threw the
+      // other side away, so a 160-day end with an all-time start rendered as
+      // plain "Any time before index" (#218).
+      if (startWindow.days === null && endWindow.days === null) {
+        return 'Any time'
       }
 
-      // Check if "any time after"
-      if (endWindow.days === null && endWindow.beforeAfter === 'AFTER') {
-        return 'Any time after index'
+      // Exactly one side is unbounded. The range templates below factor the
+      // day unit out across both bounds, which cannot express "any time" on
+      // one side only, so spell each bound out in full instead.
+      if (startWindow.days === null || endWindow.days === null) {
+        return `${formatBound(startWindow)} to ${formatBound(endWindow)} ${formatAnchor(startWindow, endWindow)}`
       }
 
       // Format as range - handle mixed directions
@@ -131,12 +136,9 @@ export function useTemporalWindows() {
   /**
    * Format a single window with prefix
    */
+  // Only reached with a bounded window: both callers answer the unbounded
+  // case themselves before delegating.
   function formatSingleWindow(window: Window, prefix: string): string {
-    if (window.days === null) {
-      const direction = window.beforeAfter === 'AFTER' ? 'after' : 'before'
-      return `${prefix} any time ${direction} index`
-    }
-
     const dayStr = window.days === 1 ? '1 day' : `${window.days} days`
     const direction = window.beforeAfter === 'AFTER' ? 'after' : 'before'
     const reference = formatReferencePoint(window)
@@ -147,10 +149,9 @@ export function useTemporalWindows() {
   /**
    * Format window value (just the number for ranges)
    */
+  // Only reached with a bounded window: a range with an unbounded end is
+  // spelled out by formatBound instead.
   function formatWindowValue(window: Window): string {
-    if (window.days === null) {
-      return 'any time'
-    }
     return `${window.days}`
   }
 
@@ -168,6 +169,32 @@ export function useTemporalWindows() {
   }
 
   /**
+   * Format one end of a range in full, including its own day count and
+   * direction, for the cases where the two ends cannot share a unit.
+   */
+  function formatBound(window: Window): string {
+    const direction = window.beforeAfter === 'AFTER' ? 'after' : 'before'
+    if (window.days === null) {
+      return `any time ${direction}`
+    }
+    const dayStr = window.days === 1 ? '1 day' : `${window.days} days`
+    return `${dayStr} ${direction}`
+  }
+
+  /**
+   * The anchor both ends are measured from, or "index" when they disagree.
+   */
+  function formatAnchor(startWindow: Window, endWindow: Window): string {
+    if (
+      (startWindow.useIndexEnd ?? false) === (endWindow.useIndexEnd ?? false) &&
+      (startWindow.useEventEnd ?? false) === (endWindow.useEventEnd ?? false)
+    ) {
+      return formatReferencePoint(startWindow)
+    }
+    return 'index'
+  }
+
+  /**
    * Format reference point with direction for ranges
    */
   function formatReference(startWindow: Window, endWindow: Window): string {
@@ -179,17 +206,7 @@ export function useTemporalWindows() {
           ? 'days before'
           : 'days' // mixed directions
 
-    // If both use same anchor flags, show it once
-    if (
-      (startWindow.useIndexEnd ?? false) === (endWindow.useIndexEnd ?? false) &&
-      (startWindow.useEventEnd ?? false) === (endWindow.useEventEnd ?? false)
-    ) {
-      const ref = formatReferencePoint(startWindow)
-      return `${direction} ${ref}`
-    }
-
-    // Otherwise show "index" (most common)
-    return `${direction} index`
+    return `${direction} ${formatAnchor(startWindow, endWindow)}`
   }
 
   /**
