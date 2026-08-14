@@ -1620,6 +1620,7 @@
       "failedToCreateSample": "Failed to create sample"
     },
     "cohortSampleDetail": {
+      "source": "Source: {name}",
       "personsCreated": "{count} persons · created {date}",
       "records": "Records",
       "noRecords": "This sample has no person records."
