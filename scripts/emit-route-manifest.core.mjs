@@ -1,10 +1,3 @@
-#!/usr/bin/env node
-import { readFile, writeFile } from 'node:fs/promises'
-import { fileURLToPath, pathToFileURL } from 'node:url'
-import { dirname, join } from 'node:path'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-
 // Route object recogniser. Routes are written as a JS object literal with a
 // `name:` string and optional `meta:` object. Both top-level routes (absolute
 // paths like '/cohorts/:id') and named children of unnamed parent routes
@@ -49,24 +42,4 @@ export function extractRoutes(source) {
     })
   }
   return out
-}
-
-async function main() {
-  const src = await readFile(join(__dirname, '../src/router/routes.ts'), 'utf8')
-  const routes = extractRoutes(src)
-  const outPath = join(__dirname, '../src/router/routes.manifest.json')
-  await writeFile(outPath, JSON.stringify(routes, null, 2) + '\n', 'utf8')
-  console.log(`Wrote ${routes.length} routes to ${outPath} (${routes.filter(r => r.agentVisible).length} agent-visible)`)
-  // Count actual route entries (path: ... immediately followed by name: ...),
-  // not bare name: references which also appear inside redirect: { name: 'X' }.
-  const namedRouteCount = (src.match(/\{\s*[^{}]*?path:\s*'[^']+'\s*,\s*name:\s*'/g) || []).length
-  if (namedRouteCount !== routes.length) {
-    console.warn(`emit-route-manifest: extracted ${routes.length} routes but routes.ts contains ${namedRouteCount} path+name entries — ${namedRouteCount - routes.length} were silently dropped (missing meta? non-standard shape?). Investigate before relying on the manifest.`)
-  }
-}
-
-const entryPoint = process.argv[1] ? pathToFileURL(process.argv[1]).href : null
-
-if (entryPoint && import.meta.url === entryPoint) {
-  main().catch(err => { console.error(err); process.exit(1) })
 }
