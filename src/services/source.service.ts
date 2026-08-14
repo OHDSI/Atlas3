@@ -3,7 +3,7 @@
  * Handles create, read, update, delete operations for data sources.
  */
 import { logger } from '@/utils/logger'
-import { httpGet, httpPost, httpPut, httpDelete, getBaseUrl } from '@/services/http-client'
+import { httpGet, httpPost, httpDelete, getBaseUrl } from '@/services/http-client'
 import { unwrap, parseOrThrow } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import { CDMSourceListSchema, type CDMSource } from '@/models/webapi.types'
@@ -42,20 +42,12 @@ export async function getSourceDetails(sourceKey: string): Promise<SourceDetails
 
 /**
  * Create a new data source
- * Uses multipart/form-data when a keyfile is provided
  */
 export async function createSource(request: SourceRequest, keyfile?: File): Promise<DataSource> {
   try {
     logger.debug('SourceService', 'Creating new source', { name: request.name })
 
-    let response: DataSource
-
-    if (keyfile) {
-      // Use multipart/form-data for keyfile upload
-      response = await uploadSourceWithKeyfile('/source', 'POST', request, keyfile)
-    } else {
-      response = await httpPost<DataSource>('/source', mapRequestToApiPayload(request))
-    }
+    const response = await uploadSource('/source', 'POST', request, keyfile)
 
     logger.debug('SourceService', `Successfully created source: ${response.sourceName}`)
     return response
@@ -67,30 +59,25 @@ export async function createSource(request: SourceRequest, keyfile?: File): Prom
 
 /**
  * Update an existing data source
- * Uses multipart/form-data when a keyfile is provided
+ *
+ * WebAPI's update endpoint is keyed on the numeric `sourceId`
+ * (`PUT /source/{sourceId}`), not the string `sourceKey`.
  */
 export async function updateSource(
-  sourceKey: string,
+  sourceId: number,
   request: SourceRequest,
   keyfile?: File
 ): Promise<DataSource> {
   try {
-    logger.debug('SourceService', `Updating source key ${sourceKey}`, { name: request.name })
+    logger.debug('SourceService', `Updating source id ${sourceId}`, { name: request.name })
 
-    let response: DataSource
-
-    if (keyfile) {
-      // Use multipart/form-data for keyfile upload
-      response = await uploadSourceWithKeyfile(`/source/${sourceKey}`, 'PUT', request, keyfile)
-    } else {
-      response = await httpPut<DataSource>(`/source/${sourceKey}`, mapRequestToApiPayload(request))
-    }
+    const response = await uploadSource(`/source/${sourceId}`, 'PUT', request, keyfile)
 
     logger.debug('SourceService', `Successfully updated source: ${response.sourceName}`)
     return response
   } catch (error) {
     logger.error('SourceService', 'Failed to update source', {
-      sourceKey,
+      sourceId,
       name: request.name,
       error,
     })
@@ -184,13 +171,18 @@ function mapRequestToApiPayload(request: SourceRequest): Record<string, unknown>
 }
 
 /**
- * Upload source with keyfile using multipart/form-data
+ * Save a source using multipart/form-data
+ *
+ * WebAPI's create/update endpoints consume multipart/form-data only, and
+ * resolve the `source` part through its message converters — so the part has
+ * to carry an `application/json` content type. A plain JSON request body, or
+ * an untyped part, is rejected with HttpMediaTypeNotSupportedException.
  */
-async function uploadSourceWithKeyfile(
+async function uploadSource(
   endpoint: string,
   method: 'POST' | 'PUT',
   request: SourceRequest,
-  keyfile: File
+  keyfile?: File
 ): Promise<DataSource> {
   const formData = new FormData()
 
@@ -198,8 +190,9 @@ async function uploadSourceWithKeyfile(
   const sourceData = mapRequestToApiPayload(request)
   formData.append('source', new Blob([JSON.stringify(sourceData)], { type: 'application/json' }))
 
-  // Add keyfile
-  formData.append('keyfile', keyfile)
+  if (keyfile) {
+    formData.append('keyfile', keyfile)
+  }
 
   // Get auth token
   const { useAuthStore } = await import('@/stores/auth')
