@@ -13,7 +13,7 @@ import { z } from 'zod'
 import type { Tag } from './cohort.types'
 import type { FeatureAnalysisType } from './feature-analysis.types'
 import { FeatureAnalysisTypeSchema } from './feature-analysis.types'
-import { CriteriaGroupSchema } from '@/components/cohort-editor/circe.types'
+import { StoredCriteriaGroupSchema } from '@/models/stored-criteria-group'
 import type { CriteriaGroup, ConceptSet } from '@/components/cohort-editor/circe.types'
 
 // Re-export so consumers of Stratum can import CriteriaGroup and ConceptSet from one place.
@@ -76,7 +76,7 @@ export const StratumSchema = z
   .object({
     id: z.union([z.string(), z.number()]).transform((v) => String(v)),
     name: z.string(),
-    criteria: CriteriaGroupSchema.optional(),
+    criteria: StoredCriteriaGroupSchema,
   })
   .passthrough()
 

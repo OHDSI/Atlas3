@@ -4,10 +4,9 @@
  * tests/unit/components/cohort-builder/GroupCriteriaUI.spec.ts onto
  * cohort-editor/criteria/CriteriaGroup.vue, which now owns Type/Count.
  *
- * The `it.fails` cases exercise thread T18: the editor defaults the
- * group Type for display only, so a group can reach the server with no Type at
- * all, and an "At least" group can reach it with no Count -- which circe turns
- * into `HAVING COUNT(...) >= null`.
+ * Thread T18 (group Type defaulted for display only, "At least" reaching the
+ * server with no Count) is covered by the three cases that assert the editor
+ * keeps the model sparse while normalizeForCirce supplies what circe-be needs.
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -18,6 +17,7 @@ import * as directives from 'vuetify/directives'
 import CriteriaGroup from '@/components/cohort-editor/criteria/CriteriaGroup.vue'
 import CorelatedCriteria from '@/components/cohort-editor/criteria/CorelatedCriteria.vue'
 import type { CriteriaGroup as CriteriaGroupModel } from '@/components/cohort-editor/circe.types'
+import { normalizeForCirce } from '@/components/cohort-editor/normalize'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -105,39 +105,34 @@ describe('CriteriaGroup match type', () => {
     expect(mountGroup({ Type: 'AT_MOST', CriteriaList: [] }).find('input[type="number"]').exists()).toBe(true)
   })
 
-  // T18: `groupType` defaults to ALL in its getter only (`props.group.Type ?? 'ALL'`)
-  // and nothing writes the default back, so a group the user was shown as "All"
-  // still serialises with no Type field.
-  it.fails('a group displayed as ALL is also saved as ALL', () => {
+  // T18 was that a group the user saw as "All" serialised with no Type at all,
+  // and an "At least" group could reach generation with no Count. The editor
+  // deliberately still leaves both unset — keeping the document sparse is what
+  // stops merely opening a cohort from dirtying it — so the fix lives at the
+  // save boundary. These three cases pin both halves of that contract together,
+  // since the component half is only safe because the boundary half exists.
+  it('leaves a displayed-only ALL out of the model, and fills it on the way out', () => {
     const group: CriteriaGroupModel = { CriteriaList: [] }
     const wrapper = mountGroup(group)
 
     expect(matchLabel(wrapper).text()).toBe('All')
-    expect(group.Type).toBe('ALL')
+    expect(group.Type).toBeUndefined()
+
+    const saved = normalizeForCirce({ InclusionRules: [{ name: 'r', expression: group }] })
+    expect(saved.InclusionRules?.[0]?.expression?.Type).toBe('ALL')
   })
 
-  // T18: the match-type buttons set only Type. Picking "At least" on a group with
-  // no Count saves {"Type":"AT_LEAST"}, which circe renders as
-  // `HAVING COUNT(...) >= null` and which matches nothing server-side.
-  it.fails('choosing At least gives the group a count to compare against', async () => {
+  it('does not invent a count when At least is chosen, and fills it on the way out', async () => {
     const group: CriteriaGroupModel = { Type: 'ALL', CriteriaList: [] }
     const wrapper = mountGroup(group)
 
     await wrapper.find('.match-chip--at_least').trigger('click')
 
     expect(group.Type).toBe('AT_LEAST')
-    expect(typeof group.Count).toBe('number')
-  })
+    expect(group.Count).toBeUndefined()
 
-  // T18, same defect reached from the other side: clearing the count field
-  // deletes Count outright rather than holding the group at a usable value.
-  it.fails('clearing the count of an AT_LEAST group leaves it countable', async () => {
-    const group: CriteriaGroupModel = { Type: 'AT_LEAST', Count: 2, CriteriaList: [] }
-    const wrapper = mountGroup(group)
-
-    await wrapper.find('input[type="number"]').setValue('')
-
-    expect(typeof group.Count).toBe('number')
+    const saved = normalizeForCirce({ InclusionRules: [{ name: 'r', expression: group }] })
+    expect(saved.InclusionRules?.[0]?.expression?.Count).toBe(0)
   })
 
   it('clearing the count removes it rather than writing a zero', async () => {
@@ -148,6 +143,20 @@ describe('CriteriaGroup match type', () => {
 
     expect(group.Count).toBeUndefined()
     expect(matchLabel(wrapper).text()).toBe('At least ?')
+  })
+
+  // A fractional or negative occurrence count is meaningless to
+  // `HAVING COUNT(index_id) >= ?`, so the previous value stands rather than
+  // being replaced by something generation cannot use. (Non-numeric text never
+  // reaches the setter: a number input hands over an empty string instead,
+  // which is the clearing case above.)
+  it.each(['1.5', '-2'])('ignores %s rather than writing a nonsense count', async value => {
+    const group: CriteriaGroupModel = { Type: 'AT_LEAST', Count: 2, CriteriaList: [] }
+    const wrapper = mountGroup(group)
+
+    await wrapper.find('input[type="number"]').setValue(value)
+
+    expect(group.Count).toBe(2)
   })
 })
 

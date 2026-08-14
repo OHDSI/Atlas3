@@ -6,7 +6,8 @@
  */
 import { z } from 'zod'
 import { TagSchema } from '@/models/webapi.types'
-import { ConceptSetSchema, CriteriaGroupSchema } from '@/components/cohort-editor/circe.types'
+import { ConceptSetSchema } from '@/components/cohort-editor/circe.types'
+import { StoredCriteriaGroupSchema } from '@/models/stored-criteria-group'
 import { userSchema } from '@/components/versions/schemas'
 import type { CriteriaGroup } from '@/components/cohort-editor/circe.types'
 
@@ -36,7 +37,7 @@ export type StudyWindow = z.infer<typeof StudyWindowSchema>
 export const StratifyRuleSchema = z.object({
   name: z.string().nullable(),
   description: z.string().nullable().optional(),
-  expression: CriteriaGroupSchema.optional(),
+  expression: StoredCriteriaGroupSchema,
 })
 export type StratifyRule = z.infer<typeof StratifyRuleSchema>
 

@@ -238,12 +238,21 @@ const groupType = computed({
 const groupCount = computed({
   get: () => props.group.Count?.toString() ?? '',
   set: value => {
+    // An emptied field stays empty in the model rather than snapping to 0,
+    // so clearing it to type a new number is not fought by the editor. The
+    // save boundary fills in the 0 that circe-be needs (see normalize.ts).
     if (value === '' || value === null || value === undefined) {
       delete props.group.Count
       return
     }
 
-    props.group.Count = Number(value)
+    // Number('abc') is NaN, which serialises as null and reaches generation as
+    // `HAVING COUNT(index_id) >= null`. Anything that is not a whole,
+    // non-negative number leaves the previous value alone.
+    const parsed = Number(value)
+    if (!Number.isInteger(parsed) || parsed < 0) return
+
+    props.group.Count = parsed
   },
 })
 

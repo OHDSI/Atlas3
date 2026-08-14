@@ -1,15 +1,23 @@
 <template>
   <div class="concept-set-selection">
+    <!--
+      Rendered unconditionally. It used to be gated on `IsExclusion !== undefined`,
+      but `IsExclusion` is nullish in the schema and nothing backfills it, so a
+      selection loaded as `{ "CodesetId": 3 }` — which is perfectly valid — hid
+      the chip permanently. `toggleExclude` carried the same guard, so the
+      control was unreachable rather than merely invisible, and the only way to
+      get it back was to delete and re-add the attribute, losing the CodesetId.
+      An unset `IsExclusion` means "any of", which is what the chip now shows.
+    -->
     <AtlasChip
-      v-if="modelValue.IsExclusion !== undefined"
       class="concept-set-selection__exclude-chip"
-      :color="modelValue.IsExclusion ? 'warning' : 'primary'"
+      :color="isExcluded ? 'warning' : 'primary'"
       variant="tonal"
       label
       size="sm"
       @click="toggleExclude"
     >
-      {{ modelValue.IsExclusion ? notAnyOfLabel : anyOfLabel }}
+      {{ isExcluded ? notAnyOfLabel : anyOfLabel }}
     </AtlasChip>
 
     <EventConceptSet
@@ -67,9 +75,11 @@ const { modelValue, conceptSets, label, selectLabel, compact, pickerTestId, chip
 const anyOfLabel = computed(() => t('components.conceptAddBox.anyOf', 'any of').value)
 const notAnyOfLabel = computed(() => t('components.conceptAddBox.notAnyOf', 'not any of').value)
 
+// An unset IsExclusion means the selection is not excluded, the same as false.
+const isExcluded = computed(() => modelValue.value.IsExclusion === true)
+
 function toggleExclude() {
-  if (modelValue.value.IsExclusion === undefined) return
-  modelValue.value.IsExclusion = !modelValue.value.IsExclusion
+  modelValue.value.IsExclusion = !isExcluded.value
 }
 </script>
 
