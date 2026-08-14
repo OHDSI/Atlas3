@@ -1,6 +1,7 @@
 import { computed, ref, type Ref } from 'vue'
+import { convertAtlasItemToCirce } from '@/components/cohort-editor/atlas-concept-set'
 import { useConceptSetsStore } from '@/stores/concept-sets'
-import type { ConceptSet, ConceptSetItem } from '@/components/cohort-editor/circe.types'
+import type { ConceptSet } from '@/components/cohort-editor/circe.types'
 import type { ConceptSetItem as AtlasConceptSetItem } from '@/models/concept-set.types'
 import type {
   ConceptSetOption,
@@ -43,24 +44,6 @@ export function useCirceConceptSetPicker(opts: {
       .filter((cs): cs is ConceptSet & { id: number } => typeof cs.id === 'number')
       .map(cs => ({ id: cs.id, name: cs.name ?? '' })),
   )
-
-  function convertAtlasItemToCirce(item: AtlasConceptSetItem): ConceptSetItem {
-    return {
-      concept: {
-        CONCEPT_ID: item.conceptId,
-        CONCEPT_NAME: item.conceptName,
-        CONCEPT_CODE: item.conceptCode,
-        STANDARD_CONCEPT: item.standardConcept,
-        INVALID_REASON: item.invalidReason,
-        DOMAIN_ID: item.domainId,
-        VOCABULARY_ID: item.vocabularyId,
-        CONCEPT_CLASS_ID: item.conceptClassId,
-      },
-      isExcluded: item.isExcluded,
-      includeDescendants: item.includeDescendants,
-      includeMapped: item.includeMapped,
-    }
-  }
 
   function openSelection(target: ConceptSetSelectionTarget | undefined) {
     activeRequest = target ? { targetRef: target.targetRef } : null

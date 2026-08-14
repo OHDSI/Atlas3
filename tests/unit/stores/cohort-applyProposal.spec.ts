@@ -253,7 +253,7 @@ describe('applyProposal registers concept sets embedded on agent events', () => 
     },
   })
 
-  it.fails('gives the entry event a numeric CodesetId and registers the set', () => {
+  it('gives the entry event a numeric CodesetId and registers the set', () => {
     const store = newCohort()
     store.applyProposal({
       kind: 'addEntryEvent',
@@ -277,10 +277,10 @@ describe('applyProposal registers concept sets embedded on agent events', () => 
     expect(item?.concept?.CONCEPT_NAME).toBe('Amoxicillin')
   })
 
-  // T14 on both counts: addEntryEvent drops the first criterion's conceptSet,
-  // and addInclusionRule drops criteriaGroups entirely, so the second
-  // criterion's conceptSet never even reaches the store.
-  it.fails('assigns distinct ids across several criteria', () => {
+  // T14 on both counts: addEntryEvent used to drop the first criterion's
+  // conceptSet, and addInclusionRule dropped criteriaGroups entirely, so the
+  // second criterion's conceptSet never even reached the store.
+  it('assigns distinct ids across several criteria', () => {
     const store = newCohort()
     store.applyProposal({
       kind: 'addEntryEvent',
@@ -345,9 +345,10 @@ describe('agent-built cohort serialises to valid CIRCE', () => {
     expect(parsed.PrimaryCriteria?.CriteriaList).toHaveLength(1)
   })
 
-  // T14: the criterion is added (above), but its embedded conceptSet is
-  // dropped — no CodesetId, no ConceptSets entry. Fixed in Phase 3.
-  it.fails('emits a matching CodesetId and a concept set carrying the concept', () => {
+  // T14: the criterion was added (above) but its embedded conceptSet was
+  // dropped — no CodesetId, no ConceptSets entry — so the criterion matched its
+  // whole domain.
+  it('emits a matching CodesetId and a concept set carrying the concept', () => {
     const store = newCohort()
     store.applyProposal({
       kind: 'addEntryEvent',

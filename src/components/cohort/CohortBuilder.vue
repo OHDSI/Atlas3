@@ -308,6 +308,7 @@ import { CohortExpressionSchema } from '@/components/cohort-editor/circe.types'
 import type { CohortExpression, ConceptSetItem as CirceConceptSetItem } from '@/components/cohort-editor/circe.types'
 import { unassignConceptSetId, walkConceptSetReferences } from '@/components/cohort-editor/concept-set-usage'
 import { normalizeForCirce } from '@/components/cohort-editor/normalize'
+import { convertAtlasItemToCirce } from '@/components/cohort-editor/atlas-concept-set'
 import CohortGenerationSection from './CohortGenerationSection.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import type { VersionsConfig, User } from '@/components/versions/types'
@@ -1143,25 +1144,6 @@ function deleteConceptSet(conceptSet: ConceptSetReference) {
 function handleCreateNewConceptSet() {
   hideSelectionDialog()
   conceptSetsStore.openCreateEditor()
-}
-
-/** Helper: convert a store ConceptSetItem to a Circe expression item */
-function convertAtlasItemToCirce(item: ConceptSetItem) {
-  return {
-    concept: {
-      CONCEPT_ID: item.conceptId,
-      CONCEPT_NAME: item.conceptName,
-      CONCEPT_CODE: item.conceptCode,
-      STANDARD_CONCEPT: item.standardConcept,
-      INVALID_REASON: item.invalidReason,
-      DOMAIN_ID: item.domainId,
-      VOCABULARY_ID: item.vocabularyId,
-      CONCEPT_CLASS_ID: item.conceptClassId,
-    },
-    isExcluded: item.isExcluded,
-    includeDescendants: item.includeDescendants,
-    includeMapped: item.includeMapped,
-  }
 }
 
 /**

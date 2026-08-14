@@ -12,6 +12,15 @@ import type { Criteria, CohortExpression } from '@/components/cohort-editor/circ
 import type { Version } from '@/components/versions/types'
 import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
 import { logger } from '@/utils/logger'
+import {
+  translateAgentEvent,
+  translateAgentCriteriaGroups,
+  registerConceptSets,
+} from '@/stores/agent-proposal-circe'
+import {
+  circeConceptSetFromAtlas,
+  type AtlasConceptSetItem,
+} from '@/components/cohort-editor/atlas-concept-set'
 
 const STORAGE_KEY = 'atlas3_cohort_draft'
 export const AUTO_SAVE_INTERVAL_MS = 30000 // 30 seconds
@@ -41,7 +50,14 @@ export type CohortDocument = Omit<CohortDefinition, 'expression'> & {
 
 export interface ProposalResult {
   applied: boolean
-  reason?: 'no-document' | 'unsupported-kind' | 'no-match'
+  /**
+   * `untranslatable-criteria` covers a proposal whose payload cannot be
+   * expressed in circe — a criterion with no domain to key its wrapper on, or a
+   * concept set with no numeric id for a CodesetId to reference. These used to
+   * be applied partially and reported as success, which left the cohort holding
+   * a criterion that matched its whole domain.
+   */
+  reason?: 'no-document' | 'unsupported-kind' | 'no-match' | 'untranslatable-criteria'
 }
 
 const RESULT_LIMIT_TYPES = { ALL: 'All', FIRST: 'First', LAST: 'Last' } as const
@@ -215,11 +231,27 @@ export const useCohortStore = defineStore('cohort', () => {
         if (!expression.InclusionRules) {
           expression.InclusionRules = []
         }
+        if (!expression.ConceptSets) {
+          expression.ConceptSets = []
+        }
+
+        // The rule's criteriaGroups used to be dropped, so an exclusion rule
+        // built with a zero-occurrence cardinality saved with an empty
+        // expression and excluded nobody, while applyProposal still reported
+        // success.
+        const translated = translateAgentCriteriaGroups(
+          proposal.rule.criteriaGroups,
+          expression.ConceptSets
+        )
+        if (translated.dropped > 0) {
+          return { applied: false, reason: 'untranslatable-criteria' }
+        }
+
+        registerConceptSets(expression.ConceptSets, translated.conceptSets)
         expression.InclusionRules.push({
           name: proposal.rule.name,
           description: proposal.rule.description,
-          // CriteriaGroup expression left empty — agent must follow up with
-          // a more specific mutation to populate it.
+          expression: translated.group,
         })
         break
       }
@@ -227,14 +259,21 @@ export const useCohortStore = defineStore('cohort', () => {
         if (!expression.ConceptSets) {
           expression.ConceptSets = []
         }
+        // The items were previously discarded, so the set landed in the cohort
+        // empty and every criterion referencing it matched nobody — while
+        // applyProposal still reported success. A set with no numeric id cannot
+        // be referenced by a CodesetId at all, so that is refused rather than
+        // skipped silently.
         const cs = proposal.conceptSet
-        if (typeof cs.id === 'number') {
-          // Deduplicate: skip if a concept set with the same id already exists.
-          const already = expression.ConceptSets.some(s => s.id === cs.id)
-          if (!already) {
-            expression.ConceptSets.push({ id: cs.id, name: cs.name })
-          }
+        const circeSet = circeConceptSetFromAtlas(
+          { id: cs.id, name: cs.name, items: cs.items as AtlasConceptSetItem[] | undefined },
+          expression.ConceptSets
+        )
+        if (!circeSet) {
+          return { applied: false, reason: 'untranslatable-criteria' }
         }
+
+        registerConceptSets(expression.ConceptSets, [circeSet])
         break
       }
       case 'addEntryEvent': {
@@ -243,17 +282,34 @@ export const useCohortStore = defineStore('cohort', () => {
         const criteriaType = proposal.event.criteriaType
         if (criteriaType === 'Demographic') {
           logger.warn('CohortStore', 'addEntryEvent: Demographic not supported in PrimaryCriteria.CriteriaList')
-          break
+          return { applied: false, reason: 'unsupported-kind' }
         }
+
+        // Previously pushed `{ [criteriaType]: {} }`, dropping the concept set
+        // the agent attached — so "add a diabetes entry event" reached
+        // generation as every condition occurrence in the database.
+        if (!expression.ConceptSets) {
+          expression.ConceptSets = []
+        }
+        const translated = translateAgentEvent(proposal.event, expression.ConceptSets)
+        if (!translated) {
+          return { applied: false, reason: 'untranslatable-criteria' }
+        }
+
         if (!expression.PrimaryCriteria) {
           expression.PrimaryCriteria = {}
         }
         if (!expression.PrimaryCriteria.CriteriaList) {
           expression.PrimaryCriteria.CriteriaList = []
         }
-        expression.PrimaryCriteria.CriteriaList.push(
-          { [criteriaType]: {} } as Criteria
-        )
+        if (!expression.ConceptSets) {
+          expression.ConceptSets = []
+        }
+
+        if (translated.conceptSet) {
+          registerConceptSets(expression.ConceptSets, [translated.conceptSet])
+        }
+        expression.PrimaryCriteria.CriteriaList.push(translated.criteria)
         break
       }
       case 'setCohortExit': {
@@ -271,15 +327,50 @@ export const useCohortStore = defineStore('cohort', () => {
               },
             }
             break
-          case 'CONTINUOUS_DRUG':
+          case 'CONTINUOUS_DRUG': {
+            if (!expression.ConceptSets) {
+              expression.ConceptSets = []
+            }
+
+            // The drug concept set was previously dropped whenever its id was
+            // not already numeric — which is the normal case, since translate.ts
+            // mints a string uid — leaving CustomEra with no DrugCodesetId at
+            // all. Registering the set first gives the strategy something to
+            // point at.
+            const drugSet = ec.conceptSet
+              ? circeConceptSetFromAtlas(
+                  {
+                    id: ec.conceptSet.id,
+                    name: ec.conceptSet.name,
+                    items: ec.conceptSet.items as AtlasConceptSetItem[] | undefined,
+                  },
+                  expression.ConceptSets
+                )
+              : undefined
+            if (drugSet) {
+              registerConceptSets(expression.ConceptSets, [drugSet])
+            }
+
+            // Atlas 2.15 binds Persistence to GapDays and Surveillance to
+            // Offset (CustomEraStrategyTemplate.html). GapDays was being fed
+            // the surveillance window while the persistence window was never
+            // read at all, so the era was built with the wrong tolerance.
             expression.EndStrategy = {
               CustomEra: {
-                DrugCodesetId: typeof ec.conceptSet?.id === 'number' ? ec.conceptSet.id : undefined,
-                GapDays: ec.surveillanceWindow ?? 0,
-                Offset: ec.offset ?? 0,
+                DrugCodesetId: drugSet?.id,
+                GapDays: ec.persistenceWindow ?? 0,
+                Offset: ec.surveillanceWindow ?? ec.offset ?? 0,
               },
             }
             break
+          }
+          default:
+            // Anything else (e.g. CUSTOM_EVENT, which translate.ts can emit)
+            // has no representation here. Reporting it beats bumping
+            // agentRevision and marking the cohort dirty for a mutation that
+            // changed nothing.
+            logger.warn('CohortStore', `setCohortExit: unsupported strategy "${ec.strategy}"`)
+            return { applied: false, reason: 'unsupported-kind' }
         }
         break
       }
@@ -287,14 +378,30 @@ export const useCohortStore = defineStore('cohort', () => {
         const criteriaType = proposal.event.criteriaType
         if (criteriaType === 'Demographic') {
           logger.warn('CohortStore', 'addCensoringCriterion: Demographic not supported in CensoringCriteria')
-          break
+          return { applied: false, reason: 'unsupported-kind' }
         }
+
+        // Same defect as addEntryEvent: the concept set was dropped, so the
+        // censoring criterion censored on the whole domain.
+        if (!expression.ConceptSets) {
+          expression.ConceptSets = []
+        }
+        const translated = translateAgentEvent(proposal.event, expression.ConceptSets)
+        if (!translated) {
+          return { applied: false, reason: 'untranslatable-criteria' }
+        }
+
         if (!expression.CensoringCriteria) {
           expression.CensoringCriteria = []
         }
-        expression.CensoringCriteria.push(
-          { [criteriaType]: {} } as Criteria
-        )
+        if (!expression.ConceptSets) {
+          expression.ConceptSets = []
+        }
+
+        if (translated.conceptSet) {
+          registerConceptSets(expression.ConceptSets, [translated.conceptSet])
+        }
+        expression.CensoringCriteria.push(translated.criteria)
         break
       }
       // Non-cohort proposal kinds. pythiaBridge routes these to their own

@@ -60,6 +60,8 @@ const REFUSAL_MESSAGES: Record<NonNullable<ProposalResult['reason']>, string> = 
   'no-document': 'Open a cohort before asking for changes to one',
   'unsupported-kind': 'ATLAS cannot make that change to a cohort yet',
   'no-match': 'Nothing in the cohort matched that change, so it was left as it was',
+  'untranslatable-criteria':
+    'That change was missing something ATLAS needs to build the criterion — a domain, or a saved concept set — so the cohort was left as it was',
 }
 
 let installed = false
