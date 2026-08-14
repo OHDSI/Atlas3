@@ -490,6 +490,54 @@ describe('ConceptSetEditor', () => {
     expect(wrapper.vm.activeTab).toBe('search')
   })
 
+  it('switches to the Selected tab when a recommend batch fills an empty set (#210)', async () => {
+    const wrapper = mountComponent({ conceptSet: null })
+    const store = useConceptSetsStore()
+    store.currentSet = { id: 'new', name: '', items: [] }
+    await wrapper.vm.$nextTick()
+    expect(wrapper.vm.activeTab).toBe('search')
+
+    // RecommendTab adds the concepts itself and reports how many landed.
+    store.currentSet.items = [
+      { ...mockConcept, isExcluded: false, includeDescendants: false, includeMapped: false },
+      { ...mockConcept, conceptId: 999, isExcluded: false, includeDescendants: false, includeMapped: false },
+    ]
+    await wrapper.vm.onRecommendedConceptsAdded(2)
+
+    expect(wrapper.vm.activeTab).toBe('selected')
+  })
+
+  it('leaves the tab alone when a recommend batch adds to an already populated set (#210)', async () => {
+    const wrapper = mountComponent({ conceptSet: null })
+    const store = useConceptSetsStore()
+    store.currentSet = {
+      id: 'new',
+      name: '',
+      items: [
+        { ...mockConcept, isExcluded: false, includeDescendants: false, includeMapped: false },
+        { ...mockConcept, conceptId: 999, isExcluded: false, includeDescendants: false, includeMapped: false },
+      ],
+    }
+    await wrapper.vm.$nextTick()
+    wrapper.vm.activeTab = 'search'
+
+    // Only one of the two is new, so the set was not empty beforehand.
+    await wrapper.vm.onRecommendedConceptsAdded(1)
+
+    expect(wrapper.vm.activeTab).toBe('search')
+  })
+
+  it('leaves the tab alone when a recommend batch adds nothing (#210)', async () => {
+    const wrapper = mountComponent({ conceptSet: null })
+    const store = useConceptSetsStore()
+    store.currentSet = { id: 'new', name: '', items: [] }
+    await wrapper.vm.$nextTick()
+
+    await wrapper.vm.onRecommendedConceptsAdded(0)
+
+    expect(wrapper.vm.activeTab).toBe('search')
+  })
+
   it('should remove concept from set when remove-concept is emitted', async () => {
     const wrapper = mountComponent({ conceptSet: mockConceptSet })
     const store = useConceptSetsStore()
