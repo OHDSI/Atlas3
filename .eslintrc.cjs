@@ -114,11 +114,6 @@ module.exports = {
       // cohort-editor uses intentional design patterns that conflict with several
       // generic lint rules:
       //
-      // no-side-effects-in-computed-properties — computed getters that lazy-init
-      //   sparse model arrays/objects (e.g. `innerCriteria` in CorelatedCriteria)
-      //   are intentional document-mutation patterns; same rationale as the global
-      //   vue/no-mutating-props: 'off'.
-      //
       // no-explicit-any — generic field-binding utilities (bindings.ts,
       //   criteria-editor-helper.ts) and per-domain computed accessors use
       //   Record<string, any> to work across the Criteria discriminated union.
@@ -133,7 +128,6 @@ module.exports = {
       //   (WCAG dialog interaction pattern). The rule targets page-load hijacking.
       files: ['src/components/cohort-editor/**/*.{vue,ts}'],
       rules: {
-        'vue/no-side-effects-in-computed-properties': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
         'vue/multi-word-component-names': 'off',
         'vuejs-accessibility/no-autofocus': 'off',

@@ -293,9 +293,15 @@ const criteriaTypeOptions = computed<Array<{ title: string; value: CriteriaType 
   })),
 ])
 
-const demographicCriteriaList = computed(() => ensureDemographicCriteriaList())
-const criteriaList = computed(() => ensureCriteriaList())
-const nestedGroups = computed(() => ensureNestedGroups())
+// Read-only for rendering: an absent list reads as empty rather than being
+// created. Creating it here meant that merely opening a cohort added
+// `DemographicCriteriaList: []` and `Groups: []` to every group in it, so the
+// document came back changed from being looked at. The `ensure*` helpers below
+// still create the list, but only from the handlers that are about to put
+// something in it.
+const demographicCriteriaList = computed(() => props.group.DemographicCriteriaList ?? [])
+const criteriaList = computed(() => props.group.CriteriaList ?? [])
+const nestedGroups = computed(() => props.group.Groups ?? [])
 
 function ensureCriteriaList() {
   if (!props.group.CriteriaList) {

@@ -221,7 +221,6 @@ import Window from './Window.vue'
 import type { CorelatedCriteria, Criteria, Occurrence } from '../circe.types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
 import { createDefaultWindow, formatWindowExpression, getWindowPresetOptions, cloneWindow, type WindowPresetValue } from './window-utils'
-import { numberBinding } from '../input/bindings'
 
 type OccurrenceTypeOption = Omit<Occurrence, 'Type' | 'Count' | 'IsDistinct'> & {
   Type: NonNullable<Occurrence['Type']>
@@ -249,43 +248,58 @@ const showOccurrenceMenu = ref(false)
 const showWindowMenu = ref(false)
 const windowPresetOptions = getWindowPresetOptions()
 
-const innerCriteria = computed<Criteria>(() => {
-  if (!props.criteria.Criteria) {
-    props.criteria.Criteria = { ConditionOccurrence: {} }
-  }
+// A correlated criterion with no `Criteria` is malformed — circe always writes
+// one — so this is a repair rather than a default. It runs once at setup rather
+// than from a getter the template reads: repairing during render hid the
+// mutation inside every re-render, and a well-formed document never reaches it.
+if (!props.criteria.Criteria) {
+  props.criteria.Criteria = { ConditionOccurrence: {} }
+}
 
-  return props.criteria.Criteria as Criteria
-})
+const innerCriteria = computed<Criteria>(() => props.criteria.Criteria as Criteria)
 
-const occurrence = computed<OccurrenceTypeOption>(() => ensureOccurrence())
+// Reading an absent Occurrence yields the defaults for display without writing
+// them: `ensureOccurrence()` runs from the setters instead, so a criterion only
+// gains an Occurrence once the user actually sets one. Creating it on read meant
+// opening a cohort stamped `{Type: 2, Count: 1, IsDistinct: false}` onto every
+// correlated criterion in it, and the document came back changed.
+const occurrence = computed<OccurrenceTypeOption>(
+  () => (props.criteria.Occurrence ?? DEFAULT_OCCURRENCE) as OccurrenceTypeOption
+)
 
 const occurrenceTypeKey = computed<'EXACTLY' | 'AT_LEAST' | 'AT_MOST'>({
   // ATLAS_TO_CARDINALITY / cardinalityToAtlas already own the 0/1/2 <-> name
   // mapping for the CIRCE Occurrence.Type enum; a second copy here drifts.
   get: () => ATLAS_TO_CARDINALITY[(occurrence.value.Type ?? 0) as 0 | 1 | 2] ?? 'EXACTLY',
   set: value => {
-    occurrence.value.Type = cardinalityToAtlas(value)
+    ensureOccurrence().Type = cardinalityToAtlas(value)
   },
 })
 
-const occurrenceCount = numberBinding(occurrence, 'Count')
+const occurrenceCount = computed<number, number | string | null | undefined>({
+  get: () => Number(occurrence.value.Count ?? 0),
+  set: value => {
+    ensureOccurrence().Count = value === '' || value === null || value === undefined ? 0 : Number(value)
+  },
+})
 
 const isDistinct = computed({
   get: () => occurrence.value.IsDistinct ?? false,
   set: value => {
-    occurrence.value.IsDistinct = value
+    ensureOccurrence().IsDistinct = value
   },
 })
 
 const distinctCountColumn = computed<Occurrence['CountColumn']>({
   get: () => occurrence.value.CountColumn,
   set: value => {
+    const target = ensureOccurrence()
     if (value === undefined) {
-      delete occurrence.value.CountColumn
+      delete target.CountColumn
       return
     }
 
-    occurrence.value.CountColumn = value
+    target.CountColumn = value
   },
 })
 
@@ -360,13 +374,14 @@ const ignoreObservationPeriod = computed({
   },
 })
 
+// What an unset Occurrence means: at least one, not distinct. Shared by the
+// read path (which shows it without writing it) and by ensureOccurrence (which
+// writes it once the user sets something).
+const DEFAULT_OCCURRENCE = { Type: 2, Count: 1, IsDistinct: false } as const
+
 function ensureOccurrence(): OccurrenceTypeOption {
   if (!props.criteria.Occurrence) {
-    props.criteria.Occurrence = {
-      Type: 2,
-      Count: 1,
-      IsDistinct: false,
-    }
+    props.criteria.Occurrence = { ...DEFAULT_OCCURRENCE }
   }
 
   return props.criteria.Occurrence as OccurrenceTypeOption

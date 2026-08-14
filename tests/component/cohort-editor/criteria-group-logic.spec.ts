@@ -175,13 +175,16 @@ describe('CriteriaGroup membership', () => {
     expect(wrapper.text()).toContain('No correlated criteria in this group yet.')
   })
 
-  it('normalises the group lists so an empty group still serialises as arrays', () => {
+  // The group's lists used to be created by the computeds the template read, so
+  // rendering an empty group wrote three empty arrays into it — and rendering a
+  // loaded cohort did the same to every group in it, which is what made an
+  // untouched cohort report unsaved changes. They are created from the add
+  // handlers now; see render-does-not-mutate.spec.ts.
+  it('leaves an empty group empty rather than writing arrays into it on render', () => {
     const group: CriteriaGroupModel = { Type: 'ALL' }
     mountGroup(group)
 
-    expect(group.CriteriaList).toEqual([])
-    expect(group.Groups).toEqual([])
-    expect(group.DemographicCriteriaList).toEqual([])
+    expect(group).toEqual({ Type: 'ALL' })
   })
 
   it('adds a correlated criteria of the chosen domain with a usable default', async () => {

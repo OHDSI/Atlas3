@@ -54,12 +54,15 @@ const CONDITION = { ConditionOccurrence: {} }
 describe('CorelatedCriteria occurrence', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('gives a criteria with no occurrence a usable default of at least one', () => {
+  // The default is shown but not written: stamping it on render meant a loaded
+  // cohort gained an Occurrence on every correlated criterion that did not have
+  // one. ensureOccurrence writes it when the user sets one instead.
+  it('shows at least one for a criteria with no occurrence, without writing it', () => {
     const criteria: CorelatedCriteriaModel = { Criteria: CONDITION }
     const wrapper = mountCriteria(criteria)
 
-    expect(criteria.Occurrence).toEqual({ Type: 2, Count: 1, IsDistinct: false })
     expect(occurrenceLabel(wrapper).text()).toBe('At least 1')
+    expect(criteria.Occurrence).toBeUndefined()
   })
 
   it.each([
