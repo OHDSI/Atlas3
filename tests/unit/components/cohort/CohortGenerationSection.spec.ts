@@ -127,6 +127,55 @@ describe('CohortGenerationSection', () => {
     expect(document.querySelector('[data-testid="cohort-report-drawer"]')).not.toBeNull()
   })
 
+  it('opens the inclusion report from the generation history eye icon (#217)', async () => {
+    const wrapper = mountSection(
+      { cohortId: 1 },
+      [{ id: 7, cohortDefinitionId: 1, sourceKey: 'CCAE', status: 'COMPLETE', personCount: 8420 }],
+      [ccae]
+    )
+    await flushPromises()
+
+    await wrapper.find('[data-testid="history-btn-CCAE"]').trigger('click')
+    await flushPromises()
+
+    const eye = document.querySelector('[data-testid="view-btn-7"]') as HTMLButtonElement
+    expect(eye).not.toBeNull()
+    expect(eye.disabled).toBe(false)
+    // The icon carried only an aria-label before, so a sighted mouse user had
+    // no way to tell what it did.
+    expect(eye.getAttribute('aria-label')).toBe('View results')
+
+    eye.click()
+    await flushPromises()
+
+    expect(document.querySelector('[data-testid="cohort-report-drawer"]')).not.toBeNull()
+  })
+
+  it('disables the history eye icon on runs whose results no longer exist (#217)', async () => {
+    // Cohort results are keyed by cohort + source, so a second generation
+    // overwrites the first and WebAPI cannot serve the older run's report.
+    const wrapper = mountSection(
+      { cohortId: 1 },
+      [
+        { id: 1, cohortDefinitionId: 1, sourceKey: 'CCAE', status: 'COMPLETE', personCount: 10, startTime: 1000 },
+        { id: 2, cohortDefinitionId: 1, sourceKey: 'CCAE', status: 'COMPLETE', personCount: 20, startTime: 2000 },
+      ],
+      [ccae]
+    )
+    await flushPromises()
+
+    await wrapper.find('[data-testid="history-btn-CCAE"]').trigger('click')
+    await flushPromises()
+
+    const newest = document.querySelector('[data-testid="view-btn-2"]') as HTMLButtonElement
+    const older = document.querySelector('[data-testid="view-btn-1"]') as HTMLButtonElement
+    expect(newest.disabled).toBe(false)
+    expect(older.disabled).toBe(true)
+    expect(older.getAttribute('aria-label')).toBe(
+      'Superseded: only the most recent run keeps its results'
+    )
+  })
+
   it('disables Inclusion report and Samples buttons for non-complete rows', async () => {
     const wrapper = mountSection(
       { cohortId: 1 },
