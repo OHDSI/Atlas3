@@ -2,6 +2,7 @@
   <div class="cohort-toolbar-actions">
     <AtlasButton
       variant="ghost"
+      data-testid="cohort-close-btn"
       @click="$emit('cancel')"
     >
       <AtlasIcon class="d-md-none">
