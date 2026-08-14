@@ -136,12 +136,9 @@ export function useTemporalWindows() {
   /**
    * Format a single window with prefix
    */
+  // Only reached with a bounded window: both callers answer the unbounded
+  // case themselves before delegating.
   function formatSingleWindow(window: Window, prefix: string): string {
-    if (window.days === null) {
-      const direction = window.beforeAfter === 'AFTER' ? 'after' : 'before'
-      return `${prefix} any time ${direction} index`
-    }
-
     const dayStr = window.days === 1 ? '1 day' : `${window.days} days`
     const direction = window.beforeAfter === 'AFTER' ? 'after' : 'before'
     const reference = formatReferencePoint(window)
@@ -152,10 +149,9 @@ export function useTemporalWindows() {
   /**
    * Format window value (just the number for ranges)
    */
+  // Only reached with a bounded window: a range with an unbounded end is
+  // spelled out by formatBound instead.
   function formatWindowValue(window: Window): string {
-    if (window.days === null) {
-      return 'any time'
-    }
     return `${window.days}`
   }
 

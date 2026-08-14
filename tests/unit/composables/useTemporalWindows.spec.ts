@@ -225,3 +225,41 @@ describe('getTemporalWindowPresets', () => {
     expect(labels.some(l => l.includes('365'))).toBe(true)
   })
 })
+
+describe('formatTemporalWindowDisplay — remaining single-window and range shapes', () => {
+  it('describes a lone unbounded start window', () => {
+    expect(
+      formatTemporalWindowDisplay({ startWindow: win({ days: null, beforeAfter: 'BEFORE' }) })
+    ).toBe('Any time before index')
+  })
+
+  it('describes a lone bounded end window', () => {
+    expect(
+      formatTemporalWindowDisplay({ endWindow: win({ days: 90, beforeAfter: 'AFTER' }) })
+    ).toBe('Up to 90 days after index start')
+  })
+
+  it('singularises a lone one-day window', () => {
+    expect(
+      formatTemporalWindowDisplay({ startWindow: win({ days: 1, beforeAfter: 'BEFORE' }) })
+    ).toBe('From 1 day before index start')
+  })
+
+  it('describes a range that sits entirely before the index', () => {
+    expect(
+      formatTemporalWindowDisplay({
+        startWindow: win({ days: 365, beforeAfter: 'BEFORE' }),
+        endWindow: win({ days: 30, beforeAfter: 'BEFORE' }),
+      })
+    ).toBe('365 to 30 days before index start')
+  })
+
+  it('carries a shared event-end anchor into the range wording', () => {
+    expect(
+      formatTemporalWindowDisplay({
+        startWindow: win({ days: 0, beforeAfter: 'AFTER', useEventEnd: true }),
+        endWindow: win({ days: 30, beforeAfter: 'AFTER', useEventEnd: true }),
+      })
+    ).toBe('0 to 30 days after event end')
+  })
+})
