@@ -281,6 +281,7 @@ import CohortExpressionEditor from '@/components/cohort-editor/CohortExpressionE
 import { CohortExpressionSchema } from '@/components/cohort-editor/circe.types'
 import type { CohortExpression, ConceptSetItem as CirceConceptSetItem } from '@/components/cohort-editor/circe.types'
 import { unassignConceptSetId } from '@/components/cohort-editor/concept-set-usage'
+import { normalizeForCirce } from '@/components/cohort-editor/normalize'
 import CohortGenerationSection from './CohortGenerationSection.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import type { VersionsConfig, User } from '@/components/versions/types'
@@ -1099,8 +1100,10 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     '@/services/cohort-definition.service'
   )
 
-  // Deep-clone the expression for save (don't mutate live state)
-  const expressionForSave = JSON.parse(JSON.stringify(toRaw(expression.value))) as CohortExpression
+  // Deep copy plus the circe fields the sparse editor document leaves unset
+  // (group Type/Count, a range operator alongside a bound). Live state is not
+  // mutated, so the editor stays sparse and the cohort stays undirtied.
+  const expressionForSave = normalizeForCirce(toRaw(expression.value))
 
   // Hydrate concept set items from API for any sets that lack them
   if (expressionForSave.ConceptSets) {
@@ -1273,16 +1276,23 @@ function exportFilename(): string {
   return `${slug}_cohort.json`
 }
 
+// Export goes through the same normalization as save: what the user copies,
+// downloads or reads in the JSON dialog is what would reach the server, rather
+// than the sparser in-editor form that circe-be would reject.
+function exportableExpression(): string {
+  return JSON.stringify(normalizeForCirce(toRaw(expression.value)), null, 2)
+}
+
 /**
  * Open the JSON dialog seeded with the current expression.
  */
 function openJsonDialog() {
-  jsonDialogSource.value = JSON.stringify(toRaw(expression.value), null, 2)
+  jsonDialogSource.value = exportableExpression()
   showJsonDialog.value = true
 }
 
 function handleExportDownload() {
-  const json = JSON.stringify(toRaw(expression.value), null, 2)
+  const json = exportableExpression()
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -1295,7 +1305,7 @@ function handleExportDownload() {
 }
 
 async function handleExportCopy() {
-  const json = JSON.stringify(toRaw(expression.value), null, 2)
+  const json = exportableExpression()
   try {
     await navigator.clipboard.writeText(json)
     successMessage.value = tv(
