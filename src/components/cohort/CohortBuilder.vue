@@ -942,6 +942,11 @@ const {
   qualifyingLimit,
   primaryCriteriaLimit,
   inclusionQualifyingLimit,
+  // The cohort's canonical concept set list, the same one the Concepts dialog
+  // and the unused-set badge read. Validation would otherwise rebuild the
+  // ConceptSets array from the criteria alone and omit any set referenced only
+  // through a *CS attribute field (#200).
+  definedConceptSets: () => cohortStore.currentCohort?.conceptSets ?? [],
 })
 
 // Permission gating for save: a *new* cohort needs `create:cohort-definition`,

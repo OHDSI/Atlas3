@@ -49,6 +49,22 @@ export interface CohortValidationOptions {
   primaryCriteriaLimit?: Ref<QualifyingLimit | undefined>
   /** Inclusion qualifying limit ref */
   inclusionQualifyingLimit: Ref<QualifyingLimit>
+  /**
+   * The cohort's own concept sets, i.e. what the `ConceptSets` array holds when
+   * the cohort is saved.
+   *
+   * Validation used to build that array purely from extractConceptSets, which
+   * only recognises a set referenced through `event.conceptSet` or an attribute
+   * of type 'conceptSet'. References carried on `*CS` attribute fields
+   * (VisitTypeCS, DeathTypeCS, ProviderSpecialtyCS, ...) do not survive import
+   * in that shape, so those sets were left out of the payload while the criteria
+   * still carried their CodesetId. circe then saw a criterion pointing at a
+   * codeset nothing defined and reported "It's not specified what type of
+   * records to look for ..." for a cohort that has one (#200).
+   *
+   * Optional: without it the validator falls back to what it can discover.
+   */
+  definedConceptSets?: () => ConceptSetReference[]
   debounceDelay?: number
 }
 
@@ -269,12 +285,28 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     )
   })
 
+  function conceptSetsForValidation(): ConceptSetReference[] {
+    const byId = new Map<number | string, ConceptSetReference>()
+    for (const set of options.definedConceptSets?.() ?? []) {
+      if (hasNumericConceptSetId(set)) byId.set(set.id, set)
+    }
+    for (const set of usedConceptSets.value) {
+      if (!byId.has(set.id)) byId.set(set.id, set)
+    }
+    return [...byId.values()]
+  }
+
   async function validateCohort() {
     try {
       _isValidatingFlag = true
       _isValidatingInternal.value = true
 
-      const conceptSetsWithItems = await hydrateConceptSetItems(usedConceptSets.value)
+      // Union of what the cohort declares and what the criteria reference, so
+      // that every CodesetId in the payload resolves and every declared set is
+      // still visible to the server's unused-set check.
+      const conceptSetsWithItems = await hydrateConceptSetItems(
+        conceptSetsForValidation()
+      )
 
       const cohortDef = assembleCohortDefinition({
         id: cohortId.value ?? undefined,
