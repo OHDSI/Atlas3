@@ -21,6 +21,7 @@ import type {
   AtlasGroup,
 } from '@/models/atlas.types'
 import type { ConceptSetItem } from '@/models/concept-set.types'
+import { normalizeInvalidReason } from '@/utils/api-mappers'
 
 interface AtlasJSON {
   expressionType?: string
@@ -98,7 +99,7 @@ function mapAtlasConceptSetItemToInternal(
     conceptClassId: item.concept.CONCEPT_CLASS_ID ?? '',
     standardConcept: item.concept.STANDARD_CONCEPT ?? null,
     conceptCode: item.concept.CONCEPT_CODE ?? '',
-    invalidReason: item.concept.INVALID_REASON ?? null,
+    invalidReason: normalizeInvalidReason(item.concept.INVALID_REASON),
     includeDescendants: item.includeDescendants ?? false,
     isExcluded: item.isExcluded ?? false,
     includeMapped: item.includeMapped ?? false,

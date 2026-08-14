@@ -55,6 +55,17 @@ export interface ConceptSetAPIResponse extends ConceptSetAPIMetadata {
 }
 
 /**
+ * Concept-set-expression items round-trip through WebAPI with `INVALID_REASON`
+ * set to the literal string `"V"` for valid concepts (the plain
+ * `/vocabulary/{key}/search` endpoint uses `null` instead). Every UI badge
+ * and facet checks `invalidReason` for truthiness, so a raw `"V"` reads as
+ * "invalid" unless it is normalized back to `null` here (see #221).
+ */
+export function normalizeInvalidReason(invalidReason: string | null | undefined): string | null {
+  return invalidReason && invalidReason !== 'V' ? invalidReason : null
+}
+
+/**
  * Map WebAPI concept response (UPPERCASE) to Concept interface (camelCase)
  */
 export function mapConceptFromAPI(raw: {
@@ -119,7 +130,7 @@ export function mapExpressionItemsFromAPI(
       vocabularyId: item.concept.VOCABULARY_ID,
       conceptClassId: item.concept.CONCEPT_CLASS_ID,
       standardConcept: item.concept.STANDARD_CONCEPT,
-      invalidReason: item.concept.INVALID_REASON,
+      invalidReason: normalizeInvalidReason(item.concept.INVALID_REASON),
       isExcluded: item.isExcluded,
       includeDescendants: item.includeDescendants,
       includeMapped: item.includeMapped,

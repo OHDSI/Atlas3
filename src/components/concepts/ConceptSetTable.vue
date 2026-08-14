@@ -403,7 +403,7 @@ const headers = [
     width: '120px',
   },
   {
-    title: t('columns.validEndDate', 'Validity').value,
+    title: t('columns.validity', 'Validity').value,
     key: 'invalidReason',
     sortable: true,
     width: '90px',
