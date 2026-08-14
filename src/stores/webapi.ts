@@ -45,6 +45,15 @@ export const useWebAPIStore = defineStore('webapi', () => {
     return sources.value.filter(s => s.daimons?.some(d => d.daimonType === 'Vocabulary'))
   })
 
+  /**
+   * Sources that can report record and person counts. A vocabulary source
+   * knows the concepts; only a source with a Results daimon knows how often
+   * they occur in that data.
+   */
+  const resultsSources = computed(() => {
+    return sources.value.filter(s => s.daimons?.some(d => d.daimonType === 'Results'))
+  })
+
   /** Returns validated vocabulary source key, auto-correcting invalid localStorage values */
   function getValidVocabularySource(): string | null {
     const storedVocab = localStorage.getItem('selectedVocabulary')
@@ -361,6 +370,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
     isLoadingSources,
     // Getters
     sourcesList,
+    resultsSources,
     currentSource,
     activeJobs,
     vocabularySources,

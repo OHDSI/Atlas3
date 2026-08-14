@@ -40,6 +40,7 @@ vi.mock('@/stores/webapi', () => ({
     sources: [],
     selectedSource: null,
     vocabularySources: [],
+    resultsSources: [],
   }),
 }))
 
