@@ -185,9 +185,22 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
     )
   }
 
+  // Keyed by source AND concept (`cacheKey`), not source alone. A
+  // source-only key meant that once any concept under a source had been
+  // drilled down, `has(sourceKey)` was true forever for that source, so
+  // every later concept viewed under the same source reused the FIRST
+  // concept's cached result (including a null/empty one) without ever
+  // re-fetching, regardless of which concept was actually being viewed
+  // (#225).
+  function getDrilldown(sourceKey: string, conceptId: number): DrilldownReport | null {
+    return drilldownBySource.value.get(cacheKey(sourceKey, conceptId)) ?? null
+  }
+
   async function loadDrilldown(sourceKey: string): Promise<void> {
     if (!concept.value) return
-    if (drilldownBySource.value.has(sourceKey)) return
+    const conceptId = concept.value.conceptId
+    const key = cacheKey(sourceKey, conceptId)
+    if (drilldownBySource.value.has(key)) return
 
     isDrilldownLoading.value = true
     drilldownErrorBySource.value = new Map(
@@ -197,10 +210,10 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
       const report = await getConceptDrilldown(
         sourceKey,
         concept.value.domainId,
-        concept.value.conceptId,
+        conceptId,
         concept.value.conceptName,
       )
-      drilldownBySource.value = new Map(drilldownBySource.value).set(sourceKey, report)
+      drilldownBySource.value = new Map(drilldownBySource.value).set(key, report)
     } catch (e) {
       logger.error('ConceptDetail', `loadDrilldown failed for ${sourceKey}`, e)
       // Deliberately not written to drilldownBySource: that map doubles as the
@@ -241,6 +254,7 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
     children,
     recordCountsBySource,
     drilldownBySource,
+    getDrilldown,
     isLoading,
     isDrilldownLoading,
     error,

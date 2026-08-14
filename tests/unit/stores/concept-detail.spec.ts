@@ -255,7 +255,7 @@ describe('concept-detail store', () => {
     expect(store.isDrilldownLoading).toBe(false)
   })
 
-  it('loadDrilldown fetches the report and caches by source', async () => {
+  it('loadDrilldown fetches the report and caches by source AND concept', async () => {
     (getConceptById as Mock).mockResolvedValue({
       conceptId: 10,
       conceptName: 'D',
@@ -276,10 +276,10 @@ describe('concept-detail store', () => {
     await store.loadDrilldown('SYNPUF1K')
 
     expect(getConceptDrilldown).toHaveBeenCalledWith('SYNPUF1K', 'Condition', 10, 'D')
-    expect(store.drilldownBySource.get('SYNPUF1K')).toEqual({ report: { foo: 1 } })
+    expect(store.getDrilldown('SYNPUF1K', 10)).toEqual({ report: { foo: 1 } })
     expect(store.isDrilldownLoading).toBe(false)
 
-    // Second invocation should short-circuit on the cached entry
+    // Second invocation for the SAME concept should short-circuit on the cached entry
     await store.loadDrilldown('SYNPUF1K')
     expect(getConceptDrilldown).toHaveBeenCalledTimes(1)
   })
@@ -424,7 +424,7 @@ describe('concept-detail store', () => {
     await store.loadDrilldown('SYNPUF1K')
 
     expect(store.drilldownErrorFor('SYNPUF1K')).toBe('Failed to load drilldown')
-    expect(store.drilldownBySource.has('SYNPUF1K')).toBe(false)
+    expect(store.getDrilldown('SYNPUF1K', 10)).toBeNull()
     expect(store.isDrilldownLoading).toBe(false)
 
     ;(getConceptDrilldown as Mock).mockResolvedValueOnce({ report: { foo: 1 } })
@@ -432,7 +432,54 @@ describe('concept-detail store', () => {
 
     expect(getConceptDrilldown).toHaveBeenCalledTimes(2)
     expect(store.drilldownErrorFor('SYNPUF1K')).toBeNull()
-    expect(store.drilldownBySource.get('SYNPUF1K')).toEqual({ report: { foo: 1 } })
+    expect(store.getDrilldown('SYNPUF1K', 10)).toEqual({ report: { foo: 1 } })
+  })
+
+  it('loadDrilldown does not reuse a different concept\'s cached (or empty) result under the same source (#225)', async () => {
+    (getConceptById as Mock)
+      .mockResolvedValueOnce({
+        conceptId: 10,
+        conceptName: 'Metformin',
+        domainId: 'Drug',
+        vocabularyId: 'RxNorm',
+        conceptClassId: 'Ingredient',
+        standardConcept: 'S',
+        conceptCode: '10',
+        invalidReason: null,
+      })
+      .mockResolvedValueOnce({
+        conceptId: 20,
+        conceptName: 'Aspirin',
+        domainId: 'Drug',
+        vocabularyId: 'RxNorm',
+        conceptClassId: 'Ingredient',
+        standardConcept: 'S',
+        conceptCode: '20',
+        invalidReason: null,
+      })
+    ;(getConceptRelated as Mock).mockResolvedValue([])
+    ;(getConceptAncestorAndDescendant as Mock).mockResolvedValue([])
+    ;(getConceptRecordCounts as Mock).mockResolvedValue(new Map())
+    // First concept's drilldown comes back empty/null (e.g. a transient
+    // failure or genuinely no data).
+    ;(getConceptDrilldown as Mock).mockResolvedValueOnce(null)
+
+    const store = useConceptDetailStore()
+    await store.loadConcept('SYNPUF1K', 10)
+    await store.loadDrilldown('SYNPUF1K')
+    expect(store.getDrilldown('SYNPUF1K', 10)).toBeNull()
+
+    // Switching to a different concept under the SAME source must fetch its
+    // own report, not reuse concept 10's cached null.
+    ;(getConceptDrilldown as Mock).mockResolvedValueOnce({ report: { bar: 2 } })
+    await store.loadConcept('SYNPUF1K', 20)
+    await store.loadDrilldown('SYNPUF1K')
+
+    expect(getConceptDrilldown).toHaveBeenCalledTimes(2)
+    expect(getConceptDrilldown).toHaveBeenLastCalledWith('SYNPUF1K', 'Drug', 20, 'Aspirin')
+    expect(store.getDrilldown('SYNPUF1K', 20)).toEqual({ report: { bar: 2 } })
+    // Concept 10's own cached entry is untouched.
+    expect(store.getDrilldown('SYNPUF1K', 10)).toBeNull()
   })
 
   it('reset clears all state', async () => {
