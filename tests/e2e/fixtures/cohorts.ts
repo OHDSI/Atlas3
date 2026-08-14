@@ -11,7 +11,17 @@ export interface MockCohort {
   createdDate: number // Unix timestamp
   modifiedBy: string
   modifiedDate: number // Unix timestamp
-  expressionType?: 'SIMPLE' | 'COMPLEX'
+  /**
+   * WebAPI's CohortDefinitionDTO.expressionType. 'SIMPLE_EXPRESSION' is the
+   * value the server sends and the one this app writes back on save; the
+   * builder refuses to open anything else, since it cannot edit it.
+   *
+   * These fixtures used to carry 'SIMPLE' / 'COMPLEX', which no server sends.
+   * That was harmless until the builder started checking the field, at which
+   * point every cohort mocked here failed to load and the sections rendered
+   * behind `v-if="!loadError"` — Generation among them — silently disappeared.
+   */
+  expressionType?: 'SIMPLE_EXPRESSION'
 }
 
 /**
@@ -26,7 +36,7 @@ export const mockCohorts: MockCohort[] = [
     createdDate: Date.parse('2024-01-01T00:00:00.000Z'),
     modifiedBy: 'test_user',
     modifiedDate: Date.parse('2024-01-01T00:00:00.000Z'),
-    expressionType: 'SIMPLE'
+    expressionType: 'SIMPLE_EXPRESSION'
   },
   {
     id: 2,
@@ -36,7 +46,7 @@ export const mockCohorts: MockCohort[] = [
     createdDate: Date.parse('2024-01-02T00:00:00.000Z'),
     modifiedBy: 'test_user',
     modifiedDate: Date.parse('2024-01-02T00:00:00.000Z'),
-    expressionType: 'SIMPLE'
+    expressionType: 'SIMPLE_EXPRESSION'
   },
   {
     id: 3,
@@ -46,7 +56,7 @@ export const mockCohorts: MockCohort[] = [
     createdDate: Date.parse('2024-01-03T00:00:00.000Z'),
     modifiedBy: 'test_user',
     modifiedDate: Date.parse('2024-01-03T00:00:00.000Z'),
-    expressionType: 'COMPLEX'
+    expressionType: 'SIMPLE_EXPRESSION'
   },
   {
     id: 4,
@@ -56,7 +66,7 @@ export const mockCohorts: MockCohort[] = [
     createdDate: Date.parse('2024-01-04T00:00:00.000Z'),
     modifiedBy: 'researcher',
     modifiedDate: Date.parse('2024-01-05T00:00:00.000Z'),
-    expressionType: 'COMPLEX'
+    expressionType: 'SIMPLE_EXPRESSION'
   },
   {
     id: 5,
@@ -66,7 +76,7 @@ export const mockCohorts: MockCohort[] = [
     createdDate: Date.parse('2024-01-06T00:00:00.000Z'),
     modifiedBy: 'analyst',
     modifiedDate: Date.parse('2024-01-06T00:00:00.000Z'),
-    expressionType: 'SIMPLE'
+    expressionType: 'SIMPLE_EXPRESSION'
   }
 ]
 
@@ -86,7 +96,7 @@ export const mockCohortSingle: MockCohort = {
   createdDate: Date.parse('2024-01-10T00:00:00.000Z'),
   modifiedBy: 'test_user',
   modifiedDate: Date.parse('2024-01-10T00:00:00.000Z'),
-  expressionType: 'SIMPLE'
+  expressionType: 'SIMPLE_EXPRESSION'
 }
 
 /**
@@ -100,5 +110,5 @@ export const mockCohortsLarge: MockCohort[] = Array.from({ length: 100 }, (_, i)
   createdDate: Date.parse('2024-01-01T00:00:00.000Z') + i * 86400000, // +1 day each
   modifiedBy: 'test_user',
   modifiedDate: Date.parse('2024-01-01T00:00:00.000Z') + i * 86400000,
-  expressionType: i % 3 === 0 ? 'COMPLEX' : 'SIMPLE'
+  expressionType: 'SIMPLE_EXPRESSION'
 }))
