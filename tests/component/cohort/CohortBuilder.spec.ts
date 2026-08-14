@@ -2122,3 +2122,132 @@ describe('CohortBuilder — one document, shared with the store', () => {
     expect(store.currentCohort?.expression?.InclusionRules).toHaveLength(1)
   })
 })
+
+/**
+ * Deleting a concept set clears every CodesetId that pointed at it, and a
+ * criterion with no CodesetId matches its whole domain rather than nothing —
+ * so a delete can quietly widen the cohort. The dialog used to emit delete
+ * straight through with nothing shown.
+ */
+describe('CohortBuilder — deleting a concept set that is still in use', () => {
+  let router: ReturnType<typeof createRouter>
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/', component: { template: '<div>Home</div>' } },
+        { path: '/cohorts', component: { template: '<div>Cohorts</div>' } },
+        { path: '/cohorts/:id?', component: { template: '<div>Cohort</div>' } },
+      ],
+    })
+    vi.clearAllMocks()
+  })
+
+  const mountBuilder = () =>
+    mount(CohortBuilder, {
+      global: { plugins: [vuetify, router], stubs: childStubs },
+      attachTo: document.body,
+    })
+
+  const setupOf = (wrapper: ReturnType<typeof mountBuilder>) =>
+    (wrapper.vm as any).$.setupState
+
+  function seedReferencedConceptSet(setup: any) {
+    Object.assign(setup.expression, {
+      ConceptSets: [{ id: 3, name: 'Diabetes', expression: { items: [] } }],
+      PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: { CodesetId: 3 } }] },
+      InclusionRules: [
+        {
+          name: 'Rule 1',
+          expression: {
+            Type: 'ALL',
+            DemographicCriteriaList: [{ GenderCS: { CodesetId: 3 } }],
+          },
+        },
+      ],
+    })
+  }
+
+  it('asks before removing a set something still points at', async () => {
+    const wrapper = mountBuilder()
+    await wrapper.vm.$nextTick()
+    const setup = setupOf(wrapper)
+    seedReferencedConceptSet(setup)
+
+    setup.handleDeleteConceptSet({ id: 3, name: 'Diabetes' })
+    await wrapper.vm.$nextTick()
+
+    expect(setup.showDeleteConceptSetDialog).toBe(true)
+    // Nothing removed yet, and nothing un-constrained.
+    expect(setup.expression.ConceptSets).toHaveLength(1)
+    expect(setup.expression.PrimaryCriteria.CriteriaList[0].ConditionOccurrence.CodesetId).toBe(3)
+  })
+
+  it('counts every reference, including the wrapped demographic ones', async () => {
+    const wrapper = mountBuilder()
+    await wrapper.vm.$nextTick()
+    const setup = setupOf(wrapper)
+    seedReferencedConceptSet(setup)
+
+    setup.handleDeleteConceptSet({ id: 3, name: 'Diabetes' })
+    await wrapper.vm.$nextTick()
+
+    expect(setup.conceptSetPendingDeleteUsage).toBe(2)
+  })
+
+  it('removes the set and clears its references once confirmed', async () => {
+    const wrapper = mountBuilder()
+    await wrapper.vm.$nextTick()
+    const setup = setupOf(wrapper)
+    seedReferencedConceptSet(setup)
+
+    setup.handleDeleteConceptSet({ id: 3, name: 'Diabetes' })
+    await wrapper.vm.$nextTick()
+    setup.confirmDeleteConceptSet()
+    await wrapper.vm.$nextTick()
+
+    expect(setup.showDeleteConceptSetDialog).toBe(false)
+    expect(setup.expression.ConceptSets).toHaveLength(0)
+    expect(
+      setup.expression.PrimaryCriteria.CriteriaList[0].ConditionOccurrence.CodesetId
+    ).toBeUndefined()
+    expect(
+      setup.expression.InclusionRules[0].expression.DemographicCriteriaList[0].GenderCS.CodesetId
+    ).toBeUndefined()
+  })
+
+  it('leaves the cohort untouched when the confirmation is dismissed', async () => {
+    const wrapper = mountBuilder()
+    await wrapper.vm.$nextTick()
+    const setup = setupOf(wrapper)
+    seedReferencedConceptSet(setup)
+
+    setup.handleDeleteConceptSet({ id: 3, name: 'Diabetes' })
+    await wrapper.vm.$nextTick()
+    setup.cancelDeleteConceptSet()
+    await wrapper.vm.$nextTick()
+
+    expect(setup.showDeleteConceptSetDialog).toBe(false)
+    expect(setup.expression.ConceptSets).toHaveLength(1)
+    expect(setup.expression.PrimaryCriteria.CriteriaList[0].ConditionOccurrence.CodesetId).toBe(3)
+  })
+
+  // An unused set carries no consequence to warn about, so the confirmation
+  // would be pure friction.
+  it('deletes an unreferenced set without asking', async () => {
+    const wrapper = mountBuilder()
+    await wrapper.vm.$nextTick()
+    const setup = setupOf(wrapper)
+    Object.assign(setup.expression, {
+      ConceptSets: [{ id: 9, name: 'Unused', expression: { items: [] } }],
+    })
+
+    setup.handleDeleteConceptSet({ id: 9, name: 'Unused' })
+    await wrapper.vm.$nextTick()
+
+    expect(setup.showDeleteConceptSetDialog).toBe(false)
+    expect(setup.expression.ConceptSets).toHaveLength(0)
+  })
+})

@@ -246,6 +246,32 @@
       </template>
     </AtlasDialog>
 
+    <!-- Concept-set delete confirmation, shown only when something still uses it -->
+    <AtlasDialog
+      v-model="showDeleteConceptSetDialog"
+      eyebrow="CONCEPT SET"
+      :title="t('components.cohortBuilder.deleteConceptSetTitle', 'Delete concept set?').value"
+      max-width="480"
+      @close="cancelDeleteConceptSet"
+    >
+      {{ deleteConceptSetWarning }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="cancelDeleteConceptSet"
+        >
+          {{ t('common.cancel', 'Cancel').value }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          data-testid="confirm-delete-concept-set"
+          @click="confirmDeleteConceptSet"
+        >
+          {{ t('common.delete', 'Delete').value }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
+
     <!-- Tags Dialog -->
     <tag-selection-dialog
       v-model="showTagsDialog"
@@ -280,7 +306,7 @@ import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
 import CohortExpressionEditor from '@/components/cohort-editor/CohortExpressionEditor.vue'
 import { CohortExpressionSchema } from '@/components/cohort-editor/circe.types'
 import type { CohortExpression, ConceptSetItem as CirceConceptSetItem } from '@/components/cohort-editor/circe.types'
-import { unassignConceptSetId } from '@/components/cohort-editor/concept-set-usage'
+import { unassignConceptSetId, walkConceptSetReferences } from '@/components/cohort-editor/concept-set-usage'
 import { normalizeForCirce } from '@/components/cohort-editor/normalize'
 import CohortGenerationSection from './CohortGenerationSection.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
@@ -1030,11 +1056,80 @@ function handleViewConceptSet(conceptSet: {
   handleEditConceptSet(conceptSet)
 }
 
+// Deleting a concept set clears every CodesetId pointing at it, and a criterion
+// with no CodesetId matches its whole domain rather than nothing — so a delete
+// can quietly widen the cohort instead of narrowing it. It can also leave
+// EndStrategy.CustomEra with no DrugCodesetId at all. The dialog emitted delete
+// straight through, so neither consequence was ever shown. Anything still
+// referencing the set now has to be confirmed first.
+const conceptSetPendingDelete = ref<ConceptSetReference | null>(null)
+const conceptSetPendingDeleteUsage = ref(0)
+const showDeleteConceptSetDialog = ref(false)
+
+function handleDeleteConceptSet(conceptSet: ConceptSetReference) {
+  if (conceptSet.id === undefined || conceptSet.id === null) return
+
+  const usage = countConceptSetReferences(conceptSet.id as number)
+  if (usage === 0) {
+    deleteConceptSet(conceptSet)
+    return
+  }
+
+  conceptSetPendingDelete.value = conceptSet
+  conceptSetPendingDeleteUsage.value = usage
+  showDeleteConceptSetDialog.value = true
+}
+
+/** How many criteria fields currently point at this concept set. */
+function countConceptSetReferences(conceptSetId: number): number {
+  let count = 0
+  walkConceptSetReferences(expression.value, {
+    raw: (container, key) => {
+      if (container[key] === conceptSetId) count++
+    },
+    wrapped: selection => {
+      if (selection.CodesetId === conceptSetId) count++
+    },
+  })
+  return count
+}
+
+function confirmDeleteConceptSet() {
+  const conceptSet = conceptSetPendingDelete.value
+  showDeleteConceptSetDialog.value = false
+  conceptSetPendingDelete.value = null
+  if (conceptSet) deleteConceptSet(conceptSet)
+}
+
+function cancelDeleteConceptSet() {
+  showDeleteConceptSetDialog.value = false
+  conceptSetPendingDelete.value = null
+}
+
+// Names the consequence rather than asking "are you sure": an unconstrained
+// criterion matches everything in its domain, which is the opposite of what
+// deleting a concept set looks like it should do.
+const deleteConceptSetWarning = computed(() => {
+  const name = conceptSetPendingDelete.value?.name ?? ''
+  const count = conceptSetPendingDeleteUsage.value
+  const usage =
+    count === 1
+      ? t('components.cohortBuilder.deleteConceptSetUsageOne', '1 criterion still uses it').value
+      : t('components.cohortBuilder.deleteConceptSetUsageMany', '{count} criteria still use it', {
+          count,
+        }).value
+
+  return t(
+    'components.cohortBuilder.deleteConceptSetWarning',
+    'Deleting "{name}" will clear it from those criteria, and a criterion with no concept set matches its entire domain. {usage}.',
+    { name, usage }
+  ).value
+})
+
 /**
  * Delete a concept set from the cohort expression
  */
-function handleDeleteConceptSet(conceptSet: ConceptSetReference) {
-  if (conceptSet.id === undefined || conceptSet.id === null) return
+function deleteConceptSet(conceptSet: ConceptSetReference) {
   const idx = (expression.value.ConceptSets ?? []).findIndex(cs => cs.id === conceptSet.id)
   if (idx !== -1) {
     expression.value.ConceptSets!.splice(idx, 1)

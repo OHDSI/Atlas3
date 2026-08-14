@@ -1868,7 +1868,11 @@
       "jsonInvalid": "Invalid JSON: {error}",
       "jsonInvalidExpression": "Not a valid Atlas cohort expression",
       "jsonImportFailed": "Import failed: {error}",
-      "jsonReadFailed": "Could not read file"
+      "jsonReadFailed": "Could not read file",
+      "deleteConceptSetTitle": "Delete concept set?",
+      "deleteConceptSetUsageOne": "1 criterion still uses it",
+      "deleteConceptSetUsageMany": "{count} criteria still use it",
+      "deleteConceptSetWarning": "Deleting \"{name}\" will clear it from those criteria, and a criterion with no concept set matches its entire domain. {usage}."
     },
     "conceptDetail": {
       "closeDetails": "Close concept details",
