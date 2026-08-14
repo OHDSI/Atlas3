@@ -20,14 +20,17 @@
  * lost its content.
  */
 import { circeConceptSetFromAtlas, type AtlasConceptSetItem } from '@/components/cohort-editor/atlas-concept-set'
-import { cardinalityToAtlas } from '@/utils/mappers'
+import { cardinalityToAtlas, operatorToAtlas } from '@/utils/mappers'
 import type {
   ConceptSet,
   Criteria,
   CorelatedCriteria,
+  DemographicCriteria,
+  NumericRange,
   CriteriaGroup as CirceCriteriaGroup,
 } from '@/components/cohort-editor/circe.types'
 import type { CohortEvent, CriteriaGroup as AtlasCriteriaGroup } from '@/models/cohort.types'
+import type { NumericOperator } from '@/models/event.types'
 
 /**
  * What a translated event needs from its caller: the criterion itself, plus the
@@ -105,6 +108,59 @@ export function translateAgentEventToCorelated(
   return { criteria, conceptSet: translated.conceptSet }
 }
 
+/**
+ * Builds a circe DemographicCriteria from an agent event.
+ *
+ * circe keeps demographics out of criteria lists entirely: they live in a
+ * group's `DemographicCriteriaList` and carry their constraints as fields
+ * rather than as a domain criterion. The agent sends them as an event with
+ * `criteriaType: 'Demographic'` and an `attributes` array, so the two shapes
+ * have nothing structural in common and this maps attribute by attribute.
+ */
+export function translateAgentDemographicEvent(event: CohortEvent): DemographicCriteria | null {
+  if (event.criteriaType !== 'Demographic') return null
+
+  const demographic: DemographicCriteria = {}
+
+  for (const attribute of (event.attributes ?? []) as AgentAttribute[]) {
+    const field = DEMOGRAPHIC_FIELD_BY_KEY[attribute.attributeKey ?? '']
+    if (!field) continue
+
+    if (attribute.type === 'numericRange' && field === 'Age') {
+      demographic.Age = {
+        Op: operatorToAtlas(attribute.operator as NumericOperator) as NonNullable<NumericRange['Op']>,
+        Value: attribute.value,
+        ...(attribute.extent === undefined ? {} : { Extent: attribute.extent }),
+      }
+      continue
+    }
+
+    if (attribute.type === 'concept' && field !== 'Age') {
+      // Gender/Race/Ethnicity carry the CDM concepts inline, not a codeset.
+      demographic[field] = attribute.concepts as DemographicCriteria['Gender']
+    }
+  }
+
+  return Object.keys(demographic).length > 0 ? demographic : null
+}
+
+/** Attribute keys the agent uses, against the circe field they populate. */
+const DEMOGRAPHIC_FIELD_BY_KEY: Record<string, 'Age' | 'Gender' | 'Race' | 'Ethnicity' | undefined> = {
+  age: 'Age',
+  gender: 'Gender',
+  race: 'Race',
+  ethnicity: 'Ethnicity',
+}
+
+interface AgentAttribute {
+  type?: string
+  attributeKey?: string
+  operator?: string
+  value?: number
+  extent?: number
+  concepts?: unknown[]
+}
+
 export interface TranslatedGroup {
   group: CirceCriteriaGroup
   conceptSets: ConceptSet[]
@@ -127,8 +183,18 @@ export function translateAgentCriteriaGroups(
 
   const translateOne = (group: AtlasCriteriaGroup): CirceCriteriaGroup => {
     const criteriaList: CorelatedCriteria[] = []
+    const demographicList: DemographicCriteria[] = []
 
     for (const event of group.events ?? []) {
+      // Demographics are not domain criteria in circe — they belong to the
+      // group's own DemographicCriteriaList.
+      if (event.criteriaType === 'Demographic') {
+        const demographic = translateAgentDemographicEvent(event)
+        if (demographic) demographicList.push(demographic)
+        else dropped++
+        continue
+      }
+
       // Each translated set joins the pool so the next event in the group is
       // allocated a distinct id rather than colliding with it.
       const translated = translateAgentEventToCorelated(event, [...existingConceptSets, ...conceptSets])
@@ -144,6 +210,8 @@ export function translateAgentCriteriaGroups(
       Type: group.logicType ?? 'ALL',
       CriteriaList: criteriaList,
     }
+
+    if (demographicList.length > 0) circeGroup.DemographicCriteriaList = demographicList
 
     if (group.count !== undefined) circeGroup.Count = group.count
 

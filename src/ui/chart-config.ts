@@ -892,6 +892,12 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
   const binStarts = validBins.map(bin => offset + bin.intervalIndex * intervalSize)
   const yValues = validBins.map(bin => bin.countValue)
   const axisLabel = data.xAxisLabel || 'Age'
+  // Bin bounds can be fractional (e.g. days expressed as years, interval
+  // ~0.082), so round for display instead of dumping raw floats. Shared by
+  // the tooltip and the x-axis tick labels so both charts and this one
+  // format consistently instead of the axis truncating fractional ticks to
+  // whole numbers (#208).
+  const fmtBin = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
 
   return {
     ...chartRootTextStyle(),
@@ -906,9 +912,6 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
 
         const [xStart, xEnd, yValue] = point
         const value = formatSINumber(yValue)
-        // Bin bounds can be fractional (e.g. days expressed as years, interval
-        // ~0.082), so round for display instead of dumping raw floats.
-        const fmtBin = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
         const label = intervalSize === 1 ? fmtBin(xStart) : `${fmtBin(xStart)} - ${fmtBin(xEnd)}`
         return `<strong>${axisLabel}: ${label}</strong><br/>${data.seriesName || data.unit || 'Count'}: ${value}`
       },
@@ -928,7 +931,7 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
       nameLocation: 'middle',
       nameGap: 30,
       axisLabel: {
-        formatter: (value: number) => `${Math.floor(value)}`,
+        formatter: (value: number) => fmtBin(value),
         fontSize: 11,
       },
     },

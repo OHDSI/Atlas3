@@ -90,6 +90,8 @@
       :source-name="historyDialog.sourceName"
       :source-key="historyDialog.sourceKey"
       :executions="historyExecutions"
+      :latest-result-only="true"
+      @select="onViewRunResults"
     />
   </AtlasCollapsibleSection>
 </template>
@@ -350,6 +352,16 @@ function onExtraAction(actionKey: string, sourceKey: string) {
   drawer.reportType = actionKey
   drawer.open = true
   router.replace({ query: { ...route.query, report: actionKey, source: sourceKey } }).catch(() => {})
+}
+
+// The run id is deliberately unused: cohort results are stored per cohort and
+// source, not per run, so this can only ever show the newest run's report. The
+// dialog disables the action on every older run for the same reason (#217).
+function onViewRunResults() {
+  const sourceKey = historyDialog.sourceKey
+  if (!sourceKey) return
+  historyDialog.open = false
+  onExtraAction('inclusion', sourceKey)
 }
 
 watch(

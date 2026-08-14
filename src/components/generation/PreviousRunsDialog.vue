@@ -33,16 +33,23 @@
       </template>
 
       <template #[`item.actions`]="{ item }">
-        <AtlasIconButton
-          icon="mdi-eye"
-          v-bind="{ ariaLabel: viewLabel }"
-          variant="text"
-          size="sm"
-          tone="primary"
-          :disabled="(item as Row).status !== 'COMPLETED'"
-          :data-testid="`view-btn-${(item as Row).id}`"
-          @click="emit('select', (item as Row).id)"
-        />
+        <AtlasTooltip location="top">
+          <template #activator="{ props: tipProps }">
+            <span v-bind="tipProps">
+              <AtlasIconButton
+                icon="mdi-eye"
+                v-bind="{ ariaLabel: (item as Row).actionLabel }"
+                variant="text"
+                size="sm"
+                tone="primary"
+                :disabled="!(item as Row).viewable"
+                :data-testid="`view-btn-${(item as Row).id}`"
+                @click="emit('select', (item as Row).id)"
+              />
+            </span>
+          </template>
+          <span>{{ (item as Row).actionLabel }}</span>
+        </AtlasTooltip>
       </template>
     </AtlasDataTable>
   </AtlasDialog>
@@ -55,6 +62,7 @@ import {
   AtlasDataTable,
   AtlasChip,
   AtlasIconButton,
+  AtlasTooltip,
 } from '@/components/ui'
 import type { AtlasChipTone } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
@@ -68,11 +76,20 @@ interface Props {
   executions: RunTableExecution[]
   selectedId?: number | string | null
   loading?: boolean
+  /**
+   * Set for analyses whose results are not retained per run. Cohort generation
+   * writes `cohort_inclusion_result`/`cohort_inclusion_stats` keyed by
+   * cohort_definition_id + mode_id only, so each run overwrites the last and
+   * WebAPI has no endpoint to fetch an older run's results (#217). Only the
+   * newest completed run stays viewable there.
+   */
+  latestResultOnly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   selectedId: null,
   loading: false,
+  latestResultOnly: false,
 })
 
 const emit = defineEmits<{
@@ -85,6 +102,14 @@ const em = '—'
 
 const eyebrowText = tv('components.analysisExecution.history', 'HISTORY')
 const viewLabel = tv('components.analysisExecution.viewResults', 'View results')
+const notCompletedLabel = tv(
+  'components.analysisExecution.viewResultsNotCompleted',
+  'Results are available only for completed runs'
+)
+const supersededLabel = tv(
+  'components.analysisExecution.viewResultsSuperseded',
+  'Superseded: only the most recent run keeps its results'
+)
 const emptyText = computed(() =>
   t('components.analysisExecution.noPreviousRuns', 'No previous runs.').value
 )
@@ -149,22 +174,34 @@ interface Row {
   statusTone: AtlasChipTone
   duration: string
   isSelected: boolean
+  viewable: boolean
+  actionLabel: string
 }
 
-const rows = computed<Row[]>(() =>
-  props.executions
+const rows = computed<Row[]>(() => {
+  const sorted = props.executions
     .filter((e) => e.sourceKey === props.sourceKey)
     .slice()
     .sort((a, b) => (b.startTime ?? 0) - (a.startTime ?? 0))
-    .map((e) => ({
+
+  const newestCompletedId = sorted.find((e) => e.status === 'COMPLETED')?.id
+
+  return sorted.map((e) => {
+    const completed = e.status === 'COMPLETED'
+    const superseded = completed && props.latestResultOnly && e.id !== newestCompletedId
+    const viewable = completed && !superseded
+    return {
       id: e.id,
       date: formatDateTime(e.startTime),
       status: e.status,
       statusTone: STATUS_TONE[e.status],
       duration: formatDuration(effectiveDuration(e)),
       isSelected: props.selectedId !== null && props.selectedId !== undefined && e.id === props.selectedId,
-    }))
-)
+      viewable,
+      actionLabel: viewable ? viewLabel : superseded ? supersededLabel : notCompletedLabel,
+    }
+  })
+})
 
 function rowClass(r: Row): string {
   return r.isSelected ? 'prd-row--selected' : ''

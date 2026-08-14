@@ -164,7 +164,7 @@ const headers = [
   { title: t('columns.domain', 'Domain').value, key: 'domainId', sortable: true, width: '120px' },
   { title: t('columns.vocabulary', 'Vocabulary').value, key: 'vocabularyId', sortable: true, width: '120px' },
   { title: t('columns.type', 'Type').value, key: 'standardConcept', sortable: true, width: '120px' },
-  { title: t('columns.validEndDate', 'Validity').value, key: 'invalidReason', sortable: true, width: '90px' },
+  { title: t('columns.validity', 'Validity').value, key: 'invalidReason', sortable: true, width: '90px' },
 ]
 
 const emptyMessage = computed(() => {

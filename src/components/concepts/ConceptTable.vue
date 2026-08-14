@@ -371,7 +371,7 @@ const headers = computed(() => {
       width: '150px',
     },
     {
-      title: t('columns.validEndDate', 'Validity').value,
+      title: t('columns.validity', 'Validity').value,
       key: 'invalidReason',
       sortable: true,
       width: '100px',

@@ -309,6 +309,13 @@ export const useCohortStore = defineStore('cohort', () => {
         if (translated.conceptSet) {
           registerConceptSets(expression.ConceptSets, [translated.conceptSet])
         }
+
+        // `replace` is what distinguishes "set the entry event" from "add
+        // another one". It was never read, so set_entry_event left the previous
+        // entry event in place and the cohort qualified on either.
+        if (proposal.replace) {
+          expression.PrimaryCriteria.CriteriaList.length = 0
+        }
         expression.PrimaryCriteria.CriteriaList.push(translated.criteria)
         break
       }
@@ -473,14 +480,29 @@ export const useCohortStore = defineStore('cohort', () => {
           logger.warn('CohortStore', 'addQualifyingCriterion: Demographic qualifiers are not supported')
           return { applied: false, reason: 'unsupported-kind' }
         }
+        if (!expression.ConceptSets) {
+          expression.ConceptSets = []
+        }
+
+        // Same defect as addEntryEvent: the qualifier was built as an empty
+        // criterion, so it restricted the entry event to its whole domain.
+        const translated = translateAgentEvent(proposal.event, expression.ConceptSets)
+        if (!translated) {
+          return { applied: false, reason: 'untranslatable-criteria' }
+        }
+
         if (!expression.AdditionalCriteria) {
           expression.AdditionalCriteria = { Type: 'ALL', CriteriaList: [] }
         }
         if (!expression.AdditionalCriteria.CriteriaList) {
           expression.AdditionalCriteria.CriteriaList = []
         }
+
+        if (translated.conceptSet) {
+          registerConceptSets(expression.ConceptSets, [translated.conceptSet])
+        }
         expression.AdditionalCriteria.CriteriaList.push({
-          Criteria: { [criteriaType]: {} } as Criteria,
+          Criteria: translated.criteria,
           StartWindow: defaultQualifyingWindow(),
           Occurrence: { Type: 2, Count: 1 },
           RestrictVisit: false,

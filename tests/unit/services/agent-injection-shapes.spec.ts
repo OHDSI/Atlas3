@@ -10,11 +10,13 @@
  * just quietly described the wrong thing.
  *
  * This walks every capability that can put criteria into a cohort and asserts
- * the expression that comes out the far end is actually usable. A number of
- * cases are `it.fails`: applyProposal was rewritten for the circe-native store
- * and no longer carries some of the behaviour translate.ts still promises. Each
- * is annotated with the defect it exercises; see dropped-assertions.txt and the
- * Task 8 report for the full accounting.
+ * the expression that comes out the far end is actually usable.
+ *
+ * Most of these started as `it.fails` markers: applyProposal had been rewritten
+ * for the circe-native store and stopped carrying behaviour translate.ts still
+ * promised, so criteria arrived with no concept set, exclusions lost the
+ * cardinality that made them exclusions, and demographics never reached
+ * DemographicCriteriaList. They assert the repaired behaviour now.
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
@@ -57,7 +59,7 @@ function everyConcept(expr: CohortExpression) {
 describe('shapes of everything the agent injects', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  // Shared bodies for the it.fails.each groups below, so the same assertions
+  // Shared bodies for the it.each groups below, so the same assertions
   // can be reused verbatim across capability groups that fail for different,
   // specifically-diagnosed reasons.
   function assertProducesConceptsWithRealConceptId(cap: string, args: Record<string, unknown>) {
@@ -91,42 +93,37 @@ describe('shapes of everything the agent injects', () => {
     }
   }
 
-  // T14 (src/stores/cohort.ts:112): addEntryEvent and addCensoringCriterion
-  // read only the proposal's criteriaType and push a bare `{[criteriaType]: {}}`,
-  // dropping the embedded conceptSet and attributes entirely -- the criterion
-  // never gets a CodesetId and nothing lands in expression.ConceptSets, while
-  // the proposal still reports applied and marks the cohort dirty. Fixed in Phase 3.
+  // Was T14: addEntryEvent and addCensoringCriterion read only the proposal's
+  // criteriaType and pushed a bare `{[criteriaType]: {}}`, dropping the embedded
+  // conceptSet, so the criterion got no CodesetId and nothing landed in
+  // expression.ConceptSets — while the proposal still reported applied.
   const entryEventConceptSetCapabilities: Array<[string, Record<string, unknown>]> = [
     ['set_entry_event', { ...CONCEPT }],
     ['set_censor_event', { ...CONCEPT }],
   ]
 
-  it.fails.each(entryEventConceptSetCapabilities)(
+  it.each(entryEventConceptSetCapabilities)(
     '%s produces concepts with a real CONCEPT_ID', assertProducesConceptsWithRealConceptId)
-  it.fails.each(entryEventConceptSetCapabilities)(
+  it.each(entryEventConceptSetCapabilities)(
     '%s gives every criterion a resolvable CodesetId', assertGivesResolvableCodesetId)
 
-  // T15 (src/stores/cohort.ts:219): the CONTINUOUS_DRUG branch of setCohortExit
-  // has two bugs -- GapDays reads `surveillanceWindow` while
-  // `persistenceWindow` is ignored (Atlas 2.15 binds Persistence to GapDays and
-  // Surveillance to Offset), and `typeof ec.conceptSet?.id === 'number'` never
-  // passes because translate.ts always supplies a string uid, so DrugCodesetId
-  // is dropped every time. The three strategies themselves
-  // (CONTINUOUS_OBSERVATION, FIXED_DURATION, CONTINUOUS_DRUG) are all matched.
-  // Fixed in Phase 3.
+  // Was T15: the CONTINUOUS_DRUG branch of setCohortExit had two defects —
+  // GapDays read `surveillanceWindow` while `persistenceWindow` was ignored
+  // (Atlas 2.15 binds Persistence to GapDays and Surveillance to Offset), and
+  // the numeric-id check never passed because translate.ts supplies a string
+  // uid, so DrugCodesetId was dropped every time.
   const exitStrategyCapabilities: Array<[string, Record<string, unknown>]> = [
     ['add_exit_criterion', { strategy: 'continuous_drug', persistenceWindow: 30, concept: { ...CONCEPT } }],
   ]
 
-  it.fails.each(exitStrategyCapabilities)(
+  it.each(exitStrategyCapabilities)(
     '%s produces concepts with a real CONCEPT_ID', assertProducesConceptsWithRealConceptId)
-  it.fails.each(exitStrategyCapabilities)(
+  it.each(exitStrategyCapabilities)(
     '%s gives every criterion a resolvable CodesetId', assertGivesResolvableCodesetId)
 
-  // T14: addInclusionRule keeps the rule's name/description but drops
-  // rule.criteriaGroups entirely (see the comment in src/stores/cohort.ts), so
-  // the rule's `expression` is never populated and the concept the agent chose
-  // never reaches the cohort. Fixed in Phase 3.
+  // Was T14: addInclusionRule kept the rule's name and description but dropped
+  // rule.criteriaGroups entirely, so the rule's `expression` was never
+  // populated and the concept the agent chose never reached the cohort.
   const inclusionRuleCapabilities: Array<[string, Record<string, unknown>]> = [
     ['add_criterion', { ...CONCEPT, group: 'inclusion' }],
     ['add_criterion', { ...CONCEPT, group: 'exclusion' }],
@@ -134,18 +131,17 @@ describe('shapes of everything the agent injects', () => {
     ['add_criteria', { name: 'Batch', events: [{ ...CONCEPT }] }],
   ]
 
-  it.fails.each(inclusionRuleCapabilities)(
+  it.each(inclusionRuleCapabilities)(
     '%s produces concepts with a real CONCEPT_ID', assertProducesConceptsWithRealConceptId)
-  it.fails.each(inclusionRuleCapabilities)(
+  it.each(inclusionRuleCapabilities)(
     '%s gives every criterion a resolvable CodesetId', assertGivesResolvableCodesetId)
 
-  // No review thread: addEntryEvent ignores `proposal.replace` entirely. The
-  // capability says "Replaces any existing entry event", but the store appends
-  // unconditionally: asking the agent to change the entry event leaves the
-  // cohort qualifying on either drug -- roughly twice the population, with
+  // No review thread. The capability says "Replaces any existing entry event",
+  // but `proposal.replace` was never read and the store appended
+  // unconditionally, so asking the agent to change the entry event left the
+  // cohort qualifying on either drug — roughly twice the population, with
   // nothing failing and both events sitting in the editor looking deliberate.
-  // Not covered by T13/T14/T15; needs its own thread before Phase 3.
-  it.fails('set_entry_event replaces the entry event rather than adding a second', () => {
+  it('set_entry_event replaces the entry event rather than adding a second', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('set_entry_event', { ...CONCEPT }) as never)
     store.applyProposal(translateCapability('set_entry_event', {
@@ -191,13 +187,13 @@ describe('shapes of everything the agent injects', () => {
     expect(store.currentCohort?.expression?.InclusionRules).toHaveLength(1)
   })
 
-  // T14: removeEntryEvent matches a criterion by resolving its CodesetId back
+  // Was T14: removeEntryEvent matches a criterion by resolving its CodesetId back
   // through ConceptSets, but addEntryEvent drops the event's concept set, so
   // nothing here carries a codeset to match on and the removal finds no target.
   // The match itself is covered directly in
   // tests/unit/stores/cohort-applyProposal-unimplemented-kinds.spec.ts.
-  // Fixed in Phase 3, with addEntryEvent.
-  it.fails('remove_entry_event drops the entry event built from that concept', () => {
+  //
+  it('remove_entry_event drops the entry event built from that concept', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('set_entry_event', { ...CONCEPT }) as never)
     store.applyProposal(translateCapability('add_criterion', {
@@ -219,20 +215,20 @@ describe('shapes of everything the agent injects', () => {
     return rules.flatMap(r => r.expression?.DemographicCriteriaList ?? [])
   }
 
-  // T14: add_demographic_criterion also goes through addInclusionRule, so it
+  // Was T14: add_demographic_criterion also goes through addInclusionRule, so it
   // hits the same criteriaGroups drop -- the Demographic event never reaches
-  // DemographicCriteriaList. Fixed in Phase 3.
-  it.fails('add_demographic_criterion encodes an age floor', () => {
+  // DemographicCriteriaList.
+  it('add_demographic_criterion encodes an age floor', () => {
     const expr = applyAndParse('add_demographic_criterion', { minAge: 18 })
     expect(demographicsOf(expr)[0]?.Age).toEqual({ Op: 'gte', Value: 18 })
   })
 
-  it.fails('encodes an age range as a between', () => {
+  it('encodes an age range as a between', () => {
     const expr = applyAndParse('add_demographic_criterion', { minAge: 40, maxAge: 70 })
     expect(demographicsOf(expr)[0]?.Age).toEqual({ Op: 'bt', Value: 40, Extent: 70 })
   })
 
-  it.fails('encodes sex with the CDM gender concept rather than a searched one', () => {
+  it('encodes sex with the CDM gender concept rather than a searched one', () => {
     const expr = applyAndParse('add_demographic_criterion', { sex: 'female' })
     const gender = demographicsOf(expr)[0]?.Gender as unknown as Array<{ CONCEPT_ID: number }> | undefined
     expect(gender?.[0]?.CONCEPT_ID).toBe(8532)
@@ -281,7 +277,7 @@ describe('shapes of everything the agent injects', () => {
   // does, so it inherits the same drop -- the event's concept set never reaches
   // expression.ConceptSets and the criterion gets no CodesetId. Fixed in
   // Phase 3, with addEntryEvent.
-  it.fails('the qualifying criterion carries a resolvable concept set', () => {
+  it('the qualifying criterion carries a resolvable concept set', () => {
     const expr = applyAndParse('add_qualifying_criterion', { ...CONCEPT })
     expect(expr.ConceptSets ?? []).toHaveLength(1)
     expect(expr.ConceptSets?.[0]?.expression?.items).toHaveLength(1)

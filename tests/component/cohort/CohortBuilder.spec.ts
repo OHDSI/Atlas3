@@ -2251,3 +2251,69 @@ describe('CohortBuilder — deleting a concept set that is still in use', () => 
     expect(setup.expression.ConceptSets).toHaveLength(0)
   })
 })
+
+/**
+ * Ported from develop's #212 case, which was written against the legacy model
+ * (`cohortStore.currentCohort.conceptSets` plus per-criterion `event.conceptSet`
+ * copies). Here the expression's ConceptSets array is the single canonical list,
+ * so the same defect would look like a rename that never reaches it.
+ */
+describe('CohortBuilder — renaming a concept set with no selection context', () => {
+  let router: ReturnType<typeof createRouter>
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/', component: { template: '<div>Home</div>' } },
+        { path: '/cohorts', component: { template: '<div>Cohorts</div>' } },
+        { path: '/cohorts/:id?', component: { template: '<div>Cohort</div>' } },
+      ],
+    })
+    vi.clearAllMocks()
+  })
+
+  const mountBuilder = () =>
+    mount(CohortBuilder, {
+      global: { plugins: [vuetify, router], stubs: childStubs },
+      attachTo: document.body,
+    })
+
+  const setupOf = (wrapper: ReturnType<typeof mountBuilder>) =>
+    (wrapper.vm as any).$.setupState
+
+  // The pencil in the concept sets list opens the editor with neither a
+  // criteria selection context nor a pending callback, which is what made the
+  // legacy path skip the canonical list.
+  it('renames the set in the expression even though nothing is awaiting a selection', async () => {
+    const wrapper = mountBuilder()
+    await wrapper.vm.$nextTick()
+    const setup = setupOf(wrapper)
+
+    Object.assign(setup.expression, {
+      ConceptSets: [{ id: 7, name: 'Old Name', expression: { items: [] } }],
+      PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: { CodesetId: 7 } }] },
+    })
+
+    setup.handleConceptSetApplied({ id: 7, name: 'Renamed', items: [] })
+    await wrapper.vm.$nextTick()
+
+    expect(setup.expression.ConceptSets).toHaveLength(1)
+    expect(setup.expression.ConceptSets[0]).toMatchObject({ id: 7, name: 'Renamed' })
+    // The criterion keeps pointing at it — the rename must not re-key the set.
+    expect(setup.expression.PrimaryCriteria.CriteriaList[0].ConditionOccurrence.CodesetId).toBe(7)
+  })
+
+  it('adds the set rather than renaming when the id is not already present', async () => {
+    const wrapper = mountBuilder()
+    await wrapper.vm.$nextTick()
+    const setup = setupOf(wrapper)
+
+    setup.handleConceptSetApplied({ id: 12, name: 'Brand New', items: [] })
+    await wrapper.vm.$nextTick()
+
+    expect(setup.expression.ConceptSets).toHaveLength(1)
+    expect(setup.expression.ConceptSets[0]).toMatchObject({ id: 12, name: 'Brand New' })
+  })
+})

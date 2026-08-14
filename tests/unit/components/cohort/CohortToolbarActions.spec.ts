@@ -96,6 +96,17 @@ describe('CohortToolbarActions', () => {
       const cancelBtn = buttons.find(btn => btn.text().includes('Cancel') || btn.html().includes('mdi-close'))
       expect(cancelBtn?.props('disabled')).toBeFalsy()
     })
+
+    it('reads "Close" when there are no unsaved changes, not "Cancel" (#220)', () => {
+      const wrapper = mountComponent({ isDirty: false })
+      expect(wrapper.text()).toContain('Close')
+      expect(wrapper.text()).not.toContain('Cancel')
+    })
+
+    it('reads "Cancel" when there are unsaved changes to discard (#220)', () => {
+      const wrapper = mountComponent({ isDirty: true })
+      expect(wrapper.text()).toContain('Cancel')
+    })
   })
 
   describe('Save Button', () => {
@@ -224,6 +235,13 @@ describe('CohortToolbarActions', () => {
     it('renders the export trigger button', () => {
       const wrapper = mountComponent()
       expect(wrapper.find('[data-testid="export-btn"]').exists()).toBe(true)
+    })
+
+    it('uses a download icon, not a share icon, since the menu only offers download/copy/view-JSON actions (#219)', () => {
+      const wrapper = mountComponent()
+      const exportBtn = wrapper.find('[data-testid="export-btn"]')
+      expect(exportBtn.html()).toContain('mdi-download')
+      expect(exportBtn.html()).not.toContain('mdi-export-variant')
     })
 
     it('emits export-download when the JSON download item is clicked', async () => {

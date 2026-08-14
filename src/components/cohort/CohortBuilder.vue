@@ -1158,6 +1158,11 @@ function handleConceptSetApplied(set: { id?: number | string; name: string; item
     ? nextConceptSetId((expression.value.ConceptSets ?? []).filter(cs => cs.id !== undefined) as Pick<ConceptSetReference, 'id'>[])
     : (set.id as number)
 
+  // Upserts unconditionally, including on a pure rename with no active
+  // selection context. That is what develop's #212 fix restored on the legacy
+  // model by calling upsertConceptSetInCohort outside the context check; here
+  // the expression's ConceptSets array is the single canonical list, so
+  // replacing the entry in place covers the same case.
   if (!expression.value.ConceptSets) expression.value.ConceptSets = []
   const existingIdx = expression.value.ConceptSets.findIndex(cs => cs.id === finalId)
   const circeItems = items.map(convertAtlasItemToCirce)
@@ -1166,6 +1171,7 @@ function handleConceptSetApplied(set: { id?: number | string; name: string; item
   } else {
     expression.value.ConceptSets.push({ id: finalId, name: set.name, expression: { items: circeItems } })
   }
+
 
   resolveSelection(finalId)
 }

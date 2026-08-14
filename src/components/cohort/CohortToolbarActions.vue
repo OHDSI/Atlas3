@@ -2,19 +2,20 @@
   <div class="cohort-toolbar-actions">
     <AtlasButton
       variant="ghost"
+      data-testid="cohort-close-btn"
       @click="$emit('cancel')"
     >
       <AtlasIcon class="d-md-none">
         mdi-close
       </AtlasIcon>
-      <span class="d-none d-md-inline">{{ t('common.cancel') }}</span>
+      <span class="d-none d-md-inline">{{ isDirty ? t('common.cancel', 'Cancel') : t('common.close', 'Close') }}</span>
     </AtlasButton>
 
     <AtlasMenu>
       <template #activator="{ props: menuProps }">
         <AtlasIconButton
           v-bind="{ ...menuProps, ariaLabel: t('common.export', 'Export').value }"
-          icon="mdi-export-variant"
+          icon="mdi-download"
           variant="text"
           size="sm"
           data-testid="export-btn"

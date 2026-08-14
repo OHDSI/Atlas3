@@ -261,6 +261,16 @@ describe('CharacterizationBuilderView', () => {
     expect(createCharacterization).toHaveBeenCalledTimes(1)
     const payload = vi.mocked(createCharacterization).mock.calls[0]![0]!
     expect(payload.name).toBe('My new characterization')
+
+    // #223: after the first save, the draft's id must be hydrated from the
+    // server response so `characterization-id` (and therefore the Generate
+    // button's disabled gate) reflects the now-saved characterization,
+    // instead of staying null forever.
+    await flushPromises()
+    const workbenchAfterSave = mounted.wrapper.findComponent({
+      name: 'CharacterizationWorkbench',
+    })
+    expect(workbenchAfterSave.props('characterizationId')).toBe(99)
   })
 
   it('Save in edit mode calls updateCharacterization', async () => {

@@ -550,6 +550,8 @@
       "noSources": "No data sources available",
       "history": "HISTORY",
       "viewResults": "View results",
+      "viewResultsNotCompleted": "Results are available only for completed runs",
+      "viewResultsSuperseded": "Superseded: only the most recent run keeps its results",
       "noPreviousRuns": "No previous runs."
     },
     "atlasCohortEditor": {

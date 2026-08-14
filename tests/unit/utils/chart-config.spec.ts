@@ -711,6 +711,44 @@ describe('chart-config', () => {
       expect(result).not.toContain('31.123')
     })
 
+    it('formats fractional x-axis tick labels to one decimal place instead of truncating (#208)', () => {
+      // Observation Length: 30-day bins expressed as years -> fractional ticks
+      // like 1.25 used to be floored to 1, producing duplicate whole-number
+      // labels (0, 1, 1, 2, 2...) instead of 0.0, 1.2, 2.5...
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 30 / 365.25,
+        offset: 0,
+        bins: [{ intervalIndex: 0, countValue: 1 }],
+        unit: 'Person Count',
+        xAxisLabel: 'Years',
+      }
+
+      const options = dashboardAgeBarOptions(data)
+      const formatter = (options.xAxis as ChartAxisOption & {
+        axisLabel: { formatter: (v: number) => string }
+      }).axisLabel.formatter
+
+      expect(formatter(2.5)).toBe('2.5')
+      expect(formatter(0)).toBe('0')
+      expect(formatter(30 / 365.25)).toBe('0.1')
+    })
+
+    it('keeps whole-number x-axis tick labels whole for integer bin sizes', () => {
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 1,
+        offset: 0,
+        bins: [{ intervalIndex: 0, countValue: 1 }],
+        unit: 'Persons',
+      }
+
+      const options = dashboardAgeBarOptions(data)
+      const formatter = (options.xAxis as ChartAxisOption & {
+        axisLabel: { formatter: (v: number) => string }
+      }).axisLabel.formatter
+
+      expect(formatter(5)).toBe('5')
+    })
+
     it('formats tooltip with large numbers using SI notation', () => {
       const data: DatasourceHistogramChartData = {
         intervalSize: 1,
