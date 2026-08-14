@@ -139,6 +139,28 @@ describe('findUsedConceptSetIds', () => {
 
     expect(findUsedConceptSetIds(expression).size).toBe(0)
   })
+
+  // Carried over from #214 on the legacy model, where a freshly-added criterion
+  // was seeded with a placeholder concept set (id null) that got counted as
+  // used and serialized with a fabricated id, colliding with a real set. The
+  // circe shape has no placeholder — an unselected criterion carries a null or
+  // absent CodesetId — so the equivalent guard is that neither counts as a use.
+  it('does not count an unselected CodesetId as a used concept set', () => {
+    const expression: CohortExpression = {
+      PrimaryCriteria: {
+        CriteriaList: [
+          { ConditionOccurrence: { CodesetId: 3 } },
+          { ConditionOccurrence: { CodesetId: null } },
+          { ConditionOccurrence: {} },
+        ],
+      },
+      InclusionRules: [
+        { name: 'Rule 1', expression: { Type: 'ALL', DemographicCriteriaList: [{ GenderCS: { CodesetId: null } }] } },
+      ],
+    }
+
+    expect(sorted(findUsedConceptSetIds(expression))).toEqual([3])
+  })
 })
 
 describe('unassignConceptSetId', () => {

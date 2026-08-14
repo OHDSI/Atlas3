@@ -1257,6 +1257,10 @@ export const InclusionRuleReportSchema = z.object({
       percentExcluded: z.string(),
     })
   ),
-  treemapData: z.string(),
+  // Optional/nullable: the server omits this when there is nothing to plot
+  // (e.g. a small cohort, or `mode=0`/by-event). Requiring it made the whole
+  // envelope fail validation and get silently discarded, hiding a perfectly
+  // valid summary/inclusionRuleStats behind a "no report data" message (#202).
+  treemapData: z.string().nullable().optional(),
   prevalenceThreshold: z.number().optional(),
 })

@@ -5,6 +5,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { createPinia, setActivePinia } from 'pinia'
 import CohortSampleDetail from '@/components/cohort-samples/CohortSampleDetail.vue'
+import { useDataSourcesStore } from '@/stores/datasources'
 
 const vuetify = createVuetify({ components, directives })
 const globalMountOpts = {
@@ -46,6 +47,25 @@ describe('CohortSampleDetail', () => {
       props: { sample: { id: 1, name: 'demo', size: 0, elements: [] } },
     })
     expect(wrapper.find('[data-testid=cohort-sample-detail-empty]').exists()).toBe(true)
+  })
+
+  it('shows which source the sample belongs to (#204)', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const dsStore = useDataSourcesStore()
+    dsStore.sources = [
+      { sourceId: 1, sourceName: 'SynPUF 5%', sourceKey: 'SYNPUF5PCT', sourceDialect: 'postgresql', daimons: [] },
+    ]
+
+    const wrapper = mount(CohortSampleDetail, {
+      global: { plugins: [vuetify, pinia], stubs: globalMountOpts.stubs },
+      props: {
+        sourceKey: 'SYNPUF5PCT',
+        sample: { id: 1, name: 'demo', size: 0, elements: [] },
+      },
+    })
+
+    expect(wrapper.find('[data-testid=cohort-sample-detail-source]').text()).toContain('SynPUF 5%')
   })
 
   it('shows the loading skeleton when loading is true', () => {

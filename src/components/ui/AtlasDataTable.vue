@@ -5,8 +5,6 @@
     :headers="headers"
     :items="items"
     :loading="loading"
-    :items-per-page="itemsPerPage"
-    :page="page"
     :height="height"
     :fixed-header="fixedHeader"
     :hide-default-footer="hideDefaultFooter"
@@ -14,7 +12,7 @@
     :loading-text="loadingText"
     :aria-label="caption"
     density="compact"
-    v-bind="forwardAttrs"
+    v-bind="tableBind"
     @update:page="(v: number) => $emit('update:page', v)"
     @update:items-per-page="(v: number) => $emit('update:itemsPerPage', v)"
   >
@@ -65,8 +63,8 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
-  itemsPerPage: 10,
-  page: 1,
+  itemsPerPage: undefined,
+  page: undefined,
   sortBy: undefined,
   height: undefined,
   fixedHeader: false,
@@ -97,10 +95,23 @@ const sortByModel = computed<SortItem[]>({
   },
 })
 
+// Vuetify treats `page`/`items-per-page` as externally controlled when the
+// vnode carries the prop key AND an `onUpdate:` listener. This wrapper always
+// attaches the listeners, so binding the props unconditionally made every
+// table controlled — including callers that never round-trip page state,
+// whose pager was then pinned to a value nothing ever updated (#203, #222).
+// Forward the keys only when the caller actually provided them.
 const attrs = useAttrs()
-const forwardAttrs = computed(() => {
-  const { density: _d, ...rest } = attrs as Record<string, unknown>
+
+// Single merged v-bind: Vue's SFC compiler rejects multiple bare `v-bind`
+// directives on one element, so the conditional pagination keys and the
+// forwarded $attrs have to combine here.
+const tableBind = computed(() => {
+  const { density: _d, ...restAttrs } = attrs as Record<string, unknown>
   void _d
-  return rest
+  const bind: Record<string, unknown> = { ...restAttrs }
+  if (props.page !== undefined) bind.page = props.page
+  if (props.itemsPerPage !== undefined) bind['items-per-page'] = props.itemsPerPage
+  return bind
 })
 </script>
