@@ -71,6 +71,14 @@ let activeWrapper: VueWrapper | null = null
 // that automatically between tests, so a leftover dialog from a prior test
 // would still satisfy document.querySelector lookups here — track and
 // unmount the wrapper after each test to keep body clean.
+// Switching view yields a macrotask before rebuilding the rows, so the loading
+// row can paint first (#207). Flush that before asserting on the new rows.
+async function flushViewSwitch(wrapper: { vm: { $nextTick: () => Promise<void> } }) {
+  await wrapper.vm.$nextTick()
+  await new Promise(resolve => setTimeout(resolve, 0))
+  await wrapper.vm.$nextTick()
+}
+
 function mountDialog(overrides: Partial<{ concept: Concept }> = {}) {
   activeWrapper = mount(ConceptHierarchyDialog, {
     props: { modelValue: true, concept: overrides.concept ?? concept, sourceKey: 'SYNPUF1K' },
@@ -528,7 +536,7 @@ describe('toolbar', () => {
 
     const flat = document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement
     flat.click()
-    await wrapper.vm.$nextTick()
+    await flushViewSwitch(wrapper)
 
     const rows = document.querySelectorAll('[data-descendant-row]')
     expect(rows).toHaveLength(
@@ -549,7 +557,7 @@ describe('toolbar', () => {
     await new Promise(r => setTimeout(r, 0))
     await wrapper.vm.$nextTick()
     ;(document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement).click()
-    await wrapper.vm.$nextTick()
+    await flushViewSwitch(wrapper)
 
     // 4050872 "Pneumonia due to parasitic infestation" exists only in 443410's
     // own expansion payload, never in the anchor's ancestorAndDescendant
@@ -576,7 +584,7 @@ describe('toolbar', () => {
     await new Promise(r => setTimeout(r, 0))
     await wrapper.vm.$nextTick()
     ;(document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement).click()
-    await wrapper.vm.$nextTick()
+    await flushViewSwitch(wrapper)
 
     // 257315 "Bacterial pneumonia" is both a distance-2 descendant in the
     // anchor's own payload and a distance-1 child returned by expanding
@@ -609,7 +617,7 @@ describe('toolbar', () => {
     await new Promise(r => setTimeout(r, 0))
     await wrapper.vm.$nextTick()
     ;(document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement).click()
-    await wrapper.vm.$nextTick()
+    await flushViewSwitch(wrapper)
 
     const anchorDescendantIds = new Set(
       PNEUMONIA_ANCESTOR_AND_DESCENDANT.filter(c =>
@@ -634,7 +642,7 @@ describe('toolbar', () => {
     input.dispatchEvent(new Event('input'))
     await wrapper.vm.$nextTick()
     ;(document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement).click()
-    await wrapper.vm.$nextTick()
+    await flushViewSwitch(wrapper)
 
     expect(input.value).toBe('Aspiration')
     expect(document.querySelectorAll('[data-descendant-row]')).toHaveLength(1)
@@ -701,5 +709,99 @@ describe('toolbar', () => {
     for (const child of INFECTIVE_PNEUMONIA_CHILDREN.filter(c => c.conceptId !== 4215807)) {
       expect(document.querySelector(`[data-testid="hierarchy-row-${child.conceptId}"]`)).toBeNull()
     }
+  })
+})
+
+describe('view switch feedback (#207)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    ;(getConceptRecordCounts as Mock).mockResolvedValue(new Map())
+    ;(getConceptAncestorAndDescendant as Mock).mockResolvedValue(INFECTIVE_PNEUMONIA_PAYLOAD)
+    useConceptDetailStore().hierarchy = PNEUMONIA_ANCESTOR_AND_DESCENDANT
+  })
+
+  afterEach(() => {
+    activeWrapper?.unmount()
+    activeWrapper = null
+    document.body.innerHTML = ''
+  })
+
+  const tree = () => document.querySelector('[data-testid="hierarchy-view-tree"]') as HTMLButtonElement
+  const flat = () => document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLButtonElement
+  const spinner = () => document.querySelector('[data-testid="hierarchy-view-switching"]')
+
+  it('shows nothing while the current view is settled', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    expect(spinner()).toBeNull()
+    expect(document.querySelectorAll('[data-descendant-row]').length).toBeGreaterThan(0)
+  })
+
+  // The switch has to reach the screen before the rows are rebuilt, otherwise
+  // the expensive render blocks the frame and the user sees nothing happen.
+  it('paints a loading row before rebuilding the rows', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    flat().click()
+    await wrapper.vm.$nextTick()
+
+    expect(spinner()).not.toBeNull()
+    expect(document.querySelectorAll('[data-descendant-row]')).toHaveLength(0)
+  })
+
+  it('disables both view buttons while the switch is in flight', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    flat().click()
+    await wrapper.vm.$nextTick()
+
+    expect(flat().disabled).toBe(true)
+    expect(tree().disabled).toBe(true)
+  })
+
+  it('clears the loading row and re-enables the buttons once the rows are up', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    flat().click()
+    await flushViewSwitch(wrapper)
+
+    expect(spinner()).toBeNull()
+    expect(flat().disabled).toBe(false)
+    expect(flat().getAttribute('aria-pressed')).toBe('true')
+    expect(document.querySelectorAll('[data-descendant-row]').length).toBeGreaterThan(0)
+  })
+
+  it('ignores a click on the view already showing', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    tree().click()
+    await wrapper.vm.$nextTick()
+
+    expect(spinner()).toBeNull()
+    expect(document.querySelectorAll('[data-descendant-row]').length).toBeGreaterThan(0)
+  })
+
+  // The reporter clicked repeatedly because nothing appeared to happen. The
+  // disabled buttons swallow those extra clicks, so the view still settles on
+  // the one first asked for rather than ping-ponging.
+  it('settles on the first requested view despite rapid repeated clicks', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    flat().click()
+    await wrapper.vm.$nextTick()
+    flat().click()
+    tree().click()
+    await flushViewSwitch(wrapper)
+
+    expect(spinner()).toBeNull()
+    expect(flat().getAttribute('aria-pressed')).toBe('true')
+    expect(tree().getAttribute('aria-pressed')).toBe('false')
   })
 })

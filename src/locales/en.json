@@ -1842,6 +1842,7 @@
     "conceptHierarchyDialog": {
       "title": "Hierarchy · {concept}",
       "viewFullHierarchy": "View full hierarchy",
+      "switchingView": "Rebuilding the list…",
       "treeView": "Tree",
       "flatView": "Flat",
       "filterPlaceholder": "Filter by name or code…",
