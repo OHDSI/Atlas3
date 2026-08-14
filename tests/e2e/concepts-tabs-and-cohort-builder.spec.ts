@@ -94,26 +94,34 @@ test.describe('Cohort Builder - Breadcrumb Navigation', () => {
     // CohortBuilderView.vue passes hide-internal-breadcrumb to CohortBuilder,
     // so the internal <cohort-breadcrumb> (CohortBreadcrumb.vue) never
     // renders in the real app: the hero header (eyebrow + inline title)
-    // replaced it, and "back to cohorts" is now the toolbar Cancel button
+    // replaced it, and "back to cohorts" is now the toolbar close button
     // (CohortToolbarActions.vue, which emits 'cancel' -> handleCancel() ->
     // router.push('/cohorts')). The old selectors targeted classes that
     // either never existed or were style-only dead text, and the tautology
     // assertion below them passed regardless of what was found.
-    const cancelButton = page.getByRole('button', { name: /^cancel$/i })
-    await expect(cancelButton).toBeVisible()
+    //
+    // The cohort has just been opened and not edited, so the button reads
+    // "Close"; it only says "Cancel" once there are unsaved changes (#220).
+    // By test id, not by name: the navbar carries its own "Close" control, so
+    // an accessible-name lookup matches two buttons.
+    const closeButton = page.getByTestId('cohort-close-btn')
+    await expect(closeButton).toBeVisible()
+    await expect(closeButton).toHaveText(/close/i)
   })
 
-  test('should navigate back to cohorts list when clicking Cancel', async ({ page }) => {
+  test('should navigate back to cohorts list when clicking Close', async ({ page }) => {
     await page.goto('/#/cohorts/1')
     await waitForPageReady(page)
 
     // Ensure no overlays are blocking
     await waitForOverlaysToClose(page)
 
-    const cancelButton = page.getByRole('button', { name: /^cancel$/i })
-    await expect(cancelButton).toBeVisible()
+    // Unedited cohort, so the button reads "Close" rather than "Cancel" (#220).
+    const closeButton = page.getByTestId('cohort-close-btn')
+    await expect(closeButton).toBeVisible()
+    await expect(closeButton).toHaveText(/close/i)
 
-    await cancelButton.click()
+    await closeButton.click()
     await page.waitForTimeout(1000)
 
     // Verify navigation to cohorts list

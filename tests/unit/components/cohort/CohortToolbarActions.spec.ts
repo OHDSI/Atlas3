@@ -96,6 +96,17 @@ describe('CohortToolbarActions', () => {
       const cancelBtn = buttons.find(btn => btn.text().includes('Cancel') || btn.html().includes('mdi-close'))
       expect(cancelBtn?.props('disabled')).toBeFalsy()
     })
+
+    it('reads "Close" when there are no unsaved changes, not "Cancel" (#220)', () => {
+      const wrapper = mountComponent({ isDirty: false })
+      expect(wrapper.text()).toContain('Close')
+      expect(wrapper.text()).not.toContain('Cancel')
+    })
+
+    it('reads "Cancel" when there are unsaved changes to discard (#220)', () => {
+      const wrapper = mountComponent({ isDirty: true })
+      expect(wrapper.text()).toContain('Cancel')
+    })
   })
 
   describe('Save Button', () => {

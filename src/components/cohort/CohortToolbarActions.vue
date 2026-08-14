@@ -2,12 +2,13 @@
   <div class="cohort-toolbar-actions">
     <AtlasButton
       variant="ghost"
+      data-testid="cohort-close-btn"
       @click="$emit('cancel')"
     >
       <AtlasIcon class="d-md-none">
         mdi-close
       </AtlasIcon>
-      <span class="d-none d-md-inline">{{ t('common.cancel') }}</span>
+      <span class="d-none d-md-inline">{{ isDirty ? t('common.cancel', 'Cancel') : t('common.close', 'Close') }}</span>
     </AtlasButton>
 
     <AtlasMenu>
