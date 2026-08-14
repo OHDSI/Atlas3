@@ -1,6 +1,8 @@
 import type { AgentProposal } from '@/models/agent.types'
 import type { ExitStrategy } from '@/models/cohort.types'
 import routeManifest from '@/router/routes.manifest.json'
+import { criteriaTypeForDomain } from '@/components/cohort-editor/criteria/criteria-registry'
+import { logger } from '@/utils/logger'
 
 interface ConceptRefArgs {
   conceptId?: number
@@ -154,18 +156,26 @@ function uid(): string {
 // occurrence count is EXACTLY 0. Shared by every exclusion path below.
 const ZERO_OCCURRENCE_CARDINALITY = { type: 'EXACTLY', count: 0, countingMethod: 'ALL' } as const
 
+/**
+ * The criteria type an OMOP domain maps to.
+ *
+ * The mapping lives in the criteria registry now, alongside the editors and the
+ * add-criteria menus, so a new domain is added in one place rather than five.
+ *
+ * The fallback to ConditionOccurrence is kept, since the agent's tool contract
+ * expects a criterion for any domain it names, but it is now a logged guess
+ * rather than a silent one: producing a condition criterion for, say, a Note
+ * domain builds a cohort that describes something other than what was asked for.
+ */
 export function domainToCriteriaType(domain: string | undefined): string {
-  switch (domain) {
-    case 'Condition': return 'ConditionOccurrence'
-    case 'Drug': return 'DrugExposure'
-    case 'Procedure': return 'ProcedureOccurrence'
-    case 'Measurement': return 'Measurement'
-    case 'Observation': return 'Observation'
-    case 'Visit': return 'VisitOccurrence'
-    case 'Device': return 'DeviceExposure'
-    case 'Specimen': return 'Specimen'
-    default: return 'ConditionOccurrence'
-  }
+  const mapped = criteriaTypeForDomain(domain)
+  if (mapped) return mapped
+
+  logger.warn(
+    'translate',
+    `No criteria type is mapped to domain "${domain}"; falling back to ConditionOccurrence`
+  )
+  return 'ConditionOccurrence'
 }
 
 // Map the agent's index-relative window {startDays,endDays} to ATLAS's

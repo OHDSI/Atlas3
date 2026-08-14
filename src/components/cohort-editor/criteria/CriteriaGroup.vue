@@ -199,13 +199,17 @@ import {
   AtlasTextField,
 } from '@/components/ui'
 import type { CriteriaGroup, CorelatedCriteria as CorelatedCriteriaType, DemographicCriteria as DemographicCriteriaType } from '../circe.types'
+import { CRITERIA_TYPE_BY_KEY, EDITABLE_CRITERIA_TYPES, type EditableCriteriaKey } from './criteria-registry'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
 import { createObjectKeyGenerator } from './criteria-editor-helper'
 import { createDefaultWindow } from './window-utils'
 import CorelatedCriteria from './CorelatedCriteria.vue'
 import DemographicCriteria from './DemographicCriteria.vue'
 
-type CriteriaType = 'DemographicCriteria' | 'ConditionOccurrence' | 'ConditionEra' | 'DrugExposure' | 'DeviceExposure' | 'Death' | 'DoseEra' | 'DrugEra' | 'Measurement' | 'Observation' | 'ObservationPeriod' | 'PayerPlanPeriod' | 'ProcedureOccurrence' | 'Specimen' | 'VisitDetail' | 'VisitOccurrence'
+// Demographics are not a circe criteria type — they live in the group's own
+// DemographicCriteriaList — so the menu offers them alongside the registry's
+// editable types rather than as one of them.
+type CriteriaType = 'DemographicCriteria' | EditableCriteriaKey
 
 defineOptions({ name: 'CriteriaGroup' })
 
@@ -283,21 +287,10 @@ const noCriteriaLabel = computed(() => t('components.criteriaGroup.noEventsInGro
 const demographicCriteriaLabel = computed(() => 'Demographic Criteria')
 const criteriaTypeOptions = computed<Array<{ title: string; value: CriteriaType }>>(() => [
   { title: demographicCriteriaLabel.value, value: 'DemographicCriteria' },
-  { title: t('criteria.conditionOccurrence.name', 'Condition Occurrence').value, value: 'ConditionOccurrence' },
-  { title: t('criteria.conditionEra.name', 'Condition Era').value, value: 'ConditionEra' },
-  { title: t('criteria.drugExposure.name', 'Drug Exposure').value, value: 'DrugExposure' },
-  { title: t('criteria.drugEra.name', 'Drug Era').value, value: 'DrugEra' },
-  { title: t('criteria.doseEra.name', 'Dose Era').value, value: 'DoseEra' },
-  { title: t('criteria.measurement.name', 'Measurement').value, value: 'Measurement' },
-  { title: t('criteria.observation.name', 'Observation').value, value: 'Observation' },
-  { title: t('criteria.observationPeriod.name', 'Observation Period').value, value: 'ObservationPeriod' },
-  { title: t('criteria.payerPlanPeriod.name', 'Payer Plan Period').value, value: 'PayerPlanPeriod' },
-  { title: t('criteria.procedureOccurrence.name', 'Procedure Occurrence').value, value: 'ProcedureOccurrence' },
-  { title: t('criteria.specimen.name', 'Specimen').value, value: 'Specimen' },
-  { title: t('criteria.visitDetail.name', 'Visit Detail').value, value: 'VisitDetail' },
-  { title: t('criteria.visitOccurrence.name', 'Visit Occurrence').value, value: 'VisitOccurrence' },
-  { title: t('criteria.deviceExposure.name', 'Device Exposure').value, value: 'DeviceExposure' },
-  { title: t('criteria.death.name', 'Death').value, value: 'Death' },
+  ...EDITABLE_CRITERIA_TYPES.map(type => ({
+    title: t(type.i18nKey, type.label).value,
+    value: type.key as CriteriaType,
+  })),
 ])
 
 const demographicCriteriaList = computed(() => ensureDemographicCriteriaList())
@@ -353,9 +346,9 @@ function addCriteria(type: CriteriaType) {
   }
 
   const criteria = createDefaultCorelatedCriteria()
-  criteria.Criteria = {
-    [type]: {},
-  } as CorelatedCriteriaType['Criteria']
+  // The registry owns each type's initial shape, so a criterion added here and
+  // one added from the entry-event menu start out identical.
+  criteria.Criteria = CRITERIA_TYPE_BY_KEY[type].create() as CorelatedCriteriaType['Criteria']
   ensureCriteriaList().push(criteria)
 }
 

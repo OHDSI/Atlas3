@@ -65,10 +65,10 @@
 
                   <AtlasList density="compact">
                     <AtlasListItem
-                      v-for="type in criteriaTypes"
-                      :key="type"
-                      :title="type"
-                      @click="addPrimaryCriteria(type)"
+                      v-for="type in criteriaTypeOptions"
+                      :key="type.key"
+                      :title="type.title"
+                      @click="addPrimaryCriteria(type.key)"
                     />
                   </AtlasList>
                 </AtlasMenu>
@@ -287,6 +287,11 @@ import {
   AtlasSpacer,
   AtlasTextField,
 } from '@/components/ui'
+import {
+  CRITERIA_TYPE_BY_KEY,
+  EDITABLE_CRITERIA_TYPES,
+  type EditableCriteriaKey,
+} from './criteria/criteria-registry'
 import CriteriaRenderer from './criteria/CriteriaRenderer.vue'
 import CriteriaGroup from './criteria/CriteriaGroup.vue'
 import InclusionRulesPanel from './inclusion-rules/InclusionRulesPanel.vue'
@@ -400,23 +405,12 @@ const inclusionCriteriaLabel = computed(() => t('components.cohortExpressionEdit
 const exitCriteriaLabel = computed(() => t('components.cohortExpressionEditor.exitCriteria', 'Exit & Eras').value)
 const cohortErasLabel = computed(() => t('components.cohortExpressionEditor.cohortEras', 'Cohort Eras').value)
 
-const criteriaTypes = [
-  'ConditionOccurrence',
-  'ConditionEra',
-  'DrugExposure',
-  'DoseEra',
-  'DeviceExposure',
-  'DrugEra',
-  'Measurement',
-  'Observation',
-  'ObservationPeriod',
-  'PayerPlanPeriod',
-  'ProcedureOccurrence',
-  'Specimen',
-  'VisitDetail',
-  'VisitOccurrence',
-  'Death',
-]
+// Same list, same wording and same initial shapes as the criteria-group menu,
+// because both read the registry. This menu previously showed raw wrapper keys
+// ("ConditionOccurrence") while the group menu showed proper names.
+const criteriaTypeOptions = computed(() =>
+  EDITABLE_CRITERIA_TYPES.map(type => ({ key: type.key, title: t(type.i18nKey, type.label).value }))
+)
 
 const entryEventsState = computed(() => {
   const count = expression.value.PrimaryCriteria.CriteriaList.length
@@ -444,57 +438,8 @@ const observationPostDays = computed<number>({
   },
 })
 
-function addPrimaryCriteria(type: string) {
-  let criteria: Criteria
-
-  switch (type) {
-    case 'ConditionEra':
-      criteria = { ConditionEra: {} }
-      break
-    case 'DrugExposure':
-      criteria = { DrugExposure: {} }
-      break
-    case 'DoseEra':
-      criteria = { DoseEra: {} }
-      break
-    case 'DeviceExposure':
-      criteria = { DeviceExposure: {} }
-      break
-    case 'DrugEra':
-      criteria = { DrugEra: {} }
-      break
-    case 'Measurement':
-      criteria = { Measurement: {} }
-      break
-    case 'Observation':
-      criteria = { Observation: {} }
-      break
-    case 'ObservationPeriod':
-      criteria = { ObservationPeriod: {} }
-      break
-    case 'PayerPlanPeriod':
-      criteria = { PayerPlanPeriod: {} }
-      break
-    case 'ProcedureOccurrence':
-      criteria = { ProcedureOccurrence: {} }
-      break
-    case 'Specimen':
-      criteria = { Specimen: {} }
-      break
-    case 'VisitDetail':
-      criteria = { VisitDetail: {} }
-      break
-    case 'VisitOccurrence':
-      criteria = { VisitOccurrence: {} }
-      break
-    case 'Death':
-      criteria = { Death: {} }
-      break
-    case 'ConditionOccurrence':
-    default:
-      criteria = { ConditionOccurrence: { First: false } }
-      break
-  }
+function addPrimaryCriteria(type: EditableCriteriaKey) {
+  const criteria = CRITERIA_TYPE_BY_KEY[type].create()
 
   expression.value.PrimaryCriteria.CriteriaList.push(criteria)
 }

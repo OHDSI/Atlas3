@@ -41,7 +41,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { AtlasButton, AtlasSpacer } from '@/components/ui'
-import { getCriteriaWrapperKey, type Criteria, type CriteriaWrapperKey } from '../circe.types'
+import { getCriteriaWrapperKey, type Criteria } from '../circe.types'
 import ConditionEra from './ConditionEra.vue'
 import ConditionOccurrence from './ConditionOccurrence.vue'
 import Death from './Death.vue'
@@ -58,6 +58,7 @@ import Specimen from './Specimen.vue'
 import VisitDetail from './VisitDetail.vue'
 import VisitOccurrence from './VisitOccurrence.vue'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
+import type { EditableCriteriaKey } from './criteria-registry'
 
 const props = defineProps<{
   criteria: Criteria
@@ -73,7 +74,11 @@ defineEmits<{
 
 const wrapperKey = computed(() => getCriteriaWrapperKey(props.criteria))
 
-const editorMap: Partial<Record<CriteriaWrapperKey, unknown>> = {
+// The one place components are bound to criteria types. Every key the registry
+// marks `hasEditor` must appear here, and the check below fails the build if one
+// does not — which is how LocationRegion used to go missing from list after list
+// without anything noticing.
+const editorMap = {
   ConditionEra: ConditionEra,
   ConditionOccurrence: ConditionOccurrence,
   Death: Death,
@@ -89,9 +94,11 @@ const editorMap: Partial<Record<CriteriaWrapperKey, unknown>> = {
   Specimen: Specimen,
   VisitDetail: VisitDetail,
   VisitOccurrence: VisitOccurrence,
-}
+} satisfies Record<EditableCriteriaKey, unknown>
 
-const editorComponent = computed(() => editorMap[wrapperKey.value])
+const editorComponent = computed(
+  () => editorMap[wrapperKey.value as EditableCriteriaKey] as unknown
+)
 
 const editorProps = computed(() => {
   return {
