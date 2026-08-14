@@ -28,11 +28,22 @@ const EXPRESSION_PARSE_STATUS = 422
 export function normalizeRawCohortDefinition(raw: RawCohortDefinition): CohortDefinition {
   // WebAPI serialises `expression` as a JSON string; the editor works on the parsed
   // circe object, so this is the only place the two representations meet.
+  //
+  // Some callers already hand over the parsed object — the version-preview path,
+  // the e2e mocks, and any WebAPI deployment that serialises the DTO field as an
+  // object rather than a string. Requiring a string turned those into a 422 and
+  // an empty editor. Parsing only what is actually a string keeps the failure
+  // modes that matter (malformed JSON, schema violations) reported just as
+  // loudly, since the safeParse below still runs either way.
   let source: unknown
-  try {
-    source = JSON.parse(raw.expression)
-  } catch (err) {
-    throw new ApiError(EXPRESSION_PARSE_FAILED, EXPRESSION_PARSE_STATUS, String(err))
+  if (typeof raw.expression === 'string') {
+    try {
+      source = JSON.parse(raw.expression)
+    } catch (err) {
+      throw new ApiError(EXPRESSION_PARSE_FAILED, EXPRESSION_PARSE_STATUS, String(err))
+    }
+  } else {
+    source = raw.expression
   }
 
   const parsed = CohortExpressionSchema.safeParse(source)

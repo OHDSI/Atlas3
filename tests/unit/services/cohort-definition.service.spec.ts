@@ -110,6 +110,29 @@ describe('services/cohort-definition.service', () => {
       }
     })
 
+    // WebAPI's DTO field is a String, but the version-preview path and the e2e
+    // mocks hand over an expression that is already an object. Requiring a
+    // string made those a 422, and the builder rendered an empty cohort whose
+    // export produced `{}`.
+    it('accepts an expression that arrives already parsed rather than as a JSON string', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            id: 1,
+            name: 'Demo',
+            expression: { ConceptSets: [], PrimaryCriteria: { CriteriaList: [] } },
+          }),
+      })
+
+      const result = await getCohortDefinition(1)
+
+      expect(result).toMatchObject({
+        success: true,
+        data: { expression: { ConceptSets: [], PrimaryCriteria: { CriteriaList: [] } } },
+      })
+    })
+
     it('reports a malformed expression as a failed ApiResult instead of an empty cohort', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
