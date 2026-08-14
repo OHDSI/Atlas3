@@ -5,6 +5,13 @@
         <div class="text-subtitle-1 font-weight-medium">
           {{ sample.name }}
         </div>
+        <div
+          v-if="sourceName"
+          class="text-caption text-grey-darken-1"
+          data-testid="cohort-sample-detail-source"
+        >
+          {{ t('components.cohortSampleDetail.source', 'Source: {name}', { name: sourceName }).value }}
+        </div>
         <div class="text-caption text-grey-darken-1">
           {{
             t('components.cohortSampleDetail.personsCreated', '{count} persons · created {date}', {
@@ -107,6 +114,14 @@ defineEmits<{ 'open-profile': [personId: string] }>()
 const dsStore = useDataSourcesStore()
 
 const effectiveSourceKey = computed(() => props.sourceKey ?? dsStore.selectedSource?.sourceKey)
+
+// Once a sample is generated, the view gives no indication of which source's
+// sample is being looked at, which is ambiguous when a cohort has samples
+// from more than one source (#204).
+const sourceName = computed(
+  () => dsStore.sources.find(s => s.sourceKey === effectiveSourceKey.value)?.sourceName
+    ?? effectiveSourceKey.value
+)
 
 function formatCount(n: number): string {
   return new Intl.NumberFormat().format(n)
