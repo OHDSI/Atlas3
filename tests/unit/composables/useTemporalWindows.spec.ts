@@ -103,3 +103,125 @@ describe('formatTemporalWindowDisplay', () => {
     expect(formatTemporalWindowDisplay({})).toBe('No temporal constraints')
   })
 })
+
+// The composable had no tests before this branch, so its other exports went
+// unexercised alongside the summary text.
+describe('validateTemporalWindows', () => {
+  const { validateTemporalWindows } = useTemporalWindows()
+
+  it('accepts an empty window', () => {
+    expect(validateTemporalWindows({})).toEqual({ isValid: true, errors: [] })
+  })
+
+  it('accepts non-negative day counts and "all time" on either end', () => {
+    expect(
+      validateTemporalWindows({
+        startWindow: win({ days: null, beforeAfter: 'BEFORE' }),
+        endWindow: win({ days: 30, beforeAfter: 'AFTER' }),
+      }).isValid
+    ).toBe(true)
+  })
+
+  it('rejects a negative start and names the offending end', () => {
+    const result = validateTemporalWindows({ startWindow: win({ days: -1, beforeAfter: 'BEFORE' }) })
+
+    expect(result.isValid).toBe(false)
+    expect(result.errors).toEqual(['Start window: Days must be >= 0 or null for "all time"'])
+  })
+
+  it('rejects a negative end and names the offending end', () => {
+    const result = validateTemporalWindows({ endWindow: win({ days: -5, beforeAfter: 'AFTER' }) })
+
+    expect(result.errors).toEqual(['End window: Days must be >= 0 or null for "all time"'])
+  })
+
+  it('rejects a range whose start falls after its end', () => {
+    // 10 days after index to 5 days after index.
+    const result = validateTemporalWindows({
+      startWindow: win({ days: 10, beforeAfter: 'AFTER' }),
+      endWindow: win({ days: 5, beforeAfter: 'AFTER' }),
+    })
+
+    expect(result.isValid).toBe(false)
+    expect(result.errors).toContain('Start window must come before end window')
+  })
+
+  it('allows a range that crosses the index', () => {
+    expect(
+      validateTemporalWindows({
+        startWindow: win({ days: 30, beforeAfter: 'BEFORE' }),
+        endWindow: win({ days: 30, beforeAfter: 'AFTER' }),
+      }).isValid
+    ).toBe(true)
+  })
+
+  it('does not compare order when either end is unbounded', () => {
+    expect(
+      validateTemporalWindows({
+        startWindow: win({ days: 10, beforeAfter: 'AFTER' }),
+        endWindow: win({ days: null, beforeAfter: 'AFTER' }),
+      }).isValid
+    ).toBe(true)
+  })
+
+  it('collects errors from both ends at once', () => {
+    const result = validateTemporalWindows({
+      startWindow: win({ days: -1, beforeAfter: 'BEFORE' }),
+      endWindow: win({ days: -2, beforeAfter: 'AFTER' }),
+    })
+
+    expect(result.errors).toContain('Start window: Days must be >= 0 or null for "all time"')
+    expect(result.errors).toContain('End window: Days must be >= 0 or null for "all time"')
+    // These offsets also put the start after the end, which is reported too.
+    expect(result.errors).toContain('Start window must come before end window')
+  })
+})
+
+describe('defaultWindow', () => {
+  const { defaultWindow } = useTemporalWindows()
+
+  it('defaults to zero days after the index start', () => {
+    expect(defaultWindow()).toEqual({
+      days: 0,
+      beforeAfter: 'AFTER',
+      useIndexEnd: false,
+      useEventEnd: false,
+    })
+  })
+
+  it('maps the direction onto the stored enum', () => {
+    expect(defaultWindow('before').beforeAfter).toBe('BEFORE')
+    expect(defaultWindow('after').beforeAfter).toBe('AFTER')
+  })
+
+  it('carries the day count and anchor flags through', () => {
+    expect(defaultWindow('before', null, true, true)).toEqual({
+      days: null,
+      beforeAfter: 'BEFORE',
+      useIndexEnd: true,
+      useEventEnd: true,
+    })
+  })
+})
+
+describe('getTemporalWindowPresets', () => {
+  const { getTemporalWindowPresets, validateTemporalWindows } = useTemporalWindows()
+
+  it('offers presets that all pass validation', () => {
+    const presets = getTemporalWindowPresets()
+
+    expect(presets.length).toBeGreaterThan(0)
+    for (const preset of presets) {
+      expect(preset.label).toBeTruthy()
+      expect(validateTemporalWindows(preset.value).isValid).toBe(true)
+    }
+  })
+
+  it('includes the FeatureExtraction baseline lookbacks', () => {
+    const labels = getTemporalWindowPresets().map(p => p.label)
+
+    expect(labels.some(l => l.includes('30'))).toBe(true)
+    expect(labels.some(l => l.includes('180'))).toBe(true)
+    expect(labels.some(l => l.includes('365'))).toBe(true)
+  })
+})
