@@ -18,7 +18,7 @@
     <!-- Concept Set Selection Button/Chip -->
     <div class="mt-4 mb-4">
       <AtlasButton
-        v-if="!strategy.conceptSet || strategy.conceptSet.id == null"
+        v-if="!strategy.conceptSet || !hasNumericConceptSetId(strategy.conceptSet)"
         variant="secondary"
         icon="mdi-plus"
         :disabled="disabled"
@@ -141,6 +141,7 @@ import { watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ExitCriteria } from '@/models/cohort.types'
 import type { ValidationError } from '@/models/validation.types'
+import { hasNumericConceptSetId } from '@/utils/concept-set-id'
 
 const { tv } = useI18n()
 

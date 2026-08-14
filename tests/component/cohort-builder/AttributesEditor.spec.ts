@@ -231,6 +231,30 @@ describe('AttributesEditor', () => {
       expect(wrapper.text()).toContain('Male')
     })
 
+    it('still shows the picker for the empty-string placeholder a new attribute is seeded with', () => {
+      // openConceptSetPickerForAttribute seeds `{ id: '', name: '' }`, and
+      // CriteriaEventCard does the same. That is "not chosen yet", so it must
+      // keep offering the picker rather than render an empty chip.
+      const attributes: ConceptSetAttribute[] = [
+        { type: 'conceptSet', attributeKey: 'gender', conceptSet: { id: '', name: '' } },
+      ]
+
+      const wrapper = createWrapper(attributes)
+
+      expect(wrapper.find('[data-testid="attribute-concept-set-picker"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="attribute-selected-concept-set"]').exists()).toBe(false)
+    })
+
+    it('shows the picker when the attribute has no concept set at all', () => {
+      const attributes: ConceptSetAttribute[] = [
+        { type: 'conceptSet', attributeKey: 'gender' },
+      ]
+
+      const wrapper = createWrapper(attributes)
+
+      expect(wrapper.find('[data-testid="attribute-concept-set-picker"]').exists()).toBe(true)
+    })
+
     it('shows the selected concept set chip when its id is 0, not the "select" placeholder (#213)', () => {
       // id 0 is a valid, real concept set id (the first set in an imported
       // cohort). A truthy check on `.id` treated it the same as "unset" and
