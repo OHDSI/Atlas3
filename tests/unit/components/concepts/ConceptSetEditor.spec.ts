@@ -473,6 +473,23 @@ describe('ConceptSetEditor', () => {
     expect(addConceptSpy).toHaveBeenNthCalledWith(2, second, flags)
   })
 
+  it('switches to the Selected tab after the first concept lands in an empty set, not on later adds (#210)', async () => {
+    const wrapper = mountComponent({ conceptSet: null })
+    const store = useConceptSetsStore()
+    store.currentSet = { id: 'new', name: '', items: [] }
+    await wrapper.vm.$nextTick()
+    expect(wrapper.vm.activeTab).toBe('search')
+
+    await wrapper.vm.onAddConcept(mockConcept)
+    expect(wrapper.vm.activeTab).toBe('selected')
+
+    // A second add to an already-populated set should not force a tab
+    // switch back if the user has since navigated away from Selected.
+    wrapper.vm.activeTab = 'search'
+    await wrapper.vm.onAddConcept({ ...mockConcept, conceptId: 999 })
+    expect(wrapper.vm.activeTab).toBe('search')
+  })
+
   it('should remove concept from set when remove-concept is emitted', async () => {
     const wrapper = mountComponent({ conceptSet: mockConceptSet })
     const store = useConceptSetsStore()

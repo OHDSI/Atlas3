@@ -1127,16 +1127,31 @@ function confirmDelete() {
 // Concept Building Methods
 // ============================================================================
 
+// A brand-new set opens on Search so users can add concepts right away, but a
+// single add left the search view up with no visible confirmation that
+// anything happened, since the added concept only shows on the Selected tab.
+// Switch there after the FIRST concept lands in an empty set, not on every
+// add, so search-then-add-several still works (#210).
+function showResultAfterFirstAdd(wasEmpty: boolean) {
+  if (wasEmpty && (store.currentSet?.items.length ?? 0) > 0) {
+    activeTab.value = 'selected'
+  }
+}
+
 function onAddConcept(concept: Concept, flags?: ConceptAddFlags) {
+  const wasEmpty = (store.currentSet?.items.length ?? 0) === 0
   store.addConceptToSet(concept, flags)
   hasUnsavedChanges.value = true
+  showResultAfterFirstAdd(wasEmpty)
 }
 
 function onAddConcepts(concepts: Concept[], flags?: ConceptAddFlags) {
+  const wasEmpty = (store.currentSet?.items.length ?? 0) === 0
   for (const concept of concepts) {
     store.addConceptToSet(concept, flags)
   }
   hasUnsavedChanges.value = true
+  showResultAfterFirstAdd(wasEmpty)
 }
 
 function onRemoveConcept(concept: Concept) {
@@ -1164,8 +1179,13 @@ function onToggleExclude(conceptId: number) {
   hasUnsavedChanges.value = true
 }
 
-function onRecommendedConceptsAdded(_count: number) {
+function onRecommendedConceptsAdded(count: number) {
   hasUnsavedChanges.value = true
+  // Same rule as onAddConcept: only jump to Selected when this batch is
+  // what populated a previously-empty set, not on every recommend-add (#210).
+  if (count > 0 && store.currentSet?.items.length === count) {
+    activeTab.value = 'selected'
+  }
 }
 
 // ============================================================================
