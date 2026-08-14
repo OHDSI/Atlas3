@@ -139,22 +139,22 @@ function formatEndpoint(endpoint: Offset | null | undefined): string {
   return `${days} ${direction}`
 }
 
+// These read as fragments inside the sentence built by formatWindowExpression
+// ("event starts between 30 days before and 0 days after index start"), so they
+// are lowercase and keyed separately from the capitalised chip labels that
+// Window.vue renders for the same concepts.
 function formatAnchor(window: Pick<Window, 'UseIndexEnd' | 'UseEventEnd'>): string {
   const { t } = useI18n()
 
-  return window.UseEventEnd ? t('common.eventEnds', 'event ends').value : t('common.eventStarts', 'event starts').value
+  return window.UseEventEnd
+    ? t('components.windowExpression.eventEnds', 'event ends').value
+    : t('components.windowExpression.eventStarts', 'event starts').value
 }
 
 function formatIndexAnchor(window: Pick<Window, 'UseIndexEnd' | 'UseEventEnd'>): string {
   const { t } = useI18n()
 
-  if (window.UseIndexEnd && window.UseEventEnd) {
-    return t('common.indexEnds', 'index end').value
-  }
-
-  if (window.UseIndexEnd) {
-    return t('common.indexEnds', 'index end').value
-  }
-
-  return t('common.indexStarts', 'index start').value
+  return window.UseIndexEnd
+    ? t('components.windowExpression.indexEnd', 'index end').value
+    : t('components.windowExpression.indexStart', 'index start').value
 }

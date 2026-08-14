@@ -34,7 +34,7 @@
               class="rule-detail__description"
               :class="{ 'rule-detail__description--placeholder': !ruleDescription }"
             >
-              {{ ruleDescription || t('cohortDefinitions.ruleDescription', 'No description').value }}
+              {{ ruleDescription || t('cohortDefinitions.noRuleDescription', 'No description').value }}
             </div>
           </div>
         </template>
