@@ -507,7 +507,7 @@ describe('Concept Sets Store', () => {
 
         store.addConceptToSet(mockConcept)
 
-        expect(store.error).toBe('Concept already exists in this set')
+        expect(store.error).toBe('Concept already exists in this set with the same options')
       })
 
       it('should clear error on successful add', () => {

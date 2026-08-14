@@ -274,10 +274,10 @@ const resolvedSourceKey = computed(
 )
 
 const emit = defineEmits<{
-  'toggle:descendants': [conceptId: number]
-  'toggle:mapped': [conceptId: number]
-  'toggle:exclude': [conceptId: number]
-  remove: [conceptId: number]
+  'toggle:descendants': [item: ConceptSetItem]
+  'toggle:mapped': [item: ConceptSetItem]
+  'toggle:exclude': [item: ConceptSetItem]
+  remove: [item: ConceptSetItem]
   'view-concept': [payload: { conceptId: number; sourceKey: string }]
 }>()
 
@@ -449,19 +449,19 @@ function resetFilters() {
 }
 
 function onToggleDescendants(item: ConceptSetItem) {
-  emit('toggle:descendants', item.conceptId)
+  emit('toggle:descendants', item)
 }
 
 function onToggleMapped(item: ConceptSetItem) {
-  emit('toggle:mapped', item.conceptId)
+  emit('toggle:mapped', item)
 }
 
 function onToggleExclude(item: ConceptSetItem) {
-  emit('toggle:exclude', item.conceptId)
+  emit('toggle:exclude', item)
 }
 
 function onRemove(item: ConceptSetItem) {
-  emit('remove', item.conceptId)
+  emit('remove', item)
 }
 </script>
 
