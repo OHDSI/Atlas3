@@ -129,4 +129,22 @@ describe('per-row edits when a concept appears more than once', () => {
 
     expect(s.currentSet?.items.map(i => i.conceptId)).toEqual([313217, 999])
   })
+
+  describe('with no concept set open', () => {
+    it('reports the missing set rather than mutating nothing silently', () => {
+      const s = useConceptSetsStore()
+      const row = { conceptId: 1 } as never
+
+      s.removeConceptItem(row)
+      expect(s.error).toBe('No concept set selected')
+
+      s.error = null
+      s.toggleConceptItemFlag(row, 'isExcluded')
+      expect(s.error).toBe('No concept set selected')
+
+      s.error = null
+      s.setConceptItemFlags(row, { isExcluded: true })
+      expect(s.error).toBe('No concept set selected')
+    })
+  })
 })
