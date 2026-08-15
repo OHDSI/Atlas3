@@ -125,3 +125,66 @@ test.describe('Concept Set list', () => {
     await expect(confirmDialog).not.toBeVisible()
   })
 })
+
+test.describe('Concept set editor — inline panel layout', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupBasicMocks(page)
+    await page.goto('/#/concepts')
+    await waitForPageReady(page)
+  })
+
+  // #254 — the search field is the first element inside the tab's v-window,
+  // whose overflow: hidden clips anything rendered above its own top edge.
+  // The floating label needs clearance there or its top gets sliced off.
+  test('search tab field has clearance so its floating label is not clipped by the tab window', async ({
+    page
+  }) => {
+    const newButton = page.getByRole('button', { name: /new concept set/i }).first()
+    await expect(newButton).toBeEnabled()
+    await newButton.click()
+    await expect(page.getByTestId('cs-editor-primary-btn')).toBeVisible()
+
+    // New sets open on the Search tab.
+    const wrap = page.locator('.concept-search-inline')
+    await expect(wrap).toBeVisible()
+
+    const paddingTop = await wrap.evaluate(el => parseFloat(getComputedStyle(el).paddingTop))
+    expect(paddingTop).toBeGreaterThan(0)
+  })
+
+  // #253 — the inline concept detail overlay is a scrolling container with its
+  // own top padding, and ConceptDetailHeader inside it is position: sticky.
+  // A sticky offset is measured from the scroll container's padding edge, so
+  // top padding on the container itself leaves a permanent gap above the
+  // stuck header, exposing the container's background as the user scrolls.
+  test('inline concept detail header sticks flush with no gap above it on scroll', async ({
+    page
+  }) => {
+    const newButton = page.getByRole('button', { name: /new concept set/i }).first()
+    await expect(newButton).toBeEnabled()
+    await newButton.click()
+    await expect(page.getByTestId('cs-editor-primary-btn')).toBeVisible()
+
+    const searchInput = page.locator('.concept-search-inline input').first()
+    await searchInput.fill('diabetes')
+    await searchInput.press('Enter')
+
+    const nameLink = page.locator('[data-testid^="concept-name-link-"]').first()
+    await expect(nameLink).toBeVisible({ timeout: 10000 })
+    await nameLink.click()
+
+    const overlay = page.locator('[data-testid="concept-set-editor-inline-detail"]')
+    await expect(overlay).toBeVisible()
+    const header = page.getByTestId('concept-detail-header')
+    await expect(header).toBeVisible()
+
+    await overlay.evaluate(el => el.scrollTo(0, 300))
+
+    const rects = await page.evaluate(() => {
+      const overlayEl = document.querySelector('[data-testid="concept-set-editor-inline-detail"]')!
+      const headerEl = document.querySelector('[data-testid="concept-detail-header"]')!
+      return { overlayTop: overlayEl.getBoundingClientRect().top, headerTop: headerEl.getBoundingClientRect().top }
+    })
+    expect(rects.headerTop).toBeCloseTo(rects.overlayTop, 0)
+  })
+})

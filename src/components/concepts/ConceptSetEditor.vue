@@ -1484,7 +1484,13 @@ function closeJsonDialog() {
 }
 
 /* Concept detail overlays the tabs menu + body within cs-editor__main,
- * leaving the editor header (title / save / close) visible above it. */
+ * leaving the editor header (title / save / close) visible above it.
+ *
+ * No top padding here: ConceptDetailHeader inside is position: sticky:
+ * top: 0, and a sticky element's offset is measured from the padding
+ * edge of its nearest scrolling ancestor. Top padding on this element
+ * would leave a permanent gap above the stuck header, exposing this
+ * container's own background as you scroll (#253). */
 .cs-editor__detail-overlay {
   position: absolute;
   inset: 0;
@@ -1493,7 +1499,7 @@ function closeJsonDialog() {
   flex-direction: column;
   overflow-y: auto;
   background: rgb(var(--v-theme-surface));
-  padding: 16px 28px 28px;
+  padding: 0 28px 28px;
 }
 .cs-editor__inline-detail-toolbar {
   padding: 4px 0 12px;

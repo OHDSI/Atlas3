@@ -208,5 +208,10 @@ function onRemoveConcept(concept: Concept) {
 <style scoped>
 .concept-search-inline {
   width: 100%;
+  /* The search field sits as the first element inside the tab's v-window,
+   * whose overflow: hidden clips anything above its own top edge. With no
+   * clearance here, the outlined field's floating label — which renders
+   * above the field's own box — gets its top sliced off (#254). */
+  padding-top: 8px;
 }
 </style>
