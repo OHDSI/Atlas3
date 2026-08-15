@@ -112,16 +112,36 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
   // Actions
   // ============================================================================
 
+  // This is a search-as-you-type box behind a 300ms debounce, so several
+  // queries can still be in flight at once and they do not come back in the
+  // order they were sent. Every call takes a generation token and aborts the
+  // request it supersedes; a response whose token is stale is dropped instead
+  // of overwriting the results of a newer query.
+  let searchGeneration = 0
+  let activeSearch: AbortController | null = null
+
+  function beginSearch(): number {
+    activeSearch?.abort()
+    activeSearch = null
+    return ++searchGeneration
+  }
+
   async function search(term: string) {
+    const generation = beginSearch()
+
     if (term.length < 3) {
       allConcepts.value = []
       error.value = null
+      loading.value = false
       return
     }
 
     searchTerm.value = term
     loading.value = true
     error.value = null
+
+    const controller = new AbortController()
+    activeSearch = controller
 
     try {
       const webapiStore = useWebAPIStore()
@@ -131,7 +151,8 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
         throw new Error('No vocabulary source available.')
       }
 
-      const result = await searchConcepts(sourceKey, term)
+      const result = await searchConcepts(sourceKey, term, { signal: controller.signal })
+      if (generation !== searchGeneration) return
       if (!result.success) {
         throw result.error
       }
@@ -144,6 +165,10 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
 
       await loadRecordCounts(recordCountSourceKey.value ?? sourceKey)
     } catch (err) {
+      // A superseded query has already been replaced on screen; its failure
+      // (usually the abort itself) is not the user's problem.
+      if (generation !== searchGeneration) return
+
       const errorMessage = err instanceof Error ? err.message : String(err)
       error.value = errorMessage.includes('403')
         ? 'Access denied. Please check your source selection in Configuration.'
@@ -163,12 +188,17 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
     const current = allConcepts.value
     if (current.length === 0) return
 
+    // Counts belong to the result set they were requested for; if a newer
+    // search has landed meanwhile they would decorate the wrong concepts.
+    const generation = searchGeneration
     loadingRecordCounts.value = true
     try {
       const recordCounts = await getConceptRecordCounts(
         sourceKey,
         current.map(c => c.conceptId)
       )
+
+      if (generation !== searchGeneration) return
 
       allConcepts.value = current.map(concept => ({
         ...concept,
@@ -221,6 +251,8 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
    * Clear search results
    */
   function clearSearch() {
+    // Nothing in flight may repopulate a box the user just emptied.
+    beginSearch()
     searchTerm.value = ''
     allConcepts.value = []
     error.value = null

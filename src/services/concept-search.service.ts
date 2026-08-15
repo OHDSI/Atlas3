@@ -34,6 +34,9 @@ export async function searchConcepts(
     page?: number
     pageSize?: number
     domain?: string
+    // Search-as-you-type: callers pass a signal so a superseded query can be
+    // cancelled instead of racing the one the user is actually waiting for.
+    signal?: AbortSignal
   }
 ): Promise<ApiResult<Concept[]>> {
   return unwrap(async () => {
@@ -54,7 +57,7 @@ export async function searchConcepts(
     if (options?.domain) {
       body.DOMAIN_ID = [options.domain]
     }
-    const data = await httpPostRead<unknown>(endpoint, body)
+    const data = await httpPostRead<unknown>(endpoint, body, { signal: options?.signal })
     const parsed = parseOrThrow(ConceptSearchResponseSchema, data, 'Invalid concept search response format')
 
     return parsed.map(mapConceptFromAPI)

@@ -119,9 +119,24 @@ export const useWebAPIStore = defineStore('webapi', () => {
   // Generation workflow actions
 
   /**
-   * Fetch available CDM data sources
+   * Fetch available CDM data sources.
+   *
+   * Several components call this from their own `onMounted`, so a single page
+   * load can ask for the source list four or five times in the same tick.
+   * Concurrent callers share the one in-flight request; once it settles the
+   * slot is cleared so a later call still refetches.
    */
-  async function fetchSources(): Promise<void> {
+  let sourcesRequest: Promise<void> | null = null
+
+  function fetchSources(): Promise<void> {
+    if (sourcesRequest) return sourcesRequest
+    sourcesRequest = doFetchSources().finally(() => {
+      sourcesRequest = null
+    })
+    return sourcesRequest
+  }
+
+  async function doFetchSources(): Promise<void> {
     try {
       setLoadingSources(true)
       const result = await fetchCDMSources()

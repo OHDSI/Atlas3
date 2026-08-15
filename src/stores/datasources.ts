@@ -103,48 +103,65 @@ export const useDataSourcesStore = defineStore('datasources', () => {
     }
   }
 
-  async function fetchReport(reportType: ReportType) {
-    if (!selectedSourceId.value) return
+  // In-flight report requests, keyed by cache key. Two *different* reports can
+  // legitimately be loading at once (the user picks B while A is still in
+  // flight); only a repeat request for the same key is a duplicate. The old
+  // guard keyed off the shared `loading.report` flag and returned immediately
+  // with neither data nor a promise, so B was dropped and never refetched.
+  const reportRequests = new Map<string, Promise<void>>()
+
+  function fetchReport(reportType: ReportType): Promise<void> {
+    if (!selectedSourceId.value) return Promise.resolve()
 
     const source = selectedSource.value
-    if (!source) return
+    if (!source) return Promise.resolve()
 
     const cacheKey = `${selectedSourceId.value}-${reportType}`
 
     // Return cached if available
     if (reportCache.value.has(cacheKey)) {
       logger.debug('DataSourcesStore', 'Using cached report', cacheKey)
-      return
+      return Promise.resolve()
     }
 
-    // Don't start a new fetch if already loading
-    if (loading.value.report) {
-      logger.debug('DataSourcesStore', 'Already loading a report, skipping', cacheKey)
-      return
+    const pending = reportRequests.get(cacheKey)
+    if (pending) {
+      logger.debug('DataSourcesStore', 'Report already in flight, joining it', cacheKey)
+      return pending
     }
 
+    const request = doFetchReport(reportType, source.sourceKey, cacheKey).finally(() => {
+      reportRequests.delete(cacheKey)
+      // Only clear the flag once nothing is left in flight.
+      loading.value.report = reportRequests.size > 0
+    })
+    reportRequests.set(cacheKey, request)
+    return request
+  }
+
+  async function doFetchReport(reportType: ReportType, sourceKey: string, cacheKey: string) {
     loading.value.report = true
     error.value.report = null
 
     try {
       if (reportType === 'dashboard') {
-        const data = await getDashboardReport(source.sourceKey)
+        const data = await getDashboardReport(sourceKey)
         cacheReport(cacheKey, { type: 'dashboard', data })
       } else if (reportType === 'datadensity') {
         const { getDataDensityReport } = await import('@/services/datasource.service')
-        const data = await getDataDensityReport(source.sourceKey)
+        const data = await getDataDensityReport(sourceKey)
         cacheReport(cacheKey, { type: 'datadensity', data })
       } else if (reportType === 'person') {
         const { getPersonReport } = await import('@/services/datasource.service')
-        const data = await getPersonReport(source.sourceKey)
+        const data = await getPersonReport(sourceKey)
         cacheReport(cacheKey, { type: 'person', data })
       } else if (reportType === 'observationPeriod') {
         const { getObservationPeriodReport } = await import('@/services/datasource.service')
-        const data = await getObservationPeriodReport(source.sourceKey)
+        const data = await getObservationPeriodReport(sourceKey)
         cacheReport(cacheKey, { type: 'observationPeriod', data })
       } else if (reportType === 'death') {
         const { getDeathReport } = await import('@/services/datasource.service')
-        const data = await getDeathReport(source.sourceKey)
+        const data = await getDeathReport(sourceKey)
         cacheReport(cacheKey, { type: 'death', data })
       } else if (
         reportType === 'visit' ||
@@ -156,7 +173,7 @@ export const useDataSourcesStore = defineStore('datasources', () => {
         reportType === 'measurement' ||
         reportType === 'observation'
       ) {
-        const data = await getClinicalDomainReport(source.sourceKey, reportType)
+        const data = await getClinicalDomainReport(sourceKey, reportType)
         cacheReport(cacheKey, { type: 'clinical', data: { prevalenceData: data } })
       } else {
         throw new Error(`Report type ${reportType} not yet implemented`)
@@ -171,11 +188,9 @@ export const useDataSourcesStore = defineStore('datasources', () => {
       error.value.report = err instanceof Error ? err.message : 'Failed to load report'
       logger.error('DataSourcesStore', 'Error fetching report', {
         reportType,
-        sourceKey: source.sourceKey,
+        sourceKey,
         error: err,
       })
-    } finally {
-      loading.value.report = false
     }
   }
 

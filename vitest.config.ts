@@ -47,6 +47,11 @@ export default defineConfig({
       reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
       reportsDirectory: './coverage',
       clean: false,
+      // Write the coverage reports even when a test fails. Vitest defaults this
+      // to false, which means one failing test silently produces no
+      // coverage-summary.json — the thresholds go unchecked and the CI job that
+      // reads the summary has nothing to read.
+      reportOnFailure: true,
       // Include all src/ files for coverage
       include: ['src/**/*.{ts,vue}'],
       // Documented exclusions with justifications

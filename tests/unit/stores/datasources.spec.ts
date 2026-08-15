@@ -342,15 +342,46 @@ describe('DataSources Store', () => {
       expect(store.error.report).toBeNull()
     })
 
-    it('should not start new fetch if already loading', async () => {
+    it('should join an in-flight request for the same report instead of refetching', async () => {
       const store = useDataSourcesStore()
       store.sources = mockDataSources
       store.selectedSourceId = 1
-      store.loading.report = true
+      vi.mocked(getDashboardReport).mockResolvedValue({ summary: {} })
 
-      await store.fetchReport('dashboard')
+      await Promise.all([store.fetchReport('dashboard'), store.fetchReport('dashboard')])
 
-      expect(getDashboardReport).not.toHaveBeenCalled()
+      expect(getDashboardReport).toHaveBeenCalledTimes(1)
+      expect(store.reportCache.has('1-dashboard')).toBe(true)
+      expect(store.loading.report).toBe(false)
+    })
+
+    it('should still fetch report B when report A is in flight', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+
+      let releaseDashboard: (value: unknown) => void = () => {}
+      vi.mocked(getDashboardReport).mockReturnValue(
+        new Promise(resolve => {
+          releaseDashboard = resolve
+        }) as ReturnType<typeof getDashboardReport>
+      )
+      vi.mocked(getClinicalDomainReport).mockResolvedValue([])
+
+      // A starts and stays in flight; B is requested while it hangs.
+      const reportA = store.fetchReport('dashboard')
+      await store.fetchReport('conditionOccurrence')
+
+      expect(getClinicalDomainReport).toHaveBeenCalledWith('TEST_CDM_1', 'conditionOccurrence')
+      expect(store.reportCache.has('1-conditionOccurrence')).toBe(true)
+      // A is still running, so the store is still loading.
+      expect(store.loading.report).toBe(true)
+
+      releaseDashboard({ summary: {} })
+      await reportA
+
+      expect(store.reportCache.has('1-dashboard')).toBe(true)
+      expect(store.loading.report).toBe(false)
     })
 
     it('should handle visit report type', async () => {
