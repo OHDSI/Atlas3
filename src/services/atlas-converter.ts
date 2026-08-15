@@ -20,6 +20,7 @@ import type {
   AtlasEndStrategy,
   AtlasGroup,
 } from '@/models/atlas.types'
+import { ATTRIBUTE_KEY_TO_ATLAS } from '@/models/atlas.types'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 import { normalizeInvalidReason } from '@/utils/api-mappers'
 
@@ -352,7 +353,7 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
         !!attr &&
         typeof attr === 'object' &&
         attr.type === 'concept' &&
-        convertToPascalCase(attr.attributeKey) + 'Exclude' === typeExcludeKey,
+        attributeKeyToAtlasField(attr.attributeKey) + 'Exclude' === typeExcludeKey,
     )
     ;(criteriaTypeObj as Record<string, unknown>)[typeExcludeKey] = typeConceptAttr
       ? !!typeConceptAttr.isExclusion
@@ -492,7 +493,7 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
 }
 
 function convertTextAttribute(attributeKey: string, value: string, operator?: string): Record<string, unknown> {
-  const attributeName = convertToPascalCase(attributeKey)
+  const attributeName = attributeKeyToAtlasField(attributeKey)
   return {
     [attributeName]: {
       Text: value,
@@ -553,7 +554,7 @@ function parseTextFilterAttribute(
 }
 
 function convertBooleanAttribute(attributeKey: string, value: boolean): Record<string, boolean> {
-  const attributeName = convertToPascalCase(attributeKey)
+  const attributeName = attributeKeyToAtlasField(attributeKey)
   return { [attributeName]: value }
 }
 
@@ -569,7 +570,7 @@ function convertConceptAttribute(
   attributeKey: string,
   concepts: unknown[]
 ): Record<string, unknown> {
-  const attributeName = convertToPascalCase(attributeKey)
+  const attributeName = attributeKeyToAtlasField(attributeKey)
   return { [attributeName]: concepts }
 }
 
@@ -632,7 +633,7 @@ function convertTemporalRelationshipAttribute(
     }
   }
 ): Record<string, unknown> {
-  const attributeName = convertToPascalCase(attributeKey)
+  const attributeName = attributeKeyToAtlasField(attributeKey)
   const atlasWindow: Record<string, unknown> = {}
 
   if (temporalWindow.startWindow) {
@@ -708,7 +709,7 @@ function convertDateAdjustmentAttribute(
     endOffset: number
   }
 ): Record<string, unknown> {
-  const attributeName = convertToPascalCase(attributeKey)
+  const attributeName = attributeKeyToAtlasField(attributeKey)
   return {
     [attributeName]: {
       StartWith: dateAdjustment.startWith,
@@ -771,7 +772,7 @@ function convertAttributeToAtlas(attr: EventAttribute): Record<string, unknown> 
   }
 
   if (attr.type === 'numericRange' || attr.type === 'dateRange') {
-    const attributeName = convertToPascalCase(attr.attributeKey)
+    const attributeName = attributeKeyToAtlasField(attr.attributeKey)
     const result: Record<string, { Op: string; Value: unknown; Extent?: unknown }> = {
       [attributeName]: {
         Op: convertOperatorToAtlas(attr.operator),
@@ -797,7 +798,7 @@ function convertAttributeToAtlas(attr: EventAttribute): Record<string, unknown> 
   } else if (attr.type === 'concept') {
     const out = convertConceptAttribute(attr.attributeKey, attr.concepts)
     if (attr.isExclusion) {
-      out[convertToPascalCase(attr.attributeKey) + 'Exclude'] = true
+      out[attributeKeyToAtlasField(attr.attributeKey) + 'Exclude'] = true
     }
     return out
   } else if (attr.type === 'boolean') {
@@ -1807,9 +1808,20 @@ function convertToPascalCase(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-// Atlas 2.15 uses uppercase "CS" for concept-set variant fields (e.g. VisitTypeCS),
-// but our internal keys camelCase the suffix as "Cs" (e.g. visitTypeCs).
+// The single mapping from an internal attributeKey to the CIRCE field name.
+//
+// Most keys are just the PascalCase of the internal key, which is why the write
+// path used to compute the name and skip the table entirely. That silently broke
+// every key where CIRCE does not follow the rule: `deviceId` is CIRCE's
+// `UniqueDeviceId`, so the read path parsed a device filter in and the write path
+// pushed `DeviceId` back out — a field CIRCE does not recognise, so the filter was
+// dropped on every save. ATTRIBUTE_KEY_TO_ATLAS is the source of truth and the
+// algorithmic rule is only the fallback, so the round trip cannot drift again.
 function attributeKeyToAtlasField(key: string): string {
+  const mapped = ATTRIBUTE_KEY_TO_ATLAS[key]
+  if (mapped) return mapped
+  // Atlas 2.15 uses uppercase "CS" for concept-set variant fields (e.g. VisitTypeCS),
+  // but our internal keys camelCase the suffix as "Cs" (e.g. visitTypeCs).
   const pascal = convertToPascalCase(key)
   return pascal.endsWith('Cs') ? pascal.slice(0, -2) + 'CS' : pascal
 }

@@ -197,6 +197,20 @@ describe('UniqueDeviceId Attribute', () => {
     expect(attr).toBeDefined()
     expect(attr.value).toBe('DEV-456')
   })
+
+  // The write path used to PascalCase the internal key algorithmically, which
+  // turns `deviceId` into `DeviceId` — not a field CIRCE knows. Reading a device
+  // filter in and saving it back therefore renamed it out of existence.
+  it('writes the device filter back as UniqueDeviceId, not DeviceId', () => {
+    const atlas = makeAtlasCohort('DeviceExposure', {
+      UniqueDeviceId: { Text: 'ABC', Op: 'contains' },
+    })
+    const { rt } = roundTrip(atlas)
+    const rtDevice = (rt.PrimaryCriteria?.CriteriaList?.[0] as Record<string, unknown>)
+      ?.DeviceExposure as Record<string, unknown>
+    expect(rtDevice?.UniqueDeviceId).toEqual({ Text: 'ABC', Op: 'contains' })
+    expect(rtDevice).not.toHaveProperty('DeviceId')
+  })
 })
 
 // ─── New Boolean Attributes (Previously Missing) ────────────────────────────
