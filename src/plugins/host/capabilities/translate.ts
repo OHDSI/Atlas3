@@ -1,5 +1,19 @@
 import type { AgentProposal } from '@/models/agent.types'
-import type { ExitStrategy } from '@/models/cohort.types'
+import type {
+  CohortEvent,
+  ConceptSetReference,
+  CriteriaGroup,
+  CriteriaType,
+  ExitCriteria,
+  ExitStrategy,
+} from '@/models/cohort.types'
+import type {
+  Cardinality,
+  EventAttribute,
+  NumericOperator,
+  TemporalWindow,
+  Window as EventWindow,
+} from '@/models/event.types'
 import routeManifest from '@/router/routes.manifest.json'
 
 interface ConceptRefArgs {
@@ -152,9 +166,9 @@ function uid(): string {
 
 // CIRCE's canonical encoding for "patient must NOT have X": the criterion's
 // occurrence count is EXACTLY 0. Shared by every exclusion path below.
-const ZERO_OCCURRENCE_CARDINALITY = { type: 'EXACTLY', count: 0, countingMethod: 'ALL' } as const
+const ZERO_OCCURRENCE_CARDINALITY: Cardinality = { type: 'EXACTLY', count: 0, countingMethod: 'ALL' }
 
-export function domainToCriteriaType(domain: string | undefined): string {
+export function domainToCriteriaType(domain: string | undefined): CriteriaType {
   switch (domain) {
     case 'Condition': return 'ConditionOccurrence'
     case 'Drug': return 'DrugExposure'
@@ -176,9 +190,9 @@ export function domainToCriteriaType(domain: string | undefined): string {
 // window — callers shouldn't, but it is well-defined.
 function toEventWindow(
   w: { startDays?: number | null; endDays?: number | null } | undefined,
-): Record<string, unknown> | undefined {
+): TemporalWindow | undefined {
   if (!w) return undefined
-  const toWindowBound = (d: number | null | undefined, openEndedAfter: boolean) =>
+  const toWindowBound = (d: number | null | undefined, openEndedAfter: boolean): EventWindow =>
     d === null || d === undefined
       ? { days: null, beforeAfter: openEndedAfter ? 'AFTER' : 'BEFORE', useIndexEnd: false, useEventEnd: false }
       : { days: Math.abs(d), beforeAfter: d < 0 ? 'BEFORE' : 'AFTER', useIndexEnd: false, useEventEnd: false }
@@ -221,7 +235,7 @@ function embeddedConceptSet(c: {
   domain?: string
   includeDescendants?: boolean
   isExcluded?: boolean
-}): Record<string, unknown> {
+}): ConceptSetReference {
   return {
     id: uid(),
     name: c.conceptName,
@@ -244,19 +258,69 @@ function embeddedConceptSet(c: {
   }
 }
 
-function buildEventFromCriterion(args: CriterionArgs): Record<string, unknown> | null {
+// The capability schema speaks the Atlas short operator codes; the internal
+// model (and everything downstream of it) speaks the long CIRCE names.
+const NUMERIC_OPERATOR_BY_CODE: Record<NonNullable<CriterionArgs['operator']>, NumericOperator> = {
+  gt: 'GREATER_THAN',
+  gte: 'GREATER_THAN_OR_EQUAL',
+  lt: 'LESS_THAN',
+  lte: 'LESS_THAN_OR_EQUAL',
+  eq: 'EQUAL',
+  between: 'BETWEEN',
+}
+
+// CIRCE only defines ValueAsNumber on the two value-bearing domains. Attaching
+// it anywhere else would emit a field the criteria type has no column for.
+const VALUE_AS_NUMBER_TYPES: ReadonlySet<CriteriaType> = new Set<CriteriaType>([
+  'Measurement',
+  'Observation',
+])
+
+// "measurement value greater than 5" is a numericRange attribute on the
+// criterion — the same shape the Atlas converter reads back out of
+// `ValueAsNumber`. It is NOT a field on the event itself: an unknown event
+// field is dropped on the way to Atlas, taking the whole filter with it and
+// leaving a criterion that matches every occurrence of the concept.
+function buildValueAsNumberAttribute(
+  criteriaType: CriteriaType,
+  args: CriterionArgs,
+): EventAttribute | null {
+  if (!args.operator || typeof args.value !== 'number') return null
+  if (!VALUE_AS_NUMBER_TYPES.has(criteriaType)) return null
+  const operator = NUMERIC_OPERATOR_BY_CODE[args.operator]
+  if (!operator) return null
+  // BETWEEN needs both bounds; without the upper one there is no range to test.
+  if (operator === 'BETWEEN' && typeof args.value2 !== 'number') return null
+  return {
+    type: 'numericRange',
+    attributeKey: 'valueAsNumber',
+    operator,
+    value: args.value,
+    ...(operator === 'BETWEEN' ? { extent: args.value2 } : {}),
+  }
+}
+
+function buildEventFromCriterion(args: CriterionArgs): CohortEvent | null {
   if (!args.conceptId || !args.conceptName) return null
-  const event: Record<string, unknown> = {
+  const criteriaType = domainToCriteriaType(args.domain)
+  const event: CohortEvent = {
     id: uid(),
-    criteriaType: domainToCriteriaType(args.domain),
-    conceptSet: embeddedConceptSet(args as Parameters<typeof embeddedConceptSet>[0]),
+    criteriaType,
+    conceptSet: embeddedConceptSet({
+      conceptId: args.conceptId,
+      conceptName: args.conceptName,
+      domain: args.domain,
+      includeDescendants: args.includeDescendants,
+      isExcluded: args.isExcluded,
+    }),
   }
-  if (args.operator && typeof args.value === 'number') {
-    event.measurementOperator = args.operator
-    event.measurementValue = args.value
-    if (typeof args.value2 === 'number') event.measurementValue2 = args.value2
-  }
+  const valueFilter = buildValueAsNumberAttribute(criteriaType, args)
+  if (valueFilter) event.attributes = [valueFilter]
   return event
+}
+
+function isEvent(event: CohortEvent | null): event is CohortEvent {
+  return event !== null
 }
 
 function buildNavigateProposal(args: NavigateArgs): AgentProposal | null {
@@ -266,13 +330,13 @@ function buildNavigateProposal(args: NavigateArgs): AgentProposal | null {
   const params: Record<string, string | number> = {}
   for (const k of allowedKeys) {
     const v = (args as Record<string, unknown>)[k]
-    if (v !== undefined && v !== null) params[k] = v as string | number
+    if (typeof v === 'string' || typeof v === 'number') params[k] = v
   }
   return {
     kind: 'navigate',
     route: { name: view, params },
     reason: typeof args.reason === 'string' ? args.reason : undefined,
-  } as unknown as AgentProposal
+  }
 }
 
 function buildFeatureAnalysisProposal(args: CreateFeatureAnalysisArgs): AgentProposal | null {
@@ -287,7 +351,7 @@ function buildFeatureAnalysisProposal(args: CreateFeatureAnalysisArgs): AgentPro
       statType: args.statType,
       design: args.design,
     },
-  } as unknown as AgentProposal
+  }
 }
 
 function buildCharacterizationProposal(args: CreateCharacterizationArgs): AgentProposal | null {
@@ -307,7 +371,7 @@ function buildCharacterizationProposal(args: CreateCharacterizationArgs): AgentP
       cohorts,
       featureAnalyses,
     },
-  } as unknown as AgentProposal
+  }
 }
 
 function buildPathwayProposal(args: CreatePathwayArgs): AgentProposal | null {
@@ -330,7 +394,7 @@ function buildPathwayProposal(args: CreatePathwayArgs): AgentProposal | null {
       maxDepth: args.maxDepth,
       allowRepeats: args.allowRepeats,
     },
-  } as unknown as AgentProposal
+  }
 }
 
 function buildIncidenceRateProposal(args: CreateIncidenceRateArgs): AgentProposal | null {
@@ -357,7 +421,7 @@ function buildIncidenceRateProposal(args: CreateIncidenceRateArgs): AgentProposa
       timeAtRisk: tar,
       studyWindow: args.studyWindow,
     },
-  } as unknown as AgentProposal
+  }
 }
 
 // ----- Update-* proposal builders --------------------------------------------
@@ -412,7 +476,7 @@ function buildUpdateConceptSetProposal(args: ProposalArgs): AgentProposal | null
       items: items.length > 0 ? items : undefined,
       itemsToAdd: itemsToAdd.length > 0 ? itemsToAdd : undefined,
     },
-  } as unknown as AgentProposal
+  }
 }
 
 function buildUpdateFeatureAnalysisProposal(args: ProposalArgs): AgentProposal | null {
@@ -429,7 +493,7 @@ function buildUpdateFeatureAnalysisProposal(args: ProposalArgs): AgentProposal |
       statType: (args as { statType?: unknown }).statType as 'PREVALENCE' | 'DISTRIBUTION' | undefined,
       design: (args as { design?: unknown }).design,
     },
-  } as unknown as AgentProposal
+  }
 }
 
 function buildUpdateCharacterizationProposal(args: ProposalArgs): AgentProposal | null {
@@ -450,7 +514,7 @@ function buildUpdateCharacterizationProposal(args: ProposalArgs): AgentProposal 
       featureAnalyses: fas.length > 0 ? fas : undefined,
       featureAnalysesToAdd: fasToAdd.length > 0 ? fasToAdd : undefined,
     },
-  } as unknown as AgentProposal
+  }
 }
 
 function buildUpdatePathwayProposal(args: ProposalArgs): AgentProposal | null {
@@ -476,7 +540,7 @@ function buildUpdatePathwayProposal(args: ProposalArgs): AgentProposal | null {
       maxDepth: typeof a.maxDepth === 'number' ? (a.maxDepth as number) : undefined,
       allowRepeats: typeof a.allowRepeats === 'boolean' ? (a.allowRepeats as boolean) : undefined,
     },
-  } as unknown as AgentProposal
+  }
 }
 
 function buildUpdateIncidenceRateProposal(args: ProposalArgs): AgentProposal | null {
@@ -513,7 +577,7 @@ function buildUpdateIncidenceRateProposal(args: ProposalArgs): AgentProposal | n
         : undefined,
       studyWindow: sw === null ? null : (sw && sw.startDate && sw.endDate ? { startDate: sw.startDate, endDate: sw.endDate } : undefined),
     },
-  } as unknown as AgentProposal
+  }
 }
 
 function buildStandaloneConceptSetProposal(args: StandaloneConceptSetArgs): AgentProposal | null {
@@ -533,7 +597,7 @@ function buildStandaloneConceptSetProposal(args: StandaloneConceptSetArgs): Agen
           isExcluded: it.isExcluded ?? false,
         })),
     },
-  } as unknown as AgentProposal
+  }
 }
 
 export function translateCapability(
@@ -553,7 +617,7 @@ export function translateCapability(
             name: args.conceptName ?? 'Inclusion rule',
             criteriaGroups: [{ id: uid(), logicType: 'ALL', events: [event] }],
           },
-        } as unknown as AgentProposal
+        }
       }
       if (args.group === 'exclusion') {
         const excEvent = { ...event, cardinality: ZERO_OCCURRENCE_CARDINALITY }
@@ -564,9 +628,9 @@ export function translateCapability(
             name: args.conceptName ? `Exclude: ${args.conceptName}` : 'Exclusion',
             criteriaGroups: [{ id: uid(), logicType: 'ALL', events: [excEvent] }],
           },
-        } as unknown as AgentProposal
+        }
       }
-      return { kind: 'addEntryEvent', event } as unknown as AgentProposal
+      return { kind: 'addEntryEvent', event }
     }
 
     case 'add_criteria': {
@@ -574,9 +638,7 @@ export function translateCapability(
         ?? (args.events as CriterionArgs[] | undefined)
         ?? []
       const isExclusion = args.group === 'exclusion'
-      const baseEvents = items
-        .map(buildEventFromCriterion)
-        .filter(Boolean) as Record<string, unknown>[]
+      const baseEvents = items.map(buildEventFromCriterion).filter(isEvent)
       if (baseEvents.length === 0) return null
       // CIRCE encodes "patient must not have X" as a criterion with
       // cardinality EXACTLY 0. For exclusion groups, force ALL-logic so
@@ -602,13 +664,13 @@ export function translateCapability(
             { id: uid(), logicType, events },
           ],
         },
-      } as unknown as AgentProposal
+      }
     }
 
     case 'add_qualifying_criterion': {
       const event = buildEventFromCriterion(args as CriterionArgs)
       if (!event) return null
-      return { kind: 'addQualifyingCriterion', event } as unknown as AgentProposal
+      return { kind: 'addQualifyingCriterion', event }
     }
 
     case 'set_censor_window': {
@@ -620,7 +682,7 @@ export function translateCapability(
       return {
         kind: 'setCensorWindow',
         censorWindow: { startDate: startDate ?? null, endDate: endDate ?? null },
-      } as unknown as AgentProposal
+      }
     }
 
     case 'set_era_collapse': {
@@ -629,7 +691,7 @@ export function translateCapability(
       return {
         kind: 'setEraCollapse',
         collapseSettings: { collapseType: 'ERA', eraPad: a.gapDays },
-      } as unknown as AgentProposal
+      }
     }
 
     case 'set_event_limits': {
@@ -645,7 +707,7 @@ export function translateCapability(
       return {
         kind: 'setEventLimits',
         limits: { primaryCriteriaLimit, qualifyingLimit, inclusionQualifyingLimit },
-      } as unknown as AgentProposal
+      }
     }
 
     case 'add_demographic_criterion': {
@@ -655,12 +717,12 @@ export function translateCapability(
       const sex = a.sex === 'male' || a.sex === 'female' ? a.sex : undefined
       if (!hasMin && !hasMax && !sex) return null
 
-      const attributes: Record<string, unknown>[] = []
-      if (hasMin && hasMax) {
+      const attributes: EventAttribute[] = []
+      if (a.minAge !== undefined && a.maxAge !== undefined) {
         attributes.push({ type: 'numericRange', attributeKey: 'age', operator: 'BETWEEN', value: a.minAge, extent: a.maxAge })
-      } else if (hasMin) {
+      } else if (a.minAge !== undefined) {
         attributes.push({ type: 'numericRange', attributeKey: 'age', operator: 'GREATER_THAN_OR_EQUAL', value: a.minAge })
-      } else if (hasMax) {
+      } else if (a.maxAge !== undefined) {
         attributes.push({ type: 'numericRange', attributeKey: 'age', operator: 'LESS_THAN_OR_EQUAL', value: a.maxAge })
       }
       if (sex) {
@@ -682,7 +744,7 @@ export function translateCapability(
       // (convertInternalToAtlas asserts this — a Demographic event routed to the
       // entry-event list throws rather than silently producing a criterion CIRCE
       // cannot read.)
-      const event = { id: uid(), criteriaType: 'Demographic', attributes }
+      const event: CohortEvent = { id: uid(), criteriaType: 'Demographic', attributes }
       return {
         kind: 'addInclusionRule',
         rule: {
@@ -690,7 +752,7 @@ export function translateCapability(
           name: (typeof a.name === 'string' && a.name.trim()) || label,
           criteriaGroups: [{ id: uid(), logicType: 'ALL', events: [event] }],
         },
-      } as unknown as AgentProposal
+      }
     }
 
     case 'use_concept_set': {
@@ -700,13 +762,13 @@ export function translateCapability(
       return {
         kind: 'useConceptSet',
         payload: { conceptSetId: Number(a.conceptSetId), group, name: a.name },
-      } as unknown as AgentProposal
+      }
     }
 
     case 'remove_inclusion_rule': {
       const a = args as { name?: string; id?: string | number }
       if (!a.name && a.id === undefined) return null
-      return { kind: 'removeInclusionRule', match: { name: a.name, id: a.id } } as unknown as AgentProposal
+      return { kind: 'removeInclusionRule', match: { name: a.name, id: a.id } }
     }
 
     case 'remove_entry_event': {
@@ -715,7 +777,7 @@ export function translateCapability(
       return {
         kind: 'removeEntryEvent',
         match: { conceptId: a.conceptId, conceptName: a.conceptName },
-      } as unknown as AgentProposal
+      }
     }
 
     case 'set_entry_event': {
@@ -725,22 +787,23 @@ export function translateCapability(
       // The capability's contract is "replaces any existing entry event". Without
       // this the store appended, so changing the entry event left the cohort
       // qualifying on either one — twice the population, no error anywhere.
-      return { kind: 'addEntryEvent', event, replace: true } as unknown as AgentProposal
+      return { kind: 'addEntryEvent', event, replace: true }
     }
 
     case 'generate_analysis': {
       const a = args as { analysisType?: string; analysisId?: number; sourceKey?: string }
-      const kinds = ['pathway', 'characterization', 'incidenceRate']
-      if (!a.analysisType || !kinds.includes(a.analysisType)) return null
+      const kinds = ['pathway', 'characterization', 'incidenceRate'] as const
+      const analysisType = kinds.find(k => k === a.analysisType)
+      if (!analysisType) return null
       if (typeof a.analysisId !== 'number') return null
       return {
         kind: 'generateAnalysis',
         payload: {
-          analysisType: a.analysisType,
+          analysisType,
           analysisId: a.analysisId,
           ...(a.sourceKey ? { sourceKey: a.sourceKey } : {}),
         },
-      } as unknown as AgentProposal
+      }
     }
 
     case 'set_observation_window': {
@@ -764,23 +827,27 @@ export function translateCapability(
       }
       const strategy = strategyMap[e.strategy ?? 'end_of_observation']
       if (!strategy) return null
-      const exitCriteria: Record<string, unknown> = { strategy }
+      const exitCriteria: ExitCriteria = { strategy }
       if (typeof e.offset === 'number') exitCriteria.offset = e.offset
       if (e.dateField) exitCriteria.dateField = e.dateField
       if (typeof e.persistenceWindow === 'number') exitCriteria.persistenceWindow = e.persistenceWindow
       if (typeof e.surveillanceWindow === 'number') exitCriteria.surveillanceWindow = e.surveillanceWindow
       if (e.concept?.conceptId && e.concept?.conceptName) {
-        exitCriteria.conceptSet = embeddedConceptSet(
-          e.concept as Parameters<typeof embeddedConceptSet>[0],
-        )
+        exitCriteria.conceptSet = embeddedConceptSet({
+          conceptId: e.concept.conceptId,
+          conceptName: e.concept.conceptName,
+          domain: e.concept.domain,
+          includeDescendants: e.concept.includeDescendants,
+          isExcluded: e.concept.isExcluded,
+        })
       }
-      return { kind: 'setExitCriteria', exitCriteria } as unknown as AgentProposal
+      return { kind: 'setExitCriteria', exitCriteria }
     }
 
     case 'set_censor_event': {
       const event = buildEventFromCriterion(args as CriterionArgs)
       if (!event) return null
-      return { kind: 'addCensoringCriterion', event } as unknown as AgentProposal
+      return { kind: 'addCensoringCriterion', event }
     }
 
     case 'navigate_to':
@@ -791,7 +858,7 @@ export function translateCapability(
         kind: 'saveCohort',
         name: typeof args.name === 'string' ? args.name : undefined,
         description: typeof args.description === 'string' ? args.description : undefined,
-      } as AgentProposal
+      }
 
     case 'create_standalone_concept_set':
       return buildStandaloneConceptSetProposal(args as StandaloneConceptSetArgs)
@@ -825,8 +892,7 @@ export function translateCapability(
 
     case 'add_inclusion_rule': {
       const r = args as InclusionRuleArgs
-      const events = (r.events ?? []).map(buildEventFromCriterion)
-        .filter(Boolean) as Record<string, unknown>[]
+      const events = (r.events ?? []).map(buildEventFromCriterion).filter(isEvent)
       if (events.length === 0) return null
       const isExcludeGroup = r.logicType === 'AT_MOST' && (r.count ?? 0) === 0
       const finalEvents = isExcludeGroup
@@ -836,7 +902,7 @@ export function translateCapability(
       const windowedEvents = tw
         ? finalEvents.map(e => ({ ...e, temporalWindow: tw }))
         : finalEvents
-      const group: Record<string, unknown> = {
+      const group: CriteriaGroup = {
         id: uid(),
         logicType: isExcludeGroup ? 'ALL' : (r.logicType ?? 'ALL'),
         events: windowedEvents,
@@ -853,7 +919,7 @@ export function translateCapability(
           description: r.description,
           criteriaGroups: [group],
         },
-      } as unknown as AgentProposal
+      }
     }
 
     default:

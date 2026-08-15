@@ -3,6 +3,13 @@ import {
   translateCapability,
   isAgentVisibleView,
 } from '@/plugins/host/capabilities/translate'
+import { convertInternalToAtlas } from '@/services/atlas-converter'
+import type {
+  CohortDefinition,
+  CohortEvent,
+  ConceptSetReference,
+  InclusionRule,
+} from '@/models/cohort.types'
 
 describe('translateCapability', () => {
   it('add_criterion (no group) → addEntryEvent', () => {
@@ -557,5 +564,113 @@ describe('translateCapability: generate_analysis', () => {
   it('rejects a missing or non-numeric analysis id', () => {
     expect(translateCapability('generate_analysis', { analysisType: 'pathway' })).toBeNull()
     expect(translateCapability('generate_analysis', { analysisType: 'pathway', analysisId: '12' })).toBeNull()
+  })
+})
+
+// "Measurement value greater than 5" used to be written onto the event as
+// `measurementOperator` / `measurementValue` — field names nothing else in the
+// repo reads. CohortEvent has no such fields and the Atlas converter never looked
+// for them, so the numeric filter was dropped and the criterion matched every
+// occurrence of the concept. The filter belongs in `attributes` as a numericRange,
+// which is the shape the converter reads and writes as `ValueAsNumber`.
+describe('translateCapability — measurement value filters', () => {
+  const hba1c = {
+    conceptId: 3004410,
+    conceptName: 'Hemoglobin A1c',
+    domain: 'Measurement',
+    includeDescendants: true,
+  }
+
+  it('keeps the operator and value as a numericRange attribute', () => {
+    const p = translateCapability('add_criterion', { ...hba1c, operator: 'gt', value: 5 })
+    expect(p?.kind).toBe('addEntryEvent')
+    const event = (p as { event: CohortEvent }).event
+    expect(event.attributes).toEqual([
+      { type: 'numericRange', attributeKey: 'valueAsNumber', operator: 'GREATER_THAN', value: 5 },
+    ])
+  })
+
+  it('maps every operator code the capability schema accepts', () => {
+    const cases: Array<[string, string]> = [
+      ['gt', 'GREATER_THAN'],
+      ['gte', 'GREATER_THAN_OR_EQUAL'],
+      ['lt', 'LESS_THAN'],
+      ['lte', 'LESS_THAN_OR_EQUAL'],
+      ['eq', 'EQUAL'],
+    ]
+    for (const [code, expected] of cases) {
+      const p = translateCapability('add_criterion', { ...hba1c, operator: code, value: 7 })
+      const event = (p as { event: CohortEvent }).event
+      expect(event.attributes?.[0]).toMatchObject({ operator: expected, value: 7 })
+    }
+  })
+
+  it('between carries the upper bound as the range extent', () => {
+    const p = translateCapability('add_criterion', {
+      ...hba1c, operator: 'between', value: 5, value2: 9,
+    })
+    const event = (p as { event: CohortEvent }).event
+    expect(event.attributes?.[0]).toEqual({
+      type: 'numericRange',
+      attributeKey: 'valueAsNumber',
+      operator: 'BETWEEN',
+      value: 5,
+      extent: 9,
+    })
+  })
+
+  // Half a range is not a range: emitting BETWEEN with no extent would produce a
+  // filter CIRCE cannot evaluate.
+  it('drops a between with no upper bound rather than emitting half a range', () => {
+    const p = translateCapability('add_criterion', { ...hba1c, operator: 'between', value: 5 })
+    const event = (p as { event: CohortEvent }).event
+    expect(event.attributes).toBeUndefined()
+  })
+
+  // ValueAsNumber only exists on the value-bearing domains; on a condition it
+  // would be a column CIRCE has nothing to compare.
+  it('ignores a value filter on a domain that has no measured value', () => {
+    const p = translateCapability('add_criterion', {
+      conceptId: 201826,
+      conceptName: 'Type 2 diabetes mellitus',
+      domain: 'Condition',
+      includeDescendants: true,
+      operator: 'gt',
+      value: 5,
+    })
+    const event = (p as { event: CohortEvent }).event
+    expect(event.criteriaType).toBe('ConditionOccurrence')
+    expect(event.attributes).toBeUndefined()
+  })
+
+  it('carries the filter through inclusion rules too', () => {
+    const p = translateCapability('add_criterion', {
+      ...hba1c, group: 'inclusion', operator: 'gte', value: 6.5,
+    })
+    const rule = (p as { rule: InclusionRule }).rule
+    expect(rule.criteriaGroups[0]?.events[0]?.attributes?.[0]).toMatchObject({
+      attributeKey: 'valueAsNumber',
+      operator: 'GREATER_THAN_OR_EQUAL',
+      value: 6.5,
+    })
+  })
+
+  // End to end: the filter has to reach the Atlas expression CIRCE executes, not
+  // just the internal event.
+  it('survives conversion into the Atlas expression as ValueAsNumber', () => {
+    const p = translateCapability('add_criterion', { ...hba1c, operator: 'gt', value: 5 })
+    const event = (p as { event: CohortEvent }).event
+    const conceptSet = { ...(event.conceptSet as ConceptSetReference), id: 0 }
+    const cohort: CohortDefinition = {
+      name: 'HbA1c over 5',
+      entryEvents: [{ ...event, conceptSet }],
+      qualifyingLimit: 'ALL',
+      inclusionRules: [],
+      conceptSets: [conceptSet],
+    }
+    const atlas = convertInternalToAtlas(cohort)
+    const measurement = (atlas.PrimaryCriteria.CriteriaList[0] as Record<string, unknown>)
+      .Measurement as Record<string, unknown>
+    expect(measurement.ValueAsNumber).toEqual({ Op: 'gt', Value: 5 })
   })
 })

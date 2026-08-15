@@ -30,7 +30,7 @@ import { createCharacterization } from '@/services/characterization.service'
 import { createPathway, generatePathway } from '@/services/pathway.service'
 import { createIncidenceRate } from '@/services/incidence-rate.service'
 import type { ConceptSetItem } from '@/models/concept-set.types'
-import type { CohortEvent, ConceptSetReference, CriteriaGroup } from '@/models/cohort.types'
+import type { CohortEvent, ConceptSetReference, CriteriaGroup, InclusionRule } from '@/models/cohort.types'
 import { ensureUniqueConceptSetId } from '@/utils/concept-set-id'
 import type {
   FeatureAnalysis,
@@ -297,18 +297,22 @@ async function handleUseConceptSet(payload: {
     return
   }
 
+  // Criteria reference their concepts by CodesetId, so the set has to carry an
+  // id. The requested id is the fallback for a response that omits it — without
+  // one the criterion would resolve against nothing.
+  const setId = set.id ?? payload.conceptSetId
   const first = items[0] as Record<string, unknown>
   const nested = (first.concept ?? {}) as Record<string, unknown>
   const domain = String(first.domainId ?? nested.DOMAIN_ID ?? '')
   const group = payload.group ?? 'inclusion'
-  const conceptSet = {
-    id: set.id,
+  const conceptSet: ConceptSetReference = {
+    id: setId,
     name: set.name,
     conceptCount: items.length,
     items,
   }
-  const event: Record<string, unknown> = {
-    id: `use-${set.id}-${Date.now()}`,
+  const event: CohortEvent = {
+    id: `use-${setId}-${Date.now()}`,
     criteriaType: domainToCriteriaType(domain),
     conceptSet,
   }
@@ -317,27 +321,25 @@ async function handleUseConceptSet(payload: {
   if (!cohortStore.currentCohort) cohortStore.requestNewCohort()
 
   if (group === 'entry') {
-    cohortStore.applyProposal({ kind: 'addEntryEvent', event } as never)
+    cohortStore.applyProposal({ kind: 'addEntryEvent', event })
   } else {
     const excluded = group === 'exclusion'
-    cohortStore.applyProposal({
-      kind: 'addInclusionRule',
-      rule: {
-        id: `use-rule-${set.id}-${Date.now()}`,
-        name: payload.name || (excluded ? `Exclude: ${set.name}` : set.name),
-        criteriaGroups: [
-          {
-            id: `use-group-${set.id}`,
-            logicType: 'ALL',
-            events: [
-              excluded
-                ? { ...event, cardinality: { type: 'EXACTLY', count: 0, countingMethod: 'ALL' } }
-                : event,
-            ],
-          },
-        ],
-      },
-    } as never)
+    const rule: InclusionRule = {
+      id: `use-rule-${setId}-${Date.now()}`,
+      name: payload.name || (excluded ? `Exclude: ${set.name}` : set.name),
+      criteriaGroups: [
+        {
+          id: `use-group-${setId}`,
+          logicType: 'ALL',
+          events: [
+            excluded
+              ? { ...event, cardinality: { type: 'EXACTLY', count: 0, countingMethod: 'ALL' } }
+              : event,
+          ],
+        },
+      ],
+    }
+    cohortStore.applyProposal({ kind: 'addInclusionRule', rule })
   }
   await ensureOnCohortRoute()
   showSnackbar(`Using concept set "${set.name}" (${items.length} concepts)`, 'success')
