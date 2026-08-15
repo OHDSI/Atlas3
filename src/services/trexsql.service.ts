@@ -9,10 +9,43 @@ import {
   type BuildCacheResponse,
   type InclusionStatsResult,
 } from '@/models/trexsql.types'
-import { getAppConfig } from '@/config/app-config.loader'
+import { ApiError } from '@/services/api-error'
+import { httpClient, type HttpClientOptions } from '@/services/http-client'
 
-function getBaseUrl(): string {
-  return getAppConfig().api.url
+/**
+ * TrexSQL traffic goes through the shared http client. Hand-rolled fetch calls
+ * here missed three things it does: a 401 never cleared the session or opened
+ * the login modal, so an expired token turned the cohort-builder count into a
+ * plain failure instead of a login prompt; no User-Language header went out, so
+ * WebAPI answered untranslated; and the error body was not unwrapped from its
+ * JSON envelope. The status-specific meanings these endpoints carry — 404 "no
+ * cache yet", 409 "build already running", 422 "circe rejected the expression"
+ * — are read back off the ApiError the shared client throws.
+ *
+ * maxRetries: 1 keeps the previous behaviour of not retrying: a cache build is
+ * not idempotent, and a patient count is expensive enough that repeating it
+ * against a struggling server would only make things worse.
+ */
+function trexRequest<T>(endpoint: string, options: HttpClientOptions = {}): Promise<T> {
+  return httpClient<T>(endpoint, { maxRetries: 1, ...options })
+}
+
+/** HTTP status of a failed request; 0 for a network or parse failure. */
+function statusOf(error: unknown): number {
+  return error instanceof ApiError ? error.status : 0
+}
+
+/** What WebAPI said, already unwrapped from a JSON `{ message }` envelope. */
+function serverMessage(error: unknown): string {
+  return error instanceof ApiError && error.body ? error.body.trim() : ''
+}
+
+function detailOf(error: unknown): string {
+  return serverMessage(error) || (error instanceof Error ? error.message : 'Unknown error')
+}
+
+function asError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error))
 }
 
 const activeCountRequests = new Map<string, AbortController>()
@@ -25,6 +58,17 @@ export function cancelCountRequest(sourceKey: string): void {
   }
 }
 
+/**
+ * Drop our own registration only. A superseding request for the same source has
+ * already replaced the entry, and deleting that would leave the next cancel
+ * with nothing to abort.
+ */
+function releaseCountRequest(sourceKey: string, controller: AbortController): void {
+  if (activeCountRequests.get(sourceKey) === controller) {
+    activeCountRequests.delete(sourceKey)
+  }
+}
+
 export function cancelAllCountRequests(): void {
   for (const [_, controller] of activeCountRequests) {
     controller.abort()
@@ -32,68 +76,43 @@ export function cancelAllCountRequests(): void {
   activeCountRequests.clear()
 }
 
-async function getAuthHeader(): Promise<Record<string, string>> {
-  try {
-    const { useAuthStore } = await import('@/stores/auth')
-    const authStore = useAuthStore()
-    if (authStore.token) {
-      return { Authorization: `Bearer ${authStore.token}` }
-    }
-  } catch {
-    // Ignore auth errors - proceed without authentication
+function buildCacheFailure(sourceKey: string, error: unknown): Error {
+  switch (statusOf(error)) {
+    case 404:
+      return new Error(`Data source '${sourceKey}' not found`)
+    case 409:
+      return new Error('Cache build already in progress')
+    case 503:
+      return new Error('TrexSQL extension not available')
   }
-  return {}
+  if (error instanceof ApiError) return new Error(`Build failed: ${detailOf(error)}`)
+  return asError(error)
 }
 
 export async function buildCache(
   sourceKey: string,
   schemaName?: string
 ): Promise<BuildCacheResponse> {
-  const url = `${getBaseUrl()}/trexsql/${sourceKey}/cache`
-
   try {
     logger.info('TrexSQL', `Starting cache build for ${sourceKey}`)
 
-    const authHeader = await getAuthHeader()
-    const response = await fetch(url, {
+    const data = await trexRequest<{ message?: string }>(`/trexsql/${sourceKey}/cache`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeader,
-      },
-      body: JSON.stringify({ schemaName: schemaName || sourceKey.toLowerCase() }),
+      body: { schemaName: schemaName || sourceKey.toLowerCase() },
     })
 
-    if (!response.ok) {
-      const status = response.status
-
-      if (status === 404) {
-        throw new Error(`Data source '${sourceKey}' not found`)
-      }
-      if (status === 409) {
-        throw new Error('Cache build already in progress')
-      }
-      if (status === 503) {
-        throw new Error('TrexSQL extension not available')
-      }
-
-      const errorText = await response.text().catch(() => 'Unknown error')
-      throw new Error(`Build failed: ${errorText}`)
-    }
-
-    const data = await response.json()
     const result = BuildCacheResponseSchema.safeParse(data)
 
     if (!result.success) {
       logger.warn('TrexSQL', 'Build response validation failed, using raw response')
-      return { message: data.message || 'Cache build started' }
+      return { message: data?.message || 'Cache build started' }
     }
 
     logger.info('TrexSQL', `Cache build started for ${sourceKey}`)
     return result.data
   } catch (error) {
     logger.error('TrexSQL', 'Failed to start cache build', { sourceKey, error })
-    throw error
+    throw buildCacheFailure(sourceKey, error)
   }
 }
 
@@ -140,42 +159,13 @@ export async function getCacheStatus(
   sourceKey: string,
   attempt = 0
 ): Promise<TrexSQLCacheStatus> {
-  const url = `${getBaseUrl()}/trexsql/${sourceKey}/cache/status`
-
   try {
     logger.debug('TrexSQL', `Fetching cache status for ${sourceKey}`)
 
-    const authHeader = await getAuthHeader()
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeader,
-      },
-    })
-
-    if (!response.ok) {
-      const status = response.status
-
-      if (status === 404) {
-        return {
-          sourceKey,
-          status: 'not_built',
-          totalPatientCount: null,
-          lastBuiltAt: null,
-          sizeBytes: null,
-          errorMessage: null,
-        }
-      }
-
-      const errorText = await response.text().catch(() => 'Unknown error')
-      throw new Error(`Failed to get cache status: ${errorText}`)
-    }
-
-    const data = await response.json()
+    const data = await trexRequest<Record<string, unknown>>(`/trexsql/${sourceKey}/cache/status`)
 
     const result = TrexSQLCacheStatusSchema.safeParse(data)
-    const status = result.success ? result.data : mapCacheStatusResponse(sourceKey, data)
+    const status = result.success ? result.data : mapCacheStatusResponse(sourceKey, data ?? {})
 
     if (status.status === 'error' && attempt < CACHE_STATUS_ERROR_RETRIES) {
       await new Promise(resolve => setTimeout(resolve, CACHE_STATUS_RETRY_DELAY_MS))
@@ -184,9 +174,53 @@ export async function getCacheStatus(
 
     return status
   } catch (error) {
+    // A source that has never been built has no status document, not a problem
+    // to report.
+    if (statusOf(error) === 404) {
+      return {
+        sourceKey,
+        status: 'not_built',
+        totalPatientCount: null,
+        lastBuiltAt: null,
+        sizeBytes: null,
+        errorMessage: null,
+      }
+    }
+
     logger.error('TrexSQL', 'Failed to get cache status', { sourceKey, error })
+    if (error instanceof ApiError) {
+      throw new Error(`Failed to get cache status: ${detailOf(error)}`)
+    }
     throw error
   }
+}
+
+/**
+ * The count and inclusion-stats endpoints reject the same way, so they map the
+ * same statuses. 422 means circe rejected the expression (incomplete inclusion
+ * rule, missing StartWindow, codeset id pointing at an empty placeholder);
+ * WebAPI's message names the broken rule, so it is surfaced verbatim for the
+ * cohort-builder banner and marked with a distinct error name the banner keys
+ * off.
+ */
+function expressionQueryFailure(sourceKey: string, prefix: string, error: unknown): Error {
+  switch (statusOf(error)) {
+    case 400:
+      return new Error('Invalid cohort expression')
+    case 404:
+      return new Error(`Data source '${sourceKey}' not found`)
+    case 503:
+      return new Error('Cache not available. Please build the cache first.')
+    case 422: {
+      const invalid = new Error(
+        serverMessage(error) || 'The cohort expression is incomplete or invalid.'
+      )
+      invalid.name = 'InvalidExpressionError'
+      return invalid
+    }
+  }
+  if (error instanceof ApiError) return new Error(`${prefix}: ${detailOf(error)}`)
+  return asError(error)
 }
 
 export async function getPatientCount(
@@ -194,8 +228,6 @@ export async function getPatientCount(
   expression: Record<string, unknown>,
   signal?: AbortSignal
 ): Promise<PatientCountResult> {
-  const url = `${getBaseUrl()}/trexsql/${sourceKey}/cache/count`
-
   cancelCountRequest(sourceKey)
 
   const controller = new AbortController()
@@ -206,56 +238,22 @@ export async function getPatientCount(
   }
 
   try {
-    const authHeader = await getAuthHeader()
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeader,
-      },
-      body: JSON.stringify({
-        expression: JSON.stringify(expression),
-      }),
-      signal: controller.signal,
-    })
-
-    if (!response.ok) {
-      const status = response.status
-
-      if (status === 400) {
-        throw new Error('Invalid cohort expression')
+    const data = await trexRequest<Partial<PatientCountResult>>(
+      `/trexsql/${sourceKey}/cache/count`,
+      {
+        method: 'POST',
+        body: { expression: JSON.stringify(expression) },
+        signal: controller.signal,
       }
-      if (status === 404) {
-        throw new Error(`Data source '${sourceKey}' not found`)
-      }
-      if (status === 503) {
-        throw new Error('Cache not available. Please build the cache first.')
-      }
-      // 422 — circe rejected the expression (incomplete inclusion rule,
-      // missing StartWindow, codeset id pointing at empty placeholder).
-      // Surface the message verbatim so the cohort builder banner can
-      // tell the user which inclusion rule is broken.
-      if (status === 422) {
-        const body = await response.json().catch(() => null)
-        const msg = (body && typeof body.message === 'string' && body.message)
-          || 'The cohort expression is incomplete or invalid.'
-        const err = new Error(msg)
-        err.name = 'InvalidExpressionError'
-        throw err
-      }
+    )
 
-      const errorText = await response.text().catch(() => 'Unknown error')
-      throw new Error(`Count failed: ${errorText}`)
-    }
-
-    const data = await response.json()
     const result = PatientCountResultSchema.safeParse(data)
 
     if (!result.success) {
       const patientCount: PatientCountResult = {
-        cohortPatientCount: data.cohortPatientCount ?? 0,
-        totalPatientCount: data.totalPatientCount ?? 0,
-        executionTimeMs: data.executionTimeMs ?? 0,
+        cohortPatientCount: data?.cohortPatientCount ?? 0,
+        totalPatientCount: data?.totalPatientCount ?? 0,
+        executionTimeMs: data?.executionTimeMs ?? 0,
       }
       return patientCount
     }
@@ -266,9 +264,9 @@ export async function getPatientCount(
       throw error
     }
     logger.error('TrexSQL', 'Failed to get patient count', { sourceKey, error })
-    throw error
+    throw expressionQueryFailure(sourceKey, 'Count failed', error)
   } finally {
-    activeCountRequests.delete(sourceKey)
+    releaseCountRequest(sourceKey, controller)
   }
 }
 
@@ -289,35 +287,31 @@ export interface CacheFile {
  * Keyed by file rather than by source, which is the only way orphans surface —
  * the per-source endpoints can't resolve them and answer 404.
  */
-export async function listCacheFiles(): Promise<CacheFile[]> {
-  const url = `${getBaseUrl()}/trexsql/cache/files`
-  const authHeader = await getAuthHeader()
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json', ...authHeader },
-  })
-
-  if (!response.ok) {
-    const detail = await response.text().catch(() => '')
-    throw new Error(`Failed to list cache files: ${response.status} ${detail}`.trim())
+function cacheFileFailure(summary: string, error: unknown): Error {
+  // status 0 is a network or parse failure, which has no server status to quote.
+  if (error instanceof ApiError && error.status > 0) {
+    return new Error(`${summary}: ${error.status} ${error.body ?? ''}`.trim())
   }
+  return asError(error)
+}
 
-  const data = (await response.json()) as { files?: unknown }
-  return Array.isArray(data.files) ? (data.files as CacheFile[]) : []
+export async function listCacheFiles(): Promise<CacheFile[]> {
+  try {
+    const data = await trexRequest<{ files?: unknown }>('/trexsql/cache/files')
+    return Array.isArray(data?.files) ? (data.files as CacheFile[]) : []
+  } catch (error) {
+    throw cacheFileFailure('Failed to list cache files', error)
+  }
 }
 
 /** Delete a cache by database code. Works whether or not a source still exists. */
 export async function deleteCacheFile(databaseCode: string): Promise<void> {
-  const url = `${getBaseUrl()}/trexsql/cache/files/${encodeURIComponent(databaseCode)}`
-  const authHeader = await getAuthHeader()
-  const response = await fetch(url, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...authHeader },
-  })
-
-  if (!response.ok) {
-    const detail = await response.text().catch(() => '')
-    throw new Error(`Failed to delete cache: ${response.status} ${detail}`.trim())
+  try {
+    await trexRequest<void>(`/trexsql/cache/files/${encodeURIComponent(databaseCode)}`, {
+      method: 'DELETE',
+    })
+  } catch (error) {
+    throw cacheFileFailure('Failed to delete cache', error)
   }
 }
 
@@ -361,10 +355,6 @@ export async function getInclusionStats(
   expression: Record<string, unknown>,
   signal?: AbortSignal
 ): Promise<InclusionStatsResult> {
-  const url = `${getBaseUrl()}/trexsql/${sourceKey}/cache/inclusion`
-
-  const authHeader = await getAuthHeader()
-
   cancelCountRequest(sourceKey)
   const controller = new AbortController()
   activeCountRequests.set(sourceKey, controller)
@@ -373,46 +363,32 @@ export async function getInclusionStats(
   }
 
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeader },
-      body: JSON.stringify({ expression: JSON.stringify(expression) }),
-      signal: controller.signal,
-    })
-
-    if (!response.ok) {
-      const status = response.status
-      if (status === 400) throw new Error('Invalid cohort expression')
-      if (status === 404) throw new Error(`Data source '${sourceKey}' not found`)
-      if (status === 503) throw new Error('Cache not available. Please build the cache first.')
-      if (status === 422) {
-        const body = await response.json().catch(() => null)
-        const msg = (body && typeof body.message === 'string' && body.message)
-          || 'The cohort expression is incomplete or invalid.'
-        const err = new Error(msg)
-        err.name = 'InvalidExpressionError'
-        throw err
+    const data = await trexRequest<Record<string, unknown>>(
+      `/trexsql/${sourceKey}/cache/inclusion`,
+      {
+        method: 'POST',
+        body: { expression: JSON.stringify(expression) },
+        signal: controller.signal,
       }
-      const errorText = await response.text().catch(() => 'Unknown error')
-      throw new Error(`Inclusion stats failed: ${errorText}`)
-    }
+    )
 
-    const data = await response.json()
     const parsed = InclusionStatsResultSchema.safeParse(data)
     if (parsed.success) return parsed.data
 
     return {
-      entryEventCount: Number(data.entryEventCount ?? 0),
-      totalPatientCount: Number(data.totalPatientCount ?? 0),
-      finalCount: Number(data.finalCount ?? 0),
-      ruleCounts: Array.isArray(data.ruleCounts) ? data.ruleCounts : [],
-      executionTimeMs: Number(data.executionTimeMs ?? 0),
+      entryEventCount: Number(data?.entryEventCount ?? 0),
+      totalPatientCount: Number(data?.totalPatientCount ?? 0),
+      finalCount: Number(data?.finalCount ?? 0),
+      ruleCounts: Array.isArray(data?.ruleCounts)
+        ? (data.ruleCounts as InclusionStatsResult['ruleCounts'])
+        : [],
+      executionTimeMs: Number(data?.executionTimeMs ?? 0),
     }
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') throw error
     logger.error('TrexSQL', 'Failed to get inclusion stats', { sourceKey, error })
-    throw error
+    throw expressionQueryFailure(sourceKey, 'Inclusion stats failed', error)
   } finally {
-    activeCountRequests.delete(sourceKey)
+    releaseCountRequest(sourceKey, controller)
   }
 }

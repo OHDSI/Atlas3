@@ -71,7 +71,7 @@ describe('DataSourceService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockSources),
+        text: () => Promise.resolve(JSON.stringify(mockSources)),
       })
 
       const result = await listDataSources()
@@ -102,7 +102,7 @@ describe('DataSourceService', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve([]),
+          text: () => Promise.resolve(JSON.stringify([])),
         })
 
       const promise = listDataSources()
@@ -126,7 +126,7 @@ describe('DataSourceService', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve([]),
+          text: () => Promise.resolve(JSON.stringify([])),
         })
 
       const promise = listDataSources()
@@ -155,7 +155,7 @@ describe('DataSourceService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockReport),
+        text: () => Promise.resolve(JSON.stringify(mockReport)),
       })
 
       const result = await getDashboardReport('TEST')
@@ -187,7 +187,7 @@ describe('DataSourceService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockReport),
+        text: () => Promise.resolve(JSON.stringify(mockReport)),
       })
 
       const result = await getDataDensityReport('TEST')
@@ -220,7 +220,7 @@ describe('DataSourceService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockReport),
+        text: () => Promise.resolve(JSON.stringify(mockReport)),
       })
 
       const result = await getPersonReport('TEST')
@@ -250,7 +250,7 @@ describe('DataSourceService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockReport),
+        text: () => Promise.resolve(JSON.stringify(mockReport)),
       })
 
       await getClinicalDomainReport('TEST', 'conditionOccurrence')
@@ -266,7 +266,7 @@ describe('DataSourceService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockReport),
+        text: () => Promise.resolve(JSON.stringify(mockReport)),
       })
 
       await getClinicalDomainReport('TEST', 'drugExposure')
@@ -282,7 +282,7 @@ describe('DataSourceService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockReport),
+        text: () => Promise.resolve(JSON.stringify(mockReport)),
       })
 
       await getClinicalDomainReport('TEST', 'procedure')
@@ -317,7 +317,7 @@ describe('DataSourceService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockReport),
+        text: () => Promise.resolve(JSON.stringify(mockReport)),
       })
 
       const result = await getObservationPeriodReport('TEST')
@@ -353,7 +353,7 @@ describe('DataSourceService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockReport),
+        text: () => Promise.resolve(JSON.stringify(mockReport)),
       })
 
       const result = await getDeathReport('TEST')
@@ -393,7 +393,7 @@ describe('DataSourceService', () => {
       ]
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockSources),
+        text: () => Promise.resolve(JSON.stringify(mockSources)),
       })
 
       const [first, second] = await Promise.all([listDataSources(), listDataSources()])
