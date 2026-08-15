@@ -20,15 +20,8 @@ import {
   transformDataDensityReport,
   transformPersonReport,
 } from '@/utils/datasource-formatters'
-import { getAppConfig } from '@/config/app-config.loader'
 import { ApiError } from '@/services/api-error'
-
-function getBaseUrl(): string {
-  return getAppConfig().api.url
-}
-
-const MAX_RETRY_ATTEMPTS = 3
-const INITIAL_RETRY_DELAY_MS = 500
+import { httpClient, type HttpClientOptions } from '@/services/http-client'
 
 // Request cancellation support - use a Map to track multiple requests
 const activeRequests = new Map<string, AbortController>()
@@ -41,110 +34,56 @@ function cancelRequest(endpoint: string) {
   }
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-function isRetryableError(statusCode?: number): boolean {
-  if (statusCode && statusCode >= 500 && statusCode < 600) return true
-  if (statusCode === 429) return true
-  return false
-}
-
-async function getAuthToken(): Promise<string | null> {
-  try {
-    const { useAuthStore } = await import('@/stores/auth')
-    return useAuthStore().token
-  } catch {
-    return null
-  }
-}
-
-async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${getBaseUrl()}${endpoint}`
-  let lastError: Error | null = null
-
-  // Cancel previous request to the same endpoint
+/**
+ * Every CDM-results request goes through the shared httpClient. This used to be
+ * a second copy of that client's retry/auth loop, which silently drifted: a 401
+ * never cleared the session or opened the login modal, so an expired token
+ * turned every dashboard and report into a dead-end error instead of a login
+ * prompt; no User-Language header went out, so WebAPI answered untranslated;
+ * and the error body was not unwrapped, discarding the server's explanation
+ * (#132). Everything here beyond cancellation is now the shared client's job.
+ */
+async function fetchJSON<T>(endpoint: string, options?: HttpClientOptions): Promise<T> {
+  // A newer request for the same endpoint supersedes the one in flight — the
+  // reports switch source faster than WebAPI answers. /source/sources is exempt
+  // via listDataSources' coalescing below.
   cancelRequest(endpoint)
 
-  // Create new abort controller for this endpoint
   const abortController = new AbortController()
   activeRequests.set(endpoint, abortController)
-  const signal = abortController.signal
 
-  // Get auth token
-  const token = await getAuthToken()
-  const authHeaders: Record<string, string> = {}
-  if (token) {
-    authHeaders['Authorization'] = `Bearer ${token}`
-  }
-
-  for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders,
-          ...options?.headers,
-        },
-        signal,
-      })
-
-      if (!response.ok) {
-        const status = response.status
-        const errorText = await response.text().catch(() => 'Unknown error')
-
-        if (isRetryableError(status) && attempt < MAX_RETRY_ATTEMPTS - 1) {
-          const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-          logger.warn(
-            'DataSource',
-            `Retrying ${endpoint} after ${delayMs}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`
-          )
-          await sleep(delayMs)
-          continue
-        }
-
-        throw new ApiError(`HTTP ${status}: ${errorText}`, status, errorText)
-      }
-
-      // Parse JSON response with error handling
-      try {
-        const data = await response.json()
-        activeRequests.delete(endpoint)
-        return data
-      } catch (parseError) {
-        logger.error('DataSource', 'Failed to parse JSON response', parseError)
-        throw new Error('Invalid response format')
-      }
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        logger.debug('DataSource', 'Request cancelled', endpoint)
-        throw error
-      }
-
-      lastError = error instanceof Error ? error : new Error('Unknown error')
-
-      // The status check above only escapes this catch by throwing, so without
-      // re-checking here every 4xx would be retried anyway.
-      if (lastError instanceof ApiError && !isRetryableError(lastError.status)) {
-        break
-      }
-
-      if (attempt < MAX_RETRY_ATTEMPTS - 1) {
-        const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-        logger.warn(
-          'DataSource',
-          `Retrying ${endpoint} after ${delayMs}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`
-        )
-        await sleep(delayMs)
-        continue
-      }
+  try {
+    return await httpClient<T>(endpoint, { ...options, signal: abortController.signal })
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      logger.debug('DataSource', 'Request cancelled', endpoint)
+    }
+    throw error
+  } finally {
+    // Only clear our own entry: a superseding request has already replaced it.
+    if (activeRequests.get(endpoint) === abortController) {
+      activeRequests.delete(endpoint)
     }
   }
+}
 
-  activeRequests.delete(endpoint)
-  throw lastError || new Error('Request failed')
+// A WebAPI error body can be a full stack trace; the toast only has room for
+// the gist of it.
+const MAX_DETAIL_LENGTH = 200
+
+/**
+ * "Unable to load Person report. Please try again." is the same sentence whether
+ * the results daimon is missing, the cache is detached or the session expired —
+ * retrying fixes none of them. Append what WebAPI actually said, now that the
+ * shared client preserves it, and keep the generic advice only when there is
+ * nothing to append.
+ */
+function reportFailure(summary: string, error: unknown): Error {
+  const detail = error instanceof ApiError ? (error.body ?? '').trim() : ''
+  if (!detail) return new Error(`${summary}. Please try again.`)
+  const capped =
+    detail.length > MAX_DETAIL_LENGTH ? `${detail.slice(0, MAX_DETAIL_LENGTH)}…` : detail
+  return new Error(`${summary}: ${capped}`)
 }
 
 // In-flight de-duplication for the sources list. Several callers fetch this on
@@ -185,7 +124,7 @@ export async function listDataSources(): Promise<DataSource[]> {
       return validated
     } catch (error) {
       logger.error('DataSource', 'Failed to fetch sources', error)
-      throw new Error('Unable to load data sources. Please try again.')
+      throw reportFailure('Unable to load data sources', error)
     } finally {
       // Allow the next (post-completion) call to fetch fresh data.
       sourcesInFlight = null
@@ -215,7 +154,7 @@ export async function getDashboardReport(sourceKey: string): Promise<DashboardRe
     return result.data
   } catch (error) {
     logger.error('DataSource', 'Failed to fetch dashboard report', { sourceKey, error })
-    throw new Error('Unable to load Dashboard report. Please try again.')
+    throw reportFailure('Unable to load Dashboard report', error)
   }
 }
 
@@ -235,7 +174,7 @@ export async function getDataDensityReport(sourceKey: string): Promise<DataDensi
     return transformed
   } catch (error) {
     logger.error('DataSource', 'Failed to fetch data density report', { sourceKey, error })
-    throw new Error('Unable to load Data Density report. Please try again.')
+    throw reportFailure('Unable to load Data Density report', error)
   }
 }
 
@@ -255,7 +194,7 @@ export async function getPersonReport(sourceKey: string): Promise<PersonReport> 
     return transformed
   } catch (error) {
     logger.error('DataSource', 'Failed to fetch person report', { sourceKey, error })
-    throw new Error('Unable to load Person report. Please try again.')
+    throw reportFailure('Unable to load Person report', error)
   }
 }
 
@@ -283,7 +222,7 @@ export async function getClinicalDomainReport(
       reportType,
       error,
     })
-    throw new Error(`Unable to load ${reportType} report. Please try again.`)
+    throw reportFailure(`Unable to load ${reportType} report`, error)
   }
 }
 
@@ -307,7 +246,7 @@ export async function getObservationPeriodReport(
     return transformed
   } catch (error) {
     logger.error('DataSource', 'Failed to fetch observation period report', { sourceKey, error })
-    throw new Error('Unable to load Observation Period report. Please try again.')
+    throw reportFailure('Unable to load Observation Period report', error)
   }
 }
 
@@ -329,7 +268,7 @@ export async function getDeathReport(
     return transformed
   } catch (error) {
     logger.error('DataSource', 'Failed to fetch death report', { sourceKey, error })
-    throw new Error('Unable to load Death report. Please try again.')
+    throw reportFailure('Unable to load Death report', error)
   }
 }
 

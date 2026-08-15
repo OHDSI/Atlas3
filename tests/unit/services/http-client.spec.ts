@@ -56,6 +56,24 @@ describe('services/http-client error surfacing', () => {
     )
   })
 
+  it('leaves the body null when the server sent none', async () => {
+    // A caller that substitutes its own wording has to be able to tell an
+    // absent explanation from one that reads like the reason phrase.
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 422,
+      statusText: 'Unprocessable Entity',
+      text: async () => '',
+    })
+
+    const { httpClient } = await import('@/services/http-client')
+    await expect(httpClient('/tag/', { method: 'POST', skipAuth: true })).rejects.toMatchObject({
+      status: 422,
+      message: 'HTTP 422: Unprocessable Entity',
+      body: null,
+    })
+  })
+
   it('preserves the HTTP status on the thrown error', async () => {
     mockFetch.mockResolvedValue({
       ok: false,

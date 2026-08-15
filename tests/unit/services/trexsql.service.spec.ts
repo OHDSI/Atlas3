@@ -53,28 +53,24 @@ describe('TrexSQLService', () => {
     it('starts cache build successfully', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({ message: 'Cache build started' })
+        text: async () => JSON.stringify({ message: 'Cache build started' })
       } as Response)
 
       const result = await buildCache('CDM_SOURCE')
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/trexsql/CDM_SOURCE/cache'),
-        expect.objectContaining({
-          method: 'POST',
-          headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer mock-token'
-          })
-        })
-      )
+      const [url, init] = vi.mocked(global.fetch).mock.calls[0]
+      expect(url).toContain('/trexsql/CDM_SOURCE/cache')
+      expect((init as RequestInit).method).toBe('POST')
+      const headers = (init as RequestInit).headers as Headers
+      expect(headers.get('Content-Type')).toBe('application/json')
+      expect(headers.get('Authorization')).toBe('Bearer mock-token')
       expect(result.message).toBe('Cache build started')
     })
 
     it('uses custom schema name', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({ message: 'Cache build started' })
+        text: async () => JSON.stringify({ message: 'Cache build started' })
       } as Response)
 
       await buildCache('CDM_SOURCE', 'custom_schema')
@@ -130,7 +126,7 @@ describe('TrexSQLService', () => {
     it('handles validation failure gracefully', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({ unexpectedField: 'value' })
+        text: async () => JSON.stringify({ unexpectedField: 'value' })
       } as Response)
 
       const result = await buildCache('CDM_SOURCE')
@@ -144,7 +140,7 @@ describe('TrexSQLService', () => {
     it('returns cache status for ready cache', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           sourceKey: 'CDM_SOURCE',
           status: 'ready',
           totalPatientCount: 1000000,
@@ -163,7 +159,9 @@ describe('TrexSQLService', () => {
     it('returns not_built status for 404', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: false,
-        status: 404
+        status: 404,
+        statusText: 'Not Found',
+        text: async () => ''
       } as Response)
 
       const result = await getCacheStatus('NEW_SOURCE')
@@ -175,7 +173,7 @@ describe('TrexSQLService', () => {
     it('maps legacy response format', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           sourceKey: 'CDM_SOURCE',
           cacheExists: true,
           cacheAttached: true,
@@ -195,7 +193,7 @@ describe('TrexSQLService', () => {
     it('maps building status from legacy format', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           sourceKey: 'CDM_SOURCE',
           cacheExists: false,
           cacheAttached: false,
@@ -211,7 +209,7 @@ describe('TrexSQLService', () => {
     it('maps error status from legacy format', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           sourceKey: 'CDM_SOURCE',
           cacheExists: true,
           cacheAttached: false,
@@ -238,7 +236,7 @@ describe('TrexSQLService', () => {
     it('re-checks a transient error and returns the recovered status', async () => {
       const errorResponse = {
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           sourceKey: 'CDM_SOURCE',
           cacheExists: true,
           cacheAttached: false,
@@ -248,7 +246,7 @@ describe('TrexSQLService', () => {
       } as Response
       const readyResponse = {
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           sourceKey: 'CDM_SOURCE',
           cacheExists: true,
           cacheAttached: true,
@@ -290,7 +288,7 @@ describe('TrexSQLService', () => {
     it('returns patient count for valid expression', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           cohortPatientCount: 5000,
           totalPatientCount: 1000000,
           executionTimeMs: 150
@@ -308,7 +306,7 @@ describe('TrexSQLService', () => {
     it('sends expression as JSON string', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           cohortPatientCount: 100,
           totalPatientCount: 10000,
           executionTimeMs: 50
@@ -329,7 +327,9 @@ describe('TrexSQLService', () => {
     it('throws on 400 bad request', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: false,
-        status: 400
+        status: 400,
+        statusText: 'Bad Request',
+        text: async () => ''
       } as Response)
 
       await expect(getPatientCount('CDM_SOURCE', {})).rejects.toThrow('Invalid cohort expression')
@@ -338,7 +338,9 @@ describe('TrexSQLService', () => {
     it('throws on 404 not found', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: false,
-        status: 404
+        status: 404,
+        statusText: 'Not Found',
+        text: async () => ''
       } as Response)
 
       await expect(getPatientCount('MISSING', {})).rejects.toThrow("Data source 'MISSING' not found")
@@ -347,7 +349,9 @@ describe('TrexSQLService', () => {
     it('throws on 503 cache not available', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: false,
-        status: 503
+        status: 503,
+        statusText: 'Service Unavailable',
+        text: async () => ''
       } as Response)
 
       await expect(getPatientCount('NO_CACHE', {})).rejects.toThrow('Cache not available')
@@ -356,7 +360,7 @@ describe('TrexSQLService', () => {
     it('handles validation failure gracefully', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           cohortPatientCount: 100,
           // Missing other fields
         })
@@ -381,7 +385,7 @@ describe('TrexSQLService', () => {
         }
         return {
           ok: true,
-          json: async () => ({ cohortPatientCount: 100, totalPatientCount: 1000, executionTimeMs: 10 })
+          text: async () => JSON.stringify({ cohortPatientCount: 100, totalPatientCount: 1000, executionTimeMs: 10 })
         } as Response
       })
 
@@ -448,7 +452,7 @@ describe('TrexSQLService', () => {
 
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           sourceKey: 'SOURCE_1',
           status: 'ready',
           totalPatientCount: 1000,
@@ -473,7 +477,7 @@ describe('TrexSQLService', () => {
       vi.mocked(global.fetch)
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ sourceKey: 'GOOD_SOURCE', status: 'ready', totalPatientCount: 100, lastBuiltAt: null, sizeBytes: null, errorMessage: null })
+          text: async () => JSON.stringify({ sourceKey: 'GOOD_SOURCE', status: 'ready', totalPatientCount: 100, lastBuiltAt: null, sizeBytes: null, errorMessage: null })
         } as Response)
         .mockRejectedValueOnce(new Error('Connection failed'))
 
@@ -497,7 +501,7 @@ describe('TrexSQLService', () => {
     it('returns true when cache is ready', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           sourceKey: 'CDM',
           status: 'ready',
           totalPatientCount: 1000,
@@ -515,7 +519,7 @@ describe('TrexSQLService', () => {
     it('returns false when cache is not ready', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           sourceKey: 'CDM',
           status: 'building',
           totalPatientCount: null,
@@ -552,7 +556,7 @@ describe('TrexSQLService', () => {
       }
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => payload,
+        text: async () => JSON.stringify(payload),
       } as Response)
 
       const { getInclusionStats } = await import('@/services/trexsql.service')
@@ -585,18 +589,24 @@ describe('TrexSQLService', () => {
 
       let firstAborted = false
       vi.mocked(global.fetch).mockImplementationOnce((_url, init) => {
+        const signal = (init as RequestInit).signal
         return new Promise((_resolve, reject) => {
-          (init as RequestInit).signal?.addEventListener('abort', () => {
+          const onAbort = () => {
             firstAborted = true
             const err = new Error('aborted')
             err.name = 'AbortError'
             reject(err)
-          })
+          }
+          // Real fetch rejects straight away on a signal that is already
+          // aborted, which is now the case: the superseding call cancels
+          // before the first request has finished resolving its auth token.
+          if (signal?.aborted) onAbort()
+          else signal?.addEventListener('abort', onAbort)
         })
       })
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           entryEventCount: 1, totalPatientCount: 1, finalCount: 1,
           ruleCounts: [], executionTimeMs: 0,
         }),
@@ -615,7 +625,7 @@ describe('TrexSQLService', () => {
     it('returns the files the endpoint reports', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({
+        text: async () => JSON.stringify({
           cachePath: '/usr/src/data/cache',
           files: [
             {
@@ -641,7 +651,7 @@ describe('TrexSQLService', () => {
     it('returns an empty list when the payload has no files array', async () => {
       vi.mocked(global.fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({})
+        text: async () => JSON.stringify({})
       } as Response)
 
       await expect(listCacheFiles()).resolves.toEqual([])
@@ -658,7 +668,7 @@ describe('TrexSQLService', () => {
     })
 
     it('deletes by database code', async () => {
-      vi.mocked(global.fetch).mockResolvedValue({ ok: true } as Response)
+      vi.mocked(global.fetch).mockResolvedValue({ ok: true, text: async () => '' } as Response)
 
       await deleteCacheFile('cdm_demo')
 

@@ -143,6 +143,10 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
         // constraint violations) instead of the bare status text, which
         // alone doesn't say what went wrong (#132).
         let detail = response.statusText
+        // Stays null when the server explained nothing, so a caller can tell
+        // "no explanation" from one that happens to read like a reason phrase
+        // and fall back to its own wording.
+        let body: string | null = null
         try {
           const text = await response.text()
           if (text) {
@@ -151,6 +155,7 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
             } catch {
               detail = text
             }
+            body = detail
           }
         } catch {
           // keep statusText
@@ -159,7 +164,7 @@ export async function httpClient<T>(endpoint: string, options: HttpClientOptions
         // be a full HTML stack trace, so cap it there. `body` keeps the whole
         // thing for logs.
         const summary = detail.length > 300 ? `${detail.slice(0, 300)}…` : detail
-        const error = new ApiError(`HTTP ${response.status}: ${summary}`, response.status, detail)
+        const error = new ApiError(`HTTP ${response.status}: ${summary}`, response.status, body)
         if (retryAllowed && isRetryableError(error, response.status) && attempt < maxRetries - 1) {
           const delay = initialDelay * Math.pow(2, attempt)
           logger.warn(
