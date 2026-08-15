@@ -343,5 +343,13 @@ async function captureImportedExpression(
     return res.json()
   }, idMatch[1]) as Record<string, unknown> | null
 
-  return (data?.expression as Record<string, unknown> | undefined) ?? null
+  // WebAPI serializes `expression` as a JSON string on this endpoint — the same
+  // decode CohortBuilder.applyAtlasCohort and profile.service do. This used to
+  // read the field as a plain object because the mock handed one back; against
+  // the real wire shape every assertion below it would have read undefined.
+  const expression = data?.expression
+  if (typeof expression === 'string') {
+    return JSON.parse(expression) as Record<string, unknown>
+  }
+  return (expression as Record<string, unknown> | undefined) ?? null
 }

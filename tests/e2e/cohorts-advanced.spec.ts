@@ -94,13 +94,18 @@ test.describe('Cohort Card Actions', () => {
   test('should handle cohort delete action', async ({ page }) => {
     let deleteRequestMade = false
 
-    // Mock delete endpoint
+    // Mock delete endpoint. The non-DELETE branch must fallback(), not
+    // continue(): this handler is registered after setupBasicMocks and so runs
+    // first for every /cohortdefinition/{id} request. continue() sends the
+    // request straight to the network and stops the remaining handlers, so it
+    // shadowed the shared cohort-detail mock and every non-DELETE method here
+    // ended up at the vite 503 stub instead.
     await page.route('**/cohortdefinition/*', async (route) => {
       if (route.request().method() === 'DELETE') {
         deleteRequestMade = true
         await route.fulfill({ status: 204 })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
 
@@ -146,7 +151,7 @@ test.describe('Cohort List - Error Handling', () => {
           body: JSON.stringify({ error: 'Internal Server Error' })
         })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
 
@@ -167,7 +172,7 @@ test.describe('Cohort List - Error Handling', () => {
       if (route.request().method() === 'GET') {
         await route.fulfill({ status: 500 })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
 
@@ -197,7 +202,7 @@ test.describe('Cohort List - Empty State', () => {
           body: JSON.stringify([])
         })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
 

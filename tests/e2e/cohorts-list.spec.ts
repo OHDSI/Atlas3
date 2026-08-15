@@ -106,13 +106,14 @@ test.describe('Cohorts List', () => {
       await firstCard.click()
     }
 
-    // Wait for potential navigation
-    await page.waitForTimeout(1000)
-
-    // Verify navigation happened or card was clicked (both valid outcomes)
-    const url = page.url()
-    const navigatedToCohort = url.includes(`/cohorts/${cohortId}`) || url.includes('/cohorts/')
-    expect(navigatedToCohort || url.includes('/Atlas')).toBeTruthy()
+    // Wait on the URL rather than sleeping a fixed second and reading it once:
+    // under a fully parallel run the router can land just past that deadline,
+    // which made this fail intermittently. The old fallbacks ("or the URL still
+    // contains /Atlas", "or any /cohorts/ URL") also let a click that navigated
+    // nowhere count as success — assert the card's own id instead.
+    await expect(page).toHaveURL(new RegExp(`/cohorts/${cohortId}(?:$|[/?])`), {
+      timeout: 10000,
+    })
   })
 
   test('should filter cohorts using search', async ({ page }) => {
@@ -160,7 +161,7 @@ test.describe('Cohorts List', () => {
           body: JSON.stringify(mockCohortsLarge),
         })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
     await page.reload()
