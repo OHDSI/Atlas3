@@ -298,14 +298,13 @@ import { useEntityAccess } from '@/composables/useEntityAccess'
 import { getCohortDefinition } from '@/services/cohort-definition.service'
 import { getConceptSetById } from '@/services/concept-set.service'
 import type { CohortDefinition, ConceptSetReference } from '@/models/cohort.types'
-import type { Concept } from '@/models/event.types'
-import type { ConceptSetItem } from '@/models/concept-set.types'
+import type { Concept as SearchConcept, ConceptSetItem } from '@/models/concept-set.types'
 import ConceptSetSelectionDialog from './ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from './ConceptSearchDialog.vue'
 import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
 import CohortExpressionEditor from '@/components/cohort-editor/CohortExpressionEditor.vue'
 import { CohortExpressionSchema } from '@/models/circe-types'
-import type { CohortExpression, ConceptSetItem as CirceConceptSetItem } from '@/models/circe-types'
+import type { CohortExpression, Concept as CirceConcept, ConceptSetItem as CirceConceptSetItem } from '@/models/circe-types'
 import { unassignConceptSetId, walkConceptSetReferences } from '@/components/cohort-editor/concept-set-usage'
 import { normalizeForCirce } from '@/components/cohort-editor/normalize'
 import { convertAtlasItemToCirce } from '@/components/cohort-editor/atlas-concept-set'
@@ -468,7 +467,7 @@ const selectedConceptDomainFilter = ref<string | undefined>(undefined)
 // ConceptArray.vue components at any depth request concepts through this
 // service. Concept-set selection flows through useCirceConceptSetPicker so the
 // dialog/request lifecycle stays centralized.
-const pendingConceptsCallback = ref<((concepts: Concept[]) => void) | null>(null)
+const pendingConceptsCallback = ref<((concepts: CirceConcept[]) => void) | null>(null)
 
 // Named so it can be part of the defineExpose contract below: descendant
 // components reach it via inject (useCriteriaSelection), but nothing in this
@@ -479,7 +478,7 @@ const criteriaSelectionService: CriteriaSelectionService = {
     // not used by CohortExpressionEditor — concept-set events flow through the
     // centralized useCirceConceptSetPicker request lifecycle.
   },
-  requestConcepts(domainFilter: string | undefined, onSelect: (concepts: Concept[]) => void) {
+  requestConcepts(domainFilter: string | undefined, onSelect: (concepts: CirceConcept[]) => void) {
     pendingConceptsCallback.value = onSelect
     selectedConceptDomainFilter.value = domainFilter
     isConceptSearchDialogOpen.value = true
@@ -995,16 +994,7 @@ function syncToStoreDefinition() {
 watch(() => cohortStore.reloadRequest, syncToStoreDefinition)
 
 function handleConceptsSelected(
-  concepts: Array<{
-    conceptId: number
-    conceptName: string
-    conceptCode: string
-    domainId: string
-    vocabularyId: string
-    conceptClassId: string
-    standardConcept: string | null
-    invalidReason: string | null
-  }>
+  concepts: SearchConcept[]
 ) {
   if (concepts.length === 0 || !pendingConceptsCallback.value) {
     isConceptSearchDialogOpen.value = false
@@ -1013,13 +1003,17 @@ function handleConceptsSelected(
   }
 
   // Convert camelCase concepts to UPPERCASE Circe format
-  const convertedConcepts = concepts.map(c => ({
+  const convertedConcepts: CirceConcept[] = concepts.map(c => ({
     CONCEPT_ID: c.conceptId,
     CONCEPT_NAME: c.conceptName,
+    STANDARD_CONCEPT_CAPTION: c.standardConcept === 'S' ? 'Standard' : c.standardConcept === 'C' ? 'Classification' : '',
+    INVALID_REASON_CAPTION: c.invalidReason ?? '',
     CONCEPT_CODE: c.conceptCode,
     DOMAIN_ID: c.domainId,
     VOCABULARY_ID: c.vocabularyId,
     CONCEPT_CLASS_ID: c.conceptClassId,
+    VALID_START_DATE: '',
+    VALID_END_DATE: '',
     STANDARD_CONCEPT: c.standardConcept,
     INVALID_REASON: c.invalidReason,
   }))

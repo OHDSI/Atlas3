@@ -328,6 +328,7 @@ describe('agent-built cohort serialises to valid CIRCE', () => {
               concept: {
                 CONCEPT_ID: 1713671,
                 CONCEPT_NAME: 'Amoxicillin',
+                CONCEPT_CODE: '1713671',
                 DOMAIN_ID: 'Drug',
               },
               includeDescendants: true,
@@ -364,6 +365,7 @@ describe('agent-built cohort serialises to valid CIRCE', () => {
               concept: {
                 CONCEPT_ID: 1713671,
                 CONCEPT_NAME: 'Amoxicillin',
+                CONCEPT_CODE: '1713671',
                 DOMAIN_ID: 'Drug',
               },
               includeDescendants: true,

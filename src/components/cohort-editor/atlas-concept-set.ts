@@ -24,6 +24,10 @@ export interface AtlasConceptSetItem {
   conceptCode?: string
   standardConcept?: string
   invalidReason?: string | null
+  standardConceptCaption: string
+  invalidReasonCaption: string
+  validStartDate: number
+  validEndDate: number
   domainId?: string
   vocabularyId?: string
   conceptClassId?: string
@@ -49,13 +53,15 @@ export function convertAtlasItemToCirce(
   return {
     concept: {
       CONCEPT_ID: item.conceptId,
-      CONCEPT_NAME: item.conceptName,
-      CONCEPT_CODE: item.conceptCode,
-      STANDARD_CONCEPT: item.standardConcept,
-      INVALID_REASON: item.invalidReason,
-      DOMAIN_ID: item.domainId,
-      VOCABULARY_ID: item.vocabularyId,
-      CONCEPT_CLASS_ID: item.conceptClassId,
+      CONCEPT_NAME: item.conceptName ?? '',
+      STANDARD_CONCEPT_CAPTION: item.standardConceptCaption,
+      INVALID_REASON_CAPTION: item.invalidReasonCaption,
+      CONCEPT_CODE: item.conceptCode ?? '',
+      STANDARD_CONCEPT: item.standardConcept ?? null,
+      INVALID_REASON: item.invalidReason ?? null,
+      DOMAIN_ID: item.domainId ?? '',
+      VOCABULARY_ID: item.vocabularyId ?? '',
+      CONCEPT_CLASS_ID: item.conceptClassId ?? '',
     },
     isExcluded: item.isExcluded,
     includeDescendants: item.includeDescendants,

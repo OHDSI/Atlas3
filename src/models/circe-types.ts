@@ -93,17 +93,15 @@ export type ResultLimit = z.infer<typeof ResultLimitSchema>
 
 export const ConceptSchema = z.object({
   CONCEPT_ID: z.number(),
-  CONCEPT_NAME: z.string().nullish(),
-  CONCEPT_CODE: z.string().nullish(),
+  CONCEPT_NAME: z.string(),
   STANDARD_CONCEPT: z.string().nullish(),
-  STANDARD_CONCEPT_CAPTION: z.string().nullish(),
-  VOCABULARY_ID: z.string().nullish(),
-  DOMAIN_ID: z.string().nullish(),
-  CONCEPT_CLASS_ID: z.string().nullish(),
+  STANDARD_CONCEPT_CAPTION: z.string(),
   INVALID_REASON: z.string().nullish(),
-  VALID_START_DATE: z.string().nullish(),
-  VALID_END_DATE: z.string().nullish(),
-  INVALID_REASON_CAPTION: z.string().nullish(),
+  INVALID_REASON_CAPTION: z.string(),
+  CONCEPT_CODE: z.string(),
+  DOMAIN_ID: z.string(),
+  VOCABULARY_ID: z.string(),
+  CONCEPT_CLASS_ID: z.string(),
 })
 export type Concept = z.infer<typeof ConceptSchema>
 
