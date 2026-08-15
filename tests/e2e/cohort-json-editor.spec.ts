@@ -41,7 +41,7 @@ test.describe('Cohort JSON editor', () => {
 
     await page.route('**/WebAPI/cohortdefinition/1', async route => {
       if (route.request().method() !== 'GET') {
-        await route.continue()
+        await route.fallback()
         return
       }
       await route.fulfill({
@@ -85,7 +85,7 @@ test.describe('Cohort JSON editor', () => {
     let savedExpression: Record<string, unknown> | null = null
     await page.route('**/WebAPI/cohortdefinition/1', async route => {
       if (route.request().method() !== 'PUT') {
-        await route.continue()
+        await route.fallback()
         return
       }
       const body = JSON.parse(route.request().postData() || '{}')

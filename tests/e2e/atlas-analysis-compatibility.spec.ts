@@ -38,7 +38,7 @@ test.describe('Atlas Pathway Compatibility', () => {
             body: JSON.stringify(pathway),
           })
         } else {
-          await route.continue()
+          await route.fallback()
         }
       })
 
@@ -72,7 +72,7 @@ test.describe('Atlas Pathway Compatibility', () => {
           body: JSON.stringify(zeroWindowPathway),
         })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
 
@@ -90,7 +90,7 @@ test.describe('Atlas Pathway Compatibility', () => {
     await page.route(`**/pathway-analysis/${pw.id}`, async (route) => {
       if (route.request().method() === 'GET') {
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(pw) })
-      } else { await route.continue() }
+      } else { await route.fallback() }
     })
 
     await page.goto(`/#/pathways/${pw.id}`)
@@ -105,7 +105,7 @@ test.describe('Atlas Pathway Compatibility', () => {
     await page.route(`**/pathway-analysis/${pw.id}`, async (route) => {
       if (route.request().method() === 'GET') {
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(pw) })
-      } else { await route.continue() }
+      } else { await route.fallback() }
     })
 
     await page.goto(`/#/pathways/${pw.id}`)
@@ -120,7 +120,7 @@ test.describe('Atlas Pathway Compatibility', () => {
     await page.route(`**/pathway-analysis/${pw.id}`, async (route) => {
       if (route.request().method() === 'GET') {
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(pw) })
-      } else { await route.continue() }
+      } else { await route.fallback() }
     })
 
     await page.goto(`/#/pathways/${pw.id}`)
@@ -167,7 +167,7 @@ test.describe('Atlas Pathway Compatibility', () => {
           body: JSON.stringify(importedPathway),
         })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
 
@@ -180,7 +180,7 @@ test.describe('Atlas Pathway Compatibility', () => {
           body: JSON.stringify(importedPathway),
         })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
     await page.route('**/pathway-analysis/999/generation', async (route) => {
@@ -242,7 +242,7 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
             body: JSON.stringify(wireIR),
           })
         } else {
-          await route.continue()
+          await route.fallback()
         }
       })
 
@@ -272,7 +272,7 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
     await page.route(`**/ir/${ir.id}`, async (route) => {
       if (route.request().method() === 'GET') {
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(wireIR) })
-      } else { await route.continue() }
+      } else { await route.fallback() }
     })
 
     await page.goto(`/#/incidence-rates/${ir.id}`)
@@ -291,7 +291,7 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
     await page.route(`**/ir/${ir.id}`, async (route) => {
       if (route.request().method() === 'GET') {
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(wireIR) })
-      } else { await route.continue() }
+      } else { await route.fallback() }
     })
 
     await page.goto(`/#/incidence-rates/${ir.id}`)
@@ -311,7 +311,7 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
     await page.route(`**/ir/${ir.id}`, async (route) => {
       if (route.request().method() === 'GET') {
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(wireIR) })
-      } else { await route.continue() }
+      } else { await route.fallback() }
     })
 
     await page.goto(`/#/incidence-rates/${ir.id}`)
@@ -334,7 +334,7 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
           body: JSON.stringify(wireIR),
         })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
 
@@ -360,14 +360,14 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
           body: JSON.stringify(importedIR),
         })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
 
     await page.route('**/ir/999', async (route) => {
       if (route.request().method() === 'GET') {
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(importedIR) })
-      } else { await route.continue() }
+      } else { await route.fallback() }
     })
     await page.route('**/ir/999/info', async (route) => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
@@ -402,7 +402,7 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
           body: JSON.stringify(wireIRs),
         })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
 
@@ -442,7 +442,7 @@ test.describe('Atlas Characterization Compatibility', () => {
             body: JSON.stringify(fullChar),
           })
         } else {
-          await route.continue()
+          await route.fallback()
         }
       })
 
@@ -472,7 +472,7 @@ test.describe('Atlas Characterization Compatibility', () => {
     await page.route(`**/cohort-characterization/${char.id}`, async (route) => {
       if (route.request().method() === 'GET') {
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fullChar) })
-      } else { await route.continue() }
+      } else { await route.fallback() }
     })
 
     const errors: string[] = []
@@ -502,7 +502,7 @@ test.describe('Atlas Characterization Compatibility', () => {
     await page.route(`**/cohort-characterization/${char.id}`, async (route) => {
       if (route.request().method() === 'GET') {
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fullChar) })
-      } else { await route.continue() }
+      } else { await route.fallback() }
     })
 
     await page.goto(`/#/characterizations/${char.id}`)
@@ -518,7 +518,7 @@ test.describe('Atlas Characterization Compatibility', () => {
           body: JSON.stringify(atlasDemoCharacterizations),
         })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
 
@@ -541,14 +541,14 @@ test.describe('Atlas Characterization Compatibility', () => {
           body: JSON.stringify(importedChar),
         })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
 
     await page.route('**/cohort-characterization/999', async (route) => {
       if (route.request().method() === 'GET') {
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(importedChar) })
-      } else { await route.continue() }
+      } else { await route.fallback() }
     })
     await page.route('**/cohort-characterization/999/generation', async (route) => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
@@ -570,7 +570,7 @@ test.describe('Atlas Characterization Compatibility', () => {
           body: JSON.stringify(fullChar),
         })
       } else {
-        await route.continue()
+        await route.fallback()
       }
     })
 
@@ -686,7 +686,7 @@ async function setupAnalysisMocks(page: Page) {
         body: JSON.stringify([]),
       })
     } else {
-      await route.continue()
+      await route.fallback()
     }
   })
 
@@ -699,7 +699,7 @@ async function setupAnalysisMocks(page: Page) {
         body: JSON.stringify([]),
       })
     } else {
-      await route.continue()
+      await route.fallback()
     }
   })
 
@@ -712,7 +712,7 @@ async function setupAnalysisMocks(page: Page) {
         body: JSON.stringify([]),
       })
     } else {
-      await route.continue()
+      await route.fallback()
     }
   })
 
@@ -725,7 +725,7 @@ async function setupAnalysisMocks(page: Page) {
         body: JSON.stringify([]),
       })
     } else {
-      await route.continue()
+      await route.fallback()
     }
   })
 

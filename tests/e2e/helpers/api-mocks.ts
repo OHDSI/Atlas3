@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import type { Page, Route } from '@playwright/test'
+import { z } from 'zod'
 import {
   mockCohorts,
   mockDatasources,
@@ -15,6 +16,174 @@ import {
   mockDiabetesConcepts,
   mockCardiovascularConcepts
 } from '../fixtures'
+import {
+  CohortDefinitionListSchema,
+  CohortGenerationInfoListSchema,
+} from '../../../src/models/webapi.types'
+import { ConceptSearchResponseSchema } from '../../../src/models/concept-set.types'
+import { CharacterizationDefinitionSchema } from '../../../src/models/characterization.types'
+import { CohortDefExpressionSchema } from '../../../src/models/profile.types'
+
+// ---------------------------------------------------------------------------
+// Mock-drift guard
+// ---------------------------------------------------------------------------
+//
+// A mock the app rejects is worse than no mock: the spec still renders enough
+// DOM to satisfy a "did it crash?" assertion, so it stays green while testing
+// nothing. Several mocks in this file had drifted that far — /cohortdefinition/
+// {id}/info returned `id: {sourceId, cohortId}` against a schema demanding
+// `{cohortDefinitionId, sourceId}` (parseOrThrow, so it threw on *every* call),
+// /user/refresh returned `token` where authService reads `jwt`, the concept
+// lookup returned camelCase against an UPPERCASE schema, and the
+// characterization design returned `{}` against a schema requiring four fields.
+//
+// Everything below now goes through checkedBody()/fulfillChecked(), which runs
+// the payload through the same Zod schema the app parses it with. A drifted
+// mock throws out of the route handler — Playwright fails the test on the spot,
+// naming the endpoint and the offending field — instead of being served to an
+// app that silently discards it.
+function checkedBody(schema: z.ZodTypeAny, payload: unknown, label: string): string {
+  const parsed = schema.safeParse(payload)
+  if (!parsed.success) {
+    const issues = parsed.error.issues
+      .map(i => `  - ${i.path.join('.') || '(root)'}: ${i.message}`)
+      .join('\n')
+    throw new Error(
+      `E2E mock drift: the payload for ${label} does not match the schema the app ` +
+        `parses that response with.\n${issues}\n` +
+        `Payload: ${JSON.stringify(payload).slice(0, 600)}`
+    )
+  }
+  return JSON.stringify(payload)
+}
+
+async function fulfillChecked(
+  route: Route,
+  schema: z.ZodTypeAny,
+  payload: unknown,
+  label: string
+): Promise<void> {
+  await route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: checkedBody(schema, payload, label),
+  })
+}
+
+// Endpoints the app reads without a Zod schema of its own. The schemas below
+// mirror exactly what the consuming code destructures, so a mock that stops
+// feeding that code still fails here.
+
+// authService.refreshToken() reads `body?.jwt` and returns false when absent.
+const UserRefreshSchema = z.object({ jwt: z.string().min(1) })
+
+// generateCohort() reads status/executionId/startDate/endDate off WebAPI's job
+// execution object; `status` must be one of the raw Spring Batch values that
+// toGenerationStatus() knows, not an already-normalized internal status.
+const GenerateJobSchema = z.object({
+  executionId: z.number(),
+  status: z.enum([
+    'PENDING',
+    'STARTING',
+    'STARTED',
+    'RUNNING',
+    'STOPPING',
+    'COMPLETE',
+    'COMPLETED',
+    'FAILED',
+    'STOPPED',
+    'ABANDONED',
+  ]),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+})
+
+// GET /cohortdefinition/{id}. getCohortDefinition() returns the body untyped,
+// but CohortBuilder.applyAtlasCohort() needs id/name/expression, and
+// profile.service.getCohortConceptSets() JSON.parses `expression` and feeds it
+// to CohortDefExpressionSchema. WebAPI serializes `expression` as a JSON
+// string on this endpoint, so require that and validate what it decodes to.
+const CohortDefinitionDetailSchema = z
+  .object({
+    id: z.number(),
+    name: z.string(),
+    description: z.string().nullable().optional(),
+    expression: z
+      .string()
+      .refine(s => CohortDefExpressionSchema.safeParse(safeJsonParse(s)).success, {
+        message: 'expression must be a JSON string decoding to a cohort expression',
+      }),
+  })
+  .passthrough()
+
+function safeJsonParse(s: string): unknown {
+  try {
+    return JSON.parse(s)
+  } catch {
+    return null
+  }
+}
+
+// WebAPI hands back `expression` as a JSON string on every /cohortdefinition
+// route. This file used to emit it as an object on the generic handler and as a
+// string on the id-42 handler, so half the specs exercised a code path
+// (`typeof expression === 'string'` in CohortBuilder.applyAtlasCohort and
+// profile.service.getCohortConceptSets) that production never takes and the
+// other half exercised the one it does. Serialize on the way out, always.
+function toWireCohortDefinition(def: Record<string, unknown>): Record<string, unknown> {
+  const { expression, ...rest } = def
+  return {
+    ...rest,
+    expression: typeof expression === 'string' ? expression : JSON.stringify(expression ?? {}),
+  }
+}
+
+// A structurally complete but empty Atlas expression, for cohorts served out of
+// the mockCohorts fixture (which carries metadata only).
+const EMPTY_COHORT_EXPRESSION = {
+  ConceptSets: [],
+  PrimaryCriteria: {
+    CriteriaList: [],
+    ObservationWindow: { PriorDays: 0, PostDays: 0 },
+    PrimaryCriteriaLimit: { Type: 'All' },
+  },
+  QualifiedLimit: { Type: 'First' },
+  ExpressionLimit: { Type: 'All' },
+  InclusionRules: [],
+  EndStrategy: { DateOffset: { DateField: 'EndDate', Offset: 0 } },
+  CensoringCriteria: [],
+  CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+  CensorWindow: {},
+}
+
+// Generation timestamps are pinned rather than derived from Date.now() so the
+// "started N minutes ago" cells a generation panel renders stay byte-stable.
+// 2026-01-15T12:00:00Z, the same instant setupAnalysisListMocks pins.
+const FIXED_GENERATION_START = 1768478400000
+
+// The WebAPI wire shape for a concept: UPPERCASE column names straight out of
+// the vocabulary tables. The camelCase fixtures are the app's internal shape.
+function toWebApiConcept(c: {
+  conceptId: number
+  conceptName: string
+  conceptCode: string
+  domainId: string
+  vocabularyId: string
+  conceptClassId: string
+  standardConcept: string | null
+  invalidReason: string | null
+}) {
+  return {
+    CONCEPT_ID: c.conceptId,
+    CONCEPT_NAME: c.conceptName,
+    CONCEPT_CODE: c.conceptCode,
+    DOMAIN_ID: c.domainId,
+    VOCABULARY_ID: c.vocabularyId,
+    CONCEPT_CLASS_ID: c.conceptClassId,
+    STANDARD_CONCEPT: c.standardConcept,
+    INVALID_REASON: c.invalidReason,
+  }
+}
 
 // In-memory store for cohorts — persists data between requests.
 // Used by the PhenotypeLibrary integration tests to simulate a real backend.
@@ -42,13 +211,18 @@ const personProfileFixture = JSON.parse(
   readFileSync(resolve(__dirname, '../../fixtures/person-profile.json'), 'utf-8')
 )
 
+// Shared between the localStorage seed in the init script and the /user/refresh
+// mock, so a refresh hands back the same identity the page booted with.
+const MOCK_JWT =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJuYW1lIjoiVGVzdCBVc2VyIiwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjE1MTYyMzkwMjJ9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+
 /**
  * Setup basic API mocks for all tests
  * This includes sources, translations, and common endpoints
  */
 export async function setupBasicMocks(page: Page) {
   // Auto-accept license agreement and set up auth bypass to prevent dialogs from blocking tests
-  await page.addInitScript(() => {
+  await page.addInitScript((mockToken: string) => {
     const LICENSE_ACCEPTANCE_KEY = 'atlas3-license-acceptance-date'
     // Set acceptance date to current time to bypass license dialog
     localStorage.setItem(LICENSE_ACCEPTANCE_KEY, Date.now().toString())
@@ -58,11 +232,9 @@ export async function setupBasicMocks(page: Page) {
     // preference here to render the grid those specs exercise.
     localStorage.setItem('cohorts-view-mode', 'tile')
 
-    // Set auth token to bypass authentication dialog
-    // Token must be valid JWT format with exp claim far in the future
-    // This is a mock JWT: header.payload.signature
-    // Payload contains: {"sub":"test_user","name":"Test User","exp":9999999999,"iat":1516239022}
-    const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJuYW1lIjoiVGVzdCBVc2VyIiwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjE1MTYyMzkwMjJ9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+    // Set auth token to bypass authentication dialog. MOCK_JWT is a valid JWT
+    // shape (header.payload.signature) whose payload carries an exp far in the
+    // future: {"sub":"test_user","name":"Test User","exp":9999999999,...}
     localStorage.setItem('bearerToken', mockToken)
     localStorage.setItem('auth-client', 'TestClient')
 
@@ -95,7 +267,7 @@ export async function setupBasicMocks(page: Page) {
       }
       return originalFetch(input, init)
     }
-  })
+  }, MOCK_JWT)
 
   // Mock user/me endpoint to return authenticated user.
   await page.route('**/user/me', async (route: Route) => {
@@ -118,16 +290,16 @@ export async function setupBasicMocks(page: Page) {
     })
   })
 
-  // Mock user/refresh endpoint
+  // Mock user/refresh endpoint. WebAPI answers with the renewed bearer under
+  // `jwt` — which is the only key authService.refreshToken() looks at. The old
+  // `{ token, refreshToken }` body made every refresh return false silently.
   await page.route('**/user/refresh', async (route: Route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJuYW1lIjoiVGVzdCBVc2VyIiwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjE1MTYyMzkwMjJ9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
-        refreshToken: 'mock-new-refresh-token'
-      })
-    })
+    await fulfillChecked(
+      route,
+      UserRefreshSchema,
+      { jwt: MOCK_JWT },
+      'GET /user/refresh'
+    )
   })
 
   // Mock CDM sources endpoint
@@ -166,11 +338,12 @@ export async function setupBasicMocks(page: Page) {
 
     // Only handle the list endpoint, not detail endpoints
     if (url.match(/cohortdefinition$/) && route.request().method() === 'GET') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(mockCohorts)
-      })
+      await fulfillChecked(
+        route,
+        CohortDefinitionListSchema,
+        mockCohorts,
+        'GET /cohortdefinition'
+      )
     } else if (url.match(/cohortdefinition$/) && route.request().method() === 'POST') {
       // Mock cohort creation — assign a unique ID and persist so the
       // subsequent GET /cohortdefinition/{id} can find it.
@@ -186,10 +359,16 @@ export async function setupBasicMocks(page: Page) {
       await route.fulfill({
         status: 201,
         contentType: 'application/json',
-        body: JSON.stringify(stored),
+        body: checkedBody(
+          CohortDefinitionDetailSchema,
+          toWireCohortDefinition(stored),
+          'POST /cohortdefinition'
+        ),
       })
     } else {
-      await route.continue()
+      // Defer to any broader handler (and, failing that, the network) —
+      // route.continue() would skip the remaining handlers outright.
+      await route.fallback()
     }
   })
 
@@ -203,39 +382,24 @@ export async function setupBasicMocks(page: Page) {
       // Check in-memory store first (for round-trip tests)
       const stored = cohortStore.get(cohortId)
       if (stored) {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify(stored)
-         })
+        await fulfillChecked(
+          route,
+          CohortDefinitionDetailSchema,
+          toWireCohortDefinition(stored),
+          `GET /cohortdefinition/${cohortId}`
+        )
         return
        }
       // Fall back to mockCohorts
       const cohort = mockCohorts.find(c => c.id === cohortId)
 
       if (cohort) {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            ...cohort,
-            expression: {
-              ConceptSets: [],
-              PrimaryCriteria: {
-                CriteriaList: [],
-                ObservationWindow: { PriorDays: 0, PostDays: 0 },
-                PrimaryCriteriaLimit: { Type: 'All' }
-              },
-              QualifiedLimit: { Type: 'First' },
-              ExpressionLimit: { Type: 'All' },
-              InclusionRules: [],
-              EndStrategy: { DateOffset: { DateField: 'EndDate', Offset: 0 } },
-              CensoringCriteria: [],
-              CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
-              CensorWindow: {}
-            }
-          })
-        })
+        await fulfillChecked(
+          route,
+          CohortDefinitionDetailSchema,
+          toWireCohortDefinition({ ...cohort, expression: EMPTY_COHORT_EXPRESSION }),
+          `GET /cohortdefinition/${cohortId}`
+        )
       } else {
         await route.fulfill({ status: 404, body: 'Not found' })
       }
@@ -247,46 +411,63 @@ export async function setupBasicMocks(page: Page) {
         await route.fulfill({
           status: 200,
           contentType: "application/json",
-          body: JSON.stringify(putData)
+          body: checkedBody(
+            CohortDefinitionDetailSchema,
+            toWireCohortDefinition({ id: putId, ...putData }),
+            `PUT /cohortdefinition/${putId}`
+          ),
         })
     } else if (match && route.request().method() === 'DELETE') {
       // Mock cohort deletion
       await route.fulfill({ status: 204 })
     } else {
-      await route.continue()
+      await route.fallback()
     }
   })
 
-  // Mock cohort generation endpoint
+  // Mock cohort generation endpoint. generateCohort() reads executionId /
+  // startDate / endDate and normalizes the raw job-execution status; the old
+  // `{ jobId, status: 'COMPLETED', personCount }` body matched none of those
+  // reads, so every generated job came back with a Date.now() id and no times.
   await page.route('**/WebAPI/cohortdefinition/*/generate/*', async (route: Route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        jobId: 1,
+    await fulfillChecked(
+      route,
+      GenerateJobSchema,
+      {
+        executionId: 1,
         status: 'COMPLETED',
-        personCount: 1234
-      })
-    })
+        startDate: new Date(FIXED_GENERATION_START).toISOString(),
+        endDate: new Date(FIXED_GENERATION_START + 5000).toISOString(),
+      },
+      'GET /cohortdefinition/{id}/generate/{sourceKey}'
+    )
   })
 
-  // Mock cohort generation info endpoint
+  // Mock cohort generation info endpoint. The composite key is
+  // `{ cohortDefinitionId, sourceId }` — CohortGenerationIdSchema requires both
+  // and does not allow unknown keys, and getCohortGenerationInfo() parses with
+  // parseOrThrow. The previous `{ sourceId, cohortId }` therefore threw on every
+  // single call, so no spec here ever saw a generation status at all.
   await page.route('**/WebAPI/cohortdefinition/*/info', async (route: Route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([
+    const cohortId = Number(route.request().url().match(/cohortdefinition\/(\d+)\/info/)?.[1] ?? 1)
+    await fulfillChecked(
+      route,
+      CohortGenerationInfoListSchema,
+      [
         {
-          id: { sourceId: 6, cohortId: 1 },
+          id: { cohortDefinitionId: cohortId, sourceId: 6 },
           status: 'COMPLETE',
           personCount: 1234,
           recordCount: 1234,
-          startTime: Date.now() - 10000,
+          startTime: FIXED_GENERATION_START,
           executionDuration: 5000,
-          failMessage: null
-        }
-      ])
-    })
+          isValid: true,
+          isCanceled: false,
+          failMessage: null,
+        },
+      ],
+      `GET /cohortdefinition/${cohortId}/info`
+    )
   })
 
   // Mock concept sets list endpoint
@@ -350,25 +531,19 @@ export async function setupBasicMocks(page: Page) {
     // The app validates against WebAPI's raw uppercase field names
     // (ConceptSearchResponseSchema); the camelCase fixture shape fails that
     // parse and used to make every search silently return zero rows.
-    const webApiShape = results.map(c => ({
-      CONCEPT_ID: c.conceptId,
-      CONCEPT_NAME: c.conceptName,
-      CONCEPT_CODE: c.conceptCode,
-      DOMAIN_ID: c.domainId,
-      VOCABULARY_ID: c.vocabularyId,
-      CONCEPT_CLASS_ID: c.conceptClassId,
-      STANDARD_CONCEPT: c.standardConcept,
-      INVALID_REASON: c.invalidReason
-    }))
-
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(webApiShape)
-    })
+    await fulfillChecked(
+      route,
+      ConceptSearchResponseSchema,
+      results.map(toWebApiConcept),
+      'POST /vocabulary/{sourceKey}/search'
+    )
   })
 
-  // Mock concept lookup endpoint
+  // Mock concept lookup endpoint. getConceptById() parses the body with
+  // ConceptSearchResponseSchema.element — the same UPPERCASE shape as the
+  // sibling search route above. This handler was still returning the camelCase
+  // fixture verbatim, so every single-concept lookup raised "Invalid concept
+  // detail response" and the caller rendered nothing.
   await page.route('**/WebAPI/vocabulary/*/concept/*', async (route: Route) => {
     const url = route.request().url()
     const match = url.match(/concept\/(\d+)/)
@@ -379,16 +554,17 @@ export async function setupBasicMocks(page: Page) {
       const concept = allConcepts.find(c => c.conceptId === conceptId)
 
       if (concept) {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify(concept)
-        })
+        await fulfillChecked(
+          route,
+          ConceptSearchResponseSchema.element,
+          toWebApiConcept(concept),
+          `GET /vocabulary/{sourceKey}/concept/${conceptId}`
+        )
       } else {
         await route.fulfill({ status: 404, body: 'Concept not found' })
       }
     } else {
-      await route.continue()
+      await route.fallback()
     }
   })
 
@@ -440,7 +616,7 @@ export async function setupBasicMocks(page: Page) {
   // Used by the Profiles feature.
   await page.route('**/WebAPI/*/person/*', async (route: Route) => {
     if (route.request().method() !== 'GET') {
-      await route.continue()
+      await route.fallback()
       return
     }
     await route.fulfill({
@@ -452,23 +628,27 @@ export async function setupBasicMocks(page: Page) {
 
   // Mock cohort-definition fetch for the profiles cohort context (id 42).
   // The Profiles feature calls getCohortConceptSets, which fetches
-  // /cohortdefinition/{id} and reads `expression` (string or object).
+  // /cohortdefinition/{id} and JSON-parses `expression`.
   // This handler is registered after the generic **/cohortdefinition/** route
-  // so it takes precedence for id 42.
+  // so it takes precedence for id 42; non-GET methods fall back to that
+  // handler rather than being pushed at the network.
   await page.route('**/WebAPI/cohortdefinition/42', async (route: Route) => {
     if (route.request().method() !== 'GET') {
-      await route.continue()
+      await route.fallback()
       return
     }
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
+    await fulfillChecked(
+      route,
+      CohortDefinitionDetailSchema,
+      toWireCohortDefinition({
         id: 42,
         name: 'Hypertension',
-        expression: '{"ConceptSets":[{"id":0,"name":"ACE Inhibitors","expression":{"items":[]}}]}'
-      })
-    })
+        expression: {
+          ConceptSets: [{ id: 0, name: 'ACE Inhibitors', expression: { items: [] } }],
+        },
+      }),
+      'GET /cohortdefinition/42'
+    )
   })
 
   // Mock i18n endpoints (locale list + translation bundles)
@@ -507,9 +687,27 @@ export async function setupBasicMocks(page: Page) {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ content: [], totalElements: 0 }) })
   })
 
-  // Mock characterization design snapshot
+  // Mock characterization design snapshot. getCharacterization() parses this
+  // with CharacterizationDefinitionSchema via parseOrThrow, which requires
+  // name/cohorts/featureAnalyses/stratas — the previous `{}` failed on all four
+  // and the builder silently fell back to its blank state on every load.
   await page.route('**/cohort-characterization/*/design', async (route: Route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
+    const id = Number(
+      route.request().url().match(/cohort-characterization\/(\d+)\/design/)?.[1] ?? 1
+    )
+    await fulfillChecked(
+      route,
+      CharacterizationDefinitionSchema,
+      {
+        id,
+        name: 'Test Characterization',
+        description: 'Mock characterization design',
+        cohorts: [],
+        featureAnalyses: [],
+        stratas: [],
+      },
+      `GET /cohort-characterization/${id}/design`
+    )
   })
 }
 
