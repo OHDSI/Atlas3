@@ -370,6 +370,46 @@ describe('WebAPI Store', () => {
         expect(store.sources).toEqual([])
         expect(store.isLoadingSources).toBe(false)
       })
+
+      it('should issue a single request for concurrent callers', async () => {
+        const store = useWebAPIStore()
+        const mockSources: CDMSource[] = [
+          {
+            sourceId: 1,
+            sourceKey: 'SYNPUF1K',
+            sourceName: 'SYNPUF 1K',
+            sourceDialect: 'postgresql',
+            daimons: [],
+          },
+        ]
+
+        let release: (value: { success: true; data: CDMSource[] }) => void = () => {}
+        vi.mocked(sourceService.fetchCDMSources).mockReturnValue(
+          new Promise(resolve => {
+            release = resolve
+          })
+        )
+
+        // Several components call this from their own onMounted in one tick.
+        const calls = [store.fetchSources(), store.fetchSources(), store.fetchSources()]
+        expect(sourceService.fetchCDMSources).toHaveBeenCalledTimes(1)
+
+        release({ success: true, data: mockSources })
+        await Promise.all(calls)
+
+        expect(sourceService.fetchCDMSources).toHaveBeenCalledTimes(1)
+        expect(store.sources).toEqual(mockSources)
+      })
+
+      it('should refetch once the shared request has settled', async () => {
+        const store = useWebAPIStore()
+        vi.mocked(sourceService.fetchCDMSources).mockResolvedValue({ success: true, data: [] })
+
+        await store.fetchSources()
+        await store.fetchSources()
+
+        expect(sourceService.fetchCDMSources).toHaveBeenCalledTimes(2)
+      })
     })
 
     describe('generateCohort', () => {

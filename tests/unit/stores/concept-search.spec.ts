@@ -186,7 +186,11 @@ describe('Concept Search Store', () => {
       const store = useConceptSearchStore()
       await store.search('diabetes')
 
-      expect(conceptSearchService.searchConcepts).toHaveBeenCalledWith('FALLBACK_SRC', 'diabetes')
+      expect(conceptSearchService.searchConcepts).toHaveBeenCalledWith(
+        'FALLBACK_SRC',
+        'diabetes',
+        expect.objectContaining({ signal: expect.any(AbortSignal) })
+      )
     })
 
     it('should set error when no source is available', async () => {
@@ -248,6 +252,79 @@ describe('Concept Search Store', () => {
       await store.search('diabetes')
 
       expect(store.allConcepts[0].recordCount).toBeUndefined()
+    })
+
+    describe('out-of-order responses', () => {
+      const slowConcept: Concept = { ...mockConcepts[0], conceptId: 1, conceptName: 'Slow result' }
+      const fastConcept: Concept = { ...mockConcepts[0], conceptId: 2, conceptName: 'Fast result' }
+
+      it('should not let a slow earlier response overwrite a newer one', async () => {
+        vi.mocked(conceptSearchService.getConceptRecordCounts).mockResolvedValue(new Map())
+
+        let releaseSlow: (value: { success: true; data: Concept[] }) => void = () => {}
+        vi.mocked(conceptSearchService.searchConcepts)
+          .mockReturnValueOnce(
+            new Promise(resolve => {
+              releaseSlow = resolve
+            })
+          )
+          .mockResolvedValueOnce({ success: true, data: [fastConcept] })
+
+        const store = useConceptSearchStore()
+
+        // The user types, pauses, then types more: the first query is still in
+        // flight when the second one is sent and answered.
+        const slowSearch = store.search('diab')
+        await store.search('diabetes')
+
+        expect(store.allConcepts).toEqual([fastConcept])
+
+        releaseSlow({ success: true, data: [slowConcept] })
+        await slowSearch
+
+        expect(store.allConcepts).toEqual([fastConcept])
+        expect(store.error).toBeNull()
+      })
+
+      it('should abort the superseded request', async () => {
+        vi.mocked(conceptSearchService.getConceptRecordCounts).mockResolvedValue(new Map())
+        vi.mocked(conceptSearchService.searchConcepts)
+          .mockReturnValueOnce(new Promise(() => {}))
+          .mockResolvedValueOnce({ success: true, data: [fastConcept] })
+
+        const store = useConceptSearchStore()
+        void store.search('diab')
+
+        const firstSignal = vi.mocked(conceptSearchService.searchConcepts).mock.calls[0][2]?.signal
+        expect(firstSignal?.aborted).toBe(false)
+
+        await store.search('diabetes')
+
+        expect(firstSignal?.aborted).toBe(true)
+      })
+
+      it('should not repopulate results cleared by a shorter term', async () => {
+        vi.mocked(conceptSearchService.getConceptRecordCounts).mockResolvedValue(new Map())
+
+        let releaseSlow: (value: { success: true; data: Concept[] }) => void = () => {}
+        vi.mocked(conceptSearchService.searchConcepts).mockReturnValueOnce(
+          new Promise(resolve => {
+            releaseSlow = resolve
+          })
+        )
+
+        const store = useConceptSearchStore()
+        const slowSearch = store.search('diabetes')
+
+        // The user deletes back below the minimum length before it answers.
+        await store.search('di')
+
+        releaseSlow({ success: true, data: [slowConcept] })
+        await slowSearch
+
+        expect(store.allConcepts).toEqual([])
+        expect(store.loading).toBe(false)
+      })
     })
   })
 
