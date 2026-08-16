@@ -10,6 +10,8 @@ import { useExitCriteriaValidation } from '@/composables/useExitCriteriaValidati
 export interface CohortValidationOptions {
   /** CohortExpression source; accepts either a ref or a reactive object */
   expression: MaybeRef<CohortExpression>
+  /** Bumped when the builder wants validation to refresh for expression-context changes. */
+  expressionRevision?: Ref<number>
   cohortName: Ref<string>
   cohortDescription: Ref<string>
   cohortId: ComputedRef<number | null>
@@ -43,7 +45,7 @@ export interface CohortValidationReturn {
 }
 
 export function useCohortValidation(options: CohortValidationOptions): CohortValidationReturn {
-  const { cohortName, cohortDescription, debounceDelay = 2000 } = options
+  const { cohortName, debounceDelay = 2000 } = options
   const { validateExpression: validateExitCriteria } = useExitCriteriaValidation()
 
   const validationWarnings = ref<ValidationWarning[]>([])
@@ -163,11 +165,15 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     _hasValidatedOnce.value = false
   }
 
-  const stopWatch = watch(
-    [() => unref(options.expression), cohortName, cohortDescription],
-    () => { triggerValidation() },
-    { deep: true }
-  )
+  const stopWatch = options.expressionRevision
+    ? watch(
+        options.expressionRevision,
+        () => {
+          triggerValidation()
+        },
+        { flush: 'sync' }
+      )
+    : () => {}
 
   onUnmounted(() => {
     cancelValidation()

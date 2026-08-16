@@ -173,6 +173,7 @@ describe('exit criteria rules surface through useCohortValidation', () => {
       cohortDescription: ref('Test Description'),
       cohortId: computed(() => null),
       expression: ref<CohortExpression>(expression),
+      expressionRevision: ref(0),
       debounceDelay: 100,
     }
   }
@@ -197,7 +198,7 @@ describe('exit criteria rules surface through useCohortValidation', () => {
       useCohortValidation(options)
 
     cancelValidation()
-    options.cohortName.value = 'Changed Name'
+    options.expressionRevision.value++
     await nextTick()
     await vi.runAllTimersAsync()
     await nextTick()
@@ -232,7 +233,7 @@ describe('exit criteria rules surface through useCohortValidation', () => {
       useCohortValidation(options)
 
     cancelValidation()
-    options.cohortName.value = 'Changed Name'
+    options.expressionRevision.value++
     await nextTick()
     await vi.runAllTimersAsync()
     await nextTick()
@@ -259,7 +260,7 @@ describe('exit criteria rules surface through useCohortValidation', () => {
     const { validationWarnings, cancelValidation } = useCohortValidation(options)
 
     cancelValidation()
-    options.cohortName.value = 'Changed Name'
+    options.expressionRevision.value++
     await nextTick()
     await vi.runAllTimersAsync()
     await nextTick()
@@ -296,7 +297,7 @@ describe('exit criteria rules surface through useCohortValidation', () => {
     const { validationWarnings, cancelValidation } = useCohortValidation(options)
 
     cancelValidation()
-    options.cohortName.value = 'Changed Name'
+    options.expressionRevision.value++
     await nextTick()
     await vi.runAllTimersAsync()
     await nextTick()

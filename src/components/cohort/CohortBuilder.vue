@@ -372,7 +372,12 @@ const { t, tv } = useI18n()
 // Single reactive CohortExpression replaces 10+ individual refs.
 function defaultExpression(): CohortExpression { return {} }
 const expression = ref<CohortExpression>(defaultExpression())
+const expressionRevision = ref(0)
 const usedConceptSetsRevision = ref(0)
+
+function markExpressionRevision() {
+  expressionRevision.value++
+}
 
 function markUsedConceptSetsDirty() {
   usedConceptSetsRevision.value++
@@ -389,6 +394,7 @@ function replaceExpression(next: CohortExpression) {
   if (toRaw(next) === toRaw(expression.value)) return
   for (const key of Object.keys(target)) delete target[key]
   Object.assign(target, next)
+  markExpressionRevision()
   markUsedConceptSetsDirty()
 }
 
@@ -546,11 +552,11 @@ const {
   highestSeverityColor,
   groupedWarningsBySeverity,
   usedConceptSets,
-  triggerValidation,
   cancelValidation,
   resetValidation,
 } = useCohortValidation({
   expression,
+  expressionRevision,
   cohortName,
   cohortDescription,
   cohortId,
@@ -790,8 +796,7 @@ onMounted(async () => {
     if (route.query.name && typeof route.query.name === 'string') {
       cohortName.value = route.query.name
     }
-    // Trigger validation for new/restored cohorts
-    triggerValidation()
+    markExpressionRevision()
   }
 
   // Load resources in parallel in the background (don't block rendering)
@@ -973,8 +978,8 @@ function applyDefinition(def: CohortDocument) {
   cohortDescription.value = def.description || ''
   loadedTags.value = [...(def.tags || [])]
   loadedSnapshot.value = createStateSnapshot()
+  markExpressionRevision()
   isLoadingCohort.value = false
-  triggerValidation()
 }
 
 // A preview keeps the same :id, so neither onMounted nor the props.id watcher
@@ -1293,6 +1298,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     cohortStore.markClean()
     cohortStore.clearDraft()
     loadedSnapshot.value = createStateSnapshot()
+    markExpressionRevision()
 
     successMessage.value = tv('components.cohortBuilder.saveSuccess', 'Cohort saved successfully')
     showSuccess.value = true

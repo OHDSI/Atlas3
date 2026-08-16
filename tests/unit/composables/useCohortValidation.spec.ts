@@ -39,6 +39,7 @@ describe('useCohortValidation', () => {
       cohortDescription: ref('Test Description'),
       cohortId: computed(() => null),
       expression: ref<CohortExpression>({}),
+      expressionRevision: ref(0),
       debounceDelay: 100,
       ...overrides,
     }
@@ -357,7 +358,7 @@ describe('useCohortValidation', () => {
         PrimaryCriteria: {
           CriteriaList: [{ ConditionOccurrence: { CodesetId: 1 } }],
         },
-      })
+        } as any)
       const options = createTestOptions({ expression })
       const { usedConceptSets } = useCohortValidation(options)
 
@@ -480,7 +481,8 @@ describe('useCohortValidation', () => {
       expect(usedConceptSets.value).toHaveLength(1)
       expect(usedConceptSets.value[0]!.name).toBe('Initial Set')
 
-      expression.PrimaryCriteria.CriteriaList[0]!.ConditionOccurrence.CodesetId = 2
+      const firstCriterion = (expression as any).PrimaryCriteria.CriteriaList[0]
+      firstCriterion.ConditionOccurrence.CodesetId = 2
       await nextTick()
 
       expect(usedConceptSets.value).toHaveLength(1)
@@ -575,14 +577,12 @@ describe('useCohortValidation', () => {
 
       const calls = vi.mocked(cohortDefService.validateCohortDefinition).mock.calls
       expect(calls).toHaveLength(1)
-      expect(calls[0][0]).toBe('Untitled Cohort')
+      expect(calls[0]?.[0]).toBe('Untitled Cohort')
     })
 
     it('should validate even when no entry events', async () => {
       vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
-      const options = createTestOptions({
-        entryEvents: ref([]),
-      })
+      const options = createTestOptions()
       const { triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
@@ -719,7 +719,7 @@ describe('useCohortValidation', () => {
   })
 
   describe('auto-validation on changes', () => {
-    it('should auto-trigger validation when cohort name changes', async () => {
+    it('should not auto-trigger validation when cohort name changes', async () => {
       vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
 
       const cohortName = ref('Initial Name')
@@ -732,6 +732,27 @@ describe('useCohortValidation', () => {
       vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
 
       cohortName.value = 'Updated Name'
+      await nextTick()
+
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      expect(cohortDefService.validateCohortDefinition).not.toHaveBeenCalled()
+    })
+
+    it('should auto-trigger validation when expressionRevision changes', async () => {
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
+
+      const expressionRevision = ref(0)
+      const options = createTestOptions({ expressionRevision })
+      const { cancelValidation } = useCohortValidation(options)
+
+      cancelValidation()
+      await vi.runAllTimersAsync()
+      await nextTick()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+
+      expressionRevision.value++
       await nextTick()
 
       await vi.runAllTimersAsync()
