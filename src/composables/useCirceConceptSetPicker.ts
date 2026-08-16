@@ -27,6 +27,7 @@ import type {
 export function useCirceConceptSetPicker(opts: {
   getConceptSets: () => ConceptSet[]
   addConceptSet: (cs: ConceptSet) => void
+  onConceptSetChanged?: () => void
 }) {
   const conceptSetsStore = useConceptSetsStore()
 
@@ -62,6 +63,7 @@ export function useCirceConceptSetPicker(opts: {
   function resolveSelection(selectedId: number) {
     if (!activeRequest) return
     activeRequest.targetRef.value = selectedId
+    opts.onConceptSetChanged?.()
     activeRequest = null
     dialogOpen.value = false
   }

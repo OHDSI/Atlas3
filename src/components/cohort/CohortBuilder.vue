@@ -131,7 +131,7 @@
         :concept-sets="conceptSetOptions"
         @select-concept-set="onSelectConceptSet"
         @edit-concept-set="onSelectConceptSet"
-        @clear-concept-set="cancelSelection"
+        @clear-concept-set="handleClearConceptSet"
       />
     </div>
     <!-- /.cohort-builder__steps -->
@@ -372,6 +372,11 @@ const { t, tv } = useI18n()
 // Single reactive CohortExpression replaces 10+ individual refs.
 function defaultExpression(): CohortExpression { return {} }
 const expression = ref<CohortExpression>(defaultExpression())
+const usedConceptSetsRevision = ref(0)
+
+function markUsedConceptSetsDirty() {
+  usedConceptSetsRevision.value++
+}
 
 // The store hands out `currentCohort.expression` as the object itself, not this
 // ref, so every wholesale swap (load, new-cohort signal, apply-JSON) has to
@@ -384,6 +389,7 @@ function replaceExpression(next: CohortExpression) {
   if (toRaw(next) === toRaw(expression.value)) return
   for (const key of Object.keys(target)) delete target[key]
   Object.assign(target, next)
+  markUsedConceptSetsDirty()
 }
 
 // The store holds a reference to this object for as long as the editor is
@@ -420,7 +426,7 @@ const expressionConceptSets = computed<ConceptSetReference[]>(() =>
     }))
 )
 
-  const {
+const {
     dialogOpen: isConceptSetDialogOpen,
     conceptSetOptions,
     onSelectConceptSet,
@@ -431,6 +437,7 @@ const expressionConceptSets = computed<ConceptSetReference[]>(() =>
     cancelSelection,
   } = useCirceConceptSetPicker({
     getConceptSets: () => expression.value.ConceptSets ?? [],
+    onConceptSetChanged: markUsedConceptSetsDirty,
     addConceptSet: (cs) => {
       if (!expression.value.ConceptSets) expression.value.ConceptSets = []
       expression.value.ConceptSets.push(cs)
@@ -547,6 +554,7 @@ const {
   cohortName,
   cohortDescription,
   cohortId,
+  usedConceptSetsRevision,
 })
 
 const criticalValidationCount = computed(() => groupedWarningsBySeverity.value.CRITICAL.length)
@@ -1130,6 +1138,12 @@ function deleteConceptSet(conceptSet: ConceptSetReference) {
     expression.value.ConceptSets!.splice(idx, 1)
   }
   unassignConceptSetId(expression.value, conceptSet.id as number)
+  markUsedConceptSetsDirty()
+}
+
+function handleClearConceptSet() {
+  cancelSelection()
+  markUsedConceptSetsDirty()
 }
 
 /**
@@ -1166,6 +1180,7 @@ function handleConceptSetApplied(set: { id?: number | string; name: string; item
     expression.value.ConceptSets.push({ id: finalId, name: set.name, expression: { items: circeItems } })
   }
 
+  markUsedConceptSetsDirty()
 
   resolveSelection(finalId)
 }

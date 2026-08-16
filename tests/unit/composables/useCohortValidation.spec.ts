@@ -462,6 +462,36 @@ describe('useCohortValidation', () => {
       expect(usedConceptSets.value.some(cs => cs.name === 'Reloaded Set')).toBe(true)
       expect(usedConceptSets.value.some(cs => cs.name === 'Initial Set')).toBe(false)
     })
+
+    it('refreshes the cached usedConceptSets only after the explicit revision changes', async () => {
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [
+          { id: 1, name: 'Initial Set' },
+          { id: 2, name: 'Reloaded Set' },
+        ],
+        PrimaryCriteria: {
+          CriteriaList: [{ ConditionOccurrence: { CodesetId: 1 } }],
+        },
+      })
+      const usedConceptSetsRevision = ref(0)
+      const options = createTestOptions({ expression, usedConceptSetsRevision })
+      const { usedConceptSets } = useCohortValidation(options)
+
+      expect(usedConceptSets.value).toHaveLength(1)
+      expect(usedConceptSets.value[0]!.name).toBe('Initial Set')
+
+      expression.PrimaryCriteria.CriteriaList[0]!.ConditionOccurrence.CodesetId = 2
+      await nextTick()
+
+      expect(usedConceptSets.value).toHaveLength(1)
+      expect(usedConceptSets.value[0]!.name).toBe('Initial Set')
+
+      usedConceptSetsRevision.value++
+      await nextTick()
+
+      expect(usedConceptSets.value).toHaveLength(1)
+      expect(usedConceptSets.value[0]!.name).toBe('Reloaded Set')
+    })
   })
 
   describe('triggerValidation', () => {

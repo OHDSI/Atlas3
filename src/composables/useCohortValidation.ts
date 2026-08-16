@@ -13,6 +13,8 @@ export interface CohortValidationOptions {
   cohortName: Ref<string>
   cohortDescription: Ref<string>
   cohortId: ComputedRef<number | null>
+  /** Bumped only when concept-set membership or concept-set metadata changes. */
+  usedConceptSetsRevision?: Ref<number>
   debounceDelay?: number
 }
 
@@ -33,7 +35,7 @@ export interface CohortValidationReturn {
   groupedWarningsBySeverity: ComputedRef<Record<ValidationSeverity, ValidationWarning[]>>
   highestSeverity: ComputedRef<ValidationSeverity | null>
   highestSeverityColor: ComputedRef<string>
-  usedConceptSets: ComputedRef<ConceptSetReference[]>
+  usedConceptSets: Ref<ConceptSetReference[]>
   triggerValidation: () => void
   cancelValidation: () => void
   clearWarnings: () => void
@@ -47,6 +49,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
   const validationWarnings = ref<ValidationWarning[]>([])
   const _isValidatingInternal = ref(false)
   const _hasValidatedOnce = ref(false)
+  const usedConceptSets = ref<ConceptSetReference[]>([])
   let _currentRunId = 0
   let validationDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -84,13 +87,24 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     return 'info'
   })
 
-  const usedConceptSets = computed<ConceptSetReference[]>(() => {
+  function refreshUsedConceptSets() {
     const expressionValue = unref(options.expression)
     const usedIds = findUsedConceptSetIds(expressionValue)
-    return (expressionValue.ConceptSets ?? []).flatMap(cs =>
+    usedConceptSets.value = (expressionValue.ConceptSets ?? []).flatMap(cs =>
       typeof cs.id === 'number' && usedIds.has(cs.id) ? [{ id: cs.id, name: cs.name ?? '' }] : []
     )
-  })
+  }
+
+  if (options.usedConceptSetsRevision) {
+    watch([() => unref(options.expression), options.usedConceptSetsRevision], refreshUsedConceptSets, {
+      immediate: true,
+    })
+  } else {
+    watch(() => unref(options.expression), refreshUsedConceptSets, {
+      deep: true,
+      immediate: true,
+    })
+  }
 
   // Every run carries a token so a response that a later run has superseded is
   // dropped rather than written. Without it a slow check for the previous

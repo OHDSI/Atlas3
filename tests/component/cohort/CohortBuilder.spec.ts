@@ -2202,6 +2202,10 @@ describe('CohortBuilder — deleting a concept set that is still in use', () => 
     await wrapper.vm.$nextTick()
     const setup = setupOf(wrapper)
     seedReferencedConceptSet(setup)
+    setup.handleConceptSetApplied({ id: 3, name: 'Diabetes', items: [] })
+    await wrapper.vm.$nextTick()
+
+    expect(setup.usedConceptSets).toHaveLength(1)
 
     setup.handleDeleteConceptSet({ id: 3, name: 'Diabetes' })
     await wrapper.vm.$nextTick()
@@ -2216,6 +2220,7 @@ describe('CohortBuilder — deleting a concept set that is still in use', () => 
     expect(
       setup.expression.InclusionRules[0].expression.DemographicCriteriaList[0].GenderCS.CodesetId
     ).toBeUndefined()
+    expect(setup.usedConceptSets).toHaveLength(0)
   })
 
   it('leaves the cohort untouched when the confirmation is dismissed', async () => {
@@ -2301,6 +2306,8 @@ describe('CohortBuilder — renaming a concept set with no selection context', (
 
     expect(setup.expression.ConceptSets).toHaveLength(1)
     expect(setup.expression.ConceptSets[0]).toMatchObject({ id: 7, name: 'Renamed' })
+    expect(setup.usedConceptSets).toHaveLength(1)
+    expect(setup.usedConceptSets[0]).toMatchObject({ id: 7, name: 'Renamed' })
     // The criterion keeps pointing at it — the rename must not re-key the set.
     expect(setup.expression.PrimaryCriteria.CriteriaList[0].ConditionOccurrence.CodesetId).toBe(7)
   })
