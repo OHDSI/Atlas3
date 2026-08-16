@@ -2242,7 +2242,12 @@
                     "CONCEPT_ID": 8507,
                     "CONCEPT_NAME": "MALE",
                     "DOMAIN_ID": "Gender",
-                    "VOCABULARY_ID": "Gender"
+                    "VOCABULARY_ID": "Gender",
+                    "STANDARD_CONCEPT": null,
+                    "STANDARD_CONCEPT_CAPTION": "Unknown",
+                    "INVALID_REASON": null,
+                    "INVALID_REASON_CAPTION": "Unknown",
+                    "CONCEPT_CLASS_ID": "Gender"
                   }
                 ]
               }
@@ -2264,7 +2269,12 @@
                     "CONCEPT_ID": 8532,
                     "CONCEPT_NAME": "FEMALE",
                     "DOMAIN_ID": "Gender",
-                    "VOCABULARY_ID": "Gender"
+                    "VOCABULARY_ID": "Gender",
+                    "STANDARD_CONCEPT": null,
+                    "STANDARD_CONCEPT_CAPTION": "Unknown",
+                    "INVALID_REASON": null,
+                    "INVALID_REASON_CAPTION": "Unknown",
+                    "CONCEPT_CLASS_ID": "Gender"
                   }
                 ]
               }
@@ -3838,7 +3848,12 @@
                     "DOMAIN_ID": "Gender",
                     "VOCABULARY_ID": "Gender",
                     "VALID_START_DATE": "",
-                    "VALID_END_DATE": ""
+                    "VALID_END_DATE": "",
+                    "STANDARD_CONCEPT": null,
+                    "STANDARD_CONCEPT_CAPTION": "Unknown",
+                    "INVALID_REASON": null,
+                    "INVALID_REASON_CAPTION": "Unknown",
+                    "CONCEPT_CLASS_ID": "Gender"
                   }
                 ]
               }
@@ -3862,7 +3877,12 @@
                     "DOMAIN_ID": "Gender",
                     "VOCABULARY_ID": "Gender",
                     "VALID_START_DATE": "",
-                    "VALID_END_DATE": ""
+                    "VALID_END_DATE": "",
+                    "STANDARD_CONCEPT": null,
+                    "STANDARD_CONCEPT_CAPTION": "Unknown",
+                    "INVALID_REASON": null,
+                    "INVALID_REASON_CAPTION": "Unknown",
+                    "CONCEPT_CLASS_ID": "Gender"
                   }
                 ]
               }
@@ -6828,7 +6848,7 @@
         },
         {
           "id": 4,
-          "name": "803-Parkinson\u2019s Dementia",
+          "name": "803-Parkinson’s Dementia",
           "expression": {
             "items": [
               {
@@ -8307,12 +8327,12 @@
     "hasReadAccess": false,
     "tags": [],
     "id": 1747637,
-    "name": "\u8c35\u5984\u53d1\u75c5\u7387",
+    "name": "谵妄发病率",
     "expression": {
       "ConceptSets": [
         {
           "id": 0,
-          "name": "\u5c31\u8bca\u8bb0\u5f55",
+          "name": "就诊记录",
           "expression": {
             "items": [
               {
@@ -8391,7 +8411,7 @@
       "studyWindow": null,
       "strata": [
         {
-          "name": "\u6b7b\u4ea1",
+          "name": "死亡",
           "description": null,
           "expression": {
             "Type": "ALL",
@@ -8439,7 +8459,7 @@
           }
         },
         {
-          "name": "\u5c31\u8bca\u60c5\u51b5",
+          "name": "就诊情况",
           "description": null,
           "expression": {
             "Type": "ALL",
@@ -8493,7 +8513,7 @@
           }
         },
         {
-          "name": "\u5e74\u9f84",
+          "name": "年龄",
           "description": null,
           "expression": {
             "Type": "ALL",
@@ -8534,7 +8554,7 @@
       "outcomeCohorts": [
         {
           "id": 1781537,
-          "name": "\u8c35\u5984\u60a3\u8005"
+          "name": "谵妄患者"
         }
       ]
     }
@@ -9175,7 +9195,7 @@
     "hasReadAccess": false,
     "tags": [],
     "id": 1747917,
-    "name": "\u65b0\u53d1\u75c5\u7387\u5206\u6790123",
+    "name": "新发病率分析123",
     "expression": {
       "ConceptSets": [
         {

@@ -101,7 +101,7 @@ export const ConceptSchema = z.object({
   CONCEPT_CODE: z.string(),
   DOMAIN_ID: z.string(),
   VOCABULARY_ID: z.string(),
-  CONCEPT_CLASS_ID: z.string(),
+  CONCEPT_CLASS_ID: z.string().nullish(),
 })
 export type Concept = z.infer<typeof ConceptSchema>
 

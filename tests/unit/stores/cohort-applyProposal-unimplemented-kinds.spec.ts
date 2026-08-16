@@ -323,12 +323,42 @@ describe('applyProposal: removeEntryEvent', () => {
       {
         id: 0,
         name: 'Viral sinusitis',
-        expression: { items: [{ concept: { CONCEPT_ID: 40481087, CONCEPT_NAME: 'Viral sinusitis' } }] },
+        expression: {
+          items: [
+            {
+              concept: {
+                CONCEPT_ID: 40481087,
+                CONCEPT_NAME: 'Viral sinusitis',
+                STANDARD_CONCEPT_CAPTION: 'Unknown',
+                INVALID_REASON_CAPTION: 'Unknown',
+                CONCEPT_CODE: '{CONCEPT_CODE}',
+                DOMAIN_ID: '{DOMAIN_ID}',
+                VOCABULARY_ID: '{VOCABULARY_ID}',
+                CONCEPT_CLASS_ID: '{CONCEPT_CLASS_ID}',
+              },
+            },
+          ],
+        },
       },
       {
         id: 1,
         name: 'Ibuprofen',
-        expression: { items: [{ concept: { CONCEPT_ID: 1177480, CONCEPT_NAME: 'Ibuprofen' } }] },
+        expression: {
+          items: [
+            {
+              concept: {
+                CONCEPT_ID: 1177480,
+                CONCEPT_NAME: 'Ibuprofen',
+                STANDARD_CONCEPT_CAPTION: 'Unknown',
+                INVALID_REASON_CAPTION: 'Unknown',
+                CONCEPT_CODE: '{CONCEPT_CODE}',
+                DOMAIN_ID: '{DOMAIN_ID}',
+                VOCABULARY_ID: '{VOCABULARY_ID}',
+                CONCEPT_CLASS_ID: '{CONCEPT_CLASS_ID}',
+              },
+            },
+          ],
+        },
       },
     ],
     PrimaryCriteria: {

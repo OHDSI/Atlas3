@@ -136,7 +136,16 @@
             {
               "Gender": [
                 {
-                  "CONCEPT_ID": 8507
+                  "CONCEPT_ID": 8507,
+                  "CONCEPT_NAME": "MALE",
+                  "STANDARD_CONCEPT": null,
+                  "STANDARD_CONCEPT_CAPTION": "Unknown",
+                  "INVALID_REASON": null,
+                  "INVALID_REASON_CAPTION": "Unknown",
+                  "CONCEPT_CODE": "M",
+                  "DOMAIN_ID": "Gender",
+                  "VOCABULARY_ID": "Gender",
+                  "CONCEPT_CLASS_ID": "Gender"
                 }
               ]
             }

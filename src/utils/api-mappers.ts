@@ -76,7 +76,7 @@ export function mapConceptFromAPI(raw: ConceptSearchResponseItem): Concept {
     conceptCode: raw.CONCEPT_CODE,
     domainId: raw.DOMAIN_ID,
     vocabularyId: raw.VOCABULARY_ID,
-    conceptClassId: raw.CONCEPT_CLASS_ID,
+    conceptClassId: raw.CONCEPT_CLASS_ID ?? "",
     standardConcept: raw.STANDARD_CONCEPT ?? null,
     invalidReason: raw.INVALID_REASON ?? null,
   }

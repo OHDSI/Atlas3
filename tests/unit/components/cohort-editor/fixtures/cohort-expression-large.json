@@ -18,14 +18,14 @@
               "CONCEPT_NAME": "FEMALE",
               "CONCEPT_CODE": "F",
               "STANDARD_CONCEPT": null,
-              "STANDARD_CONCEPT_CAPTION": null,
+              "STANDARD_CONCEPT_CAPTION": "Unknown",
               "VOCABULARY_ID": "Gender",
               "DOMAIN_ID": "Gender",
               "CONCEPT_CLASS_ID": null,
               "INVALID_REASON": null,
               "VALID_START_DATE": null,
               "VALID_END_DATE": null,
-              "INVALID_REASON_CAPTION": null
+              "INVALID_REASON_CAPTION": "Unknown"
             }
           ]
         }

@@ -35,8 +35,13 @@ function generateLargeCohort(): Record<string, unknown> {
             CONCEPT_ID: 201826 + i,
             CONCEPT_NAME: `Test Concept ${i}`,
             STANDARD_CONCEPT: 'S',
+            STANDARD_CONCEPT_CAPTION: 'Standard',
+            INVALID_REASON: null,
+            INVALID_REASON_CAPTION: 'Unknown',
+            CONCEPT_CODE: String(201826 + i),
             DOMAIN_ID: 'Condition',
             VOCABULARY_ID: 'SNOMED',
+            CONCEPT_CLASS_ID: 'Unknown',
           },
           isExcluded: false,
           includeDescendants: true,
@@ -51,7 +56,20 @@ function generateLargeCohort(): Record<string, unknown> {
       CodesetId: i % 50,
       ConditionTypeExclude: false,
       Age: i % 2 === 0 ? { Op: 'gte', Value: 18 } : undefined,
-      Gender: i % 3 === 0 ? [{ CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE' }] : undefined,
+        Gender: i % 3 === 0
+          ? [{
+              CONCEPT_ID: 8507,
+              CONCEPT_NAME: 'MALE',
+              STANDARD_CONCEPT: null,
+              STANDARD_CONCEPT_CAPTION: 'Unknown',
+              INVALID_REASON: null,
+              INVALID_REASON_CAPTION: 'Unknown',
+              CONCEPT_CODE: 'M',
+              DOMAIN_ID: 'Gender',
+              VOCABULARY_ID: 'Gender',
+              CONCEPT_CLASS_ID: 'Gender',
+            }]
+          : undefined,
     },
   }))
 

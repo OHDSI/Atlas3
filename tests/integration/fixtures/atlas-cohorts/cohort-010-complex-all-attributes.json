@@ -13,7 +13,12 @@
               "CONCEPT_NAME": "Coronary arteriosclerosis",
               "STANDARD_CONCEPT": "S",
               "DOMAIN_ID": "Condition",
-              "VOCABULARY_ID": "SNOMED"
+              "VOCABULARY_ID": "SNOMED",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "INVALID_REASON": null,
+              "INVALID_REASON_CAPTION": "Unknown",
+              "CONCEPT_CODE": "318443",
+              "CONCEPT_CLASS_ID": "Unknown"
             },
             "isExcluded": false,
             "includeDescendants": true,
@@ -33,7 +38,12 @@
               "CONCEPT_NAME": "Atorvastatin",
               "STANDARD_CONCEPT": "S",
               "DOMAIN_ID": "Drug",
-              "VOCABULARY_ID": "RxNorm"
+              "VOCABULARY_ID": "RxNorm",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "INVALID_REASON": null,
+              "INVALID_REASON_CAPTION": "Unknown",
+              "CONCEPT_CODE": "1539403",
+              "CONCEPT_CLASS_ID": "Unknown"
             },
             "isExcluded": false,
             "includeDescendants": true,
@@ -53,7 +63,12 @@
               "CONCEPT_NAME": "Heart failure",
               "STANDARD_CONCEPT": "S",
               "DOMAIN_ID": "Condition",
-              "VOCABULARY_ID": "SNOMED"
+              "VOCABULARY_ID": "SNOMED",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "INVALID_REASON": null,
+              "INVALID_REASON_CAPTION": "Unknown",
+              "CONCEPT_CODE": "316139",
+              "CONCEPT_CLASS_ID": "Unknown"
             },
             "isExcluded": false,
             "includeDescendants": true,
@@ -73,7 +88,12 @@
               "CONCEPT_NAME": "Dead",
               "STANDARD_CONCEPT": "S",
               "DOMAIN_ID": "Observation",
-              "VOCABULARY_ID": "SNOMED"
+              "VOCABULARY_ID": "SNOMED",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "INVALID_REASON": null,
+              "INVALID_REASON_CAPTION": "Unknown",
+              "CONCEPT_CODE": "4216643",
+              "CONCEPT_CLASS_ID": "Unknown"
             },
             "isExcluded": false,
             "includeDescendants": false,

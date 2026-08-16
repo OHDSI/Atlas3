@@ -245,7 +245,11 @@ function embeddedConceptSet(c: {
         vocabularyId: '',
         conceptClassId: '',
         standardConcept: 'S',
+        standardConceptCaption: 'Standard',
         invalidReason: null,
+        invalidReasonCaption: 'Unknown',
+        validStartDate: Date.UTC(1970, 0, 1),
+        validEndDate: Date.UTC(2090, 0, 1),
         includeDescendants: c.includeDescendants ?? true,
         isExcluded: c.isExcluded ?? false,
         includeMapped: false,
@@ -677,8 +681,34 @@ export function translateCapability(
         // The OMOP gender concepts are fixed CDM vocabulary, not something the
         // model should be recalling or searching for per source.
         const concept = sex === 'male'
-          ? { CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE', DOMAIN_ID: 'Gender' }
-          : { CONCEPT_ID: 8532, CONCEPT_NAME: 'FEMALE', DOMAIN_ID: 'Gender' }
+          ? {
+              CONCEPT_ID: 8507,
+              CONCEPT_NAME: 'MALE',
+              STANDARD_CONCEPT: 'S',
+              STANDARD_CONCEPT_CAPTION: 'Standard',
+              INVALID_REASON: null,
+              INVALID_REASON_CAPTION: 'Unknown',
+              CONCEPT_CODE: '8507',
+              DOMAIN_ID: 'Gender',
+              VOCABULARY_ID: 'Gender',
+              CONCEPT_CLASS_ID: 'Gender',
+              VALID_START_DATE: Date.UTC(1970, 0, 1),
+              VALID_END_DATE: Date.UTC(2090, 0, 1),
+            }
+          : {
+              CONCEPT_ID: 8532,
+              CONCEPT_NAME: 'FEMALE',
+              STANDARD_CONCEPT: 'S',
+              STANDARD_CONCEPT_CAPTION: 'Standard',
+              INVALID_REASON: null,
+              INVALID_REASON_CAPTION: 'Unknown',
+              CONCEPT_CODE: '8532',
+              DOMAIN_ID: 'Gender',
+              VOCABULARY_ID: 'Gender',
+              CONCEPT_CLASS_ID: 'Gender',
+              VALID_START_DATE: Date.UTC(1970, 0, 1),
+              VALID_END_DATE: Date.UTC(2090, 0, 1),
+            }
         attributes.push({ type: 'concept', attributeKey: 'gender', concepts: [concept] })
       }
 
