@@ -13,6 +13,8 @@ import CustomEraEndStrategy from '@/components/cohort-editor/end-strategy/Custom
 import DateOffsetEndStrategy from '@/components/cohort-editor/end-strategy/DateOffsetEndStrategy.vue'
 import ObservationEndStrategy from '@/components/cohort-editor/end-strategy/ObservationEndStrategy.vue'
 import CensoringCriteriaEditor from '@/components/cohort-editor/end-strategy/CensoringCriteriaEditor.vue'
+import InclusionRulesPanel from '@/components/cohort-editor/inclusion-rules/InclusionRulesPanel.vue'
+import CensorWindowEditor from '@/components/cohort-editor/CensorWindowEditor.vue'
 import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import ConditionEra from '@/components/circe/criteria/ConditionEra.vue'
 import ConditionOccurrence from '@/components/circe/criteria/ConditionOccurrence.vue'
@@ -177,6 +179,117 @@ describe('CohortExpressionEditor', () => {
     await wrapper.findComponent(CriteriaGroup).vm.$emit('remove')
     expect(wrapper.findComponent(CriteriaGroup).exists()).toBe(false)
   })
+
+  it('renders populated state and switches the primary and qualified limit toggles', async () => {
+    const wrapper = mountExpressionEditor({
+      PrimaryCriteria: {
+        CriteriaList: [{ Observation: {} }],
+        ObservationWindow: { PriorDays: 2, PostDays: 4 },
+        PrimaryCriteriaLimit: { Type: 'First' },
+      },
+      QualifiedLimit: { Type: 'All' },
+      ExpressionLimit: { Type: 'Last' },
+      AdditionalCriteria: {
+        Type: 'ALL',
+        CriteriaList: [],
+        Groups: [],
+      },
+      InclusionRules: [
+        {
+          name: 'Rule A',
+          expression: { Type: 'ALL', CriteriaList: [], DemographicCriteriaList: [], Groups: [] },
+        },
+      ],
+    })
+
+    expect(wrapper.text()).toContain('1 event')
+    expect(wrapper.text()).toContain('1 rule')
+    expect(wrapper.find('[data-step="2"] .section-state-chip').classes()).toContain('section-state-chip--primary')
+
+    const topStepToggles = wrapper.get('[data-step="1"]').findAllComponents({ name: 'VBtnToggle' })
+    await topStepToggles[0]!.vm.$emit('update:modelValue', 'All')
+    await topStepToggles[1]!.vm.$emit('update:modelValue', 'Last')
+
+    expect((wrapper.vm as any).expression.PrimaryCriteria.PrimaryCriteriaLimit.Type).toBe('All')
+    expect((wrapper.vm as any).expression.QualifiedLimit.Type).toBe('Last')
+
+    await wrapper.findComponent(InclusionRulesPanel).vm.$emit('select-concept-set', { id: 2, type: 'ConceptSet' })
+    await wrapper.findComponent(InclusionRulesPanel).vm.$emit('edit-concept-set', { id: 2, type: 'ConceptSet' })
+    await wrapper.findComponent(InclusionRulesPanel).vm.$emit('clear-concept-set')
+
+    expect(wrapper.emitted('select-concept-set')?.at(-1)?.[0]).toEqual({ id: 2, type: 'ConceptSet' })
+    expect(wrapper.emitted('edit-concept-set')?.at(-1)?.[0]).toEqual({ id: 2, type: 'ConceptSet' })
+    expect(wrapper.emitted('clear-concept-set')?.at(-1)).toEqual([])
+  })
+
+  it('forwards child editor updates and concept-set relays into the expression', async () => {
+    const wrapper = mountExpressionEditor({
+      PrimaryCriteria: {
+        CriteriaList: [{ Observation: {} }],
+        ObservationWindow: { PriorDays: 1, PostDays: 2 },
+        PrimaryCriteriaLimit: { Type: 'First' },
+      },
+      QualifiedLimit: { Type: 'All' },
+      ExpressionLimit: { Type: 'Last' },
+      AdditionalCriteria: {
+        Type: 'ALL',
+        CriteriaList: [],
+        Groups: [],
+      },
+      InclusionRules: [
+        {
+          name: 'Rule A',
+          expression: { Type: 'ALL', CriteriaList: [], DemographicCriteriaList: [], Groups: [] },
+        },
+      ],
+      EndStrategy: {
+        DateOffset: { DateField: 'StartDate', Offset: 0 },
+      },
+      CensorWindow: null,
+      CollapseSettings: null,
+    })
+
+    await wrapper.findComponent({ name: 'CriteriaRenderer' }).vm.$emit('select-concept-set', { id: 1, type: 'ConceptSet' })
+    await wrapper.findComponent({ name: 'CriteriaRenderer' }).vm.$emit('edit-concept-set', { id: 1, type: 'ConceptSet' })
+    await wrapper.findComponent({ name: 'CriteriaRenderer' }).vm.$emit('clear-concept-set')
+
+    await wrapper.findComponent(CriteriaGroup).vm.$emit('select-concept-set', { id: 2, type: 'ConceptSet' })
+    await wrapper.findComponent(CriteriaGroup).vm.$emit('edit-concept-set', { id: 2, type: 'ConceptSet' })
+    await wrapper.findComponent(CriteriaGroup).vm.$emit('clear-concept-set')
+
+    await wrapper.findComponent(InclusionRulesPanel).vm.$emit('update:modelValue', [
+      {
+        name: 'Rule B',
+        expression: { Type: 'ALL', CriteriaList: [], DemographicCriteriaList: [], Groups: [] },
+      },
+    ])
+
+    await wrapper.findComponent(EndStrategyPanel).vm.$emit('select-concept-set', { id: 3, type: 'ConceptSet' })
+    await wrapper.findComponent(EndStrategyPanel).vm.$emit('edit-concept-set', { id: 3, type: 'ConceptSet' })
+    await wrapper.findComponent(EndStrategyPanel).vm.$emit('clear-concept-set')
+
+    await wrapper.findComponent(CensorWindowEditor).vm.$emit('update:censorWindow', {
+      StartDate: '2020-01-01',
+      EndDate: '2020-01-02',
+    })
+    await wrapper.findComponent(CensorWindowEditor).vm.$emit('update:collapseSettings', {
+      CollapseType: 'ERA',
+      EraPad: 12,
+    })
+
+    expect(wrapper.emitted('select-concept-set')?.length).toBeGreaterThanOrEqual(3)
+    expect(wrapper.emitted('edit-concept-set')?.length).toBeGreaterThanOrEqual(3)
+    expect(wrapper.emitted('clear-concept-set')?.length).toBeGreaterThanOrEqual(3)
+    expect((wrapper.vm as any).expression.InclusionRules).toHaveLength(1)
+    expect((wrapper.vm as any).expression.CensorWindow).toEqual({
+      StartDate: '2020-01-01',
+      EndDate: '2020-01-02',
+    })
+    expect((wrapper.vm as any).expression.CollapseSettings).toEqual({
+      CollapseType: 'ERA',
+      EraPad: 12,
+    })
+  })
 })
 
 describe('End strategy components', () => {
@@ -285,6 +398,239 @@ describe('End strategy components', () => {
     expect(wrapper.emitted('select-concept-set')).toEqual([[undefined]])
     expect(wrapper.emitted('edit-concept-set')).toEqual([[undefined]])
     expect(wrapper.emitted('clear-concept-set')).toEqual([[]])
+  })
+
+  it('writes end-strategy and censoring-criteria updates back through the panel', async () => {
+    const expression = {
+      EndStrategy: undefined,
+      CensoringCriteria: [],
+    }
+
+    const wrapper = mount(EndStrategyPanel, {
+      global: { plugins: [vuetify] },
+      props: { expression: expression as never, conceptSets: [] },
+    })
+
+    await wrapper.findComponent(EndStrategySelector).vm.$emit('update:endStrategy', {
+      DateOffset: { DateField: 'EndDate', Offset: 14 },
+    })
+    await wrapper.findComponent(CensoringCriteriaEditor).vm.$emit('update:modelValue', [
+      { Observation: {} },
+    ])
+
+    expect(expression.EndStrategy).toEqual({ DateOffset: { DateField: 'EndDate', Offset: 14 } })
+    expect(expression.CensoringCriteria).toEqual([{ Observation: {} }])
+  })
+
+  it('applies end-strategy panel updates back to the expression object', async () => {
+    const expression = {
+      EndStrategy: undefined,
+      CensoringCriteria: [],
+    }
+
+    const wrapper = mount(EndStrategyPanel, {
+      global: { plugins: [vuetify] },
+      props: { expression: expression as never, conceptSets: [] },
+    })
+
+    await wrapper.findComponent({ name: 'EndStrategySelector' }).vm.$emit('update:end-strategy', {
+      DateOffset: { DateField: 'EndDate', Offset: 14 },
+    })
+    await wrapper.findComponent({ name: 'CensoringCriteriaEditor' }).vm.$emit('update:modelValue', [
+      { Observation: {} },
+    ])
+
+    expect(expression.EndStrategy).toEqual({ DateOffset: { DateField: 'EndDate', Offset: 14 } })
+    expect(expression.CensoringCriteria).toEqual([{ Observation: {} }])
+  })
+
+  it('forwards exact child event names back through the panel', async () => {
+    const expression = {
+      EndStrategy: undefined,
+      CensoringCriteria: [],
+    }
+
+    const wrapper = mount(EndStrategyPanel, {
+      global: { plugins: [vuetify] },
+      props: { expression: expression as never, conceptSets: [] },
+    })
+
+    await wrapper.findComponent(EndStrategySelector).vm.$emit('select-concept-set', { id: 1, type: 'ConceptSet' })
+    await wrapper.findComponent(EndStrategySelector).vm.$emit('edit-concept-set', { id: 1, type: 'ConceptSet' })
+    await wrapper.findComponent(EndStrategySelector).vm.$emit('clear-concept-set')
+    await wrapper.findComponent(EndStrategySelector).vm.$emit('update:end-strategy', {
+      CustomEra: { GapDays: 30, Offset: 0, DaysSupplyOverride: 0 },
+    })
+
+    await wrapper.findComponent(CensoringCriteriaEditor).vm.$emit('select-concept-set', { id: 2, type: 'ConceptSet' })
+    await wrapper.findComponent(CensoringCriteriaEditor).vm.$emit('edit-concept-set', { id: 2, type: 'ConceptSet' })
+    await wrapper.findComponent(CensoringCriteriaEditor).vm.$emit('clear-concept-set')
+    await wrapper.findComponent(CensoringCriteriaEditor).vm.$emit('update:model-value', [{ Observation: {} }])
+
+    expect(wrapper.emitted('select-concept-set')).toEqual([
+      [{ id: 1, type: 'ConceptSet' }],
+      [{ id: 2, type: 'ConceptSet' }],
+    ])
+    expect(wrapper.emitted('edit-concept-set')).toEqual([
+      [{ id: 1, type: 'ConceptSet' }],
+      [{ id: 2, type: 'ConceptSet' }],
+    ])
+    expect(wrapper.emitted('clear-concept-set')).toEqual([[], []])
+    expect(expression.EndStrategy).toEqual({
+      CustomEra: { GapDays: 30, Offset: 0, DaysSupplyOverride: 0 },
+    })
+    expect(expression.CensoringCriteria).toEqual([{ Observation: {} }])
+  })
+})
+
+describe('InclusionRulesPanel', () => {
+  it('adds, removes, reorders, and relabels inclusion rules', async () => {
+    const expressionLimit = { Type: 'First' as const }
+    const modelValue = [
+      { name: 'Rule A', description: undefined, expression: { Type: 'ALL', CriteriaList: [], DemographicCriteriaList: [], Groups: [] } },
+      { name: 'Rule B', description: undefined, expression: { Type: 'ALL', CriteriaList: [], DemographicCriteriaList: [], Groups: [] } },
+    ]
+
+    const wrapper = mount(InclusionRulesPanel, {
+      global: { plugins: [vuetify] },
+      props: { modelValue, conceptSets: [], expressionLimit },
+    })
+
+    await wrapper.findComponent({ name: 'InclusionRuleRail' }).vm.$emit('select', 1)
+    await wrapper.findComponent({ name: 'InclusionRuleRail' }).vm.$emit('reorder', {
+      fromIndex: 1,
+      toIndex: 0,
+    })
+    await wrapper.findComponent({ name: 'InclusionRuleDetail' }).vm.$emit('remove')
+    await wrapper.findAllComponents(AtlasButton)[0]!.trigger('click')
+
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toHaveLength(3)
+    expect(expressionLimit.Type).toBe('First')
+  })
+
+  it('shows the empty state and adds the first rule', async () => {
+    const wrapper = mount(InclusionRulesPanel, {
+      global: { plugins: [vuetify] },
+      props: {
+        modelValue: [] as never[],
+        conceptSets: [],
+        expressionLimit: { Type: 'First' as const },
+      },
+    })
+
+    expect(wrapper.text()).toContain('No inclusion rules')
+    await wrapper.get('[data-testid="inclusion-empty-add"]').trigger('click')
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toHaveLength(1)
+  })
+})
+
+describe('CensorWindowEditor', () => {
+  it('updates collapse settings and reveals trim options when requested', async () => {
+    const wrapper = mount(CensorWindowEditor, {
+      global: { plugins: [vuetify] },
+      props: {
+        collapseSettings: { CollapseType: 'ERA', EraPad: 30 },
+      },
+    })
+
+    await wrapper.findComponent({ name: 'AtlasTextField' }).vm.$emit('update:modelValue', '45')
+    await wrapper.findComponent({ name: 'AtlasTextField' }).vm.$emit('blur')
+    await wrapper.find('.trim-toggle').trigger('click')
+
+    expect(wrapper.emitted('update:collapseSettings')?.at(-1)?.[0]).toEqual({
+      CollapseType: 'ERA',
+      EraPad: 45,
+    })
+    expect(wrapper.text()).toContain('Left censor cohort start dates to')
+    expect(wrapper.text()).toContain('Right censor cohort end dates to')
+  })
+
+  it('reacts when censor and collapse props change after mount', async () => {
+    const wrapper = mount(CensorWindowEditor, {
+      global: { plugins: [vuetify] },
+      props: {
+        censorWindow: null,
+        collapseSettings: null,
+      },
+    })
+
+    await wrapper.setProps({
+      collapseSettings: { CollapseType: 'ERA', EraPad: 8 },
+    })
+    expect(wrapper.findComponent({ name: 'AtlasTextField' }).props('modelValue')).toBe(8)
+
+    await wrapper.setProps({
+      censorWindow: { StartDate: '2020-02-01', EndDate: '2020-02-02' },
+    })
+
+    expect(wrapper.findAllComponents({ name: 'AtlasTextField' })).toHaveLength(3)
+    expect(wrapper.text()).toContain('Left censor cohort start dates to')
+    expect(wrapper.text()).toContain('Right censor cohort end dates to')
+    const fields = wrapper.findAllComponents({ name: 'AtlasTextField' })
+    expect(fields[1]!.props('modelValue')).toBe('2020-02-01')
+    expect(fields[2]!.props('modelValue')).toBe('2020-02-02')
+  })
+
+  it('emits censor-window warnings and clears both dates', async () => {
+    const wrapper = mount(CensorWindowEditor, {
+      global: { plugins: [vuetify] },
+      props: {
+        censorWindow: { StartDate: '2020-02-01', EndDate: '2020-01-01' },
+        collapseSettings: { CollapseType: 'ERA', EraPad: 30 },
+      },
+    })
+
+    expect(wrapper.text()).toContain('Start date must be on or before end date')
+    const dateFields = wrapper.findAllComponents({ name: 'AtlasTextField' })
+    await dateFields[1]!.vm.$emit('update:modelValue', '2020-01-02')
+    await dateFields[2]!.vm.$emit('update:modelValue', '2020-01-03')
+    await dateFields[1]!.vm.$emit('click:clear')
+    await dateFields[2]!.vm.$emit('click:clear')
+
+    expect(wrapper.emitted('validation-error')?.at(-1)?.[0]).toEqual([])
+    expect(wrapper.emitted('update:censorWindow')?.at(-1)?.[0]).toBeUndefined()
+  })
+
+  it('starts with trim options visible from the prop and clears one date at a time', async () => {
+    const wrapper = mount(CensorWindowEditor, {
+      global: { plugins: [vuetify] },
+      props: {
+        censorWindow: { StartDate: '2020-03-01', EndDate: '2020-03-10' },
+        collapseSettings: { CollapseType: 'ERA', EraPad: 15 },
+      },
+    })
+
+    expect(wrapper.text()).toContain('Left censor cohort start dates to')
+    expect(wrapper.text()).toContain('Right censor cohort end dates to')
+
+    const dateFields = wrapper.findAllComponents({ name: 'AtlasTextField' })
+    await dateFields[1]!.vm.$emit('click:clear')
+    expect(wrapper.emitted('update:censorWindow')?.at(-1)?.[0]).toEqual({
+      StartDate: undefined,
+      EndDate: '2020-03-10',
+    })
+
+    await dateFields[2]!.vm.$emit('click:clear')
+    expect(wrapper.emitted('update:censorWindow')?.at(-1)?.[0]).toBeUndefined()
+  })
+
+  it('emits no warning when the censor dates are in order', async () => {
+    const wrapper = mount(CensorWindowEditor, {
+      global: { plugins: [vuetify] },
+      props: { censorWindow: null, collapseSettings: null },
+    })
+
+    await wrapper.find('.trim-toggle').trigger('click')
+    const dateFields = wrapper.findAllComponents({ name: 'AtlasTextField' })
+    await dateFields[1]!.vm.$emit('update:modelValue', '2020-01-01')
+    await dateFields[2]!.vm.$emit('update:modelValue', '2020-01-02')
+
+    expect(wrapper.text()).not.toContain('Start date must be on or before end date')
+    expect(wrapper.emitted('validation-error')?.at(-1)?.[0]).toEqual([])
+    expect(wrapper.emitted('update:censorWindow')?.at(-1)?.[0]).toEqual({
+      StartDate: '2020-01-01',
+      EndDate: '2020-01-02',
+    })
   })
 })
 
