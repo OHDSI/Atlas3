@@ -73,10 +73,8 @@ test.describe('dark mode colour contrast', () => {
       // a loading/error state in CI, so the scan covers different pixels in each
       // environment — the reason this suite passed locally and failed in CI.
       await setupAnalysisListMocks(page)
-      // Dark mode is opt-in per deployment (settings.theme.enableDarkMode,
-      // default false) — patch the manifest response so the toggle this
-      // suite exercises is actually present, without touching the shipped
-      // default in public/config/plugins.json.
+      // Pins settings.theme.enableDarkMode explicitly so the toggle this suite
+      // exercises stays present even if a deployment manifest turns it off.
       await enableDarkModeToggle(page)
       await enableDarkMode(page)
       await page.goto(route.path)

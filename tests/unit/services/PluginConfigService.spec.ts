@@ -295,11 +295,11 @@ describe('PluginConfigService', () => {
   })
 
   describe('showThemeToggle', () => {
-    it('should return false before loading (no manifest)', () => {
-      expect(service.showThemeToggle()).toBe(false)
+    it('should return true before loading (no manifest)', () => {
+      expect(service.showThemeToggle()).toBe(true)
     })
 
-    it('should return false when the manifest omits it', async () => {
+    it('should return true when the manifest omits it', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -313,7 +313,7 @@ describe('PluginConfigService', () => {
 
       await service.loadConfig()
 
-      expect(service.showThemeToggle()).toBe(false)
+      expect(service.showThemeToggle()).toBe(true)
     })
 
     it('should return false when explicitly disabled', async () => {
@@ -350,7 +350,7 @@ describe('PluginConfigService', () => {
       expect(service.showThemeToggle()).toBe(true)
     })
 
-    it('should return false when config fails to load and falls back to defaults', async () => {
+    it('should return true when config fails to load and falls back to defaults', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
@@ -359,7 +359,7 @@ describe('PluginConfigService', () => {
 
       await expect(service.loadConfig()).rejects.toThrow('Failed to load plugins.json')
 
-      expect(service.showThemeToggle()).toBe(false)
+      expect(service.showThemeToggle()).toBe(true)
     })
   })
 

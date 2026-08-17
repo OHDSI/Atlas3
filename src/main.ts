@@ -140,7 +140,7 @@ async function initializeApp() {
   // Resolve and apply the active theme before mount so there is no
   // light-to-dark flash on first paint.
   const themeStore = useThemeStore()
-  themeStore.initialize(defaultThemeMode ?? 'system')
+  themeStore.initialize(defaultThemeMode ?? 'light')
   vuetify.theme.change(themeStore.resolved)
   setChartTheme(themeStore.resolved)
   watch(

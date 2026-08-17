@@ -290,7 +290,7 @@ const showFeedbackButton = ref(true)
 const showLanguageSelector = ref(true)
 const showConfigButton = ref(true)
 const showUserMenu = ref(true)
-const showThemeToggle = ref(false)
+const showThemeToggle = ref(true)
 const feedbackUrl = ref('https://forms.office.com/r/2JzrYy1yDP')
 const logoNavigateTo = ref('/')
 

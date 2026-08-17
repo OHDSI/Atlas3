@@ -30,7 +30,7 @@ export const useThemeStore = defineStore('theme', () => {
     return preference.value
   })
 
-  function initialize(fallback: ThemeMode = 'system') {
+  function initialize(fallback: ThemeMode = 'light') {
     if (initialized) return
     initialized = true
     preference.value = readStored() ?? fallback

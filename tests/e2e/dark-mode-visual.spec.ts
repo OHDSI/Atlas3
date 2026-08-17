@@ -107,10 +107,8 @@ for (const mode of ['light', 'dark'] as const) {
         // and a loading/error state in CI. Applied to every route because it also
         // pins the clock the relative-date cells render against.
         await setupAnalysisListMocks(page)
-        // Dark mode is opt-in per deployment (settings.theme.enableDarkMode,
-        // default false) — patch the manifest response so the toggle this
-        // suite exercises is actually present, without touching the shipped
-        // default in public/config/plugins.json.
+        // Pins settings.theme.enableDarkMode explicitly so the toggle this suite
+        // exercises stays present even if a deployment manifest turns it off.
         await enableDarkModeToggle(page)
         await forceUnauthenticated(page)
         await setTheme(page, mode)
