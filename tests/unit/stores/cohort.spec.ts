@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import type { CohortEvent, CohortDefinition } from '@/models/cohort.types'
+import { logger } from '@/utils/logger'
 
 vi.mock('@/services/cohort-definition-versions.service', () => ({
   getVersion: vi.fn(),
@@ -778,6 +779,40 @@ describe('Cohort Store', () => {
       expect(store.newCohortSignal).toBe(before + 1)
       expect(store.currentCohort?.name).toBe('New Cohort')
       expect(store.isDirty).toBe(false)
+    })
+
+    it('saveCohort returns false when there is no cohort to persist', async () => {
+      const store = useCohortStore()
+
+      await expect(store.saveCohort()).resolves.toBe(false)
+    })
+
+    it('saveCohort retries once when the save path throws and then succeeds', async () => {
+      vi.useFakeTimers()
+      try {
+        const store = useCohortStore()
+        store.createNewCohort()
+
+        const infoSpy = vi.spyOn(logger, 'info').mockImplementationOnce(() => {
+          throw new Error('save failed')
+        })
+
+        const savePromise = store.saveCohort()
+
+        expect(store.retryState.isRetrying).toBe(true)
+        expect(store.retryState.attempt).toBe(1)
+        expect(store.retryState.nextRetryAt).not.toBeNull()
+
+        await vi.advanceTimersByTimeAsync(1000)
+
+        await expect(savePromise).resolves.toBe(true)
+        expect(store.retryState.isRetrying).toBe(false)
+        expect(store.retryState.attempt).toBe(0)
+        expect(store.retryState.nextRetryAt).toBeNull()
+        expect(infoSpy).toHaveBeenCalled()
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it('requestSave resolves with the payload passed to notifySaved', async () => {

@@ -11,5 +11,5 @@ import type { CohortDefinition } from '@/models/cohort.types'
  * and loaded the editor empty.
  */
 export type RawCohortDefinition = Omit<CohortDefinition, 'expression'> & {
-  expression: string | object
+  expression: string
 }

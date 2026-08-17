@@ -14,6 +14,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { createRouter, createMemoryHistory } from 'vue-router'
+import { ref } from 'vue'
 
 // Mock i18n composable with real translations
 vi.mock('@/composables/useI18n', async () => {
@@ -172,12 +173,15 @@ describe('CohortBuilder', () => {
     conversionErrorRef.value = null
   })
 
-  const createWrapper = (props: Record<string, unknown> = {}) => {
+  const createWrapper = (
+    props: Record<string, unknown> = {},
+    stubs: Record<string, unknown> = {}
+  ) => {
     return mount(CohortBuilder, {
       props,
       global: {
         plugins: [vuetify, router],
-        stubs: childStubs,
+        stubs: { ...childStubs, ...stubs },
       },
       attachTo: document.body,
     })
@@ -268,6 +272,28 @@ describe('CohortBuilder', () => {
     // Raw transport text must not leak into the banner.
     expect(errorSnackbar?.props('text')).not.toContain('HTTP 500')
     expect(getSetup(wrapper).isLoadingCohort).toBe(false)
+  })
+
+  it('retryLoad retries a failed cohort load', async () => {
+    const cohortDefService = await import('@/services/cohort-definition.service')
+    vi.mocked(cohortDefService.getCohortDefinition).mockResolvedValueOnce({
+      success: false,
+      error: new ApiError('HTTP 500: <html>Internal Server Error</html>', 500, null),
+    })
+
+    const wrapper = createWrapper({ id: '1' })
+    await flushPromises()
+    const setup = getSetup(wrapper)
+
+    expect(setup.loadError).toBe('Failed to load cohort')
+    const callsBeforeRetry = vi.mocked(cohortDefService.getCohortDefinition).mock.calls.length
+
+    setup.retryLoad()
+    await flushPromises()
+
+    expect(vi.mocked(cohortDefService.getCohortDefinition).mock.calls.length).toBe(
+      callsBeforeRetry + 1
+    )
   })
 
   it('refuses to load a definition whose expression type is not a simple expression', async () => {
@@ -432,6 +458,96 @@ describe('CohortBuilder', () => {
     expect(() => vm.openValidationDialog()).not.toThrow()
     expect(() => vm.openVersionsDialog()).not.toThrow()
     expect(() => vm.openTagsDialog()).not.toThrow()
+  })
+
+  it('wires toolbar status and breadcrumb events to the local dialog state', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const pushSpy = vi.spyOn(router, 'push')
+
+    const toolbar = wrapper.findComponent({ name: 'CohortToolbarStatus' })
+    toolbar.vm.$emit('show-concept-sets')
+    toolbar.vm.$emit('show-validation')
+    toolbar.vm.$emit('show-versions')
+    toolbar.vm.$emit('show-tags')
+
+    await wrapper.vm.$nextTick()
+    expect(conceptSetsListDialog(wrapper).props('modelValue')).toBe(true)
+    expect(wrapper.findComponent({ name: 'ValidationMessagesDialog' }).props('modelValue')).toBe(
+      true
+    )
+    expect(wrapper.findComponent({ name: 'AtlasDialog' }).exists()).toBe(true)
+
+    const breadcrumb = wrapper.findComponent({ name: 'CohortBreadcrumb' })
+    breadcrumb.vm.$emit('navigate-back')
+    await wrapper.vm.$nextTick()
+
+    expect(pushSpy).toHaveBeenCalledWith('/cohorts')
+  })
+
+  it('syncs the breadcrumb name and opens the dialog chrome from real child emits', async () => {
+    const wrapper = createWrapper({}, {
+      CohortBreadcrumb: false,
+      CohortToolbarStatus: false,
+    })
+    await wrapper.vm.$nextTick()
+
+    const breadcrumb = wrapper.findComponent({ name: 'CohortBreadcrumb' })
+    await breadcrumb.vm.$emit('update:modelValue', 'Updated Cohort')
+    await wrapper.vm.$nextTick()
+    expect(breadcrumb.props('modelValue')).toBe('Updated Cohort')
+
+    const toolbar = wrapper.findComponent({ name: 'CohortToolbarStatus' })
+    toolbar.vm.$emit('show-concept-sets')
+    toolbar.vm.$emit('show-validation')
+    toolbar.vm.$emit('show-versions')
+    toolbar.vm.$emit('show-tags')
+    await wrapper.vm.$nextTick()
+
+    expect(conceptSetsListDialog(wrapper).props('modelValue')).toBe(true)
+    expect(wrapper.findComponent({ name: 'ValidationMessagesDialog' }).props('modelValue')).toBe(
+      true
+    )
+    expect(wrapper.findComponent({ name: 'TagSelectionDialog' }).props('modelValue')).toBe(true)
+  })
+
+  it('handles dialog v-model and close emits from the child components', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+
+    const { useConceptSetsStore } = await import('@/stores/concept-sets')
+    const conceptSetsStore = useConceptSetsStore()
+    conceptSetsStore.openCreateEditor()
+    await wrapper.vm.$nextTick()
+
+    const conceptSetSelection = conceptSetSelectionDialog(wrapper)
+    const conceptSearch = conceptSearchDialog(wrapper)
+    const conceptSetEditorVm = conceptSetEditor(wrapper)
+    const conceptSetsList = conceptSetsListDialog(wrapper)
+    const validationDialog = wrapper.findComponent({ name: 'ValidationMessagesDialog' })
+    const jsonDialog = cohortJsonDialog(wrapper)
+    const tagDialog = tagSelectionDialog(wrapper)
+    const versionDialog = wrapper.findComponent({ name: 'AtlasDialog' })
+
+    conceptSetsList.vm.$emit('update:modelValue', false)
+    validationDialog.vm.$emit('update:modelValue', false)
+    jsonDialog.vm.$emit('update:modelValue', false)
+    conceptSetSelection.vm.$emit('update:modelValue', false)
+    conceptSearch.vm.$emit('update:modelValue', false)
+    conceptSetEditorVm.vm.$emit('update:modelValue', false)
+    tagDialog.vm.$emit('update:modelValue', false)
+
+    versionDialog.vm.$emit('close')
+
+    await wrapper.vm.$nextTick()
+
+    expect(conceptSetsList.props('modelValue')).toBe(false)
+    expect(validationDialog.props('modelValue')).toBe(false)
+    expect(jsonDialog.props('modelValue')).toBe(false)
+    expect(conceptSetSelection.props('modelValue')).toBe(false)
+    expect(conceptSearch.props('modelValue')).toBe(false)
+    expect(conceptSetsStore.editorOpen).toBe(false)
+    expect(tagDialog.props('modelValue')).toBe(false)
   })
 
   // ---------------------------------------------------------------------------
@@ -658,6 +774,47 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
 
     expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false)
+  })
+
+  it('selecting a repository concept set adds it to the expression and resolves the target', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    const targetRef = ref<number | null | undefined>(undefined)
+
+    setup.onSelectConceptSet({ targetRef })
+    await wrapper.vm.$nextTick()
+
+    expect(() => setup.criteriaSelectionService.requestConceptSet()).not.toThrow()
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(true)
+
+    conceptSetSelectionDialog(wrapper).vm.$emit('concept-set-selected', {
+      id: 27,
+      name: 'Repository Set',
+      items: [{ conceptId: 101, conceptName: 'Alpha' }],
+    })
+    await flushPromises()
+
+    expect(setup.expression.ConceptSets).toHaveLength(1)
+    expect(setup.expression.ConceptSets?.[0]).toMatchObject({ id: 27, name: 'Repository Set' })
+    expect(targetRef.value).toBe(27)
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false)
+  })
+
+  it('handleClearConceptSet closes the active selection without changing the expression', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    const targetRef = ref<number | null | undefined>(undefined)
+
+    setup.onSelectConceptSet({ targetRef })
+    await wrapper.vm.$nextTick()
+    setup.handleClearConceptSet()
+    await wrapper.vm.$nextTick()
+
+    expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false)
+    expect(targetRef.value).toBeUndefined()
+    expect(setup.expression.ConceptSets).toEqual([])
   })
 
   // ---------------------------------------------------------------------------
@@ -1260,6 +1417,80 @@ describe('CohortBuilder', () => {
     })
     await setup.handleExportCopy()
     expect(setup.showError).toBe(true)
+  })
+
+  it('handleExportDownload writes a blob download and reports success', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Downloadable'
+    Object.assign(setup.expression, {
+      PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] },
+    })
+
+    const click = vi.fn()
+    const createObjectURL = vi.fn().mockReturnValue('blob:atlas')
+    const revokeObjectURL = vi.fn()
+    const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue({
+      href: '',
+      download: '',
+      click,
+    } as never)
+    const urlApi = globalThis.URL as typeof URL & {
+      createObjectURL?: typeof URL.createObjectURL
+      revokeObjectURL?: typeof URL.revokeObjectURL
+    }
+    const originalCreateObjectURL = urlApi.createObjectURL
+    const originalRevokeObjectURL = urlApi.revokeObjectURL
+
+    Object.defineProperty(urlApi, 'createObjectURL', {
+      value: createObjectURL,
+      configurable: true,
+      writable: true,
+    })
+    Object.defineProperty(urlApi, 'revokeObjectURL', {
+      value: revokeObjectURL,
+      configurable: true,
+      writable: true,
+    })
+
+    try {
+      setup.handleExportDownload()
+      expect(createObjectURL).toHaveBeenCalledTimes(1)
+      expect(click).toHaveBeenCalledTimes(1)
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:atlas')
+      expect(setup.showSuccess).toBe(true)
+    } finally {
+      createElementSpy.mockRestore()
+      Object.defineProperty(urlApi, 'createObjectURL', {
+        value: originalCreateObjectURL,
+        configurable: true,
+        writable: true,
+      })
+      Object.defineProperty(urlApi, 'revokeObjectURL', {
+        value: originalRevokeObjectURL,
+        configurable: true,
+        writable: true,
+      })
+    }
+  })
+
+  it('warns on beforeunload when the cohort has unsaved changes', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Dirty Cohort'
+    await wrapper.vm.$nextTick()
+
+    const event = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent & {
+      returnValue?: string
+    }
+    const preventDefaultSpy = vi.spyOn(event, 'preventDefault')
+
+    window.dispatchEvent(event)
+
+    expect(preventDefaultSpy).toHaveBeenCalled()
+    expect(event.returnValue).toBe(false)
   })
 
   // ---------------------------------------------------------------------------

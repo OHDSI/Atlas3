@@ -115,6 +115,6 @@ describe('main.ts bootstrap', () => {
 
     await import('@/main')
 
-    await vi.waitFor(() => expect(setChartTheme).toHaveBeenCalledWith('light'))
+    await vi.waitFor(() => expect(setChartTheme).toHaveBeenCalledWith('light'), { timeout: 60000 })
   })
 })

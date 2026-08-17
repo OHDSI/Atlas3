@@ -30,6 +30,7 @@ const {
   openValidationDialog,
   openVersionsDialog,
   openTagsDialog,
+  openJsonDialog,
   handleCancel,
   handleSave,
   handleExportDownload,
@@ -39,6 +40,7 @@ const {
   openValidationDialog: vi.fn(),
   openVersionsDialog: vi.fn(),
   openTagsDialog: vi.fn(),
+  openJsonDialog: vi.fn(),
   handleCancel: vi.fn(),
   handleSave: vi.fn(),
   handleExportDownload: vi.fn(),
@@ -70,6 +72,7 @@ vi.mock('@/components/cohort/CohortBuilder.vue', () => ({
       'openValidationDialog',
       'openVersionsDialog',
       'openTagsDialog',
+      'openJsonDialog',
       'handleCancel',
       'handleSave',
       'handleExportDownload',
@@ -93,6 +96,7 @@ vi.mock('@/components/cohort/CohortBuilder.vue', () => ({
       openValidationDialog,
       openVersionsDialog,
       openTagsDialog,
+      openJsonDialog,
       handleCancel,
       handleSave,
       handleExportDownload,
@@ -120,13 +124,14 @@ vi.mock('@/components/cohort/CohortToolbarActions.vue', () => ({
   default: {
     name: 'CohortToolbarActions',
     props: ['canSave', 'isPreviewingVersion'],
-    emits: ['cancel', 'save', 'export-download', 'export-copy'],
+    emits: ['cancel', 'save', 'export-download', 'export-copy', 'view-json'],
     template:
       '<div class="stub-toolbar-actions">' +
       '<button class="actions-cancel" @click="$emit(\'cancel\')" />' +
       '<button class="actions-save" @click="$emit(\'save\')" />' +
       '<button class="actions-export-download" @click="$emit(\'export-download\')" />' +
       '<button class="actions-export-copy" @click="$emit(\'export-copy\')" />' +
+      '<button class="actions-view-json" @click="$emit(\'view-json\')" />' +
       '</div>',
   },
 }))
@@ -232,6 +237,13 @@ describe('CohortBuilderView interactions', () => {
     await wrapper.find('.actions-export-copy').trigger('click')
     expect(handleExportDownload).toHaveBeenCalled()
     expect(handleExportCopy).toHaveBeenCalled()
+  })
+
+  it('forwards toolbar view-json to the builder ref handle', async () => {
+    const wrapper = mountIt()
+    await wrapper.vm.$nextTick()
+    await wrapper.find('.actions-view-json').trigger('click')
+    expect(openJsonDialog).toHaveBeenCalled()
   })
 
   it('passes the id prop through to CohortBuilder and surfaces it in the eyebrow', async () => {

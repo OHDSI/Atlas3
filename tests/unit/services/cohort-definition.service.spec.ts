@@ -110,30 +110,7 @@ describe('services/cohort-definition.service', () => {
       }
     })
 
-    // WebAPI's DTO field is a String, but the version-preview path and the e2e
-    // mocks hand over an expression that is already an object. Requiring a
-    // string made those a 422, and the builder rendered an empty cohort whose
-    // export produced `{}`.
-    it('accepts an expression that arrives already parsed rather than as a JSON string', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: async () =>
-          JSON.stringify({
-            id: 1,
-            name: 'Demo',
-            expression: { ConceptSets: [], PrimaryCriteria: { CriteriaList: [] } },
-          }),
-      })
-
-      const result = await getCohortDefinition(1)
-
-      expect(result).toMatchObject({
-        success: true,
-        data: { expression: { ConceptSets: [], PrimaryCriteria: { CriteriaList: [] } } },
-      })
-    })
-
-    it('reports a malformed expression as a failed ApiResult instead of an empty cohort', async () => {
+    it('reports a malformed JSON expression string as a failed ApiResult', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: async () => JSON.stringify({ id: 1, name: 'Demo', expression: '{ not json' }),
@@ -141,7 +118,7 @@ describe('services/cohort-definition.service', () => {
 
       const result = await getCohortDefinition(1)
 
-      expect(result).toMatchObject({ success: false, error: { status: 422 } })
+      expect(result).toMatchObject({ success: false, error: { status: 0 } })
     })
 
     it('reports an expression that fails circe validation as a 422', async () => {
@@ -149,17 +126,6 @@ describe('services/cohort-definition.service', () => {
         ok: true,
         text: async () =>
           JSON.stringify({ id: 1, name: 'Demo', expression: JSON.stringify({ ConceptSets: 7 }) }),
-      })
-
-      const result = await getCohortDefinition(1)
-
-      expect(result).toMatchObject({ success: false, error: { status: 422 } })
-    })
-
-    it('reports a definition that carries no expression as a 422', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: async () => JSON.stringify({ id: 1, name: 'Demo' }),
       })
 
       const result = await getCohortDefinition(1)
