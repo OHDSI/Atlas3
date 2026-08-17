@@ -144,4 +144,42 @@ describe('CharacterizationWorkbench', () => {
     expect(replaceSpy).not.toHaveBeenCalled()
     expect(pollSpy).not.toHaveBeenCalled()
   })
+
+  it('cancels the latest execution for a source and refreshes the list', async () => {
+    const router = makeRouter()
+    await router.push('/characterizations/5')
+    const store = useCharacterizationStore()
+    store.executions = [
+      { id: 7, sourceKey: 'CCAE', status: 'RUNNING', startTime: 0, executionDuration: 0 },
+    ] as never
+    const cancelSpy = vi.spyOn(store, 'cancelExecution').mockResolvedValue(undefined)
+    const loadSpy = vi.spyOn(store, 'loadExecutions').mockResolvedValue(undefined)
+    const w = mount(CharacterizationWorkbench, {
+      global: { plugins: [router, vuetify], stubs },
+      props: { modelValue: baseDraft(), characterizationId: 5,
+               availableCohorts: [], availableFeatureAnalyses: [] },
+    })
+    await flushPromises()
+
+    await w.findComponent({ name: 'DataSourceRunTable' }).vm.$emit('cancel', 'CCAE')
+
+    expect(cancelSpy).toHaveBeenCalledWith(5, 'CCAE', 7)
+    expect(loadSpy).toHaveBeenCalled()
+  })
+
+  it('ignores invalid history selections', async () => {
+    const router = makeRouter()
+    await router.push('/characterizations/5')
+    const pushSpy = vi.spyOn(router, 'push')
+    const w = mount(CharacterizationWorkbench, {
+      global: { plugins: [router, vuetify], stubs },
+      props: { modelValue: baseDraft(), characterizationId: 5,
+               availableCohorts: [], availableFeatureAnalyses: [] },
+    })
+    await flushPromises()
+
+    await w.findComponent({ name: 'PreviousRunsDialog' }).vm.$emit('select', 'not-a-number')
+
+    expect(pushSpy).not.toHaveBeenCalled()
+  })
 })
