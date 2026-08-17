@@ -5,7 +5,7 @@
  */
 import { logger } from '@/utils/logger'
 import { httpGet, httpPost, httpPut, httpDelete, httpPostRead, getBaseUrl } from '@/services/http-client'
-import { unwrap, ApiError, parseOrThrow } from '@/services/api-error'
+import { unwrap, ApiError, parseOrThrow, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import type { RawCohortDefinition } from '@/models/atlas.types'
 import type { CohortDefinition } from '@/models/cohort.types'
@@ -29,7 +29,7 @@ const CONTEXT = 'CohortDefinitionService'
 export function normalizeRawCohortDefinition(raw: RawCohortDefinition): CohortDefinition {
   const parsedExpression = CohortExpressionSchema.safeParse(JSON.parse(raw.expression))
   if (!parsedExpression.success) {
-    throw new ApiError('Cohort expression failed validation', 422, parsedExpression.error)
+    throw new ApiError('Cohort expression failed validation', 422, zodIssues(parsedExpression.error))
   }
 
   return {

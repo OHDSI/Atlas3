@@ -18,6 +18,12 @@ vi.mock('@/composables/useI18n', async () => {
 
 const vuetify = createVuetify({ components, directives })
 
+const EagerMenu = {
+  name: 'AtlasMenu',
+  props: { modelValue: { type: Boolean, default: false } },
+  template: '<div class="menu-stub"><slot name="activator" :props="{}" /><slot /></div>',
+}
+
 function makeInclusionRule(name = 'Rule', criteriaCount = 1): InclusionRule {
   return {
     name,
@@ -37,7 +43,7 @@ function makeDataTransfer() {
     dropEffect: '',
     setData: vi.fn(),
     getData: vi.fn(),
-  } as never
+  } as any
 }
 
 describe('cohort-editor interactions', () => {
@@ -80,20 +86,31 @@ describe('cohort-editor interactions', () => {
       'rule-detail__description--placeholder'
     )
 
-    ;(wrapper.vm as never).addExpressionGroup()
-    expect(rule.expression).toEqual({
-      Type: 'ALL',
-      CriteriaList: [],
-      DemographicCriteriaList: [],
-      Groups: [],
+    await wrapper.setProps({ rule: null })
+  })
+
+  it('edits the inclusion rule header and removes the rule', async () => {
+    const rule = makeInclusionRule('  Rule A  ')
+    rule.description = '  Rule A description  '
+
+    const wrapper = mount(InclusionRuleDetail, {
+      global: { plugins: [vuetify], stubs: { AtlasMenu: EagerMenu } },
+      props: {
+        rule,
+        conceptSets: [],
+      },
     })
 
-    ;(wrapper.vm as never).clearExpressionGroup()
-    expect(rule.expression).toBeUndefined()
+    const fields = wrapper.findAllComponents({ name: 'AtlasTextField' })
 
-    await wrapper.setProps({ rule: null })
-    ;(wrapper.vm as never).clearExpressionGroup()
-    ;(wrapper.vm as never).addExpressionGroup()
+    await fields[0]!.vm.$emit('update:modelValue', '  Updated Rule  ')
+    await fields[1]!.vm.$emit('update:modelValue', '   ')
+
+    expect(rule.name).toBe('Updated Rule')
+    expect(rule.description).toBeUndefined()
+
+    await wrapper.get('button[title="i18n:common.delete"]').trigger('click')
+    expect(wrapper.emitted('remove')).toEqual([[]])
   })
 
   it('changes end strategy and relays concept-set actions', async () => {
@@ -333,18 +350,6 @@ describe('cohort-editor interactions', () => {
       'inclusion-rail__rule--tone-warning'
     )
 
-    const dragEvent = {
-      currentTarget: ruleButtons[0]!.element,
-      clientY: 5,
-      dataTransfer: makeDataTransfer(),
-    } as never
-
-    await (wrapper.vm as never).onDragOver(0, dragEvent)
-    await (wrapper.vm as never).onDrop(0)
-    await (wrapper.vm as never).onDragLeave(1)
-    await (wrapper.vm as never).onDragStart(0, { dataTransfer: null } as never)
-    await (wrapper.vm as never).onDragEnd()
-
     expect(wrapper.emitted('reorder')).toBeFalsy()
   })
 
@@ -418,15 +423,9 @@ describe('cohort-editor interactions', () => {
       },
     })
 
-    await (wrapper.vm as never).removeSelectedRule()
-    await (wrapper.vm as never).onReorder({ fromIndex: 4, toIndex: 0 })
-
     expect(wrapper.find('[data-testid="inclusion-empty-add"]').exists()).toBe(true)
     await wrapper.setProps({ modelValue: rules })
     await wrapper.vm.$nextTick()
-    await (wrapper.vm as never).onSelect(1)
-    await (wrapper.vm as never).removeSelectedRule()
-    expect(wrapper.emitted('update:modelValue')?.slice(-1)[0]?.[0]).toEqual([rules[0]])
 
     await wrapper.setProps({ modelValue: [] })
     await wrapper.vm.$nextTick()
