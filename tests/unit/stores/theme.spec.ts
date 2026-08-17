@@ -28,39 +28,54 @@ describe('theme store', () => {
     vi.unstubAllGlobals()
   })
 
-  it('defaults to system when nothing is stored', () => {
+  it('defaults to light when nothing is stored', () => {
     mockMatchMedia(false)
     const store = useThemeStore()
     store.initialize()
-    expect(store.preference).toBe('system')
+    expect(store.preference).toBe('light')
+  })
+
+  it('stays light when nothing is stored and the OS prefers dark', () => {
+    mockMatchMedia(true)
+    const store = useThemeStore()
+    store.initialize()
+    expect(store.resolved).toBe('light')
   })
 
   it('resolves system to dark when the OS prefers dark', () => {
     mockMatchMedia(true)
     const store = useThemeStore()
-    store.initialize()
+    store.initialize('system')
     expect(store.resolved).toBe('dark')
   })
 
   it('resolves system to light when the OS prefers light', () => {
     mockMatchMedia(false)
     const store = useThemeStore()
-    store.initialize()
+    store.initialize('system')
     expect(store.resolved).toBe('light')
   })
 
   it('follows a live OS change while the preference is system', () => {
     const media = mockMatchMedia(false)
     const store = useThemeStore()
-    store.initialize()
+    store.initialize('system')
     media.emit(true)
     expect(store.resolved).toBe('dark')
+  })
+
+  it('ignores a live OS change while the default light preference applies', () => {
+    const media = mockMatchMedia(false)
+    const store = useThemeStore()
+    store.initialize()
+    media.emit(true)
+    expect(store.resolved).toBe('light')
   })
 
   it('ignores the OS once an explicit preference is set', () => {
     const media = mockMatchMedia(false)
     const store = useThemeStore()
-    store.initialize()
+    store.initialize('system')
     store.setPreference('dark')
     media.emit(false)
     expect(store.resolved).toBe('dark')
@@ -94,6 +109,15 @@ describe('theme store', () => {
     localStorage.setItem(THEME_STORAGE_KEY, 'neon')
     const store = useThemeStore()
     store.initialize()
+    expect(store.preference).toBe('light')
+  })
+
+  it('restores a stored system preference', () => {
+    mockMatchMedia(true)
+    localStorage.setItem(THEME_STORAGE_KEY, 'system')
+    const store = useThemeStore()
+    store.initialize()
     expect(store.preference).toBe('system')
+    expect(store.resolved).toBe('dark')
   })
 })
