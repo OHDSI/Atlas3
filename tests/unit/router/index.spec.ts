@@ -57,6 +57,7 @@ vi.mock('@/utils/logger', () => ({
 vi.mock('@/services/auth/authService', () => ({
   authService: {
     fetchUserInfo: vi.fn(),
+    redeemOTC: vi.fn(),
   },
 }))
 
@@ -278,6 +279,49 @@ describe('Vue Router', () => {
 
         expect(mockAuthStore.setToken).toHaveBeenCalledWith('test-token')
         expect(authService.fetchUserInfo).toHaveBeenCalled()
+      })
+    })
+
+    describe('OIDC one-time-code handoff (#256)', () => {
+      it('redeems ?code= via WebAPI and authenticates', async () => {
+        vi.mocked(authService.redeemOTC).mockResolvedValue('otc-jwt-123')
+
+        await router.push('/oauth/callback?code=abc123')
+
+        expect(authService.redeemOTC).toHaveBeenCalledWith('abc123')
+        expect(mockAuthStore.setToken).toHaveBeenCalledWith('otc-jwt-123')
+        expect(authService.fetchUserInfo).toHaveBeenCalled()
+        expect(mockAuthStore.setUser).toHaveBeenCalled()
+        expect(mockAuthStore.setAuthClient).toHaveBeenCalledWith('OIDC')
+      })
+
+      it('restores the stored redirect destination after OTC auth', async () => {
+        vi.mocked(authService.redeemOTC).mockResolvedValue('otc-jwt-123')
+        sessionStorage.setItem('oauth_redirect_destination', '/cohorts')
+
+        await router.push('/oauth/callback?code=abc123')
+
+        expect(sessionStorage.getItem('oauth_redirect_destination')).toBeNull()
+      })
+
+      it('takes priority over a bearerToken already in localStorage', async () => {
+        vi.mocked(authService.redeemOTC).mockResolvedValue('otc-jwt-123')
+        localStorage.setItem('bearerToken', 'stale-token')
+
+        await router.push('/oauth/callback?code=abc123')
+
+        expect(authService.redeemOTC).toHaveBeenCalled()
+        expect(mockAuthStore.setToken).toHaveBeenCalledWith('otc-jwt-123')
+        expect(mockAuthStore.setToken).not.toHaveBeenCalledWith('stale-token')
+      })
+
+      it('surfaces a redemption failure as an auth error', async () => {
+        vi.mocked(authService.redeemOTC).mockRejectedValue(new Error('code already used'))
+
+        await router.push('/oauth/callback?code=expired')
+
+        expect(mockAuthStore.setError).toHaveBeenCalledWith('code already used')
+        expect(mockAuthStore.setToken).not.toHaveBeenCalled()
       })
     })
 
