@@ -48,6 +48,9 @@
         <v-list-item-title>
           {{ cohort.name }}
         </v-list-item-title>
+        <v-list-item-subtitle :data-testid="`linked-cohort-picker-id-${cohort.id}`">
+          {{ t('columns.id', 'ID').value }} {{ cohort.id }}
+        </v-list-item-subtitle>
         <template #append>
           <AtlasIconButton
             icon="mdi-close"
@@ -82,8 +85,7 @@
         <AtlasDataTable
           v-model="selectedIds"
           :headers="dialogHeaders"
-          :items="selectableItems"
-          :search="search"
+          :items="visibleItems"
           item-value="id"
           show-select
           data-testid="linked-cohort-picker-table"
@@ -116,6 +118,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { LinkedCohort } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
+import { matchesNameOrId } from '@/utils/list-filters'
 
 const props = defineProps<{
   modelValue: LinkedCohort[]
@@ -132,8 +135,12 @@ const dialogOpen = ref(false)
 const selectedIds = ref<number[]>([])
 const search = ref('')
 
+// The id leads, as it does in the cohort list: in a deployment with tens of
+// thousands of definitions it is how you tell two similarly-named cohorts apart,
+// and it is what people search by (#215).
 const dialogHeaders = computed(() => [
-  { title: t('cc.viewEdit.results.filters.cohorts', 'Linked Cohorts').value, key: 'name' },
+  { title: t('columns.id', 'ID').value, key: 'id', width: '90px' },
+  { title: t('columns.name', 'Name').value, key: 'name' },
 ])
 
 const selectableItems = computed(() => {
@@ -142,6 +149,15 @@ const selectableItems = computed(() => {
     .filter(c => !linkedIds.has(c.id))
     .map(c => ({ id: c.id, name: c.name }))
 })
+
+// Filter here rather than handing the table a `search`: VDataTable filters over
+// every column key, so the id column silently turned the box into a substring
+// search over the id as well, and "2" then listed cohort 42 with nothing in its
+// name to explain it. Same shape as the concept set pickers, which own their
+// filtering for the same reason.
+const visibleItems = computed(() =>
+  selectableItems.value.filter(c => matchesNameOrId(c, search.value))
+)
 
 function openDialog() {
   selectedIds.value = []
