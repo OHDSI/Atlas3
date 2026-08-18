@@ -85,6 +85,7 @@ vi.mock('@/services/cohort-definition.service', () => ({
     },
   }),
   saveCohortDefinition: vi.fn().mockResolvedValue({ success: true, data: { id: 99, name: 'Saved' } }),
+  validateCohortDefinition: vi.fn().mockResolvedValue({ success: true, data: { warnings: [] } }),
   assignTagToCohort: vi.fn().mockResolvedValue({ success: true, data: undefined }),
   unassignTagFromCohort: vi.fn().mockResolvedValue({ success: true, data: undefined }),
 }))
@@ -315,6 +316,41 @@ describe('CohortBuilder', () => {
     const events = entryEventsList(wrapper).props('events')
     expect(events).toHaveLength(1)
     expect(events[0].name).toBe('Diclofenac')
+  })
+
+  // #200: the payload sent for validation used to be rebuilt from the criteria
+  // alone, so a concept set the cohort declares but whose reference the criteria
+  // walk cannot see (a *CS attribute field) was dropped and circe reported a
+  // dangling CodesetId. The builder is what hands the store's list to the
+  // validator, so the wiring only holds if the declared set reaches the
+  // definition that gets converted and posted.
+  it('validates against the concept sets the cohort declares, not only the discovered ones', async () => {
+    const { useCohortStore } = await import('@/stores/cohort')
+    const { validateCohortDefinition } = await import('@/services/cohort-definition.service')
+    const store = useCohortStore()
+    store.createNewCohort()
+    store.addConceptSetReference({ id: 11, name: 'Inpatient visit types' })
+
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+
+    vi.useFakeTimers()
+    try {
+      vi.mocked(convertInternalToAtlas).mockClear()
+      vi.mocked(validateCohortDefinition).mockClear()
+
+      // Any watched edit starts the debounce; the name is the cheapest one.
+      ;(wrapper.vm as any).cohortName = 'Triggers validation'
+      await wrapper.vm.$nextTick()
+      await vi.runAllTimersAsync()
+      await wrapper.vm.$nextTick()
+
+      expect(validateCohortDefinition).toHaveBeenCalled()
+      const converted = vi.mocked(convertInternalToAtlas).mock.calls.at(-1)![0]
+      expect(converted.conceptSets.map(cs => cs.id)).toEqual([11])
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('loadCohort populates internal state when id prop is provided', async () => {
