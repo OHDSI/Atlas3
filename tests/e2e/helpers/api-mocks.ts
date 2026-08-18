@@ -203,13 +203,20 @@ export async function setupBasicMocks(page: Page) {
       // Check in-memory store first (for round-trip tests)
       const stored = cohortStore.get(cohortId)
       if (stored) {
+        // WebAPI serialises `expression` as a JSON string inside the response
+        // body. Callers that seed the store with an expression object must have
+        // it re-serialised here so normalizeRawCohortDefinition can JSON.parse it.
+        const wireForm = { ...stored }
+        if (wireForm.expression !== undefined && typeof wireForm.expression !== 'string') {
+          wireForm.expression = JSON.stringify(wireForm.expression)
+        }
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify(stored)
-         })
+          body: JSON.stringify(wireForm)
+        })
         return
-       }
+      }
       // Fall back to mockCohorts
       const cohort = mockCohorts.find(c => c.id === cohortId)
 
