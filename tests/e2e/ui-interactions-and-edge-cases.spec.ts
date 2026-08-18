@@ -70,7 +70,7 @@ test.describe('Concept Search - Advanced Features', () => {
     await filtersButton.click()
 
     const domainFilter = page
-      .locator('.concept-facet-filters__menu-body [role="combobox"]')
+      .locator('.facet-filter-bar__menu-body [role="combobox"]')
       .filter({ hasText: 'Domain' })
       .first()
     await expect(domainFilter).toBeVisible({ timeout: 5000 })
