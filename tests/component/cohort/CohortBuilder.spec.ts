@@ -69,9 +69,9 @@ vi.mock('@/services/cohort-definition.service', () => ({
     },
   }),
   saveCohortDefinition: vi.fn().mockResolvedValue({ success: true, data: { id: 99, name: 'Saved' } }),
+  validateCohortDefinition: vi.fn().mockResolvedValue({ success: true, data: { warnings: [] } }),
   assignTagToCohort: vi.fn().mockResolvedValue({ success: true, data: undefined }),
   unassignTagFromCohort: vi.fn().mockResolvedValue({ success: true, data: undefined }),
-  validateCohortDefinition: vi.fn().mockResolvedValue({ success: true, data: { warnings: [] } }),
 }))
 
 vi.mock('@/services/concept-set.service', () => ({
@@ -225,6 +225,39 @@ describe('CohortBuilder', () => {
     expect(typeof vm.openValidationDialog).toBe('function')
     expect(typeof vm.openVersionsDialog).toBe('function')
     expect(typeof vm.openTagsDialog).toBe('function')
+  })
+
+  // #200: the payload sent for validation used to be rebuilt from the criteria
+  // alone, so a concept set the cohort declares but whose reference the criteria
+  // walk cannot see was dropped and circe reported a dangling CodesetId. The
+  // editor now posts the cohort expression itself, so the guarantee to hold is
+  // that a declared set reaches checkV2 whether or not a criterion cites it.
+  it('validates against the concept sets the cohort declares, not only the discovered ones', async () => {
+    const { validateCohortDefinition } = await import('@/services/cohort-definition.service')
+    const store = useCohortStore()
+    store.createNewCohort()
+    store.currentCohort!.expression.ConceptSets = [
+      { id: 11, name: 'Inpatient visit types', expression: { items: [] } },
+    ]
+    vi.mocked(validateCohortDefinition).mockClear()
+
+    // The mount itself bumps the expression revision, which is what schedules
+    // the debounced validation run — so the clock has to be fake before it.
+    vi.useFakeTimers()
+    try {
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      // Past the 2s validation debounce, but not so far that the 30s auto-save
+      // interval keeps re-arming itself.
+      await vi.advanceTimersByTimeAsync(3000)
+      await wrapper.vm.$nextTick()
+
+      expect(validateCohortDefinition).toHaveBeenCalled()
+      const posted = vi.mocked(validateCohortDefinition).mock.calls.at(-1)![1]
+      expect((posted.ConceptSets ?? []).map(cs => cs.id)).toEqual([11])
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('loadCohort populates internal state when id prop is provided', async () => {

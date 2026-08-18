@@ -122,7 +122,7 @@ export class PluginConfigService {
   }
 
   showThemeToggle(): boolean {
-    return this.manifest?.settings?.theme?.enableDarkMode ?? false
+    return this.manifest?.settings?.theme?.enableDarkMode ?? true
   }
 
   getAccentColor(): string | null {

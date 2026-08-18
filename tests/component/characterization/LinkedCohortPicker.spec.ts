@@ -33,11 +33,14 @@ const availableCohorts: CohortDefinitionSummary[] = [
   { id: 3, name: 'Asthma' },
 ]
 
-function mountPicker(initial: LinkedCohort[] = []) {
+function mountPicker(
+  initial: LinkedCohort[] = [],
+  cohorts: CohortDefinitionSummary[] = availableCohorts
+) {
   return mount(LinkedCohortPicker, {
     props: {
       modelValue: initial,
-      availableCohorts,
+      availableCohorts: cohorts,
     },
     global: { plugins: [vuetify] },
     attachTo: document.body,
@@ -142,5 +145,166 @@ describe('LinkedCohortPicker', () => {
       expect(wrapper.vm.search).toBe('')
       wrapper.unmount()
     })
+  })
+})
+
+/**
+ * Issue #215: the cohort selector showed names only. In a deployment with 20k+
+ * definitions the id is how you tell two similarly-named cohorts apart, and it
+ * is what people search by.
+ */
+describe('LinkedCohortPicker cohort id (#215)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    document.body.innerHTML = ''
+  })
+
+  const openDialog = async (wrapper: ReturnType<typeof mountPicker>) => {
+    await wrapper.get('[data-testid="linked-cohort-picker-add"]').trigger('click')
+    await flushPromises()
+  }
+
+  const tableText = () =>
+    Array.from(
+      document.querySelectorAll('[data-testid="linked-cohort-picker-table"] tbody tr')
+    ).map(row => row.textContent ?? '')
+
+  it('shows an ID column in the selector, ahead of the name', async () => {
+    const wrapper = mountPicker([])
+    await openDialog(wrapper)
+
+    const headers = Array.from(
+      document.querySelectorAll('[data-testid="linked-cohort-picker-table"] thead th')
+    ).map(th => th.textContent?.trim() ?? '')
+
+    // Case-insensitive: the label comes from the shared columns.id key, which
+    // renders "Id", and asserting the exact casing here would pin a translation
+    // rather than the column being present. show-select puts a checkbox column
+    // first, so the id is the first data column.
+    const labels = headers.filter(Boolean).map(h => h.toLowerCase())
+    expect(labels.slice(0, 2).join('|')).toContain('id')
+    expect(labels.some(h => h.includes('name'))).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('shows each selectable cohort with its id', async () => {
+    const wrapper = mountPicker([])
+    await openDialog(wrapper)
+
+    expect(tableText().some(text => text.includes('1') && text.includes('Diabetes'))).toBe(true)
+    wrapper.unmount()
+  })
+
+  // The point of the issue: finding a cohort by the identifier people quote.
+  it('finds a cohort by typing its id', async () => {
+    const wrapper = mountPicker([])
+    await openDialog(wrapper)
+
+    wrapper.vm.search = '3'
+    await flushPromises()
+
+    expect(tableText().some(text => text.includes('Asthma'))).toBe(true)
+    expect(tableText().some(text => text.includes('Diabetes'))).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('keeps the id visible on a linked cohort, not just while choosing it', () => {
+    const wrapper = mountPicker([{ id: 2, name: 'Hypertension' }])
+
+    expect(wrapper.get('[data-testid="linked-cohort-picker-id-2"]').text()).toContain('2')
+    wrapper.unmount()
+  })
+})
+
+/**
+ * Showing the id made the table filter over it too, on a substring, so "3" also
+ * listed 13 and 130 and any digit typed while searching by name dragged in rows
+ * whose name explained nothing. Ids now match exactly or by prefix, and only
+ * when the whole query is digits.
+ */
+describe('LinkedCohortPicker search by id and by name', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    document.body.innerHTML = ''
+  })
+
+  // Digit-carrying names, so a name query and an id query really do compete.
+  const digitCohorts: CohortDefinitionSummary[] = [
+    { id: 3, name: 'Asthma' },
+    { id: 13, name: 'COPD' },
+    { id: 130, name: 'Heart failure' },
+    { id: 7, name: 'Type 2 diabetes' },
+    { id: 42, name: 'Chronic kidney disease' },
+  ]
+
+  const openAndSearch = async (term: string) => {
+    const wrapper = mountPicker([], digitCohorts)
+    await wrapper.get('[data-testid="linked-cohort-picker-add"]').trigger('click')
+    await flushPromises()
+    wrapper.vm.search = term
+    await flushPromises()
+    return wrapper
+  }
+
+  const visibleNames = () =>
+    Array.from(
+      document.querySelectorAll('[data-testid="linked-cohort-picker-table"] tbody tr')
+    ).map(row => row.textContent ?? '')
+
+  it('finds a cohort by its exact id', async () => {
+    const wrapper = await openAndSearch('42')
+
+    const names = visibleNames()
+    expect(names.some(text => text.includes('Chronic kidney disease'))).toBe(true)
+    expect(names).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('does not return 13 and 130 when the query is 3', async () => {
+    const wrapper = await openAndSearch('3')
+
+    const names = visibleNames()
+    expect(names.some(text => text.includes('Asthma'))).toBe(true)
+    expect(names.some(text => text.includes('COPD'))).toBe(false)
+    expect(names.some(text => text.includes('Heart failure'))).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('still matches ids by prefix, so 13 reaches 13 and 130', async () => {
+    const wrapper = await openAndSearch('13')
+
+    const names = visibleNames()
+    expect(names.some(text => text.includes('COPD'))).toBe(true)
+    expect(names.some(text => text.includes('Heart failure'))).toBe(true)
+    expect(names.some(text => text.includes('Asthma'))).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('does not pull in id-only matches for a digit typed in a name query', async () => {
+    const wrapper = await openAndSearch('2')
+
+    const names = visibleNames()
+    // The 2 in "Type 2 diabetes" is on screen; cohort 42 has no visible 2.
+    expect(names.some(text => text.includes('Type 2 diabetes'))).toBe(true)
+    expect(names.some(text => text.includes('Chronic kidney disease'))).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('ignores ids entirely once the query carries more than digits', async () => {
+    const wrapper = await openAndSearch('type 2')
+
+    const names = visibleNames()
+    expect(names.some(text => text.includes('Type 2 diabetes'))).toBe(true)
+    expect(names).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('lists everything again when the search is cleared', async () => {
+    const wrapper = await openAndSearch('3')
+    wrapper.vm.search = ''
+    await flushPromises()
+
+    expect(visibleNames()).toHaveLength(digitCohorts.length)
+    wrapper.unmount()
   })
 })

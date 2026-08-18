@@ -124,7 +124,7 @@ vi.mock('@/services/PluginConfigService', () => ({
     showLanguageSelector: () => true,
     showConfigButton: () => true,
     showUserMenu: () => true,
-    showThemeToggle: vi.fn(() => false),
+    showThemeToggle: vi.fn(() => true),
     getFeedbackUrl: () => 'https://forms.office.com/r/2JzrYy1yDP',
     getLogoNavigateTo: () => '/'
   }
@@ -183,7 +183,7 @@ describe('NavBar', () => {
     vi.mocked(generatePluginMenuItems).mockReturnValue([])
     vi.mocked(usePermissions).mockReturnValue(mockPermissions)
     vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
-    vi.mocked(pluginConfigService.showThemeToggle).mockReturnValue(false)
+    vi.mocked(pluginConfigService.showThemeToggle).mockReturnValue(true)
   })
 
   describe('Component Rendering', () => {
@@ -486,16 +486,16 @@ describe('NavBar', () => {
   })
 
   describe('Theme toggle', () => {
-    it('should not render ThemeToggle by default', () => {
+    it('should render ThemeToggle by default', () => {
       const wrapper = mountComponent()
-      expect(wrapper.findComponent({ name: 'ThemeToggle' }).exists()).toBe(false)
+      expect(wrapper.findComponent({ name: 'ThemeToggle' }).exists()).toBe(true)
     })
 
-    it('should render ThemeToggle when enabled by deployment config', async () => {
-      vi.mocked(pluginConfigService.showThemeToggle).mockReturnValue(true)
+    it('should not render ThemeToggle when disabled by deployment config', async () => {
+      vi.mocked(pluginConfigService.showThemeToggle).mockReturnValue(false)
       const wrapper = mountComponent()
       await flushPromises()
-      expect(wrapper.findComponent({ name: 'ThemeToggle' }).exists()).toBe(true)
+      expect(wrapper.findComponent({ name: 'ThemeToggle' }).exists()).toBe(false)
     })
   })
 
