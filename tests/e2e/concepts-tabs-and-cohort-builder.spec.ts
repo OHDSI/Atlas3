@@ -10,7 +10,11 @@
 
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from './helpers/api-mocks'
+import { createI18nMock } from '../helpers/i18n-mock'
 import { waitForNetworkIdle, waitForOverlaysToClose, waitForPageReady } from './helpers/wait-utils'
+
+const i18n = createI18nMock()
+const generateAllLabel = i18n.tv('cohortDefinitions.generation.section.generateAll', 'Generate all')
 
 test.describe('Concepts View - Tab Switching', () => {
   test.beforeEach(async ({ page }) => {
@@ -198,7 +202,7 @@ test.describe('Cohort Builder - Action Buttons', () => {
     const generationSection = page.getByTestId('cohort-generation-section')
     await generationSection.getByTestId('cs-header').click()
 
-    const generateBtn = generationSection.getByTestId('generate-all-btn')
+    const generateBtn = generationSection.getByRole('button', { name: generateAllLabel })
     await expect(generateBtn).toBeVisible({ timeout: 5000 })
   })
 })
