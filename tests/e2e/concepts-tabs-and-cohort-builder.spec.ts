@@ -202,7 +202,8 @@ test.describe('Cohort Builder - Action Buttons', () => {
     const generationSection = page.getByTestId('cohort-generation-section')
     await generationSection.getByTestId('cs-header').click()
 
-    const generateBtn = generationSection.getByRole('button', { name: generateAllLabel })
+    const generateBtn = generationSection.getByTestId('generate-all-btn')
     await expect(generateBtn).toBeVisible({ timeout: 5000 })
+    await expect(generateBtn).toContainText(generateAllLabel)
   })
 })
