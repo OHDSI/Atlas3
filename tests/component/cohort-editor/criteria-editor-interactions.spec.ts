@@ -9,6 +9,7 @@ import InclusionRuleRail from '@/components/cohort-editor/inclusion-rules/Inclus
 import InclusionRulesPanel from '@/components/cohort-editor/inclusion-rules/InclusionRulesPanel.vue'
 import CensoringCriteriaEditor from '@/components/cohort-editor/end-strategy/CensoringCriteriaEditor.vue'
 import CriteriaRenderer from '@/components/circe/criteria/CriteriaRenderer.vue'
+import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
 import type { Criteria, InclusionRule } from '@/models/circe-types'
 
 vi.mock('@/composables/useI18n', async () => {
@@ -17,12 +18,6 @@ vi.mock('@/composables/useI18n', async () => {
 })
 
 const vuetify = createVuetify({ components, directives })
-
-const EagerMenu = {
-  name: 'AtlasMenu',
-  props: { modelValue: { type: Boolean, default: false } },
-  template: '<div class="menu-stub"><slot name="activator" :props="{}" /><slot /></div>',
-}
 
 function makeInclusionRule(name = 'Rule', criteriaCount = 1): InclusionRule {
   return {
@@ -94,7 +89,7 @@ describe('cohort-editor interactions', () => {
     rule.description = '  Rule A description  '
 
     const wrapper = mount(InclusionRuleDetail, {
-      global: { plugins: [vuetify], stubs: { AtlasMenu: EagerMenu } },
+      global: { plugins: [vuetify], stubs: { AtlasMenu: InlineAtlasMenuStub } },
       props: {
         rule,
         conceptSets: [],
@@ -357,11 +352,7 @@ describe('cohort-editor interactions', () => {
     const wrapper = mount(CensoringCriteriaEditor, {
       global: {
         plugins: [vuetify],
-        stubs: {
-          AtlasMenu: {
-            template: '<div><slot name="activator" :props="{}"></slot><div><slot /></div></div>',
-          },
-        },
+        stubs: { AtlasMenu: InlineAtlasMenuStub },
       },
       props: {
         modelValue: [],

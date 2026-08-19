@@ -18,23 +18,15 @@ import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import CorelatedCriteria from '@/components/circe/criteria/CorelatedCriteria.vue'
 import type { CriteriaGroup as CriteriaGroupModel } from '@/models/circe-types'
 import { normalizeForCirce } from '@/components/cohort-editor/normalize'
+import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
 
 const vuetify = createVuetify({ components, directives })
-
-// v-menu teleports its content and only renders it once opened, so the match-type
-// buttons and the count field are unreachable from a mounted wrapper. This stub
-// renders the activator and the content inline instead.
-const EagerMenu = {
-  name: 'AtlasMenu',
-  props: { modelValue: { type: Boolean, default: false } },
-  template: '<div class="menu-stub"><slot name="activator" :props="{}" /><slot /></div>',
-}
 
 function mountGroup(group: CriteriaGroupModel, depth?: number) {
   return mount(CriteriaGroup, {
     global: {
       plugins: [vuetify, createPinia()],
-      stubs: { AtlasMenu: EagerMenu, CriteriaRenderer: true, Window: true },
+      stubs: { AtlasMenu: InlineAtlasMenuStub, CriteriaRenderer: true, Window: true },
     },
     props: { group, conceptSets: [], ...(depth === undefined ? {} : { depth }) },
   })

@@ -351,7 +351,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deviceExposureData.value.DeviceSourceConcept
     },
-    isActive: () => deviceExposureData.value.DeviceSourceConcept != null,
+    isActive: () => 'DeviceSourceConcept' in deviceExposureData.value,
   },
   {
     key: 'ProviderSpecialty',

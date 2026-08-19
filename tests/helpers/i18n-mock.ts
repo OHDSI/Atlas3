@@ -3,10 +3,18 @@
  * Provides real translations from en.json for consistent test mocking
  */
 
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { computed, ref } from 'vue'
 import type { ComputedRef } from 'vue'
-import translations from '@/locales/en.json'
 import type { TranslationParams, LocaleCode, Locale, LocaleFormat, UseI18nReturn } from '@/types/i18n'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const translations = JSON.parse(
+  readFileSync(resolve(__dirname, '../../src/locales/en.json'), 'utf-8')
+) as Record<string, unknown>
 
 /**
  * Get nested translation value by dot-notation key

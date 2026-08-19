@@ -424,7 +424,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete conditionOccurrenceData.value.ConditionSourceConcept
     },
-    isActive: () => conditionOccurrenceData.value.ConditionSourceConcept != null,
+    isActive: () => 'ConditionSourceConcept' in conditionOccurrenceData.value,
   },
   {
     key: 'CorrelatedCriteria',

@@ -26,20 +26,13 @@ import type {
   CorelatedCriteria as CorelatedCriteriaModel,
   Window as WindowModel,
 } from '@/models/circe-types'
+import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
 
 const vuetify = createVuetify({ components, directives })
 
-// v-menu teleports and lazily renders its content, so the day fields inside the
-// window chips are unreachable from a mounted wrapper without this.
-const EagerMenu = {
-  name: 'AtlasMenu',
-  props: { modelValue: { type: Boolean, default: false } },
-  template: '<div class="menu-stub"><slot name="activator" :props="{}" /><slot /></div>',
-}
-
 function mountWindow(window: WindowModel) {
   return mount(WindowEditor, {
-    global: { plugins: [vuetify, createPinia()], stubs: { AtlasMenu: EagerMenu } },
+    global: { plugins: [vuetify, createPinia()], stubs: { AtlasMenu: InlineAtlasMenuStub } },
     props: { window },
   })
 }
@@ -322,7 +315,7 @@ describe('CorelatedCriteria window menu', () => {
     return mount(CorelatedCriteria, {
       global: {
         plugins: [vuetify, createPinia()],
-        stubs: { AtlasMenu: EagerMenu, CriteriaRenderer: RendererStub },
+        stubs: { AtlasMenu: InlineAtlasMenuStub, CriteriaRenderer: RendererStub },
       },
       props: { criteria, conceptSets: [] },
     })

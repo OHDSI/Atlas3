@@ -357,7 +357,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete observationData.value.ObservationSourceConcept
     },
-    isActive: () => observationData.value.ObservationSourceConcept != null,
+    isActive: () => 'ObservationSourceConcept' in observationData.value,
   },
   {
     key: 'Age',

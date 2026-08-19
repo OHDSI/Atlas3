@@ -402,7 +402,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete measurementData.value.MeasurementSourceConcept
     },
-    isActive: () => measurementData.value.MeasurementSourceConcept != null,
+    isActive: () => 'MeasurementSourceConcept' in measurementData.value,
   },
   {
     key: 'Age',

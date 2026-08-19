@@ -15,20 +15,13 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import DateAdjustment from '@/components/circe/input/DateAdjustment.vue'
 import type { DateAdjustment as DateAdjustmentModel } from '@/models/circe-types'
+import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
 
 const vuetify = createVuetify({ components, directives })
 
-// The editor lives inside a v-menu, which teleports its content and only renders
-// it once opened. This stub renders the chip and the panel inline.
-const EagerMenu = {
-  name: 'AtlasMenu',
-  props: { modelValue: { type: Boolean, default: false } },
-  template: '<div class="menu-stub"><slot name="activator" :props="{}" /><slot /></div>',
-}
-
 function mountAdjustment(modelValue: DateAdjustmentModel) {
   return mount(DateAdjustment, {
-    global: { plugins: [vuetify, createPinia()], stubs: { AtlasMenu: EagerMenu } },
+    global: { plugins: [vuetify, createPinia()], stubs: { AtlasMenu: InlineAtlasMenuStub } },
     props: { modelValue },
   })
 }

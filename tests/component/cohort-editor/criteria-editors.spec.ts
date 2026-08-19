@@ -31,14 +31,9 @@ import ProcedureOccurrence from '@/components/circe/criteria/ProcedureOccurrence
 import Specimen from '@/components/circe/criteria/Specimen.vue'
 import VisitDetail from '@/components/circe/criteria/VisitDetail.vue'
 import VisitOccurrence from '@/components/circe/criteria/VisitOccurrence.vue'
+import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
 
 const vuetify = createVuetify({ components, directives })
-
-const EagerMenu = {
-  name: 'AtlasMenu',
-  props: { modelValue: { type: Boolean, default: false } },
-  template: '<div class="menu-stub"><slot name="activator" :props="{}" /><slot /></div>',
-}
 
 const VARIANTS = ['primary', 'secondary', 'tonal', 'danger', 'ghost', 'link']
 const SIZES = ['xs', 'sm', 'md', 'lg']
@@ -140,7 +135,7 @@ describe.each(CONTAINERS)('%s', (_name, mountContainer) => {
 describe('CohortExpressionEditor', () => {
   function mountExpressionEditor(expression: Record<string, unknown> = {}) {
     return mount(CohortExpressionEditor, {
-      global: { plugins: [vuetify, createPinia()], stubs: { AtlasMenu: EagerMenu } },
+      global: { plugins: [vuetify, createPinia()], stubs: { AtlasMenu: InlineAtlasMenuStub } },
       props: { expression, conceptSets: [] },
     })
   }
@@ -323,6 +318,29 @@ describe('End strategy components', () => {
       endStrategy: { CustomEra: { GapDays: 30, Offset: 0, DaysSupplyOverride: 0 } },
     })
     expect(wrapper.findComponent(CustomEraEndStrategy).exists()).toBe(true)
+  })
+
+  it('offers the select action until a custom-era concept set is chosen', async () => {
+    const strategy = {
+      GapDays: 7,
+      Offset: 3,
+      DaysSupplyOverride: 0,
+    }
+
+    const wrapper = mount(CustomEraEndStrategy, {
+      global: { plugins: [vuetify] },
+      props: {
+        strategy,
+        conceptSets: [{ id: 11, name: 'Drug Set' }],
+      },
+    })
+
+    expect(wrapper.findAllComponents({ name: 'AtlasTextField' })).toHaveLength(0)
+    expect(wrapper.text()).toContain('Select Drug Concept Set')
+
+    await wrapper.get('button').trigger('click')
+
+    expect(wrapper.emitted('select-concept-set')?.[0]?.[0]?.targetRef.value).toBeUndefined()
   })
 
   it('edits the custom-era fields and clears the selected concept set', async () => {
@@ -508,6 +526,51 @@ describe('InclusionRulesPanel', () => {
     expect(expressionLimit.Type).toBe('First')
   })
 
+  it('keeps the selected detail aligned when the list shrinks and forwards concept-set relays', async () => {
+    const expressionLimit = { Type: 'First' as const }
+    const firstRule = {
+      name: 'Rule A',
+      description: undefined,
+      expression: { Type: 'ALL', CriteriaList: [], DemographicCriteriaList: [], Groups: [] },
+    }
+    const secondRule = {
+      name: 'Rule B',
+      description: undefined,
+      expression: { Type: 'ALL', CriteriaList: [], DemographicCriteriaList: [], Groups: [] },
+    }
+
+    const wrapper = mount(InclusionRulesPanel, {
+      global: { plugins: [vuetify] },
+      props: { modelValue: [firstRule, secondRule], conceptSets: [], expressionLimit },
+    })
+
+    expect(wrapper.findComponent({ name: 'InclusionRuleDetail' }).props('rule')).toEqual(firstRule)
+
+    const limitButtons = wrapper.get('.inclusion-rules-panel__limit-toggle').findAllComponents(AtlasButton)
+    await limitButtons[1]!.trigger('click')
+    await limitButtons[2]!.trigger('click')
+
+    expect(expressionLimit.Type).toBe('Last')
+
+    await wrapper.findComponent({ name: 'InclusionRuleRail' }).vm.$emit('select', 1)
+    await wrapper.setProps({ modelValue: [secondRule] })
+    expect(wrapper.findComponent({ name: 'InclusionRuleDetail' }).props('rule')).toEqual(secondRule)
+
+    await wrapper.setProps({ modelValue: [] as never[] })
+    expect(wrapper.find('.inclusion-rules-panel__empty').exists()).toBe(true)
+
+    await wrapper.setProps({ modelValue: [firstRule] })
+    expect(wrapper.findComponent({ name: 'InclusionRuleDetail' }).props('rule')).toEqual(firstRule)
+
+    await wrapper.findComponent({ name: 'InclusionRuleDetail' }).vm.$emit('select-concept-set', { id: 2, type: 'ConceptSet' })
+    await wrapper.findComponent({ name: 'InclusionRuleDetail' }).vm.$emit('edit-concept-set', { id: 2, type: 'ConceptSet' })
+    await wrapper.findComponent({ name: 'InclusionRuleDetail' }).vm.$emit('clear-concept-set')
+
+    expect(wrapper.emitted('select-concept-set')?.at(-1)?.[0]).toEqual({ id: 2, type: 'ConceptSet' })
+    expect(wrapper.emitted('edit-concept-set')?.at(-1)?.[0]).toEqual({ id: 2, type: 'ConceptSet' })
+    expect(wrapper.emitted('clear-concept-set')?.at(-1)).toEqual([])
+  })
+
   it('shows the empty state and adds the first rule', async () => {
     const wrapper = mount(InclusionRulesPanel, {
       global: { plugins: [vuetify] },
@@ -632,12 +695,34 @@ describe('CensorWindowEditor', () => {
       EndDate: '2020-01-02',
     })
   })
+
+  it('clamps invalid era-pad input back to zero and keeps the trim toggle disabled when requested', async () => {
+    const wrapper = mount(CensorWindowEditor, {
+      global: { plugins: [vuetify] },
+      props: {
+        disabled: true,
+        collapseSettings: { CollapseType: 'ERA', EraPad: 1 },
+      },
+    })
+
+    const eraPad = wrapper.findComponent({ name: 'AtlasTextField' })
+    await eraPad.vm.$emit('update:modelValue', '-3.7')
+    await eraPad.vm.$emit('blur')
+
+    expect(wrapper.emitted('update:collapseSettings')?.at(-1)?.[0]).toEqual({
+      CollapseType: 'ERA',
+      EraPad: 0,
+    })
+    expect(wrapper.get('.trim-toggle').attributes('disabled')).toBeDefined()
+    await wrapper.get('.trim-toggle').trigger('click')
+    expect(wrapper.find('.trim-options').exists()).toBe(false)
+  })
 })
 
 describe('CensoringCriteriaEditor', () => {
   it('adds and removes censoring criteria and relays concept-set actions', async () => {
     const wrapper = mount(CensoringCriteriaEditor, {
-      global: { plugins: [vuetify], stubs: { AtlasMenu: EagerMenu } },
+      global: { plugins: [vuetify], stubs: { AtlasMenu: InlineAtlasMenuStub } },
       props: {
         modelValue: [],
         conceptSets: [],

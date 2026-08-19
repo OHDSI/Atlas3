@@ -258,7 +258,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete deathData.value.DeathSourceConcept
     },
-    isActive: () => deathData.value.DeathSourceConcept != null,
+    isActive: () => 'DeathSourceConcept' in deathData.value,
   },
   {
     key: 'CorrelatedCriteria',

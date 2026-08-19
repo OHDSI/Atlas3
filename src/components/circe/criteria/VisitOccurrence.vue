@@ -214,7 +214,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.VisitSourceConcept
     },
-    isActive: () => visitOccurrenceData.value.VisitSourceConcept != null,
+    isActive: () => 'VisitSourceConcept' in visitOccurrenceData.value,
   },
   {
     key: 'VisitLength',
@@ -396,7 +396,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete visitOccurrenceData.value.PlaceOfServiceLocation
     },
-    isActive: () => visitOccurrenceData.value.PlaceOfServiceLocation != null,
+    isActive: () =>  'PlaceOfServiceLocation' in visitOccurrenceData.value,
   },
   {
     key: 'CorrelatedCriteria',

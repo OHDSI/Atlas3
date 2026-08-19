@@ -1,31 +1,26 @@
 import { describe, it, expect, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
-import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
+import { InlineAtlasMenuStub, mountComponent } from '../../../../helpers/component-wrapper'
 import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import CorelatedCriteria from '@/components/circe/criteria/CorelatedCriteria.vue'
 import ConditionOccurrence from '@/components/circe/criteria/ConditionOccurrence.vue'
-import fixture from '../fixtures/editor-surface.json'
+import fixture from '../../cohort-editor/fixtures/editor-surface.json'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../../helpers/i18n-mock')
   return mockUseI18n
 })
 
-const vuetify = createVuetify({ components, directives })
-
 function cloneFixture() {
   return JSON.parse(JSON.stringify(fixture)) as typeof fixture
 }
 
 function mountWithVuetify(component: unknown, props: Record<string, unknown>) {
-  return mount(component as never, {
+  return mountComponent(component as never, {
     props,
-    global: {
-      plugins: [vuetify],
-    },
+    // Inline the menu so the correlated-criteria overlay stays queryable in
+    // unit tests without recreating Vuetify's body-teleport behavior.
+    stubs: { AtlasMenu: InlineAtlasMenuStub },
   })
 }
 
@@ -54,6 +49,18 @@ describe('Criteria editor hierarchy', () => {
 
     expect(wrapper.emitted('select-concept-set')?.[0]).toEqual([selectionTarget])
 
+    corelatedCriteria.vm.$emit('edit-concept-set', selectionTarget)
+    await nextTick()
+    expect(wrapper.emitted('edit-concept-set')?.[0]).toEqual([selectionTarget])
+
+    corelatedCriteria.vm.$emit('clear-concept-set')
+    await nextTick()
+    expect(wrapper.emitted('clear-concept-set')?.[0]).toEqual([])
+
+    await wrapper.get('.criteria-group-editor .v-btn--variant-text').trigger('click')
+    await nextTick()
+    expect(wrapper.emitted('remove')?.[0]).toEqual([])
+
   })
 
   it('renders correlated criteria through the renderer and forwards concept-set events', async () => {
@@ -76,5 +83,32 @@ describe('Criteria editor hierarchy', () => {
     await nextTick()
 
     expect(wrapper.emitted('select-concept-set')?.[0]).toEqual([selectionTarget])
+
+    conditionOccurrence.vm.$emit('edit-concept-set', selectionTarget)
+    await nextTick()
+    expect(wrapper.emitted('edit-concept-set')?.[0]).toEqual([selectionTarget])
+
+    conditionOccurrence.vm.$emit('clear-concept-set')
+    await nextTick()
+    expect(wrapper.emitted('clear-concept-set')?.[0]).toEqual([])
+  })
+
+  it('updates correlated criteria occurrence through the inline menu stub', async () => {
+    const criteria = {
+      Criteria: {
+        ConditionOccurrence: {},
+      },
+    }
+
+    const wrapper = mountWithVuetify(CorelatedCriteria, {
+      criteria,
+      conceptSets: [],
+    })
+
+    const occurrenceCount = wrapper.findAllComponents({ name: 'AtlasTextField' })[0]
+    await occurrenceCount.vm.$emit('update:modelValue', '3')
+    await nextTick()
+    expect(criteria.Occurrence).toStrictEqual({ Type: 2, Count: 3, IsDistinct: false })
+
   })
 })

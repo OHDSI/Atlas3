@@ -16,16 +16,9 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import CorelatedCriteria from '@/components/circe/criteria/CorelatedCriteria.vue'
 import type { CorelatedCriteria as CorelatedCriteriaModel } from '@/models/circe-types'
+import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
 
 const vuetify = createVuetify({ components, directives })
-
-// v-menu teleports and lazily renders its content, so the occurrence menu is
-// unreachable from a mounted wrapper. Render activator and content inline.
-const EagerMenu = {
-  name: 'AtlasMenu',
-  props: { modelValue: { type: Boolean, default: false } },
-  template: '<div class="menu-stub"><slot name="activator" :props="{}" /><slot /></div>',
-}
 
 const RendererStub = {
   name: 'CriteriaRendererStub',
@@ -39,7 +32,7 @@ function mountCriteria(criteria: CorelatedCriteriaModel) {
       plugins: [vuetify, createPinia()],
       // The domain editor and the window editor own their own number fields;
       // stub them so the only one left is the occurrence count.
-      stubs: { AtlasMenu: EagerMenu, CriteriaRenderer: RendererStub, Window: true },
+        stubs: { AtlasMenu: InlineAtlasMenuStub, CriteriaRenderer: RendererStub, Window: true },
     },
     props: { criteria, conceptSets: [] },
   })

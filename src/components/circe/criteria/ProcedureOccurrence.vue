@@ -252,7 +252,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete procedureOccurrenceData.value.ProcedureSourceConcept
     },
-    isActive: () => procedureOccurrenceData.value.ProcedureSourceConcept != null,
+    isActive: () => 'ProcedureSourceConcept' in procedureOccurrenceData.value,
   },
   {
     key: 'Age',

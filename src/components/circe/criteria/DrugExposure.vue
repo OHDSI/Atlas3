@@ -500,7 +500,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete drugExposureData.value.DrugSourceConcept
     },
-    isActive: () => drugExposureData.value.DrugSourceConcept != null,
+    isActive: () => 'DrugSourceConcept' in drugExposureData.value,
   },
   {
     key: 'CorrelatedCriteria',

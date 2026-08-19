@@ -359,7 +359,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete specimenData.value.SpecimenSourceConcept
     },
-    isActive: () => specimenData.value.SpecimenSourceConcept != null,
+    isActive: () => 'SpecimenSourceConcept' in specimenData.value,
   },
   {
     key: 'Age',

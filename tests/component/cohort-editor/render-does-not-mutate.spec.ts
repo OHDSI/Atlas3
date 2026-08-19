@@ -24,25 +24,18 @@ import type {
   CriteriaGroup as GroupModel,
   CorelatedCriteria as CorelatedModel,
 } from '@/models/circe-types'
+import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
 
 const vuetify = createVuetify({ components, directives })
 
-// v-menu teleports its content and only renders it once opened, so the
-// add-criteria entries are unreachable from a mounted wrapper without this.
-const EagerMenu = {
-  name: 'AtlasMenu',
-  props: { modelValue: { type: Boolean, default: false } },
-  template: '<div class="menu-stub"><slot name="activator" :props="{}" /><slot /></div>',
-}
-
-function mountGroup(group: GroupModel, eagerMenu = false) {
+function mountGroup(group: GroupModel, useInlineMenu = false) {
   return mount(CriteriaGroup, {
     global: {
       plugins: [vuetify, createPinia()],
       stubs: {
         CriteriaRenderer: true,
         Window: true,
-        ...(eagerMenu ? { AtlasMenu: EagerMenu } : {}),
+        ...(useInlineMenu ? { AtlasMenu: InlineAtlasMenuStub } : {}),
       },
     },
     props: { group, conceptSets: [] },
@@ -142,11 +135,7 @@ describe('the containers are still created when something goes into them', () =>
         stubs: {
           CriteriaRenderer: true,
           Window: true,
-          AtlasMenu: {
-            name: 'AtlasMenu',
-            props: { modelValue: { type: Boolean, default: false } },
-            template: '<div><slot name="activator" :props="{}" /><slot /></div>',
-          },
+          AtlasMenu: InlineAtlasMenuStub,
         },
       },
       props: { criteria, conceptSets: [] },

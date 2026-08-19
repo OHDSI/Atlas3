@@ -264,7 +264,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.PayerConcept
     },
-    isActive: () => payerPlanPeriodData.value.PayerConcept != null,
+    isActive: () => 'PayerConcept' in payerPlanPeriodData.value,
   },
   {
     key: 'PlanConcept',
@@ -284,7 +284,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.PlanConcept
     },
-    isActive: () => payerPlanPeriodData.value.PlanConcept != null,
+    isActive: () => 'PlanConcept' in payerPlanPeriodData.value,
   },
   {
     key: 'SponsorConcept',
@@ -304,7 +304,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.SponsorConcept
     },
-    isActive: () => payerPlanPeriodData.value.SponsorConcept != null,
+    isActive: () => 'SponsorConcept' in payerPlanPeriodData.value,
   },
   {
     key: 'StopReasonConcept',
@@ -324,7 +324,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.StopReasonConcept
     },
-    isActive: () => payerPlanPeriodData.value.StopReasonConcept != null,
+    isActive: () => 'StopReasonConcept' in payerPlanPeriodData.value,
   },
   {
     key: 'PayerSourceConcept',
@@ -344,7 +344,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.PayerSourceConcept
     },
-    isActive: () => payerPlanPeriodData.value.PayerSourceConcept != null,
+    isActive: () => 'PayerSourceConcept' in payerPlanPeriodData.value,
   },
   {
     key: 'PlanSourceConcept',
@@ -364,7 +364,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.PlanSourceConcept
     },
-    isActive: () => payerPlanPeriodData.value.PlanSourceConcept != null,
+    isActive: () => 'PlanSourceConcept' in payerPlanPeriodData.value,
   },
   {
     key: 'SponsorSourceConcept',
@@ -384,7 +384,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.SponsorSourceConcept
     },
-    isActive: () => payerPlanPeriodData.value.SponsorSourceConcept != null,
+    isActive: () => 'SponsorSourceConcept' in payerPlanPeriodData.value,
   },
   {
     key: 'StopReasonSourceConcept',
@@ -404,7 +404,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     clear: () => {
       delete payerPlanPeriodData.value.StopReasonSourceConcept
     },
-    isActive: () => payerPlanPeriodData.value.StopReasonSourceConcept != null,
+    isActive: () => 'StopReasonSourceConcept' in payerPlanPeriodData.value,
   },
   {
     key: 'DateAdjustment',
