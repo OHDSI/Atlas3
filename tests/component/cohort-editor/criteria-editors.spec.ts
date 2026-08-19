@@ -550,7 +550,8 @@ describe('InclusionRulesPanel', () => {
     await limitButtons[1]!.trigger('click')
     await limitButtons[2]!.trigger('click')
 
-    expect(expressionLimit.Type).toBe('Last')
+    expect(wrapper.emitted('update:expressionLimitType')).toEqual([['All'], ['Last']])
+    expect(expressionLimit.Type).toBe('First')
 
     await wrapper.findComponent({ name: 'InclusionRuleRail' }).vm.$emit('select', 1)
     await wrapper.setProps({ modelValue: [secondRule] })

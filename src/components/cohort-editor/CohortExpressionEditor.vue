@@ -19,11 +19,12 @@
             </div>
 
             <v-btn-toggle
-              v-model="expression.PrimaryCriteria.PrimaryCriteriaLimit.Type"
+              :model-value="primaryCriteriaLimitType"
               mandatory
               variant="outlined"
               density="compact"
               divided
+              @update:model-value="primaryCriteriaLimitType = $event"
             >
               <AtlasButton value="First">
                 {{ earliestLabel }}
@@ -136,7 +137,7 @@
 
               <div class="entry-events-list">
                 <AtlasAlert
-                  v-if="!expression.PrimaryCriteria.CriteriaList.length"
+                  v-if="!primaryCriteriaList.length"
                   type="info"
                   variant="tonal"
                   density="compact"
@@ -146,7 +147,7 @@
                 </AtlasAlert>
 
                 <CriteriaRenderer
-                  v-for="(criteria, index) in expression.PrimaryCriteria.CriteriaList"
+                  v-for="(criteria, index) in primaryCriteriaList"
                   :key="`criteria-${index}`"
                   :criteria="criteria"
                   :concept-sets="conceptSets"
@@ -186,11 +187,12 @@
                     </div>
 
                     <v-btn-toggle
-                      v-model="expression.QualifiedLimit.Type"
+                      :model-value="qualifiedLimitType"
                       mandatory
                       variant="outlined"
                       density="compact"
                       divided
+                      @update:model-value="qualifiedLimitType = $event"
                     >
                       <AtlasButton value="First">
                         {{ earliestLabel }}
@@ -228,9 +230,11 @@
           </span>
         </div>
         <InclusionRulesPanel
-          v-model="expression.InclusionRules"
+          :model-value="inclusionRules"
           :concept-sets="conceptSets"
-          :expression-limit="expression.ExpressionLimit"
+          :expression-limit="expression.ExpressionLimit ?? undefined"
+          @update:model-value="setInclusionRules"
+          @update:expression-limit-type="setExpressionLimitType"
           @select-concept-set="emit('select-concept-set', $event)"
           @edit-concept-set="emit('edit-concept-set', $event)"
           @clear-concept-set="emit('clear-concept-set')"
@@ -275,7 +279,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import { normalizeDefaults } from '@/utils/normalize'
 import {
   AtlasButton,
   AtlasAlert,
@@ -302,43 +305,11 @@ import type {
   Criteria,
   CriteriaGroup as CriteriaGroupType,
   InclusionRule,
-  ObservationFilter,
-  PrimaryCriteria,
-  ResultLimit,
 } from '@/models/circe-types'
 import type {
   ConceptSetOption,
   ConceptSetSelectionTarget,
 } from '@/components/circe/criteria/criteria-editor.types'
-
-/**
- * This component always presents editing controls for these portions
- * of the CIRCE expression, so it guarantees that they exist while
- * the expression is being edited here.
- */
-type EditablePrimaryCriteria =
-  PrimaryCriteria & {
-    CriteriaList: Criteria[]
-    ObservationWindow: ObservationFilter & {
-      PriorDays: number
-      PostDays: number
-    }
-    PrimaryCriteriaLimit: ResultLimit & {
-      Type: NonNullable<ResultLimit['Type']>
-    }
-  }
-
-type EditableCohortExpression =
-  CohortExpression & {
-    PrimaryCriteria: EditablePrimaryCriteria
-    QualifiedLimit: NonNullable<ResultLimit> & {
-      Type: NonNullable<ResultLimit['Type']>
-    }
-    ExpressionLimit: NonNullable<ResultLimit> & {
-      Type: NonNullable<ResultLimit['Type']>
-    }
-    InclusionRules: InclusionRule[]
-  }
 
 const props = defineProps<{
   expression: CohortExpression
@@ -351,39 +322,70 @@ const emit = defineEmits<{
   'clear-concept-set': []
 }>()
 
-/**
- * Normalize the portion of the CIRCE graph this component owns.
- *
- * AdditionalCriteria deliberately remains optional because its absence
- * represents a meaningful UI state.
- *
- * ExpressionLimit and EndStrategy are left to their child editors.
- */
-const expression = computed<EditableCohortExpression>(() =>
-  normalizeDefaults<EditableCohortExpression>(
-    {
-      ConceptSets: [],
-      PrimaryCriteria: {
-        CriteriaList: [],
-        ObservationWindow: {
-          PriorDays: 0,
-          PostDays: 0,
-        },
-        PrimaryCriteriaLimit: {
-          Type: 'First',
-        },
-      },
-      QualifiedLimit: {
-        Type: 'First',
-      },
-      ExpressionLimit: {
-        Type: 'First'
-      },
-      InclusionRules: [],
-    },
-    props.expression,
-  ),
-)
+const expression = computed(() => props.expression)
+
+function ensurePrimaryCriteria() {
+  if (!props.expression.PrimaryCriteria) {
+    props.expression.PrimaryCriteria = { CriteriaList: [] }
+  }
+  return props.expression.PrimaryCriteria
+}
+
+function ensurePrimaryCriteriaList() {
+  const primaryCriteria = ensurePrimaryCriteria()
+  if (!primaryCriteria.CriteriaList) {
+    primaryCriteria.CriteriaList = []
+  }
+  return primaryCriteria.CriteriaList
+}
+
+function ensureObservationWindow() {
+  const primaryCriteria = ensurePrimaryCriteria()
+  if (!primaryCriteria.ObservationWindow) {
+    primaryCriteria.ObservationWindow = { PriorDays: 0, PostDays: 0 }
+  }
+  return primaryCriteria.ObservationWindow
+}
+
+function ensureInclusionRules() {
+  if (!props.expression.InclusionRules) {
+    props.expression.InclusionRules = []
+  }
+  return props.expression.InclusionRules
+}
+
+const primaryCriteriaList = computed(() => props.expression.PrimaryCriteria?.CriteriaList ?? [])
+const inclusionRules = computed(() => props.expression.InclusionRules ?? [])
+
+// An absent ResultLimit means 'First' to circe-be, so the toggle shows First
+// without the document having to say so. Only a click writes it.
+const primaryCriteriaLimitType = computed({
+  get: () => props.expression.PrimaryCriteria?.PrimaryCriteriaLimit?.Type ?? 'First',
+  set: (value: 'First' | 'All' | 'Last') => {
+    const primaryCriteria = ensurePrimaryCriteria()
+    if (!primaryCriteria.PrimaryCriteriaLimit) {
+      primaryCriteria.PrimaryCriteriaLimit = {}
+    }
+    primaryCriteria.PrimaryCriteriaLimit.Type = value
+  },
+})
+
+const qualifiedLimitType = computed({
+  get: () => props.expression.QualifiedLimit?.Type ?? 'First',
+  set: (value: 'First' | 'All' | 'Last') => {
+    if (!props.expression.QualifiedLimit) {
+      props.expression.QualifiedLimit = {}
+    }
+    props.expression.QualifiedLimit.Type = value
+  },
+})
+
+function setExpressionLimitType(value: 'First' | 'All' | 'Last') {
+  if (!props.expression.ExpressionLimit) {
+    props.expression.ExpressionLimit = {}
+  }
+  props.expression.ExpressionLimit.Type = value
+}
 
 const { t } = useI18n()
 
@@ -413,35 +415,44 @@ const criteriaTypeOptions = computed(() =>
 )
 
 const entryEventsState = computed(() => {
-  const count = expression.value.PrimaryCriteria.CriteriaList.length
+  const count = primaryCriteriaList.value.length
   return count > 0 ? `${count} event${count === 1 ? '' : 's'}` : 'Empty'
 })
 
 const inclusionRulesState = computed(() => {
-  const count = expression.value.InclusionRules.length
+  const count = inclusionRules.value.length
   return count > 0 ? `${count} rule${count === 1 ? '' : 's'}` : 'Empty'
 })
 
-const inclusionRulesStateTone = computed(() => (expression.value.InclusionRules.length > 0 ? 'primary' : 'muted'))
+const inclusionRulesStateTone = computed(() => (inclusionRules.value.length > 0 ? 'primary' : 'muted'))
 
 const observationPriorDays = computed<number>({
-  get: () => expression.value.PrimaryCriteria.ObservationWindow.PriorDays,
+  get: () => props.expression.PrimaryCriteria?.ObservationWindow?.PriorDays ?? 0,
   set: value => {
-    expression.value.PrimaryCriteria.ObservationWindow.PriorDays = Number(value) || 0
-  }
+    ensureObservationWindow().PriorDays = Number(value) || 0
+  },
 })
 
 const observationPostDays = computed<number>({
-  get: () => expression.value.PrimaryCriteria.ObservationWindow.PostDays,
+  get: () => props.expression.PrimaryCriteria?.ObservationWindow?.PostDays ?? 0,
   set: value => {
-    expression.value.PrimaryCriteria.ObservationWindow.PostDays = Number(value) || 0
+    ensureObservationWindow().PostDays = Number(value) || 0
   },
 })
 
 function addPrimaryCriteria(type: EditableCriteriaKey) {
-  const criteria = CRITERIA_TYPE_BY_KEY[type].create()
+  ensurePrimaryCriteriaList().push(CRITERIA_TYPE_BY_KEY[type].create())
+}
 
-  expression.value.PrimaryCriteria.CriteriaList.push(criteria)
+function removePrimaryCriteria(criteriaToRemove: Criteria) {
+  const list = props.expression.PrimaryCriteria?.CriteriaList
+  if (!list) return
+  const index = list.indexOf(criteriaToRemove)
+  if (index !== -1) list.splice(index, 1)
+}
+
+function setInclusionRules(rules: InclusionRule[]) {
+  ensureInclusionRules().splice(0, props.expression.InclusionRules!.length, ...rules)
 }
 
 function createEmptyCriteriaGroup(): CriteriaGroupType {
@@ -458,15 +469,6 @@ function addAdditionalCriteria() {
 
 function removeAdditionalCriteria() {
   delete expression.value.AdditionalCriteria
-}
-
-function removePrimaryCriteria(
-  criteriaToRemove: Criteria,
-) {
-  expression.value.PrimaryCriteria.CriteriaList =
-    expression.value.PrimaryCriteria.CriteriaList.filter(
-      criteria => criteria !== criteriaToRemove,
-    )
 }
 </script>
 

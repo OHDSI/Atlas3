@@ -20,6 +20,8 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import CorelatedCriteria from '@/components/circe/criteria/CorelatedCriteria.vue'
+import CohortExpressionEditor from '@/components/cohort-editor/CohortExpressionEditor.vue'
+import type { CohortExpression } from '@/models/circe-types'
 import type {
   CriteriaGroup as GroupModel,
   CorelatedCriteria as CorelatedModel,
@@ -146,5 +148,55 @@ describe('the containers are still created when something goes into them', () =>
     await wrapper.find('.occurrence-chip--exactly').trigger('click')
 
     expect(criteria.Occurrence).toMatchObject({ Type: 0 })
+  })
+})
+
+// A cohort saved without the optional result limits. Both are legal to omit:
+// circe-be treats an absent ResultLimit as 'First'. Rendering the editor used
+// to add them, so an untouched cohort reported unsaved changes.
+const loadedExpression = (): CohortExpression => ({
+  ConceptSets: [{ id: 0, name: 'x', expression: { items: [] } }],
+  PrimaryCriteria: {
+    CriteriaList: [{ ConditionOccurrence: { CodesetId: 0 } }],
+    ObservationWindow: { PriorDays: 0, PostDays: 0 },
+    PrimaryCriteriaLimit: { Type: 'First' },
+  },
+  InclusionRules: [],
+})
+
+describe('rendering a loaded cohort expression leaves it alone', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  function mountEditor(expression: CohortExpression) {
+    return mount(CohortExpressionEditor, {
+      global: {
+        plugins: [vuetify, createPinia()],
+        stubs: { CriteriaGroup: true, CriteriaRenderer: true, Window: true, teleport: true },
+      },
+      props: { expression, conceptSets: [] },
+    })
+  }
+
+  it('does not add result limits the cohort did not have', () => {
+    const expression = loadedExpression()
+    const before = JSON.stringify(expression)
+    mountEditor(expression)
+    expect(JSON.stringify(expression)).toBe(before)
+  })
+
+  it('does not add containers to a bare expression', () => {
+    const expression: CohortExpression = { PrimaryCriteria: { CriteriaList: [] } }
+    const before = JSON.stringify(expression)
+    mountEditor(expression)
+    expect(JSON.stringify(expression)).toBe(before)
+  })
+
+  it('still writes the limit the user actually picks', async () => {
+    const expression = loadedExpression()
+    const wrapper = mountEditor(expression)
+    const toggles = wrapper.findAllComponents({ name: 'VBtnToggle' })
+    expect(toggles.length).toBeGreaterThan(0)
+    await toggles[0]!.vm.$emit('update:modelValue', 'All')
+    expect(expression.PrimaryCriteria!.PrimaryCriteriaLimit!.Type).toBe('All')
   })
 })

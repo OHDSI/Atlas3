@@ -847,7 +847,7 @@ describe('CohortBuilder', () => {
 
     expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false)
     expect(targetRef.value).toBeUndefined()
-    expect(setup.expression.ConceptSets).toEqual([])
+    expect(setup.expression.ConceptSets).toBeUndefined()
   })
 
   // ---------------------------------------------------------------------------
@@ -2286,6 +2286,36 @@ describe('CohortBuilder', () => {
 
     expect(vm.hasUnsavedChanges).toBe(true)
   })
+
+  it('does not report unsaved changes for a cohort that was only opened', async () => {
+    const { getCohortDefinition } = await import('@/services/cohort-definition.service')
+    vi.mocked(getCohortDefinition).mockResolvedValueOnce({
+      success: true,
+      data: {
+        id: 42,
+        name: 'Existing Cohort',
+        description: 'A loaded cohort',
+        tags: [],
+        expression: {
+          ConceptSets: [],
+          PrimaryCriteria: {
+            CriteriaList: [{ ConditionOccurrence: {} }],
+            ObservationWindow: { PriorDays: 0, PostDays: 0 },
+            PrimaryCriteriaLimit: { Type: 'First' },
+          },
+          InclusionRules: [],
+        },
+      },
+    } as never)
+
+    const wrapper = createWrapper({ id: '42' })
+    await flushPromises()
+    await new Promise(resolve => setTimeout(resolve, 50))
+    await flushPromises()
+
+    expect((wrapper.vm as unknown as { hasUnsavedChanges: boolean }).hasUnsavedChanges).toBe(false)
+  })
+
 })
 
 // One cohort document: the editor owns the CohortExpression instance and the
