@@ -44,6 +44,7 @@ export default defineConfig({
     },
     coverage: {
       provider: 'v8',
+      reportOnFailure: true,
       reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
       reportsDirectory: './coverage',
       clean: false,

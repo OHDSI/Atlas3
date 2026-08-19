@@ -65,6 +65,8 @@ async function main() {
   }
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+const entryPoint = process.argv[1] ? pathToFileURL(process.argv[1]).href : null
+
+if (entryPoint && import.meta.url === entryPoint) {
   main().catch(err => { console.error(err); process.exit(1) })
 }

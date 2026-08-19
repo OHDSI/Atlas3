@@ -20,8 +20,10 @@
     <StrataEditor
       :model-value="draft.stratas"
       :strata-only="draft.strataOnly ?? false"
+      :strata-concept-sets="draft.strataConceptSets ?? []"
       @update:model-value="v => updateField('stratas', v)"
       @update:strata-only="v => updateField('strataOnly', v)"
+      @update:strata-concept-sets="v => updateField('strataConceptSets', v)"
     />
   </div>
 </template>

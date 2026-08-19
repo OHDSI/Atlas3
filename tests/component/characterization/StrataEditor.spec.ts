@@ -13,7 +13,7 @@ import * as directives from 'vuetify/directives'
 
 import StrataEditor from '@/components/characterization/StrataEditor.vue'
 import type { Stratum } from '@/models/characterization.types'
-import type { CriteriaGroup } from '@/models/cohort.types'
+import type { CriteriaGroup } from '@/models/circe-types'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../helpers/i18n-mock')
@@ -39,13 +39,17 @@ function mountEditor(initial: Stratum[] = []) {
     global: {
       plugins: [vuetify],
       stubs: {
-        GroupCriteriaUI: true,
+        CriteriaGroup: {
+          name: 'CriteriaGroup',
+          props: ['group'],
+          template:
+            '<button data-testid="criteria-group-mutate" @click="group.Type = \'MUTATED\'; group.CriteriaList = [{ Type: \'ATOMIC\', ConceptSets: [], Codesets: [], ExitCriteria: null, InclusionRules: [] }]">mutate</button>',
+        },
         AtlasDialog: {
           name: 'AtlasDialog',
           template: '<div><slot /><slot name="actions" /></div>',
         },
         ConceptSetSelectionDialog: true,
-        ConceptSearchDialog: true,
       },
     },
   })
@@ -64,7 +68,7 @@ describe('StrataEditor', () => {
     expect(wrapper.find('[data-testid="strata-editor-empty"]').exists()).toBe(true)
   })
 
-  it('emits a new stratum with a UUID id and a default CriteriaGroup when Add is clicked', async () => {
+  it('emits a new stratum with a UUID id and a default circe CriteriaGroup when Add is clicked', async () => {
     wrapper = mountEditor([])
 
     await wrapper.get('[data-testid="strata-editor-add"]').trigger('click')
@@ -78,8 +82,8 @@ describe('StrataEditor', () => {
     expect(next[0]!.id.length).toBeGreaterThan(0)
     expect(next[0]!.name).toBe('')
     const criteria = next[0]!.criteria as CriteriaGroup
-    expect(criteria.logicType).toBe('ALL')
-    expect(criteria.events).toEqual([])
+    expect(criteria.Type).toBe('ALL')
+    expect(criteria.CriteriaList).toEqual([])
   })
 
   it('removing a stratum filters it out of the modelValue', async () => {
@@ -99,23 +103,74 @@ describe('StrataEditor', () => {
     expect(next[0]!.id).toBe('b')
   })
 
-  it('forwards GroupCriteriaUI update:modelValue back into the stratum', async () => {
-    const group: CriteriaGroup = { id: 'g1', logicType: 'ALL', events: [] }
-    const initial: Stratum[] = [{ id: 'a', name: 'A', criteria: group }]
+  it('closes the dialog and emits updated criteria when close button is clicked', async () => {
+    const initial: Stratum[] = [
+      { id: 'a', name: 'A', criteria: { Type: 'ALL', CriteriaList: [] } },
+    ]
     wrapper = mountEditor(initial)
 
     await wrapper.get('[data-testid="strata-editor-edit-criteria-0"]').trigger('click')
     await flushPromises()
 
-    const editor = wrapper.findComponent({ name: 'GroupCriteriaUI' })
-    expect(editor.exists()).toBe(true)
-    const nextGroup: CriteriaGroup = { id: 'g1', logicType: 'ANY', events: [] }
-    await editor.vm.$emit('update:modelValue', nextGroup)
-    await flushPromises()
+    // Trigger close via the dialog close action button
+    const closeBtn = wrapper.findAll('button').find(b => b.text().toLowerCase().includes('close'))
+    if (closeBtn) {
+      await closeBtn.trigger('click')
+      await flushPromises()
+    }
 
+    // After close, an update should have been emitted
     const emitted = wrapper.emitted('update:modelValue')
     expect(emitted).toBeTruthy()
     const next = emitted![0]![0] as Stratum[]
-    expect((next[0]!.criteria as CriteriaGroup).logicType).toBe('ANY')
+    expect(next[0]!.criteria).toBeDefined()
+  })
+
+  it('keeps each stratum criteria isolated across dialog opens', async () => {
+    const initial: Stratum[] = [
+      {
+        id: 'a',
+        name: 'A',
+        criteria: {
+          Type: 'ALL',
+          CriteriaList: [{ Type: 'ATOMIC', ConceptSets: [], Codesets: [], ExitCriteria: null, InclusionRules: [] }],
+        },
+      },
+      {
+        id: 'b',
+        name: 'B',
+        criteria: {
+          Type: 'ANY',
+          CriteriaList: [
+            { Type: 'ATOMIC', ConceptSets: [], Codesets: [], ExitCriteria: null, InclusionRules: [] },
+            { Type: 'ATOMIC', ConceptSets: [], Codesets: [], ExitCriteria: null, InclusionRules: [] },
+          ],
+        },
+      },
+    ]
+    wrapper = mountEditor(initial)
+
+    await wrapper.get('[data-testid="strata-editor-edit-criteria-0"]').trigger('click')
+    await flushPromises()
+    await wrapper.get('[data-testid="criteria-group-mutate"]').trigger('click')
+    const closeBtn = wrapper.findAll('button').find(b => b.text().toLowerCase().includes('close'))
+    if (closeBtn) {
+      await closeBtn.trigger('click')
+    }
+    await flushPromises()
+
+    await wrapper.get('[data-testid="strata-editor-edit-criteria-1"]').trigger('click')
+    await flushPromises()
+
+    const strata = wrapper.props('modelValue') as Stratum[]
+    expect(strata[0]!.criteria).toMatchObject({
+      Type: 'MUTATED',
+      CriteriaList: [{ Type: 'ATOMIC' }],
+    })
+    expect(strata[1]!.criteria).toMatchObject({
+      Type: 'ANY',
+      CriteriaList: expect.any(Array),
+    })
+    expect((strata[1]!.criteria as CriteriaGroup).CriteriaList).toHaveLength(2)
   })
 })

@@ -7,6 +7,7 @@ import * as echarts from 'echarts/core'
 import { BarChart } from 'echarts/charts'
 import { GridComponent } from 'echarts/components'
 import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
+import AtlasButton from '@/components/ui/AtlasButton.vue'
 import { setChartTheme } from '@/ui/chart-config'
 
 // The app registers these globally in main.ts; the off-screen SVG exporter
@@ -96,7 +97,7 @@ describe('ChartExport', () => {
   describe('Rendering', () => {
     it('should render export buttons', () => {
       const wrapper = mountComponent()
-      const buttons = wrapper.findAll('button')
+      const buttons = wrapper.findAllComponents(AtlasButton)
       expect(buttons).toHaveLength(2)
       expect(buttons[0].text()).toBe('PNG')
       expect(buttons[1].text()).toBe('SVG')
@@ -104,17 +105,17 @@ describe('ChartExport', () => {
 
     it('should disable buttons when no chart instance', () => {
       const wrapper = mountComponent({ chartInstance: null })
-      const buttons = wrapper.findAll('button')
-      expect(buttons[0].attributes('disabled')).toBeDefined()
-      expect(buttons[1].attributes('disabled')).toBeDefined()
+      const buttons = wrapper.findAllComponents(AtlasButton)
+      expect(buttons[0].props('disabled')).toBe(true)
+      expect(buttons[1].props('disabled')).toBe(true)
     })
 
     it('should enable buttons when chart instance is provided', () => {
       const chartInstance = createMockChartInstance()
       const wrapper = mountComponent({ chartInstance })
-      const buttons = wrapper.findAll('button')
-      expect(buttons[0].attributes('disabled')).toBeUndefined()
-      expect(buttons[1].attributes('disabled')).toBeUndefined()
+      const buttons = wrapper.findAllComponents(AtlasButton)
+      expect(buttons[0].props('disabled')).toBe(false)
+      expect(buttons[1].props('disabled')).toBe(false)
     })
   })
 
@@ -123,7 +124,7 @@ describe('ChartExport', () => {
       const chartInstance = createMockChartInstance()
       const wrapper = mountComponent({ chartInstance, filename: 'test-chart' })
 
-      const pngButton = wrapper.findAll('button')[0]
+      const pngButton = wrapper.findAllComponents(AtlasButton)[0]
       await pngButton.trigger('click')
 
       // Background tracks the active chart theme (see CHART_SURFACE); the
@@ -142,7 +143,7 @@ describe('ChartExport', () => {
       const chartInstance = createMockChartInstance()
       const wrapper = mountComponent({ chartInstance, filename: 'test-chart' })
 
-      const pngButton = wrapper.findAll('button')[0]
+      const pngButton = wrapper.findAllComponents(AtlasButton)[0]
       await pngButton.trigger('click')
 
       expect(chartInstance.getDataURL).toHaveBeenCalledWith({
@@ -156,7 +157,7 @@ describe('ChartExport', () => {
       const chartInstance = createMockChartInstance()
       const wrapper = mountComponent({ chartInstance, filename: 'test' })
 
-      const pngButton = wrapper.findAll('button')[0]
+      const pngButton = wrapper.findAllComponents(AtlasButton)[0]
       await pngButton.trigger('click')
 
       expect(wrapper.emitted('export-start')).toBeTruthy()
@@ -169,7 +170,7 @@ describe('ChartExport', () => {
       const chartInstance = createMockChartInstance()
       const wrapper = mountComponent({ chartInstance })
 
-      const pngButton = wrapper.findAll('button')[0]
+      const pngButton = wrapper.findAllComponents(AtlasButton)[0]
       await pngButton.trigger('click')
 
       expect(mockLink.download).toMatch(/^chart-\d+\.png$/)
@@ -181,7 +182,7 @@ describe('ChartExport', () => {
       })
       const wrapper = mountComponent({ chartInstance })
 
-      const pngButton = wrapper.findAll('button')[0]
+      const pngButton = wrapper.findAllComponents(AtlasButton)[0]
       await pngButton.trigger('click')
 
       expect(wrapper.emitted('export-error')).toBeTruthy()
@@ -206,7 +207,7 @@ describe('ChartExport', () => {
       })
       const wrapper = mountComponent({ chartInstance, filename: 'test-svg' })
 
-      const svgButton = wrapper.findAll('button')[1]
+      const svgButton = wrapper.findAllComponents(AtlasButton)[1]
       await svgButton.trigger('click')
 
       expect(globalThis.URL.createObjectURL).toHaveBeenCalled()
@@ -221,7 +222,7 @@ describe('ChartExport', () => {
       })
       const wrapper = mountComponent({ chartInstance, filename: 'svg-test' })
 
-      const svgButton = wrapper.findAll('button')[1]
+      const svgButton = wrapper.findAllComponents(AtlasButton)[1]
       await svgButton.trigger('click')
 
       expect(wrapper.emitted('export-start')).toBeTruthy()
@@ -236,7 +237,7 @@ describe('ChartExport', () => {
       })
       const wrapper = mountComponent({ chartInstance, filename: 'offscreen-test' })
 
-      const svgButton = wrapper.findAll('button')[1]
+      const svgButton = wrapper.findAllComponents(AtlasButton)[1]
       await svgButton.trigger('click')
 
       expect(chartInstance.getDataURL).not.toHaveBeenCalled()
@@ -250,7 +251,7 @@ describe('ChartExport', () => {
       })
       const wrapper = mountComponent({ chartInstance, filename: 'empty-svg' })
 
-      const svgButton = wrapper.findAll('button')[1]
+      const svgButton = wrapper.findAllComponents(AtlasButton)[1]
       await svgButton.trigger('click')
 
       expect(chartInstance.getDataURL).not.toHaveBeenCalled()
@@ -267,7 +268,7 @@ describe('ChartExport', () => {
       })
       const wrapper = mountComponent({ chartInstance, filename: 'canvas-chart' })
 
-      const svgButton = wrapper.findAll('button')[1]
+      const svgButton = wrapper.findAllComponents(AtlasButton)[1]
       await svgButton.trigger('click')
 
       expect(chartInstance.getDataURL).not.toHaveBeenCalled()
@@ -288,7 +289,7 @@ describe('ChartExport', () => {
       })
       const wrapper = mountComponent({ chartInstance, filename: 'blob-check' })
 
-      await wrapper.findAll('button')[1].trigger('click')
+      await wrapper.findAllComponents(AtlasButton)[1].trigger('click')
 
       expect(blobTypes).toContain('image/svg+xml;charset=utf-8')
       expect(blobTypes.some(type => type.includes('png'))).toBe(false)
@@ -304,7 +305,7 @@ describe('ChartExport', () => {
       })
       const wrapper = mountComponent({ chartInstance })
 
-      const svgButton = wrapper.findAll('button')[1]
+      const svgButton = wrapper.findAllComponents(AtlasButton)[1]
       await svgButton.trigger('click')
 
       expect(wrapper.emitted('export-error')).toBeTruthy()
@@ -330,7 +331,7 @@ describe('ChartExport', () => {
       // Check initial state
       expect(wrapper.vm.exporting).toBeNull()
 
-      const pngButton = wrapper.findAll('button')[0]
+      const pngButton = wrapper.findAllComponents(AtlasButton)[0]
       await pngButton.trigger('click')
 
       // After export completes, state should be reset
@@ -343,7 +344,7 @@ describe('ChartExport', () => {
       })
       const wrapper = mountComponent({ chartInstance })
 
-      const svgButton = wrapper.findAll('button')[1]
+      const svgButton = wrapper.findAllComponents(AtlasButton)[1]
       await svgButton.trigger('click')
 
       expect(wrapper.vm.exporting).toBeNull()
@@ -355,7 +356,7 @@ describe('ChartExport', () => {
       })
       const wrapper = mountComponent({ chartInstance })
 
-      const pngButton = wrapper.findAll('button')[0]
+      const pngButton = wrapper.findAllComponents(AtlasButton)[0]
       await pngButton.trigger('click')
 
       expect(wrapper.vm.exporting).toBeNull()

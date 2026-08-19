@@ -181,6 +181,67 @@ describe('ConceptSetSelector', () => {
       expect(addedSet.id).toBeTruthy()
     })
 
+    it('should update, remove and delete concept sets through the store helpers', async () => {
+      const store = useConceptPickerStore()
+      const conceptSet = createMockConceptSet({
+        id: 1,
+        name: 'Original Name',
+        items: [
+          {
+            ...createMockConcept({ conceptId: 1, conceptName: 'Kept Concept' }),
+            isExcluded: false,
+            includeDescendants: false,
+            includeMapped: false,
+          },
+          {
+            ...createMockConcept({ conceptId: 2, conceptName: 'Removed Concept' }),
+            isExcluded: false,
+            includeDescendants: false,
+            includeMapped: false,
+          },
+        ],
+      })
+      store.conceptSets = new Map([[1, conceptSet]])
+
+      const addSpy = vi.spyOn(store, 'addConceptSet')
+      const removeSpy = vi.spyOn(store, 'removeConceptSet')
+
+      const wrapper = mountComponent()
+      await nextTick()
+
+      const vm = wrapper.vm as any
+
+      vm.updateConceptSetName(1, 'Renamed Set')
+      vm.updateConceptSetName(999, 'Ignored Set')
+      vm.removeConcept(1, 2)
+      vm.removeConcept(999, 2)
+      vm.deleteConceptSet(1)
+
+      expect(addSpy).toHaveBeenCalledTimes(2)
+      expect(addSpy.mock.calls[0][0].name).toBe('Renamed Set')
+      expect(addSpy.mock.calls[1][0].items).toHaveLength(1)
+      expect(addSpy.mock.calls[1][0].items[0].conceptName).toBe('Kept Concept')
+      expect(removeSpy).toHaveBeenCalledWith(1)
+    })
+
+    it('should open the search dialog from the add concepts button', async () => {
+      const store = useConceptPickerStore()
+      const conceptSet = createMockConceptSet({ id: 1, name: 'Test Set' })
+      store.conceptSets = new Map([[1, conceptSet]])
+
+      const wrapper = mountComponent()
+      await nextTick()
+
+      const vm = wrapper.vm as any
+      expect(vm.isSearchDialogOpen).toBe(false)
+
+      vm.openSearchDialog(1)
+      await nextTick()
+
+      expect(vm.isSearchDialogOpen).toBe(true)
+      expect(vm.currentConceptSetId).toBe(1)
+    })
+
     it('should have delete functionality available', async () => {
       const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({ id: 1, name: 'Test Set' })

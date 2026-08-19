@@ -343,5 +343,11 @@ async function captureImportedExpression(
     return res.json()
   }, idMatch[1]) as Record<string, unknown> | null
 
-  return (data?.expression as Record<string, unknown> | undefined) ?? null
+  // WebAPI (and the mock, which mirrors it) sends `expression` as a JSON
+  // string inside the response body; the app's own normalizeRawCohortDefinition
+  // parses it the same way. Returning the raw field made every assertion below
+  // read properties off a string and see undefined.
+  const raw = data?.expression
+  if (raw == null) return null
+  return (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>
 }

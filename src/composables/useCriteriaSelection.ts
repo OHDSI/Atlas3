@@ -1,5 +1,5 @@
 import { inject, provide, type InjectionKey } from 'vue'
-import type { Concept } from '@/models/event.types'
+import type { Concept } from '@/models/circe-types'
 import type { ConceptSetReference } from '@/models/cohort.types'
 
 /**
@@ -28,7 +28,7 @@ export interface CriteriaSelectionService {
   requestConceptSet(onSelect: (conceptSet: ConceptSetReference) => void): void
   /**
    * Open the concept search picker (e.g. gender/race attributes).
-   * `onSelect` receives Atlas-format (UPPERCASE) concepts.
+   * `onSelect` receives Circe-format (UPPERCASE) concepts.
    */
   requestConcepts(
     domainFilter: string | undefined,

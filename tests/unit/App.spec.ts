@@ -21,7 +21,7 @@ vi.mock('@/components/auth/SessionExpiryModal.vue', () => ({
   default: { name: 'SessionExpiryModal', template: '<div class="session-expiry-mock"></div>' }
 }))
 
-vi.mock('@/components/cohort-builder/ConfigurationWarningBanner.vue', () => ({
+vi.mock('@/components/ConfigurationWarningBanner.vue', () => ({
   default: { name: 'ConfigurationWarningBanner', template: '<div class="config-warning-mock"></div>' }
 }))
 

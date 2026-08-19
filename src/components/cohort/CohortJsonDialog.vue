@@ -107,9 +107,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { AtlasAlert, AtlasButton, AtlasDialog, AtlasSpacer, AtlasTextField } from '@/components/ui'
-import { useAtlasConverter } from '@/composables/useAtlasConverter'
 import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+const ALLOWED_EXTENSIONS = ['.json']
 
 /**
  * CohortJsonDialog - View / edit the cohort's Atlas JSON expression.
@@ -140,12 +142,28 @@ const emit = defineEmits<{
 }>()
 
 const { t, tv } = useI18n()
-const { readFileText, conversionError } = useAtlasConverter()
 
 const draft = ref('')
 const fileError = ref('')
 const copied = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
+
+async function readFileText(file: File): Promise<string | null> {
+  if (file.size > MAX_FILE_SIZE) {
+    fileError.value = `File exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`
+    return null
+  }
+  if (!ALLOWED_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext))) {
+    fileError.value = 'File must be JSON format (.json)'
+    return null
+  }
+  return new Promise(resolve => {
+    const reader = new FileReader()
+    reader.onload = e => resolve((e.target?.result as string) ?? '')
+    reader.onerror = () => { fileError.value = 'Failed to read file'; resolve(null) }
+    reader.readAsText(file)
+  })
+}
 
 let copiedTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -191,7 +209,7 @@ async function onFileSelected(event: Event) {
 
   if (text === null) {
     fileError.value =
-      conversionError.value || tv('components.cohortBuilder.jsonReadFailed', 'Could not read file')
+      fileError.value || tv('components.cohortBuilder.jsonReadFailed', 'Could not read file')
   } else {
     draft.value = text
   }

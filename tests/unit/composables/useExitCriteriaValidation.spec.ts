@@ -1,314 +1,310 @@
-/**
- * useExitCriteriaValidation Composable Tests
- * Tests for Zod-based validation of exit criteria and censor windows
- */
-import { describe, it, expect } from 'vitest'
-import { useExitCriteriaValidation } from '@/composables/useExitCriteriaValidation'
-import type { ExitCriteria, CensorWindow } from '@/models/cohort.types'
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
+import { ref, computed, nextTick } from 'vue'
+import type { CohortExpression, EndStrategy } from '@/models/circe-types'
+import type { ValidationWarning } from '@/models/cohort-validation.types'
+import { ApiError } from '@/services/api-error'
+
+vi.mock('@/services/cohort-definition.service', () => ({
+  validateCohortDefinition: vi.fn(),
+}))
+
+vi.mock('@/utils/logger', () => ({
+  logger: {
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+  },
+}))
+
+let cohortDefService: typeof import('@/services/cohort-definition.service')
+let useExitCriteriaValidation: typeof import('@/composables/useExitCriteriaValidation').useExitCriteriaValidation
+let useCohortValidation: typeof import('@/composables/useCohortValidation').useCohortValidation
+
+beforeAll(async () => {
+  vi.resetModules()
+  cohortDefService = await import('@/services/cohort-definition.service')
+  useExitCriteriaValidation = (await import('@/composables/useExitCriteriaValidation'))
+    .useExitCriteriaValidation
+  useCohortValidation = (await import('@/composables/useCohortValidation')).useCohortValidation
+})
 
 describe('useExitCriteriaValidation', () => {
-  describe('validate', () => {
-    it('should return valid for undefined criteria', () => {
-      const { validate } = useExitCriteriaValidation()
+  describe('validateEndStrategy — no strategy', () => {
+    it('reports nothing when the cohort has no end strategy', () => {
+      const { validateEndStrategy } = useExitCriteriaValidation()
 
-      const result = validate(undefined)
-
-      expect(result.valid).toBe(true)
-      expect(result.errors).toHaveLength(0)
-    })
-
-    it('should validate CONTINUOUS_OBSERVATION strategy', () => {
-      const { validate } = useExitCriteriaValidation()
-
-      const criteria: ExitCriteria = {
-        strategy: 'CONTINUOUS_OBSERVATION'
-      }
-
-      const result = validate(criteria)
-
-      expect(result.valid).toBe(true)
-      expect(result.errors).toHaveLength(0)
-    })
-
-    it('should validate FIXED_DURATION strategy with offset', () => {
-      const { validate } = useExitCriteriaValidation()
-
-      const criteria: ExitCriteria = {
-        strategy: 'FIXED_DURATION',
-        offset: 30,
-        dateField: 'START_DATE'
-      }
-
-      const result = validate(criteria)
-
-      expect(result.valid).toBe(true)
-    })
-
-    it('should fail FIXED_DURATION without offset', () => {
-      const { validate } = useExitCriteriaValidation()
-
-      const criteria: ExitCriteria = {
-        strategy: 'FIXED_DURATION',
-        dateField: 'START_DATE'
-      }
-
-      const result = validate(criteria)
-
-      expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.message.includes('offset'))).toBe(true)
-    })
-
-    it('should validate CONTINUOUS_DRUG strategy with concept set', () => {
-      const { validate } = useExitCriteriaValidation()
-
-      const criteria: ExitCriteria = {
-        strategy: 'CONTINUOUS_DRUG',
-        conceptSet: { id: 1, name: 'Drug Set' },
-        persistenceWindow: 30,
-        surveillanceWindow: 7
-      }
-
-      const result = validate(criteria)
-
-      expect(result.valid).toBe(true)
-    })
-
-    it('should fail CONTINUOUS_DRUG without concept set', () => {
-      const { validate } = useExitCriteriaValidation()
-
-      const criteria: ExitCriteria = {
-        strategy: 'CONTINUOUS_DRUG',
-        persistenceWindow: 30
-      }
-
-      const result = validate(criteria)
-
-      expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.message.includes('concept set'))).toBe(true)
-    })
-
-    it('should fail with invalid strategy', () => {
-      const { validate } = useExitCriteriaValidation()
-
-      const criteria = {
-        strategy: 'INVALID_STRATEGY'
-      } as unknown as ExitCriteria
-
-      const result = validate(criteria)
-
-      expect(result.valid).toBe(false)
-    })
-
-    it('should fail with negative offset', () => {
-      const { validate } = useExitCriteriaValidation()
-
-      const criteria: ExitCriteria = {
-        strategy: 'FIXED_DURATION',
-        offset: -10,
-        dateField: 'START_DATE'
-      }
-
-      const result = validate(criteria)
-
-      expect(result.valid).toBe(false)
-    })
-
-    it('should fail with invalid dateField', () => {
-      const { validate } = useExitCriteriaValidation()
-
-      const criteria = {
-        strategy: 'FIXED_DURATION',
-        offset: 30,
-        dateField: 'INVALID_DATE'
-      } as unknown as ExitCriteria
-
-      const result = validate(criteria)
-
-      expect(result.valid).toBe(false)
+      expect(validateEndStrategy(undefined)).toEqual([])
+      expect(validateEndStrategy(null)).toEqual([])
     })
   })
 
-  describe('validateField', () => {
-    it('should return true for valid field', () => {
-      const { validateField } = useExitCriteriaValidation()
+  describe('validateEndStrategy — CustomEra requires a drug concept set', () => {
+    it('reports nothing for a CustomEra strategy carrying a DrugCodesetId', () => {
+      const { validateEndStrategy } = useExitCriteriaValidation()
 
-      const criteria: ExitCriteria = {
-        strategy: 'FIXED_DURATION',
-        offset: 30,
-        dateField: 'START_DATE'
+      const strategy: EndStrategy = {
+        CustomEra: { DrugCodesetId: 3, GapDays: 30, Offset: 0 },
       }
 
-      const result = validateField(criteria, 'offset')
-
-      expect(result).toBe(true)
+      expect(validateEndStrategy(strategy)).toEqual([])
     })
 
-    it('should return error message for invalid field', () => {
-      const { validateField } = useExitCriteriaValidation()
+    it('reports exactly one finding naming DrugCodesetId when it is absent', () => {
+      const { validateEndStrategy } = useExitCriteriaValidation()
 
-      const criteria: ExitCriteria = {
-        strategy: 'FIXED_DURATION',
-        dateField: 'START_DATE'
-        // Missing required offset
+      const strategy: EndStrategy = {
+        CustomEra: { GapDays: 30, Offset: 0 },
       }
 
-      const result = validateField(criteria, 'offset')
+      const findings = validateEndStrategy(strategy)
 
-      expect(typeof result).toBe('string')
-      expect(result).toContain('offset')
+      expect(findings).toHaveLength(1)
+      expect(findings[0]!.message).toContain('DrugCodesetId')
+      expect(findings[0]!.severity).toBe('CRITICAL')
+      expect(findings[0]!.type).toBe('DefaultWarning')
     })
 
-    it('should return true when field error not found', () => {
-      const { validateField } = useExitCriteriaValidation()
+    it('reports a finding when DrugCodesetId is explicitly null', () => {
+      const { validateEndStrategy } = useExitCriteriaValidation()
 
-      const criteria: ExitCriteria = {
-        strategy: 'CONTINUOUS_DRUG'
-        // Missing conceptSet but checking different field
-      }
+      const findings = validateEndStrategy({ CustomEra: { DrugCodesetId: null } })
 
-      const result = validateField(criteria, 'offset')
+      expect(findings).toHaveLength(1)
+      expect(findings[0]!.message).toContain('DrugCodesetId')
+    })
 
-      // The error is on conceptSet, not offset
-      expect(result).toBe(true)
+    it('accepts codeset id 0 as a real selection', () => {
+      const { validateEndStrategy } = useExitCriteriaValidation()
+
+      expect(validateEndStrategy({ CustomEra: { DrugCodesetId: 0 } })).toEqual([])
     })
   })
 
-  describe('validateCensorWindow', () => {
-    it('should return valid for undefined censor window', () => {
-      const { validateCensorWindow } = useExitCriteriaValidation()
+  describe('validateEndStrategy — DateOffset requires an offset', () => {
+    it('reports nothing for a DateOffset strategy carrying an Offset', () => {
+      const { validateEndStrategy } = useExitCriteriaValidation()
 
-      const result = validateCensorWindow(undefined)
-
-      expect(result.valid).toBe(true)
-      expect(result.errors).toHaveLength(0)
-    })
-
-    it('should return valid for null censor window', () => {
-      const { validateCensorWindow } = useExitCriteriaValidation()
-
-      const result = validateCensorWindow(null)
-
-      expect(result.valid).toBe(true)
-    })
-
-    it('should validate valid censor window', () => {
-      const { validateCensorWindow } = useExitCriteriaValidation()
-
-      const censorWindow: CensorWindow = {
-        startDate: '2024-01-01',
-        endDate: '2024-01-31'
+      const strategy: EndStrategy = {
+        DateOffset: { DateField: 'StartDate', Offset: 30 },
       }
 
-      const result = validateCensorWindow(censorWindow)
-
-      expect(result.valid).toBe(true)
+      expect(validateEndStrategy(strategy)).toEqual([])
     })
 
-    it('should fail when startDate > endDate', () => {
-      const { validateCensorWindow } = useExitCriteriaValidation()
+    it('reports exactly one finding naming Offset when it is absent', () => {
+      const { validateEndStrategy } = useExitCriteriaValidation()
 
-      const censorWindow: CensorWindow = {
-        startDate: '2024-12-31',
-        endDate: '2024-01-01'
+      const strategy: EndStrategy = {
+        DateOffset: { DateField: 'StartDate' },
       }
 
-      const result = validateCensorWindow(censorWindow)
+      const findings = validateEndStrategy(strategy)
 
-      expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.message.includes('Start date must be on or before end date'))).toBe(true)
+      expect(findings).toHaveLength(1)
+      expect(findings[0]!.message).toContain('Offset')
+      // circe's ExitCriteriaDaysOffsetCheck overrides BaseCheck's CRITICAL down to
+      // WARNING, so this finding must never reach CRITICAL and disable generation.
+      expect(findings[0]!.severity).toBe('WARNING')
     })
 
-    it('should validate window with only startDate', () => {
-      const { validateCensorWindow } = useExitCriteriaValidation()
+    it('reports a finding when Offset is explicitly null', () => {
+      const { validateEndStrategy } = useExitCriteriaValidation()
 
-      const censorWindow: CensorWindow = {
-        startDate: '2024-01-01'
-      }
+      const findings = validateEndStrategy({ DateOffset: { Offset: null } })
 
-      const result = validateCensorWindow(censorWindow)
-
-      expect(result.valid).toBe(true)
+      expect(findings).toHaveLength(1)
+      expect(findings[0]!.message).toContain('Offset')
     })
 
-    it('should validate window with only endDate', () => {
-      const { validateCensorWindow } = useExitCriteriaValidation()
+    it('accepts an offset of 0 days', () => {
+      const { validateEndStrategy } = useExitCriteriaValidation()
 
-      const censorWindow: CensorWindow = {
-        endDate: '2024-12-31'
-      }
-
-      const result = validateCensorWindow(censorWindow)
-
-      expect(result.valid).toBe(true)
-    })
-
-    it('should fail with invalid date format in censor window', () => {
-      const { validateCensorWindow } = useExitCriteriaValidation()
-
-      const censorWindow = {
-        startDate: 'not-a-date'
-      } as unknown as CensorWindow
-
-      const result = validateCensorWindow(censorWindow)
-
-      expect(result.valid).toBe(false)
-    })
-
-    it('should include severity in validation errors', () => {
-      const { validateCensorWindow } = useExitCriteriaValidation()
-
-      const censorWindow: CensorWindow = {
-        startDate: '2024-12-31',
-        endDate: '2024-01-01'
-      }
-
-      const result = validateCensorWindow(censorWindow)
-
-      expect(result.errors[0].severity).toBe('warning')
+      expect(validateEndStrategy({ DateOffset: { DateField: 'EndDate', Offset: 0 } })).toEqual([])
     })
   })
 
-  describe('validateCensorWindowField', () => {
-    it('should return true for valid field', () => {
-      const { validateCensorWindowField } = useExitCriteriaValidation()
+  // ATLAS 2.15 has no client-side exit-criteria check at all: CustomEraStrategy.js is a
+  // plain observable model and cohort-definition-manager.js#diagnose posts straight to
+  // checkV2. Both findings therefore originate in circe, and our local copies exist only
+  // to skip the round trip — so they must carry circe's severities verbatim.
+  describe('severity parity with circe (ATLAS 2.15 checkV2)', () => {
+    it('matches ExitCriteriaCheck, which inherits BaseCheck.defineSeverity() = CRITICAL', () => {
+      const { validateEndStrategy } = useExitCriteriaValidation()
 
-      const censorWindow: CensorWindow = {
-        startDate: '2024-01-01',
-        endDate: '2024-01-31'
-      }
-
-      const result = validateCensorWindowField(censorWindow, 'startDate')
-
-      expect(result).toBe(true)
+      expect(validateEndStrategy({ CustomEra: {} })[0]!.severity).toBe('CRITICAL')
     })
 
-    it('should return error message for invalid field path', () => {
-      const { validateCensorWindowField } = useExitCriteriaValidation()
+    it('matches ExitCriteriaDaysOffsetCheck, which overrides defineSeverity() to WARNING', () => {
+      const { validateEndStrategy } = useExitCriteriaValidation()
 
-      const censorWindow: CensorWindow = {
-        startDate: '2024-12-31',
-        endDate: '2024-01-01'
-      }
+      expect(validateEndStrategy({ DateOffset: { DateField: 'StartDate' } })[0]!.severity).toBe(
+        'WARNING'
+      )
+    })
+  })
 
-      // The cross-field error is reported on path 'endDate'
-      const result = validateCensorWindowField(censorWindow, 'endDate')
+  describe('validateExpression', () => {
+    it('reports nothing for an expression without an end strategy', () => {
+      const { validateExpression } = useExitCriteriaValidation()
 
-      expect(typeof result).toBe('string')
-      expect(result).toContain('Start date must be on or before end date')
+      expect(validateExpression({})).toEqual([])
     })
 
-    it('should return true when specific field has no error', () => {
-      const { validateCensorWindowField } = useExitCriteriaValidation()
+    it('surfaces the CustomEra finding from a whole expression', () => {
+      const { validateExpression } = useExitCriteriaValidation()
 
-      const censorWindow: CensorWindow = {
-        startDate: '2024-12-31',
-        endDate: '2024-01-01'
+      const expression: CohortExpression = {
+        EndStrategy: { CustomEra: { GapDays: 0 } },
       }
 
-      // Error is on endDate, not startDate
-      const result = validateCensorWindowField(censorWindow, 'startDate')
+      const findings = validateExpression(expression)
 
-      expect(result).toBe(true)
+      expect(findings).toHaveLength(1)
+      expect(findings[0]!.message).toContain('DrugCodesetId')
     })
+  })
+})
+
+describe('exit criteria rules surface through useCohortValidation', () => {
+  function createOptions(expression: CohortExpression) {
+    return {
+      cohortName: ref('Test Cohort'),
+      cohortDescription: ref('Test Description'),
+      cohortId: computed(() => null),
+      expression: ref<CohortExpression>(expression),
+      expressionRevision: ref(0),
+      debounceDelay: 100,
+    }
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('exposes an incomplete CustomEra strategy as a CRITICAL warning in the UI-facing state', async () => {
+    vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+      success: false,
+      error: new ApiError('Service unavailable', 503, null),
+    })
+
+    const options = createOptions({ EndStrategy: { CustomEra: { GapDays: 30 } } })
+    const { validationWarnings, groupedWarningsBySeverity, highestSeverity, highestSeverityColor, cancelValidation } =
+      useCohortValidation(options)
+
+    cancelValidation()
+    options.expressionRevision.value++
+    await nextTick()
+    await vi.runAllTimersAsync()
+    await nextTick()
+
+    expect(validationWarnings.value).toHaveLength(1)
+    expect(validationWarnings.value[0]!.message).toContain('DrugCodesetId')
+    expect(groupedWarningsBySeverity.value.CRITICAL).toHaveLength(1)
+    expect(highestSeverity.value).toBe('CRITICAL')
+    expect(highestSeverityColor.value).toBe('error')
+
+    cancelValidation()
+  })
+
+  // checkV2 runs circe's ExitCriteriaCheck itself (ExitCriteriaCheck.java), so
+  // keeping the local finding after the server answers would show the same
+  // defect twice and double the CRITICAL count the generate gate reads.
+  it('reports one finding, not two, when checkV2 reports the same defect', async () => {
+    const serverWarnings: ValidationWarning[] = [
+      {
+        type: 'DefaultWarning',
+        severity: 'CRITICAL',
+        message: 'Drug concept set must be selected at Exit Criteria.',
+      },
+    ]
+    vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+      success: true,
+      data: { warnings: serverWarnings },
+    })
+
+    const options = createOptions({ EndStrategy: { CustomEra: { GapDays: 30 } } })
+    const { validationWarnings, groupedWarningsBySeverity, cancelValidation } =
+      useCohortValidation(options)
+
+    cancelValidation()
+    options.expressionRevision.value++
+    await nextTick()
+    await vi.runAllTimersAsync()
+    await nextTick()
+
+    expect(validationWarnings.value).toHaveLength(1)
+    expect(validationWarnings.value[0]!.message).toBe(
+      'Drug concept set must be selected at Exit Criteria.'
+    )
+    expect(groupedWarningsBySeverity.value.CRITICAL).toHaveLength(1)
+
+    cancelValidation()
+  })
+
+  it('replaces the local findings with the server list once checkV2 answers', async () => {
+    const serverWarnings: ValidationWarning[] = [
+      { type: 'DefaultWarning', severity: 'INFO', message: 'Server note' },
+    ]
+    vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+      success: true,
+      data: { warnings: serverWarnings },
+    })
+
+    const options = createOptions({ EndStrategy: { DateOffset: { DateField: 'StartDate' } } })
+    const { validationWarnings, cancelValidation } = useCohortValidation(options)
+
+    cancelValidation()
+    options.expressionRevision.value++
+    await nextTick()
+    await vi.runAllTimersAsync()
+    await nextTick()
+
+    expect(validationWarnings.value).toEqual(serverWarnings)
+
+    cancelValidation()
+  })
+
+  it('adds no warning when the end strategy is complete', async () => {
+    vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+      success: true,
+      data: { warnings: [] },
+    })
+
+    const options = createOptions({ EndStrategy: { CustomEra: { DrugCodesetId: 7, GapDays: 30 } } })
+    const { validationWarnings, cancelValidation } = useCohortValidation(options)
+
+    cancelValidation()
+    options.cohortName.value = 'Changed Name'
+    await nextTick()
+    await vi.runAllTimersAsync()
+    await nextTick()
+
+    expect(validationWarnings.value).toEqual([])
+
+    cancelValidation()
+  })
+
+  it('keeps the exit criteria finding when the server validation call fails', async () => {
+    vi.mocked(cohortDefService.validateCohortDefinition).mockRejectedValue(new Error('API Error'))
+
+    const options = createOptions({ EndStrategy: { CustomEra: {} } })
+    const { validationWarnings, cancelValidation } = useCohortValidation(options)
+
+    cancelValidation()
+    options.expressionRevision.value++
+    await nextTick()
+    await vi.runAllTimersAsync()
+    await nextTick()
+
+    expect(validationWarnings.value).toHaveLength(1)
+    expect(validationWarnings.value[0]!.message).toContain('DrugCodesetId')
+
+    cancelValidation()
   })
 })

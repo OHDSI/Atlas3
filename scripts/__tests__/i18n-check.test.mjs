@@ -6,7 +6,7 @@ import {
   findParentCollision,
   findBatchCollision,
   findFallbackConflicts,
-} from '../i18n-check.mjs'
+} from '../i18n-check.core.mjs'
 
 describe('extractKeys', () => {
   it('extracts a key with an inline fallback', () => {

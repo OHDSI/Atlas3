@@ -17,9 +17,7 @@ import {
   attributeKeyToAtlas,
   atlasToAttributeKey,
 } from '@/utils/mappers'
-import { convertInternalToAtlas } from '@/services/atlas-converter'
 import type { CardinalityType, NumericOperator, DateOperator } from '@/models/event.types'
-import type { CohortDefinition } from '@/models/cohort.types'
 
 describe('Operator Mappers', () => {
   describe('OPERATOR_TO_ATLAS', () => {
@@ -137,33 +135,6 @@ describe('Cardinality Mappers', () => {
     })
   })
 
-  describe('agreement with atlas-converter', () => {
-    // Regression: the mappers previously transposed AT_LEAST (0) and EXACTLY (2)
-    // relative to the CIRCE Occurrence.Type enum, inverting "at least" and
-    // "exactly" for any caller while the converter's inline mapping was correct.
-    it('should produce the same Occurrence.Type as convertInternalToAtlas for every cardinality type', () => {
-      const types: CardinalityType[] = ['EXACTLY', 'AT_MOST', 'AT_LEAST']
-      for (const type of types) {
-        const cohort: CohortDefinition = {
-          name: 'Cardinality mapping check',
-          entryEvents: [
-            {
-              id: 'event-1',
-              criteriaType: 'ConditionOccurrence',
-              cardinality: { type, count: 1, countingMethod: 'ALL' },
-            },
-          ],
-          qualifyingLimit: 'ALL',
-          inclusionRules: [],
-          conceptSets: [],
-        }
-        const atlas = convertInternalToAtlas(cohort)
-        const occurrence = atlas.PrimaryCriteria.CriteriaList[0]?.Occurrence
-        expect(occurrence?.Type).toBe(cardinalityToAtlas(type))
-        expect(atlasToCardinality(occurrence!.Type)).toBe(type)
-      }
-    })
-  })
 })
 
 describe('Attribute Key Mappers', () => {

@@ -1,6 +1,8 @@
 import type { AgentProposal } from '@/models/agent.types'
 import type { ExitStrategy } from '@/models/cohort.types'
 import routeManifest from '@/router/routes.manifest.json'
+import { criteriaTypeForDomain } from '@/components/circe/criteria/criteria-registry'
+import { logger } from '@/utils/logger'
 
 interface ConceptRefArgs {
   conceptId?: number
@@ -154,18 +156,26 @@ function uid(): string {
 // occurrence count is EXACTLY 0. Shared by every exclusion path below.
 const ZERO_OCCURRENCE_CARDINALITY = { type: 'EXACTLY', count: 0, countingMethod: 'ALL' } as const
 
+/**
+ * The criteria type an OMOP domain maps to.
+ *
+ * The mapping lives in the criteria registry now, alongside the editors and the
+ * add-criteria menus, so a new domain is added in one place rather than five.
+ *
+ * The fallback to ConditionOccurrence is kept, since the agent's tool contract
+ * expects a criterion for any domain it names, but it is now a logged guess
+ * rather than a silent one: producing a condition criterion for, say, a Note
+ * domain builds a cohort that describes something other than what was asked for.
+ */
 export function domainToCriteriaType(domain: string | undefined): string {
-  switch (domain) {
-    case 'Condition': return 'ConditionOccurrence'
-    case 'Drug': return 'DrugExposure'
-    case 'Procedure': return 'ProcedureOccurrence'
-    case 'Measurement': return 'Measurement'
-    case 'Observation': return 'Observation'
-    case 'Visit': return 'VisitOccurrence'
-    case 'Device': return 'DeviceExposure'
-    case 'Specimen': return 'Specimen'
-    default: return 'ConditionOccurrence'
-  }
+  const mapped = criteriaTypeForDomain(domain)
+  if (mapped) return mapped
+
+  logger.warn(
+    'translate',
+    `No criteria type is mapped to domain "${domain}"; falling back to ConditionOccurrence`
+  )
+  return 'ConditionOccurrence'
 }
 
 // Map the agent's index-relative window {startDays,endDays} to ATLAS's
@@ -235,7 +245,11 @@ function embeddedConceptSet(c: {
         vocabularyId: '',
         conceptClassId: '',
         standardConcept: 'S',
+        standardConceptCaption: 'Standard',
         invalidReason: null,
+        invalidReasonCaption: 'Unknown',
+        validStartDate: Date.UTC(1970, 0, 1),
+        validEndDate: Date.UTC(2090, 0, 1),
         includeDescendants: c.includeDescendants ?? true,
         isExcluded: c.isExcluded ?? false,
         includeMapped: false,
@@ -667,8 +681,34 @@ export function translateCapability(
         // The OMOP gender concepts are fixed CDM vocabulary, not something the
         // model should be recalling or searching for per source.
         const concept = sex === 'male'
-          ? { CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE', DOMAIN_ID: 'Gender' }
-          : { CONCEPT_ID: 8532, CONCEPT_NAME: 'FEMALE', DOMAIN_ID: 'Gender' }
+          ? {
+              CONCEPT_ID: 8507,
+              CONCEPT_NAME: 'MALE',
+              STANDARD_CONCEPT: 'S',
+              STANDARD_CONCEPT_CAPTION: 'Standard',
+              INVALID_REASON: null,
+              INVALID_REASON_CAPTION: 'Unknown',
+              CONCEPT_CODE: '8507',
+              DOMAIN_ID: 'Gender',
+              VOCABULARY_ID: 'Gender',
+              CONCEPT_CLASS_ID: 'Gender',
+              VALID_START_DATE: Date.UTC(1970, 0, 1),
+              VALID_END_DATE: Date.UTC(2090, 0, 1),
+            }
+          : {
+              CONCEPT_ID: 8532,
+              CONCEPT_NAME: 'FEMALE',
+              STANDARD_CONCEPT: 'S',
+              STANDARD_CONCEPT_CAPTION: 'Standard',
+              INVALID_REASON: null,
+              INVALID_REASON_CAPTION: 'Unknown',
+              CONCEPT_CODE: '8532',
+              DOMAIN_ID: 'Gender',
+              VOCABULARY_ID: 'Gender',
+              CONCEPT_CLASS_ID: 'Gender',
+              VALID_START_DATE: Date.UTC(1970, 0, 1),
+              VALID_END_DATE: Date.UTC(2090, 0, 1),
+            }
         attributes.push({ type: 'concept', attributeKey: 'gender', concepts: [concept] })
       }
 
@@ -774,7 +814,7 @@ export function translateCapability(
           e.concept as Parameters<typeof embeddedConceptSet>[0],
         )
       }
-      return { kind: 'setExitCriteria', exitCriteria } as unknown as AgentProposal
+      return { kind: 'setCohortExit', exitCriteria } as unknown as AgentProposal
     }
 
     case 'set_censor_event': {

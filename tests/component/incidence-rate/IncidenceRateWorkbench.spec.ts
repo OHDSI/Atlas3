@@ -13,6 +13,7 @@ vi.mock('@/services/incidence-rate.service', () => ({
   cancelIncidenceRateGeneration: vi.fn(),
 }))
 
+
 vi.mock('@/stores/datasources', () => ({
   useDataSourcesStore: () => ({ sources: [], isLoading: false, fetchDataSources: vi.fn() }),
 }))
@@ -39,6 +40,13 @@ const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '
 describe('IncidenceRateWorkbench', () => {
   beforeEach(() => pristinePinia())
 
+  function loadedStore() {
+    const store = useIncidenceRateStore()
+    store.createNewIR()
+    if (store.currentIR) store.currentIR.id = 42
+    return store
+  }
+
   it('renders the workbench shell when there is no IR (no-id empty state)', () => {
     const w = mount(IncidenceRateWorkbench, {
       global: { plugins: [vuetify, router], stubs },
@@ -47,9 +55,7 @@ describe('IncidenceRateWorkbench', () => {
   })
 
   it('renders all three lanes when an IR is loaded', async () => {
-    const store = useIncidenceRateStore()
-    store.createNewIR()
-    if (store.currentIR) store.currentIR.id = 42
+    loadedStore()
     const w = mount(IncidenceRateWorkbench, {
       global: { plugins: [vuetify, router], stubs },
     })
@@ -62,9 +68,7 @@ describe('IncidenceRateWorkbench', () => {
   it('auto-selects the latest completed run when no ?run is set', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
-    const store = useIncidenceRateStore()
-    store.createNewIR()
-    if (store.currentIR) store.currentIR.id = 42
+    const store = loadedStore()
 
     store.setExecutionInfo('CCAE', {
       executionInfo: { id: { analysisId: 42, sourceId: 7 }, status: 'COMPLETED', startTime: 100 },
@@ -84,5 +88,34 @@ describe('IncidenceRateWorkbench', () => {
     })
     await flushPromises()
     expect(pushed).toMatchObject({ query: { run: '7' } })
+  })
+
+  it('toggles the design rail and fires the strata add/edit handlers', async () => {
+    const store = loadedStore()
+    const addSpy = vi.spyOn(store, 'addStratifyRule').mockImplementation(() => undefined)
+    const w = mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+
+    await w.get('button.rail-toggle').trigger('click')
+    await w.get('button.rail-toggle').trigger('click')
+    await w.findComponent({ name: 'IncidenceRateDesignRail' }).vm.$emit('strata:add')
+    await w.findComponent({ name: 'IncidenceRateDesignRail' }).vm.$emit('strata:edit', 0)
+
+    expect(addSpy).toHaveBeenCalled()
+    expect(w.find('[data-testid="ir-workbench-rail"]').exists()).toBe(true)
+  })
+
+  it('routes history selections back to the run query', async () => {
+    loadedStore()
+    const r = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: { template: '<div/>' } }] })
+    const pushSpy = vi.spyOn(r, 'replace')
+    const w = mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, r], stubs },
+    })
+    await flushPromises()
+    await w.findComponent({ name: 'PreviousRunsDialog' }).vm.$emit('select', '7')
+    expect(pushSpy).toHaveBeenCalledWith({ query: expect.objectContaining({ run: '7' }) })
   })
 })

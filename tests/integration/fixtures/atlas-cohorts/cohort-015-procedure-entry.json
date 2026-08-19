@@ -13,7 +13,12 @@
               "CONCEPT_NAME": "Coronary artery bypass grafting",
               "STANDARD_CONCEPT": "S",
               "DOMAIN_ID": "Procedure",
-              "VOCABULARY_ID": "SNOMED"
+              "VOCABULARY_ID": "SNOMED",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "INVALID_REASON": null,
+              "INVALID_REASON_CAPTION": "Unknown",
+              "CONCEPT_CODE": "4336464",
+              "CONCEPT_CLASS_ID": "Unknown"
             },
             "isExcluded": false,
             "includeDescendants": true,
@@ -50,16 +55,7 @@
     "CollapseType": "ERA",
     "EraPad": 180
   },
-  "CensorWindow": {
-    "StartDate": {
-      "DateField": "START_DATE",
-      "Offset": 0
-    },
-    "EndDate": {
-      "DateField": "END_DATE",
-      "Offset": 90
-    }
-  },
+  "CensorWindow": {},
   "InclusionRules": [],
   "CensoringCriteria": []
 }

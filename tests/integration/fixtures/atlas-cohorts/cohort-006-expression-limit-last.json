@@ -13,7 +13,12 @@
               "CONCEPT_NAME": "Atrial fibrillation",
               "STANDARD_CONCEPT": "S",
               "DOMAIN_ID": "Condition",
-              "VOCABULARY_ID": "SNOMED"
+              "VOCABULARY_ID": "SNOMED",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "INVALID_REASON": null,
+              "INVALID_REASON_CAPTION": "Unknown",
+              "CONCEPT_CODE": "313217",
+              "CONCEPT_CLASS_ID": "Unknown"
             },
             "isExcluded": false,
             "includeDescendants": true,
