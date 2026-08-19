@@ -11,7 +11,11 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { normalizeForCirce, DEFAULT_RANGE_OP } from '@/components/cohort-editor/normalize'
+import {
+  normalizeForCirce,
+  normalizeCriteriaGroupForCirce,
+  DEFAULT_RANGE_OP,
+} from '@/components/cohort-editor/normalize'
 import { CohortExpressionSchema, type CohortExpression } from '@/models/circe-types'
 
 interface PhenotypeFixture {
@@ -128,5 +132,49 @@ describe('normalizeForCirce — leaves everything else alone', () => {
     }
 
     expect(changed).toEqual([])
+  })
+})
+
+describe('normalizeCriteriaGroupForCirce', () => {
+  // circe-be's CriteriaGroup.count is a boxed Integer and the query builder
+  // concatenates it straight into "HAVING COUNT(index_id) >= ", so a missing
+  // Count reaches SQL as the literal null and then throws on unboxing.
+  it('fills the count an AT_LEAST group needs', () => {
+    expect(normalizeCriteriaGroupForCirce({ Type: 'AT_LEAST' }).Count).toBe(0)
+  })
+
+  it('fills the count an AT_MOST group needs', () => {
+    expect(normalizeCriteriaGroupForCirce({ Type: 'AT_MOST' }).Count).toBe(0)
+  })
+
+  it('fills a missing match type', () => {
+    expect(normalizeCriteriaGroupForCirce({}).Type).toBe('ALL')
+  })
+
+  it('reaches nested groups and nested correlated criteria', () => {
+    const result = normalizeCriteriaGroupForCirce({
+      Type: 'ALL',
+      Groups: [{ Type: 'AT_LEAST' }],
+      CriteriaList: [
+        { Criteria: { ConditionOccurrence: { CorrelatedCriteria: {} } } },
+      ],
+    })
+
+    expect(result.Groups![0]!.Count).toBe(0)
+    const nested = (result.CriteriaList![0]!.Criteria as {
+      ConditionOccurrence: { CorrelatedCriteria: { Type?: string } }
+    }).ConditionOccurrence.CorrelatedCriteria
+    expect(nested.Type).toBe('ALL')
+  })
+
+  it('leaves the input untouched', () => {
+    const original = { Type: 'AT_LEAST' as const }
+    normalizeCriteriaGroupForCirce(original)
+    expect(original).toEqual({ Type: 'AT_LEAST' })
+  })
+
+  it('leaves an ALL group alone', () => {
+    expect(normalizeCriteriaGroupForCirce({ Type: 'ALL', CriteriaList: [] }))
+      .toEqual({ Type: 'ALL', CriteriaList: [] })
   })
 })

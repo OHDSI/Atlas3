@@ -76,6 +76,29 @@ export function normalizeForCirce(expression: CohortExpression): CohortExpressio
   return normalized
 }
 
+/**
+ * The same fill for a criteria group that is not part of a CohortExpression:
+ * characterization strata and incidence-rate stratify rules both carry one, and
+ * neither passes through the cohort save path.
+ */
+export function normalizeCriteriaGroupForCirce(group: CriteriaGroup): CriteriaGroup {
+  const normalized = JSON.parse(JSON.stringify(group)) as CriteriaGroup
+
+  walkSchema(CriteriaGroupSchema, normalized, {
+    value(schema, data) {
+      if (!data || typeof data !== 'object') return
+
+      if (schema === CriteriaGroupSchema) {
+        normalizeCriteriaGroup(data as CriteriaGroup)
+      } else if (schema === NumericRangeSchema || schema === DateRangeSchema) {
+        normalizeRange(data as NumericRange | DateRange)
+      }
+    },
+  })
+
+  return normalized
+}
+
 function normalizeCriteriaGroup(group: CriteriaGroup): void {
   if (group.Type === null || group.Type === undefined) {
     group.Type = DEFAULT_GROUP_TYPE
