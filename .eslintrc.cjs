@@ -56,8 +56,6 @@ module.exports = {
     // this pattern, so we disable it completely.
     'vue/no-mutating-props': 'off',
 
-    'vue/multi-word-component-names': 'off',
-
     // Atlas UI library — Phase 1 + 2 wrappers shipped, severity at 'warn'.
     // Uses vue/no-restricted-html-elements (NOT no-restricted-component-names) because
     // Vuetify components are globally auto-imported via vite-plugin-vuetify and appear
@@ -113,20 +111,10 @@ module.exports = {
   },
   overrides: [
     {
-      // cohort-editor uses intentional design patterns that conflict with several
-      // generic lint rules:
-      //
-      // no-explicit-any — generic field-binding utilities (bindings.ts,
-      //   criteria-editor-helper.ts) and per-domain computed accessors use
-      //   Record<string, any> to work across the Criteria discriminated union.
-      //   Zod at the API boundary is the real safety layer; converting to `unknown`
-      //   would require 30+ casts with no meaningful gain.
-      //
-      // no-autofocus — autofocus on popover/inline-edit text fields is correct UX
-      //   (WCAG dialog interaction pattern). The rule targets page-load hijacking.
+      // autofocus on an inline-edit field the user just opened is the WCAG
+      // dialog pattern; the rule targets page-load focus hijacking.
       files: ['src/components/cohort-editor/**/*.{vue,ts}'],
       rules: {
-        '@typescript-eslint/no-explicit-any': 'off',
         'vuejs-accessibility/no-autofocus': 'off',
       },
     },
@@ -153,10 +141,22 @@ module.exports = {
       },
     },
     {
+      // Death, Measurement, Observation, Window and Period mirror the circe-be
+      // Java model names exactly; renaming them would misalign with the domain.
+      files: ['src/components/circe/**/*.vue'],
+      rules: {
+        'vue/multi-word-component-names': 'off',
+      },
+    },
+    {
       files: ['src/components/ui/**/*.{vue,ts}'],
       rules: {
         'vue/no-restricted-html-elements': 'off',
         'no-restricted-imports': 'off',
+        // Histoire story files are named after their subject (Tokens.story.vue).
+        // The `.story` suffix is not counted as a word, so single-word subjects
+        // trip the rule. Stories are not shipped components.
+        'vue/multi-word-component-names': 'off',
       },
     },
   ],
