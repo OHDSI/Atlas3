@@ -12,6 +12,7 @@ export interface IAuthService {
   refreshToken(): Promise<boolean>
   fetchUserInfo(): Promise<UserInfo>
   runAs(targetUsername: string): Promise<void>
+  redeemOTC(code: string): Promise<string>
 }
 
 /**
@@ -140,6 +141,37 @@ class AuthService implements IAuthService {
       allowBearerHeader: true,
       noTokenMessage: 'No token received from server',
     })
+  }
+
+  /**
+   * Redeem an OIDC one-time code (delivered as `?code=` on the
+   * `/oauth/callback` redirect) for a JWT via WebAPI's `/user/login/otc`
+   * endpoint. The code itself is single-use and worthless without this
+   * exchange, so unlike a bearer token it is safe to read from the URL.
+   */
+  async redeemOTC(code: string): Promise<string> {
+    const url = this.buildProviderUrl(`user/login/otc?code=${encodeURIComponent(code)}`)
+    logger.debug('Auth', 'Redeeming OIDC one-time code', url)
+
+    const response = await fetch(url, { method: 'GET' })
+
+    if (!response.ok) {
+      await this.throwAuthError(response)
+    }
+
+    let body: Record<string, unknown> = {}
+    try {
+      body = (await response.json()) as Record<string, unknown>
+    } catch {
+      // response wasn't JSON — fall through to the missing-token error below
+    }
+
+    if (typeof body.jwt !== 'string') {
+      const message = typeof body.message === 'string' ? body.message : 'No token received from server'
+      throw new Error(message)
+    }
+
+    return body.jwt
   }
 
   private async throwAuthError(response: Response): Promise<never> {
