@@ -279,7 +279,13 @@ const occurrenceTypeKey = computed<'EXACTLY' | 'AT_LEAST' | 'AT_MOST'>({
 const occurrenceCount = computed<number, number | string | null | undefined>({
   get: () => Number(occurrence.value.Count ?? 0),
   set: value => {
-    ensureOccurrence().Count = value === '' || value === null || value === undefined ? 0 : Number(value)
+    if (value === '' || value === null || value === undefined) {
+      ensureOccurrence().Count = 0
+      return
+    }
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed)) return
+    ensureOccurrence().Count = parsed
   },
 })
 

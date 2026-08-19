@@ -239,7 +239,13 @@ function windowDays(side: 'Start' | 'End') {
 }
 
 function setWindowDays(side: 'Start' | 'End', value: string) {
-  ensureEndpoint(side).Days = value === '' ? null : Number(value)
+  if (value === '') {
+    ensureEndpoint(side).Days = null
+    return
+  }
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return
+  ensureEndpoint(side).Days = parsed
 }
 
 function windowDirection(side: 'Start' | 'End') {
