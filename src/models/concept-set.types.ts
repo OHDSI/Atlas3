@@ -4,6 +4,7 @@
  */
 import { z } from 'zod'
 import type { Tag } from '@/models/cohort.types'
+import { ConceptSchema as CirceConceptSchema } from '@/models/circe-types'
 
 // ============================================================================
 // Core Concept Type (standardized from WebAPI UPPERCASE fields to camelCase)
@@ -39,19 +40,14 @@ export const ConceptSchema = z.object({
 })
 
 // Zod validation schema for WebAPI concept search response (UPPERCASE fields)
-export const ConceptSearchResponseSchema = z.array(
-  z.object({
-    CONCEPT_ID: z.number(),
-    CONCEPT_NAME: z.string(),
-    CONCEPT_CODE: z.string(),
-    DOMAIN_ID: z.string(),
-    VOCABULARY_ID: z.string(),
-    CONCEPT_CLASS_ID: z.string(),
-    STANDARD_CONCEPT: z.string().nullable(),
-    INVALID_REASON: z.string().nullable(),
-    RELATIONSHIPS: z.array(z.string()).optional(),
-  })
-)
+export const ConceptSearchResponseItemSchema = CirceConceptSchema.extend({
+  VALID_START_DATE: z.number(),
+  VALID_END_DATE: z.number(),
+  RELATIONSHIPS: z.array(z.string()).optional(),
+})
+export type ConceptSearchResponseItem = z.infer<typeof ConceptSearchResponseItemSchema>
+
+export const ConceptSearchResponseSchema = z.array(ConceptSearchResponseItemSchema)
 
 export type ConceptSearchResponse = z.infer<typeof ConceptSearchResponseSchema>
 

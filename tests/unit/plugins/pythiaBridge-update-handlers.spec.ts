@@ -739,8 +739,13 @@ describe('pythiaBridge update-existing handlers', () => {
     // Seed a current cohort so the "attach to cohort" branch runs.
     const cohort = useCohortStore()
     // Intercept applyProposal so the real implementation (which expects a
-    // fully-populated cohort shape including conceptSets) doesn't run.
-    const cohortApply = vi.spyOn(cohort, 'applyProposal').mockReturnValue(undefined as never)
+    // fully-populated cohort shape including conceptSets) doesn't run. It must
+    // still return a ProposalResult: the caller reads `.applied`, so returning
+    // undefined threw inside an un-awaited promise. Vitest tolerated that as an
+    // unhandled rejection and still passed, but Stryker treats an unhandled
+    // error in the initial run as fatal, which took the whole mutation check
+    // down with a message that named no test.
+    const cohortApply = vi.spyOn(cohort, 'applyProposal').mockReturnValue({ applied: true })
     ;(cohort as unknown as { currentCohort: unknown }).currentCohort = {
       id: 42,
       name: 'Existing cohort',

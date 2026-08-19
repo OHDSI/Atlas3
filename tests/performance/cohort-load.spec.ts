@@ -1,152 +1,123 @@
 /**
  * Performance Tests: Cohort Load (T113-T114)
  *
- * Measures load time for typical cohorts and verifies performance targets
- * Target: Load/save should complete within 2 seconds for typical cohorts
+ * Measures how long it takes to bring a cohort's circe expression into the
+ * editor for a typical cohort: parsing against CohortExpressionSchema, and
+ * running normalizeRawCohortDefinition (the function the app actually calls
+ * on load, which JSON.parses the WebAPI `expression` string and then
+ * validates it against the schema).
+ *
+ * There is no Atlas <-> internal conversion any more: in the circe-native
+ * model the editor's document is the WebAPI payload, so schema validation is
+ * the whole cost of "loading" a cohort.
  */
 
 import { describe, it, expect } from 'vitest'
-import { convertInternalToAtlas, convertAtlasToInternal } from '@/services/atlas-converter'
 import * as fs from 'fs'
 import * as path from 'path'
+import { CohortExpressionSchema } from '@/models/circe-types'
+import { normalizeRawCohortDefinition } from '@/services/cohort-definition.service'
 
 const FIXTURES_DIR = path.join(__dirname, '../integration/fixtures/atlas-cohorts')
-const PERFORMANCE_TARGET_MS = 2000 // 2 seconds
+
+// Schema validation of a typical cohort is sub-millisecond once the schema
+// module is warm (observed under vitest: ~0.1-0.2ms per call, ~0.9ms on the
+// very first, cold call). 25ms is a regression tripwire, not a performance
+// target -- roughly 125-250x the typical warm call and ~28x the cold-call
+// worst case, tight enough to catch a real regression (e.g. an accidentally
+// quadratic schema refinement) without being so lenient it never fires.
+const PERFORMANCE_TARGET_MS = 25
+
+function toRaw(atlasJson: unknown): { id: number; name: string; expression: string } {
+  return { id: 1, name: 'Test Cohort', expression: JSON.stringify(atlasJson) }
+}
 
 describe('Performance Tests - Typical Cohort Load', () => {
-  it('T113: measures load time for typical cohort', () => {
-    // Load a typical cohort fixture (<10 rules, <20 criteria)
+  it('T113: measures schema-validation time for typical cohort', () => {
     const fixturePath = path.join(FIXTURES_DIR, 'cohort-001-simple.json')
     const atlasJson = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'))
 
-    // Measure conversion time: Atlas → Internal
-    const startConvertToInternal = performance.now()
-    const internal = convertAtlasToInternal(atlasJson)
-    const convertToInternalTime = performance.now() - startConvertToInternal
+    const startParse = performance.now()
+    const parsed = CohortExpressionSchema.parse(atlasJson)
+    const parseTime = performance.now() - startParse
 
-    // Measure conversion time: Internal → Atlas
-    const startConvertToAtlas = performance.now()
-    const backToAtlas = convertInternalToAtlas({
-      ...internal,
-      name: 'Test Cohort',
-      entryEvents: internal.entryEvents || [],
-      qualifyingLimit: internal.qualifyingLimit || 'ALL',
-      inclusionRules: internal.inclusionRules || [],
-      conceptSets: internal.conceptSets || [],
-    })
-    const convertToAtlasTime = performance.now() - startConvertToAtlas
+    const startNormalize = performance.now()
+    const normalized = normalizeRawCohortDefinition(toRaw(atlasJson))
+    const normalizeTime = performance.now() - startNormalize
 
-    const totalTime = convertToInternalTime + convertToAtlasTime
-
-    console.log(`\n[Performance] Typical cohort conversion times:`)
-    console.log(`  - Atlas → Internal: ${convertToInternalTime.toFixed(2)}ms`)
-    console.log(`  - Internal → Atlas: ${convertToAtlasTime.toFixed(2)}ms`)
-    console.log(`  - Total round-trip: ${totalTime.toFixed(2)}ms`)
+    console.log(`\n[Performance] Typical cohort load times:`)
+    console.log(`  - CohortExpressionSchema.parse: ${parseTime.toFixed(3)}ms`)
+    console.log(`  - normalizeRawCohortDefinition: ${normalizeTime.toFixed(3)}ms`)
     console.log(`  - Target: ${PERFORMANCE_TARGET_MS}ms`)
 
-    // Verify internal structure is valid
-    expect(internal).toBeDefined()
-    expect(backToAtlas).toBeDefined()
+    expect(parsed).toBeDefined()
+    expect(normalized).toBeDefined()
 
-    // Performance assertion: Total time should be well under target
-    // Using a more lenient threshold for unit tests (should be <100ms typically)
-    expect(totalTime).toBeLessThan(PERFORMANCE_TARGET_MS)
+    expect(parseTime).toBeLessThan(PERFORMANCE_TARGET_MS)
+    expect(normalizeTime).toBeLessThan(PERFORMANCE_TARGET_MS)
   })
 
-  it('T114: verifies load/save completes within 2 seconds', () => {
-    // Test with multiple typical cohorts to ensure consistent performance
-    const fixtureFiles = fs.readdirSync(FIXTURES_DIR)
-      .filter(file => file.endsWith('.json') && file.startsWith('cohort-'))
-      .slice(0, 5) // Test first 5 cohorts
+  it('T114: verifies load completes well within target for a batch of typical cohorts', () => {
+    const fixtureFiles = fs
+      .readdirSync(FIXTURES_DIR)
+      .filter((file) => file.endsWith('.json') && file.startsWith('cohort-'))
+      .slice(0, 5)
 
     const results: Array<{ filename: string; time: number }> = []
 
-    fixtureFiles.forEach(filename => {
+    fixtureFiles.forEach((filename) => {
       const fixturePath = path.join(FIXTURES_DIR, filename)
       const atlasJson = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'))
 
       const startTime = performance.now()
-
-      // Simulate load: Atlas → Internal
-      const internal = convertAtlasToInternal(atlasJson)
-
-      // Simulate save: Internal → Atlas
-      const _backToAtlas = convertInternalToAtlas({
-        ...internal,
-        name: atlasJson.name || 'Test Cohort',
-        entryEvents: internal.entryEvents || [],
-        qualifyingLimit: internal.qualifyingLimit || 'ALL',
-        inclusionRules: internal.inclusionRules || [],
-        conceptSets: internal.conceptSets || [],
-      })
-
+      normalizeRawCohortDefinition(toRaw(atlasJson))
       const totalTime = performance.now() - startTime
-      results.push({ filename, time: totalTime })
 
-      // Each individual cohort should meet performance target
+      results.push({ filename, time: totalTime })
       expect(totalTime).toBeLessThan(PERFORMANCE_TARGET_MS)
     })
 
-    // Calculate statistics
-    const times = results.map(r => r.time)
+    const times = results.map((r) => r.time)
     const avgTime = times.reduce((a, b) => a + b, 0) / times.length
     const maxTime = Math.max(...times)
     const minTime = Math.min(...times)
 
     console.log(`\n[Performance] Multiple cohorts statistics:`)
     console.log(`  - Cohorts tested: ${results.length}`)
-    console.log(`  - Average time: ${avgTime.toFixed(2)}ms`)
-    console.log(`  - Min time: ${minTime.toFixed(2)}ms`)
-    console.log(`  - Max time: ${maxTime.toFixed(2)}ms`)
+    console.log(`  - Average time: ${avgTime.toFixed(3)}ms`)
+    console.log(`  - Min time: ${minTime.toFixed(3)}ms`)
+    console.log(`  - Max time: ${maxTime.toFixed(3)}ms`)
     console.log(`  - Target: ${PERFORMANCE_TARGET_MS}ms`)
 
-    // Verify average performance is good
     expect(avgTime).toBeLessThan(PERFORMANCE_TARGET_MS)
   })
 
   it('measures performance breakdown by operation', () => {
-    // Detailed performance breakdown for optimization insights
     const fixturePath = path.join(FIXTURES_DIR, 'cohort-001-simple.json')
     const atlasJson = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'))
+    const rawExpression = JSON.stringify(atlasJson)
 
-    // Measure individual operations
     const metrics: Record<string, number> = {}
 
-    // 1. JSON parse (already done, but simulate)
-    const parseStart = performance.now()
-    JSON.parse(JSON.stringify(atlasJson))
-    metrics.jsonParse = performance.now() - parseStart
+    const jsonParseStart = performance.now()
+    const reParsed = JSON.parse(rawExpression)
+    metrics.jsonParse = performance.now() - jsonParseStart
 
-    // 2. Atlas → Internal conversion
-    const toInternalStart = performance.now()
-    const internal = convertAtlasToInternal(atlasJson)
-    metrics.toInternal = performance.now() - toInternalStart
+    const schemaParseStart = performance.now()
+    const parsed = CohortExpressionSchema.parse(reParsed)
+    metrics.schemaParse = performance.now() - schemaParseStart
 
-    // 3. Internal → Atlas conversion
-    const toAtlasStart = performance.now()
-    const _backToAtlas = convertInternalToAtlas({
-      ...internal,
-      name: 'Test',
-      entryEvents: [],
-      qualifyingLimit: 'ALL',
-      inclusionRules: [],
-      conceptSets: [],
-    })
-    metrics.toAtlas = performance.now() - toAtlasStart
-
-    // 4. JSON stringify
-    const stringifyStart = performance.now()
-    JSON.stringify(_backToAtlas)
-    metrics.jsonStringify = performance.now() - stringifyStart
+    const jsonStringifyStart = performance.now()
+    JSON.stringify(parsed)
+    metrics.jsonStringify = performance.now() - jsonStringifyStart
 
     console.log(`\n[Performance] Operation breakdown:`)
     Object.entries(metrics).forEach(([operation, time]) => {
-      console.log(`  - ${operation}: ${time.toFixed(2)}ms`)
+      console.log(`  - ${operation}: ${time.toFixed(3)}ms`)
     })
 
-    // Total should be reasonable
     const total = Object.values(metrics).reduce((a, b) => a + b, 0)
-    console.log(`  - Total: ${total.toFixed(2)}ms`)
+    console.log(`  - Total: ${total.toFixed(3)}ms`)
 
     expect(total).toBeLessThan(PERFORMANCE_TARGET_MS)
   })

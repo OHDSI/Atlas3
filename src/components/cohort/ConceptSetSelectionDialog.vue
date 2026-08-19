@@ -215,6 +215,8 @@ import { AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIcon
 import { formatDate } from '@/utils/date-format'
 import { hasNumericConceptSetId } from '@/utils/concept-set-id'
 
+defineOptions({ name: 'ConceptSetSelectionDialog' })
+
 interface Props {
   modelValue: boolean
   /**

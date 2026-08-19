@@ -13,7 +13,12 @@
               "CONCEPT_NAME": "Cerebrovascular accident",
               "STANDARD_CONCEPT": "S",
               "DOMAIN_ID": "Condition",
-              "VOCABULARY_ID": "SNOMED"
+              "VOCABULARY_ID": "SNOMED",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "INVALID_REASON": null,
+              "INVALID_REASON_CAPTION": "Unknown",
+              "CONCEPT_CODE": "381591",
+              "CONCEPT_CLASS_ID": "Unknown"
             },
             "isExcluded": false,
             "includeDescendants": true,
@@ -33,7 +38,12 @@
               "CONCEPT_NAME": "Warfarin",
               "STANDARD_CONCEPT": "S",
               "DOMAIN_ID": "Drug",
-              "VOCABULARY_ID": "RxNorm"
+              "VOCABULARY_ID": "RxNorm",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "INVALID_REASON": null,
+              "INVALID_REASON_CAPTION": "Unknown",
+              "CONCEPT_CODE": "1308216",
+              "CONCEPT_CLASS_ID": "Unknown"
             },
             "isExcluded": false,
             "includeDescendants": true,
@@ -70,16 +80,7 @@
     "CollapseType": "ERA",
     "EraPad": 14
   },
-  "CensorWindow": {
-    "StartDate": {
-      "DateField": "START_DATE",
-      "Offset": 0
-    },
-    "EndDate": {
-      "DateField": "END_DATE",
-      "Offset": 180
-    }
-  },
+  "CensorWindow": {},
   "InclusionRules": [
     {
       "name": "Has anticoagulant exposure",

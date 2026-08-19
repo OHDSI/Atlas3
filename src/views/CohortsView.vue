@@ -369,12 +369,12 @@ import {
 import { logger } from '@/utils/logger'
 import { AtlasAlert, AtlasButton, AtlasChip, AtlasDialog, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
+import type { CohortExpression } from '@/models/circe-types'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
 import CohortFilters from '@/components/cohort/CohortFilters.vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import type { AtlasCohortDefinition } from '@/models/atlas.types'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -576,7 +576,7 @@ async function confirmImport() {
     const result = await saveCohortDefinition({
       name: importName.value.trim(),
       expressionType: 'SIMPLE_EXPRESSION',
-      expression: parsed as object,
+      expression: parsed as CohortExpression,
     })
 
     if (!result.success || !result.data.id) {
@@ -629,10 +629,10 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
   copyingId.value = cohort.id
 
   try {
-    const definitionResult = await getCohortDefinition(cohort.id)
-    if (!definitionResult.success) {
+    const loaded = await getCohortDefinition(cohort.id)
+    if (!loaded.success) {
       const message =
-        definitionResult.error.status === 403
+        loaded.error.status === 403
           ? t(
               'cohortDefinitions.copyLoadForbidden',
               'You do not have permission to read this cohort.'
@@ -641,24 +641,13 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
       showSnackbar(message, 'danger')
       return
     }
-
-    const {
-      id: _id,
-      name: _name,
-      description,
-      createdBy: _createdBy,
-      createdDate: _createdDate,
-      modifiedBy: _modifiedBy,
-      modifiedDate: _modifiedDate,
-      tags: _tags,
-      ...expression
-    } = definitionResult.data as AtlasCohortDefinition
+    const definition = loaded.data
 
     const created = await saveCohortDefinition({
       name: buildCopyName(cohort.name),
-      description,
+      description: definition.description,
       expressionType: 'SIMPLE_EXPRESSION',
-      expression,
+      expression: definition.expression,
     })
 
     if (!created.success || !created.data.id) {
@@ -746,12 +735,10 @@ async function handleShowInfo(cohort: CohortDefinitionSummary) {
   cohortInfoHtml.value = null
 
   try {
-    // Fetch the full cohort definition
     const definitionResult = await getCohortDefinition(cohort.id)
     if (requestId !== cohortInfoRequestId) return
     if (definitionResult.success) {
-      // Get print-friendly HTML
-      const htmlResult = await getCohortPrintFriendly(definitionResult.data)
+      const htmlResult = await getCohortPrintFriendly(definitionResult.data.expression)
       if (requestId !== cohortInfoRequestId) return
       cohortInfoHtml.value = htmlResult.success ? htmlResult.data : null
     } else {

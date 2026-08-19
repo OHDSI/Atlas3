@@ -4,6 +4,7 @@
  */
 import type {
   Concept,
+  ConceptSearchResponseItem,
   ConceptSetItem,
   ConceptSet,
   ConceptSetExpression,
@@ -66,28 +67,18 @@ export function normalizeInvalidReason(invalidReason: string | null | undefined)
 }
 
 /**
- * Map WebAPI concept response (UPPERCASE) to Concept interface (camelCase)
+ * Map a WebAPI concept-search response item (UPPERCASE) to Concept interface (camelCase)
  */
-export function mapConceptFromAPI(raw: {
-  CONCEPT_ID: number
-  CONCEPT_NAME: string
-  CONCEPT_CODE: string
-  DOMAIN_ID: string
-  VOCABULARY_ID: string
-  CONCEPT_CLASS_ID: string
-  STANDARD_CONCEPT: string | null
-  INVALID_REASON: string | null
-  RELATIONSHIPS?: string[]
-}): Concept {
+export function mapConceptFromAPI(raw: ConceptSearchResponseItem): Concept {
   const concept: Concept = {
     conceptId: raw.CONCEPT_ID,
     conceptName: raw.CONCEPT_NAME,
     conceptCode: raw.CONCEPT_CODE,
     domainId: raw.DOMAIN_ID,
     vocabularyId: raw.VOCABULARY_ID,
-    conceptClassId: raw.CONCEPT_CLASS_ID,
-    standardConcept: raw.STANDARD_CONCEPT,
-    invalidReason: raw.INVALID_REASON,
+    conceptClassId: raw.CONCEPT_CLASS_ID ?? "",
+    standardConcept: raw.STANDARD_CONCEPT ?? null,
+    invalidReason: raw.INVALID_REASON ?? null,
   }
   if (raw.RELATIONSHIPS !== undefined) {
     concept.relationships = raw.RELATIONSHIPS

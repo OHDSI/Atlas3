@@ -23,6 +23,10 @@ function stubWebApi(): Plugin {
   }
 }
 
+// Point the dev proxy at a remote WebAPI with `WEBAPI_URL=https://host npm run dev`.
+const webApiTarget = process.env.WEBAPI_URL ?? 'http://localhost:8080'
+const webApiOrigin = new URL(webApiTarget).origin
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   base: './',
@@ -64,7 +68,7 @@ export default defineConfig(({ mode }) => ({
         : {
             // Proxy WebAPI requests to local WebAPI instance
             '/WebAPI': {
-              target: 'http://localhost:8080',
+              target: webApiTarget,
               changeOrigin: true,
               secure: false,
               rewrite: (path) => path,
@@ -74,8 +78,8 @@ export default defineConfig(({ mode }) => ({
               // it with "Invalid CORS request" — login fails on the dev server.
               configure: (proxy) => {
                 proxy.on('proxyReq', (proxyReq) => {
-                  proxyReq.setHeader('origin', 'http://localhost:8080')
-                  proxyReq.setHeader('referer', 'http://localhost:8080/')
+                  proxyReq.setHeader('origin', webApiOrigin)
+                  proxyReq.setHeader('referer', `${webApiOrigin}/`)
                 })
               },
             },

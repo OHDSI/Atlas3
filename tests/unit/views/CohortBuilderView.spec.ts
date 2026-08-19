@@ -92,6 +92,17 @@ describe('CohortBuilderView.vue', () => {
       const cohortBuilder = wrapper.findComponent({ name: 'CohortBuilder' })
       expect(cohortBuilder.exists()).toBe(true)
     })
+
+    it('should wire the hero inputs with the expected placeholders', () => {
+      wrapper = mount(CohortBuilderView, {
+        global: {
+          plugins: [vuetify]
+        }
+      })
+
+      expect(wrapper.find('.cohort-builder-view__title-input').attributes('placeholder')).toBe('New cohort')
+      expect(wrapper.find('.cohort-builder-view__subtitle-input').attributes('placeholder')).toContain('Add a description')
+    })
   })
 
   describe('Props handling', () => {

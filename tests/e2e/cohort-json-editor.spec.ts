@@ -51,7 +51,9 @@ test.describe('Cohort JSON editor', () => {
           id: 1,
           name: 'Test Cohort',
           description: 'A test cohort for E2E testing',
-          expression: loadedCohort,
+          // WebAPI serialises `expression` as a JSON string; normalizeRawCohortDefinition
+          // JSON.parses it, so the mock has to match the wire shape, not the parsed shape.
+          expression: JSON.stringify(loadedCohort),
         }),
       })
     })
@@ -123,5 +125,19 @@ test.describe('Cohort JSON editor', () => {
     const criteria = (expression as Record<string, { CriteriaList: unknown[] }>).PrimaryCriteria
     expect(criteria.CriteriaList[0]).toHaveProperty('ProcedureOccurrence')
     expect(JSON.stringify(expression)).not.toContain('ConditionOccurrence')
+  })
+
+  test('warns before navigating away from an unsaved JSON edit', async ({ page }) => {
+    await openJsonDialog(page)
+    await page.fill(JSON_FIELD, JSON.stringify(replacementCohort, null, 2))
+    await page.click('[data-testid="cohort-json-apply"]')
+    await expect(page.locator(JSON_FIELD)).toBeHidden()
+
+    await page.evaluate(() => {
+      window.location.hash = '#/cohorts'
+    })
+
+    await expect(page.getByText('Unsaved changes will be lost. Proceed?')).toBeVisible()
+    await expect(page).toHaveURL(/#\/cohorts\/1$/)
   })
 })

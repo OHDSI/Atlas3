@@ -248,7 +248,18 @@
     "filtering": "Filtering",
     "importCohort": "Import cohort definition",
     "deleteCohortTitle": "Delete cohort?",
-    "cannotUndo": "This action cannot be undone."
+    "cannotUndo": "This action cannot be undone.",
+    "eventEnds": "Event ends",
+    "eventStarts": "Event starts",
+    "indexEnds": "Index ends",
+    "indexStarts": "Index starts",
+    "between": "between",
+    "allDays": "all days",
+    "day": "day",
+    "noWindow": "No window",
+    "unset": "unset",
+    "startDate": "start date",
+    "endDate": "end date"
   },
   "validation": {
     "required": "This field is required"
@@ -424,7 +435,19 @@
     "endOfContinuousObservationShort": "Observation",
     "fixedDurationShort": "Fixed duration",
     "endOfContinuousDrugExposureShort": "Drug exposure",
-    "of": "of"
+    "of": "of",
+    "earliest": "Earliest",
+    "latest": "Latest",
+    "onOrBefore": "on or before",
+    "on": "on",
+    "notOn": "not on",
+    "onOrAfter": "on or after",
+    "lessThan": "less than",
+    "lessThanOrEqual": "less than or equal",
+    "equal": "equal",
+    "notEqual": "not equal",
+    "greaterThan": "greater than",
+    "greaterThanOrEqual": "greater than or equal"
   },
   "components": {
     "inclusionRuleReport": {
@@ -641,7 +664,17 @@
       "exitAndErasTitle": "Cohort Exit & Eras",
       "exitStrategyLabel": "Strategy",
       "censoringEventsDescription": "Exit cohort when any of these events occur.",
-      "inclusionCriteriaTextShort": "No inclusion rules — adding one narrows which patients qualify beyond the entry events."
+      "inclusionCriteriaTextShort": "No inclusion rules — adding one narrows which patients qualify beyond the entry events.",
+      "entryEvents": "Cohort Entry Events",
+      "entryOn": "Cohort Entry On",
+      "addCriteriaToGroup": "Add Criteria to Group",
+      "continuousObservation": "Continuous observation",
+      "daysBefore": "Days before",
+      "daysAfter": "Days after",
+      "noPrimaryCriteria": "No primary criteria yet. Click \"Add Criteria to Group\" to start.",
+      "restrictInitialEvents": "Restrict Initial Events",
+      "exitCriteria": "Exit & Eras",
+      "cohortEras": "Cohort Eras"
     },
     "cohortExpressionViewer": {
       "cohortExpressionViewerText_1": "People having any of the following:",
@@ -734,7 +767,11 @@
       "exclude": "Exclude",
       "descendants": "Descendants",
       "mapped": "Mapped",
-      "addedToConceptSet": "Added To Concept Set!"
+      "addedToConceptSet": "Added To Concept Set!",
+      "anyOf": "any of",
+      "notAnyOf": "not any of",
+      "addConcepts": "Add Concepts",
+      "noConceptsSelected": "No concepts selected"
     },
     "conceptSetBuilder": {
       "conceptSet": "Concept Set",
@@ -1705,7 +1742,17 @@
       "startReferencePoint": "Start Reference Point",
       "endReferencePoint": "End Reference Point",
       "useIndexEnd": "Use index end date",
-      "useEventEnd": "Use event end date"
+      "useEventEnd": "Use event end date",
+      "shortTermBaseline": "Short-term baseline (−30 to 0 days)",
+      "mediumTermBaseline": "Medium-term baseline (−180 to 0 days)",
+      "longTermBaseline": "Long-term baseline (−365 to 0 days)",
+      "allTimePriorToIndex": "All time prior to index",
+      "onIndexDate": "On index date",
+      "acuteFollowUp": "Acute follow-up (0 to 30 days after)",
+      "ninetyDayFollowUp": "90-day follow-up (0 to 90 days after)",
+      "oneYearFollowUp": "1-year follow-up (0 to 365 days after)",
+      "allTimeAfterIndex": "All time after index",
+      "eventOverlapsWithIndex": "event overlapps with index"
     },
     "conceptSetPicker": {
       "clearSelection": "Clear selection",
@@ -1805,6 +1852,7 @@
       "saveError": "Failed to save cohort",
       "loadForbidden": "You do not have permission to open this cohort",
       "loadError": "Failed to load cohort",
+      "parseError": "Failed to parse cohort definition",
       "exportFailed": "Export failed: {error}",
       "exportDownloaded": "Cohort JSON downloaded",
       "copiedToClipboard": "Cohort JSON copied to clipboard",
@@ -1822,7 +1870,11 @@
       "jsonInvalid": "Invalid JSON: {error}",
       "jsonInvalidExpression": "Not a valid Atlas cohort expression",
       "jsonImportFailed": "Import failed: {error}",
-      "jsonReadFailed": "Could not read file"
+      "jsonReadFailed": "Could not read file",
+      "deleteConceptSetTitle": "Delete concept set?",
+      "deleteConceptSetUsageOne": "1 criterion still uses it",
+      "deleteConceptSetUsageMany": "{count} criteria still use it",
+      "deleteConceptSetWarning": "Deleting \"{name}\" will clear it from those criteria, and a criterion with no concept set matches its entire domain. {usage}."
     },
     "conceptDetail": {
       "closeDetails": "Close concept details",
@@ -2151,6 +2203,12 @@
     },
     "dateAdjust": {
       "criteriaLabel": "Date Adjustment"
+    },
+    "windowExpression": {
+      "eventEnds": "event ends",
+      "eventStarts": "event starts",
+      "indexEnd": "index end",
+      "indexStart": "index start"
     }
   },
   "characterizations": {
@@ -4181,7 +4239,8 @@
     "qualifyingCohort": "Qualifying cohort",
     "ofEntry": "of entry",
     "group": "1 group",
-    "criterion": "1 criterion"
+    "criterion": "1 criterion",
+    "unnamedRule": "Unnamed Rule"
   },
   "cohortDefinitions": {
     "closeYourCurrentCohort": "Please close your current cohort definition before creating a new one",
@@ -4521,7 +4580,9 @@
     "copyLoadError": "Failed to load the cohort to copy.",
     "copyLoadForbidden": "You do not have permission to read this cohort.",
     "copyError": "Failed to copy the cohort.",
-    "deleteError": "Failed to delete the cohort."
+    "deleteError": "Failed to delete the cohort.",
+    "noRuleDescription": "No description",
+    "ruleDescription": "Description"
   },
   "const": {
     "disabledReason": {
@@ -6412,5 +6473,8 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "inclusionPanel": {
+    "limitIncludedEvents": "Limit Included Events to"
   }
 }

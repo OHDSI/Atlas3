@@ -33,7 +33,9 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
           id: 1,
           name: 'Test Cohort',
           description: 'A test cohort for E2E testing',
-          expression: sampleCohort,
+          // WebAPI serialises `expression` as a JSON string; normalizeRawCohortDefinition
+          // JSON.parses it, so the mock has to match the wire shape, not the parsed shape.
+          expression: JSON.stringify(sampleCohort),
         }),
       })
     })
@@ -119,7 +121,9 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
             id: 1,
             name: 'Test Cohort',
             description: 'A test cohort for round-trip testing',
-            expression: sampleCohort,
+            // WebAPI serialises `expression` as a JSON string; normalizeRawCohortDefinition
+            // JSON.parses it, so the mock has to match the wire shape, not the parsed shape.
+            expression: JSON.stringify(sampleCohort),
           }),
         })
       } else if (route.request().method() === 'PUT') {
@@ -165,7 +169,9 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
     // Check that critical attributes are preserved
     const savedExpression = (savedCohortData!.expression as Record<string, unknown>) || {}
 
-    expect(savedExpression.expressionType).toBe(sampleCohort.expressionType)
+    // expressionType is a CohortDefinitionDTO field, a sibling of `expression`,
+    // not part of the CircE expression itself - assert it at the DTO level.
+    expect(savedCohortData!.expressionType).toBe(sampleCohort.expressionType)
     expect(savedExpression.cdmVersionRange).toBe(sampleCohort.cdmVersionRange)
     expect(savedExpression.CollapseSettings).toEqual(sampleCohort.CollapseSettings)
 

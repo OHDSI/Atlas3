@@ -8,6 +8,18 @@ import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { createTestVuetify } from './vuetify-setup'
 import type { Component } from 'vue'
 
+const PassthroughStub = {
+  template: '<div><slot /></div>',
+}
+
+// Shared inline menu stub for unit tests: keep activator and content in the
+// wrapper so tests can assert behavior without teleport/overlay plumbing.
+export const InlineAtlasMenuStub = {
+  name: 'AtlasMenu',
+  props: { modelValue: { type: Boolean, default: false } },
+  template: '<div class="menu-stub"><slot name="activator" :props="{}" /><slot /></div>',
+}
+
 /**
  * Options for mounting components in tests
  */
@@ -61,7 +73,23 @@ export function mountComponent<T extends Component>(
     ...mountOptions,
     global: {
       plugins: globalPlugins,
-      stubs,
+      stubs: {
+        'v-chart': true,
+        // Simplify Vue/Vuetify rendering infrastructure; keep behavior real.
+        Teleport: true,
+        teleport: true,
+        Transition: PassthroughStub,
+        transition: PassthroughStub,
+        TransitionGroup: PassthroughStub,
+        'transition-group': PassthroughStub,
+        VDialogTransition: PassthroughStub,
+        VMenuTransition: PassthroughStub,
+        VFadeTransition: PassthroughStub,
+        VScaleTransition: PassthroughStub,
+        VExpandTransition: PassthroughStub,
+        VExpandXTransition: PassthroughStub,
+        ...stubs,
+      },
       mocks,
     },
   }) as VueWrapper<InstanceType<T>>

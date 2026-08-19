@@ -3,10 +3,12 @@ import { mount } from '@vue/test-utils'
 import { vuetify, pristinePinia } from './_test-helpers'
 import IncidenceRateStratifyRulesList from '@/components/incidence-rate/IncidenceRateStratifyRulesList.vue'
 
-const rules = [
-  { name: 'Age band', expression: { id: 'a', logicType: 'ALL', events: [] } },
-  { name: 'Sex',      expression: { id: 'b', logicType: 'ALL', events: [] } },
-] as const
+import type { StratifyRule } from '@/models/incidence-rate.types'
+
+const rules: StratifyRule[] = [
+  { name: 'Age band', expression: { Type: 'ALL', CriteriaList: [] } },
+  { name: 'Sex',      expression: { Type: 'ALL', CriteriaList: [] } },
+]
 
 describe('IncidenceRateStratifyRulesList', () => {
   it('renders one row per rule and the empty hint when none', () => {
