@@ -78,6 +78,12 @@ export function convertAtlasItemToCirce(
  * produces). Passing `existing` lets one be allocated from the expression's own
  * sets, so the caller does not depend on something upstream having done it
  * first. Without `existing`, a non-numeric id yields undefined.
+ *
+ * Repository ids and the expression's local codeset ids are separate number
+ * spaces that overlap, so a numeric id is only kept when no *different* set in
+ * the expression already holds it — otherwise the criterion built from this id
+ * would resolve to that other set. Identity is approximated by id+name, the
+ * same way useCirceConceptSetPicker does it.
  */
 export function circeConceptSetFromAtlas(
   set: {
@@ -87,7 +93,7 @@ export function circeConceptSetFromAtlas(
   },
   existing?: ReadonlyArray<ConceptSet>,
 ): ConceptSet | undefined {
-  const id = typeof set.id === 'number' ? set.id : existing && nextConceptSetId(existing)
+  const id = resolveCodesetId(set.id, set.name ?? '', existing)
   if (typeof id !== 'number') return undefined
 
   return {
@@ -95,6 +101,20 @@ export function circeConceptSetFromAtlas(
     name: set.name ?? '',
     expression: { items: (set.items ?? []).map(convertAtlasItemToCirce) },
   }
+}
+
+function resolveCodesetId(
+  id: number | string | null | undefined,
+  name: string,
+  existing?: ReadonlyArray<ConceptSet>,
+): number | undefined {
+  if (typeof id !== 'number') return existing && nextConceptSetId(existing)
+  if (!existing) return id
+
+  const collision = existing.find(cs => cs.id === id)
+  if (!collision || collision.name === name) return id
+
+  return nextConceptSetId(existing)
 }
 
 function isCirceItem(item: AtlasConceptSetItem | CirceConceptSetItem): item is CirceConceptSetItem {
