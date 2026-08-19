@@ -433,7 +433,7 @@ describe('DeviceExposure', () => {
     await expectMenuItemPresent(wrapper, 'Nested Criteria')
     await selectMenuItem(wrapper, 'Nested Criteria')
 
-    expect(criteria.DeviceExposure?.CorrelatedCriteria).toStrictEqual({})
+    expect(criteria.DeviceExposure?.CorrelatedCriteria).toStrictEqual({ Type: 'ALL' })
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Nested Criteria')

@@ -1,4 +1,4 @@
-import type { ConceptSetSelection, DateAdjustment } from '@/models/circe-types'
+import type { ConceptSetSelection, CriteriaGroup, DateAdjustment } from '@/models/circe-types'
 import type { ConceptSetOption, ConceptSetSelectionTarget, ModelAccessor } from './criteria-editor.types'
 
 export function createObjectKeyGenerator() {
@@ -58,7 +58,11 @@ export function createDefaultDateAdjustment(): DateAdjustment {
   }
 }
 
-export function ensureObjectField<T extends Record<string, unknown>>(
+export function createDefaultCriteriaGroup(): CriteriaGroup {
+  return { Type: 'ALL' }
+}
+
+export function ensureObjectField<T extends object>(
   target: Record<string, unknown>,
   fieldKey: string,
   createValue: () => T,

@@ -4,6 +4,7 @@ import { reactive } from 'vue'
 import {
   createConceptSetComponentProps,
   createConceptSetModel,
+  createDefaultCriteriaGroup,
   createDefaultDateAdjustment,
   createObjectKeyGenerator,
   createSchemaFieldProps,
@@ -65,5 +66,18 @@ describe('criteria-editor-helper', () => {
     expect(created).toEqual({ created: true })
     expect(target.missing).toBe(created)
     expect(ensureObjectField(target, 'invalid', () => ({ replaced: true }))).toEqual({ replaced: true })
+  })
+})
+
+describe('createDefaultCriteriaGroup', () => {
+  // circe-be calls group.type.equalsIgnoreCase(...) without a null check, so a
+  // group that reaches SQL generation without a Type throws rather than
+  // generating.
+  it('carries an explicit match type', () => {
+    expect(createDefaultCriteriaGroup()).toEqual({ Type: 'ALL' })
+  })
+
+  it('returns a fresh object each call', () => {
+    expect(createDefaultCriteriaGroup()).not.toBe(createDefaultCriteriaGroup())
   })
 })
