@@ -1,6 +1,7 @@
 import { computed, ref, type Ref } from 'vue'
 import { convertAtlasItemToCirce, nextConceptSetId } from '@/components/cohort-editor/atlas-concept-set'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { logger } from '@/utils/logger'
 import type { ConceptSet } from '@/models/circe-types'
 import type { ConceptSetItem as AtlasConceptSetItem } from '@/models/concept-set.types'
 import type {
@@ -87,11 +88,25 @@ export function useCirceConceptSetPicker(opts: {
     // Fetch full items for repository imports, then materialize the chosen set
     // into the cohort expression before completing the shared assignment step.
     let items: AtlasConceptSetItem[] = (conceptSet.items ?? []) as AtlasConceptSetItem[]
-    if (items.length === 0 && numericId != null) {
+    if (items.length === 0) {
       await conceptSetsStore.fetchOne(numericId)
-      if (conceptSetsStore.currentSet?.id === numericId) {
-        items = conceptSetsStore.currentSet.items ?? []
+
+      // A failed fetch is indistinguishable from a genuinely empty set by item
+      // count alone, and materializing the unresolved set would save a codeset
+      // that matches nothing. fetchOne clears `error` up front and nulls
+      // `currentSet` on failure, so success is "no error and currentSet is the
+      // set we asked for" — an empty set that did resolve is still accepted.
+      const fetched = conceptSetsStore.currentSet
+      if (conceptSetsStore.error || fetched?.id !== numericId) {
+        logger.error('useCirceConceptSetPicker', 'Concept set fetch failed, selection cancelled', {
+          id: numericId,
+          error: conceptSetsStore.error,
+        })
+        cancelSelection()
+        return
       }
+
+      items = fetched.items ?? []
     }
 
     const existing = opts.getConceptSets().find(cs => cs.id === numericId)

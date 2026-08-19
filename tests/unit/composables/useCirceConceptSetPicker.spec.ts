@@ -4,7 +4,9 @@ import type { ConceptSet } from '@/models/circe-types'
 
 const mockConceptSetsStore = {
   currentSet: null as ConceptSet | null,
+  error: null as string | null,
   fetchOne: vi.fn(async (id: number) => {
+    mockConceptSetsStore.error = null
     mockConceptSetsStore.currentSet = {
       id,
       name: 'Repository concept set',
@@ -37,7 +39,23 @@ import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker
 describe('useCirceConceptSetPicker', () => {
   beforeEach(() => {
     mockConceptSetsStore.currentSet = null
+    mockConceptSetsStore.error = null
     mockConceptSetsStore.fetchOne.mockClear()
+    mockConceptSetsStore.fetchOne.mockImplementation(async (id: number) => {
+      mockConceptSetsStore.error = null
+      mockConceptSetsStore.currentSet = {
+        id,
+        name: 'Repository concept set',
+        items: [
+          {
+            concept: {
+              CONCEPT_ID: 101,
+              CONCEPT_NAME: 'Imported concept',
+            },
+          },
+        ],
+      } as ConceptSet
+    })
   })
 
   it('filters non-numeric ids out of the concept-set options list', () => {
@@ -148,6 +166,52 @@ describe('useCirceConceptSetPicker', () => {
     await picker.onConceptSetSelected({ id: 8, name: 'Ignored', items: [] })
 
     expect(addConceptSet).not.toHaveBeenCalled()
+    expect(picker.dialogOpen.value).toBe(false)
+  })
+
+  it('refuses the selection when the concept-set fetch fails', async () => {
+    mockConceptSetsStore.fetchOne.mockImplementation(async () => {
+      mockConceptSetsStore.error = 'Concept set not found'
+      mockConceptSetsStore.currentSet = null
+    })
+
+    const target = ref<number | null | undefined>()
+    const addConceptSet = vi.fn()
+    const picker = useCirceConceptSetPicker({
+      getConceptSets: () => [],
+      addConceptSet,
+    })
+
+    picker.onSelectConceptSet({ targetRef: target })
+    await picker.onConceptSetSelected({ id: 7, name: 'Unreachable set' })
+
+    expect(addConceptSet).not.toHaveBeenCalled()
+    expect(target.value).toBeUndefined()
+    expect(picker.dialogOpen.value).toBe(false)
+  })
+
+  it('accepts a repository concept set that resolves to zero items', async () => {
+    mockConceptSetsStore.fetchOne.mockImplementation(async (id: number) => {
+      mockConceptSetsStore.error = null
+      mockConceptSetsStore.currentSet = { id, name: 'Empty set', items: [] } as ConceptSet
+    })
+
+    const target = ref<number | null | undefined>()
+    const addConceptSet = vi.fn()
+    const picker = useCirceConceptSetPicker({
+      getConceptSets: () => [],
+      addConceptSet,
+    })
+
+    picker.onSelectConceptSet({ targetRef: target })
+    await picker.onConceptSetSelected({ id: 7, name: 'Empty set' })
+
+    expect(addConceptSet).toHaveBeenCalledWith({
+      id: 7,
+      name: 'Empty set',
+      expression: { items: [] },
+    })
+    expect(target.value).toBe(7)
     expect(picker.dialogOpen.value).toBe(false)
   })
 
