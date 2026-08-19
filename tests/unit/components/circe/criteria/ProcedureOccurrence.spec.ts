@@ -155,11 +155,10 @@ describe('ProcedureOccurrence', () => {
     expect(criteria.ProcedureOccurrence?.ProcedureType).toStrictEqual([{ CONCEPT_ID: 200, CONCEPT_NAME: 'Procedure Type' }])
 
     const excludeChip = conceptArray.find('.concept-array__exclude-chip')
-    if (excludeChip.exists()) {
-      await excludeChip.trigger('click')
-      await nextTick()
-      expect(criteria.ProcedureOccurrence?.ProcedureTypeExclude).toBe(true)
-    }
+    expect(excludeChip.exists()).toBe(true)
+    await excludeChip.trigger('click')
+    await nextTick()
+    expect(criteria.ProcedureOccurrence?.ProcedureTypeExclude).toBe(true)
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Procedure Type')

@@ -189,11 +189,10 @@ describe('DrugExposure', () => {
     expect(criteria.DrugExposure?.DrugType).toStrictEqual([{ CONCEPT_ID: 1234, CONCEPT_NAME: 'Drug type concept' }])
 
     const excludeChip = conceptArray.find('.concept-array__exclude-chip')
-    if (excludeChip.exists()) {
-      await excludeChip.trigger('click')
-      await nextTick()
-      expect(criteria.DrugExposure?.DrugTypeExclude).toBe(true)
-    }
+    expect(excludeChip.exists()).toBe(true)
+    await excludeChip.trigger('click')
+    await nextTick()
+    expect(criteria.DrugExposure?.DrugTypeExclude).toBe(true)
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Drug Type')

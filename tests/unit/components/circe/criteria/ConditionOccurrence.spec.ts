@@ -152,11 +152,10 @@ describe('ConditionOccurrence', () => {
     expect(wrapper.emitted('edit-concept-set')?.at(-1)?.[0]?.targetRef.value).toBe(42)
 
     const excludeChip = conceptSetSelection.find('.concept-set-selection__exclude-chip')
-    if (excludeChip.exists()) {
-      await excludeChip.trigger('click')
-      await nextTick()
-      expect(criteria.ConditionOccurrence?.GenderCS?.IsExclusion).toBe(true)
-    }
+    expect(excludeChip.exists()).toBe(true)
+    await excludeChip.trigger('click')
+    await nextTick()
+    expect(criteria.ConditionOccurrence?.GenderCS?.IsExclusion).toBe(true)
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Gender Concept Set')
@@ -214,11 +213,10 @@ describe('ConditionOccurrence', () => {
     expect(wrapper.emitted('edit-concept-set')?.at(-1)?.[0]?.targetRef.value).toBe(42)
 
     const excludeChip = conceptSetSelection.find('.concept-set-selection__exclude-chip')
-    if (excludeChip.exists()) {
-      await excludeChip.trigger('click')
-      await nextTick()
-      expect(criteria.ConditionOccurrence?.ConditionStatusCS?.IsExclusion).toBe(true)
-    }
+    expect(excludeChip.exists()).toBe(true)
+    await excludeChip.trigger('click')
+    await nextTick()
+    expect(criteria.ConditionOccurrence?.ConditionStatusCS?.IsExclusion).toBe(true)
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Condition Status Concept Set')
@@ -338,11 +336,10 @@ describe('ConditionOccurrence', () => {
     expect(criteria.ConditionOccurrence?.ConditionType).toStrictEqual([{ CONCEPT_ID: 123, CONCEPT_NAME: 'Condition type concept' }])
 
     const excludeChip = conceptArray.find('.concept-array__exclude-chip')
-    if (excludeChip.exists()) {
-      await excludeChip.trigger('click')
-      await nextTick()
-      expect(criteria.ConditionOccurrence?.ConditionTypeExclude).toBe(true)
-    }
+    expect(excludeChip.exists()).toBe(true)
+    await excludeChip.trigger('click')
+    await nextTick()
+    expect(criteria.ConditionOccurrence?.ConditionTypeExclude).toBe(true)
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Condition Type')
@@ -376,11 +373,10 @@ describe('ConditionOccurrence', () => {
     expect(wrapper.emitted('edit-concept-set')?.at(-1)?.[0]?.targetRef.value).toBe(42)
 
     const excludeChip = conceptSetSelection.find('.concept-set-selection__exclude-chip')
-    if (excludeChip.exists()) {
-      await excludeChip.trigger('click')
-      await nextTick()
-      expect(criteria.ConditionOccurrence?.ConditionTypeCS?.IsExclusion).toBe(true)
-    }
+    expect(excludeChip.exists()).toBe(true)
+    await excludeChip.trigger('click')
+    await nextTick()
+    expect(criteria.ConditionOccurrence?.ConditionTypeCS?.IsExclusion).toBe(true)
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Condition Type Concept Set')
@@ -438,11 +434,10 @@ describe('ConditionOccurrence', () => {
     expect(wrapper.emitted('edit-concept-set')?.at(-1)?.[0]?.targetRef.value).toBe(42)
 
     const excludeChip = conceptSetSelection.find('.concept-set-selection__exclude-chip')
-    if (excludeChip.exists()) {
-      await excludeChip.trigger('click')
-      await nextTick()
-      expect(criteria.ConditionOccurrence?.VisitTypeCS?.IsExclusion).toBe(true)
-    }
+    expect(excludeChip.exists()).toBe(true)
+    await excludeChip.trigger('click')
+    await nextTick()
+    expect(criteria.ConditionOccurrence?.VisitTypeCS?.IsExclusion).toBe(true)
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Visit Type Concept Set')
@@ -526,11 +521,10 @@ describe('ConditionOccurrence', () => {
     expect(wrapper.emitted('edit-concept-set')?.at(-1)?.[0]?.targetRef.value).toBe(42)
 
     const excludeChip = conceptSetSelection.find('.concept-set-selection__exclude-chip')
-    if (excludeChip.exists()) {
-      await excludeChip.trigger('click')
-      await nextTick()
-      expect(criteria.ConditionOccurrence?.ProviderSpecialtyCS?.IsExclusion).toBe(true)
-    }
+    expect(excludeChip.exists()).toBe(true)
+    await excludeChip.trigger('click')
+    await nextTick()
+    expect(criteria.ConditionOccurrence?.ProviderSpecialtyCS?.IsExclusion).toBe(true)
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Provider Specialty Concept Set')

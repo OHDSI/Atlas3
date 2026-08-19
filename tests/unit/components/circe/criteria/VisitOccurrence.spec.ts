@@ -155,11 +155,10 @@ describe('VisitOccurrence', () => {
     expect(criteria.VisitOccurrence?.VisitType).toStrictEqual([{ CONCEPT_ID: 9001, CONCEPT_NAME: 'Inpatient' }])
 
     const excludeChip = conceptArray.find('.concept-array__exclude-chip')
-    if (excludeChip.exists()) {
-      await excludeChip.trigger('click')
-      await nextTick()
-      expect(criteria.VisitOccurrence?.VisitTypeExclude).toBe(true)
-    }
+    expect(excludeChip.exists()).toBe(true)
+    await excludeChip.trigger('click')
+    await nextTick()
+    expect(criteria.VisitOccurrence?.VisitTypeExclude).toBe(true)
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Visit Type')

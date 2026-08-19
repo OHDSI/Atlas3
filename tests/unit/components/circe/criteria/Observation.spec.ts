@@ -135,11 +135,10 @@ describe('Observation', () => {
     expect(criteria.Observation?.ObservationType).toStrictEqual([{ CONCEPT_ID: 111, CONCEPT_NAME: 'Type A' }])
 
     const excludeChip = conceptArray.find('.concept-array__exclude-chip')
-    if (excludeChip.exists()) {
-      await excludeChip.trigger('click')
-      await nextTick()
-      expect(criteria.Observation?.ObservationTypeExclude).toBe(true)
-    }
+    expect(excludeChip.exists()).toBe(true)
+    await excludeChip.trigger('click')
+    await nextTick()
+    expect(criteria.Observation?.ObservationTypeExclude).toBe(true)
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Observation Type')

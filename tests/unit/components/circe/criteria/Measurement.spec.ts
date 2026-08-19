@@ -134,11 +134,10 @@ describe('Measurement', () => {
     expect(criteria.Measurement?.MeasurementType).toStrictEqual([{ CONCEPT_ID: 1001, CONCEPT_NAME: 'Glucose' }])
 
     const excludeChip = conceptArray.find('.concept-array__exclude-chip')
-    if (excludeChip.exists()) {
-      await excludeChip.trigger('click')
-      await nextTick()
-      expect(criteria.Measurement?.MeasurementTypeExclude).toBe(true)
-    }
+    expect(excludeChip.exists()).toBe(true)
+    await excludeChip.trigger('click')
+    await nextTick()
+    expect(criteria.Measurement?.MeasurementTypeExclude).toBe(true)
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Measurement Type')
