@@ -270,6 +270,65 @@ describe('AuthService', () => {
     })
   })
 
+  describe('redeemOTC (#256)', () => {
+    it('exchanges the one-time code for a JWT via /user/login/otc', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        headers: createHeadersMock({}),
+        json: () =>
+          Promise.resolve({ login: 'oidcuser', jwt: 'otc-jwt-token', roles: null, message: 'OTC redeemed successfully.' }),
+      })
+
+      const token = await authService.redeemOTC('the-otc-code')
+
+      expect(token).toBe('otc-jwt-token')
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://test-api.com/user/login/otc?code=the-otc-code',
+        expect.objectContaining({ method: 'GET' })
+      )
+    })
+
+    it('URL-encodes the code', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        headers: createHeadersMock({}),
+        json: () => Promise.resolve({ jwt: 'token' }),
+      })
+
+      await authService.redeemOTC('a code/with?special&chars')
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://test-api.com/user/login/otc?code=a%20code%2Fwith%3Fspecial%26chars',
+        expect.anything()
+      )
+    })
+
+    it('throws the server error message when the exchange fails', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        headers: createHeadersMock({ 'x-auth-error': 'OTC code invalid or expired' }),
+        text: () => Promise.resolve(''),
+      })
+
+      await expect(authService.redeemOTC('expired-code')).rejects.toThrow(
+        'OTC code invalid or expired'
+      )
+    })
+
+    it('throws when the response has no jwt', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        headers: createHeadersMock({}),
+        json: () => Promise.resolve({ login: null, jwt: null, message: 'OTC code invalid or expired' }),
+      })
+
+      await expect(authService.redeemOTC('expired-code')).rejects.toThrow(
+        'OTC code invalid or expired'
+      )
+    })
+  })
+
   describe('logout', () => {
     beforeEach(() => {
       const authStore = useAuthStore()

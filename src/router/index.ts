@@ -100,6 +100,26 @@ router.beforeEach(async (to, _from, next) => {
     const authStore = useAuthStore()
 
     try {
+      // OIDC one-time-code handoff: the provider redirects here with
+      // ?code={otc} instead of setting a token in storage/cookies. Redeem it
+      // via WebAPI before falling back to the other handoff mechanisms.
+      const otcCode = to.query.code as string | undefined
+      if (otcCode) {
+        const { authService } = await import('@/services/auth/authService')
+        const jwt = await authService.redeemOTC(otcCode)
+        authStore.setToken(jwt)
+
+        const userInfo = await authService.fetchUserInfo()
+        authStore.setUser(userInfo)
+        authStore.setAuthClient('OIDC')
+
+        const oidcDestination = sessionStorage.getItem('oauth_redirect_destination')
+        sessionStorage.removeItem('oauth_redirect_destination')
+
+        next(oidcDestination || '/')
+        return
+      }
+
       // Check for token in localStorage (Atlas pattern - backend sets this)
       const localStorageToken = localStorage.getItem('bearerToken')
       if (localStorageToken && localStorageToken !== 'null' && localStorageToken !== 'undefined') {
