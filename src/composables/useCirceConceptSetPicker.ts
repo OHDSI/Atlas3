@@ -1,5 +1,5 @@
 import { computed, ref, type Ref } from 'vue'
-import { convertAtlasItemToCirce } from '@/components/cohort-editor/atlas-concept-set'
+import { convertAtlasItemToCirce, nextConceptSetId } from '@/components/cohort-editor/atlas-concept-set'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSet } from '@/models/circe-types'
 import type { ConceptSetItem as AtlasConceptSetItem } from '@/models/concept-set.types'
@@ -94,16 +94,27 @@ export function useCirceConceptSetPicker(opts: {
       }
     }
 
-    // Add to expression-level concept sets if not already present.
-    if (!opts.getConceptSets().some(cs => cs.id === numericId)) {
-      opts.addConceptSet({
-        id: numericId,
-        name: conceptSet.name,
-        expression: { items: items.map(convertAtlasItemToCirce) },
-      })
+    const existing = opts.getConceptSets().find(cs => cs.id === numericId)
+
+    // Repository ids and the expression's local codeset ids are separate number
+    // spaces that happen to overlap: circe numbers ConceptSets from 0, and a
+    // WebAPI concept set id can land in the same range. Reusing the repository
+    // id when a different set already holds it would point the criterion at
+    // that other set, so a colliding import gets the next free id instead.
+    if (existing && existing.name === conceptSet.name) {
+      resolveSelection(numericId)
+      return
     }
 
-    resolveSelection(numericId)
+    const codesetId = existing ? nextConceptSetId(opts.getConceptSets()) : numericId
+
+    opts.addConceptSet({
+      id: codesetId,
+      name: conceptSet.name,
+      expression: { items: items.map(convertAtlasItemToCirce) },
+    })
+
+    resolveSelection(codesetId)
   }
 
   function onLocalConceptSetSelected(conceptSet: {

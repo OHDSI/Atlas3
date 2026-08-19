@@ -24,9 +24,13 @@ vi.mock('@/stores/concept-sets', () => ({
   useConceptSetsStore: () => mockConceptSetsStore,
 }))
 
-vi.mock('@/components/cohort-editor/atlas-concept-set', () => ({
-  convertAtlasItemToCirce: (item: unknown) => item,
-}))
+vi.mock('@/components/cohort-editor/atlas-concept-set', async importOriginal => {
+  const actual = await importOriginal<typeof import('@/components/cohort-editor/atlas-concept-set')>()
+  return {
+    ...actual,
+    convertAtlasItemToCirce: (item: unknown) => item,
+  }
+})
 
 import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
 
@@ -156,5 +160,67 @@ describe('useCirceConceptSetPicker', () => {
     picker.onLocalConceptSetSelected({ id: 9, name: 'No request' })
 
     expect(picker.dialogOpen.value).toBe(false)
+  })
+})
+
+describe('importing a repository concept set whose id is already taken', () => {
+  it('adds the picked set under a free id and binds the criterion to it', async () => {
+    const conceptSets: ConceptSet[] = [
+      { id: 0, name: 'Local A', expression: { items: [] } },
+      { id: 1, name: 'Local B', expression: { items: [] } },
+    ]
+    const picker = useCirceConceptSetPicker({
+      getConceptSets: () => conceptSets,
+      addConceptSet: cs => conceptSets.push(cs),
+    })
+
+    const codesetId = ref<number | undefined>(undefined)
+    picker.onSelectConceptSet({ targetRef: codesetId })
+    await picker.onConceptSetSelected({
+      id: 1,
+      name: 'Type 2 Diabetes',
+      items: [{ concept: { CONCEPT_ID: 201826 } }],
+    })
+
+    const added = conceptSets.find(cs => cs.name === 'Type 2 Diabetes')
+    expect(added, 'the picked concept set must reach the expression').toBeDefined()
+    expect(codesetId.value).toBe(added!.id)
+    expect(conceptSets.find(cs => cs.name === 'Local B')!.id).toBe(1)
+  })
+
+  it('keeps the repository id when nothing else is using it', async () => {
+    const conceptSets: ConceptSet[] = [{ id: 0, name: 'Local A', expression: { items: [] } }]
+    const picker = useCirceConceptSetPicker({
+      getConceptSets: () => conceptSets,
+      addConceptSet: cs => conceptSets.push(cs),
+    })
+
+    const codesetId = ref<number | undefined>(undefined)
+    picker.onSelectConceptSet({ targetRef: codesetId })
+    await picker.onConceptSetSelected({
+      id: 7,
+      name: 'Hypertension',
+      items: [{ concept: { CONCEPT_ID: 316866 } }],
+    })
+
+    expect(codesetId.value).toBe(7)
+    expect(conceptSets.map(cs => cs.id)).toEqual([0, 7])
+  })
+
+  it('reuses the existing entry when the same set is picked twice', async () => {
+    const conceptSets: ConceptSet[] = [
+      { id: 7, name: 'Hypertension', expression: { items: [] } },
+    ]
+    const picker = useCirceConceptSetPicker({
+      getConceptSets: () => conceptSets,
+      addConceptSet: cs => conceptSets.push(cs),
+    })
+
+    const codesetId = ref<number | undefined>(undefined)
+    picker.onSelectConceptSet({ targetRef: codesetId })
+    await picker.onConceptSetSelected({ id: 7, name: 'Hypertension', items: [] })
+
+    expect(codesetId.value).toBe(7)
+    expect(conceptSets).toHaveLength(1)
   })
 })
