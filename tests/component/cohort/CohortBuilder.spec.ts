@@ -132,14 +132,10 @@ global.ResizeObserver = class ResizeObserver {
 // Stub all heavy child components so their own lifecycle doesn't fire.
 // The handlers under test live in CohortBuilder itself, not in the children.
 const childStubs = {
-  EntryEventsList: true,
   ConceptSetSelectionDialog: true,
   ConceptSearchDialog: true,
   ConceptSetEditor: true,
-  InclusionCriteriaPanel: true,
-  ExitCriteriaPanel: true,
   CensorWindowEditor: true,
-  GroupCriteriaUI: true,
   CohortGenerationSection: true,
   VersionsTabContent: true,
   CohortBreadcrumb: true,
