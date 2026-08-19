@@ -199,4 +199,26 @@ describe('rendering a loaded cohort expression leaves it alone', () => {
     await toggles[0]!.vm.$emit('update:modelValue', 'All')
     expect(expression.PrimaryCriteria!.PrimaryCriteriaLimit!.Type).toBe('All')
   })
+
+  // The inclusion-rules panel emits `update:expressionLimitType` while the
+  // editor listens for `update:expression-limit-type`; only Vue's hyphenate
+  // fallback joins the two. Driving the control through the mounted editor is
+  // what makes a mismatched listener name fail.
+  it('writes the inclusion-rule limit the user picks', async () => {
+    const expression = loadedExpression()
+    expression.InclusionRules = [
+      { name: 'Rule A', description: '', expression: { Type: 'ALL', CriteriaList: [] } },
+    ]
+
+    const wrapper = mountEditor(expression)
+
+    const limitButtons = wrapper.findAll('.inclusion-rules-panel__limit-toggle button')
+    expect(limitButtons).toHaveLength(3)
+
+    await limitButtons[2]!.trigger('click')
+    expect(expression.ExpressionLimit?.Type).toBe('Last')
+
+    await limitButtons[1]!.trigger('click')
+    expect(expression.ExpressionLimit?.Type).toBe('All')
+  })
 })
