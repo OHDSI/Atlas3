@@ -215,11 +215,14 @@ function createDefaultRule(): InclusionRule {
   return {
     name: undefined,
     description: undefined,
-    expression: createDefaultCriteriaGroup(),
+    expression: createEmptyRuleExpression(),
   }
 }
 
-function createDefaultCriteriaGroup(): CriteriaGroup {
+// Not criteria-editor-helper's createDefaultCriteriaGroup: that one is
+// deliberately sparse ({ Type: 'ALL' }), while a new inclusion rule is created
+// with its containers already in place for the rail and detail editors to bind.
+function createEmptyRuleExpression(): CriteriaGroup {
   return {
     Type: 'ALL',
     CriteriaList: [],

@@ -15,9 +15,9 @@
  * something circe-be needs:
  *
  * - A `CriteriaGroup` with no `Type`. Atlas 2.15 always initialises
- *   `Type || 'ALL'`, and circe-be has no default of its own, so a group created
- *   by one of the lazy `ensureObjectField(..., () => ({}))` sites serialises
- *   without one.
+ *   `Type || 'ALL'`, and circe-be has no default of its own, so a group that
+ *   reaches the editor without one (imported, agent-built, or saved by an
+ *   older Atlas) serialises without one.
  * - An `AT_LEAST` / `AT_MOST` group with no `Count`, which reaches generation as
  *   `HAVING COUNT(index_id) >= null`.
  * - A numeric or date range carrying a `Value` but no `Op`. The editors display
