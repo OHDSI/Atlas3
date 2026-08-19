@@ -101,6 +101,12 @@ export function useCirceConceptSetPicker(opts: {
     // WebAPI concept set id can land in the same range. Reusing the repository
     // id when a different set already holds it would point the criterion at
     // that other set, so a colliding import gets the next free id instead.
+    //
+    // Name is compared too, as the only available proxy for "is this the set
+    // already in the expression, re-picked" versus "a different set that
+    // happens to collide". It cannot tell apart two distinct repository sets
+    // that share both an id collision and a display name; that case is
+    // treated as a re-pick and silently reuses the existing entry.
     if (existing && existing.name === conceptSet.name) {
       resolveSelection(numericId)
       return

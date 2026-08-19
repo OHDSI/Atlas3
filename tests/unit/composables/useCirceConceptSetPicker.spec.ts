@@ -223,4 +223,36 @@ describe('importing a repository concept set whose id is already taken', () => {
     expect(codesetId.value).toBe(7)
     expect(conceptSets).toHaveLength(1)
   })
+
+  // Known limitation, not a regression to fix here: identity is approximated
+  // by id+name because the repository id and the local codeset id share a
+  // number space (see the comment at the identity check in
+  // useCirceConceptSetPicker.ts). Two distinct repository sets that happen to
+  // collide on both an id AND a display name are indistinguishable from a
+  // re-pick of the same set, so the second one is silently merged into the
+  // first rather than added as its own entry.
+  it('conflates two distinct sets that share both a colliding id and a name, silently discarding the second pick', async () => {
+    const conceptSets: ConceptSet[] = [
+      { id: 7, name: 'Hypertension', expression: { items: [] } },
+    ]
+    const picker = useCirceConceptSetPicker({
+      getConceptSets: () => conceptSets,
+      addConceptSet: cs => conceptSets.push(cs),
+    })
+
+    const codesetId = ref<number | undefined>(undefined)
+    picker.onSelectConceptSet({ targetRef: codesetId })
+    // A different repository set that happens to share both id 7 and the
+    // name "Hypertension" — its concepts are never written into the
+    // expression, proving the two sets were treated as one.
+    await picker.onConceptSetSelected({
+      id: 7,
+      name: 'Hypertension',
+      items: [{ concept: { CONCEPT_ID: 999999 } }],
+    })
+
+    expect(codesetId.value).toBe(7)
+    expect(conceptSets).toHaveLength(1)
+    expect(conceptSets[0]!.expression?.items).toEqual([])
+  })
 })

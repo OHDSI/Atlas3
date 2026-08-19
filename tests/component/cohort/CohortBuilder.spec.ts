@@ -923,9 +923,9 @@ describe('CohortBuilder', () => {
     setup.cohortDescription = 'Described'
     Object.assign(setup.expression, {
       PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] },
-      // No items: handleSave must hydrate them from the concept set service
-      // before the definition goes to the server.
-      ConceptSets: [{ id: 7, name: 'Unhydrated', expression: { items: [] } }],
+      // No expression at all: handleSave must hydrate the items from the
+      // concept set service before the definition goes to the server.
+      ConceptSets: [{ id: 7, name: 'Unhydrated' }],
     })
     const webapi = await import('@/services/cohort-definition.service')
     const conceptSetService = await import('@/services/concept-set.service')
@@ -961,6 +961,31 @@ describe('CohortBuilder', () => {
     expect(conceptSetService.getConceptSetById).not.toHaveBeenCalled()
     const payload = vi.mocked(webapi.saveCohortDefinition).mock.calls[0][0] as any
     expect(payload.expression.ConceptSets[0].expression.items).toEqual([hydrated])
+  })
+
+  // Regression: an entry the picker resolved to genuinely zero concepts (an
+  // empty repository set, or a freshly allocated codeset id whose fetch
+  // hadn't landed yet) must not be looked up by id at save time. That id is a
+  // local codeset id, not necessarily a live repository id, so re-fetching it
+  // can stamp an unrelated repository set's concepts into this one. Only the
+  // absence of an items array — never loaded, no fetch attempted — should
+  // trigger the id lookup.
+  it('handleSave does not re-fetch a concept set whose items were resolved to empty', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'A Cohort'
+    Object.assign(setup.expression, {
+      PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] },
+      ConceptSets: [{ id: 7, name: 'Genuinely empty', expression: { items: [] } }],
+    })
+    const webapi = await import('@/services/cohort-definition.service')
+    const conceptSetService = await import('@/services/concept-set.service')
+    await setup.handleSave()
+
+    expect(conceptSetService.getConceptSetById).not.toHaveBeenCalledWith(7)
+    const payload = vi.mocked(webapi.saveCohortDefinition).mock.calls[0][0] as any
+    expect(payload.expression.ConceptSets[0].expression.items).toEqual([])
   })
 
   // ATLAS 2.15 does not gate saving on validation: cohort-definition-manager.js builds
