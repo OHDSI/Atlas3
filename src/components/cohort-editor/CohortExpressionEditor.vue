@@ -295,6 +295,7 @@ import {
   EDITABLE_CRITERIA_TYPES,
   type EditableCriteriaKey,
 } from '@/components/circe/criteria/criteria-registry'
+import { isClearedInput, toFiniteNumber } from '@/components/circe/input/bindings'
 import CriteriaRenderer from '@/components/circe/criteria/CriteriaRenderer.vue'
 import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import InclusionRulesPanel from './inclusion-rules/InclusionRulesPanel.vue'
@@ -426,19 +427,28 @@ const inclusionRulesState = computed(() => {
 
 const inclusionRulesStateTone = computed(() => (inclusionRules.value.length > 0 ? 'primary' : 'muted'))
 
-const observationPriorDays = computed<number>({
+const observationPriorDays = computed<number, number | string | null | undefined>({
   get: () => props.expression.PrimaryCriteria?.ObservationWindow?.PriorDays ?? 0,
   set: value => {
-    ensureObservationWindow().PriorDays = Number(value) || 0
+    const days = observationDaysInput(value)
+    if (days === undefined) return
+    ensureObservationWindow().PriorDays = days
   },
 })
 
-const observationPostDays = computed<number>({
+const observationPostDays = computed<number, number | string | null | undefined>({
   get: () => props.expression.PrimaryCriteria?.ObservationWindow?.PostDays ?? 0,
   set: value => {
-    ensureObservationWindow().PostDays = Number(value) || 0
+    const days = observationDaysInput(value)
+    if (days === undefined) return
+    ensureObservationWindow().PostDays = days
   },
 })
+
+/** undefined means "reject": the field keeps whatever it already held. */
+function observationDaysInput(value: number | string | null | undefined): number | undefined {
+  return isClearedInput(value) ? 0 : toFiniteNumber(value)
+}
 
 function addPrimaryCriteria(type: EditableCriteriaKey) {
   ensurePrimaryCriteriaList().push(CRITERIA_TYPE_BY_KEY[type].create())
