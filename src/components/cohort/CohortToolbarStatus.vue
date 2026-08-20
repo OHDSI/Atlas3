@@ -82,6 +82,23 @@
       </template>
     </AtlasTooltip>
 
+    <AtlasTooltip
+      :text="t('components.access.configureAccess', 'Configure access').value"
+      location="bottom"
+    >
+      <template #activator="{ props }">
+        <AtlasIconButton
+          v-bind="{ ...props, ariaLabel: t('components.access.configureAccess', 'Configure access').value }"
+          icon="mdi-lock"
+          variant="text"
+          size="sm"
+          data-testid="access-icon"
+          :disabled="!cohortId || isPreviewingVersion"
+          @click="!isPreviewingVersion && cohortId && $emit('show-access')"
+        />
+      </template>
+    </AtlasTooltip>
+
     <!-- Validation Notification Icon -->
     <AtlasTooltip
       :text="
@@ -122,6 +139,7 @@
 
 <script setup lang="ts">
 import { AtlasBadge, AtlasIcon, AtlasTooltip } from '@/components/ui'
+import { AtlasIconButton } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 interface Props {
@@ -143,6 +161,7 @@ defineEmits<{
   (e: 'show-validation'): void
   (e: 'show-versions'): void
   (e: 'show-tags'): void
+  (e: 'show-access'): void
 }>()
 
 const { t } = useI18n()

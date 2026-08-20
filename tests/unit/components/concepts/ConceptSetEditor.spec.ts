@@ -2,6 +2,7 @@
  * ConceptSetEditor Component Tests (T131)
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { defineComponent } from 'vue'
 
 // Some sandboxed jsdom builds don't expose a global `localStorage`, which the
 // WebAPI store (and http-client) read directly. Provide a minimal in-memory
@@ -96,6 +97,25 @@ const mockConcept: Concept = {
   invalidReason: null,
 }
 
+const EntityAccessLockButtonStub = defineComponent({
+  name: 'EntityAccessLockButton',
+  emits: ['click'],
+  template: '<button data-testid="concept-set-access-btn" @click="$emit(\'click\', $event)">Lock</button>',
+})
+
+const EntityAccessDialogStub = defineComponent({
+  name: 'EntityAccessDialog',
+  props: {
+    modelValue: { type: Boolean, default: false },
+    entityType: { type: String, required: true },
+    entityId: { type: [Number, String, null], default: null },
+    title: { type: String, default: '' },
+    subtitle: { type: String, default: '' },
+  },
+  emits: ['close', 'update:modelValue'],
+  template: '<div data-testid="concept-set-access-dialog" />',
+})
+
 function mountComponent(props = {}) {
   return mount(ConceptSetEditor, {
     props: {
@@ -106,6 +126,8 @@ function mountComponent(props = {}) {
     global: {
       plugins: [vuetify],
       stubs: {
+        EntityAccessDialog: EntityAccessDialogStub,
+        EntityAccessLockButton: EntityAccessLockButtonStub,
         ConceptSearchInline: true,
         ConceptSetTable: true,
         VNavigationDrawer: {
@@ -226,6 +248,36 @@ describe('ConceptSetEditor', () => {
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const closeBtn = buttons.find(btn => btn.props('icon') === 'mdi-close')
     expect(closeBtn).toBeTruthy()
+  })
+
+  it('should render the access lock button next to tags in edit mode', () => {
+    const wrapper = mountComponent({ conceptSet: mockConceptSet })
+
+    const accessButton = wrapper.findComponent({ name: 'EntityAccessLockButton' })
+    expect(accessButton.exists()).toBe(true)
+    expect(accessButton.attributes('data-testid')).toBe('cs-editor-access-btn')
+  })
+
+  it('should not render the access lock button in create mode', () => {
+    const wrapper = mountComponent({ conceptSet: { name: '', items: [] } })
+
+    expect(wrapper.findComponent({ name: 'EntityAccessLockButton' }).exists()).toBe(false)
+  })
+
+  it('should open the access dialog when the lock button is clicked', async () => {
+    const wrapper = mountComponent({ conceptSet: mockConceptSet })
+
+    const accessButton = wrapper.findComponent({ name: 'EntityAccessLockButton' })
+    expect(accessButton.exists()).toBe(true)
+
+    await accessButton.vm.$emit('click', new MouseEvent('click'))
+    await wrapper.vm.$nextTick()
+
+    const accessDialog = wrapper.findComponent({ name: 'EntityAccessDialog' })
+    expect(accessDialog.props('modelValue')).toBe(true)
+    expect(accessDialog.props('entityType')).toBe('CONCEPT_SET')
+    expect(accessDialog.props('entityId')).toBe(123)
+    expect(accessDialog.props('subtitle')).toBe('Test Concept Set')
   })
 
   it('should render delete button in edit mode', () => {

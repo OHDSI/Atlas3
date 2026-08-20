@@ -101,6 +101,20 @@
               />
             </template>
           </AtlasTooltip>
+          <AtlasTooltip
+            v-if="isEditing && draftId"
+            :text="t('components.access.configureAccess', 'Configure access').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tooltipProps }">
+              <EntityAccessLockButton
+                v-bind="{ ...tooltipProps, ariaLabel: t('components.access.configureAccess', 'Configure access').value }"
+                size="sm"
+                data-testid="char-builder-access-icon"
+                @click="showAccessDialog = true"
+              />
+            </template>
+          </AtlasTooltip>
         </template>
         <template #actions>
           <AtlasButton
@@ -248,6 +262,15 @@
       </div>
     </AtlasDialog>
 
+    <EntityAccessDialog
+      v-model="showAccessDialog"
+      entity-type="COHORT_CHARACTERIZATION"
+      :entity-id="draftId"
+      :title="t('components.access.configureAccess', 'Configure access').value"
+      :subtitle="draft.name || undefined"
+      @close="showAccessDialog = false"
+    />
+
     <AtlasDialog
       v-model="showValidationDialog"
       :eyebrow="t('cc.title', 'Characterization').value"
@@ -313,6 +336,7 @@ import { logger } from '@/utils/logger'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
+import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
@@ -350,6 +374,7 @@ const saving = ref<boolean>(false)
 const showDeleteDialog = ref<boolean>(false)
 const showConceptSetsDialog = ref<boolean>(false)
 const showVersionsDialog = ref<boolean>(false)
+const showAccessDialog = ref<boolean>(false)
 const showValidationDialog = ref<boolean>(false)
 const importing = ref<boolean>(false)
 const exporting = ref<boolean>(false)

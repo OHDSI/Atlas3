@@ -50,6 +50,13 @@ vi.mock('@/services/feature-analysis.service', () => ({
   listFeatureAnalyses: vi.fn(),
 }))
 
+vi.mock('@/services/access.service', () => ({
+  fetchEntityAccessRoles: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  loadRoleSuggestions: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  grantEntityAccess: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+  revokeEntityAccess: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+}))
+
 vi.mock('@/services/cohort-definition.service', () => ({
   getCohorts: vi.fn(),
 }))
@@ -183,6 +190,7 @@ describe('CharacterizationBuilderView', () => {
 
     expect(mounted.wrapper.find('[data-testid="char-builder-workbench"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="char-builder-conceptsets-icon"]').exists()).toBe(true)
+    expect(mounted.wrapper.find('[data-testid="char-builder-access-icon"]').exists()).toBe(false)
 
     expect(mounted.wrapper.find('[data-testid="char-builder-run"]').exists()).toBe(false)
 
@@ -215,6 +223,37 @@ describe('CharacterizationBuilderView', () => {
 
     expect(mounted.wrapper.find('[data-testid="char-builder-copy"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="char-builder-delete"]').exists()).toBe(true)
+    expect(mounted.wrapper.find('[data-testid="char-builder-access-icon"]').exists()).toBe(true)
+  })
+
+  it('opens access configuration from the versions-side action bar icon', async () => {
+    vi.mocked(getCharacterization).mockResolvedValue(success(sampleCharacterization))
+
+    mounted = await mountBuilder('/characterizations/42', { id: '42' })
+    await flushPromises()
+
+    await mounted.wrapper.get('[data-testid="char-builder-access-icon"]').trigger('click')
+    await flushPromises()
+
+    const accessDialog = mounted.wrapper.findComponent({ name: 'EntityAccessDialog' })
+    expect(accessDialog.props('modelValue')).toBe(true)
+    expect(accessDialog.props('entityType')).toBe('COHORT_CHARACTERIZATION')
+    expect(accessDialog.props('entityId')).toBe(42)
+    expect(accessDialog.props('title')).toBe('Configure access')
+    expect(accessDialog.props('subtitle')).toBe('Diabetes Cohort Profile')
+
+    await accessDialog.vm.$emit('close')
+    await flushPromises()
+
+    expect(mounted.wrapper.findComponent({ name: 'EntityAccessDialog' }).props('modelValue')).toBe(false)
+  })
+
+  it('keeps the access dialog hidden in new mode while the button is absent', async () => {
+    mounted = await mountBuilder('/characterizations/new')
+    await flushPromises()
+
+    expect(mounted.wrapper.find('[data-testid="char-builder-access-icon"]').exists()).toBe(false)
+    expect(mounted.wrapper.findComponent({ name: 'EntityAccessDialog' }).props('modelValue')).toBe(false)
   })
 
   it('typing into the name input updates the draft', async () => {

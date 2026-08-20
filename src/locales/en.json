@@ -126,6 +126,7 @@
     "or": "or",
     "preview": "Preview",
     "progress": "Progress",
+    "read": "Read",
     "refresh": "Refresh",
     "retry": "Retry",
     "save": "Save",
@@ -149,6 +150,7 @@
     "characterization": "Characterization",
     "pathway": "Pathway Analysis",
     "incidenceRate": "Incidence Rate",
+    "write": "Write",
     "ple": "Population Level Effect Estimation",
     "plp": "Patient Level Prediction",
     "reusable": "Reusable",
@@ -515,6 +517,15 @@
         "login": "log in",
         "message": "This feature is protected. Please"
       }
+    },
+    "access": {
+      "configureAccess": "Configure access",
+      "entityMissing": "Save the asset before assigning permissions.",
+      "intro": "Grant READ or WRITE access to this asset by assigning roles. WRITE implies READ.",
+      "addReadAccess": "Add READ access to role",
+      "searchRoles": "Search roles...",
+      "addWriteAccess": "Add WRITE access to role",
+      "roleNotFound": "Role not found"
     },
     "analysisExecution": {
       "title": "Executions",
