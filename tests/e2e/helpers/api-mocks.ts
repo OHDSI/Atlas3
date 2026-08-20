@@ -400,10 +400,26 @@ export async function setupBasicMocks(page: Page) {
       const concept = allConcepts.find(c => c.conceptId === conceptId)
 
       if (concept) {
+        // Same uppercase-shape requirement as the search endpoint above
+        // (ConceptSearchResponseSchema.element) — the camelCase fixture
+        // fails validation and surfaces as "Failed to load concept".
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify(concept)
+          body: JSON.stringify({
+            CONCEPT_ID: concept.conceptId,
+            CONCEPT_NAME: concept.conceptName,
+            CONCEPT_CODE: concept.conceptCode,
+            DOMAIN_ID: concept.domainId,
+            VOCABULARY_ID: concept.vocabularyId,
+            CONCEPT_CLASS_ID: concept.conceptClassId,
+            STANDARD_CONCEPT: concept.standardConcept,
+            STANDARD_CONCEPT_CAPTION: concept.standardConcept === 'S' ? 'Standard' : 'Non-Standard',
+            INVALID_REASON: concept.invalidReason,
+            INVALID_REASON_CAPTION: concept.invalidReason ? 'Invalid' : 'Valid',
+            VALID_START_DATE: Date.UTC(1970, 0, 1),
+            VALID_END_DATE: Date.UTC(2099, 11, 31)
+          })
         })
       } else {
         await route.fulfill({ status: 404, body: 'Concept not found' })
@@ -412,6 +428,16 @@ export async function setupBasicMocks(page: Page) {
       await route.continue()
     }
   })
+
+  // Mock concept related/hierarchy lookups used by the concept detail view —
+  // unmocked, these fall through to the dev proxy and 503, which used to
+  // leave ConceptDetailContent stuck failing to load in e2e tests.
+  await page.route('**/WebAPI/vocabulary/*/concept/*/related', route =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+  )
+  await page.route('**/WebAPI/vocabulary/*/concept/*/ancestorAndDescendant', route =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+  )
 
   // Mock config/settings endpoint
   await page.route('**/WebAPI/source/config', async (route: Route) => {
