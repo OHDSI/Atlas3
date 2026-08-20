@@ -414,7 +414,11 @@ export async function setupBasicMocks(page: Page) {
             VOCABULARY_ID: concept.vocabularyId,
             CONCEPT_CLASS_ID: concept.conceptClassId,
             STANDARD_CONCEPT: concept.standardConcept,
-            INVALID_REASON: concept.invalidReason
+            STANDARD_CONCEPT_CAPTION: concept.standardConcept === 'S' ? 'Standard' : 'Non-Standard',
+            INVALID_REASON: concept.invalidReason,
+            INVALID_REASON_CAPTION: concept.invalidReason ? 'Invalid' : 'Valid',
+            VALID_START_DATE: Date.UTC(1970, 0, 1),
+            VALID_END_DATE: Date.UTC(2099, 11, 31)
           })
         })
       } else {
