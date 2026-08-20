@@ -15,9 +15,9 @@
  * something circe-be needs:
  *
  * - A `CriteriaGroup` with no `Type`. Atlas 2.15 always initialises
- *   `Type || 'ALL'`, and circe-be has no default of its own, so a group created
- *   by one of the lazy `ensureObjectField(..., () => ({}))` sites serialises
- *   without one.
+ *   `Type || 'ALL'`, and circe-be has no default of its own, so a group that
+ *   reaches the editor without one (imported, agent-built, or saved by an
+ *   older Atlas) serialises without one.
  * - An `AT_LEAST` / `AT_MOST` group with no `Count`, which reaches generation as
  *   `HAVING COUNT(index_id) >= null`.
  * - A numeric or date range carrying a `Value` but no `Op`. The editors display
@@ -62,6 +62,29 @@ export function normalizeForCirce(expression: CohortExpression): CohortExpressio
   const normalized = JSON.parse(JSON.stringify(expression)) as CohortExpression
 
   walkSchema(CohortExpressionSchema, normalized, {
+    value(schema, data) {
+      if (!data || typeof data !== 'object') return
+
+      if (schema === CriteriaGroupSchema) {
+        normalizeCriteriaGroup(data as CriteriaGroup)
+      } else if (schema === NumericRangeSchema || schema === DateRangeSchema) {
+        normalizeRange(data as NumericRange | DateRange)
+      }
+    },
+  })
+
+  return normalized
+}
+
+/**
+ * The same fill for a criteria group that is not part of a CohortExpression:
+ * characterization strata and incidence-rate stratify rules both carry one, and
+ * neither passes through the cohort save path.
+ */
+export function normalizeCriteriaGroupForCirce(group: CriteriaGroup): CriteriaGroup {
+  const normalized = JSON.parse(JSON.stringify(group)) as CriteriaGroup
+
+  walkSchema(CriteriaGroupSchema, normalized, {
     value(schema, data) {
       if (!data || typeof data !== 'object') return
 

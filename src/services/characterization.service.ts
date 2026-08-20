@@ -17,6 +17,7 @@ import {
   type CharacterizationExecution,
 } from '@/models/characterization.types'
 import { z } from 'zod'
+import { normalizeCriteriaGroupForCirce } from '@/components/cohort-editor/normalize'
 
 const CONTEXT = 'CharacterizationService'
 
@@ -54,13 +55,14 @@ export async function getCharacterization(
 // assigns real IDs.
 function serializeCharacterization(def: CharacterizationDefinition): unknown {
   const stratas = def.stratas.map((s) => {
+    const criteria = s.criteria ? normalizeCriteriaGroupForCirce(s.criteria) : s.criteria
     const numeric = Number(s.id)
     if (Number.isFinite(numeric) && Number.isInteger(numeric) && numeric > 0) {
-      return { ...s, id: numeric }
+      return { ...s, id: numeric, criteria }
     }
     const { id: _id, ...rest } = s
     void _id
-    return rest
+    return { ...rest, criteria }
   })
   return { ...def, stratas }
 }

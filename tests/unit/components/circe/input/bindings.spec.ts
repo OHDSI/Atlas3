@@ -33,3 +33,29 @@ describe('bindings', () => {
     expect(state.value.Label).toBeUndefined()
   })
 })
+
+describe('non-numeric input', () => {
+  // Number('abc') is NaN, which JSON.stringify writes as null. circe reads a
+  // null Days as an unbounded window, so a garbage keystroke would silently
+  // widen the criterion instead of being rejected.
+  it('numberBinding leaves the previous value alone', () => {
+    const target = ref<Record<string, number | string | null | undefined>>({ StartOffset: 5 })
+    const binding = numberBinding(target, 'StartOffset')
+    binding.value = 'abc'
+    expect(target.value.StartOffset).toBe(5)
+  })
+
+  it('optionalNumberBinding leaves the previous value alone', () => {
+    const target = ref<Record<string, number | string | null | undefined>>({ Value: 5 })
+    const binding = optionalNumberBinding(target, 'Value')
+    binding.value = 'abc'
+    expect(target.value.Value).toBe(5)
+  })
+
+  it('optionalNumberBinding still clears on an empty string', () => {
+    const target = ref<Record<string, number | string | null | undefined>>({ Value: 5 })
+    const binding = optionalNumberBinding(target, 'Value')
+    binding.value = ''
+    expect(target.value.Value).toBeUndefined()
+  })
+})

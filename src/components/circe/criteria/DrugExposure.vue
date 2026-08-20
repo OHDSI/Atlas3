@@ -88,7 +88,7 @@ import {
 import type { Criteria, CriteriaGroup, ConceptArray, ConceptSetSelection, DateAdjustment, DateRange, DrugExposure, NumericRange, TextFilter } from '@/models/circe-types'
 import EventConceptSet from '../input/EventConceptSet.vue'
 import CriteriaAttributes from './CriteriaAttributes.vue'
-import { createConceptSetComponentProps, createConceptSetModel, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createDefaultCriteriaGroup, createConceptSetModel, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
 import type { CriteriaAttributeSpec } from './criteria-editor.types'
 
@@ -508,10 +508,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Add nested criteria group',
     kind: 'criteriaGroup',
     componentProps: () => ({
-      group: ensureObjectField(drugExposureData.value, 'CorrelatedCriteria', () => ({})) as CriteriaGroup,
+      group: ensureObjectField(drugExposureData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup) as CriteriaGroup,
     }),
     init: () => {
-      ensureObjectField(drugExposureData.value, 'CorrelatedCriteria', () => ({}))
+      ensureObjectField(drugExposureData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup)
     },
     clear: () => {
       delete drugExposureData.value.CorrelatedCriteria

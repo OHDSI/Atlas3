@@ -92,7 +92,7 @@ import type { ConceptSetOption, ConceptSetSelectionTarget } from './criteria-edi
 import CriteriaAttributes from './CriteriaAttributes.vue'
 import type { ConceptArrayBinding, CriteriaAttributeSpec } from './criteria-editor.types'
 import type { ConceptSetSelection, DateAdjustment, DateRange, NumericRange, TextFilter } from '@/models/circe-types'
-import { createConceptSetComponentProps, createConceptSetModel, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createDefaultCriteriaGroup, createConceptSetModel, createDefaultDateAdjustment, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 
 const props = defineProps<{
   criteria: Criteria
@@ -432,10 +432,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Add nested criteria group',
     kind: 'criteriaGroup',
     componentProps: () => ({
-      group: ensureObjectField(conditionOccurrenceData.value, 'CorrelatedCriteria', () => ({})) as CriteriaGroup,
+      group: ensureObjectField(conditionOccurrenceData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup) as CriteriaGroup,
     }),
     init: () => {
-      ensureObjectField(conditionOccurrenceData.value, 'CorrelatedCriteria', () => ({}))
+      ensureObjectField(conditionOccurrenceData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup)
     },
     clear: () => {
       delete conditionOccurrenceData.value.CorrelatedCriteria

@@ -341,7 +341,7 @@ describe('DoseEra', () => {
     await expectMenuItemPresent(wrapper, 'Nested Criteria')
     await selectMenuItem(wrapper, 'Nested Criteria')
 
-    expect(criteria.DoseEra?.CorrelatedCriteria).toStrictEqual({})
+    expect(criteria.DoseEra?.CorrelatedCriteria).toStrictEqual({ Type: 'ALL' })
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Nested Criteria')

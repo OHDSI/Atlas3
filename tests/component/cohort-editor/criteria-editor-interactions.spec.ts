@@ -254,13 +254,11 @@ describe('cohort-editor interactions', () => {
     const latest = buttons.find(button => button.text().includes('options.latest'))
 
     await earliest!.trigger('click')
-    expect(expressionLimit.Type).toBe('First')
-
     await all!.trigger('click')
-    expect(expressionLimit.Type).toBe('All')
-
     await latest!.trigger('click')
-    expect(expressionLimit.Type).toBe('Last')
+
+    expect(wrapper.emitted('update:expressionLimitType')).toEqual([['First'], ['All'], ['Last']])
+    expect(expressionLimit.Type).toBe('All')
   })
 
   it('removes the selected inclusion rule', async () => {

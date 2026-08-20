@@ -188,12 +188,88 @@ describe('registerConceptSets', () => {
     expect(added).toHaveLength(1)
   })
 
-  it('skips an id that is already there rather than duplicating it', () => {
+  it('reuses the existing entry when the same set is registered twice', () => {
     const existing: ConceptSet[] = [{ id: 1, name: 'A' }]
 
-    const added = registerConceptSets(existing, [{ id: 1, name: 'A again' }])
+    const added = registerConceptSets(existing, [{ id: 1, name: 'A' }])
 
     expect(existing).toHaveLength(1)
     expect(added).toHaveLength(0)
+  })
+
+  it('files a colliding set under a free id instead of dropping it', () => {
+    const existing: ConceptSet[] = [
+      { id: 0, name: 'A' },
+      { id: 1, name: 'B' },
+    ]
+    const incoming: ConceptSet = { id: 1, name: 'Type 2 Diabetes' }
+
+    const added = registerConceptSets(existing, [incoming])
+
+    expect(added).toEqual([incoming])
+    expect(incoming.id).toBe(2)
+    expect(existing.find(cs => cs.name === 'B')!.id).toBe(1)
+    expect(existing.map(cs => cs.id)).toEqual([0, 1, 2])
+  })
+
+  it('keeps a batch of colliding sets apart from each other', () => {
+    const existing: ConceptSet[] = [{ id: 0, name: 'A' }]
+
+    registerConceptSets(existing, [
+      { id: 0, name: 'B' },
+      { id: 0, name: 'C' },
+    ])
+
+    expect(existing.map(cs => [cs.id, cs.name])).toEqual([
+      [0, 'A'],
+      [1, 'B'],
+      [2, 'C'],
+    ])
+  })
+})
+
+describe('codeset ids written into criteria', () => {
+  it('points the criterion at the allocated id, not the colliding repository id', () => {
+    const existing: ConceptSet[] = [
+      { id: 0, name: 'Local A' },
+      { id: 1, name: 'Local B' },
+    ]
+
+    const translated = translateAgentEvent(
+      {
+        criteriaType: 'ConditionOccurrence',
+        conceptSet: { id: 1, name: 'Type 2 Diabetes', items: [] },
+      } as unknown as CohortEvent,
+      existing
+    )
+
+    expect(translated!.conceptSet!.id).toBe(2)
+    expect(
+      (translated!.criteria as { ConditionOccurrence: { CodesetId?: number } }).ConditionOccurrence
+        .CodesetId
+    ).toBe(2)
+
+    registerConceptSets(existing, [translated!.conceptSet!])
+    expect(existing.find(cs => cs.id === 2)!.name).toBe('Type 2 Diabetes')
+    expect(existing.find(cs => cs.id === 1)!.name).toBe('Local B')
+  })
+
+  it('reuses the existing codeset id when the same set is referenced again', () => {
+    const existing: ConceptSet[] = [{ id: 3, name: 'Type 2 Diabetes' }]
+
+    const translated = translateAgentEvent(
+      {
+        criteriaType: 'ConditionOccurrence',
+        conceptSet: { id: 3, name: 'Type 2 Diabetes', items: [] },
+      } as unknown as CohortEvent,
+      existing
+    )
+
+    expect(
+      (translated!.criteria as { ConditionOccurrence: { CodesetId?: number } }).ConditionOccurrence
+        .CodesetId
+    ).toBe(3)
+    expect(registerConceptSets(existing, [translated!.conceptSet!])).toHaveLength(0)
+    expect(existing).toHaveLength(1)
   })
 })

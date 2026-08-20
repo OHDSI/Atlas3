@@ -20,6 +20,8 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import CorelatedCriteria from '@/components/circe/criteria/CorelatedCriteria.vue'
+import CohortExpressionEditor from '@/components/cohort-editor/CohortExpressionEditor.vue'
+import type { CohortExpression } from '@/models/circe-types'
 import type {
   CriteriaGroup as GroupModel,
   CorelatedCriteria as CorelatedModel,
@@ -146,5 +148,77 @@ describe('the containers are still created when something goes into them', () =>
     await wrapper.find('.occurrence-chip--exactly').trigger('click')
 
     expect(criteria.Occurrence).toMatchObject({ Type: 0 })
+  })
+})
+
+// A cohort saved without the optional result limits. Both are legal to omit:
+// circe-be treats an absent ResultLimit as 'First'. Rendering the editor used
+// to add them, so an untouched cohort reported unsaved changes.
+const loadedExpression = (): CohortExpression => ({
+  ConceptSets: [{ id: 0, name: 'x', expression: { items: [] } }],
+  PrimaryCriteria: {
+    CriteriaList: [{ ConditionOccurrence: { CodesetId: 0 } }],
+    ObservationWindow: { PriorDays: 0, PostDays: 0 },
+    PrimaryCriteriaLimit: { Type: 'First' },
+  },
+  InclusionRules: [],
+})
+
+describe('rendering a loaded cohort expression leaves it alone', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  function mountEditor(expression: CohortExpression) {
+    return mount(CohortExpressionEditor, {
+      global: {
+        plugins: [vuetify, createPinia()],
+        stubs: { CriteriaGroup: true, CriteriaRenderer: true, Window: true, teleport: true },
+      },
+      props: { expression, conceptSets: [] },
+    })
+  }
+
+  it('does not add result limits the cohort did not have', () => {
+    const expression = loadedExpression()
+    const before = JSON.stringify(expression)
+    mountEditor(expression)
+    expect(JSON.stringify(expression)).toBe(before)
+  })
+
+  it('does not add containers to a bare expression', () => {
+    const expression: CohortExpression = { PrimaryCriteria: { CriteriaList: [] } }
+    const before = JSON.stringify(expression)
+    mountEditor(expression)
+    expect(JSON.stringify(expression)).toBe(before)
+  })
+
+  it('still writes the limit the user actually picks', async () => {
+    const expression = loadedExpression()
+    const wrapper = mountEditor(expression)
+    const toggles = wrapper.findAllComponents({ name: 'VBtnToggle' })
+    expect(toggles.length).toBeGreaterThan(0)
+    await toggles[0]!.vm.$emit('update:modelValue', 'All')
+    expect(expression.PrimaryCriteria!.PrimaryCriteriaLimit!.Type).toBe('All')
+  })
+
+  // The inclusion-rules panel emits `update:expressionLimitType` while the
+  // editor listens for `update:expression-limit-type`; only Vue's hyphenate
+  // fallback joins the two. Driving the control through the mounted editor is
+  // what makes a mismatched listener name fail.
+  it('writes the inclusion-rule limit the user picks', async () => {
+    const expression = loadedExpression()
+    expression.InclusionRules = [
+      { name: 'Rule A', description: '', expression: { Type: 'ALL', CriteriaList: [] } },
+    ]
+
+    const wrapper = mountEditor(expression)
+
+    const limitButtons = wrapper.findAll('.inclusion-rules-panel__limit-toggle button')
+    expect(limitButtons).toHaveLength(3)
+
+    await limitButtons[2]!.trigger('click')
+    expect(expression.ExpressionLimit?.Type).toBe('Last')
+
+    await limitButtons[1]!.trigger('click')
+    expect(expression.ExpressionLimit?.Type).toBe('All')
   })
 })

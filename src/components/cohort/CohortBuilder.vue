@@ -1206,7 +1206,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
   if (expressionForSave.ConceptSets) {
     expressionForSave.ConceptSets = await Promise.all(
       expressionForSave.ConceptSets.map(async cs => {
-        if ((cs.expression?.items?.length ?? 0) > 0) return cs
+        if (cs.expression?.items) return cs
         if (typeof cs.id === 'number') {
           const fullCs = await getConceptSetById(cs.id)
           if (fullCs?.items) {

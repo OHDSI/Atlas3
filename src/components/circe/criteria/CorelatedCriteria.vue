@@ -218,6 +218,7 @@ import {
 } from '@/components/ui'
 import CriteriaRenderer from './CriteriaRenderer.vue'
 import Window from './Window.vue'
+import { isClearedInput, toFiniteNumber } from '@/components/circe/input/bindings'
 import type { CorelatedCriteria, Criteria, Occurrence } from '@/models/circe-types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
 import { createDefaultWindow, formatWindowExpression, getWindowPresetOptions, cloneWindow, type WindowPresetValue } from './window-utils'
@@ -279,7 +280,13 @@ const occurrenceTypeKey = computed<'EXACTLY' | 'AT_LEAST' | 'AT_MOST'>({
 const occurrenceCount = computed<number, number | string | null | undefined>({
   get: () => Number(occurrence.value.Count ?? 0),
   set: value => {
-    ensureOccurrence().Count = value === '' || value === null || value === undefined ? 0 : Number(value)
+    if (isClearedInput(value)) {
+      ensureOccurrence().Count = 0
+      return
+    }
+    const parsed = toFiniteNumber(value)
+    if (parsed === undefined) return
+    ensureOccurrence().Count = parsed
   },
 })
 

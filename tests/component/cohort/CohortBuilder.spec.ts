@@ -132,14 +132,10 @@ global.ResizeObserver = class ResizeObserver {
 // Stub all heavy child components so their own lifecycle doesn't fire.
 // The handlers under test live in CohortBuilder itself, not in the children.
 const childStubs = {
-  EntryEventsList: true,
   ConceptSetSelectionDialog: true,
   ConceptSearchDialog: true,
   ConceptSetEditor: true,
-  InclusionCriteriaPanel: true,
-  ExitCriteriaPanel: true,
   CensorWindowEditor: true,
-  GroupCriteriaUI: true,
   CohortGenerationSection: true,
   VersionsTabContent: true,
   CohortBreadcrumb: true,
@@ -847,7 +843,7 @@ describe('CohortBuilder', () => {
 
     expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false)
     expect(targetRef.value).toBeUndefined()
-    expect(setup.expression.ConceptSets).toEqual([])
+    expect(setup.expression.ConceptSets).toBeUndefined()
   })
 
   // ---------------------------------------------------------------------------
@@ -923,9 +919,9 @@ describe('CohortBuilder', () => {
     setup.cohortDescription = 'Described'
     Object.assign(setup.expression, {
       PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] },
-      // No items: handleSave must hydrate them from the concept set service
-      // before the definition goes to the server.
-      ConceptSets: [{ id: 7, name: 'Unhydrated', expression: { items: [] } }],
+      // No expression at all: handleSave must hydrate the items from the
+      // concept set service before the definition goes to the server.
+      ConceptSets: [{ id: 7, name: 'Unhydrated' }],
     })
     const webapi = await import('@/services/cohort-definition.service')
     const conceptSetService = await import('@/services/concept-set.service')
@@ -961,6 +957,31 @@ describe('CohortBuilder', () => {
     expect(conceptSetService.getConceptSetById).not.toHaveBeenCalled()
     const payload = vi.mocked(webapi.saveCohortDefinition).mock.calls[0][0] as any
     expect(payload.expression.ConceptSets[0].expression.items).toEqual([hydrated])
+  })
+
+  // Regression: an entry the picker resolved to genuinely zero concepts (an
+  // empty repository set, or a freshly allocated codeset id whose fetch
+  // hadn't landed yet) must not be looked up by id at save time. That id is a
+  // local codeset id, not necessarily a live repository id, so re-fetching it
+  // can stamp an unrelated repository set's concepts into this one. Only the
+  // absence of an items array — never loaded, no fetch attempted — should
+  // trigger the id lookup.
+  it('handleSave does not re-fetch a concept set whose items were resolved to empty', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'A Cohort'
+    Object.assign(setup.expression, {
+      PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] },
+      ConceptSets: [{ id: 7, name: 'Genuinely empty', expression: { items: [] } }],
+    })
+    const webapi = await import('@/services/cohort-definition.service')
+    const conceptSetService = await import('@/services/concept-set.service')
+    await setup.handleSave()
+
+    expect(conceptSetService.getConceptSetById).not.toHaveBeenCalledWith(7)
+    const payload = vi.mocked(webapi.saveCohortDefinition).mock.calls[0][0] as any
+    expect(payload.expression.ConceptSets[0].expression.items).toEqual([])
   })
 
   // ATLAS 2.15 does not gate saving on validation: cohort-definition-manager.js builds
@@ -2286,6 +2307,36 @@ describe('CohortBuilder', () => {
 
     expect(vm.hasUnsavedChanges).toBe(true)
   })
+
+  it('does not report unsaved changes for a cohort that was only opened', async () => {
+    const { getCohortDefinition } = await import('@/services/cohort-definition.service')
+    vi.mocked(getCohortDefinition).mockResolvedValueOnce({
+      success: true,
+      data: {
+        id: 42,
+        name: 'Existing Cohort',
+        description: 'A loaded cohort',
+        tags: [],
+        expression: {
+          ConceptSets: [],
+          PrimaryCriteria: {
+            CriteriaList: [{ ConditionOccurrence: {} }],
+            ObservationWindow: { PriorDays: 0, PostDays: 0 },
+            PrimaryCriteriaLimit: { Type: 'First' },
+          },
+          InclusionRules: [],
+        },
+      },
+    } as never)
+
+    const wrapper = createWrapper({ id: '42' })
+    await flushPromises()
+    await new Promise(resolve => setTimeout(resolve, 50))
+    await flushPromises()
+
+    expect((wrapper.vm as unknown as { hasUnsavedChanges: boolean }).hasUnsavedChanges).toBe(false)
+  })
+
 })
 
 // One cohort document: the editor owns the CohortExpression instance and the

@@ -433,7 +433,7 @@ describe('PayerPlanPeriod', () => {
     await expectMenuItemPresent(wrapper, 'Nested Criteria')
     await selectMenuItem(wrapper, 'Nested Criteria')
 
-    expect(criteria.PayerPlanPeriod?.CorrelatedCriteria).toStrictEqual({})
+    expect(criteria.PayerPlanPeriod?.CorrelatedCriteria).toStrictEqual({ Type: 'ALL' })
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Nested Criteria')
