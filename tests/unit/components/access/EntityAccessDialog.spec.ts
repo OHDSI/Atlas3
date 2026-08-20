@@ -8,6 +8,7 @@ import { defineComponent } from 'vue'
 import EntityAccessDialog from '@/components/access/EntityAccessDialog.vue'
 import { ApiError } from '@/services/api-error'
 import { failure, success } from '@/types/api'
+import { createI18nMock } from '../../../helpers/i18n-mock'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../helpers/i18n-mock')
@@ -251,7 +252,8 @@ describe('EntityAccessDialog', () => {
     await addButton!.trigger('click')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Select a role from the list.')
+    const { tv } = createI18nMock()
+    expect(wrapper.text()).toContain(tv('components.access.roleNotFound', 'Select a role from the list.'))
   })
 
   it('retries and revokes access entries from the table actions', async () => {
