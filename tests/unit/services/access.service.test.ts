@@ -38,10 +38,7 @@ describe('access.service', () => {
     const result = await fetchEntityAccessRoles('SOURCE', 123)
 
     expect(httpGet).toHaveBeenCalledWith('/permission/access/SOURCE/123/WRITE')
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data).toEqual([role])
-    }
+    expect(result).toMatchObject({ success: true, data: [role] })
   })
 
   it('loads role suggestions', async () => {
@@ -50,10 +47,7 @@ describe('access.service', () => {
     const result = await loadRoleSuggestions('Source')
 
     expect(httpGet).toHaveBeenCalledWith('/permission/access/suggest?roleSearch=Source')
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data[0]?.name).toBe('Source Managers')
-    }
+    expect(result).toMatchObject({ success: true, data: [role] })
   })
 
   it('grants access to a role', async () => {
