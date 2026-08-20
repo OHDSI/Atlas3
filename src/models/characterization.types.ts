@@ -11,9 +11,13 @@
 import { z } from 'zod'
 
 import type { Tag } from './cohort.types'
-import type { ConceptSetReference } from './concept-set.types'
 import type { FeatureAnalysisType } from './feature-analysis.types'
 import { FeatureAnalysisTypeSchema } from './feature-analysis.types'
+import { StoredCriteriaGroupSchema } from '@/models/stored-criteria-group'
+import type { CriteriaGroup, ConceptSet } from '@/models/circe-types'
+
+// Re-export so consumers of Stratum can import CriteriaGroup and ConceptSet from one place.
+export type { CriteriaGroup, ConceptSet }
 
 // ============================================================================
 // Linked entities
@@ -65,15 +69,14 @@ export const LinkedFeatureAnalysisSchema = z
 export interface Stratum {
   id: string
   name: string
-  // CohortBuilder CriteriaGroup; kept opaque until StrataEditor lands.
-  criteria: unknown
+  criteria?: CriteriaGroup
 }
 
 export const StratumSchema = z
   .object({
     id: z.union([z.string(), z.number()]).transform((v) => String(v)),
     name: z.string(),
-    criteria: z.unknown(),
+    criteria: StoredCriteriaGroupSchema,
   })
   .passthrough()
 
@@ -111,15 +114,6 @@ const TagSchema = z
   })
   .passthrough()
 
-const ConceptSetReferenceSchema = z
-  .object({
-    id: z.union([z.number(), z.string()]),
-    name: z.string(),
-    conceptCount: z.number().optional(),
-    items: z.array(z.unknown()).optional(),
-  })
-  .passthrough()
-
 // ============================================================================
 // CharacterizationDefinition
 // ============================================================================
@@ -132,7 +126,7 @@ export interface CharacterizationDefinition {
   featureAnalyses: LinkedFeatureAnalysis[]
   // Atlas spelling (`stratas`) preserved to match the WebAPI payload.
   stratas: Stratum[]
-  strataConceptSets?: ConceptSetReference[]
+  strataConceptSets?: ConceptSet[]
   stratifiedBy?: string
   strataOnly?: boolean
   parameters?: CharacterizationParameter[]
@@ -151,7 +145,7 @@ export const CharacterizationDefinitionSchema = z
     cohorts: z.array(LinkedCohortSchema),
     featureAnalyses: z.array(LinkedFeatureAnalysisSchema),
     stratas: z.array(StratumSchema),
-    strataConceptSets: z.array(ConceptSetReferenceSchema).optional(),
+    strataConceptSets: z.array(z.record(z.unknown())).optional(),
     stratifiedBy: z.string().optional(),
     strataOnly: z.boolean().optional(),
     parameters: z.array(CharacterizationParameterSchema).optional(),

@@ -64,7 +64,7 @@ describe('translateCapability', () => {
       strategy: 'continuous_drug',
       persistenceWindow: 30,
     })
-    expect(p?.kind).toBe('setExitCriteria')
+    expect(p?.kind).toBe('setCohortExit')
     expect((p as { exitCriteria: { strategy: string } }).exitCriteria.strategy).toBe('CONTINUOUS_DRUG')
   })
 

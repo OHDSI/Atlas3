@@ -13,7 +13,12 @@
               "CONCEPT_NAME": "Metformin",
               "STANDARD_CONCEPT": "S",
               "DOMAIN_ID": "Drug",
-              "VOCABULARY_ID": "RxNorm"
+              "VOCABULARY_ID": "RxNorm",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "INVALID_REASON": null,
+              "INVALID_REASON_CAPTION": "Unknown",
+              "CONCEPT_CODE": "1503297",
+              "CONCEPT_CLASS_ID": "Unknown"
             },
             "isExcluded": false,
             "includeDescendants": true,

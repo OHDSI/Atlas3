@@ -5,13 +5,10 @@
  */
 import { logger } from '@/utils/logger'
 import { httpGet, httpPost, httpPut, httpDelete, httpPostRead, getBaseUrl } from '@/services/http-client'
-import { unwrap, ApiError, parseOrThrow } from '@/services/api-error'
+import { unwrap, ApiError, parseOrThrow, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
-import {
-  type AtlasCohortDefinition,
-  type AtlasCohortDefinitionInput,
-  isAtlasCohortDefinitionWrapper,
-} from '@/models/atlas.types'
+import type { RawCohortDefinition } from '@/models/atlas.types'
+import type { CohortDefinition } from '@/models/cohort.types'
 import {
   CohortGenerationInfoListSchema,
   CohortDefinitionListSchema,
@@ -21,6 +18,7 @@ import {
   type CohortDefinitionSummary,
 } from '@/models/webapi.types'
 import type { ValidationResponse } from '@/models/cohort-validation.types'
+import { CohortExpressionSchema, type CohortExpression } from '@/models/circe-types'
 
 const CONTEXT = 'CohortDefinitionService'
 
@@ -28,9 +26,22 @@ const CONTEXT = 'CohortDefinitionService'
  * Get cohort definition by ID
  * Endpoint: GET /cohortdefinition/{id}
  */
-export async function getCohortDefinition(id: number): Promise<ApiResult<AtlasCohortDefinition>> {
+export function normalizeRawCohortDefinition(raw: RawCohortDefinition): CohortDefinition {
+  const parsedExpression = CohortExpressionSchema.safeParse(JSON.parse(raw.expression))
+  if (!parsedExpression.success) {
+    throw new ApiError('Cohort expression failed validation', 422, zodIssues(parsedExpression.error))
+  }
+
+  return {
+    ...raw,
+    expression: parsedExpression.data as CohortExpression,
+  }
+}
+
+export async function getCohortDefinition(id: number): Promise<ApiResult<CohortDefinition>> {
   return unwrap(async () => {
-    return await httpGet<AtlasCohortDefinition>(`/cohortdefinition/${id}`)
+    const raw = await httpGet<RawCohortDefinition>(`/cohortdefinition/${id}`)
+    return normalizeRawCohortDefinition(raw)
   }, CONTEXT)
 }
 
@@ -42,22 +53,25 @@ export interface CohortSavePayload {
   name: string
   description?: string
   expressionType?: string
-  expression: object // Must be object, not stringified JSON
+  expression: CohortExpression
 }
 
 /**
  * Save cohort definition (create or update)
  * Endpoint: POST /cohortdefinition (create) or PUT /cohortdefinition/{id} (update)
+ *
+ * The response is the DTO shape with a parsed CohortExpression, matching the
+ * WebAPI save/update contract.
  */
 export async function saveCohortDefinition(
   cohort: CohortSavePayload
-): Promise<ApiResult<CohortSavePayload>> {
+): Promise<ApiResult<CohortDefinition>> {
   return unwrap(async () => {
     logger.debug(CONTEXT, 'Saving cohort definition', { id: cohort.id, name: cohort.name })
-    if (cohort.id) {
-      return await httpPut<CohortSavePayload>(`/cohortdefinition/${cohort.id}`, cohort)
-    }
-    return await httpPost<CohortSavePayload>('/cohortdefinition', cohort)
+    const saved = cohort.id
+      ? await httpPut<CohortDefinition>(`/cohortdefinition/${cohort.id}`, cohort)
+      : await httpPost<CohortDefinition>('/cohortdefinition', cohort)
+    return saved
   }, CONTEXT)
 }
 
@@ -191,27 +205,14 @@ export async function validateCohortDefinition(
  * JSON-parses the response body) and talks to fetch directly.
  */
 export async function getCohortPrintFriendly(
-  cohortDefinition: AtlasCohortDefinitionInput
+  cohortDefinition: CohortExpression
 ): Promise<ApiResult<string>> {
   return unwrap(async () => {
     const baseUrl = getBaseUrl()
     const url = `${baseUrl}/cohortdefinition/printfriendly/cohort?format=html`
     const locale = localStorage.getItem('locale') || 'en'
 
-    // The cohort definition from WebAPI has structure: { id, name, description, expression: {...} }
-    // The printfriendly endpoint expects just the expression property
-    let payload: AtlasCohortDefinition | string
-
-    if (isAtlasCohortDefinitionWrapper(cohortDefinition)) {
-      payload = cohortDefinition.expression
-    } else {
-      payload = cohortDefinition
-    }
-
-    // If expression is a string, parse it first
-    if (typeof payload === 'string') {
-      payload = JSON.parse(payload) as AtlasCohortDefinition
-    }
+    const payload = cohortDefinition
 
     // Get auth token for the request
     let authHeader: string | undefined

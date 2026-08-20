@@ -69,7 +69,10 @@ test.describe('Concept Search - Advanced Features', () => {
     await expect(filtersButton).toBeVisible()
     await filtersButton.click()
 
-    const domainFilter = page.getByRole('combobox', { name: 'Domain' })
+    const domainFilter = page
+      .locator('.facet-filter-bar__menu-body [role="combobox"]')
+      .filter({ hasText: 'Domain' })
+      .first()
     await expect(domainFilter).toBeVisible({ timeout: 5000 })
   })
 

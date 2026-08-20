@@ -1,22 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
-import { ref, computed, nextTick } from 'vue'
-import type {
-  CensorWindow,
-  CohortEvent,
-  CollapseSettings,
-  InclusionRule,
-  CriteriaGroup,
-  ExitCriteria,
-  QualifyingLimit,
-} from '@/models/cohort.types'
+import { ref, reactive, computed, nextTick } from 'vue'
+import { ApiError } from '@/services/api-error'
+import type { CohortExpression } from '@/models/circe-types'
 import type { ValidationWarning } from '@/models/cohort-validation.types'
 
 vi.mock('@/services/cohort-definition.service', () => ({
   validateCohortDefinition: vi.fn(),
-}))
-
-vi.mock('@/services/atlas-converter', () => ({
-  convertInternalToAtlas: vi.fn(() => ({ expression: {} })),
 }))
 
 vi.mock('@/services/concept-set.service', () => ({
@@ -33,16 +22,12 @@ vi.mock('@/utils/logger', () => ({
 }))
 
 let cohortDefService: typeof import('@/services/cohort-definition.service')
-let atlasConverter: typeof import('@/services/atlas-converter')
-let conceptSetService: typeof import('@/services/concept-set.service')
 let useCohortValidation: typeof import('@/composables/useCohortValidation').useCohortValidation
 let CohortValidationOptions: import('@/composables/useCohortValidation').CohortValidationOptions
 
 beforeAll(async () => {
   vi.resetModules()
   cohortDefService = await import('@/services/cohort-definition.service')
-  atlasConverter = await import('@/services/atlas-converter')
-  conceptSetService = await import('@/services/concept-set.service')
   const mod = await import('@/composables/useCohortValidation')
   useCohortValidation = mod.useCohortValidation
 })
@@ -53,24 +38,8 @@ describe('useCohortValidation', () => {
       cohortName: ref('Test Cohort'),
       cohortDescription: ref('Test Description'),
       cohortId: computed(() => null),
-      entryEvents: ref<CohortEvent[]>([
-        {
-          id: 'entry-1',
-          criteriaType: 'ConditionOccurrence',
-          conceptSet: { id: 1, name: 'Test Concept Set' },
-          attributes: [],
-        },
-      ]),
-      additionalCriteria: ref<CriteriaGroup | undefined>(undefined),
-      inclusionRules: ref<InclusionRule[]>([]),
-      exitCriteria: ref<ExitCriteria>({
-        exitType: 'fixedDuration',
-        duration: { value: 0, unit: 'days' },
-      }),
-      censoringCriteria: ref<CohortEvent[]>([]),
-      observationPeriod: ref({ priorDays: 0, postDays: 0 }),
-      qualifyingLimit: ref<QualifyingLimit>({ type: 'First' }),
-      inclusionQualifyingLimit: ref<QualifyingLimit>({ type: 'First' }),
+      expression: ref<CohortExpression>({}),
+      expressionRevision: ref(0),
       debounceDelay: 100,
       ...overrides,
     }
@@ -98,6 +67,120 @@ describe('useCohortValidation', () => {
       const { isValidating } = useCohortValidation(options)
 
       expect(isValidating.value).toBe(false)
+    })
+
+    it('should initialize with validationStatus as unvalidated', () => {
+      const options = createTestOptions()
+      const { validationStatus } = useCohortValidation(options)
+
+      expect(validationStatus.value).toBe('unvalidated')
+    })
+  })
+
+  describe('validationStatus', () => {
+    it('distinguishes a never-validated cohort from one that validated clean', async () => {
+      // Both states present zero warnings; a boolean in-flight flag cannot
+      // tell them apart, which is exactly the bug a gate reading zero
+      // findings as "safe to generate" would fall for.
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+        success: true,
+        data: { warnings: [] },
+      })
+
+      const options = createTestOptions()
+      const { validationStatus, validationWarnings, triggerValidation, cancelValidation } =
+        useCohortValidation(options)
+
+      cancelValidation()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+        success: true,
+        data: { warnings: [] },
+      })
+
+      expect(validationWarnings.value).toEqual([])
+      expect(validationStatus.value).toBe('unvalidated')
+
+      triggerValidation()
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      expect(validationWarnings.value).toEqual([])
+      expect(validationStatus.value).toBe('validated')
+    })
+
+    it('reports validating while a validation request is in flight', async () => {
+      let resolveValidation: (value: { success: true; data: { warnings: ValidationWarning[] } }) => void
+      const pending = new Promise<{ success: true; data: { warnings: ValidationWarning[] } }>(resolve => {
+        resolveValidation = resolve
+      })
+      vi.mocked(cohortDefService.validateCohortDefinition).mockReturnValue(pending)
+
+      const options = createTestOptions()
+      const { validationStatus, triggerValidation, cancelValidation } = useCohortValidation(options)
+
+      cancelValidation()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockReturnValue(pending)
+
+      triggerValidation()
+      await vi.advanceTimersByTimeAsync(100)
+
+      expect(validationStatus.value).toBe('validating')
+
+      resolveValidation!({ success: true, data: { warnings: [] } })
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      expect(validationStatus.value).toBe('validated')
+    })
+
+    it('marks validationStatus as validated after a failed request resolves (fallback ran)', async () => {
+      vi.mocked(cohortDefService.validateCohortDefinition).mockRejectedValue(new Error('API Error'))
+
+      const options = createTestOptions()
+      const { validationStatus, triggerValidation, cancelValidation } = useCohortValidation(options)
+
+      cancelValidation()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockRejectedValue(new Error('API Error'))
+
+      triggerValidation()
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      expect(validationStatus.value).toBe('validated')
+    })
+
+    it('returns to unvalidated when resetValidation is called for a new definition', async () => {
+      // The composable outlives the definition it validated: the editor stays
+      // mounted across a version preview or a change of :id. Without a reset the
+      // previous definition's verdict and warning list keep answering for the
+      // new one.
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+        success: true,
+        data: {
+          warnings: [
+            { type: 'DefaultWarning', severity: 'CRITICAL', message: 'broken' },
+          ] as ValidationWarning[],
+        },
+      })
+
+      const options = createTestOptions()
+      const { validationStatus, validationWarnings, triggerValidation, resetValidation } =
+        useCohortValidation(options)
+
+      triggerValidation()
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      expect(validationStatus.value).toBe('validated')
+      expect(validationWarnings.value).toHaveLength(1)
+
+      resetValidation()
+
+      expect(validationStatus.value).toBe('unvalidated')
+      expect(validationWarnings.value).toEqual([])
     })
   })
 
@@ -265,128 +348,151 @@ describe('useCohortValidation', () => {
   })
 
   describe('usedConceptSets', () => {
-    it('should extract concept sets from entry events', () => {
-      const options = createTestOptions({
-        entryEvents: ref([
-          {
-            id: 'entry-1',
-            criteriaType: 'ConditionOccurrence',
-            conceptSet: { id: 1, name: 'Condition Set' },
-            attributes: [],
-          },
-        ]),
-      })
+    // usedConceptSets now derives from the CohortExpression (circe-native):
+    // it walks the expression graph to find referenced CodesetIds, then filters
+    // expression.ConceptSets to those that are actually used.
 
+    it('should extract concept sets from primary criteria (entry events)', () => {
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [{ id: 1, name: 'Condition Set' }],
+        PrimaryCriteria: {
+          CriteriaList: [{ ConditionOccurrence: { CodesetId: 1 } }],
+        },
+        } as any)
+      const options = createTestOptions({ expression })
       const { usedConceptSets } = useCohortValidation(options)
 
       expect(usedConceptSets.value).toHaveLength(1)
-      expect(usedConceptSets.value[0].name).toBe('Condition Set')
+      expect(usedConceptSets.value[0]!.name).toBe('Condition Set')
     })
 
     it('should extract concept sets from additional criteria', () => {
-      const options = createTestOptions({
-        additionalCriteria: ref<CriteriaGroup>({
-          id: 'group-1',
-          logicType: 'ALL',
-          events: [
-            {
-              id: 'add-1',
-              criteriaType: 'DrugExposure',
-              conceptSet: { id: 2, name: 'Drug Set' },
-              attributes: [],
-            },
-          ],
-        }),
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [{ id: 2, name: 'Drug Set' }],
+        AdditionalCriteria: {
+          Type: 'ALL',
+          CriteriaList: [{ Criteria: { DrugExposure: { CodesetId: 2 } } }],
+        },
       })
-
+      const options = createTestOptions({ expression })
       const { usedConceptSets } = useCohortValidation(options)
 
       expect(usedConceptSets.value.some(cs => cs.name === 'Drug Set')).toBe(true)
     })
 
     it('should extract concept sets from inclusion rules', () => {
-      const options = createTestOptions({
-        inclusionRules: ref([
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [{ id: 3, name: 'Procedure Set' }],
+        InclusionRules: [
           {
-            id: 'rule-1',
             name: 'Test Rule',
-            criteriaGroups: [
-              {
-                id: 'group-1',
-                logicType: 'ALL',
-                events: [
-                  {
-                    id: 'inc-1',
-                    criteriaType: 'ProcedureOccurrence',
-                    conceptSet: { id: 3, name: 'Procedure Set' },
-                    attributes: [],
-                  },
-                ],
-              },
-            ],
+            expression: {
+              Type: 'ALL',
+              CriteriaList: [{ Criteria: { ProcedureOccurrence: { CodesetId: 3 } } }],
+            },
           },
-        ]),
+        ],
       })
-
+      const options = createTestOptions({ expression })
       const { usedConceptSets } = useCohortValidation(options)
 
       expect(usedConceptSets.value.some(cs => cs.name === 'Procedure Set')).toBe(true)
     })
 
-    it('should extract concept sets from exit criteria', () => {
-      const options = createTestOptions({
-        exitCriteria: ref<ExitCriteria>({
-          exitType: 'drugExposure',
-          conceptSet: { id: 4, name: 'Exit Drug Set' },
-        }),
+    it('should extract concept sets from exit strategy (drug era end)', () => {
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [{ id: 4, name: 'Exit Drug Set' }],
+        EndStrategy: {
+          CustomEra: { DrugCodesetId: 4, GapDays: 0 },
+        },
       })
-
+      const options = createTestOptions({ expression })
       const { usedConceptSets } = useCohortValidation(options)
 
       expect(usedConceptSets.value.some(cs => cs.name === 'Exit Drug Set')).toBe(true)
     })
 
     it('should extract concept sets from censoring criteria', () => {
-      const options = createTestOptions({
-        censoringCriteria: ref([
-          {
-            id: 'censor-1',
-            criteriaType: 'Death',
-            conceptSet: { id: 5, name: 'Death Set' },
-            attributes: [],
-          },
-        ]),
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [{ id: 5, name: 'Death Set' }],
+        CensoringCriteria: [{ Death: { CodesetId: 5 } }],
       })
-
+      const options = createTestOptions({ expression })
       const { usedConceptSets } = useCohortValidation(options)
 
       expect(usedConceptSets.value.some(cs => cs.name === 'Death Set')).toBe(true)
     })
 
-    it('should deduplicate concept sets by name', () => {
-      const options = createTestOptions({
-        entryEvents: ref([
-          {
-            id: 'entry-1',
-            criteriaType: 'ConditionOccurrence',
-            conceptSet: { id: 1, name: 'Shared Set' },
-            attributes: [],
-          },
-        ]),
-        censoringCriteria: ref([
-          {
-            id: 'censor-1',
-            criteriaType: 'Death',
-            conceptSet: { id: 1, name: 'Shared Set' },
-            attributes: [],
-          },
-        ]),
+    it('should deduplicate: same concept set referenced from multiple criteria appears once', () => {
+      // Same CodesetId referenced from both primary criteria and censoring criteria.
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [{ id: 1, name: 'Shared Set' }],
+        PrimaryCriteria: {
+          CriteriaList: [{ ConditionOccurrence: { CodesetId: 1 } }],
+        },
+        CensoringCriteria: [{ ConditionOccurrence: { CodesetId: 1 } }],
       })
-
+      const options = createTestOptions({ expression })
       const { usedConceptSets } = useCohortValidation(options)
 
       const sharedSets = usedConceptSets.value.filter(cs => cs.name === 'Shared Set')
       expect(sharedSets).toHaveLength(1)
+    })
+
+    it('should follow expression ref replacement when the cohort expression is reloaded', async () => {
+      const expression = ref<CohortExpression>({
+        ConceptSets: [{ id: 1, name: 'Initial Set' }],
+        PrimaryCriteria: {
+          CriteriaList: [{ ConditionOccurrence: { CodesetId: 1 } }],
+        },
+      })
+      const options = createTestOptions({ expression })
+      const { usedConceptSets } = useCohortValidation(options)
+
+      expect(usedConceptSets.value.some(cs => cs.name === 'Initial Set')).toBe(true)
+
+      expression.value = {
+        ConceptSets: [{ id: 2, name: 'Reloaded Set' }],
+        PrimaryCriteria: {
+          CriteriaList: [{ DrugExposure: { CodesetId: 2 } }],
+        },
+      }
+
+      await nextTick()
+
+      expect(usedConceptSets.value.some(cs => cs.name === 'Reloaded Set')).toBe(true)
+      expect(usedConceptSets.value.some(cs => cs.name === 'Initial Set')).toBe(false)
+    })
+
+    it('refreshes the cached usedConceptSets only after the explicit revision changes', async () => {
+      const expression = reactive<CohortExpression>({
+        ConceptSets: [
+          { id: 1, name: 'Initial Set' },
+          { id: 2, name: 'Reloaded Set' },
+        ],
+        PrimaryCriteria: {
+          CriteriaList: [{ ConditionOccurrence: { CodesetId: 1 } }],
+        },
+      })
+      const usedConceptSetsRevision = ref(0)
+      const options = createTestOptions({ expression, usedConceptSetsRevision })
+      const { usedConceptSets } = useCohortValidation(options)
+
+      expect(usedConceptSets.value).toHaveLength(1)
+      expect(usedConceptSets.value[0]!.name).toBe('Initial Set')
+
+      const firstCriterion = (expression as any).PrimaryCriteria.CriteriaList[0]
+      firstCriterion.ConditionOccurrence.CodesetId = 2
+      await nextTick()
+
+      expect(usedConceptSets.value).toHaveLength(1)
+      expect(usedConceptSets.value[0]!.name).toBe('Initial Set')
+
+      usedConceptSetsRevision.value++
+      await nextTick()
+
+      expect(usedConceptSets.value).toHaveLength(1)
+      expect(usedConceptSets.value[0]!.name).toBe('Reloaded Set')
     })
   })
 
@@ -412,6 +518,49 @@ describe('useCohortValidation', () => {
       expect(cohortDefService.validateCohortDefinition).toHaveBeenCalledTimes(1)
     })
 
+    it('validates the new definition even when the previous request is still in flight', async () => {
+      // A slow check for cohort A must not swallow the trigger for cohort B, or
+      // B is never checked and A's response marks it validated on arrival.
+      let resolveFirst: (value: { success: true; data: { warnings: ValidationWarning[] } }) => void
+      const first = new Promise<{ success: true; data: { warnings: ValidationWarning[] } }>(
+        resolve => {
+          resolveFirst = resolve
+        }
+      )
+      vi.mocked(cohortDefService.validateCohortDefinition).mockReturnValueOnce(first)
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+        success: true,
+        data: { warnings: [{ type: 'DefaultWarning', severity: 'INFO', message: 'second' }] },
+      })
+
+      const options = createTestOptions()
+      const { validationWarnings, validationStatus, triggerValidation, resetValidation } =
+        useCohortValidation(options)
+
+      resetValidation()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+
+      triggerValidation()
+      await vi.advanceTimersByTimeAsync(100)
+      expect(validationStatus.value).toBe('validating')
+
+      triggerValidation()
+      await vi.advanceTimersByTimeAsync(100)
+
+      expect(cohortDefService.validateCohortDefinition).toHaveBeenCalledTimes(2)
+
+      resolveFirst!({
+        success: true,
+        data: { warnings: [{ type: 'DefaultWarning', severity: 'CRITICAL', message: 'first' }] },
+      })
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      // The superseded response must not win the write, nor mark the new
+      // definition validated on its way out.
+      expect(validationWarnings.value.map(w => w.message)).toEqual(['second'])
+    })
+
     it('should validate with placeholder name when cohort name is empty', async () => {
       vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
       const options = createTestOptions({
@@ -428,14 +577,12 @@ describe('useCohortValidation', () => {
 
       const calls = vi.mocked(cohortDefService.validateCohortDefinition).mock.calls
       expect(calls).toHaveLength(1)
-      expect(calls[0][0]).toBe('Untitled Cohort')
+      expect(calls[0]?.[0]).toBe('Untitled Cohort')
     })
 
     it('should validate even when no entry events', async () => {
       vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
-      const options = createTestOptions({
-        entryEvents: ref([]),
-      })
+      const options = createTestOptions()
       const { triggerValidation, cancelValidation } = useCohortValidation(options)
 
       cancelValidation()
@@ -468,6 +615,46 @@ describe('useCohortValidation', () => {
       expect(validationWarnings.value).toEqual(warnings)
     })
 
+    it('should drop stale warnings when the API returns a failed result', async () => {
+      const warnings: ValidationWarning[] = [
+        { type: 'DefaultWarning', severity: 'WARNING', message: 'Stale warning' },
+      ]
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
+
+      const options = createTestOptions()
+      const { validationWarnings, isValidating, triggerValidation, cancelValidation } =
+        useCohortValidation(options)
+
+      cancelValidation()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings } })
+
+      const hasStaleWarning = () =>
+        validationWarnings.value.some(w => w.message === 'Stale warning')
+
+      triggerValidation()
+      await vi.runAllTimersAsync()
+      await nextTick()
+      expect(hasStaleWarning()).toBe(true)
+
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
+        success: false,
+        error: new ApiError('HTTP 500: <html>Internal Server Error</html>', 500, null),
+      })
+
+      triggerValidation()
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      expect(hasStaleWarning()).toBe(false)
+      expect(isValidating.value).toBe(false)
+
+      // A failed result is not a thrown error: it must resolve through the
+      // success ternary, never the catch block that logs.
+      const { logger } = await import('@/utils/logger')
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
     it('should clear warnings when validation fails', async () => {
       vi.mocked(cohortDefService.validateCohortDefinition).mockRejectedValue(new Error('API Error'))
 
@@ -483,36 +670,6 @@ describe('useCohortValidation', () => {
       await nextTick()
 
       expect(validationWarnings.value).toEqual([])
-    })
-
-    it('surfaces an ApiResult failure as a DefaultWarning rather than silently clearing warnings', async () => {
-      // validateCohortDefinition itself never rejects post-migration — an
-      // HTTP/network failure resolves as { success: false }. The old
-      // contract folded that into a synthetic warning so the user saw
-      // *something*; the composable must reproduce that, not go quiet.
-      const { ApiError } = await import('@/services/api-error')
-      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
-        success: false,
-        error: new ApiError('Network error', 0, null),
-      })
-
-      const options = createTestOptions()
-      const { validationWarnings, triggerValidation, cancelValidation } = useCohortValidation(options)
-
-      cancelValidation()
-      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
-      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({
-        success: false,
-        error: new ApiError('Network error', 0, null),
-      })
-
-      triggerValidation()
-      await vi.runAllTimersAsync()
-      await nextTick()
-
-      expect(validationWarnings.value).toHaveLength(1)
-      expect(validationWarnings.value[0]?.type).toBe('DefaultWarning')
-      expect(validationWarnings.value[0]?.message).toContain('Network error')
     })
   })
 
@@ -561,195 +718,8 @@ describe('useCohortValidation', () => {
     })
   })
 
-  describe('assembled definition', () => {
-    it('validates the same fields the editor saves, including censoring criteria, censor window and collapse settings', async () => {
-      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
-
-      const censoringCriteria = ref<CohortEvent[]>([
-        {
-          id: 'censor-1',
-          criteriaType: 'Death',
-          conceptSet: { id: 5, name: 'Death Set' },
-          attributes: [],
-        },
-      ])
-      const options = createTestOptions({
-        censoringCriteria,
-        censorWindow: ref<CensorWindow | null>({ startDate: '2020-01-01', endDate: '2021-01-01' }),
-        collapseSettings: ref<CollapseSettings>({ collapseType: 'ERA', eraPad: 7 }),
-      })
-      const { triggerValidation, cancelValidation } = useCohortValidation(options)
-
-      cancelValidation()
-      vi.mocked(atlasConverter.convertInternalToAtlas).mockClear()
-
-      triggerValidation()
-      await vi.runAllTimersAsync()
-      await nextTick()
-
-      const definition = vi.mocked(atlasConverter.convertInternalToAtlas).mock.calls[0][0]
-      expect(definition.censoringCriteria).toEqual(censoringCriteria.value)
-      expect(definition.censorWindow).toEqual({ startDate: '2020-01-01', endDate: '2021-01-01' })
-      expect(definition.collapseSettings).toEqual({ collapseType: 'ERA', eraPad: 7 })
-    })
-
-    it('re-validates when the censor window changes', async () => {
-      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
-
-      const censorWindow = ref<CensorWindow | null>(null)
-      const options = createTestOptions({ censorWindow })
-      const { cancelValidation } = useCohortValidation(options)
-
-      cancelValidation()
-      await vi.runAllTimersAsync()
-      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
-
-      censorWindow.value = { startDate: '2020-01-01' }
-      await nextTick()
-      await vi.runAllTimersAsync()
-      await nextTick()
-
-      expect(cohortDefService.validateCohortDefinition).toHaveBeenCalledTimes(1)
-    })
-  })
-
-  describe('concept set hydration', () => {
-    it('does not fetch concept sets whose id is not numeric', async () => {
-      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
-
-      const options = createTestOptions({
-        entryEvents: ref<CohortEvent[]>([
-          {
-            id: 'entry-1',
-            criteriaType: 'ConditionOccurrence',
-            conceptSet: { id: 'b4d1c8e2-uuid', name: 'Unsaved Set' },
-            attributes: [],
-          },
-        ]),
-      })
-      const { triggerValidation, cancelValidation } = useCohortValidation(options)
-
-      cancelValidation()
-      vi.mocked(conceptSetService.getConceptSetById).mockClear()
-
-      triggerValidation()
-      await vi.runAllTimersAsync()
-      await nextTick()
-
-      expect(conceptSetService.getConceptSetById).not.toHaveBeenCalled()
-    })
-
-    it('still fetches concept set id 0', async () => {
-      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
-
-      const options = createTestOptions({
-        entryEvents: ref<CohortEvent[]>([
-          {
-            id: 'entry-1',
-            criteriaType: 'ConditionOccurrence',
-            conceptSet: { id: 0, name: 'Legacy Set' },
-            attributes: [],
-          },
-        ]),
-      })
-      const { triggerValidation, cancelValidation } = useCohortValidation(options)
-
-      cancelValidation()
-      vi.mocked(conceptSetService.getConceptSetById).mockClear()
-
-      triggerValidation()
-      await vi.runAllTimersAsync()
-      await nextTick()
-
-      expect(conceptSetService.getConceptSetById).toHaveBeenCalledWith(0)
-    })
-  })
-
-  describe('triggers during an in-flight validation', () => {
-    it('re-validates once after the in-flight run settles instead of dropping the edits', async () => {
-      let settleFirst: (value: { success: true; data: { warnings: ValidationWarning[] } }) => void = () => {}
-      vi.mocked(cohortDefService.validateCohortDefinition)
-        .mockImplementationOnce(
-          () => new Promise(resolve => { settleFirst = resolve })
-        )
-        .mockResolvedValue({ success: true, data: { warnings: [] } })
-
-      const options = createTestOptions()
-      const { triggerValidation, cancelValidation } = useCohortValidation(options)
-
-      cancelValidation()
-
-      triggerValidation()
-      await vi.advanceTimersByTimeAsync(100)
-      expect(cohortDefService.validateCohortDefinition).toHaveBeenCalledTimes(1)
-
-      triggerValidation()
-      triggerValidation()
-      await vi.advanceTimersByTimeAsync(100)
-      expect(cohortDefService.validateCohortDefinition).toHaveBeenCalledTimes(1)
-
-      settleFirst({ success: true, data: { warnings: [] } })
-      await vi.runAllTimersAsync()
-      await nextTick()
-
-      expect(cohortDefService.validateCohortDefinition).toHaveBeenCalledTimes(2)
-
-      await vi.runAllTimersAsync()
-      expect(cohortDefService.validateCohortDefinition).toHaveBeenCalledTimes(2)
-    })
-
-    it('does not re-validate when nothing changed during the in-flight run', async () => {
-      let settleFirst: (value: { success: true; data: { warnings: ValidationWarning[] } }) => void = () => {}
-      vi.mocked(cohortDefService.validateCohortDefinition)
-        .mockImplementationOnce(
-          () => new Promise(resolve => { settleFirst = resolve })
-        )
-        .mockResolvedValue({ success: true, data: { warnings: [] } })
-
-      const options = createTestOptions()
-      const { triggerValidation, cancelValidation } = useCohortValidation(options)
-
-      cancelValidation()
-
-      triggerValidation()
-      await vi.advanceTimersByTimeAsync(100)
-
-      settleFirst({ success: true, data: { warnings: [] } })
-      await vi.runAllTimersAsync()
-      await nextTick()
-
-      expect(cohortDefService.validateCohortDefinition).toHaveBeenCalledTimes(1)
-    })
-
-    it('cancelValidation drops a queued re-validation', async () => {
-      let settleFirst: (value: { success: true; data: { warnings: ValidationWarning[] } }) => void = () => {}
-      vi.mocked(cohortDefService.validateCohortDefinition)
-        .mockImplementationOnce(
-          () => new Promise(resolve => { settleFirst = resolve })
-        )
-        .mockResolvedValue({ success: true, data: { warnings: [] } })
-
-      const options = createTestOptions()
-      const { triggerValidation, cancelValidation } = useCohortValidation(options)
-
-      cancelValidation()
-
-      triggerValidation()
-      await vi.advanceTimersByTimeAsync(100)
-
-      triggerValidation()
-      cancelValidation()
-
-      settleFirst({ success: true, data: { warnings: [] } })
-      await vi.runAllTimersAsync()
-      await nextTick()
-
-      expect(cohortDefService.validateCohortDefinition).toHaveBeenCalledTimes(1)
-    })
-  })
-
   describe('auto-validation on changes', () => {
-    it('should auto-trigger validation when cohort name changes', async () => {
+    it('should not auto-trigger validation when cohort name changes', async () => {
       vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
 
       const cohortName = ref('Initial Name')
@@ -762,6 +732,27 @@ describe('useCohortValidation', () => {
       vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
 
       cohortName.value = 'Updated Name'
+      await nextTick()
+
+      await vi.runAllTimersAsync()
+      await nextTick()
+
+      expect(cohortDefService.validateCohortDefinition).not.toHaveBeenCalled()
+    })
+
+    it('should auto-trigger validation when expressionRevision changes', async () => {
+      vi.mocked(cohortDefService.validateCohortDefinition).mockResolvedValue({ success: true, data: { warnings: [] } })
+
+      const expressionRevision = ref(0)
+      const options = createTestOptions({ expressionRevision })
+      const { cancelValidation } = useCohortValidation(options)
+
+      cancelValidation()
+      await vi.runAllTimersAsync()
+      await nextTick()
+      vi.mocked(cohortDefService.validateCohortDefinition).mockClear()
+
+      expressionRevision.value++
       await nextTick()
 
       await vi.runAllTimersAsync()

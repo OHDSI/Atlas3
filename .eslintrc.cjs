@@ -56,6 +56,8 @@ module.exports = {
     // this pattern, so we disable it completely.
     'vue/no-mutating-props': 'off',
 
+    'vue/multi-word-component-names': 'off',
+
     // Atlas UI library — Phase 1 + 2 wrappers shipped, severity at 'warn'.
     // Uses vue/no-restricted-html-elements (NOT no-restricted-component-names) because
     // Vuetify components are globally auto-imported via vite-plugin-vuetify and appear
@@ -111,6 +113,24 @@ module.exports = {
   },
   overrides: [
     {
+      // cohort-editor uses intentional design patterns that conflict with several
+      // generic lint rules:
+      //
+      // no-explicit-any — generic field-binding utilities (bindings.ts,
+      //   criteria-editor-helper.ts) and per-domain computed accessors use
+      //   Record<string, any> to work across the Criteria discriminated union.
+      //   Zod at the API boundary is the real safety layer; converting to `unknown`
+      //   would require 30+ casts with no meaningful gain.
+      //
+      // no-autofocus — autofocus on popover/inline-edit text fields is correct UX
+      //   (WCAG dialog interaction pattern). The rule targets page-load hijacking.
+      files: ['src/components/cohort-editor/**/*.{vue,ts}'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'off',
+        'vuejs-accessibility/no-autofocus': 'off',
+      },
+    },
+    {
       // Allow console in tests, scripts, dev plugins, and the Stryker config (which
       // logs its computed mutate scope on load)
       files: ['tests/**/*', 'scripts/**/*', 'plugins-dev/**/*', 'stryker.conf.mjs'],
@@ -137,11 +157,6 @@ module.exports = {
       rules: {
         'vue/no-restricted-html-elements': 'off',
         'no-restricted-imports': 'off',
-        // Histoire story files are named after their subject (e.g. Tokens.story.vue,
-        // Introduction.story.vue). The `.story` suffix is not counted as a word, so
-        // single-word subjects trip vue/multi-word-component-names. Stories are not
-        // shipped components, so this rule is not meaningful here.
-        'vue/multi-word-component-names': 'off',
       },
     },
   ],

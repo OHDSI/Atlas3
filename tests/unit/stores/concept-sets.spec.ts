@@ -14,6 +14,8 @@ vi.mock('@/services/concept-set.service', () => ({
   createConceptSet: vi.fn(),
   updateConceptSet: vi.fn(),
   deleteConceptSet: vi.fn(),
+  assignTagToConceptSet: vi.fn(),
+  unassignTagFromConceptSet: vi.fn(),
 }))
 
 vi.mock('@/services/concept-search.service', () => ({
@@ -75,6 +77,8 @@ import {
   createConceptSet,
   updateConceptSet,
   deleteConceptSet,
+  assignTagToConceptSet,
+  unassignTagFromConceptSet,
 } from '@/services/concept-set.service'
 import {
   getRecommendedConcepts,
@@ -194,6 +198,42 @@ describe('Concept Sets Store', () => {
       const store = useConceptSetsStore()
       store.conceptSets = mockConceptSetList
       expect(store.isEmpty).toBe(false)
+    })
+
+    it('covers tag, author, and filter branches', () => {
+      const store = useConceptSetsStore()
+      store.conceptSets = [
+        {
+          id: 1,
+          name: 'One',
+          createdBy: { id: 1, name: 'Alice', email: 'alice@test.com' },
+          tags: [{ name: 'alpha' }, { name: '' }, null as never],
+        } as never,
+        {
+          id: 2,
+          name: 'Two',
+          createdBy: undefined,
+          tags: [{ name: 'beta' }],
+        } as never,
+      ]
+
+      expect(store.availableTags).toEqual(['alpha', 'beta'])
+      expect(store.availableAuthors).toEqual(['alice'])
+
+      store.setFilters({
+        searchQuery: 'one',
+        author: 'alice',
+        selectedTags: undefined as never,
+        createdDateRange: { from: '2024-01-01' } as never,
+        modifiedDateRange: { to: '2024-12-31' } as never,
+      })
+
+      expect(store.filters.selectedTags).toEqual([])
+      expect(store.activeFilterCount).toBe(4)
+
+      store.clearFilters()
+      expect(store.activeFilterCount).toBe(0)
+      expect(store.filteredSets).toEqual(store.conceptSets)
     })
   })
 
@@ -455,6 +495,32 @@ describe('Concept Sets Store', () => {
     })
   })
 
+  describe('tag synchronization', () => {
+    it('updates current tags and surfaces assign/unassign failures', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = {
+        id: 7,
+        name: 'Tagged',
+        items: [],
+        tags: [{ id: 1, name: 'old' }],
+      } as never
+
+      vi.mocked(assignTagToConceptSet).mockResolvedValueOnce({ success: false, error: 'add failed' })
+      vi.mocked(unassignTagFromConceptSet).mockResolvedValueOnce({ success: false, error: 'remove failed' })
+
+      const result = await store.syncTags(
+        7,
+        [{ id: 1, name: 'old' } as never],
+        [{ id: 2, name: 'new' } as never]
+      )
+
+      expect(result.success).toBe(false)
+      expect(store.currentSet?.tags).toEqual([{ id: 2, name: 'new' }])
+      expect(store.error).toContain('add failed')
+      expect(store.error).toContain('remove failed')
+    })
+  })
+
   describe('clearError Action', () => {
     it('should clear error', () => {
       const store = useConceptSetsStore()
@@ -644,6 +710,59 @@ describe('Concept Sets Store', () => {
 
         // No error, no change
         expect(store.currentSet.items).toHaveLength(0)
+      })
+    })
+
+    describe('row-specific flags', () => {
+      function makeRow(conceptId: number, flags: Partial<ConceptSetItem> = {}): ConceptSetItem {
+        return {
+          conceptId,
+          conceptName: `Concept ${conceptId}`,
+          conceptCode: `${conceptId}`,
+          domainId: 'Condition',
+          vocabularyId: 'SNOMED',
+          conceptClassId: 'Clinical Finding',
+          standardConcept: 'S',
+          invalidReason: null,
+          isExcluded: false,
+          includeDescendants: false,
+          includeMapped: false,
+          ...flags,
+        }
+      }
+
+      it('toggleConceptItemFlag rejects making a duplicate sibling row', () => {
+        const store = useConceptSetsStore()
+        const first = makeRow(101, { includeDescendants: false, includeMapped: false, isExcluded: false })
+        const second = makeRow(101, { includeDescendants: true, includeMapped: false, isExcluded: false })
+        store.currentSet = { name: 'Test', items: [first, second] }
+
+        store.toggleConceptItemFlag({ ...first }, 'includeDescendants')
+
+        expect(store.error).toBe('Another entry for this concept already uses those options')
+        expect(first.includeDescendants).toBe(false)
+      })
+
+      it('setConceptItemFlags applies only the provided fields', () => {
+        const store = useConceptSetsStore()
+        const row = makeRow(202, { includeDescendants: true, includeMapped: true, isExcluded: false })
+        store.currentSet = { name: 'Test', items: [row] }
+
+        store.setConceptItemFlags({ ...row }, { isExcluded: true })
+
+        expect(row.isExcluded).toBe(true)
+        expect(row.includeDescendants).toBe(true)
+        expect(row.includeMapped).toBe(true)
+      })
+
+      it('removeConceptItem uses flag-based lookup when passed a copy', () => {
+        const store = useConceptSetsStore()
+        const row = makeRow(303, { includeDescendants: true })
+        store.currentSet = { name: 'Test', items: [row] }
+
+        store.removeConceptItem({ ...row })
+
+        expect(store.currentSet.items).toEqual([])
       })
     })
 
@@ -914,6 +1033,29 @@ describe('Concept Sets Store', () => {
 
       expect(store.loadingRecommended).toBe(false)
     })
+
+    it('should leave a candidate unchanged when no record-count row is returned', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Test', items: [makeItem(1)] }
+
+      vi.mocked(getRecommendedConcepts).mockResolvedValue({
+        available: true,
+        concepts: [makeRecommended(10), makeRecommended(11)],
+      })
+      vi.mocked(getConceptRecordCounts).mockResolvedValue(new Map([[10, {
+        recordCount: 7,
+        descendantRecordCount: 8,
+        personCount: 3,
+        descendantPersonCount: 4,
+      }]]))
+
+      await store.loadRecommendedConcepts('TEST')
+
+      const enriched = store.recommendedConcepts.find(c => c.conceptId === 10)!
+      const untouched = store.recommendedConcepts.find(c => c.conceptId === 11)!
+      expect(enriched.recordCount).toBe(7)
+      expect(untouched.recordCount).toBeUndefined()
+    })
   })
 
   describe('Concept Set Comparison', () => {
@@ -1097,6 +1239,39 @@ describe('Concept Sets Store', () => {
       await inFlight
 
       expect(store.loadingComparison).toBe(false)
+    })
+
+    it('should support source-mode comparison and reuse the cache on repeat calls', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = {
+        id: 1,
+        name: 'CS1',
+        items: [makeItem(100)],
+      }
+
+      const cs2: ConceptSet = {
+        id: 2,
+        name: 'CS2',
+        items: [makeItem(200)],
+      }
+      vi.mocked(getConceptSetById).mockResolvedValue(cs2)
+      vi.mocked(resolveConceptSetExpression).mockResolvedValueOnce([{ ...makeItem(100) } as never, { ...makeItem(101) } as never])
+      vi.mocked(resolveConceptSetExpression).mockResolvedValueOnce([{ ...makeItem(200) } as never])
+      vi.mocked(getMappedSourceCodes).mockResolvedValue([{ ...makeItem(900) } as never])
+
+      await store.loadComparisonForMode('TEST', 2, 'source')
+      const firstCallCount = vi.mocked(getConceptSetById).mock.calls.length
+      const firstResolveCount = vi.mocked(resolveConceptSetExpression).mock.calls.length
+      const firstSourceCount = vi.mocked(getMappedSourceCodes).mock.calls.length
+
+      await store.loadComparisonForMode('TEST', 2, 'source')
+
+      expect(store.comparisonMode).toBe('source')
+      expect(store.comparisonOtherSet?.id).toBe(2)
+      expect(getConceptSetById).toHaveBeenCalledTimes(firstCallCount)
+      expect(resolveConceptSetExpression).toHaveBeenCalledTimes(firstResolveCount)
+      expect(getMappedSourceCodes).toHaveBeenCalledTimes(firstSourceCount)
+      expect(store.comparison).toHaveLength(1)
     })
   })
 
@@ -1359,6 +1534,25 @@ describe('Concept Sets Store', () => {
       }
       const result = await store.savePreviewAsCurrent()
       expect(result).toBe(false)
+    })
+
+    it('savePreviewAsCurrent returns false when the update result is empty', async () => {
+      const store = useConceptSetsStore()
+      store.previewVersion = {
+        version: 1,
+        assetId: 1,
+        createdBy: { id: 1, name: 'U', email: 'u@test.com' },
+        createdDate: '2024-01-01T00:00:00Z',
+        comment: null,
+        archived: false,
+      }
+      store.currentSet = { id: 1, name: 'Test', items: [] }
+      vi.mocked(updateConceptSet).mockResolvedValueOnce(null as never)
+
+      const result = await store.savePreviewAsCurrent()
+
+      expect(result).toBe(false)
+      expect(store.previewVersion).toEqual(expect.objectContaining({ version: 1 }))
     })
   })
 })

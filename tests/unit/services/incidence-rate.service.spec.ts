@@ -81,13 +81,28 @@ describe('services/incidence-rate.service', () => {
 
   describe('listIncidenceRates', () => {
     it('calls /ir/ and returns the parsed summary list', async () => {
-      ok([{ id: 1, name: 'X', tags: [] }])
+      ok([{ id: 1, name: 'X', tags: [], createdBy: { id: -1, login: 'anonymous', name: 'Anonymous' } }])
 
       const result = await listIncidenceRates()
 
       expect(result.success).toBe(true)
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/ir/')
+    })
+
+    it('accepts legacy anonymous createdBy ids', async () => {
+      ok([
+        {
+          id: 5,
+          name: 'Legacy IR',
+          tags: [],
+          createdBy: { id: -1, login: 'anonymous', name: 'Anonymous' },
+        },
+      ])
+
+      const result = await listIncidenceRates()
+
+      expect(result).toMatchObject({ success: true, data: [{ createdBy: { id: -1 } }] })
     })
 
     it('returns failure on parse error', async () => {

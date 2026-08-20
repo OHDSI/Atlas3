@@ -120,7 +120,9 @@
     <IncidenceRateStratifyInspector
       v-model="strataInspectorOpen"
       :rule="strataInspectorRule"
+      :concept-sets="irConceptSets"
       @update="(p) => strataInspectorIndex !== null && store.updateStratifyRule(strataInspectorIndex, p)"
+      @add-concept-set="onAddStratifyConceptSet"
     />
   </div>
 </template>
@@ -128,7 +130,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { v4 as uuidv4 } from 'uuid'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { useIncidenceRateReport } from '@/composables/useIncidenceRateReport'
 import { useIncidenceRateGeneration } from '@/composables/useIncidenceRateGeneration'
@@ -151,7 +152,7 @@ import DataSourceRunTable, {
 import PreviousRunsDialog from '@/components/generation/PreviousRunsDialog.vue'
 import { IR_TERMINAL_STATUSES } from '@/models/incidence-rate.types'
 import { arrayToCsv, downloadCsv } from '@/utils/csv'
-import type { CriteriaGroup } from '@/models/cohort.types'
+import type { ConceptSet } from '@/models/circe-types'
 import type { StratifyRule } from '@/models/incidence-rate.types'
 import type { GenerationStatus } from '@/models/characterization.types'
 
@@ -171,6 +172,19 @@ const strataInspectorRule = computed<StratifyRule | null>(() =>
     ? null
     : (store.currentIR?.expression.strata[strataInspectorIndex.value] ?? null)
 )
+
+// Concept sets at the IR-expression level, passed into the stratify inspector.
+const irConceptSets = computed<ConceptSet[]>(
+  () => (store.currentIR?.expression.ConceptSets ?? []) as ConceptSet[],
+)
+
+function onAddStratifyConceptSet(cs: ConceptSet) {
+  if (!store.currentIR) return
+  const sets = store.currentIR.expression.ConceptSets ?? []
+  if (!sets.some(s => s.id === cs.id)) {
+    store.currentIR.expression.ConceptSets = [...sets, cs]
+  }
+}
 
 const selectedExecutionId = computed<number | null>(() => {
   const q = route.query?.run
@@ -308,7 +322,7 @@ function onStrataAdd() {
   const newRule: StratifyRule = {
     name: `Rule ${(store.currentIR?.expression.strata.length ?? 0) + 1}`,
     description: '',
-    expression: { id: uuidv4(), logicType: 'ALL', events: [] } as CriteriaGroup,
+    expression: { Type: 'ALL', CriteriaList: [] },
   }
   store.addStratifyRule(newRule)
   strataInspectorIndex.value = (store.currentIR?.expression.strata.length ?? 1) - 1

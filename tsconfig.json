@@ -28,7 +28,7 @@
     "noUncheckedIndexedAccess": true,
 
     /* Path Aliases */
-    "baseUrl": ".",
+    "ignoreDeprecations": "5.0",
     "paths": {
       "@/*": ["./src/*"]
     },

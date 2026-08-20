@@ -166,7 +166,7 @@ export type AgentProposal =
   | { kind: 'addInclusionRule'; rule: InclusionRule }
   | { kind: 'addConceptSet'; conceptSet: ConceptSetReference }
   | { kind: 'setObservationPeriod'; observationPeriod: ObservationPeriod }
-  | { kind: 'setExitCriteria'; exitCriteria: ExitCriteria }
+  | { kind: 'setCohortExit'; exitCriteria: ExitCriteria }
   | { kind: 'addCensoringCriterion'; event: CohortEvent }
   | { kind: 'navigate'; route: NavigateRoute; reason?: string }
   // The host always navigates the user to the relevant editor after a

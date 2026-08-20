@@ -1,5 +1,6 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest'
-import { extractRoutes } from '../emit-route-manifest.mjs'
+import { extractRoutes } from '../emit-route-manifest.core.mjs'
 
 const FIXTURE = `
 export const routes = [

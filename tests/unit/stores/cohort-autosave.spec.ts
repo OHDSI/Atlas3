@@ -4,8 +4,12 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useCohortStore } from '@/stores/cohort'
+import { useCohortStore, AUTO_SAVE_INTERVAL_MS } from '@/stores/cohort'
 import type { CohortDefinition } from '@/models/cohort.types'
+
+function makeCohort(): CohortDefinition {
+  return { name: 'Test Cohort' }
+}
 
 describe('Cohort Store - Auto-Save and Draft Management', () => {
   let store: ReturnType<typeof useCohortStore>
@@ -278,59 +282,29 @@ describe('Cohort Store - Auto-Save and Draft Management', () => {
   })
 
   describe('auto-save ownership', () => {
-    // The timer is owned by the mounted editor, which pairs startAutoSave in
-    // onMounted with stopAutoSave in onBeforeUnmount. A store that started it
-    // on dirty would leave it running with nobody to stop it whenever the
-    // cohort is mutated while the editor is closed, e.g. by an agent proposal.
-    it('should not start auto-save merely because the cohort became dirty', async () => {
-      const cohort: CohortDefinition = {
-        name: 'Test Cohort',
-        entryEvents: [],
-        qualifyingLimit: 'ALL',
-        inclusionRules: [],
-        conceptSets: [],
-      }
-
-      store.setCohort(cohort)
+    // The timer is owned by the mounted editor (CohortBuilder starts it in onMounted,
+    // stops it in onBeforeUnmount), not by dirty state. Arming it from markDirty() would
+    // leak an interval whenever the cohort is mutated with no editor mounted to stop it,
+    // e.g. an agent proposal applied against a background store.
+    it('does not write a draft when the cohort is merely marked dirty', async () => {
+      store.setCohort(makeCohort())
       store.markDirty()
 
-      await vi.advanceTimersByTimeAsync(30000)
+      await vi.advanceTimersByTimeAsync(AUTO_SAVE_INTERVAL_MS + 1000)
 
       expect(sessionStorage.getItem('atlas3_cohort_draft')).toBeNull()
     })
 
-    it('should auto-save an added entry event once the editor starts auto-save', async () => {
-      store.createNewCohort()
-      store.startAutoSave()
-
-      store.addEntryEvent({
-        id: '1',
-        criteriaType: 'ConditionOccurrence',
-      })
-
-      await vi.advanceTimersByTimeAsync(30000)
-
-      const savedData = sessionStorage.getItem('atlas3_cohort_draft')
-      expect(savedData).toBeTruthy()
-
-      const parsed = JSON.parse(savedData!)
-      expect(parsed.cohort.entryEvents).toHaveLength(1)
-    })
-
-    it('should stop writing drafts once the editor unmounts', async () => {
-      store.createNewCohort()
+    it('writes a draft on the interval once the editor has started autosave', async () => {
+      store.setCohort(makeCohort())
       store.startAutoSave()
       store.markDirty()
 
-      await vi.advanceTimersByTimeAsync(30000)
-      expect(sessionStorage.getItem('atlas3_cohort_draft')).toBeTruthy()
+      await vi.advanceTimersByTimeAsync(AUTO_SAVE_INTERVAL_MS + 1000)
 
-      store.stopAutoSave()
-      sessionStorage.removeItem('atlas3_cohort_draft')
-      store.markDirty()
-
-      await vi.advanceTimersByTimeAsync(60000)
-      expect(sessionStorage.getItem('atlas3_cohort_draft')).toBeNull()
+      const draft = sessionStorage.getItem('atlas3_cohort_draft')
+      expect(draft).toBeTruthy()
+      expect(JSON.parse(draft as string).cohort.name).toBe('Test Cohort')
     })
   })
 

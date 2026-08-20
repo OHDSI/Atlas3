@@ -26,10 +26,6 @@ export function createMockCohortDefinition(overrides: Partial<CohortDefinition> 
   return {
     id: Math.floor(Math.random() * 10000),
     name: 'Test Cohort',
-    entryEvents: [],
-    qualifyingLimit: 'ALL',
-    inclusionRules: [],
-    conceptSets: [],
     ...overrides,
   }
 }

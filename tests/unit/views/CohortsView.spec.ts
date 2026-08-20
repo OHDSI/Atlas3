@@ -588,6 +588,10 @@ describe('CohortsView.vue', () => {
 
   describe('Copy Cohort (discussion #124)', () => {
     const mockCohort = createMockCohort(1, { name: 'Diabetes Cohort' })
+    const mockExpressionObj = {
+      ConceptSets: [{ id: 0, name: 'Diabetes' }],
+      PrimaryCriteria: { CriteriaList: [], ObservationWindow: { PriorDays: 0, PostDays: 0 }, PrimaryCriteriaLimit: { Type: 'First' } }
+    }
     const mockDefinition = {
       id: 1,
       name: 'Diabetes Cohort',
@@ -597,8 +601,8 @@ describe('CohortsView.vue', () => {
       modifiedBy: 'someone',
       modifiedDate: 1700000000000,
       tags: [{ id: 1, name: 'chronic' }],
-      ConceptSets: [{ id: 0, name: 'Diabetes' }],
-      PrimaryCriteria: { CriteriaList: [], ObservationWindow: { PriorDays: 0, PostDays: 0 }, PrimaryCriteriaLimit: { Type: 'First' } }
+      expression: mockExpressionObj,
+      expressionType: 'SIMPLE_EXPRESSION',
     }
 
     beforeEach(() => {
@@ -623,13 +627,9 @@ describe('CohortsView.vue', () => {
           expressionType: 'SIMPLE_EXPRESSION',
         })
       )
-      // Metadata (id/name/description/tags/audit fields) must not leak into
-      // the expression payload — only the expression-shaped fields remain.
+      // The expression must be the parsed object from definition.expression
       const savedPayload = vi.mocked(saveCohortDefinition).mock.calls[0]![0] as any
-      expect(savedPayload.expression).toEqual({
-        ConceptSets: mockDefinition.ConceptSets,
-        PrimaryCriteria: mockDefinition.PrimaryCriteria,
-      })
+      expect(savedPayload.expression).toEqual(mockExpressionObj)
     })
 
     it('navigates to the new cohort and refreshes the list on success', async () => {
@@ -709,7 +709,11 @@ describe('CohortsView.vue', () => {
 
   describe('Cohort Info Dialog', () => {
     const mockCohort = createMockCohort(1)
-    const mockAtlasDefinition = { id: 1, name: 'Test' }
+    const mockAtlasDefinition = {
+      id: 1,
+      name: 'Test',
+      expression: { ConceptSets: [], PrimaryCriteria: { CriteriaList: [] } },
+    }
     const mockHtml = '<h1>Test Cohort Info</h1>'
 
     beforeEach(() => {
@@ -748,7 +752,7 @@ describe('CohortsView.vue', () => {
       await wrapper.vm.$nextTick()
 
       expect(getCohortDefinition).toHaveBeenCalledWith(mockCohort.id)
-      expect(getCohortPrintFriendly).toHaveBeenCalledWith(mockAtlasDefinition)
+      expect(getCohortPrintFriendly).toHaveBeenCalledWith(mockAtlasDefinition.expression)
       expect(wrapper.vm.cohortInfoHtml).toBe(mockHtml)
       expect(wrapper.vm.loadingCohortInfo).toBe(false)
     })

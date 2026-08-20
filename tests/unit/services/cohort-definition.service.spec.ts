@@ -72,7 +72,7 @@ describe('services/cohort-definition.service', () => {
     it('returns the definition on success', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        text: async () => JSON.stringify({ id: 1, name: 'C', expression: { ConceptSets: [] } }),
+        text: async () => JSON.stringify({ id: 1, name: 'C', expression: JSON.stringify({ ConceptSets: [] }) }),
       })
 
       const result = await getCohortDefinition(1)
@@ -80,9 +80,57 @@ describe('services/cohort-definition.service', () => {
       expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data.name).toBe('C')
+        expect(result.data.expression).toMatchObject({ ConceptSets: [] })
       } else {
         expect.fail(`expected success, got ${result.error.message}`)
       }
+    })
+
+    it('parses a stringified expression into a circe object', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            id: 1,
+            name: 'Demo',
+            expression: JSON.stringify({ ConceptSets: [], PrimaryCriteria: { CriteriaList: [] } }),
+          }),
+      })
+
+      const result = await getCohortDefinition(1)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.expression).toEqual({
+          ConceptSets: [],
+          PrimaryCriteria: { CriteriaList: [] },
+        })
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
+    })
+
+    it('reports a malformed JSON expression string as a failed ApiResult', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () => JSON.stringify({ id: 1, name: 'Demo', expression: '{ not json' }),
+      })
+
+      const result = await getCohortDefinition(1)
+
+      expect(result).toMatchObject({ success: false, error: { status: 0 } })
+    })
+
+    it('reports an expression that fails circe validation as a 422', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({ id: 1, name: 'Demo', expression: JSON.stringify({ ConceptSets: 7 }) }),
+      })
+
+      const result = await getCohortDefinition(1)
+
+      expect(result).toMatchObject({ success: false, error: { status: 422 } })
     })
   })
 
@@ -529,10 +577,10 @@ describe('services/cohort-definition.service', () => {
       }
     })
 
-    it('parses a stringified expression on a wrapper before sending it', async () => {
+    it('sends the expression it is given as the request body', async () => {
       mockFetch.mockResolvedValueOnce({ ok: true, text: async () => '<html></html>' })
 
-      await getCohortPrintFriendly({ expression: JSON.stringify({ ConceptSets: [] }) } as never)
+      await getCohortPrintFriendly({ ConceptSets: [] } as never)
 
       const [, options] = mockFetch.mock.calls[0]
       expect(JSON.parse(options.body as string)).toEqual({ ConceptSets: [] })

@@ -89,8 +89,12 @@ describe('ConceptSearchService', () => {
           VOCABULARY_ID: 'SNOMED',
           CONCEPT_CLASS_ID: 'Clinical Finding',
           STANDARD_CONCEPT: 'S',
+          STANDARD_CONCEPT_CAPTION: 'Standard',
           CONCEPT_CODE: '12345',
           INVALID_REASON: null,
+          INVALID_REASON_CAPTION: 'Unknown',
+          VALID_START_DATE: Date.UTC(1970, 0, 1),
+          VALID_END_DATE: Date.UTC(2090, 0, 1),
         },
       ]
 
@@ -225,8 +229,12 @@ describe('ConceptSearchService', () => {
         VOCABULARY_ID: 'SNOMED',
         CONCEPT_CLASS_ID: 'Clinical Finding',
         STANDARD_CONCEPT: 'S',
+        STANDARD_CONCEPT_CAPTION: 'Standard',
         CONCEPT_CODE: '12345',
         INVALID_REASON: null,
+        INVALID_REASON_CAPTION: 'Unknown',
+        VALID_START_DATE: Date.UTC(1970, 0, 1),
+        VALID_END_DATE: Date.UTC(2090, 0, 1),
       }
 
       // http-client uses text() then JSON.parse
@@ -285,8 +293,12 @@ describe('ConceptSearchService', () => {
       VOCABULARY_ID: 'SNOMED',
       CONCEPT_CLASS_ID: 'Clinical Finding',
       STANDARD_CONCEPT: 'S',
+      STANDARD_CONCEPT_CAPTION: 'Standard',
       CONCEPT_CODE: `${id}`,
       INVALID_REASON: null,
+      INVALID_REASON_CAPTION: 'Unknown',
+      VALID_START_DATE: Date.UTC(1970, 0, 1),
+      VALID_END_DATE: Date.UTC(2090, 0, 1),
     })
 
     it('POSTs the id array to lookup/identifiers and maps the response', async () => {
@@ -372,8 +384,12 @@ describe('ConceptSearchService', () => {
       VOCABULARY_ID: vocab,
       CONCEPT_CLASS_ID: 'ICD10 code',
       STANDARD_CONCEPT: null,
+      STANDARD_CONCEPT_CAPTION: 'Unknown',
       CONCEPT_CODE: code,
       INVALID_REASON: null,
+      INVALID_REASON_CAPTION: 'Unknown',
+      VALID_START_DATE: Date.UTC(1970, 0, 1),
+      VALID_END_DATE: Date.UTC(2090, 0, 1),
     })
 
     it('POSTs the concept-id array to lookup/mapped and maps the response', async () => {
@@ -448,8 +464,12 @@ describe('ConceptSearchService', () => {
       VOCABULARY_ID: 'ICD10CM',
       CONCEPT_CLASS_ID: '4-char billing code',
       STANDARD_CONCEPT: null,
+      STANDARD_CONCEPT_CAPTION: 'Unknown',
       CONCEPT_CODE: code,
       INVALID_REASON: null,
+      INVALID_REASON_CAPTION: 'Unknown',
+      VALID_START_DATE: Date.UTC(1970, 0, 1),
+      VALID_END_DATE: Date.UTC(2090, 0, 1),
     })
 
     it('POSTs the code array to lookup/sourcecodes and maps the response', async () => {
@@ -633,15 +653,19 @@ describe('ConceptSearchService', () => {
     it('should POST to /vocabulary/{key}/lookup/recommended with conceptIds and map results', async () => {
       const mockResponse = [
         {
-          CONCEPT_ID: 999,
-          CONCEPT_NAME: 'Recommended Concept',
-          DOMAIN_ID: 'Condition',
-          VOCABULARY_ID: 'SNOMED',
-          CONCEPT_CLASS_ID: 'Clinical Finding',
-          STANDARD_CONCEPT: 'S',
-          CONCEPT_CODE: '99999',
-          INVALID_REASON: null,
-          RELATIONSHIPS: ['Maps to', 'Subsumes'],
+            CONCEPT_ID: 999,
+            CONCEPT_NAME: 'Recommended Concept',
+            DOMAIN_ID: 'Condition',
+            VOCABULARY_ID: 'SNOMED',
+            CONCEPT_CLASS_ID: 'Clinical Finding',
+            STANDARD_CONCEPT: 'S',
+          STANDARD_CONCEPT_CAPTION: 'Standard',
+            CONCEPT_CODE: '99999',
+            INVALID_REASON: null,
+          INVALID_REASON_CAPTION: 'Unknown',
+          VALID_START_DATE: Date.UTC(1970, 0, 1),
+          VALID_END_DATE: Date.UTC(2090, 0, 1),
+            RELATIONSHIPS: ['Maps to', 'Subsumes'],
         },
       ]
 
@@ -670,14 +694,18 @@ describe('ConceptSearchService', () => {
     it('should map results without RELATIONSHIPS when not provided', async () => {
       const mockResponse = [
         {
-          CONCEPT_ID: 1000,
-          CONCEPT_NAME: 'Plain Concept',
-          DOMAIN_ID: 'Condition',
-          VOCABULARY_ID: 'SNOMED',
-          CONCEPT_CLASS_ID: 'Clinical Finding',
-          STANDARD_CONCEPT: 'S',
-          CONCEPT_CODE: '1000',
-          INVALID_REASON: null,
+            CONCEPT_ID: 1000,
+            CONCEPT_NAME: 'Plain Concept',
+            DOMAIN_ID: 'Condition',
+            VOCABULARY_ID: 'SNOMED',
+            CONCEPT_CLASS_ID: 'Clinical Finding',
+            STANDARD_CONCEPT: 'S',
+          STANDARD_CONCEPT_CAPTION: 'Standard',
+            CONCEPT_CODE: '1000',
+            INVALID_REASON: null,
+          INVALID_REASON_CAPTION: 'Unknown',
+          VALID_START_DATE: Date.UTC(1970, 0, 1),
+          VALID_END_DATE: Date.UTC(2090, 0, 1),
         },
       ]
 
@@ -759,24 +787,32 @@ describe('ConceptSearchService', () => {
     it('POSTs the expression to the resolve endpoint and maps the response', async () => {
       const apiResponse = [
         {
-          CONCEPT_ID: 201826,
-          CONCEPT_NAME: 'Type 2 diabetes mellitus',
-          CONCEPT_CODE: '44054006',
-          DOMAIN_ID: 'Condition',
-          VOCABULARY_ID: 'SNOMED',
-          CONCEPT_CLASS_ID: 'Clinical Finding',
-          STANDARD_CONCEPT: 'S',
-          INVALID_REASON: null,
+            CONCEPT_ID: 201826,
+            CONCEPT_NAME: 'Type 2 diabetes mellitus',
+            CONCEPT_CODE: '44054006',
+            DOMAIN_ID: 'Condition',
+            VOCABULARY_ID: 'SNOMED',
+            CONCEPT_CLASS_ID: 'Clinical Finding',
+            STANDARD_CONCEPT: 'S',
+          STANDARD_CONCEPT_CAPTION: 'Standard',
+            INVALID_REASON: null,
+          INVALID_REASON_CAPTION: 'Unknown',
+          VALID_START_DATE: Date.UTC(1970, 0, 1),
+          VALID_END_DATE: Date.UTC(2090, 0, 1),
         },
         {
-          CONCEPT_ID: 443238,
-          CONCEPT_NAME: 'Type 2 diabetes mellitus with diabetic nephropathy',
-          CONCEPT_CODE: '127013003',
-          DOMAIN_ID: 'Condition',
-          VOCABULARY_ID: 'SNOMED',
-          CONCEPT_CLASS_ID: 'Clinical Finding',
-          STANDARD_CONCEPT: 'S',
-          INVALID_REASON: null,
+            CONCEPT_ID: 443238,
+            CONCEPT_NAME: 'Type 2 diabetes mellitus with diabetic nephropathy',
+            CONCEPT_CODE: '127013003',
+            DOMAIN_ID: 'Condition',
+            VOCABULARY_ID: 'SNOMED',
+            CONCEPT_CLASS_ID: 'Clinical Finding',
+            STANDARD_CONCEPT: 'S',
+          STANDARD_CONCEPT_CAPTION: 'Standard',
+            INVALID_REASON: null,
+          INVALID_REASON_CAPTION: 'Unknown',
+          VALID_START_DATE: Date.UTC(1970, 0, 1),
+          VALID_END_DATE: Date.UTC(2090, 0, 1),
         },
       ]
 

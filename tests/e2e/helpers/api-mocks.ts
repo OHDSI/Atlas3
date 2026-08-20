@@ -203,13 +203,20 @@ export async function setupBasicMocks(page: Page) {
       // Check in-memory store first (for round-trip tests)
       const stored = cohortStore.get(cohortId)
       if (stored) {
+        // WebAPI serialises `expression` as a JSON string inside the response
+        // body. Callers that seed the store with an expression object must have
+        // it re-serialised here so normalizeRawCohortDefinition can JSON.parse it.
+        const wireForm = { ...stored }
+        if (wireForm.expression !== undefined && typeof wireForm.expression !== 'string') {
+          wireForm.expression = JSON.stringify(wireForm.expression)
+        }
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify(stored)
-         })
+          body: JSON.stringify(wireForm)
+        })
         return
-       }
+      }
       // Fall back to mockCohorts
       const cohort = mockCohorts.find(c => c.id === cohortId)
 
@@ -219,7 +226,11 @@ export async function setupBasicMocks(page: Page) {
           contentType: 'application/json',
           body: JSON.stringify({
             ...cohort,
-            expression: {
+            // Stringified for the same reason as the stored branch above:
+            // normalizeRawCohortDefinition JSON.parses this field, and an
+            // object here makes every cohort load fail with "Failed to load
+            // cohort" before the builder renders anything.
+            expression: JSON.stringify({
               ConceptSets: [],
               PrimaryCriteria: {
                 CriteriaList: [],
@@ -233,7 +244,7 @@ export async function setupBasicMocks(page: Page) {
               CensoringCriteria: [],
               CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
               CensorWindow: {}
-            }
+            })
           })
         })
       } else {
@@ -350,6 +361,12 @@ export async function setupBasicMocks(page: Page) {
     // The app validates against WebAPI's raw uppercase field names
     // (ConceptSearchResponseSchema); the camelCase fixture shape fails that
     // parse and used to make every search silently return zero rows.
+    //
+    // The schema mirrors circe's Concept class, so the caption fields and the
+    // epoch-millis validity dates are required even though the mapper drops
+    // them: leave any of them out and the parse fails, the view shows
+    // "Invalid concept search response format", and every results assertion
+    // in this suite sees an empty table.
     const webApiShape = results.map(c => ({
       CONCEPT_ID: c.conceptId,
       CONCEPT_NAME: c.conceptName,
@@ -358,7 +375,11 @@ export async function setupBasicMocks(page: Page) {
       VOCABULARY_ID: c.vocabularyId,
       CONCEPT_CLASS_ID: c.conceptClassId,
       STANDARD_CONCEPT: c.standardConcept,
-      INVALID_REASON: c.invalidReason
+      STANDARD_CONCEPT_CAPTION: c.standardConcept === 'S' ? 'Standard' : 'Non-Standard',
+      INVALID_REASON: c.invalidReason,
+      INVALID_REASON_CAPTION: c.invalidReason ? 'Invalid' : 'Valid',
+      VALID_START_DATE: Date.UTC(1970, 0, 1),
+      VALID_END_DATE: Date.UTC(2099, 11, 31)
     }))
 
     await route.fulfill({
