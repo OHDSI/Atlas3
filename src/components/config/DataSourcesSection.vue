@@ -109,6 +109,11 @@
                     size="sm"
                     @click="openEditDialog(source)"
                   />
+                  <EntityAccessLockButton
+                    v-bind="{ ariaLabel: tv('components.access.configureAccess', 'Configure access') }"
+                    size="sm"
+                    @click="openAccessDialog(source)"
+                  />
                   <AtlasIconButton
                     icon="mdi-connection"
                     v-bind="{ ariaLabel: tv('columns.checkConnection') }"
@@ -191,6 +196,15 @@
       @error="handleDialogError"
     />
 
+    <EntityAccessDialog
+      v-model="showAccessDialog"
+      entity-type="SOURCE"
+      :entity-id="accessSourceId"
+      :title="tv('components.access.configureAccess', 'Configure access')"
+      :subtitle="accessSourceLabel"
+      @close="showAccessDialog = false"
+    />
+
     <!-- Delete Confirmation Dialog -->
     <AtlasDialog
       v-model="showDeleteConfirm"
@@ -227,6 +241,7 @@ import { deleteSource } from '@/services/source.service'
 import { listDataSources } from '@/services/datasource.service'
 import { httpGet, httpPost } from '@/services/http-client'
 import DataSourceDialog from './DataSourceDialog.vue'
+import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 
 const { t, tv } = useI18n()
 
@@ -259,6 +274,10 @@ const errorMessage = ref('')
 // Dialog state
 const showDialog = ref(false)
 const editingSourceKey = ref<string | null>(null)
+
+const showAccessDialog = ref(false)
+const accessSourceId = ref<number | null>(null)
+const accessSourceLabel = ref('')
 
 // Delete confirmation state
 const showDeleteConfirm = ref(false)
@@ -428,6 +447,15 @@ function openCreateDialog() {
 function openEditDialog(source: DataSourceDisplay) {
   editingSourceKey.value = source.sourceKey
   showDialog.value = true
+}
+
+/**
+ * Open the shared entity-access dialog for the selected source.
+ */
+function openAccessDialog(source: DataSourceDisplay) {
+  accessSourceId.value = source.sourceId
+  accessSourceLabel.value = `${source.sourceName} [${source.sourceKey}]`
+  showAccessDialog.value = true
 }
 
 /**

@@ -94,6 +94,21 @@
               </AtlasBadge>
             </template>
           </AtlasTooltip>
+          <AtlasTooltip
+            v-if="store.currentIR?.id"
+            :text="t('components.access.configureAccess', 'Configure access').value"
+            location="bottom"
+          >
+            <template #activator="{ props }">
+              <EntityAccessLockButton
+                v-bind="{ ...props, ariaLabel: t('components.access.configureAccess', 'Configure access').value }"
+                size="sm"
+                :disabled="!store.currentIR?.id || store.isPreviewMode"
+                data-testid="ir-builder-access-icon"
+                @click="showAccessDialog = true"
+              />
+            </template>
+          </AtlasTooltip>
         </template>
         <template #actions>
           <AtlasButton
@@ -239,6 +254,16 @@
       @update:selected-tags="handleTagsUpdate"
     />
 
+    <EntityAccessDialog
+      v-if="store.currentIR?.id"
+      v-model="showAccessDialog"
+      entity-type="INCIDENCE_RATE"
+      :entity-id="store.currentIR.id"
+      :title="t('components.access.configureAccess', 'Configure access').value"
+      :subtitle="store.currentIR.name || undefined"
+      @close="showAccessDialog = false"
+    />
+
     <AtlasDialog
       v-model="askDelete"
       :eyebrow="t('common.confirm', 'Confirm').value"
@@ -288,6 +313,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
+import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
@@ -310,6 +336,7 @@ const askDelete = ref(false)
 const showConceptSetsDialog = ref(false)
 const showVersionsDialog = ref(false)
 const showTagsDialog = ref(false)
+const showAccessDialog = ref(false)
 const importing = ref(false)
 const exporting = ref(false)
 const importFileInput = ref<HTMLInputElement | null>(null)

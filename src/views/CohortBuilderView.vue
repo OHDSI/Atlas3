@@ -49,6 +49,7 @@
           @show-validation="builderRef.openValidationDialog()"
           @show-versions="builderRef.openVersionsDialog()"
           @show-tags="builderRef.openTagsDialog()"
+          @show-access="builderRef.openAccessDialog()"
         />
 
         <span class="cohort-builder-view__divider" />

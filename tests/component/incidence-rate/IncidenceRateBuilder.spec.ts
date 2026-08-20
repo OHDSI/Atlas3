@@ -17,6 +17,13 @@ const serviceMocks = vi.hoisted(() => ({
   importIncidenceRate: vi.fn(),
 }))
 
+const accessMocks = vi.hoisted(() => ({
+  fetchEntityAccessRoles: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  loadRoleSuggestions: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  grantEntityAccess: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+  revokeEntityAccess: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+}))
+
 vi.mock('@/composables/useIncidenceRateBuilder', () => ({
   useIncidenceRateBuilder: () => ({
     save: builderMocks.save,
@@ -45,9 +52,17 @@ vi.mock('@/services/incidence-rate.service', () => ({
   unassignIncidenceRateTag: vi.fn(),
 }))
 
+vi.mock('@/services/access.service', () => ({
+  fetchEntityAccessRoles: accessMocks.fetchEntityAccessRoles,
+  loadRoleSuggestions: accessMocks.loadRoleSuggestions,
+  grantEntityAccess: accessMocks.grantEntityAccess,
+  revokeEntityAccess: accessMocks.revokeEntityAccess,
+}))
+
 const stubs = [
   'IncidenceRateWorkbench',
   'TagSelectionDialog',
+  'EntityAccessDialog',
   'IncidenceRateConceptSetsPanel',
   'IncidenceRateVersionsPanel',
   'AtlasDialog',
@@ -147,6 +162,20 @@ describe('IncidenceRateBuilder', () => {
 
     await dialog.vm.$emit('update:selected-tags', [{ id: 1, name: 'trial' }])
     expect(syncSpy).toHaveBeenCalledWith([{ id: 1, name: 'trial' }])
+  })
+
+  it('opens the access dialog from the action bar', async () => {
+    loadIR()
+
+    const w = mount(IncidenceRateBuilder, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+
+    await w.get('[data-testid="ir-builder-access-icon"]').trigger('click')
+    await flushPromises()
+
+    expect(w.findComponent({ name: 'EntityAccessDialog' }).props('modelValue')).toBe(true)
   })
 
   it('exports and imports incidence rate designs through the file handlers', async () => {

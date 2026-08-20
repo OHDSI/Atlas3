@@ -30,6 +30,7 @@ const {
   openValidationDialog,
   openVersionsDialog,
   openTagsDialog,
+  openAccessDialog,
   openJsonDialog,
   handleCancel,
   handleSave,
@@ -40,6 +41,7 @@ const {
   openValidationDialog: vi.fn(),
   openVersionsDialog: vi.fn(),
   openTagsDialog: vi.fn(),
+  openAccessDialog: vi.fn(),
   openJsonDialog: vi.fn(),
   handleCancel: vi.fn(),
   handleSave: vi.fn(),
@@ -72,6 +74,7 @@ vi.mock('@/components/cohort/CohortBuilder.vue', () => ({
       'openValidationDialog',
       'openVersionsDialog',
       'openTagsDialog',
+      'openAccessDialog',
       'openJsonDialog',
       'handleCancel',
       'handleSave',
@@ -96,6 +99,7 @@ vi.mock('@/components/cohort/CohortBuilder.vue', () => ({
       openValidationDialog,
       openVersionsDialog,
       openTagsDialog,
+      openAccessDialog,
       openJsonDialog,
       handleCancel,
       handleSave,
@@ -109,13 +113,14 @@ vi.mock('@/components/cohort/CohortToolbarStatus.vue', () => ({
   default: {
     name: 'CohortToolbarStatus',
     props: ['conceptSetCount', 'validationCount', 'validationColor', 'isValidating', 'versionCount', 'tagCount', 'cohortId', 'isPreviewingVersion'],
-    emits: ['show-concept-sets', 'show-validation', 'show-versions', 'show-tags'],
+    emits: ['show-concept-sets', 'show-validation', 'show-versions', 'show-tags', 'show-access'],
     template:
       '<div class="stub-toolbar-status">' +
       '<button class="status-concept-sets" @click="$emit(\'show-concept-sets\')" />' +
       '<button class="status-validation" @click="$emit(\'show-validation\')" />' +
       '<button class="status-versions" @click="$emit(\'show-versions\')" />' +
       '<button class="status-tags" @click="$emit(\'show-tags\')" />' +
+      '<button class="status-access" @click="$emit(\'show-access\')" />' +
       '</div>',
   },
 }))
@@ -211,10 +216,12 @@ describe('CohortBuilderView interactions', () => {
     await wrapper.find('.status-validation').trigger('click')
     await wrapper.find('.status-versions').trigger('click')
     await wrapper.find('.status-tags').trigger('click')
+    await wrapper.find('.status-access').trigger('click')
     expect(openConceptSetsDialog).toHaveBeenCalled()
     expect(openValidationDialog).toHaveBeenCalled()
     expect(openVersionsDialog).toHaveBeenCalled()
     expect(openTagsDialog).toHaveBeenCalled()
+    expect(openAccessDialog).toHaveBeenCalled()
   })
 
   it('forwards toolbar actions cancel/save to the builder ref handles', async () => {

@@ -23,6 +23,10 @@ vi.mock('@/composables/useI18n', async () => {
 const mockListDataSources = vi.fn()
 const mockHttpGet = vi.fn()
 const mockHttpPost = vi.fn()
+const mockFetchEntityAccessRoles = vi.fn()
+const mockLoadRoleSuggestions = vi.fn()
+const mockGrantEntityAccess = vi.fn()
+const mockRevokeEntityAccess = vi.fn()
 
 vi.mock('@/services/datasource.service', () => ({
   listDataSources: () => mockListDataSources()
@@ -35,6 +39,13 @@ vi.mock('@/services/http-client', () => ({
 
 vi.mock('@/services/source.service', () => ({
   deleteSource: vi.fn()
+}))
+
+vi.mock('@/services/access.service', () => ({
+  fetchEntityAccessRoles: (...args: unknown[]) => mockFetchEntityAccessRoles(...args),
+  loadRoleSuggestions: (...args: unknown[]) => mockLoadRoleSuggestions(...args),
+  grantEntityAccess: (...args: unknown[]) => mockGrantEntityAccess(...args),
+  revokeEntityAccess: (...args: unknown[]) => mockRevokeEntityAccess(...args),
 }))
 
 const mockDataSources = [
@@ -82,6 +93,10 @@ describe('DataSourcesSection.vue', () => {
       return Promise.resolve({})
     })
     mockHttpPost.mockResolvedValue({})
+    mockFetchEntityAccessRoles.mockResolvedValue({ success: true, data: [] })
+    mockLoadRoleSuggestions.mockResolvedValue({ success: true, data: [] })
+    mockGrantEntityAccess.mockResolvedValue({ success: true, data: undefined })
+    mockRevokeEntityAccess.mockResolvedValue({ success: true, data: undefined })
   })
 
   afterEach(() => {
@@ -318,6 +333,41 @@ describe('DataSourcesSection.vue', () => {
       await flushPromises()
       // httpPost is called with URL and optional undefined body
       expect(mockHttpPost).toHaveBeenCalledWith('/cdmresults/OHDSI-CDMV5/clearCache', undefined)
+    })
+
+    it('should render the source access lock action', async () => {
+      wrapper = mount(DataSourcesSection, {
+        global: {
+          plugins: [vuetify]
+        }
+      })
+
+      await flushPromises()
+
+      const lockButtons = wrapper.findAllComponents({ name: 'EntityAccessLockButton' })
+      expect(lockButtons.length).toBeGreaterThan(0)
+    })
+
+    it('should open the source access dialog when the lock action is clicked', async () => {
+      wrapper = mount(DataSourcesSection, {
+        global: {
+          plugins: [vuetify]
+        }
+      })
+
+      await flushPromises()
+
+      const lockButton = wrapper.findComponent({ name: 'EntityAccessLockButton' })
+      expect(lockButton.exists()).toBe(true)
+
+      await lockButton.vm.$emit('click', new MouseEvent('click'))
+      await flushPromises()
+
+      const accessDialog = wrapper.findComponent({ name: 'EntityAccessDialog' })
+      expect(accessDialog.props('modelValue')).toBe(true)
+      expect(accessDialog.props('entityType')).toBe('SOURCE')
+      expect(accessDialog.props('entityId')).toBe(1)
+      expect(accessDialog.props('subtitle')).toBe('OHDSI CDM V5 Database [OHDSI-CDMV5]')
     })
   })
 

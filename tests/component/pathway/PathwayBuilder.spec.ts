@@ -22,6 +22,13 @@ const serviceMocks = vi.hoisted(() => ({
   importPathway: vi.fn(),
 }))
 
+const accessMocks = vi.hoisted(() => ({
+  fetchEntityAccessRoles: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  loadRoleSuggestions: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  grantEntityAccess: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+  revokeEntityAccess: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+}))
+
 vi.mock('@/composables/usePathwayBuilder', () => ({
   usePathwayBuilder: () => ({
     save: builderMocks.save,
@@ -40,9 +47,17 @@ vi.mock('@/services/pathway.service', () => ({
   importPathway: serviceMocks.importPathway,
 }))
 
+vi.mock('@/services/access.service', () => ({
+  fetchEntityAccessRoles: accessMocks.fetchEntityAccessRoles,
+  loadRoleSuggestions: accessMocks.loadRoleSuggestions,
+  grantEntityAccess: accessMocks.grantEntityAccess,
+  revokeEntityAccess: accessMocks.revokeEntityAccess,
+}))
+
 const stubs = [
   'PathwayWorkbench',
   'TagSelectionDialog',
+  'EntityAccessDialog',
   'VersionsTabContent',
   'AtlasDialog',
 ]
@@ -152,6 +167,23 @@ describe('PathwayBuilder', () => {
     expect(dialog.exists()).toBe(true)
     await dialog.vm.$emit('update:selected-tags', [{ id: 1, name: 'trial' }])
     expect(syncSpy).toHaveBeenCalledWith([{ id: 1, name: 'trial' }])
+  })
+
+  it('opens the access dialog from the action bar', async () => {
+    loadPathway()
+
+    const w = mount(PathwayBuilder, {
+      global: {
+        plugins: [vuetify, router],
+        stubs,
+      },
+    })
+    await flushPromises()
+
+    await w.get('[data-testid="pathway-builder-access"]').trigger('click')
+    await flushPromises()
+
+    expect(w.findComponent({ name: 'EntityAccessDialog' }).props('modelValue')).toBe(true)
   })
 
   it('exports and imports pathway designs through the file handlers', async () => {

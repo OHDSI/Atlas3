@@ -207,6 +207,33 @@ describe('CohortToolbarStatus', () => {
     })
   })
 
+  describe('Access Action', () => {
+    it('should render the access lock icon when cohortId is present', () => {
+      const wrapper = mountComponent({ cohortId: 99 })
+
+      const accessIcon = wrapper.find('[data-testid="access-icon"]')
+      expect(accessIcon.exists()).toBe(true)
+      expect(accessIcon.html()).toContain('mdi-lock')
+    })
+
+    it('should emit show-access when the lock icon is clicked', async () => {
+      const wrapper = mountComponent({ cohortId: 99 })
+
+      const accessIcon = wrapper.find('[data-testid="access-icon"]')
+      await accessIcon.trigger('click')
+
+      expect(wrapper.emitted('show-access')).toBeTruthy()
+    })
+
+    it('should disable the access icon when the cohort is not saved', () => {
+      const wrapper = mountComponent({ cohortId: null })
+
+      const accessIcon = wrapper.find('[data-testid="access-icon"]')
+      expect(accessIcon.exists()).toBe(true)
+      expect(accessIcon.attributes('disabled')).toBeDefined()
+    })
+  })
+
   describe('Combined State', () => {
     it('should show both concept sets and validation badges', () => {
       const wrapper = mountComponent({

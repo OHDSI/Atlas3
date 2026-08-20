@@ -22,6 +22,22 @@
   >
     <template #actions>
       <AtlasActionToolbar>
+        <template #status>
+          <AtlasTooltip
+            :text="t('components.access.configureAccess', 'Configure access').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <EntityAccessLockButton
+                v-bind="{ ...tipProps, ariaLabel: t('components.access.configureAccess', 'Configure access').value }"
+                :disabled="!isEditing || !canWrite"
+                :loading="loading"
+                data-testid="feature-analysis-editor-access-icon"
+                @click="showAccessDialog = true"
+              />
+            </template>
+          </AtlasTooltip>
+        </template>
         <template #actions>
           <AtlasButton
             variant="ghost"
@@ -296,6 +312,16 @@
       </template>
     </AtlasDialog>
 
+    <EntityAccessDialog
+      v-model="showAccessDialog"
+      entity-type="FE_ANALYSIS"
+      :entity-id="draftId"
+      :title="t('components.access.configureAccess', 'Configure access').value"
+      :subtitle="draft.name || undefined"
+      :can-revoke-role="role => !role.name.toLowerCase().includes('admin')"
+      @close="showAccessDialog = false"
+    />
+
     <AtlasSnackbar
       v-model="snackbar.show"
       :severity="snackbar.severity"
@@ -327,6 +353,7 @@ import type {
 import type { ConceptSetReference } from '@/models/concept-set.types'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
+import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 
 const props = defineProps<{
   id?: string
@@ -369,6 +396,7 @@ const customFeSql = ref<string>('')
 const saving = ref<boolean>(false)
 const loadingDefaults = ref<boolean>(false)
 const showDeleteDialog = ref<boolean>(false)
+const showAccessDialog = ref<boolean>(false)
 const nameError = ref<string | null>(null)
 const dirty = ref<boolean>(false)
 

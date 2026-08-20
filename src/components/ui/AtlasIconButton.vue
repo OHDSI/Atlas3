@@ -6,7 +6,7 @@
     :size="vuetifyProps.size"
     :loading="loading"
     :disabled="disabled"
-    :aria-label="ariaLabel"
+    :aria-label="resolvedAriaLabel"
     v-bind="forwardAttrs"
     @click="$emit('click', $event)"
   />
@@ -21,7 +21,7 @@ export type AtlasIconButtonTone = 'primary' | 'neutral' | 'danger'
 
 interface Props {
   icon: string
-  ariaLabel: string
+  ariaLabel?: string
   variant?: AtlasIconButtonVariant
   size?: AtlasIconButtonSize
   tone?: AtlasIconButtonTone
@@ -30,6 +30,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  ariaLabel: '',
   variant: 'tonal',
   size: 'md',
   tone: 'neutral',
@@ -49,6 +50,8 @@ const vuetifyProps = computed(() => ({
   variant: props.variant,
   size: props.size === 'sm' ? 'small' : props.size === 'lg' ? 'large' : undefined,
 }))
+
+const resolvedAriaLabel = computed(() => props.ariaLabel)
 
 const attrs = useAttrs()
 const forwardAttrs = computed(() => {

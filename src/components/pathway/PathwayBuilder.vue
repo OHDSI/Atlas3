@@ -79,6 +79,22 @@
               </AtlasBadge>
             </template>
           </AtlasTooltip>
+          <AtlasTooltip
+            v-if="currentPathway?.id"
+            :text="t('components.access.configureAccess', 'Configure access').value"
+            location="bottom"
+          >
+            <template #activator="{ props }">
+              <EntityAccessLockButton
+                v-bind="{ ...props, ariaLabel: t('components.access.configureAccess', 'Configure access').value }"
+                variant="text"
+                size="sm"
+                :disabled="!currentPathway?.id || isPreviewMode"
+                data-testid="pathway-builder-access"
+                @click="showAccess = true"
+              />
+            </template>
+          </AtlasTooltip>
         </template>
         <template #actions>
           <AtlasButton
@@ -229,6 +245,16 @@
       @update:selected-tags="handleTagsUpdate"
     />
 
+    <EntityAccessDialog
+      v-if="currentPathway?.id"
+      v-model="showAccess"
+      entity-type="PATHWAY_ANALYSIS"
+      :entity-id="currentPathway.id"
+      :title="t('components.access.configureAccess', 'Configure access').value"
+      :subtitle="currentPathway.name || undefined"
+      @close="showAccess = false"
+    />
+
     <AtlasSnackbar
       :model-value="!!feedback"
       :severity="feedbackSeverity"
@@ -240,6 +266,7 @@
 </template>
 
 <script setup lang="ts">
+import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
@@ -272,6 +299,7 @@ const feedbackSeverity = computed<AtlasSnackbarSeverity>(() =>
 
 const showVersions = ref(false)
 const showTags = ref(false)
+const showAccess = ref(false)
 const selectedExecutionId = ref<number | null>(null)
 const importing = ref(false)
 const exporting = ref(false)

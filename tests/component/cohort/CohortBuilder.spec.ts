@@ -221,6 +221,7 @@ describe('CohortBuilder', () => {
     expect(typeof vm.openValidationDialog).toBe('function')
     expect(typeof vm.openVersionsDialog).toBe('function')
     expect(typeof vm.openTagsDialog).toBe('function')
+    expect(typeof vm.openAccessDialog).toBe('function')
   })
 
   // #200: the payload sent for validation used to be rebuilt from the criteria
@@ -487,6 +488,17 @@ describe('CohortBuilder', () => {
     expect(() => vm.openValidationDialog()).not.toThrow()
     expect(() => vm.openVersionsDialog()).not.toThrow()
     expect(() => vm.openTagsDialog()).not.toThrow()
+    expect(() => vm.openAccessDialog()).not.toThrow()
+  })
+
+  it('openAccessDialog opens the shared access dialog', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await wrapper.vm.$nextTick()
+
+    ;(wrapper.vm as any).openAccessDialog()
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.findComponent({ name: 'EntityAccessDialog' }).props('modelValue')).toBe(true)
   })
 
   it('wires toolbar status and breadcrumb events to the local dialog state', async () => {
@@ -499,6 +511,7 @@ describe('CohortBuilder', () => {
     toolbar.vm.$emit('show-validation')
     toolbar.vm.$emit('show-versions')
     toolbar.vm.$emit('show-tags')
+    toolbar.vm.$emit('show-access')
 
     await wrapper.vm.$nextTick()
     expect(conceptSetsListDialog(wrapper).props('modelValue')).toBe(true)
@@ -506,6 +519,7 @@ describe('CohortBuilder', () => {
       true
     )
     expect(wrapper.findComponent({ name: 'AtlasDialog' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'EntityAccessDialog' }).props('modelValue')).toBe(true)
 
     const breadcrumb = wrapper.findComponent({ name: 'CohortBreadcrumb' })
     breadcrumb.vm.$emit('navigate-back')
@@ -531,6 +545,7 @@ describe('CohortBuilder', () => {
     toolbar.vm.$emit('show-validation')
     toolbar.vm.$emit('show-versions')
     toolbar.vm.$emit('show-tags')
+    toolbar.vm.$emit('show-access')
     await wrapper.vm.$nextTick()
 
     expect(conceptSetsListDialog(wrapper).props('modelValue')).toBe(true)
@@ -538,6 +553,7 @@ describe('CohortBuilder', () => {
       true
     )
     expect(wrapper.findComponent({ name: 'TagSelectionDialog' }).props('modelValue')).toBe(true)
+    expect(wrapper.findComponent({ name: 'EntityAccessDialog' }).props('modelValue')).toBe(true)
   })
 
   it('handles dialog v-model and close emits from the child components', async () => {

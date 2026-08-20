@@ -65,6 +65,7 @@
             @show-validation="showValidationDialog = true"
             @show-versions="showVersionsDialog = true"
             @show-tags="showTagsDialog = true"
+            @show-access="showAccessDialog = true"
           />
         </template>
         <template #actions>
@@ -94,6 +95,15 @@
       v-model="showValidationDialog"
       :warnings="validationWarnings"
       :severity-color="highestSeverityColor"
+    />
+
+    <EntityAccessDialog
+      v-model="showAccessDialog"
+      entity-type="COHORT_DEFINITION"
+      :entity-id="cohortId"
+      :title="t('components.access.configureAccess', 'Configure access').value"
+      :subtitle="cohortName || undefined"
+      @close="showAccessDialog = false"
     />
 
     <cohort-json-dialog
@@ -322,6 +332,7 @@ import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import CohortJsonDialog from './CohortJsonDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
+import { EntityAccessDialog } from '@/components/access'
 import type { Tag } from '@/models/cohort.types'
 
 interface Props {
@@ -459,6 +470,7 @@ const showValidationDialog = ref(false)
 const showConceptSetsDialog = ref(false)
 const showVersionsDialog = ref(false)
 const showTagsDialog = ref(false)
+const showAccessDialog = ref(false)
 const showJsonDialog = ref(false)
 // Snapshot of the expression taken when the JSON dialog opens, so the
 // editor is not re-seeded under the user while they type.
@@ -1499,6 +1511,9 @@ defineExpose({
   },
   openTagsDialog: () => {
     showTagsDialog.value = true
+  },
+  openAccessDialog: () => {
+    showAccessDialog.value = true
   },
   handleCancel,
   handleSave,
