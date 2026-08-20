@@ -19,7 +19,11 @@
  * answer honestly instead of returning `{ applied: true }` for a mutation that
  * lost its content.
  */
-import { circeConceptSetFromAtlas, type AtlasConceptSetItem } from '@/components/cohort-editor/atlas-concept-set'
+import {
+  circeConceptSetFromAtlas,
+  nextConceptSetId,
+  type AtlasConceptSetItem,
+} from '@/components/cohort-editor/atlas-concept-set'
 import { cardinalityToAtlas, operatorToAtlas } from '@/utils/mappers'
 import type {
   ConceptSet,
@@ -235,14 +239,29 @@ export function translateAgentCriteriaGroups(
 }
 
 /**
- * Adds concept sets to the expression-level list, skipping ids already present.
- * Returns the sets actually added.
+ * Adds concept sets to the expression-level list, reusing the entry already
+ * there when the same set is registered twice. Returns the sets actually added.
+ *
+ * Skipping on id alone dropped an incoming set whenever an *unrelated* set
+ * already held that id, while the criterion built for it kept a `CodesetId`
+ * pointing at that other set — so the criterion silently matched the wrong
+ * concepts. A colliding set is given the next free id instead, mutated in place
+ * so a caller that reads `conceptSet.id` afterwards (the CustomEra strategy
+ * does) sees the id it was actually filed under.
+ *
+ * Identity is approximated by id+name, matching circeConceptSetFromAtlas and
+ * useCirceConceptSetPicker; ids reaching here are normally already resolved by
+ * circeConceptSetFromAtlas against the same list.
  */
 export function registerConceptSets(existing: ConceptSet[], incoming: ConceptSet[]): ConceptSet[] {
   const added: ConceptSet[] = []
 
   for (const conceptSet of incoming) {
-    if (existing.some(cs => cs.id === conceptSet.id)) continue
+    const collision = existing.find(cs => cs.id === conceptSet.id)
+    if (collision && collision.name === conceptSet.name) continue
+
+    if (collision) conceptSet.id = nextConceptSetId(existing)
+
     existing.push(conceptSet)
     added.push(conceptSet)
   }

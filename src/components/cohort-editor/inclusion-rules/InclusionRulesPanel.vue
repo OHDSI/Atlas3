@@ -58,23 +58,23 @@
         </div>
         <div class="inclusion-rules-panel__limit-toggle">
           <AtlasButton
-            :variant="props.expressionLimit.Type === 'First' ? 'tonal' : 'secondary'"
+            :variant="expressionLimitType === 'First' ? 'tonal' : 'secondary'"
             size="sm"
-            @click="props.expressionLimit.Type = 'First'"
+            @click="emit('update:expressionLimitType', 'First')"
           >
             {{ earliestLabel }}
           </AtlasButton>
           <AtlasButton
-            :variant="props.expressionLimit.Type === 'All' ? 'tonal' : 'secondary'"
+            :variant="expressionLimitType === 'All' ? 'tonal' : 'secondary'"
             size="sm"
-            @click="props.expressionLimit.Type = 'All'"
+            @click="emit('update:expressionLimitType', 'All')"
           >
             {{ allLabel }}
           </AtlasButton>
           <AtlasButton
-            :variant="props.expressionLimit.Type === 'Last' ? 'tonal' : 'secondary'"
+            :variant="expressionLimitType === 'Last' ? 'tonal' : 'secondary'"
             size="sm"
-            @click="props.expressionLimit.Type = 'Last'"
+            @click="emit('update:expressionLimitType', 'Last')"
           >
             {{ latestLabel }}
           </AtlasButton>
@@ -98,19 +98,20 @@ const { t } = useI18n()
 interface Props {
   modelValue: InclusionRule[]
   conceptSets: ConceptSetOption[]
-  expressionLimit: NonNullable<ResultLimit> & {
-    Type: NonNullable<ResultLimit['Type']>
-  }
+  expressionLimit?: ResultLimit
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: InclusionRule[]]
+  'update:expressionLimitType': [value: 'First' | 'All' | 'Last']
   'select-concept-set': [target: ConceptSetSelectionTarget | undefined]
   'edit-concept-set': [target: ConceptSetSelectionTarget | undefined]
   'clear-concept-set': []
 }>()
+
+const expressionLimitType = computed(() => props.expressionLimit?.Type ?? 'First')
 
 const limitIncludedEventsLabel = computed(() => t('inclusionPanel.limitIncludedEvents', 'Limit Included Events to').value)
 const earliestLabel = computed(() => t('options.earliest', 'Earliest').value)
@@ -214,11 +215,14 @@ function createDefaultRule(): InclusionRule {
   return {
     name: undefined,
     description: undefined,
-    expression: createDefaultCriteriaGroup(),
+    expression: createEmptyRuleExpression(),
   }
 }
 
-function createDefaultCriteriaGroup(): CriteriaGroup {
+// Not criteria-editor-helper's createDefaultCriteriaGroup: that one is
+// deliberately sparse ({ Type: 'ALL' }), while a new inclusion rule is created
+// with its containers already in place for the rail and detail editors to bind.
+function createEmptyRuleExpression(): CriteriaGroup {
   return {
     Type: 'ALL',
     CriteriaList: [],

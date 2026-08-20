@@ -155,6 +155,7 @@ import {
   AtlasMenu,
   AtlasTextField,
 } from '@/components/ui'
+import { isClearedInput, toFiniteNumber } from '@/components/circe/input/bindings'
 import type { Window } from '@/models/circe-types'
 
 const props = defineProps<{
@@ -239,7 +240,13 @@ function windowDays(side: 'Start' | 'End') {
 }
 
 function setWindowDays(side: 'Start' | 'End', value: string) {
-  ensureEndpoint(side).Days = value === '' ? null : Number(value)
+  if (isClearedInput(value)) {
+    ensureEndpoint(side).Days = null
+    return
+  }
+  const parsed = toFiniteNumber(value)
+  if (parsed === undefined) return
+  ensureEndpoint(side).Days = parsed
 }
 
 function windowDirection(side: 'Start' | 'End') {

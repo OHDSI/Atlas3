@@ -1,6 +1,7 @@
 import { computed, ref, type Ref } from 'vue'
-import { convertAtlasItemToCirce } from '@/components/cohort-editor/atlas-concept-set'
+import { convertAtlasItemToCirce, nextConceptSetId } from '@/components/cohort-editor/atlas-concept-set'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { logger } from '@/utils/logger'
 import type { ConceptSet } from '@/models/circe-types'
 import type { ConceptSetItem as AtlasConceptSetItem } from '@/models/concept-set.types'
 import type {
@@ -87,23 +88,54 @@ export function useCirceConceptSetPicker(opts: {
     // Fetch full items for repository imports, then materialize the chosen set
     // into the cohort expression before completing the shared assignment step.
     let items: AtlasConceptSetItem[] = (conceptSet.items ?? []) as AtlasConceptSetItem[]
-    if (items.length === 0 && numericId != null) {
+    if (items.length === 0) {
       await conceptSetsStore.fetchOne(numericId)
-      if (conceptSetsStore.currentSet?.id === numericId) {
-        items = conceptSetsStore.currentSet.items ?? []
+
+      // A failed fetch is indistinguishable from a genuinely empty set by item
+      // count alone, and materializing the unresolved set would save a codeset
+      // that matches nothing. fetchOne clears `error` up front and nulls
+      // `currentSet` on failure, so success is "no error and currentSet is the
+      // set we asked for" — an empty set that did resolve is still accepted.
+      const fetched = conceptSetsStore.currentSet
+      if (conceptSetsStore.error || fetched?.id !== numericId) {
+        logger.error('useCirceConceptSetPicker', 'Concept set fetch failed, selection cancelled', {
+          id: numericId,
+          error: conceptSetsStore.error,
+        })
+        cancelSelection()
+        return
       }
+
+      items = fetched.items ?? []
     }
 
-    // Add to expression-level concept sets if not already present.
-    if (!opts.getConceptSets().some(cs => cs.id === numericId)) {
-      opts.addConceptSet({
-        id: numericId,
-        name: conceptSet.name,
-        expression: { items: items.map(convertAtlasItemToCirce) },
-      })
+    const existing = opts.getConceptSets().find(cs => cs.id === numericId)
+
+    // Repository ids and the expression's local codeset ids are separate number
+    // spaces that happen to overlap: circe numbers ConceptSets from 0, and a
+    // WebAPI concept set id can land in the same range. Reusing the repository
+    // id when a different set already holds it would point the criterion at
+    // that other set, so a colliding import gets the next free id instead.
+    //
+    // Name is compared too, as the only available proxy for "is this the set
+    // already in the expression, re-picked" versus "a different set that
+    // happens to collide". It cannot tell apart two distinct repository sets
+    // that share both an id collision and a display name; that case is
+    // treated as a re-pick and silently reuses the existing entry.
+    if (existing && existing.name === conceptSet.name) {
+      resolveSelection(numericId)
+      return
     }
 
-    resolveSelection(numericId)
+    const codesetId = existing ? nextConceptSetId(opts.getConceptSets()) : numericId
+
+    opts.addConceptSet({
+      id: codesetId,
+      name: conceptSet.name,
+      expression: { items: items.map(convertAtlasItemToCirce) },
+    })
+
+    resolveSelection(codesetId)
   }
 
   function onLocalConceptSetSelected(conceptSet: {

@@ -353,7 +353,7 @@ describe('ConditionEra', () => {
     await expectMenuItemPresent(wrapper, 'Nested Criteria')
     await selectMenuItem(wrapper, 'Nested Criteria')
 
-    expect(criteria.ConditionEra?.CorrelatedCriteria).toStrictEqual({})
+    expect(criteria.ConditionEra?.CorrelatedCriteria).toStrictEqual({ Type: 'ALL' })
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Nested Criteria')

@@ -13,6 +13,9 @@ import DrugExposure from '@/components/circe/criteria/DrugExposure.vue'
 import InclusionRulesPanel from '@/components/cohort-editor/inclusion-rules/InclusionRulesPanel.vue'
 import EndStrategyPanel from '@/components/cohort-editor/end-strategy/EndStrategyPanel.vue'
 import CensorWindowEditor from '@/components/cohort-editor/CensorWindowEditor.vue'
+import { AtlasTextField } from '@/components/ui'
+import { InlineAtlasMenuStub } from '../../../helpers/component-wrapper'
+import type { CohortExpression } from '@/models/circe-types'
 import fixture from './fixtures/cohort-expression-large.json'
 
 vi.mock('@/composables/useI18n', async () => {
@@ -60,5 +63,60 @@ describe('CohortExpressionEditor', () => {
     expect(wrapper.text()).toContain('Inclusion Criteria')
     expect(wrapper.text()).toContain('Exit & Eras')
     expect(wrapper.text()).toContain('Cohort Eras')
+  })
+})
+describe('observation window day inputs', () => {
+  function mountWithObservationWindow(priorDays: number, postDays: number) {
+    const expression: CohortExpression = {
+      PrimaryCriteria: {
+        CriteriaList: [{ ConditionOccurrence: {} }],
+        ObservationWindow: { PriorDays: priorDays, PostDays: postDays },
+      },
+    }
+
+    const wrapper = mount(CohortExpressionEditor, {
+      props: { expression, conceptSets: [] },
+      global: {
+        plugins: [vuetify],
+        stubs: { AtlasMenu: InlineAtlasMenuStub, teleport: true },
+      },
+    })
+
+    const popover = wrapper.find('.obs-period-popover__fields')
+    const fields = wrapper
+      .findAllComponents(AtlasTextField)
+      .filter(field => popover.element.contains(field.element))
+
+    return { expression, prior: fields[0]!, post: fields[1]! }
+  }
+
+  it('writes a finite day count the user types', async () => {
+    const { expression, prior, post } = mountWithObservationWindow(365, 0)
+
+    await prior.vm.$emit('update:modelValue', '30')
+    await post.vm.$emit('update:modelValue', 45)
+
+    expect(expression.PrimaryCriteria!.ObservationWindow!.PriorDays).toBe(30)
+    expect(expression.PrimaryCriteria!.ObservationWindow!.PostDays).toBe(45)
+  })
+
+  it('leaves the previous day count alone when the input is not a number', async () => {
+    const { expression, prior, post } = mountWithObservationWindow(365, 180)
+
+    await prior.vm.$emit('update:modelValue', 'not a number')
+    await post.vm.$emit('update:modelValue', Number.NaN)
+
+    expect(expression.PrimaryCriteria!.ObservationWindow!.PriorDays).toBe(365)
+    expect(expression.PrimaryCriteria!.ObservationWindow!.PostDays).toBe(180)
+  })
+
+  it('treats a cleared field as the documented default of zero days', async () => {
+    const { expression, prior, post } = mountWithObservationWindow(365, 180)
+
+    await prior.vm.$emit('update:modelValue', '')
+    await post.vm.$emit('update:modelValue', null)
+
+    expect(expression.PrimaryCriteria!.ObservationWindow!.PriorDays).toBe(0)
+    expect(expression.PrimaryCriteria!.ObservationWindow!.PostDays).toBe(0)
   })
 })

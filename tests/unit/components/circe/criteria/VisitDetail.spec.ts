@@ -338,7 +338,7 @@ describe('VisitDetail', () => {
     await expectMenuItemPresent(wrapper, 'Nested Criteria')
     await selectMenuItem(wrapper, 'Nested Criteria')
 
-    expect(criteria.VisitDetail?.CorrelatedCriteria).toStrictEqual({})
+    expect(criteria.VisitDetail?.CorrelatedCriteria).toStrictEqual({ Type: 'ALL' })
 
     await openMenu(wrapper)
     await expectMenuItemAbsent(wrapper, 'Nested Criteria')

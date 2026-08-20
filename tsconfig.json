@@ -28,7 +28,6 @@
     "noUncheckedIndexedAccess": true,
 
     /* Path Aliases */
-    "ignoreDeprecations": "5.0",
     "paths": {
       "@/*": ["./src/*"]
     },

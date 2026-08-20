@@ -88,7 +88,7 @@ import {
 } from '@/components/ui'
 import EventConceptSet from '../input/EventConceptSet.vue'
 import CriteriaAttributes from './CriteriaAttributes.vue'
-import { createConceptSetComponentProps, createConceptSetModel, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
+import { createConceptSetComponentProps, createDefaultCriteriaGroup, createConceptSetModel, createSchemaFieldProps, ensureObjectField } from './criteria-editor-helper'
 import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget, CriteriaAttributeSpec } from './criteria-editor.types'
 import type { ConceptArray, Criteria, CriteriaGroup, ConceptSetSelection, DateAdjustment, DateRange, Death, NumericRange } from '@/models/circe-types'
 
@@ -266,10 +266,10 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Add nested criteria group',
     kind: 'criteriaGroup',
     componentProps: () => ({
-      group: ensureObjectField(deathData.value, 'CorrelatedCriteria', () => ({})) as CriteriaGroup,
+      group: ensureObjectField(deathData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup) as CriteriaGroup,
     }),
     init: () => {
-      ensureObjectField(deathData.value, 'CorrelatedCriteria', () => ({}))
+      ensureObjectField(deathData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup)
     },
     clear: () => {
       delete deathData.value.CorrelatedCriteria

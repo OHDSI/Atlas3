@@ -21,6 +21,7 @@ import type {
   IncidenceRateReport,
 } from '@/models/incidence-rate.types'
 import { z } from 'zod'
+import { normalizeCriteriaGroupForCirce } from '@/components/cohort-editor/normalize'
 
 const CONTEXT = 'IncidenceRateService'
 
@@ -56,7 +57,10 @@ function decodeIRExpression(wire: unknown): IncidenceRate {
 
 function encodeIRForSave(ir: IncidenceRate): Record<string, unknown> {
   const { expression, ...rest } = ir
-  return { ...rest, expression: JSON.stringify(expression) }
+  const strata = expression.strata.map(rule =>
+    rule.expression ? { ...rule, expression: normalizeCriteriaGroupForCirce(rule.expression) } : rule
+  )
+  return { ...rest, expression: JSON.stringify({ ...expression, strata }) }
 }
 
 /** GET /ir/ — list of all incidence rate analyses (no expression in payload). */
