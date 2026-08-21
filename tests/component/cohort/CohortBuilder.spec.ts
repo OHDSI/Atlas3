@@ -1934,16 +1934,20 @@ describe('CohortBuilder', () => {
     const store = useCohortStore()
 
     const notifySpy = vi.spyOn(store, 'notifySaved')
-    // canSave is false (no entry events) — handleSave returns {} and the watcher
-    // still calls notifySaved so the bridge's awaited Promise resolves.
+    // The options supply a name, which is all the save gate requires now that an
+    // incomplete design is savable (#262), so the watcher runs the real save
+    // rather than no-opping.
     const p = store.requestSave({ name: 'From Agent', description: 'Agent desc' })
     await wrapper.vm.$nextTick()
-    await new Promise(r => setTimeout(r, 0))
+
+    // notifySaved is what settles the bridge promise, so awaiting it is the
+    // synchronisation point; the save chain behind it does several dynamic
+    // imports that a fixed number of microtask flushes would not drain.
+    await expect(p).resolves.toEqual({ id: 99, name: 'From Agent' })
 
     expect(setup.cohortName).toBe('From Agent')
     expect(setup.cohortDescription).toBe('Agent desc')
     expect(notifySpy).toHaveBeenCalled()
-    await expect(p).resolves.toEqual({})
   })
 
   it('saveRequest watcher leaves name untouched when saveOptions is empty', async () => {
