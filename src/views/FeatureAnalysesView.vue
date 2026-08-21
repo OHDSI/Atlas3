@@ -37,8 +37,9 @@
       :items-per-page="itemsPerPage"
       :empty-text="t('common.noData', 'No feature analyses yet.').value"
       testid="feature-analyses-table"
-      :can-copy-item="item => canCopy && !!item.id"
-      :can-delete-item="item => entityAccess.canDelete(item.id)"
+      :can-open-item="item => !isPreset(item)"
+      :can-copy-item="item => !isPreset(item) && canCopy && !!item.id"
+      :can-delete-item="item => !isPreset(item) && entityAccess.canDelete(item.id)"
       @open="handleOpen"
       @copy="handleCopy"
       @delete="handleDeleteClick"
@@ -181,11 +182,22 @@ function handleCreate() {
   router.push('/feature-analyses/new')
 }
 
+/**
+ * Built-in PRESET feature analyses are shipped with WebAPI and are shared by
+ * every characterization, so they are read-only: they cannot be opened in the
+ * editor, copied or deleted. See OHDSI/Atlas3#265.
+ */
+function isPreset(item: FeatureAnalysisListItem): boolean {
+  return item.type === 'PRESET'
+}
+
 function handleOpen(item: FeatureAnalysisListItem) {
+  if (isPreset(item)) return
   router.push(`/feature-analyses/${item.id}`)
 }
 
 async function handleCopy(item: FeatureAnalysisListItem) {
+  if (isPreset(item)) return
   const copied = await store.copy(item.id)
   if (copied?.id) {
     router.push(`/feature-analyses/${copied.id}`)
@@ -193,6 +205,7 @@ async function handleCopy(item: FeatureAnalysisListItem) {
 }
 
 function handleDeleteClick(item: FeatureAnalysisListItem) {
+  if (isPreset(item)) return
   selectedFA.value = item
   showDeleteDialog.value = true
 }
