@@ -12,6 +12,7 @@
     <template #[`item.${nameKey}`]="{ item }">
       <div class="analysis-data-table__name-cell">
         <a
+          v-if="canOpenItem(item)"
           href="#"
           class="analysis-data-table__name-link"
           :data-testid="testid ? `${testid}-row-name` : undefined"
@@ -19,6 +20,13 @@
         >
           {{ getName(item) }}
         </a>
+        <span
+          v-else
+          class="analysis-data-table__name-static"
+          :data-testid="testid ? `${testid}-row-name` : undefined"
+        >
+          {{ getName(item) }}
+        </span>
         <div
           v-if="hasTags(item)"
           class="analysis-data-table__tag-rail"
@@ -69,6 +77,7 @@
     <template #[`item.actions`]="{ item }">
       <div class="analysis-data-table__row-actions">
         <AtlasIconButton
+          v-if="canOpenItem(item)"
           icon="mdi-pencil"
           v-bind="{ ariaLabel: t('configuration.tagManagement.edit', 'Edit').value }"
           variant="text"
@@ -164,6 +173,12 @@ interface Props {
    */
   canCopyItem?: (item: T) => boolean
   canDeleteItem?: (item: T) => boolean
+  /**
+   * Whether a row can be opened in an editor. Rows that cannot render their
+   * name as plain text and drop the edit action, so a read-only row such as a
+   * feature analysis preset does not invite a click that goes nowhere.
+   */
+  canOpenItem?: (item: T) => boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -178,6 +193,7 @@ const props = withDefaults(defineProps<Props>(), {
   descriptionLimit: 80,
   canCopyItem: () => () => true,
   canDeleteItem: () => () => true,
+  canOpenItem: () => () => true,
 })
 
 defineEmits<{
@@ -304,6 +320,11 @@ function formatUser(user: unknown): string {
 
 .analysis-data-table__name-link:hover {
   text-decoration: underline;
+}
+
+.analysis-data-table__name-static {
+  color: var(--atlas-color-on-surface);
+  font-weight: 500;
 }
 
 .analysis-data-table__tag-rail {
