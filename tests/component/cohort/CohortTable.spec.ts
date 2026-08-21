@@ -151,4 +151,88 @@ describe('CohortTable', () => {
     await wrapper.find('[data-testid=cohort-table-row]').trigger('click')
     expect(push).toHaveBeenCalledWith('/cohorts/1')
   })
+
+  /** Regression: OHDSI/Atlas3#263 — the headers were inert text. */
+  describe('column sorting (Atlas3#263)', () => {
+    const rows: CohortDefinitionSummary[] = [
+      {
+        id: 3,
+        name: 'Zoledronic acid',
+        createdBy: { name: 'carol' },
+        createdDate: '2026-03-01T00:00:00Z',
+        modifiedDate: '2026-03-02T00:00:00Z',
+      },
+      {
+        id: 1,
+        name: 'Aspirin',
+        createdBy: { name: 'alice' },
+        createdDate: '2026-01-01T00:00:00Z',
+        modifiedDate: '2026-05-01T00:00:00Z',
+      },
+      {
+        id: 2,
+        name: 'metformin',
+        createdBy: { name: 'bob' },
+        createdDate: '2026-02-01T00:00:00Z',
+        modifiedDate: '2026-04-01T00:00:00Z',
+      },
+    ] as never
+
+    function names(wrapper: ReturnType<typeof makeWrapper>) {
+      return wrapper
+        .findAll('[data-testid=cohort-table-row]')
+        .map(r => r.findAll('td')[1]!.text().split('\n')[0]!.trim())
+    }
+
+    it('opens on most recently modified, like the concept set list', () => {
+      expect(names(makeWrapper({ cohorts: rows }))).toEqual([
+        'Aspirin',
+        'metformin',
+        'Zoledronic acid',
+      ])
+    })
+
+    it('sorts by id, and reverses on a second click', async () => {
+      const wrapper = makeWrapper({ cohorts: rows })
+
+      await wrapper.find('[data-testid=cohort-table-sort-id]').trigger('click')
+      expect(names(wrapper)).toEqual(['Zoledronic acid', 'metformin', 'Aspirin'])
+
+      await wrapper.find('[data-testid=cohort-table-sort-id]').trigger('click')
+      expect(names(wrapper)).toEqual(['Aspirin', 'metformin', 'Zoledronic acid'])
+    })
+
+    it('sorts by name case-insensitively, ascending first', async () => {
+      const wrapper = makeWrapper({ cohorts: rows })
+
+      await wrapper.find('[data-testid=cohort-table-sort-name]').trigger('click')
+      expect(names(wrapper)).toEqual(['Aspirin', 'metformin', 'Zoledronic acid'])
+    })
+
+    it('sorts by author and by created date', async () => {
+      const wrapper = makeWrapper({ cohorts: rows })
+
+      await wrapper.find('[data-testid=cohort-table-sort-author]').trigger('click')
+      expect(names(wrapper)).toEqual(['Aspirin', 'metformin', 'Zoledronic acid'])
+
+      await wrapper.find('[data-testid=cohort-table-sort-created]').trigger('click')
+      expect(names(wrapper)).toEqual(['Zoledronic acid', 'metformin', 'Aspirin'])
+    })
+
+    it('reports the active sort to assistive technology', async () => {
+      const wrapper = makeWrapper({ cohorts: rows })
+
+      await wrapper.find('[data-testid=cohort-table-sort-name]').trigger('click')
+
+      const headers = wrapper.findAll('th')
+      expect(headers[1]!.attributes('aria-sort')).toBe('ascending')
+      expect(headers[0]!.attributes('aria-sort')).toBe('none')
+    })
+
+    it('does not reorder the array it was given', () => {
+      const given = [...rows]
+      makeWrapper({ cohorts: given })
+      expect(given.map(c => c.id)).toEqual([3, 1, 2])
+    })
+  })
 })

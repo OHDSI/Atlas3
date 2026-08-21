@@ -77,30 +77,105 @@
       >
         <thead>
           <tr>
-            <th class="cohort-table__col-id">
-              {{ t('columns.id', 'ID').value }}
+            <th
+              class="cohort-table__col-id"
+              :aria-sort="ariaSort('id')"
+            >
+              <button
+                type="button"
+                class="cohort-table__sort"
+                data-testid="cohort-table-sort-id"
+                @click="toggleSort('id')"
+              >
+                {{ t('columns.id', 'ID').value }}
+                <AtlasIcon
+                  v-if="sortKey === 'id'"
+                  :icon="sortIcon"
+                  size="xs"
+                />
+              </button>
             </th>
-            <th class="cohort-table__col-name">
-              {{ t('columns.name', 'Name').value }}
+            <th
+              class="cohort-table__col-name"
+              :aria-sort="ariaSort('name')"
+            >
+              <button
+                type="button"
+                class="cohort-table__sort"
+                data-testid="cohort-table-sort-name"
+                @click="toggleSort('name')"
+              >
+                {{ t('columns.name', 'Name').value }}
+                <AtlasIcon
+                  v-if="sortKey === 'name'"
+                  :icon="sortIcon"
+                  size="xs"
+                />
+              </button>
             </th>
             <th class="cohort-table__col-tags">
               {{ t('common.tags', 'Tags').value }}
             </th>
-            <th class="cohort-table__col-author">
-              {{ t('columns.author', 'Author').value }}
+            <th
+              class="cohort-table__col-author"
+              :aria-sort="ariaSort('createdBy')"
+            >
+              <button
+                type="button"
+                class="cohort-table__sort"
+                data-testid="cohort-table-sort-author"
+                @click="toggleSort('createdBy')"
+              >
+                {{ t('columns.author', 'Author').value }}
+                <AtlasIcon
+                  v-if="sortKey === 'createdBy'"
+                  :icon="sortIcon"
+                  size="xs"
+                />
+              </button>
             </th>
-            <th class="cohort-table__col-date">
-              {{ t('columns.created', 'Created').value }}
+            <th
+              class="cohort-table__col-date"
+              :aria-sort="ariaSort('createdDate')"
+            >
+              <button
+                type="button"
+                class="cohort-table__sort"
+                data-testid="cohort-table-sort-created"
+                @click="toggleSort('createdDate')"
+              >
+                {{ t('columns.created', 'Created').value }}
+                <AtlasIcon
+                  v-if="sortKey === 'createdDate'"
+                  :icon="sortIcon"
+                  size="xs"
+                />
+              </button>
             </th>
-            <th class="cohort-table__col-date">
-              {{ t('columns.modified', 'Modified').value }}
+            <th
+              class="cohort-table__col-date"
+              :aria-sort="ariaSort('modifiedDate')"
+            >
+              <button
+                type="button"
+                class="cohort-table__sort"
+                data-testid="cohort-table-sort-modified"
+                @click="toggleSort('modifiedDate')"
+              >
+                {{ t('columns.updated', 'Updated').value }}
+                <AtlasIcon
+                  v-if="sortKey === 'modifiedDate'"
+                  :icon="sortIcon"
+                  size="xs"
+                />
+              </button>
             </th>
             <th class="cohort-table__col-actions" />
           </tr>
         </thead>
         <tbody>
           <tr
-            v-for="cohort in cohorts"
+            v-for="cohort in sortedCohorts"
             :key="cohort.id"
             class="cohort-table__row"
             data-testid="cohort-table-row"
@@ -192,7 +267,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
@@ -232,6 +307,56 @@ defineEmits<{
   'tag-click': [tagName: string]
   'show-info': [cohort: CohortDefinitionSummary]
 }>()
+
+type SortKey = 'id' | 'name' | 'createdBy' | 'createdDate' | 'modifiedDate'
+
+// Opens on most recently modified, matching the concept set list.
+const sortKey = ref<SortKey>('modifiedDate')
+const sortOrder = ref<'asc' | 'desc'>('desc')
+
+const sortIcon = computed(() => (sortOrder.value === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down'))
+
+function ariaSort(key: SortKey): 'ascending' | 'descending' | 'none' {
+  if (sortKey.value !== key) return 'none'
+  return sortOrder.value === 'asc' ? 'ascending' : 'descending'
+}
+
+function toggleSort(key: SortKey) {
+  if (sortKey.value === key) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+    return
+  }
+  sortKey.value = key
+  // Names read best A to Z; ids and dates most useful newest first.
+  sortOrder.value = key === 'name' || key === 'createdBy' ? 'asc' : 'desc'
+}
+
+function sortValue(cohort: CohortDefinitionSummary, key: SortKey): string | number {
+  switch (key) {
+    case 'id':
+      return cohort.id ?? 0
+    case 'name':
+      return (cohort.name ?? '').toLowerCase()
+    case 'createdBy':
+      return formatUser(cohort.createdBy).toLowerCase()
+    case 'createdDate':
+      return cohort.createdDate ? new Date(cohort.createdDate).getTime() : 0
+    case 'modifiedDate':
+      return cohort.modifiedDate ? new Date(cohort.modifiedDate).getTime() : 0
+  }
+}
+
+const sortedCohorts = computed(() => {
+  const key = sortKey.value
+  const direction = sortOrder.value === 'asc' ? 1 : -1
+  // Copy first: the prop array belongs to the caller.
+  return [...props.cohorts].sort((a, b) => {
+    const left = sortValue(a, key)
+    const right = sortValue(b, key)
+    if (left === right) return 0
+    return left > right ? direction : -direction
+  })
+})
 
 const isFiltered = computed(
   () => Boolean(props.searchQuery) || (props.selectedTags?.length ?? 0) > 0
@@ -285,6 +410,24 @@ function openCohort(cohort: CohortDefinitionSummary) {
 <style scoped>
 .cohort-table__grid {
   background: rgb(var(--v-theme-surface));
+}
+.cohort-table__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.cohort-table__sort:hover {
+  color: var(--atlas-color-on-surface);
+}
+.cohort-table__sort:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
 }
 .cohort-table__row {
   cursor: pointer;

@@ -1,10 +1,10 @@
 <template>
   <AtlasDataTable
+    v-model:sort-by="sortByModel"
     :headers="headers"
     :items="items"
     :loading="loading"
     :items-per-page="itemsPerPage"
-    :sort-by="sortBy"
     hide-default-footer
     class="analysis-data-table"
     :data-testid="testid"
@@ -138,7 +138,7 @@
 
 <script setup lang="ts" generic="T extends { id?: number }">
 import { AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
-import { computed, useSlots } from 'vue'
+import { computed, ref, useSlots, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { formatDate, formatRelativeTime } from '@/utils/date-format'
 import { tagColor, tagContrastColor } from '@/utils/tag-color'
@@ -188,6 +188,19 @@ defineEmits<{
 
 const { t } = useI18n()
 const slots = useSlots()
+
+/**
+ * `sortBy` is the column the list opens on, not a fixed order. Passing it
+ * straight down pinned the table to that value, so header clicks were
+ * emitted and discarded and every analysis list was stuck on last-modified.
+ */
+const sortByModel = ref<{ key: string; order: 'asc' | 'desc' }[]>([...props.sortBy])
+watch(
+  () => props.sortBy,
+  v => {
+    sortByModel.value = [...v]
+  }
+)
 
 // Forward any item.<key> or other custom slots that the consumer passed
 // in but that we don't render ourselves.
