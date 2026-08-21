@@ -80,4 +80,58 @@ describe('useCharacterizationResults', () => {
     expect(ok).toBe(false)
     expect(r.error.value).toBe('boom')
   })
+
+  /**
+   * Regression: OHDSI/Atlas3#276. A failed run has no results, so the count
+   * and result queries fail too. Discarding the execution alongside them threw
+   * away the only object saying the generation failed, and the workbench fell
+   * back to "no runs".
+   */
+  describe('failed generations (Atlas3#276)', () => {
+    const failedExec = {
+      id: 92,
+      sourceKey: 'SYNPUF5PCT',
+      status: 'FAILED',
+      startTime: 0,
+      executionDuration: 0,
+      exitMessage: 'permission denied for schema synpuf5pct_results_v3',
+    }
+
+    beforeEach(() => {
+      mockExec.mockResolvedValue(success(failedExec as any))
+      mockCount.mockResolvedValue(failure(new ApiError('no results', 500, null)))
+      mockResults.mockResolvedValue(failure(new ApiError('no results', 500, null)))
+    })
+
+    it('keeps the execution even though the result queries failed', async () => {
+      const r = useCharacterizationResults()
+      const ok = await r.load(92)
+
+      expect(ok).toBe(false)
+      expect(r.execution.value).not.toBeNull()
+      expect(r.execution.value!.status).toBe('FAILED')
+      expect(r.execution.value!.id).toBe(92)
+    })
+
+    it('surfaces the reason the job gave', async () => {
+      const r = useCharacterizationResults()
+      await r.load(92)
+      expect(r.error.value).toBe('permission denied for schema synpuf5pct_results_v3')
+    })
+
+    it('falls back to a generic reason when the job gave none', async () => {
+      mockExec.mockResolvedValue(success({ ...failedExec, exitMessage: undefined } as any))
+      const r = useCharacterizationResults()
+      await r.load(92)
+      expect(r.error.value).toBe('Generation failed')
+    })
+
+    it('still reports a genuine fetch failure on a run that did not fail', async () => {
+      mockExec.mockResolvedValue(success({ ...failedExec, status: 'COMPLETED' } as any))
+      const r = useCharacterizationResults()
+      const ok = await r.load(92)
+      expect(ok).toBe(false)
+      expect(r.error.value).toBe('no results')
+    })
+  })
 })

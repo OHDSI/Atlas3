@@ -318,9 +318,14 @@ watch(
     }
     await store.loadExecutions(id)
     if (selectedExecutionId.value === null) {
-      const completed = store.executions.find(e => e.status === 'COMPLETED')
-      if (completed) {
-        await router.replace({ query: { ...route.query, run: String(completed.id) } })
+      // Prefer a run with results, but fall back to a failed one rather than
+      // selecting nothing: with only failed runs the workbench would sit on
+      // its empty state and never report that the generation failed.
+      const selectable =
+        store.executions.find(e => e.status === 'COMPLETED') ??
+        store.executions.find(e => e.status === 'FAILED')
+      if (selectable) {
+        await router.replace({ query: { ...route.query, run: String(selectable.id) } })
       }
     }
   },

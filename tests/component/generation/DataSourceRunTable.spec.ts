@@ -235,4 +235,45 @@ describe('DataSourceRunTable extensions', () => {
     const mdcrBtn = w.find('[data-testid="run-btn-MDCR"]')
     expect(mdcrBtn.text()).not.toMatch(/Cancel/i)
   })
+
+  /**
+   * Regression: OHDSI/Atlas3#276. A job that dies at startup never records a
+   * startTime. Treating that as time zero sorted it behind every older run,
+   * so the row kept showing the previous success and the failure vanished.
+   */
+  describe('latest run per source (Atlas3#276)', () => {
+    function ccaeStatus(w: ReturnType<typeof mountTable>) {
+      return w.findAll('tbody tr')[0]!.text()
+    }
+
+    it('prefers a failed run with no start time over an older success', () => {
+      const w = mountTable({
+        executions: [
+          exec({ id: 1, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 1_000 }),
+          exec({ id: 2, sourceKey: 'CCAE', status: 'FAILED', startTime: undefined }),
+        ],
+      })
+      expect(ccaeStatus(w)).toContain('FAILED')
+    })
+
+    it('still prefers the most recent run when both have start times', () => {
+      const w = mountTable({
+        executions: [
+          exec({ id: 1, sourceKey: 'CCAE', status: 'FAILED', startTime: 1_000 }),
+          exec({ id: 2, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 2_000 }),
+        ],
+      })
+      expect(ccaeStatus(w)).toContain('COMPLETED')
+    })
+
+    it('breaks a tie between two unstarted runs on the newer id', () => {
+      const w = mountTable({
+        executions: [
+          exec({ id: 5, sourceKey: 'CCAE', status: 'FAILED', startTime: undefined }),
+          exec({ id: 9, sourceKey: 'CCAE', status: 'PENDING', startTime: undefined }),
+        ],
+      })
+      expect(ccaeStatus(w)).toContain('PENDING')
+    })
+  })
 })

@@ -255,8 +255,29 @@ interface Row {
   personCount?: number
 }
 
+function executionId(e: RunTableExecution): number {
+  const id = typeof e.id === 'number' ? e.id : Number(e.id)
+  return Number.isFinite(id) ? id : 0
+}
+
+/**
+ * Newest run first. A run with no startTime has not started yet, so it is the
+ * newest, not the oldest: falling back to 0 sorted a job that died before
+ * recording a start time behind every older run, hiding the failure the user
+ * needs to see. Ids are assigned in creation order and break the tie.
+ */
+function compareRecency(a: RunTableExecution, b: RunTableExecution): number {
+  const aStarted = a.startTime !== undefined
+  const bStarted = b.startTime !== undefined
+  if (aStarted !== bStarted) return aStarted ? 1 : -1
+  if (aStarted && bStarted && a.startTime !== b.startTime) {
+    return b.startTime! - a.startTime!
+  }
+  return executionId(b) - executionId(a)
+}
+
 const latestBySource = computed(() => {
-  const sorted = [...props.executions].sort((a, b) => (b.startTime ?? 0) - (a.startTime ?? 0))
+  const sorted = [...props.executions].sort(compareRecency)
   const map = new Map<string, RunTableExecution>()
   for (const e of sorted) {
     if (!map.has(e.sourceKey)) map.set(e.sourceKey, e)

@@ -47,6 +47,13 @@
         </div>
       </div>
     </div>
+    <div
+      v-if="execution.status === 'FAILED' && execution.exitMessage"
+      class="char-run-meta__error"
+      data-testid="char-run-meta-error"
+    >
+      {{ execution.exitMessage }}
+    </div>
   </AtlasCard>
 </template>
 
@@ -95,4 +102,11 @@ const durationLabel = computed<string>(() => {
   color: rgba(var(--v-theme-on-surface), 0.6);
 }
 .char-run-meta__value { font-size: 0.85rem; font-weight: 500; }
+.char-run-meta__error {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgb(var(--v-theme-error));
+  word-break: break-word;
+}
 </style>
