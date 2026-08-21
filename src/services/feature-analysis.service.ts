@@ -16,6 +16,7 @@ import {
   type CovariateSetting,
 } from '@/models/feature-analysis.types'
 import { z } from 'zod'
+import { registerCreatedEntity } from '@/services/auth/entityOwnership'
 
 const CONTEXT = 'FeatureAnalysisService'
 
@@ -51,7 +52,13 @@ export async function createFeatureAnalysis(
 ): Promise<ApiResult<FeatureAnalysis>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>('/feature-analysis', fa)
-    return parseOrThrow(FeatureAnalysisSchema, data, 'Invalid response from POST /feature-analysis') as FeatureAnalysis
+    const created = parseOrThrow(
+      FeatureAnalysisSchema,
+      data,
+      'Invalid response from POST /feature-analysis'
+    ) as FeatureAnalysis
+    await registerCreatedEntity('feAnalysis', created.id)
+    return created
   }, CONTEXT)
 }
 
@@ -92,11 +99,13 @@ export async function deleteFeatureAnalysis(id: number): Promise<ApiResult<void>
 export async function copyFeatureAnalysis(id: number): Promise<ApiResult<FeatureAnalysis>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/feature-analysis/${id}/copy`)
-    return parseOrThrow(
+    const copied = parseOrThrow(
       FeatureAnalysisSchema,
       data,
       `Invalid response from /feature-analysis/${id}/copy`
     ) as FeatureAnalysis
+    await registerCreatedEntity('feAnalysis', copied.id)
+    return copied
   }, CONTEXT)
 }
 

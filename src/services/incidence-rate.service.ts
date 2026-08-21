@@ -22,6 +22,7 @@ import type {
 } from '@/models/incidence-rate.types'
 import { z } from 'zod'
 import { normalizeCriteriaGroupForCirce } from '@/components/cohort-editor/normalize'
+import { registerCreatedEntity } from '@/services/auth/entityOwnership'
 
 const CONTEXT = 'IncidenceRateService'
 
@@ -87,7 +88,9 @@ export async function getIncidenceRate(id: number): Promise<ApiResult<IncidenceR
 export async function createIncidenceRate(ir: IncidenceRate): Promise<ApiResult<IncidenceRate>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>('/ir/', encodeIRForSave(ir))
-    return decodeIRExpression(data)
+    const created = decodeIRExpression(data)
+    await registerCreatedEntity('incidenceRate', created.id)
+    return created
   }, CONTEXT)
 }
 
@@ -106,7 +109,9 @@ export async function saveIncidenceRate(
 export async function copyIncidenceRate(id: number): Promise<ApiResult<IncidenceRate>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/ir/${id}/copy`)
-    return decodeIRExpression(data)
+    const copied = decodeIRExpression(data)
+    await registerCreatedEntity('incidenceRate', copied.id)
+    return copied
   }, CONTEXT)
 }
 

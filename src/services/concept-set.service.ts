@@ -16,6 +16,7 @@ import {
 import { logger } from '@/utils/logger'
 import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
 import { getSourceKey } from '@/config/webapi'
+import { registerCreatedEntity } from '@/services/auth/entityOwnership'
 
 /**
  * Prefer the source key validated against the sources the server actually
@@ -104,6 +105,7 @@ export async function createConceptSet(
     }
 
     const data = await httpPost<ConceptSetAPIResponse>('/conceptset', metadataPayload)
+    await registerCreatedEntity('conceptSet', data.id)
 
     if ((conceptSet.items?.length || 0) > 0 && data.id) {
       const itemsPayload = (conceptSet.items || []).map(item => ({

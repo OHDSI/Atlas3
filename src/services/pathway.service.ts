@@ -5,6 +5,7 @@
  */
 import { httpGet, httpPost, httpPostRead, httpPut, httpDelete } from '@/services/http-client'
 import { unwrap, ApiError, parseOrThrow } from '@/services/api-error'
+import { registerCreatedEntity } from '@/services/auth/entityOwnership'
 import { type ApiResult } from '@/types/api'
 import { logger } from '@/utils/logger'
 import {
@@ -62,7 +63,13 @@ export async function getPathway(id: number): Promise<ApiResult<Pathway>> {
 export async function createPathway(pathway: Pathway): Promise<ApiResult<Pathway>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>('/pathway-analysis', pathway)
-    return parseOrThrow(PathwaySchema.passthrough(), data, 'Invalid create response') as Pathway
+    const created = parseOrThrow(
+      PathwaySchema.passthrough(),
+      data,
+      'Invalid create response'
+    ) as Pathway
+    await registerCreatedEntity('pathway', created.id)
+    return created
   }, CONTEXT)
 }
 
@@ -84,7 +91,13 @@ export async function savePathway(id: number, pathway: Pathway): Promise<ApiResu
 export async function copyPathway(id: number): Promise<ApiResult<Pathway>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>(`/pathway-analysis/${id}`, undefined)
-    return parseOrThrow(PathwaySchema.passthrough(), data, 'Invalid copy response') as Pathway
+    const copied = parseOrThrow(
+      PathwaySchema.passthrough(),
+      data,
+      'Invalid copy response'
+    ) as Pathway
+    await registerCreatedEntity('pathway', copied.id)
+    return copied
   }, CONTEXT)
 }
 

@@ -5,6 +5,7 @@
  */
 import { httpGet, httpPost, httpPut, httpDelete, httpPostRead } from '@/services/http-client'
 import { unwrap, unwrapList, ApiError, parseOrThrow } from '@/services/api-error'
+import { registerCreatedEntity } from '@/services/auth/entityOwnership'
 import { logger } from '@/utils/logger'
 import { type ApiResult } from '@/types/api'
 import {
@@ -76,11 +77,13 @@ export async function createCharacterization(
 ): Promise<ApiResult<CharacterizationDefinition>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>('/cohort-characterization', serializeCharacterization(def))
-    return parseOrThrow(
+    const created = parseOrThrow(
       CharacterizationDefinitionSchema,
       data,
       'Invalid response from POST /cohort-characterization'
     ) as CharacterizationDefinition
+    await registerCreatedEntity('cohortCharacterization', created.id)
+    return created
   }, CONTEXT)
 }
 
@@ -127,11 +130,13 @@ export async function copyCharacterization(
 ): Promise<ApiResult<CharacterizationDefinition>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>(`/cohort-characterization/${id}`)
-    return parseOrThrow(
+    const copied = parseOrThrow(
       CharacterizationDefinitionSchema,
       data,
       `Invalid response from POST /cohort-characterization/${id}`
     ) as CharacterizationDefinition
+    await registerCreatedEntity('cohortCharacterization', copied.id)
+    return copied
   }, CONTEXT)
 }
 

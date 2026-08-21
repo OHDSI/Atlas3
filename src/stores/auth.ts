@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { AuthState, UserInfo } from '@/models/auth.types'
+import type { AuthState, EntityAccessKind, UserInfo } from '@/models/auth.types'
 import { emptyEntityAccess } from '@/models/auth.types'
 import { storageManager } from '@/services/auth/storageManager'
 import { tokenManager } from '@/services/auth/tokenManager'
@@ -104,6 +104,22 @@ export const useAuthStore = defineStore('auth', {
         this.permissions = {}
         this.entityAccess = emptyEntityAccess()
       }
+    },
+
+    /**
+     * Record the current user as owner of an entity they just created.
+     *
+     * The per-entity grant maps come from `/user/me`, which is only fetched at
+     * startup. Without this, a freshly created entity has no grant until the
+     * next page load, so `useEntityAccess` denies write and the editor's
+     * Save/Delete actions stay disabled on the thing the user just made.
+     */
+    registerOwnedEntity(kind: EntityAccessKind, id: string | number | null | undefined) {
+      if (id === null || id === undefined || id === '') return
+      const key = String(id)
+      const map = this.entityAccess[kind]
+      if (map[key]?.isOwner) return
+      map[key] = { accessTypes: ['READ', 'WRITE'], isOwner: true }
     },
 
     setAuthProvider(provider: string | null) {
