@@ -587,9 +587,15 @@ const canSavePermission = computed(() =>
   cohortId.value === null ? hasPermission('create:cohort-definition') : canWriteCohort.value
 )
 
+// Save is a *draft* save: a named cohort is savable even when its design is
+// still incomplete (no entry events yet). Requiring an entry event here made
+// the editor contradict itself — the dirty dot (hasUnsavedChanges) lights up
+// as soon as the cohort has a name, while Save stayed disabled, so the user
+// was told they had unsaved work with no way to save it (issue #262).
+// Design completeness is not this gate's job: WebAPI validation surfaces it
+// as warnings, and generation refuses an unsaved/invalid design on its own.
 const canSave = computed(() => {
-  const hasEntryEvents = (expression.value.PrimaryCriteria?.CriteriaList?.length ?? 0) > 0
-  return cohortName.value.trim().length > 0 && hasEntryEvents && canSavePermission.value
+  return cohortName.value.trim().length > 0 && canSavePermission.value
 })
 
 // Preview mode state. A preview installed for another cohort survives until
