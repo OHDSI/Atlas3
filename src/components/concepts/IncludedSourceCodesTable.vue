@@ -19,16 +19,31 @@
       </div>
     </AtlasAlert>
 
+    <ConceptFacetFilters
+      v-if="store.sourceCodeItems.length > 0"
+      :facets="facets"
+      :facet-options="facetOptions"
+      :selected="selectedFacets"
+      :active-filter-count="activeFilterCount"
+      :result-filter="textFilter"
+      text-field-test-id="source-codes-result-filter"
+      class="included-source-codes-table__filters"
+      @update:facet="({ key, values }) => setFacet(key, values)"
+      @update:result-filter="setTextFilter"
+      @clear="clearFilters()"
+    />
+
     <AtlasCard
       v-if="store.sourceCodeLoading || store.sourceCodeItems.length > 0"
       padding="none"
     >
       <AtlasDataTable
         v-model:sort-by="sortBy"
+        v-model:items-per-page="pageSize"
         :headers="headers"
-        :items="store.sourceCodeItems"
+        :items="visibleSourceCodes"
         :loading="store.sourceCodeLoading"
-        :items-per-page="50"
+        multi-sort
         hover
         class="included-source-codes-table__table"
       >
@@ -74,6 +89,22 @@
           </AtlasChip>
         </template>
 
+        <template #no-data>
+          <div class="included-source-codes-table__no-match">
+            <p class="included-source-codes-table__no-match-text">
+              {{ t('cs.manager.emptyFilteredMessage', 'No concepts match the active filters.').value }}
+            </p>
+            <AtlasButton
+              size="sm"
+              variant="ghost"
+              data-testid="source-codes-clear-filters-btn"
+              @click="clearFilters()"
+            >
+              {{ t('versions.filterClear', 'Clear filters').value }}
+            </AtlasButton>
+          </div>
+        </template>
+
         <template #loading>
           <AtlasSkeleton
             v-for="i in 5"
@@ -115,6 +146,8 @@ import {
   AtlasIcon,
   AtlasSkeleton,
 } from '@/components/ui'
+import ConceptFacetFilters from './ConceptFacetFilters.vue'
+import { CONCEPT_FACETS, useConceptFacets } from '@/composables/useConceptFacets'
 import { getDomainColor } from '@/utils/domain-colors'
 import { useThemeStore } from '@/stores/theme'
 
@@ -133,6 +166,31 @@ const emit = defineEmits<{
 }>()
 
 const sortBy = ref([{ key: 'conceptId', order: 'asc' as const }])
+
+/**
+ * See IncludedConceptsTable: a bare `:items-per-page` makes v-data-table's model
+ * controlled, so the footer's dropdown emits and is then overwritten. Owning the
+ * value here is what makes it live (issue #266).
+ */
+const pageSize = ref(50)
+
+/** Facets mirror this table's categorical columns: class, domain and vocabulary. */
+const facets = CONCEPT_FACETS.filter(f =>
+  ['conceptClassId', 'domainId', 'vocabularyId'].includes(f.key)
+)
+
+const sourceCodeItems = computed(() => store.sourceCodeItems)
+
+const {
+  facetOptions,
+  selected: selectedFacets,
+  textFilter,
+  filteredConcepts: visibleSourceCodes,
+  activeFilterCount,
+  setFacet,
+  setTextFilter,
+  clearFilters,
+} = useConceptFacets(sourceCodeItems, facets)
 
 const headers = [
   { title: t('columns.conceptId', 'ID').value, key: 'conceptId', sortable: true, width: '90px' },
@@ -167,6 +225,9 @@ watch(
     if (!active) return
     const [prevActive, prevSig, prevKey] = prev ?? [false, '', undefined]
     if (active !== prevActive || sig !== prevSig || key !== prevKey) {
+      // A different included set resolves to a different value space, so a
+      // stale selection would silently hide rows the user just produced.
+      if (sig !== prevSig || key !== prevKey) clearFilters()
       void store.resolveSourceCodes(key)
     }
   },
@@ -181,6 +242,24 @@ function onView(c: Concept) {
 <style scoped>
 .included-source-codes-table {
   width: 100%;
+}
+
+.included-source-codes-table__filters {
+  margin-bottom: 12px;
+}
+
+.included-source-codes-table__no-match {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 24px;
+}
+
+.included-source-codes-table__no-match-text {
+  margin: 0;
+  font-size: 14px;
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 
 .included-source-codes-table__error {
