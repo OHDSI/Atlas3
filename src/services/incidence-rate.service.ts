@@ -22,7 +22,7 @@ import type {
 } from '@/models/incidence-rate.types'
 import { z } from 'zod'
 import { normalizeCriteriaGroupForCirce } from '@/components/cohort-editor/normalize'
-import { registerCreatedEntity } from '@/services/auth/entityOwnership'
+import { syncAccessAfterCreate } from '@/services/auth/entityOwnership'
 
 const CONTEXT = 'IncidenceRateService'
 
@@ -89,7 +89,7 @@ export async function createIncidenceRate(ir: IncidenceRate): Promise<ApiResult<
   return unwrap(async () => {
     const data = await httpPost<unknown>('/ir/', encodeIRForSave(ir))
     const created = decodeIRExpression(data)
-    await registerCreatedEntity('incidenceRate', created.id)
+    await syncAccessAfterCreate('incidenceRate', created.id)
     return created
   }, CONTEXT)
 }
@@ -110,7 +110,7 @@ export async function copyIncidenceRate(id: number): Promise<ApiResult<Incidence
   return unwrap(async () => {
     const data = await httpGet<unknown>(`/ir/${id}/copy`)
     const copied = decodeIRExpression(data)
-    await registerCreatedEntity('incidenceRate', copied.id)
+    await syncAccessAfterCreate('incidenceRate', copied.id)
     return copied
   }, CONTEXT)
 }
@@ -149,7 +149,9 @@ export async function exportIncidenceRate(id: number): Promise<unknown> {
  */
 export async function importIncidenceRate(design: unknown): Promise<IncidenceRate> {
   const data = await httpPost<unknown>('/ir/design', design)
-  return decodeIRExpression(data)
+  const imported = decodeIRExpression(data)
+  await syncAccessAfterCreate('incidenceRate', imported.id)
+  return imported
 }
 
 /** POST /ir/{id}/tag/{tagId}. */

@@ -5,7 +5,7 @@
  */
 import { httpGet, httpPost, httpPut, httpDelete, httpPostRead } from '@/services/http-client'
 import { unwrap, unwrapList, ApiError, parseOrThrow } from '@/services/api-error'
-import { registerCreatedEntity } from '@/services/auth/entityOwnership'
+import { syncAccessAfterCreate } from '@/services/auth/entityOwnership'
 import { logger } from '@/utils/logger'
 import { type ApiResult } from '@/types/api'
 import {
@@ -82,7 +82,7 @@ export async function createCharacterization(
       data,
       'Invalid response from POST /cohort-characterization'
     ) as CharacterizationDefinition
-    await registerCreatedEntity('cohortCharacterization', created.id)
+    await syncAccessAfterCreate('cohortCharacterization', created.id)
     return created
   }, CONTEXT)
 }
@@ -135,7 +135,7 @@ export async function copyCharacterization(
       data,
       `Invalid response from POST /cohort-characterization/${id}`
     ) as CharacterizationDefinition
-    await registerCreatedEntity('cohortCharacterization', copied.id)
+    await syncAccessAfterCreate('cohortCharacterization', copied.id)
     return copied
   }, CONTEXT)
 }
@@ -177,11 +177,13 @@ export async function importCharacterization(
 ): Promise<ApiResult<CharacterizationDefinition>> {
   return unwrap(async () => {
     const data = await httpPost<unknown>('/cohort-characterization/import', design)
-    return parseOrThrow(
+    const imported = parseOrThrow(
       CharacterizationDefinitionSchema,
       data,
       'Invalid response from POST /cohort-characterization/import'
     ) as CharacterizationDefinition
+    await syncAccessAfterCreate('cohortCharacterization', imported.id)
+    return imported
   }, CONTEXT)
 }
 

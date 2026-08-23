@@ -5,7 +5,7 @@
  */
 import { httpGet, httpPost, httpPostRead, httpPut, httpDelete } from '@/services/http-client'
 import { unwrap, ApiError, parseOrThrow } from '@/services/api-error'
-import { registerCreatedEntity } from '@/services/auth/entityOwnership'
+import { syncAccessAfterCreate } from '@/services/auth/entityOwnership'
 import { type ApiResult } from '@/types/api'
 import { logger } from '@/utils/logger'
 import {
@@ -68,7 +68,7 @@ export async function createPathway(pathway: Pathway): Promise<ApiResult<Pathway
       data,
       'Invalid create response'
     ) as Pathway
-    await registerCreatedEntity('pathway', created.id)
+    await syncAccessAfterCreate('pathway', created.id)
     return created
   }, CONTEXT)
 }
@@ -96,7 +96,7 @@ export async function copyPathway(id: number): Promise<ApiResult<Pathway>> {
       data,
       'Invalid copy response'
     ) as Pathway
-    await registerCreatedEntity('pathway', copied.id)
+    await syncAccessAfterCreate('pathway', copied.id)
     return copied
   }, CONTEXT)
 }
@@ -149,7 +149,9 @@ export async function importPathway(design: unknown): Promise<Pathway> {
     logger.error('Pathway', 'importPathway validation', parsed.error)
     throw new Error('Invalid response from POST /pathway-analysis/import')
   }
-  return parsed.data as Pathway
+  const imported = parsed.data as Pathway
+  await syncAccessAfterCreate('pathway', imported.id)
+  return imported
 }
 
 /**

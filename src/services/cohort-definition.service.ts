@@ -6,7 +6,7 @@
 import { logger } from '@/utils/logger'
 import { httpGet, httpPost, httpPut, httpDelete, httpPostRead, getBaseUrl } from '@/services/http-client'
 import { unwrap, ApiError, parseOrThrow, zodIssues } from '@/services/api-error'
-import { registerCreatedEntity } from '@/services/auth/entityOwnership'
+import { syncAccessAfterCreate } from '@/services/auth/entityOwnership'
 import { type ApiResult } from '@/types/api'
 import type { RawCohortDefinition } from '@/models/atlas.types'
 import type { CohortDefinition } from '@/models/cohort.types'
@@ -73,7 +73,7 @@ export async function saveCohortDefinition(
       return await httpPut<CohortDefinition>(`/cohortdefinition/${cohort.id}`, cohort)
     }
     const created = await httpPost<CohortDefinition>('/cohortdefinition', cohort)
-    await registerCreatedEntity('cohortDefinition', created.id)
+    await syncAccessAfterCreate('cohortDefinition', created.id)
     return created
   }, CONTEXT)
 }

@@ -122,6 +122,28 @@ export const useAuthStore = defineStore('auth', {
       map[key] = { accessTypes: ['READ', 'WRITE'], isOwner: true }
     },
 
+    /**
+     * Re-read the current subject's authorization snapshot from the server.
+     *
+     * A write can change more grants than the client can predict: importing a
+     * design creates cohorts and concept sets of its own, and the creator's
+     * grant on any of them only exists server-side. Rather than guess, ask
+     * `/user/me` again and let the answer replace what is held locally.
+     *
+     * Returns whether the refresh landed, so callers can keep an optimistic
+     * grant in place when the server could not be reached.
+     */
+    async refreshUserContext(): Promise<boolean> {
+      try {
+        const { authService } = await import('@/services/auth/authService')
+        this.setUser(await authService.fetchUserInfo())
+        return true
+      } catch (error) {
+        logger.warn('Auth', 'Failed to refresh the user authorization snapshot', error)
+        return false
+      }
+    },
+
     setAuthProvider(provider: string | null) {
       this.authProvider = provider
     },
