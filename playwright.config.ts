@@ -2,7 +2,6 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests/e2e',
-  testIgnore: ['**/phenotype-library/**'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -51,6 +50,14 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      // The phenotype library is its own project below: 1104 fidelity cases
+      // that the regular suite has no business running on every push.
+      testIgnore: ['**/phenotype-library/**'],
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'phenotype',
+      testDir: './tests/e2e/phenotype-library',
       use: { ...devices['Desktop Chrome'] },
     },
     // Firefox and WebKit disabled for faster development iteration

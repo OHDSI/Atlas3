@@ -38,7 +38,7 @@ jobs:
         run: npm run build -- --mode test
 
       - name: Run E2E tests
-        run: npx playwright test
+        run: npx playwright test --project=chromium
         env:
           # Serve the build above instead of the dev server, so the suite's
           # four workers do not queue behind vite's transform pipeline.
