@@ -71,8 +71,11 @@ jobs:
           path: tests/e2e/phenotype-library/fixtures/phenotypes.json
           retention-days: 1
 
-  # ── Job 2: Run all tests — 8 GHA shards × 2 Playwright workers ──────────
-  # 1104 tests ÷ 8 shards = ~138 tests/shard × ~6s ÷ 2 workers ≈ 7 min/shard
+  # ── Job 2: Run all tests — 8 GHA shards × 4 Playwright workers ──────────
+  # Each shard serves the built app, so its workers do not queue behind vite's
+  # on-demand transform. 1104 tests ÷ 8 shards = ~138/shard; a 276-test quarter
+  # took 3.8 minutes locally at these settings, so a shard has room inside the
+  # 20 minute cap even on a slower runner.
   phenotype-tests:
     needs: generate-fixtures
     runs-on: ubuntu-latest
@@ -81,7 +84,7 @@ jobs:
     # hangs indefinitely on GitHub runners. Keep the version in sync with the
     # @playwright/test version in package-lock.json.
     container:
-      image: mcr.microsoft.com/playwright:v1.56.1-noble
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
     timeout-minutes: 20
     permissions:
       contents: read
@@ -109,13 +112,19 @@ jobs:
           name: phenotype-fixtures
           path: tests/e2e/phenotype-library/fixtures/
 
+      # Required: playwright's webServer serves this build with `vite preview`.
+      - name: Build application for the phenotype tests
+        run: npm run build -- --mode test
+
       - name: Run phenotype integration tests (shard ${{ matrix.shard }}/8)
         run: |
-          npx playwright test tests/e2e/phenotype-library/ \
-            --project=chromium \
-            --workers=2 \
+          npx playwright test \
+            --project=phenotype \
+            --workers=4 \
             --shard=${{ matrix.shard }}/8 \
             --reporter=list
+        env:
+          E2E_SERVE_BUILD: '1'
 
       - name: Upload Playwright report (shard ${{ matrix.shard }})
         uses: actions/upload-artifact@v4

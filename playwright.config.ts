@@ -2,11 +2,15 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests/e2e',
-  testIgnore: ['**/phenotype-library/**'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // The suite is fullyParallel and every spec mocks WebAPI per page, so workers
+  // cost CPU, not isolation. Four only holds up when the built app is being
+  // served (see webServer): against the dev server, four browsers queue behind
+  // its single transform pipeline and the slower routes time out. The
+  // phenotype workflow passes its own --workers, which overrides this.
+  workers: process.env.CI ? 4 : undefined,
   // Use 'list' reporter to avoid HTML server hanging
   // HTML report still generated but not served/opened
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
@@ -46,6 +50,14 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      // The phenotype library is its own project below: 1104 fidelity cases
+      // that the regular suite has no business running on every push.
+      testIgnore: ['**/phenotype-library/**'],
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'phenotype',
+      testDir: './tests/e2e/phenotype-library',
       use: { ...devices['Desktop Chrome'] },
     },
     // Firefox and WebKit disabled for faster development iteration
@@ -61,8 +73,14 @@ export default defineConfig({
   ],
 
   webServer: {
-    // Use --mode test to load .env.test with auth disabled for E2E tests
-    command: 'npm run dev -- --mode test',
+    // Serving the built app takes vite's on-demand transform off the hot path,
+    // which is what lets the e2e job run four workers without its slower routes
+    // timing out. Opt-in rather than keyed to CI: the phenotype workflow shares
+    // this config, builds nothing, and would find no dist/ to serve.
+    // Use --mode test to load .env.test with auth disabled for E2E tests.
+    command: process.env.E2E_SERVE_BUILD
+      ? 'npm run preview -- --port 5173 --strictPort'
+      : 'npm run dev -- --mode test',
     url: 'http://localhost:5173',
     // Attaching to a dev server someone left running on another branch silently
     // tests that branch's code — never do it in CI or when recording baselines.

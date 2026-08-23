@@ -33,11 +33,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Required: playwright's webServer serves this build with `vite preview`.
       - name: Build application for E2E tests
         run: npm run build -- --mode test
 
       - name: Run E2E tests
-        run: npx playwright test
+        run: npx playwright test --project=chromium
+        env:
+          # Serve the build above instead of the dev server, so the suite's
+          # four workers do not queue behind vite's transform pipeline.
+          E2E_SERVE_BUILD: '1'
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
