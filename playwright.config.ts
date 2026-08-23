@@ -6,7 +6,11 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // The suite is fullyParallel and every spec mocks WebAPI per page, so workers
+  // cost CPU, not isolation. Four only holds up because CI serves a static
+  // build (see webServer): against the dev server, four browsers queue behind
+  // its single transform pipeline and the slower routes time out.
+  workers: process.env.CI ? 4 : undefined,
   // Use 'list' reporter to avoid HTML server hanging
   // HTML report still generated but not served/opened
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
@@ -61,8 +65,14 @@ export default defineConfig({
   ],
 
   webServer: {
-    // Use --mode test to load .env.test with auth disabled for E2E tests
-    command: 'npm run dev -- --mode test',
+    // CI serves the built app: vite's dev server transforms modules on demand
+    // in one process, so parallel workers queue behind it and slow routes time
+    // out. A static build has no such bottleneck. Locally the dev server stays,
+    // so a run picks up edits without a rebuild.
+    // Use --mode test to load .env.test with auth disabled for E2E tests.
+    command: process.env.CI
+      ? 'npm run preview -- --port 5173 --strictPort'
+      : 'npm run dev -- --mode test',
     url: 'http://localhost:5173',
     // Attaching to a dev server someone left running on another branch silently
     // tests that branch's code — never do it in CI or when recording baselines.
