@@ -7,9 +7,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   // The suite is fullyParallel and every spec mocks WebAPI per page, so workers
-  // cost CPU, not isolation. Four only holds up because CI serves a static
-  // build (see webServer): against the dev server, four browsers queue behind
-  // its single transform pipeline and the slower routes time out.
+  // cost CPU, not isolation. Four only holds up when the built app is being
+  // served (see webServer): against the dev server, four browsers queue behind
+  // its single transform pipeline and the slower routes time out. The
+  // phenotype workflow passes its own --workers, which overrides this.
   workers: process.env.CI ? 4 : undefined,
   // Use 'list' reporter to avoid HTML server hanging
   // HTML report still generated but not served/opened
@@ -65,12 +66,12 @@ export default defineConfig({
   ],
 
   webServer: {
-    // CI serves the built app: vite's dev server transforms modules on demand
-    // in one process, so parallel workers queue behind it and slow routes time
-    // out. A static build has no such bottleneck. Locally the dev server stays,
-    // so a run picks up edits without a rebuild.
+    // Serving the built app takes vite's on-demand transform off the hot path,
+    // which is what lets the e2e job run four workers without its slower routes
+    // timing out. Opt-in rather than keyed to CI: the phenotype workflow shares
+    // this config, builds nothing, and would find no dist/ to serve.
     // Use --mode test to load .env.test with auth disabled for E2E tests.
-    command: process.env.CI
+    command: process.env.E2E_SERVE_BUILD
       ? 'npm run preview -- --port 5173 --strictPort'
       : 'npm run dev -- --mode test',
     url: 'http://localhost:5173',

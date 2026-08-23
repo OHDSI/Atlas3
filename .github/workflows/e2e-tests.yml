@@ -39,6 +39,10 @@ jobs:
 
       - name: Run E2E tests
         run: npx playwright test
+        env:
+          # Serve the build above instead of the dev server, so the suite's
+          # four workers do not queue behind vite's transform pipeline.
+          E2E_SERVE_BUILD: '1'
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
