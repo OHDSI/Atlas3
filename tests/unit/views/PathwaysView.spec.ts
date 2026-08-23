@@ -125,6 +125,24 @@ describe('PathwaysView', () => {
   })
 
   describe('Row Rendering', () => {
+    it('renders the id, created and updated columns', async () => {
+      vi.mocked(listPathways).mockResolvedValue({
+        success: true,
+        data: [mkPathway(42, { createdDate: Date.parse('2024-03-01T00:00:00Z') })],
+      })
+      wrapper = mountView()
+      await flushPromises()
+
+      const headers = wrapper.findAll('[data-testid="pathways-table"] thead th').map(h => h.text())
+      expect(headers).toContain('ID')
+      expect(headers).toContain('Created')
+      expect(headers).toContain('Updated')
+      expect(headers).not.toContain('Modified')
+
+      const row = wrapper.find('[data-testid="pathways-table-row-name"]').element.closest('tr')
+      expect(row?.textContent).toContain('42')
+    })
+
     it('renders target and event counts from the pathway data', async () => {
       vi.mocked(listPathways).mockResolvedValue({
         success: true,

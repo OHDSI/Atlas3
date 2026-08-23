@@ -149,6 +149,7 @@ const feedbackSeverity = computed<AtlasSnackbarSeverity>(() =>
 const searchInput = ref('')
 
 const headers = computed(() => [
+  { title: t('columns.id', 'ID').value, key: 'id', width: '90px' },
   { title: t('columns.name', 'Name').value, key: 'name' },
   { title: t('columns.description', 'Description').value, key: 'description' },
   {
@@ -158,7 +159,8 @@ const headers = computed(() => [
   },
   { title: t('columns.eventCohort', 'Events').value, key: 'eventCount', sortable: false },
   { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
-  { title: t('columns.modified', 'Modified').value, key: 'modifiedDate' },
+  { title: t('columns.created', 'Created').value, key: 'createdDate' },
+  { title: t('columns.updated', 'Updated').value, key: 'modifiedDate' },
   { title: t('columns.actions', 'Actions').value, key: 'actions', sortable: false },
 ])
 

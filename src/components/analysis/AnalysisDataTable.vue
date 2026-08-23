@@ -155,7 +155,7 @@ import { tagColor, tagContrastColor } from '@/utils/tag-color'
 interface Tag { id?: number; name: string; color?: string }
 
 interface Props {
-  headers: { title: string; key: string; sortable?: boolean }[]
+  headers: { title: string; key: string; sortable?: boolean; width?: string }[]
   items: T[]
   loading?: boolean
   itemsPerPage?: number
