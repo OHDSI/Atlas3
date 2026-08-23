@@ -322,7 +322,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import { useI18n } from '@/composables/useI18n'
@@ -714,23 +714,65 @@ async function loadAvailableFeatureAnalyses() {
   }
 }
 
+// Which id this editor has already loaded ('' means the blank "new" draft,
+// null means "nothing loaded yet"). Guards the watcher and onMounted from
+// both fetching on first mount, and doubles as a race token below.
+const loadedKey = ref<string | null>(null)
+
+/**
+ * Load (or reset) the editor for a given route id. Shared by onMounted and
+ * the props.id watcher so both paths hydrate identically.
+ */
+async function loadForId(rawId: string | undefined): Promise<void> {
+  const key = rawId ?? ''
+  if (loadedKey.value === key) return
+  loadedKey.value = key
+
+  if (!rawId) {
+    // :id -> new must not keep showing the previous design.
+    store.clearCurrent()
+    hydrateFrom(null)
+    return
+  }
+
+  const numericId = Number(rawId)
+  if (Number.isNaN(numericId)) {
+    router.push('/characterizations')
+    return
+  }
+
+  // Drop the previous entity up front so a slow fetch can never leave one
+  // characterization's design rendered under another one's URL.
+  store.clearCurrent()
+  hydrateFrom(null)
+
+  await store.fetchOne(numericId)
+  // A newer navigation started while this fetch was in flight — it owns the
+  // draft now, so discard this (stale) result.
+  if (loadedKey.value !== key) return
+  hydrateFrom(store.currentCharacterization)
+}
+
+// /characterizations/new and /characterizations/:id are two route records
+// pointing at this one component, and <router-view/> is unkeyed, so Vue reuses
+// the instance and onMounted does NOT re-run when import / save / duplicate
+// navigate from `new` to a real id (nor when the id changes from one
+// characterization to another). Without this watcher the draft stayed empty
+// while the URL claimed an id — the "stuck on an empty page after Import"
+// bug (OHDSI/Atlas3 #271, #272).
+watch(
+  () => props.id,
+  newId => {
+    void loadForId(newId)
+  }
+)
+
 onMounted(async () => {
   // Load picker data once per editor mount.
   loadAvailableCohorts()
   loadAvailableFeatureAnalyses()
 
-  if (props.id) {
-    const numericId = Number(props.id)
-    if (Number.isNaN(numericId)) {
-      router.push('/characterizations')
-      return
-    }
-    await store.fetchOne(numericId)
-    hydrateFrom(store.currentCharacterization)
-  } else {
-    store.clearCurrent()
-    hydrateFrom(null)
-  }
+  await loadForId(props.id)
 })
 
 onBeforeRouteLeave((_to, _from, next) => {
