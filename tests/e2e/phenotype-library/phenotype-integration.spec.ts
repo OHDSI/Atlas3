@@ -132,8 +132,11 @@ function mulberry32(seed: number): () => number {
 }
 
 function samplePhenotypes(all: PhenotypeDefinition[]): PhenotypeDefinition[] {
-  const rawSize = process.env.PHENOTYPE_SAMPLE_SIZE ?? '10'
-  if (rawSize === 'all') return all
+  const rawSize = (process.env.PHENOTYPE_SAMPLE_SIZE ?? '10').trim()
+  // 0 means every phenotype, the same reading the fixture generator in
+  // .github/workflows/phenotype-integration.yml uses. Taking it as "sample
+  // none" instead left the workflow running zero tests and passing.
+  if (rawSize === 'all' || rawSize === '0') return all
   const size = Math.max(0, Math.min(all.length, parseInt(rawSize, 10) || 0))
   if (size >= all.length) return all
   const seed = parseInt(process.env.PHENOTYPE_SAMPLE_SEED ?? '', 10) || Date.now() % 0xffffffff
@@ -242,15 +245,18 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
       ).toHaveLength(0)
 
       // ── Step 5: Add one inclusion rule ────────────────────────────────
-      const addRuleBtn = page.locator('[data-testid="add-inclusion-rule"]')
+      // The panel shows a standalone empty-state button until the first rule
+      // exists and the rail's own button after that.
+      const ruleItems = page.locator('[data-testid="inclusion-rail-rule"]')
+      const originalRuleCount = await ruleItems.count()
+      const addRuleBtn =
+        originalRuleCount === 0
+          ? page.locator('[data-testid="inclusion-empty-add"]')
+          : page.locator('[data-testid="inclusion-rail-add"]')
       await expect(addRuleBtn).toBeVisible({ timeout: 10000 })
-      const originalRuleCount = await page.locator('[data-testid="remove-inclusion-rule"]').count()
 
       await addRuleBtn.click()
-      await expect(page.locator('[data-testid="remove-inclusion-rule"]')).toHaveCount(
-        originalRuleCount + 1,
-        { timeout: 5000 },
-      )
+      await expect(ruleItems).toHaveCount(originalRuleCount + 1, { timeout: 5000 })
 
       // ── Step 6: Save with the extra rule ──────────────────────────────
       await captureNextSaveExpression(page, async () => {
@@ -258,12 +264,11 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
       })
 
       // ── Step 7: Remove the inclusion rule we just added ───────────────
-      // addNewRule() prepends the new rule at index 0, so .first() targets it
-      await page.locator('[data-testid="remove-inclusion-rule"]').first().click()
-      await expect(page.locator('[data-testid="remove-inclusion-rule"]')).toHaveCount(
-        originalRuleCount,
-        { timeout: 5000 },
-      )
+      // addNewRule() appends the rule and selects it, so the detail pane is
+      // already showing the new one and its delete button acts on that
+      // selection.
+      await page.locator('[data-testid="inclusion-detail-remove"]').click()
+      await expect(ruleItems).toHaveCount(originalRuleCount, { timeout: 5000 })
 
       // ── Step 8: Save again → capture FINAL expression ─────────────────
       const finalExpression = await captureNextSaveExpression(page, async () => {

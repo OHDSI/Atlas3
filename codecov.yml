@@ -1,0 +1,16 @@
+# Without this file Codecov defaults the patch status to `auto`, i.e. every PR
+# must hit the project's current coverage (~95%) on its changed lines alone.
+# Vitest's v8 provider also misattributes lines inside single-file components:
+# the same source reports different per-line hit counts depending on how many
+# test files are in the run, so a fully exercised block can come back as
+# missed. A fixed patch target keeps the gate meaningful without failing PRs
+# on that remapping noise.
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: 80%

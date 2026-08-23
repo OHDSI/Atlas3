@@ -72,6 +72,7 @@
           icon="mdi-delete"
           color="error"
           :title="t('common.delete', 'Delete rule').value"
+          data-testid="inclusion-detail-remove"
           @click="emit('remove')"
         />
       </div>
