@@ -130,6 +130,28 @@ describe('IncidenceRatesView', () => {
   })
 
   describe('Row Rendering', () => {
+    it('renders the id, created and updated columns', async () => {
+      vi.mocked(listIncidenceRates).mockResolvedValue({
+        success: true,
+        data: [mkIR(42, { createdDate: Date.parse('2024-03-01T00:00:00Z') })],
+      })
+      wrapper = mountView()
+      await flushPromises()
+
+      const headers = wrapper
+        .findAll('[data-testid="incidence-rates-table"] thead th')
+        .map(h => h.text())
+      expect(headers).toContain('ID')
+      expect(headers).toContain('Created')
+      expect(headers).toContain('Updated')
+      expect(headers).not.toContain('Modified')
+
+      const row = wrapper
+        .find('[data-testid="incidence-rates-table-row-name"]')
+        .element.closest('tr')
+      expect(row?.textContent).toContain('42')
+    })
+
     it('renders target and outcome counts from the expression', async () => {
       vi.mocked(listIncidenceRates).mockResolvedValue({ success: true, data: [mkIR(1)] })
       wrapper = mountView()

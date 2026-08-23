@@ -138,6 +138,24 @@ describe('CharacterizationsView', () => {
     expect(mounted.wrapper.text()).toContain('New')
   })
 
+  it('renders the id, created and updated columns', async () => {
+    vi.mocked(listCharacterizations).mockResolvedValue(success(sampleList))
+    mounted = await mountView()
+
+    const headers = mounted.wrapper
+      .findAll('[data-testid="characterizations-table"] thead th')
+      .map(h => h.text())
+    expect(headers).toContain('Id')
+    expect(headers).toContain('Created')
+    expect(headers).toContain('Updated')
+    expect(headers).not.toContain('Modified')
+
+    const row = mounted.wrapper
+      .find('[data-testid="characterizations-table-row-name"]')
+      .element.closest('tr')
+    expect(row?.textContent).toContain('1')
+  })
+
   it('renders rows from the store after fetch', async () => {
     vi.mocked(listCharacterizations).mockResolvedValue(success(sampleList))
     mounted = await mountView()

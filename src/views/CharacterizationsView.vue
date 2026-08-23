@@ -141,6 +141,7 @@ const {
 const searchInput = ref<string>('')
 
 const headers = computed(() => [
+  { title: t('columns.id', 'ID').value, key: 'id' },
   { title: t('columns.name', 'Name').value, key: 'name' },
   { title: t('columns.description', 'Description').value, key: 'description' },
   {
@@ -154,7 +155,8 @@ const headers = computed(() => [
     sortable: false,
   },
   { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
-  { title: t('columns.modified', 'Modified').value, key: 'modifiedDate' },
+  { title: t('columns.created', 'Created').value, key: 'createdDate' },
+  { title: t('columns.updated', 'Updated').value, key: 'modifiedDate' },
   { title: t('columns.actions', 'Actions').value, key: 'actions', sortable: false },
 ])
 
