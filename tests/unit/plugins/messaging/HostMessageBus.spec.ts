@@ -3,6 +3,8 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { HostMessageBus, createHostMessageBus, getHostMessageBus, setupGlobalMessageHandler } from '@/plugins/messaging/HostMessageBus'
+import { setActivePinia, createPinia } from 'pinia'
+import { usePluginConceptSetChooserStore } from '@/stores/plugin-concept-set-chooser'
 
 // Mock logger
 vi.mock('@/utils/logger', () => ({
@@ -358,6 +360,65 @@ describe('setupGlobalMessageHandler', () => {
         timestamp: new Date(),
       },
     }))).not.toThrow()
+  })
+
+  describe('conceptSet:choose', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    const dispatch = (detail: Record<string, unknown>) => {
+      setupGlobalMessageHandler(null)
+      const handler = eventListenerSpy.mock.calls[0][1] as EventListener
+      handler(new CustomEvent('plugin-message', { detail }))
+    }
+
+    it('opens the chooser and answers the request with the selection', async () => {
+      const bus = createHostMessageBus('test-plugin')
+      const response = bus.request('conceptSet:choose', { title: 'Pick one' })
+      dispatch({
+        type: 'conceptSet:choose',
+        sourcePluginId: 'test-plugin',
+        payload: { title: 'Pick one' },
+        callbackId: 'req-test-plugin-1',
+        timestamp: new Date(),
+      })
+
+      const store = usePluginConceptSetChooserStore()
+      expect(store.isOpen).toBe(true)
+      expect(store.title).toBe('Pick one')
+
+      store.select({ conceptSetId: 5, name: 'Aspirin' })
+      await Promise.resolve()
+      await Promise.resolve()
+
+      bus.handleResponse('req-test-plugin-1', { conceptSetId: 5, name: 'Aspirin' })
+      await expect(response).resolves.toEqual({ conceptSetId: 5, name: 'Aspirin' })
+    })
+
+    it('ignores a request with no callbackId, since there is nothing to answer', () => {
+      dispatch({
+        type: 'conceptSet:choose',
+        sourcePluginId: 'test-plugin',
+        payload: {},
+        timestamp: new Date(),
+      })
+
+      expect(usePluginConceptSetChooserStore().isOpen).toBe(false)
+    })
+
+    it('tolerates a missing payload', () => {
+      expect(() =>
+        dispatch({
+          type: 'conceptSet:choose',
+          sourcePluginId: 'test-plugin',
+          callbackId: 'req-test-plugin-2',
+          timestamp: new Date(),
+        })
+      ).not.toThrow()
+
+      expect(usePluginConceptSetChooserStore().isOpen).toBe(true)
+    })
   })
 
   it('should handle unknown message types gracefully', () => {

@@ -69,6 +69,9 @@
     <!-- Concept Detail Drawer (opens from concept tables and search results) -->
     <ConceptDetailDrawer />
 
+    <!-- Concept set chooser opened by plugins over the host message bus -->
+    <PluginConceptSetChooserHost />
+
     <!-- Pythia (Atlas3 cohort design advisor) — global FAB + overlay,
          gated on auth + feature flag. -->
     <template v-if="pythiaEnabled && authStore.isAuthenticated">
@@ -89,6 +92,7 @@ import ConfigPanel from '@/components/config/ConfigPanel.vue'
 import JobsPanel from '@/components/jobs/JobsPanel.vue'
 import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
 import ConceptDetailDrawer from '@/components/concepts/detail/ConceptDetailDrawer.vue'
+import PluginConceptSetChooserHost from '@/components/plugins/PluginConceptSetChooserHost.vue'
 import PluginFab from '@/components/plugins/PluginFab.vue'
 import PluginOverlayHost from '@/components/plugins/PluginOverlayHost.vue'
 import { useLocaleStore } from '@/stores/locale'
