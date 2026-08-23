@@ -34,11 +34,22 @@ export function useCharacterizationResults() {
         getCharacterizationResults(executionId, {}),
       ])
       if (!execResult.success) throw execResult.error
+
+      // Keep the execution even when the result queries fail. A run that
+      // failed has no results to fetch, so treating that as a total failure
+      // discarded the one object carrying the reason and left the UI showing
+      // "no runs" instead of the failure.
+      execution.value = execResult.data
+
+      if (execResult.data.status === 'FAILED') {
+        error.value = execResult.data.exitMessage || 'Generation failed'
+        return false
+      }
+
       if (!countResult.success) throw countResult.error
       if (!resultsResult.success) throw resultsResult.error
 
       const mapped = mapCharacterizationResults(resultsResult.data)
-      execution.value = execResult.data
       resultCount.value = countResult.data
       prevalence.value = mapped.prevalence
       distribution.value = mapped.distribution
