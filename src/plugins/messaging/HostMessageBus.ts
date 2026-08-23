@@ -1,5 +1,6 @@
 import { PluginMessageBus, HostMessage } from '@/models/PluginModels'
 import { logger } from '@/utils/logger'
+import { usePluginConceptSetChooserStore } from '@/stores/plugin-concept-set-chooser'
 
 type MessageCallback<T = unknown> = (payload: T) => void
 
@@ -170,6 +171,23 @@ export function setupGlobalMessageHandler(
           const response = { success: true, data: {} }
           messageBus.handleResponse(message.callbackId, response)
         }
+        break
+      }
+
+      case 'conceptSet:choose': {
+        // Plugins cannot mount an Atlas dialog, so they ask the host to run its
+        // own chooser and hand back what the user picked. Answered through the
+        // same callbackId plumbing as data:request; a dismissed dialog resolves
+        // null rather than leaving the plugin waiting.
+        const messageBus = getHostMessageBus(message.sourcePluginId)
+        if (!message.callbackId) {
+          logger.debug('HostMessageBus', 'conceptSet:choose ignored: no callbackId to answer')
+          break
+        }
+        const payload = (message.payload ?? {}) as { title?: string }
+        void usePluginConceptSetChooserStore()
+          .open(payload.title)
+          .then(choice => messageBus?.handleResponse(message.callbackId as string, choice))
         break
       }
 
