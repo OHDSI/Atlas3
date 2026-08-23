@@ -141,7 +141,7 @@ const {
 const searchInput = ref<string>('')
 
 const headers = computed(() => [
-  { title: t('columns.id', 'ID').value, key: 'id', width: '90px' },
+  { title: t('columns.id', 'ID').value, key: 'id' },
   { title: t('columns.name', 'Name').value, key: 'name' },
   { title: t('columns.description', 'Description').value, key: 'description' },
   {

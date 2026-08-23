@@ -132,8 +132,14 @@ for (const mode of ['light', 'dark'] as const) {
           mode === 'light'
             ? {
                 fullPage: true,
+                // Every pixel must match, but "match" allows the ±1/255 the
+                // compositor rounds icon-button edges to between runs. At
+                // threshold 0 a table whose columns land on a fractional pixel
+                // fails perhaps half the time on nothing but that rounding,
+                // while any real move or recolour still clears 0.1 easily and
+                // trips maxDiffPixels on its first pixel.
                 maxDiffPixels: 0,
-                threshold: 0,
+                threshold: 0.1,
                 mask: [page.locator('[data-testid="visual-test-nav-mask"]'), ...extraMasksFor(page, route.name)],
               }
             : { fullPage: true, mask: extraMasksFor(page, route.name) },
