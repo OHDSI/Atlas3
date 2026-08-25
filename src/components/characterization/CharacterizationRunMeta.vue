@@ -76,11 +76,23 @@ function formatTime(value: number | undefined): string {
   return formatDateTime(value)
 }
 
+function effectiveDuration(startTime: number | undefined, endTime: number | undefined, duration: number | undefined): number | undefined {
+  if (typeof duration === 'number' && duration > 0) return duration
+  if (typeof startTime === 'number' && typeof endTime === 'number') {
+    return Math.max(0, endTime - startTime)
+  }
+  return undefined
+}
+
 const durationLabel = computed<string>(() => {
-  const ms = props.execution?.duration
+  const ms = effectiveDuration(
+    props.execution?.startTime,
+    props.execution?.endTime,
+    props.execution?.duration
+  )
   if (typeof ms !== 'number' || ms < 0) return '—'
   if (ms < 1000) return `${ms} ms`
-  const seconds = Math.round(ms / 1000)
+  const seconds = Math.floor(ms / 1000)
   if (seconds < 60) return `${seconds}s`
   const minutes = Math.floor(seconds / 60)
   return `${minutes}m ${seconds % 60}s`
