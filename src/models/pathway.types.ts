@@ -120,10 +120,10 @@ export const PathwayExecutionSchema = z.object({
   id: z.number(),
   status: PathwayExecutionStatusSchema,
   sourceKey: z.string(),
-  hashCode: z.union([z.string(), z.number()]).optional(),
+  hashCode: z.union([z.string(), z.number()]).nullable().optional(),
   executionDate: z.union([z.string(), z.number()]).optional(),
   startTime: z.union([z.string(), z.number()]).optional(),
-  endTime: z.union([z.string(), z.number()]).optional(),
+  endTime: z.union([z.string(), z.number()]).nullable().optional(),
   duration: z.number().optional(),
   exitMessage: z.string().optional(),
 })

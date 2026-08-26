@@ -221,7 +221,7 @@ export interface CharacterizationExecution {
   hashCode?: string | number | null
   status: GenerationStatus
   startTime?: number
-  endTime?: number
+  endTime?: number | null
   duration?: number
   executionStatus?: GenerationStatus
   sourceKey: string
@@ -237,7 +237,7 @@ export const CharacterizationExecutionSchema = z
     hashCode: z.union([z.string(), z.number()]).nullable().optional(),
     status: GenerationStatusSchema,
     startTime: z.number().optional(),
-    endTime: z.number().optional(),
+    endTime: z.number().nullable().optional(),
     duration: z.number().optional(),
     executionStatus: GenerationStatusSchema.optional(),
     sourceKey: z.string(),
