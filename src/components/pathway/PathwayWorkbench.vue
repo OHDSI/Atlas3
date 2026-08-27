@@ -41,11 +41,13 @@
         v-if="pathwayId"
         :sources="runTableSources"
         :executions="runTableExecutions"
+        :selected-execution-id="selectedExecutionId ?? null"
         :loading="executionsLoading"
         :run-disabled="!canGenerate"
         :run-disabled-reason="runDisabledReason"
         @run="onRun"
         @cancel="onCancel"
+        @select-result="onHistorySelect"
         @show-history="onShowHistory"
       />
 
@@ -190,31 +192,21 @@ import type {
   RunTableExecution,
 } from '@/components/generation/DataSourceRunTable.vue'
 import type { PathwayExecution } from '@/models/pathway.types'
-
-const PALETTE_20 = [
-  '#1f77b4',
-  '#ff7f0e',
-  '#2ca02c',
-  '#d62728',
-  '#9467bd',
-  '#8c564b',
-  '#e377c2',
-  '#7f7f7f',
-  '#bcbd22',
-  '#17becf',
-  '#aec7e8',
-  '#ffbb78',
-  '#98df8a',
-  '#ff9896',
-  '#c5b0d5',
-  '#c49c94',
-  '#f7b6d2',
-  '#c7c7c7',
-  '#dbdb8d',
-  '#9edae5',
-]
-
-const TERMINAL_STATUSES = new Set(['COMPLETED', 'FAILED', 'CANCELED'])
+import {
+  buildColorMap,
+  buildCoverageProps,
+  buildRunTableExecutions,
+  resolveActiveRunSummary,
+  resolveHistorySourceName,
+  resolveTargetCohortName,
+  resolveTargetGroup,
+} from './pathway-workbench-state'
+import {
+  cancelPathwayGeneration,
+  maybeFetchPathwaySources,
+  refreshPathwayExecutions,
+  runPathwayGeneration,
+} from './pathway-workbench-actions'
 
 const props = defineProps<{
   pathwayId: number | null
@@ -256,43 +248,22 @@ const runDisabledReason = tv(
   'Save the design before generating'
 )
 
-const targetGroup = computed(() => results.value?.pathwayGroups[0] ?? null)
+const targetGroup = computed(() => resolveTargetGroup(results.value))
 
-const targetCohortName = computed(() => {
-  if (!design.value || !targetGroup.value) return ''
-  return (
-    design.value.targetCohorts.find(c => c.id === targetGroup.value!.targetCohortId)?.name ?? ''
-  )
-})
+const targetCohortName = computed(() => resolveTargetCohortName({
+  design: design.value,
+  targetGroup: targetGroup.value,
+}))
 
-const colorMap = computed(() => {
-  const map = new Map<string, string>()
-  const singleCodes = (results.value?.eventCodes ?? [])
-    .filter(ec => !ec.isCombo)
-    .sort((a, b) => a.code - b.code)
-  if (singleCodes.length > 0) {
-    singleCodes.forEach((ec, i) => {
-      map.set(String(ec.code), PALETTE_20[i % PALETTE_20.length] ?? '#cccccc')
-    })
-  } else if (design.value) {
-    design.value.eventCohorts.forEach((cohort, i) => {
-      const bit = cohort.code != null ? (1 << cohort.code) : (1 << i)
-      map.set(String(bit), PALETTE_20[i % PALETTE_20.length] ?? '#cccccc')
-    })
-  }
-  return map
-})
+const colorMap = computed(() => buildColorMap({
+  results: results.value,
+  design: design.value,
+}))
 const colors = (key: string): string => colorMap.value.get(key) ?? '#ccc'
 
-const activeRunSummary = computed(() => {
-  if (!props.selectedExecutionId) return null
-  return { id: props.selectedExecutionId, sourceKey: '—', age: undefined }
-})
+const activeRunSummary = computed(() => resolveActiveRunSummary(props.selectedExecutionId))
 
-const coverageProps = computed(() => ({
-  totalPathwaysCount: targetGroup.value?.totalPathwaysCount ?? 0,
-  targetCohortCount: targetGroup.value?.targetCohortCount ?? 0,
-}))
+const coverageProps = computed(() => buildCoverageProps(targetGroup.value))
 
 const pathStats = computed(() => {
   if (!design.value || !results.value || !targetGroup.value) return null
@@ -308,84 +279,44 @@ const runTableSources = computed<RunTableSource[]>(() =>
   dsStore.sources.map(s => ({ sourceKey: s.sourceKey, sourceName: s.sourceName }))
 )
 
-function toMs(v: string | number | undefined): number | undefined {
-  if (v === undefined) return undefined
-  if (typeof v === 'number') return v
-  const n = Date.parse(v)
-  return Number.isNaN(n) ? undefined : n
-}
+const runTableExecutions = computed<RunTableExecution[]>(() => buildRunTableExecutions({
+  executions: executions.value,
+  liveExecution: generation.value?.execution.value ?? null,
+}))
 
-const runTableExecutions = computed<RunTableExecution[]>(() => {
-  const rows: RunTableExecution[] = executions.value.map(e => {
-    const start = toMs(e.startTime) ?? toMs(e.executionDate)
-    const end = toMs(e.endTime)
-    return {
-      id: e.id,
-      sourceKey: e.sourceKey,
-      status: e.status,
-      startTime: start,
-      endTime: end,
-      duration: e.duration,
-    }
-  })
-
-  const live = generation.value?.execution.value
-  if (live && !TERMINAL_STATUSES.has(live.status)) {
-    const idx = rows.findIndex(r => r.sourceKey === live.sourceKey)
-    const liveRow: RunTableExecution = {
-      id: live.id,
-      sourceKey: live.sourceKey,
-      status: live.status,
-      startTime: toMs(live.startTime) ?? toMs(live.executionDate),
-    }
-    if (idx >= 0) rows[idx] = liveRow
-    else rows.unshift(liveRow)
-  }
-
-  return rows
-})
-
-const historySourceName = computed(() => {
-  const match = dsStore.sources.find(s => s.sourceKey === historySourceKey.value)
-  return match?.sourceName ?? historySourceKey.value
-})
+const historySourceName = computed(() => resolveHistorySourceName({
+  sourceKey: historySourceKey.value,
+  sources: dsStore.sources,
+}))
 
 async function refreshExecutions() {
-  if (!props.pathwayId) {
-    executions.value = []
-    return
-  }
-  executionsLoading.value = true
-  try {
-    const r = await listPathwayExecutions(props.pathwayId)
-    if (r.success) {
-      executions.value = r.data
-      if (!props.selectedExecutionId) {
-        const latestCompleted = r.data.find(e => e.status === 'COMPLETED')
-        if (latestCompleted) emit('execution:select', latestCompleted.id)
-      }
-    } else {
-      logger.error('PathwayWorkbench', 'listPathwayExecutions failed', r.error)
-    }
-  } finally {
-    executionsLoading.value = false
-  }
+  await refreshPathwayExecutions({
+    pathwayId: props.pathwayId,
+    selectedExecutionId: props.selectedExecutionId,
+    listExecutions: listPathwayExecutions,
+    onExecutions: value => { executions.value = value },
+    onLoading: value => { executionsLoading.value = value },
+    onSelectExecution: id => emit('execution:select', id),
+    logError: (message, error) => logger.error('PathwayWorkbench', message, error),
+  })
 }
 
 async function onRun(sourceKey: string) {
-  const gen = generation.value
-  if (!gen) return
-  const ok = await gen.start(sourceKey)
-  if (!ok) logger.error('PathwayWorkbench', 'start failed', gen.error.value)
-  await refreshExecutions()
+  await runPathwayGeneration({
+    generation: generation.value,
+    sourceKey,
+    refreshExecutions,
+    logError: (message, error) => logger.error('PathwayWorkbench', message, error),
+  })
 }
 
 async function onCancel(sourceKey: string) {
-  const gen = generation.value
-  if (!gen) return
-  const ok = await gen.cancel(sourceKey)
-  if (!ok) logger.error('PathwayWorkbench', 'cancel failed', gen.error.value)
-  await refreshExecutions()
+  await cancelPathwayGeneration({
+    generation: generation.value,
+    sourceKey,
+    refreshExecutions,
+    logError: (message, error) => logger.error('PathwayWorkbench', message, error),
+  })
 }
 
 function onShowHistory(sourceKey: string) {
@@ -393,8 +324,10 @@ function onShowHistory(sourceKey: string) {
   historyOpen.value = true
 }
 
-function onHistorySelect(id: number | string) {
-  if (typeof id === 'number') emit('execution:select', id)
+function onHistorySelect(id: number | string | undefined) {
+  if (id == null) return
+  const numericId = typeof id === 'number' ? id : Number(id)
+  if (Number.isFinite(numericId)) emit('execution:select', numericId)
   historyOpen.value = false
 }
 
@@ -450,9 +383,11 @@ watch(
 onBeforeUnmount(stopAgentPolling)
 
 onMounted(async () => {
-  if (dsStore.sources.length === 0 && !dsStore.isLoading) {
-    await dsStore.fetchDataSources()
-  }
+  await maybeFetchPathwaySources({
+    sourceCount: dsStore.sources.length,
+    isLoading: dsStore.isLoading,
+    fetchDataSources: () => dsStore.fetchDataSources(),
+  })
 })
 
 onBeforeUnmount(() => {

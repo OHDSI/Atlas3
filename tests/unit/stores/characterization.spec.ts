@@ -527,6 +527,24 @@ describe('Characterization Store', () => {
         await vi.advanceTimersByTimeAsync(10000)
         expect(vi.mocked(getCharacterizationExecution).mock.calls.length).toBe(callsBefore)
       })
+
+      it('dispose clears all pollers and stops future ticks', async () => {
+        const store = useCharacterizationStore()
+        vi.mocked(getCharacterizationExecution).mockResolvedValue(
+          success({ ...baseExec, id: 500, status: 'RUNNING' })
+        )
+
+        store.pollExecution(500)
+        await vi.advanceTimersByTimeAsync(0)
+        expect(store.pollingHandles.has(500)).toBe(true)
+
+        store.dispose()
+        expect(store.pollingHandles.has(500)).toBe(false)
+
+        const callsBefore = vi.mocked(getCharacterizationExecution).mock.calls.length
+        await vi.advanceTimersByTimeAsync(10000)
+        expect(vi.mocked(getCharacterizationExecution).mock.calls.length).toBe(callsBefore)
+      })
     })
   })
 })

@@ -245,4 +245,31 @@ describe('PathwayWorkbench', () => {
     await w.findComponent({ name: 'PreviousRunsDialog' }).vm.$emit('select', 11)
     expect(w.emitted('execution:select')?.at(-1)).toEqual([11])
   })
+
+  it('selects a pathway result from the main run table eye', async () => {
+    const store = usePathwayStore()
+    store.createNewPathway()
+    if (store.currentPathway) store.currentPathway.id = 1
+    composableMocks.design.value = store.currentPathway
+    composableMocks.results.value = {
+      pathwayGroups: [{ targetCohortId: 5, totalPathwaysCount: 10, targetCohortCount: 4 }],
+      eventCodes: [],
+    }
+    vi.mocked(listPathwayExecutions).mockResolvedValue({
+      success: true,
+      data: [{ id: 11, sourceKey: 's1', status: 'COMPLETED', executionDate: Date.now() }],
+    } as never)
+
+    const w = mount(PathwayWorkbench, {
+      props: { pathwayId: 1, selectedExecutionId: 11 },
+      global: { plugins: [vuetify], stubs: stubChildren },
+    })
+    await flushPromises()
+
+    const runTable = w.findComponent({ name: 'DataSourceRunTable' })
+    await runTable.vm.$emit('select-result', 11)
+    await flushPromises()
+
+    expect(w.emitted('execution:select')?.at(-1)).toEqual([11])
+  })
 })

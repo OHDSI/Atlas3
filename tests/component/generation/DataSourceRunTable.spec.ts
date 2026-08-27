@@ -45,6 +45,7 @@ function mountTable(props: Partial<{
   runDisabled: boolean
   runDisabledReason: string
   noSourcesText: string
+  selectedExecutionId: number | string | null
 }> = {}) {
   const pinia = createPinia()
   setActivePinia(pinia)
@@ -60,6 +61,7 @@ function mountTable(props: Partial<{
     props: {
       sources: SOURCES,
       executions: [],
+      selectedExecutionId: null,
       ...props,
     },
   })
@@ -98,6 +100,14 @@ describe('DataSourceRunTable', () => {
     const w = mountTable()
     await w.find('[data-testid="run-btn-MDCD"]').trigger('click')
     expect(w.emitted('run')?.[0]).toEqual(['MDCD'])
+  })
+
+  it('emits select-result when the main-view eye is clicked', async () => {
+    const w = mountTable({
+      executions: [exec({ id: 11, sourceKey: 'CCAE', status: 'COMPLETED' })],
+    })
+    await w.find('[data-testid="view-latest-btn-CCAE"]').trigger('click')
+    expect(w.emitted('select-result')?.[0]).toEqual([11])
   })
 
   it('disables history icon when no executions for a source and emits show-history when clicked', async () => {

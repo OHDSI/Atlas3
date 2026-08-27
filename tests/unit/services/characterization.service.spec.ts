@@ -126,6 +126,28 @@ describe('services/characterization.service', () => {
       }
     })
 
+      it('accepts a running execution with null endTime and hashCode', async () => {
+        ok({
+          id: 290,
+          status: 'STARTED',
+          sourceKey: 'sample',
+          hashCode: null,
+          startTime: 1787763349585,
+          endTime: null,
+          exitMessage: '',
+        })
+
+        const result = await getCharacterizationExecution(290)
+
+        expect(result.success).toBe(true)
+        if (result.success) {
+          expect(result.data.id).toBe(290)
+          expect(result.data.endTime).toBeNull()
+        } else {
+          expect.fail(`expected success, got ${result.error.message}`)
+        }
+      })
+
     it('does not import the webapi barrel', async () => {
       const source = await import('node:fs').then(fs =>
         fs.readFileSync('src/services/characterization.service.ts', 'utf8')

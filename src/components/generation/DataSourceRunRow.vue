@@ -32,7 +32,28 @@
       {{ primaryLabel }}
     </AtlasButton>
 
+    <AtlasTooltip
+      v-if="canViewLatestResult"
+      location="top"
+    >
+      <template #activator="{ props: tipProps }">
+        <span v-bind="tipProps">
+          <AtlasIconButton
+            :icon="latestResultIcon"
+            v-bind="{ ariaLabel: viewLatestLabel }"
+            variant="text"
+            size="sm"
+            :tone="isActiveLatestResult ? 'primary' : 'neutral'"
+            :data-testid="`view-latest-btn-${sourceKey}`"
+            @click="$emit('select-result')"
+          />
+        </span>
+      </template>
+      <span>{{ viewLatestLabel }}</span>
+    </AtlasTooltip>
+
     <AtlasIconButton
+      v-if="!hideHistoryButton"
       icon="mdi-history"
       v-bind="{ ariaLabel: historyLabel }"
       variant="text"
@@ -43,7 +64,7 @@
       @click="$emit('show-history')"
     />
     <span
-      v-if="historyCount > 1"
+      v-if="!hideHistoryButton && historyCount > 1"
       class="dsrr-count"
       :data-testid="`history-count-${sourceKey}`"
     >{{ historyCount }}</span>
@@ -60,22 +81,29 @@ import type { GenerationStatus } from '@/models/characterization.types'
 interface Props {
   sourceKey: string
   latestStatus?: GenerationStatus
+  latestExecutionId?: number | string | null
+  selectedExecutionId?: number | string | null
   historyCount: number
   runDisabled?: boolean
   runDisabledReason?: string
   hideCancel?: boolean
+  hideHistoryButton?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   latestStatus: undefined,
+  latestExecutionId: null,
+  selectedExecutionId: null,
   runDisabled: false,
   runDisabledReason: '',
   hideCancel: false,
+  hideHistoryButton: false,
 })
 
 const emit = defineEmits<{
   run: []
   cancel: []
+  'select-result': []
   'show-history': []
 }>()
 
@@ -89,6 +117,13 @@ const isActive = computed(() =>
   props.latestStatus === 'RUNNING'
 )
 const isStopping = computed(() => props.latestStatus === 'STOPPING')
+const isActiveLatestResult = computed(() =>
+  props.selectedExecutionId != null &&
+  props.latestExecutionId != null &&
+  String(props.selectedExecutionId) === String(props.latestExecutionId)
+)
+const canViewLatestResult = computed(() => props.latestStatus === 'COMPLETED' && props.latestExecutionId != null)
+const latestResultIcon = computed(() => (isActiveLatestResult.value ? 'mdi-eye' : 'mdi-eye-outline'))
 
 const primaryLabel = computed(() => {
   if (isStopping.value) {
@@ -129,6 +164,7 @@ const disabledReason = computed(() => {
 
 const historyDisabled = computed(() => props.historyCount === 0)
 const historyLabel = tv('components.analysisExecution.previousRuns', 'Previous runs')
+const viewLatestLabel = tv('components.analysisExecution.viewResults', 'View results')
 
 function onPrimaryClick() {
   if (effectiveDisabled.value) return

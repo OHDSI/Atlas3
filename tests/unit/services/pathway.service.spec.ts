@@ -341,20 +341,51 @@ describe('services/pathway.service', () => {
 
   describe('pathway executions', () => {
     it('listPathwayExecutions GETs /pathway-analysis/:id/generation', async () => {
-      ok([])
+      ok([
+        {
+          id: 290,
+          status: 'STARTED',
+          sourceKey: 'sample',
+          hashCode: null,
+          startTime: 1787763349585,
+          endTime: null,
+          exitMessage: '',
+        },
+      ])
 
-      await listPathwayExecutions(1)
+      const result = await listPathwayExecutions(1)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+        expect(result.data[0].endTime).toBeNull()
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
 
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/pathway-analysis/1/generation')
     })
 
     it('getPathwayExecution GETs /pathway-analysis/generation/:gid', async () => {
-      ok({ id: 99, status: 'COMPLETED', sourceKey: 'cdm' })
+      ok({
+        id: 99,
+        status: 'STARTED',
+        sourceKey: 'cdm',
+        hashCode: null,
+        startTime: 1787763349585,
+        endTime: null,
+        exitMessage: '',
+      })
 
       const result = await getPathwayExecution(99)
 
       expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.endTime).toBeNull()
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/pathway-analysis/generation/99')
     })

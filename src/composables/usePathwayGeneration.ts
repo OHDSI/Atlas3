@@ -10,7 +10,6 @@ const TERMINAL = new Set(['COMPLETED', 'FAILED', 'CANCELED'])
 export function usePathwayGeneration(pathwayId: number) {
   const execution = ref<PathwayExecution | null>(null)
   const error = ref<string | null>(null)
-
   const poller = useExecutionPolling<PathwayExecution>({
     intervalMs: PATHWAY_GENERATION_POLL_MS,
     fetcher: async () => {
