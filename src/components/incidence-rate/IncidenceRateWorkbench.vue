@@ -272,8 +272,11 @@ watch(
   { immediate: true },
 )
 
-function onSelectRun(id: number) {
-  void router.replace({ query: { ...route.query, run: String(id) } })
+function onSelectRun(id: number | string | undefined) {
+  if (id == null) return
+  const numericId = typeof id === 'number' ? id : Number(id)
+  if (!Number.isFinite(numericId)) return
+  void router.replace({ query: { ...route.query, run: String(numericId) } })
 }
 
 onMounted(async () => {

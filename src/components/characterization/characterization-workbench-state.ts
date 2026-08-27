@@ -1,11 +1,10 @@
-import type { LinkedCohort } from '@/models/characterization.types'
-import type { PrevalenceStat } from '@/models/characterization-results.types'
+import type { DistributionStat, LinkedCohort, PrevalenceStat } from '@/models/characterization.types'
 
 export type EmptyVariant = 'no-runs' | 'run-pending' | 'run-failed' | null
 
 export function resolveCohorts(input: {
   prevalence: PrevalenceStat[]
-  distribution: PrevalenceStat[]
+  distribution: DistributionStat[]
   fallbackCohorts: LinkedCohort[]
 }): LinkedCohort[] {
   const map = new Map<number, LinkedCohort>()
@@ -20,7 +19,7 @@ export function resolveHasStrata(input: { stratasLength: number; stratifiedBy: s
 
 export function resolveAvailableDomains(input: {
   prevalence: PrevalenceStat[]
-  distribution: PrevalenceStat[]
+  distribution: DistributionStat[]
 }): string[] {
   const set = new Set<string>()
   for (const row of input.prevalence) if (row.domainId) set.add(row.domainId)
@@ -30,7 +29,7 @@ export function resolveAvailableDomains(input: {
 
 export function resolveAvailableCohortsForFilter(input: {
   prevalence: PrevalenceStat[]
-  distribution: PrevalenceStat[]
+  distribution: DistributionStat[]
 }): LinkedCohort[] {
   const map = new Map<number, LinkedCohort>()
   for (const row of input.prevalence) for (const cohort of row.cohorts) if (!map.has(cohort.id)) map.set(cohort.id, cohort)

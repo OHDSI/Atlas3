@@ -3,7 +3,7 @@ import type { PathwayExecution } from '@/models/pathway.types'
 export async function refreshPathwayExecutions(input: {
   pathwayId: number | null | undefined
   selectedExecutionId: number | null | undefined
-  listExecutions: (pathwayId: number) => Promise<{ success: boolean; data: PathwayExecution[]; error?: unknown }>
+  listExecutions: (pathwayId: number) => Promise<{ success: boolean; data?: PathwayExecution[]; error?: unknown }>
   onExecutions: (executions: PathwayExecution[]) => void
   onLoading: (loading: boolean) => void
   onSelectExecution: (id: number) => void
@@ -16,7 +16,7 @@ export async function refreshPathwayExecutions(input: {
   input.onLoading(true)
   try {
     const result = await input.listExecutions(input.pathwayId)
-    if (result.success) {
+    if (result.success && Array.isArray(result.data)) {
       input.onExecutions(result.data)
       if (!input.selectedExecutionId) {
         const latestCompleted = result.data.find(execution => execution.status === 'COMPLETED')

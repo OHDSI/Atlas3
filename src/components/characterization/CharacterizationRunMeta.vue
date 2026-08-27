@@ -71,12 +71,12 @@ const props = defineProps<{
 
 const { tv } = useI18n()
 
-function formatTime(value: number | undefined): string {
+function formatTime(value: number | null | undefined): string {
   if (typeof value !== 'number' || value <= 0) return '—'
   return formatDateTime(value)
 }
 
-function effectiveDuration(startTime: number | undefined, endTime: number | undefined, duration: number | undefined): number | undefined {
+function effectiveDuration(startTime: number | null | undefined, endTime: number | null | undefined, duration: number | null | undefined): number | undefined {
   if (typeof duration === 'number' && duration > 0) return duration
   if (typeof startTime === 'number' && typeof endTime === 'number') {
     return Math.max(0, endTime - startTime)

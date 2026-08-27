@@ -324,8 +324,10 @@ function onShowHistory(sourceKey: string) {
   historyOpen.value = true
 }
 
-function onHistorySelect(id: number | string) {
-  if (typeof id === 'number') emit('execution:select', id)
+function onHistorySelect(id: number | string | undefined) {
+  if (id == null) return
+  const numericId = typeof id === 'number' ? id : Number(id)
+  if (Number.isFinite(numericId)) emit('execution:select', numericId)
   historyOpen.value = false
 }
 

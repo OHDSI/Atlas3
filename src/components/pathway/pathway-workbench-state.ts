@@ -1,6 +1,5 @@
-import type { PathwayExecution } from '@/models/pathway.types'
+import type { Pathway, PathwayExecution, PathwayResults } from '@/models/pathway.types'
 import type { RunTableExecution } from '@/components/generation/DataSourceRunTable.vue'
-import type { PathwayDesign, PathwayResults } from '@/models/pathway-results.types'
 
 const PALETTE_20 = [
   '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
@@ -9,40 +8,41 @@ const PALETTE_20 = [
   '#c49c94', '#f7b6d2', '#c7c7c7', '#dbdb8d', '#9edae5',
 ]
 
-export function resolveTargetGroup(results: PathwayResults | null | undefined) {
+export function resolveTargetGroup(results: PathwayResults | null | undefined): PathwayResults['pathwayGroups'][number] | null {
   return results?.pathwayGroups[0] ?? null
 }
 
 export function resolveTargetCohortName(input: {
-  design: PathwayDesign | null | undefined
+  design: Pathway | null | undefined
   targetGroup: { targetCohortId: number } | null
 }): string {
-  if (!input.design || !input.targetGroup) return ''
-  return input.design.targetCohorts.find(c => c.id === input.targetGroup.targetCohortId)?.name ?? ''
+  const targetGroup = input.targetGroup
+  if (!input.design || !targetGroup) return ''
+  return input.design.targetCohorts.find(cohort => cohort.id === targetGroup.targetCohortId)?.name ?? ''
 }
 
 export function buildColorMap(input: {
   results: PathwayResults | null | undefined
-  design: PathwayDesign | null | undefined
+  design: Pathway | null | undefined
 }): Map<string, string> {
   const map = new Map<string, string>()
   const singleCodes = (input.results?.eventCodes ?? [])
-    .filter(ec => !ec.isCombo)
+    .filter(eventCode => !eventCode.isCombo)
     .sort((a, b) => a.code - b.code)
   if (singleCodes.length > 0) {
-    singleCodes.forEach((ec, i) => {
-      map.set(String(ec.code), PALETTE_20[i % PALETTE_20.length] ?? '#cccccc')
+    singleCodes.forEach((eventCode, index) => {
+      map.set(String(eventCode.code), PALETTE_20[index % PALETTE_20.length] ?? '#cccccc')
     })
   } else if (input.design) {
-    input.design.eventCohorts.forEach((cohort, i) => {
-      const bit = cohort.code != null ? (1 << cohort.code) : (1 << i)
-      map.set(String(bit), PALETTE_20[i % PALETTE_20.length] ?? '#cccccc')
+    input.design.eventCohorts.forEach((cohort, index) => {
+      const bit = cohort.code != null ? (1 << cohort.code) : (1 << index)
+      map.set(String(bit), PALETTE_20[index % PALETTE_20.length] ?? '#cccccc')
     })
   }
   return map
 }
 
-export function resolveActiveRunSummary(selectedExecutionId: number | null | undefined) {
+export function resolveActiveRunSummary(selectedExecutionId: number | null | undefined): { id: number; sourceKey: string; age?: string } | null {
   if (!selectedExecutionId) return null
   return { id: selectedExecutionId, sourceKey: '—', age: undefined }
 }
@@ -54,8 +54,8 @@ export function buildCoverageProps(targetGroup: { totalPathwaysCount: number; ta
   }
 }
 
-function toMs(v: string | number | undefined): number | undefined {
-  if (v === undefined) return undefined
+function toMs(v: string | number | null | undefined): number | undefined {
+  if (v == null) return undefined
   if (typeof v === 'number') return v
   const parsed = Date.parse(v)
   return Number.isNaN(parsed) ? undefined : parsed

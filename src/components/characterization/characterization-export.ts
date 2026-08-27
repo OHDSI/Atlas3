@@ -1,13 +1,17 @@
 import { arrayToCsv, downloadCsv } from '@/utils/csv'
 import { buildTable1 } from '@/utils/characterization-table1'
-import type { CharacterizationDefinition } from '@/models/characterization.types'
-import type { PrevalenceStat } from '@/models/characterization-results.types'
+import type {
+  CharacterizationDefinition,
+  DistributionStat,
+  PrevalenceStat,
+  Table1Config,
+} from '@/models/characterization.types'
 
 export function exportCharacterizationResults(input: {
   prevalence: PrevalenceStat[]
-  distribution: PrevalenceStat[]
+  distribution: DistributionStat[]
   cohorts: CharacterizationDefinition['cohorts']
-  config: { showStdDiffCI: boolean }
+  config: Table1Config
   filters: {
     threshold: number
     selectedAnalysisIds: number[]

@@ -116,7 +116,7 @@ const emit = defineEmits<{
 
 const { tv } = useI18n()
 
-function formatTime(value: number | undefined): string {
+function formatTime(value: number | null | undefined): string {
   if (typeof value !== 'number' || value <= 0) {
     return '—'
   }

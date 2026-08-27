@@ -1,6 +1,14 @@
 import { arrayToCsv, downloadCsv } from '@/utils/csv'
 import type { GenerationStatus } from '@/models/characterization.types'
 import type { RunTableExecution, RunTableSource } from '@/components/generation/DataSourceRunTable.vue'
+import type { IncidenceRateExecutionSummary } from '@/stores/incidence-rate'
+
+function toMs(value: string | number | null | undefined): number | undefined {
+  if (value == null) return undefined
+  if (typeof value === 'number') return value
+  const parsed = Date.parse(value)
+  return Number.isNaN(parsed) ? undefined : parsed
+}
 
 export function resolveSelectedExecutionId(runQuery: unknown): number | null {
   if (typeof runQuery === 'string') {
@@ -23,13 +31,15 @@ export function buildRunTableExecutions(input: Array<{
   sourceKey: string
   status: string
   startTime?: string | number | null
+  endTime?: string | number | null
   duration?: number | null
 }>): RunTableExecution[] {
   return input.map(execution => ({
     id: execution.id,
     sourceKey: execution.sourceKey,
     status: mapStatus(execution.status),
-    startTime: execution.startTime ?? undefined,
+    startTime: toMs(execution.startTime),
+    endTime: toMs(execution.endTime),
     duration: execution.duration ?? undefined,
   }))
 }
@@ -56,15 +66,15 @@ export function resolveHistorySourceName(input: {
 
 export function resolveActiveRun(input: {
   selectedExecutionId: number | null
-  executionById: (id: number) => { sourceKey: string; status: string; message?: string } | null
-}): { sourceKey: string; status: string; message?: string } | null {
+  executionById: (id: number) => IncidenceRateExecutionSummary | null
+}): IncidenceRateExecutionSummary | null {
   return input.selectedExecutionId === null ? null : input.executionById(input.selectedExecutionId)
 }
 
 export function resolveEmptyVariant(input: {
   currentIRId: number | null | undefined
   selectedExecutionId: number | null
-  activeRun: { status: string } | null
+  activeRun: IncidenceRateExecutionSummary | null
   selectedTargetId: number | null
   selectedOutcomeId: number | null
   terminalStatuses: Set<string>
