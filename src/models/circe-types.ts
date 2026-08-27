@@ -691,3 +691,31 @@ export const CohortExpressionSchema = z.object({
 })
 export type CohortExpression = z.infer<typeof CohortExpressionSchema>
 
+/** Blank expression a new cohort builder starts from. Callers should clone this, not reuse the instance. */
+export const defaultExpression: CohortExpression = {
+  ConceptSets: [],
+  PrimaryCriteria: {
+    CriteriaList: [],
+    ObservationWindow: {
+      PriorDays: 0,
+      PostDays: 0,
+    },
+    PrimaryCriteriaLimit: {
+      Type: 'First',
+    },
+  },
+  QualifiedLimit: {
+    Type: 'First',
+  },
+  ExpressionLimit: {
+    Type: 'First',
+  },
+  InclusionRules: [],
+  CensoringCriteria: [],
+  CollapseSettings: {
+    CollapseType: 'ERA',
+    EraPad: 0,
+  },
+  CensorWindow: {},
+}
+
