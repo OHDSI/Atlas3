@@ -68,12 +68,16 @@
         <DataSourceRunRow
           :source-key="(item as Row).sourceKey"
           :latest-status="(item as Row).latestStatus"
+          :latest-execution-id="(item as Row).latestExecutionId"
+          :selected-execution-id="selectedExecutionId"
           :history-count="(item as Row).count"
           :run-disabled="runDisabled"
           :run-disabled-reason="runDisabledReason"
           :hide-cancel="hideCancel"
+          :hide-history-button="hideHistoryButton"
           @run="$emit('run', (item as Row).sourceKey)"
           @cancel="$emit('cancel', (item as Row).sourceKey)"
+          @select-result="$emit('select-result', (item as Row).latestExecutionId)"
           @show-history="$emit('show-history', (item as Row).sourceKey)"
         />
         <AtlasButton
@@ -133,6 +137,8 @@ interface Props {
   showPatientCount?: boolean
   extraActions?: ExtraAction[]
   hideCancel?: boolean
+  hideHistoryButton?: boolean
+  selectedExecutionId?: number | string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -143,11 +149,14 @@ const props = withDefaults(defineProps<Props>(), {
   showPatientCount: false,
   extraActions: () => [],
   hideCancel: false,
+  hideHistoryButton: false,
+  selectedExecutionId: null,
 })
 
 const emit = defineEmits<{
   run: [sourceKey: string]
   cancel: [sourceKey: string]
+  'select-result': [executionId: number | string | undefined]
   'show-history': [sourceKey: string]
   'extra-action': [actionKey: string, sourceKey: string]
 }>()
@@ -245,6 +254,7 @@ interface Row {
   sourceKey: string
   sourceName: string
   showKey: boolean
+  latestExecutionId?: number | string
   latestStatus?: GenerationStatus
   statusLabel: string
   statusTone: AtlasChipTone
@@ -302,6 +312,7 @@ const rows = computed<Row[]>(() =>
       sourceKey: s.sourceKey,
       sourceName: s.sourceName || s.sourceKey,
       showKey: !!(s.sourceName && s.sourceName !== s.sourceKey),
+      latestExecutionId: latest?.id,
       latestStatus: status,
       statusLabel: status ?? '',
       statusTone: status ? STATUS_TONE[status] : 'neutral',

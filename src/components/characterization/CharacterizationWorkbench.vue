@@ -30,12 +30,14 @@
       <DataSourceRunTable
         :sources="runTableSources"
         :executions="runTableExecutions"
+        :selected-execution-id="selectedExecutionId"
         :loading="store.executionsLoading"
         :run-disabled="runDisabled"
         :run-disabled-reason="runDisabledReason"
         data-testid="char-workbench-run-table"
         @run="handleRun"
         @cancel="handleCancel"
+        @select-result="onSelectHistoryExecution"
         @show-history="handleShowHistory"
       />
 
@@ -134,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import CharacterizationDesignRail from './CharacterizationDesignRail.vue'
@@ -171,8 +173,18 @@ import {
 } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
-import { arrayToCsv, downloadCsv } from '@/utils/csv'
-import { buildTable1 } from '@/utils/characterization-table1'
+import { exportCharacterizationResults } from './characterization-export'
+import {
+  resolveActiveRunSummary,
+  resolveAvailableCohortsForFilter,
+  resolveAvailableDomains,
+  resolveCohorts,
+  resolveEmptyVariant,
+  resolveHasStrata,
+  resolveHistorySourceName,
+  resolveRunDisabledReason,
+  resolveSelectedExecutionId,
+} from './characterization-workbench-state'
 
 import type { ViewMode } from './CharacterizationCanvasToolbar.vue'
 
@@ -207,18 +219,44 @@ const errorMessage = ref<string>('')
 const historyOpen = ref<boolean>(false)
 const historySourceKey = ref<string | null>(null)
 
-const cohorts = computed<LinkedCohort[]>(() => {
-  const map = new Map<number, LinkedCohort>()
-  for (const r of prevalence.value) for (const c of r.cohorts) if (!map.has(c.id)) map.set(c.id, c)
-  for (const r of distribution.value) for (const c of r.cohorts) if (!map.has(c.id)) map.set(c.id, c)
-  if (map.size > 0) return Array.from(map.values())
-  return props.modelValue.cohorts
-})
+async function refreshExecutions(characterizationId: number): Promise<void> {
+  await store.loadExecutions(characterizationId)
+  seedRunningExecutions()
+  await selectDefaultExecution()
+}
 
-const hasStrata = computed<boolean>(() =>
-  props.modelValue.stratas.length > 0
-  || (props.modelValue.stratifiedBy ?? '').trim().length > 0
-)
+async function selectDefaultExecution(): Promise<void> {
+  if (selectedExecutionId.value !== null) return
+  const selectable =
+    store.executions.find(e => e.status === 'COMPLETED') ??
+    store.executions.find(e => e.status === 'FAILED')
+  if (selectable) {
+    await router.replace({ query: { ...route.query, run: String(selectable.id) } })
+  }
+}
+
+function seedRunningExecutions(): void {
+  for (const execution of store.executions) {
+    if (!isTerminalStatus(execution.status)) {
+      store.pollExecution(execution.id, () => {
+        if (props.characterizationId != null) {
+          void refreshExecutions(props.characterizationId)
+        }
+      })
+    }
+  }
+}
+
+const cohorts = computed<LinkedCohort[]>(() => resolveCohorts({
+  prevalence: prevalence.value,
+  distribution: distribution.value,
+  fallbackCohorts: props.modelValue.cohorts,
+}))
+
+const hasStrata = computed<boolean>(() => resolveHasStrata({
+  stratasLength: props.modelValue.stratas.length,
+  stratifiedBy: props.modelValue.stratifiedBy,
+}))
 
 const availableAnalyses = computed<{ id: number; name: string }[]>(() => {
   const map = new Map<number, string>()
@@ -227,46 +265,29 @@ const availableAnalyses = computed<{ id: number; name: string }[]>(() => {
   return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
 })
 
-const availableDomains = computed<string[]>(() => {
-  const set = new Set<string>()
-  for (const r of prevalence.value) if (r.domainId) set.add(r.domainId)
-  for (const r of distribution.value) if (r.domainId) set.add(r.domainId)
-  return Array.from(set).sort()
-})
+const availableDomains = computed<string[]>(() => resolveAvailableDomains({
+  prevalence: prevalence.value,
+  distribution: distribution.value,
+}))
 
-const availableCohortsForFilter = computed<LinkedCohort[]>(() => {
-  const map = new Map<number, LinkedCohort>()
-  for (const r of prevalence.value) for (const c of r.cohorts) if (!map.has(c.id)) map.set(c.id, c)
-  for (const r of distribution.value) for (const c of r.cohorts) if (!map.has(c.id)) map.set(c.id, c)
-  return Array.from(map.values())
-})
+const availableCohortsForFilter = computed<LinkedCohort[]>(() => resolveAvailableCohortsForFilter({
+  prevalence: prevalence.value,
+  distribution: distribution.value,
+}))
 
-const selectedExecutionId = computed<number | null>(() => {
-  const q = route.query?.run
-  if (typeof q === 'string') {
-    const n = Number(q)
-    return Number.isFinite(n) ? n : null
-  }
-  return null
-})
+const selectedExecutionId = computed<number | null>(() => resolveSelectedExecutionId(route.query?.run))
 
-const activeRunSummary = computed(() => {
-  if (!execution.value) return null
-  return {
-    id: execution.value.id,
-    sourceKey: execution.value.sourceKey,
-    personCount: resultCount.value || undefined,
-  }
-})
+const activeRunSummary = computed(() => resolveActiveRunSummary({
+  execution: execution.value,
+  resultCount: resultCount.value,
+}))
 
-const emptyVariant = computed<'no-runs' | 'run-pending' | 'run-failed' | null>(() => {
-  if (!props.characterizationId) return null
-  if (store.executions.length === 0) return 'no-runs'
-  if (selectedExecutionId.value === null) return null
-  if (execution.value && !isTerminalStatus(execution.value.status)) return 'run-pending'
-  if (execution.value?.status === 'FAILED') return 'run-failed'
-  return null
-})
+const emptyVariant = computed(() => resolveEmptyVariant({
+  characterizationId: props.characterizationId,
+  executionCount: store.executions.length,
+  selectedExecutionId: selectedExecutionId.value,
+  executionStatus: execution.value?.status,
+}))
 
 const runTableSources = computed<RunTableSource[]>(() =>
   sourcesStore.sources.map((s) => ({
@@ -281,53 +302,37 @@ const runTableExecutions = computed<RunTableExecution[]>(() =>
     sourceKey: e.sourceKey,
     status: e.status,
     startTime: e.startTime,
-    endTime: e.endTime,
+    endTime: e.endTime ?? undefined,
     duration: e.duration,
   }))
 )
 
 const runDisabled = computed<boolean>(() => props.characterizationId == null || store.isDirty)
 
-const runDisabledReason = computed<string>(() => {
-  if (props.characterizationId == null) {
-    return tv(
-      'characterizations.editor.executions.runDisabledNoId',
-      'Save the characterization before running.'
-    )
-  }
-  if (store.isDirty) {
-    return tv('const.disabledReason.dirty', 'Save your changes before running.')
-  }
-  return ''
-})
+const runDisabledReason = computed<string>(() => resolveRunDisabledReason({
+  characterizationId: props.characterizationId,
+  isDirty: store.isDirty,
+  translate: tv,
+}))
 
-const historySourceName = computed<string>(() => {
-  if (!historySourceKey.value) return ''
-  const found = sourcesStore.sources.find(s => s.sourceKey === historySourceKey.value)
-  return found?.sourceName ?? historySourceKey.value
-})
+const historySourceName = computed<string>(() => resolveHistorySourceName({
+  historySourceKey: historySourceKey.value,
+  sources: sourcesStore.sources,
+}))
 
 watch(
   () => props.characterizationId,
   async (id, prev) => {
+    if (prev !== undefined && prev !== id) {
+      store.dispose()
+    }
     if (id == null) return
     if (prev !== undefined && prev !== id && route.query.run !== undefined) {
       const { run: _run, ...rest } = route.query
       void _run
       await router.replace({ query: rest })
     }
-    await store.loadExecutions(id)
-    if (selectedExecutionId.value === null) {
-      // Prefer a run with results, but fall back to a failed one rather than
-      // selecting nothing: with only failed runs the workbench would sit on
-      // its empty state and never report that the generation failed.
-      const selectable =
-        store.executions.find(e => e.status === 'COMPLETED') ??
-        store.executions.find(e => e.status === 'FAILED')
-      if (selectable) {
-        await router.replace({ query: { ...route.query, run: String(selectable.id) } })
-      }
-    }
+    await refreshExecutions(id)
   },
   { immediate: true },
 )
@@ -379,6 +384,10 @@ onMounted(async () => {
   }
 })
 
+onBeforeUnmount(() => {
+  store.dispose()
+})
+
 async function handleRun(sourceKey: string): Promise<void> {
   if (props.characterizationId == null) return
   try {
@@ -410,7 +419,8 @@ function handleShowHistory(sourceKey: string): void {
   historyOpen.value = true
 }
 
-function onSelectHistoryExecution(id: number | string): void {
+function onSelectHistoryExecution(id: number | string | undefined): void {
+  if (id == null) return
   const numericId = typeof id === 'number' ? id : Number(id)
   if (!Number.isFinite(numericId)) return
   historyOpen.value = false
@@ -429,69 +439,15 @@ function onRunStarted(exec: CharacterizationExecution): void {
 function onExplore(row: PrevalenceStat): void { emit('explore', row) }
 
 function onExport(): void {
-  const built = buildTable1({
+  exportCharacterizationResults({
     prevalence: prevalence.value,
     distribution: distribution.value,
     cohorts: cohorts.value,
     config: config.value,
     filters: filters.value,
     cohortSizes: cohortSizes.value,
+    selectedExecutionId: selectedExecutionId.value,
   })
-  if (built.rows.length === 0) return
-
-  const headers: { key: string; label: string }[] = [
-    { key: 'kind', label: 'Type' },
-    { key: 'analysisId', label: 'Analysis ID' },
-    { key: 'analysisName', label: 'Analysis' },
-    { key: 'covariateId', label: 'Covariate ID' },
-    { key: 'covariateName', label: 'Covariate' },
-    { key: 'conceptId', label: 'Concept ID' },
-  ]
-  for (const col of built.columns) {
-    const colLabel = col.strataLabel
-      ? `${col.cohortName} · ${col.strataLabel}`
-      : col.cohortName
-    headers.push({ key: `${col.cohortKey}__primary`, label: `${colLabel} · primary` })
-    headers.push({ key: `${col.cohortKey}__secondary`, label: `${colLabel} · secondary` })
-  }
-  if (built.includeStdDiff) {
-    headers.push({ key: 'stdDiff', label: 'Std Diff' })
-  }
-
-  const rows: Array<Record<string, string | number | null>> = []
-  for (const row of built.rows) {
-    if (row.kind === 'group') continue
-    const out: Record<string, string | number | null> = {
-      kind: row.kind,
-      analysisId: row.analysisId,
-      analysisName: row.analysisName,
-      covariateId: row.covariateId,
-      covariateName: row.label,
-      conceptId: row.conceptId,
-    }
-    for (const col of built.columns) {
-      const cell = row.cells[col.cohortKey]
-      if (cell === null || cell === undefined) {
-        out[`${col.cohortKey}__primary`] = null
-        out[`${col.cohortKey}__secondary`] = null
-      } else if (row.kind === 'binary') {
-        out[`${col.cohortKey}__primary`] = (cell as { count: number }).count
-        out[`${col.cohortKey}__secondary`] = (cell as { pct: number }).pct
-      } else {
-        out[`${col.cohortKey}__primary`] = (cell as { primary: number }).primary
-        out[`${col.cohortKey}__secondary`] = (cell as { secondary: number }).secondary
-      }
-    }
-    if (built.includeStdDiff && row.kind === 'binary' && typeof row.stdDiff === 'number') {
-      out.stdDiff = row.stdDiff
-    } else {
-      out.stdDiff = null
-    }
-    rows.push(out)
-  }
-
-  const csv = arrayToCsv(rows, headers)
-  downloadCsv(`characterization-${selectedExecutionId.value ?? 'results'}.csv`, csv)
 }
 </script>
 

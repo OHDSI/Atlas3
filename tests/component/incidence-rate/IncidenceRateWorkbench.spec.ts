@@ -5,12 +5,19 @@ import { setActivePinia, createPinia } from 'pinia'
 import { vuetify, pristinePinia } from './_test-helpers'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
+import { generateIncidenceRate, cancelIncidenceRateGeneration } from '@/services/incidence-rate.service'
+
+const mockGenerate = vi.mocked(generateIncidenceRate)
+const mockCancel = vi.mocked(cancelIncidenceRateGeneration)
 
 vi.mock('@/services/incidence-rate.service', () => ({
   getIncidenceRateReport: vi.fn().mockResolvedValue({ success: true, data: null }),
   listIncidenceRateInfo: vi.fn().mockResolvedValue({ success: true, data: [] }),
-  generateIncidenceRate: vi.fn(),
-  cancelIncidenceRateGeneration: vi.fn(),
+  generateIncidenceRate: vi.fn().mockResolvedValue({
+    success: true,
+    data: { id: { analysisId: 42, sourceId: 7 }, status: 'PENDING' },
+  }),
+  cancelIncidenceRateGeneration: vi.fn().mockResolvedValue({ success: true }),
 }))
 
 
@@ -38,7 +45,10 @@ const stubs = [
 const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: { template: '<div/>' } }] })
 
 describe('IncidenceRateWorkbench', () => {
-  beforeEach(() => pristinePinia())
+  beforeEach(() => {
+    pristinePinia()
+    vi.clearAllMocks()
+  })
 
   function loadedStore() {
     const store = useIncidenceRateStore()
@@ -88,6 +98,142 @@ describe('IncidenceRateWorkbench', () => {
     })
     await flushPromises()
     expect(pushed).toMatchObject({ query: { run: '7' } })
+  })
+
+  it('routes the eye icon selection back to the run query', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = loadedStore()
+
+    store.setExecutionInfo('CCAE', {
+      executionInfo: { id: { analysisId: 42, sourceId: 7 }, status: 'COMPLETED', startTime: 100 },
+      summaryList: [],
+    })
+
+    const r = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: { template: '<div/>' } }],
+    })
+    const replaceSpy = vi.spyOn(r, 'replace')
+
+    const w = mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, r, pinia], stubs },
+    })
+    await flushPromises()
+
+    await w.findComponent({ name: 'DataSourceRunTable' }).vm.$emit('select-result', 7)
+
+    expect(replaceSpy).toHaveBeenCalledWith({ query: expect.objectContaining({ run: '7' }) })
+  })
+
+  it('runs the selected source when the table emits run', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    loadedStore()
+
+    const r = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: { template: '<div/>' } }],
+    })
+
+    const w = mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, r, pinia], stubs },
+    })
+    await flushPromises()
+
+    await w.findComponent({ name: 'DataSourceRunTable' }).vm.$emit('run', 'CCAE')
+    await flushPromises()
+
+    expect(mockGenerate).toHaveBeenCalledWith(42, 'CCAE')
+  })
+
+  it('cancels the selected source when the table emits cancel', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    loadedStore()
+
+    const r = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: { template: '<div/>' } }],
+    })
+
+    const w = mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, r, pinia], stubs },
+    })
+    await flushPromises()
+
+    await w.findComponent({ name: 'DataSourceRunTable' }).vm.$emit('cancel', 'CCAE')
+    await flushPromises()
+
+    expect(mockCancel).toHaveBeenCalledWith(42, 'CCAE')
+  })
+
+  it('opens the history dialog when the table emits show-history', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    loadedStore()
+
+    const r = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: { template: '<div/>' } }],
+    })
+
+    const w = mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, r, pinia], stubs },
+    })
+    await flushPromises()
+
+    await w.findComponent({ name: 'DataSourceRunTable' }).vm.$emit('show-history', 'CCAE')
+
+    expect(w.findComponent({ name: 'PreviousRunsDialog' }).props('modelValue')).toBe(true)
+  })
+
+  it('selects the new default run when a different IR design loads', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = loadedStore()
+
+    store.setExecutionInfo('CCAE', {
+      executionInfo: { id: { analysisId: 42, sourceId: 11 }, status: 'COMPLETED', startTime: 100 },
+      summaryList: [],
+    })
+
+    const r = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: { template: '<div/>' } }],
+    })
+    await r.push({ path: '/', query: { run: '999' } })
+    await r.isReady()
+    const replaceSpy = vi.spyOn(r, 'replace')
+
+    mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, r, pinia], stubs },
+    })
+    await flushPromises()
+
+    expect(replaceSpy).toHaveBeenCalledWith({ query: { run: '11' } })
+  })
+
+  it('leaves no run selected when the design has no generations', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    loadedStore()
+
+    const r = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: { template: '<div/>' } }],
+    })
+    await r.push({ path: '/', query: { run: '999' } })
+    await r.isReady()
+    const replaceSpy = vi.spyOn(r, 'replace')
+
+    mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, r, pinia], stubs },
+    })
+    await flushPromises()
+
+    expect(replaceSpy).toHaveBeenCalledWith({ query: {} })
+    expect(replaceSpy).not.toHaveBeenCalledWith({ query: expect.objectContaining({ run: expect.any(String) }) })
   })
 
   it('toggles the design rail and fires the strata add/edit handlers', async () => {

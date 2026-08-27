@@ -31,11 +31,14 @@
         <DataSourceRunTable
           :sources="runTableSources"
           :executions="runTableExecutions"
+          :selected-execution-id="selectedExecutionId"
           :loading="ds.isLoading"
           :run-disabled="!store.canGenerate"
           :run-disabled-reason="runDisabledReason"
+          :hide-history-button="true"
           @run="onRunSource"
           @cancel="onCancelSource"
+          @select-result="onSelectRun"
           @show-history="onShowHistory"
         />
 
@@ -151,10 +154,25 @@ import DataSourceRunTable, {
 } from '@/components/generation/DataSourceRunTable.vue'
 import PreviousRunsDialog from '@/components/generation/PreviousRunsDialog.vue'
 import { IR_TERMINAL_STATUSES } from '@/models/incidence-rate.types'
-import { arrayToCsv, downloadCsv } from '@/utils/csv'
 import type { ConceptSet } from '@/models/circe-types'
 import type { StratifyRule } from '@/models/incidence-rate.types'
-import type { GenerationStatus } from '@/models/characterization.types'
+import {
+  buildCsvExport,
+  buildRunTableExecutions,
+  resolveActiveRun,
+  resolveEmptyVariant,
+  resolveHistorySourceName,
+  resolveRunDisabledReason,
+  resolveRunTableSources,
+  resolveSelectedExecutionId,
+} from './incidence-rate-workbench-state'
+import {
+  cancelIncidenceRateSource,
+  maybeFetchIncidenceRateSources,
+  selectIncidenceRateFromHistory,
+  syncIncidenceRateSelection,
+  runIncidenceRateSource,
+} from './incidence-rate-workbench-actions'
 
 const { t, tv } = useI18n()
 const route = useRoute()
@@ -186,18 +204,12 @@ function onAddStratifyConceptSet(cs: ConceptSet) {
   }
 }
 
-const selectedExecutionId = computed<number | null>(() => {
-  const q = route.query?.run
-  if (typeof q === 'string') {
-    const n = Number(q)
-    return Number.isFinite(n) ? n : null
-  }
-  return null
-})
+const selectedExecutionId = computed<number | null>(() => resolveSelectedExecutionId(route.query?.run))
 
-const activeRun = computed(() =>
-  selectedExecutionId.value === null ? null : store.executionById(selectedExecutionId.value)
-)
+const activeRun = computed(() => resolveActiveRun({
+  selectedExecutionId: selectedExecutionId.value,
+  executionById: id => store.executionById(id),
+}))
 
 const irIdRef = computed<number | null>(() => store.currentIR?.id ?? null)
 const sourceKeyRef = computed<string | null>(() => activeRun.value?.sourceKey ?? null)
@@ -221,33 +233,41 @@ const availableOutcomes = computed(() =>
   }))
 )
 
-const emptyVariant = computed<'run-pending' | 'run-failed' | 'select-to' | null>(() => {
-  if (!store.currentIR?.id) return null
-  if (selectedExecutionId.value === null) return null
-  if (activeRun.value && !IR_TERMINAL_STATUSES.has(activeRun.value.status)) return 'run-pending'
-  if (activeRun.value?.status === 'FAILED') return 'run-failed'
-  if (!store.selectedTargetId || !store.selectedOutcomeId) return 'select-to'
-  return null
-})
+const emptyVariant = computed(() => resolveEmptyVariant({
+  currentIRId: store.currentIR?.id,
+  selectedExecutionId: selectedExecutionId.value,
+  activeRun: activeRun.value,
+  selectedTargetId: store.selectedTargetId,
+  selectedOutcomeId: store.selectedOutcomeId,
+  terminalStatuses: IR_TERMINAL_STATUSES,
+}))
+
+async function clearRunQuery() {
+  if (!('run' in route.query)) return
+  const nextQuery = { ...route.query }
+  delete (nextQuery as { run?: unknown }).run
+  await router.replace({ query: nextQuery })
+}
 
 watch(
   [() => store.currentIR?.id, () => store.executions],
-  async ([id, executions], [prevId]) => {
-    if (id == null) return
-    if (id !== prevId) {
-      await useIncidenceRateGeneration(id).pollOnce()
-    }
-    if (selectedExecutionId.value === null) {
-      const list = id !== prevId ? store.executions : executions
-      const completed = list.find(e => e.status === 'COMPLETED' || e.status === 'COMPLETE')
-      if (completed) await router.replace({ query: { ...route.query, run: String(completed.id) } })
-    }
-    if (store.selectedTargetId === null && store.currentIR?.expression.targetIds.length) {
-      store.setSelectedTargetOutcome(
-        store.currentIR.expression.targetIds[0]!,
-        store.currentIR.expression.outcomeIds[0] ?? null
-      )
-    }
+  async ([id], [prevId]) => {
+    await syncIncidenceRateSelection({
+      currentIRId: id,
+      previousIRId: prevId,
+      executions: store.executions,
+      selectedExecutionId: selectedExecutionId.value,
+      executionById: executionId => store.executionById(executionId),
+      currentTargetIds: store.currentIR?.expression.targetIds ?? [],
+      currentOutcomeIds: store.currentIR?.expression.outcomeIds ?? [],
+      selectedTargetId: store.selectedTargetId,
+      setSelectedTargetOutcome: (targetId, outcomeId) => store.setSelectedTargetOutcome(targetId, outcomeId),
+      clearRunQuery,
+      replaceRunQuery: async (runId: number) => {
+        await router.replace({ query: { ...route.query, run: String(runId) } })
+      },
+      pollOnceForNewDesign: async (irId: number) => { await useIncidenceRateGeneration(irId).pollOnce() },
+    })
   },
   { immediate: true },
 )
@@ -257,52 +277,50 @@ function onSelectRun(id: number) {
 }
 
 onMounted(async () => {
-  if (ds.sources.length === 0 && !ds.isLoading) await ds.fetchDataSources()
+  await maybeFetchIncidenceRateSources({
+    sourceCount: ds.sources.length,
+    isLoading: ds.isLoading,
+    fetchDataSources: () => ds.fetchDataSources(),
+  })
 })
 
 const runTableSources = computed<RunTableSource[]>(() =>
-  ds.sources.map(s => ({ sourceKey: s.sourceKey, sourceName: s.sourceName }))
+  resolveRunTableSources(ds.sources)
 )
-
-function mapStatus(raw: string): GenerationStatus {
-  return raw === 'COMPLETE' ? 'COMPLETED' : (raw as GenerationStatus)
-}
 
 const runTableExecutions = computed<RunTableExecution[]>(() =>
-  store.executions.map(e => ({
-    id: e.id,
-    sourceKey: e.sourceKey,
-    status: mapStatus(e.status),
-    startTime: e.startTime ?? undefined,
-    duration: e.duration ?? undefined,
-  }))
+  buildRunTableExecutions(store.executions)
 )
 
-const runDisabledReason = computed(() => {
-  if (store.isPreviewMode) return tv('common.previewMode', 'Preview mode')
-  if (store.isDirty) return tv('components.generation.unsavedChanges', 'Save changes before running')
-  if (store.hasErrors) return tv('components.generation.fixErrors', 'Resolve validation errors before running')
-  return ''
-})
+const runDisabledReason = computed(() => resolveRunDisabledReason({
+  isPreviewMode: store.isPreviewMode,
+  isDirty: store.isDirty,
+  hasErrors: store.hasErrors,
+  translate: tv,
+}))
 
 async function onRunSource(sourceKey: string) {
-  const id = store.currentIR?.id
-  if (id == null) return
-  await useIncidenceRateGeneration(id).start(sourceKey)
+  await runIncidenceRateSource({
+    currentIRId: store.currentIR?.id,
+    sourceKey,
+    start: async (irId, key) => { await useIncidenceRateGeneration(irId).start(key) },
+  })
 }
 
 async function onCancelSource(sourceKey: string) {
-  const id = store.currentIR?.id
-  if (id == null) return
-  await useIncidenceRateGeneration(id).cancel(sourceKey)
+  await cancelIncidenceRateSource({
+    currentIRId: store.currentIR?.id,
+    sourceKey,
+    cancel: async (irId, key) => { await useIncidenceRateGeneration(irId).cancel(key) },
+  })
 }
 
 const historyOpen = ref(false)
 const historySourceKey = ref<string | null>(null)
-const historySourceName = computed(() => {
-  if (!historySourceKey.value) return ''
-  return ds.sources.find(s => s.sourceKey === historySourceKey.value)?.sourceName ?? historySourceKey.value
-})
+const historySourceName = computed(() => resolveHistorySourceName({
+  historySourceKey: historySourceKey.value,
+  sources: ds.sources,
+}))
 
 function onShowHistory(sourceKey: string) {
   historySourceKey.value = sourceKey
@@ -310,12 +328,10 @@ function onShowHistory(sourceKey: string) {
 }
 
 function onSelectFromHistory(id: number | string) {
-  historyOpen.value = false
-  if (typeof id === 'number') onSelectRun(id)
-  else {
-    const n = Number(id)
-    if (Number.isFinite(n)) onSelectRun(n)
-  }
+  selectIncidenceRateFromHistory({
+    onSelectRun,
+    setHistoryOpen: open => { historyOpen.value = open },
+  })(id)
 }
 
 function onStrataAdd() {
@@ -335,29 +351,11 @@ function onStrataEdit(index: number) {
 }
 
 function onExport(format: 'csv' | 'svg' | 'png') {
-  if (format === 'csv' && report.value) {
-    type CsvRow = { name: string; totalPersons: number; cases: number; timeAtRisk: number }
-    const rows: CsvRow[] = [
-      {
-        name: 'Summary',
-        totalPersons: report.value.summary.totalPersons,
-        cases: report.value.summary.cases,
-        timeAtRisk: report.value.summary.timeAtRisk,
-      },
-      ...report.value.stratifyStats.map(s => ({
-        name: s.name,
-        totalPersons: s.totalPersons,
-        cases: s.cases,
-        timeAtRisk: s.timeAtRisk,
-      })),
-    ]
-    const headers: { key: keyof CsvRow; label: string }[] = [
-      { key: 'name',         label: 'Stratum' },
-      { key: 'totalPersons', label: 'Persons' },
-      { key: 'cases',        label: 'Cases' },
-      { key: 'timeAtRisk',   label: 'TAR (days)' },
-    ]
-    downloadCsv(`incidence-rate-${selectedExecutionId.value ?? 'results'}.csv`, arrayToCsv(rows, headers))
+  if (format === 'csv') {
+    buildCsvExport({
+      selectedExecutionId: selectedExecutionId.value,
+      report: report.value,
+    })
   }
 }
 </script>
