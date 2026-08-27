@@ -9,6 +9,7 @@ import type {
 } from '@/models/cohort.types'
 import type { AgentProposal } from '@/models/agent.types'
 import type { Criteria, CohortExpression } from '@/models/circe-types'
+import { defaultExpression } from '@/models/circe-types'
 import type { Version } from '@/components/versions/types'
 import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
 import { logger } from '@/utils/logger'
@@ -198,7 +199,8 @@ export const useCohortStore = defineStore('cohort', () => {
   function createNewCohort() {
     currentCohort.value = {
       name: 'New Cohort',
-      expression: {} as CohortExpression,
+      // Cloned so this session's edits never mutate the shared default.
+      expression: JSON.parse(JSON.stringify(defaultExpression)) as CohortExpression,
     }
     previewVersion.value = null
     adoptDocument()

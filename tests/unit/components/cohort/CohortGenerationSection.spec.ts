@@ -106,6 +106,20 @@ describe('CohortGenerationSection', () => {
     expect(wrapper.text()).toMatch(/1 \/ 2 generated/)
   })
 
+  it('shows a danger state chip when a generation fails', async () => {
+    const wrapper = mountSection(
+      { cohortId: 1 },
+      [{ id: 1, cohortDefinitionId: 1, sourceKey: 'CCAE', status: 'FAILED', failMessage: 'boom' }],
+      [ccae]
+    )
+    await flushPromises()
+    const section = wrapper.findComponent({ name: 'AtlasCollapsibleSection' })
+    expect(section.props('stateChip')).toMatchObject({
+      label: '0 / 1 generated',
+      tone: 'danger',
+    })
+  })
+
   it('starts collapsed when no jobs exist', async () => {
     const wrapper = mountSection({ cohortId: 1 }, [], [ccae])
     await flushPromises()

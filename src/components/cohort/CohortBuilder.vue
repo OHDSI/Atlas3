@@ -313,7 +313,7 @@ import ConceptSetSelectionDialog from './ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from './ConceptSearchDialog.vue'
 import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
 import CohortExpressionEditor from '@/components/cohort-editor/CohortExpressionEditor.vue'
-import { CohortExpressionSchema } from '@/models/circe-types'
+import { CohortExpressionSchema, defaultExpression as blankExpression } from '@/models/circe-types'
 import type { CohortExpression, Concept as CirceConcept, ConceptSetItem as CirceConceptSetItem } from '@/models/circe-types'
 import { unassignConceptSetId, walkConceptSetReferences } from '@/components/cohort-editor/concept-set-usage'
 import { normalizeForCirce } from '@/components/cohort-editor/normalize'
@@ -381,7 +381,8 @@ const { t, tv } = useI18n()
 
 // ── Core expression state (Phase 4) ──────────────────────────────────────────
 // Single reactive CohortExpression replaces 10+ individual refs.
-function defaultExpression(): CohortExpression { return {} }
+// Deep-cloned so the shared circe-types default is never mutated by an editing session.
+function defaultExpression(): CohortExpression { return JSON.parse(JSON.stringify(blankExpression)) }
 const expression = ref<CohortExpression>(defaultExpression())
 const expressionRevision = ref(0)
 const usedConceptSetsRevision = ref(0)

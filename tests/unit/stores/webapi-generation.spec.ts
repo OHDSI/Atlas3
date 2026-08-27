@@ -149,6 +149,31 @@ describe('WebAPI Store - Generation Polling', () => {
         // (Implementation should handle timeout)
       }
     })
+
+    it('should treat terminal failed status as non-active', async () => {
+      const cohortDefService = await import('@/services/cohort-definition.service')
+      vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue({
+        success: true,
+        data: [{
+          id: { cohortDefinitionId: 123, sourceId: 1 },
+          status: 'FAILED',
+          failMessage: 'boom',
+        }],
+      })
+
+      store.addGenerationJob({
+        id: 1,
+        cohortDefinitionId: 123,
+        sourceKey: 'SYNPUF1K',
+        status: 'RUNNING',
+      })
+
+      await (store as unknown).pollGenerationStatus(123)
+
+      expect(store.getJobById(1)?.status).toBe('FAILED')
+      expect(store.getJobById(1)?.failMessage).toBe('boom')
+      expect(store.activeJobs).toHaveLength(0)
+    })
   })
 
   describe('activeJobs', () => {
