@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { CharacterizationDefinition } from '@/models/characterization.types'
 import type { IncidenceRate, IncidenceRateExpression } from '@/models/incidence-rate.types'
 
+const mockAuthStore = {
+  executeWithUserRefresh: vi.fn((operation: () => Promise<unknown>) => operation()),
+}
+
 const { httpPut } = vi.hoisted(() => ({ httpPut: vi.fn() }))
 
 vi.mock('@/services/http-client', () => ({
@@ -12,13 +16,20 @@ vi.mock('@/services/http-client', () => ({
   httpPostRead: vi.fn(),
 }))
 
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: vi.fn(() => mockAuthStore),
+}))
+
 const timeAtRisk = {
   start: { DateField: 'StartDate', Offset: 0 },
   end: { DateField: 'EndDate', Offset: 0 },
 } satisfies IncidenceRateExpression['timeAtRisk']
 
 describe('criteria groups leaving through the strata save paths', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockAuthStore.executeWithUserRefresh.mockImplementation((operation: () => Promise<unknown>) => operation())
+  })
 
   it('characterization strata reach the wire with Type and Count', async () => {
     const design: CharacterizationDefinition = {

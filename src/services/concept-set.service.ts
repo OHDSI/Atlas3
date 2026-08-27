@@ -16,6 +16,7 @@ import {
 import { logger } from '@/utils/logger'
 import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
 import { getSourceKey } from '@/config/webapi'
+import { useAuthStore } from '@/stores/auth'
 
 /**
  * Prefer the source key validated against the sources the server actually
@@ -98,23 +99,30 @@ export async function createConceptSet(
   conceptSet: Omit<ConceptSet, 'id' | 'createdDate' | 'createdBy' | 'modifiedDate' | 'modifiedBy'>
 ): Promise<ConceptSet> {
   try {
+    const authStore = useAuthStore()
     const metadataPayload = {
       name: conceptSet.name,
       description: conceptSet.description,
     }
 
-    const data = await httpPost<ConceptSetAPIResponse>('/conceptset', metadataPayload)
+    const data = await authStore.executeWithUserRefresh(async () => {
+      const created = await httpPost<ConceptSetAPIResponse>('/conceptset', metadataPayload)
 
-    if ((conceptSet.items?.length || 0) > 0 && data.id) {
-      const itemsPayload = (conceptSet.items || []).map(item => ({
-        conceptId: item.conceptId,
-        isExcluded: item.isExcluded ? 1 : 0,
-        includeDescendants: item.includeDescendants ? 1 : 0,
-        includeMapped: item.includeMapped ? 1 : 0,
-      }))
+      if ((conceptSet.items?.length || 0) > 0 && created.id) {
+        const itemsPayload = (conceptSet.items || []).map(item => ({
+          conceptId: item.conceptId,
+          isExcluded: item.isExcluded ? 1 : 0,
+          includeDescendants: item.includeDescendants ? 1 : 0,
+          includeMapped: item.includeMapped ? 1 : 0,
+        }))
 
-      await httpPut(`/conceptset/${data.id}/items`, itemsPayload)
+        await httpPut(`/conceptset/${created.id}/items`, itemsPayload)
+      }
 
+      return created
+    })
+
+    if (data.id) {
       const sourceKey = await resolveSourceKey()
       const [updatedMetadata, updatedExpression] = await Promise.all([
         httpGet<ConceptSetAPIMetadata>(`/conceptset/${data.id}`),
@@ -129,8 +137,6 @@ export async function createConceptSet(
 
     return mapConceptSetFromAPI(data)
   } catch (error) {
-    // Propagate: the server's error detail (the shared client surfaces the body)
-    // is what the user needs; a bare null reduced every failure to a generic toast.
     logger.error('ConceptSet', 'Failed to create concept set', error)
     throw error
   }
@@ -147,22 +153,25 @@ export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptS
   }
 
   try {
+    const authStore = useAuthStore()
     const metadataPayload = {
       id: conceptSet.id,
       name: conceptSet.name,
       description: conceptSet.description,
     }
 
-    await httpPut<ConceptSetAPIResponse>(`/conceptset/${conceptSet.id}`, metadataPayload)
+    await authStore.executeWithUserRefresh(async () => {
+      await httpPut<ConceptSetAPIResponse>(`/conceptset/${conceptSet.id}`, metadataPayload)
 
-    const itemsPayload = (conceptSet.items || []).map(item => ({
-      conceptId: item.conceptId,
-      isExcluded: item.isExcluded ? 1 : 0,
-      includeDescendants: item.includeDescendants ? 1 : 0,
-      includeMapped: item.includeMapped ? 1 : 0,
-    }))
+      const itemsPayload = (conceptSet.items || []).map(item => ({
+        conceptId: item.conceptId,
+        isExcluded: item.isExcluded ? 1 : 0,
+        includeDescendants: item.includeDescendants ? 1 : 0,
+        includeMapped: item.includeMapped ? 1 : 0,
+      }))
 
-    await httpPut(`/conceptset/${conceptSet.id}/items`, itemsPayload)
+      await httpPut(`/conceptset/${conceptSet.id}/items`, itemsPayload)
+    })
 
     const sourceKey = await resolveSourceKey()
     const [updatedMetadata, updatedExpression] = await Promise.all([

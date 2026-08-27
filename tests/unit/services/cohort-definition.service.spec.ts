@@ -4,8 +4,12 @@ vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 
+const mockAuthStore = {
+  executeWithUserRefresh: vi.fn((operation: () => Promise<unknown>) => operation()),
+}
+
 vi.mock('@/stores/auth', () => ({
-  useAuthStore: vi.fn(() => ({ token: 'mock-token' })),
+  useAuthStore: vi.fn(() => ({ token: 'mock-token', ...mockAuthStore })),
 }))
 
 import {
@@ -174,6 +178,17 @@ describe('services/cohort-definition.service', () => {
       const [url, options] = mockFetch.mock.calls[0]
       expect(url).toContain('/cohortdefinition/5')
       expect(options.method).toBe('PUT')
+    })
+
+    it('wraps successful saves in executeWithUserRefresh', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () => JSON.stringify({ id: 1, name: 'C', expression: {} }),
+      })
+
+      await saveCohortDefinition({ name: 'C', expression: {} })
+
+      expect(mockAuthStore.executeWithUserRefresh).toHaveBeenCalled()
     })
   })
 

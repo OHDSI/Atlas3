@@ -7,6 +7,12 @@ vi.mock('@/services/http-client', () => ({
   httpPost: vi.fn(),
   httpDelete: vi.fn(),
 }))
+const mockAuthStore = {
+  executeWithUserRefresh: vi.fn((operation: () => Promise<unknown>) => operation()),
+}
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: vi.fn(() => mockAuthStore),
+}))
 vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
@@ -58,6 +64,7 @@ describe('access.service', () => {
     expect(httpPost).toHaveBeenCalledWith('/permission/access/SOURCE/123/role/7', {
       accessType: 'WRITE',
     })
+    expect(mockAuthStore.executeWithUserRefresh).toHaveBeenCalled()
     expect(result.success).toBe(true)
   })
 
@@ -69,6 +76,7 @@ describe('access.service', () => {
     expect(httpDelete).toHaveBeenCalledWith('/permission/access/SOURCE/123/role/7', {
       body: { accessType: 'READ' },
     })
+    expect(mockAuthStore.executeWithUserRefresh).toHaveBeenCalled()
     expect(result.success).toBe(true)
   })
 })

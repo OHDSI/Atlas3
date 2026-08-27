@@ -14,6 +14,10 @@ let storageHandler: ((e: StorageEvent) => void) | null = null
 // Debounce timeout for cross-tab sync
 let syncDebounceTimer: ReturnType<typeof setTimeout> | null = null
 const SYNC_DEBOUNCE_MS = 100
+const PERMISSION_REFRESH_INTERVAL_MS = 60_000
+
+let refreshUserPromise: Promise<UserInfo> | null = null
+let permissionRefreshIntervalId: ReturnType<typeof setInterval> | null = null
 
 let lastModalOpenTime = 0
 const MODAL_DEBOUNCE_MS = 500
@@ -21,6 +25,7 @@ const MODAL_DEBOUNCE_MS = 500
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState & {
     refreshTimeoutId: number | null
+    isRefreshingUser: boolean
     isRunningAs: boolean
     originalUser: UserInfo | null
     sessionExpiryModalOpen: boolean
@@ -41,6 +46,7 @@ export const useAuthStore = defineStore('auth', {
     errorMessage: null,
     isAuthenticating: false,
     refreshTimeoutId: null,
+    isRefreshingUser: false,
     isRunningAs: false,
     originalUser: null,
     sessionExpiryModalOpen: false,
@@ -81,6 +87,52 @@ export const useAuthStore = defineStore('auth', {
       storageManager.saveToken(token)
 
       this.scheduleTokenRefresh()
+    },
+
+    async refreshUser(): Promise<UserInfo> {
+      if (refreshUserPromise) {
+        return refreshUserPromise
+      }
+
+      this.isRefreshingUser = true
+      refreshUserPromise = (async () => {
+        try {
+          const { authService } = await import('@/services/auth/authService')
+          const userInfo = await authService.fetchUserInfo()
+          this.setUser(userInfo)
+          return userInfo
+        } finally {
+          this.isRefreshingUser = false
+          refreshUserPromise = null
+        }
+      })()
+
+      return refreshUserPromise
+    },
+
+    async executeWithUserRefresh<T>(operation: () => Promise<T>): Promise<T> {
+      const result = await operation()
+      await this.refreshUser()
+      return result
+    },
+
+    startPermissionRefreshPolling() {
+      if (permissionRefreshIntervalId !== null) {
+        return
+      }
+
+      permissionRefreshIntervalId = setInterval(() => {
+        void this.refreshUser().catch(error => {
+          logger.warn('Auth', 'Periodic permission refresh failed', error)
+        })
+      }, PERMISSION_REFRESH_INTERVAL_MS)
+    },
+
+    stopPermissionRefreshPolling() {
+      if (permissionRefreshIntervalId !== null) {
+        clearInterval(permissionRefreshIntervalId)
+        permissionRefreshIntervalId = null
+      }
     },
 
     /**
@@ -131,6 +183,7 @@ export const useAuthStore = defineStore('auth', {
       this.errorMessage = null
       this.isRunningAs = false
       this.originalUser = null
+      this.isRefreshingUser = false
       // The expiry warning is tied to the active session — once auth is
       // cleared (logout, cross-tab sync, refresh failure) the modal must
       // not linger above whatever comes next.
@@ -283,9 +336,7 @@ export const useAuthStore = defineStore('auth', {
       // anonymous permission set and no login prompt is shown; per-endpoint
       // permissions still gate actions server-side.
       try {
-        const { authService } = await import('@/services/auth/authService')
-        const userInfo = await authService.fetchUserInfo()
-        this.setUser(userInfo)
+        await this.refreshUser()
       } catch (error) {
         this.setUser(null)
         if (hadToken) {
@@ -304,6 +355,7 @@ export const useAuthStore = defineStore('auth', {
         this.userResolved = true
       }
 
+      this.startPermissionRefreshPolling()
       this.setupCrossTabSync()
     },
 
@@ -324,9 +376,7 @@ export const useAuthStore = defineStore('auth', {
                 this.setToken(newValue)
                 if (!this.tokenExpired && this.isTokenValid) {
                   try {
-                    const { authService } = await import('@/services/auth/authService')
-                    const userInfo = await authService.fetchUserInfo()
-                    this.setUser(userInfo)
+                    await this.refreshUser()
                   } catch (error) {
                     logger.error('Auth', 'Failed to fetch user info on tab sync', error)
                   }
@@ -371,6 +421,7 @@ export const useAuthStore = defineStore('auth', {
         window.removeEventListener('storage', storageHandler)
         storageHandler = null
       }
+      this.stopPermissionRefreshPolling()
     },
   },
 })

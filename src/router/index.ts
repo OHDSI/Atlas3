@@ -72,6 +72,17 @@ router.beforeEach(
   }
 )
 
+
+router.afterEach(to => {
+  if (to.meta.isOAuthCallback || to.meta.isSAMLCallback || to.meta.isOpenIDCallback) {
+    return
+  }
+
+  const authStore = useAuthStore()
+  void authStore.refreshUser().catch(error => {
+    logger.warn('Router', 'Permission refresh after navigation failed', error)
+  })
+})
 // Home redirect guard - must run before auth guard
 router.beforeEach(
   (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
@@ -108,9 +119,7 @@ router.beforeEach(async (to, _from, next) => {
         const { authService } = await import('@/services/auth/authService')
         const jwt = await authService.redeemOTC(otcCode)
         authStore.setToken(jwt)
-
-        const userInfo = await authService.fetchUserInfo()
-        authStore.setUser(userInfo)
+        await authStore.refreshUser()
         authStore.setAuthClient('OIDC')
 
         const oidcDestination = sessionStorage.getItem('oauth_redirect_destination')
@@ -125,10 +134,7 @@ router.beforeEach(async (to, _from, next) => {
       if (localStorageToken && localStorageToken !== 'null' && localStorageToken !== 'undefined') {
         authStore.setToken(localStorageToken)
 
-        // Fetch user info
-        const { authService } = await import('@/services/auth/authService')
-        const userInfo = await authService.fetchUserInfo()
-        authStore.setUser(userInfo)
+        await authStore.refreshUser()
         authStore.setAuthClient('OpenID')
 
         // Restore destination URL or redirect to home
@@ -145,10 +151,7 @@ router.beforeEach(async (to, _from, next) => {
         logger.info('Router', 'Token found in cookie')
         authStore.setToken(cookieToken)
 
-        // Fetch user info
-        const { authService } = await import('@/services/auth/authService')
-        const userInfo = await authService.fetchUserInfo()
-        authStore.setUser(userInfo)
+        await authStore.refreshUser()
 
         // Clear the cookie token
         document.cookie = 'bearerToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'

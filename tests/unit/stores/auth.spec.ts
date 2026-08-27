@@ -71,6 +71,7 @@ import { storageManager } from '@/services/auth/storageManager'
 import { tokenManager } from '@/services/auth/tokenManager'
 import { refreshManager } from '@/services/auth/refreshManager'
 import { permissionService } from '@/services/auth/permissions'
+import { authService } from '@/services/auth/authService'
 
 describe('Auth Store', () => {
   beforeEach(() => {
@@ -263,6 +264,89 @@ describe('Auth Store', () => {
 
       expect(store.user).toBeNull()
       expect(store.permissions).toEqual({})
+    })
+  })
+
+  describe('refreshUser Action', () => {
+    it('should fetch user info and update the store', async () => {
+      const store = useAuthStore()
+      const user: UserInfo = {
+        login: 'jdoe',
+        displayName: 'John Doe',
+        permissionIdx: { cohort: ['cohort:read'] },
+      } as UserInfo
+
+      vi.mocked(authService.fetchUserInfo).mockResolvedValue(user)
+
+      const result = await store.refreshUser()
+
+      expect(authService.fetchUserInfo).toHaveBeenCalled()
+      expect(result).toEqual(user)
+      expect(store.user).toEqual(user)
+      expect(permissionService.clearCache).toHaveBeenCalled()
+    })
+
+    it('should share the in-flight refresh promise', async () => {
+      const store = useAuthStore()
+      const user: UserInfo = {
+        login: 'jdoe',
+        displayName: 'John Doe',
+        permissionIdx: {},
+      } as UserInfo
+
+      vi.mocked(authService.fetchUserInfo).mockResolvedValue(user)
+
+      const first = store.refreshUser()
+      const second = store.refreshUser()
+
+      await expect(first).resolves.toEqual(user)
+      await expect(second).resolves.toEqual(user)
+      expect(authService.fetchUserInfo).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('executeWithUserRefresh Action', () => {
+    it('should run the operation then refresh the user', async () => {
+      const store = useAuthStore()
+      const user: UserInfo = {
+        login: 'jdoe',
+        displayName: 'John Doe',
+        permissionIdx: {},
+      } as UserInfo
+
+      vi.mocked(authService.fetchUserInfo).mockResolvedValue(user)
+
+      const operation = vi.fn().mockResolvedValue('saved')
+
+      const result = await store.executeWithUserRefresh(operation)
+
+      expect(operation).toHaveBeenCalled()
+      expect(result).toBe('saved')
+      expect(authService.fetchUserInfo).toHaveBeenCalled()
+    })
+  })
+
+  describe('permission refresh polling', () => {
+    it('should refresh permissions on the polling interval', async () => {
+      vi.useFakeTimers()
+
+      const store = useAuthStore()
+      const user: UserInfo = {
+        login: 'jdoe',
+        displayName: 'John Doe',
+        permissionIdx: {},
+      } as UserInfo
+
+      vi.mocked(authService.fetchUserInfo).mockResolvedValue(user)
+
+      store.startPermissionRefreshPolling()
+
+      await vi.advanceTimersByTimeAsync(60_000)
+
+      expect(authService.fetchUserInfo).toHaveBeenCalled()
+
+      store.stopPermissionRefreshPolling()
+      vi.useRealTimers()
     })
   })
 
