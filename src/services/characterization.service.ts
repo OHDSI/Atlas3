@@ -18,6 +18,7 @@ import {
 } from '@/models/characterization.types'
 import { z } from 'zod'
 import { normalizeCriteriaGroupForCirce } from '@/components/cohort-editor/normalize'
+import { useAuthStore } from '@/stores/auth'
 
 const CONTEXT = 'CharacterizationService'
 
@@ -75,7 +76,10 @@ export async function createCharacterization(
   def: CharacterizationDefinition
 ): Promise<ApiResult<CharacterizationDefinition>> {
   return unwrap(async () => {
-    const data = await httpPost<unknown>('/cohort-characterization', serializeCharacterization(def))
+    const authStore = useAuthStore()
+    const data = await authStore.executeWithUserRefresh(() =>
+      httpPost<unknown>('/cohort-characterization', serializeCharacterization(def))
+    )
     return parseOrThrow(
       CharacterizationDefinitionSchema,
       data,
@@ -95,9 +99,9 @@ export async function updateCharacterization(
     if (typeof def.id !== 'number') {
       throw new Error('updateCharacterization requires def.id')
     }
-    const data = await httpPut<unknown>(
-      `/cohort-characterization/${def.id}`,
-      serializeCharacterization(def)
+    const authStore = useAuthStore()
+    const data = await authStore.executeWithUserRefresh(() =>
+      httpPut<unknown>(`/cohort-characterization/${def.id}`, serializeCharacterization(def))
     )
     return parseOrThrow(
       CharacterizationDefinitionSchema,
@@ -126,7 +130,10 @@ export async function copyCharacterization(
   id: number
 ): Promise<ApiResult<CharacterizationDefinition>> {
   return unwrap(async () => {
-    const data = await httpPost<unknown>(`/cohort-characterization/${id}`)
+    const authStore = useAuthStore()
+    const data = await authStore.executeWithUserRefresh(() =>
+      httpPost<unknown>(`/cohort-characterization/${id}`)
+    )
     return parseOrThrow(
       CharacterizationDefinitionSchema,
       data,

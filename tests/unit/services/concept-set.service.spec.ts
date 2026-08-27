@@ -12,6 +12,14 @@ vi.mock('@/services/http-client', () => ({
   httpDelete: vi.fn(),
 }))
 
+const mockAuthStore = {
+  executeWithUserRefresh: vi.fn((operation: () => Promise<unknown>) => operation()),
+}
+
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: vi.fn(() => mockAuthStore),
+}))
+
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {
@@ -59,6 +67,7 @@ describe('ConceptSetService', () => {
     vi.clearAllMocks()
     getValidVocabularySource.mockReturnValue(null)
     localStorage.clear()
+    mockAuthStore.executeWithUserRefresh.mockImplementation((operation: () => Promise<unknown>) => operation())
   })
 
   afterEach(() => {
@@ -123,7 +132,7 @@ describe('ConceptSetService', () => {
     })
 
     it('should return null on fetch failure', async () => {
-      vi.mocked(httpGet).mockRejectedValue(new Error('HTTP 404: Not Found'))
+      vi.mocked(httpGet).mockRejectedValueOnce(new Error('HTTP 404: Not Found'))
 
       const result = await getConceptSetById(999)
 
@@ -131,7 +140,7 @@ describe('ConceptSetService', () => {
     })
 
     it('should return null on network error', async () => {
-      vi.mocked(httpGet).mockRejectedValue(new Error('Network error'))
+      vi.mocked(httpGet).mockRejectedValueOnce(new Error('Network error'))
 
       const result = await getConceptSetById(1)
 
@@ -168,6 +177,7 @@ describe('ConceptSetService', () => {
         name: 'New Concept Set',
         description: 'New description',
       })
+      expect(mockAuthStore.executeWithUserRefresh).toHaveBeenCalled()
       expect(result).not.toBeNull()
     })
 
@@ -200,6 +210,7 @@ describe('ConceptSetService', () => {
 
       expect(httpPut).toHaveBeenCalledWith('/conceptset/1', metadata)
       expect(httpPut).toHaveBeenCalledWith('/conceptset/1/items', [])
+      expect(mockAuthStore.executeWithUserRefresh).toHaveBeenCalled()
       expect(result).not.toBeNull()
     })
 

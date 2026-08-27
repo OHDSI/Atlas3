@@ -11,6 +11,7 @@ import { unwrap, parseOrThrow, unwrapList } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import { RoleListSchema, type Role } from '@/models/role.types'
 import { AccessEntityTypeSchema, AccessTypeSchema, type AccessEntityType, type AccessType } from '@/models/access.types'
+import { useAuthStore } from '@/stores/auth'
 
 const CONTEXT = 'AccessService'
 
@@ -60,11 +61,14 @@ export async function grantEntityAccess(
   accessType: AccessType = 'WRITE'
 ): Promise<ApiResult<void>> {
   return unwrap(async () => {
+    const authStore = useAuthStore()
     const normalizedEntityType = AccessEntityTypeSchema.parse(entityType)
     const normalizedAccessType = AccessTypeSchema.parse(accessType)
-    await httpPost(accessRolePath(normalizedEntityType, entityId, roleId), {
-      accessType: normalizedAccessType,
-    })
+    await authStore.executeWithUserRefresh(() =>
+      httpPost(accessRolePath(normalizedEntityType, entityId, roleId), {
+        accessType: normalizedAccessType,
+      })
+    )
   }, CONTEXT)
 }
 
@@ -78,10 +82,13 @@ export async function revokeEntityAccess(
   accessType: AccessType = 'WRITE'
 ): Promise<ApiResult<void>> {
   return unwrap(async () => {
+    const authStore = useAuthStore()
     const normalizedEntityType = AccessEntityTypeSchema.parse(entityType)
     const normalizedAccessType = AccessTypeSchema.parse(accessType)
-    await httpDelete(accessRolePath(normalizedEntityType, entityId, roleId), {
-      body: { accessType: normalizedAccessType },
-    })
+    await authStore.executeWithUserRefresh(() =>
+      httpDelete(accessRolePath(normalizedEntityType, entityId, roleId), {
+        body: { accessType: normalizedAccessType },
+      })
+    )
   }, CONTEXT)
 }

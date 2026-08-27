@@ -14,6 +14,7 @@ import * as permissionService from '@/services/permission.service'
 import * as userService from '@/services/user.service'
 import type { Role, RoleCreate, RoleUpdate, Permission, User } from '@/models/role.types'
 import { logger } from '@/utils/logger'
+import { useAuthStore } from '@/stores/auth'
 
 export const useRolesStore = defineStore('roles', () => {
   // ============================================================================
@@ -298,7 +299,10 @@ export const useRolesStore = defineStore('roles', () => {
     isSaving.value = true
 
     try {
-      const result = await roleService.assignPermissionToRole(roleId, permissionId)
+      const authStore = useAuthStore()
+      const result = await authStore.executeWithUserRefresh(() =>
+        roleService.assignPermissionToRole(roleId, permissionId)
+      )
 
       if (result.success) {
         // Add to local state if not already present
@@ -336,7 +340,10 @@ export const useRolesStore = defineStore('roles', () => {
     isSaving.value = true
 
     try {
-      const result = await roleService.removePermissionFromRole(roleId, permissionId)
+      const authStore = useAuthStore()
+      const result = await authStore.executeWithUserRefresh(() =>
+        roleService.removePermissionFromRole(roleId, permissionId)
+      )
 
       if (result.success) {
         // Remove from local state
@@ -436,7 +443,10 @@ export const useRolesStore = defineStore('roles', () => {
     isSaving.value = true
 
     try {
-      const result = await roleService.assignUserToRole(roleId, userId)
+      const authStore = useAuthStore()
+      const result = await authStore.executeWithUserRefresh(() =>
+        roleService.assignUserToRole(roleId, userId)
+      )
 
       if (result.success) {
         // Add to local state if not already present
@@ -470,7 +480,10 @@ export const useRolesStore = defineStore('roles', () => {
     isSaving.value = true
 
     try {
-      const result = await roleService.removeUserFromRole(roleId, userId)
+      const authStore = useAuthStore()
+      const result = await authStore.executeWithUserRefresh(() =>
+        roleService.removeUserFromRole(roleId, userId)
+      )
 
       if (result.success) {
         // Remove from local state

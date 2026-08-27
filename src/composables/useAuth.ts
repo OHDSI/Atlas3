@@ -34,6 +34,10 @@ export function useAuth() {
       return authService.refreshToken()
     },
 
+    async refreshUser(): Promise<void> {
+      await authStore.refreshUser()
+    },
+
     async runAs(targetUsername: string): Promise<void> {
       return authService.runAs(targetUsername)
     },

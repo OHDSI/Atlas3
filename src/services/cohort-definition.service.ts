@@ -9,6 +9,7 @@ import { unwrap, ApiError, parseOrThrow, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import type { RawCohortDefinition } from '@/models/atlas.types'
 import type { CohortDefinition } from '@/models/cohort.types'
+import { useAuthStore } from '@/stores/auth'
 import {
   CohortGenerationInfoListSchema,
   CohortDefinitionListSchema,
@@ -68,9 +69,12 @@ export async function saveCohortDefinition(
 ): Promise<ApiResult<CohortDefinition>> {
   return unwrap(async () => {
     logger.debug(CONTEXT, 'Saving cohort definition', { id: cohort.id, name: cohort.name })
-    const saved = cohort.id
-      ? await httpPut<CohortDefinition>(`/cohortdefinition/${cohort.id}`, cohort)
-      : await httpPost<CohortDefinition>('/cohortdefinition', cohort)
+    const authStore = useAuthStore()
+    const saved = await authStore.executeWithUserRefresh(() =>
+      cohort.id
+        ? httpPut<CohortDefinition>(`/cohortdefinition/${cohort.id}`, cohort)
+        : httpPost<CohortDefinition>('/cohortdefinition', cohort)
+    )
     return saved
   }, CONTEXT)
 }

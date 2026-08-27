@@ -89,6 +89,10 @@ describe('Vue Router', () => {
       setAuthClient: vi.fn(),
       setError: vi.fn(),
       openLoginModal: vi.fn(),
+      refreshUser: vi.fn(async () => {
+        const userInfo = await authService.fetchUserInfo()
+        mockAuthStore.setUser(userInfo)
+      }),
     }
     vi.mocked(useAuthStore).mockReturnValue(mockAuthStore)
 
@@ -122,6 +126,7 @@ describe('Vue Router', () => {
     // Reset router to initial state
     await router.push('/')
     await router.isReady()
+    vi.mocked(mockAuthStore.refreshUser).mockClear()
   })
 
   afterEach(() => {
@@ -145,6 +150,14 @@ describe('Vue Router', () => {
       const conceptsRoute = router.getRoutes().find((r) => r.name === 'concepts')
       expect((cohortsRoute?.meta as { titleKey?: string })?.titleKey).toBe('route.cohorts.title')
       expect((conceptsRoute?.meta as { titleKey?: string })?.titleKey).toBe('route.conceptSets.title')
+    })
+  })
+
+  describe('permission refresh', () => {
+    it('should refresh user after navigation', async () => {
+      await router.push('/cohorts')
+
+      expect(mockAuthStore.refreshUser).toHaveBeenCalled()
     })
   })
 
@@ -229,6 +242,7 @@ describe('Vue Router', () => {
         name: 'Test User',
         email: 'test@example.com',
       })
+      vi.mocked(mockAuthStore.refreshUser).mockClear()
     })
 
     describe('Token in localStorage', () => {
@@ -705,6 +719,7 @@ describe('Deeplink guard (?route= handling)', () => {
       setAuthClient: vi.fn(),
       setError: vi.fn(),
       openLoginModal: vi.fn(),
+      refreshUser: vi.fn().mockResolvedValue(undefined),
     }
     mockUIStore = {
       configPanelState: { isOpen: false },

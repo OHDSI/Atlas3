@@ -9,6 +9,14 @@ import type { Role, RoleCreate, RoleUpdate, Permission, User } from '@/models/ro
 import type { ApiResult } from '@/types/api'
 import { ApiError } from '@/services/api-error'
 
+const mockAuthStore = {
+  executeWithUserRefresh: vi.fn((operation: () => Promise<unknown>) => operation()),
+}
+
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: vi.fn(() => mockAuthStore),
+}))
+
 // Mock the services
 vi.mock('@/services/role.service')
 vi.mock('@/services/permission.service')
@@ -240,6 +248,21 @@ describe('useRolesStore', () => {
       resolveCreate(successResult)
       await createPromise
       expect(store.isSaving).toBe(false)
+    })
+  })
+
+  describe('permission mutations', () => {
+    it('should refresh the user after assigning a permission', async () => {
+      vi.spyOn(roleService, 'assignPermissionToRole').mockResolvedValue({
+        success: true,
+        data: undefined,
+      })
+
+      const store = useRolesStore()
+      const result = await store.assignPermissionToRole(1, 77)
+
+      expect(result).toBe(true)
+      expect(mockAuthStore.executeWithUserRefresh).toHaveBeenCalled()
     })
   })
 
