@@ -317,6 +317,7 @@ onUnmounted(() => {
 
 .config-panel__card {
   height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -328,6 +329,8 @@ onUnmounted(() => {
 
 .config-panel__content {
   height: 100%;
+  flex: 1 1 0;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -348,10 +351,12 @@ onUnmounted(() => {
 }
 
 .config-panel__sections {
+  flex: 1 1 0;
   padding: 1.5rem;
   /* Establish a stacking context so position:sticky descendants (e.g. the
      v-data-table header inside JobsSection) stay clipped to the scroll
      container instead of bleeding upward over siblings. */
+  min-height: 0;
   position: relative;
   z-index: 0;
   isolation: isolate;

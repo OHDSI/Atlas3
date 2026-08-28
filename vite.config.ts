@@ -26,10 +26,14 @@ function stubWebApi(): Plugin {
 // Point the dev proxy at a remote WebAPI with `WEBAPI_URL=https://host npm run dev`.
 const webApiTarget = process.env.WEBAPI_URL ?? 'http://localhost:8080'
 const webApiOrigin = new URL(webApiTarget).origin
+const enableProdDevtools = process.env.VITE_ENABLE_PROD_DEVTOOLS === 'true'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   base: './',
+  define: {
+    __VUE_PROD_DEVTOOLS__: enableProdDevtools,
+  },
   plugins: [
     vue(),
     // Vuetify plugin for auto-importing components and tree-shaking
@@ -42,6 +46,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
+    sourcemap: true,
     target: 'es2020',
     // Code splitting configuration
     rollupOptions: {
