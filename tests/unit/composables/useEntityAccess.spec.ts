@@ -100,29 +100,36 @@ describe('useSourceAccess', () => {
   })
 
   it('grants write when sourceAccess includes WRITE', () => {
-    setupUser({ entityAccess: { source: { sample: ['WRITE'] } } })
-    const { canRead, canWrite } = useSourceAccess('sample')
+    setupUser({ entityAccess: { source: { '101': ['WRITE'] } } })
+    const { canRead, canWrite } = useSourceAccess(101)
+    expect(canRead.value).toBe(true)
+    expect(canWrite.value).toBe(true)
+  })
+
+  it('grants write when sourceAccess is keyed by numeric id', () => {
+    setupUser({ entityAccess: { source: { '404': ['WRITE'] } } })
+    const { canRead, canWrite } = useSourceAccess(404)
     expect(canRead.value).toBe(true)
     expect(canWrite.value).toBe(true)
   })
 
   it('grants read but not write when only READ', () => {
-    setupUser({ entityAccess: { source: { ro: ['READ'] } } })
-    const { canRead, canWrite } = useSourceAccess('ro')
+    setupUser({ entityAccess: { source: { '102': ['READ'] } } })
+    const { canRead, canWrite } = useSourceAccess(102)
     expect(canRead.value).toBe(true)
     expect(canWrite.value).toBe(false)
   })
 
   it('denies when source key is unknown', () => {
-    setupUser({ entityAccess: { source: { sample: ['WRITE'] } } })
-    const { canRead, canWrite } = useSourceAccess('missing')
+    setupUser({ entityAccess: { source: { '103': ['WRITE'] } } })
+    const { canRead, canWrite } = useSourceAccess(999)
     expect(canRead.value).toBe(false)
     expect(canWrite.value).toBe(false)
   })
 
   it('admin:source grants both', () => {
     setupUser({ permissionIdx: { admin: ['admin:source'] } })
-    const { canRead, canWrite } = useSourceAccess('any')
+    const { canRead, canWrite } = useSourceAccess(777)
     expect(canRead.value).toBe(true)
     expect(canWrite.value).toBe(true)
   })

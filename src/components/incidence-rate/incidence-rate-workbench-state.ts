@@ -18,8 +18,8 @@ export function resolveSelectedExecutionId(runQuery: unknown): number | null {
   return null
 }
 
-export function resolveRunTableSources(input: Array<{ sourceKey: string; sourceName: string }>): RunTableSource[] {
-  return input.map(source => ({ sourceKey: source.sourceKey, sourceName: source.sourceName }))
+export function resolveRunTableSources(input: Array<{ sourceId: number; sourceKey: string; sourceName: string }>): RunTableSource[] {
+  return input.map(source => ({ sourceId: source.sourceId, sourceKey: source.sourceKey, sourceName: source.sourceName }))
 }
 
 export function mapStatus(raw: string): GenerationStatus {

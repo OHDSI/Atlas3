@@ -72,13 +72,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, toRef } from 'vue'
+import { computed } from 'vue'
 import { AtlasButton, AtlasIconButton, AtlasTooltip } from '@/components/ui'
 import { useSourceAccess } from '@/composables/useEntityAccess'
 import { useI18n } from '@/composables/useI18n'
 import type { GenerationStatus } from '@/models/characterization.types'
 
 interface Props {
+  sourceId: number
   sourceKey: string
   latestStatus?: GenerationStatus
   latestExecutionId?: number | string | null
@@ -108,7 +109,7 @@ const emit = defineEmits<{
 }>()
 
 const { t, tv } = useI18n()
-const { canWrite } = useSourceAccess(toRef(() => props.sourceKey))
+const { canWrite } = useSourceAccess(computed(() => props.sourceId))
 
 const isActive = computed(() =>
   props.latestStatus === 'PENDING' ||

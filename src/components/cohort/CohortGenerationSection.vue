@@ -166,7 +166,11 @@ const jobs = computed<GenerationJob[]>(() =>
 )
 
 const runTableSources = computed<RunTableSource[]>(() =>
-  sources.value.map(s => ({ sourceKey: s.sourceKey, sourceName: s.sourceName || s.sourceKey }))
+  sources.value.map(s => ({
+    sourceId: s.sourceId,
+    sourceKey: s.sourceKey,
+    sourceName: s.sourceName || s.sourceKey,
+  }))
 )
 
 const onlyGenerated = ref(false)
@@ -262,7 +266,7 @@ const canGenerateAll = computed(() => {
   if (props.cohortId === null) return false
   if (generateBlocked.value) return false
   return sources.value.some(s => {
-    if (!sourceAccess.canWrite(s.sourceKey)) return false
+    if (!sourceAccess.canWrite(s.sourceId)) return false
     const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
     return !j || (j.status !== 'RUNNING' && j.status !== 'PENDING')
   })
@@ -271,7 +275,7 @@ const canGenerateAll = computed(() => {
 async function generateAll() {
   if (props.cohortId === null || generateBlocked.value) return
   for (const s of sources.value) {
-    if (!sourceAccess.canWrite(s.sourceKey)) continue
+    if (!sourceAccess.canWrite(s.sourceId)) continue
     const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
     if (j && (j.status === 'RUNNING' || j.status === 'PENDING')) continue
     try {
