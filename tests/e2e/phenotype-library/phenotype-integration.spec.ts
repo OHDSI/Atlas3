@@ -210,14 +210,13 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
 
       // ── Step 3: Wait for builder to load ──────────────────────────────
       await page.waitForURL(/\/cohorts\/\d+/, { timeout: 30000 })
-      await waitForPageReady(page)
+      // Skip cohorts with no entry events — the Save button is disabled
+      const saveBtn = page.locator('[data-testid="save-cohort-btn"]')
       // The cohort builder may or may not issue a GET /cohortdefinition/{id}
       // (if the POST response data was stored in Pinia, no GET is made).
       // Waiting for the save button is a more reliable signal that the
       // builder has fully loaded the cohort.
-      await waitForPageReady(page)
-      // Skip cohorts with no entry events — the Save button is disabled
-      const saveBtn = page.locator('[data-testid="save-cohort-btn"]')
+      await waitForStableElement(saveBtn, 15000)
       await expect(saveBtn).toBeVisible({ timeout: 15000 })
       const isSaveEnabled = await saveBtn.isEnabled().catch(() => false)
       if (!isSaveEnabled) {

@@ -10,6 +10,13 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import CohortGenerationSection from '@/components/cohort/CohortGenerationSection.vue'
 import { useWebAPIStore } from '@/stores/webapi'
 
+const mockSourceAccessFor = {
+  canRead: vi.fn<(sourceId: number) => boolean>(),
+  canWrite: vi.fn<(sourceId: number) => boolean>(),
+}
+mockSourceAccessFor.canRead.mockImplementation(() => true)
+mockSourceAccessFor.canWrite.mockImplementation(() => true)
+
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../helpers/i18n-mock')
   return mockUseI18n
@@ -20,10 +27,7 @@ vi.mock('@/composables/useEntityAccess', () => ({
     canRead: computed(() => true),
     canWrite: computed(() => true),
   }),
-  useSourceAccessFor: () => ({
-    canRead: () => true,
-    canWrite: () => true,
-  }),
+  useSourceAccessFor: () => mockSourceAccessFor,
 }))
 
 vi.mock('@/components/reports/inclusion/InclusionRuleReport.vue', () => ({
@@ -51,6 +55,15 @@ function mountSection(
   sourcesList: Array<Record<string, unknown>> = [],
   stubs: Record<string, unknown> = {}
 ) {
+  return mountSectionWithRouter(props, jobs, sourcesList, stubs).wrapper
+}
+
+function mountSectionWithRouter(
+  props: Record<string, unknown>,
+  jobs: Array<Record<string, unknown>> = [],
+  sourcesList: Array<Record<string, unknown>> = [],
+  stubs: Record<string, unknown> = {}
+) {
   setActivePinia(createPinia())
   const store = useWebAPIStore()
   store.sources = sourcesList as never
@@ -58,7 +71,7 @@ function mountSection(
   vi.spyOn(store, 'fetchSources').mockResolvedValue(undefined)
   vi.spyOn(store, 'fetchCohortGenerationInfo').mockResolvedValue(undefined)
   const router = makeRouter()
-  return mount(CohortGenerationSection, {
+  const wrapper = mount(CohortGenerationSection, {
     attachTo: document.body,
     global: {
       plugins: [vuetify, router],
@@ -69,6 +82,74 @@ function mountSection(
     // cases pass it explicitly.
     props: { cohortId: 1, validationStatus: 'validated', ...props },
   })
+  return { wrapper, router }
+}
+
+const sourceRunTableStub = {
+  name: 'DataSourceRunTable',
+  props: [
+    'sources',
+    'executions',
+    'loading',
+    'showPatientCount',
+    'hideCancel',
+    'runDisabled',
+    'runDisabledReason',
+    'extraActions',
+  ],
+  emits: ['run', 'show-history', 'extra-action'],
+  template: `
+    <div data-testid="run-table-stub">
+      <button
+        v-for="source in sources"
+        :key="source.sourceKey"
+        :data-testid="'run-btn-' + source.sourceKey"
+        @click="$emit('run', source.sourceKey)"
+      >run</button>
+      <button
+        data-testid="history-btn"
+        @click="$emit('show-history', sources[0] && sources[0].sourceKey)"
+      >history</button>
+      <button
+        data-testid="extra-btn"
+        @click="$emit('extra-action', 'inclusion', sources[0] && sources[0].sourceKey)"
+      >extra</button>
+    </div>
+  `,
+}
+
+const cohortReportDrawerStub = {
+  name: 'CohortReportDrawer',
+  props: ['modelValue', 'cohortId', 'sourceKey', 'reportType', 'personId'],
+  emits: ['update:modelValue', 'open-profile', 'back'],
+  template: `
+    <div
+      data-testid="cohort-report-drawer-stub"
+      :data-open="String(modelValue)"
+      :data-source-key="sourceKey || ''"
+      :data-report-type="reportType || ''"
+    >
+      <button data-testid="drawer-open-profile" @click="$emit('open-profile', '42')">profile</button>
+      <button data-testid="drawer-back" @click="$emit('back')">back</button>
+      <button data-testid="drawer-close" @click="$emit('update:modelValue', false)">close</button>
+    </div>
+  `,
+}
+
+const previousRunsDialogStub = {
+  name: 'PreviousRunsDialog',
+  props: ['modelValue', 'sourceName', 'sourceKey', 'executions', 'latestResultOnly'],
+  emits: ['update:modelValue', 'select'],
+  template: `
+    <div
+      data-testid="previous-runs-dialog-stub"
+      :data-open="String(modelValue)"
+      :data-source-key="sourceKey || ''"
+      :data-source-name="sourceName || ''"
+    >
+      <button data-testid="history-select" @click="$emit('select')">select</button>
+    </div>
+  `,
 }
 
 const tooltipStub = {
@@ -81,6 +162,8 @@ const tooltipStub = {
 describe('CohortGenerationSection', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockSourceAccessFor.canRead.mockImplementation(() => true)
+    mockSourceAccessFor.canWrite.mockImplementation(() => true)
     document.body.innerHTML = ''
   })
 
@@ -202,6 +285,17 @@ describe('CohortGenerationSection', () => {
     )
   })
 
+  it('stops polling when the section unmounts for a saved cohort', async () => {
+    const wrapper = mountSection({ cohortId: 1 }, [], [ccae])
+    await flushPromises()
+    const store = useWebAPIStore()
+    const spy = vi.spyOn(store, 'stopPolling')
+
+    wrapper.unmount()
+
+    expect(spy).toHaveBeenCalledWith(1)
+  })
+
   it('disables Inclusion report and Samples buttons for non-complete rows', async () => {
     const wrapper = mountSection(
       { cohortId: 1 },
@@ -217,6 +311,8 @@ describe('CohortGenerationSection', () => {
 describe('CohortGenerationSection — CRITICAL design findings block generation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockSourceAccessFor.canRead.mockImplementation(() => true)
+    mockSourceAccessFor.canWrite.mockImplementation(() => true)
     document.body.innerHTML = ''
   })
 
@@ -265,6 +361,8 @@ describe('CohortGenerationSection — CRITICAL design findings block generation'
 describe('CohortGenerationSection — unsaved changes block generation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockSourceAccessFor.canRead.mockImplementation(() => true)
+    mockSourceAccessFor.canWrite.mockImplementation(() => true)
     document.body.innerHTML = ''
   })
 
@@ -305,6 +403,91 @@ describe('CohortGenerationSection — unsaved changes block generation', () => {
     expect(spy).toHaveBeenCalledWith(1, 'CCAE')
   })
 
+  it('generates only writable sources that are not pending or running', async () => {
+    mockSourceAccessFor.canWrite.mockImplementation((sourceId: number) => sourceId !== 3)
+    const wrapper = mountSection(
+      { cohortId: 1, isDirty: false },
+      [{ id: 1, cohortDefinitionId: 1, sourceKey: 'S2', status: 'PENDING' }],
+      [
+        { ...ccae, sourceKey: 'S1', sourceId: 1 },
+        { ...mdcr, sourceKey: 'S2', sourceId: 2 },
+        { sourceId: 3, sourceKey: 'S3', sourceName: 'S3', sourceDialect: 'postgresql', daimons: [] },
+      ],
+      tooltipStub
+    )
+    await flushPromises()
+    const store = useWebAPIStore()
+    const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
+
+    await wrapper.find('[data-testid="generate-all-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy).toHaveBeenCalledWith(1, 'S1')
+  })
+
+  it('opens and closes the report drawer from a row extra action', async () => {
+    const { wrapper, router } = mountSectionWithRouter(
+      { cohortId: 1 },
+      [{ id: 1, cohortDefinitionId: 1, sourceKey: 'CCAE', status: 'COMPLETE', personCount: 10 }],
+      [ccae],
+      {
+        DataSourceRunTable: sourceRunTableStub,
+        CohortReportDrawer: cohortReportDrawerStub,
+        PreviousRunsDialog: previousRunsDialogStub,
+      }
+    )
+    await flushPromises()
+
+    await wrapper.find('[data-testid="extra-btn"]').trigger('click')
+    await flushPromises()
+
+    const drawer = wrapper.findComponent({ name: 'CohortReportDrawer' })
+    expect(drawer.props('modelValue')).toBe(true)
+    expect(drawer.props('reportType')).toBe('inclusion')
+    expect(drawer.props('sourceKey')).toBe('CCAE')
+    expect(router.currentRoute.value.query).toMatchObject({ report: 'inclusion', source: 'CCAE' })
+
+    await drawer.find('[data-testid="drawer-close"]').trigger('click')
+    await flushPromises()
+
+    expect(drawer.props('modelValue')).toBe(false)
+    expect(router.currentRoute.value.query).toEqual({})
+  })
+
+  it('opens history and replays the inclusion report from a selected run', async () => {
+    const { wrapper } = mountSectionWithRouter(
+      { cohortId: 1 },
+      [{ id: 1, cohortDefinitionId: 1, sourceKey: 'CCAE', status: 'COMPLETE', personCount: 10 }],
+      [ccae],
+      {
+        DataSourceRunTable: sourceRunTableStub,
+        CohortReportDrawer: cohortReportDrawerStub,
+        PreviousRunsDialog: previousRunsDialogStub,
+      }
+    )
+    await flushPromises()
+
+    await wrapper.find('[data-testid="history-btn"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.findComponent({ name: 'PreviousRunsDialog' }).props('modelValue')).toBe(true)
+
+    await wrapper.find('[data-testid="history-select"]').trigger('click')
+    await flushPromises()
+
+    const drawer = wrapper.findComponent({ name: 'CohortReportDrawer' })
+    expect(drawer.props('modelValue')).toBe(true)
+    expect(drawer.props('reportType')).toBe('inclusion')
+
+    await drawer.find('[data-testid="drawer-open-profile"]').trigger('click')
+    await flushPromises()
+    expect(drawer.props('reportType')).toBe('profile')
+
+    await drawer.find('[data-testid="drawer-back"]').trigger('click')
+    await flushPromises()
+    expect(drawer.props('reportType')).toBe('samples')
+  })
+
   it('reports the invalid design before the dirty flag, as 2.15 orders them', async () => {
     const wrapper = mountSection(
       { cohortId: 1, isDirty: true, criticalCount: 1 },
@@ -325,6 +508,8 @@ describe('CohortGenerationSection — unsaved changes block generation', () => {
 describe('CohortGenerationSection — unvalidated designs block generation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockSourceAccessFor.canRead.mockImplementation(() => true)
+    mockSourceAccessFor.canWrite.mockImplementation(() => true)
     document.body.innerHTML = ''
   })
 

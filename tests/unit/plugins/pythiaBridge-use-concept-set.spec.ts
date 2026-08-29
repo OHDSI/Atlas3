@@ -170,7 +170,7 @@ describe('pythiaBridge useConceptSet', () => {
     const res = await applyProposalDirect(useConceptSetProposal({ conceptSetId: 42 }))
 
     expect(res).toEqual({ applied: false })
-    expect(store.currentCohort?.expression?.InclusionRules).toBeUndefined()
+    expect(store.currentCohort?.expression?.InclusionRules).toHaveLength(0)
     expect(severities()).toEqual([
       { severity: 'danger', title: 'Concept set "Statins" has no concepts' },
     ])

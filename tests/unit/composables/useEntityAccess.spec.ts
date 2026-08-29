@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
-import { useEntityAccess, useEntityAccessFor, useSourceAccess } from '@/composables/useEntityAccess'
+import { useEntityAccess, useEntityAccessFor, useSourceAccess, useSourceAccessFor } from '@/composables/useEntityAccess'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
 import { getAuthConfig, setAuthConfig } from '@/config/auth.config'
@@ -120,6 +120,13 @@ describe('useSourceAccess', () => {
     expect(canWrite.value).toBe(false)
   })
 
+  it('grants read and write when write:source is present', () => {
+    setupUser({ permissionIdx: { write: ['write:source'] } })
+    const { canRead, canWrite } = useSourceAccess(102)
+    expect(canRead.value).toBe(true)
+    expect(canWrite.value).toBe(true)
+  })
+
   it('denies when source key is unknown', () => {
     setupUser({ entityAccess: { source: { '103': ['WRITE'] } } })
     const { canRead, canWrite } = useSourceAccess(999)
@@ -132,6 +139,43 @@ describe('useSourceAccess', () => {
     const { canRead, canWrite } = useSourceAccess(777)
     expect(canRead.value).toBe(true)
     expect(canWrite.value).toBe(true)
+  })
+
+  it('allows source access when authentication is disabled', () => {
+    setAuthConfig({ userAuthenticationEnabled: false })
+    setupUser({})
+    const { canRead, canWrite } = useSourceAccess(888)
+    expect(canRead.value).toBe(true)
+    expect(canWrite.value).toBe(true)
+  })
+})
+
+describe('useSourceAccessFor', () => {
+  let prevAuthEnabled: boolean
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    prevAuthEnabled = getAuthConfig().userAuthenticationEnabled
+    setAuthConfig({ userAuthenticationEnabled: true })
+  })
+
+  afterEach(() => {
+    setAuthConfig({ userAuthenticationEnabled: prevAuthEnabled })
+  })
+
+  it('uses numeric ids for source grants', () => {
+    setupUser({ entityAccess: { source: { '321': ['WRITE'] } } })
+    const { canRead, canWrite } = useSourceAccessFor()
+    expect(canRead(321)).toBe(true)
+    expect(canWrite(321)).toBe(true)
+  })
+
+  it('allows all source actions when authentication is disabled', () => {
+    setAuthConfig({ userAuthenticationEnabled: false })
+    setupUser({})
+    const { canRead, canWrite } = useSourceAccessFor()
+    expect(canRead(123)).toBe(true)
+    expect(canWrite(123)).toBe(true)
   })
 })
 

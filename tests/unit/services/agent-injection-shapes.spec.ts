@@ -259,7 +259,7 @@ describe('shapes of everything the agent injects', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('set_event_limits', { entryEvents: 'first' }) as never)
     expect(store.currentCohort!.expression!.PrimaryCriteria?.PrimaryCriteriaLimit?.Type).toBe('First')
-    expect(store.currentCohort!.expression!.QualifiedLimit).toBeUndefined()
+    expect(store.currentCohort!.expression!.QualifiedLimit?.Type).toBe('First')
   })
 
   it('proposes nothing for an unrecognised limit', () => {

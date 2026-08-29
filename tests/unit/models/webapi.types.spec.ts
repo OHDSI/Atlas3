@@ -27,8 +27,6 @@ describe('webapi generation status mapping', () => {
     })
 
     expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.status).toBe('FAILED')
-    }
+    expect(result.success && result.data.status).toBe('FAILED')
   })
 })

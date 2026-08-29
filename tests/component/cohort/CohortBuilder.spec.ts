@@ -859,7 +859,7 @@ describe('CohortBuilder', () => {
 
     expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false)
     expect(targetRef.value).toBeUndefined()
-    expect(setup.expression.ConceptSets).toBeUndefined()
+    expect(setup.expression.ConceptSets).toHaveLength(0)
   })
 
   // ---------------------------------------------------------------------------
