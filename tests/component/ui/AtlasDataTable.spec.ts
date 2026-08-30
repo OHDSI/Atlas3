@@ -174,6 +174,56 @@ describe('AtlasDataTable', () => {
     expect(firstRowName()).toBe('alpha')
   })
 
+  it('re-paginates when the caller passes items-per-page one-way (#266)', async () => {
+    const many = Array.from({ length: 60 }, (_, i) => ({ name: `row-${i}`, value: i }))
+    const wrapper = mount(AtlasDataTable, {
+      global: { plugins: [vuetify] },
+      props: { headers: HEADERS, items: many, itemsPerPage: 25 },
+    })
+
+    expect(wrapper.findAll('tbody tr')).toHaveLength(25)
+
+    await wrapper.findComponent({ name: 'VDataTable' }).vm.$emit('update:items-per-page', 50)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.findAll('tbody tr')).toHaveLength(50)
+    expect(wrapper.emitted('update:itemsPerPage')).toEqual([[50]])
+  })
+
+  it('changes page when the caller passes page one-way (#266)', async () => {
+    const many = Array.from({ length: 60 }, (_, i) => ({ name: `row-${i}`, value: i }))
+    const wrapper = mount(AtlasDataTable, {
+      global: { plugins: [vuetify] },
+      props: { headers: HEADERS, items: many, itemsPerPage: 25, page: 1 },
+    })
+
+    expect(wrapper.text()).toContain('row-0')
+
+    await wrapper.findComponent({ name: 'VDataTable' }).vm.$emit('update:page', 2)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('row-25')
+    expect(wrapper.text()).not.toContain('row-0')
+  })
+
+  it('lets a caller that pushes a new page value down win over the footer (#266)', async () => {
+    const many = Array.from({ length: 60 }, (_, i) => ({ name: `row-${i}`, value: i }))
+    const wrapper = mount(AtlasDataTable, {
+      global: { plugins: [vuetify] },
+      props: { headers: HEADERS, items: many, itemsPerPage: 25, page: 1 },
+    })
+
+    await wrapper.findComponent({ name: 'VDataTable' }).vm.$emit('update:page', 2)
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('row-25')
+
+    await wrapper.setProps({ page: 3 })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('row-50')
+    expect(wrapper.text()).not.toContain('row-25')
+  })
+
   it('still lets a caller with v-model:sort-by fully control sorting', async () => {
     const headers = [{ key: 'name', title: 'Name', sortable: true }]
     const items = [
