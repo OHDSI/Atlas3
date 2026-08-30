@@ -7,7 +7,7 @@ describe('webapi generation status mapping', () => {
   })
 
   it('parses cohort generation info ERROR as FAILED', () => {
-    const result = CohortGenerationInfoSchema.safeParse({
+    const parsed = CohortGenerationInfoSchema.parse({
       id: { cohortDefinitionId: 54, sourceId: 1 },
       startTime: 1787855182500,
       executionDuration: 661,
@@ -26,9 +26,6 @@ describe('webapi generation status mapping', () => {
       isDemographic: false,
     })
 
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.status).toBe('FAILED')
-    }
+    expect(parsed.status).toBe('FAILED')
   })
 })
