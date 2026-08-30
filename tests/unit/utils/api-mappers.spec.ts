@@ -56,6 +56,23 @@ describe('API Mappers', () => {
       expect(result.standardConcept).toBeNull()
       expect(result.invalidReason).toBe('D')
     })
+
+    it("normalizes the 'V' valid sentinel returned by vocabulary search to null", () => {
+      const apiConcept = {
+        CONCEPT_ID: 779546,
+        CONCEPT_NAME: 'buprenorphine',
+        CONCEPT_CODE: '1819',
+        DOMAIN_ID: 'Drug',
+        VOCABULARY_ID: 'RxNorm',
+        CONCEPT_CLASS_ID: 'Ingredient',
+        STANDARD_CONCEPT: 'S',
+        INVALID_REASON: 'V'
+      }
+
+      const result = mapConceptFromAPI(apiConcept)
+
+      expect(result.invalidReason).toBeNull()
+    })
   })
 
   describe('conceptToConceptSetItem', () => {
