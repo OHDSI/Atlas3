@@ -3192,6 +3192,7 @@
     "conceptSet": {
       "recommend": {
         "notAvailable": "Recommendations are not available. The PHOEBE 2.0 vocabulary tables are required to generate recommendations.",
+        "setupLink": "How to install the PHOEBE 2.0 tables",
         "noSeed": "Add concepts to the set first — recommendations are based on what is already included.",
         "recommendations": "recommendations"
       },
