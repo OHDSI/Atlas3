@@ -57,16 +57,25 @@ describe('CharacterizationsView import (#267)', () => {
     expect(btn.attributes('disabled')).toBeDefined()
   })
 
-  it('opens the imported characterization', async () => {
+  it('passes the design to the service and returns the new id', async () => {
     vi.mocked(importCharacterization).mockResolvedValue({ success: true, data: { id: 55 } } as never)
     const wrapper = mountView()
 
-    await (wrapper.vm as unknown as {
+    const entity = await (wrapper.vm as unknown as {
       importDesign: (j: unknown, m: { fileName: string }) => Promise<{ id?: number }>
     }).importDesign({ any: 'design' }, { fileName: 'cc.json' })
     await flushPromises()
 
     expect(importCharacterization).toHaveBeenCalledWith({ any: 'design' })
+    expect(entity).toEqual({ id: 55 })
+  })
+
+  it('opens the imported characterization', () => {
+    const wrapper = mountView()
+
+    ;(wrapper.vm as unknown as { onImported: (e: { id?: number }) => void }).onImported({ id: 55 })
+
+    expect(push).toHaveBeenCalledWith('/characterizations/55')
   })
 
   it('rejects so the button can report a server refusal', async () => {
