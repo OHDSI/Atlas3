@@ -276,7 +276,7 @@ const pathStats = computed(() => {
 })
 
 const runTableSources = computed<RunTableSource[]>(() =>
-  dsStore.sources.map(s => ({ sourceKey: s.sourceKey, sourceName: s.sourceName }))
+  dsStore.sources.map(s => ({ sourceId: s.sourceId, sourceKey: s.sourceKey, sourceName: s.sourceName }))
 )
 
 const runTableExecutions = computed<RunTableExecution[]>(() => buildRunTableExecutions({

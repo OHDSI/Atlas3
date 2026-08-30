@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
-import { useEntityAccess, useEntityAccessFor, useSourceAccess } from '@/composables/useEntityAccess'
+import { useEntityAccess, useEntityAccessFor, useSourceAccess, useSourceAccessFor } from '@/composables/useEntityAccess'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
 import { getAuthConfig, setAuthConfig } from '@/config/auth.config'
@@ -100,31 +100,82 @@ describe('useSourceAccess', () => {
   })
 
   it('grants write when sourceAccess includes WRITE', () => {
-    setupUser({ entityAccess: { source: { sample: ['WRITE'] } } })
-    const { canRead, canWrite } = useSourceAccess('sample')
+    setupUser({ entityAccess: { source: { '101': ['WRITE'] } } })
+    const { canRead, canWrite } = useSourceAccess(101)
+    expect(canRead.value).toBe(true)
+    expect(canWrite.value).toBe(true)
+  })
+
+  it('grants write when sourceAccess is keyed by numeric id', () => {
+    setupUser({ entityAccess: { source: { '404': ['WRITE'] } } })
+    const { canRead, canWrite } = useSourceAccess(404)
     expect(canRead.value).toBe(true)
     expect(canWrite.value).toBe(true)
   })
 
   it('grants read but not write when only READ', () => {
-    setupUser({ entityAccess: { source: { ro: ['READ'] } } })
-    const { canRead, canWrite } = useSourceAccess('ro')
+    setupUser({ entityAccess: { source: { '102': ['READ'] } } })
+    const { canRead, canWrite } = useSourceAccess(102)
     expect(canRead.value).toBe(true)
     expect(canWrite.value).toBe(false)
   })
 
+  it('grants read and write when write:source is present', () => {
+    setupUser({ permissionIdx: { write: ['write:source'] } })
+    const { canRead, canWrite } = useSourceAccess(102)
+    expect(canRead.value).toBe(true)
+    expect(canWrite.value).toBe(true)
+  })
+
   it('denies when source key is unknown', () => {
-    setupUser({ entityAccess: { source: { sample: ['WRITE'] } } })
-    const { canRead, canWrite } = useSourceAccess('missing')
+    setupUser({ entityAccess: { source: { '103': ['WRITE'] } } })
+    const { canRead, canWrite } = useSourceAccess(999)
     expect(canRead.value).toBe(false)
     expect(canWrite.value).toBe(false)
   })
 
   it('admin:source grants both', () => {
     setupUser({ permissionIdx: { admin: ['admin:source'] } })
-    const { canRead, canWrite } = useSourceAccess('any')
+    const { canRead, canWrite } = useSourceAccess(777)
     expect(canRead.value).toBe(true)
     expect(canWrite.value).toBe(true)
+  })
+
+  it('allows source access when authentication is disabled', () => {
+    setAuthConfig({ userAuthenticationEnabled: false })
+    setupUser({})
+    const { canRead, canWrite } = useSourceAccess(888)
+    expect(canRead.value).toBe(true)
+    expect(canWrite.value).toBe(true)
+  })
+})
+
+describe('useSourceAccessFor', () => {
+  let prevAuthEnabled: boolean
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    prevAuthEnabled = getAuthConfig().userAuthenticationEnabled
+    setAuthConfig({ userAuthenticationEnabled: true })
+  })
+
+  afterEach(() => {
+    setAuthConfig({ userAuthenticationEnabled: prevAuthEnabled })
+  })
+
+  it('uses numeric ids for source grants', () => {
+    setupUser({ entityAccess: { source: { '321': ['WRITE'] } } })
+    const { canRead, canWrite } = useSourceAccessFor()
+    expect(canRead(321)).toBe(true)
+    expect(canWrite(321)).toBe(true)
+  })
+
+  it('allows all source actions when authentication is disabled', () => {
+    setAuthConfig({ userAuthenticationEnabled: false })
+    setupUser({})
+    const { canRead, canWrite } = useSourceAccessFor()
+    expect(canRead(123)).toBe(true)
+    expect(canWrite(123)).toBe(true)
   })
 })
 

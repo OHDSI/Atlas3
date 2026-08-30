@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { computed } from 'vue'
+import { computed, unref } from 'vue'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -13,9 +13,9 @@ vi.mock('@/composables/useI18n', async () => {
 })
 
 vi.mock('@/composables/useEntityAccess', () => ({
-  useSourceAccess: () => ({
+  useSourceAccess: (sourceId: unknown) => ({
     canRead: computed(() => true),
-    canWrite: computed(() => true),
+    canWrite: computed(() => String(unref(sourceId as any)) === '404'),
   }),
 }))
 
@@ -24,7 +24,7 @@ const vuetify = createVuetify({ components, directives })
 function mountRow(props: Record<string, unknown>) {
   return mount(DataSourceRunRow, {
     global: { plugins: [vuetify] },
-    props: { sourceKey: 'CCAE', historyCount: 0, ...props },
+    props: { sourceId: 1, sourceKey: 'CCAE', historyCount: 0, ...props },
   })
 }
 
@@ -47,9 +47,15 @@ describe('DataSourceRunRow', () => {
   })
 
   it('shows Rerun (enabled) when COMPLETE with hideCancel=true', () => {
-    const wrapper = mountRow({ latestStatus: 'COMPLETED', hideCancel: true })
+    const wrapper = mountRow({ latestStatus: 'COMPLETED', hideCancel: true, sourceId: 404 })
     const btn = wrapper.find('[data-testid="run-btn-CCAE"]')
     expect(btn.text()).toMatch(/Rerun/i)
+    expect(btn.attributes('disabled')).toBeUndefined()
+  })
+
+  it('uses sourceId for permission checks when provided', () => {
+    const wrapper = mountRow({ sourceId: 404 })
+    const btn = wrapper.find('[data-testid="run-btn-CCAE"]')
     expect(btn.attributes('disabled')).toBeUndefined()
   })
 })

@@ -292,6 +292,7 @@ const emptyVariant = computed(() => resolveEmptyVariant({
 
 const runTableSources = computed<RunTableSource[]>(() =>
   sourcesStore.sources.map((s) => ({
+    sourceId: s.sourceId,
     sourceKey: s.sourceKey,
     sourceName: s.sourceName ?? s.sourceKey,
   }))

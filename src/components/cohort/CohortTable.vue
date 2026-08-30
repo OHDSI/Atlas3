@@ -402,7 +402,12 @@ function formatDate(dateValue: string | number | null | undefined): string {
   if (!dateValue) return naLabel.value
   const date = new Date(dateValue)
   if (isNaN(date.getTime())) return naLabel.value
-  return date.toLocaleDateString(locale.value, { year: 'numeric', month: 'short', day: 'numeric' })
+  return date.toLocaleDateString(locale.value, {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 function openCohort(cohort: CohortDefinitionSummary) {

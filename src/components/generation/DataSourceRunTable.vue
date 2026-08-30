@@ -66,6 +66,7 @@
     <template #[`item.actions`]="{ item }">
       <div class="dsrt-actions-cell">
         <DataSourceRunRow
+          :source-id="(item as Row).sourceId"
           :source-key="(item as Row).sourceKey"
           :latest-status="(item as Row).latestStatus"
           :latest-execution-id="(item as Row).latestExecutionId"
@@ -106,6 +107,7 @@ import { useI18n } from '@/composables/useI18n'
 import type { GenerationStatus } from '@/models/characterization.types'
 
 export interface RunTableSource {
+  sourceId: number
   sourceKey: string
   sourceName: string
 }
@@ -251,6 +253,7 @@ function effectiveDuration(e: RunTableExecution): number | undefined {
 }
 
 interface Row {
+  sourceId: number
   sourceKey: string
   sourceName: string
   showKey: boolean
@@ -309,6 +312,7 @@ const rows = computed<Row[]>(() =>
     const status = latest?.status
     const kind: StatusKind = status ? STATUS_KIND[status] : 'none'
     return {
+      sourceId: s.sourceId,
       sourceKey: s.sourceKey,
       sourceName: s.sourceName || s.sourceKey,
       showKey: !!(s.sourceName && s.sourceName !== s.sourceKey),
