@@ -243,6 +243,32 @@ describe('useIncidenceRateBuilder', () => {
       expect(pushMock).toHaveBeenCalledWith('/incidence-rates/12')
       expect(feedback.value).toEqual({ message: 'Copied', color: 'success' })
     })
+
+    it('does not carry the source design\'s execution info into the copy (#293)', async () => {
+      const store = useIncidenceRateStore()
+      store.setIR(makeValidIR({ id: 5 }))
+      store.setExecutionInfo('SynPUF5', {
+        executionInfo: {
+          id: { sourceId: 1, analysisId: 5 },
+          status: 'COMPLETE',
+          startTime: Date.now(),
+        },
+      } as never)
+      store.setSelectedTargetOutcome(1, 2)
+      expect(store.executions.length).toBe(1)
+
+      vi.mocked(webapi.copyIncidenceRate).mockResolvedValue({
+        success: true,
+        data: makeValidIR({ id: 12 }),
+      })
+
+      const { copy } = useIncidenceRateBuilder()
+      await copy()
+
+      expect(store.executions).toEqual([])
+      expect(store.selectedTargetId).toBeNull()
+      expect(store.selectedOutcomeId).toBeNull()
+    })
   })
 
   describe('remove', () => {
