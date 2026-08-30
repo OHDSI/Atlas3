@@ -88,15 +88,23 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     validationErrors.value = []
   }
 
+  // The workbench is not remounted across /incidence-rates/:id navigations, so
+  // any state scoped to one design (polled execution info and the report's
+  // target/outcome/source selection) has to be dropped whenever the store
+  // adopts a different design, or the previous design's results keep showing.
+  function resetGenerationState() {
+    executionInfoBySourceKey.value = {}
+    selectedTargetId.value = null
+    selectedOutcomeId.value = null
+    selectedSourceKey.value = null
+  }
+
   function createNewIR() {
     setIR(emptyIR())
     previewVersion.value = null
     isReadOnly.value = false
     cohortNameById.value = new Map()
-    executionInfoBySourceKey.value = {}
-    selectedTargetId.value = null
-    selectedOutcomeId.value = null
-    selectedSourceKey.value = null
+    resetGenerationState()
   }
 
   function markDirty() {
@@ -211,7 +219,7 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     setIR(result.data)
     previewVersion.value = null
     isReadOnly.value = false
-    executionInfoBySourceKey.value = {}
+    resetGenerationState()
     await resolveCohortNames(result.data)
     return true
   }
@@ -581,6 +589,7 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     removeTag,
     syncTags,
     setExecutionInfo,
+    resetGenerationState,
     setSelectedSource,
     setSelectedTargetOutcome,
     setRateMultiplier,
