@@ -90,7 +90,7 @@
 
         <!-- Modified Date -->
         <template #item.modifiedDate="{ item }">
-          {{ formatDate(item.modifiedDate) }}
+          {{ formatDate(lastTouchedDate(item)) }}
         </template>
 
         <!-- Author (Created By) -->
@@ -162,7 +162,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
-import { formatDate } from '@/utils/date-format'
+import { formatDate, lastTouchedDate } from '@/utils/date-format'
 import { tagColor, tagContrastColor } from '@/utils/tag-color'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetFilters from './ConceptSetFilters.vue'
@@ -209,6 +209,9 @@ const headers = [
   {
     title: t('columns.updated', 'Updated').value,
     key: 'modifiedDate',
+    // Sorted off the same fallback the cell displays, so a set that was only
+    // ever created orders by its creation date rather than sinking (#292).
+    value: (item: unknown) => lastTouchedDate(item as ConceptSetListItem),
     sortable: true,
     width: '120px',
   },
