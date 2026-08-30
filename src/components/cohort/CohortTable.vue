@@ -226,7 +226,7 @@
               {{ formatDate(cohort.createdDate) }}
             </td>
             <td class="cohort-table__col-date">
-              {{ formatDate(cohort.modifiedDate) }}
+              {{ formatDate(lastTouchedDate(cohort)) }}
             </td>
             <td class="cohort-table__col-actions">
               <div class="cohort-table__actions">
@@ -270,6 +270,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
+import { lastTouchedDate } from '@/utils/date-format'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
@@ -341,8 +342,10 @@ function sortValue(cohort: CohortDefinitionSummary, key: SortKey): string | numb
       return formatUser(cohort.createdBy).toLowerCase()
     case 'createdDate':
       return cohort.createdDate ? new Date(cohort.createdDate).getTime() : 0
-    case 'modifiedDate':
-      return cohort.modifiedDate ? new Date(cohort.modifiedDate).getTime() : 0
+    case 'modifiedDate': {
+      const touched = lastTouchedDate(cohort)
+      return touched ? new Date(touched).getTime() : 0
+    }
   }
 }
 
