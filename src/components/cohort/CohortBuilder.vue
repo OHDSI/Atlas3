@@ -328,6 +328,7 @@ import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { nextConceptSetId } from '@/utils/concept-set-id'
+import { normalizeInvalidReason } from '@/utils/api-mappers'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import CohortJsonDialog from './CohortJsonDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
@@ -426,7 +427,7 @@ function convertCirceItemToAtlas(item: CirceConceptSetItem): ConceptSetItem {
     vocabularyId: c?.VOCABULARY_ID ?? '',
     conceptClassId: c?.CONCEPT_CLASS_ID ?? '',
     standardConcept: c?.STANDARD_CONCEPT ?? null,
-    invalidReason: c?.INVALID_REASON ?? null,
+    invalidReason: normalizeInvalidReason(c?.INVALID_REASON),
     isExcluded: item.isExcluded ?? false,
     includeDescendants: item.includeDescendants ?? false,
     includeMapped: item.includeMapped ?? false,

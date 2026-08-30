@@ -51,6 +51,26 @@ describe('concept-detail.service', () => {
       })
     })
 
+    it("normalizes the 'V' valid sentinel to null", async () => {
+      (httpClient as Mock).mockResolvedValueOnce([
+        {
+          CONCEPT_ID: 779546,
+          CONCEPT_NAME: 'buprenorphine',
+          CONCEPT_CODE: '1819',
+          DOMAIN_ID: 'Drug',
+          VOCABULARY_ID: 'RxNorm',
+          CONCEPT_CLASS_ID: 'Ingredient',
+          STANDARD_CONCEPT: 'S',
+          INVALID_REASON: 'V',
+          RELATIONSHIPS: [],
+        },
+      ])
+
+      const result = await getConceptRelated('SYNPUF1K', 779546)
+
+      expect(result[0].invalidReason).toBeNull()
+    })
+
     it('rejects when validation fails', async () => {
       (httpClient as Mock).mockResolvedValueOnce([{ broken: true }])
       await expect(getConceptRelated('SYNPUF1K', 1)).rejects.toThrow(
