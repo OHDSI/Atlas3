@@ -22,6 +22,12 @@
           'Recommendations are not available. The PHOEBE 2.0 vocabulary tables are required to generate recommendations.'
         )
       }}
+      <a
+        :href="PHOEBE_SETUP_URL"
+        target="_blank"
+        rel="noopener noreferrer"
+        data-testid="recommend-setup-link"
+      >{{ t('cs.conceptSet.recommend.setupLink', 'How to install the PHOEBE 2.0 tables') }}</a>
     </AtlasAlert>
 
     <AtlasAlert
@@ -123,6 +129,10 @@ import ConceptAddOptions from './ConceptAddOptions.vue'
 import type { Concept, ConceptAddFlags } from '@/models/concept-set.types'
 
 const { t } = useI18n()
+
+// Atlas 2.15 pointed at this thread from the same message; without it the user
+// is told the tables are missing but not where to get them.
+const PHOEBE_SETUP_URL = 'https://forums.ohdsi.org/t/phoebe-2-0/17410'
 
 interface Props {
   active: boolean
