@@ -28,6 +28,18 @@ describe('CharacterizationEmptyState', () => {
     expect(w.emitted('run')).toHaveLength(1)
   })
 
+  it('renders the results-error variant with the server message (#291)', () => {
+    const w = mount(CharacterizationEmptyState, {
+      global: { plugins: [vuetify] },
+      props: {
+        variant: 'results-error',
+        errorMessage: 'An exception occurred: java.lang.IllegalArgumentException',
+      },
+    })
+    expect(w.text().toLowerCase()).toContain('could not be loaded')
+    expect(w.text()).toContain('An exception occurred: java.lang.IllegalArgumentException')
+  })
+
   it('renders no-data variant', () => {
     const w = mount(CharacterizationEmptyState, {
       global: { plugins: [vuetify] }, props: { variant: 'no-data' },

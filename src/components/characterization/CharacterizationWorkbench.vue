@@ -75,7 +75,7 @@
         <CharacterizationEmptyState
           v-if="emptyVariant"
           :variant="emptyVariant"
-          :error-message="execution?.status === 'FAILED' ? errorMessage : undefined"
+          :error-message="emptyVariant === 'run-failed' || emptyVariant === 'results-error' ? errorMessage : undefined"
         />
 
         <template v-else>
@@ -287,6 +287,7 @@ const emptyVariant = computed(() => resolveEmptyVariant({
   executionCount: store.executions.length,
   selectedExecutionId: selectedExecutionId.value,
   executionStatus: execution.value?.status,
+  resultsError: errorMessage.value || null,
 }))
 
 const runTableSources = computed<RunTableSource[]>(() =>
