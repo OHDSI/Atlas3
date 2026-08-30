@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { ref } from 'vue'
-import type { CohortExpression } from '@/models/circe-types'
+import { defaultExpression, type CohortExpression } from '@/models/circe-types'
 
 vi.mock('@/router', () => ({
   default: {
@@ -170,7 +170,7 @@ describe('pythiaBridge useConceptSet', () => {
     const res = await applyProposalDirect(useConceptSetProposal({ conceptSetId: 42 }))
 
     expect(res).toEqual({ applied: false })
-    expect(store.currentCohort?.expression?.InclusionRules).toBeUndefined()
+    expect(store.currentCohort?.expression?.InclusionRules).toEqual(defaultExpression.InclusionRules)
     expect(severities()).toEqual([
       { severity: 'danger', title: 'Concept set "Statins" has no concepts' },
     ])
