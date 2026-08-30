@@ -19,6 +19,7 @@ import {
   type Pathway,
 } from '@/models/pathway.types'
 import { z } from 'zod'
+import { useAuthStore } from '@/stores/auth'
 
 const CONTEXT = 'PathwayService'
 
@@ -130,7 +131,10 @@ export async function exportPathway(id: number): Promise<unknown> {
  * POST /pathway-analysis/import
  */
 export async function importPathway(design: unknown): Promise<Pathway> {
-  const data = await httpPost<unknown>('/pathway-analysis/import', design)
+  const authStore = useAuthStore()
+  const data = await authStore.executeWithUserRefresh(() =>
+    httpPost<unknown>('/pathway-analysis/import', design)
+  )
   const parsed = PathwaySchema.safeParse(data)
   if (!parsed.success) {
     logger.error('Pathway', 'importPathway validation', parsed.error)
