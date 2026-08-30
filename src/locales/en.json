@@ -461,6 +461,7 @@
       "perRuleSatisfaction": "Per-rule satisfaction",
       "populationBreakdown": "Population breakdown",
       "noReportData": "No inclusion-rule report data is available for this cohort and source. The cohort may have no inclusion rules, or it may not have been generated yet. If you've generated it already, try re-running.",
+      "noStatsRecorded": "This generation recorded no inclusion statistics for this mode, so there is no attrition to report. The cohort itself may still contain records; see the generation panel for its record count.",
       "loadError": "Failed to load the inclusion-rule report",
       "attrition": "Attrition",
       "noAttritionData": "No attrition data available",

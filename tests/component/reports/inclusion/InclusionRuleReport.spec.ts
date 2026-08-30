@@ -97,6 +97,54 @@ describe('InclusionRuleReport', () => {
     expect(wrapper.find('[data-testid=inclusion-summary-match-rate]').text()).toContain('—')
   })
 
+  it('says no statistics were recorded rather than reporting zeros (#299)', async () => {
+    // What WebAPI returns when the results schema holds no cohort_summary_stats
+    // row for this cohort and mode: a default Summary, every count zero and
+    // percentMatched unset. Reporting that as real data told the user there
+    // were no records while the generation panel showed a populated cohort.
+    fetchMock.mockResolvedValueOnce({
+      success: true,
+      data: {
+        summary: { baseCount: 0, finalCount: 0, lostCount: 0, percentMatched: null },
+        inclusionRuleStats: [],
+        treemap: null,
+      },
+    })
+
+    const wrapper = mount(InclusionRuleReport, {
+      global,
+      props: { cohortId: 54, sourceKey: 'SYNPUF5' },
+    })
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid=inclusion-rule-report-no-stats]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid=inclusion-summary-final-count]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid=inclusion-rule-report-empty]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid=inclusion-rule-report-error]').exists()).toBe(false)
+  })
+
+  it('still reports a genuinely empty cohort, which carries a percent (#299)', async () => {
+    // A generation that ran and matched nobody writes a row, so the mapper
+    // fills percentMatched. That is real data and must render as a report.
+    fetchMock.mockResolvedValueOnce({
+      success: true,
+      data: {
+        summary: { baseCount: 0, finalCount: 0, lostCount: 0, percentMatched: '0.00' },
+        inclusionRuleStats: [],
+        treemap: null,
+      },
+    })
+
+    const wrapper = mount(InclusionRuleReport, {
+      global,
+      props: { cohortId: 54, sourceKey: 'SYNPUF5' },
+    })
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid=inclusion-rule-report-no-stats]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid=inclusion-summary-final-count]').exists()).toBe(true)
+  })
+
   it('refetches with the correct mode when the user switches the tab', async () => {
     fetchMock.mockResolvedValue({ success: true, data: fullReport })
 

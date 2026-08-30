@@ -42,6 +42,19 @@
     </AtlasAlert>
 
     <AtlasAlert
+      v-else-if="report && !hasStatistics"
+      severity="info"
+      data-testid="inclusion-rule-report-no-stats"
+    >
+      {{
+        t(
+          'components.inclusionRuleReport.noStatsRecorded',
+          'This generation recorded no inclusion statistics for this mode, so there is no attrition to report. The cohort itself may still contain records; see the generation panel for its record count.'
+        ).value
+      }}
+    </AtlasAlert>
+
+    <AtlasAlert
       v-else-if="!report"
       severity="info"
       data-testid="inclusion-rule-report-empty"
@@ -143,6 +156,24 @@ const report = ref<InclusionRuleReport | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
 
+// WebAPI hands back a default Summary, every count zero and percentMatched
+// unset, when the results schema holds no cohort_summary_stats row for this
+// cohort and mode. Its row mapper always fills percentMatched when a row does
+// exist, and a genuinely empty cohort still reports "0.00%", so that null
+// together with zeroed counts means "nothing was recorded" rather than
+// "nothing matched". Rendering it as a report of zeros contradicted the
+// generation panel's own record count (#299).
+const hasStatistics = computed<boolean>(() => {
+  const summary = report.value?.summary
+  if (!summary) return false
+  return (
+    summary.percentMatched !== null ||
+    summary.baseCount !== 0 ||
+    summary.finalCount !== 0 ||
+    summary.lostCount !== 0
+  )
+})
+
 const cumulativeRemaining = computed<number[] | undefined>(() => {
   if (!report.value) return undefined
   // computeAttritionSteps returns [Initial, ...perRule]; drop the initial step
@@ -187,7 +218,7 @@ function formatPercent(s: string | null): string {
 defineOptions({ name: 'InclusionRuleReport' })
 
 // Expose internal refs so tests can drive the tab switch deterministically
-defineExpose({ mode, report, loading, error })
+defineExpose({ mode, report, loading, error, hasStatistics })
 </script>
 
 <style scoped>
