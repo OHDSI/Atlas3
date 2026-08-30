@@ -13,8 +13,8 @@
     :aria-label="caption"
     density="compact"
     v-bind="tableBind"
-    @update:page="(v: number) => $emit('update:page', v)"
-    @update:items-per-page="(v: number) => $emit('update:itemsPerPage', v)"
+    @update:page="onUpdatePage"
+    @update:items-per-page="onUpdateItemsPerPage"
   >
     <template
       v-for="(_, name) in $slots"
@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useAttrs } from 'vue'
+import { computed, ref, watch, useAttrs } from 'vue'
 
 interface SortItem {
   key: string
@@ -103,6 +103,38 @@ const sortByModel = computed<SortItem[]>({
 // Forward the keys only when the caller actually provided them.
 const attrs = useAttrs()
 
+// A caller that binds `page`/`items-per-page` one-way, as a starting value it
+// never writes back (`:items-per-page="25"`), still makes the table
+// controlled: the footer's choice was emitted and then immediately overwritten
+// by the unchanged prop, leaving the pager inert (#266). Hold the user's choice
+// here so it survives, and drop it whenever the caller pushes a new value down,
+// which keeps a real `v-model` binding authoritative.
+const pageOverride = ref<number | undefined>(undefined)
+const itemsPerPageOverride = ref<number | undefined>(undefined)
+
+watch(
+  () => props.page,
+  () => {
+    pageOverride.value = undefined
+  }
+)
+watch(
+  () => props.itemsPerPage,
+  () => {
+    itemsPerPageOverride.value = undefined
+  }
+)
+
+function onUpdatePage(v: number) {
+  pageOverride.value = v
+  emit('update:page', v)
+}
+
+function onUpdateItemsPerPage(v: number) {
+  itemsPerPageOverride.value = v
+  emit('update:itemsPerPage', v)
+}
+
 // Single merged v-bind: Vue's SFC compiler rejects multiple bare `v-bind`
 // directives on one element, so the conditional pagination keys and the
 // forwarded $attrs have to combine here.
@@ -110,8 +142,12 @@ const tableBind = computed(() => {
   const { density: _d, ...restAttrs } = attrs as Record<string, unknown>
   void _d
   const bind: Record<string, unknown> = { ...restAttrs }
-  if (props.page !== undefined) bind.page = props.page
-  if (props.itemsPerPage !== undefined) bind['items-per-page'] = props.itemsPerPage
+  // The override only applies on top of a prop the caller actually passed. A
+  // caller that binds neither key stays fully uncontrolled, as #203/#222 needs.
+  if (props.page !== undefined) bind.page = pageOverride.value ?? props.page
+  if (props.itemsPerPage !== undefined) {
+    bind['items-per-page'] = itemsPerPageOverride.value ?? props.itemsPerPage
+  }
   return bind
 })
 </script>
