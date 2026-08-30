@@ -65,11 +65,42 @@ describe('ConceptSetList import (#267)', () => {
   it('opens the editor on the imported set', async () => {
     const wrapper = mountList()
     const store = useConceptSetsStore()
-    const open = vi.spyOn(store, 'openEditEditor').mockImplementation(() => {})
+    vi.spyOn(store, 'fetchAll').mockResolvedValue()
+    const open = vi.spyOn(store, 'openEditEditor').mockResolvedValue()
 
-    ;(wrapper.vm as unknown as { onImported: (e: { id?: number | string }) => void })
+    await (wrapper.vm as unknown as { onImported: (e: { id?: number | string }) => Promise<void> })
       .onImported({ id: 9 })
 
     expect(open).toHaveBeenCalledWith(9)
+  })
+
+  it('refetches the list before opening the editor, so the imported set is not re-imported as a duplicate', async () => {
+    const wrapper = mountList()
+    const store = useConceptSetsStore()
+    const calls: string[] = []
+    vi.spyOn(store, 'fetchAll').mockImplementation(async () => {
+      calls.push('fetchAll')
+    })
+    vi.spyOn(store, 'openEditEditor').mockImplementation(async () => {
+      calls.push('openEditEditor')
+    })
+
+    await (wrapper.vm as unknown as { onImported: (e: { id?: number | string }) => Promise<void> })
+      .onImported({ id: 9 })
+
+    expect(calls).toEqual(['fetchAll', 'openEditEditor'])
+  })
+
+  it('does not refetch or open the editor when the imported entity has no id', async () => {
+    const wrapper = mountList()
+    const store = useConceptSetsStore()
+    const fetchAll = vi.spyOn(store, 'fetchAll').mockResolvedValue()
+    const open = vi.spyOn(store, 'openEditEditor').mockResolvedValue()
+
+    await (wrapper.vm as unknown as { onImported: (e: { id?: number | string }) => Promise<void> })
+      .onImported({ id: undefined })
+
+    expect(fetchAll).not.toHaveBeenCalled()
+    expect(open).not.toHaveBeenCalled()
   })
 })

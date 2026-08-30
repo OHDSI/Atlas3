@@ -26,6 +26,7 @@
 import { ref } from 'vue'
 import { AtlasButton } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
+import { logger } from '@/utils/logger'
 
 interface Props {
   label: string
@@ -78,12 +79,14 @@ async function onFileChange(event: Event) {
     let design: unknown
     try {
       design = JSON.parse(await readFileAsText(file))
-    } catch {
+    } catch (err) {
+      logger.error('EntityImportButton', `Import parse failed for ${file.name}`, err)
       emit('failed', tv('components.entityImport.invalidJson', '{file} is not valid JSON.', { file: file.name }))
       return
     }
     emit('imported', await props.importDesign(design, { fileName: file.name }))
   } catch (err) {
+    logger.error('EntityImportButton', `Import failed for ${file.name}`, err)
     emit(
       'failed',
       err instanceof Error && err.message

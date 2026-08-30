@@ -275,8 +275,14 @@ async function importDesign(
   return { id: created.id }
 }
 
-function onImported(entity: { id?: number | string }) {
-  if (entity.id !== undefined) store.openEditEditor(entity.id)
+// The editor overlays this list rather than replacing it via router.push, so
+// it opens through the store like onEditClick does; nothing else refetches
+// this list, so we must do it explicitly before opening or the imported set
+// is missing on close, inviting a duplicate re-import (#267).
+async function onImported(entity: { id?: number | string }) {
+  if (entity.id == null) return
+  await store.fetchAll()
+  await store.openEditEditor(entity.id)
 }
 
 defineExpose({ importDesign, onImported })
