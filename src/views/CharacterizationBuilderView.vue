@@ -18,6 +18,7 @@
     :eyebrow="t('cc.title', 'Characterization').value"
     :title="titleText"
     :error="storeError"
+    :authorship="store.currentCharacterization"
     :show-back="false"
     testid="char-builder"
     @back="handleBack"

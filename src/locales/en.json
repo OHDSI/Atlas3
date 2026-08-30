@@ -90,6 +90,12 @@
     }
   },
   "common": {
+    "authorship": {
+      "created": "Created",
+      "createdBy": "Created by",
+      "updated": "Updated",
+      "updatedBy": "Updated by"
+    },
     "accessDenied": "Access denied",
     "add": "Add",
     "and": "and",

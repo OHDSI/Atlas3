@@ -63,6 +63,12 @@
           >
             {{ subtitle }}
           </p>
+          <div
+            v-if="$slots.meta"
+            class="page-header__meta"
+          >
+            <slot name="meta" />
+          </div>
         </div>
         <div
           v-if="$slots.actions"
@@ -112,11 +118,15 @@ const props = defineProps<Props>()
 const slots = useSlots()
 
 const hasHeader = computed(() =>
-  Boolean(props.title || slots.title || slots.actions || slots.subtitle)
+  Boolean(props.title || slots.title || slots.actions || slots.subtitle || slots.meta)
 )
 </script>
 
 <style scoped>
+.page-header__meta {
+  margin-top: 4px;
+}
+
 .page-wrapper {
   min-height: 100%;
   background-color: rgb(var(--v-theme-surface-variant));

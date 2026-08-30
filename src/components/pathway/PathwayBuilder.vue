@@ -3,6 +3,7 @@
     :eyebrow="t('navigation.pathways', 'Pathway analysis').value"
     :title="title"
     :subtitle="subtitle"
+    :authorship="store.currentPathway"
     :show-back="false"
     testid="pathway-builder"
     @back="handleBack"

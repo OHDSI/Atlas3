@@ -44,6 +44,11 @@
                 {{ nameError }}
               </p>
             </v-form>
+            <AssetAuthorship
+              v-if="authorship"
+              v-bind="authorship"
+              class="cs-editor__authorship"
+            />
           </div>
 
           <div class="cs-editor__actions">
@@ -687,6 +692,7 @@
 
 <script setup lang="ts">
 import { logger } from '@/utils/logger'
+import AssetAuthorship from '@/components/shared/AssetAuthorship.vue'
 import { ref, computed, inject, watch, toRef, onBeforeUnmount } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
@@ -744,6 +750,19 @@ const emit = defineEmits<{
 // ============================================================================
 
 const store = useConceptSetsStore()
+
+// Ownership drives what the current user may do with a set, so the editor says
+// who owns it rather than leaving that to be inferred (#269).
+const authorship = computed(() => {
+  const set = store.currentSet
+  if (!set?.id || set.id === 'new') return null
+  return {
+    createdBy: set.createdBy,
+    createdDate: set.createdDate,
+    modifiedBy: set.modifiedBy,
+    modifiedDate: set.modifiedDate,
+  }
+})
 const notify = useNotifications()
 
 // ============================================================================
@@ -1461,6 +1480,10 @@ function closeJsonDialog() {
 .cs-editor__title-input:disabled {
   color: rgb(var(--v-theme-on-surface-variant));
   cursor: not-allowed;
+}
+
+.cs-editor__authorship {
+  margin-top: 4px;
 }
 
 .cs-editor__title-error {
