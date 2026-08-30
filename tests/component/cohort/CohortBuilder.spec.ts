@@ -15,6 +15,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { ref } from 'vue'
+import { defaultExpression } from '@/models/circe-types'
 
 // Mock i18n composable with real translations
 vi.mock('@/composables/useI18n', async () => {
@@ -859,7 +860,7 @@ describe('CohortBuilder', () => {
 
     expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false)
     expect(targetRef.value).toBeUndefined()
-    expect(setup.expression.ConceptSets).toBeUndefined()
+    expect(setup.expression.ConceptSets).toEqual(defaultExpression.ConceptSets)
   })
 
   // ---------------------------------------------------------------------------
