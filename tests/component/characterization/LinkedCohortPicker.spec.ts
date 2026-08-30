@@ -169,6 +169,41 @@ describe('LinkedCohortPicker cohort id (#215)', () => {
       document.querySelectorAll('[data-testid="linked-cohort-picker-table"] tbody tr')
     ).map(row => row.textContent ?? '')
 
+  it('offers no select-all checkbox, only per-row selection (#215)', async () => {
+    const wrapper = mountPicker([])
+    await wrapper.get('[data-testid="linked-cohort-picker-add"]').trigger('click')
+    await flushPromises()
+
+    const table = document.querySelector('[data-testid="linked-cohort-picker-table"]')!
+    expect(table.querySelectorAll('thead input[type="checkbox"]')).toHaveLength(0)
+    expect(table.querySelectorAll('tbody input[type="checkbox"]')).toHaveLength(3)
+    wrapper.unmount()
+  })
+
+  it('still adds several cohorts in one go (#215)', async () => {
+    const wrapper = mountPicker([])
+    await wrapper.get('[data-testid="linked-cohort-picker-add"]').trigger('click')
+    await flushPromises()
+
+    const rowBox = (i: number) =>
+      document.querySelectorAll<HTMLInputElement>(
+        '[data-testid="linked-cohort-picker-table"] tbody input[type="checkbox"]'
+      )[i]!
+    rowBox(0).click()
+    await flushPromises()
+    rowBox(2).click()
+    await flushPromises()
+
+    ;(document.querySelector('[data-testid="linked-cohort-picker-confirm"]') as HTMLElement).click()
+    await flushPromises()
+
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toEqual([
+      { id: 1, name: 'Diabetes' },
+      { id: 3, name: 'Asthma' },
+    ])
+    wrapper.unmount()
+  })
+
   it('shows an ID column in the selector, ahead of the name', async () => {
     const wrapper = mountPicker([])
     await openDialog(wrapper)
