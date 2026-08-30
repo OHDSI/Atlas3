@@ -32,7 +32,10 @@ async function load() {
 
   const idStr = props.id ?? (route.params.id as string | undefined)
   if (!idStr || idStr === 'new') {
-    if (!store.currentIR) {
+    // Only an unsaved draft (no id) may be reused here. A saved design left
+    // loaded by an earlier visit, and its polled execution info, must not
+    // leak into a freshly started design.
+    if (!store.currentIR || store.currentIR.id !== undefined) {
       // Try draft first; otherwise empty.
       if (!store.restoreFromDraft()) store.createNewIR()
     }

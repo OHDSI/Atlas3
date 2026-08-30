@@ -10,6 +10,22 @@ import { logger } from '@/utils/logger'
  * @param isoDate ISO 8601 date string or Unix timestamp (milliseconds)
  * @returns Formatted date string or "Invalid Date" if parsing fails
  */
+/**
+ * The moment an asset was last touched, for both sorting and display.
+ *
+ * WebAPI leaves `modifiedDate` unset on an asset that has only ever been
+ * created. Read literally that is "no date", which sorted such an asset to the
+ * far end of a most-recently-updated list and rendered it as Unknown, so a
+ * cohort created minutes ago sank below one last edited months back (#292).
+ * Creation is the last time an unmodified asset was touched, so it stands in.
+ */
+export function lastTouchedDate(entity: {
+  modifiedDate?: string | number | null
+  createdDate?: string | number | null
+}): string | number | undefined {
+  return entity.modifiedDate ?? entity.createdDate ?? undefined
+}
+
 export function formatDate(isoDate: string | number | undefined | null): string {
   if (!isoDate) {
     return '—' // em dash for missing dates

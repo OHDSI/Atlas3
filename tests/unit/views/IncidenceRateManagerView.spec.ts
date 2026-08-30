@@ -162,6 +162,29 @@ describe('IncidenceRateManagerView.vue', () => {
     expect(wrapper.find('.state.error').text()).toBe('Failed to load incidence rate')
   })
 
+  it('reuses an unsaved draft already in the store when navigating to "new"', async () => {
+    mockRoute.params = { id: 'new' }
+    store.currentIR = { id: undefined as unknown as number }
+
+    wrapper = mount(IncidenceRateManagerView, { props: { id: 'new' } })
+    await flushMounted()
+
+    expect(store.restoreFromDraft).not.toHaveBeenCalled()
+    expect(store.createNewIR).not.toHaveBeenCalled()
+  })
+
+  it('starts a fresh draft when navigating to "new" from a previously loaded saved design (#293)', async () => {
+    // A saved design (with results already polled into the store) was left
+    // loaded from a prior visit; navigating to "new" must not keep showing it.
+    mockRoute.params = { id: 'new' }
+    store.currentIR = { id: 5 }
+
+    wrapper = mount(IncidenceRateManagerView, { props: { id: 'new' } })
+    await flushMounted()
+
+    expect(store.createNewIR).toHaveBeenCalled()
+  })
+
   it('does not reload when route.params is replaced with identical id and version', async () => {
     mockRoute.params = { id: '5', version: '3' }
 

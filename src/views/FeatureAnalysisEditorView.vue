@@ -15,6 +15,7 @@
   <AnalysisBuilderShell
     :title="titleText"
     :error="storeError"
+    :authorship="store.currentFA"
     :show-back="false"
     testid="feature-analysis-editor"
     @back="handleBack"

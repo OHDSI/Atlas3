@@ -89,7 +89,14 @@
           item-value="id"
           show-select
           data-testid="linked-cohort-picker-table"
-        />
+        >
+          <!-- Rows are picked one at a time here. A characterization runs every
+               linked cohort, so a single click that sweeps in a whole page of a
+               20k-definition list is a cost nobody meant to incur (#215).
+               Vuetify has no select strategy that keeps multi-select without
+               the header checkbox, so the header select cell is emptied. -->
+          <template #[`header.data-table-select`] />
+        </AtlasDataTable>
       </div>
       <template #actions>
         <AtlasButton

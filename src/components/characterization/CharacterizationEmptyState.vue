@@ -30,7 +30,7 @@ import { computed } from 'vue'
 import { AtlasButton } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
-type Variant = 'no-id' | 'no-runs' | 'run-pending' | 'run-failed' | 'no-data'
+type Variant = 'no-id' | 'no-runs' | 'run-pending' | 'run-failed' | 'results-error' | 'no-data'
 
 const props = defineProps<{ variant: Variant; errorMessage?: string }>()
 defineEmits<{ run: [] }>()
@@ -39,7 +39,7 @@ const { tv } = useI18n()
 
 const icon = computed(() => ({
   'no-id': '', 'no-runs': '', 'run-pending': '',
-  'run-failed': '', 'no-data': '',
+  'run-failed': '', 'results-error': '', 'no-data': '',
 } as const)[props.variant])
 
 const title = computed(() => ({
@@ -47,11 +47,12 @@ const title = computed(() => ({
   'no-runs': tv('cc.viewEdit.workbench.empty.noRunsTitle', 'No runs yet'),
   'run-pending': tv('cc.viewEdit.workbench.empty.runPendingTitle', 'Run in progress'),
   'run-failed': tv('cc.viewEdit.workbench.empty.runFailedTitle', 'Run failed'),
+  'results-error': tv('cc.viewEdit.workbench.empty.resultsErrorTitle', 'Run finished, but its results could not be loaded'),
   'no-data': tv('cc.viewEdit.workbench.empty.noDataTitle', 'No rows match the current filter'),
 })[props.variant])
 
 const hint = computed(() => {
-  if (props.variant === 'run-failed') return props.errorMessage ?? ''
+  if (props.variant === 'run-failed' || props.variant === 'results-error') return props.errorMessage ?? ''
   if (props.variant === 'run-pending') {
     return tv('cc.viewEdit.workbench.empty.runPendingHint', 'Polling for completion…')
   }

@@ -1,7 +1,7 @@
 <template>
   <AtlasDataTable
     v-model:sort-by="sortByModel"
-    :headers="headers"
+    :headers="tableHeaders"
     :items="items"
     :loading="loading"
     :items-per-page="itemsPerPage"
@@ -59,8 +59,8 @@
     </template>
 
     <template #[`item.modifiedDate`]="{ item }">
-      <span :title="formatDate(dateField(item, 'modifiedDate'))">
-        {{ formatRelativeTime(dateField(item, 'modifiedDate')) }}
+      <span :title="formatDate(updatedField(item))">
+        {{ formatRelativeTime(updatedField(item)) }}
       </span>
     </template>
 
@@ -149,7 +149,7 @@
 import { AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
 import { computed, ref, useSlots, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import { formatDate, formatRelativeTime } from '@/utils/date-format'
+import { formatDate, formatRelativeTime, lastTouchedDate } from '@/utils/date-format'
 import { tagColor, tagContrastColor } from '@/utils/tag-color'
 
 interface Tag { id?: number; name: string; color?: string }
@@ -275,6 +275,19 @@ function strField(item: T, key: string): string | undefined {
   const v = (item as Record<string, unknown>)[key]
   return typeof v === 'string' ? v : undefined
 }
+
+function updatedField(item: T): string | number | undefined {
+  return lastTouchedDate(item as { modifiedDate?: string | number | null; createdDate?: string | number | null })
+}
+
+// Vuetify sorts the Updated column off the raw `modifiedDate`, which the slot
+// above no longer displays. Give that one header the same fallback the cell
+// uses, so the order on screen matches the dates on screen (#292).
+const tableHeaders = computed(() =>
+  props.headers.map(header =>
+    header.key === 'modifiedDate' ? { ...header, value: (item: unknown) => updatedField(item as T) } : header
+  )
+)
 
 function dateField(item: T, key: string): string | number | undefined {
   const v = (item as Record<string, unknown>)[key]

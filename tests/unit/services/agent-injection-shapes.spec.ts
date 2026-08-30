@@ -23,7 +23,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { ref } from 'vue'
 import { translateCapability } from '@/plugins/host/capabilities/translate'
 import { useCohortStore } from '@/stores/cohort'
-import { CohortExpressionSchema, type CohortExpression } from '@/models/circe-types'
+import { CohortExpressionSchema, defaultExpression, type CohortExpression } from '@/models/circe-types'
 
 const CONCEPT = {
   conceptId: 40481087,
@@ -259,7 +259,7 @@ describe('shapes of everything the agent injects', () => {
     const store = newCohort()
     store.applyProposal(translateCapability('set_event_limits', { entryEvents: 'first' }) as never)
     expect(store.currentCohort!.expression!.PrimaryCriteria?.PrimaryCriteriaLimit?.Type).toBe('First')
-    expect(store.currentCohort!.expression!.QualifiedLimit?.Type).toBe('First')
+    expect(store.currentCohort!.expression!.QualifiedLimit).toEqual(defaultExpression.QualifiedLimit)
   })
 
   it('proposes nothing for an unrecognised limit', () => {

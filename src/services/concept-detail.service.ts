@@ -6,6 +6,7 @@ import {
 } from '@/models/concept-detail.types'
 import type { DrilldownReport, WebAPIDrilldownRaw } from '@/models/report.types'
 import { mapDrilldownReport } from '@/services/report-mapper'
+import { normalizeInvalidReason } from '@/utils/api-mappers'
 
 // `cause` is declared here rather than passed to Error's constructor: the
 // project targets ES2020, whose Error has no cause option.
@@ -61,7 +62,7 @@ function mapRelatedFromApi(
     vocabularyId: api.VOCABULARY_ID,
     conceptClassId: api.CONCEPT_CLASS_ID,
     standardConcept: api.STANDARD_CONCEPT,
-    invalidReason: api.INVALID_REASON,
+    invalidReason: normalizeInvalidReason(api.INVALID_REASON),
     validStartDate: api.VALID_START_DATE != null ? String(api.VALID_START_DATE) : undefined,
     validEndDate: api.VALID_END_DATE != null ? String(api.VALID_END_DATE) : undefined,
     relationships: api.RELATIONSHIPS.map((r) => ({

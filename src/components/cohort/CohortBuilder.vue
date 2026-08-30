@@ -975,6 +975,10 @@ async function loadCohort(id: string) {
       description: atlasCohort.description || '',
       tags: atlasCohort.tags || [],
       expression: atlasCohort.expression,
+      createdBy: atlasCohort.createdBy,
+      createdDate: atlasCohort.createdDate,
+      modifiedBy: atlasCohort.modifiedBy,
+      modifiedDate: atlasCohort.modifiedDate,
     }
     cohortStore.setCohort(cohortDef)
     cohortStore.markClean()
@@ -1492,7 +1496,20 @@ function _getStatusText(status: string): string {
 // toolbar in the hero header (with hide-internal-toolbar). The
 // proxy returned by defineExpose auto-unwraps refs at access
 // time, so a parent reading `builderRef.canSave` gets a number.
+// Read by the host view, which owns the hero header this belongs under.
+const authorship = computed(() => {
+  const cohort = cohortStore.currentCohort
+  if (!cohort?.id) return null
+  return {
+    createdBy: cohort.createdBy,
+    createdDate: cohort.createdDate,
+    modifiedBy: cohort.modifiedBy,
+    modifiedDate: cohort.modifiedDate,
+  }
+})
+
 defineExpose({
+  authorship,
   // Status state
   totalConceptSets: computed(() => expression.value.ConceptSets?.length || 0),
   unusedConceptSetCount: computed(() => (expression.value.ConceptSets?.length || 0) - usedConceptSets.value.length),

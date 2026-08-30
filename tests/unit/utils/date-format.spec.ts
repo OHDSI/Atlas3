@@ -14,7 +14,7 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-import { formatDate, formatRelativeTime } from '@/utils/date-format'
+import { formatDate, formatRelativeTime, lastTouchedDate } from '@/utils/date-format'
 
 describe('Date Format Utils', () => {
   beforeEach(() => {
@@ -25,6 +25,26 @@ describe('Date Format Utils', () => {
 
   afterEach(() => {
     vi.useRealTimers()
+  })
+
+  describe('lastTouchedDate (#292)', () => {
+    it('uses the modified date when the asset has one', () => {
+      expect(
+        lastTouchedDate({ modifiedDate: '2026-05-01T00:00:00Z', createdDate: '2026-01-01T00:00:00Z' })
+      ).toBe('2026-05-01T00:00:00Z')
+    })
+
+    it('falls back to the created date for an asset never modified', () => {
+      expect(lastTouchedDate({ modifiedDate: null, createdDate: '2026-01-01T00:00:00Z' })).toBe(
+        '2026-01-01T00:00:00Z'
+      )
+      expect(lastTouchedDate({ createdDate: 1767225600000 })).toBe(1767225600000)
+    })
+
+    it('reports nothing when the asset carries neither date', () => {
+      expect(lastTouchedDate({})).toBeUndefined()
+      expect(lastTouchedDate({ modifiedDate: null, createdDate: null })).toBeUndefined()
+    })
   })
 
   describe('formatDate', () => {

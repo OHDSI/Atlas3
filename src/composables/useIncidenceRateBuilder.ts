@@ -72,6 +72,9 @@ export function useIncidenceRateBuilder() {
       return false
     }
     store.setIR(result.data)
+    // The copy has never been generated; carrying the source design's polled
+    // execution info over made its workbench render the source's results.
+    store.resetGenerationState()
     notify('Copied', 'success')
     if (result.data.id !== undefined) {
       router.push(`/incidence-rates/${result.data.id}`)

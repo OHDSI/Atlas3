@@ -90,6 +90,12 @@
     }
   },
   "common": {
+    "authorship": {
+      "created": "Created",
+      "createdBy": "Created by",
+      "updated": "Updated",
+      "updatedBy": "Updated by"
+    },
     "accessDenied": "Access denied",
     "add": "Add",
     "and": "and",
@@ -461,6 +467,7 @@
       "perRuleSatisfaction": "Per-rule satisfaction",
       "populationBreakdown": "Population breakdown",
       "noReportData": "No inclusion-rule report data is available for this cohort and source. The cohort may have no inclusion rules, or it may not have been generated yet. If you've generated it already, try re-running.",
+      "noStatsRecorded": "This generation recorded no inclusion statistics for this mode, so there is no attrition to report. The cohort itself may still contain records; see the generation panel for its record count.",
       "loadError": "Failed to load the inclusion-rule report",
       "attrition": "Attrition",
       "noAttritionData": "No attrition data available",
@@ -3192,6 +3199,7 @@
     "conceptSet": {
       "recommend": {
         "notAvailable": "Recommendations are not available. The PHOEBE 2.0 vocabulary tables are required to generate recommendations.",
+        "setupLink": "How to install the PHOEBE 2.0 tables",
         "noSeed": "Add concepts to the set first — recommendations are based on what is already included.",
         "recommendations": "recommendations"
       },
@@ -3323,6 +3331,7 @@
           "noRunsTitle": "No runs yet",
           "runPendingTitle": "Run in progress",
           "runFailedTitle": "Run failed",
+          "resultsErrorTitle": "Run finished, but its results could not be loaded",
           "noDataTitle": "No rows match the current filter",
           "runPendingHint": "Polling for completion…",
           "noRunsHint": "Generate against a data source to see baseline characteristics."

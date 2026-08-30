@@ -26,6 +26,13 @@
       >
     </template>
 
+    <template
+      v-if="builderRef?.authorship"
+      #meta
+    >
+      <AssetAuthorship v-bind="builderRef.authorship" />
+    </template>
+
     <!-- Toolbar shares the title row. We render it here (in the
          page-shell hero header) but the state still lives in
          <cohort-builder> below — we read it through `builderRef`,
@@ -85,6 +92,7 @@ import { ref, computed } from 'vue'
 import { AtlasPageShell } from '@/components/ui'
 import CohortBuilder from '@/components/cohort/CohortBuilder.vue'
 import CohortToolbarStatus from '@/components/cohort/CohortToolbarStatus.vue'
+import AssetAuthorship from '@/components/shared/AssetAuthorship.vue'
 import CohortToolbarActions from '@/components/cohort/CohortToolbarActions.vue'
 import { useI18n } from '@/composables/useI18n'
 

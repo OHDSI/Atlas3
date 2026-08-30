@@ -3,6 +3,7 @@
     :eyebrow="t('navigation.incidenceRates', 'Incidence rate analysis').value"
     :title="title"
     :subtitle="subtitle"
+    :authorship="store.currentIR"
     :show-back="false"
     testid="ir-builder"
     @back="handleBack"
