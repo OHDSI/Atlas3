@@ -18,6 +18,12 @@
     >
       <slot name="subtitle" />
     </template>
+    <template
+      v-if="authorship"
+      #meta
+    >
+      <AssetAuthorship v-bind="authorship" />
+    </template>
     <template #actions>
       <AtlasButton
         v-if="showBack"
@@ -65,10 +71,20 @@
 <script setup lang="ts">
 import { useI18n } from '@/composables/useI18n'
 import { AtlasAlert, AtlasButton, AtlasPageShell } from '@/components/ui'
+import AssetAuthorship from '@/components/shared/AssetAuthorship.vue'
+
+export interface AuthorshipProps {
+  createdBy?: unknown
+  createdDate?: string | number | null
+  modifiedBy?: unknown
+  modifiedDate?: string | number | null
+}
 
 interface Props {
   title?: string
   subtitle?: string
+  /** Who created and last changed the asset, shown under the hero subtitle. */
+  authorship?: AuthorshipProps | null
   /**
    * Optional eyebrow text for the hero header (e.g. "OHDSI ·
    * Characterization"). When omitted no eyebrow is rendered.
@@ -83,6 +99,7 @@ interface Props {
 withDefaults(defineProps<Props>(), {
   title: undefined,
   subtitle: undefined,
+  authorship: null,
   eyebrow: undefined,
   error: null,
   showBack: true,

@@ -8,7 +8,10 @@ import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 
 vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({ t: (_k: string, fallback?: string) => ({ value: fallback ?? _k }) }),
+  useI18n: () => ({
+    t: (_k: string, fallback?: string) => ({ value: fallback ?? _k }),
+    tv: (_k: string, fallback?: string) => fallback ?? _k,
+  }),
 }))
 vi.mock('@/composables/usePermissions', () => ({
   usePermissions: () => ({ hasPermission: () => true }),
