@@ -3331,6 +3331,7 @@
           "noRunsTitle": "No runs yet",
           "runPendingTitle": "Run in progress",
           "runFailedTitle": "Run failed",
+          "resultsErrorTitle": "Run finished, but its results could not be loaded",
           "noDataTitle": "No rows match the current filter",
           "runPendingHint": "Polling for completion…",
           "noRunsHint": "Generate against a data source to see baseline characteristics."
