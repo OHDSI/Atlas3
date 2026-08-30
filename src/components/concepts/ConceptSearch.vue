@@ -293,6 +293,14 @@ function onRemoveConcept(concept: Concept) {
   margin-bottom: 16px;
 }
 
+.concept-search__add-options {
+  margin-bottom: 16px;
+}
+
+.concept-search__count-source {
+  margin-bottom: 16px;
+}
+
 .concept-search__input :deep(.v-field) {
   min-height: 48px;
   font-size: 14px;
