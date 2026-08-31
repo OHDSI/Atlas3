@@ -26,6 +26,12 @@ const stubs = {
     },
     template: '<table class="stub-table"><tbody><tr v-for="i in items" :key="i.conceptId"><td>{{ i.conceptName }}</td></tr></tbody><tfoot v-if="items.length === 0"><slot name="no-data" /></tfoot></table>',
   },
+  ConceptAddOptions: {
+    name: 'ConceptAddOptions',
+    props: ['modelValue', 'selectedCount', 'disabled'],
+    emits: ['update:modelValue', 'add'],
+    template: '<div class="stub-add-options" />',
+  },
   ConceptFacetFilters: {
     name: 'ConceptFacetFilters',
     props: ['facets', 'facetOptions', 'selected', 'activeFilterCount', 'resultFilter'],
