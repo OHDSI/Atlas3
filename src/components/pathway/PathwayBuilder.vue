@@ -193,14 +193,16 @@
           >
             {{ t('common.delete', 'Delete') }}
           </AtlasButton>
-          <AtlasButton
-            variant="primary"
-            :disabled="!canSave"
-            data-testid="pathway-builder-save"
-            @click="onSave"
-          >
-            {{ t('common.save', 'Save') }}
-          </AtlasButton>
+          <DisabledReasonTooltip :reason="saveDisabledReason">
+            <AtlasButton
+              variant="primary"
+              :disabled="!canSave"
+              data-testid="pathway-builder-save"
+              @click="onSave"
+            >
+              {{ t('common.save', 'Save') }}
+            </AtlasButton>
+          </DisabledReasonTooltip>
         </template>
       </AtlasActionToolbar>
     </template>
@@ -285,6 +287,8 @@ import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import { exportPathway, importPathway } from '@/services/pathway.service'
 import { logger } from '@/utils/logger'
 import type { VersionsConfig, VersionsTableItem } from '@/components/versions/types'
+import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
+import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
 import type { Tag } from '@/models/webapi.types'
 
 const store = usePathwayStore()
@@ -292,7 +296,22 @@ const router = useRouter()
 const { currentPathway, previewVersion, isDirty, isPreviewMode, canSave } = storeToRefs(store)
 const { save, copy, remove, feedback } = usePathwayBuilder()
 const { hasPermission } = usePermissions()
-const { t } = useI18n()
+
+// hasPermission is true here because this button does not gate on write access
+// at all, unlike every sibling editor. Reporting a permission reason it does
+// not actually enforce would be a lie; the gap is raised in OHDSI/Atlas3#300.
+const saveDisabledReason = computed<string>(() =>
+  resolveSaveDisabledReason({
+    entity: tv('const.entityName.pathway', 'pathway analysis'),
+    isNew: !currentPathway.value?.id,
+    hasName: true,
+    hasPermission: true,
+    isPreviewing: isPreviewMode.value,
+    hasValidationErrors: store.hasErrors,
+    translate: tv,
+  })
+)
+const { t, tv } = useI18n()
 
 const feedbackSeverity = computed<AtlasSnackbarSeverity>(() =>
   feedback.value?.color === 'error' ? 'danger' : (feedback.value?.color ?? 'info')

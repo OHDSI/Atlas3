@@ -2266,6 +2266,31 @@ describe('CohortBuilder', () => {
     return wrapper
   }
 
+  // #300: a disabled Save said nothing about why, so the user could not tell
+  // whether to ask for access or fix something themselves.
+  it('explains a disabled Save when the cohort has no name yet', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = ''
+    await wrapper.vm.$nextTick()
+
+    const vm = wrapper.vm as unknown as { canSave: boolean; saveDisabledReason: string }
+    expect(vm.canSave).toBe(false)
+    expect(vm.saveDisabledReason).toMatch(/name/i)
+  })
+
+  it('offers no explanation once Save is available', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'A named cohort'
+    await wrapper.vm.$nextTick()
+
+    const vm = wrapper.vm as unknown as { saveDisabledReason: string }
+    expect(vm.saveDisabledReason).toBe('')
+  })
+
   it('hasUnsavedChanges is false immediately after a cohort loads', async () => {
     const wrapper = await mountLoaded()
     const vm = wrapper.vm as any

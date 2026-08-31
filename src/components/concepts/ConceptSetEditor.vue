@@ -139,20 +139,22 @@
               {{ t('common.cancel', 'Cancel') }}
             </AtlasButton>
 
-            <AtlasButton
-              :disabled="!formValid || loading || !canSubmit"
-              :loading="loading"
-              data-testid="cs-editor-primary-btn"
-              @click="embedded ? onApply() : onSave()"
-            >
-              {{
-                embedded
-                  ? t('common.apply', 'Apply')
-                  : isEditMode
-                    ? t('common.save', 'Save')
-                    : t('common.create', 'Create')
-              }}
-            </AtlasButton>
+            <DisabledReasonTooltip :reason="saveDisabledReason">
+              <AtlasButton
+                :disabled="!formValid || loading || !canSubmit"
+                :loading="loading"
+                data-testid="cs-editor-primary-btn"
+                @click="embedded ? onApply() : onSave()"
+              >
+                {{
+                  embedded
+                    ? t('common.apply', 'Apply')
+                    : isEditMode
+                      ? t('common.save', 'Save')
+                      : t('common.create', 'Create')
+                }}
+              </AtlasButton>
+            </DisabledReasonTooltip>
 
             <AtlasIconButton
               icon="mdi-close"
@@ -699,6 +701,8 @@ import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useNotifications } from '@/stores/notifications'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
+import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
+import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
 import type { ConceptSet, Concept, ConceptSetItem, ConceptAddFlags } from '@/models/concept-set.types'
 import type { VersionsConfig, VersionsTableItem, User } from '@/components/versions/types'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
@@ -902,6 +906,19 @@ const canSubmit = computed<boolean>(() => {
   if (props.embedded) return true
   return isEditMode.value ? canWrite.value : hasPermission('create:conceptset')
 })
+
+const saveDisabledReason = computed<string>(() =>
+  resolveSaveDisabledReason({
+    entity: tv('const.entityName.conceptSet', 'concept set'),
+    isNew: !isEditMode.value,
+    // nameError already says what is wrong with the name, so it is surfaced
+    // verbatim rather than replaced with the generic "give it a name".
+    hasName: !nameError.value,
+    hasPermission: canSubmit.value,
+    isSaving: loading.value,
+    translate: tv,
+  })
+)
 
 const itemCount = computed(() => {
   return store.currentSet?.items?.length || 0

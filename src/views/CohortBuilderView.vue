@@ -63,6 +63,7 @@
 
         <cohort-toolbar-actions
           :can-save="builderRef.canSave"
+          :save-disabled-reason="builderRef.saveDisabledReason"
           :is-dirty="builderRef.hasUnsavedChanges"
           :is-previewing-version="builderRef.isPreviewingVersion"
           @cancel="builderRef.handleCancel()"

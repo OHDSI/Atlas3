@@ -77,15 +77,17 @@
           >
             {{ t('common.delete', 'Delete') }}
           </AtlasButton>
-          <AtlasButton
-            variant="primary"
-            :disabled="!canSave"
-            :loading="saving"
-            data-testid="feature-analysis-editor-save"
-            @click="handleSave"
-          >
-            {{ t('common.save', 'Save') }}
-          </AtlasButton>
+          <DisabledReasonTooltip :reason="saveDisabledReason">
+            <AtlasButton
+              variant="primary"
+              :disabled="!canSave"
+              :loading="saving"
+              data-testid="feature-analysis-editor-save"
+              @click="handleSave"
+            >
+              {{ t('common.save', 'Save') }}
+            </AtlasButton>
+          </DisabledReasonTooltip>
         </template>
       </AtlasActionToolbar>
     </template>
@@ -355,13 +357,15 @@ import type { ConceptSetReference } from '@/models/concept-set.types'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
+import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
+import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
 
 const props = defineProps<{
   id?: string
 }>()
 
 const router = useRouter()
-const { t } = useI18n()
+const { t, tv } = useI18n()
 const store = useFeatureAnalysesStore()
 
 // ---------------------------------------------------------------------------
@@ -476,6 +480,17 @@ const canSave = computed<boolean>(() => {
   if (draft.value.name.trim().length === 0) return false
   return isEditing.value ? canWrite.value : hasPermission('create:feature-analysis')
 })
+
+const saveDisabledReason = computed<string>(() =>
+  resolveSaveDisabledReason({
+    entity: tv('const.entityName.featureAnalysis', 'feature analysis'),
+    isNew: !isEditing.value,
+    hasName: draft.value.name.trim().length > 0,
+    hasPermission: isEditing.value ? canWrite.value : hasPermission('create:feature-analysis'),
+    isSaving: saving.value || loading.value,
+    translate: tv,
+  })
+)
 
 const deleteMessage = computed<string>(() => {
   return t(

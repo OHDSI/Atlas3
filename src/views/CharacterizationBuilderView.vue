@@ -197,15 +197,17 @@
           >
             {{ t('common.delete', 'Delete') }}
           </AtlasButton>
-          <AtlasButton
-            variant="primary"
-            :disabled="!canSave"
-            :loading="saving"
-            data-testid="char-builder-save"
-            @click="handleSave"
-          >
-            {{ t('common.save', 'Save') }}
-          </AtlasButton>
+          <DisabledReasonTooltip :reason="saveDisabledReason">
+            <AtlasButton
+              variant="primary"
+              :disabled="!canSave"
+              :loading="saving"
+              data-testid="char-builder-save"
+              @click="handleSave"
+            >
+              {{ t('common.save', 'Save') }}
+            </AtlasButton>
+          </DisabledReasonTooltip>
         </template>
       </AtlasActionToolbar>
     </template>
@@ -342,6 +344,8 @@ import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, Atlas
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
+import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
+import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { validateCharacterization, countByLevel } from '@/utils/characterization-validators'
 import type { CharacterizationDefinition, PrevalenceStat } from '@/models/characterization.types'
@@ -353,7 +357,7 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const { t } = useI18n()
+const { t, tv } = useI18n()
 const store = useCharacterizationStore()
 
 // ---------------------------------------------------------------------------
@@ -453,6 +457,17 @@ const canSave = computed<boolean>(() => {
   if (draft.value.name.trim().length === 0) return false
   return isEditing.value ? canWrite.value : hasPermission('create:cohort-characterization')
 })
+
+const saveDisabledReason = computed<string>(() =>
+  resolveSaveDisabledReason({
+    entity: tv('const.entityName.characterization', 'characterization'),
+    isNew: !isEditing.value,
+    hasName: draft.value.name.trim().length > 0,
+    hasPermission: isEditing.value ? canWrite.value : hasPermission('create:cohort-characterization'),
+    isSaving: saving.value || loading.value,
+    translate: tv,
+  })
+)
 
 const deleteMessage = computed<string>(() => {
   return t('cc.viewEdit.deleteConfirmation', `Delete characterization '${draft.value.name}'?`, {
