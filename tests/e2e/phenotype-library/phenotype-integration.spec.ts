@@ -24,6 +24,9 @@ import { waitForPageReady, waitForStableElement } from '../helpers/wait-utils'
 const require = createRequire(import.meta.url)
 const phenotypeFixtures = require('./fixtures/phenotypes.json') as PhenotypeDefinition[]
 
+/** Chosen to select the four multi-megabyte outliers, well clear of the next largest at ~750KB. */
+const LARGE_DESIGN_BYTES = 1_000_000
+
 interface PhenotypeDefinition {
   cohortId: string
   name: string
@@ -173,6 +176,17 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
         browserName !== 'chromium',
         'Phenotype integration tests run on Chromium only',
       )
+
+      // A handful of designs are enormous next to the rest: the four largest are
+      // ~3.7MB of JSON against a median of 2.3KB across all 1104 fixtures. Filling
+      // the textarea, importing and diffing that much JSON takes over a minute at
+      // the four workers per shard this suite runs with, so they sat on the 60s
+      // limit and tipped over it whenever the runner was loaded, failing CI on
+      // unrelated changes. slow() triples the budget for just these, rather than
+      // loosening the limit for the 1100 designs that finish in about five seconds.
+      if (phenotype.json.length > LARGE_DESIGN_BYTES) {
+        test.slow()
+      }
 
       // ── Setup ─────────────────────────────────────────────────────────
       clearCohortStore()
