@@ -44,7 +44,6 @@ vi.mock('@/utils/logger', () => ({
 import { listFeatureAnalyses } from '@/services/feature-analysis.service'
 import { success } from '@/types/api'
 import FeatureAnalysesView from '@/views/FeatureAnalysesView.vue'
-import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
 
@@ -175,24 +174,23 @@ describe('FeatureAnalysesView', () => {
     expect(mounted.wrapper.text()).toContain('No data')
   })
 
-  it('search input drives the store filter (after debounce)', async () => {
-    vi.useFakeTimers()
+  it('search box narrows the visible rows', async () => {
+    // Was asserting store.filterTerm. The view filters through the facet bar
+    // now, so the store's own text filter is no longer what drives this list;
+    // assert what the user sees instead of which field held the term (#264).
     vi.mocked(listFeatureAnalyses).mockResolvedValue(success(sampleList))
     mounted = await mountView()
 
-    const store = useFeatureAnalysesStore()
-    expect(store.filterTerm).toBe('')
+    const rows = () =>
+      mounted!.wrapper.findAll('[data-testid="feature-analyses-table"] tbody tr')
+    expect(rows()).toHaveLength(2)
 
     const searchEl = mounted.wrapper.find('[data-testid="feature-analyses-search"] input')
     await searchEl.setValue('Demographics')
-
-    // Debounce window
-    vi.advanceTimersByTime(300)
     await flushPromises()
 
-    expect(store.filterTerm).toBe('Demographics')
-
-    vi.useRealTimers()
+    expect(rows()).toHaveLength(1)
+    expect(rows()[0]!.text()).toContain('Demographics PRESET')
   })
 
   it('clicking Create navigates to /feature-analyses/new', async () => {
@@ -208,5 +206,96 @@ describe('FeatureAnalysesView', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.path).toBe('/feature-analyses/new')
+  })
+})
+
+/**
+ * Issue #264: the list offered only a text box, so there was no way to narrow
+ * by domain or the other column attributes. It now carries the same facet bar
+ * the characterization design editor's picker uses.
+ */
+describe('FeatureAnalysesView facets (#264)', () => {
+  let mounted: { wrapper: ReturnType<typeof mount>; router: Router } | null = null
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    vi.useRealTimers()
+  })
+
+  afterEach(() => {
+    mounted?.wrapper.unmount()
+    mounted = null
+  })
+
+  const filterBar = (wrapper: ReturnType<typeof mount>) =>
+    wrapper.findComponent({ name: 'AtlasFacetFilterBar' })
+
+  const rowText = (wrapper: ReturnType<typeof mount>) =>
+    wrapper
+      .findAll('[data-testid="feature-analyses-table"] tbody tr')
+      .map(row => row.text())
+
+  it('offers the same facets the design editor picker offers', async () => {
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success(sampleList))
+    mounted = await mountView()
+
+    const facets = filterBar(mounted.wrapper).props('facets') as Array<{ key: string }>
+
+    expect(facets.map(f => f.key)).toEqual([
+      'type', 'domain', 'created', 'updated', 'author', 'designs',
+    ])
+  })
+
+  it('narrows the table to the selected domain', async () => {
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success(sampleList))
+    mounted = await mountView()
+    expect(rowText(mounted.wrapper)).toHaveLength(2)
+
+    filterBar(mounted.wrapper).vm.$emit('update:facet', { key: 'domain', values: ['Condition'] })
+    await flushPromises()
+
+    const rows = rowText(mounted.wrapper)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toContain('Conditions Criteria')
+  })
+
+  it('restores every row when the filters are cleared', async () => {
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success(sampleList))
+    mounted = await mountView()
+
+    filterBar(mounted.wrapper).vm.$emit('update:facet', { key: 'domain', values: ['Condition'] })
+    await flushPromises()
+    expect(rowText(mounted.wrapper)).toHaveLength(1)
+
+    filterBar(mounted.wrapper).vm.$emit('clear')
+    await flushPromises()
+
+    expect(rowText(mounted.wrapper)).toHaveLength(2)
+  })
+
+  it('narrows the table by the text box in the bar', async () => {
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success(sampleList))
+    mounted = await mountView()
+
+    filterBar(mounted.wrapper).vm.$emit('update:resultFilter', 'Demographics')
+    await flushPromises()
+
+    const rows = rowText(mounted.wrapper)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toContain('Demographics PRESET')
+  })
+
+  // The pager reads the filtered length, not the whole list. Reading the
+  // unfiltered count would offer pages that render nothing.
+  it('counts pages against the filtered rows, not the whole list', async () => {
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success(sampleList))
+    mounted = await mountView()
+
+    filterBar(mounted.wrapper).vm.$emit('update:facet', { key: 'domain', values: ['Condition'] })
+    await flushPromises()
+
+    const vm = mounted.wrapper.vm as unknown as { totalItems: number }
+    expect(vm.totalItems).toBe(1)
   })
 })
