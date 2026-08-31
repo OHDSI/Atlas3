@@ -184,8 +184,22 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
       // limit and tipped over it whenever the runner was loaded, failing CI on
       // unrelated changes. slow() triples the budget for just these, rather than
       // loosening the limit for the 1100 designs that finish in about five seconds.
-      if (phenotype.json.length > LARGE_DESIGN_BYTES) {
-        test.slow()
+      // A handful of designs are enormous next to the rest: the four largest are
+      // ~3.7MB of JSON against a median of 2.3KB across all 1104 fixtures. The
+      // builder takes tens of seconds to render and settle one of those, which
+      // overruns both the per-test budget and the per-action waits below. Give
+      // them room rather than loosening the limits for the 1100 designs that
+      // finish in about five seconds and should still fail fast.
+      const isLargeDesign = phenotype.json.length > LARGE_DESIGN_BYTES
+      const settleTimeout = isLargeDesign ? 60000 : 15000
+      if (isLargeDesign) {
+        // All four land in the same shard and run concurrently at the four
+        // workers this suite uses, so they compete for the same two cores with
+        // roughly 15MB of DOM between them. Importing, saving, diffing, adding
+        // a rule and saving again takes minutes in that state. slow() triples
+        // the budget to 180s, which is still not enough; this is the observed
+        // worst case with headroom, and it applies to four tests out of 1104.
+        test.setTimeout(300000)
       }
 
       // ── Setup ─────────────────────────────────────────────────────────
@@ -202,7 +216,7 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
       // animation to finish — Vuetify animates dialogs open, and the textarea
       // stays non-editable until the animation settles.
       const jsonTextarea = page.locator('[data-testid="import-json-field"] textarea').first()
-      await waitForStableElement(jsonTextarea, 15000)
+      await waitForStableElement(jsonTextarea, settleTimeout)
       await expect(jsonTextarea).toBeEditable({ timeout: 15000 })
 
       // ── Step 2: Fill import form and submit ───────────────────────────
@@ -230,8 +244,17 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
       // (if the POST response data was stored in Pinia, no GET is made).
       // Waiting for the save button is a more reliable signal that the
       // builder has fully loaded the cohort.
-      await waitForStableElement(saveBtn, 15000)
-      await expect(saveBtn).toBeVisible({ timeout: 15000 })
+      if (isLargeDesign) {
+        // The builder is compute bound for a design this size rather than
+        // animating: the main thread is saturated rendering thousands of
+        // criteria, so the animation settle step cannot get a turn and times
+        // out however long it is given. Visibility plus the enabled check
+        // below is the readiness signal that actually matters here.
+        await saveBtn.waitFor({ state: 'visible', timeout: settleTimeout })
+      } else {
+        await waitForStableElement(saveBtn, settleTimeout)
+      }
+      await expect(saveBtn).toBeVisible({ timeout: settleTimeout })
       const isSaveEnabled = await saveBtn.isEnabled().catch(() => false)
       if (!isSaveEnabled) {
         test.skip(true, `Cohort "${phenotype.name}" has no entry events; skipping`)
