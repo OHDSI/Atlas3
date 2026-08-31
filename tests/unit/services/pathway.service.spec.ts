@@ -13,6 +13,14 @@ vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 
+const mockAuthStore = {
+  executeWithUserRefresh: vi.fn((operation: () => Promise<unknown>) => operation()),
+}
+
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: vi.fn(() => mockAuthStore),
+}))
+
 import {
   listPathways,
   getPathway,

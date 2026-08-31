@@ -17,6 +17,7 @@ import { logger } from '@/utils/logger'
 import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
 import { getSourceKey } from '@/config/webapi'
 import { useAuthStore } from '@/stores/auth'
+import { parseConceptSetObject } from '@/components/concepts/concept-set-import'
 
 /**
  * Prefer the source key validated against the sources the server actually
@@ -236,4 +237,32 @@ export async function unassignTagFromConceptSet(
     logger.error('ConceptSet', `Failed to unassign tag ${tagId} from concept set ${id}`, error)
     return { success: false, error: error instanceof Error ? error.message : String(error) }
   }
+}
+
+/**
+ * Create a concept set from an exported design. There is no server-side import
+ * endpoint for concept sets, so this parses with the same parser the editor's
+ * Import JSON dialog uses and then creates the set (#267).
+ */
+export async function importConceptSet(design: unknown, fileName: string): Promise<ConceptSet> {
+  const parsed = parseConceptSetObject(design)
+  if (!parsed.ok) {
+    throw new Error(parsed.error ?? 'The file is not a concept set expression.')
+  }
+
+  return createConceptSet({ name: importedName(design, fileName), items: parsed.items })
+}
+
+/**
+ * The design names itself where it can, matching the analysis imports, which
+ * let the file decide. The file name is the next best answer, since a list
+ * level import has no name field to fall back on.
+ */
+function importedName(design: unknown, fileName: string): string {
+  const named = design as { name?: unknown }
+  if (typeof named?.name === 'string' && named.name.trim()) {
+    return named.name.trim()
+  }
+  const base = fileName.replace(/\.[^.]+$/, '').trim()
+  return base || 'Imported concept set'
 }
