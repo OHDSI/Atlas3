@@ -171,6 +171,27 @@ describe('VisitOccurrence', () => {
     await expectMenuItemPresent(wrapper, 'Visit Type')
   })
 
+  it('keeps Visit Type inactive when only a false exclude flag is present', async () => {
+    const criteria = reactive({
+      VisitOccurrence: {
+        VisitTypeExclude: false,
+      },
+    }) as CriteriaRecord
+
+    const wrapper = mountComponent(VisitOccurrence, {
+      props: {
+        criteria,
+        conceptSets: [{ id: 1, name: 'Concept Set' }],
+      },
+      stubs: { AtlasMenu: InlineAtlasMenuStub },
+    })
+
+    expect(wrapper.findComponent({ name: 'ConceptArray' }).exists()).toBe(false)
+
+    await openMenu(wrapper)
+    await expectMenuItemPresent(wrapper, 'Visit Type')
+  })
+
   it('adds, selects, removes, and restores Visit Type Concept Set', async () => {
     const { wrapper, criteria } = mountEditor()
 

@@ -174,7 +174,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete visitOccurrenceData.value.VisitType
       delete visitOccurrenceData.value.VisitTypeExclude
     },
-    isActive: () => visitOccurrenceData.value.VisitType != null || visitOccurrenceData.value.VisitTypeExclude != null,
+    isActive: () => visitOccurrenceData.value.VisitType != null || visitOccurrenceData.value.VisitTypeExclude === true,
   },
   {
     key: 'VisitTypeCS',
