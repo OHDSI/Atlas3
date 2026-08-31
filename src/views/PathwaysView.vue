@@ -26,6 +26,14 @@
       >
         {{ t('home.newEntityNames.pathway', 'New pathway') }}
       </AtlasButton>
+      <EntityImportButton
+        :label="t('common.import', 'Import').value"
+        testid="pathways-import"
+        :disabled="!canCreate"
+        :import-design="importDesign"
+        @imported="onImported"
+        @failed="(message: string) => { feedback = { message, color: 'error' } }"
+      />
     </template>
 
     <AnalysisDataTable
@@ -116,11 +124,12 @@ import { useI18n } from '@/composables/useI18n'
 import { usePathwayStore } from '@/stores/pathway'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
-import { deletePathway, copyPathway } from '@/services/pathway.service'
+import { deletePathway, copyPathway, importPathway } from '@/services/pathway.service'
 import { logger } from '@/utils/logger'
 import type { Pathway } from '@/models/pathway.types'
 import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
 import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
+import EntityImportButton from '@/components/shared/EntityImportButton.vue'
 
 const {
   loading,
@@ -220,6 +229,17 @@ async function confirmDelete() {
   showDelete.value = false
   deleteTarget.value = null
 }
+
+async function importDesign(design: unknown): Promise<{ id?: number }> {
+  const created = await importPathway(design)
+  return { id: created.id }
+}
+
+function onImported(entity: { id?: number | string }) {
+  if (entity.id != null) router.push(`/pathways/${entity.id}`)
+}
+
+defineExpose({ importDesign, onImported })
 </script>
 
 <style scoped>

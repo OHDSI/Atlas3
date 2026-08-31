@@ -26,6 +26,14 @@
       >
         {{ t('home.newEntityNames.incidenceRate', 'New incidence rate') }}
       </AtlasButton>
+      <EntityImportButton
+        :label="t('common.import', 'Import').value"
+        testid="incidence-rates-import"
+        :disabled="!canCreate"
+        :import-design="importDesign"
+        @imported="onImported"
+        @failed="(message: string) => notify.danger(message)"
+      />
     </template>
 
     <AnalysisDataTable
@@ -111,11 +119,12 @@ import { useI18n } from '@/composables/useI18n'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
-import { deleteIncidenceRate, copyIncidenceRate } from '@/services/incidence-rate.service'
+import { deleteIncidenceRate, copyIncidenceRate, importIncidenceRate } from '@/services/incidence-rate.service'
 import { logger } from '@/utils/logger'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
 import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
 import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
+import EntityImportButton from '@/components/shared/EntityImportButton.vue'
 
 const {
   loading,
@@ -215,6 +224,17 @@ async function confirmDelete() {
   showDelete.value = false
   deleteTarget.value = null
 }
+
+async function importDesign(design: unknown): Promise<{ id?: number }> {
+  const created = await importIncidenceRate(design)
+  return { id: created.id }
+}
+
+function onImported(entity: { id?: number | string }) {
+  if (entity.id != null) router.push(`/incidence-rates/${entity.id}`)
+}
+
+defineExpose({ importDesign, onImported })
 </script>
 
 <style scoped>

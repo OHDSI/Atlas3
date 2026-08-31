@@ -71,6 +71,7 @@
         <template #actions>
           <cohort-toolbar-actions
             :can-save="canSave"
+            :save-disabled-reason="saveDisabledReason"
             :is-dirty="hasUnsavedChanges"
             :is-previewing-version="isPreviewingVersion"
             @cancel="handleCancel"
@@ -328,6 +329,7 @@ import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { nextConceptSetId } from '@/utils/concept-set-id'
+import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import CohortJsonDialog from './CohortJsonDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
@@ -598,6 +600,17 @@ const canSavePermission = computed(() =>
 const canSave = computed(() => {
   return cohortName.value.trim().length > 0 && canSavePermission.value
 })
+
+const saveDisabledReason = computed<string>(() =>
+  resolveSaveDisabledReason({
+    entity: tv('const.entityName.cohort', 'cohort'),
+    isNew: cohortId.value === null,
+    hasName: cohortName.value.trim().length > 0,
+    hasPermission: canSavePermission.value,
+    isPreviewing: isPreviewingVersion.value,
+    translate: tv,
+  })
+)
 
 // Preview mode state. A preview installed for another cohort survives until
 // this editor loads its own definition, and the first render happens before
@@ -1510,6 +1523,7 @@ const authorship = computed(() => {
 
 defineExpose({
   authorship,
+  saveDisabledReason,
   // Status state
   totalConceptSets: computed(() => expression.value.ConceptSets?.length || 0),
   unusedConceptSetCount: computed(() => (expression.value.ConceptSets?.length || 0) - usedConceptSets.value.length),

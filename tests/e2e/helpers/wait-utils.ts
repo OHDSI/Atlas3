@@ -61,7 +61,10 @@ export async function waitForElement(
  */
 export async function waitForStableElement(locator: Locator, timeout: number = 10000): Promise<void> {
   await locator.waitFor({ state: 'visible', timeout })
-  // Wait for element to stop moving (animations complete)
+  // The timeout has to be passed again here. locator.evaluate does not inherit
+  // the one above, so without it this step silently used the global
+  // actionTimeout instead of what the caller asked for, and a caller raising
+  // the timeout for a slow page got the default anyway.
   await locator.evaluate((el: Element) => {
     return new Promise<void>((resolve) => {
       if (document.getAnimations) {
@@ -76,7 +79,7 @@ export async function waitForStableElement(locator: Locator, timeout: number = 1
         setTimeout(() => resolve(), 300)
       }
     })
-  })
+  }, undefined, { timeout })
 }
 
 /**

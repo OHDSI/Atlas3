@@ -178,7 +178,10 @@ export async function importCharacterization(
   design: unknown
 ): Promise<ApiResult<CharacterizationDefinition>> {
   return unwrap(async () => {
-    const data = await httpPost<unknown>('/cohort-characterization/import', design)
+    const authStore = useAuthStore()
+    const data = await authStore.executeWithUserRefresh(() =>
+      httpPost<unknown>('/cohort-characterization/import', design)
+    )
     return parseOrThrow(
       CharacterizationDefinitionSchema,
       data,

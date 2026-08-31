@@ -28,6 +28,14 @@
       >
         {{ t('home.newEntityNames.characterization', 'New characterization') }}
       </AtlasButton>
+      <EntityImportButton
+        :label="t('common.import', 'Import').value"
+        testid="characterizations-import"
+        :disabled="!canCreate"
+        :import-design="importDesign"
+        @imported="onImported"
+        @failed="(message: string) => notify.danger(message)"
+      />
     </template>
 
     <AnalysisDataTable
@@ -113,6 +121,9 @@ import { logger } from '@/utils/logger'
 import type { CharacterizationListItem } from '@/models/characterization.types'
 import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
 import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
+import EntityImportButton from '@/components/shared/EntityImportButton.vue'
+import { importCharacterization } from '@/services/characterization.service'
+import { useNotifications } from '@/stores/notifications'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -122,6 +133,7 @@ const canCreate = computed(() => hasPermission('create:cohort-characterization')
 // Copy creates a new characterization, so it requires the same create perm.
 const canCopy = computed(() => hasPermission('create:cohort-characterization'))
 const entityAccess = useEntityAccessFor('cohortCharacterization')
+const notify = useNotifications()
 
 const {
   loading,
@@ -215,9 +227,21 @@ async function confirmDelete() {
   }
 }
 
+async function importDesign(design: unknown): Promise<{ id?: number }> {
+  const result = await importCharacterization(design)
+  if (!result.success) throw result.error
+  return { id: result.data.id }
+}
+
+function onImported(entity: { id?: number | string }) {
+  if (entity.id != null) router.push(`/characterizations/${entity.id}`)
+}
+
 onMounted(() => {
   refresh()
 })
+
+defineExpose({ importDesign, onImported })
 </script>
 
 <style scoped>

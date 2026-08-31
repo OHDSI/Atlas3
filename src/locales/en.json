@@ -1299,6 +1299,10 @@
       "endDateStrategy": "End Date Strategy",
       "endStrategyViewerText_1": "No end date strategy selected. By default, the cohort end date will be the end of the observation period that contains the index event."
     },
+    "entityImport": {
+      "failed": "Import failed.",
+      "invalidJson": "{file} is not valid JSON."
+    },
     "evidencePairViewer": {
       "evidencePairViewerText_1": "loading evidence pairs",
       "evidencePairViewerText_2": "If CommonEvidenceModel has indicated there is product label information for the selected drug-condition pair (1 = true, 0 = false) you may see many product labels below. The count of labels is non-informative since an adverse event on one label is supposed to be on all product labels. So, this page will show all product labels for the selected drug-condition pair.",
@@ -4605,7 +4609,20 @@
     "ruleDescription": "Description"
   },
   "const": {
+    "entityName": {
+      "characterization": "characterization",
+      "cohort": "cohort",
+      "conceptSet": "concept set",
+      "featureAnalysis": "feature analysis",
+      "incidenceRate": "incidence rate analysis",
+      "pathway": "pathway analysis"
+    },
     "disabledReason": {
+      "previewingVersion": "You are previewing an earlier version. Return to the current version to save.",
+      "noCreatePermission": "You do not have permission to create a {entity}.",
+      "noWriteAccess": "You do not own this {entity} and have not been granted write access to it.",
+      "needsName": "Give the {entity} a name before saving.",
+      "hasErrors": "Resolve the validation errors before saving.",
       "dirty": "Save changes before generate",
       "accessDenied": "Access denied",
       "invalidTar": "Invalid TAR",

@@ -72,6 +72,14 @@ export function parseConceptSetJson(input: string): ParsedJsonImport {
     return { ok: false, items: [], error: 'Invalid JSON: could not parse the pasted text.' }
   }
 
+  return parseConceptSetObject(raw)
+}
+
+/**
+ * The object form of {@link parseConceptSetJson}, for callers that already hold
+ * parsed JSON and would otherwise have to re-serialise it.
+ */
+export function parseConceptSetObject(raw: unknown): ParsedJsonImport {
   if (raw === null || typeof raw !== 'object') {
     return { ok: false, items: [], error: 'Expected a JSON object with an "items" array.' }
   }

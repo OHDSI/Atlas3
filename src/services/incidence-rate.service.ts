@@ -22,6 +22,7 @@ import type {
 } from '@/models/incidence-rate.types'
 import { z } from 'zod'
 import { normalizeCriteriaGroupForCirce } from '@/components/cohort-editor/normalize'
+import { useAuthStore } from '@/stores/auth'
 
 const CONTEXT = 'IncidenceRateService'
 
@@ -143,7 +144,8 @@ export async function exportIncidenceRate(id: number): Promise<unknown> {
  * POST /ir/design
  */
 export async function importIncidenceRate(design: unknown): Promise<IncidenceRate> {
-  const data = await httpPost<unknown>('/ir/design', design)
+  const authStore = useAuthStore()
+  const data = await authStore.executeWithUserRefresh(() => httpPost<unknown>('/ir/design', design))
   return decodeIRExpression(data)
 }
 
