@@ -207,15 +207,17 @@
           >
             {{ t('common.delete', 'Delete') }}
           </AtlasButton>
-          <AtlasButton
-            variant="primary"
-            :disabled="!store.canSave || saving || !canSave"
-            :loading="saving"
-            data-testid="ir-builder-save"
-            @click="onSave"
-          >
-            {{ t('common.save', 'Save') }}
-          </AtlasButton>
+          <DisabledReasonTooltip :reason="saveDisabledReason">
+            <AtlasButton
+              variant="primary"
+              :disabled="!store.canSave || saving || !canSave"
+              :loading="saving"
+              data-testid="ir-builder-save"
+              @click="onSave"
+            >
+              {{ t('common.save', 'Save') }}
+            </AtlasButton>
+          </DisabledReasonTooltip>
         </template>
       </AtlasActionToolbar>
     </template>
@@ -321,11 +323,13 @@ import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWor
 import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/IncidenceRateConceptSetsPanel.vue'
 import IncidenceRateVersionsPanel from '@/components/incidence-rate/IncidenceRateVersionsPanel.vue'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
+import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
+import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
 import { exportIncidenceRate, importIncidenceRate } from '@/services/incidence-rate.service'
 import { logger } from '@/utils/logger'
 import type { Tag } from '@/models/webapi.types'
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 const store = useIncidenceRateStore()
 const router = useRouter()
 const { save, copy, remove, feedback } = useIncidenceRateBuilder()
@@ -450,6 +454,19 @@ const { canWrite, canDelete } = useEntityAccess('incidenceRate', irId)
 const canCopy = computed<boolean>(() => hasPermission('create:incidence'))
 const canSave = computed<boolean>(() =>
   irId.value === null ? hasPermission('create:incidence') : canWrite.value
+)
+
+const saveDisabledReason = computed<string>(() =>
+  resolveSaveDisabledReason({
+    entity: tv('const.entityName.incidenceRate', 'incidence rate analysis'),
+    isNew: irId.value === null,
+    hasName: true,
+    hasPermission: canSave.value,
+    isPreviewing: store.isPreviewMode,
+    hasValidationErrors: store.hasErrors,
+    isSaving: saving.value,
+    translate: tv,
+  })
 )
 
 const title = computed(() => {
