@@ -111,6 +111,10 @@ describe('IncludedConceptsTable', () => {
   })
 
   it('does not render any descendants/mapped/exclude checkbox columns', () => {
+    // These rows are the resolved expansion of the expression, not its items,
+    // so there are no per-row flags to toggle. Narrowed from "no checkbox
+    // anywhere" once #224 added selection checkboxes and an add-options bar,
+    // which are a different thing from a per-row flag column.
     const wrapper = mount(IncludedConceptsTable, {
       global: { plugins: [vuetify] },
       props: {
@@ -120,7 +124,10 @@ describe('IncludedConceptsTable', () => {
         manualCount: 1,
       },
     })
-    expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false)
+    const headings = wrapper.findAll('thead th').map(th => th.text().toLowerCase()).join(' ')
+    expect(headings).not.toContain('descendant')
+    expect(headings).not.toContain('mapped')
+    expect(headings).not.toContain('exclude')
   })
 })
 
@@ -264,5 +271,76 @@ describe('IncludedConceptsTable — filtering, sorting and pagination (issue #26
       { key: 'conceptName', order: 'asc' },
       { key: 'conceptId', order: 'desc' },
     ])
+  })
+})
+
+/**
+ * Issue #224: the Included Concepts tab shows the resolved expansion of the
+ * expression, so the way to drop one of these concepts is to add a new
+ * expression item excluding it. That needed multi-select, which only the
+ * Search tab had.
+ */
+describe('IncludedConceptsTable multi-select (#224)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    setActivePinia(createPinia())
+  })
+
+  const mountTable = (items = [makeConcept(1), makeConcept(2), makeConcept(3)]) =>
+    mount(IncludedConceptsTable, {
+      global: { plugins: [vuetify] },
+      props: { items, loading: false, error: null, manualCount: 1, sourceKey: 'SYNPUF1K' },
+    })
+
+  const addOptions = (wrapper: ReturnType<typeof mountTable>) =>
+    wrapper.findComponent({ name: 'ConceptAddOptions' })
+
+  it('offers the add-options bar', () => {
+    expect(addOptions(mountTable()).exists()).toBe(true)
+  })
+
+  // Excluding is the point of selecting here, so it should not need a click.
+  it('pre-checks Exclude, unlike the search tab', () => {
+    const flags = addOptions(mountTable()).props('modelValue') as Record<string, boolean>
+    expect(flags.isExcluded).toBe(true)
+    expect(flags.includeDescendants).toBe(false)
+    expect(flags.includeMapped).toBe(false)
+  })
+
+  it('reports nothing selected until a row is picked', () => {
+    expect(addOptions(mountTable()).props('selectedCount')).toBe(0)
+  })
+
+  it('emits the picked concepts with the current flags', async () => {
+    const wrapper = mountTable()
+    await wrapper.get('[data-testid="included-concepts-row-checkbox-1"] input').setValue(true)
+    await wrapper.get('[data-testid="included-concepts-row-checkbox-3"] input').setValue(true)
+
+    expect(addOptions(wrapper).props('selectedCount')).toBe(2)
+
+    addOptions(wrapper).vm.$emit('add')
+    await wrapper.vm.$nextTick()
+
+    const emitted = wrapper.emitted('add-concepts')
+    expect(emitted).toHaveLength(1)
+    const [concepts, flags] = emitted![0] as [Concept[], Record<string, boolean>]
+    expect(concepts.map(c => c.conceptId)).toEqual([1, 3])
+    expect(flags.isExcluded).toBe(true)
+  })
+
+  it('clears the selection after adding, so the next pick starts clean', async () => {
+    const wrapper = mountTable()
+    await wrapper.get('[data-testid="included-concepts-row-checkbox-1"] input').setValue(true)
+    addOptions(wrapper).vm.$emit('add')
+    await wrapper.vm.$nextTick()
+
+    expect(addOptions(wrapper).props('selectedCount')).toBe(0)
+  })
+
+  it('selects every row with the header checkbox', async () => {
+    const wrapper = mountTable()
+    await wrapper.get('[data-testid="included-concepts-select-all"] input').setValue(true)
+
+    expect(addOptions(wrapper).props('selectedCount')).toBe(3)
   })
 })

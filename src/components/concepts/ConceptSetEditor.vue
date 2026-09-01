@@ -301,6 +301,7 @@
                   :manual-count="store.currentSet?.items?.length ?? 0"
                   :source-key="sourceKey"
                   @view-concept="onViewConcept"
+                  @add-concepts="onAddFromResolved"
                   @retry="store.resolveIncluded(sourceKey)"
                 />
               </v-window-item>
@@ -311,6 +312,7 @@
                   :active="activeTab === 'source-codes'"
                   :source-key="sourceKey"
                   @view-concept="onViewConcept"
+                  @add-concepts="onAddFromResolved"
                 />
               </v-window-item>
 
@@ -1217,6 +1219,20 @@ function onAddConcepts(concepts: Concept[], flags?: ConceptAddFlags) {
   }
   hasUnsavedChanges.value = true
   showResultAfterFirstAdd(wasEmpty)
+}
+
+/**
+ * Adding from the Included Concepts or Source Codes tabs, where the rows are
+ * the resolved expansion of the expression rather than its items. The new items
+ * change what resolves, so the lists have to be recomputed or the row the user
+ * just excluded stays on screen and nothing appears to have happened (#224).
+ */
+function onAddFromResolved(concepts: Concept[], flags?: ConceptAddFlags) {
+  onAddConcepts(concepts, flags)
+  void store.resolveIncluded(sourceKey.value)
+  if (activeTab.value === 'source-codes') {
+    void store.resolveSourceCodes(sourceKey.value)
+  }
 }
 
 function onRemoveConcept(concept: Concept) {
