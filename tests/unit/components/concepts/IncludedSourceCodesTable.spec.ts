@@ -24,7 +24,21 @@ const stubs = {
       multiSort: Boolean,
       sortBy: { type: Array, default: () => [] },
     },
-    template: '<table class="stub-table"><tbody><tr v-for="i in items" :key="i.conceptId"><td>{{ i.conceptName }}</td></tr></tbody><tfoot v-if="items.length === 0"><slot name="no-data" /></tfoot></table>',
+    template: '<table class="stub-table"><thead><tr><th><slot name="header.select" /></th></tr></thead><tbody><tr v-for="i in items" :key="i.conceptId"><td><slot name="item.select" :item="i" /></td><td>{{ i.conceptName }}</td></tr></tbody><tfoot v-if="items.length === 0"><slot name="no-data" /></tfoot></table>',
+  },
+  // A plain input so the selection tests can drive it; this spec installs no
+  // Vuetify, by design, and stubs every child.
+  VCheckboxBtn: {
+    name: 'VCheckboxBtn',
+    props: ['modelValue', 'indeterminate'],
+    emits: ['update:modelValue'],
+    template: '<input type="checkbox" :checked="modelValue" @change="$emit(\'update:modelValue\', $event.target.checked)">',
+  },
+  ConceptAddOptions: {
+    name: 'ConceptAddOptions',
+    props: ['modelValue', 'selectedCount', 'disabled'],
+    emits: ['update:modelValue', 'add'],
+    template: '<div class="stub-add-options" />',
   },
   ConceptFacetFilters: {
     name: 'ConceptFacetFilters',
@@ -201,5 +215,103 @@ describe('IncludedSourceCodesTable — filtering and pagination (issue #266)', (
     await wrapper.find('[data-testid="source-codes-clear-filters-btn"]').trigger('click')
     await wrapper.vm.$nextTick()
     expect(wrapper.text()).toContain('Code 1')
+  })
+})
+
+/**
+ * Issue #224: source codes resolve out of the expression the same way included
+ * concepts do, so acting on one means adding an expression item for it. That
+ * needed multi-select here too.
+ */
+describe('IncludedSourceCodesTable multi-select (#224)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.spyOn(useConceptSetsStore(), 'resolveSourceCodes').mockResolvedValue()
+  })
+
+  const code = (id: number, over: Record<string, unknown> = {}) => ({
+    conceptId: id,
+    conceptName: `Code ${id}`,
+    conceptCode: `C${id}`,
+    domainId: 'Condition',
+    vocabularyId: 'ICD10CM',
+    conceptClassId: 'ICD10 code',
+    standardConcept: null,
+    invalidReason: null,
+    ...over,
+  })
+
+  function seed(items: ReturnType<typeof code>[]) {
+    useConceptSetsStore().sourceCodeItems = items as never
+  }
+
+  const addOptions = (wrapper: ReturnType<typeof makeWrapper>) =>
+    wrapper.findComponent({ name: 'ConceptAddOptions' })
+
+  it('pre-checks Exclude, as the included concepts tab does', () => {
+    seed([code(1)])
+    const flags = addOptions(makeWrapper()).props('modelValue') as Record<string, boolean>
+
+    expect(flags.isExcluded).toBe(true)
+    expect(flags.includeDescendants).toBe(false)
+    expect(flags.includeMapped).toBe(false)
+  })
+
+  it('emits the picked source codes with the current flags', async () => {
+    seed([code(1), code(2), code(3)])
+    const wrapper = makeWrapper()
+
+    await wrapper.get('[data-testid="included-source-codes-row-checkbox-1"] input').setValue(true)
+    await wrapper.get('[data-testid="included-source-codes-row-checkbox-3"] input').setValue(true)
+    expect(addOptions(wrapper).props('selectedCount')).toBe(2)
+
+    addOptions(wrapper).vm.$emit('add')
+    await wrapper.vm.$nextTick()
+
+    const emitted = wrapper.emitted('add-concepts')
+    expect(emitted).toHaveLength(1)
+    const [concepts, flags] = emitted![0] as [Array<{ conceptId: number }>, Record<string, boolean>]
+    expect(concepts.map(c => c.conceptId)).toEqual([1, 3])
+    expect(flags.isExcluded).toBe(true)
+  })
+
+  it('clears the selection after adding', async () => {
+    seed([code(1)])
+    const wrapper = makeWrapper()
+    await wrapper.get('[data-testid="included-source-codes-row-checkbox-1"] input').setValue(true)
+
+    addOptions(wrapper).vm.$emit('add')
+    await wrapper.vm.$nextTick()
+
+    expect(addOptions(wrapper).props('selectedCount')).toBe(0)
+  })
+
+  it('emits nothing when no row is picked', async () => {
+    seed([code(1)])
+    const wrapper = makeWrapper()
+
+    addOptions(wrapper).vm.$emit('add')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.emitted('add-concepts')).toBeUndefined()
+  })
+
+  // Select-all must not reach rows the facets have filtered away.
+  it('selects only the rows left on screen by the filters', async () => {
+    seed([code(1, { vocabularyId: 'ICD10CM' }), code(2, { vocabularyId: 'READ' })])
+    const wrapper = makeWrapper()
+
+    wrapper.findComponent({ name: 'ConceptFacetFilters' })
+      .vm.$emit('update:facet', { key: 'vocabularyId', values: ['ICD10CM'] })
+    await wrapper.vm.$nextTick()
+
+    await wrapper.get('[data-testid="included-source-codes-select-all"] input').setValue(true)
+
+    expect(addOptions(wrapper).props('selectedCount')).toBe(1)
+
+    addOptions(wrapper).vm.$emit('add')
+    await wrapper.vm.$nextTick()
+    const [concepts] = wrapper.emitted('add-concepts')![0] as [Array<{ conceptId: number }>]
+    expect(concepts.map(c => c.conceptId)).toEqual([1])
   })
 })

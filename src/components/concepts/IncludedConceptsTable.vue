@@ -33,6 +33,16 @@
       @clear="clearFilters()"
     />
 
+    <!-- These rows are the resolved expansion of the expression, not its items,
+         so the way to drop one is to add an item excluding it (#224). -->
+    <ConceptAddOptions
+      v-if="!loading && items.length > 0"
+      v-model="addFlags"
+      :selected-count="selected.length"
+      class="mb-3"
+      @add="onAddSelected"
+    />
+
     <AtlasCard
       v-if="loading || items.length > 0"
       padding="none"
@@ -47,6 +57,30 @@
         hover
         class="included-concepts-table__table"
       >
+        <template #header.select>
+          <div data-testid="included-concepts-select-all">
+            <v-checkbox-btn
+              :model-value="allVisibleSelected"
+              :indeterminate="someVisibleSelected && !allVisibleSelected"
+              :aria-label="t('components.conceptTable.selectAllConcepts', 'Select all concepts').value"
+              density="compact"
+              hide-details
+              @update:model-value="onToggleSelectAll"
+            />
+          </div>
+        </template>
+
+        <template #item.select="{ item }">
+          <div :data-testid="`included-concepts-row-checkbox-${(item as Concept).conceptId}`">
+            <v-checkbox-btn
+              :model-value="selectedSet.has((item as Concept).conceptId)"
+              :aria-label="(item as Concept).conceptName"
+              density="compact"
+              hide-details
+              @update:model-value="(v: boolean | null) => onToggleRow((item as Concept).conceptId, v)"
+            />
+          </div>
+        </template>
         <template
           v-if="sourceKey"
           #item.conceptName="{ item }"
@@ -156,7 +190,7 @@
 <script setup lang="ts">
 import { ref, computed, toRef } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import type { Concept } from '@/models/concept-set.types'
+import type { Concept, ConceptAddFlags } from '@/models/concept-set.types'
 import {
   AtlasAlert,
   AtlasButton,
@@ -167,6 +201,7 @@ import {
   AtlasSkeleton,
 } from '@/components/ui'
 import ConceptFacetFilters from './ConceptFacetFilters.vue'
+import ConceptAddOptions from './ConceptAddOptions.vue'
 import { CONCEPT_FACETS, useConceptFacets } from '@/composables/useConceptFacets'
 import { getDomainColor } from '@/utils/domain-colors'
 import { useThemeStore } from '@/stores/theme'
@@ -185,8 +220,51 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'view-concept': [payload: { conceptId: number; sourceKey: string }]
+  'add-concepts': [concepts: Concept[], flags: Required<ConceptAddFlags>]
   retry: []
 }>()
+
+// Exclude rather than include: a concept already listed here is by definition
+// in the set, so the reason to select it is almost always to take it back out.
+const addFlags = ref<Required<ConceptAddFlags>>({
+  isExcluded: true,
+  includeDescendants: false,
+  includeMapped: false,
+})
+
+const selected = ref<number[]>([])
+const selectedSet = computed(() => new Set(selected.value))
+
+// Select-all covers the rows the facets have left on screen, not every resolved
+// concept: offering to select rows the user has filtered away would be a trap.
+const visibleIds = computed(() => visibleConcepts.value.map(c => c.conceptId))
+const allVisibleSelected = computed(
+  () => visibleIds.value.length > 0 && visibleIds.value.every(id => selectedSet.value.has(id))
+)
+const someVisibleSelected = computed(() => visibleIds.value.some(id => selectedSet.value.has(id)))
+
+function onToggleRow(conceptId: number, checked: boolean | null) {
+  selected.value = checked
+    ? [...selected.value, conceptId]
+    : selected.value.filter(id => id !== conceptId)
+}
+
+function onToggleSelectAll(checked: boolean | null) {
+  if (checked) {
+    const merged = new Set([...selected.value, ...visibleIds.value])
+    selected.value = [...merged]
+    return
+  }
+  const dropped = new Set(visibleIds.value)
+  selected.value = selected.value.filter(id => !dropped.has(id))
+}
+
+function onAddSelected() {
+  if (selected.value.length === 0) return
+  const picked = props.items.filter(c => selectedSet.value.has(c.conceptId))
+  emit('add-concepts', picked, { ...addFlags.value })
+  selected.value = []
+}
 
 const sortBy = ref([{ key: 'conceptId', order: 'asc' as const }])
 
@@ -217,6 +295,7 @@ const {
 } = useConceptFacets(toRef(props, 'items'), facets)
 
 const headers = [
+  { title: '', key: 'select', sortable: false, width: '48px' },
   { title: t('columns.conceptId', 'ID').value, key: 'conceptId', sortable: true, width: '90px' },
   { title: t('columns.conceptCode', 'Code').value, key: 'conceptCode', sortable: true, width: '110px' },
   { title: t('columns.conceptName', 'Name').value, key: 'conceptName', sortable: true },
