@@ -169,6 +169,62 @@ describe('mapCharacterizationResults', () => {
     expect(out.prevalence[0].count.M['1']).toBe(5)
     expect(out.prevalence[0].count.F['1']).toBe(7)
   })
+
+  it('surfaces classifiable-less rows with valid ids as unmapped', () => {
+    const raw = [
+      {
+        analysisId: 500,
+        analysisName: 'Days home vs hospital death',
+        covariateId: 9001,
+        covariateName: 'home death',
+        faType: 'CUSTOM_FE',
+        cohortId: 1,
+        // no count/pct/avg/median/… — a custom-SQL shape the classifier
+        // cannot fit into prevalence or distribution.
+        deathPlace: 'home',
+        deaths: 128,
+      },
+    ]
+    const out = mapCharacterizationResults(raw)
+    expect(out.prevalence).toEqual([])
+    expect(out.distribution).toEqual([])
+    expect(out.unmapped).toHaveLength(1)
+    expect(out.unmapped[0]).toMatchObject({
+      analysisId: 500,
+      faType: 'CUSTOM_FE',
+      deathPlace: 'home',
+      deaths: 128,
+    })
+  })
+
+  it('surfaces a classifiable row with no cohortId as unmapped', () => {
+    const out = mapCharacterizationResults([
+      {
+        analysisId: 1,
+        covariateId: 100,
+        covariateName: 'X',
+        conceptId: 100,
+        // classifiable as prevalence (has count/pct) but no cohortId to key by
+        count: 5,
+        pct: 5,
+      },
+    ])
+    expect(out.prevalence).toEqual([])
+    expect(out.distribution).toEqual([])
+    expect(out.unmapped).toHaveLength(1)
+    expect(out.unmapped[0]).toMatchObject({ analysisId: 1, covariateId: 100 })
+  })
+
+  it('does not surface malformed id-less rows as unmapped', () => {
+    const out = mapCharacterizationResults([{ foo: 'bar' }, null, { analysisId: 1 }])
+    expect(out.prevalence).toEqual([])
+    expect(out.distribution).toEqual([])
+    expect(out.unmapped).toEqual([])
+  })
+
+  it('includes an empty unmapped array by default', () => {
+    expect(mapCharacterizationResults([]).unmapped).toEqual([])
+  })
 })
 
 describe('computeBinaryStdDiff', () => {

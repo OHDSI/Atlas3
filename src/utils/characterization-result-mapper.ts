@@ -33,6 +33,14 @@ export type CharacterizationStatType = 'PREVALENCE' | 'DISTRIBUTION'
 export interface MappedCharacterizationResults {
   prevalence: PrevalenceStat[]
   distribution: DistributionStat[]
+  /**
+   * Rows the classifier could not fit into the prevalence / distribution
+   * shapes (e.g. custom-SQL feature analyses that emit their own columns).
+   * Instead of silently dropping them, we surface the raw records so the
+   * viewer can render them verbatim. Kept as loose records because the
+   * column set is, by definition, unknown here.
+   */
+  unmapped: Record<string, unknown>[]
 }
 
 /** Internal: a single raw row before classification. */
@@ -272,24 +280,27 @@ export function computeBinaryStdDiff(
 export function mapCharacterizationResults(raw: unknown[]): MappedCharacterizationResults {
   const prevalenceMap = new Map<string, PrevalenceStat>()
   const distributionMap = new Map<string, DistributionStat>()
+  const unmapped: Record<string, unknown>[] = []
   let skipped = 0
 
   for (const value of raw) {
     const rows = toRawRows(value)
     if (rows.length === 0) {
+      // Malformed row (missing analysisId/covariateId) — not a spec-conformant
+      // result row, so nothing meaningful to surface. Dropped as before.
       skipped++
       continue
     }
     for (const row of rows) {
       const type = classifyRow(row)
       if (type === null) {
-        skipped++
+        unmapped.push(row as Record<string, unknown>)
         continue
       }
       const groupKey = `${row.analysisId}::${row.covariateId}`
       const cKey = cohortKey(row)
       if (!cKey) {
-        skipped++
+        unmapped.push(row as Record<string, unknown>)
         continue
       }
       const sKey = strataKey(row)
@@ -353,11 +364,18 @@ export function mapCharacterizationResults(raw: unknown[]): MappedCharacterizati
   }
 
   if (skipped > 0) {
-    logger.debug('CharacterizationResultMapper', `Skipped ${skipped} unclassifiable result row(s)`)
+    logger.debug('CharacterizationResultMapper', `Skipped ${skipped} non-record result row(s)`)
+  }
+  if (unmapped.length > 0) {
+    logger.debug(
+      'CharacterizationResultMapper',
+      `Surfacing ${unmapped.length} unmapped result row(s) as raw output`
+    )
   }
 
   return {
     prevalence: Array.from(prevalenceMap.values()),
     distribution: Array.from(distributionMap.values()),
+    unmapped,
   }
 }

@@ -17,8 +17,16 @@
       :rows="g.rows"
       :cohorts="g.cohorts"
     />
+    <RawResultTable
+      v-for="g in unmappedGroups"
+      :key="`raw-${g.analysisId}`"
+      :analysis-id="g.analysisId"
+      :analysis-name="g.analysisName"
+      :rows="g.rows"
+    />
     <div
-      v-if="prevalenceGroups.length === 0 && distributionGroups.length === 0"
+      v-if="prevalenceGroups.length === 0 && distributionGroups.length === 0
+        && unmappedGroups.length === 0"
       class="char-per-analysis__empty"
     >
       {{ tv('common.noData', 'No rows match the current filter.') }}
@@ -31,6 +39,7 @@ import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import PrevalenceTable from '@/components/characterization-results/PrevalenceTable.vue'
 import DistributionTable from '@/components/characterization-results/DistributionTable.vue'
+import RawResultTable from '@/components/characterization-results/RawResultTable.vue'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type {
   DistributionStat, LinkedCohort, PrevalenceStat,
@@ -39,6 +48,7 @@ import type {
 const props = defineProps<{
   prevalence: PrevalenceStat[]
   distribution: DistributionStat[]
+  unmapped?: Record<string, unknown>[]
   cohorts: LinkedCohort[]
   threshold: number
   selectedAnalysisIds: number[]
@@ -103,6 +113,28 @@ const distributionGroups = computed<Group<DistributionStat>[]>(() => {
       g = { analysisId: row.analysisId, analysisName: row.analysisName,
             cohorts: filterCohorts(row.cohorts), rows: [] }
       groups.set(row.analysisId, g)
+    }
+    g.rows.push(row)
+  }
+  return Array.from(groups.values())
+})
+
+interface RawGroup { analysisId: number; analysisName: string; rows: Record<string, unknown>[] }
+
+const unmappedGroups = computed<RawGroup[]>(() => {
+  const groups = new Map<number, RawGroup>()
+  for (const row of props.unmapped ?? []) {
+    const analysisId = typeof row.analysisId === 'number' ? row.analysisId : -1
+    if (!passesAnalysis(analysisId)) continue
+    const domainId = typeof row.domainId === 'string' ? row.domainId : undefined
+    if (!passesDomain(domainId)) continue
+    let g = groups.get(analysisId)
+    if (!g) {
+      const analysisName = typeof row.analysisName === 'string' && row.analysisName
+        ? row.analysisName
+        : `Analysis ${analysisId}`
+      g = { analysisId, analysisName, rows: [] }
+      groups.set(analysisId, g)
     }
     g.rows.push(row)
   }
