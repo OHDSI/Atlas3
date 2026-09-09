@@ -151,9 +151,15 @@ function mapRequestToApiPayload(request: SourceRequest): Record<string, unknown>
     payload.password = request.password
   }
 
-  if (request.krbAuthMethod) {
-    payload.krbAuthMethod = request.krbAuthMethod
-  }
+  // Always sent, even for a dialect that has nothing to do with Kerberos.
+  // WebAPI converts the request with
+  // `KerberosAuthMechanism.getByName(request.getKrbAuthMethod())`, and that
+  // helper calls `name.toUpperCase()` before matching, so omitting the field
+  // fails the whole create/update with a NullPointerException surfaced as an
+  // opaque HTTP 500 ConversionFailedException. `DEFAULT` is the enum's own
+  // fallback for an unrecognised name, so it is what a source with no Kerberos
+  // mechanism should record anyway.
+  payload.krbAuthMethod = request.krbAuthMethod ?? 'DEFAULT'
 
   if (request.krbAdminServer) {
     payload.krbAdminServer = request.krbAdminServer
