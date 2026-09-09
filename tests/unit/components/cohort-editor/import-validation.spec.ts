@@ -160,6 +160,24 @@ describe('validateCohortExpression against real cohort exports', () => {
     expect(rejected).toEqual([])
   })
 
+  // These are captured Atlas cohort exports, and unlike the atlas-demo set they
+  // carry the top-level `expressionType` field that Atlas writes. They are the
+  // corpus the e2e JSON-editor tests paste, so a schema gap here is a broken
+  // import in the real editor.
+  it('accepts every captured Atlas cohort export', () => {
+    const dir = 'tests/integration/fixtures/atlas-cohorts'
+    const rejected: string[] = []
+
+    for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
+      const json = JSON.parse(readFileSync(`${dir}/${file}`, 'utf8'))
+      if (!json?.PrimaryCriteria) continue
+      const result = validateCohortExpression(json)
+      if (!result.ok) rejected.push(`${file}: ${describeImportProblems(result.problems).join('; ')}`)
+    }
+
+    expect(rejected).toEqual([])
+  })
+
   it('accepts every cohort in the phenotype library', () => {
     const library = JSON.parse(
       readFileSync('tests/e2e/phenotype-library/fixtures/phenotypes.json', 'utf8')
