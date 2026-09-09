@@ -264,6 +264,18 @@ describe('CohortToolbarActions', () => {
       wrapper.unmount()
     })
 
+    // #321: the export menu offered only JSON, so there was no way to reach the
+    // SQL a cohort generates — the reporter looked here first.
+    it('emits view-sql when the SQL item is clicked', async () => {
+      const wrapper = mountComponent({}, { attachTo: document.body })
+      await wrapper.find('[data-testid="export-btn"]').trigger('click')
+      const sqlItem = document.querySelector('[data-testid="view-sql"]') as HTMLElement | null
+      expect(sqlItem).not.toBeNull()
+      sqlItem!.click()
+      expect(wrapper.emitted('view-sql')).toBeTruthy()
+      wrapper.unmount()
+    })
+
     it('emits view-json when the JSON view/edit item is clicked', async () => {
       const wrapper = mountComponent({}, { attachTo: document.body })
       await wrapper.find('[data-testid="export-btn"]').trigger('click')

@@ -79,6 +79,7 @@
             @export-download="handleExportDownload"
             @export-copy="handleExportCopy"
             @view-json="openJsonDialog"
+            @view-sql="openSqlDialog"
           />
         </template>
       </AtlasActionToolbar>
@@ -113,6 +114,12 @@
       :filename="exportFilename()"
       :can-apply="!isPreviewingVersion"
       @apply="handleApplyJson"
+    />
+
+    <cohort-sql-dialog
+      v-model="showSqlDialog"
+      :expression="sqlDialogExpression"
+      :filename="sqlExportFilename()"
     />
 
     <AtlasAlert
@@ -333,6 +340,7 @@ import { nextConceptSetId } from '@/utils/concept-set-id'
 import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import CohortJsonDialog from './CohortJsonDialog.vue'
+import CohortSqlDialog from './CohortSqlDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import { EntityAccessDialog } from '@/components/access'
@@ -476,6 +484,8 @@ const showVersionsDialog = ref(false)
 const showTagsDialog = ref(false)
 const showAccessDialog = ref(false)
 const showJsonDialog = ref(false)
+const showSqlDialog = ref(false)
+const sqlDialogExpression = ref<CohortExpression | null>(null)
 // Snapshot of the expression taken when the JSON dialog opens, so the
 // editor is not re-seeded under the user while they type.
 const jsonDialogSource = ref('')
@@ -1429,6 +1439,23 @@ function openJsonDialog() {
   showJsonDialog.value = true
 }
 
+function sqlExportFilename(): string {
+  return exportFilename().replace(/\.json$/, '.sql')
+}
+
+/**
+ * Open the SQL dialog for the current expression.
+ *
+ * Normalised the same way save and JSON export are: circe-be rejects the
+ * sparse in-editor form, so handing it the raw document would fail the SQL
+ * build on cohorts that look perfectly fine in the builder. The cohort need
+ * not be saved — the expression travels in the request body.
+ */
+function openSqlDialog() {
+  sqlDialogExpression.value = normalizeForCirce(toRaw(expression.value))
+  showSqlDialog.value = true
+}
+
 function handleExportDownload() {
   const json = exportableExpression()
   const blob = new Blob([json], { type: 'application/json' })
@@ -1562,6 +1589,7 @@ defineExpose({
   handleExportDownload,
   handleExportCopy,
   openJsonDialog,
+  openSqlDialog,
   // Test-support contract: routing/UI state and pure helpers that have no
   // child component to observe or drive them through. Named here instead of
   // reached via Vue's private `$.setupState`/`$.provides`, so a rename shows
