@@ -29,6 +29,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { matchesTerms } from '@/utils/list-filters'
 import PrevalenceTable from '@/components/characterization-results/PrevalenceTable.vue'
 import DistributionTable from '@/components/characterization-results/DistributionTable.vue'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
@@ -44,6 +45,8 @@ const props = defineProps<{
   selectedAnalysisIds: number[]
   selectedDomains: string[]
   selectedCohortId: number | null
+  /** Free text narrowing the covariate rows; empty keeps them all (#327). */
+  search?: string
 }>()
 
 defineEmits<{ explore: [row: PrevalenceStat] }>()
@@ -68,6 +71,12 @@ function passesAnalysis(id: number) {
 function passesDomain(domain?: string) {
   return props.selectedDomains.length === 0 || (!!domain && props.selectedDomains.includes(domain))
 }
+// A single analysis can emit a row per concept in the vocabulary, so the
+// covariate name is searchable text. The concept name goes in too, because the
+// two differ for some analyses and the reader sees both.
+function passesSearch(row: { covariateName: string; conceptName?: string }) {
+  return matchesTerms([row.covariateName, row.conceptName], props.search)
+}
 function filterCohorts(list: LinkedCohort[]): LinkedCohort[] {
   if (props.selectedCohortId === null) return list
   const f = list.filter(c => c.id === props.selectedCohortId)
@@ -81,6 +90,7 @@ const prevalenceGroups = computed<Group<PrevalenceStat>[]>(() => {
   for (const row of props.prevalence) {
     if (!passesAnalysis(row.analysisId)) continue
     if (!passesDomain(row.domainId)) continue
+    if (!passesSearch(row)) continue
     if (!passesThreshold(row)) continue
     let g = groups.get(row.analysisId)
     if (!g) {
@@ -98,6 +108,7 @@ const distributionGroups = computed<Group<DistributionStat>[]>(() => {
   for (const row of props.distribution) {
     if (!passesAnalysis(row.analysisId)) continue
     if (!passesDomain(row.domainId)) continue
+    if (!passesSearch(row)) continue
     let g = groups.get(row.analysisId)
     if (!g) {
       g = { analysisId: row.analysisId, analysisName: row.analysisName,

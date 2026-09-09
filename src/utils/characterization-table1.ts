@@ -7,6 +7,7 @@ import type {
   Table1Filters,
   Table1Row,
 } from '@/models/characterization.types'
+import { matchesTerms } from '@/utils/list-filters'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 
 export interface BuildTable1Input {
@@ -290,6 +291,9 @@ function keepBinary(row: Extract<Table1Row, { kind: 'binary' }>, input: BuildTab
   if (input.filters.selectedDomains.length > 0 && !input.filters.selectedDomains.includes(domain)) {
     return false
   }
+  if (!matchesCovariateSearch(row, input)) {
+    return false
+  }
   if (input.filters.threshold > 0) {
     const cleared = Object.values(row.cells).some(
       c => c !== null && c.pct >= input.filters.threshold
@@ -321,7 +325,22 @@ function keepContinuous(
   if (input.filters.selectedDomains.length > 0 && !input.filters.selectedDomains.includes(domain)) {
     return false
   }
+  if (!matchesCovariateSearch(row, input)) {
+    return false
+  }
   return true
+}
+
+/**
+ * A single feature analysis can emit a row per concept in the vocabulary, so
+ * the covariate name is searchable text (#327). The concept name is included
+ * because the two differ for some analyses and the reader sees both.
+ */
+function matchesCovariateSearch(
+  row: Extract<Table1Row, { kind: 'binary' | 'continuous' }>,
+  input: BuildTable1Input
+): boolean {
+  return matchesTerms([row.label, row._source.conceptName], input.filters.search)
 }
 
 function orderAndGroup(

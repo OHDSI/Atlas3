@@ -1,7 +1,8 @@
 <!--
   ResultsFilterPanel
 
-  Compact filter strip: Domain / Analysis (multi) and Cohort (single).
+  Compact filter strip: Domain / Analysis (multi), Cohort (single) and a free
+  text filter over the covariate names (#327).
   Pure controlled component — emits update:* for each binding.
 -->
 <template>
@@ -54,6 +55,17 @@
         data-testid="char-results-filter-cohort"
         @update:model-value="(v) => onCohortChange(v as number | null)"
       />
+      <AtlasTextField
+        :model-value="search"
+        :label="tv('common.search', 'Search')"
+        :placeholder="tv('components.characterizationResults.searchCovariates', 'Filter results by name')"
+        variant="outlined"
+        clearable
+        hide-details
+        class="results-filter__select"
+        data-testid="char-results-filter-search"
+        @update:model-value="(v) => emit('update:search', v == null ? '' : String(v))"
+      />
     </div>
   </AtlasCard>
 </template>
@@ -63,7 +75,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
 import type { LinkedCohort } from '@/models/characterization.types'
-import { AtlasCard, AtlasSelect } from '@/components/ui'
+import { AtlasCard, AtlasSelect, AtlasTextField } from '@/components/ui'
 
 interface AnalysisOption {
   id: number
@@ -77,6 +89,7 @@ interface Props {
   selectedAnalysisIds: number[]
   selectedDomains: string[]
   selectedCohortId: number | null
+  search: string
 }
 
 const props = defineProps<Props>()
@@ -84,6 +97,7 @@ const emit = defineEmits<{
   (e: 'update:selectedAnalysisIds', value: number[]): void
   (e: 'update:selectedDomains', value: string[]): void
   (e: 'update:selectedCohortId', value: number | null): void
+  (e: 'update:search', value: string): void
 }>()
 
 const { tv } = useI18n()

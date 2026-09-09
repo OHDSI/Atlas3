@@ -11,6 +11,7 @@ import {
   type LinkedCohort,
   type PrevalenceStat,
   type Table1Config,
+  type Table1Row,
   type Table1Filters,
 } from '@/models/characterization.types'
 
@@ -101,6 +102,11 @@ const baseInput = (over: Partial<{
   filters: over.filters ?? DEFAULT_TABLE1_FILTERS,
 })
 
+/** Row labels excluding the analysis group headers. */
+function covariateLabels(rows: Table1Row[]): string[] {
+  return rows.filter(r => r.kind !== 'group').map(r => r.label)
+}
+
 describe('buildTable1', () => {
   it('returns empty rows when no data', () => {
     const result = buildTable1(baseInput())
@@ -112,6 +118,58 @@ describe('buildTable1', () => {
     const result = buildTable1(baseInput())
     expect(result.columns.map(c => c.cohortId)).toEqual([1, 2])
     expect(result.columns.every(c => c.strataKey === undefined)).toBe(true)
+  })
+
+  // #327: a single analysis can emit thousands of covariates, so the results
+  // need narrowing by text the same way they are narrowed by domain or analysis.
+  it('keeps only covariates matching the search filter', () => {
+    const result = buildTable1(baseInput({
+      prevalence: [
+        prev({ analysisId: 1, analysisName: 'Conditions', covariateId: 11,
+               covariateName: 'Major depression', cohorts: [COHORT_A, COHORT_B],
+               byCohort: { '1': { count: 10, pct: 0.1 }, '2': { count: 20, pct: 0.2 } } }),
+        prev({ analysisId: 1, analysisName: 'Conditions', covariateId: 12,
+               covariateName: 'Essential hypertension', cohorts: [COHORT_A, COHORT_B],
+               byCohort: { '1': { count: 30, pct: 0.3 }, '2': { count: 40, pct: 0.4 } } }),
+      ],
+      filters: { ...DEFAULT_TABLE1_FILTERS, search: 'depression' },
+    }))
+
+    expect(covariateLabels(result.rows)).toEqual(['Major depression'])
+  })
+
+  it('matches search terms non-consecutively, like every other search box', () => {
+    const result = buildTable1(baseInput({
+      prevalence: [
+        prev({ analysisId: 1, analysisName: 'Conditions', covariateId: 11,
+               covariateName: 'Major depressive disorder', cohorts: [COHORT_A, COHORT_B],
+               byCohort: { '1': { count: 10, pct: 0.1 }, '2': { count: 20, pct: 0.2 } } }),
+        prev({ analysisId: 1, analysisName: 'Conditions', covariateId: 12,
+               covariateName: 'Major bleeding event', cohorts: [COHORT_A, COHORT_B],
+               byCohort: { '1': { count: 30, pct: 0.3 }, '2': { count: 40, pct: 0.4 } } }),
+      ],
+      filters: { ...DEFAULT_TABLE1_FILTERS, search: 'major disorder' },
+    }))
+
+    expect(covariateLabels(result.rows)).toEqual(['Major depressive disorder'])
+  })
+
+  it('filters continuous rows by search as well', () => {
+    const result = buildTable1(baseInput({
+      distribution: [
+        dist({ analysisId: 2, analysisName: 'Demographics', covariateId: 21,
+               covariateName: 'Age at index', cohorts: [COHORT_A, COHORT_B],
+               byCohort: { '1': { avg: 50, stdDev: 5, median: 50, p25: 45, p75: 55 },
+                           '2': { avg: 60, stdDev: 6, median: 60, p25: 55, p75: 65 } } }),
+        dist({ analysisId: 2, analysisName: 'Demographics', covariateId: 22,
+               covariateName: 'Charlson index', cohorts: [COHORT_A, COHORT_B],
+               byCohort: { '1': { avg: 1, stdDev: 1, median: 1, p25: 0, p75: 2 },
+                           '2': { avg: 2, stdDev: 1, median: 2, p25: 1, p75: 3 } } }),
+      ],
+      filters: { ...DEFAULT_TABLE1_FILTERS, search: 'charlson' },
+    }))
+
+    expect(covariateLabels(result.rows)).toEqual(['Charlson index'])
   })
 
   it('groups binary rows by analysis when groupByAnalysis is on', () => {

@@ -1743,6 +1743,7 @@
     },
     "characterizationResults": {
       "covariateDetail": "COVARIATE DETAIL",
+      "searchCovariates": "Filter results by name",
       "concept": "Concept",
       "smdLabel": "Standardised mean difference",
       "noCovariateSelected": "No covariate selected."
