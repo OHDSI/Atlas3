@@ -167,6 +167,32 @@ export function useSourceAccessFor() {
   const has = (perm: string) =>
     permissionChecker.hasPermission(perm, authStore.permissions).granted
 
+  /**
+   * Whether the user can read *some* source, without naming one.
+   *
+   * For deciding whether a source-listing screen is worth showing at all, when
+   * the caller has no id yet because the list is what it is about to load.
+   */
+  function canReadAny(): boolean {
+    if (!getAuthConfig().userAuthenticationEnabled) return true
+    if (has('read:source') || has('write:source') || has('admin:source') || has('source:*:access')) {
+      return true
+    }
+    return Object.values(authStore.entityAccess.source).some(
+      (grant) => Array.isArray(grant) && (grant.includes('READ') || grant.includes('WRITE'))
+    )
+  }
+
+  /**
+   * Whether the user may administer sources as a whole, rather than one source:
+   * registering a new one, or clearing the server-side cache. Neither action
+   * has a source id to check, so neither can go through `canWrite`.
+   */
+  function canManageAll(): boolean {
+    if (!getAuthConfig().userAuthenticationEnabled) return true
+    return has('write:source') || has('admin:source')
+  }
+
   function canRead(sourceId: number): boolean {
     if (!getAuthConfig().userAuthenticationEnabled) return true
     if (
@@ -188,5 +214,5 @@ export function useSourceAccessFor() {
     return Array.isArray(g) && g.includes('WRITE')
   }
 
-  return { canRead, canWrite }
+  return { canRead, canWrite, canReadAny, canManageAll }
 }

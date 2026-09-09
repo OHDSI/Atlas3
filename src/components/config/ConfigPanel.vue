@@ -159,6 +159,7 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useUIStore } from '@/stores/ui'
 import { usePermissions } from '@/composables/usePermissions'
+import { useSourceAccessFor } from '@/composables/useEntityAccess'
 import { usePluginMounts } from '@/composables/usePluginMounts'
 import PluginParcelOutlet from '@/plugins/components/PluginParcelOutlet.vue'
 import type { ConfigPanelSection } from '@/models/config.types'
@@ -170,6 +171,7 @@ import PermissionsSection from './PermissionsSection.vue'
 const { t, tv } = useI18n()
 const uiStore = useUIStore()
 const { hasPermission } = usePermissions()
+const { canReadAny: canReadAnySource } = useSourceAccessFor()
 const { items: pluginTabs } = usePluginMounts('admin-tabs')
 
 // Admin-only sections: hidden entirely from users without the matching admin
@@ -177,7 +179,12 @@ const { items: pluginTabs } = usePluginMounts('admin-tabs')
 // normal users rather than show as disabled. The cog icon itself is hidden
 // from the navbar when none of these are visible.
 const canSeeCache = computed(() => hasPermission('admin:cache'))
-const canSeeSources = computed(() => hasPermission('admin:source'))
+// Data Sources is the exception to the rule above. It is mostly a read-only
+// catalogue, and picking the session's vocabulary/evidence/results source from
+// it is something every user needs to do, not an administrative act (#324). It
+// is therefore gated on read access to sources; the mutating controls inside
+// DataSourcesSection carry their own write guard.
+const canSeeSources = computed(() => canReadAnySource())
 const canSeeTags = computed(() => hasPermission('admin:tags'))
 const canSeePermissions = computed(() => hasPermission('admin:security'))
 const hasAnyAdminTab = computed(

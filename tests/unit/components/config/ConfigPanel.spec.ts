@@ -14,6 +14,7 @@ import { computed } from 'vue'
 import ConfigPanel from '@/components/config/ConfigPanel.vue'
 import { useUIStore } from '@/stores/ui'
 import { useAuthStore } from '@/stores/auth'
+import { getAuthConfig, setAuthConfig } from '@/config/auth.config'
 import { usePluginMounts } from '@/composables/usePluginMounts'
 import CacheManagementSection from '@/components/config/CacheManagementSection.vue'
 import DataSourcesSection from '@/components/config/DataSourcesSection.vue'
@@ -484,6 +485,8 @@ describe('ConfigPanel responsive drawer width', () => {
 })
 
 describe('ConfigPanel plugin admin tabs', () => {
+  let previousAuthEnabled: boolean
+
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
@@ -492,6 +495,16 @@ describe('ConfigPanel plugin admin tabs', () => {
     // keep tests order-independent.
     vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
     vi.spyOn(console, 'warn').mockImplementation(() => {})
+    // These tests assert tab visibility for specific permission grants, which
+    // only means anything with authentication on. With it off — the test and
+    // open-deployment default — every read-gated tab, Data Sources included,
+    // is visible to everyone regardless of what the user was granted.
+    previousAuthEnabled = getAuthConfig().userAuthenticationEnabled
+    setAuthConfig({ userAuthenticationEnabled: true })
+  })
+
+  afterEach(() => {
+    setAuthConfig({ userAuthenticationEnabled: previousAuthEnabled })
   })
 
   function withPluginTab() {
@@ -536,6 +549,74 @@ describe('ConfigPanel plugin admin tabs', () => {
       global: { stubs: { PluginParcelOutlet: true } },
     })
 
+    expect(wrapper.text()).toContain("You don't have access to any administrative settings.")
+  })
+
+  // Regression (#324): Data Sources used to require admin:source just to see
+  // the tab, so an ordinary Atlas user could not reach the source list and had
+  // no way to pick their session vocabulary. Read access to sources is now
+  // enough; the mutating controls inside the section carry their own write
+  // guard (see DataSourcesSection.spec.ts).
+  it('shows the Data Sources tab to a user with read:source but no admin permission', () => {
+    useAuthStore().setUser({
+      login: 'reader',
+      displayName: 'reader',
+      permissionIdx: { read: ['read:source'] },
+    })
+
+    const wrapper = mountConfigPanel({
+      global: {
+        stubs: {
+          PluginParcelOutlet: true,
+          CacheManagementSection: true,
+          DataSourcesSection: true,
+          TagManagementSection: true,
+          PermissionsSection: true,
+        },
+      },
+    })
+
+    expect(wrapper.text()).toContain('Data Sources')
+    expect(wrapper.text()).not.toContain("You don't have access to any administrative settings.")
+  })
+
+  it('shows the Data Sources tab to a user granted access to one specific source', () => {
+    useAuthStore().setUser({
+      login: 'reader',
+      displayName: 'reader',
+      permissionIdx: {},
+      entityAccess: { source: { '3': ['READ'] } },
+    })
+
+    const wrapper = mountConfigPanel({
+      global: {
+        stubs: {
+          PluginParcelOutlet: true,
+          CacheManagementSection: true,
+          DataSourcesSection: true,
+          TagManagementSection: true,
+          PermissionsSection: true,
+        },
+      },
+    })
+
+    expect(wrapper.text()).toContain('Data Sources')
+  })
+
+  it('still hides the Data Sources tab from a user with no source access at all', () => {
+    const wrapper = mountConfigPanel({
+      global: {
+        stubs: {
+          PluginParcelOutlet: true,
+          CacheManagementSection: true,
+          DataSourcesSection: true,
+          TagManagementSection: true,
+          PermissionsSection: true,
+        },
+      },
+    })
+
+    expect(wrapper.text()).not.toContain('Data Sources')
     expect(wrapper.text()).toContain("You don't have access to any administrative settings.")
   })
 

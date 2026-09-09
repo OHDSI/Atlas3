@@ -11,6 +11,8 @@ import { createPinia, setActivePinia } from 'pinia'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import DataSourcesSection from '@/components/config/DataSourcesSection.vue'
+import { useAuthStore } from '@/stores/auth'
+import { getAuthConfig, setAuthConfig } from '@/config/auth.config'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -542,6 +544,79 @@ describe('DataSourcesSection.vue', () => {
       const snackbars = wrapper.findAllComponents({ name: 'AtlasSnackbar' })
       const errorSnackbar = snackbars.find(s => s.props('severity') === 'danger')
       expect(errorSnackbar?.props('modelValue')).toBe(true)
+    })
+  })
+  /**
+   * Regression (#324). This section is now visible to any user who can read a
+   * source, so the controls that *change* one need a guard of their own. They
+   * are disabled rather than hidden, per the issue: a user should see that the
+   * action exists and that it is not theirs to use.
+   */
+  describe('Write-gated actions', () => {
+    let previousAuthEnabled: boolean
+
+    beforeEach(() => {
+      previousAuthEnabled = getAuthConfig().userAuthenticationEnabled
+      setAuthConfig({ userAuthenticationEnabled: true })
+    })
+
+    afterEach(() => {
+      setAuthConfig({ userAuthenticationEnabled: previousAuthEnabled })
+    })
+
+    function buttonFor(icon: string): HTMLButtonElement | null {
+      return wrapper.find(icon).element.closest('button')
+    }
+
+    async function mountAs(permissionIdx: Record<string, string[]>) {
+      useAuthStore().setUser({ login: 'u', displayName: 'u', permissionIdx })
+      wrapper = mount(DataSourcesSection, { global: { plugins: [vuetify] } })
+      await flushPromises()
+    }
+
+    it('still lists the sources and their vocabulary options for a read-only user', async () => {
+      await mountAs({ read: ['read:source'] })
+
+      expect(wrapper.text()).toContain('OHDSI CDM V5 Database')
+      expect(wrapper.text()).toContain('Synpuf 5PCT')
+      expect(wrapper.findAll('input[type="radio"]').length).toBeGreaterThan(0)
+    })
+
+    it('disables the mutating actions for a read-only user', async () => {
+      await mountAs({ read: ['read:source'] })
+
+      expect(buttonFor('.mdi-pencil')).toHaveProperty('disabled', true)
+      expect(buttonFor('.mdi-refresh')).toHaveProperty('disabled', true)
+      expect(buttonFor('.mdi-delete')).toHaveProperty('disabled', true)
+      expect(buttonFor('.mdi-plus')).toHaveProperty('disabled', true)
+      expect(buttonFor('.mdi-server')).toHaveProperty('disabled', true)
+    })
+
+    it('leaves the read-only actions available to a read-only user', async () => {
+      await mountAs({ read: ['read:source'] })
+
+      // Checking connectivity and clearing this browser's own cached config
+      // change nothing on the server.
+      expect(buttonFor('.mdi-connection')).toHaveProperty('disabled', false)
+      expect(buttonFor('.mdi-delete-sweep')).toHaveProperty('disabled', false)
+    })
+
+    it('explains why a disabled action is unavailable', async () => {
+      await mountAs({ read: ['read:source'] })
+
+      const wrap = wrapper.find('[data-testid="disabled-reason-wrap"]')
+      expect(wrap.exists()).toBe(true)
+      expect(wrap.attributes('title')).toBe('You do not have permission for this action')
+    })
+
+    it('enables the mutating actions for a user with write:source', async () => {
+      await mountAs({ write: ['write:source'] })
+
+      expect(buttonFor('.mdi-pencil')).toHaveProperty('disabled', false)
+      expect(buttonFor('.mdi-delete')).toHaveProperty('disabled', false)
+      expect(buttonFor('.mdi-plus')).toHaveProperty('disabled', false)
+      expect(buttonFor('.mdi-server')).toHaveProperty('disabled', false)
+      expect(wrapper.find('[data-testid="disabled-reason-wrap"]').exists()).toBe(false)
     })
   })
 })

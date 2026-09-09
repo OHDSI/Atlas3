@@ -32,12 +32,15 @@
     <v-card>
       <v-card-title class="d-flex align-center justify-space-between">
         <span>{{ t('navigation.datasources') }}</span>
-        <AtlasButton
-          icon="mdi-plus"
-          @click="openCreateDialog"
-        >
-          {{ t('configuration.newSource') }}
-        </AtlasButton>
+        <DisabledReasonTooltip :reason="manageDisabledReason">
+          <AtlasButton
+            icon="mdi-plus"
+            :disabled="!canManageAll()"
+            @click="openCreateDialog"
+          >
+            {{ t('configuration.newSource') }}
+          </AtlasButton>
+        </DisabledReasonTooltip>
       </v-card-title>
       <v-card-text>
         <v-table>
@@ -103,37 +106,48 @@
               </td>
               <td>
                 <div class="d-flex gap-2">
-                  <AtlasIconButton
-                    icon="mdi-pencil"
-                    v-bind="{ ariaLabel: tv('configuration.tagManagement.edit') }"
-                    size="sm"
-                    @click="openEditDialog(source)"
-                  />
-                  <EntityAccessLockButton
-                    v-bind="{ ariaLabel: tv('components.access.configureAccess', 'Configure access') }"
-                    size="sm"
-                    @click="openAccessDialog(source)"
-                  />
+                  <DisabledReasonTooltip :reason="writeDisabledReason(source)">
+                    <AtlasIconButton
+                      icon="mdi-pencil"
+                      v-bind="{ ariaLabel: tv('configuration.tagManagement.edit') }"
+                      size="sm"
+                      :disabled="!canWriteSource(source.sourceId)"
+                      @click="openEditDialog(source)"
+                    />
+                  </DisabledReasonTooltip>
+                  <DisabledReasonTooltip :reason="writeDisabledReason(source)">
+                    <EntityAccessLockButton
+                      v-bind="{ ariaLabel: tv('components.access.configureAccess', 'Configure access') }"
+                      size="sm"
+                      :disabled="!canWriteSource(source.sourceId)"
+                      @click="openAccessDialog(source)"
+                    />
+                  </DisabledReasonTooltip>
                   <AtlasIconButton
                     icon="mdi-connection"
                     v-bind="{ ariaLabel: tv('columns.checkConnection') }"
                     size="sm"
                     @click="checkConnection(source)"
                   />
-                  <AtlasIconButton
-                    icon="mdi-refresh"
-                    v-bind="{ ariaLabel: tv('columns.refreshCache') }"
-                    size="sm"
-                    :disabled="!source.hasResults"
-                    @click="refreshCache(source)"
-                  />
-                  <AtlasIconButton
-                    icon="mdi-delete"
-                    v-bind="{ ariaLabel: tv('common.delete') }"
-                    size="sm"
-                    tone="danger"
-                    @click="confirmDeleteSource(source)"
-                  />
+                  <DisabledReasonTooltip :reason="writeDisabledReason(source)">
+                    <AtlasIconButton
+                      icon="mdi-refresh"
+                      v-bind="{ ariaLabel: tv('columns.refreshCache') }"
+                      size="sm"
+                      :disabled="!source.hasResults || !canWriteSource(source.sourceId)"
+                      @click="refreshCache(source)"
+                    />
+                  </DisabledReasonTooltip>
+                  <DisabledReasonTooltip :reason="writeDisabledReason(source)">
+                    <AtlasIconButton
+                      icon="mdi-delete"
+                      v-bind="{ ariaLabel: tv('common.delete') }"
+                      size="sm"
+                      tone="danger"
+                      :disabled="!canWriteSource(source.sourceId)"
+                      @click="confirmDeleteSource(source)"
+                    />
+                  </DisabledReasonTooltip>
                 </div>
               </td>
             </tr>
@@ -161,12 +175,15 @@
           >
             {{ t('configuration.buttons.clearConfigurationCache') }}
           </AtlasButton>
-          <AtlasButton
-            icon="mdi-server"
-            @click="clearServerCache"
-          >
-            {{ t('configuration.buttons.clearServerCache') }}
-          </AtlasButton>
+          <DisabledReasonTooltip :reason="manageDisabledReason">
+            <AtlasButton
+              icon="mdi-server"
+              :disabled="!canManageAll()"
+              @click="clearServerCache"
+            >
+              {{ t('configuration.buttons.clearServerCache') }}
+            </AtlasButton>
+          </DisabledReasonTooltip>
         </div>
       </v-card-text>
     </v-card>
@@ -235,8 +252,10 @@
 
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar } from '@/components/ui'
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { useSourceAccessFor } from '@/composables/useEntityAccess'
+import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
 import { deleteSource } from '@/services/source.service'
 import { listDataSources } from '@/services/datasource.service'
 import { httpGet, httpPost } from '@/services/http-client'
@@ -244,6 +263,22 @@ import DataSourceDialog from './DataSourceDialog.vue'
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 
 const { t, tv } = useI18n()
+
+// This section is visible to any user who can read a source (#324), so the
+// controls that change one need their own guard. They are disabled with a
+// reason rather than hidden, so a user can see that the action exists and why
+// it is unavailable to them.
+const { canWrite: canWriteSource, canManageAll } = useSourceAccessFor()
+
+const manageDisabledReason = computed(() =>
+  canManageAll() ? '' : tv('common.noPermission', 'You do not have permission for this action')
+)
+
+function writeDisabledReason(source: DataSourceDisplay): string {
+  return canWriteSource(source.sourceId)
+    ? ''
+    : tv('common.noPermission', 'You do not have permission for this action')
+}
 
 interface DataSourceDisplay {
   sourceId: number
