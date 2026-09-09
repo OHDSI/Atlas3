@@ -282,6 +282,51 @@ describe('SourceService', () => {
       })
     })
 
+    // Regression (#325): a non-Kerberos source (Postgres, in the report) was
+    // created with krbAuthMethod omitted entirely, and WebAPI's
+    // SourceRequestToSourceConverter calls
+    // KerberosAuthMechanism.getByName(...) unguarded — which does
+    // name.toUpperCase() and threw a NullPointerException, surfacing as
+    // "HTTP 500: ConversionFailedException" and "Unable to create data source".
+    it('always sends krbAuthMethod, defaulting to DEFAULT for a non-Kerberos source', async () => {
+      mockFetchOnce({
+        sourceId: 7,
+        sourceName: 'Plain Postgres',
+        sourceDialect: 'postgresql',
+        sourceKey: 'PLAIN_PG'
+      })
+
+      await createSource({
+        name: 'Plain Postgres',
+        dialect: 'postgresql',
+        key: 'PLAIN_PG',
+        connectionString: 'jdbc:postgresql://localhost:5432/plaindb'
+      })
+
+      const [, init] = lastFetchCall()
+      expect(await sourcePartOf(init)).toMatchObject({ krbAuthMethod: 'DEFAULT' })
+    })
+
+    it('leaves an explicit Kerberos mechanism untouched', async () => {
+      mockFetchOnce({
+        sourceId: 8,
+        sourceName: 'Kerb Password',
+        sourceDialect: 'impala',
+        sourceKey: 'KERB_PW'
+      })
+
+      await createSource({
+        name: 'Kerb Password',
+        dialect: 'impala',
+        key: 'KERB_PW',
+        connectionString: 'jdbc:impala://localhost:21050',
+        krbAuthMethod: 'PASSWORD'
+      })
+
+      const [, init] = lastFetchCall()
+      expect(await sourcePartOf(init)).toMatchObject({ krbAuthMethod: 'PASSWORD' })
+    })
+
     it('creates a source with keyfile using multipart form', async () => {
       const mockResponse = {
         sourceId: 6,
@@ -352,6 +397,27 @@ describe('SourceService', () => {
         sourceName: 'Updated Source'
       })
       expect(result.sourceName).toBe('Updated Source')
+    })
+
+    // The update endpoint runs through the same converter as create, so a
+    // non-Kerberos source has to carry the field here too (#325).
+    it('always sends krbAuthMethod on update as well', async () => {
+      mockFetchOnce({
+        sourceId: 1,
+        sourceName: 'Updated Source',
+        sourceDialect: 'postgresql',
+        sourceKey: 'UPDATED_SOURCE'
+      })
+
+      await updateSource(1, {
+        name: 'Updated Source',
+        dialect: 'postgresql',
+        key: 'UPDATED_SOURCE',
+        connectionString: 'jdbc:postgresql://localhost:5432/updated'
+      })
+
+      const [, init] = lastFetchCall()
+      expect(await sourcePartOf(init)).toMatchObject({ krbAuthMethod: 'DEFAULT' })
     })
 
     it('updates a source with keyfile using multipart form', async () => {
