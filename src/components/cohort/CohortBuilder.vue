@@ -314,10 +314,11 @@ import ConceptSetSelectionDialog from './ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from './ConceptSearchDialog.vue'
 import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
 import CohortExpressionEditor from '@/components/cohort-editor/CohortExpressionEditor.vue'
-import { CohortExpressionSchema, defaultExpression as blankExpression } from '@/models/circe-types'
+import { defaultExpression as blankExpression } from '@/models/circe-types'
 import type { CohortExpression, Concept as CirceConcept, ConceptSetItem as CirceConceptSetItem } from '@/models/circe-types'
 import { unassignConceptSetId, walkConceptSetReferences } from '@/components/cohort-editor/concept-set-usage'
 import { normalizeForCirce } from '@/components/cohort-editor/normalize'
+import { describeImportProblems, validateCohortExpression } from '@/components/cohort-editor/import-validation'
 import { convertAtlasItemToCirce } from '@/components/cohort-editor/atlas-concept-set'
 import CohortGenerationSection from './CohortGenerationSection.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
@@ -1385,17 +1386,20 @@ async function handleApplyJson(json: string) {
     return
   }
 
-  const result = CohortExpressionSchema.safeParse(parsed)
-  if (!result.success) {
+  // Reports the fields the schema does not recognise as well as the ones it
+  // rejects, so a renamed key (`title` for `name`) is refused outright rather
+  // than dropped on the way in (#328).
+  const result = validateCohortExpression(parsed)
+  if (!result.ok) {
     errorMessage.value = tv('components.cohortBuilder.jsonImportFailed', 'Import failed: {error}', {
-      error: result.error.issues[0]?.message ?? 'Invalid expression',
+      error: describeImportProblems(result.problems).join('; '),
     })
     showError.value = true
     return
   }
 
   cancelValidation()
-  replaceExpression(result.data)
+  replaceExpression(result.expression)
 
   showJsonDialog.value = false
   successMessage.value = tv(

@@ -4600,6 +4600,7 @@
     "importFileReadError": "Failed to read the selected file.",
     "importInvalidJson": "Expression JSON is not valid JSON.",
     "importInvalidShape": "Expression must be a JSON object.",
+    "importInvalidExpression": "Expression JSON is not a valid cohort expression: {errors}",
     "importFailed": "Import failed. Check the JSON and try again.",
     "copyLoadError": "Failed to load the cohort to copy.",
     "copyLoadForbidden": "You do not have permission to read this cohort.",

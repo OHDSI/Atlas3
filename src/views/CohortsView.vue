@@ -367,9 +367,9 @@ import {
   saveCohortDefinition,
 } from '@/services/cohort-definition.service'
 import { logger } from '@/utils/logger'
+import { describeImportProblems, validateCohortExpression } from '@/components/cohort-editor/import-validation'
 import { AtlasAlert, AtlasButton, AtlasChip, AtlasDialog, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
-import type { CohortExpression } from '@/models/circe-types'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
@@ -571,12 +571,25 @@ async function confirmImport() {
     return
   }
 
+  // Validated before it is saved, not after: an expression with a renamed or
+  // misspelled field used to be stored as-is and only lose the field when the
+  // editor opened it, leaving the user with a silently incomplete cohort (#328).
+  const validation = validateCohortExpression(parsed)
+  if (!validation.ok) {
+    importError.value = t(
+      'cohortDefinitions.importInvalidExpression',
+      'Expression JSON is not a valid cohort expression: {errors}',
+      { errors: describeImportProblems(validation.problems).join('; ') }
+    ).value
+    return
+  }
+
   importing.value = true
   try {
     const result = await saveCohortDefinition({
       name: importName.value.trim(),
       expressionType: 'SIMPLE_EXPRESSION',
-      expression: parsed as CohortExpression,
+      expression: validation.expression,
     })
 
     if (!result.success || !result.data.id) {
