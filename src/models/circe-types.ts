@@ -688,6 +688,12 @@ export const CohortExpressionSchema = z.object({
   CollapseSettings: CollapseSettingsSchema.nullish(),
   CensorWindow: PeriodSchema.nullish(),
   cdmVersionRange: z.string().nullish(),
+  /**
+   * Written by Atlas at the top of an exported expression (SIMPLE_EXPRESSION).
+   * Carried rather than used: the editor has no other expression type, but the
+   * field is part of what Atlas exports and must survive a round trip.
+   */
+  expressionType: z.string().nullish(),
 })
 export type CohortExpression = z.infer<typeof CohortExpressionSchema>
 
