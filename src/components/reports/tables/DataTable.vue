@@ -115,6 +115,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { TableHeader, TableRow } from '@/models/report.types'
 import TableExport from './TableExport.vue'
+import { matchesTerms } from '@/utils/list-filters'
 
 /**
  * i18n
@@ -192,13 +193,15 @@ const visibleHeaders = computed(() => {
 const filteredItems = computed(() => {
   if (!debouncedSearchQuery.value) return props.items
 
-  const query = debouncedSearchQuery.value.toLowerCase()
+  const query = debouncedSearchQuery.value
   return props.items.filter(item => {
-    return visibleHeaders.value.some(header => {
-      const value = item[header.key]
-      if (value == null) return false
-      return String(value).toLowerCase().includes(query)
-    })
+    return matchesTerms(
+      visibleHeaders.value.map(header => {
+        const value = item[header.key]
+        return value == null ? null : String(value)
+      }),
+      query
+    )
   })
 })
 
@@ -220,13 +223,14 @@ const exportData = computed(() => {
  */
 function customFilter(_value: string, query: string, item?: { raw: TableRow }) {
   if (!query) return true
-  const searchLower = query.toLowerCase()
 
-  return visibleHeaders.value.some(header => {
-    const cellValue = item?.raw?.[header.key]
-    if (cellValue == null) return false
-    return String(cellValue).toLowerCase().includes(searchLower)
-  })
+  return matchesTerms(
+    visibleHeaders.value.map(header => {
+      const cellValue = item?.raw?.[header.key]
+      return cellValue == null ? null : String(cellValue)
+    }),
+    query
+  )
 }
 
 /**

@@ -201,6 +201,7 @@ import { arrayToCsv, downloadCsv } from '@/utils/csv'
 import ComparisonVennDiagram from './ComparisonVennDiagram.vue'
 import ConceptSetChooserDialog from './ConceptSetChooserDialog.vue'
 import type { ComparisonResultItem } from '@/models/concept-set.types'
+import { matchesTerms } from '@/utils/list-filters'
 
 const props = defineProps<{ active: boolean }>()
 
@@ -276,7 +277,7 @@ const searchedRows = computed<Row[]>(() => {
   const term = searchText.value?.trim().toLowerCase()
   if (!term) return rows.value
   return rows.value.filter(r =>
-    SEARCHABLE_FIELDS.some(f => String(r[f] ?? '').toLowerCase().includes(term))
+    matchesTerms(SEARCHABLE_FIELDS.map(f => String(r[f] ?? '')), term)
   )
 })
 

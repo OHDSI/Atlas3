@@ -18,6 +18,7 @@ import { useConceptHierarchyStore } from '@/stores/concept-hierarchy'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { Concept, ConceptAddFlags, ConceptSetItem } from '@/models/concept-set.types'
 import type { RelatedConcept } from '@/models/concept-detail.types'
+import { matchesTerms } from '@/utils/list-filters'
 
 const props = defineProps<{
   modelValue: boolean
@@ -151,8 +152,8 @@ function optionsFor(key: 'conceptClassId' | 'domainId' | 'vocabularyId') {
 }
 
 function matches(row: RelatedConcept): boolean {
-  const q = filterText.value.trim().toLowerCase()
-  if (q && !row.conceptName.toLowerCase().includes(q) && !row.conceptCode.toLowerCase().includes(q))
+  const q = filterText.value
+  if (!matchesTerms([row.conceptName, row.conceptCode], q))
     return false
   if (classFilter.value && row.conceptClassId !== classFilter.value) return false
   if (domainFilter.value && row.domainId !== domainFilter.value) return false

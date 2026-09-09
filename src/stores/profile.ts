@@ -3,6 +3,7 @@
  * Manages person profile state, route params, filters, and highlights.
  */
 import { defineStore } from 'pinia'
+import { matchesTerms } from '@/utils/list-filters'
 import { ref, computed } from 'vue'
 import { logger } from '@/utils/logger'
 import {
@@ -126,11 +127,11 @@ export const useProfileStore = defineStore('profile', () => {
   const filteredRecords = computed<PersonRecord[]>(() => {
     const records = person.value?.records ?? []
     const dom = domainFilter.value
-    const txt = textFilter.value.trim().toLowerCase()
+    const txt = textFilter.value
     const range = dateRange.value
     return records.filter(r => {
       if (dom.size > 0 && !dom.has(r.domain)) return false
-      if (txt && !r.conceptName.toLowerCase().includes(txt)) return false
+      if (!matchesTerms([r.conceptName], txt)) return false
       if (range) {
         const [from, to] = range
         if (r.startDay < from || r.startDay > to) return false

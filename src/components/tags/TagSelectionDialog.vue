@@ -219,6 +219,7 @@ import type { Tag as ConfigTag, TagGroup } from '@/models/config.types'
 import CreateTagForm from '@/components/tags/CreateTagForm.vue'
 import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'
+import { matchesTerms } from '@/utils/list-filters'
 
 interface Props {
   modelValue: boolean
@@ -284,12 +285,12 @@ const filteredTagGroups = computed(() => {
   const query = searchQuery.value.toLowerCase()
 
   return tagGroups.value.filter(group => {
-    if (group.name.toLowerCase().includes(query)) {
+    if (matchesTerms([group.name], query)) {
       return true
     }
 
     const groupTags = getGroupTags(group)
-    return groupTags.some(tag => tag.name.toLowerCase().includes(query))
+    return groupTags.some(tag => matchesTerms([tag.name], query))
   })
 })
 
@@ -301,8 +302,7 @@ function getGroupTags(group: TagGroup): ConfigTag[] {
   )
 
   if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    return tags.filter(tag => tag.name.toLowerCase().includes(query))
+    return tags.filter(tag => matchesTerms([tag.name], searchQuery.value))
   }
 
   return tags

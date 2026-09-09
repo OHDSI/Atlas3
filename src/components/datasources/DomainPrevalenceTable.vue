@@ -140,6 +140,7 @@ import { useI18n } from '@/composables/useI18n'
 import type { PrevalenceTableRow } from '@/models/datasource.types'
 import { formatNumber, formatPercentage, exportTableToCSV } from '@/utils/datasource-formatters'
 import { logger } from '@/utils/logger'
+import { matchesTerms } from '@/utils/list-filters'
 
 const { t, tv } = useI18n()
 
@@ -207,11 +208,8 @@ const filteredData = computed(() => {
 
   if (!search.value) return dataToFilter
 
-  const searchLower = search.value.toLowerCase()
-  return dataToFilter.filter(
-    row =>
-      row.conceptName.toLowerCase().includes(searchLower) ||
-      row.conceptId.toString().includes(searchLower)
+  return dataToFilter.filter(row =>
+    matchesTerms([row.conceptName, row.conceptId.toString()], search.value)
   )
 })
 

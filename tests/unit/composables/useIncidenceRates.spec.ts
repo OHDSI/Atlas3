@@ -105,6 +105,27 @@ describe('useIncidenceRates', () => {
     expect(c.filteredIncidenceRates.value.map(ir => ir.id)).toEqual([1])
   })
 
+  // #326: every term has to appear, but not consecutively and not in order.
+  it('filteredIncidenceRates matches non-consecutive terms across name and description', async () => {
+    (listIncidenceRates as Mock).mockResolvedValueOnce({
+      success: true,
+      data: [
+        mkIR({ id: 1, name: '[PL] earliest event of schizophrenia', description: null }),
+        mkIR({ id: 2, name: '[PL] earliest event of depression', description: null }),
+        mkIR({ id: 3, name: '[PL] cohort', description: 'earliest event of schizophrenia' }),
+      ],
+    })
+    const c = useIncidenceRates()
+    await c.fetchIncidenceRates()
+
+    c.filters.value.searchQuery = 'pl schiz'
+    expect(c.filteredIncidenceRates.value.map(ir => ir.id)).toEqual([1, 3])
+
+    // Order of the terms makes no difference.
+    c.filters.value.searchQuery = 'schiz pl'
+    expect(c.filteredIncidenceRates.value.map(ir => ir.id)).toEqual([1, 3])
+  })
+
   it('filteredIncidenceRates filters by tags (all required)', async () => {
     (listIncidenceRates as Mock).mockResolvedValueOnce({
       success: true,

@@ -214,6 +214,7 @@ import type { ConceptSetReference } from '@/models/cohort.types'
 import { AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasProgressLinear, AtlasSkeleton, AtlasTextField } from '@/components/ui'
 import { formatDate } from '@/utils/date-format'
 import { hasNumericConceptSetId } from '@/utils/concept-set-id'
+import { matchesTerms } from '@/utils/list-filters'
 
 defineOptions({ name: 'ConceptSetSelectionDialog' })
 
@@ -251,8 +252,7 @@ const drawerWidth = computed(() => window.innerWidth - 100)
 const filteredSets = computed(() => {
   const sets = conceptSetsStore.conceptSets
   if (!searchTerm.value) return sets
-  const term = searchTerm.value.toLowerCase()
-  return sets.filter(set => set.name.toLowerCase().includes(term))
+  return sets.filter(set => matchesTerms([set.name], searchTerm.value))
 })
 
 const countLabel = computed(() => {

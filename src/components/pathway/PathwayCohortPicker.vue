@@ -47,6 +47,7 @@ import { getCohorts } from '@/services/cohort-definition.service'
 import type { PathwayCohortRef } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
 import { useI18n } from '@/composables/useI18n'
+import { matchesTerms } from '@/utils/list-filters'
 
 interface CohortOption {
   id: number
@@ -82,7 +83,7 @@ onMounted(load)
 const filtered = computed(() =>
   cohorts.value.filter(
     c =>
-      !props.excludedIds.includes(c.id) && c.name.toLowerCase().includes(search.value.toLowerCase())
+      !props.excludedIds.includes(c.id) && matchesTerms([c.name], search.value)
   )
 )
 
