@@ -46,6 +46,7 @@ import { ref, onMounted, computed } from 'vue'
 import { getCohorts } from '@/services/cohort-definition.service'
 import { logger } from '@/utils/logger'
 import { useI18n } from '@/composables/useI18n'
+import { matchesTerms } from '@/utils/list-filters'
 
 interface CohortOption {
   id: number
@@ -82,7 +83,7 @@ const filtered = computed(() =>
   cohorts.value.filter(
     c =>
       !(props.excludedIds ?? []).includes(c.id) &&
-      c.name.toLowerCase().includes(search.value.toLowerCase())
+      matchesTerms([c.name], search.value)
   )
 )
 

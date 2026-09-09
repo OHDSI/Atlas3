@@ -79,6 +79,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import { AtlasButton, AtlasDataTable, AtlasDialog, AtlasProgressLinear, AtlasTextField } from '@/components/ui'
+import { matchesTerms } from '@/utils/list-filters'
 
 interface Props {
   modelValue: boolean
@@ -114,7 +115,7 @@ const filteredRows = computed<ConceptSetListItem[]>(() => {
   return store.conceptSets.filter(row => {
     if (props.excludeId !== undefined && row.id === props.excludeId) return false
     if (!term) return true
-    return row.name.toLowerCase().includes(term)
+    return matchesTerms([row.name], term)
   })
 })
 

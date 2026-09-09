@@ -9,6 +9,7 @@
 import { ref, computed, toValue } from 'vue'
 import type { MaybeRefOrGetter, Ref } from 'vue'
 import type { Concept } from '@/models/concept-set.types'
+import { matchesTerms } from '@/utils/list-filters'
 
 export type FacetKey = string
 
@@ -49,20 +50,27 @@ export const CONCEPT_FACETS: FacetDefinition<Concept>[] = [
  * rows already returned.
  */
 export function conceptSearchText(c: Concept): string {
-  return [
-    String(c.conceptId ?? ''),
-    c.conceptName ?? '',
-    c.conceptCode ?? '',
-    c.domainId ?? '',
-    c.vocabularyId ?? '',
-    c.conceptClassId ?? '',
-  ].join(' ')
+  return [c.conceptName ?? '', c.domainId ?? '', c.vocabularyId ?? '', c.conceptClassId ?? ''].join(
+    ' '
+  )
+}
+
+/**
+ * Concept id and code are matched as identifiers rather than as free text, so a
+ * term only hits them whole or by prefix. Folded into the search text they
+ * would match on any substring, and a query like "type 1" would return "Type 2
+ * diabetes" because its concept id happens to contain a 1.
+ */
+export function conceptSearchIdentifiers(c: Concept): (string | number | null | undefined)[] {
+  return [c.conceptId, c.conceptCode]
 }
 
 export function useConceptFacets<T = Concept>(
   concepts: Ref<T[]>,
   definitions: MaybeRefOrGetter<FacetDefinition<T>[]> = CONCEPT_FACETS as FacetDefinition<T>[],
-  searchText: (item: T) => string = conceptSearchText as unknown as (item: T) => string
+  searchText: (item: T) => string = conceptSearchText as unknown as (item: T) => string,
+  searchIdentifiers: (item: T) => (string | number | null | undefined)[] =
+    conceptSearchIdentifiers as unknown as (item: T) => (string | number | null | undefined)[]
 ) {
   const selected = ref<Record<FacetKey, string[]>>({})
   const textFilter = ref<string>('')
@@ -80,7 +88,9 @@ export function useConceptFacets<T = Concept>(
    */
   function matchesText(item: T): boolean {
     if (!normalizedText.value) return true
-    return searchText(item).toLowerCase().includes(normalizedText.value)
+    return matchesTerms([searchText(item)], normalizedText.value, {
+      identifiers: searchIdentifiers(item),
+    })
   }
 
   /** Does an item pass every facet's selection except the excluded one? */

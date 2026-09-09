@@ -5,6 +5,7 @@ import type {
   DistributionStat,
   PrevalenceStat,
   Table1Config,
+  Table1Filters,
 } from '@/models/characterization.types'
 
 export function exportCharacterizationResults(input: {
@@ -12,12 +13,9 @@ export function exportCharacterizationResults(input: {
   distribution: DistributionStat[]
   cohorts: CharacterizationDefinition['cohorts']
   config: Table1Config
-  filters: {
-    threshold: number
-    selectedAnalysisIds: number[]
-    selectedDomains: string[]
-    selectedCohortId: number | null
-  }
+  // The same filters the table is showing, so an export matches the screen —
+  // including the free-text search (#327).
+  filters: Table1Filters
   cohortSizes: Record<string, number>
   selectedExecutionId: number | null
 }): void {

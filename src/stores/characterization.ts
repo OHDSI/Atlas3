@@ -8,6 +8,7 @@
  * without further store churn.
  */
 import { defineStore } from 'pinia'
+import { matchesTerms } from '@/utils/list-filters'
 import { ref, computed } from 'vue'
 
 import {
@@ -68,8 +69,8 @@ export const useCharacterizationStore = defineStore('characterization', () => {
       return characterizations.value
     }
 
-    const term = filterTerm.value.toLowerCase()
-    return characterizations.value.filter(cc => cc.name.toLowerCase().includes(term))
+    const term = filterTerm.value
+    return characterizations.value.filter(cc => matchesTerms([cc.name], term))
   })
 
   const isEmpty = computed(() => characterizations.value.length === 0)

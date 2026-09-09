@@ -428,6 +428,8 @@ export interface Table1Filters {
   selectedAnalysisIds: number[]
   selectedDomains: string[]
   selectedCohortId: number | null
+  /** Free text narrowing the covariate rows; empty keeps them all. */
+  search: string
 }
 
 export const DEFAULT_TABLE1_FILTERS: Table1Filters = {
@@ -435,4 +437,5 @@ export const DEFAULT_TABLE1_FILTERS: Table1Filters = {
   selectedAnalysisIds: [],
   selectedDomains: [],
   selectedCohortId: null,
+  search: '',
 }

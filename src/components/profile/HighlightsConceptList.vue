@@ -91,6 +91,7 @@ import { useTimelineFilters } from '@/composables/useTimelineFilters'
 import { useProfileStore } from '@/stores/profile'
 import { useI18n } from '@/composables/useI18n'
 import { HIGHLIGHT_PALETTE, type HighlightColor } from '@/models/profile.types'
+import { matchesTerms } from '@/utils/list-filters'
 
 const { uniqueConcepts } = useTimelineFilters()
 const { tv } = useI18n()
@@ -117,7 +118,7 @@ const items = computed(() => {
   const q = search.value.trim().toLowerCase()
   const list = uniqueConcepts.value.slice().sort((a, b) => b.count - a.count)
   if (!q) return list
-  return list.filter(c => c.conceptName.toLowerCase().includes(q))
+  return list.filter(c => matchesTerms([c.conceptName], q))
 })
 
 function currentColor(conceptId: number): HighlightColor | undefined {

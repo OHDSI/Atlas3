@@ -206,6 +206,7 @@ import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'
 import RoleCreateDialog from './RoleCreateDialog.vue'
 import RoleDeleteDialog from './RoleDeleteDialog.vue'
+import { matchesTerms } from '@/utils/list-filters'
 
 const { t, tv } = useI18n()
 const router = useRouter()
@@ -238,12 +239,8 @@ const filteredRoles = computed(() => {
     return roles.value
   }
 
-  const query = debouncedSearchQuery.value.toLowerCase().trim()
-  return roles.value.filter(role => {
-    const nameMatch = role.name.toLowerCase().includes(query)
-    const descriptionMatch = role.description?.toLowerCase().includes(query) || false
-    return nameMatch || descriptionMatch
-  })
+  const query = debouncedSearchQuery.value
+  return roles.value.filter(role => matchesTerms([role.name, role.description], query))
 })
 
 // Table configuration

@@ -67,6 +67,8 @@
           :selected-analysis-ids="filters.selectedAnalysisIds"
           :selected-domains="filters.selectedDomains"
           :selected-cohort-id="filters.selectedCohortId"
+          :search="filters.search"
+          @update:search="(v) => (filters.search = v)"
           @update:selected-analysis-ids="(v) => (filters.selectedAnalysisIds = v)"
           @update:selected-domains="(v) => (filters.selectedDomains = v)"
           @update:selected-cohort-id="(v) => (filters.selectedCohortId = v)"
@@ -103,6 +105,7 @@
             :threshold="filters.threshold"
             :selected-analysis-ids="filters.selectedAnalysisIds"
             :selected-domains="filters.selectedDomains"
+            :search="filters.search"
             :selected-cohort-id="filters.selectedCohortId"
             @explore="onExplore"
           />

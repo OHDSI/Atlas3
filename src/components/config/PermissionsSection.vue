@@ -187,6 +187,7 @@ import RolePermissionsTab from '@/components/config/permissions/RolePermissionsT
 import RoleUsersTab from '@/components/config/permissions/RoleUsersTab.vue'
 import RoleCreateDialog from '@/components/config/permissions/RoleCreateDialog.vue'
 import RoleDeleteDialog from '@/components/config/permissions/RoleDeleteDialog.vue'
+import { matchesTerms } from '@/utils/list-filters'
 
 const { t, tv } = useI18n()
 const { roles, currentRole, isLoadingRoles, rolesError, fetchRoles, fetchRoleById } = useRoles()
@@ -209,10 +210,8 @@ const editingRole = ref<Role | null>(null)
 
 const filteredRoles = computed(() => {
   if (!searchQuery.value) return roles.value
-  const query = searchQuery.value.toLowerCase()
-  return roles.value.filter(
-    role =>
-      role.name.toLowerCase().includes(query) || role.description?.toLowerCase().includes(query)
+  return roles.value.filter(role =>
+    matchesTerms([role.name, role.description], searchQuery.value)
   )
 })
 

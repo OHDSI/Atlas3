@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { listPathways } from '@/services/pathway.service'
 import type { Pathway } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
+import { matchesTerms } from '@/utils/list-filters'
 
 export interface PathwayFilters {
   searchQuery: string
@@ -44,14 +45,13 @@ export function usePathways() {
   }
 
   const filteredPathways = computed(() => {
-    const q = filters.value.searchQuery.trim().toLowerCase()
+    const q = filters.value.searchQuery
     const tags = filters.value.selectedTags
     const author = filters.value.author
     const cr = filters.value.createdDateRange
     const mr = filters.value.modifiedDateRange
     return pathways.value.filter(p => {
-      if (q && !p.name.toLowerCase().includes(q) && !p.description?.toLowerCase().includes(q))
-        return false
+      if (!matchesTerms([p.name, p.description], q)) return false
       if (tags.length > 0) {
         const have = new Set((p.tags || []).map(t => t.name))
         if (!tags.every(t => have.has(t))) return false

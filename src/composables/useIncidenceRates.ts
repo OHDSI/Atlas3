@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { listIncidenceRates } from '@/services/incidence-rate.service'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
 import { logger } from '@/utils/logger'
+import { matchesTerms } from '@/utils/list-filters'
 
 export interface IncidenceRateListFilters {
   searchQuery: string
@@ -41,14 +42,13 @@ export function useIncidenceRates() {
   }
 
   const filteredIncidenceRates = computed(() => {
-    const q = filters.value.searchQuery.trim().toLowerCase()
+    const q = filters.value.searchQuery
     const tags = filters.value.selectedTags
     const author = filters.value.author
     const cr = filters.value.createdDateRange
     const mr = filters.value.modifiedDateRange
     return incidenceRates.value.filter(ir => {
-      if (q && !ir.name.toLowerCase().includes(q) && !ir.description?.toLowerCase().includes(q))
-        return false
+      if (!matchesTerms([ir.name, ir.description], q)) return false
       if (tags.length > 0) {
         const have = new Set((ir.tags || []).map(t => t.name))
         if (!tags.every(t => have.has(t))) return false
