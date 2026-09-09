@@ -71,6 +71,7 @@
           @export-download="builderRef.handleExportDownload()"
           @export-copy="builderRef.handleExportCopy()"
           @view-json="builderRef.openJsonDialog()"
+          @view-sql="builderRef.openSqlDialog()"
         />
       </div>
     </template>

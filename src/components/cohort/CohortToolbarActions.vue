@@ -46,6 +46,13 @@
           :subtitle="t('components.cohortBuilder.jsonViewEditSubtitle', 'Overwrite the cohort from JSON').value"
           @click="$emit('view-json')"
         />
+        <AtlasListItem
+          data-testid="view-sql"
+          prepend-icon="mdi-database-search"
+          :title="t('components.cohortBuilder.sqlMenuTitle', 'SQL').value"
+          :subtitle="t('components.cohortBuilder.sqlMenuSubtitle', 'View and download the generated SQL').value"
+          @click="$emit('view-sql')"
+        />
       </AtlasList>
     </AtlasMenu>
 
@@ -92,6 +99,7 @@ defineEmits<{
   (e: 'save'): void
   (e: 'export-download'): void
   (e: 'export-copy'): void
+  (e: 'view-sql'): void
   (e: 'view-json'): void
 }>()
 
