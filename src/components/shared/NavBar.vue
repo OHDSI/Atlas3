@@ -206,6 +206,17 @@
                 </v-list-item-title>
               </AtlasListItem>
               <AtlasDivider v-if="accountMenuItems.length" />
+              <AtlasListItem
+                data-testid="account-menu-api-keys"
+                @click="handleApiKeysClick"
+              >
+                <template #prepend>
+                  <AtlasIcon>mdi-key-variant</AtlasIcon>
+                </template>
+                <v-list-item-title>
+                  {{ apiKeysLabel }}
+                </v-list-item-title>
+              </AtlasListItem>
               <AtlasListItem @click="handleLogout">
                 <template #prepend>
                   <AtlasIcon>mdi-logout</AtlasIcon>
@@ -296,6 +307,7 @@ const logoNavigateTo = ref('/')
 
 const signInLabel = t('components.userBar.signin', 'Sign In')
 const signOutLabel = t('components.userBar.signout', 'Sign Out')
+const apiKeysLabel = t('components.userBar.apiKeys', 'API Keys')
 const logoAriaLabel = computed(() => t('a11y.logoHome', 'OHDSI ATLAS Home').value)
 
 // Core navigation items (will be filtered based on plugin configuration)
@@ -402,6 +414,11 @@ const handleNavClick = async (item: NavigationItem) => {
 function handleAccountItemClick(item: { pluginId: string; path?: string }) {
   const suffix = item.path ?? ''
   router.push(`/plugins/${item.pluginId}/${suffix}`.replace(/\/+$/, ''))
+}
+
+async function handleApiKeysClick() {
+  await router.isReady()
+  router.push('/profile/api-keys')
 }
 
 async function handleLogout() {
