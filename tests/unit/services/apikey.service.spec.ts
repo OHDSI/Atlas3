@@ -64,6 +64,8 @@ describe('services/apikey.service', () => {
       expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid API key list response format')
+      } else {
+        expect.fail('expected failure')
       }
     })
   })
@@ -108,6 +110,8 @@ describe('services/apikey.service', () => {
       expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.message).toBe('Invalid API key creation response format')
+      } else {
+        expect.fail('expected failure')
       }
       expect(logger.error).toHaveBeenCalledWith('ApiKeyService', expect.any(String), expect.anything())
     })
