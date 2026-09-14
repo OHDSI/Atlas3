@@ -389,6 +389,7 @@
           "profiles-source",
           "profile-view",
           "profile-view-cohort",
+          "api-keys",
           "feature-analyses",
           "characterizations",
           "pathways",
