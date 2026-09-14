@@ -8,7 +8,6 @@ import { defineComponent } from 'vue'
 import EntityAccessDialog from '@/components/access/EntityAccessDialog.vue'
 import { ApiError } from '@/services/api-error'
 import { failure, success } from '@/types/api'
-import { createI18nMock } from '../../../helpers/i18n-mock'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../helpers/i18n-mock')
@@ -83,7 +82,7 @@ const AtlasChipStub = defineComponent({
 const AtlasAutocompleteStub = defineComponent({
   name: 'AtlasAutocomplete',
   props: {
-    modelValue: { type: String, default: '' },
+    modelValue: { type: [String, Number], default: null },
     items: { type: Array, default: () => [] },
     label: { type: String, default: '' },
     placeholder: { type: String, default: '' },
@@ -91,9 +90,8 @@ const AtlasAutocompleteStub = defineComponent({
   emits: ['update:modelValue', 'update:search'],
   template:
     '<input '
-    + ':value="modelValue" '
     + 'data-testid="autocomplete-stub" '
-    + '@input="$emit(\'update:modelValue\', $event.target.value); $emit(\'update:search\', $event.target.value)" '
+    + '@input="$emit(\'update:search\', $event.target.value)" '
     + ' />',
 })
 
@@ -217,11 +215,11 @@ describe('EntityAccessDialog', () => {
     const wrapper = mountComponent()
     await flushPromises()
 
-    const inputs = wrapper.findAll('[data-testid="autocomplete-stub"]')
-    expect(inputs).toHaveLength(2)
+    const autocompletes = wrapper.findAllComponents({ name: 'AtlasAutocomplete' })
+    expect(autocompletes).toHaveLength(2)
 
-    await inputs[0].setValue('Reader')
-    await inputs[1].setValue('Writer')
+    await autocompletes[0].vm.$emit('update:modelValue', 1)
+    await autocompletes[1].vm.$emit('update:modelValue', 2)
     await vi.runAllTimersAsync()
     await flushPromises()
 
@@ -237,23 +235,31 @@ describe('EntityAccessDialog', () => {
     vi.useRealTimers()
   })
 
-  it('surfaces a role-not-found error when the typed role does not match suggestions', async () => {
+  it('disables the Add button until a role is selected from the suggestions', async () => {
     mockLoadRoleSuggestions.mockResolvedValue(success([{ id: 1, name: 'Reader', description: null }]))
 
     const wrapper = mountComponent()
     await flushPromises()
 
-    const input = wrapper.find('[data-testid="autocomplete-stub"]')
-    await input.setValue('Unknown role')
-    await flushPromises()
-
     const addButton = wrapper.findAll('button').find(button => button.text() === 'Add')
     expect(addButton).toBeTruthy()
+    expect(addButton!.attributes('disabled')).toBeDefined()
+
+    // Typing without selecting a suggestion must not enable the button.
+    const input = wrapper.find('[data-testid="autocomplete-stub"]')
+    await input.setValue('Read')
+    await flushPromises()
+    expect(addButton!.attributes('disabled')).toBeDefined()
+
+    const autocomplete = wrapper.findComponent({ name: 'AtlasAutocomplete' })
+    await autocomplete.vm.$emit('update:modelValue', 1)
+    await flushPromises()
+    expect(addButton!.attributes('disabled')).toBeUndefined()
+
     await addButton!.trigger('click')
     await flushPromises()
 
-    const { tv } = createI18nMock()
-    expect(wrapper.text()).toContain(tv('components.access.roleNotFound', 'Select a role from the list.'))
+    expect(mockGrantEntityAccess).toHaveBeenCalledWith('SOURCE', 42, 1, 'READ')
   })
 
   it('retries and revokes access entries from the table actions', async () => {
@@ -300,6 +306,21 @@ describe('EntityAccessDialog', () => {
     await closeButton.vm.$emit('click', new MouseEvent('click'))
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([false])
+  })
+
+  it('still closes after the role search is cleared to null by the autocomplete', async () => {
+    // Vuetify's VAutocomplete emits null (not '') when a single-select field is cleared.
+    const wrapper = mountComponent()
+    await flushPromises()
+
+    const autocomplete = wrapper.findComponent({ name: 'AtlasAutocomplete' })
+    await autocomplete.vm.$emit('update:modelValue', null)
+    await flushPromises()
+
+    const closeButton = wrapper.findComponent({ name: 'AtlasIconButton' })
+    await closeButton.vm.$emit('click', new MouseEvent('click'))
+
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([false])
   })
 })
