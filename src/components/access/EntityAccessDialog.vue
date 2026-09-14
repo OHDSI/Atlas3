@@ -92,8 +92,10 @@
 
               <div class="entity-access-dialog__grant-row">
                 <AtlasAutocomplete
-                  v-model="readRoleName"
-                  :items="readRoleSuggestionNames"
+                  v-model="readRoleId"
+                  :items="readSuggestions"
+                  item-title="name"
+                  item-value="id"
                   :label="t('components.access.addReadAccess', 'Add READ access to role').value"
                   :placeholder="t('components.access.searchRoles', 'Search roles...').value"
                   clearable
@@ -104,7 +106,7 @@
 
                 <AtlasButton
                   variant="primary"
-                  :disabled="!readRoleName.trim() || isLoadingRead || !entityId"
+                  :disabled="readRoleId == null || isLoadingRead || !entityId"
                   :loading="isLoadingRead"
                   @click="grantReadAccess"
                 >
@@ -154,8 +156,10 @@
 
               <div class="entity-access-dialog__grant-row">
                 <AtlasAutocomplete
-                  v-model="writeRoleName"
-                  :items="writeRoleSuggestionNames"
+                  v-model="writeRoleId"
+                  :items="writeSuggestions"
+                  item-title="name"
+                  item-value="id"
                   :label="t('components.access.addWriteAccess', 'Add WRITE access to role').value"
                   :placeholder="t('components.access.searchRoles', 'Search roles...').value"
                   clearable
@@ -166,7 +170,7 @@
 
                 <AtlasButton
                   variant="primary"
-                  :disabled="!writeRoleName.trim() || isLoadingWrite || !entityId"
+                  :disabled="writeRoleId == null || isLoadingWrite || !entityId"
                   :loading="isLoadingWrite"
                   @click="grantWriteAccess"
                 >
@@ -208,7 +212,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import {
   AtlasAlert,
   AtlasAutocomplete,
@@ -257,8 +261,8 @@ const writeAccessRoles = ref<Role[]>([])
 
 const readSearch = ref('')
 const writeSearch = ref('')
-const readRoleName = ref('')
-const writeRoleName = ref('')
+const readRoleId = ref<number | null>(null)
+const writeRoleId = ref<number | null>(null)
 const readSuggestions = ref<Role[]>([])
 const writeSuggestions = ref<Role[]>([])
 
@@ -268,9 +272,6 @@ const accessHeaders = [
   { title: t('columns.description', 'Description').value, key: 'description' },
   { title: t('columns.action', 'Action').value, key: 'actions', sortable: false, width: '110px' },
 ]
-
-const readRoleSuggestionNames = computed(() => readSuggestions.value.map(role => role.name))
-const writeRoleSuggestionNames = computed(() => writeSuggestions.value.map(role => role.name))
 
 let readSearchDebounce: ReturnType<typeof setTimeout> | null = null
 let writeSearchDebounce: ReturnType<typeof setTimeout> | null = null
@@ -348,15 +349,10 @@ function scheduleSuggestionLoad(accessType: AccessType, search: string) {
   }, 250)
 }
 
-async function grantAccess(accessType: AccessType, roleName: string, suggestions: Role[]) {
+async function grantAccess(accessType: AccessType, roleId: number) {
   if (!props.entityId) return
-  const role = suggestions.find(candidate => candidate.name === roleName.trim())
-  if (!role) {
-    errorMessage.value = t('components.access.roleNotFound', 'Select a role from the list.').value
-    return
-  }
 
-  const result = await grantEntityAccess(props.entityType, props.entityId, role.id, accessType)
+  const result = await grantEntityAccess(props.entityType, props.entityId, roleId, accessType)
   if (!result.success) {
     errorMessage.value = result.error.message
     return
@@ -367,16 +363,18 @@ async function grantAccess(accessType: AccessType, roleName: string, suggestions
 }
 
 async function grantReadAccess() {
-  const roleName = readRoleName.value
-  readRoleName.value = ''
-  await grantAccess('READ', roleName, readSuggestions.value)
+  const roleId = readRoleId.value
+  if (roleId == null) return
+  readRoleId.value = null
+  await grantAccess('READ', roleId)
   await refreshReadSuggestions(readSearch.value)
 }
 
 async function grantWriteAccess() {
-  const roleName = writeRoleName.value
-  writeRoleName.value = ''
-  await grantAccess('WRITE', roleName, writeSuggestions.value)
+  const roleId = writeRoleId.value
+  if (roleId == null) return
+  writeRoleId.value = null
+  await grantAccess('WRITE', roleId)
   await refreshWriteSuggestions(writeSearch.value)
 }
 
