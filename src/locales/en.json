@@ -337,6 +337,9 @@
     "incidenceRates": {
       "title": "Incidence Rates"
     },
+    "apiKeys": {
+      "title": "API Keys"
+    },
     "dataSources": {
       "title": "Data Sources"
     },
@@ -1495,7 +1498,8 @@
     },
     "userBar": {
       "signin": "Sign In",
-      "signout": "Sign Out"
+      "signout": "Sign Out",
+      "apiKeys": "API Keys"
     },
     "welcome": {
       "close": "Close",
@@ -6521,5 +6525,64 @@
   },
   "inclusionPanel": {
     "limitIncludedEvents": "Limit Included Events to"
+  },
+  "apiKeys": {
+    "list": {
+      "title": "API Keys",
+      "subtitle": "Manage personal API keys for programmatic access to WebAPI.",
+      "newButton": "New Key",
+      "empty": "You haven't created any API keys yet.",
+      "columns": {
+        "name": "Name",
+        "description": "Description",
+        "identifier": "Key Identifier",
+        "created": "Created",
+        "expires": "Expires",
+        "lastUsed": "Last Used",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "disabled": "Disabled",
+        "expired": "Expired"
+      },
+      "never": "Never",
+      "neverUsed": "Never used",
+      "revoke": "Revoke",
+      "revokeConfirmTitle": "Revoke API Key",
+      "revokeConfirm": "Revoke the key '{name}'? It will stop working immediately, but stays listed here.",
+      "delete": "Delete",
+      "deleteConfirmTitle": "Delete API Key",
+      "deleteConfirm": "Permanently delete the key '{name}'? This cannot be undone.",
+      "revoked": "API key revoked",
+      "deleted": "API key deleted",
+      "revokeError": "Failed to revoke API key",
+      "deleteError": "Failed to delete API key"
+    },
+    "create": {
+      "eyebrow": "NEW KEY",
+      "title": "New API Key",
+      "subtitle": "Generate a personal API key for programmatic access.",
+      "name": "Name",
+      "namePlaceholder": "e.g. My laptop",
+      "description": "Description",
+      "expiration": "Expiration",
+      "expirationNever": "Never expires",
+      "expirationDays": "{days} days",
+      "expirationCustom": "Custom\u2026",
+      "customDays": "Number of days",
+      "customDaysPlaceholder": "Blank = never expires",
+      "generate": "Generate",
+      "cancel": "Cancel",
+      "nameRequired": "Name is required",
+      "resultTitle": "API Key Created",
+      "resultWarning": "Copy this key now \u2014 you won't be able to see it again.",
+      "rawKeyLabel": "API Key",
+      "copy": "Copy",
+      "copied": "Copied to clipboard",
+      "copyFailed": "Could not copy to clipboard",
+      "done": "Done"
+    }
   }
 }

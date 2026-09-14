@@ -69,6 +69,12 @@ export const routes: RouteRecordRaw[] = [
     props: true,
     meta: { requiresAuth: true, titleKey: 'route.profiles.title', agentVisible: true, agentLabel: 'Patient profile (cohort)' },
   },
+  {
+    path: '/profile/api-keys',
+    name: 'api-keys',
+    component: () => import('@/views/ApiKeysView.vue'),
+    meta: { requiresAuth: true, titleKey: 'route.apiKeys.title', agentVisible: true, agentLabel: 'API keys' },
+  },
   // Analysis hub: shared parent for the four list views, each rendered inside
   // a tab strip. Default redirect respects the user's last-visited tab via
   // localStorage when available.
