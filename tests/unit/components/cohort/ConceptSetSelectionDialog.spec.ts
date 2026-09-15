@@ -38,8 +38,8 @@ function mountComponent(props = {}) {
         // query its DOM.
         Teleport: { template: '<div><slot /></div>' },
         VNavigationDrawer: {
-          template: '<div class="v-navigation-drawer"><slot /></div>',
-          props: ['modelValue', 'location', 'temporary', 'width']
+          template: '<div class="v-navigation-drawer" :data-z-index="zIndex"><slot /></div>',
+          props: ['modelValue', 'location', 'temporary', 'width', 'zIndex']
         }
       }
     }
@@ -64,6 +64,19 @@ describe('ConceptSetSelectionDialog', () => {
       expect(wrapper.find('.cs-picker__accent-rule').exists()).toBe(true)
       expect(wrapper.find('.cs-picker__title').exists()).toBe(true)
       expect(wrapper.text().toLowerCase()).toContain('select concept set')
+    })
+
+    // Regression test for #339: this picker is opened from inside other
+    // modal dialogs (Strata editor, Characterization criteria editor). Its
+    // v-navigation-drawer defaults to a lower Vuetify overlay tier than
+    // v-dialog, so without an explicit z-index above the dialog it rendered
+    // behind its parent dialog instead of on top of it.
+    it('gives the navigation drawer a z-index above the Vuetify dialog overlay tier (#339)', () => {
+      const wrapper = mountComponent()
+      const drawerEl = wrapper.find('.v-navigation-drawer')
+      expect(drawerEl.exists()).toBe(true)
+      const zIndex = Number(drawerEl.attributes('data-z-index'))
+      expect(zIndex).toBeGreaterThan(2400)
     })
 
     it('should render the search input + close button', () => {

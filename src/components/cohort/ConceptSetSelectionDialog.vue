@@ -5,6 +5,7 @@
       location="right"
       temporary
       :width="drawerWidth"
+      :z-index="CONCEPT_SET_PICKER_Z_INDEX"
       @update:model-value="emit('update:modelValue', $event)"
     >
       <div class="cs-picker">
@@ -248,6 +249,13 @@ const sortBy = ref([{ key: 'modifiedDate', order: 'desc' as const }])
 
 // Match the editor's drawer width behaviour.
 const drawerWidth = computed(() => window.innerWidth - 100)
+
+// This picker is often opened from inside another modal (Strata editor,
+// Characterization criteria editor, etc). Vuetify gives v-navigation-drawer
+// a much lower default stacking tier than v-dialog, so without an explicit
+// z-index above the dialog tier this drawer renders behind its parent
+// dialog instead of on top of it (#339).
+const CONCEPT_SET_PICKER_Z_INDEX = 2500
 
 const filteredSets = computed(() => {
   const sets = conceptSetsStore.conceptSets
