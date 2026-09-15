@@ -117,32 +117,19 @@ export function transformClinicalDomainReport(
   const isEra = isEraReport(reportType)
   const AGGREGATION_THRESHOLD = 10000
 
-  // For very large datasets, aggregate less significant entries
+  // For very large datasets, keep only the top entries by prevalence for
+  // display/performance. We used to fold the remainder into a synthetic
+  // "Other" row (conceptId -1), but percentPersons is not a mutually
+  // exclusive share of the population (a person can hold many distinct
+  // concepts), so summing it across thousands of rows produced nonsensical
+  // prevalence values well over 100%. Each concept is now shown
+  // individually; the caller's own dataset-size hint (and search/export)
+  // covers discoverability of the truncated tail.
   let processedRaw = raw
   if (raw.length > AGGREGATION_THRESHOLD) {
-    logger.info('Transformer', `Large dataset detected (${raw.length} entries), aggregating nodes`)
-    // Keep top 1000 by prevalence, aggregate rest as "Other"
+    logger.info('Transformer', `Large dataset detected (${raw.length} entries), truncating to top 1000`)
     const sorted = [...raw].sort((a, b) => b.percentPersons - a.percentPersons)
-    const top = sorted.slice(0, 1000)
-    const rest = sorted.slice(1000)
-
-    if (rest.length > 0) {
-      const otherNode: ClinicalDomainAPIResponse = {
-        conceptId: -1,
-        conceptPath: `Other (${rest.length} concepts)`,
-        numPersons: rest.reduce((sum, r) => sum + r.numPersons, 0),
-        percentPersons: rest.reduce((sum, r) => sum + r.percentPersons, 0),
-        recordsPerPerson: isEra
-          ? undefined
-          : rest.reduce((sum, r) => sum + (r.recordsPerPerson || 0), 0) / rest.length,
-        lengthOfEra: isEra
-          ? rest.reduce((sum, r) => sum + (r.lengthOfEra || 0), 0) / rest.length
-          : undefined,
-      }
-      processedRaw = [...top, otherNode]
-    } else {
-      processedRaw = top
-    }
+    processedRaw = sorted.slice(0, 1000)
   }
 
   const tableRows: PrevalenceTableRow[] = processedRaw.map(item => ({
