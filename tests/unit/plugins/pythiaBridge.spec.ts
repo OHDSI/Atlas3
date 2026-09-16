@@ -129,8 +129,8 @@ describe('pythiaBridge', () => {
       data: {
         id: 42,
         name: 'Demographics',
-        type: 'PRESET',
-        design: 'demographics-age-group',
+        type: 'CUSTOM_FE',
+        design: 'select 1',
       },
     })
 
@@ -142,8 +142,8 @@ describe('pythiaBridge', () => {
           kind: 'createFeatureAnalysis',
           payload: {
             name: 'Demographics',
-            type: 'PRESET',
-            design: 'demographics-age-group',
+            type: 'CUSTOM_FE',
+            design: 'select 1',
           },
           openAfterCreate: true,
         },
