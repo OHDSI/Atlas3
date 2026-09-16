@@ -38,6 +38,7 @@ import { createIncidenceRate } from '@/services/incidence-rate.service'
 import { setupPythiaBridge, applyProposalDirect } from '@/plugins/host/pythiaBridge'
 import { useCohortStore } from '@/stores/cohort'
 import { createHostMessageBus, getHostMessageBus } from '@/plugins/messaging/HostMessageBus'
+import { useNotifications } from '@/stores/notifications'
 
 function dispatchPluginMessage(detail: unknown) {
   window.dispatchEvent(new CustomEvent('plugin-message', { detail }))
@@ -56,6 +57,7 @@ describe('pythiaBridge', () => {
     vi.mocked(createCharacterization).mockReset()
     vi.mocked(createPathway).mockReset()
     vi.mocked(createIncidenceRate).mockReset()
+    useNotifications().clear()
   })
 
   it('routes cohort.applyProposal into the cohort store (setObservationPeriod is a no-op in Circe-native)', () => {
@@ -129,8 +131,8 @@ describe('pythiaBridge', () => {
       data: {
         id: 42,
         name: 'Demographics',
-        type: 'PRESET',
-        design: 'demographics-age-group',
+        type: 'CUSTOM_FE',
+        design: 'select 1',
       },
     })
 
@@ -142,8 +144,8 @@ describe('pythiaBridge', () => {
           kind: 'createFeatureAnalysis',
           payload: {
             name: 'Demographics',
-            type: 'PRESET',
-            design: 'demographics-age-group',
+            type: 'CUSTOM_FE',
+            design: 'select 1',
           },
           openAfterCreate: true,
         },
@@ -157,6 +159,73 @@ describe('pythiaBridge', () => {
       name: 'feature-analysis-edit',
       params: { id: '42' },
     })
+  })
+
+  it('createFeatureAnalysis proposal with PRESET type is refused before calling the service', async () => {
+    const bus = getHostMessageBus('pythia-plugin')!
+    const handleResponseSpy = vi.spyOn(bus, 'handleResponse')
+
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: {
+          kind: 'createFeatureAnalysis',
+          payload: {
+            name: 'Demographics preset',
+            type: 'PRESET',
+            design: 'DemographicsAge',
+          },
+        },
+      },
+      callbackId: 'fa-refuse-1',
+      timestamp: new Date(),
+    })
+
+    await flush()
+    expect(createFeatureAnalysis).not.toHaveBeenCalled()
+    expect(handleResponseSpy).toHaveBeenCalledWith('fa-refuse-1', {})
+    expect(useNotifications().items.at(-1)?.title).toBe('Preset feature analyses cannot be created')
+  })
+
+  it('createFeatureAnalysis proposal with missing name or type is refused before calling the service', async () => {
+    const bus = getHostMessageBus('pythia-plugin')!
+    const handleResponseSpy = vi.spyOn(bus, 'handleResponse')
+
+    await applyProposalDirect({
+      kind: 'createFeatureAnalysis',
+      payload: {
+        name: '',
+        type: 'CUSTOM_FE',
+        design: 'SELECT 1',
+      },
+    } as never)
+
+    expect(createFeatureAnalysis).not.toHaveBeenCalled()
+    expect(handleResponseSpy).not.toHaveBeenCalled()
+    expect(useNotifications().items.at(-1)?.title).toBe('Feature analysis is missing a name or type')
+  })
+
+  it('createFeatureAnalysis proposal with no id returned reports failure', async () => {
+    vi.mocked(createFeatureAnalysis).mockResolvedValue({
+      success: true,
+      data: { name: 'Created without id' } as never,
+    })
+
+    await applyProposalDirect({
+      kind: 'createFeatureAnalysis',
+      payload: {
+        name: 'Created without id',
+        type: 'CUSTOM_FE',
+        design: 'SELECT 1',
+      },
+    } as never)
+
+    expect(router.push).not.toHaveBeenCalledWith({
+      name: 'feature-analysis-edit',
+      params: { id: expect.any(String) },
+    })
+    expect(useNotifications().items.at(-1)?.title).toBe('Failed to create feature analysis')
   })
 
   it('createCharacterization proposal → calls service + navigates to characterization-edit', async () => {

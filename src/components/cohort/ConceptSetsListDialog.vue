@@ -54,6 +54,7 @@
               @click="$emit('view', conceptSet)"
             />
             <AtlasIconButton
+              v-if="showDeleteAction"
               icon="mdi-delete-outline"
               v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
               variant="text"
@@ -71,6 +72,7 @@
       {{ t('cohortDefinitions.noConceptSets', 'No concept sets in this cohort') }}
     </div>
     <template #actions>
+      <slot name="actions" />
       <AtlasButton
         @click="$emit('update:modelValue', false)"
       >
@@ -89,9 +91,13 @@ interface Props {
   modelValue: boolean
   conceptSets: ConceptSetReference[]
   usedConceptSets?: ConceptSetReference[]
+  showDeleteAction?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  usedConceptSets: () => [],
+  showDeleteAction: true,
+})
 
 defineEmits<{
   'update:modelValue': [value: boolean]

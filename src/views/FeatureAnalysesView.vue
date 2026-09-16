@@ -22,15 +22,46 @@
     </template>
 
     <template #primary-action>
-      <AtlasButton
-        icon="mdi-plus"
-        :aria-label="t('cc.tabs.featureAnalyses.newLabel', 'New Feature Analysis').value"
-        data-testid="feature-analyses-create"
-        :disabled="!canCreate"
-        @click="handleCreate"
-      >
-        {{ t('home.newEntityNames.featureAnalysis', 'New feature analysis') }}
-      </AtlasButton>
+      <AtlasMenu location="bottom end">
+        <template #activator="{ props: menuProps }">
+          <AtlasButton
+            icon="mdi-plus"
+            append-icon="mdi-menu-down"
+            :aria-label="t('cc.tabs.featureAnalyses.newLabel', 'New Feature Analysis').value"
+            data-testid="feature-analyses-create"
+            :disabled="!canCreate"
+            v-bind="menuProps"
+          >
+            {{ t('home.newEntityNames.featureAnalysis', 'New feature analysis') }}
+          </AtlasButton>
+        </template>
+        <AtlasList>
+          <AtlasListItem
+            data-testid="feature-analyses-create-prevalence"
+            @click="handleCreate('CRITERIA_SET', 'PREVALENCE')"
+          >
+            <v-list-item-title>
+              {{ t('featureAnalyses.create.prevalence', 'Prevalence Criteria') }}
+            </v-list-item-title>
+          </AtlasListItem>
+          <AtlasListItem
+            data-testid="feature-analyses-create-distribution"
+            @click="handleCreate('CRITERIA_SET', 'DISTRIBUTION')"
+          >
+            <v-list-item-title>
+              {{ t('featureAnalyses.create.distribution', 'Distribution Criteria') }}
+            </v-list-item-title>
+          </AtlasListItem>
+          <AtlasListItem
+            data-testid="feature-analyses-create-custom"
+            @click="handleCreate('CUSTOM_FE')"
+          >
+            <v-list-item-title>
+              {{ t('featureAnalyses.create.custom', 'Custom SQL') }}
+            </v-list-item-title>
+          </AtlasListItem>
+        </AtlasList>
+      </AtlasMenu>
     </template>
 
     <AnalysisDataTable
@@ -113,7 +144,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasChip, AtlasDialog, AtlasFacetFilterBar } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasDialog, AtlasFacetFilterBar, AtlasMenu } from '@/components/ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -220,8 +251,11 @@ const deleteMessage = computed(() => {
   ).value
 })
 
-function handleCreate() {
-  router.push('/feature-analyses/new')
+function handleCreate(type: 'CRITERIA_SET' | 'CUSTOM_FE', statType?: 'PREVALENCE' | 'DISTRIBUTION') {
+  router.push({
+    path: '/feature-analyses/new',
+    query: statType ? { type, statType } : { type },
+  })
 }
 
 /**

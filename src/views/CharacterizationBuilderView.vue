@@ -314,6 +314,37 @@
       </template>
     </AtlasDialog>
 
+    <!-- Unsaved-changes confirmation dialog (same pattern as CohortBuilder.vue) -->
+    <AtlasDialog
+      v-model="showUnsavedDialog"
+      eyebrow="ANALYSIS"
+      :title="t('common.unsavedChanges', 'Unsaved changes').value"
+      max-width="440"
+      @close="cancelLeaveUnsaved"
+    >
+      {{
+        t(
+          'common.unsavedWarning',
+          'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.'
+        ).value
+      }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="cancelLeaveUnsaved"
+        >
+          {{ t('common.cancel', 'Cancel').value }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          data-testid="char-builder-discard-changes"
+          @click="confirmLeaveUnsaved"
+        >
+          {{ t('common.discard', 'Discard changes').value }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
+
     <AtlasSnackbar
       v-model="snackbar.show"
       :severity="snackbar.severity"
@@ -381,9 +412,16 @@ const showConceptSetsDialog = ref<boolean>(false)
 const showVersionsDialog = ref<boolean>(false)
 const showAccessDialog = ref<boolean>(false)
 const showValidationDialog = ref<boolean>(false)
+const showUnsavedDialog = ref<boolean>(false)
 const importing = ref<boolean>(false)
 const exporting = ref<boolean>(false)
 const importFileInput = ref<HTMLInputElement | null>(null)
+
+// Unsaved-changes navigation guard state (mirrors CohortBuilder.vue) - see
+// the onBeforeRouteLeave comment near the bottom of this file for why a
+// plain confirmed-flag + re-push is needed instead of holding onto `next`.
+let pendingNavigation: (() => void) | null = null
+const isConfirmingNavigation = ref(false)
 
 const availableCohorts = ref<CohortDefinitionSummary[]>([])
 const availableFeatureAnalyses = ref<FeatureAnalysisListItem[]>([])
@@ -695,12 +733,8 @@ async function confirmDelete() {
 }
 
 function handleBack() {
-  if (store.isDirty) {
-    const confirmed = window.confirm(
-      t('common.unsavedWarning', 'You have unsaved changes. Leave anyway?').value
-    )
-    if (!confirmed) return
-  }
+  // onBeforeRouteLeave is the single gatekeeper for the unsaved-changes
+  // prompt; confirming here too would show the dialog twice for one click.
   router.push('/characterizations')
 }
 
@@ -791,16 +825,46 @@ onMounted(async () => {
   await loadForId(props.id)
 })
 
-onBeforeRouteLeave((_to, _from, next) => {
-  if (!store.isDirty) {
+// The confirm step opens a styled AtlasDialog instead of the native
+// window.confirm. We can't hold onto `next` and call it after the user
+// confirms - `next(false)` permanently aborts the original navigation.
+// Instead we remember the target route and re-push it via router.push once
+// confirmLeaveUnsaved fires (same pattern as CohortBuilder.vue).
+let navigationConfirmed = false
+onBeforeRouteLeave((to, _from, next) => {
+  if (!store.isDirty || navigationConfirmed) {
+    navigationConfirmed = false
     next()
     return
   }
-  const confirmed = window.confirm(
-    t('common.unsavedWarning', 'You have unsaved changes. Leave anyway?').value
-  )
-  next(confirmed)
+
+  if (isConfirmingNavigation.value) {
+    next(false)
+    return
+  }
+
+  isConfirmingNavigation.value = true
+  pendingNavigation = () => {
+    navigationConfirmed = true
+    isConfirmingNavigation.value = false
+    router.push(to.fullPath)
+  }
+  showUnsavedDialog.value = true
+  next(false)
 })
+
+function confirmLeaveUnsaved() {
+  showUnsavedDialog.value = false
+  const resume = pendingNavigation
+  pendingNavigation = null
+  if (resume) resume()
+}
+
+function cancelLeaveUnsaved() {
+  showUnsavedDialog.value = false
+  pendingNavigation = null
+  isConfirmingNavigation.value = false
+}
 </script>
 
 <style scoped>

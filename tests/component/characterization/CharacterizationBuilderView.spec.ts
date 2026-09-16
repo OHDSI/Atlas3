@@ -248,6 +248,48 @@ describe('CharacterizationBuilderView', () => {
     expect(mounted.wrapper.findComponent({ name: 'EntityAccessDialog' }).props('modelValue')).toBe(false)
   })
 
+  it('opens the concept sets dialog from the action bar icon', async () => {
+    mounted = await mountBuilder('/characterizations/new')
+
+    await mounted.wrapper.get('[data-testid="char-builder-conceptsets-icon"]').trigger('click')
+    await flushPromises()
+
+    const dialogs = mounted.wrapper.findAllComponents({ name: 'AtlasDialog' })
+    const conceptSetsDialog = dialogs.find(dialog => dialog.props('title') === 'Concept Sets')
+    expect(conceptSetsDialog?.props('modelValue')).toBe(true)
+  })
+
+  it('opens the validation dialog from the action bar icon', async () => {
+    mounted = await mountBuilder('/characterizations/new')
+
+    await mounted.wrapper.get('[data-testid="char-builder-validation-icon"]').trigger('click')
+    await flushPromises()
+
+    expect(mounted.wrapper.findComponent({ name: 'CharacterizationMessagesTab' }).exists()).toBe(true)
+  })
+
+  it('opens the versions dialog from the action bar icon', async () => {
+    mounted = await mountBuilder('/characterizations/42', { id: '42' })
+    await flushPromises()
+
+    await mounted.wrapper.get('[data-testid="char-builder-versions-icon"]').trigger('click')
+    await flushPromises()
+
+    const dialogs = mounted.wrapper.findAllComponents({ name: 'AtlasDialog' })
+    const versionsDialog = dialogs.find(dialog => dialog.props('title') === 'Versions')
+    expect(versionsDialog?.props('modelValue')).toBe(true)
+  })
+
+  it('clicking import triggers the hidden file input', async () => {
+    mounted = await mountBuilder('/characterizations/new')
+    const fileInput = mounted.wrapper.get('[data-testid="char-builder-import-input"]')
+    const clickSpy = vi.spyOn(fileInput.element as HTMLInputElement, 'click')
+
+    await mounted.wrapper.get('[data-testid="char-builder-import-icon"]').trigger('click')
+
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+  })
+
   it('keeps the access dialog hidden in new mode while the button is absent', async () => {
     mounted = await mountBuilder('/characterizations/new')
     await flushPromises()
@@ -361,5 +403,32 @@ describe('CharacterizationBuilderView', () => {
     expect(snackbar.props('text')).not.toBe('Import failed.')
     expect(snackbar.props('severity')).toBe('danger')
     expect(snackbar.props('modelValue')).toBe(true)
+  })
+
+  it('Cancel defers the unsaved-changes prompt to the route guard, not itself', async () => {
+    // onBeforeRouteLeave doesn't register outside a real <router-view> (see
+    // the "No active route record" warning logged by every test in this
+    // file), so it can't be exercised here - but this still locks in the
+    // regression: handleBack() must never call window.confirm itself, or a
+    // real navigation shows the "unsaved changes" dialog twice (same bug
+    // FeatureAnalysisEditorView.vue had - fixed 2026-09-15).
+    mounted = await mountBuilder('/characterizations/new')
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    const nameInput = mounted.wrapper.find('[data-testid="char-builder-name"]')
+    await nameInput.setValue('Dirty me up')
+
+    const cancelBtn = mounted.wrapper.get(
+      '[data-testid="char-builder-cancel"]'
+    ).element as HTMLButtonElement
+    cancelBtn.click()
+    await flushPromises()
+    await new Promise<void>(resolve => setTimeout(resolve, 0))
+    await flushPromises()
+
+    expect(confirmSpy).not.toHaveBeenCalled()
+    expect(mounted.router.currentRoute.value.name).toBe('characterizations')
+
+    confirmSpy.mockRestore()
   })
 })

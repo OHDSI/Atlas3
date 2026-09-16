@@ -57,22 +57,20 @@ const mockList: FeatureAnalysisListItem[] = [
     id: 1,
     name: 'Demographics PRESET',
     type: 'PRESET',
-    domain: 'Demographics',
-    statType: 'PREVALENCE',
+    domain: 'DEMOGRAPHICS',
   },
   {
     id: 2,
     name: 'Conditions Criteria',
     type: 'CRITERIA_SET',
-    domain: 'Condition',
+    domain: 'CONDITION',
     statType: 'PREVALENCE',
   },
   {
     id: 3,
     name: 'Custom SQL Drug Counts',
     type: 'CUSTOM_FE',
-    domain: 'Drug',
-    statType: 'DISTRIBUTION',
+    domain: 'DRUG',
   },
 ]
 
@@ -80,9 +78,8 @@ const mockFA: FeatureAnalysis = {
   id: 1,
   name: 'Demographics PRESET',
   type: 'PRESET',
-  domain: 'Demographics',
-  statType: 'PREVALENCE',
-  design: { settings: 'opaque' },
+  domain: 'DEMOGRAPHICS',
+  design: 'DemographicsAge',
 }
 
 const mockAggregates: FeatureAnalysisAggregate[] = [
@@ -396,6 +393,42 @@ describe('Feature Analyses Store', () => {
       store.currentFA = { ...mockFA }
       store.clearCurrent()
       expect(store.currentFA).toBeNull()
+    })
+  })
+
+  describe('applyProposal', () => {
+    it('returns false when there is no current feature analysis', () => {
+      const store = useFeatureAnalysesStore()
+
+      const applied = store.applyProposal({ name: 'New name' })
+
+      expect(applied).toBe(false)
+      expect(store.isDirty).toBe(false)
+    })
+
+    it('applies supported fields to the current feature analysis and marks the store dirty', () => {
+      const store = useFeatureAnalysesStore()
+      store.currentFA = { ...mockFA, description: 'Original', design: 'DemographicsAge' }
+
+      const applied = store.applyProposal({
+        name: 'Renamed',
+        description: 'Updated',
+        domain: 'CONDITION',
+        type: 'CUSTOM_FE',
+        statType: 'PREVALENCE',
+        design: 'SELECT 1',
+      })
+
+      expect(applied).toBe(true)
+      expect(store.isDirty).toBe(true)
+      expect(store.currentFA).toMatchObject({
+        name: 'Renamed',
+        description: 'Updated',
+        domain: 'CONDITION',
+        type: 'CUSTOM_FE',
+        statType: 'PREVALENCE',
+        design: 'SELECT 1',
+      })
     })
   })
 })

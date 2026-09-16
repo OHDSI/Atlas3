@@ -9,11 +9,9 @@ import {
   FeatureAnalysisSchema,
   FeatureAnalysisListItemSchema,
   FeatureAnalysisAggregateSchema,
-  CovariateSettingSchema,
   type FeatureAnalysis,
   type FeatureAnalysisListItem,
   type FeatureAnalysisAggregate,
-  type CovariateSetting,
 } from '@/models/feature-analysis.types'
 import { z } from 'zod'
 
@@ -148,25 +146,6 @@ export async function listFeatureAnalysisAggregates(): Promise<
       z.array(FeatureAnalysisAggregateSchema),
       data,
       'Invalid response from /feature-analysis/aggregates'
-    )
-  }, CONTEXT)
-}
-
-/**
- * Default FeatureExtraction covariate settings (toggled by `temporal`).
- * Endpoint: GET /featureextraction/defaultcovariatesettings?temporal={temporal}
- */
-export async function getDefaultCovariateSettings(
-  temporal: boolean
-): Promise<ApiResult<CovariateSetting>> {
-  return unwrap(async () => {
-    const data = await httpGet<unknown>(
-      `/featureextraction/defaultcovariatesettings?temporal=${temporal ? 'true' : 'false'}`
-    )
-    return parseOrThrow(
-      CovariateSettingSchema,
-      data,
-      'Invalid response from /featureextraction/defaultcovariatesettings'
     )
   }, CONTEXT)
 }

@@ -1,5 +1,6 @@
 <template>
   <v-card
+    v-if="!compact"
     class="demographic-criteria"
     rounded="lg"
     variant="outlined"
@@ -63,6 +64,19 @@
       />
     </v-card-text>
   </v-card>
+
+  <div
+    v-else
+    class="demographic-criteria demographic-criteria--compact"
+  >
+    <CriteriaAttributes
+      :attributes="activeAttributes"
+      :concept-sets="conceptSets"
+      @select-concept-set="emit('select-concept-set', $event)"
+      @edit-concept-set="emit('edit-concept-set', $event)"
+      @clear-concept-set="emit('clear-concept-set')"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -83,6 +97,7 @@ import type { ConceptArrayBinding, ConceptSetOption, ConceptSetSelectionTarget, 
 const props = defineProps<{
   criteria: DemographicCriteria
   conceptSets: ConceptSetOption[]
+  compact?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -95,6 +110,7 @@ const emit = defineEmits<{
 const demographicTitle = computed(() => 'Demographic Criteria')
 const addAttributeLabel = computed(() => 'Add attribute...')
 const selectConceptSetLabel = computed(() => 'Select Concept Set')
+const compact = computed(() => props.compact ?? false)
 
 const demographicCriteriaData = computed<DemographicCriteria>(() => props.criteria)
 
@@ -279,6 +295,10 @@ function addAttribute(attribute: CriteriaAttributeSpec) {
 <style scoped>
 .demographic-criteria {
   margin-bottom: 12px;
+}
+
+.demographic-criteria--compact {
+  margin-bottom: 0;
 }
 
 .demographic-criteria__header {
