@@ -163,6 +163,7 @@
     "death": "Death",
     "causeOfDeath": "Cause of Death",
     "demographics": "Demographics",
+    "allDomains": "All Domains",
     "failedToLoad": "Failed to load",
     "noIssuesDetected": "No issues detected",
     "dataQuality": "Data Quality",
@@ -1283,6 +1284,7 @@
       "inclusive": "inclusive"
     },
     "demographicCriteria": {
+      "name": "Demographic Criteria",
       "addAttribute": "Add attribute...",
       "demographicCriteriaText_1": "gender is any of:",
       "demographicCriteriaText_2": "race is any of:",
@@ -2477,7 +2479,17 @@
         "copy": "Copy",
         "delete": "Delete"
       },
-      "deleteConfirm": "Delete feature analysis '{name}'?"
+      "deleteConfirm": "Delete feature analysis '{name}'?",
+      "create": {
+        "prevalence": "Prevalence Criteria",
+        "distribution": "Distribution Criteria",
+        "custom": "Custom SQL"
+      }
+    },
+    "create": {
+      "prevalence": "Prevalence Criteria",
+      "distribution": "Distribution Criteria",
+      "custom": "Custom SQL"
     },
     "editor": {
       "comingSoon": "Feature Analysis editor coming soon",
@@ -2504,10 +2516,19 @@
         "designLabel": "Covariate settings (JSON)",
         "invalidJson": "Invalid JSON"
       },
+      "prevalence": {
+        "addCriteria": "Add Criteria feature",
+        "empty": "No criteria features yet."
+      },
       "criteriaSet": {
         "explainer": "Criteria builder integration ships in Phase 3. For now, edit JSON directly.",
         "conceptSetsLabel": "Concept sets (JSON array)",
         "criteriaLabel": "Criteria group (JSON)"
+      },
+      "distribution": {
+        "addCriteria": "Add Criteria feature",
+        "empty": "No criteria features yet.",
+        "demographicSubtitle": "Demographic criteria are not windowed"
       },
       "customFe": {
         "sqlLabel": "Custom SQL"
@@ -2522,6 +2543,7 @@
       "leaveConfirm": "You have unsaved changes. Leave anyway?",
       "saveSuccess": "Feature analysis saved",
       "saveError": "Failed to save feature analysis",
+      "aggregatesUnavailable": "Unable to load the default aggregate",
       "nameRequired": "Name is required"
     }
   },
@@ -3396,6 +3418,8 @@
       "analysisType": "Analysis type:",
       "availableVariables": "Available variables:",
       "availableVariablesNote": "all variables specified in Cohort Characterization parameters",
+      "aggregate": "Aggregate",
+      "populateSampleSql": "Populate Sample SQL",
       "caption": "Feature Analysis #<%=id%>",
       "copiedToClipboard": "Copied To Clipboard!",
       "copySqlToClipboard": "Copy Analysis SQL Template To Clipboard",
