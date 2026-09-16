@@ -33,12 +33,7 @@ import { createIncidenceRate } from '@/services/incidence-rate.service'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 import type { CohortEvent, ConceptSetReference, CriteriaGroup } from '@/models/cohort.types'
 import { ensureUniqueConceptSetId } from '@/utils/concept-set-id'
-import type {
-  FeatureAnalysis,
-  FeatureAnalysisType,
-  FeatureAnalysisDomain,
-  FeatureAnalysisStatType,
-} from '@/models/feature-analysis.types'
+import type { FeatureAnalysis, FeatureAnalysisDomain } from '@/models/feature-analysis.types'
 import type { CharacterizationDefinition } from '@/models/characterization.types'
 import type { Pathway } from '@/models/pathway.types'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
@@ -553,17 +548,33 @@ async function handleCreateFeatureAnalysis(
     showSnackbar('Feature analysis is missing a name or type', 'error')
     return
   }
-  const fa: FeatureAnalysis = {
+  if (payload.type === 'PRESET') {
+    // Presets are system-provided FeatureExtraction settings, never agent-created.
+    showSnackbar('Preset feature analyses cannot be created', 'error')
+    return
+  }
+
+  const base = {
     name: payload.name,
     description: payload.description,
-    type: payload.type as FeatureAnalysisType,
     domain: payload.domain as FeatureAnalysisDomain | undefined,
-    statType: payload.statType as FeatureAnalysisStatType | undefined,
-    // The editor will validate the design's shape vs `type` on load. We
-    // pass it through verbatim — string for PRESET / CUSTOM_FE, object for
-    // CRITERIA_SET. Default to an empty string if the model omits it.
-    design: (payload.design ?? '') as FeatureAnalysis['design'],
   }
+
+  const fa: FeatureAnalysis =
+    payload.type === 'CRITERIA_SET'
+      ? {
+          ...base,
+          type: 'CRITERIA_SET',
+          statType: payload.statType === 'DISTRIBUTION' ? 'DISTRIBUTION' : 'PREVALENCE',
+          design: Array.isArray(payload.design) ? payload.design : [],
+          conceptSets: [],
+        }
+      : {
+          ...base,
+          type: 'CUSTOM_FE',
+          design: typeof payload.design === 'string' ? payload.design : '',
+        }
+
   const result = await createFeatureAnalysis(fa)
   if (!result.success) {
     logger.error('pythiaBridge', 'createFeatureAnalysis failed', result.error)

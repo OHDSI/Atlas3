@@ -362,4 +362,31 @@ describe('CharacterizationBuilderView', () => {
     expect(snackbar.props('severity')).toBe('danger')
     expect(snackbar.props('modelValue')).toBe(true)
   })
+
+  it('Cancel defers the unsaved-changes prompt to the route guard, not itself', async () => {
+    // onBeforeRouteLeave doesn't register outside a real <router-view> (see
+    // the "No active route record" warning logged by every test in this
+    // file), so it can't be exercised here - but this still locks in the
+    // regression: handleBack() must never call window.confirm itself, or a
+    // real navigation shows the "unsaved changes" dialog twice (same bug
+    // FeatureAnalysisEditorView.vue had - fixed 2026-09-15).
+    mounted = await mountBuilder('/characterizations/new')
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    const nameInput = mounted.wrapper.find('[data-testid="char-builder-name"]')
+    await nameInput.setValue('Dirty me up')
+
+    const cancelBtn = mounted.wrapper.get(
+      '[data-testid="char-builder-cancel"]'
+    ).element as HTMLButtonElement
+    cancelBtn.click()
+    await flushPromises()
+    await new Promise<void>(resolve => setTimeout(resolve, 0))
+    await flushPromises()
+
+    expect(confirmSpy).not.toHaveBeenCalled()
+    expect(mounted.router.currentRoute.value.name).toBe('characterizations')
+
+    confirmSpy.mockRestore()
+  })
 })

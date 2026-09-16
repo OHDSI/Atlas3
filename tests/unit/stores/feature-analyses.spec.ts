@@ -57,22 +57,20 @@ const mockList: FeatureAnalysisListItem[] = [
     id: 1,
     name: 'Demographics PRESET',
     type: 'PRESET',
-    domain: 'Demographics',
-    statType: 'PREVALENCE',
+    domain: 'DEMOGRAPHICS',
   },
   {
     id: 2,
     name: 'Conditions Criteria',
     type: 'CRITERIA_SET',
-    domain: 'Condition',
+    domain: 'CONDITION',
     statType: 'PREVALENCE',
   },
   {
     id: 3,
     name: 'Custom SQL Drug Counts',
     type: 'CUSTOM_FE',
-    domain: 'Drug',
-    statType: 'DISTRIBUTION',
+    domain: 'DRUG',
   },
 ]
 
@@ -80,9 +78,8 @@ const mockFA: FeatureAnalysis = {
   id: 1,
   name: 'Demographics PRESET',
   type: 'PRESET',
-  domain: 'Demographics',
-  statType: 'PREVALENCE',
-  design: { settings: 'opaque' },
+  domain: 'DEMOGRAPHICS',
+  design: 'DemographicsAge',
 }
 
 const mockAggregates: FeatureAnalysisAggregate[] = [

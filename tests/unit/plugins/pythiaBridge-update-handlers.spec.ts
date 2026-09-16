@@ -854,8 +854,8 @@ describe('pythiaBridge update-existing handlers', () => {
       data: {
         id: undefined as unknown as number,
         name: 'no id',
-        type: 'PRESET',
-        design: '',
+        type: 'CUSTOM_FE',
+        design: 'select 1',
       },
     } as never)
 
@@ -865,7 +865,7 @@ describe('pythiaBridge update-existing handlers', () => {
       payload: {
         proposal: {
           kind: 'createFeatureAnalysis',
-          payload: { name: 'X', type: 'PRESET' },
+          payload: { name: 'X', type: 'CUSTOM_FE', design: 'select 1' },
         },
       },
       timestamp: new Date(),
@@ -888,7 +888,7 @@ describe('pythiaBridge update-existing handlers', () => {
       payload: {
         proposal: {
           kind: 'createFeatureAnalysis',
-          payload: { name: 'X', type: 'PRESET' },
+          payload: { name: 'X', type: 'CUSTOM_FE', design: 'select 1' },
         },
       },
       timestamp: new Date(),

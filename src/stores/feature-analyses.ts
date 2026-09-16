@@ -256,33 +256,41 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
    * Merge a partial change into `currentFA` from a pythia agent proposal.
    * Mutates in place so the open editor re-renders. Only the listed fields
    * are touched; everything else is preserved.
+   *
+   * `FeatureAnalysis` is a discriminated union (one shape per design flavor),
+   * so a proposal that only touches a few fields can't be typed as a single
+   * `Partial<FeatureAnalysis>` without collapsing to the fields common to
+   * every variant. The agent payload is trusted here the same way it always
+   * was; this cast only affects how the mutation is typed, not validated -
+   * the editor's own save path is what actually enforces the wire shape.
    */
   function applyProposal(payload: Partial<FeatureAnalysis>): boolean {
     if (!currentFA.value) return false
     let applied = false
-    const fa = currentFA.value
-    if (typeof payload.name === 'string' && payload.name.trim()) {
-      fa.name = payload.name
+    const fa = currentFA.value as unknown as Record<string, unknown>
+    const p = payload as Record<string, unknown>
+    if (typeof p.name === 'string' && p.name.trim()) {
+      fa.name = p.name
       applied = true
     }
-    if (typeof payload.description === 'string') {
-      fa.description = payload.description
+    if (typeof p.description === 'string') {
+      fa.description = p.description
       applied = true
     }
-    if (payload.type !== undefined) {
-      fa.type = payload.type
+    if (p.type !== undefined) {
+      fa.type = p.type
       applied = true
     }
-    if (payload.domain !== undefined) {
-      fa.domain = payload.domain
+    if (p.domain !== undefined) {
+      fa.domain = p.domain
       applied = true
     }
-    if (payload.statType !== undefined) {
-      fa.statType = payload.statType
+    if (p.statType !== undefined) {
+      fa.statType = p.statType
       applied = true
     }
-    if (payload.design !== undefined) {
-      fa.design = payload.design as FeatureAnalysis['design']
+    if (p.design !== undefined) {
+      fa.design = p.design
       applied = true
     }
     if (applied) isDirty.value = true

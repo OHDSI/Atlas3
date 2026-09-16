@@ -29,13 +29,32 @@ describe('FeatureAnalysisAggregateSchema', () => {
     const result = FeatureAnalysisAggregateSchema.safeParse({
       id: 1,
       name: 'Events count',
-      domain: null,
+      domain: 'CONDITION',
       function: 'COUNT',
       expression: '*',
       additionalColumns: null,
-      default: true,
       isDefault: true,
       missingMeansZero: true,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  // WebAPI's FeAnalysisAggregateDTO has no @JsonInclude(NON_NULL), so unset
+  // object fields serialize as explicit `null`, not omitted - confirmed
+  // against a live WebAPI response (e.g. "Events count": domain/function both null).
+  it('accepts explicit nulls for domain, function and expression', () => {
+    const result = FeatureAnalysisAggregateSchema.safeParse({
+      id: 1,
+      name: 'Events count',
+      domain: null,
+      function: null,
+      expression: null,
+      joinTable: null,
+      joinType: null,
+      joinCondition: null,
+      additionalColumns: [],
+      isDefault: true,
+      missingMeansZero: false,
     })
     expect(result.success).toBe(true)
   })
@@ -61,19 +80,14 @@ describe('FeatureAnalysisAggregateSchema', () => {
 })
 
 describe('FeatureAnalysisSchema', () => {
-  it('parses a PRESET feature analysis (design is opaque JSON)', () => {
+  it('parses a PRESET feature analysis (design is a preset-name string)', () => {
     const fa = {
       id: 12,
       name: 'Demographics: Age',
       description: 'Standard age covariate',
       type: 'PRESET',
-      domain: 'Demographics',
-      statType: 'PREVALENCE',
-      design: {
-        DemographicsAge: true,
-        DemographicsGender: false,
-        temporal: false,
-      },
+      domain: 'DEMOGRAPHICS',
+      design: 'DemographicsAge',
       createdBy: { login: 'admin', name: 'Admin User' },
       createdDate: 1_700_000_000_000,
       modifiedDate: 1_700_000_500_000,
@@ -83,16 +97,44 @@ describe('FeatureAnalysisSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('parses a CRITERIA_SET feature analysis', () => {
+  it('parses a CRITERIA_SET/PREVALENCE feature analysis (design is an array of CriteriaGroup rows)', () => {
     const fa = {
       name: 'My condition group',
       type: 'CRITERIA_SET',
-      domain: 'Condition',
-      design: {
-        conceptSets: [{ id: 1, name: 'Diabetes' }],
-        criteria: { logicType: 'ALL', events: [] },
-      },
-      conceptSets: [{ id: 1, name: 'Diabetes' }],
+      statType: 'PREVALENCE',
+      domain: 'CONDITION',
+      design: [
+        {
+          name: 'Diabetes present',
+          criteriaType: 'CriteriaGroup',
+          expression: { Type: 'ALL', CriteriaList: [], DemographicCriteriaList: [], Groups: [] },
+        },
+      ],
+      conceptSets: [{ id: 1, name: 'Diabetes', expression: { items: [] } }],
+    }
+    const result = FeatureAnalysisSchema.safeParse(fa)
+    expect(result.success).toBe(true)
+  })
+
+  it('parses a CRITERIA_SET/DISTRIBUTION feature analysis (design rows are Windowed or Demographic)', () => {
+    const fa = {
+      name: 'Age at index',
+      type: 'CRITERIA_SET',
+      statType: 'DISTRIBUTION',
+      design: [
+        {
+          name: 'Age',
+          criteriaType: 'DemographicCriteria',
+          expression: {},
+        },
+        {
+          name: 'Prior drug exposure',
+          criteriaType: 'WindowedCriteria',
+          aggregate: { id: 2, name: 'Count' },
+          expression: { Criteria: { DrugExposure: {} } },
+        },
+      ],
+      conceptSets: [],
     }
     const result = FeatureAnalysisSchema.safeParse(fa)
     expect(result.success).toBe(true)
@@ -112,7 +154,7 @@ describe('FeatureAnalysisSchema', () => {
     const result = FeatureAnalysisSchema.safeParse({
       name: 'X',
       type: 'PRESET',
-      design: {},
+      design: 'SomePresetName',
       hasWriteAccess: true, // unknown extra field from WebAPI
     })
     expect(result.success).toBe(true)
@@ -127,7 +169,7 @@ describe('FeatureAnalysisSchema', () => {
     const result = FeatureAnalysisSchema.safeParse({
       name: 'X',
       type: 'PRESET',
-      design: {},
+      design: 'SomePresetName',
       createdBy: 'admin',
     })
     expect(result.success).toBe(true)
@@ -136,7 +178,7 @@ describe('FeatureAnalysisSchema', () => {
   it('rejects when name is missing', () => {
     const result = FeatureAnalysisSchema.safeParse({
       type: 'PRESET',
-      design: {},
+      design: 'SomePresetName',
     })
     expect(result.success).toBe(false)
   })
@@ -144,7 +186,7 @@ describe('FeatureAnalysisSchema', () => {
   it('rejects when type is missing', () => {
     const result = FeatureAnalysisSchema.safeParse({
       name: 'X',
-      design: {},
+      design: 'SomePresetName',
     })
     expect(result.success).toBe(false)
   })
@@ -157,8 +199,7 @@ describe('FeatureAnalysisListItemSchema', () => {
       name: 'Demographics: Gender',
       description: 'Gender as covariate',
       type: 'PRESET',
-      domain: 'Demographics',
-      statType: 'PREVALENCE',
+      domain: 'DEMOGRAPHICS',
       createdBy: 'admin',
       createdDate: 1_700_000_000_000,
       modifiedDate: 1_700_000_500_000,

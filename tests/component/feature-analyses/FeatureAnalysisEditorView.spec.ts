@@ -1,9 +1,10 @@
 /**
  * FeatureAnalysisEditorView component tests
  *
- * Smoke-level tests for the editor: mount in new vs. edit mode, the type
- * select drives which design section renders, the "load defaults" button
- * fills the JSON textarea, and Save dispatches to the right store action.
+ * Smoke-level tests for the editor: the create menu's type/statType is read
+ * from the route query (there is no in-editor type switcher), direct
+ * navigation to `/feature-analyses/new` without a query redirects to the
+ * list, and Save dispatches to the right store action.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
@@ -17,6 +18,14 @@ import { createRouter, createMemoryHistory, type Router } from 'vue-router'
 import type { FeatureAnalysis } from '@/models/feature-analysis.types'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
+
+vi.mock('vue-router', async () => {
+  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
+  return {
+    ...actual,
+    onBeforeRouteLeave: vi.fn(),
+  }
+})
 
 // Mock i18n with real translations
 vi.mock('@/composables/useI18n', async () => {
@@ -34,7 +43,6 @@ vi.mock('@/services/feature-analysis.service', () => ({
   copyFeatureAnalysis: vi.fn(),
   listFeatureAnalysisDomains: vi.fn(),
   listFeatureAnalysisAggregates: vi.fn(),
-  getDefaultCovariateSettings: vi.fn(),
   featureAnalysisNameExists: vi.fn(),
 }))
 
@@ -51,13 +59,11 @@ import {
   getFeatureAnalysis,
   createFeatureAnalysis,
   updateFeatureAnalysis,
-  getDefaultCovariateSettings,
   listFeatureAnalysisDomains,
   listFeatureAnalysisAggregates,
 } from '@/services/feature-analysis.service'
 import FeatureAnalysisEditorView from '@/views/FeatureAnalysisEditorView.vue'
-import { success, failure } from '@/types/api'
-import { ApiError } from '@/services/api-error'
+import { success } from '@/types/api'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -72,9 +78,8 @@ const sampleFA: FeatureAnalysis = {
   name: 'Demographics PRESET',
   description: 'Standard demographics',
   type: 'PRESET',
-  domain: 'Demographics',
-  statType: 'PREVALENCE',
-  design: { temporal: false, useDemographicsGender: true },
+  domain: 'DEMOGRAPHICS',
+  design: 'DemographicsAge',
 }
 
 function makeRouter(): Router {
@@ -120,7 +125,13 @@ async function mountEditor(path: string, props?: Record<string, unknown>) {
   })
 
   const wrapper = mount(FeatureAnalysisEditorView, {
-    global: { plugins: [vuetify, pinia, router] },
+    global: {
+      plugins: [vuetify, pinia, router],
+      // Renders as a v-navigation-drawer/Teleport - needs a real Vuetify
+      // layout to mount, which this test harness doesn't provide. Same stub
+      // used by CohortBuilder.spec.ts and StrataEditor.spec.ts.
+      stubs: { ConceptSetSelectionDialog: true },
+    },
     props,
   })
 
@@ -136,8 +147,13 @@ describe('FeatureAnalysisEditorView', () => {
     vi.clearAllMocks()
 
     // Default lookup-data stubs so onMounted lookups resolve cleanly.
-    vi.mocked(listFeatureAnalysisDomains).mockResolvedValue(success(['Demographics', 'Condition']))
-    vi.mocked(listFeatureAnalysisAggregates).mockResolvedValue(success([]))
+    vi.mocked(listFeatureAnalysisDomains).mockResolvedValue(success(['DEMOGRAPHICS', 'CONDITION']))
+    vi.mocked(listFeatureAnalysisAggregates).mockResolvedValue(
+      success([
+        { id: 20, name: 'Fallback aggregate' },
+        { id: 10, name: 'Default aggregate', isDefault: true },
+      ])
+    )
   })
 
   afterEach(() => {
@@ -145,36 +161,93 @@ describe('FeatureAnalysisEditorView', () => {
     mounted = null
   })
 
-  it('mounts in new mode with empty form and PRESET design section', async () => {
+  it('redirects to the list when /new is opened without a type query param', async () => {
     mounted = await mountEditor('/feature-analyses/new')
+    // The redirect chases a `redirect:` route entry, which resolves one
+    // macrotask later than the single flushPromises() in mountEditor.
+    await new Promise<void>(resolve => setTimeout(resolve, 0))
+    await flushPromises()
+
+    expect(mounted.router.currentRoute.value.name).toBe('feature-analyses')
+  })
+
+  it('mounts in new mode for Custom SQL', async () => {
+    mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE')
 
     const text = mounted.wrapper.text()
-    // After i18n migration, the title in new mode collapsed to "New" (common.new)
     expect(text).toContain('New')
     expect(
-      mounted.wrapper.find('[data-testid="feature-analysis-editor-design-preset"]').exists()
+      mounted.wrapper.find('[data-testid="feature-analysis-editor-design-custom"]').exists()
     ).toBe(true)
     expect(
       mounted.wrapper.find('[data-testid="feature-analysis-editor-design-criteria"]').exists()
     ).toBe(false)
     expect(
-      mounted.wrapper.find('[data-testid="feature-analysis-editor-design-custom"]').exists()
+      mounted.wrapper.find('[data-testid="feature-analysis-editor-design-preset"]').exists()
     ).toBe(false)
 
-    // Copy / Delete now always render (disabled when not editing) so the
-    // toolbar reads identically across the cohort + analysis builders.
-    const copyBtn = mounted.wrapper.find('[data-testid="feature-analysis-editor-copy"]')
-    const deleteBtn = mounted.wrapper.find('[data-testid="feature-analysis-editor-delete"]')
-    expect(copyBtn.exists()).toBe(true)
-    expect(deleteBtn.exists()).toBe(true)
-    expect(copyBtn.attributes('disabled')).toBeDefined()
-    expect(deleteBtn.attributes('disabled')).toBeDefined()
-
-    // Name field starts empty.
     const nameInput = mounted.wrapper.find(
       '[data-testid="feature-analysis-editor-name"] input'
     ).element as HTMLInputElement
     expect(nameInput.value).toBe('')
+  })
+
+  it('shows the custom SQL sample text and can copy it to the clipboard', async () => {
+    const clipboardWriteText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(globalThis.navigator, 'clipboard', {
+      value: { writeText: clipboardWriteText },
+      configurable: true,
+    })
+
+    mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE')
+
+    const textarea = mounted.wrapper.get(
+      '[data-testid="feature-analysis-editor-custom-sql"] textarea'
+    ).element as HTMLTextAreaElement
+
+    expect(mounted.wrapper.text()).toContain('SELECT covariate_id, covariate_name, concept_id, sum_value, average_value FROM (')
+    expect(mounted.wrapper.text()).toContain(')')
+    expect(mounted.wrapper.text()).toContain('Available variables:')
+    expect(mounted.wrapper.text()).toContain('@cdm_database_schema')
+    expect(textarea.getAttribute('placeholder')).toContain('One covariate per drug in the drug_era table')
+    expect(textarea.value).toBe('')
+
+    await mounted.wrapper.get('[data-testid="feature-analysis-editor-custom-sql-sample"]').trigger('click')
+    await flushPromises()
+
+    expect(textarea.value).toContain('SELECT')
+    expect(textarea.value).toContain('covariate_id')
+
+    await mounted.wrapper.get('[data-testid="feature-analysis-editor-custom-sql-copy"]').trigger('click')
+    await flushPromises()
+
+    expect(clipboardWriteText).toHaveBeenCalledTimes(1)
+    expect(clipboardWriteText).toHaveBeenCalledWith(expect.stringContaining('covariate_name'))
+  })
+
+  it('mounts in new mode for Prevalence Criteria', async () => {
+    mounted = await mountEditor('/feature-analyses/new?type=CRITERIA_SET&statType=PREVALENCE')
+
+    expect(
+      mounted.wrapper.find('[data-testid="feature-analysis-editor-design-criteria"]').exists()
+    ).toBe(true)
+    expect(
+      mounted.wrapper.find('[data-testid="fa-prevalence-add-criteria"]').exists()
+    ).toBe(true)
+    // Prevalence rows are edited directly, not via a JSON textarea.
+    expect(
+      mounted.wrapper.find('[data-testid="feature-analysis-editor-criteria-design-json"]').exists()
+    ).toBe(false)
+    expect(listFeatureAnalysisAggregates).toHaveBeenCalledTimes(1)
+  })
+
+  it('mounts in new mode for Distribution Criteria', async () => {
+    mounted = await mountEditor('/feature-analyses/new?type=CRITERIA_SET&statType=DISTRIBUTION')
+
+    expect(
+      mounted.wrapper.find('[data-testid="feature-analysis-editor-design-criteria"]').exists()
+    ).toBe(true)
+    expect(listFeatureAnalysisAggregates).toHaveBeenCalledTimes(1)
   })
 
   it('hydrates fields from store in edit mode', async () => {
@@ -192,70 +265,23 @@ describe('FeatureAnalysisEditorView', () => {
     ).element as HTMLInputElement
     expect(nameInput.value).toBe('Demographics PRESET')
 
-    // The PRESET design textarea should be populated with stringified JSON.
-    const presetTextarea = mounted.wrapper.find(
-      '[data-testid="feature-analysis-editor-preset-json"] textarea'
-    ).element as HTMLTextAreaElement
-    expect(presetTextarea.value).toContain('useDemographicsGender')
+    // PRESET's design is a plain preset-name string, not JSON.
+    const presetInput = mounted.wrapper.find(
+      '[data-testid="feature-analysis-editor-preset-name"] input'
+    ).element as HTMLInputElement
+    expect(presetInput.value).toBe('DemographicsAge')
 
     // Save Copy / Delete are visible in edit mode.
     expect(mounted.wrapper.find('[data-testid="feature-analysis-editor-copy"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="feature-analysis-editor-delete"]').exists()).toBe(true)
   })
 
-  it('"Load default covariate settings" populates the JSON textarea', async () => {
-    vi.mocked(getDefaultCovariateSettings).mockResolvedValue(success({ temporal: false, useDemographicsGender: true }))
-
-    mounted = await mountEditor('/feature-analyses/new')
-
-    const btn = mounted.wrapper.get(
-      '[data-testid="feature-analysis-editor-preset-default"]'
-    ).element as HTMLButtonElement
-    btn.click()
-    await flushPromises()
-
-    expect(getDefaultCovariateSettings).toHaveBeenCalledWith(false)
-
-    const presetTextarea = mounted.wrapper.find(
-      '[data-testid="feature-analysis-editor-preset-json"] textarea'
-    ).element as HTMLTextAreaElement
-    expect(presetTextarea.value).toContain('useDemographicsGender')
-  })
-
-  it('a failed "Load default covariate settings" shows the load-defaults error, not the save error', async () => {
-    vi.mocked(getDefaultCovariateSettings).mockResolvedValue(
-      failure(new ApiError('HTTP 500: boom', 500, null))
-    )
-
-    mounted = await mountEditor('/feature-analyses/new')
-
-    const btn = mounted.wrapper.get(
-      '[data-testid="feature-analysis-editor-preset-default"]'
-    ).element as HTMLButtonElement
-    btn.click()
-    await flushPromises()
-
-    const snackbar = mounted.wrapper.findComponent({ name: 'AtlasSnackbar' })
-    // 'cc.fa.loadDefaultsError'
-    expect(snackbar.props('text')).toBe('Failed to load default covariate settings.')
-    // ...and not 'cc.fa.saveError', which this branch used to reuse.
-    expect(snackbar.props('text')).not.toBe(
-      'An error occurred while attempting to save a feature analysis.'
-    )
-    expect(snackbar.props('severity')).toBe('danger')
-    expect(snackbar.props('modelValue')).toBe(true)
-
-    // The textarea must stay untouched on failure.
-    const presetTextarea = mounted.wrapper.find(
-      '[data-testid="feature-analysis-editor-preset-json"] textarea'
-    ).element as HTMLTextAreaElement
-    expect(presetTextarea.value).not.toContain('useDemographicsGender')
-  })
-
   it('Save in new mode calls createFeatureAnalysis', async () => {
-    vi.mocked(createFeatureAnalysis).mockResolvedValue(success({ ...sampleFA, id: 99 }))
+    vi.mocked(createFeatureAnalysis).mockResolvedValue(
+      success({ ...sampleFA, type: 'CUSTOM_FE', design: 'SELECT 1', id: 99 })
+    )
 
-    mounted = await mountEditor('/feature-analyses/new')
+    mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE')
 
     // Fill name.
     const nameInput = mounted.wrapper.find(
@@ -272,7 +298,7 @@ describe('FeatureAnalysisEditorView', () => {
     expect(createFeatureAnalysis).toHaveBeenCalledTimes(1)
     const payload = vi.mocked(createFeatureAnalysis).mock.calls[0][0]
     expect(payload.name).toBe('My new FA')
-    expect(payload.type).toBe('PRESET')
+    expect(payload.type).toBe('CUSTOM_FE')
   })
 
   it('Save in edit mode calls updateFeatureAnalysis', async () => {
@@ -300,20 +326,29 @@ describe('FeatureAnalysisEditorView', () => {
     expect(payload.name).toBe('Renamed FA')
   })
 
-  it('blocks save when PRESET design JSON is invalid', async () => {
-    mounted = await mountEditor('/feature-analyses/new')
-
-    // Fill name.
-    const nameInput = mounted.wrapper.find(
-      '[data-testid="feature-analysis-editor-name"] input'
+  it('Prevalence: Add Criteria feature appends a row and Save sends a CriteriaGroup design', async () => {
+    mounted = await mountEditor('/feature-analyses/new?type=CRITERIA_SET&statType=PREVALENCE')
+    vi.mocked(createFeatureAnalysis).mockResolvedValue(
+      success({
+        name: 'Prevalence FA',
+        type: 'CRITERIA_SET',
+        statType: 'PREVALENCE',
+        design: [],
+        conceptSets: [],
+        id: 77,
+      })
     )
-    await nameInput.setValue('Bad JSON FA')
 
-    // Replace JSON textarea with garbage.
-    const presetTextarea = mounted.wrapper.find(
-      '[data-testid="feature-analysis-editor-preset-json"] textarea'
-    )
-    await presetTextarea.setValue('{ this is not valid json')
+    const nameInput = mounted.wrapper.find('[data-testid="feature-analysis-editor-name"] input')
+    await nameInput.setValue('Prevalence FA')
+
+    const addBtn = mounted.wrapper.get(
+      '[data-testid="fa-prevalence-add-criteria"]'
+    ).element as HTMLButtonElement
+    addBtn.click()
+    await flushPromises()
+
+    expect(mounted.wrapper.find('[data-testid="fa-prevalence-row-0"]').exists()).toBe(true)
 
     const saveBtn = mounted.wrapper.get(
       '[data-testid="feature-analysis-editor-save"]'
@@ -321,10 +356,96 @@ describe('FeatureAnalysisEditorView', () => {
     saveBtn.click()
     await flushPromises()
 
-    expect(createFeatureAnalysis).not.toHaveBeenCalled()
-    // The invalid-JSON chip should be visible.
+    expect(createFeatureAnalysis).toHaveBeenCalledTimes(1)
+    const payload = vi.mocked(createFeatureAnalysis).mock.calls[0][0]
+    expect(payload.type).toBe('CRITERIA_SET')
+    if (payload.type === 'CRITERIA_SET' && payload.statType === 'PREVALENCE') {
+      expect(payload.design).toHaveLength(2)
+      expect(payload.design[0].criteriaType).toBe('CriteriaGroup')
+    } else {
+      expect.fail('expected a PREVALENCE payload')
+    }
+  })
+
+  it('mounts in new mode for Distribution Criteria with the live editor', async () => {
+    mounted = await mountEditor('/feature-analyses/new?type=CRITERIA_SET&statType=DISTRIBUTION')
+
+    // Fill name.
+    const nameInput = mounted.wrapper.find(
+      '[data-testid="feature-analysis-editor-name"] input'
+    )
+    await nameInput.setValue('Bad JSON FA')
+
     expect(
-      mounted.wrapper.find('[data-testid="feature-analysis-editor-preset-invalid"]').exists()
+      mounted.wrapper.find('[data-testid="feature-analysis-editor-design-criteria"]').exists()
     ).toBe(true)
+    expect(
+      mounted.wrapper.find('[data-testid="fa-distribution-add-criteria"]').exists()
+    ).toBe(true)
+    expect(
+      mounted.wrapper.find('[data-testid="feature-analysis-editor-criteria-design-json"]').exists()
+    ).toBe(false)
+
+    const saveBtn = mounted.wrapper.get(
+      '[data-testid="feature-analysis-editor-save"]'
+    ).element as HTMLButtonElement
+    saveBtn.click()
+    await flushPromises()
+
+    expect(createFeatureAnalysis).toHaveBeenCalledTimes(1)
+    const payload = vi.mocked(createFeatureAnalysis).mock.calls[0][0]
+    expect(payload.type).toBe('CRITERIA_SET')
+    if (payload.type === 'CRITERIA_SET' && payload.statType === 'DISTRIBUTION') {
+      expect(payload.design).toEqual([])
+      expect(payload.conceptSets).toEqual([])
+    } else {
+      expect.fail('expected a DISTRIBUTION payload')
+    }
+  })
+
+  it('Cancel defers the unsaved-changes prompt to the route guard, not itself', async () => {
+    // onBeforeRouteLeave doesn't register outside a real <router-view> (see
+    // the "No active route record" warning logged by every test in this
+    // file), so it can't be exercised here - but this still locks in the
+    // regression: handleBack() must never call window.confirm itself, or a
+    // real navigation shows the "unsaved changes" dialog twice (#found via
+    // manual testing 2026-09-15 - handleBack confirmed, then pushed, and the
+    // route guard confirmed *again* for the same navigation).
+    mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE')
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    const nameInput = mounted.wrapper.find('[data-testid="feature-analysis-editor-name"] input')
+    await nameInput.setValue('Dirty me up')
+
+    const cancelBtn = mounted.wrapper.get(
+      '[data-testid="feature-analysis-editor-cancel"]'
+    ).element as HTMLButtonElement
+    cancelBtn.click()
+    await flushPromises()
+    await new Promise<void>(resolve => setTimeout(resolve, 0))
+    await flushPromises()
+
+    expect(confirmSpy).not.toHaveBeenCalled()
+    expect(mounted.router.currentRoute.value.name).toBe('feature-analyses')
+
+    confirmSpy.mockRestore()
+  })
+
+  it('Cancel with no unsaved changes navigates without prompting', async () => {
+    mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE')
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    const cancelBtn = mounted.wrapper.get(
+      '[data-testid="feature-analysis-editor-cancel"]'
+    ).element as HTMLButtonElement
+    cancelBtn.click()
+    await flushPromises()
+    await new Promise<void>(resolve => setTimeout(resolve, 0))
+    await flushPromises()
+
+    expect(confirmSpy).not.toHaveBeenCalled()
+    expect(mounted.router.currentRoute.value.name).toBe('feature-analyses')
+
+    confirmSpy.mockRestore()
   })
 })

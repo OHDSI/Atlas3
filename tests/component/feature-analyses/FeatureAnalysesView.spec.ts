@@ -46,6 +46,7 @@ import { success } from '@/types/api'
 import FeatureAnalysesView from '@/views/FeatureAnalysesView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
+import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -108,7 +109,7 @@ async function mountView() {
   })
 
   const wrapper = mount(FeatureAnalysesView, {
-    global: { plugins: [vuetify, pinia, router] },
+    global: { plugins: [vuetify, pinia, router], stubs: { AtlasMenu: InlineAtlasMenuStub } },
   })
 
   await flushPromises()
@@ -193,7 +194,7 @@ describe('FeatureAnalysesView', () => {
     expect(rows()[0]!.text()).toContain('Demographics PRESET')
   })
 
-  it('clicking Create navigates to /feature-analyses/new', async () => {
+  it('clicking Create opens a menu; choosing Custom SQL navigates to /feature-analyses/new', async () => {
     vi.mocked(listFeatureAnalyses).mockResolvedValue(success([]))
     mounted = await mountView()
     const { wrapper, router } = mounted
@@ -201,11 +202,17 @@ describe('FeatureAnalysesView', () => {
     const createEl = wrapper.get('[data-testid="feature-analyses-create"]').element as HTMLElement
     ;(createEl as HTMLButtonElement).click()
     await flushPromises()
+
+    const customItem = wrapper.get('[data-testid="feature-analyses-create-custom"]')
+      .element as HTMLElement
+    customItem.click()
+    await flushPromises()
     // Drain microtasks for router.push (which is itself async).
     await new Promise<void>((resolve) => setTimeout(resolve, 0))
     await flushPromises()
 
     expect(router.currentRoute.value.path).toBe('/feature-analyses/new')
+    expect(router.currentRoute.value.query.type).toBe('CUSTOM_FE')
   })
 })
 

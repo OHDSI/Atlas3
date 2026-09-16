@@ -22,7 +22,6 @@ import {
   featureAnalysisNameExists,
   listFeatureAnalysisDomains,
   listFeatureAnalysisAggregates,
-  getDefaultCovariateSettings,
 } from '@/services/feature-analysis.service'
 
 describe('services/feature-analysis.service', () => {
@@ -145,12 +144,12 @@ describe('services/feature-analysis.service', () => {
 
   describe('createFeatureAnalysis', () => {
     it('POSTs and returns the created analysis', async () => {
-      ok({ id: 42, name: 'New FA', type: 'PRESET', design: { useDemographicsAge: true } })
+      ok({ id: 42, name: 'New FA', type: 'PRESET', design: 'DemographicsAge' })
 
       const result = await createFeatureAnalysis({
         name: 'New FA',
         type: 'PRESET',
-        design: { useDemographicsAge: true },
+        design: 'DemographicsAge',
       })
 
       expect(result.success).toBe(true)
@@ -166,15 +165,15 @@ describe('services/feature-analysis.service', () => {
     it('reports a network failure as ApiResult', async () => {
       mockFetch.mockRejectedValueOnce(new Error('network error'))
 
-      const result = await createFeatureAnalysis({ name: 'x', type: 'PRESET', design: {} })
+      const result = await createFeatureAnalysis({ name: 'x', type: 'PRESET', design: '' })
 
       expect(result.success).toBe(false)
     })
 
     it('reports a parse failure carrying the status and Zod issues, not just a boolean', async () => {
-      ok({ id: 1, type: 'BOGUS_TYPE', design: {} })
+      ok({ id: 1, type: 'BOGUS_TYPE', design: '' })
 
-      const result = await createFeatureAnalysis({ name: 'x', type: 'PRESET', design: {} })
+      const result = await createFeatureAnalysis({ name: 'x', type: 'PRESET', design: '' })
 
       expect(result.success).toBe(false)
       if (result.success) {
@@ -185,16 +184,16 @@ describe('services/feature-analysis.service', () => {
         const issues = JSON.parse(result.error.body as string)
         expect(Array.isArray(issues)).toBe(true)
         expect(issues.length).toBeGreaterThan(0)
-        expect(issues.some((i: { path: string[] }) => i.path.includes('type'))).toBe(true)
+        expect(issues.some((i: { code: string }) => i.code === 'invalid_union')).toBe(true)
       }
     })
   })
 
   describe('updateFeatureAnalysis', () => {
     it('PUTs to /feature-analysis/{id}', async () => {
-      ok({ id: 9, name: 'Updated', type: 'PRESET', design: {} })
+      ok({ id: 9, name: 'Updated', type: 'PRESET', design: 'DemographicsAge' })
 
-      const result = await updateFeatureAnalysis({ id: 9, name: 'Updated', type: 'PRESET', design: {} })
+      const result = await updateFeatureAnalysis({ id: 9, name: 'Updated', type: 'PRESET', design: 'DemographicsAge' })
 
       expect(result.success).toBe(true)
       if (result.success) {
@@ -208,7 +207,7 @@ describe('services/feature-analysis.service', () => {
     })
 
     it('reports a failure without a request when id is missing', async () => {
-      const result = await updateFeatureAnalysis({ name: 'no id', type: 'PRESET', design: {} })
+      const result = await updateFeatureAnalysis({ name: 'no id', type: 'PRESET', design: '' })
 
       expect(result.success).toBe(false)
       if (result.success) {
@@ -220,9 +219,9 @@ describe('services/feature-analysis.service', () => {
     })
 
     it('reports a parse failure carrying the status and Zod issues', async () => {
-      ok({ id: 9, type: 'BOGUS_TYPE', design: {} })
+      ok({ id: 9, type: 'BOGUS_TYPE', design: '' })
 
-      const result = await updateFeatureAnalysis({ id: 9, name: 'Updated', type: 'PRESET', design: {} })
+      const result = await updateFeatureAnalysis({ id: 9, name: 'Updated', type: 'PRESET', design: '' })
 
       expect(result.success).toBe(false)
       if (result.success) {
@@ -231,7 +230,7 @@ describe('services/feature-analysis.service', () => {
         expect(result.error.message).toBe('Invalid response from PUT /feature-analysis/9')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
-        expect(issues.some((i: { path: string[] }) => i.path.includes('type'))).toBe(true)
+        expect(issues.some((i: { code: string }) => i.code === 'invalid_union')).toBe(true)
       }
     })
   })
@@ -259,7 +258,7 @@ describe('services/feature-analysis.service', () => {
 
   describe('copyFeatureAnalysis', () => {
     it('GETs /copy and returns the new analysis', async () => {
-      ok({ id: 200, name: 'Copy of FA', type: 'PRESET', design: {} })
+      ok({ id: 200, name: 'Copy of FA', type: 'PRESET', design: 'DemographicsAge' })
 
       const result = await copyFeatureAnalysis(100)
 
@@ -275,7 +274,7 @@ describe('services/feature-analysis.service', () => {
     })
 
     it('reports a parse failure carrying the status and Zod issues', async () => {
-      ok({ type: 'BOGUS_TYPE', design: {} })
+      ok({ type: 'BOGUS_TYPE', design: '' })
 
       const result = await copyFeatureAnalysis(100)
 
@@ -286,7 +285,7 @@ describe('services/feature-analysis.service', () => {
         expect(result.error.message).toBe('Invalid response from /feature-analysis/100/copy')
         expect(result.error.status).toBe(0)
         const issues = JSON.parse(result.error.body as string)
-        expect(issues.some((i: { path: string[] }) => i.path.includes('type'))).toBe(true)
+        expect(issues.some((i: { code: string }) => i.code === 'invalid_union')).toBe(true)
       }
     })
   })
@@ -416,50 +415,5 @@ describe('services/feature-analysis.service', () => {
       }
     })
   })
-
-  describe('getDefaultCovariateSettings', () => {
-    it('GETs with temporal=true', async () => {
-      ok({ useDemographicsAge: true })
-
-      await getDefaultCovariateSettings(true)
-
-      const [url] = mockFetch.mock.calls[0]
-      expect(url).toContain('temporal=true')
-    })
-
-    it('GETs with temporal=false', async () => {
-      ok({})
-
-      await getDefaultCovariateSettings(false)
-
-      const [url] = mockFetch.mock.calls[0]
-      expect(url).toContain('temporal=false')
-    })
-
-    it('reports a network failure as ApiResult', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('network error'))
-
-      const result = await getDefaultCovariateSettings(true)
-
-      expect(result.success).toBe(false)
-    })
-
-    it('reports a parse failure carrying the status and Zod issues', async () => {
-      ok('not an object')
-
-      const result = await getDefaultCovariateSettings(true)
-
-      expect(result.success).toBe(false)
-      if (result.success) {
-        expect.fail('expected the result to fail')
-      } else {
-        expect(result.error.message).toBe(
-          'Invalid response from /featureextraction/defaultcovariatesettings'
-        )
-        expect(result.error.status).toBe(0)
-        const issues = JSON.parse(result.error.body as string)
-        expect(issues.length).toBeGreaterThan(0)
-      }
-    })
-  })
 })
+
