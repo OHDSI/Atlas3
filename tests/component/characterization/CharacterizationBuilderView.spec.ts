@@ -248,6 +248,48 @@ describe('CharacterizationBuilderView', () => {
     expect(mounted.wrapper.findComponent({ name: 'EntityAccessDialog' }).props('modelValue')).toBe(false)
   })
 
+  it('opens the concept sets dialog from the action bar icon', async () => {
+    mounted = await mountBuilder('/characterizations/new')
+
+    await mounted.wrapper.get('[data-testid="char-builder-conceptsets-icon"]').trigger('click')
+    await flushPromises()
+
+    const dialogs = mounted.wrapper.findAllComponents({ name: 'AtlasDialog' })
+    const conceptSetsDialog = dialogs.find(dialog => dialog.props('title') === 'Concept Sets')
+    expect(conceptSetsDialog?.props('modelValue')).toBe(true)
+  })
+
+  it('opens the validation dialog from the action bar icon', async () => {
+    mounted = await mountBuilder('/characterizations/new')
+
+    await mounted.wrapper.get('[data-testid="char-builder-validation-icon"]').trigger('click')
+    await flushPromises()
+
+    expect(mounted.wrapper.findComponent({ name: 'CharacterizationMessagesTab' }).exists()).toBe(true)
+  })
+
+  it('opens the versions dialog from the action bar icon', async () => {
+    mounted = await mountBuilder('/characterizations/42', { id: '42' })
+    await flushPromises()
+
+    await mounted.wrapper.get('[data-testid="char-builder-versions-icon"]').trigger('click')
+    await flushPromises()
+
+    const dialogs = mounted.wrapper.findAllComponents({ name: 'AtlasDialog' })
+    const versionsDialog = dialogs.find(dialog => dialog.props('title') === 'Versions')
+    expect(versionsDialog?.props('modelValue')).toBe(true)
+  })
+
+  it('clicking import triggers the hidden file input', async () => {
+    mounted = await mountBuilder('/characterizations/new')
+    const fileInput = mounted.wrapper.get('[data-testid="char-builder-import-input"]')
+    const clickSpy = vi.spyOn(fileInput.element as HTMLInputElement, 'click')
+
+    await mounted.wrapper.get('[data-testid="char-builder-import-icon"]').trigger('click')
+
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+  })
+
   it('keeps the access dialog hidden in new mode while the button is absent', async () => {
     mounted = await mountBuilder('/characterizations/new')
     await flushPromises()

@@ -395,4 +395,40 @@ describe('Feature Analyses Store', () => {
       expect(store.currentFA).toBeNull()
     })
   })
+
+  describe('applyProposal', () => {
+    it('returns false when there is no current feature analysis', () => {
+      const store = useFeatureAnalysesStore()
+
+      const applied = store.applyProposal({ name: 'New name' })
+
+      expect(applied).toBe(false)
+      expect(store.isDirty).toBe(false)
+    })
+
+    it('applies supported fields to the current feature analysis and marks the store dirty', () => {
+      const store = useFeatureAnalysesStore()
+      store.currentFA = { ...mockFA, description: 'Original', design: 'DemographicsAge' }
+
+      const applied = store.applyProposal({
+        name: 'Renamed',
+        description: 'Updated',
+        domain: 'CONDITION',
+        type: 'CUSTOM_FE',
+        statType: 'PREVALENCE',
+        design: 'SELECT 1',
+      })
+
+      expect(applied).toBe(true)
+      expect(store.isDirty).toBe(true)
+      expect(store.currentFA).toMatchObject({
+        name: 'Renamed',
+        description: 'Updated',
+        domain: 'CONDITION',
+        type: 'CUSTOM_FE',
+        statType: 'PREVALENCE',
+        design: 'SELECT 1',
+      })
+    })
+  })
 })
