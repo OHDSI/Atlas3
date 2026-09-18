@@ -77,13 +77,13 @@ describe('useCirceConceptSetPicker', () => {
     })
 
     picker.onSelectConceptSet(undefined)
-    expect(picker.dialogOpen.value).toBe(false)
+    expect(picker.pickerOpen.value).toBe(false)
 
     picker.onSelectConceptSet({ targetRef: ref<number | null | undefined>() })
-    expect(picker.dialogOpen.value).toBe(true)
+    expect(picker.pickerOpen.value).toBe(true)
 
     picker.hideSelectionDialog()
-    expect(picker.dialogOpen.value).toBe(false)
+    expect(picker.pickerOpen.value).toBe(false)
   })
 
   it('resolves the active selection and notifies the caller', () => {
@@ -100,7 +100,7 @@ describe('useCirceConceptSetPicker', () => {
 
     expect(target.value).toBe(42)
     expect(onChanged).toHaveBeenCalledTimes(1)
-    expect(picker.dialogOpen.value).toBe(false)
+    expect(picker.pickerOpen.value).toBe(false)
   })
 
   it('cancels a selection request when the local id is invalid', () => {
@@ -114,7 +114,7 @@ describe('useCirceConceptSetPicker', () => {
     picker.onLocalConceptSetSelected({ id: 'not-a-number', name: 'Invalid' })
 
     expect(target.value).toBeUndefined()
-    expect(picker.dialogOpen.value).toBe(false)
+    expect(picker.pickerOpen.value).toBe(false)
   })
 
   it('adds a fetched concept set once and resolves the chosen id', async () => {
@@ -138,7 +138,7 @@ describe('useCirceConceptSetPicker', () => {
       })
     )
     expect(target.value).toBe(7)
-    expect(picker.dialogOpen.value).toBe(false)
+    expect(picker.pickerOpen.value).toBe(false)
   })
 
   it('skips adding a duplicate concept set while still resolving the target', async () => {
@@ -166,7 +166,7 @@ describe('useCirceConceptSetPicker', () => {
     await picker.onConceptSetSelected({ id: 8, name: 'Ignored', items: [] })
 
     expect(addConceptSet).not.toHaveBeenCalled()
-    expect(picker.dialogOpen.value).toBe(false)
+    expect(picker.pickerOpen.value).toBe(false)
   })
 
   it('refuses the selection when the concept-set fetch fails', async () => {
@@ -187,7 +187,7 @@ describe('useCirceConceptSetPicker', () => {
 
     expect(addConceptSet).not.toHaveBeenCalled()
     expect(target.value).toBeUndefined()
-    expect(picker.dialogOpen.value).toBe(false)
+    expect(picker.pickerOpen.value).toBe(false)
   })
 
   it('accepts a repository concept set that resolves to zero items', async () => {
@@ -212,7 +212,7 @@ describe('useCirceConceptSetPicker', () => {
       expression: { items: [] },
     })
     expect(target.value).toBe(7)
-    expect(picker.dialogOpen.value).toBe(false)
+    expect(picker.pickerOpen.value).toBe(false)
   })
 
   it('cancels a local selection when called without an active request', () => {
@@ -223,7 +223,7 @@ describe('useCirceConceptSetPicker', () => {
 
     picker.onLocalConceptSetSelected({ id: 9, name: 'No request' })
 
-    expect(picker.dialogOpen.value).toBe(false)
+    expect(picker.pickerOpen.value).toBe(false)
   })
 })
 

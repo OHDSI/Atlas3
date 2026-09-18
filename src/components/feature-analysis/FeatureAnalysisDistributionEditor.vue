@@ -81,7 +81,7 @@
         :criteria="row.expression"
         :concept-sets="conceptSetOptions"
         @select-concept-set="onSelectConceptSet"
-        @edit-concept-set="onSelectConceptSet"
+        @edit-concept-set="handleEditConceptSetFromTarget"
         @clear-concept-set="cancelSelection"
       />
 
@@ -90,17 +90,16 @@
         :criteria="row.expression"
         :concept-sets="conceptSetOptions"
         @select-concept-set="onSelectConceptSet"
-        @edit-concept-set="onSelectConceptSet"
+        @edit-concept-set="handleEditConceptSetFromTarget"
         @clear-concept-set="cancelSelection"
       />
     </div>
 
     <ConceptSetSelectionDialog
-      v-model="dialogOpen"
+      v-model="pickerOpen"
       :local-concept-sets="localConceptSets"
       @local-concept-set-selected="onLocalConceptSetSelected"
       @concept-set-selected="onConceptSetSelected"
-      @edit-concept-set="handleEditConceptSet"
       @create-new="handleCreateNewConceptSet"
     />
 
@@ -126,11 +125,13 @@
 import { computed, ref, watch } from 'vue'
 import { AtlasAlert, AtlasButton, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasTextField } from '@/components/ui'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
+import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
 import DemographicCriteria from '@/components/circe/criteria/DemographicCriteria.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useI18n } from '@/composables/useI18n'
 import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
 import { createObjectKeyGenerator } from '@/components/circe/criteria/criteria-editor-helper'
+import type { ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 import { createDefaultWindow } from '@/components/circe/criteria/window-utils'
 import type { ConceptSetItem as AtlasConceptSetItem } from '@/models/concept-set.types'
 import type { ConceptSet as CirceConceptSet, ConceptSetItem as CirceConceptSetItem } from '@/models/circe-types'
@@ -175,7 +176,7 @@ const conceptSetsStorePicker = useCirceConceptSetPicker({
 })
 
 const {
-  dialogOpen,
+  pickerOpen,
   conceptSetOptions,
   onSelectConceptSet,
   onLocalConceptSetSelected,
@@ -190,6 +191,18 @@ const localConceptSets = computed<ConceptSetReference[]>(() =>
     .filter((conceptSet): conceptSet is CirceConceptSet & { id: number } => typeof conceptSet.id === 'number')
     .map(conceptSet => ({ id: conceptSet.id, name: conceptSet.name ?? '', items: conceptSet.expression?.items ?? [] }))
 )
+
+function handleEditConceptSetFromTarget(target: ConceptSetSelectionTarget | undefined) {
+  const conceptSetId = target?.targetRef.value
+  if (conceptSetId === undefined || conceptSetId === null) return
+
+  const conceptSet = localConceptSets.value.find(cs => cs.id === conceptSetId)
+  if (!conceptSet) {
+    throw new Error(`Feature analysis concept set ${conceptSetId} was not found in localConceptSets`)
+  }
+
+  handleEditConceptSet(conceptSet)
+}
 
 function cloneDefaultAggregate(): FeatureAnalysisAggregate | undefined {
   return defaultAggregate.value ? { ...defaultAggregate.value } : undefined

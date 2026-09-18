@@ -73,7 +73,7 @@ function mountEditor(
           name: 'CriteriaGroup',
           props: ['group', 'conceptSets'],
           template:
-            '<button data-testid="criteria-group-mutate" @click="group.Type = \'ANY\'">mutate</button>',
+            '<div><button data-testid="criteria-group-mutate" @click="group.Type = \'ANY\'">mutate</button><button data-testid="criteria-group-edit-concept-set" @click="$emit(\'edit-concept-set\', { targetRef: { value: 9 } })">edit concept set</button></div>',
         },
         ConceptSetSelectionDialog: {
           name: 'ConceptSetSelectionDialog',
@@ -163,9 +163,16 @@ describe('FeatureAnalysisPrevalenceEditor', () => {
     const design: FeatureAnalysisCriteriaGroupItem[] = [
       { name: 'A', criteriaType: 'CriteriaGroup', expression: { Type: 'ALL' } },
     ]
-    const wrapper = mountEditor(design)
+    const conceptSets: ConceptSet[] = [
+      {
+        id: 9,
+        name: 'Edited set',
+        expression: { items: [] },
+      },
+    ]
+    const wrapper = mountEditor(design, conceptSets)
 
-    await wrapper.get('[data-testid="concept-set-edit"]').trigger('click')
+    await wrapper.get('[data-testid="criteria-group-edit-concept-set"]').trigger('click')
 
     expect(conceptSetsStoreMock.openEmbeddedEditor).toHaveBeenCalledWith(
       expect.objectContaining({

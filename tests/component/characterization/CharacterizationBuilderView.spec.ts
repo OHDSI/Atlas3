@@ -16,6 +16,7 @@ import { createRouter, createMemoryHistory, type Router } from 'vue-router'
 
 import type { CharacterizationDefinition } from '@/models/characterization.types'
 import { useAuthStore } from '@/stores/auth'
+import { useCharacterizationStore } from '@/stores/characterization'
 import { emptyEntityAccess } from '@/models/auth.types'
 
 vi.mock('@/composables/useI18n', async () => {
@@ -74,9 +75,12 @@ import {
   getCharacterization,
   createCharacterization,
   updateCharacterization,
+  deleteCharacterization,
+  copyCharacterization,
   listCharacterizations,
   listCharacterizationExecutions,
   exportCharacterization,
+  importCharacterization,
 } from '@/services/characterization.service'
 import { listFeatureAnalyses } from '@/services/feature-analysis.service'
 import { getCohorts } from '@/services/cohort-definition.service'
@@ -254,9 +258,9 @@ describe('CharacterizationBuilderView', () => {
     await mounted.wrapper.get('[data-testid="char-builder-conceptsets-icon"]').trigger('click')
     await flushPromises()
 
-    const dialogs = mounted.wrapper.findAllComponents({ name: 'AtlasDialog' })
-    const conceptSetsDialog = dialogs.find(dialog => dialog.props('title') === 'Concept Sets')
-    expect(conceptSetsDialog?.props('modelValue')).toBe(true)
+    const conceptSetsDialog = mounted.wrapper.findComponent({ name: 'ConceptSetsListDialog' })
+    expect(conceptSetsDialog.exists()).toBe(true)
+    expect(conceptSetsDialog.props('modelValue')).toBe(true)
   })
 
   it('opens the validation dialog from the action bar icon', async () => {
@@ -269,6 +273,8 @@ describe('CharacterizationBuilderView', () => {
   })
 
   it('opens the versions dialog from the action bar icon', async () => {
+    vi.mocked(getCharacterization).mockResolvedValue(success(sampleCharacterization))
+
     mounted = await mountBuilder('/characterizations/42', { id: '42' })
     await flushPromises()
 
@@ -403,6 +409,49 @@ describe('CharacterizationBuilderView', () => {
     expect(snackbar.props('text')).not.toBe('Import failed.')
     expect(snackbar.props('severity')).toBe('danger')
     expect(snackbar.props('modelValue')).toBe(true)
+  })
+
+  it('routes copy and delete actions through the store and confirms delete', async () => {
+    vi.mocked(getCharacterization).mockResolvedValue(success(sampleCharacterization))
+    vi.mocked(copyCharacterization).mockResolvedValue(success({
+      ...sampleCharacterization,
+      id: 99,
+      name: 'Diabetes Cohort Profile (copy)',
+    }))
+    vi.mocked(deleteCharacterization).mockResolvedValue(success(undefined as never))
+
+    mounted = await mountBuilder('/characterizations/42', { id: '42' })
+    await flushPromises()
+
+    const _store = useCharacterizationStore()
+
+    await mounted.wrapper.get('[data-testid="char-builder-copy"]').trigger('click')
+    await flushPromises()
+    expect(copyCharacterization).toHaveBeenCalledWith(42)
+
+    await mounted.wrapper.get('[data-testid="char-builder-delete"]').trigger('click')
+    await flushPromises()
+
+    const deleteDialog = mounted.wrapper
+      .findAllComponents({ name: 'AtlasDialog' })
+      .find(dialog => dialog.props('title') === 'Delete')
+    expect(deleteDialog?.exists()).toBe(true)
+    expect(deleteCharacterization).not.toHaveBeenCalled()
+  })
+
+  it('rejects malformed imports and accepts a valid import payload', async () => {
+    mounted = await mountBuilder('/characterizations/new')
+
+    const badFile = new File(['{not json'], 'bad.json', { type: 'application/json' })
+    const importInput = mounted.wrapper.get('[data-testid="char-builder-import-input"]')
+    Object.defineProperty(importInput.element, 'files', { value: [badFile], configurable: true })
+    await importInput.trigger('change')
+    await flushPromises()
+
+    expect(importCharacterization).not.toHaveBeenCalled()
+    expect(mounted.wrapper.findComponent({ name: 'AtlasSnackbar' }).props('text')).toBe(
+      'Could not parse design JSON.'
+    )
   })
 
   it('Cancel defers the unsaved-changes prompt to the route guard, not itself', async () => {

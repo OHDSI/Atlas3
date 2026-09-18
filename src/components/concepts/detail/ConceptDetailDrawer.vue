@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import { AtlasIconButton } from '@/components/ui'
@@ -18,10 +18,19 @@ const drawerOpen = computed({
   },
 })
 
-// Match the ConceptSetEditor drawer width so the two panels look aligned.
-const drawerWidth = computed(() => {
-  if (typeof window === 'undefined') return 1100
-  return window.innerWidth - 100
+const drawerWidth = ref<number>(0)
+
+function updateDrawerWidth() {
+  drawerWidth.value = Math.max(500, Math.floor(window.innerWidth * 0.95))
+}
+
+onMounted(() => {
+  updateDrawerWidth()
+  window.addEventListener('resize', updateDrawerWidth)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateDrawerWidth)
 })
 </script>
 

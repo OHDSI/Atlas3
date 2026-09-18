@@ -13,10 +13,11 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { setActivePinia, createPinia } from 'pinia'
-import { createRouter, createMemoryHistory, type Router } from 'vue-router'
+import { createRouter, createMemoryHistory, onBeforeRouteLeave, type Router } from 'vue-router'
 
 import type { FeatureAnalysis } from '@/models/feature-analysis.types'
 import { useAuthStore } from '@/stores/auth'
+import { useConceptSetsStore } from '@/stores/concept-sets'
 import { emptyEntityAccess } from '@/models/auth.types'
 
 vi.mock('vue-router', async () => {
@@ -59,6 +60,8 @@ import {
   getFeatureAnalysis,
   createFeatureAnalysis,
   updateFeatureAnalysis,
+  deleteFeatureAnalysis,
+  copyFeatureAnalysis,
   listFeatureAnalysisDomains,
   listFeatureAnalysisAggregates,
 } from '@/services/feature-analysis.service'
@@ -130,7 +133,36 @@ async function mountEditor(path: string, props?: Record<string, unknown>) {
       // Renders as a v-navigation-drawer/Teleport - needs a real Vuetify
       // layout to mount, which this test harness doesn't provide. Same stub
       // used by CohortBuilder.spec.ts and StrataEditor.spec.ts.
-      stubs: { ConceptSetSelectionDialog: true },
+      stubs: {
+        ConceptSetSelectionDialog: true,
+        ConceptSetsListDialog: {
+          name: 'ConceptSetsListDialog',
+          props: ['modelValue', 'conceptSets', 'usedConceptSets'],
+          emits: ['delete', 'view'],
+          template:
+            '<div v-if="modelValue" data-testid="concept-sets-dialog"><slot name="actions" /></div>',
+        },
+        ConceptSetEditor: {
+          name: 'ConceptSetEditor',
+          props: ['modelValue', 'conceptSet', 'embedded'],
+          emits: ['update:modelValue', 'apply'],
+          template:
+            '<div v-if="modelValue" data-testid="concept-set-editor"><button data-testid="concept-set-editor-apply" @click="$emit(\'apply\', { id: 11, name: \'Concept set 1\', items: [] })">Apply</button></div>',
+        },
+        EntityAccessDialog: {
+          name: 'EntityAccessDialog',
+          props: ['modelValue', 'entityType', 'entityId', 'title', 'subtitle'],
+          emits: ['close'],
+          template: '<div v-if="modelValue" data-testid="entity-access-dialog" />',
+        },
+        AtlasDialog: {
+          name: 'AtlasDialog',
+          props: ['modelValue', 'title', 'eyebrow'],
+          emits: ['close'],
+          template:
+            '<div v-if="modelValue" data-testid="atlas-dialog"><slot /><slot name="actions" /></div>',
+        },
+      },
     },
     props,
   })
@@ -403,6 +435,105 @@ describe('FeatureAnalysisEditorView', () => {
     }
   })
 
+  it('opens the edit-mode dialogs and routes copy/delete actions through the store', async () => {
+    vi.mocked(getFeatureAnalysis).mockResolvedValue(
+      success({
+        id: 42,
+        name: 'Criteria edit',
+        description: 'With concept sets',
+        type: 'CRITERIA_SET',
+        statType: 'DISTRIBUTION',
+        domain: 'CONDITION',
+        design: [],
+        conceptSets: [
+          { id: 11, name: 'Concept set 1', expression: { items: [] } },
+        ],
+      } as never)
+    )
+    vi.mocked(copyFeatureAnalysis).mockResolvedValue(
+      success({
+        id: 99,
+        name: 'Criteria edit (copy)',
+        type: 'CRITERIA_SET',
+        statType: 'DISTRIBUTION',
+        domain: 'CONDITION',
+        design: [],
+        conceptSets: [],
+      } as never)
+    )
+    vi.mocked(deleteFeatureAnalysis).mockResolvedValue(success(undefined as never))
+
+    mounted = await mountEditor('/feature-analyses/42', { id: '42' })
+    await flushPromises()
+
+    await mounted.wrapper.get('[data-testid="feature-analysis-editor-conceptsets-icon"]').trigger('click')
+    expect(mounted.wrapper.findComponent({ name: 'ConceptSetsListDialog' }).props('modelValue')).toBe(true)
+
+    await mounted.wrapper.get('[data-testid="feature-analysis-editor-access-icon"]').trigger('click')
+    const accessDialog = mounted.wrapper.findComponent({ name: 'EntityAccessDialog' })
+    expect(accessDialog.props('modelValue')).toBe(true)
+    expect(accessDialog.props('entityType')).toBe('FE_ANALYSIS')
+    expect(accessDialog.props('entityId')).toBe(42)
+
+    await mounted.wrapper.get('[data-testid="feature-analysis-editor-copy"]').trigger('click')
+    await flushPromises()
+    expect(copyFeatureAnalysis).toHaveBeenCalledWith(42)
+
+    await mounted.wrapper.get('[data-testid="feature-analysis-editor-delete"]').trigger('click')
+    await flushPromises()
+    expect(mounted.wrapper.findComponent({ name: 'AtlasDialog' }).exists()).toBe(true)
+
+    await mounted.wrapper.get('[data-testid="feature-analysis-editor-delete-confirm"]').trigger('click')
+    await flushPromises()
+    expect(deleteFeatureAnalysis).toHaveBeenCalledWith(42)
+  })
+
+  it('opens the embedded concept-set editor and applies or deletes a concept set', async () => {
+    vi.mocked(getFeatureAnalysis).mockResolvedValue(
+      success({
+        id: 42,
+        name: 'Criteria edit',
+        description: 'With concept sets',
+        type: 'CRITERIA_SET',
+        statType: 'DISTRIBUTION',
+        domain: 'CONDITION',
+        design: [],
+        conceptSets: [
+          { id: 11, name: 'Concept set 1', expression: { items: [] } },
+        ],
+      } as never)
+    )
+
+    mounted = await mountEditor('/feature-analyses/42', { id: '42' })
+    await flushPromises()
+
+    const conceptSetsStore = useConceptSetsStore()
+    const conceptSetsDialog = mounted.wrapper.findComponent({ name: 'ConceptSetsListDialog' })
+
+    await mounted.wrapper.get('[data-testid="feature-analysis-editor-conceptsets-icon"]').trigger('click')
+    expect(conceptSetsDialog.props('modelValue')).toBe(true)
+
+    await conceptSetsDialog.vm.$emit('view', { id: 11, name: 'Concept set 1', items: [] })
+    await flushPromises()
+    expect(conceptSetsStore.editorOpen).toBe(true)
+    expect(mounted.wrapper.find('[data-testid="concept-set-editor"]').exists()).toBe(true)
+
+    await mounted.wrapper.get('[data-testid="concept-set-editor-apply"]').trigger('click')
+    await flushPromises()
+    expect(conceptSetsStore.currentSet?.id).toBe(11)
+    expect(conceptSetsStore.editorOpen).toBe(true)
+
+    await mounted.wrapper.findComponent({ name: 'ConceptSetEditor' }).vm.$emit('update:modelValue', false)
+    await flushPromises()
+    expect(conceptSetsStore.editorOpen).toBe(false)
+
+    await mounted.wrapper.get('[data-testid="feature-analysis-editor-conceptsets-icon"]').trigger('click')
+    await flushPromises()
+    await conceptSetsDialog.vm.$emit('delete', { id: 11, name: 'Concept set 1', items: [] })
+    await flushPromises()
+    expect(mounted.wrapper.findComponent({ name: 'AtlasDialog' }).exists()).toBe(true)
+  })
+
   it('Cancel defers the unsaved-changes prompt to the route guard, not itself', async () => {
     // onBeforeRouteLeave doesn't register outside a real <router-view> (see
     // the "No active route record" warning logged by every test in this
@@ -447,5 +578,44 @@ describe('FeatureAnalysisEditorView', () => {
     expect(mounted.router.currentRoute.value.name).toBe('feature-analyses')
 
     confirmSpy.mockRestore()
+  })
+
+  it('shows the unsaved-changes dialog from the registered leave guard and resumes or cancels navigation', async () => {
+    mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE')
+
+    const nameInput = mounted.wrapper.find('[data-testid="feature-analysis-editor-name"] input')
+    await nameInput.setValue('Dirty editor')
+    await flushPromises()
+
+    const leaveGuard = vi.mocked(onBeforeRouteLeave).mock.calls[0][0] as (
+      to: { fullPath: string },
+      from: unknown,
+      next: (decision?: boolean) => void
+    ) => void
+    const next = vi.fn()
+    const pushSpy = vi.spyOn(mounted.router, 'push')
+
+    leaveGuard({ fullPath: '/analysis/feature-analyses' }, {} as never, next)
+
+    expect(next).toHaveBeenCalledWith(false)
+
+    const vm = mounted.wrapper.vm as {
+      showUnsavedDialog: boolean
+      confirmLeaveUnsaved: () => void
+      cancelLeaveUnsaved: () => void
+    }
+
+    vm.showUnsavedDialog = true
+    vm.confirmLeaveUnsaved()
+    await flushPromises()
+
+    expect(pushSpy).toHaveBeenCalledWith('/analysis/feature-analyses')
+    expect(vm.showUnsavedDialog).toBe(false)
+
+    vm.showUnsavedDialog = true
+    vm.cancelLeaveUnsaved()
+    expect(vm.showUnsavedDialog).toBe(false)
+
+    pushSpy.mockRestore()
   })
 })

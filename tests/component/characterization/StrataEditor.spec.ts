@@ -45,6 +45,11 @@ function mountEditor(initial: Stratum[] = []) {
           template:
             '<button data-testid="criteria-group-mutate" @click="group.Type = \'MUTATED\'; group.CriteriaList = [{ Type: \'ATOMIC\', ConceptSets: [], Codesets: [], ExitCriteria: null, InclusionRules: [] }]">mutate</button>',
         },
+        VNavigationDrawer: {
+          name: 'VNavigationDrawer',
+          props: ['modelValue', 'location', 'temporary', 'width', 'scrim'],
+          template: '<div><slot /></div>',
+        },
         AtlasDialog: {
           name: 'AtlasDialog',
           template: '<div><slot /><slot name="actions" /></div>',

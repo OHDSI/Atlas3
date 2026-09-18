@@ -13,7 +13,7 @@ import { createVuetify } from 'vuetify'
 import { createPinia, setActivePinia } from 'pinia'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { nextTick } from 'vue'
+import { h, nextTick } from 'vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
@@ -37,10 +37,24 @@ function mountComponent(props = {}) {
         // Stub Teleport so the drawer renders inline and tests can
         // query its DOM.
         Teleport: { template: '<div><slot /></div>' },
+        VDialog: {
+          template: '<div><slot /></div>',
+        },
         VNavigationDrawer: {
           template: '<div class="v-navigation-drawer"><slot /></div>',
           props: ['modelValue', 'location', 'temporary', 'width']
-        }
+        },
+        VDataTable: {
+          name: 'VDataTable',
+          emits: ['click:row'],
+          props: ['items'],
+          setup(props, { slots }) {
+            return () => h('div', {}, [
+              ...(Array.isArray(props.items) ? props.items.map((item: { name?: string }) => h('div', item.name ?? '')) : []),
+              slots.default?.(),
+            ])
+          },
+        },
       }
     }
   })
@@ -199,7 +213,7 @@ describe('ConceptSetSelectionDialog', () => {
     it('emits local-concept-set-selected with the ref and closes when a local row is clicked', async () => {
       const wrapper = mountComponent({ localConceptSets: localSets })
       const items = wrapper.findAll('[data-testid="local-concept-set-item"]')
-      await items[0].trigger('click')
+      await items[0]?.trigger('click')
 
       expect(wrapper.emitted('local-concept-set-selected')).toBeTruthy()
       expect(wrapper.emitted('local-concept-set-selected')![0]).toEqual([localSets[0]])
@@ -217,30 +231,12 @@ describe('ConceptSetSelectionDialog', () => {
       await nextTick()
 
       const table = wrapper.findComponent({ name: 'VDataTable' })
-      // Simulate the (event, payload) signature v-data-table emits
-      // for click:row.
       await table.vm.$emit('click:row', new Event('click'), { item: mockSet })
 
       expect(wrapper.emitted('concept-set-selected')).toBeTruthy()
       expect(wrapper.emitted('concept-set-selected')![0]).toEqual([mockSet])
       expect(wrapper.emitted('update:modelValue')).toBeTruthy()
       expect(wrapper.emitted('update:modelValue')![0]).toEqual([false])
-    })
-
-    it('should emit edit-concept-set without closing when the edit pencil is clicked', async () => {
-      const wrapper = mountComponent()
-      const store = useConceptSetsStore()
-      const mockSet: ConceptSetListItem = { id: 1, name: 'Test Set' }
-      store.conceptSets = [mockSet]
-      store.loading = false
-      await nextTick()
-
-      const vm = wrapper.vm as unknown as { onEditClick: (s: ConceptSetListItem) => void }
-      vm.onEditClick(mockSet)
-
-      expect(wrapper.emitted('edit-concept-set')).toBeTruthy()
-      expect(wrapper.emitted('edit-concept-set')![0]).toEqual([mockSet])
-      expect(wrapper.emitted('update:modelValue')).toBeFalsy()
     })
 
     it('should emit create-new from the empty-state CTA', async () => {
@@ -251,7 +247,7 @@ describe('ConceptSetSelectionDialog', () => {
       await nextTick()
 
       const buttons = wrapper.find('.cs-picker__empty').findAllComponents({ name: 'VBtn' })
-      const createBtn = buttons.find(b => b.text().toLowerCase().includes('new concept set'))
+      const createBtn = buttons.find((b: { text: () => string }) => b.text().toLowerCase().includes('new concept set'))
       await createBtn?.trigger('click')
 
       expect(wrapper.emitted('create-new')).toBeTruthy()

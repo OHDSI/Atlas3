@@ -16,6 +16,11 @@ vi.mock('@/components/ui', async (importOriginal) => {
       emits: ['update:modelValue', 'close'],
       template: '<div><slot /><button data-testid="ir-strata-inspector-close" @click="$emit(\'update:modelValue\', false)">x</button></div>',
     },
+    VNavigationDrawer: {
+      name: 'VNavigationDrawer',
+      props: ['modelValue', 'location', 'temporary', 'width', 'scrim'],
+      template: '<div><slot /></div>',
+    },
   }
 })
 
@@ -27,7 +32,15 @@ describe('IncidenceRateStratifyInspector', () => {
   it('renders the editor when modelValue=true and rule is provided', () => {
     const w = mount(IncidenceRateStratifyInspector, {
       attachTo: document.body,
-      global: { plugins: [pristinePinia(), vuetify] },
+      global: {
+        plugins: [pristinePinia(), vuetify],
+        stubs: {
+          VNavigationDrawer: {
+            name: 'VNavigationDrawer',
+            template: '<div><slot /></div>',
+          },
+        },
+      },
       props: { modelValue: true, rule, conceptSets: [] },
     })
     expect(document.body.querySelector('[data-testid="stub-editor"]')).toBeTruthy()
@@ -37,11 +50,18 @@ describe('IncidenceRateStratifyInspector', () => {
   it('emits update:modelValue=false when the close button is clicked', async () => {
     const w = mount(IncidenceRateStratifyInspector, {
       attachTo: document.body,
-      global: { plugins: [pristinePinia(), vuetify] },
+      global: {
+        plugins: [pristinePinia(), vuetify],
+        stubs: {
+          VNavigationDrawer: {
+            name: 'VNavigationDrawer',
+            template: '<div><slot /></div>',
+          },
+        },
+      },
       props: { modelValue: true, rule, conceptSets: [] },
     })
-    const btn = document.body.querySelector('[data-testid="ir-strata-inspector-close"]') as HTMLElement
-    btn.click()
+    await w.findComponent({ name: 'AtlasButton' }).trigger('click')
     expect(w.emitted('update:modelValue')).toEqual([[false]])
     w.unmount()
   })
