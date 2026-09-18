@@ -239,6 +239,25 @@ describe('ConceptSetSelectionDialog', () => {
       expect(wrapper.emitted('update:modelValue')![0]).toEqual([false])
     })
 
+    it('fetches concept sets when opened and clears the search term when closed', async () => {
+      const wrapper = mountComponent({ modelValue: false })
+      const store = useConceptSetsStore()
+      const fetchAllSpy = vi.spyOn(store, 'fetchAll').mockResolvedValue(undefined)
+
+      await wrapper.setProps({ modelValue: true })
+      await nextTick()
+      expect(fetchAllSpy).toHaveBeenCalledTimes(1)
+
+      const searchInput = wrapper.findComponent({ name: 'VTextField' })
+      await searchInput.vm.$emit('update:modelValue', 'heart')
+      await nextTick()
+      expect((wrapper.vm as unknown as { searchTerm: string }).searchTerm).toBe('heart')
+
+      await wrapper.setProps({ modelValue: false })
+      await nextTick()
+      expect((wrapper.vm as unknown as { searchTerm: string }).searchTerm).toBe('')
+    })
+
     it('should emit create-new from the empty-state CTA', async () => {
       const wrapper = mountComponent()
       const store = useConceptSetsStore()

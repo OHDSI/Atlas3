@@ -393,4 +393,16 @@ describe('CharacterizationBuilderView — props.id navigation', () => {
     expect(nameInputValue(mounted.wrapper)).toBe('Characterization 42 (copy)')
     expect(workbenchId(mounted.wrapper)).toBe('43')
   })
+
+  it('covers the unsaved-changes confirmation helpers', async () => {
+    mounted = await mountAt('/characterizations/new')
+
+    const builder = mounted.wrapper.findComponent(CharacterizationBuilderView)
+    const setupState = builder.vm as any
+
+    setupState.$.setupState.confirmLeaveUnsaved()
+    setupState.$.setupState.cancelLeaveUnsaved()
+
+    expect(mounted.router.currentRoute.value.path).toBe('/characterizations/new')
+  })
 })

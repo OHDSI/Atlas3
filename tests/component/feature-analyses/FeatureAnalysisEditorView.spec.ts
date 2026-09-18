@@ -18,6 +18,7 @@ import { createRouter, createMemoryHistory, onBeforeRouteLeave, type Router } fr
 import type { FeatureAnalysis } from '@/models/feature-analysis.types'
 import { useAuthStore } from '@/stores/auth'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
 import { emptyEntityAccess } from '@/models/auth.types'
 
 vi.mock('vue-router', async () => {
@@ -203,6 +204,14 @@ describe('FeatureAnalysisEditorView', () => {
     expect(mounted.router.currentRoute.value.name).toBe('feature-analyses')
   })
 
+  it('redirects malformed edit ids back to the list', async () => {
+    mounted = await mountEditor('/feature-analyses/not-a-number', { id: 'not-a-number' })
+    await new Promise<void>(resolve => setTimeout(resolve, 0))
+    await flushPromises()
+
+    expect(mounted.router.currentRoute.value.name).toBe('feature-analyses')
+  })
+
   it('mounts in new mode for Custom SQL', async () => {
     mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE')
 
@@ -217,11 +226,36 @@ describe('FeatureAnalysisEditorView', () => {
     expect(
       mounted.wrapper.find('[data-testid="feature-analysis-editor-design-preset"]').exists()
     ).toBe(false)
+    expect((mounted.wrapper.vm as any).$.setupState.prevalenceDraftDesign).toEqual([])
+    expect((mounted.wrapper.vm as any).$.setupState.prevalenceDraftConceptSets).toEqual([])
+    expect((mounted.wrapper.vm as any).$.setupState.distributionDraftDesign).toEqual([])
+    expect((mounted.wrapper.vm as any).$.setupState.distributionDraftConceptSets).toEqual([])
 
     const nameInput = mounted.wrapper.find(
       '[data-testid="feature-analysis-editor-name"] input'
     ).element as HTMLInputElement
     expect(nameInput.value).toBe('')
+  })
+
+  it('hydrates the custom SQL field when editing an existing custom analysis', async () => {
+    vi.mocked(getFeatureAnalysis).mockResolvedValue(
+      success({
+        id: 77,
+        name: 'Custom SQL FA',
+        description: 'Custom SQL editor',
+        type: 'CUSTOM_FE',
+        domain: 'CONDITION',
+        design: 'SELECT 1',
+      } as never)
+    )
+
+    mounted = await mountEditor('/feature-analyses/77', { id: '77' })
+    await flushPromises()
+
+    const customSqlInput = mounted.wrapper.find(
+      '[data-testid="feature-analysis-editor-custom-sql"] textarea'
+    ).element as HTMLTextAreaElement
+    expect(customSqlInput.value).toBe('SELECT 1')
   })
 
   it('shows the custom SQL sample text and can copy it to the clipboard', async () => {
@@ -255,6 +289,24 @@ describe('FeatureAnalysisEditorView', () => {
 
     expect(clipboardWriteText).toHaveBeenCalledTimes(1)
     expect(clipboardWriteText).toHaveBeenCalledWith(expect.stringContaining('covariate_name'))
+  })
+
+  it('shows a snackbar when copying the custom SQL template fails', async () => {
+    const clipboardWriteText = vi.fn().mockRejectedValue(new Error('denied'))
+    Object.defineProperty(globalThis.navigator, 'clipboard', {
+      value: { writeText: clipboardWriteText },
+      configurable: true,
+    })
+
+    mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE')
+
+    await mounted.wrapper.get('[data-testid="feature-analysis-editor-custom-sql-copy"]').trigger('click')
+    await flushPromises()
+
+    expect(clipboardWriteText).toHaveBeenCalledTimes(1)
+    expect(mounted.wrapper.findComponent({ name: 'AtlasSnackbar' }).props('text')).toBe(
+      'Failed to copy SQL template'
+    )
   })
 
   it('mounts in new mode for Prevalence Criteria', async () => {
@@ -435,6 +487,158 @@ describe('FeatureAnalysisEditorView', () => {
     }
   })
 
+  it('still mounts criteria-set creation when aggregate loading fails', async () => {
+    vi.mocked(listFeatureAnalysisDomains).mockRejectedValueOnce(new Error('domains down'))
+    vi.mocked(listFeatureAnalysisAggregates).mockRejectedValueOnce(new Error('aggregates down'))
+
+    mounted = await mountEditor('/feature-analyses/new?type=CRITERIA_SET&statType=PREVALENCE')
+    await flushPromises()
+
+    expect(mounted.wrapper.find('[data-testid="fa-prevalence-add-criteria"]').exists()).toBe(true)
+  })
+
+  it('keeps edit mode mounted when loading the editor data fails', async () => {
+    vi.mocked(listFeatureAnalysisDomains).mockRejectedValueOnce(new Error('domains down'))
+    vi.mocked(listFeatureAnalysisAggregates).mockRejectedValueOnce(new Error('aggregates down'))
+    vi.mocked(getFeatureAnalysis).mockResolvedValue(
+      success({
+        id: 42,
+        name: 'Criteria edit',
+        description: 'With concept sets',
+        type: 'CRITERIA_SET',
+        statType: 'DISTRIBUTION',
+        domain: 'CONDITION',
+        design: [],
+        conceptSets: [],
+      } as never)
+    )
+
+    mounted = await mountEditor('/feature-analyses/42', { id: '42' })
+    await flushPromises()
+
+    expect(mounted.wrapper.find('[data-testid="feature-analysis-editor-name"]').exists()).toBe(true)
+  })
+
+  it('shows a snackbar when saving prevalence criteria without a default aggregate', async () => {
+    mounted = await mountEditor('/feature-analyses/new?type=CRITERIA_SET&statType=PREVALENCE')
+
+    const store = useFeatureAnalysesStore()
+    store.aggregates = []
+
+    const nameInput = mounted.wrapper.find('[data-testid="feature-analysis-editor-name"] input')
+    await nameInput.setValue('No aggregate FA')
+
+    await mounted.wrapper.get('[data-testid="feature-analysis-editor-save"]').trigger('click')
+    await flushPromises()
+
+    expect(mounted.wrapper.findComponent({ name: 'AtlasSnackbar' }).props('text')).toBe(
+      'Unable to load the default aggregate'
+    )
+  })
+
+  it('shows a snackbar when create returns no id', async () => {
+    mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE')
+    const store = useFeatureAnalysesStore()
+    vi.spyOn(store, 'create').mockResolvedValue({} as never)
+
+    const nameInput = mounted.wrapper.find('[data-testid="feature-analysis-editor-name"] input')
+    await nameInput.setValue('Missing id')
+
+    await (mounted.wrapper.vm as any).$.setupState.handleSave()
+    await flushPromises()
+
+    expect(mounted.wrapper.findComponent({ name: 'AtlasSnackbar' }).props('text')).toBe(
+      'An error occurred while attempting to save a feature analysis.'
+    )
+  })
+
+  it('applies and removes concept sets through the editor helpers with real concept items', async () => {
+    vi.mocked(getFeatureAnalysis).mockResolvedValue(
+      success({
+        id: 42,
+        name: 'Criteria edit',
+        description: 'With concept sets',
+        type: 'CRITERIA_SET',
+        statType: 'DISTRIBUTION',
+        domain: 'CONDITION',
+        design: [],
+        conceptSets: [],
+      } as never)
+    )
+
+    mounted = await mountEditor('/feature-analyses/42', { id: '42' })
+    await flushPromises()
+
+    const conceptSetItem = {
+      concept: {
+        CONCEPT_ID: 123,
+        CONCEPT_NAME: 'Alpha concept',
+        CONCEPT_CODE: 'A123',
+        DOMAIN_ID: 'Condition',
+        VOCABULARY_ID: 'SNOMED',
+        CONCEPT_CLASS_ID: 'Clinical Finding',
+        STANDARD_CONCEPT: 'S',
+        INVALID_REASON: null,
+      },
+      isExcluded: true,
+      includeDescendants: true,
+      includeMapped: false,
+    }
+
+    ;(mounted.wrapper.vm as any).$.setupState.handleConceptSetApplied({
+      name: 'Concept set 1',
+      items: [conceptSetItem],
+    })
+    await flushPromises()
+
+    const conceptSetsDialog = mounted.wrapper.findComponent({ name: 'ConceptSetsListDialog' })
+    expect(conceptSetsDialog.props('modelValue')).toBe(true)
+    expect(conceptSetsDialog.props('conceptSets')).toHaveLength(1)
+    expect((conceptSetsDialog.props('conceptSets') as any[])[0].items[0]).toMatchObject({
+      conceptId: 123,
+      conceptName: 'Alpha concept',
+      isExcluded: true,
+      includeDescendants: true,
+      includeMapped: false,
+    })
+
+    await conceptSetsDialog.vm.$emit('delete', conceptSetsDialog.props('conceptSets')?.[0])
+    await flushPromises()
+
+    expect(conceptSetsDialog.props('conceptSets')).toHaveLength(0)
+  })
+
+  it('shows a snackbar when copy or delete fails through the store helpers', async () => {
+    vi.mocked(getFeatureAnalysis).mockResolvedValue(
+      success({
+        id: 42,
+        name: 'Criteria edit',
+        description: 'With concept sets',
+        type: 'CRITERIA_SET',
+        statType: 'DISTRIBUTION',
+        domain: 'CONDITION',
+        design: [],
+        conceptSets: [],
+      } as never)
+    )
+
+    mounted = await mountEditor('/feature-analyses/42', { id: '42' })
+    await flushPromises()
+
+    const store = useFeatureAnalysesStore()
+    vi.spyOn(store, 'copy').mockResolvedValue(null)
+    vi.spyOn(store, 'remove').mockResolvedValue(false)
+
+    await (mounted.wrapper.vm as any).$.setupState.handleSaveCopy()
+    await flushPromises()
+    await (mounted.wrapper.vm as any).$.setupState.confirmDelete()
+    await flushPromises()
+
+    expect(mounted.wrapper.findComponent({ name: 'AtlasSnackbar' }).props('text')).toBe(
+      'An error occurred while attempting to save a feature analysis.'
+    )
+  })
+
   it('opens the edit-mode dialogs and routes copy/delete actions through the store', async () => {
     vi.mocked(getFeatureAnalysis).mockResolvedValue(
       success({
@@ -612,10 +816,36 @@ describe('FeatureAnalysisEditorView', () => {
     expect(pushSpy).toHaveBeenCalledWith('/analysis/feature-analyses')
     expect(vm.showUnsavedDialog).toBe(false)
 
+    const confirmedNext = vi.fn()
+    leaveGuard({ fullPath: '/analysis/feature-analyses' }, {} as never, confirmedNext)
+    expect(confirmedNext).toHaveBeenCalled()
+
     vm.showUnsavedDialog = true
     vm.cancelLeaveUnsaved()
     expect(vm.showUnsavedDialog).toBe(false)
 
     pushSpy.mockRestore()
+  })
+
+  it('aborts a second leave attempt while the unsaved confirmation is already active', async () => {
+    mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE')
+
+    const nameInput = mounted.wrapper.find('[data-testid="feature-analysis-editor-name"] input')
+    await nameInput.setValue('Dirty editor')
+    await flushPromises()
+
+    const leaveGuard = vi.mocked(onBeforeRouteLeave).mock.calls[0][0] as (
+      to: { fullPath: string },
+      from: unknown,
+      next: (decision?: boolean) => void
+    ) => void
+    const next = vi.fn()
+
+    leaveGuard({ fullPath: '/analysis/feature-analyses' }, {} as never, next)
+    expect(next).toHaveBeenCalledWith(false)
+
+    next.mockReset()
+    leaveGuard({ fullPath: '/analysis/feature-analyses' }, {} as never, next)
+    expect(next).toHaveBeenCalledWith(false)
   })
 })
