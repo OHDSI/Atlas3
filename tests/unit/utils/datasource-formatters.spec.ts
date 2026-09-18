@@ -604,26 +604,21 @@ describe('Data Source Formatters', () => {
       expect(result.treemapNodes[0].name).toBe('Final Name')
     })
 
-    it('aggregates large era datasets with default 0 lengthOfEra', () => {
+    it('truncates large era datasets to the top 1000 by prevalence, without a synthetic Other row', () => {
       const raw = Array(10500).fill(null).map((_, i) => ({
         conceptId: i,
         conceptPath: `Drug ${i}`,
         numPersons: 100 - (i % 100),
         percentPersons: 0.01,
-        // No lengthOfEra — the otherNode aggregation must handle the missing field
       }))
 
       const result = transformClinicalDomainReport(raw, 'drugEra')
-      // Top 1000 + Other = 1001
-      expect(result.tableRows.length).toBe(1001)
+      expect(result.tableRows.length).toBe(1000)
       expect(result.totalCount).toBe(10500)
-      const otherRow = result.tableRows.find(r => r.conceptId === -1)
-      expect(otherRow).toBeDefined()
-      // For era reports, the otherNode metric is averaged lengthOfEra; with all undefined it averages to 0
-      expect(otherRow?.metric).toBe(0)
+      expect(result.tableRows.find(r => r.conceptId === -1)).toBeUndefined()
     })
 
-    it('aggregates large non-era datasets and averages recordsPerPerson', () => {
+    it('truncates large non-era datasets to the top 1000 by prevalence, without a synthetic Other row', () => {
       const raw = Array(10500).fill(null).map((_, i) => ({
         conceptId: i,
         conceptPath: `Cond ${i}`,
@@ -633,10 +628,31 @@ describe('Data Source Formatters', () => {
       }))
 
       const result = transformClinicalDomainReport(raw, 'conditionOccurrence')
-      const otherRow = result.tableRows.find(r => r.conceptId === -1)
-      expect(otherRow).toBeDefined()
-      // (10500-1000)*2 / 9500 averaged ~= 2
-      expect(otherRow?.metric).toBeCloseTo(2, 5)
+      expect(result.tableRows.length).toBe(1000)
+      expect(result.tableRows.find(r => r.conceptId === -1)).toBeUndefined()
+    })
+
+    // Regression test for #337: percentPersons is not a mutually exclusive
+    // share of the population (a person can hold many distinct concepts), so
+    // summing it across a large aggregated "Other" bucket used to produce
+    // prevalence values well over 100%. Every row's prevalence must stay
+    // within the valid 0-100% range, and each concept is now kept on its own
+    // row instead of being folded into a fake -1 "Other" concept.
+    it('never reports a prevalence over 100% for any row, even with many low-prevalence concepts (#337)', () => {
+      const raw = Array(10500).fill(null).map((_, i) => ({
+        conceptId: i + 1,
+        conceptPath: `Concept ${i}`,
+        numPersons: 10,
+        percentPersons: 0.01,
+        recordsPerPerson: 1,
+      }))
+
+      const result = transformClinicalDomainReport(raw, 'conditionOccurrence')
+      for (const row of result.tableRows) {
+        expect(row.conceptId).not.toBe(-1)
+        expect(row.prevalence).toBeGreaterThanOrEqual(0)
+        expect(row.prevalence).toBeLessThanOrEqual(100)
+      }
     })
   })
 
