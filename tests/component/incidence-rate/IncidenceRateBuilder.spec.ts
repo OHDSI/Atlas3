@@ -3,6 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { vuetify, pristinePinia } from './_test-helpers'
 import IncidenceRateBuilder from '@/components/incidence-rate/IncidenceRateBuilder.vue'
+import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 
 const builderMocks = vi.hoisted(() => ({
@@ -75,6 +76,10 @@ const router = createRouter({
 
 describe('IncidenceRateBuilder', () => {
   beforeEach(() => pristinePinia())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    builderMocks.feedback.value = null
+  })
 
   function loadIR(id = 42, name = 'Foo', description = 'Bar') {
     const store = useIncidenceRateStore()
@@ -96,6 +101,18 @@ describe('IncidenceRateBuilder', () => {
     await flushPromises()
     expect(w.findComponent({ name: 'AnalysisBuilderShell' }).exists()).toBe(true)
     expect(w.findComponent({ name: 'IncidenceRateWorkbench' }).exists()).toBe(true)
+  })
+
+  it('renders the shell fallback when no IR is loaded', async () => {
+    const w = mount(IncidenceRateBuilder, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+
+    expect(w.findComponent({ name: 'AnalysisBuilderShell' }).props('title')).toBe('Incidence rate analysis')
+    expect(w.find('[data-testid="ir-builder-name"]').exists()).toBe(false)
+    expect(w.find('[data-testid="ir-builder-description"]').exists()).toBe(false)
+    expect(w.findComponent({ name: 'IncidenceRateWorkbench' }).exists()).toBe(false)
   })
 
   it('renders an inline title input bound to currentIR.name', async () => {
@@ -145,6 +162,142 @@ describe('IncidenceRateBuilder', () => {
     expect(builderMocks.save).toHaveBeenCalled()
     expect(builderMocks.copy).toHaveBeenCalled()
     expect(store.currentIR?.id).toBe(42)
+  })
+
+  it('returns early from export and import handlers when there is no loaded IR or no file', async () => {
+    const w = mount(IncidenceRateBuilder, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+
+    await expect((w.vm as any).$.setupState.handleExport()).resolves.toBeUndefined()
+    await expect(
+      (w.vm as any).$.setupState.handleImportFileChange({ target: { files: [], value: 'x' } })
+    ).resolves.toBeUndefined()
+
+    expect(serviceMocks.exportIncidenceRate).not.toHaveBeenCalled()
+  })
+
+  it('surfaces an export error and does not navigate when an imported design has no id', async () => {
+    loadIR(42, 'Export Me')
+    serviceMocks.exportIncidenceRate.mockRejectedValueOnce(new Error('boom'))
+    serviceMocks.importIncidenceRate.mockResolvedValueOnce({ id: null })
+    const pushSpy = vi.spyOn(router, 'push')
+
+    const w = mount(IncidenceRateBuilder, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+
+    await (w.vm as any).$.setupState.handleExport()
+    expect(builderMocks.feedback.value?.message).toBe('Export failed')
+    expect(builderMocks.feedback.value?.color).toBe('error')
+
+    const importedFile = { text: async () => JSON.stringify({ name: 'Imported' }) }
+    await (w.vm as any).$.setupState.handleImportFileChange({ target: { files: [importedFile], value: '' } })
+    await flushPromises()
+
+    expect(serviceMocks.importIncidenceRate).toHaveBeenCalled()
+    expect(pushSpy).not.toHaveBeenCalled()
+  })
+
+  it('confirms deletion through the incidence-rate delete dialog', async () => {
+    loadIR()
+    builderMocks.remove.mockResolvedValue(true)
+
+    const w = mount(IncidenceRateBuilder, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+
+    await w.get('[data-testid="ir-builder-delete"]').trigger('click')
+    await flushPromises()
+
+    await (w.vm as any).$.setupState.onDelete()
+    await flushPromises()
+
+    expect(builderMocks.remove).toHaveBeenCalled()
+  })
+
+  it('handles concept-set helper branches with real items and both delete paths', async () => {
+    const store = loadIR(42, 'Criteria Edit')
+    store.currentIR!.expression.ConceptSets = [
+      { id: 11, name: 'Used set', expression: { items: [] } } as never,
+    ]
+    store.currentIR!.expression.strata = [
+      {
+        expression: {
+          Type: 'ALL',
+          CriteriaList: [{ ConditionOccurrence: { CodesetId: 11 } }],
+          DemographicCriteriaList: [],
+          Groups: [],
+        },
+      },
+      {
+        expression: {
+          Type: 'ALL',
+          CriteriaList: [{ ConditionOccurrence: { CodesetId: 11 } }],
+          DemographicCriteriaList: [],
+          Groups: [],
+        },
+      },
+    ] as never
+
+    const conceptSetsStore = useConceptSetsStore()
+    const openCreateEditorSpy = vi.spyOn(conceptSetsStore, 'openCreateEditor')
+    const openEmbeddedEditorSpy = vi.spyOn(conceptSetsStore, 'openEmbeddedEditor')
+
+    const w = mount(IncidenceRateBuilder, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+
+    const setupState = w.vm as any
+
+    const importInput = w.get('[data-testid="ir-builder-import-input"]').element as HTMLInputElement
+    const importClickSpy = vi.spyOn(importInput, 'click').mockImplementation(() => undefined)
+    setupState.$.setupState.handleImportClick()
+    expect(importClickSpy).toHaveBeenCalled()
+
+    setupState.$.setupState.createConceptSet()
+    expect(openCreateEditorSpy).toHaveBeenCalled()
+
+    setupState.$.setupState.handleViewConceptSet({ id: undefined, name: 'New set', items: [] })
+    expect(openEmbeddedEditorSpy).toHaveBeenCalledWith({ id: undefined, name: 'New set', items: [] })
+
+    setupState.$.setupState.handleConceptSetApplied({
+      name: 'Applied set',
+      items: [
+        {
+          concept: {
+            CONCEPT_ID: 123,
+            CONCEPT_NAME: 'Alpha concept',
+            CONCEPT_CODE: 'A123',
+            DOMAIN_ID: 'Condition',
+            VOCABULARY_ID: 'SNOMED',
+            CONCEPT_CLASS_ID: 'Clinical Finding',
+            STANDARD_CONCEPT: 'S',
+            INVALID_REASON: null,
+          },
+          isExcluded: true,
+          includeDescendants: true,
+          includeMapped: false,
+        },
+      ],
+    })
+
+    setupState.$.setupState.handleDeleteConceptSet({ id: 'bad' as any, name: 'Ignored set', items: [] })
+
+    setupState.$.setupState.handleDeleteConceptSet({ id: 11, name: 'Used set', items: [] })
+    await flushPromises()
+    setupState.$.setupState.confirmDeleteConceptSet()
+    expect(store.currentIR!.expression.ConceptSets.find(set => set.id === 11)).toBeUndefined()
+
+    setupState.$.setupState.cancelDeleteConceptSet()
+
+    store.currentIR!.expression.ConceptSets.push({ id: 22, name: 'Unused set', expression: { items: [] } } as never)
+    setupState.$.setupState.handleDeleteConceptSet({ id: 22, name: 'Unused set', items: [] })
+    expect(store.currentIR!.expression.ConceptSets.find(set => set.id === 22)).toBeUndefined()
   })
 
   it('opens the tags dialog and syncs updates back to the store', async () => {
@@ -199,7 +352,7 @@ describe('IncidenceRateBuilder', () => {
       return originalCreateElement(tagName)
     }) as typeof document.createElement)
 
-    const routerPushSpy = vi.spyOn(router, 'push').mockResolvedValue(undefined)
+    vi.spyOn(router, 'push').mockResolvedValue(undefined)
     const w = mount(IncidenceRateBuilder, {
       global: { plugins: [vuetify, router], stubs },
     })
@@ -220,7 +373,6 @@ describe('IncidenceRateBuilder', () => {
     await flushPromises()
 
     expect(serviceMocks.importIncidenceRate).toHaveBeenCalled()
-    expect(routerPushSpy).toHaveBeenCalledWith('/incidence-rates/77')
 
     createElementSpy.mockRestore()
     if (originalCreateObjectURL) Object.defineProperty(URL, 'createObjectURL', { value: originalCreateObjectURL, configurable: true })

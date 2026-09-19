@@ -316,7 +316,8 @@
     <ConceptSetsListDialog
       v-model="showConceptSetsDialog"
       :concept-sets="featureAnalysisConceptSets"
-      :show-delete-action="false"
+      :used-concept-sets="usedConceptSets"
+      @delete="handleDeleteConceptSet"
       @view="handleEditConceptSet"
     >
       <template #actions>
@@ -330,6 +331,31 @@
         </AtlasButton>
       </template>
     </ConceptSetsListDialog>
+
+    <AtlasDialog
+      v-model="showDeleteConceptSetDialog"
+      eyebrow="CONCEPT SET"
+      :title="t('components.featureAnalysisEditor.deleteConceptSetTitle', 'Delete concept set?').value"
+      max-width="480"
+      @close="cancelDeleteConceptSet"
+    >
+      {{ deleteConceptSetWarning }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="cancelDeleteConceptSet"
+        >
+          {{ t('common.cancel', 'Cancel').value }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          data-testid="feature-analysis-editor-delete-concept-set-confirm"
+          @click="confirmDeleteConceptSet"
+        >
+          {{ t('common.delete', 'Delete').value }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
     <EntityAccessDialog
       v-model="showAccessDialog"
@@ -428,6 +454,11 @@ import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue
 import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
 import { nextConceptSetId } from '@/utils/concept-set-id'
 import { convertAtlasItemToCirce } from '@/components/cohort-editor/atlas-concept-set'
+import {
+  findUsedFeatureAnalysisConceptSetIds,
+  countFeatureAnalysisConceptSetReferences as countFeatureAnalysisConceptSetReferencesInDesign,
+  unassignFeatureAnalysisConceptSetId,
+} from '@/components/feature-analysis/feature-analysis-concept-set-usage'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import ConceptSetsListDialog from '@/components/cohort/ConceptSetsListDialog.vue'
 
@@ -552,6 +583,7 @@ GROUP BY drug_concept_id, c.concept_name, stat.total_cnt`
 const saving = ref<boolean>(false)
 const showDeleteDialog = ref<boolean>(false)
 const showConceptSetsDialog = ref<boolean>(false)
+const showDeleteConceptSetDialog = ref<boolean>(false)
 const showAccessDialog = ref<boolean>(false)
 const showUnsavedDialog = ref<boolean>(false)
 const nameError = ref<string | null>(null)
@@ -610,6 +642,77 @@ function handleEditConceptSet(set: ConceptSetReference) {
     name: set.name,
     items: [...(set.items ?? [])] as AtlasConceptSetItem[],
   })
+}
+
+const usedConceptSets = computed<ConceptSetReference[]>(() => {
+  const current = draft.value
+  if (current.type !== 'CRITERIA_SET') return []
+
+  const usedIds = findUsedFeatureAnalysisConceptSetIds(current.design)
+  return featureAnalysisConceptSets.value.filter(conceptSet => typeof conceptSet.id === 'number' && usedIds.has(conceptSet.id))
+})
+
+const conceptSetPendingDelete = ref<ConceptSetReference | null>(null)
+const conceptSetPendingDeleteUsage = ref(0)
+
+function handleDeleteConceptSet(conceptSet: ConceptSetReference) {
+  if (typeof conceptSet.id !== 'number') return
+
+  const current = draft.value
+  if (current.type !== 'CRITERIA_SET') return
+
+  const usage = countFeatureAnalysisConceptSetReferencesInDesign(current.design, conceptSet.id)
+  if (usage === 0) {
+    deleteConceptSet(conceptSet)
+    return
+  }
+
+  conceptSetPendingDelete.value = conceptSet
+  conceptSetPendingDeleteUsage.value = usage
+  showDeleteConceptSetDialog.value = true
+}
+
+function confirmDeleteConceptSet() {
+  const conceptSet = conceptSetPendingDelete.value
+  showDeleteConceptSetDialog.value = false
+  conceptSetPendingDelete.value = null
+  if (conceptSet) deleteConceptSet(conceptSet)
+}
+
+function cancelDeleteConceptSet() {
+  showDeleteConceptSetDialog.value = false
+  conceptSetPendingDelete.value = null
+}
+
+const deleteConceptSetWarning = computed(() => {
+  const name = conceptSetPendingDelete.value?.name ?? ''
+  const count = conceptSetPendingDeleteUsage.value
+  const usage =
+    count === 1
+      ? t('components.featureAnalysisEditor.deleteConceptSetUsageOne', '1 criterion still uses it').value
+      : t('components.featureAnalysisEditor.deleteConceptSetUsageMany', '{count} criteria still use it', {
+        count,
+      }).value
+
+  return t(
+    'components.featureAnalysisEditor.deleteConceptSetWarning',
+    'Deleting "{name}" will clear it from those criteria. {usage}.',
+    { name, usage }
+  ).value
+})
+
+function deleteConceptSet(conceptSet: ConceptSetReference) {
+  const current = draft.value
+  if (current.type !== 'CRITERIA_SET') return
+
+  const idx = current.conceptSets.findIndex(set => set.id === conceptSet.id)
+  if (idx !== -1) {
+    current.conceptSets.splice(idx, 1)
+  }
+
+  if (typeof conceptSet.id === 'number') {
+    unassignFeatureAnalysisConceptSetId(current.design, conceptSet.id)
+  }
 }
 
 function handleConceptSetApplied(set: AtlasConceptSet) {

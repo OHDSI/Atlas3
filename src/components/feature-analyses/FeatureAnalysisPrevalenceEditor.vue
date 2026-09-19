@@ -57,16 +57,15 @@
         :group="row.expression"
         :concept-sets="conceptSetOptions"
         @select-concept-set="onSelectConceptSet"
-        @edit-concept-set="onSelectConceptSet"
+        @edit-concept-set="handleEditConceptSetFromTarget"
       />
     </div>
 
     <ConceptSetSelectionDialog
-      v-model="dialogOpen"
+      v-model="pickerOpen"
       :local-concept-sets="localConceptSets"
       @local-concept-set-selected="onLocalConceptSetSelected"
       @concept-set-selected="onConceptSetSelected"
-      @edit-concept-set="handleEditConceptSet"
       @create-new="handleCreateNewConceptSet"
     />
     <!-- Concept Set Editor Side Panel (for editing/creating concept sets) -->
@@ -98,6 +97,7 @@ import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useI18n } from '@/composables/useI18n'
 import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
 import { createObjectKeyGenerator } from '@/components/circe/criteria/criteria-editor-helper'
+import type { ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 import type { ConceptSet, ConceptSetItem as CirceConceptSetItem, CriteriaGroup as CriteriaGroupType } from '@/models/circe-types'
 import type { FeatureAnalysisAggregate, FeatureAnalysisCriteriaGroupItem } from '@/models/feature-analysis.types'
 import type { ConceptSetReference } from '@/models/cohort.types'
@@ -147,7 +147,7 @@ const conceptSetsStore = useConceptSetsStore()
 // convention CriteriaGroup.vue itself uses for its own `group` prop), so no
 // update:* emits are needed here.
 const { 
-  dialogOpen, 
+  pickerOpen, 
   conceptSetOptions, 
   onSelectConceptSet, 
   onLocalConceptSetSelected, 
@@ -165,6 +165,18 @@ const localConceptSets = computed<ConceptSetReference[]>(() =>
     .filter((cs): cs is ConceptSet & { id: number } => typeof cs.id === 'number')
     .map(cs => ({ id: cs.id, name: cs.name ?? '', items: cs.expression?.items ?? [] }))
 )
+
+function handleEditConceptSetFromTarget(target: ConceptSetSelectionTarget | undefined) {
+  const conceptSetId = target?.targetRef.value
+  if (conceptSetId === undefined || conceptSetId === null) return
+
+  const conceptSet = localConceptSets.value.find(cs => cs.id === conceptSetId)
+  if (!conceptSet) {
+    throw new Error(`Feature analysis concept set ${conceptSetId} was not found in localConceptSets`)
+  }
+
+  handleEditConceptSet(conceptSet)
+}
 
 watch(
   defaultAggregate,

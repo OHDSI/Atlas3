@@ -148,7 +148,7 @@
         :expression="expression"
         :concept-sets="conceptSetOptions"
         @select-concept-set="onSelectConceptSet"
-        @edit-concept-set="onSelectConceptSet"
+        @edit-concept-set="handleEditConceptSetFromTarget"
         @clear-concept-set="handleClearConceptSet"
       />
     </div>
@@ -317,6 +317,7 @@ import { getCohortDefinition } from '@/services/cohort-definition.service'
 import { getConceptSetById } from '@/services/concept-set.service'
 import type { CohortDefinition, ConceptSetReference } from '@/models/cohort.types'
 import type { Concept as SearchConcept, ConceptSetItem } from '@/models/concept-set.types'
+import type { ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 import ConceptSetSelectionDialog from './ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from './ConceptSearchDialog.vue'
 import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
@@ -456,7 +457,7 @@ const expressionConceptSets = computed<ConceptSetReference[]>(() =>
 )
 
 const {
-    dialogOpen: isConceptSetDialogOpen,
+  pickerOpen: isConceptSetDialogOpen,
     conceptSetOptions,
     onSelectConceptSet,
     onLocalConceptSetSelected,
@@ -1108,6 +1109,22 @@ function handleViewConceptSet(conceptSet: {
   items?: unknown[]
 }) {
   showConceptSetsDialog.value = false
+  handleEditConceptSet(conceptSet)
+}
+
+function handleEditConceptSetFromTarget(target: ConceptSetSelectionTarget | undefined) {
+  const conceptSetId = target?.targetRef.value
+  if (conceptSetId === undefined || conceptSetId === null) {
+    onSelectConceptSet(target)
+    return
+  }
+
+  const conceptSet = expressionConceptSets.value.find(cs => cs.id === conceptSetId)
+  if (!conceptSet) {
+    onSelectConceptSet(target)
+    return
+  }
+
   handleEditConceptSet(conceptSet)
 }
 

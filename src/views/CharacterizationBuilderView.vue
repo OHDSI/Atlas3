@@ -228,18 +228,48 @@
       :stat="exploreStat"
     />
 
-    <AtlasDialog
+    <ConceptSetsListDialog
       v-model="showConceptSetsDialog"
-      :eyebrow="t('cc.title', 'Characterization').value"
-      :title="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
-      :close-label="t('common.close', 'Close').value"
-      max-width="1200"
-      @close="showConceptSetsDialog = false"
+      :concept-sets="characterizationConceptSets"
+      :used-concept-sets="usedConceptSets"
+      @delete="handleDeleteConceptSet"
+      @view="handleViewConceptSet"
     >
-      <CharacterizationConceptSetsTab
-        :characterization="draft"
-        data-testid="char-builder-conceptsets-tab"
-      />
+      <template #actions>
+        <AtlasButton
+          variant="secondary"
+          icon="mdi-plus"
+          data-testid="char-builder-conceptset-create"
+          @click="createConceptSet()"
+        >
+          {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
+        </AtlasButton>
+      </template>
+    </ConceptSetsListDialog>
+
+    <AtlasDialog
+      v-model="showDeleteConceptSetDialog"
+      eyebrow="CONCEPT SET"
+      :title="t('components.featureAnalysisEditor.deleteConceptSetTitle', 'Delete concept set?').value"
+      max-width="480"
+      @close="cancelDeleteConceptSet"
+    >
+      {{ deleteConceptSetWarning }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="cancelDeleteConceptSet"
+        >
+          {{ t('common.cancel', 'Cancel').value }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          data-testid="char-builder-delete-concept-set-confirm"
+          @click="confirmDeleteConceptSet"
+        >
+          {{ t('common.delete', 'Delete').value }}
+        </AtlasButton>
+      </template>
     </AtlasDialog>
 
     <AtlasDialog
@@ -264,6 +294,21 @@
         </p>
       </div>
     </AtlasDialog>
+
+    <ConceptSetEditor
+      v-if="conceptSetsStore.editorOpen"
+      :model-value="conceptSetsStore.editorOpen"
+      :concept-set="conceptSetsStore.currentSet"
+      embedded
+      @update:model-value="
+        value => {
+          if (!value) {
+            conceptSetsStore.closeEditor()
+          }
+        }
+      "
+      @apply="handleConceptSetApplied"
+    />
 
     <EntityAccessDialog
       v-model="showAccessDialog"
@@ -361,6 +406,7 @@ import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import { useI18n } from '@/composables/useI18n'
 import { useCharacterizationStore } from '@/stores/characterization'
+import { useConceptSetsStore } from '@/stores/concept-sets'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import { getCohorts } from '@/services/cohort-definition.service'
@@ -368,9 +414,10 @@ import { listFeatureAnalyses } from '@/services/feature-analysis.service'
 import { exportCharacterization, importCharacterization } from '@/services/characterization.service'
 import { logger } from '@/utils/logger'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
-import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
+import ConceptSetsListDialog from '@/components/cohort/ConceptSetsListDialog.vue'
+import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
@@ -382,6 +429,11 @@ import { validateCharacterization, countByLevel } from '@/utils/characterization
 import type { CharacterizationDefinition, PrevalenceStat } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
+import type { ConceptSetReference } from '@/models/cohort.types'
+import type { ConceptSet as CirceConceptSet, ConceptSetItem as CirceConceptSetItem, CriteriaGroup as CirceCriteriaGroup } from '@/models/circe-types'
+import type { ConceptSetItem as AtlasConceptSetItem } from '@/models/concept-set.types'
+import { convertAtlasItemToCirce, convertCirceItemToAtlas, nextConceptSetId } from '@/components/cohort-editor/atlas-concept-set'
+import { countCriteriaGroupConceptSetReferences, findUsedCriteriaGroupConceptSetIds, unassignCriteriaGroupConceptSetId } from '@/components/cohort-editor/criteria-concept-set-usage'
 
 const props = defineProps<{
   id?: string
@@ -390,6 +442,7 @@ const props = defineProps<{
 const router = useRouter()
 const { t, tv } = useI18n()
 const store = useCharacterizationStore()
+const conceptSetsStore = useConceptSetsStore()
 
 // ---------------------------------------------------------------------------
 // Local state
@@ -484,6 +537,25 @@ const validationBadge = computed<{ color: string; count: number } | null>(() => 
 
 const draftId = computed<number | null>(() => draft.value.id ?? null)
 
+const characterizationConceptSets = computed<ConceptSetReference[]>(() =>
+  (draft.value.strataConceptSets ?? []).map((set, index) => ({
+    id: set.id ?? index,
+    name: set.name ?? '',
+    items: ((set.expression?.items ?? []) as CirceConceptSetItem[]).map(convertCirceItemToAtlas),
+  }))
+)
+
+const usedConceptSets = computed<ConceptSetReference[]>(() => {
+  const usedIds = findUsedCriteriaGroupConceptSetIds(
+    (draft.value.stratas ?? []).map(stratum => stratum.criteria as CirceCriteriaGroup | undefined)
+  )
+  return characterizationConceptSets.value.filter(conceptSet => typeof conceptSet.id === 'number' && usedIds.has(conceptSet.id))
+})
+
+const conceptSetPendingDelete = ref<ConceptSetReference | null>(null)
+const conceptSetPendingDeleteUsage = ref(0)
+const showDeleteConceptSetDialog = ref<boolean>(false)
+
 // Permission gating: new characterizations need create:cohort-characterization;
 // existing ones need write access on the specific entity (ownership counts).
 const { hasPermission } = usePermissions()
@@ -537,6 +609,104 @@ function hydrateFrom(cc: CharacterizationDefinition | null) {
 
 function onDraftChange(next: CharacterizationDefinition) {
   draft.value = next
+  store.markDirty()
+}
+
+function createConceptSet() {
+  showConceptSetsDialog.value = false
+  conceptSetsStore.openCreateEditor()
+}
+
+function handleViewConceptSet(set: ConceptSetReference) {
+  showConceptSetsDialog.value = false
+  conceptSetsStore.openEmbeddedEditor({
+    id: set.id,
+    name: set.name,
+    items: (set.items ?? []) as AtlasConceptSetItem[],
+  })
+}
+
+function handleConceptSetApplied(set: { id?: number | string; name: string; items?: unknown[] }) {
+  const conceptSetItems = (set.items ?? []) as Array<AtlasConceptSetItem | CirceConceptSetItem>
+  const finalId = typeof set.id === 'number'
+    ? set.id
+    : nextConceptSetId((draft.value.strataConceptSets ?? []) as Array<Pick<CirceConceptSet, 'id'>>)
+
+  const updatedSet: CirceConceptSet = {
+    id: finalId,
+    name: set.name,
+    expression: { items: conceptSetItems.map(convertAtlasItemToCirce) },
+  }
+
+  const next = [...(draft.value.strataConceptSets ?? [])]
+  const existingIndex = next.findIndex(existing => existing.id === finalId)
+  if (existingIndex !== -1) next[existingIndex] = updatedSet
+  else next.push(updatedSet)
+
+  draft.value.strataConceptSets = next
+  conceptSetsStore.closeEditor()
+  showConceptSetsDialog.value = true
+}
+
+function handleDeleteConceptSet(conceptSet: ConceptSetReference) {
+  if (typeof conceptSet.id !== 'number') return
+
+  const usage = countCriteriaGroupConceptSetReferences(
+    (draft.value.stratas ?? []).map(stratum => stratum.criteria as CirceCriteriaGroup | undefined),
+    conceptSet.id,
+  )
+
+  if (usage === 0) {
+    deleteConceptSet(conceptSet)
+    return
+  }
+
+  conceptSetPendingDelete.value = conceptSet
+  conceptSetPendingDeleteUsage.value = usage
+  showDeleteConceptSetDialog.value = true
+}
+
+function confirmDeleteConceptSet() {
+  const conceptSet = conceptSetPendingDelete.value
+  showDeleteConceptSetDialog.value = false
+  conceptSetPendingDelete.value = null
+  if (conceptSet) deleteConceptSet(conceptSet)
+}
+
+function cancelDeleteConceptSet() {
+  showDeleteConceptSetDialog.value = false
+  conceptSetPendingDelete.value = null
+}
+
+const deleteConceptSetWarning = computed(() => {
+  const name = conceptSetPendingDelete.value?.name ?? ''
+  const count = conceptSetPendingDeleteUsage.value
+  const usage =
+    count === 1
+      ? t('components.featureAnalysisEditor.deleteConceptSetUsageOne', '1 criterion still uses it').value
+      : t('components.featureAnalysisEditor.deleteConceptSetUsageMany', '{count} criteria still use it', { count }).value
+
+  return t(
+    'components.featureAnalysisEditor.deleteConceptSetWarning',
+    'Deleting "{name}" will clear it from those criteria. {usage}.',
+    { name, usage },
+  ).value
+})
+
+function deleteConceptSet(conceptSet: ConceptSetReference) {
+  const conceptSetId = conceptSet.id
+  if (typeof conceptSetId !== 'number') return
+
+  const next = [...(draft.value.strataConceptSets ?? [])]
+  const idx = next.findIndex(cs => cs.id === conceptSetId)
+  if (idx !== -1) next.splice(idx, 1)
+  draft.value.strataConceptSets = next
+
+  unassignCriteriaGroupConceptSetId(
+    (draft.value.stratas ?? []).map(stratum => stratum.criteria as CirceCriteriaGroup | undefined),
+    conceptSetId,
+  )
+
   store.markDirty()
 }
 

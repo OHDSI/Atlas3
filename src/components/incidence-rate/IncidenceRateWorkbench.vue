@@ -199,9 +199,15 @@ const irConceptSets = computed<ConceptSet[]>(
 function onAddStratifyConceptSet(cs: ConceptSet) {
   if (!store.currentIR) return
   const sets = store.currentIR.expression.ConceptSets ?? []
-  if (!sets.some(s => s.id === cs.id)) {
-    store.currentIR.expression.ConceptSets = [...sets, cs]
+  const index = sets.findIndex(existing => existing.id === cs.id)
+  if (index !== -1) {
+    const next = [...sets]
+    next[index] = cs
+    store.currentIR.expression.ConceptSets = next
+    return
   }
+
+  store.currentIR.expression.ConceptSets = [...sets, cs]
 }
 
 const selectedExecutionId = computed<number | null>(() => resolveSelectedExecutionId(route.query?.run))

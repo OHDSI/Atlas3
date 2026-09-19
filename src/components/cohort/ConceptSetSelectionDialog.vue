@@ -1,209 +1,196 @@
 <template>
-  <Teleport to="body">
-    <v-navigation-drawer
-      :model-value="modelValue"
-      location="right"
-      temporary
-      :width="drawerWidth"
-      :z-index="CONCEPT_SET_PICKER_Z_INDEX"
-      @update:model-value="emit('update:modelValue', $event)"
+  <AtlasDialog
+    :model-value="modelValue"
+    :max-width="1200"
+    chromeless
+    @update:model-value="emit('update:modelValue', $event)"
+  >
+    <v-card
+      class="cs-picker"
+      rounded="lg"
     >
-      <div class="cs-picker">
-        <!-- Header — eyebrow + accent rule + clean title; matches
+      <!-- Header — eyebrow + accent rule + clean title; matches
              the modernised dialog pattern used elsewhere. -->
-        <header class="cs-picker__header">
-          <div class="cs-picker__title-block">
-            <div class="cs-picker__eyebrow-row">
-              <span class="text-eyebrow">{{ t('common.conceptSet', 'Concept set').value }}</span>
-              <span class="cs-picker__accent-rule" />
-            </div>
-            <h2 class="cs-picker__title">
-              {{ t('components.conceptSetBuilder.selectConceptSet', 'Select concept set').value }}
-            </h2>
+      <header class="cs-picker__header">
+        <div class="cs-picker__title-block">
+          <div class="cs-picker__eyebrow-row">
+            <span class="text-eyebrow">{{ t('common.conceptSet', 'Concept set').value }}</span>
+            <span class="cs-picker__accent-rule" />
           </div>
-          <AtlasIconButton
-            icon="mdi-close"
-            v-bind="{ ariaLabel: t('common.close', 'Close').value }"
-            variant="text"
-            size="sm"
-            @click="close"
-          />
-        </header>
+          <h2 class="cs-picker__title">
+            {{ t('components.conceptSetBuilder.selectConceptSet', 'Select concept set').value }}
+          </h2>
+        </div>
+        <AtlasIconButton
+          icon="mdi-close"
+          v-bind="{ ariaLabel: t('common.close', 'Close').value }"
+          variant="text"
+          size="sm"
+          @click="close"
+        />
+      </header>
 
-        <div class="cs-picker__body">
-          <!-- Create a new empty concept set in this definition (#111). -->
-          <div class="cs-picker__create-row">
-            <AtlasButton
-              icon="mdi-plus"
-              variant="secondary"
-              @click="onCreateNew"
-            >
-              {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
-            </AtlasButton>
-          </div>
+      <div class="cs-picker__body">
+        <!-- Create a new empty concept set in this definition (#111). -->
+        <div class="cs-picker__create-row">
+          <AtlasButton
+            icon="mdi-plus"
+            variant="secondary"
+            @click="onCreateNew"
+          >
+            {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
+          </AtlasButton>
+        </div>
 
-          <!-- In-definition (local) concept sets (#111). Selecting one reuses it
+        <!-- In-definition (local) concept sets (#111). Selecting one reuses it
                in place; importing from the repository below makes a fresh copy. -->
-          <section
-            v-if="selectableLocalSets.length > 0"
-            class="cs-picker__local"
-            data-testid="local-concept-sets"
-          >
-            <h3 class="cs-picker__section-title">
-              {{ t('components.conceptSetBuilder.inThisDefinition', 'In this definition').value }}
-            </h3>
-            <AtlasCard padding="none">
-              <button
-                v-for="set in selectableLocalSets"
-                :key="`local-${set.id}`"
-                type="button"
-                class="cs-picker__local-item"
-                data-testid="local-concept-set-item"
-                @click="onLocalSelect(set)"
-              >
-                <span class="cs-picker__name">{{ set.name }}</span>
-                <AtlasChip
-                  size="sm"
-                  tone="neutral"
-                  variant="outlined"
-                >
-                  {{ t('columns.id', 'ID').value }} {{ set.id }}
-                </AtlasChip>
-              </button>
-            </AtlasCard>
-          </section>
-
-          <h3
-            v-if="selectableLocalSets.length > 0"
-            class="cs-picker__section-title"
-          >
-            {{ t('components.conceptSetBuilder.importFromRepository', 'Import from repository').value }}
+        <section
+          v-if="selectableLocalSets.length > 0"
+          class="cs-picker__local"
+          data-testid="local-concept-sets"
+        >
+          <h3 class="cs-picker__section-title">
+            {{ t('components.conceptSetBuilder.inThisDefinition', 'In this definition').value }}
           </h3>
-
-          <!-- Toolbar: search + count chip + create-new button.
-               Mirrors the toolbar on the /concepts list page. -->
-          <div class="cs-picker__toolbar">
-            <AtlasTextField
-              v-model="searchTerm"
-              :placeholder="t('common.search', 'Search concept sets…').value"
-              prepend-icon="mdi-magnify"
-              clearable
-              variant="outlined"
-              hide-details
-              class="cs-picker__search"
-            />
-
-            <AtlasChip
-              v-if="!loading && filteredSets.length > 0"
-              size="sm"
-              tone="primary"
-              class="cs-picker__count"
+          <AtlasCard padding="none">
+            <button
+              v-for="set in selectableLocalSets"
+              :key="`local-${set.id}`"
+              type="button"
+              class="cs-picker__local-item"
+              data-testid="local-concept-set-item"
+              @click="onLocalSelect(set)"
             >
-              {{ countLabel }}
-            </AtlasChip>
-          </div>
+              <span class="cs-picker__name">{{ set.name }}</span>
+              <AtlasChip
+                size="sm"
+                tone="neutral"
+                variant="outlined"
+              >
+                {{ t('columns.id', 'ID').value }} {{ set.id }}
+              </AtlasChip>
+            </button>
+          </AtlasCard>
+        </section>
 
-          <!-- Loading -->
-          <AtlasProgressLinear
-            v-if="loading"
-            indeterminate
-            class="cs-picker__loading"
+        <h3
+          v-if="selectableLocalSets.length > 0"
+          class="cs-picker__section-title"
+        >
+          {{ t('components.conceptSetBuilder.importFromRepository', 'Import from repository').value }}
+        </h3>
+
+        <!-- Toolbar: search + count chip + create-new button.
+               Mirrors the toolbar on the /concepts list page. -->
+        <div class="cs-picker__toolbar">
+          <AtlasTextField
+            v-model="searchTerm"
+            :placeholder="t('common.search', 'Search concept sets…').value"
+            prepend-icon="mdi-magnify"
+            clearable
+            variant="outlined"
+            hide-details
+            class="cs-picker__search"
           />
 
-          <!-- Concept-set table — same visual treatment as
+          <AtlasChip
+            v-if="!loading && filteredSets.length > 0"
+            size="sm"
+            tone="primary"
+            class="cs-picker__count"
+          >
+            {{ countLabel }}
+          </AtlasChip>
+        </div>
+
+        <!-- Loading -->
+        <AtlasProgressLinear
+          v-if="loading"
+          indeterminate
+          class="cs-picker__loading"
+        />
+
+        <!-- Concept-set table — same visual treatment as
                /concepts: SurfaceCard, hover rows, click-to-select,
-               hover-only edit icon. -->
-          <AtlasCard
-            v-if="loading || filteredSets.length > 0"
-            padding="none"
+               no inline edit action. -->
+        <AtlasCard
+          v-if="loading || filteredSets.length > 0"
+          padding="none"
+        >
+          <AtlasDataTable
+            v-model:sort-by="sortBy"
+            :headers="headers"
+            :items="filteredSets"
+            :loading="loading"
+            :items-per-page="itemsPerPage"
+            :items-per-page-text="t('datatable.itemsPerPage', 'Rows per page:').value"
+            hover
+            class="cs-picker__table"
+            @click:row="onRowClick"
           >
-            <AtlasDataTable
-              v-model:sort-by="sortBy"
-              :headers="headers"
-              :items="filteredSets"
-              :loading="loading"
-              :items-per-page="itemsPerPage"
-              :items-per-page-text="t('datatable.itemsPerPage', 'Rows per page:').value"
-              hover
-              class="cs-picker__table"
-              @click:row="onRowClick"
-            >
-              <template #item.name="{ item }">
-                <span class="cs-picker__name">{{ item.name }}</span>
-              </template>
+            <template #item.name="{ item }">
+              <span class="cs-picker__name">{{ item.name }}</span>
+            </template>
 
-              <template #item.createdDate="{ item }">
-                {{ formatDate(item.createdDate) }}
-              </template>
+            <template #item.createdDate="{ item }">
+              {{ formatDate(item.createdDate) }}
+            </template>
 
-              <template #item.modifiedDate="{ item }">
-                {{ formatDate(item.modifiedDate) }}
-              </template>
+            <template #item.modifiedDate="{ item }">
+              {{ formatDate(item.modifiedDate) }}
+            </template>
 
-              <template #item.actions="{ item }">
-                <div class="cs-picker__actions">
-                  <AtlasIconButton
-                    icon="mdi-pencil-outline"
-                    v-bind="{ ariaLabel: t('common.edit', 'Edit').value }"
-                    variant="text"
-                    size="sm"
-                    @click.stop="onEditClick(item)"
-                  />
-                </div>
-              </template>
+            <template #loading>
+              <AtlasSkeleton
+                v-for="i in 5"
+                :key="i"
+                type="table-row"
+                class="mx-2"
+              />
+            </template>
+          </AtlasDataTable>
+        </AtlasCard>
 
-              <template #loading>
-                <AtlasSkeleton
-                  v-for="i in 5"
-                  :key="i"
-                  type="table-row"
-                  class="mx-2"
-                />
-              </template>
-            </AtlasDataTable>
-          </AtlasCard>
-
-          <!-- Empty / filtered-empty state -->
-          <div
+        <!-- Empty / filtered-empty state -->
+        <div
+          v-else
+          class="cs-picker__empty"
+        >
+          <AtlasIcon
+            :icon="searchTerm ? 'mdi-filter-off-outline' : 'mdi-bookmark-outline'"
+            size="36"
+            class="cs-picker__empty-icon"
+          />
+          <p class="cs-picker__empty-text">
+            {{
+              searchTerm
+                ? t('search.noResultsFoundFor', 'No concept sets match your search.').value
+                : t(
+                  'cohortDefinitions.noConceptSets',
+                  'No concept sets yet — create one to get started.'
+                ).value
+            }}
+          </p>
+          <AtlasButton
+            v-if="!searchTerm"
+            icon="mdi-plus"
+            @click="onCreateNew"
+          >
+            {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
+          </AtlasButton>
+          <AtlasButton
             v-else
-            class="cs-picker__empty"
+            size="sm"
+            variant="secondary"
+            icon="mdi-close"
+            @click="searchTerm = ''"
           >
-            <AtlasIcon
-              :icon="searchTerm ? 'mdi-filter-off-outline' : 'mdi-bookmark-outline'"
-              size="36"
-              class="cs-picker__empty-icon"
-            />
-            <p class="cs-picker__empty-text">
-              {{
-                searchTerm
-                  ? t('search.noResultsFoundFor', 'No concept sets match your search.').value
-                  : t(
-                    'cohortDefinitions.noConceptSets',
-                    'No concept sets yet — create one to get started.'
-                  ).value
-              }}
-            </p>
-            <AtlasButton
-              v-if="!searchTerm"
-              icon="mdi-plus"
-              @click="onCreateNew"
-            >
-              {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
-            </AtlasButton>
-            <AtlasButton
-              v-else
-              size="sm"
-              variant="secondary"
-              icon="mdi-close"
-              @click="searchTerm = ''"
-            >
-              {{ t('common.clearSearch', 'Clear search').value }}
-            </AtlasButton>
-          </div>
+            {{ t('common.clearSearch', 'Clear search').value }}
+          </AtlasButton>
         </div>
       </div>
-    </v-navigation-drawer>
-  </Teleport>
+    </v-card>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
@@ -212,7 +199,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import type { ConceptSetReference } from '@/models/cohort.types'
-import { AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasProgressLinear, AtlasSkeleton, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasProgressLinear, AtlasSkeleton, AtlasTextField } from '@/components/ui'
 import { formatDate } from '@/utils/date-format'
 import { hasNumericConceptSetId } from '@/utils/concept-set-id'
 import { matchesTerms } from '@/utils/list-filters'
@@ -237,7 +224,6 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   'local-concept-set-selected': [conceptSet: ConceptSetReference]
   'concept-set-selected': [conceptSet: ConceptSetListItem]
-  'edit-concept-set': [conceptSet: ConceptSetListItem]
   'create-new': []
 }>()
 
@@ -246,16 +232,6 @@ const searchTerm = ref('')
 const loading = computed(() => conceptSetsStore.loading)
 const itemsPerPage = ref(25)
 const sortBy = ref([{ key: 'modifiedDate', order: 'desc' as const }])
-
-// Match the editor's drawer width behaviour.
-const drawerWidth = computed(() => window.innerWidth - 100)
-
-// This picker is often opened from inside another modal (Strata editor,
-// Characterization criteria editor, etc). Vuetify gives v-navigation-drawer
-// a much lower default stacking tier than v-dialog, so without an explicit
-// z-index above the dialog tier this drawer renders behind its parent
-// dialog instead of on top of it (#339).
-const CONCEPT_SET_PICKER_Z_INDEX = 2500
 
 const filteredSets = computed(() => {
   const sets = conceptSetsStore.conceptSets
@@ -318,10 +294,6 @@ function onRowClick(_event: Event, payload: { item: ConceptSetListItem }) {
   }
 }
 
-function onEditClick(conceptSet: ConceptSetListItem) {
-  emit('edit-concept-set', conceptSet)
-}
-
 function onCreateNew() {
   emit('create-new')
 }
@@ -335,6 +307,7 @@ function close() {
 <style scoped>
 .cs-picker {
   height: 100%;
+  max-height: calc(100vh - 48px);
   display: flex;
   flex-direction: column;
   background: rgb(var(--v-theme-surface));

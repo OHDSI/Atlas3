@@ -45,15 +45,21 @@ vi.mock('@/utils/logger', () => ({
 // Mock datasource service
 const mockListDataSources = vi.fn()
 const mockGetDashboardReport = vi.fn()
+const mockGetDataDensityReport = vi.fn()
+const mockGetPersonReport = vi.fn()
+const mockGetObservationPeriodReport = vi.fn()
+const mockGetDeathReport = vi.fn()
+const mockGetClinicalDomainReport = vi.fn()
 
 vi.mock('@/services/datasource.service', () => ({
   listDataSources: () => mockListDataSources(),
   getDashboardReport: (sourceKey: string) => mockGetDashboardReport(sourceKey),
-  getDataDensityReport: vi.fn(),
-  getPersonReport: vi.fn(),
-  getObservationPeriodReport: vi.fn(),
-  getDeathReport: vi.fn(),
-  getClinicalDomainReport: vi.fn(),
+  getDataDensityReport: (sourceKey: string) => mockGetDataDensityReport(sourceKey),
+  getPersonReport: (sourceKey: string) => mockGetPersonReport(sourceKey),
+  getObservationPeriodReport: (sourceKey: string) => mockGetObservationPeriodReport(sourceKey),
+  getDeathReport: (sourceKey: string) => mockGetDeathReport(sourceKey),
+  getClinicalDomainReport: (sourceKey: string, reportType: string) =>
+    mockGetClinicalDomainReport(sourceKey, reportType),
 }))
 
 // Mock child components
@@ -160,6 +166,12 @@ describe('DataSourcesView', () => {
     vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
     mockRoute.params = {}
     mockListDataSources.mockResolvedValue([])
+    mockGetDashboardReport.mockReset()
+    mockGetDataDensityReport.mockReset()
+    mockGetPersonReport.mockReset()
+    mockGetObservationPeriodReport.mockReset()
+    mockGetDeathReport.mockReset()
+    mockGetClinicalDomainReport.mockReset()
   })
 
   afterEach(() => {
@@ -364,6 +376,61 @@ describe('DataSourcesView', () => {
       await flushPromises()
       expect(store.currentReport?.type).toBe('dashboard')
       expect(wrapper.findComponent({ name: 'DashboardReport' }).exists()).toBe(true)
+    })
+
+    it.each([
+      ['datadensity', 'DataDensityReport', mockGetDataDensityReport],
+      ['person', 'PersonReport', mockGetPersonReport],
+      ['observationPeriod', 'ObservationPeriodReport', mockGetObservationPeriodReport],
+      ['death', 'DeathReport', mockGetDeathReport],
+    ] as const)('should render %s when report data is available', async (reportType, componentName, serviceMock) => {
+      const mockSource = createMockDataSource({ sourceKey: 'TEST', sourceId: 1 })
+      const payload = { summary: { sourceName: 'Test' } }
+      mockListDataSources.mockResolvedValue([mockSource])
+      serviceMock.mockResolvedValue(payload)
+
+      wrapper = mountComponent()
+      await flushPromises()
+
+      store.selectedSourceId = mockSource.sourceId
+      await store.selectReportType(reportType as never)
+      await flushPromises()
+
+      expect(wrapper.findComponent({ name: componentName }).exists()).toBe(true)
+      expect(store.currentReport?.type).toBe(reportType)
+    })
+
+    it('should render ClinicalDomainReport for clinical report types', async () => {
+      const mockSource = createMockDataSource({ sourceKey: 'TEST', sourceId: 1 })
+      mockListDataSources.mockResolvedValue([mockSource])
+      mockGetClinicalDomainReport.mockResolvedValue({ prevalenceData: [] })
+
+      wrapper = mountComponent()
+      await flushPromises()
+
+      store.selectedSourceId = mockSource.sourceId
+      await store.selectReportType('visit')
+      await flushPromises()
+
+      expect(mockGetClinicalDomainReport).toHaveBeenCalledWith('TEST', 'visit')
+      expect(wrapper.findComponent({ name: 'ClinicalDomainReport' }).exists()).toBe(true)
+      expect(store.currentReport?.type).toBe('clinical')
+    })
+
+    it('should show the unimplemented-report empty state for unknown report types', async () => {
+      const mockSource = createMockDataSource({ sourceKey: 'TEST', sourceId: 1 })
+      mockListDataSources.mockResolvedValue([mockSource])
+
+      wrapper = mountComponent()
+      await flushPromises()
+
+      store.selectedSourceId = mockSource.sourceId
+      store.selectedReportType = 'plugin:missing:report'
+      await wrapper.vm.$nextTick()
+
+      const empty = wrapper.find('.datasources-view__empty')
+      expect(empty.exists()).toBe(true)
+      expect(empty.text()).toContain('not yet implemented')
     })
   })
 

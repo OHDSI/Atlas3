@@ -5,7 +5,11 @@ import { setActivePinia, createPinia } from 'pinia'
 import { vuetify, pristinePinia } from './_test-helpers'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
-import { generateIncidenceRate, cancelIncidenceRateGeneration } from '@/services/incidence-rate.service'
+import { generateIncidenceRate, cancelIncidenceRateGeneration, getIncidenceRateReport } from '@/services/incidence-rate.service'
+
+const { mockBuildCsvExport } = vi.hoisted(() => ({
+  mockBuildCsvExport: vi.fn(),
+}))
 
 const mockGenerate = vi.mocked(generateIncidenceRate)
 const mockCancel = vi.mocked(cancelIncidenceRateGeneration)
@@ -19,6 +23,14 @@ vi.mock('@/services/incidence-rate.service', () => ({
   }),
   cancelIncidenceRateGeneration: vi.fn().mockResolvedValue({ success: true }),
 }))
+
+vi.mock('@/components/incidence-rate/incidence-rate-workbench-state', async importOriginal => {
+  const actual = await importOriginal<typeof import('@/components/incidence-rate/incidence-rate-workbench-state')>()
+  return {
+    ...actual,
+    buildCsvExport: mockBuildCsvExport,
+  }
+})
 
 
 vi.mock('@/stores/datasources', () => ({
@@ -48,6 +60,7 @@ describe('IncidenceRateWorkbench', () => {
   beforeEach(() => {
     pristinePinia()
     vi.clearAllMocks()
+    vi.mocked(getIncidenceRateReport).mockResolvedValue({ success: true, data: null })
   })
 
   function loadedStore() {
@@ -62,6 +75,7 @@ describe('IncidenceRateWorkbench', () => {
       global: { plugins: [vuetify, router], stubs },
     })
     expect(w.find('[data-testid="ir-workbench"]').exists()).toBe(true)
+    expect(w.findComponent({ name: 'IncidenceRateEmptyState' }).exists()).toBe(true)
   })
 
   it('renders all three lanes when an IR is loaded', async () => {
@@ -214,6 +228,35 @@ describe('IncidenceRateWorkbench', () => {
     expect(replaceSpy).toHaveBeenCalledWith({ query: { run: '11' } })
   })
 
+  it('auto-selects the first target/outcome when the design already has them', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = loadedStore()
+
+    store.currentIR!.expression.targetIds = [11, 12]
+    store.currentIR!.expression.outcomeIds = [21, 22]
+
+    const setSelectedTargetOutcomeSpy = vi.spyOn(store, 'setSelectedTargetOutcome')
+
+    const r = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: { template: '<div/>' } }],
+    })
+
+    mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, r, pinia], stubs },
+    })
+    await flushPromises()
+
+    store.setExecutionInfo('CCAE', {
+      executionInfo: { id: { analysisId: 42, sourceId: 7 }, status: 'COMPLETED', startTime: 100 },
+      summaryList: [],
+    })
+    await flushPromises()
+
+    expect(setSelectedTargetOutcomeSpy).toHaveBeenCalledWith(11, 21)
+  })
+
   it('leaves no run selected when the design has no generations', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
@@ -251,6 +294,7 @@ describe('IncidenceRateWorkbench', () => {
 
     expect(addSpy).toHaveBeenCalled()
     expect(w.find('[data-testid="ir-workbench-rail"]').exists()).toBe(true)
+    expect(w.findComponent({ name: 'IncidenceRateStratifyInspector' }).props('modelValue')).toBe(true)
   })
 
   it('routes history selections back to the run query', async () => {
@@ -263,5 +307,73 @@ describe('IncidenceRateWorkbench', () => {
     await flushPromises()
     await w.findComponent({ name: 'PreviousRunsDialog' }).vm.$emit('select', '7')
     expect(pushSpy).toHaveBeenCalledWith({ query: expect.objectContaining({ run: '7' }) })
+  })
+
+  it('passes available targets/outcomes into the toolbar and exports csv', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = loadedStore()
+    store.currentIR!.expression.targetIds = [11, 12]
+    store.currentIR!.expression.outcomeIds = [21]
+    store.setSelectedTargetOutcome(11, 21)
+    store.cohortNameById.set(11, 'Target A')
+    store.cohortNameById.set(12, 'Target B')
+    store.cohortNameById.set(21, 'Outcome A')
+    vi.mocked(getIncidenceRateReport).mockResolvedValueOnce({
+      success: true,
+      data: {
+      summary: { totalPersons: 10, cases: 2, timeAtRisk: 30 },
+      stratifyStats: [{ name: 'Row 1', totalPersons: 10, cases: 2, timeAtRisk: 30 }],
+      treemapData: '{}',
+      },
+    })
+
+    const r = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: { template: '<div/>' } }],
+    })
+
+    const w = mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, r, pinia], stubs },
+    })
+    await flushPromises()
+    await flushPromises()
+
+    const toolbar = w.findComponent({ name: 'IncidenceRateCanvasToolbar' })
+    expect(toolbar.props('availableTargets')).toEqual([
+      { id: 11, name: 'Target A' },
+      { id: 12, name: 'Target B' },
+    ])
+    expect(toolbar.props('availableOutcomes')).toEqual([{ id: 21, name: 'Outcome A' }])
+
+    await toolbar.vm.$emit('export', 'csv')
+
+    expect(mockBuildCsvExport).toHaveBeenCalledWith({
+      selectedExecutionId: null,
+      report: null,
+    })
+  })
+
+  it('ignores non-csv export formats and invalid run selections', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    loadedStore()
+
+    const r = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: { template: '<div/>' } }],
+    })
+    const replaceSpy = vi.spyOn(r, 'replace')
+
+    const w = mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, r, pinia], stubs },
+    })
+    await flushPromises()
+
+    await w.findComponent({ name: 'IncidenceRateCanvasToolbar' }).vm.$emit('export', 'svg')
+    await w.findComponent({ name: 'DataSourceRunTable' }).vm.$emit('select-result', 'not-a-number')
+
+    expect(mockBuildCsvExport).not.toHaveBeenCalled()
+    expect(replaceSpy).not.toHaveBeenCalled()
   })
 })

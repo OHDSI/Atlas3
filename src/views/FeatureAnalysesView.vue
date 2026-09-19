@@ -22,7 +22,11 @@
     </template>
 
     <template #primary-action>
-      <AtlasMenu location="bottom end">
+      <AtlasMenu
+        location="bottom end"
+        :close-on-content-click="true"
+        offset="8"
+      >
         <template #activator="{ props: menuProps }">
           <AtlasButton
             icon="mdi-plus"
@@ -35,32 +39,28 @@
             {{ t('home.newEntityNames.featureAnalysis', 'New feature analysis') }}
           </AtlasButton>
         </template>
-        <AtlasList>
-          <AtlasListItem
-            data-testid="feature-analyses-create-prevalence"
-            @click="handleCreate('CRITERIA_SET', 'PREVALENCE')"
-          >
-            <v-list-item-title>
-              {{ t('featureAnalyses.create.prevalence', 'Prevalence Criteria') }}
-            </v-list-item-title>
-          </AtlasListItem>
-          <AtlasListItem
-            data-testid="feature-analyses-create-distribution"
-            @click="handleCreate('CRITERIA_SET', 'DISTRIBUTION')"
-          >
-            <v-list-item-title>
-              {{ t('featureAnalyses.create.distribution', 'Distribution Criteria') }}
-            </v-list-item-title>
-          </AtlasListItem>
-          <AtlasListItem
-            data-testid="feature-analyses-create-custom"
-            @click="handleCreate('CUSTOM_FE')"
-          >
-            <v-list-item-title>
-              {{ t('featureAnalyses.create.custom', 'Custom SQL') }}
-            </v-list-item-title>
-          </AtlasListItem>
-        </AtlasList>
+        <AtlasCard
+          padding="none"
+          class="feature-analyses-create-menu"
+        >
+          <AtlasList>
+            <AtlasListItem
+              data-testid="feature-analyses-create-prevalence"
+              :title="t('featureAnalyses.create.prevalence', 'Prevalence Criteria').value"
+              @click="handleCreate('CRITERIA_SET', 'PREVALENCE')"
+            />
+            <AtlasListItem
+              data-testid="feature-analyses-create-distribution"
+              :title="t('featureAnalyses.create.distribution', 'Distribution Criteria').value"
+              @click="handleCreate('CRITERIA_SET', 'DISTRIBUTION')"
+            />
+            <AtlasListItem
+              data-testid="feature-analyses-create-custom"
+              :title="t('featureAnalyses.create.custom', 'Custom SQL').value"
+              @click="handleCreate('CUSTOM_FE')"
+            />
+          </AtlasList>
+        </AtlasCard>
       </AtlasMenu>
     </template>
 
@@ -144,7 +144,16 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasChip, AtlasDialog, AtlasFacetFilterBar, AtlasMenu } from '@/components/ui'
+import {
+  AtlasButton,
+  AtlasCard,
+  AtlasChip,
+  AtlasDialog,
+  AtlasFacetFilterBar,
+  AtlasList,
+  AtlasListItem,
+  AtlasMenu,
+} from '@/components/ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -326,12 +335,20 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.feature-analyses-create-menu {
+  background-color: rgb(var(--v-theme-surface));
+  border-radius: var(--atlas-radius-lg);
+  box-shadow: var(--atlas-elevation-ambient), var(--atlas-elevation-diffuse);
+  overflow: hidden;
+}
+
 .feature-analyses-view__search {
-  /* Sized for the facet bar, not the single search box it replaced: the bar
-     carries a text field plus six facet menus and wraps rather than crushing
-     them. */
-  flex: 1 1 100%;
+  /* Sits in AnalysisListLayout's #actions slot; the layout's own
+     AtlasSpacer pushes the #primary-action button to the right of this
+     row instead of wrapping it below (#264). */
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 640px;
 }
 
 .feature-analyses-view__range {

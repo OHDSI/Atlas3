@@ -93,50 +93,105 @@
       </div>
     </div>
 
-    <AtlasDialog
-      v-model="dialogOpen"
-      :eyebrow="t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value"
-      :title="dialogTitle"
-      :close-label="t('common.close', 'Close').value"
-      max-width="1100"
-      persistent
-      @close="onDialogClose"
+    <v-navigation-drawer
+      v-if="drawerOpen"
+      v-model="drawerOpen"
+      class="strata-editor__drawer"
+      location="right"
+      temporary
+      :width="drawerWidth"
+      :scrim="!conceptSetsStore.editorOpen"
+      @update:model-value="value => { if (!value) closeDrawer() }"
     >
-      <CriteriaGroup
-        v-if="dialogOpen"
-        :group="editingGroup"
-        :concept-sets="conceptSetOptions"
-        @select-concept-set="onSelectConceptSet"
-        @edit-concept-set="onSelectConceptSet"
-      />
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          size="sm"
-          @click="onDialogClose"
+      <div class="strata-editor__drawer-shell">
+        <aside
+          class="strata-editor__drawer-rail"
+          aria-hidden="true"
         >
-          {{ t('common.close', 'Close').value }}
-        </AtlasButton>
-      </template>
-    </AtlasDialog>
+          <div class="strata-editor__drawer-rail-text">
+            {{ t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value }}
+          </div>
+        </aside>
+
+        <div class="strata-editor__drawer-body">
+          <header class="strata-editor__drawer-header">
+            <div>
+              <p class="strata-editor__drawer-eyebrow">
+                {{ t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value }}
+              </p>
+              <h3 class="strata-editor__drawer-title">
+                {{ drawerTitle }}
+              </h3>
+            </div>
+
+            <AtlasButton
+              variant="ghost"
+              size="sm"
+              @click="closeDrawer"
+            >
+              {{ t('common.close', 'Close').value }}
+            </AtlasButton>
+          </header>
+
+          <div class="strata-editor__drawer-content">
+            <CriteriaGroup
+              v-if="drawerOpen"
+              :group="editingGroup"
+              :concept-sets="conceptSetOptions"
+              @select-concept-set="onSelectConceptSet"
+              @edit-concept-set="handleCriteriaEditConceptSet"
+            />
+          </div>
+
+          <footer class="strata-editor__drawer-actions">
+            <AtlasButton
+              variant="ghost"
+              size="sm"
+              @click="closeDrawer"
+            >
+              {{ t('common.close', 'Close').value }}
+            </AtlasButton>
+          </footer>
+        </div>
+      </div>
+    </v-navigation-drawer>
 
     <ConceptSetSelectionDialog
-      v-model="csDialogOpen"
+      v-model="csPickerOpen"
+      :local-concept-sets="localConceptSets"
+      @local-concept-set-selected="onLocalConceptSetSelected"
       @concept-set-selected="onConceptSetSelected"
+      @create-new="handleCreateNewConceptSet"
+    />
+
+    <ConceptSetEditor
+      v-if="conceptSetsStore.editorOpen"
+      :model-value="conceptSetsStore.editorOpen"
+      :concept-set="conceptSetsStore.currentSet"
+      embedded
+      @update:model-value="onConceptSetEditorVisibilityChange"
+      @apply="handleConceptSetApplied"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
 import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
-import { AtlasButton, AtlasChip, AtlasDialog, AtlasIconButton, AtlasSwitch, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasIconButton, AtlasSwitch, AtlasTextField } from '@/components/ui'
+import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
+import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { Stratum, CriteriaGroup as CriteriaGroupType } from '@/models/characterization.types'
 import type { ConceptSet } from '@/models/circe-types'
+import type { ConceptSetItem as AtlasConceptSetItem } from '@/models/concept-set.types'
+import { convertAtlasItemToCirce, convertCirceItemToAtlas } from '@/components/cohort-editor/atlas-concept-set'
+import { nextConceptSetId } from '@/utils/concept-set-id'
+import type { ConceptSetReference } from '@/models/cohort.types'
+import type { ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 
 const props = defineProps<{
   modelValue: Stratum[]
@@ -151,11 +206,26 @@ const emit = defineEmits<{
 }>()
 
 const { t, tv } = useI18n()
+const conceptSetsStore = useConceptSetsStore()
 
-// ── Dialog state ──────────────────────────────────────────────────────────
+// ── Drawer state ──────────────────────────────────────────────────────────
 
-const dialogOpen = ref(false)
+const drawerOpen = ref(false)
 const editingStratumId = ref<string | null>(null)
+const drawerWidth = ref<number>(0)
+
+function updateDrawerWidth() {
+  drawerWidth.value = Math.max(500, Math.floor(window.innerWidth * 0.95))
+}
+
+onMounted(() => {
+  updateDrawerWidth()
+  window.addEventListener('resize', updateDrawerWidth)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateDrawerWidth)
+})
 
 // Scratch object mutated in-place by CriteriaGroup.vue while the dialog is open.
 const editingGroup = ref<CriteriaGroupType>({})
@@ -165,7 +235,7 @@ const dialogStratum = computed<Stratum | null>(() => {
   return props.modelValue.find(s => s.id === editingStratumId.value) ?? null
 })
 
-const dialogTitle = computed<string>(() => {
+const drawerTitle = computed<string>(() => {
   const stratum = dialogStratum.value
   if (!stratum) return ''
   return stratum.name.trim()
@@ -174,14 +244,28 @@ const dialogTitle = computed<string>(() => {
 
 // ── Concept-set picker ────────────────────────────────────────────────────
 
-const { dialogOpen: csDialogOpen, conceptSetOptions, onSelectConceptSet, onConceptSetSelected } =
-  useCirceConceptSetPicker({
-    getConceptSets: () => props.strataConceptSets ?? [],
-    addConceptSet: (cs) => {
-      const next = [...(props.strataConceptSets ?? []), cs]
-      emit('update:strataConceptSets', next)
-    },
-  })
+const {
+  pickerOpen: csPickerOpen,
+  conceptSetOptions,
+  onSelectConceptSet,
+  onLocalConceptSetSelected,
+  onConceptSetSelected,
+  hideSelectionDialog,
+  cancelSelection,
+  resolveSelection,
+} = useCirceConceptSetPicker({
+  getConceptSets: () => props.strataConceptSets ?? [],
+  addConceptSet: (cs) => {
+    const next = [...(props.strataConceptSets ?? []), cs]
+    emit('update:strataConceptSets', next)
+  },
+})
+
+const localConceptSets = computed<ConceptSetReference[]>(() =>
+  (props.strataConceptSets ?? [])
+    .filter((cs): cs is ConceptSet & { id: number } => typeof cs.id === 'number')
+    .map(cs => ({ id: cs.id, name: cs.name ?? '', items: cs.expression?.items ?? [] }))
+)
 
 // ── Dialog helpers ────────────────────────────────────────────────────────
 
@@ -192,10 +276,10 @@ function openCriteriaDialog(id: string) {
   // until the dialog is closed and changes are emitted to the parent.
   editingGroup.value = JSON.parse(JSON.stringify(existing)) as CriteriaGroupType
   editingStratumId.value = id
-  dialogOpen.value = true
+  drawerOpen.value = true
 }
 
-function onDialogClose() {
+function closeDrawer() {
   const id = editingStratumId.value
   if (id) {
     const next = props.modelValue.map(s =>
@@ -203,8 +287,66 @@ function onDialogClose() {
     )
     emit('update:modelValue', next)
   }
-  dialogOpen.value = false
+  drawerOpen.value = false
   editingStratumId.value = null
+}
+
+function onConceptSetEditorVisibilityChange(value: boolean) {
+  if (!value) {
+    conceptSetsStore.closeEditor()
+    cancelSelection()
+  }
+}
+
+function handleCreateNewConceptSet() {
+  hideSelectionDialog()
+  conceptSetsStore.openCreateEditor()
+}
+
+function handleCriteriaEditConceptSet(target: ConceptSetSelectionTarget | undefined) {
+  const conceptSetId = target?.targetRef.value
+  if (conceptSetId === undefined || conceptSetId === null) return
+
+  const conceptSet = (props.strataConceptSets ?? []).find(cs => cs.id === conceptSetId)
+  if (!conceptSet) {
+    throw new Error(`Characterization concept set ${conceptSetId} was not found in strataConceptSets`)
+  }
+
+  conceptSetsStore.openEmbeddedEditor({
+    id: conceptSet.id!,
+    name: conceptSet.name ?? '',
+    items: (conceptSet.expression?.items ?? []).map(convertCirceItemToAtlas) as unknown as AtlasConceptSetItem[],
+  })
+}
+
+function handleConceptSetApplied(set: { id?: number | string; name: string; items?: unknown[] }) {
+  const items = JSON.parse(JSON.stringify(set.items ?? [])) as AtlasConceptSetItem[]
+  const circeItems = items.map(convertAtlasItemToCirce)
+  const existingSets = (props.strataConceptSets ?? []).filter(
+    (cs): cs is ConceptSet & { id: number } => typeof cs.id === 'number',
+  )
+  const finalId = set.id === undefined || set.id === null
+    ? nextConceptSetId(existingSets)
+    : Number(set.id)
+
+  const conceptSet: ConceptSet = {
+    id: finalId,
+    name: set.name,
+    expression: { items: circeItems },
+  }
+
+  const next = props.strataConceptSets ?? []
+  const existingIdx = next.findIndex(cs => cs.id === conceptSet.id)
+  if (existingIdx !== -1) {
+    next[existingIdx] = conceptSet
+  } else {
+    next.push(conceptSet)
+  }
+
+  emit('update:strataConceptSets', next)
+
+  conceptSetsStore.closeEditor()
+  resolveSelection(finalId)
 }
 
 // ── Stratum list helpers ──────────────────────────────────────────────────
@@ -346,4 +488,77 @@ function removeStratum(index: number) {
 }
 
 .strata-editor__criteria-chip { font-size: 11px; }
+
+.strata-editor__drawer-shell {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  background: rgb(var(--v-theme-surface));
+}
+
+.strata-editor__drawer-rail {
+  width: 52px;
+  flex: 0 0 52px;
+  border-right: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+  background: linear-gradient(180deg, rgba(var(--v-theme-primary), 0.12), rgba(var(--v-theme-primary), 0.04));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.strata-editor__drawer-rail-text {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--v-theme-on-surface), 0.72);
+}
+
+.strata-editor__drawer-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.strata-editor__drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.strata-editor__drawer-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+}
+
+.strata-editor__drawer-title {
+  margin: 2px 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.strata-editor__drawer-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.strata-editor__drawer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
 </style>

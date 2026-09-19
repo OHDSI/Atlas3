@@ -32,7 +32,7 @@ export function useCirceConceptSetPicker(opts: {
 }) {
   const conceptSetsStore = useConceptSetsStore()
 
-  const dialogOpen = ref(false)
+  const pickerOpen = ref(false)
   interface SelectionRequest {
     targetRef: Ref<number | null | undefined>
   }
@@ -49,16 +49,16 @@ export function useCirceConceptSetPicker(opts: {
 
   function openSelection(target: ConceptSetSelectionTarget | undefined) {
     activeRequest = target ? { targetRef: target.targetRef } : null
-    dialogOpen.value = !!target
+    pickerOpen.value = !!target
   }
 
   function hideSelectionDialog() {
-    dialogOpen.value = false
+    pickerOpen.value = false
   }
 
   function cancelSelection() {
     activeRequest = null
-    dialogOpen.value = false
+    pickerOpen.value = false
   }
 
   function resolveSelection(selectedId: number) {
@@ -66,7 +66,7 @@ export function useCirceConceptSetPicker(opts: {
     activeRequest.targetRef.value = selectedId
     opts.onConceptSetChanged?.()
     activeRequest = null
-    dialogOpen.value = false
+    pickerOpen.value = false
   }
 
   async function onConceptSetSelected(conceptSet: {
@@ -75,7 +75,7 @@ export function useCirceConceptSetPicker(opts: {
     items?: unknown[]
   }) {
     if (!activeRequest) {
-      dialogOpen.value = false
+      pickerOpen.value = false
       return
     }
 
@@ -158,7 +158,7 @@ export function useCirceConceptSetPicker(opts: {
   }
 
   return {
-    dialogOpen,
+    pickerOpen,
     conceptSetOptions,
     onSelectConceptSet: openSelection,
     onLocalConceptSetSelected,

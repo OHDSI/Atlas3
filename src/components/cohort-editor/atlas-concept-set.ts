@@ -22,7 +22,7 @@ export interface AtlasConceptSetItem {
   conceptId: number
   conceptName?: string
   conceptCode?: string
-  standardConcept?: string
+  standardConcept?: string | null
   invalidReason?: string | null
   standardConceptCaption: string
   invalidReasonCaption: string
@@ -66,6 +66,31 @@ export function convertAtlasItemToCirce(
     isExcluded: item.isExcluded,
     includeDescendants: item.includeDescendants,
     includeMapped: item.includeMapped,
+  }
+}
+
+/**
+ * Converts a nested circe concept-set item back into the flat Atlas-facing
+ * shape used by the concept-set editor and builder UIs.
+ */
+export function convertCirceItemToAtlas(item: CirceConceptSetItem): AtlasConceptSetItem {
+  const concept = item.concept
+  return {
+    conceptId: concept?.CONCEPT_ID ?? 0,
+    conceptName: concept?.CONCEPT_NAME ?? '',
+    conceptCode: concept?.CONCEPT_CODE ?? '',
+    domainId: concept?.DOMAIN_ID ?? '',
+    vocabularyId: concept?.VOCABULARY_ID ?? '',
+    conceptClassId: concept?.CONCEPT_CLASS_ID ?? '',
+    standardConcept: concept?.STANDARD_CONCEPT ?? null,
+    invalidReason: concept?.INVALID_REASON ?? null,
+    standardConceptCaption: concept?.STANDARD_CONCEPT_CAPTION ?? '',
+    invalidReasonCaption: concept?.INVALID_REASON_CAPTION ?? '',
+    validStartDate: 0,
+    validEndDate: 0,
+    isExcluded: item.isExcluded ?? false,
+    includeDescendants: item.includeDescendants ?? false,
+    includeMapped: item.includeMapped ?? false,
   }
 }
 
