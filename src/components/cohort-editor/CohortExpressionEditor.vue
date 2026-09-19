@@ -232,6 +232,7 @@
         <InclusionRulesPanel
           :model-value="inclusionRules"
           :concept-sets="conceptSets"
+          :expression="expression as unknown as Record<string, unknown>"
           :expression-limit="expression.ExpressionLimit ?? undefined"
           @update:model-value="setInclusionRules"
           @update:expression-limit-type="setExpressionLimitType"
