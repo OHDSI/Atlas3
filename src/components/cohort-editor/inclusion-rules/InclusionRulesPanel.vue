@@ -34,10 +34,24 @@
           <InclusionRuleRail
             :rules="modelValue"
             :selected-index="selectedIndex"
+            :cache-state="cacheState"
+            :entry-event-count="stats?.entryEventCount ?? null"
+            :total-dataset-count="stats?.totalPatientCount ?? null"
+            :rule-counts="stats?.ruleCounts ?? null"
+            :final-count="stats?.finalCount ?? null"
+            :is-computing="isPending"
             @select="onSelect"
             @add-rule="addNewRule"
             @reorder="onReorder"
           />
+
+          <div
+            v-if="statsError && !isInvalidExpression"
+            class="inclusion-rules-panel__stats-error"
+            data-testid="inclusion-stats-error"
+          >
+            {{ statsError }}
+          </div>
         </div>
 
         <div class="inclusion-rules-panel__detail">
@@ -88,6 +102,8 @@
 import { computed, ref, watch } from 'vue'
 import { AtlasButton, AtlasIcon } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
+import { useInclusionStats } from '@/composables/useInclusionStats'
+import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
 import type { CriteriaGroup, InclusionRule, ResultLimit } from '@/models/circe-types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 import InclusionRuleRail from './InclusionRuleRail.vue'
@@ -99,9 +115,34 @@ interface Props {
   modelValue: InclusionRule[]
   conceptSets: ConceptSetOption[]
   expressionLimit?: ResultLimit
+  // The WHOLE cohort expression, not just the inclusion rules: attrition is
+  // cumulative, so each rule's count depends on the entry events and on every
+  // rule before it.
+  expression?: Record<string, unknown> | null
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  expressionLimit: undefined,
+  expression: null,
+})
+
+const expressionRef = computed(() => props.expression)
+const {
+  stats,
+  isPending,
+  error: statsError,
+  isInvalidExpression,
+} = useInclusionStats(expressionRef)
+const { isCacheReady, selectedCacheStatus, isTrexSQLEnabled } = useTrexSQLCache()
+
+const cacheState = computed<'ready' | 'stale' | 'building' | 'unavailable'>(() => {
+  if (!isTrexSQLEnabled.value) return 'unavailable'
+  const status = selectedCacheStatus.value?.status
+  if (status === 'ready' && isCacheReady.value) return 'ready'
+  if (status === 'stale') return 'stale'
+  if (status === 'building') return 'building'
+  return 'unavailable'
+})
 
 const emit = defineEmits<{
   'update:modelValue': [value: InclusionRule[]]
@@ -278,6 +319,17 @@ function createEmptyRuleExpression(): CriteriaGroup {
 
 .inclusion-rules-panel__detail {
   min-width: 0;
+}
+
+/* An invalid-expression error is expected while a rule is half-built, so only
+   real failures (network, cache unavailable) surface here. */
+.inclusion-rules-panel__stats-error {
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: rgb(var(--v-theme-error));
+  background: rgb(var(--v-theme-error), 0.08);
 }
 
 .inclusion-rules-panel__limit {
