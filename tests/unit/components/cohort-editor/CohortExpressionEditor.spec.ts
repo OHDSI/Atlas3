@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { setupPinia } from '../../../helpers/pinia-setup'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -24,6 +25,13 @@ vi.mock('@/composables/useI18n', async () => {
 })
 
 const vuetify = createVuetify({ components, directives })
+
+// The inclusion-rules panel drives the live attrition preview, which reads the
+// auth store through useTrexSQLCache — so mounting the editor needs an active
+// Pinia, exactly as the running app provides.
+beforeEach(() => {
+  setupPinia()
+})
 
 function cloneFixture() {
   return JSON.parse(JSON.stringify(fixture)) as typeof fixture

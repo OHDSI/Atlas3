@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { setupPinia } from '../../helpers/pinia-setup'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -18,6 +19,13 @@ vi.mock('@/composables/useI18n', async () => {
 })
 
 const vuetify = createVuetify({ components, directives })
+
+// InclusionRulesPanel and InclusionRuleRail drive the live attrition preview,
+// which reads the auth store through useTrexSQLCache — so both need an active
+// Pinia, exactly as the running app provides.
+beforeEach(() => {
+  setupPinia()
+})
 
 function makeInclusionRule(name = 'Rule', criteriaCount = 1): InclusionRule {
   return {
@@ -319,12 +327,28 @@ describe('cohort-editor interactions', () => {
   })
 
   it('covers the remaining inclusion-rail tone and drag guards', async () => {
+    // Tones come from the live patient counts, not from how many criteria a
+    // rule happens to carry: 1000 entry events -> 900 kept (90%, gentle) ->
+    // 100 kept (11% of the previous step, harsh).
+    const liveProps = (counts: number[]) => ({
+      cacheState: 'ready' as const,
+      entryEventCount: 1000,
+      totalDatasetCount: 2000,
+      finalCount: counts[counts.length - 1],
+      ruleCounts: counts.map((cumulativeCount, ruleIndex) => ({
+        ruleIndex,
+        ruleName: `Rule ${ruleIndex}`,
+        cumulativeCount,
+      })),
+    })
+
     const rules = [makeInclusionRule('Rule A', 3), makeInclusionRule('Rule B', 1)]
     const wrapper = mount(InclusionRuleRail, {
       global: { plugins: [vuetify] },
       props: {
         rules,
         selectedIndex: null,
+        ...liveProps([900, 100]),
       },
     })
 
@@ -332,11 +356,13 @@ describe('cohort-editor interactions', () => {
     expect(ruleButtons).toHaveLength(2)
     expect(ruleButtons[1]!.classes()).toContain('inclusion-rail__rule--tone-danger')
 
+    // 900 -> 450 keeps half, which is the middle band.
     const warningWrapper = mount(InclusionRuleRail, {
       global: { plugins: [vuetify] },
       props: {
         rules: [makeInclusionRule('Rule C', 4), makeInclusionRule('Rule D', 2)],
         selectedIndex: null,
+        ...liveProps([900, 450]),
       },
     })
     expect(warningWrapper.findAll('[data-testid="inclusion-rail-rule"]')[1]!.classes()).toContain(
