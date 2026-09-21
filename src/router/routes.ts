@@ -6,6 +6,7 @@
  */
 import type { RouteRecordRaw } from 'vue-router'
 import { generatePluginRoutes } from '@/plugins/navigation/PluginRoutes.ts'
+import { getSourceKey } from '@/config/webapi'
 import { logger } from '@/utils/logger'
 
 const ANALYSIS_TAB_NAMES = [
@@ -15,6 +16,14 @@ const ANALYSIS_TAB_NAMES = [
   'incidence-rates',
 ] as const
 const ANALYSIS_LAST_TAB_KEY = 'atlas3.analysis.lastTab'
+
+function singleParam(value: unknown): string {
+  if (Array.isArray(value)) {
+    const firstValue = value[0]
+    return typeof firstValue === 'string' ? firstValue : ''
+  }
+  return typeof value === 'string' ? value : ''
+}
 
 export const routes: RouteRecordRaw[] = [
   {
@@ -133,6 +142,94 @@ export const routes: RouteRecordRaw[] = [
   { path: '/feature-analyses', redirect: { name: 'feature-analyses' } },
   { path: '/pathways', redirect: { name: 'pathways' } },
   { path: '/incidence-rates', redirect: { name: 'incidence-rates' } },
+  // Atlas 2.x compatibility aliases. These accept old hash routes but keep
+  // Atlas 3.x URLs canonical after navigation.
+  { path: '/cohortdefinitions', redirect: { name: 'cohorts' } },
+  {
+    path: '/cohortdefinition/:id/:section(.*)*',
+    redirect: to => ({ name: 'cohort-edit', params: { id: singleParam(to.params.id) }, query: to.query, hash: to.hash }),
+  },
+  { path: '/cc/characterizations', redirect: { name: 'characterizations' } },
+  {
+    path: '/cc/characterizations/:id/version/:version',
+    redirect: to => ({
+      name: 'characterization-version-preview',
+      params: { id: singleParam(to.params.id), version: singleParam(to.params.version) },
+      query: to.query,
+      hash: to.hash,
+    }),
+  },
+  {
+    path: '/cc/characterizations/:id/results/:executionId',
+    redirect: to => ({
+      name: 'characterization-results',
+      params: { id: singleParam(to.params.id), executionId: singleParam(to.params.executionId) },
+      query: to.query,
+      hash: to.hash,
+    }),
+  },
+  {
+    path: '/cc/characterizations/:id/executions/:sourceId',
+    redirect: to => ({
+      name: 'characterization-edit',
+      params: { id: singleParam(to.params.id) },
+      query: { ...to.query, sourceId: singleParam(to.params.sourceId) },
+      hash: to.hash,
+    }),
+  },
+  {
+    path: '/cc/characterizations/:id/:section?',
+    redirect: to => ({ name: 'characterization-edit', params: { id: singleParam(to.params.id) }, query: to.query, hash: to.hash }),
+  },
+  { path: '/cc/feature-analyses', redirect: { name: 'feature-analyses' } },
+  {
+    path: '/cc/feature-analyses/:id/:section?',
+    redirect: to => ({ name: 'feature-analysis-edit', params: { id: singleParam(to.params.id) }, query: to.query, hash: to.hash }),
+  },
+  {
+    path: '/pathways/:id/version/:version',
+    redirect: to => ({
+      name: 'pathway-version-preview',
+      params: { id: singleParam(to.params.id), version: singleParam(to.params.version) },
+      query: to.query,
+      hash: to.hash,
+    }),
+  },
+  { path: '/iranalysis', redirect: { name: 'incidence-rates' } },
+  {
+    path: '/iranalysis/:id/version/:version',
+    redirect: to => ({
+      name: 'incidence-rate-version-preview',
+      params: { id: singleParam(to.params.id), version: singleParam(to.params.version) },
+      query: to.query,
+      hash: to.hash,
+    }),
+  },
+  {
+    path: '/iranalysis/:id/:section(.*)*',
+    redirect: to => ({ name: 'incidence-rate-edit', params: { id: singleParam(to.params.id) }, query: to.query, hash: to.hash }),
+  },
+  {
+    path: '/concept/:id(\\d+)',
+    redirect: to => ({
+      name: 'concept-detail',
+      params: { sourceKey: getSourceKey(), conceptId: singleParam(to.params.id) },
+      query: to.query,
+      hash: to.hash,
+    }),
+  },
+  {
+    path: '/search/:query?',
+    redirect: to => ({
+      path: '/concepts',
+      query: {
+        ...to.query,
+        tab: 'search',
+        ...(to.params.query ? { query: singleParam(to.params.query) } : {}),
+      },
+      hash: to.hash,
+    }),
+  },
   // Detail / builder / results / version-preview routes remain top-level.
   {
     path: '/feature-analyses/new',

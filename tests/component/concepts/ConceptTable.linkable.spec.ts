@@ -41,7 +41,7 @@ describe('ConceptTable linkable mode', () => {
     open.mockClear()
   })
 
-  it('renders concept name as a click-link that opens the detail drawer when linkable + sourceKey provided', async () => {
+  it('renders concept name as a click-link to the canonical concept detail route', async () => {
     const vuetify = createVuetify({ components, directives })
     const router = createRouter({
       history: createMemoryHistory(),
@@ -56,8 +56,9 @@ describe('ConceptTable linkable mode', () => {
 
     const link = wrapper.find('a[data-testid="concept-name-link-201826"]')
     expect(link.exists()).toBe(true)
+    expect(link.attributes('href')).toBe('#/concept/SYNPUF1K/201826')
     await link.trigger('click')
-    expect(open).toHaveBeenCalledWith('SYNPUF1K', 201826)
+    expect(open).not.toHaveBeenCalled()
   })
 
   it('renders a real deep-link href so right-click/ctrl-click "open in new tab" targets the concept detail route (#162)', async () => {
@@ -80,10 +81,31 @@ describe('ConceptTable linkable mode', () => {
     // the concept. It must now resolve to the real concept detail route.
     expect(link.attributes('href')).toBe('#/concept/SYNPUF1K/201826')
 
-    // A plain left-click still opens the fast in-app drawer instead of a
-    // full navigation.
+    // A plain left-click no longer opens the drawer directly; the browser
+    // follows the same canonical href used for sharing/copying the route.
     await link.trigger('click')
-    expect(open).toHaveBeenCalledWith('SYNPUF1K', 201826)
+    expect(open).not.toHaveBeenCalled()
+  })
+
+  it('emits view-concept instead of navigating when a parent handles the event', async () => {
+    const vuetify = createVuetify({ components, directives })
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/concept/:sourceKey/:conceptId', component: { template: '<div />' } }],
+    })
+    const onViewConcept = vi.fn()
+
+    const wrapper = mount(ConceptTable, {
+      props: { concepts, linkable: true, sourceKey: 'SYNPUF1K', loading: false, totalItems: 1, onViewConcept },
+      global: { plugins: [vuetify, router] },
+    })
+    await wrapper.vm.$nextTick()
+
+    const link = wrapper.find('a[data-testid="concept-name-link-201826"]')
+    await link.trigger('click')
+
+    expect(onViewConcept).toHaveBeenCalledWith({ conceptId: 201826, sourceKey: 'SYNPUF1K' })
+    expect(open).not.toHaveBeenCalled()
   })
 
   it('does not intercept ctrl/cmd/middle-clicks, letting the browser open the real href in a new tab', async () => {
