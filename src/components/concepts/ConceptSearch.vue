@@ -113,7 +113,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, inject, watch } from 'vue'
+import { routeLocationKey } from 'vue-router'
 import { AtlasAlert, AtlasSelect, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
@@ -126,6 +127,14 @@ import ConceptAddOptions from './ConceptAddOptions.vue'
 import type { Concept, ConceptAddFlags } from '@/models/concept-set.types'
 
 const { t } = useI18n()
+const route = inject(routeLocationKey, null)
+
+function routeQueryValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return typeof value[0] === 'string' ? value[0] : ''
+  }
+  return typeof value === 'string' ? value : ''
+}
 
 // ============================================================================
 // Store
@@ -162,7 +171,7 @@ const conceptsInSet = computed(() => {
 // Local State
 // ============================================================================
 
-const searchInput = ref<string>('')
+const searchInput = ref<string>(routeQueryValue(route?.query.query))
 const feedback = ref<{ open: boolean; text: string }>({ open: false, text: '' })
 const selected = ref<number[]>([])
 
@@ -191,6 +200,21 @@ const validationError = computed(() => {
 })
 
 const loading = computed(() => store.loading)
+
+watch(
+  () => route?.query.query,
+  value => {
+    const query = routeQueryValue(value)
+    if (!query) return
+
+    searchInput.value = query
+    const trimmed = query.trim()
+    if (trimmed.length >= 3) {
+      store.search(trimmed)
+    }
+  },
+  { immediate: true }
+)
 
 // ============================================================================
 // Methods

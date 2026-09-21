@@ -6,7 +6,8 @@ import { mount, VueWrapper, flushPromises } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
+import { routeLocationKey } from 'vue-router'
 import { setActivePinia, createPinia } from 'pinia'
 import ConceptSearch from '@/components/concepts/ConceptSearch.vue'
 import { useConceptSearchStore } from '@/stores/concept-search'
@@ -207,6 +208,23 @@ describe('ConceptSearch', () => {
   })
 
   describe('Search Functionality', () => {
+    it('should initialize and run search from a route query term', async () => {
+      const route = reactive({ query: { query: 'diabetes' } })
+
+      wrapper = mount(ConceptSearch, {
+        global: {
+          plugins: [vuetify],
+          provide: {
+            [routeLocationKey as symbol]: route,
+          },
+        },
+      })
+      await flushPromises()
+
+      expect(wrapper.vm.searchInput).toBe('diabetes')
+      expect(mockSearchConcepts).toHaveBeenCalledWith('SYNPUF1K', 'diabetes')
+    })
+
     it('should call search when user clicks search button with valid input', async () => {
       const mockConcept = createMockConcept({ conceptName: 'Diabetes' })
       mockSearchConcepts.mockResolvedValue({ success: true, data: [mockConcept] })

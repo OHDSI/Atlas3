@@ -234,13 +234,11 @@ import { AtlasButton, AtlasChip, AtlasDataTable, AtlasIcon, AtlasPagination, Atl
 import { computed, ref, getCurrentInstance } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'
-import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
 import type { Concept } from '@/models/concept-set.types'
 
 const { t, tv } = useI18n()
 const webapiStore = useWebAPIStore()
-const conceptDrawer = useConceptDetailDrawerStore()
 const instance = getCurrentInstance()
 
 // ============================================================================
@@ -301,21 +299,18 @@ const emit = defineEmits<{
 }>()
 
 // If a parent is listening for `view-concept`, emit and let them handle it
-// (e.g., concept set editor renders the detail inline). Otherwise fall back
-// to the global side-panel drawer. Declared emits are consumed before
-// reaching $attrs, so we have to inspect the raw vnode props.
+// (e.g., concept set editor renders the detail inline). Otherwise the row's
+// real href is allowed to navigate to the canonical concept-detail route.
+// Declared emits are consumed before reaching $attrs, so we have to inspect
+// the raw vnode props.
 function hasViewConceptListener(): boolean {
   const vprops = (instance?.vnode.props ?? {}) as Record<string, unknown>
   return typeof vprops.onViewConcept === 'function'
 }
 
-function openConceptDetail(concept: Concept) {
+function emitViewConcept(concept: Concept) {
   if (!resolvedSourceKey.value) return
-  if (hasViewConceptListener()) {
-    emit('view-concept', { conceptId: concept.conceptId, sourceKey: resolvedSourceKey.value })
-    return
-  }
-  conceptDrawer.open(resolvedSourceKey.value, concept.conceptId)
+  emit('view-concept', { conceptId: concept.conceptId, sourceKey: resolvedSourceKey.value })
 }
 
 // Real deep-link href to the concept detail route (matches the
@@ -332,8 +327,11 @@ function onConceptNameClick(event: MouseEvent, concept: Concept) {
   if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
     return
   }
+  if (!hasViewConceptListener()) {
+    return
+  }
   event.preventDefault()
-  openConceptDetail(concept)
+  emitViewConcept(concept)
 }
 
 // ============================================================================
