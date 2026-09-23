@@ -189,9 +189,9 @@ const CORPUS_COVERAGE = (() => {
 
 describe('CohortExpressionSchema field enumeration', () => {
   it('enumerates every field slot the schema models', () => {
-    expect(SURFACE.slots.size).toBe(387)
-    expect(SURFACE.fieldNames.size).toBe(207)
-    expect(SURFACE.maxBranching).toBe(16)
+    expect(SURFACE.slots.size).toBe(407)
+    expect(SURFACE.fieldNames.size).toBe(214)
+    expect(SURFACE.maxBranching).toBe(18)
   })
 
   it('reaches the recursive, union and intersection parts of the schema', () => {

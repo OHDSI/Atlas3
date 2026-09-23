@@ -64,13 +64,14 @@ function entry<K extends CriteriaWrapperKey, E extends boolean = true>(
 // explicit `readonly CriteriaTypeEntry[]` would widen them to CriteriaWrapperKey
 // and defeat the exhaustiveness check below.
 export const CRITERIA_TYPES = [
-  // `First: false` is the one non-empty default, carried over from the previous
-  // factory switch rather than changed here.
   entry('ConditionOccurrence', 'criteria.conditionOccurrence.name', 'Condition Occurrence', {
     domains: ['Condition'],
-    initial: { First: false },
   }),
   entry('ConditionEra', 'criteria.conditionEra.name', 'Condition Era'),
+  entry('CustomEra', 'criteria.customEra.name', 'Custom Era'),
+  entry('Episode', 'criteria.episode.name', 'Episode', {
+    domains: ['Episode'],
+  }),
   entry('DrugExposure', 'criteria.drugExposure.name', 'Drug Exposure', { domains: ['Drug'] }),
   entry('DrugEra', 'criteria.drugEra.name', 'Drug Era'),
   entry('DoseEra', 'criteria.doseEra.name', 'Dose Era'),
@@ -126,7 +127,7 @@ export type EditableCriteriaKey = EditableCriteriaType['key']
 /** The types a user can actually add and edit, in menu order. */
 export const EDITABLE_CRITERIA_TYPES: readonly EditableCriteriaType[] = CRITERIA_TYPES.filter(
   (type): type is EditableCriteriaType => type.hasEditor
-)
+).slice().sort((left, right) => left.label.localeCompare(right.label))
 
 /**
  * The criteria type an OMOP domain maps to.

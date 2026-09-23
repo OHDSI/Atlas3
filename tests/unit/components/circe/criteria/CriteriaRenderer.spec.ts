@@ -45,6 +45,33 @@ describe('CriteriaRenderer', () => {
     expect(wrapper.emitted('remove')?.at(-1)).toEqual([])
   })
 
+  it('renders the Episode editor', async () => {
+    const criteria = { Episode: {} }
+    const wrapper = mountComponent(CriteriaRenderer as never, {
+      props: {
+        criteria,
+        conceptSets: [{ id: 1, name: 'Concept Set' }],
+      },
+      stubs: { AtlasMenu: InlineAtlasMenuStub },
+    })
+
+    expect(wrapper.findComponent({ name: 'Episode' }).exists()).toBe(true)
+  })
+
+  it('renders the CustomEra editor', async () => {
+    const criteria = { CustomEra: {} }
+    const wrapper = mountComponent(CriteriaRenderer as never, {
+      props: {
+        criteria,
+        conceptSets: [{ id: 1, name: 'Concept Set' }],
+      },
+      stubs: { AtlasMenu: InlineAtlasMenuStub },
+    })
+
+    await nextTick()
+    expect(wrapper.findComponent({ name: 'CustomEra' }).exists()).toBe(true)
+  })
+
   it('falls back to the placeholder when no editor is mapped', async () => {
     const wrapper = mountComponent(CriteriaRenderer as never, {
       props: {

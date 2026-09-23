@@ -78,6 +78,7 @@ import DateAdjustment from '../input/DateAdjustment.vue'
 import DateRange from '../input/DateRange.vue'
 import NumericRange from '../input/NumericRange.vue'
 import ConceptSetSelection from '../input/ConceptSetSelection.vue'
+import EventConceptSet from '../input/EventConceptSet.vue'
 import CriteriaGroup from './CriteriaGroup.vue'
 import PeriodEditor from '../input/Period.vue'
 import TextFilter from '../input/TextFilter.vue'
@@ -98,6 +99,7 @@ const emit = defineEmits<{
 const componentsByKind = {
   numericRange: markRaw(NumericRange),
   conceptSet: markRaw(ConceptSetSelection),
+  eventConceptSet: markRaw(EventConceptSet),
   conceptArray: markRaw(ConceptArray),
   dateRange: markRaw(DateRange),
   dateAdjustment: markRaw(DateAdjustment),

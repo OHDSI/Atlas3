@@ -44,6 +44,8 @@ import { AtlasButton, AtlasSpacer } from '@/components/ui'
 import { getCriteriaWrapperKey, type Criteria } from '@/models/circe-types'
 import ConditionEra from './ConditionEra.vue'
 import ConditionOccurrence from './ConditionOccurrence.vue'
+import CustomEra from './CustomEra.vue'
+import Episode from './Episode.vue'
 import Death from './Death.vue'
 import DeviceExposure from './DeviceExposure.vue'
 import DoseEra from './DoseEra.vue'
@@ -81,11 +83,13 @@ const wrapperKey = computed(() => getCriteriaWrapperKey(props.criteria))
 const editorMap = {
   ConditionEra: ConditionEra,
   ConditionOccurrence: ConditionOccurrence,
+  CustomEra: CustomEra,
   Death: Death,
   DeviceExposure: DeviceExposure,
   DoseEra: DoseEra,
   DrugEra: DrugEra,
   DrugExposure: DrugExposure,
+  Episode: Episode,
   Measurement: Measurement,
   Observation: Observation,
   ObservationPeriod: ObservationPeriod,

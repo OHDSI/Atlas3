@@ -339,6 +339,29 @@ export const DrugExposureSchema = CriteriaBaseSchema.extend({
 })
 export type DrugExposure = z.infer<typeof DrugExposureSchema>
 
+export const EpisodeSchema = CriteriaBaseSchema.extend({
+  CodesetId: ConceptSetIdSchema.nullish(),
+  First: z.boolean().nullish(),
+  EpisodeStartDate: DateRangeSchema.nullish(),
+  EpisodeEndDate: DateRangeSchema.nullish(),
+  EpisodeNumber: NumericRangeSchema.nullish(),
+  Age: NumericRangeSchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
+  EpisodeObjectConceptCS: ConceptSetSelectionSchema.nullish(),
+  EpisodeTypeCS: ConceptSetSelectionSchema.nullish(),
+})
+export type Episode = z.infer<typeof EpisodeSchema>
+
+export const CustomEraSchema = CriteriaBaseSchema.extend({
+  CriteriaList: z.array(z.lazy(() => CriteriaSchema)).nullish(),
+  First: z.boolean().nullish(),
+  GapDays: z.number().nullish(),
+  AgeAtStart: NumericRangeSchema.nullish(),
+  GenderCS: ConceptSetSelectionSchema.nullish(),
+  Duration: NumericRangeSchema.nullish(),
+})
+export type CustomEra = z.infer<typeof CustomEraSchema>
+
 export const LocationRegionSchema = CriteriaBaseSchema.extend({
   CodesetId: ConceptSetIdSchema.nullish(),
   StartDate: DateRangeSchema.nullish(),
@@ -520,14 +543,18 @@ export type VisitOccurrence = z.infer<typeof VisitOccurrenceSchema>
  * Polymorphic Criteria Union Type
  * Represents Jackson's wrapper object serialization
  */
-export const CriteriaSchema = z.union([
+export type Criteria = Record<string, unknown>
+
+export const CriteriaSchema: z.ZodType<Criteria> = z.union([
   z.object({ ConditionEra: ConditionEraSchema }),
   z.object({ ConditionOccurrence: ConditionOccurrenceSchema }),
   z.object({ Death: DeathSchema }),
   z.object({ DeviceExposure: DeviceExposureSchema }),
   z.object({ DoseEra: DoseEraSchema }),
+  z.object({ CustomEra: CustomEraSchema }),
   z.object({ DrugEra: DrugEraSchema }),
   z.object({ DrugExposure: DrugExposureSchema }),
+  z.object({ Episode: EpisodeSchema }),
   z.object({ LocationRegion: LocationRegionSchema }),
   z.object({ Measurement: MeasurementSchema }),
   z.object({ Observation: ObservationSchema }),
@@ -537,8 +564,7 @@ export const CriteriaSchema = z.union([
   z.object({ Specimen: SpecimenSchema }),
   z.object({ VisitDetail: VisitDetailSchema }),
   z.object({ VisitOccurrence: VisitOccurrenceSchema }),
-])
-export type Criteria = z.infer<typeof CriteriaSchema>
+]) as z.ZodType<Criteria>
 
 export const CriteriaSchemaMap = {
   ConditionEra: ConditionEraSchema,
@@ -546,8 +572,10 @@ export const CriteriaSchemaMap = {
   Death: DeathSchema,
   DeviceExposure: DeviceExposureSchema,
   DoseEra: DoseEraSchema,
+  CustomEra: CustomEraSchema,
   DrugEra: DrugEraSchema,
   DrugExposure: DrugExposureSchema,
+  Episode: EpisodeSchema,
   LocationRegion: LocationRegionSchema,
   Measurement: MeasurementSchema,
   Observation: ObservationSchema,
