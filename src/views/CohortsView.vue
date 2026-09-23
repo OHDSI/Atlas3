@@ -103,6 +103,8 @@
 
       <cohort-table
         v-if="viewMode === 'table'"
+        v-model:sort-key="sortKey"
+        v-model:sort-order="sortOrder"
         :cohorts="paginatedCohorts"
         :loading="loading"
         :error="error"
@@ -375,6 +377,7 @@ import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
 import CohortFilters from '@/components/cohort/CohortFilters.vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
+import { sortCohorts, type CohortSortKey, type CohortSortOrder } from '@/utils/cohort-sort'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -406,6 +409,8 @@ const showNewCohortDialog = ref(false)
 const newCohortName = ref('')
 const selectedCohort = ref<CohortDefinitionSummary | null>(null)
 const deleting = ref(false)
+const sortKey = ref<CohortSortKey>('modifiedDate')
+const sortOrder = ref<CohortSortOrder>('desc')
 
 // Import-cohort state
 const importName = ref('')
@@ -459,7 +464,9 @@ const {
 } = useCohorts()
 
 // Pagination state management
-const totalItems = computed(() => filteredCohorts.value.length)
+const sortedCohorts = computed(() => sortCohorts(filteredCohorts.value, sortKey.value, sortOrder.value))
+
+const totalItems = computed(() => sortedCohorts.value.length)
 
 const { page, itemsPerPage, itemsPerPageOptions, rangeDisplay, setPage, setItemsPerPage } =
   usePagination(totalItems)
@@ -470,11 +477,11 @@ const { page, itemsPerPage, itemsPerPageOptions, rangeDisplay, setPage, setItems
 const paginatedCohorts = computed(() => {
   const start = (page.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
-  return filteredCohorts.value.slice(start, end)
+  return sortedCohorts.value.slice(start, end)
 })
 
 const countLabel = computed(() => {
-  const n = filteredCohorts.value.length
+  const n = sortedCohorts.value.length
   return n === 1
     ? t('views.cohorts.countSingular', '1 cohort').value
     : t('views.cohorts.countPlural', '{count} cohorts', { count: n.toLocaleString() }).value

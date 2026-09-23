@@ -89,7 +89,7 @@
               >
                 {{ t('columns.id', 'ID').value }}
                 <AtlasIcon
-                  v-if="sortKey === 'id'"
+                  v-if="activeSortKey === 'id'"
                   :icon="sortIcon"
                   size="xs"
                 />
@@ -107,7 +107,7 @@
               >
                 {{ t('columns.name', 'Name').value }}
                 <AtlasIcon
-                  v-if="sortKey === 'name'"
+                  v-if="activeSortKey === 'name'"
                   :icon="sortIcon"
                   size="xs"
                 />
@@ -128,7 +128,7 @@
               >
                 {{ t('columns.author', 'Author').value }}
                 <AtlasIcon
-                  v-if="sortKey === 'createdBy'"
+                  v-if="activeSortKey === 'createdBy'"
                   :icon="sortIcon"
                   size="xs"
                 />
@@ -146,7 +146,7 @@
               >
                 {{ t('columns.created', 'Created').value }}
                 <AtlasIcon
-                  v-if="sortKey === 'createdDate'"
+                  v-if="activeSortKey === 'createdDate'"
                   :icon="sortIcon"
                   size="xs"
                 />
@@ -164,7 +164,7 @@
               >
                 {{ t('columns.updated', 'Updated').value }}
                 <AtlasIcon
-                  v-if="sortKey === 'modifiedDate'"
+                  v-if="activeSortKey === 'modifiedDate'"
                   :icon="sortIcon"
                   size="xs"
                 />
@@ -175,7 +175,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="cohort in sortedCohorts"
+            v-for="cohort in displayedCohorts"
             :key="cohort.id"
             class="cohort-table__row"
             data-testid="cohort-table-row"
@@ -275,6 +275,7 @@ import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
 import { tagColor, tagContrastColor } from '@/utils/tag-color'
+import { formatCohortSortUser, sortCohorts, type CohortSortKey, type CohortSortOrder } from '@/utils/cohort-sort'
 
 const { t, tv, locale } = useI18n()
 const router = useRouter()
@@ -288,6 +289,8 @@ interface Props {
   selectedTags?: string[]
   canCopy?: boolean
   copyingId?: number | null
+  sortKey?: CohortSortKey
+  sortOrder?: CohortSortOrder
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -297,9 +300,11 @@ const props = withDefaults(defineProps<Props>(), {
   selectedTags: () => [],
   canCopy: false,
   copyingId: null,
+  sortKey: undefined,
+  sortOrder: undefined,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   retry: []
   'create-cohort': []
   'clear-filters': []
@@ -307,58 +312,42 @@ defineEmits<{
   copy: [cohort: CohortDefinitionSummary]
   'tag-click': [tagName: string]
   'show-info': [cohort: CohortDefinitionSummary]
+  'update:sortKey': [key: CohortSortKey]
+  'update:sortOrder': [order: CohortSortOrder]
 }>()
 
-type SortKey = 'id' | 'name' | 'createdBy' | 'createdDate' | 'modifiedDate'
+const internalSortKey = ref<CohortSortKey>('modifiedDate')
+const internalSortOrder = ref<CohortSortOrder>('desc')
+const activeSortKey = computed(() => props.sortKey ?? internalSortKey.value)
+const activeSortOrder = computed(() => props.sortOrder ?? internalSortOrder.value)
 
-// Opens on most recently modified, matching the concept set list.
-const sortKey = ref<SortKey>('modifiedDate')
-const sortOrder = ref<'asc' | 'desc'>('desc')
+const sortIcon = computed(() => (activeSortOrder.value === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down'))
 
-const sortIcon = computed(() => (sortOrder.value === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down'))
-
-function ariaSort(key: SortKey): 'ascending' | 'descending' | 'none' {
-  if (sortKey.value !== key) return 'none'
-  return sortOrder.value === 'asc' ? 'ascending' : 'descending'
+function ariaSort(key: CohortSortKey): 'ascending' | 'descending' | 'none' {
+  if (activeSortKey.value !== key) return 'none'
+  return activeSortOrder.value === 'asc' ? 'ascending' : 'descending'
 }
 
-function toggleSort(key: SortKey) {
-  if (sortKey.value === key) {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+function toggleSort(key: CohortSortKey) {
+  if (activeSortKey.value === key) {
+    const nextOrder = activeSortOrder.value === 'asc' ? 'desc' : 'asc'
+    if (props.sortOrder === undefined) internalSortOrder.value = nextOrder
+    emit('update:sortOrder', nextOrder)
     return
   }
-  sortKey.value = key
+  if (props.sortKey === undefined) internalSortKey.value = key
+  emit('update:sortKey', key)
   // Names read best A to Z; ids and dates most useful newest first.
-  sortOrder.value = key === 'name' || key === 'createdBy' ? 'asc' : 'desc'
+  const nextOrder = key === 'name' || key === 'createdBy' ? 'asc' : 'desc'
+  if (props.sortOrder === undefined) internalSortOrder.value = nextOrder
+  emit('update:sortOrder', nextOrder)
 }
 
-function sortValue(cohort: CohortDefinitionSummary, key: SortKey): string | number {
-  switch (key) {
-    case 'id':
-      return cohort.id ?? 0
-    case 'name':
-      return (cohort.name ?? '').toLowerCase()
-    case 'createdBy':
-      return formatUser(cohort.createdBy).toLowerCase()
-    case 'createdDate':
-      return cohort.createdDate ? new Date(cohort.createdDate).getTime() : 0
-    case 'modifiedDate': {
-      const touched = lastTouchedDate(cohort)
-      return touched ? new Date(touched).getTime() : 0
-    }
+const displayedCohorts = computed(() => {
+  if (props.sortKey !== undefined || props.sortOrder !== undefined) {
+    return props.cohorts
   }
-}
-
-const sortedCohorts = computed(() => {
-  const key = sortKey.value
-  const direction = sortOrder.value === 'asc' ? 1 : -1
-  // Copy first: the prop array belongs to the caller.
-  return [...props.cohorts].sort((a, b) => {
-    const left = sortValue(a, key)
-    const right = sortValue(b, key)
-    if (left === right) return 0
-    return left > right ? direction : -direction
-  })
+  return sortCohorts(props.cohorts, activeSortKey.value, activeSortOrder.value)
 })
 
 const isFiltered = computed(
@@ -385,17 +374,10 @@ const emptyMessage = computed(() => {
   )
 })
 
-const unknownLabel = t('common.anonymous', 'Unknown')
 const naLabel = t('common.noData', 'N/A')
 
 function formatUser(userValue: unknown): string {
-  if (!userValue) return unknownLabel.value
-  if (typeof userValue === 'string') return userValue
-  if (typeof userValue === 'object' && userValue !== null) {
-    const u = userValue as Record<string, unknown>
-    return (u.name || u.login || u.id || unknownLabel.value) as string
-  }
-  return unknownLabel.value
+  return formatCohortSortUser(userValue)
 }
 
 function formatDate(dateValue: string | number | null | undefined): string {

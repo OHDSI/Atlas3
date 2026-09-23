@@ -9,7 +9,7 @@ import { mount, VueWrapper } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 // Mock vue-router
@@ -265,6 +265,33 @@ describe('CohortsView.vue', () => {
 
       expect(wrapper.find('.page-wrapper').exists()).toBe(true)
       expect(wrapper.find('.page-card').exists()).toBe(true)
+    })
+
+    it('sorts the full cohort list before paginating it', async () => {
+      const cohorts = [
+        createMockCohort(30),
+        createMockCohort(10),
+        createMockCohort(20),
+        createMockCohort(40),
+      ]
+      mockFilteredCohorts.value = cohorts
+      mockPage.value = 1
+      mockItemsPerPage.value = 2
+
+      wrapper = mount(CohortsView, {
+        global: {
+          plugins: [vuetify]
+        }
+      })
+
+      ;(wrapper.vm as any).sortKey = 'id'
+      ;(wrapper.vm as any).sortOrder = 'asc'
+      await nextTick()
+
+      expect(wrapper.findComponent({ name: 'CohortTable' }).props('cohorts')).toEqual([
+        cohorts[1],
+        cohorts[2],
+      ])
     })
   })
 
@@ -832,7 +859,7 @@ describe('CohortsView.vue', () => {
       mockItemsPerPage.value = 60
     })
 
-    it('should compute paginated cohorts correctly', () => {
+    it('should compute paginated cohorts correctly', async () => {
       mockPage.value = 1
 
       wrapper = mount(CohortsView, {
@@ -841,13 +868,17 @@ describe('CohortsView.vue', () => {
         }
       })
 
+      ;(wrapper.vm as any).sortKey = 'id'
+      ;(wrapper.vm as any).sortOrder = 'asc'
+      await nextTick()
+
       const paginated = wrapper.vm.paginatedCohorts
       expect(paginated).toHaveLength(60)
       expect(paginated[0].id).toBe(0)
       expect(paginated[59].id).toBe(59)
     })
 
-    it('should compute second page correctly', () => {
+    it('should compute second page correctly', async () => {
       mockPage.value = 2
 
       wrapper = mount(CohortsView, {
@@ -856,13 +887,17 @@ describe('CohortsView.vue', () => {
         }
       })
 
+      ;(wrapper.vm as any).sortKey = 'id'
+      ;(wrapper.vm as any).sortOrder = 'asc'
+      await nextTick()
+
       const paginated = wrapper.vm.paginatedCohorts
       expect(paginated).toHaveLength(60)
       expect(paginated[0].id).toBe(60)
       expect(paginated[59].id).toBe(119)
     })
 
-    it('should compute last page with remaining items', () => {
+    it('should compute last page with remaining items', async () => {
       mockPage.value = 3
 
       wrapper = mount(CohortsView, {
@@ -870,6 +905,10 @@ describe('CohortsView.vue', () => {
           plugins: [vuetify]
         }
       })
+
+      ;(wrapper.vm as any).sortKey = 'id'
+      ;(wrapper.vm as any).sortOrder = 'asc'
+      await nextTick()
 
       const paginated = wrapper.vm.paginatedCohorts
       expect(paginated).toHaveLength(30) // Only 30 items remain

@@ -27,6 +27,8 @@ function makeWrapper(props: Partial<{
   selectedTags: string[]
   canCopy: boolean
   copyingId: number | null
+  sortKey: 'id' | 'name' | 'createdBy' | 'createdDate' | 'modifiedDate'
+  sortOrder: 'asc' | 'desc'
 }> = {}) {
   // Per-test pinia + a permitted user so the row action buttons aren't
   // disabled by the new permission gating.
@@ -240,6 +242,16 @@ describe('CohortTable', () => {
 
       await wrapper.find('[data-testid=cohort-table-sort-name]').trigger('click')
       expect(names(wrapper)).toEqual(['Aspirin', 'metformin', 'Zoledronic acid'])
+    })
+
+    it('respects externally controlled sort state', () => {
+      const wrapper = makeWrapper({
+        cohorts: rows,
+        sortKey: 'id',
+        sortOrder: 'asc',
+      })
+
+      expect(names(wrapper)).toEqual(['Zoledronic acid', 'Aspirin', 'metformin'])
     })
 
     it('sorts by author and by created date', async () => {
