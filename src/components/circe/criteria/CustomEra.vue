@@ -182,7 +182,7 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import type { Criteria, CustomEra, NumericRange, ConceptSetSelection } from '@/models/circe-types'
+import type { Criteria, CustomEra, DateRange, NumericRange, ConceptSetSelection } from '@/models/circe-types'
 import {
   AtlasAlert,
   AtlasButton,
@@ -277,6 +277,38 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete customEraData.value.DateAdjustment
     },
     isActive: () => customEraData.value.DateAdjustment != null,
+  },
+  {
+    key: 'StartDate',
+    label: 'Start Date',
+    description: 'Filter by custom era start date',
+    kind: 'dateRange',
+    componentProps: () => createSchemaFieldProps(
+      ensureObjectField(customEraData.value, 'StartDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
+    ),
+    init: () => {
+      ensureObjectField(customEraData.value, 'StartDate', () => ({ Value: '', Op: 'gte', Extent: undefined }))
+    },
+    clear: () => {
+      delete customEraData.value.StartDate
+    },
+    isActive: () => customEraData.value.StartDate != null,
+  },
+  {
+    key: 'EndDate',
+    label: 'End Date',
+    description: 'Filter by custom era end date',
+    kind: 'dateRange',
+    componentProps: () => createSchemaFieldProps(
+      ensureObjectField(customEraData.value, 'EndDate', () => ({ Value: '', Op: 'lte', Extent: undefined })) as DateRange
+    ),
+    init: () => {
+      ensureObjectField(customEraData.value, 'EndDate', () => ({ Value: '', Op: 'lte', Extent: undefined }))
+    },
+    clear: () => {
+      delete customEraData.value.EndDate
+    },
+    isActive: () => customEraData.value.EndDate != null,
   },
   {
     key: 'AgeAtStart',

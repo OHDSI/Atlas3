@@ -356,6 +356,8 @@ export const CustomEraSchema = CriteriaBaseSchema.extend({
   CriteriaList: z.array(z.lazy(() => CriteriaSchema)).nullish(),
   First: z.boolean().nullish(),
   GapDays: z.number().nullish(),
+  StartDate: DateRangeSchema.nullish(),
+  EndDate: DateRangeSchema.nullish(),
   AgeAtStart: NumericRangeSchema.nullish(),
   GenderCS: ConceptSetSelectionSchema.nullish(),
   Duration: NumericRangeSchema.nullish(),

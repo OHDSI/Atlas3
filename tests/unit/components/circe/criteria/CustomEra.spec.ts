@@ -44,6 +44,8 @@ describe('CustomEra', () => {
     expect(wrapper.text()).toContain('gap of:')
     expect(wrapper.text()).toContain('Additional Attributes')
     expect(wrapper.text()).toContain('Date Adjustment')
+    expect(wrapper.text()).toContain('Start Date')
+    expect(wrapper.text()).toContain('End Date')
     expect(wrapper.text()).toContain('Nested Criteria')
   })
 
@@ -80,5 +82,20 @@ describe('CustomEra', () => {
     await nextTick()
     expect(criteria.CustomEra?.GapDays).toBe(7)
     expect(wrapper.get('.custom-era-editor__gap-days-chip').text()).toContain('7 days')
+  })
+
+  it('renders optional start and end date attributes when present', async () => {
+    const { wrapper, criteria } = mountCustomEraEditor()
+
+    criteria.CustomEra = {
+      StartDate: { Value: '2020-01-01', Op: 'gte', Extent: undefined },
+      EndDate: { Value: '2020-12-31', Op: 'lte', Extent: undefined },
+    }
+
+    await nextTick()
+
+    expect(wrapper.text()).toContain('Start Date')
+    expect(wrapper.text()).toContain('End Date')
+    expect(wrapper.findAllComponents({ name: 'DateRange' })).toHaveLength(2)
   })
 })
