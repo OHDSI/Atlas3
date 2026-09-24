@@ -174,4 +174,133 @@ describe('Episode', () => {
     await openMenu(wrapper)
     await expectMenuItemPresent(wrapper, 'Episode Type Concept Set')
   })
+
+  it('adds and removes Episode Age', async () => {
+    const { wrapper, criteria } = mountEpisodeEditor()
+
+    await openMenu(wrapper)
+    await expectMenuItemPresent(wrapper, 'Age')
+    await selectMenuItem(wrapper, 'Age')
+
+    expect(criteria.Episode?.Age).toStrictEqual({ Value: undefined, Op: 'gte', Extent: undefined })
+
+    await openMenu(wrapper)
+    await expectMenuItemAbsent(wrapper, 'Age')
+
+    const activeRow = wrapper
+      .findAll('.attribute-container')
+      .find(row => row.text().includes('Age'))
+    expect(activeRow, 'Age row was not rendered').toBeTruthy()
+    await activeRow!.get('.attribute-actions .v-btn').trigger('click')
+    await nextTick()
+
+    expect(criteria.Episode?.Age).toBeUndefined()
+  })
+
+  it('adds and removes Episode Gender Concept Set', async () => {
+    const { wrapper, criteria } = mountEpisodeEditor()
+
+    await openMenu(wrapper)
+    await expectMenuItemPresent(wrapper, 'Gender Concept Set')
+    await selectMenuItem(wrapper, 'Gender Concept Set')
+
+    expect(criteria.Episode?.GenderCS).toStrictEqual({ CodesetId: undefined, IsExclusion: false })
+
+    await openMenu(wrapper)
+    await expectMenuItemAbsent(wrapper, 'Gender Concept Set')
+
+    const activeRow = wrapper
+      .findAll('.attribute-container')
+      .find(row => row.text().includes('Gender Concept Set'))
+    expect(activeRow, 'Gender Concept Set row was not rendered').toBeTruthy()
+    await activeRow!.get('.attribute-actions .v-btn').trigger('click')
+    await nextTick()
+
+    expect(criteria.Episode?.GenderCS).toBeUndefined()
+  })
+
+  it('adds and removes Episode Start Date', async () => {
+    const { wrapper, criteria } = mountEpisodeEditor()
+
+    await openMenu(wrapper)
+    await expectMenuItemPresent(wrapper, 'Start Date')
+    await selectMenuItem(wrapper, 'Start Date')
+
+    expect(criteria.Episode?.EpisodeStartDate).toStrictEqual({ Value: '', Op: 'gte', Extent: undefined })
+
+    await openMenu(wrapper)
+    await expectMenuItemAbsent(wrapper, 'Start Date')
+
+    const activeRow = wrapper
+      .findAll('.attribute-container')
+      .find(row => row.text().includes('Start Date'))
+    expect(activeRow, 'Start Date row was not rendered').toBeTruthy()
+    await activeRow!.get('.attribute-actions .v-btn').trigger('click')
+    await nextTick()
+
+    expect(criteria.Episode?.EpisodeStartDate).toBeUndefined()
+  })
+
+  it('adds and removes Episode End Date', async () => {
+    const { wrapper, criteria } = mountEpisodeEditor()
+
+    await openMenu(wrapper)
+    await expectMenuItemPresent(wrapper, 'End Date')
+    await selectMenuItem(wrapper, 'End Date')
+
+    expect(criteria.Episode?.EpisodeEndDate).toStrictEqual({ Value: '', Op: 'gte', Extent: undefined })
+
+    await openMenu(wrapper)
+    await expectMenuItemAbsent(wrapper, 'End Date')
+
+    const activeRow = wrapper
+      .findAll('.attribute-container')
+      .find(row => row.text().includes('End Date'))
+    expect(activeRow, 'End Date row was not rendered').toBeTruthy()
+    await activeRow!.get('.attribute-actions .v-btn').trigger('click')
+    await nextTick()
+
+    expect(criteria.Episode?.EpisodeEndDate).toBeUndefined()
+  })
+
+  it('adds and removes Episode Date Adjustment', async () => {
+    const { wrapper, criteria } = mountEpisodeEditor()
+
+    await openMenu(wrapper)
+    await expectMenuItemPresent(wrapper, 'Date Adjustment')
+    await selectMenuItem(wrapper, 'Date Adjustment')
+
+    expect(criteria.Episode?.DateAdjustment).toBeDefined()
+
+    await openMenu(wrapper)
+    await expectMenuItemAbsent(wrapper, 'Date Adjustment')
+
+    const activeRow = wrapper
+      .findAll('.attribute-container')
+      .find(row => row.text().includes('Date Adjustment'))
+    expect(activeRow, 'Date Adjustment row was not rendered').toBeTruthy()
+    await activeRow!.get('.attribute-actions .v-btn').trigger('click')
+    await nextTick()
+
+    expect(criteria.Episode?.DateAdjustment).toBeUndefined()
+  })
+
+  it('adds and removes Episode nested criteria', async () => {
+    const { wrapper, criteria } = mountEpisodeEditor()
+
+    await openMenu(wrapper)
+    await expectMenuItemPresent(wrapper, 'Nested Criteria')
+    await selectMenuItem(wrapper, 'Nested Criteria')
+
+    expect(criteria.Episode?.CorrelatedCriteria).toBeDefined()
+
+    await openMenu(wrapper)
+    await expectMenuItemAbsent(wrapper, 'Nested Criteria')
+
+    const criteriaGroup = wrapper.getComponent({ name: 'CriteriaGroup' })
+    await criteriaGroup.get('.group-header .v-btn--variant-text').trigger('click')
+    await nextTick()
+
+    expect(criteria.Episode?.CorrelatedCriteria).toBeUndefined()
+  })
 })

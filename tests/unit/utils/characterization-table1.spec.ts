@@ -120,6 +120,126 @@ describe('buildTable1', () => {
     expect(result.columns.every(c => c.strataKey === undefined)).toBe(true)
   })
 
+  it('collects strata keys from distribution rows when strata columns are enabled', () => {
+    const row = dist({
+      analysisId: 2,
+      analysisName: 'Demographics',
+      covariateId: 21,
+      covariateName: 'Age',
+      cohorts: [COHORT_A, COHORT_B],
+      byCohort: {
+        '1': { avg: 50, stdDev: 5, median: 50, p25: 45, p75: 55 },
+        '2': { avg: 60, stdDev: 6, median: 60, p25: 55, p75: 65 },
+      },
+    })
+    row.avg.age65 = { '1': 70, '2': 72 }
+    row.stdDev.age65 = { '1': 7, '2': 8 }
+    row.median.age65 = { '1': 70, '2': 72 }
+    row.p25.age65 = { '1': 66, '2': 68 }
+    row.p75.age65 = { '1': 74, '2': 76 }
+
+    const result = buildTable1(baseInput({
+      distribution: [row],
+      config: { ...DEFAULT_TABLE1_CONFIG, strataAsCols: true },
+    }))
+
+    expect(result.columns.map(c => c.cohortKey)).toEqual([
+      '1::overall', '1::age65', '2::overall', '2::age65',
+    ])
+    const continuous = result.rows.find(r => r.kind === 'continuous') as {
+      cells: Record<string, { primary: number; secondary: number } | null>
+    }
+    expect(continuous.cells['1::age65']?.primary).toBe(70)
+    expect(continuous.cells['2::age65']?.secondary).toBe(8)
+  })
+
+  it('keeps continuous cells null when required summary values are missing', () => {
+    const meanSdRow = dist({
+      analysisId: 2,
+      analysisName: 'Demographics',
+      covariateId: 21,
+      covariateName: 'Age',
+      cohorts: [COHORT_A],
+      byCohort: {
+        '1': { avg: 50, stdDev: 5, median: 50, p25: 45, p75: 55 },
+      },
+    })
+    delete meanSdRow.stdDev.overall['1']
+
+    const medianIqrRow = dist({
+      analysisId: 2,
+      analysisName: 'Demographics',
+      covariateId: 22,
+      covariateName: 'BMI',
+      cohorts: [COHORT_A],
+      byCohort: {
+        '1': { avg: 30, stdDev: 4, median: 30, p25: 28, p75: 32 },
+      },
+    })
+    delete medianIqrRow.p75.overall['1']
+
+    const meanResult = buildTable1(baseInput({
+      distribution: [meanSdRow],
+    }))
+    const meanRow = meanResult.rows.find(r => r.kind === 'continuous') as {
+      cells: Record<string, { primary: number; secondary: number } | null>
+    }
+    expect(meanRow.cells['1']).toBeNull()
+
+    const medianResult = buildTable1(baseInput({
+      distribution: [medianIqrRow],
+      config: { ...DEFAULT_TABLE1_CONFIG, continuousFormat: 'median-iqr' },
+    }))
+    const medianRow = medianResult.rows.find(r => r.kind === 'continuous') as {
+      cells: Record<string, { primary: number; secondary: number } | null>
+    }
+    expect(medianRow.cells['1']).toBeNull()
+  })
+
+  it('orders grouped analyses by domain precedence before group name', () => {
+    const result = buildTable1(baseInput({
+      prevalence: [
+        prev({ analysisId: 1, analysisName: 'Alpha Drug Study', covariateId: 11,
+               covariateName: 'Medication', domainId: 'Drug', cohorts: [COHORT_A, COHORT_B],
+               byCohort: { '1': { count: 100, pct: 50 }, '2': { count: 80, pct: 40 } } }),
+        prev({ analysisId: 2, analysisName: 'Zulu Condition Study', covariateId: 21,
+               covariateName: 'Diagnosis', domainId: 'Condition', cohorts: [COHORT_A, COHORT_B],
+               byCohort: { '1': { count: 50, pct: 25 }, '2': { count: 60, pct: 30 } } }),
+      ],
+    }))
+
+    expect(result.rows.filter(r => r.kind === 'group').map(r => r.label)).toEqual([
+      'Zulu Condition Study',
+      'Alpha Drug Study',
+    ])
+  })
+
+  it('drops binary rows that do not match selected analysis ids', () => {
+    const result = buildTable1(baseInput({
+      prevalence: [
+        prev({ analysisId: 1, analysisName: 'A', covariateId: 11, covariateName: 'X',
+               cohorts: [COHORT_A, COHORT_B],
+               byCohort: { '1': { count: 50, pct: 25 }, '2': { count: 50, pct: 25 } } }),
+      ],
+      filters: { ...DEFAULT_TABLE1_FILTERS, selectedAnalysisIds: [2] },
+    }))
+
+    expect(result.rows).toEqual([])
+  })
+
+  it('drops binary rows that do not match selected domains', () => {
+    const result = buildTable1(baseInput({
+      prevalence: [
+        prev({ analysisId: 1, analysisName: 'A', covariateId: 11, covariateName: 'X',
+               domainId: 'Condition', cohorts: [COHORT_A, COHORT_B],
+               byCohort: { '1': { count: 50, pct: 25 }, '2': { count: 50, pct: 25 } } }),
+      ],
+      filters: { ...DEFAULT_TABLE1_FILTERS, selectedDomains: ['Drug'] },
+    }))
+
+    expect(result.rows).toEqual([])
+  })
+
   // #327: a single analysis can emit thousands of covariates, so the results
   // need narrowing by text the same way they are narrowed by domain or analysis.
   it('keeps only covariates matching the search filter', () => {

@@ -98,4 +98,91 @@ describe('CustomEra', () => {
     expect(wrapper.text()).toContain('End Date')
     expect(wrapper.findAllComponents({ name: 'DateRange' })).toHaveLength(2)
   })
+
+  it('adds and removes CustomEra Age at Start', async () => {
+    const { wrapper, criteria } = mountCustomEraEditor()
+
+    await openMenu(wrapper, '.custom-era-editor__add-attribute-button')
+    await selectMenuItem(wrapper, 'Age at Start')
+
+    expect(criteria.CustomEra?.AgeAtStart).toStrictEqual({ Value: undefined, Op: 'gte', Extent: undefined })
+
+    await removeActiveAttribute(wrapper)
+    expect(criteria.CustomEra?.AgeAtStart).toBeUndefined()
+  })
+
+  it('adds and removes CustomEra Gender Concept Set', async () => {
+    const { wrapper, criteria } = mountCustomEraEditor()
+
+    await openMenu(wrapper, '.custom-era-editor__add-attribute-button')
+    await selectMenuItem(wrapper, 'Gender Concept Set')
+
+    expect(criteria.CustomEra?.GenderCS).toStrictEqual({ CodesetId: undefined, IsExclusion: false })
+
+    await removeActiveAttribute(wrapper)
+    expect(criteria.CustomEra?.GenderCS).toBeUndefined()
+  })
+
+  it('adds and removes CustomEra Duration', async () => {
+    const { wrapper, criteria } = mountCustomEraEditor()
+
+    await openMenu(wrapper, '.custom-era-editor__add-attribute-button')
+    await selectMenuItem(wrapper, 'Duration')
+
+    expect(criteria.CustomEra?.Duration).toStrictEqual({ Value: undefined, Op: 'gte', Extent: undefined })
+
+    await removeActiveAttribute(wrapper)
+    expect(criteria.CustomEra?.Duration).toBeUndefined()
+  })
+
+  it('adds and removes CustomEra Start Date', async () => {
+    const { wrapper, criteria } = mountCustomEraEditor()
+
+    await openMenu(wrapper, '.custom-era-editor__add-attribute-button')
+    await selectMenuItem(wrapper, 'Start Date')
+
+    expect(criteria.CustomEra?.StartDate).toStrictEqual({ Value: '', Op: 'gte', Extent: undefined })
+
+    await removeActiveAttribute(wrapper)
+    expect(criteria.CustomEra?.StartDate).toBeUndefined()
+  })
+
+  it('adds and removes CustomEra End Date', async () => {
+    const { wrapper, criteria } = mountCustomEraEditor()
+
+    await openMenu(wrapper, '.custom-era-editor__add-attribute-button')
+    await selectMenuItem(wrapper, 'End Date')
+
+    expect(criteria.CustomEra?.EndDate).toStrictEqual({ Value: '', Op: 'lte', Extent: undefined })
+
+    await removeActiveAttribute(wrapper)
+    expect(criteria.CustomEra?.EndDate).toBeUndefined()
+  })
+
+  it('adds and removes CustomEra Date Adjustment', async () => {
+    const { wrapper, criteria } = mountCustomEraEditor()
+
+    await openMenu(wrapper, '.custom-era-editor__add-attribute-button')
+    await selectMenuItem(wrapper, 'Date Adjustment')
+
+    expect(criteria.CustomEra?.DateAdjustment).toBeDefined()
+
+    await removeActiveAttribute(wrapper)
+    expect(criteria.CustomEra?.DateAdjustment).toBeUndefined()
+  })
+
+  it('adds and removes CustomEra nested criteria', async () => {
+    const { wrapper, criteria } = mountCustomEraEditor()
+
+    await openMenu(wrapper, '.custom-era-editor__add-attribute-button')
+    await selectMenuItem(wrapper, 'Nested Criteria')
+
+    expect(criteria.CustomEra?.CorrelatedCriteria).toBeDefined()
+
+    const criteriaGroup = wrapper.getComponent({ name: 'CriteriaGroup' })
+    await criteriaGroup.get('.group-header .v-btn--variant-text').trigger('click')
+    await nextTick()
+
+    expect(criteria.CustomEra?.CorrelatedCriteria).toBeUndefined()
+  })
 })

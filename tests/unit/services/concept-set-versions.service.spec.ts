@@ -186,6 +186,18 @@ describe('ConceptSetVersionsService', () => {
       await expect(getVersion(456, 2)).rejects.toThrow('Failed to validate version data')
     })
 
+    it('throws when the version expression payload fails validation', async () => {
+      const { httpGet } = await import('@/services/http-client')
+      vi.mocked(httpGet).mockImplementation(async (url: string) => {
+        if (url.endsWith('/expression')) {
+          return { items: [{ concept: { CONCEPT_ID: 1 } }] }
+        }
+        return mockVersionResponse
+      })
+
+      await expect(getVersion(456, 2)).rejects.toThrow('Failed to validate version items')
+    })
+
     it('throws on network error', async () => {
       const { httpGet } = await import('@/services/http-client')
       vi.mocked(httpGet).mockRejectedValue(new Error('404 Not found'))

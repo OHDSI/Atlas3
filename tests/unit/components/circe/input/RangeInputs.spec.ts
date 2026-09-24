@@ -66,6 +66,11 @@ describe('Range-style input controls', () => {
     await nextTick()
     expect(modelValue.Op).toBe('eq')
     expect(wrapper.find('.date-range__extent').exists()).toBe(false)
+
+    await wrapper.findComponent({ name: 'AtlasSelect' }).vm.$emit('update:modelValue', '!bt')
+    await nextTick()
+    expect(modelValue.Op).toBe('!bt')
+    expect(wrapper.find('.date-range__extent').exists()).toBe(true)
   })
 
   it('writes numeric range operator/value/extent updates back through the model binding', async () => {
@@ -103,6 +108,17 @@ describe('Range-style input controls', () => {
     await textFields[0].vm.$emit('update:modelValue', '')
     await nextTick()
     expect(modelValue.Value).toBeUndefined()
+
+    await wrapper.findComponent({ name: 'AtlasSelect' }).vm.$emit('update:modelValue', '!bt')
+    await nextTick()
+    expect(modelValue.Op).toBe('!bt')
+    expect(wrapper.find('.numeric-range__extent').exists()).toBe(true)
+
+    const rangeFields = wrapper.findAllComponents({ name: 'AtlasTextField' })
+    expect(rangeFields).toHaveLength(2)
+    await rangeFields[1].vm.$emit('update:modelValue', '72')
+    await nextTick()
+    expect(modelValue.Extent).toBe(72)
   })
 
   it('keeps date adjustment offsets numeric and falls back to zero when cleared', async () => {

@@ -203,6 +203,12 @@ describe('CohortGenerationSection', () => {
     })
   })
 
+  it('shows the no-sources alert when a saved cohort has no data sources', async () => {
+    const wrapper = mountSection({ cohortId: 1 }, [], [])
+    await flushPromises()
+    expect(wrapper.text()).toContain('Pick at least one source to generate')
+  })
+
   it('starts collapsed when no jobs exist', async () => {
     const wrapper = mountSection({ cohortId: 1 }, [], [ccae])
     await flushPromises()

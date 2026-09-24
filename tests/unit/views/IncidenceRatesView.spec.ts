@@ -36,7 +36,7 @@ vi.mock('@/services/incidence-rate.service')
 
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
-import { listIncidenceRates, deleteIncidenceRate, copyIncidenceRate } from '@/services/incidence-rate.service'
+import { listIncidenceRates, deleteIncidenceRate, copyIncidenceRate, importIncidenceRate } from '@/services/incidence-rate.service'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -298,6 +298,19 @@ describe('IncidenceRatesView', () => {
     })
   })
 
+  describe('Import Action', () => {
+    it('returns the imported id from importDesign and routes onImported', async () => {
+      wrapper = mountView()
+
+      vi.mocked(importIncidenceRate).mockResolvedValue({ id: 88 } as never)
+
+      await expect(wrapper.vm.importDesign({})).resolves.toEqual({ id: 88 })
+
+      wrapper.vm.onImported({ id: 88 })
+      expect(mockPush).toHaveBeenCalledWith('/incidence-rates/88')
+    })
+  })
+
   describe('Delete Flow', () => {
     it('opens the confirmation dialog with the target id', async () => {
       wrapper = mountView()
@@ -324,6 +337,29 @@ describe('IncidenceRatesView', () => {
       const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
       const cancelButton = buttons.find(b => b.text().includes('Cancel'))
       await cancelButton?.trigger('click')
+
+      expect(wrapper.vm.showDelete).toBe(false)
+    })
+
+    it('closes the dialog when the dialog emits an update event', async () => {
+      wrapper = mountView()
+      wrapper.vm.showDelete = true
+      await wrapper.vm.$nextTick()
+
+      const dialog = wrapper.findComponent({ name: 'AtlasDialog' })
+      await dialog.vm.$emit('update:modelValue', false)
+
+      expect(wrapper.vm.showDelete).toBe(false)
+    })
+
+    it('closes the dialog when the dialog emits close', async () => {
+      wrapper = mountView()
+      wrapper.vm.showDelete = true
+      await wrapper.vm.$nextTick()
+
+      const dialog = wrapper.findComponent({ name: 'AtlasDialog' })
+      const closeButton = dialog.findComponent({ name: 'AtlasIconButton' })
+      await closeButton.trigger('click')
 
       expect(wrapper.vm.showDelete).toBe(false)
     })

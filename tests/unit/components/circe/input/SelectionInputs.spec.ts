@@ -7,6 +7,7 @@ import * as directives from 'vuetify/directives'
 
 import ConceptArray from '@/components/circe/input/ConceptArray.vue'
 import EventConceptSet from '@/components/circe/input/EventConceptSet.vue'
+import ConceptSetSelection from '@/components/circe/input/ConceptSetSelection.vue'
 import TextFilter from '@/components/circe/input/TextFilter.vue'
 import {
   CriteriaSelectionKey,
@@ -218,6 +219,24 @@ describe('Shared input controls', () => {
       expect(wrapper.emitted('select')?.[0]).toEqual([undefined])
     })
 
+    it('renders the title when not compact and clears the selected concept set', async () => {
+      const modelValue = reactive({ CodesetId: 7 })
+      const wrapper = mountEventConceptSet({
+        conceptSets: [{ id: 7, name: 'Test Set' }],
+        modelValue,
+        label: 'Gender Concept Set',
+      })
+
+      expect(wrapper.text()).toContain('Gender Concept Set')
+      expect(wrapper.text()).toContain('Test Set')
+
+      await wrapper.findComponent({ name: 'AtlasChip' }).findComponent({ name: 'VChip' }).vm.$emit('click:close', new MouseEvent('click'))
+      await nextTick()
+
+      expect(modelValue.CodesetId).toBeUndefined()
+      expect(wrapper.emitted('clear')).toBeTruthy()
+    })
+
     it('writes clears and edits through the targetRef when a concept set is already selected', async () => {
       const modelValue = reactive({ CodesetId: 7, IsExclusion: false })
       const wrapper = mountEventConceptSet({
@@ -234,6 +253,55 @@ describe('Shared input controls', () => {
 
       await wrapper.findComponent({ name: 'AtlasChip' }).findComponent({ name: 'VChip' }).vm.$emit('click:close', new MouseEvent('click'))
       await nextTick()
+      expect(modelValue.CodesetId).toBeUndefined()
+      expect(wrapper.emitted('clear')).toBeTruthy()
+    })
+  })
+
+  describe('ConceptSetSelection', () => {
+    it('toggles the exclusion chip when the model starts as any-of', async () => {
+      const modelValue = reactive({ CodesetId: 7 })
+      const wrapper = mount(ConceptSetSelection, {
+        props: {
+          modelValue,
+          conceptSets: [{ id: 7, name: 'Test Set' }],
+        },
+        global: {
+          plugins: [vuetify],
+        },
+      })
+
+      expect(wrapper.get('.concept-set-selection__exclude-chip').text()).toContain('any of')
+      expect(wrapper.text()).toContain('Test Set')
+
+      await wrapper.get('.concept-set-selection__exclude-chip').trigger('click')
+      expect(modelValue.IsExclusion).toBe(true)
+      expect(wrapper.get('.concept-set-selection__exclude-chip').text()).toContain('not any of')
+
+      await wrapper.get('.concept-set-selection__exclude-chip').trigger('click')
+      expect(modelValue.IsExclusion).toBe(false)
+      expect(wrapper.get('.concept-set-selection__exclude-chip').text()).toContain('any of')
+    })
+
+    it('emits clear when the selected concept set chip is closed', async () => {
+      const modelValue = reactive({ CodesetId: 7, IsExclusion: false })
+      const wrapper = mount(ConceptSetSelection, {
+        props: {
+          modelValue,
+          conceptSets: [{ id: 7, name: 'Test Set' }],
+        },
+        global: {
+          plugins: [vuetify],
+        },
+      })
+
+      await wrapper
+        .findComponent({ name: 'EventConceptSet' })
+        .findComponent({ name: 'AtlasChip' })
+        .findComponent({ name: 'VChip' })
+        .vm.$emit('click:close', new MouseEvent('click'))
+      await nextTick()
+
       expect(modelValue.CodesetId).toBeUndefined()
       expect(wrapper.emitted('clear')).toBeTruthy()
     })

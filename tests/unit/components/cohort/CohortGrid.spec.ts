@@ -208,6 +208,25 @@ describe('CohortGrid', () => {
       expect(wrapper.text()).toContain('No cohorts match "diabetes"')
     })
 
+    it('should display the tag-only empty message when a tag filter is set', () => {
+      const wrapper = mountComponent({
+        cohorts: [],
+        selectedTags: ['Diabetes'],
+      })
+
+      expect(wrapper.text()).toContain('No cohorts match the selected tags.')
+    })
+
+    it('should display the query-and-tag empty message when both filters are set', () => {
+      const wrapper = mountComponent({
+        cohorts: [],
+        searchQuery: 'diabetes',
+        selectedTags: ['Diabetes'],
+      })
+
+      expect(wrapper.text()).toContain('No cohorts match "diabetes" with the selected tags.')
+    })
+
     it('should show the New cohort button in the initial empty state', () => {
       const wrapper = mountComponent({ cohorts: [] })
 
@@ -308,6 +327,16 @@ describe('CohortGrid', () => {
 
       expect(wrapper.emitted('delete')).toBeTruthy()
       expect(wrapper.emitted('delete')![0]).toEqual([mockCohorts[0]])
+    })
+
+    it('should emit copy event from cohort card', async () => {
+      const wrapper = mountComponent({ cohorts: mockCohorts })
+
+      const card = wrapper.findComponent({ name: 'CohortCard' })
+      await card.vm.$emit('copy', mockCohorts[0])
+
+      expect(wrapper.emitted('copy')).toBeTruthy()
+      expect(wrapper.emitted('copy')![0]).toEqual([mockCohorts[0]])
     })
 
     it('should emit tag-click event from cohort card', async () => {

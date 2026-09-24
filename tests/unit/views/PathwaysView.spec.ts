@@ -35,7 +35,7 @@ vi.mock('@/services/pathway.service')
 
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
-import { listPathways, deletePathway, copyPathway } from '@/services/pathway.service'
+import { listPathways, deletePathway, copyPathway, importPathway } from '@/services/pathway.service'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -293,6 +293,19 @@ describe('PathwaysView', () => {
     })
   })
 
+  describe('Import Action', () => {
+    it('returns the imported id from importDesign and routes onImported', async () => {
+      wrapper = mountView()
+
+      vi.mocked(importPathway).mockResolvedValue({ id: 88 } as never)
+
+      await expect(wrapper.vm.importDesign({})).resolves.toEqual({ id: 88 })
+
+      wrapper.vm.onImported({ id: 88 })
+      expect(mockPush).toHaveBeenCalledWith('/pathways/88')
+    })
+  })
+
   describe('Delete Flow', () => {
     it('opens the confirmation dialog with the target id', async () => {
       wrapper = mountView()
@@ -374,6 +387,36 @@ describe('PathwaysView', () => {
       await snackbar.vm.$emit('update:modelValue', false)
 
       expect(wrapper.vm.feedback).toBeNull()
+    })
+
+    it('clears feedback when the snackbar emits an update event', async () => {
+      wrapper = mountView()
+      wrapper.vm.feedback = { message: 'Pathway deleted', color: 'success' }
+      await wrapper.vm.$nextTick()
+
+      const snackbar = wrapper.findComponent({ name: 'AtlasSnackbar' })
+      await snackbar.vm.$emit('update:modelValue', false)
+
+      expect(wrapper.vm.feedback).toBeNull()
+    })
+
+    it('closes the dialog when the dialog emits close', async () => {
+      wrapper = mountView()
+      wrapper.vm.showDelete = true
+      await wrapper.vm.$nextTick()
+
+      const dialog = wrapper.findComponent({ name: 'AtlasDialog' })
+      const closeButton = dialog.findComponent({ name: 'AtlasIconButton' })
+      await closeButton.trigger('click')
+
+      expect(wrapper.vm.showDelete).toBe(false)
+    })
+
+    it('maps snackbar error severity to danger', () => {
+      wrapper = mountView()
+      wrapper.vm.feedback = { message: 'Copy failed', color: 'error' }
+
+      expect(wrapper.vm.feedbackSeverity).toBe('danger')
     })
   })
 
