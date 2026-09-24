@@ -8,6 +8,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
 const routerPush = vi.fn()
+const routeParams = { id: '123' }
 const rolesMock = {
   currentRole: ref<any>(null),
   isLoadingRoles: ref(false),
@@ -23,7 +24,7 @@ const rolesMock = {
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: routerPush }),
-  useRoute: () => ({ params: { id: '123' } }),
+  useRoute: () => ({ params: routeParams }),
 }))
 
 vi.mock('@/composables/useI18n', async () => {
@@ -215,5 +216,45 @@ describe('RoleDetailsView', () => {
     await mounted.wrapper.get('button').trigger('click')
     expect(routerPush).toHaveBeenCalledWith({ name: 'role-management' })
     mounted.wrapper.unmount()
+  })
+
+  it('switches the active tab when the tabs and window emit updates', async () => {
+    const mounted = await mountView()
+    await flushPromises()
+
+    const tabs = mounted.wrapper.findComponent({ name: 'AtlasTabs' })
+    const window = mounted.wrapper.findComponent({ name: 'VWindow' })
+
+    await tabs.vm.$emit('update:modelValue', 'permissions')
+    expect((mounted.wrapper.vm as { activeTab: string }).activeTab).toBe('permissions')
+
+    await window.vm.$emit('update:modelValue', 'utilities')
+    expect((mounted.wrapper.vm as { activeTab: string }).activeTab).toBe('utilities')
+  })
+
+  it('skips loading when the route id is not numeric', async () => {
+    routeParams.id = 'abc'
+    const mounted = await mountView()
+    await flushPromises()
+
+    expect(rolesMock.fetchRoleById).not.toHaveBeenCalled()
+    mounted.wrapper.unmount()
+    routeParams.id = '123'
+  })
+
+  it('renders the role without a description', async () => {
+    routeParams.id = 'abc'
+    rolesMock.currentRole.value = {
+      id: 123,
+      name: 'Administrator',
+    }
+
+    const mounted = await mountView()
+    await flushPromises()
+
+    expect(mounted.wrapper.text()).toContain('Administrator')
+    expect(mounted.wrapper.find('.role-details-view__title-section .text-body-1').exists()).toBe(false)
+    mounted.wrapper.unmount()
+    routeParams.id = '123'
   })
 })

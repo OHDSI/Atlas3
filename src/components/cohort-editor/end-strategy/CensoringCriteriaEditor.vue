@@ -110,7 +110,7 @@ const criteriaTypes = [
 ]
 
 const criteriaFactories: Record<string, () => Criteria> = {
-  ConditionOccurrence: () => ({ ConditionOccurrence: { First: false } }),
+  ConditionOccurrence: () => ({ ConditionOccurrence: {} }),
   ConditionEra: () => ({ ConditionEra: {} }),
   DrugExposure: () => ({ DrugExposure: {} }),
   DoseEra: () => ({ DoseEra: {} }),

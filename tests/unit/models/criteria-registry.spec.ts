@@ -32,6 +32,13 @@ describe('the registry covers the schema', () => {
   it('offers every other type for editing', () => {
     expect(EDITABLE_CRITERIA_TYPES).toHaveLength(CRITERIA_TYPES.length - 1)
   })
+
+  it('orders the editable menu alphabetically by label', () => {
+    const labels = EDITABLE_CRITERIA_TYPES.map(type => type.label)
+    const sortedLabels = [...labels].sort((left, right) => left.localeCompare(right))
+
+    expect(labels).toEqual(sortedLabels)
+  })
 })
 
 describe('the criterion each type creates', () => {
@@ -49,11 +56,9 @@ describe('the criterion each type creates', () => {
     }
   })
 
-  // Carried over from the previous factory switch, where it was the one
-  // non-empty default.
-  it('starts a condition occurrence with First unset rather than absent', () => {
+  it('starts a condition occurrence without an explicit First flag', () => {
     expect(CRITERIA_TYPE_BY_KEY.ConditionOccurrence.create()).toEqual({
-      ConditionOccurrence: { First: false },
+      ConditionOccurrence: {},
     })
   })
 

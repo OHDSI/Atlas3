@@ -385,7 +385,7 @@ describe('cohort-editor interactions', () => {
     })
 
     const expectedCriteria = new Map<string, Criteria>([
-      ['ConditionOccurrence', { ConditionOccurrence: { First: false } }],
+      ['ConditionOccurrence', { ConditionOccurrence: {} }],
       ['ConditionEra', { ConditionEra: {} }],
       ['DrugExposure', { DrugExposure: {} }],
       ['DoseEra', { DoseEra: {} }],
@@ -418,7 +418,7 @@ describe('cohort-editor interactions', () => {
     }
 
     await wrapper.setProps({
-      modelValue: [{ ConditionOccurrence: { First: false } } as Criteria],
+      modelValue: [{ ConditionOccurrence: {} } as Criteria],
     })
 
     const renderer = wrapper.findComponent(CriteriaRenderer)

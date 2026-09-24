@@ -6,6 +6,7 @@ export type ModelAccessor<T> = () => T
 export type CriteriaFieldKind =
   | 'numericRange'
   | 'conceptSet'
+  | 'eventConceptSet'
   | 'conceptArray'
   | 'dateRange'
   | 'dateAdjustment'

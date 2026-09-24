@@ -280,7 +280,7 @@ describe('concept-set reference discovery over the whole schema', () => {
       CORPUS_AUDIT.missing,
       `reference fields the walker did not discover:\n    ${CORPUS_AUDIT.missing.join('\n    ')}`,
     ).toEqual([])
-    expect(CORPUS_AUDIT.namedPaths.size).toBe(1363)
+    expect(CORPUS_AUDIT.namedPaths.size).toBe(1607)
   })
 
   it('pins the reference fields whose names do not end in CodesetId', () => {

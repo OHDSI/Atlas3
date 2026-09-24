@@ -297,6 +297,52 @@ describe('useCohorts', () => {
         return new Date(c.createdDate) >= twentyDaysAgo
       })).toBe(true)
     })
+
+    it('should filter by modified date range', async () => {
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [...mockCohorts] })
+
+      const { fetchCohorts, filters, filteredCohorts } = useCohorts()
+
+      await fetchCohorts()
+      await vi.advanceTimersByTimeAsync(500)
+
+      const sevenDaysAgo = new Date(Date.now() - 86400000 * 7)
+      filters.value.modifiedDateRange = { from: sevenDaysAgo }
+
+      await vi.advanceTimersByTimeAsync(500)
+
+      expect(filteredCohorts.value.every(c => {
+        if (!c.modifiedDate) return false
+        return new Date(c.modifiedDate) >= sevenDaysAgo
+      })).toBe(true)
+    })
+  })
+
+  describe('chunked filtering', () => {
+    it('yields between filter chunks when the cohort list is larger than one chunk', async () => {
+      const largeCohorts: CohortDefinitionSummary[] = Array.from({ length: 501 }, (_, index) => ({
+        id: index + 1,
+        name: `Cohort ${index + 1}`,
+        description: `Cohort ${index + 1} description`,
+        createdBy: { login: `user${index + 1}`, name: `User ${index + 1}` },
+        createdDate: Date.now() - index * 1000,
+        modifiedDate: Date.now() - index * 1000,
+        tags: [{ name: 'bulk' }],
+      }))
+
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: largeCohorts })
+
+      const { fetchCohorts, filters, filteredCohorts } = useCohorts()
+
+      await fetchCohorts()
+      await vi.advanceTimersByTimeAsync(500)
+
+      filters.value.searchQuery = 'Cohort'
+      await vi.advanceTimersByTimeAsync(500)
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(filteredCohorts.value).toHaveLength(501)
+    })
   })
 
   describe('tag filtering', () => {

@@ -108,4 +108,14 @@ describe('LanguageSelector', () => {
     expect(btn.props('icon')).toBe('mdi-translate')
     expect(btn.props('variant')).toBe('text')
   })
+
+  it('should clear the locale cache on shift-click', async () => {
+    const wrapper = mountComponent()
+
+    await wrapper.find('[data-testid="language-selector"]').trigger('click', {
+      shiftKey: true,
+    })
+
+    expect(mockClearCache).toHaveBeenCalledTimes(1)
+  })
 })

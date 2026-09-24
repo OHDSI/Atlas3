@@ -12,6 +12,7 @@ describe('criteria-registry', () => {
     expect(criteriaTypeForDomain(undefined)).toBeUndefined()
     expect(criteriaTypeForDomain('Condition')).toBe('ConditionOccurrence')
     expect(criteriaTypeForDomain('Drug')).toBe('DrugExposure')
+    expect(criteriaTypeForDomain('Episode')).toBe('Episode')
     expect(criteriaTypeForDomain('Measurement')).toBe('Measurement')
     expect(criteriaTypeForDomain('Observation')).toBe('Observation')
     expect(criteriaTypeForDomain('Procedure')).toBe('ProcedureOccurrence')

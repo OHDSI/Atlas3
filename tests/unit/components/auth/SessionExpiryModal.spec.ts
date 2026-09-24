@@ -290,6 +290,58 @@ describe('SessionExpiryModal.vue', () => {
 
       await wrapper.vm.$nextTick();
 
+          describe('Dismiss handling', () => {
+            it('should emit dismiss and update:model-value when closed', async () => {
+              const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+              wrapper = mount(SessionExpiryModal, {
+                props: {
+                  modelValue: true,
+                  expiresAt,
+                  remainingSeconds: 300,
+                  isExtending: false,
+                  extensionError: null,
+                },
+                global: {
+                  plugins: [vuetify]
+                }
+              });
+
+              await wrapper.findComponent({ name: 'AtlasDialog' }).vm.$emit('close', false);
+
+              expect(wrapper.emitted('dismiss')).toBeTruthy();
+              expect(wrapper.emitted('update:model-value')).toBeTruthy();
+            });
+          });
+
+          describe('Countdown lifecycle', () => {
+            it('should start and stop the countdown when visibility changes', async () => {
+              vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
+              const expiresAt = new Date('2024-01-01T00:01:00Z');
+
+              wrapper = mount(SessionExpiryModal, {
+                props: {
+                  modelValue: false,
+                  expiresAt,
+                  remainingSeconds: 60,
+                  isExtending: false,
+                  extensionError: null,
+                },
+                global: {
+                  plugins: [vuetify]
+                }
+              });
+
+              await wrapper.setProps({ modelValue: true });
+              await vi.advanceTimersByTimeAsync(1000);
+              expect(wrapper.vm.formattedTime).toBe('59s');
+
+              await wrapper.setProps({ modelValue: false });
+              wrapper.unmount();
+              expect(wrapper.exists()).toBe(false);
+            });
+          });
+
       // Component should mount successfully
       expect(wrapper.exists()).toBe(true);
     });

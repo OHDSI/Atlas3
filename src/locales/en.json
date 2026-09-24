@@ -580,6 +580,20 @@
       "enterCohortPlaceholder": "Enter a cohort definition description here",
       "importConceptSet": "Import Concept Set From Repository..."
     },
+    "customEra": {
+      "criteriaPrefix": "a custom era using",
+      "criteriaSuffix": "gap of:",
+      "criteriaList": "Criteria List",
+      "addCriteria": "Add Criteria...",
+      "additionalAttributes": "Additional Attributes",
+      "addAttribute": "Add Attribute...",
+      "noCriteria": "No criteria yet.",
+      "noOptionalAttributes": "No additional attributes yet."
+    },
+    "episode": {
+      "criteriaText_1": "an episode of",
+      "addAttribute": "Add attribute..."
+    },
     "expressionCartoonBindings": {
       "primaryCriteria": "Primary Criteria",
       "any": "any",
