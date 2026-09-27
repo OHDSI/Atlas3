@@ -86,6 +86,18 @@ function resolveDomainColorHex(domain: string, mode: 'light' | 'dark'): string {
   return VUETIFY_COLOR_HEX[token] ?? PRIMARY_FALLBACK_HEX[mode]
 }
 
+// Deterministic so a point keeps its offset across re-renders and filtering,
+// which ATLAS 2.x achieved by caching Math.random() per point.
+function jitterFor(conceptId: number, startDay: number, index: number): number {
+  let h = 2166136261
+  for (const n of [conceptId, startDay, index]) {
+    h ^= n | 0
+    h = Math.imul(h, 16777619)
+    h ^= h >>> 13
+  }
+  return (h >>> 0) / 0xffffffff - 0.5
+}
+
 export interface UniqueConcept {
   conceptId: number
   conceptName: string
@@ -104,6 +116,8 @@ export interface TimelinePoint {
   color: string
   /** domain-derived fallback color for un-highlighted points */
   domainColor: string
+  /** vertical offset in [-0.5, 0.5] of the domain row, so same-day events do not overlap */
+  jitter: number
 }
 
 export interface TimelineDataset {
@@ -115,6 +129,7 @@ export function useTimelineFilters(): {
   uniqueConcepts: ComputedRef<UniqueConcept[]>
   chartSeries: ComputedRef<TimelineDataset[]>
   axisExtent: ComputedRef<{ min: number; max: number }>
+  axisDomains: ComputedRef<string[]>
 } {
   const store = useProfileStore()
   const themeStore = useThemeStore()
@@ -136,6 +151,7 @@ export function useTimelineFilters(): {
   })
 
   const chartSeries = computed<TimelineDataset[]>(() => {
+    const recordIndex = new Map((store.person?.records ?? []).map((r, i) => [r, i]))
     const buckets = new Map<string, TimelinePoint[]>()
     for (const r of store.filteredRecords) {
       const domain = normalizeDomain(r.domain)
@@ -151,6 +167,7 @@ export function useTimelineFilters(): {
         isRange: endDay !== null && endDay > r.startDay,
         color: store.highlights.get(r.conceptId) ?? DEFAULT_HIGHLIGHT_COLOR,
         domainColor: resolveDomainColorHex(domain, themeStore.resolved),
+        jitter: jitterFor(r.conceptId, r.startDay, recordIndex.get(r) ?? 0),
       }
       const arr = buckets.get(domain)
       if (arr) {
@@ -182,5 +199,14 @@ export function useTimelineFilters(): {
     return { min, max }
   })
 
-  return { uniqueConcepts, chartSeries, axisExtent }
+  // Rows come from all of the person's records rather than the filtered ones,
+  // so filtering does not make the rows jump.
+  const axisDomains = computed<string[]>(() => {
+    const present = new Set((store.person?.records ?? []).map(r => normalizeDomain(r.domain)))
+    const known = OMOP_DOMAINS.filter(d => present.has(d))
+    const other = [...present].filter(d => !(OMOP_DOMAINS as readonly string[]).includes(d)).sort()
+    return [...known, ...other]
+  })
+
+  return { uniqueConcepts, chartSeries, axisExtent, axisDomains }
 }

@@ -91,6 +91,48 @@ describe('useTimelineFilters axis extent + isRange', () => {
     expect(same.isRange).toBe(false)
   })
 
+  it('axisDomains lists only domains the person has, in OMOP order, including unknown ones', () => {
+    const s = useProfileStore()
+    s.person = personWith([
+      { conceptId: 1, conceptName: 'A', domain: 'condition', startDate: 1, endDate: null, startDay: 0, endDay: null },
+      { conceptId: 2, conceptName: 'B', domain: 'PluginDomain', startDate: 1, endDate: null, startDay: 0, endDay: null },
+      { conceptId: 3, conceptName: 'C', domain: 'Drug', startDate: 1, endDate: null, startDay: 0, endDay: null },
+    ])
+    const { axisDomains } = useTimelineFilters()
+    expect(axisDomains.value).toEqual(['Drug', 'Condition', 'PluginDomain'])
+  })
+
+  it('axisDomains keeps domains that the current filters hide', () => {
+    const s = seed()
+    s.setDomainFilter('Drug', true)
+    const { axisDomains } = useTimelineFilters()
+    expect(axisDomains.value).toEqual(['Drug', 'Condition'])
+  })
+
+  it('gives same-day points different, stable jitter within [-0.5, 0.5]', () => {
+    const s = useProfileStore()
+    s.person = personWith(
+      Array.from({ length: 20 }, (_, i) => ({
+        conceptId: 100 + i, conceptName: `C${i}`, domain: 'Drug',
+        startDate: 1, endDate: null, startDay: 5, endDay: null,
+      }))
+    )
+    const { chartSeries } = useTimelineFilters()
+    const jitters = chartSeries.value[0]!.points.map(p => p.jitter)
+
+    expect(new Set(jitters).size).toBe(jitters.length)
+    for (const j of jitters) {
+      expect(j).toBeGreaterThanOrEqual(-0.5)
+      expect(j).toBeLessThanOrEqual(0.5)
+    }
+
+    s.setTextFilter('C1')
+    const filtered = chartSeries.value[0]!.points
+    for (const p of filtered) {
+      expect(p.jitter).toBe(jitters[p.conceptId - 100])
+    }
+  })
+
   it('axisExtent includes 0 even when all records are positive', () => {
     const store = useProfileStore()
     store.person = personWith([

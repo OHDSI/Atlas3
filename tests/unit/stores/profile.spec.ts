@@ -199,6 +199,18 @@ describe('Profile Store — getters', () => {
     expect(s.filteredRecords.map(r => r.conceptId)).toEqual([2])
   })
 
+  it('filteredRecords keeps ranged records that overlap the dateRange', () => {
+    const s = seed([
+      { conceptId: 1, startDay: -100, endDay: -40 },
+      { conceptId: 2, startDay: -100, endDay: -60 },
+      { conceptId: 3, startDay: 90, endDay: 300 },
+      { conceptId: 4, startDay: -200, endDay: 400 },
+      { conceptId: 5, startDay: 101, endDay: 300 },
+    ])
+    s.setDateRange([-50, 100])
+    expect(s.filteredRecords.map(r => r.conceptId)).toEqual([1, 3, 4])
+  })
+
   it('observationBands derives from observationPeriods', () => {
     const s = seed([])
     expect(s.observationBands).toEqual([{ x1: -100, x2: 100 }])

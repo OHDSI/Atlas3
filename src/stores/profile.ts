@@ -134,7 +134,8 @@ export const useProfileStore = defineStore('profile', () => {
       if (!matchesTerms([r.conceptName], txt)) return false
       if (range) {
         const [from, to] = range
-        if (r.startDay < from || r.startDay > to) return false
+        const end = r.endDay ?? r.startDay
+        if (r.startDay > to || end < from) return false
       }
       return true
     })

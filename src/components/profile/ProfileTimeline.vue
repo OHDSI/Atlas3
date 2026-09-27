@@ -28,6 +28,7 @@
         data-test="profile-timeline"
       >
         <v-chart
+          ref="chartRef"
           class="chart"
           :option="option"
           autoresize
@@ -39,12 +40,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useTimelineFilters } from '@/composables/useTimelineFilters'
 import { useProfileStore } from '@/stores/profile'
 import { useThemeStore } from '@/stores/theme'
 import { useI18n } from '@/composables/useI18n'
-import { DEFAULT_HIGHLIGHT_COLOR, OMOP_DOMAINS } from '@/models/profile.types'
+import { DEFAULT_HIGHLIGHT_COLOR } from '@/models/profile.types'
 import { AtlasCard, AtlasChip } from '@/components/ui'
 import { tokens } from '@/ui/tokens'
 import ProfileFilterChips from '@/components/profile/ProfileFilterChips.vue'
@@ -52,12 +53,15 @@ import ProfileFilterChips from '@/components/profile/ProfileFilterChips.vue'
 const { t, tv } = useI18n()
 const store = useProfileStore()
 const themeStore = useThemeStore()
-const { chartSeries, axisExtent } = useTimelineFilters()
+const { chartSeries, axisExtent, axisDomains } = useTimelineFilters()
+const chartRef = ref<{ dispatchAction: (action: Record<string, unknown>) => void } | null>(null)
 
 // Minimum pixel width for point-style records so they remain
 // clickable / visible. Mirrors `minBoxPix` in Atlas's profileChart.js.
 const MIN_BOX_PX = 5
 const BAR_HEIGHT_PX = 8
+// Share of a domain row that jittered events may spread across.
+const JITTER_BAND_SHARE = 0.8
 
 function escapeHtml(s: string): string {
   return s
@@ -70,12 +74,14 @@ function escapeHtml(s: string): string {
 
 interface SeriesDatum {
   name: string
-  value: [number, number | null, string]
+  value: [number, number | null, string, number]
   isRange: boolean
 }
 
 const option = computed(() => {
-  const { min, max } = axisExtent.value
+  const { min, max } = store.dateRange
+    ? { min: store.dateRange[0], max: store.dateRange[1] }
+    : axisExtent.value
   return {
     grid: { left: 120, right: 24, top: 16, bottom: 60 },
     xAxis: {
@@ -86,7 +92,7 @@ const option = computed(() => {
       min,
       max,
     },
-    yAxis: { type: 'category', data: [...OMOP_DOMAINS] },
+    yAxis: { type: 'category', data: axisDomains.value },
     tooltip: {
       trigger: 'item',
       formatter: (p: { data?: SeriesDatum }) => {
@@ -100,10 +106,11 @@ const option = computed(() => {
         return `${escapeHtml(d.name)}<br/>${range}`
       },
     },
-    brush: { toolbox: ['lineX', 'clear'], xAxisIndex: 0 },
+    brush: { toolbox: ['lineX'], xAxisIndex: 0 },
     series: chartSeries.value.map((d, i) => ({
       name: d.domain,
       type: 'custom' as const,
+      clip: true,
       encode: { x: [0, 1], y: 2, tooltip: [0, 1] },
       renderItem: (
         _params: unknown,
@@ -117,7 +124,11 @@ const option = computed(() => {
         const startDay = api.value(0) as number
         const endRaw = api.value(1)
         const yCat = api.value(2) as string
-        const [xStart, yPix] = api.coord([startDay, yCat])
+        const jitter = api.value(3) as number
+        const [xStart, yCenter] = api.coord([startDay, yCat])
+        const rowHeight = api.size([0, 1])[1]
+        const spread = Math.max(0, rowHeight * JITTER_BAND_SHARE - BAR_HEIGHT_PX)
+        const yPix = yCenter + jitter * spread
         const hasRange = typeof endRaw === 'number' && endRaw > startDay
         const xEnd = hasRange ? api.coord([endRaw as number, yCat])[0] : xStart
         const width = Math.max(MIN_BOX_PX, xEnd - xStart)
@@ -134,7 +145,7 @@ const option = computed(() => {
       },
       data: d.points.map<SeriesDatum>(pt => ({
         name: pt.conceptName,
-        value: [pt.startDay, pt.endDay, d.domain],
+        value: [pt.startDay, pt.endDay, d.domain, pt.jitter],
         isRange: pt.isRange,
         itemStyle: {
           color: pt.color === DEFAULT_HIGHLIGHT_COLOR ? pt.domainColor : pt.color,
@@ -163,8 +174,14 @@ const option = computed(() => {
 
 function onBrush(e: { areas?: Array<{ coordRange?: [number, number] }> }) {
   const range = e.areas?.[0]?.coordRange
-  if (range && range.length === 2) store.setDateRange([range[0], range[1]])
-  else store.setDateRange(null)
+  if (range && range.length === 2) {
+    store.setDateRange([Math.floor(range[0]), Math.ceil(range[1])])
+    // The axis now spans the selection, so the brush rectangle would cover the
+    // whole plot; clearing it fires `brush`, not `brushend`, so no loop.
+    chartRef.value?.dispatchAction({ type: 'brush', areas: [] })
+  } else {
+    store.setDateRange(null)
+  }
 }
 
 defineExpose({ onBrush })
