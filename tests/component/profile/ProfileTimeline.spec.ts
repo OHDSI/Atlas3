@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
@@ -37,7 +37,10 @@ describe('ProfileTimeline', () => {
       ageAtIndex: 40, recordCount: 0, records: [], cohorts: [], observationPeriods: [],
     } as never
     const w = mount(ProfileTimeline, {
-      global: { plugins: [vuetify], stubs: { 'v-chart': true } },
+      global: {
+        plugins: [vuetify],
+        stubs: { 'v-chart': { template: '<div />', methods: { dispatchAction: vi.fn() } } },
+      },
     })
     ;(w.vm as { onBrush?: (e: unknown) => void }).onBrush?.({ areas: [{ coordRange: [-30, 60] }] })
     expect(store.dateRange).toEqual([-30, 60])
@@ -120,5 +123,76 @@ describe('ProfileTimeline', () => {
     })
     expect(out).not.toContain('<img')
     expect(out).toContain('&lt;img')
+  })
+
+  function personWithRecords(records: unknown[]) {
+    const store = useProfileStore()
+    store.person = {
+      gender: 'M', yearOfBirth: 1980, monthOfBirth: null, dayOfBirth: null,
+      ageAtIndex: 40, recordCount: records.length, records,
+      cohorts: [], observationPeriods: [],
+    } as never
+    return store
+  }
+
+  function liveOption(w: ReturnType<typeof mount>) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (w.vm as any).$.setupState.option
+  }
+
+  it('zooms the x-axis to the brushed range and clears the brush rectangle', () => {
+    const store = personWithRecords([
+      { conceptId: 1, conceptName: 'A', domain: 'Drug', startDate: 1, endDate: null, startDay: -300, endDay: null },
+      { conceptId: 2, conceptName: 'B', domain: 'Drug', startDate: 1, endDate: null, startDay: 500, endDay: null },
+    ])
+    const dispatchAction = vi.fn()
+    const w = mount(ProfileTimeline, {
+      global: {
+        plugins: [vuetify],
+        stubs: { 'v-chart': { template: '<div />', methods: { dispatchAction } } },
+      },
+    })
+    expect(liveOption(w).xAxis).toMatchObject({ min: -300, max: 500 })
+
+    ;(w.vm as { onBrush: (e: unknown) => void }).onBrush({ areas: [{ coordRange: [-30.4, 59.2] }] })
+
+    expect(store.dateRange).toEqual([-31, 60])
+    expect(liveOption(w).xAxis).toMatchObject({ min: -31, max: 60 })
+    expect(dispatchAction).toHaveBeenCalledWith({ type: 'brush', areas: [] })
+
+    store.setDateRange(null)
+    expect(liveOption(w).xAxis).toMatchObject({ min: -300, max: 500 })
+  })
+
+  it('lists only the domains the person has records in', () => {
+    personWithRecords([
+      { conceptId: 1, conceptName: 'A', domain: 'Condition', startDate: 1, endDate: null, startDay: 0, endDay: null },
+      { conceptId: 2, conceptName: 'B', domain: 'Drug', startDate: 1, endDate: null, startDay: 0, endDay: null },
+    ])
+    const w = mount(ProfileTimeline, { global: { plugins: [vuetify], stubs: { 'v-chart': true } } })
+    expect(liveOption(w).yAxis.data).toEqual(['Drug', 'Condition'])
+  })
+
+  it('offsets each event vertically by its jitter, inside its domain row, and clips to the plot', () => {
+    personWithRecords([
+      { conceptId: 1, conceptName: 'A', domain: 'Drug', startDate: 1, endDate: null, startDay: 5, endDay: null },
+    ])
+    const w = mount(ProfileTimeline, { global: { plugins: [vuetify], stubs: { 'v-chart': true } } })
+    const series = liveOption(w).series[0]
+    expect(series.clip).toBe(true)
+
+    const rowHeight = 40
+    const render = (jitter: number) =>
+      series.renderItem(null, {
+        value: (i: number) => [5, null, 'Drug', jitter][i],
+        coord: () => [100, 200],
+        size: () => [0, rowHeight],
+        style: () => ({}),
+      }).shape
+    const spread = rowHeight * 0.8 - 8
+
+    expect(render(0).y).toBe(200 - 4)
+    expect(render(0.5).y).toBe(200 + spread / 2 - 4)
+    expect(render(-0.5).y).toBe(200 - spread / 2 - 4)
   })
 })
