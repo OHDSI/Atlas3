@@ -105,6 +105,41 @@ describe('ConceptSetTable', () => {
     expect(dataTable.props('items')).toEqual(mockItems)
   })
 
+  it('marks a concept the vocabulary does not contain instead of showing a blank name', () => {
+    const missing: ConceptSetItem = {
+      ...mockItems[0],
+      conceptId: 437663,
+      conceptName: '',
+      conceptCode: '',
+      domainId: '',
+      vocabularyId: '',
+      missingFromVocabulary: true,
+    }
+    const wrapper = mountComponent({ items: [missing, mockItems[1]], sourceKey: 'SYNPUF5PCT' })
+
+    expect(wrapper.find('[data-testid="concept-missing-437663"]').text()).toContain(
+      'Not in the selected vocabulary'
+    )
+    expect(wrapper.find('[data-testid="concept-name-link-437663"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="concept-name-link-4329847"]').exists()).toBe(true)
+  })
+
+  it('shows no concept type for a concept the vocabulary does not contain', () => {
+    const missing: ConceptSetItem = {
+      ...mockItems[0],
+      conceptId: 437663,
+      conceptName: '',
+      conceptCode: '',
+      domainId: '',
+      vocabularyId: '',
+      standardConcept: null,
+      missingFromVocabulary: true,
+    }
+    const wrapper = mountComponent({ items: [missing] })
+
+    expect(wrapper.findAll('.concept-set-table__chip')).toHaveLength(0)
+  })
+
   it('should display loading state', () => {
     const wrapper = mountComponent({ loading: true })
     const dataTable = wrapper.findComponent({ name: 'VDataTable' })

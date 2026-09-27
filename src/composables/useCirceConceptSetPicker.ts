@@ -1,6 +1,8 @@
 import { computed, ref, type Ref } from 'vue'
 import { convertAtlasItemToCirce, nextConceptSetId } from '@/components/cohort-editor/atlas-concept-set'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useNotifications } from '@/stores/notifications'
+import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'
 import type { ConceptSet } from '@/models/circe-types'
 import type { ConceptSetItem as AtlasConceptSetItem } from '@/models/concept-set.types'
@@ -31,6 +33,8 @@ export function useCirceConceptSetPicker(opts: {
   onConceptSetChanged?: () => void
 }) {
   const conceptSetsStore = useConceptSetsStore()
+  const notify = useNotifications()
+  const { tv } = useI18n()
 
   const pickerOpen = ref(false)
   interface SelectionRequest {
@@ -102,11 +106,37 @@ export function useCirceConceptSetPicker(opts: {
           id: numericId,
           error: conceptSetsStore.error,
         })
+        notify.danger(
+          tv(
+            'components.cohortBuilder.conceptSetLoadFailed',
+            'Could not add concept set "{name}"',
+            { name: conceptSet.name }
+          ),
+          { message: conceptSetsStore.error ?? undefined }
+        )
         cancelSelection()
         return
       }
 
       items = fetched.items ?? []
+    }
+
+    const missingIds = items.filter(item => item.missingFromVocabulary).map(item => item.conceptId)
+    if (missingIds.length > 0) {
+      notify.warning(
+        tv(
+          'components.cohortBuilder.conceptSetMissingConcepts',
+          'Concept set "{name}" has concepts that are not in the selected vocabulary',
+          { name: conceptSet.name }
+        ),
+        {
+          message: tv(
+            'components.cohortBuilder.conceptSetMissingConceptsDetail',
+            'Concept IDs {ids} are kept in the cohort definition, but they cannot be shown with the current vocabulary source.',
+            { ids: missingIds.join(', ') }
+          ),
+        }
+      )
     }
 
     const existing = opts.getConceptSets().find(cs => cs.id === numericId)

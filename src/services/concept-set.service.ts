@@ -5,6 +5,7 @@
 import {
   ConceptSetListResponseSchema,
   type ConceptSet,
+  type ConceptSetItem,
   type ConceptSetListItem,
 } from '@/models/concept-set.types'
 import {
@@ -15,6 +16,8 @@ import {
 } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
 import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
+import { ApiError } from '@/services/api-error'
+import { getConceptsByIds } from '@/services/concept-search.service'
 import { getSourceKey } from '@/config/webapi'
 import { useAuthStore } from '@/stores/auth'
 import { parseConceptSetObject } from '@/components/concepts/concept-set-import'
@@ -30,6 +33,86 @@ async function resolveSourceKey(): Promise<string> {
     return useWebAPIStore().getValidVocabularySource() || getSourceKey()
   } catch {
     return getSourceKey()
+  }
+}
+
+interface ConceptSetAPIRepositoryItem {
+  conceptId: number
+  isExcluded: number
+  includeDescendants: number
+  includeMapped: number
+}
+
+// WebAPI rejects the whole expression with this 400 when any item's concept is
+// absent from the requested vocabulary source.
+function isMissingConceptsError(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    error.status === 400 &&
+    typeof error.body === 'string' &&
+    error.body.includes('does not contain required concepts')
+  )
+}
+
+/**
+ * Rebuilds the items from the stored concept ids when the vocabulary lacks some
+ * of them, so the set still opens. Concepts the vocabulary can resolve keep
+ * their details; the rest are flagged `missingFromVocabulary` and kept, so a
+ * save does not drop them.
+ */
+async function getItemsTolerant(id: number | string, sourceKey: string): Promise<ConceptSetItem[]> {
+  const repositoryItems = await httpGet<ConceptSetAPIRepositoryItem[]>(`/conceptset/${id}/items`)
+  const conceptIds = [...new Set(repositoryItems.map(item => item.conceptId))]
+  const concepts = await getConceptsByIds(sourceKey, conceptIds)
+  const byId = new Map(concepts.map(concept => [concept.conceptId, concept]))
+
+  return repositoryItems.map(item => {
+    const flags = {
+      isExcluded: item.isExcluded === 1,
+      includeDescendants: item.includeDescendants === 1,
+      includeMapped: item.includeMapped === 1,
+    }
+    const concept = byId.get(item.conceptId)
+    if (concept) return { ...concept, ...flags }
+    return {
+      conceptId: item.conceptId,
+      conceptName: '',
+      conceptCode: '',
+      domainId: '',
+      vocabularyId: '',
+      conceptClassId: '',
+      standardConcept: null,
+      invalidReason: null,
+      ...flags,
+      missingFromVocabulary: true,
+    }
+  })
+}
+
+async function getExpressionOrNull(
+  id: number | string,
+  sourceKey: string
+): Promise<ConceptSetAPIExpression | null> {
+  try {
+    return await httpGet<ConceptSetAPIExpression>(`/conceptset/${id}/expression/${sourceKey}`)
+  } catch (error) {
+    if (isMissingConceptsError(error)) return null
+    throw error
+  }
+}
+
+async function fetchConceptSet(id: number | string, sourceKey: string): Promise<ConceptSet> {
+  const [metadata, expression] = await Promise.all([
+    httpGet<ConceptSetAPIMetadata>(`/conceptset/${id}`),
+    getExpressionOrNull(id, sourceKey),
+  ])
+
+  if (expression !== null) return mapConceptSetFromAPI({ ...metadata, expression })
+
+  logger.warn('ConceptSet', `Concept set ${id} has concepts missing from ${sourceKey}`)
+  return {
+    ...mapConceptSetFromAPI({ ...metadata, expression: { items: [] } }),
+    items: await getItemsTolerant(id, sourceKey),
   }
 }
 
@@ -66,22 +149,7 @@ export async function getConceptSetById(
   options?: { rethrow?: boolean }
 ): Promise<ConceptSet | null> {
   try {
-    const sourceKey = await resolveSourceKey()
-
-    // Fetch metadata and expression separately
-    const [metadata, expression] = await Promise.all([
-      httpGet<ConceptSetAPIMetadata>(`/conceptset/${id}`),
-      httpGet<ConceptSetAPIExpression>(`/conceptset/${id}/expression/${sourceKey}`),
-    ])
-
-    // Combine metadata and expression
-    const combined: ConceptSetAPIResponse = {
-      ...metadata,
-      expression: expression,
-    }
-
-    // Map WebAPI format to our interface
-    return mapConceptSetFromAPI(combined)
+    return await fetchConceptSet(id, await resolveSourceKey())
   } catch (error) {
     logger.error('ConceptSet', `Failed to fetch concept set ${id}`, error)
     // Most callers treat a failed load as "not found" (null). Callers that need
@@ -123,18 +191,7 @@ export async function createConceptSet(
       return created
     })
 
-    if (data.id) {
-      const sourceKey = await resolveSourceKey()
-      const [updatedMetadata, updatedExpression] = await Promise.all([
-        httpGet<ConceptSetAPIMetadata>(`/conceptset/${data.id}`),
-        httpGet<ConceptSetAPIExpression>(`/conceptset/${data.id}/expression/${sourceKey}`),
-      ])
-
-      return mapConceptSetFromAPI({
-        ...updatedMetadata,
-        expression: updatedExpression,
-      })
-    }
+    if (data.id) return await fetchConceptSet(data.id, await resolveSourceKey())
 
     return mapConceptSetFromAPI(data)
   } catch (error) {
@@ -174,16 +231,7 @@ export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptS
       await httpPut(`/conceptset/${conceptSet.id}/items`, itemsPayload)
     })
 
-    const sourceKey = await resolveSourceKey()
-    const [updatedMetadata, updatedExpression] = await Promise.all([
-      httpGet<ConceptSetAPIMetadata>(`/conceptset/${conceptSet.id}`),
-      httpGet<ConceptSetAPIExpression>(`/conceptset/${conceptSet.id}/expression/${sourceKey}`),
-    ])
-
-    return mapConceptSetFromAPI({
-      ...updatedMetadata,
-      expression: updatedExpression,
-    })
+    return await fetchConceptSet(conceptSet.id, await resolveSourceKey())
   } catch (error) {
     logger.error('ConceptSet', `Failed to update concept set ${conceptSet.id}`, error)
     throw error

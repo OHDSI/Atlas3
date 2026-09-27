@@ -67,6 +67,19 @@ export interface ConceptSetItem {
   isExcluded: boolean // Exclude from cohort criteria
   includeDescendants: boolean // Include child concepts in hierarchy
   includeMapped: boolean // Include mapped concepts from other vocabularies
+  missingFromVocabulary?: boolean
+}
+
+/**
+ * A concept the selected vocabulary source does not contain. Items flagged by
+ * the concept set loader carry `missingFromVocabulary`; items read back out of
+ * a cohort expression lose the flag but keep the empty name the loader gave
+ * them, so an unnamed item counts as missing too.
+ */
+export function isConceptMissing(item: Pick<ConceptSetItem, 'conceptName'> & {
+  missingFromVocabulary?: boolean
+}): boolean {
+  return !!item.missingFromVocabulary || !item.conceptName
 }
 
 export type ConceptAddFlags = Partial<

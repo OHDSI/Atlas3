@@ -207,6 +207,38 @@ describe('ConceptSetEditor', () => {
     expect(wrapper.vm.activeTab).toBe('selected')
   })
 
+  it('warns about concepts the selected vocabulary does not contain', async () => {
+    const store = useConceptSetsStore()
+    store.currentSet = {
+      ...mockConceptSet,
+      items: [
+        ...mockConceptSet.items,
+        {
+          ...mockConceptSet.items[0],
+          conceptId: 437663,
+          conceptName: '',
+          missingFromVocabulary: true,
+        },
+      ],
+    }
+    const wrapper = mountComponent({ conceptSet: store.currentSet })
+    await wrapper.vm.$nextTick()
+
+    const alert = wrapper.find('[data-testid="cs-editor-missing-concepts"]')
+    expect(alert.exists()).toBe(true)
+    expect(alert.text()).toContain('437663')
+    expect(alert.text()).not.toContain('313217')
+  })
+
+  it('shows no missing-concepts warning when every concept resolves', async () => {
+    const store = useConceptSetsStore()
+    store.currentSet = mockConceptSet
+    const wrapper = mountComponent({ conceptSet: mockConceptSet })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-testid="cs-editor-missing-concepts"]').exists()).toBe(false)
+  })
+
   it('should render the inline name input', () => {
     const wrapper = mountComponent()
     // Refresh: the name field is now an inline-edit input styled
