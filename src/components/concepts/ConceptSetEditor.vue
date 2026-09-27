@@ -291,6 +291,21 @@
               <v-window v-model="activeTab">
                 <!-- Selected Concepts Tab -->
                 <v-window-item value="selected">
+                  <AtlasAlert
+                    v-if="missingConceptIds.length > 0"
+                    severity="warning"
+                    :title="t('cs.manager.missingConceptsTitle', 'Some concepts are not in the selected vocabulary').value"
+                    class="mb-3"
+                    data-testid="cs-editor-missing-concepts"
+                  >
+                    {{
+                      t(
+                        'cs.manager.missingConceptsMessage',
+                        'The vocabulary of source {sourceKey} does not contain {count} of the concepts in this concept set: {ids}. They stay in the concept set, but their details cannot be shown. Choose a different vocabulary source in Configuration to see them.',
+                        { sourceKey, count: missingConceptIds.length, ids: missingConceptIds.join(', ') }
+                      ).value
+                    }}
+                  </AtlasAlert>
                   <ConceptSetTable
                     :items="store.currentSet?.items || []"
                     :loading="false"
@@ -717,7 +732,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
 import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
-import type { ConceptSet, Concept, ConceptSetItem, ConceptAddFlags } from '@/models/concept-set.types'
+import { isConceptMissing, type ConceptSet, type Concept, type ConceptSetItem, type ConceptAddFlags } from '@/models/concept-set.types'
 import type { VersionsConfig, VersionsTableItem, User } from '@/components/versions/types'
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 import type { Tag } from '@/models/cohort.types'
@@ -728,7 +743,7 @@ import IncludedSourceCodesTable from './IncludedSourceCodesTable.vue'
 import RecommendTab from './RecommendTab.vue'
 import CompareTab from './CompareTab.vue'
 import ConceptDetailContent from './detail/ConceptDetailContent.vue'
-import { AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
 import { getConceptsByIds, getConceptsBySourceCodes } from '@/services/concept-search.service'
@@ -894,6 +909,10 @@ const sourceKey = computed<string>(
     webapiStore.getValidVocabularySource() ||
     getDefaultSourceKey() ||
     '',
+)
+
+const missingConceptIds = computed(() =>
+  (store.currentSet?.items ?? []).filter(isConceptMissing).map(item => item.conceptId)
 )
 
 // ============================================================================

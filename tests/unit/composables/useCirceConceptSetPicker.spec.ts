@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'
+import { createPinia, setActivePinia } from 'pinia'
+import { useNotifications } from '@/stores/notifications'
 import type { ConceptSet } from '@/models/circe-types'
 
 const mockConceptSetsStore = {
@@ -38,6 +40,7 @@ import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker
 
 describe('useCirceConceptSetPicker', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     mockConceptSetsStore.currentSet = null
     mockConceptSetsStore.error = null
     mockConceptSetsStore.fetchOne.mockClear()
@@ -188,6 +191,52 @@ describe('useCirceConceptSetPicker', () => {
     expect(addConceptSet).not.toHaveBeenCalled()
     expect(target.value).toBeUndefined()
     expect(picker.pickerOpen.value).toBe(false)
+    expect(useNotifications().items).toEqual([
+      expect.objectContaining({
+        severity: 'danger',
+        title: 'Could not add concept set "Unreachable set"',
+        message: 'Concept set not found',
+      }),
+    ])
+  })
+
+  it('adds a set with concepts missing from the vocabulary and warns about them', async () => {
+    mockConceptSetsStore.fetchOne.mockImplementation(async (id: number) => {
+      mockConceptSetsStore.error = null
+      mockConceptSetsStore.currentSet = {
+        id,
+        name: 'Partly missing',
+        items: [
+          { conceptId: 437663, conceptName: '', missingFromVocabulary: true },
+          { conceptId: 201826, conceptName: 'Type 2 diabetes mellitus' },
+        ],
+      } as unknown as ConceptSet
+    })
+
+    const target = ref<number | null | undefined>()
+    const addConceptSet = vi.fn()
+    const picker = useCirceConceptSetPicker({
+      getConceptSets: () => [],
+      addConceptSet,
+    })
+
+    picker.onSelectConceptSet({ targetRef: target })
+    await picker.onConceptSetSelected({ id: 7, name: 'Partly missing' })
+
+    expect(addConceptSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 7,
+        expression: { items: [expect.objectContaining({ conceptId: 437663 }), expect.anything()] },
+      })
+    )
+    expect(target.value).toBe(7)
+    expect(useNotifications().items).toEqual([
+      expect.objectContaining({
+        severity: 'warning',
+        title: 'Concept set "Partly missing" has concepts that are not in the selected vocabulary',
+        message: expect.stringContaining('437663'),
+      }),
+    ])
   })
 
   it('accepts a repository concept set that resolves to zero items', async () => {

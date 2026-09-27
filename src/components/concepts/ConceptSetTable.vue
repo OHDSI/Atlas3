@@ -86,11 +86,22 @@
         hover
         class="concept-set-table__table"
       >
-        <template
-          v-if="resolvedSourceKey"
-          #item.conceptName="{ item }"
-        >
+        <template #item.conceptName="{ item }">
+          <span
+            v-if="isConceptMissing(item)"
+            :data-testid="`concept-missing-${item.conceptId}`"
+            class="concept-set-table__missing"
+          >
+            <AtlasIcon
+              size="small"
+              color="warning"
+            >
+              mdi-alert-outline
+            </AtlasIcon>
+            {{ t('cs.manager.conceptMissingFromVocabulary', 'Not in the selected vocabulary').value }}
+          </span>
           <a
+            v-else-if="resolvedSourceKey"
             href="#"
             :data-testid="`concept-name-link-${item.conceptId}`"
             class="concept-name-link"
@@ -98,6 +109,9 @@
           >
             {{ item.conceptName }}
           </a>
+          <template v-else>
+            {{ item.conceptName }}
+          </template>
         </template>
 
         <!-- Descendants Toggle -->
@@ -158,6 +172,7 @@
         <!-- Standard concept badge -->
         <template #item.standardConcept="{ item }">
           <AtlasChip
+            v-if="!isConceptMissing(item)"
             :color="getConceptTypeColor(item)"
             size="xs"
             variant="tonal"
@@ -243,7 +258,7 @@
 <script setup lang="ts">
 import { ref, computed, getCurrentInstance } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import type { ConceptSetItem } from '@/models/concept-set.types'
+import { isConceptMissing, type ConceptSetItem } from '@/models/concept-set.types'
 import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
 import { useWebAPIStore } from '@/stores/webapi'
@@ -466,6 +481,14 @@ function onRemove(item: ConceptSetItem) {
 </script>
 
 <style scoped>
+.concept-set-table__missing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-style: italic;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
 .concept-set-table {
   width: 100%;
 }

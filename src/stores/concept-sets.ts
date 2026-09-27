@@ -230,7 +230,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     error.value = null
 
     try {
-      const set = await getConceptSetById(id)
+      const set = await getConceptSetById(id, { rethrow: true })
       if (requestId !== fetchOneRequestId) return
       if (set) {
         currentSet.value = set
@@ -396,7 +396,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    */
   async function openEditEditor(id: number | string) {
     await fetchOne(id)
-    editorOpen.value = true
+    if (currentSet.value) editorOpen.value = true
   }
 
   /**
