@@ -139,13 +139,12 @@ describe('PluginParcelOutlet', () => {
     expect(wrapper.find('[data-testid="plugin-outlet-error"]').exists()).toBe(false)
   })
 
-  it('does not let a stale generation clobber a newer one once its mount finally resolves', async () => {
+  it('runs one mount at a time: a superseded pending mount is skipped and the latest mounts after the in-flight one unmounts', async () => {
     const first = deferred<unknown>()
     const third = deferred<unknown>()
 
     const firstUnmount = vi.fn().mockResolvedValue(undefined)
     const firstUpdate = vi.fn().mockResolvedValue(undefined)
-    const secondUnmount = vi.fn().mockResolvedValue(undefined)
     const thirdUpdate = vi.fn().mockResolvedValue(undefined)
 
     vi.mocked(mountPluginParcel)
@@ -153,11 +152,6 @@ describe('PluginParcelOutlet', () => {
         update: firstUpdate,
         unmount: firstUnmount,
         mountPromise: first.promise,
-      })
-      .mockResolvedValueOnce({
-        update: vi.fn().mockResolvedValue(undefined),
-        unmount: secondUnmount,
-        mountPromise: Promise.resolve(),
       })
       .mockResolvedValueOnce({
         update: thirdUpdate,
@@ -174,8 +168,7 @@ describe('PluginParcelOutlet', () => {
     await wrapper.setProps({ pluginId: 'p3' })
     await flushPromises()
 
-    expect(mountPluginParcel).toHaveBeenCalledTimes(3)
-    expect(secondUnmount).toHaveBeenCalledTimes(1)
+    expect(mountPluginParcel).toHaveBeenCalledTimes(1)
     expect(wrapper.find('.plugin-parcel-outlet__mount').classes()).toContain(
       'plugin-parcel-outlet__mount--hidden'
     )
@@ -185,6 +178,11 @@ describe('PluginParcelOutlet', () => {
 
     expect(firstUnmount).toHaveBeenCalledTimes(1)
     expect(firstUpdate).not.toHaveBeenCalled()
+    expect(mountPluginParcel).toHaveBeenCalledTimes(2)
+    expect(vi.mocked(mountPluginParcel).mock.calls[1][0]).toBe('p3')
+    expect(firstUnmount.mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(mountPluginParcel).mock.invocationCallOrder[1]
+    )
     expect(wrapper.find('.plugin-parcel-outlet__mount').classes()).toContain(
       'plugin-parcel-outlet__mount--hidden'
     )
