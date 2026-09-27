@@ -285,6 +285,20 @@
               >
                 {{ t('cs.manager.importJson', 'Import JSON') }}
               </AtlasButton>
+
+              <DisabledReasonTooltip :reason="optimizeDisabledReason">
+                <AtlasButton
+                  variant="ghost"
+                  size="sm"
+                  icon="mdi-auto-fix"
+                  class="cs-editor__paste-btn"
+                  :disabled="optimizeDisabled"
+                  data-testid="cs-editor-optimize-btn"
+                  @click="showOptimizeDialog = true"
+                >
+                  {{ t('cs.manager.optimize', 'Optimize') }}
+                </AtlasButton>
+              </DisabledReasonTooltip>
             </nav>
 
             <div class="cs-editor__body">
@@ -692,6 +706,18 @@
     </template>
   </AtlasDialog>
 
+  <ConceptSetOptimizeDialog
+    v-if="showOptimizeDialog"
+    v-model="showOptimizeDialog"
+    :items="store.currentSet?.items ?? []"
+    :source-key="sourceKey"
+    :concept-set-name="form.name"
+    :can-create-new="!embedded && hasPermission('create:conceptset')"
+    :busy="optimizeSaving"
+    @overwrite="onOptimizeOverwrite"
+    @create="onOptimizeCreate"
+  />
+
   <AtlasDialog
     v-model="showDeleteConfirm"
     :eyebrow="t('common.confirm', 'Confirm').value"
@@ -742,6 +768,7 @@ import IncludedConceptsTable from './IncludedConceptsTable.vue'
 import IncludedSourceCodesTable from './IncludedSourceCodesTable.vue'
 import RecommendTab from './RecommendTab.vue'
 import CompareTab from './CompareTab.vue'
+import ConceptSetOptimizeDialog from './ConceptSetOptimizeDialog.vue'
 import ConceptDetailContent from './detail/ConceptDetailContent.vue'
 import { AtlasAlert, AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
@@ -909,6 +936,28 @@ const sourceKey = computed<string>(
     webapiStore.getValidVocabularySource() ||
     getDefaultSourceKey() ||
     '',
+)
+
+const showOptimizeDialog = ref(false)
+const optimizeSaving = ref(false)
+
+const optimizeDisabledReason = computed<string>(() => {
+  if ((store.currentSet?.items.length ?? 0) < 2) {
+    return tv('cs.manager.optimizeNeedsTwoItems', 'Add at least two concepts to optimize the concept set.')
+  }
+  // The optimizer resolves against the vocabulary, so a concept the vocabulary
+  // lacks would silently drop out of the optimized set.
+  if (missingConceptIds.value.length > 0) {
+    return tv(
+      'cs.manager.optimizeMissingConcepts',
+      'Some concepts are not in the selected vocabulary, so the concept set cannot be optimized.'
+    )
+  }
+  return ''
+})
+
+const optimizeDisabled = computed(
+  () => !!optimizeDisabledReason.value || !!store.previewVersion || loading.value
 )
 
 const missingConceptIds = computed(() =>
@@ -1489,6 +1538,34 @@ function applyJsonItems() {
   hasUnsavedChanges.value = true
   activeTab.value = 'selected'
   closeJsonDialog()
+}
+
+function onOptimizeOverwrite(items: ConceptSetItem[]) {
+  store.applyProposal({ items })
+  hasUnsavedChanges.value = true
+  activeTab.value = 'selected'
+  showOptimizeDialog.value = false
+}
+
+async function onOptimizeCreate(payload: { name: string; items: ConceptSetItem[] }) {
+  optimizeSaving.value = true
+  try {
+    const created = await store.create(payload)
+    if (!created) {
+      notify.danger(tv('cs.manager.optimizeCreateFailed', 'Could not create the optimized concept set'), {
+        message: store.error ?? undefined,
+      })
+      return
+    }
+    showOptimizeDialog.value = false
+    hasUnsavedChanges.value = false
+    activeTab.value = 'selected'
+    notify.success(
+      tv('cs.manager.optimizeCreated', 'Created concept set "{name}"', { name: created.name })
+    )
+  } finally {
+    optimizeSaving.value = false
+  }
 }
 
 function closeJsonDialog() {
