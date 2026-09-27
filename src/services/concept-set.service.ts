@@ -9,13 +9,15 @@ import {
   type ConceptSetListItem,
 } from '@/models/concept-set.types'
 import {
+  conceptSetItemToExpressionItem,
   mapConceptSetFromAPI,
+  mapExpressionItemsFromAPI,
   type ConceptSetAPIMetadata,
   type ConceptSetAPIExpression,
   type ConceptSetAPIResponse,
 } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
-import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
+import { httpGet, httpPost, httpPostRead, httpPut, httpDelete } from '@/services/http-client'
 import { ApiError } from '@/services/api-error'
 import { getConceptsByIds } from '@/services/concept-search.service'
 import { getSourceKey } from '@/config/webapi'
@@ -313,4 +315,29 @@ function importedName(design: unknown, fileName: string): string {
   }
   const base = fileName.replace(/\.[^.]+$/, '').trim()
   return base || 'Imported concept set'
+}
+
+export interface ConceptSetOptimization {
+  optimizedItems: ConceptSetItem[]
+  removedItems: ConceptSetItem[]
+}
+
+/**
+ * Asks WebAPI for the smallest expression that resolves to the same concepts
+ * as `items` in the given vocabulary. The optimizer does not carry
+ * `includeMapped` over; mapped concepts it resolved come back as explicit items.
+ */
+export async function optimizeConceptSet(
+  sourceKey: string,
+  items: ConceptSetItem[]
+): Promise<ConceptSetOptimization> {
+  const result = await httpPostRead<{
+    optimizedConceptSet?: ConceptSetAPIExpression
+    removedConceptSet?: ConceptSetAPIExpression
+  }>(`/vocabulary/${sourceKey}/optimize`, { items: items.map(conceptSetItemToExpressionItem) })
+
+  return {
+    optimizedItems: mapExpressionItemsFromAPI(result.optimizedConceptSet),
+    removedItems: mapExpressionItemsFromAPI(result.removedConceptSet),
+  }
 }
