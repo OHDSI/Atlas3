@@ -412,19 +412,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by condition source concept',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      conditionSourceConceptModel,
+      conditionSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
       t('components.eventCard.selectSourceConcept', 'Select Source Concept').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      conditionOccurrenceData.value.ConditionSourceConcept = undefined
+      conditionSourceConceptModel.activate()
     },
     clear: () => {
-      delete conditionOccurrenceData.value.ConditionSourceConcept
+      conditionSourceConceptModel.deactivate()
     },
-    isActive: () => 'ConditionSourceConcept' in conditionOccurrenceData.value,
+    isActive: () => conditionSourceConceptModel.isActive(),
   },
   {
     key: 'CorrelatedCriteria',
@@ -462,7 +462,7 @@ const conditionOccurrence = () => conditionOccurrenceData.value
 
 const conditionOccurrenceConceptSetModel = createConceptSetModel(conditionOccurrence, 'CodesetId') as ConceptSetSelection
 
-const conditionSourceConceptModel = createConceptSetModel(conditionOccurrence, 'ConditionSourceConcept') as ConceptSetSelection
+const conditionSourceConceptModel = createConceptSetModel(conditionOccurrence, 'ConditionSourceConcept')
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

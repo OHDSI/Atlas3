@@ -241,7 +241,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete deviceExposureData.value.DeviceType
       delete deviceExposureData.value.DeviceTypeExclude
     },
-    isActive: () => deviceExposureData.value.DeviceType != null || deviceExposureData.value.DeviceTypeExclude != null,
+    isActive: () => deviceExposureData.value.DeviceType != null,
   },
   {
     key: 'DeviceTypeCS',
@@ -339,19 +339,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by device source concept',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      deviceSourceConceptModel,
+      deviceSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
       'Select Source Concept',
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      deviceExposureData.value.DeviceSourceConcept = undefined
+      deviceSourceConceptModel.activate()
     },
     clear: () => {
-      delete deviceExposureData.value.DeviceSourceConcept
+      deviceSourceConceptModel.deactivate()
     },
-    isActive: () => 'DeviceSourceConcept' in deviceExposureData.value,
+    isActive: () => deviceSourceConceptModel.isActive(),
   },
   {
     key: 'ProviderSpecialty',
@@ -425,7 +425,7 @@ const deviceExposure = () => deviceExposureData.value
 
 const deviceExposureConceptSetModel = createConceptSetModel(deviceExposure, 'CodesetId') as ConceptSetSelection
 
-const deviceSourceConceptModel = createConceptSetModel(deviceExposure, 'DeviceSourceConcept') as ConceptSetSelection
+const deviceSourceConceptModel = createConceptSetModel(deviceExposure, 'DeviceSourceConcept')
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

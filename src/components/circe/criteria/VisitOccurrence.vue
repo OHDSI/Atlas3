@@ -202,19 +202,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by visit source concept',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(visitOccurrence, 'VisitSourceConcept') as ConceptSetSelection,
+      visitSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      visitOccurrenceData.value.VisitSourceConcept = undefined
+      visitSourceConceptModel.activate()
     },
     clear: () => {
-      delete visitOccurrenceData.value.VisitSourceConcept
+      visitSourceConceptModel.deactivate()
     },
-    isActive: () => 'VisitSourceConcept' in visitOccurrenceData.value,
+    isActive: () => visitSourceConceptModel.isActive(),
   },
   {
     key: 'VisitLength',
@@ -384,19 +384,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by place of service location',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(visitOccurrence, 'PlaceOfServiceLocation') as ConceptSetSelection,
+      placeOfServiceLocationModel as ConceptSetSelection,
       props.conceptSets,
       'Select Source Concept',
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      visitOccurrenceData.value.PlaceOfServiceLocation = undefined
+      placeOfServiceLocationModel.activate()
     },
     clear: () => {
-      delete visitOccurrenceData.value.PlaceOfServiceLocation
+      placeOfServiceLocationModel.deactivate()
     },
-    isActive: () =>  'PlaceOfServiceLocation' in visitOccurrenceData.value,
+    isActive: () => placeOfServiceLocationModel.isActive(),
   },
   {
     key: 'CorrelatedCriteria',
@@ -431,6 +431,8 @@ const visitOccurrenceData = computed<VisitOccurrence>(() => {
 const visitOccurrence = () => visitOccurrenceData.value
 
 const visitOccurrenceConceptSetModel = createConceptSetModel(visitOccurrence, 'CodesetId') as ConceptSetSelection
+const visitSourceConceptModel = createConceptSetModel(visitOccurrence, 'VisitSourceConcept')
+const placeOfServiceLocationModel = createConceptSetModel(visitOccurrence, 'PlaceOfServiceLocation')
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

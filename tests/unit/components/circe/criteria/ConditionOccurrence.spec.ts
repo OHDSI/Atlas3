@@ -12,8 +12,8 @@ vi.mock('@/composables/useI18n', async () => {
 
 type CriteriaModel = Record<string, any>
 
-function mountConditionOccurrence() {
-  const criteria = reactive({}) as { ConditionOccurrence?: CriteriaModel }
+function mountConditionOccurrence(conditionOccurrence?: CriteriaModel) {
+  const criteria = reactive({ ConditionOccurrence: conditionOccurrence }) as { ConditionOccurrence?: CriteriaModel }
 
   const wrapper = mountComponent(ConditionOccurrence, {
     props: {
@@ -543,7 +543,7 @@ describe('ConditionOccurrence', () => {
     await expectMenuItemPresent(wrapper, 'Condition Source Concept')
     await selectMenuItem(wrapper, 'Condition Source Concept')
 
-    expect(criteria.ConditionOccurrence?.ConditionSourceConcept).toBeUndefined()
+    expect(criteria.ConditionOccurrence?.ConditionSourceConcept).toBeNull()
 
     const conceptSetSelection = wrapper.getComponent({ name: 'ConceptSetSelection' })
     await chooseConceptSet(conceptSetSelection, wrapper, 42)
@@ -565,6 +565,30 @@ describe('ConditionOccurrence', () => {
 
     await openMenu(wrapper)
     await expectMenuItemPresent(wrapper, 'Condition Source Concept')
+  })
+
+  it('does not activate Condition Source Concept from a server-loaded null', async () => {
+    const { wrapper } = mountConditionOccurrence({ ConditionSourceConcept: null })
+
+    expect(wrapper.findComponent({ name: 'ConceptSetSelection' }).exists()).toBe(false)
+
+    await openMenu(wrapper)
+    await expectMenuItemPresent(wrapper, 'Condition Source Concept')
+  })
+
+  it('keeps Condition Source Concept active when clearing a server-loaded selection', async () => {
+    const { wrapper, criteria } = mountConditionOccurrence({ ConditionSourceConcept: 42 })
+    const conceptSetSelection = wrapper.getComponent({ name: 'ConceptSetSelection' })
+
+    const modelValue = conceptSetSelection.props('modelValue') as { CodesetId?: number }
+    modelValue.CodesetId = undefined
+    await nextTick()
+
+    expect(criteria.ConditionOccurrence?.ConditionSourceConcept).toBeUndefined()
+    expect(wrapper.getComponent({ name: 'ConceptSetSelection' }).exists()).toBe(true)
+
+    await openMenu(wrapper)
+    await expectMenuItemAbsent(wrapper, 'Condition Source Concept')
   })
 
   it('adds and removes Nested Criteria as a CriteriaGroup field', async () => {

@@ -362,7 +362,7 @@ describe('Specimen', () => {
     await expectMenuItemPresent(wrapper, 'Specimen Source Concept')
     await selectMenuItem(wrapper, 'Specimen Source Concept')
 
-    expect(criteria.Specimen?.SpecimenSourceConcept).toBeUndefined()
+    expect(criteria.Specimen?.SpecimenSourceConcept).toBeNull()
 
     const conceptSetSelection = wrapper.getComponent({ name: 'ConceptSetSelection' })
     await chooseConceptSet(conceptSetSelection, wrapper)

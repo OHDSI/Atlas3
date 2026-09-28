@@ -252,19 +252,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by payer concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriod, 'PayerConcept') as ConceptSetSelection,
+      payerConceptModel as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      payerPlanPeriodData.value.PayerConcept = undefined
+      payerConceptModel.activate()
     },
     clear: () => {
-      delete payerPlanPeriodData.value.PayerConcept
+      payerConceptModel.deactivate()
     },
-    isActive: () => 'PayerConcept' in payerPlanPeriodData.value,
+    isActive: () => payerConceptModel.isActive(),
   },
   {
     key: 'PlanConcept',
@@ -272,19 +272,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by plan concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriod, 'PlanConcept') as ConceptSetSelection,
+      planConceptModel as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      payerPlanPeriodData.value.PlanConcept = undefined
+      planConceptModel.activate()
     },
     clear: () => {
-      delete payerPlanPeriodData.value.PlanConcept
+      planConceptModel.deactivate()
     },
-    isActive: () => 'PlanConcept' in payerPlanPeriodData.value,
+    isActive: () => planConceptModel.isActive(),
   },
   {
     key: 'SponsorConcept',
@@ -292,19 +292,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by sponsor concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriod, 'SponsorConcept') as ConceptSetSelection,
+      sponsorConceptModel as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      payerPlanPeriodData.value.SponsorConcept = undefined
+      sponsorConceptModel.activate()
     },
     clear: () => {
-      delete payerPlanPeriodData.value.SponsorConcept
+      sponsorConceptModel.deactivate()
     },
-    isActive: () => 'SponsorConcept' in payerPlanPeriodData.value,
+    isActive: () => sponsorConceptModel.isActive(),
   },
   {
     key: 'StopReasonConcept',
@@ -312,19 +312,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by stop reason concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriod, 'StopReasonConcept') as ConceptSetSelection,
+      stopReasonConceptModel as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      payerPlanPeriodData.value.StopReasonConcept = undefined
+      stopReasonConceptModel.activate()
     },
     clear: () => {
-      delete payerPlanPeriodData.value.StopReasonConcept
+      stopReasonConceptModel.deactivate()
     },
-    isActive: () => 'StopReasonConcept' in payerPlanPeriodData.value,
+    isActive: () => stopReasonConceptModel.isActive(),
   },
   {
     key: 'PayerSourceConcept',
@@ -332,19 +332,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by payer source concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriod, 'PayerSourceConcept') as ConceptSetSelection,
+      payerSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      payerPlanPeriodData.value.PayerSourceConcept = undefined
+      payerSourceConceptModel.activate()
     },
     clear: () => {
-      delete payerPlanPeriodData.value.PayerSourceConcept
+      payerSourceConceptModel.deactivate()
     },
-    isActive: () => 'PayerSourceConcept' in payerPlanPeriodData.value,
+    isActive: () => payerSourceConceptModel.isActive(),
   },
   {
     key: 'PlanSourceConcept',
@@ -352,19 +352,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by plan source concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriod, 'PlanSourceConcept') as ConceptSetSelection,
+      planSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      payerPlanPeriodData.value.PlanSourceConcept = undefined
+      planSourceConceptModel.activate()
     },
     clear: () => {
-      delete payerPlanPeriodData.value.PlanSourceConcept
+      planSourceConceptModel.deactivate()
     },
-    isActive: () => 'PlanSourceConcept' in payerPlanPeriodData.value,
+    isActive: () => planSourceConceptModel.isActive(),
   },
   {
     key: 'SponsorSourceConcept',
@@ -372,19 +372,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by sponsor source concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriod, 'SponsorSourceConcept') as ConceptSetSelection,
+      sponsorSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      payerPlanPeriodData.value.SponsorSourceConcept = undefined
+      sponsorSourceConceptModel.activate()
     },
     clear: () => {
-      delete payerPlanPeriodData.value.SponsorSourceConcept
+      sponsorSourceConceptModel.deactivate()
     },
-    isActive: () => 'SponsorSourceConcept' in payerPlanPeriodData.value,
+    isActive: () => sponsorSourceConceptModel.isActive(),
   },
   {
     key: 'StopReasonSourceConcept',
@@ -392,19 +392,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by stop reason source concept set',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(payerPlanPeriod, 'StopReasonSourceConcept') as ConceptSetSelection,
+      stopReasonSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      payerPlanPeriodData.value.StopReasonSourceConcept = undefined
+      stopReasonSourceConceptModel.activate()
     },
     clear: () => {
-      delete payerPlanPeriodData.value.StopReasonSourceConcept
+      stopReasonSourceConceptModel.deactivate()
     },
-    isActive: () => 'StopReasonSourceConcept' in payerPlanPeriodData.value,
+    isActive: () => stopReasonSourceConceptModel.isActive(),
   },
   {
     key: 'DateAdjustment',
@@ -453,6 +453,15 @@ const payerPlanPeriodData = computed<PayerPlanPeriod>(() => {
 })
 
 const payerPlanPeriod = () => payerPlanPeriodData.value
+
+const payerConceptModel = createConceptSetModel(payerPlanPeriod, 'PayerConcept')
+const planConceptModel = createConceptSetModel(payerPlanPeriod, 'PlanConcept')
+const sponsorConceptModel = createConceptSetModel(payerPlanPeriod, 'SponsorConcept')
+const stopReasonConceptModel = createConceptSetModel(payerPlanPeriod, 'StopReasonConcept')
+const payerSourceConceptModel = createConceptSetModel(payerPlanPeriod, 'PayerSourceConcept')
+const planSourceConceptModel = createConceptSetModel(payerPlanPeriod, 'PlanSourceConcept')
+const sponsorSourceConceptModel = createConceptSetModel(payerPlanPeriod, 'SponsorSourceConcept')
+const stopReasonSourceConceptModel = createConceptSetModel(payerPlanPeriod, 'StopReasonSourceConcept')
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

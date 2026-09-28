@@ -632,7 +632,7 @@ describe('DrugExposure', () => {
     await expectMenuItemPresent(wrapper, 'Drug Source Concept')
     await selectMenuItem(wrapper, 'Drug Source Concept')
 
-    expect(criteria.DrugExposure?.DrugSourceConcept).toBeUndefined()
+    expect(criteria.DrugExposure?.DrugSourceConcept).toBeNull()
 
     const conceptSetSelection = wrapper.getComponent({ name: 'ConceptSetSelection' })
     await chooseConceptSet(conceptSetSelection, wrapper)
