@@ -151,7 +151,7 @@ async function testConceptSetIdAttribute(
   await selectMenuItem(wrapper, label)
   await nextTick()
 
-  expect(criteria.PayerPlanPeriod?.[key]).toBeUndefined()
+  expect(criteria.PayerPlanPeriod?.[key]).toBeNull()
 
   await chooseConceptSetFromWrapper(wrapper)
   await nextTick()

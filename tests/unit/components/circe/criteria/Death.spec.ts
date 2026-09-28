@@ -260,7 +260,7 @@ describe('Death', () => {
     await expectMenuItemPresent(wrapper, 'Death Source Concept')
     await selectMenuItem(wrapper, 'Death Source Concept')
 
-    expect(criteria.Death?.DeathSourceConcept).toBeUndefined()
+    expect(criteria.Death?.DeathSourceConcept).toBeNull()
 
     const conceptSetSelection = wrapper.getComponent({ name: 'ConceptSetSelection' })
     await chooseConceptSet(conceptSetSelection, wrapper)

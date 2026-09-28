@@ -156,7 +156,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete measurementData.value.MeasurementType
       delete measurementData.value.MeasurementTypeExclude
     },
-    isActive: () => measurementData.value.MeasurementType != null || measurementData.value.MeasurementTypeExclude != null,
+    isActive: () => measurementData.value.MeasurementType != null,
   },
   {
     key: 'MeasurementTypeCS',
@@ -390,19 +390,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by measurement source concept',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      measurementSourceConceptModel,
+      measurementSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
       'Select Source Concept',
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      measurementData.value.MeasurementSourceConcept = undefined
+      measurementSourceConceptModel.activate()
     },
     clear: () => {
-      delete measurementData.value.MeasurementSourceConcept
+      measurementSourceConceptModel.deactivate()
     },
-    isActive: () => 'MeasurementSourceConcept' in measurementData.value,
+    isActive: () => measurementSourceConceptModel.isActive(),
   },
   {
     key: 'Age',
@@ -568,7 +568,7 @@ const measurement = () => measurementData.value
 
 const measurementConceptSetModel = createConceptSetModel(measurement, 'CodesetId') as ConceptSetSelection
 
-const measurementSourceConceptModel = createConceptSetModel(measurement, 'MeasurementSourceConcept') as ConceptSetSelection
+const measurementSourceConceptModel = createConceptSetModel(measurement, 'MeasurementSourceConcept')
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

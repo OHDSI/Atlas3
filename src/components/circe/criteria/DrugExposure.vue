@@ -250,7 +250,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete drugExposureData.value.DrugType
       delete drugExposureData.value.DrugTypeExclude
     },
-    isActive: () => drugExposureData.value.DrugType != null || drugExposureData.value.DrugTypeExclude != null,
+    isActive: () => drugExposureData.value.DrugType != null,
   },
   {
     key: 'DrugTypeCS',
@@ -488,19 +488,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by drug source concept',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      drugSourceConceptModel,
+      drugSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
       t('components.eventCard.selectSourceConcept', 'Select Source Concept').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      drugExposureData.value.DrugSourceConcept = undefined
+      drugSourceConceptModel.activate()
     },
     clear: () => {
-      delete drugExposureData.value.DrugSourceConcept
+      drugSourceConceptModel.deactivate()
     },
-    isActive: () => 'DrugSourceConcept' in drugExposureData.value,
+    isActive: () => drugSourceConceptModel.isActive(),
   },
   {
     key: 'CorrelatedCriteria',
@@ -536,7 +536,7 @@ const drugExposure = () => drugExposureData.value
 
 const drugExposureConceptSetModel = createConceptSetModel(drugExposure, 'CodesetId') as ConceptSetSelection
 
-const drugSourceConceptModel = createConceptSetModel(drugExposure, 'DrugSourceConcept') as ConceptSetSelection
+const drugSourceConceptModel = createConceptSetModel(drugExposure, 'DrugSourceConcept')
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

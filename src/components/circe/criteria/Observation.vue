@@ -155,7 +155,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete observationData.value.ObservationType
       delete observationData.value.ObservationTypeExclude
     },
-    isActive: () => observationData.value.ObservationType != null || observationData.value.ObservationTypeExclude != null,
+    isActive: () => observationData.value.ObservationType != null,
   },
   {
     key: 'ObservationTypeCS',
@@ -345,19 +345,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by observation source concept',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      observationSourceConceptModel,
+      observationSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
       'Select Source Concept',
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      observationData.value.ObservationSourceConcept = undefined
+      observationSourceConceptModel.activate()
     },
     clear: () => {
-      delete observationData.value.ObservationSourceConcept
+      observationSourceConceptModel.deactivate()
     },
-    isActive: () => 'ObservationSourceConcept' in observationData.value,
+    isActive: () => observationSourceConceptModel.isActive(),
   },
   {
     key: 'Age',
@@ -523,7 +523,7 @@ const observation = () => observationData.value
 
 const observationConceptSetModel = createConceptSetModel(observation, 'CodesetId') as ConceptSetSelection
 
-const observationSourceConceptModel = createConceptSetModel(observation, 'ObservationSourceConcept') as ConceptSetSelection
+const observationSourceConceptModel = createConceptSetModel(observation, 'ObservationSourceConcept')
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

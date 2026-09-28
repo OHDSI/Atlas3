@@ -465,7 +465,7 @@ describe('Measurement', () => {
     await expectMenuItemPresent(wrapper, 'Measurement Source Concept')
     await selectMenuItem(wrapper, 'Measurement Source Concept')
 
-    expect(criteria.Measurement?.MeasurementSourceConcept).toBeUndefined()
+    expect(criteria.Measurement?.MeasurementSourceConcept).toBeNull()
 
     const conceptSetSelection = wrapper.getComponent({ name: 'ConceptSetSelection' })
     await chooseConceptSet(conceptSetSelection, wrapper)

@@ -347,7 +347,7 @@ describe('ProcedureOccurrence', () => {
     await expectMenuItemPresent(wrapper, 'Procedure Source Concept')
     await selectMenuItem(wrapper, 'Procedure Source Concept')
 
-    expect(criteria.ProcedureOccurrence?.ProcedureSourceConcept).toBeUndefined()
+    expect(criteria.ProcedureOccurrence?.ProcedureSourceConcept).toBeNull()
 
     criteria.ProcedureOccurrence!.ProcedureSourceConcept = 1
     await nextTick()

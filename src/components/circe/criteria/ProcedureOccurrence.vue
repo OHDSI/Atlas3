@@ -158,7 +158,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete procedureOccurrenceData.value.ProcedureType
       delete procedureOccurrenceData.value.ProcedureTypeExclude
     },
-    isActive: () => procedureOccurrenceData.value.ProcedureType != null || procedureOccurrenceData.value.ProcedureTypeExclude != null,
+    isActive: () => procedureOccurrenceData.value.ProcedureType != null,
   },
   {
     key: 'ProcedureTypeCS',
@@ -240,19 +240,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by procedure source concept',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(procedureOccurrence, 'ProcedureSourceConcept') as ConceptSetSelection,
+      procedureSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      procedureOccurrenceData.value.ProcedureSourceConcept = undefined
+      procedureSourceConceptModel.activate()
     },
     clear: () => {
-      delete procedureOccurrenceData.value.ProcedureSourceConcept
+      procedureSourceConceptModel.deactivate()
     },
-    isActive: () => 'ProcedureSourceConcept' in procedureOccurrenceData.value,
+    isActive: () => procedureSourceConceptModel.isActive(),
   },
   {
     key: 'Age',
@@ -433,6 +433,7 @@ const procedureOccurrenceData = computed<ProcedureOccurrence>(() => {
 const procedureOccurrence = () => procedureOccurrenceData.value
 
 const procedureOccurrenceConceptSetModel = createConceptSetModel(procedureOccurrence, 'CodesetId') as ConceptSetSelection
+const procedureSourceConceptModel = createConceptSetModel(procedureOccurrence, 'ProcedureSourceConcept')
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

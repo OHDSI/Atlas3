@@ -218,7 +218,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete deathData.value.DeathType
       delete deathData.value.DeathTypeExclude
     },
-    isActive: () => deathData.value.DeathType != null || deathData.value.DeathTypeExclude != null,
+    isActive: () => deathData.value.DeathType != null,
   },
   {
     key: 'DeathTypeCS',
@@ -246,19 +246,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by death source concept',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      deathSourceConceptModel,
+      deathSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
       t('components.eventCard.selectSourceConcept', 'Select Source Concept').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      deathData.value.DeathSourceConcept = undefined
+      deathSourceConceptModel.activate()
     },
     clear: () => {
-      delete deathData.value.DeathSourceConcept
+      deathSourceConceptModel.deactivate()
     },
-    isActive: () => 'DeathSourceConcept' in deathData.value,
+    isActive: () => deathSourceConceptModel.isActive(),
   },
   {
     key: 'CorrelatedCriteria',
@@ -294,7 +294,7 @@ const death = () => deathData.value
 
 const deathConceptSetModel = createConceptSetModel(death, 'CodesetId') as ConceptSetSelection
 
-const deathSourceConceptModel = createConceptSetModel(death, 'DeathSourceConcept') as ConceptSetSelection
+const deathSourceConceptModel = createConceptSetModel(death, 'DeathSourceConcept')
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

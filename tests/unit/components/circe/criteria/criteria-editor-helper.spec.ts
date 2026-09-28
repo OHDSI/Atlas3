@@ -47,6 +47,36 @@ describe('criteria-editor-helper', () => {
     expect(state.CodesetId).toBe(34)
   })
 
+  it('keeps a locally activated scalar concept-set field active while storing null', () => {
+    const state = reactive<{ SourceConcept?: number | null }>({ SourceConcept: null })
+    const model = createConceptSetModel(() => state, 'SourceConcept')
+
+    expect(model.isActive()).toBe(false)
+
+    model.activate()
+    expect(state.SourceConcept).toBeNull()
+    expect(model.isActive()).toBe(true)
+
+    model.CodesetId = 34
+    expect(state.SourceConcept).toBe(34)
+    expect(model.isActive()).toBe(true)
+
+    model.deactivate()
+    expect(state.SourceConcept).toBeUndefined()
+    expect(model.isActive()).toBe(false)
+  })
+
+  it('keeps a server-loaded scalar concept-set field active after its selection is cleared', () => {
+    const state = reactive<{ SourceConcept?: number | null }>({ SourceConcept: 34 })
+    const model = createConceptSetModel(() => state, 'SourceConcept')
+
+    expect(model.isActive()).toBe(true)
+
+    model.CodesetId = undefined
+    expect(state.SourceConcept).toBeUndefined()
+    expect(model.isActive()).toBe(true)
+  })
+
   it('creates the default date adjustment and initializes missing object fields', () => {
     expect(createDefaultDateAdjustment()).toEqual({
       StartWith: 'START_DATE',

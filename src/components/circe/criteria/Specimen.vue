@@ -157,7 +157,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       delete specimenData.value.SpecimenType
       delete specimenData.value.SpecimenTypeExclude
     },
-    isActive: () => specimenData.value.SpecimenType != null || specimenData.value.SpecimenTypeExclude != null,
+    isActive: () => specimenData.value.SpecimenType != null,
   },
   {
     key: 'SpecimenTypeCS',
@@ -347,19 +347,19 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     description: 'Filter by specimen source concept',
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
-      createConceptSetModel(specimen, 'SpecimenSourceConcept') as ConceptSetSelection,
+      specimenSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
       selectConceptSetLabel.value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
     init: () => {
-      specimenData.value.SpecimenSourceConcept = undefined
+      specimenSourceConceptModel.activate()
     },
     clear: () => {
-      delete specimenData.value.SpecimenSourceConcept
+      specimenSourceConceptModel.deactivate()
     },
-    isActive: () => 'SpecimenSourceConcept' in specimenData.value,
+    isActive: () => specimenSourceConceptModel.isActive(),
   },
   {
     key: 'Age',
@@ -448,6 +448,7 @@ const specimenData = computed<Specimen>(() => {
 const specimen = () => specimenData.value
 
 const specimenConceptSetModel = createConceptSetModel(specimen, 'CodesetId') as ConceptSetSelection
+const specimenSourceConceptModel = createConceptSetModel(specimen, 'SpecimenSourceConcept')
 
 function addAttribute(row: CriteriaAttributeSpec) {
   row.init()

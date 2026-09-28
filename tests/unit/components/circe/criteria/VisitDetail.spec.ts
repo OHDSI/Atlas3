@@ -165,7 +165,7 @@ describe('VisitDetail', () => {
     await expectMenuItemPresent(wrapper, 'Visit Detail Source Concept')
     await selectMenuItem(wrapper, 'Visit Detail Source Concept')
 
-    expect(criteria.VisitDetail?.VisitDetailSourceConcept).toBeUndefined()
+    expect(criteria.VisitDetail?.VisitDetailSourceConcept).toBeNull()
 
     const conceptSetSelection = wrapper.getComponent({ name: 'ConceptSetSelection' })
     await chooseConceptSet(conceptSetSelection, wrapper)
@@ -317,7 +317,7 @@ describe('VisitDetail', () => {
     await expectMenuItemPresent(wrapper, 'Place of Service Location')
     await selectMenuItem(wrapper, 'Place of Service Location')
 
-    expect(criteria.VisitDetail?.PlaceOfServiceLocation).toBeUndefined()
+    expect(criteria.VisitDetail?.PlaceOfServiceLocation).toBeNull()
 
     const conceptSetSelection = wrapper.getComponent({ name: 'ConceptSetSelection' })
     await chooseConceptSet(conceptSetSelection, wrapper)

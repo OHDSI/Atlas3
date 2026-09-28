@@ -1,3 +1,4 @@
+import { ref } from 'vue'
 import type { ConceptSetSelection, CriteriaGroup, DateAdjustment } from '@/models/circe-types'
 import type { ConceptSetOption, ConceptSetSelectionTarget, ModelAccessor } from './criteria-editor.types'
 
@@ -39,12 +40,26 @@ export function createSchemaFieldProps<T extends Record<string, unknown>>(modelV
 }
 
 export function createConceptSetModel<T extends Record<string, unknown>>(target: ModelAccessor<T>, fieldKey: keyof T & string) {
+  const locallyActivated = ref(typeof target()[fieldKey] === 'number')
+
   return {
     get CodesetId() {
       return target()[fieldKey] as number | undefined
     },
     set CodesetId(value: number | undefined) {
       (target() as Record<string, unknown>)[fieldKey] = value
+    },
+    activate() {
+      locallyActivated.value = true
+      const model = target() as Record<string, unknown>
+      model[fieldKey] = null
+    },
+    deactivate() {
+      locallyActivated.value = false
+      delete (target() as Record<string, unknown>)[fieldKey]
+    },
+    isActive() {
+      return locallyActivated.value || typeof target()[fieldKey] === 'number'
     },
   }
 }
