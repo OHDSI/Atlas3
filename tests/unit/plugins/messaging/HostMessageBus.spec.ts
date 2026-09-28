@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { HostMessageBus, createHostMessageBus, getHostMessageBus, setupGlobalMessageHandler } from '@/plugins/messaging/HostMessageBus'
 import { setActivePinia, createPinia } from 'pinia'
 import { usePluginConceptSetChooserStore } from '@/stores/plugin-concept-set-chooser'
+import { usePluginConceptSetEditorStore } from '@/stores/plugin-concept-set-editor'
 
 // Mock logger
 vi.mock('@/utils/logger', () => ({
@@ -80,6 +81,25 @@ describe('HostMessageBus', () => {
 
       await expect(requestPromise).rejects.toThrow('Request timeout for data:request')
     })
+
+    it.each(['conceptSet:choose', 'conceptSet:edit'])(
+      'should not time out %s, which waits on the user',
+      async type => {
+        const bus = new HostMessageBus('test-plugin')
+        const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+        const settled = vi.fn()
+
+        const requestPromise = bus.request(type, {})
+        requestPromise.then(settled, settled)
+        vi.advanceTimersByTime(10 * 60 * 1000)
+        await Promise.resolve()
+        expect(settled).not.toHaveBeenCalled()
+
+        const event = dispatchSpy.mock.calls.at(-1)![0] as CustomEvent
+        bus.handleResponse(event.detail.callbackId, null)
+        await expect(requestPromise).resolves.toBeNull()
+      }
+    )
 
     it('should increment request ID counter', () => {
       const bus = new HostMessageBus('test-plugin')
@@ -418,6 +438,88 @@ describe('setupGlobalMessageHandler', () => {
       ).not.toThrow()
 
       expect(usePluginConceptSetChooserStore().isOpen).toBe(true)
+    })
+  })
+
+  describe('conceptSet:edit', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    const dispatch = (detail: Record<string, unknown>) => {
+      setupGlobalMessageHandler(null)
+      const handler = eventListenerSpy.mock.calls[0][1] as EventListener
+      handler(new CustomEvent('plugin-message', { detail }))
+    }
+
+    it('opens the editor on a new set and answers the request with the saved set', async () => {
+      const bus = createHostMessageBus('edit-plugin')
+      const handleResponseSpy = vi.spyOn(bus, 'handleResponse')
+      dispatch({
+        type: 'conceptSet:edit',
+        sourcePluginId: 'edit-plugin',
+        payload: {},
+        callbackId: 'req-edit-plugin-1',
+        timestamp: new Date(),
+      })
+
+      const store = usePluginConceptSetEditorStore()
+      await vi.waitFor(() => expect(store.isOpen).toBe(true))
+
+      store.saved({ conceptSetId: 21, name: 'Statins' })
+
+      await vi.waitFor(() =>
+        expect(handleResponseSpy).toHaveBeenCalledWith('req-edit-plugin-1', {
+          conceptSetId: 21,
+          name: 'Statins',
+        })
+      )
+    })
+
+    it('passes the requested id to the editor store', () => {
+      const open = vi.spyOn(usePluginConceptSetEditorStore(), 'open').mockResolvedValue(null)
+
+      dispatch({
+        type: 'conceptSet:edit',
+        sourcePluginId: 'edit-plugin',
+        payload: { conceptSetId: 4 },
+        callbackId: 'req-edit-plugin-2',
+        timestamp: new Date(),
+      })
+
+      expect(open).toHaveBeenCalledWith(4)
+    })
+
+    it('answers null when the editor closes without a save', async () => {
+      const bus = createHostMessageBus('edit-plugin')
+      const handleResponseSpy = vi.spyOn(bus, 'handleResponse')
+      dispatch({
+        type: 'conceptSet:edit',
+        sourcePluginId: 'edit-plugin',
+        callbackId: 'req-edit-plugin-3',
+        timestamp: new Date(),
+      })
+
+      const store = usePluginConceptSetEditorStore()
+      await vi.waitFor(() => expect(store.isOpen).toBe(true))
+      store.cancel()
+
+      await vi.waitFor(() =>
+        expect(handleResponseSpy).toHaveBeenCalledWith('req-edit-plugin-3', null)
+      )
+    })
+
+    it('ignores a request with no callbackId, since there is nothing to answer', () => {
+      const open = vi.spyOn(usePluginConceptSetEditorStore(), 'open')
+
+      dispatch({
+        type: 'conceptSet:edit',
+        sourcePluginId: 'edit-plugin',
+        payload: {},
+        timestamp: new Date(),
+      })
+
+      expect(open).not.toHaveBeenCalled()
     })
   })
 

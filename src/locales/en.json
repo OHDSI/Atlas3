@@ -5541,7 +5541,8 @@
     "concepts": "Concepts:",
     "addConcepts": "Add Concepts",
     "defaultName": "Concept Set <%=number%>",
-    "tagUpdateFailed": "Failed to update tags"
+    "tagUpdateFailed": "Failed to update tags",
+    "pluginEditLoadFailed": "Could not open concept set {id}"
   },
   "conceptSearch": {
     "title": "Search OHDSI Vocabulary",

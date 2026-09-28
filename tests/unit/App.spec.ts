@@ -33,6 +33,10 @@ vi.mock('@/components/config/ConfigPanel.vue', () => ({
   default: { name: 'ConfigPanel', template: '<div class="config-panel-mock"></div>' }
 }))
 
+vi.mock('@/components/plugins/PluginConceptSetEditorHost.vue', () => ({
+  default: { name: 'PluginConceptSetEditorHost', template: '<div></div>' }
+}))
+
 // Mock composables
 vi.mock('@/composables/useI18n', () => ({
   useI18n: () => ({
