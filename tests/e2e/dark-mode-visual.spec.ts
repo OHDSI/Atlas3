@@ -67,6 +67,16 @@ async function maskNavIconCluster(page: Page) {
   })
 }
 
+// Full-page screenshots can composite sticky elements differently from their
+// in-flow counterparts as the browser captures beyond the initial viewport.
+// The sticky behavior itself is covered by navigation-sticky.spec.ts; keep
+// these visual comparisons focused on the unchanged navigation appearance.
+async function normalizeStickyNavigationForScreenshot(page: Page) {
+  await page.addStyleTag({
+    content: '.nav-bar { position: static !important; top: auto !important; }',
+  })
+}
+
 // The landing page's hero graphic (src/assets/icons/atlas-loading.svg) is an <img>
 // referencing a standalone SVG with SMIL `<animate>`/`<animateTransform>` loops
 // (repeatCount="indefinite"). Playwright's screenshot animation-disabling only
@@ -125,6 +135,7 @@ for (const mode of ['light', 'dark'] as const) {
         // fresh on this branch, so the suite-wide loose threshold
         // (playwright.config.ts) is fine for them.
         if (mode === 'light') {
+          await normalizeStickyNavigationForScreenshot(page)
           await maskNavIconCluster(page)
         }
         await expect(page).toHaveScreenshot(
