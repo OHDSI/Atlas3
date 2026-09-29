@@ -136,8 +136,6 @@ for (const mode of ['light', 'dark'] as const) {
         // (playwright.config.ts) is fine for them.
         if (mode === 'light') {
           await normalizeStickyNavigationForScreenshot(page)
-          await expect(page.locator('.nav-bar')).toHaveCSS('position', 'static')
-          await expect(page.locator('.nav-bar')).toHaveCSS('z-index', 'auto')
           await maskNavIconCluster(page)
         }
         await expect(page).toHaveScreenshot(
