@@ -132,6 +132,7 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
     v-model="dialogOpen"
     :concept="concept"
     :source-key="sourceKey"
+    @navigate="openConcept"
   />
 </template>
 

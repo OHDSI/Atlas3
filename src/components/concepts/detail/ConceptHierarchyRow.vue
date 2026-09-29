@@ -10,8 +10,8 @@ defineProps<{
   depth: number
   canAdd: boolean
   selected: boolean
-  expandable: boolean
-  expanded: boolean
+  distance?: number
+  showDistance: boolean
   inSet: boolean
   isExcluded: boolean
   includeDescendants: boolean
@@ -19,9 +19,12 @@ defineProps<{
   descendantRecordCount: number | undefined
 }>()
 
-const emit = defineEmits<{ 'toggle-select': []; 'toggle-expand': [] }>()
+const emit = defineEmits<{
+  'toggle-select': []
+  navigate: [conceptId: number]
+}>()
 
-const { t, tv } = useI18n()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -39,19 +42,17 @@ const { t, tv } = useI18n()
     />
     <td :style="{ paddingLeft: `${8 + depth * 24}px` }">
       <button
-        v-if="expandable"
         type="button"
-        class="chev"
-        :aria-expanded="expanded"
-        :aria-label="expanded
-          ? tv('components.conceptHierarchyDialog.collapseConcept', 'Collapse {name}', { name: row.conceptName })
-          : tv('components.conceptHierarchyDialog.expandConcept', 'Expand {name}', { name: row.conceptName })"
-        :data-testid="`hierarchy-expand-${row.conceptId}`"
-        @click="emit('toggle-expand')"
+        class="concept-link"
+        :data-testid="`hierarchy-navigate-${row.conceptId}`"
+        @click="emit('navigate', row.conceptId)"
       >
-        {{ expanded ? '▾' : '▸' }}
+        {{ row.conceptName }}
       </button>
-      {{ row.conceptName }}
+      <span
+        v-if="showDistance && distance !== undefined"
+        class="dist"
+      >{{ t('components.conceptHierarchyDialog.descendantDistance', 'distance {distance}', { distance }).value }}</span>
       <AtlasChip
         v-if="inSet"
         size="sm"
@@ -85,5 +86,8 @@ const { t, tv } = useI18n()
 </template>
 
 <style scoped>
-.chev { background: none; border: none; cursor: pointer; padding: 0 6px 0 0; }
+.dist { font-size: 11px; opacity: 0.55; margin-left: 6px; }
+.concept-link { background: none; border: none; color: inherit; cursor: pointer; font: inherit; padding: 0; text-align: left; }
+.concept-link:hover { text-decoration: underline; }
 </style>
+

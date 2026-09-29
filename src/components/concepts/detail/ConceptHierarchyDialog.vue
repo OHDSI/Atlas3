@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import {
   AtlasDialog,
@@ -26,13 +26,16 @@ const props = defineProps<{
   sourceKey: string
 }>()
 
-const emit = defineEmits<{ 'update:modelValue': [boolean] }>()
+const emit = defineEmits<{
+  'update:modelValue': [boolean]
+  navigate: [conceptId: number]
+}>()
 
 const { t } = useI18n()
 const detail = useConceptDetailStore()
 const tree = useConceptHierarchyStore()
 const conceptSets = useConceptSetsStore()
-const { hierarchy, hierarchyError } = storeToRefs(detail)
+const { hierarchy, hierarchyError, isLoading } = storeToRefs(detail)
 
 const isNonStandard = computed(() => props.concept.standardConcept === 'N')
 
@@ -57,12 +60,18 @@ const ancestors = computed<AncestorRow[]>(() =>
     .sort((a, b) => b.distance - a.distance)
 )
 
-const descendants = computed(() =>
-  hierarchy.value.filter(c =>
-    c.relationships.some(
-      r => r.relationshipName === 'Has descendant of' && r.relationshipDistance === 1
-    )
-  )
+interface DescendantRow {
+  concept: RelatedConcept
+  distance: number
+}
+
+const descendants = computed<DescendantRow[]>(() =>
+  hierarchy.value.flatMap(concept => {
+    const distances = concept.relationships
+      .filter(r => r.relationshipName === 'Has descendant of')
+      .map(r => r.relationshipDistance)
+    return distances.length > 0 ? [{ concept, distance: Math.min(...distances) }] : []
+  }).sort((a, b) => a.distance - b.distance)
 )
 
 const allAncestorCount = computed(() => ancestors.value.length)
@@ -77,78 +86,29 @@ const directAncestors = computed(() => ancestors.value.filter(a => a.distance ==
 const hiddenAncestorCount = computed(() => ancestors.value.length - directAncestors.value.length)
 const visibleAncestors = computed(() => (ancestorsExpanded.value ? ancestors.value : directAncestors.value))
 
+const descendantsExpanded = ref(false)
+const directDescendants = computed(() => descendants.value.filter(d => d.distance === 1))
+const hiddenDescendantCount = computed(() => descendants.value.length - directDescendants.value.length)
+const visibleDescendants = computed(() =>
+  descendantsExpanded.value ? descendants.value : directDescendants.value
+)
+
 const isEmpty = computed(() => hierarchy.value.length === 0)
 
 const filterText = ref('')
 const classFilter = ref<string | null>(null)
 const domainFilter = ref<string | null>(null)
 const vocabularyFilter = ref<string | null>(null)
-const view = ref<'tree' | 'flat'>('tree')
-const switchingView = ref(false)
+const pendingConcept = ref<Concept | null>(null)
 
-/**
- * Switching view re-renders every row, which takes seconds on a concept with
- * a large subtree and looked like nothing had happened, so the button got
- * clicked again (#207).
- *
- * The yield matters: flipping `view` in the same tick that sets the flag lets
- * Vue batch both, and the expensive render blocks the frame, so the spinner
- * never reaches the screen. Handing control back to the event loop first lets
- * it paint before the work starts.
- */
-async function setView(next: 'tree' | 'flat') {
-  // The guard is not redundant with the buttons' disabled state: a click can
-  // land in the window between setting the flag and the DOM reflecting it.
-  if (next === view.value || switchingView.value) return
-
-  switchingView.value = true
-  await nextTick()
-  await new Promise(resolve => setTimeout(resolve, 0))
-
-  view.value = next
-  await nextTick()
-  switchingView.value = false
-}
-
-const anchorDescendants = computed(() =>
-  hierarchy.value.filter(c => c.relationships.some(r => r.relationshipName === 'Has descendant of'))
+const displayedConcept = computed(() =>
+  isLoading.value && pendingConcept.value ? pendingConcept.value : props.concept
 )
 
-// Expanding a node in Tree view fetches and caches that node's children
-// through the hierarchy store, independently of the anchor's own
-// ancestorAndDescendant payload. The two can disagree — different distance
-// cut-offs, vocabulary refresh skew, a concept whose own response includes
-// something the anchor's didn't — so Flat merges both, deduplicated by
-// conceptId with the anchor payload winning any overlap. Concepts found only
-// through expansion are appended in discovery order, so switching views never
-// reorders anything already visible.
-const allDescendants = computed<RelatedConcept[]>(() => {
-  const seen = new Set(anchorDescendants.value.map(c => c.conceptId))
-  const discovered: RelatedConcept[] = []
-  for (const children of tree.childrenByConcept.values()) {
-    for (const child of children) {
-      if (seen.has(child.conceptId)) continue
-      seen.add(child.conceptId)
-      discovered.push(child)
-    }
-  }
-  return [...anchorDescendants.value, ...discovered]
-})
+const allDescendantCount = computed(() => descendants.value.length)
 
-// The toolbar advertises this same merged total, so it can never disagree
-// with what Flat actually renders — a count/rows mismatch was a review
-// finding on this branch once already, in the ancestor direction.
-const allDescendantCount = computed(() => allDescendants.value.length)
-
-// hierarchy.value is only the anchor's own payload. A concept surfaced by
-// expanding a node (allDescendants.value) can carry a facet value the anchor
-// payload never mentioned, so the dropdown has to draw from the same rows the
-// filter itself matches against — otherwise a value is reachable by free-text
-// search but has no facet option to select it with.
 function optionsFor(key: 'conceptClassId' | 'domainId' | 'vocabularyId') {
-  const values = new Set(hierarchy.value.map(c => c[key]))
-  for (const c of allDescendants.value) values.add(c[key])
-  return [...values].sort()
+  return [...new Set(hierarchy.value.map(c => c[key]))].sort()
 }
 
 function matches(row: RelatedConcept): boolean {
@@ -161,47 +121,12 @@ function matches(row: RelatedConcept): boolean {
   return true
 }
 
-const flatRows = computed(() => allDescendants.value.filter(matches))
+const filteredVisibleAncestors = computed(() =>
+  visibleAncestors.value.filter(({ concept }) => matches(concept))
+)
 
-interface TreeRow {
-  row: RelatedConcept
-  depth: number
-  key: string
-}
-
-// One flattened list drives a single <tr v-for>, so rows at every depth share
-// one markup block instead of a copy per nesting level. SNOMED is a
-// polyhierarchy, so the same conceptId can legitimately appear more than
-// once (under two different expanded parents) — the row key is derived from
-// the full ancestor path rather than the conceptId alone, so those rows stay
-// distinct instead of colliding on a duplicate Vue key.
-//
-// Filtering is resolved bottom-up: a row survives when it matches or when
-// anything in its loaded subtree does, so a match never appears detached from
-// its ancestor chain. Only already-expanded nodes are walked, so filtering
-// still never triggers a fetch.
-function flatten(rows: RelatedConcept[], depth: number, path: number[]): TreeRow[] {
-  return rows.flatMap(row => {
-    const self: TreeRow = { row, depth, key: [...path, row.conceptId].join('>') }
-    // A concept that already appears higher up its own path is a cycle in
-    // the source data (should be acyclic, but a bad vocabulary load must
-    // not hang the UI) — render it once and stop recursing there.
-    if (!tree.isExpanded(row.conceptId) || path.includes(row.conceptId)) {
-      return matches(row) ? [self] : []
-    }
-    const children = flatten(tree.childrenOf(row.conceptId), depth + 1, [...path, row.conceptId])
-    if (children.length === 0 && !matches(row)) return []
-    return [self, ...children]
-  })
-}
-
-// Flat view already lists every descendant once, at every depth, so
-// re-nesting through flatten() would duplicate rows; each concept appears
-// only once in the source hierarchy, so its conceptId alone is a safe key.
-const treeRows = computed<TreeRow[]>(() =>
-  view.value === 'flat'
-    ? flatRows.value.map(row => ({ row, depth: 0, key: String(row.conceptId) }))
-    : flatten(descendants.value, 0, [])
+const visibleDescendantRows = computed(() =>
+  visibleDescendants.value.filter(({ concept }) => matches(concept))
 )
 
 const selected = ref<number[]>([])
@@ -247,8 +172,8 @@ function toggleSelected(conceptId: number) {
 // exactly like a row hidden by the filter or a closed tree node.
 const visibleById = computed(() => {
   const map = new Map<number, RelatedConcept>()
-  for (const { concept } of visibleAncestors.value) map.set(concept.conceptId, concept)
-  for (const { row } of treeRows.value) map.set(row.conceptId, row)
+  for (const { concept } of filteredVisibleAncestors.value) map.set(concept.conceptId, concept)
+  for (const { concept } of visibleDescendantRows.value) map.set(concept.conceptId, concept)
   return map
 })
 
@@ -305,7 +230,13 @@ watch(
   () => props.concept.conceptId,
   () => {
     selected.value = []
+    pendingConcept.value = null
     ancestorsExpanded.value = false
+    descendantsExpanded.value = false
+    filterText.value = ''
+    classFilter.value = null
+    domainFilter.value = null
+    vocabularyFilter.value = null
   }
 )
 
@@ -318,7 +249,7 @@ watch(
     void tree.loadCounts(
       [
         ...ancestors.value.map(a => a.concept.conceptId),
-        ...descendants.value.map(c => c.conceptId),
+        ...directDescendants.value.map(d => d.concept.conceptId),
       ],
       props.sourceKey
     )
@@ -331,16 +262,15 @@ watch(
 // into the next session.
 onUnmounted(() => tree.reset())
 
-function toggle(row: RelatedConcept) {
-  if (tree.isExpanded(row.conceptId)) {
-    tree.collapseNode(row.conceptId)
-    return
-  }
-  void tree.expandNode(row.conceptId)
-}
-
 function close() {
   emit('update:modelValue', false)
+}
+
+function navigate(conceptId: number) {
+  if (conceptId === props.concept.conceptId) return
+  const target = hierarchy.value.find(concept => concept.conceptId === conceptId)
+  pendingConcept.value = target ? toRow(target) : null
+  emit('navigate', conceptId)
 }
 
 function counts(conceptId: number) {
@@ -353,14 +283,27 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    :title="t('components.conceptHierarchyDialog.title', 'Hierarchy · {concept}', { concept: concept.conceptName }).value"
-    :subtitle="`${concept.conceptId} · ${concept.vocabularyId} · ${concept.conceptCode} · ${concept.domainId}`"
+    :title="t('components.conceptHierarchyDialog.title', 'Hierarchy · {concept}', { concept: displayedConcept.conceptName }).value"
+    :subtitle="`${displayedConcept.conceptId} · ${displayedConcept.vocabularyId} · ${displayedConcept.conceptCode} · ${displayedConcept.domainId}`"
     max-width="1100"
     data-testid="concept-hierarchy-dialog"
     @update:model-value="close"
   >
+    <div
+      v-if="isLoading"
+      class="hierarchy-loading-state"
+      data-testid="hierarchy-loading"
+      aria-live="polite"
+    >
+      <AtlasProgressCircular
+        indeterminate
+        size="32"
+      />
+      <p>{{ t('components.conceptHierarchyDialog.loading', 'Loading hierarchy…').value }}</p>
+    </div>
+
     <p
-      v-if="isNonStandard"
+      v-else-if="isNonStandard"
       data-testid="hierarchy-non-standard"
     >
       {{ t('cs.manager.concept.tabs.hierarchy.noHierarchyFoundMessage', 'No hierarchy found for non-standard concepts.').value }}
@@ -395,45 +338,26 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
           v-model="classFilter"
           clearable
           :items="optionsFor('conceptClassId')"
-          :label="t('components.conceptHierarchyDialog.anyClass', 'Class: any').value"
+          :placeholder="t('columns.class', 'Class').value"
+          :aria-label="t('components.conceptHierarchyDialog.filterByClass', 'Filter by class').value"
           data-testid="hierarchy-filter-class"
         />
         <AtlasSelect
           v-model="domainFilter"
           clearable
           :items="optionsFor('domainId')"
-          :label="t('components.conceptHierarchyDialog.anyDomain', 'Domain: any').value"
+          :placeholder="t('columns.domain', 'Domain').value"
+          :aria-label="t('components.conceptHierarchyDialog.filterByDomain', 'Filter by domain').value"
           data-testid="hierarchy-filter-domain"
         />
         <AtlasSelect
           v-model="vocabularyFilter"
           clearable
           :items="optionsFor('vocabularyId')"
-          :label="t('components.conceptHierarchyDialog.anyVocabulary', 'Vocabulary: any').value"
+          :placeholder="t('columns.vocabulary', 'Vocabulary').value"
+          :aria-label="t('components.conceptHierarchyDialog.filterByVocabulary', 'Filter by vocabulary').value"
           data-testid="hierarchy-filter-vocabulary"
         />
-        <div class="view-toggle">
-          <button
-            type="button"
-            :class="{ on: view === 'tree' }"
-            :aria-pressed="view === 'tree'"
-            :disabled="switchingView"
-            data-testid="hierarchy-view-tree"
-            @click="setView('tree')"
-          >
-            {{ t('components.conceptHierarchyDialog.treeView', 'Tree').value }}
-          </button>
-          <button
-            type="button"
-            :class="{ on: view === 'flat' }"
-            :aria-pressed="view === 'flat'"
-            :disabled="switchingView"
-            data-testid="hierarchy-view-flat"
-            @click="setView('flat')"
-          >
-            {{ t('components.conceptHierarchyDialog.flatView', 'Flat').value }}
-          </button>
-        </div>
       </div>
 
       <table class="hierarchy-table">
@@ -455,21 +379,9 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
         </thead>
         <tbody>
           <tr
-            v-if="switchingView"
-            data-testid="hierarchy-view-switching"
+            class="section-row"
+            data-testid="hierarchy-ancestors-section"
           >
-            <td colspan="8">
-              <AtlasProgressCircular
-                indeterminate
-                size="16"
-              />
-              <span class="view-switching__label">
-                {{ t('components.conceptHierarchyDialog.switchingView', 'Rebuilding the list…').value }}
-              </span>
-            </td>
-          </tr>
-
-          <tr class="section-row">
             <td colspan="8">
               {{ t('components.conceptHierarchyDialog.ancestors', 'Ancestors').value }}
               <button
@@ -487,7 +399,7 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
             </td>
           </tr>
           <tr
-            v-for="{ concept: a, distance } in visibleAncestors"
+            v-for="{ concept: a, distance } in filteredVisibleAncestors"
             :key="`a-${a.conceptId}`"
             :data-testid="`hierarchy-row-${a.conceptId}`"
             data-ancestor-row
@@ -501,8 +413,18 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
               @toggle="toggleSelected(a.conceptId)"
             />
             <td>
-              {{ a.conceptName }}
-              <span class="dist">{{ t('components.conceptHierarchyDialog.ancestorDistance', 'distance {distance}', { distance }).value }}</span>
+              <button
+                type="button"
+                class="concept-link"
+                :data-testid="`hierarchy-navigate-${a.conceptId}`"
+                @click="navigate(a.conceptId)"
+              >
+                {{ a.conceptName }}
+              </button>
+              <span
+                v-if="ancestorsExpanded"
+                class="dist"
+              >{{ t('components.conceptHierarchyDialog.ancestorDistance', 'distance {distance}', { distance }).value }}</span>
             </td>
             <td>{{ a.conceptCode }}</td>
             <td>{{ a.conceptClassId }}</td>
@@ -516,6 +438,14 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
             </td>
           </tr>
 
+          <tr
+            class="section-row"
+            data-testid="hierarchy-current-section"
+          >
+            <td colspan="8">
+              {{ t('components.conceptHierarchyDialog.currentConcept', 'Current concept').value }}
+            </td>
+          </tr>
           <tr
             class="anchor"
             data-testid="hierarchy-anchor"
@@ -534,50 +464,45 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
             </td>
           </tr>
 
+          <tr
+            class="section-row"
+            data-testid="hierarchy-descendants-section"
+          >
+            <td colspan="8">
+              {{ t('components.conceptHierarchyDialog.descendants', 'Descendants').value }}
+              <button
+                v-if="hiddenDescendantCount > 0"
+                type="button"
+                class="ancestors-toggle"
+                :aria-expanded="descendantsExpanded"
+                data-testid="hierarchy-descendants-toggle"
+                @click="descendantsExpanded = !descendantsExpanded"
+              >
+                {{ descendantsExpanded
+                  ? t('components.conceptHierarchyDialog.collapseDescendants', 'Show direct children only').value
+                  : t('components.conceptHierarchyDialog.showMoreDescendants', 'Show {count} more children', { count: hiddenDescendantCount }).value }}
+              </button>
+            </td>
+          </tr>
           <template
-            v-for="{ row, depth, key } in (switchingView ? [] : treeRows)"
-            :key="key"
+            v-for="{ concept: row, distance } in visibleDescendantRows"
+            :key="row.conceptId"
           >
             <ConceptHierarchyRow
               :row="row"
-              :depth="depth"
+              :depth="0"
               :can-add="canAdd"
               :selected="selected.includes(row.conceptId)"
-              :expandable="view === 'tree' && !tree.isLeaf(row.conceptId)"
-              :expanded="tree.isExpanded(row.conceptId)"
+              :distance="distance"
+              :show-distance="descendantsExpanded"
               :in-set="itemsById.has(row.conceptId)"
               :is-excluded="!!itemsById.get(row.conceptId)?.isExcluded"
               :include-descendants="!!itemsById.get(row.conceptId)?.includeDescendants"
               :record-count="counts(row.conceptId)?.recordCount"
               :descendant-record-count="counts(row.conceptId)?.descendantRecordCount"
               @toggle-select="toggleSelected(row.conceptId)"
-              @toggle-expand="toggle(row)"
+              @navigate="navigate"
             />
-
-            <tr
-              v-if="tree.isLoading(row.conceptId)"
-              :data-testid="`hierarchy-loading-${row.conceptId}`"
-            >
-              <td colspan="8">
-                <AtlasProgressCircular
-                  indeterminate
-                  size="14"
-                />
-              </td>
-            </tr>
-
-            <tr v-if="tree.hasFailed(row.conceptId)">
-              <td colspan="8">
-                {{ t('components.conceptHierarchyDialog.expandFailed', 'Could not load children').value }}
-                <button
-                  type="button"
-                  :data-testid="`hierarchy-retry-${row.conceptId}`"
-                  @click="tree.expandNode(row.conceptId)"
-                >
-                  {{ t('components.conceptHierarchyDialog.retry', 'Retry').value }}
-                </button>
-              </td>
-            </tr>
           </template>
         </tbody>
       </table>
@@ -630,9 +555,8 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
 .ancestor { opacity: 0.8; }
 .anchor { background: var(--atlas-color-primary-tint); font-weight: 600; }
 .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
-.view-switching__label { margin-inline-start: 8px; font-size: 12px; }
-.view-toggle button { border: 1px solid rgba(0, 0, 0, 0.25); background: none; padding: 2px 10px; font-size: 12px; }
-.view-toggle button.on { background: var(--atlas-color-primary-tint-strong); font-weight: 600; }
+.hierarchy-loading-state { align-items: center; display: flex; flex-direction: column; justify-content: center; min-height: 420px; }
+.hierarchy-loading-state p { font-size: 13px; margin: 12px 0 0; }
 .dialog-footer { border-top: 1px solid var(--atlas-color-outline); padding-top: 10px; margin-top: 10px; }
 
 /* Light keeps its own literals here: --atlas-color-primary-text is navy, not
@@ -641,7 +565,6 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
 .v-theme--dark .ancestors-toggle {
   color: var(--atlas-color-primary-text);
 }
-.v-theme--dark .view-toggle button {
-  border-color: var(--atlas-color-outline-strong);
-}
+.concept-link { background: none; border: none; color: inherit; cursor: pointer; font: inherit; padding: 0; text-align: left; }
+.concept-link:hover { text-decoration: underline; }
 </style>

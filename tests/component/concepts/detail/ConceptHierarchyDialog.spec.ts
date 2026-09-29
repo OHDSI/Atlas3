@@ -26,7 +26,6 @@ import { getConceptRecordCounts } from '@/services/concept-search.service'
 import {
   PNEUMONIA_ANCESTOR_AND_DESCENDANT,
   INFECTIVE_PNEUMONIA_PAYLOAD,
-  INFECTIVE_PNEUMONIA_CHILDREN,
 } from '../../../fixtures/concept-hierarchy'
 import type { Concept } from '@/models/concept-set.types'
 import type { RelatedConcept } from '@/models/concept-detail.types'
@@ -71,14 +70,6 @@ let activeWrapper: VueWrapper | null = null
 // that automatically between tests, so a leftover dialog from a prior test
 // would still satisfy document.querySelector lookups here — track and
 // unmount the wrapper after each test to keep body clean.
-// Switching view yields a macrotask before rebuilding the rows, so the loading
-// row can paint first (#207). Flush that before asserting on the new rows.
-async function flushViewSwitch(wrapper: { vm: { $nextTick: () => Promise<void> } }) {
-  await wrapper.vm.$nextTick()
-  await new Promise(resolve => setTimeout(resolve, 0))
-  await wrapper.vm.$nextTick()
-}
-
 function mountDialog(overrides: Partial<{ concept: Concept }> = {}) {
   activeWrapper = mount(ConceptHierarchyDialog, {
     props: { modelValue: true, concept: overrides.concept ?? concept, sourceKey: 'SYNPUF1K' },
@@ -138,6 +129,9 @@ describe('ConceptHierarchyDialog', () => {
       expect.arrayContaining(['hierarchy-row-253506', 'hierarchy-row-4318404'])
     )
     expect(document.querySelector('[data-testid="hierarchy-row-257907"]')).toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-row-253506"]')?.textContent).not.toContain(
+      'distance'
+    )
   })
 
   it('states how many ancestors are hidden while collapsed', async () => {
@@ -277,21 +271,13 @@ describe('ConceptHierarchyDialog', () => {
     )
   })
 
-  it('labels the expand chevrons and the view toggle for assistive technology', async () => {
+  it('does not show descendant expand controls or view-mode controls', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
 
-    expect(
-      document
-        .querySelector('[data-testid="hierarchy-expand-443410"]')
-        ?.getAttribute('aria-label')
-    ).toBe('Expand Infective pneumonia')
-    expect(
-      document.querySelector('[data-testid="hierarchy-expand-443410"]')?.getAttribute('aria-expanded')
-    ).toBe('false')
-    expect(
-      document.querySelector('[data-testid="hierarchy-view-tree"]')?.getAttribute('aria-pressed')
-    ).toBe('true')
+    expect(document.querySelector('[data-testid^="hierarchy-expand-"]')).toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-view-tree"]')).toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-view-flat"]')).toBeNull()
   })
 
   it('lists direct ancestors and highlights the anchor concept', async () => {
@@ -305,152 +291,40 @@ describe('ConceptHierarchyDialog', () => {
     )
   })
 
-  it('expands a node and renders its children indented', async () => {
+  it('separates ancestor, current concept, and descendant rows into ordered sections', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
 
-    const chevron = document.querySelector(
-      '[data-testid="hierarchy-expand-443410"]'
-    ) as HTMLElement
-    chevron.click()
-    await new Promise(r => setTimeout(r, 0))
-    await wrapper.vm.$nextTick()
+    const ancestors = document.querySelector('[data-testid="hierarchy-ancestors-section"]')
+    const current = document.querySelector('[data-testid="hierarchy-current-section"]')
+    const descendants = document.querySelector('[data-testid="hierarchy-descendants-section"]')
 
-    expect(getConceptAncestorAndDescendant).toHaveBeenCalledWith('SYNPUF1K', 443410)
-    for (const child of INFECTIVE_PNEUMONIA_CHILDREN) {
-      expect(document.body.textContent).toContain(child.conceptName)
-    }
+    expect(ancestors).not.toBeNull()
+    expect(current).not.toBeNull()
+    expect(descendants).not.toBeNull()
+    expect(ancestors?.compareDocumentPosition(current!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(current?.compareDocumentPosition(descendants!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
   })
 
-  it('offers a facet value that exists only on an expansion-discovered concept', async () => {
+  it('emits navigation when a hierarchy concept is clicked', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
 
-    // Every ancestor/descendant in the anchor payload is class "Disorder";
-    // 3178885 "Secondary pneumonia" is class "Clinical Finding" and only
-    // surfaces once 443410 is expanded — it must reach the Class dropdown,
-    // not just the free-text filter.
-    const chevron = document.querySelector(
-      '[data-testid="hierarchy-expand-443410"]'
-    ) as HTMLElement
-    chevron.click()
-    await new Promise(r => setTimeout(r, 0))
-    await wrapper.vm.$nextTick()
+    ;(document.querySelector('[data-testid="hierarchy-navigate-4309106"]') as HTMLElement).click()
 
-    const classSelect = wrapper.findComponent('[data-testid="hierarchy-filter-class"]')
-    expect(classSelect.props('items')).toContain('Clinical Finding')
+    expect(wrapper.emitted('navigate')).toEqual([[4309106]])
   })
 
-  it('drops the chevron when a node turns out to have no children', async () => {
-    (getConceptAncestorAndDescendant as Mock).mockResolvedValue([])
+  it('updates the dialog header to the clicked concept while its details load', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
 
-    const chevron = document.querySelector(
-      '[data-testid="hierarchy-expand-4309106"]'
-    ) as HTMLElement
-    chevron.click()
-    await new Promise(r => setTimeout(r, 0))
+    ;(document.querySelector('[data-testid="hierarchy-navigate-4309106"]') as HTMLElement).click()
+    useConceptDetailStore().isLoading = true
     await wrapper.vm.$nextTick()
 
-    expect(document.querySelector('[data-testid="hierarchy-expand-4309106"]')).toBeNull()
-  })
-
-  it('offers a retry when expanding fails', async () => {
-    (getConceptAncestorAndDescendant as Mock).mockRejectedValue(new Error('boom'))
-    const wrapper = mountDialog()
-    await wrapper.vm.$nextTick()
-
-    const chevron = document.querySelector(
-      '[data-testid="hierarchy-expand-443410"]'
-    ) as HTMLElement
-    chevron.click()
-    await new Promise(r => setTimeout(r, 0))
-    await wrapper.vm.$nextTick()
-
-    expect(document.querySelector('[data-testid="hierarchy-retry-443410"]')).not.toBeNull()
-  })
-
-  it('renders a shared descendant once under each expanded parent, with no duplicate-key warning', async () => {
-    const shared = relatedConcept(9999001, 'Shared descendant')
-    ;(getConceptAncestorAndDescendant as Mock).mockImplementation((_key: string, conceptId: number) =>
-      conceptId === 4309106 || conceptId === 4236311
-        ? Promise.resolve([shared])
-        : Promise.resolve(INFECTIVE_PNEUMONIA_PAYLOAD)
-    )
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    const wrapper = mountDialog()
-    await wrapper.vm.$nextTick()
-
-    const firstParent = document.querySelector(
-      '[data-testid="hierarchy-expand-4309106"]'
-    ) as HTMLElement
-    const secondParent = document.querySelector(
-      '[data-testid="hierarchy-expand-4236311"]'
-    ) as HTMLElement
-    // Click both before awaiting anything so the two expansions resolve and
-    // apply within the same reactivity flush — that's what forces Vue's
-    // keyed-diff algorithm through its duplicate-key check; expanding them
-    // one at a time (with a render in between) only ever appends, which
-    // never exercises that path even with a colliding key.
-    firstParent.click()
-    secondParent.click()
-    await new Promise(r => setTimeout(r, 0))
-    await wrapper.vm.$nextTick()
-
-    expect(document.querySelectorAll('[data-testid="hierarchy-row-9999001"]')).toHaveLength(2)
-
-    const hasDuplicateKeyWarning = [...warnSpy.mock.calls, ...errorSpy.mock.calls].some(args =>
-      args.some(arg => typeof arg === 'string' && arg.toLowerCase().includes('duplicate key'))
-    )
-    expect(hasDuplicateKeyWarning).toBe(false)
-
-    warnSpy.mockRestore()
-    errorSpy.mockRestore()
-  })
-
-  it('terminates instead of recursing forever when a node lists an ancestor as its own descendant', async () => {
-    const selfReferencing = relatedConcept(443410, 'Infective pneumonia')
-    ;(getConceptAncestorAndDescendant as Mock).mockResolvedValue([selfReferencing])
-
-    const wrapper = mountDialog()
-    await wrapper.vm.$nextTick()
-
-    const chevron = document.querySelector(
-      '[data-testid="hierarchy-expand-443410"]'
-    ) as HTMLElement
-    chevron.click()
-    await new Promise(r => setTimeout(r, 0))
-    await wrapper.vm.$nextTick()
-
-    expect(document.querySelectorAll('[data-testid="hierarchy-row-443410"]')).toHaveLength(2)
-  })
-
-  it('shows a loading indicator while a node expands, then clears it once children arrive', async () => {
-    let resolveFetch!: (value: RelatedConcept[]) => void
-    const pending = new Promise<RelatedConcept[]>(resolve => {
-      resolveFetch = resolve
-    })
-    ;(getConceptAncestorAndDescendant as Mock).mockReturnValueOnce(pending)
-
-    const wrapper = mountDialog()
-    await wrapper.vm.$nextTick()
-
-    const chevron = document.querySelector(
-      '[data-testid="hierarchy-expand-443410"]'
-    ) as HTMLElement
-    chevron.click()
-    await wrapper.vm.$nextTick()
-
-    expect(document.querySelector('[data-testid="hierarchy-loading-443410"]')).not.toBeNull()
-
-    resolveFetch(INFECTIVE_PNEUMONIA_CHILDREN)
-    await new Promise(r => setTimeout(r, 0))
-    await wrapper.vm.$nextTick()
-
-    expect(document.querySelector('[data-testid="hierarchy-loading-443410"]')).toBeNull()
+    expect(document.querySelector('.atlas-dialog__title')?.textContent).toContain('Aspiration pneumonia')
+    expect(document.querySelector('.atlas-dialog__subtitle')?.textContent).toContain('4309106')
   })
 
   it('reports an empty hierarchy for a standard concept with no ancestors or descendants', async () => {
@@ -484,6 +358,18 @@ describe('ConceptHierarchyDialog', () => {
     await wrapper.vm.$nextTick()
 
     expect(document.body.textContent).toContain('No hierarchy found for non-standard concepts.')
+  })
+
+  it('shows progress inside the dialog while the focused concept reloads', async () => {
+    useConceptDetailStore().isLoading = true
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[data-testid="hierarchy-loading"]')?.textContent).toContain(
+      'Loading hierarchy'
+    )
+    expect(document.querySelector('[data-testid="hierarchy-filter"]')).toBeNull()
+    expect(document.querySelector('.hierarchy-table')).toBeNull()
   })
 })
 
@@ -530,13 +416,112 @@ describe('toolbar', () => {
     expect(document.querySelectorAll('[data-descendant-row]')).toHaveLength(1)
   })
 
-  it('flat view lists every descendant at every depth', async () => {
+  it('uses placeholders instead of floating labels for facet filters', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
 
-    const flat = document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement
-    flat.click()
-    await flushViewSwitch(wrapper)
+    const classSelect = wrapper.findComponent('[data-testid="hierarchy-filter-class"]')
+    const domainSelect = wrapper.findComponent('[data-testid="hierarchy-filter-domain"]')
+    const vocabularySelect = wrapper.findComponent('[data-testid="hierarchy-filter-vocabulary"]')
+
+    expect(classSelect.props('label')).toBeUndefined()
+    expect(classSelect.props('placeholder')).toBe('Class')
+    expect(domainSelect.props('label')).toBeUndefined()
+    expect(domainSelect.props('placeholder')).toBe('Domain')
+    expect(vocabularySelect.props('label')).toBeUndefined()
+    expect(vocabularySelect.props('placeholder')).toBe('Vocabulary')
+  })
+
+  it('applies a class filter to both ancestors and descendants', async () => {
+    useConceptDetailStore().hierarchy = [
+      relatedConcept(7000001, 'Cohort ancestor', {
+        conceptClassId: 'Cohort',
+        relationships: [{ relationshipName: 'Has ancestor of', relationshipDistance: 1 }],
+      }),
+      relatedConcept(7000002, 'Disorder ancestor', {
+        relationships: [{ relationshipName: 'Has ancestor of', relationshipDistance: 1 }],
+      }),
+      relatedConcept(7000003, 'Cohort descendant', { conceptClassId: 'Cohort' }),
+      relatedConcept(7000004, 'Disorder descendant'),
+    ]
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const classSelect = wrapper.findComponent('[data-testid="hierarchy-filter-class"]')
+    classSelect.vm.$emit('update:modelValue', 'Cohort')
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[data-testid="hierarchy-row-7000001"]')).not.toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-row-7000003"]')).not.toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-row-7000002"]')).toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-row-7000004"]')).toBeNull()
+  })
+
+  it('combines facet filters with AND logic', async () => {
+    useConceptDetailStore().hierarchy = [
+      relatedConcept(7000011, 'Cohort condition', { conceptClassId: 'Cohort' }),
+      relatedConcept(7000012, 'Cohort metadata', {
+        conceptClassId: 'Cohort',
+        domainId: 'Metadata',
+      }),
+      relatedConcept(7000013, 'Disorder condition'),
+    ]
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    wrapper.findComponent('[data-testid="hierarchy-filter-class"]').vm.$emit('update:modelValue', 'Cohort')
+    wrapper.findComponent('[data-testid="hierarchy-filter-domain"]').vm.$emit('update:modelValue', 'Condition')
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[data-testid="hierarchy-row-7000011"]')).not.toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-row-7000012"]')).toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-row-7000013"]')).toBeNull()
+  })
+
+  it('applies a vocabulary filter', async () => {
+    useConceptDetailStore().hierarchy = [
+      relatedConcept(7000021, 'SNOMED descendant'),
+      relatedConcept(7000022, 'MedDRA descendant', { vocabularyId: 'MedDRA' }),
+    ]
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    wrapper.findComponent('[data-testid="hierarchy-filter-vocabulary"]').vm.$emit('update:modelValue', 'SNOMED')
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[data-testid="hierarchy-row-7000021"]')).not.toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-row-7000022"]')).toBeNull()
+  })
+
+  it('clears all filters when the dialog switches to a different concept', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    const input = document.querySelector('[data-testid="hierarchy-filter"] input') as HTMLInputElement
+    input.value = 'Aspiration'
+    input.dispatchEvent(new Event('input'))
+    wrapper.findComponent('[data-testid="hierarchy-filter-class"]').vm.$emit('update:modelValue', 'Disorder')
+    wrapper.findComponent('[data-testid="hierarchy-filter-domain"]').vm.$emit('update:modelValue', 'Condition')
+    wrapper.findComponent('[data-testid="hierarchy-filter-vocabulary"]').vm.$emit('update:modelValue', 'SNOMED')
+    await wrapper.vm.$nextTick()
+
+    await wrapper.setProps({
+      concept: { ...concept, conceptId: 4025165, conceptName: 'Abscess of lung with pneumonia' },
+    })
+    await wrapper.vm.$nextTick()
+
+    expect(input.value).toBe('')
+    expect(wrapper.findComponent('[data-testid="hierarchy-filter-class"]').props('modelValue')).toBeNull()
+    expect(wrapper.findComponent('[data-testid="hierarchy-filter-domain"]').props('modelValue')).toBeNull()
+    expect(wrapper.findComponent('[data-testid="hierarchy-filter-vocabulary"]').props('modelValue')).toBeNull()
+  })
+
+  it('shows every descendant at every distance when requested', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    ;(document.querySelector('[data-testid="hierarchy-descendants-toggle"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
 
     const rows = document.querySelectorAll('[data-descendant-row]')
     expect(rows).toHaveLength(
@@ -546,94 +531,29 @@ describe('toolbar', () => {
     )
   })
 
-  it('merges a concept discovered only through expansion into flat view', async () => {
+  it('shows more descendants on demand and suppresses direct-child distance labels', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
 
-    const chevron = document.querySelector(
-      '[data-testid="hierarchy-expand-443410"]'
-    ) as HTMLElement
-    chevron.click()
-    await new Promise(r => setTimeout(r, 0))
-    await wrapper.vm.$nextTick()
-    ;(document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement).click()
-    await flushViewSwitch(wrapper)
-
-    // 4050872 "Pneumonia due to parasitic infestation" exists only in 443410's
-    // own expansion payload, never in the anchor's ancestorAndDescendant
-    // response — Flat must still surface it once it has been discovered.
-    expect(
-      PNEUMONIA_ANCESTOR_AND_DESCENDANT.some(c => c.conceptId === 4050872)
-    ).toBe(false)
-    expect(
-      document.querySelector('[data-testid="hierarchy-row-4050872"]')?.textContent
-    ).toContain('Pneumonia due to parasitic infestation')
-  })
-
-  it('renders a concept present in both the anchor payload and an expansion exactly once, with no duplicate-key warning', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    const wrapper = mountDialog()
-    await wrapper.vm.$nextTick()
-
-    const chevron = document.querySelector(
-      '[data-testid="hierarchy-expand-443410"]'
-    ) as HTMLElement
-    chevron.click()
-    await new Promise(r => setTimeout(r, 0))
-    await wrapper.vm.$nextTick()
-    ;(document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement).click()
-    await flushViewSwitch(wrapper)
-
-    // 257315 "Bacterial pneumonia" is both a distance-2 descendant in the
-    // anchor's own payload and a distance-1 child returned by expanding
-    // 443410 — the merge must dedupe it rather than render it twice.
-    expect(
-      PNEUMONIA_ANCESTOR_AND_DESCENDANT.some(c => c.conceptId === 257315)
-    ).toBe(true)
-    expect(
-      INFECTIVE_PNEUMONIA_CHILDREN.some(c => c.conceptId === 257315)
-    ).toBe(true)
-    expect(document.querySelectorAll('[data-testid="hierarchy-row-257315"]')).toHaveLength(1)
-
-    const hasDuplicateKeyWarning = [...warnSpy.mock.calls, ...errorSpy.mock.calls].some(args =>
-      args.some(arg => typeof arg === 'string' && arg.toLowerCase().includes('duplicate key'))
+    const toggle = document.querySelector('[data-testid="hierarchy-descendants-toggle"]') as HTMLElement
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(toggle.textContent).toContain('Show 4 more children')
+    expect(document.querySelector('[data-testid="hierarchy-row-257315"]')).toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-row-4309106"]')?.textContent).not.toContain(
+      'distance'
     )
-    expect(hasDuplicateKeyWarning).toBe(false)
 
-    warnSpy.mockRestore()
-    errorSpy.mockRestore()
-  })
-
-  it('keeps the toolbar descendant count in sync with the merged flat row count after an expansion', async () => {
-    const wrapper = mountDialog()
+    toggle.click()
     await wrapper.vm.$nextTick()
 
-    const chevron = document.querySelector(
-      '[data-testid="hierarchy-expand-443410"]'
-    ) as HTMLElement
-    chevron.click()
-    await new Promise(r => setTimeout(r, 0))
-    await wrapper.vm.$nextTick()
-    ;(document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement).click()
-    await flushViewSwitch(wrapper)
-
-    const anchorDescendantIds = new Set(
-      PNEUMONIA_ANCESTOR_AND_DESCENDANT.filter(c =>
-        c.relationships.some(r => r.relationshipName === 'Has descendant of')
-      ).map(c => c.conceptId)
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    expect(toggle.textContent).toContain('Show direct children only')
+    expect(document.querySelector('[data-testid="hierarchy-row-257315"]')?.textContent).toContain(
+      'distance 2'
     )
-    const newFromExpansion = INFECTIVE_PNEUMONIA_CHILDREN.filter(
-      c => !anchorDescendantIds.has(c.conceptId)
-    ).length
-    const expectedMerged = anchorDescendantIds.size + newFromExpansion
-
-    expect(document.body.textContent).toContain(`${expectedMerged} descendants`)
-    expect(document.querySelectorAll('[data-descendant-row]')).toHaveLength(expectedMerged)
   })
 
-  it('keeps the filter when switching between tree and flat', async () => {
+  it('keeps the filter when showing more descendants', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
 
@@ -641,167 +561,25 @@ describe('toolbar', () => {
     input.value = 'Aspiration'
     input.dispatchEvent(new Event('input'))
     await wrapper.vm.$nextTick()
-    ;(document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLElement).click()
-    await flushViewSwitch(wrapper)
+    ;(document.querySelector('[data-testid="hierarchy-descendants-toggle"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
 
     expect(input.value).toBe('Aspiration')
     expect(document.querySelectorAll('[data-descendant-row]')).toHaveLength(1)
   })
 
-  it('keeps a non-matching parent visible when one of its loaded children matches', async () => {
+  it('orders descendants from direct children to the farthest descendants', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
 
-    const chevron = document.querySelector(
-      '[data-testid="hierarchy-expand-443410"]'
-    ) as HTMLElement
-    chevron.click()
-    await new Promise(r => setTimeout(r, 0))
+    ;(document.querySelector('[data-testid="hierarchy-descendants-toggle"]') as HTMLElement).click()
     await wrapper.vm.$nextTick()
 
-    // "Bacterial" matches only 257315 ("Bacterial pneumonia"), a loaded child of
-    // 443410 ("Infective pneumonia") — the parent itself does not match, and no
-    // top-level descendant does either.
-    const input = document.querySelector('[data-testid="hierarchy-filter"] input') as HTMLInputElement
-    input.value = 'Bacterial'
-    input.dispatchEvent(new Event('input'))
-    await wrapper.vm.$nextTick()
-
-    expect(document.querySelector('[data-testid="hierarchy-row-257315"]')?.textContent).toContain(
-      'Bacterial pneumonia'
+    const order = [...document.querySelectorAll('[data-descendant-row]')].map(row =>
+      row.getAttribute('data-testid')
     )
-    expect(document.querySelector('[data-testid="hierarchy-row-443410"]')?.textContent).toContain(
-      'Infective pneumonia'
-    )
-    expect(document.querySelectorAll('tr.descendant')).toHaveLength(2)
-    expect(getConceptAncestorAndDescendant).toHaveBeenCalledTimes(1)
+    expect(order.indexOf('hierarchy-row-4309106')).toBeLessThan(order.indexOf('hierarchy-row-257315'))
+    expect(order.at(-1)).toBe('hierarchy-row-4139520')
   })
 
-  it('filters an already-expanded node\'s children too, not just the top level', async () => {
-    const wrapper = mountDialog()
-    await wrapper.vm.$nextTick()
-
-    const chevron = document.querySelector(
-      '[data-testid="hierarchy-expand-443410"]'
-    ) as HTMLElement
-    chevron.click()
-    await new Promise(r => setTimeout(r, 0))
-    await wrapper.vm.$nextTick()
-
-    for (const child of INFECTIVE_PNEUMONIA_CHILDREN) {
-      expect(document.body.textContent).toContain(child.conceptName)
-    }
-
-    // "Infective" matches the expanded parent (443410, "Infective pneumonia")
-    // and exactly one of its eight children ("Infective pneumonia acquired
-    // prenatally", 4215807) — the other seven only contain "pneumonia". If
-    // flatten() filtered only its top-level input and forwarded children
-    // unfiltered, all eight would still render here.
-    const input = document.querySelector('[data-testid="hierarchy-filter"] input') as HTMLInputElement
-    input.value = 'Infective'
-    input.dispatchEvent(new Event('input'))
-    await wrapper.vm.$nextTick()
-
-    expect(document.querySelector('[data-testid="hierarchy-row-443410"]')).not.toBeNull()
-    expect(document.querySelector('[data-testid="hierarchy-row-4215807"]')?.textContent).toContain(
-      'Infective pneumonia acquired prenatally'
-    )
-    for (const child of INFECTIVE_PNEUMONIA_CHILDREN.filter(c => c.conceptId !== 4215807)) {
-      expect(document.querySelector(`[data-testid="hierarchy-row-${child.conceptId}"]`)).toBeNull()
-    }
-  })
-})
-
-describe('view switch feedback (#207)', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    vi.clearAllMocks()
-    ;(getConceptRecordCounts as Mock).mockResolvedValue(new Map())
-    ;(getConceptAncestorAndDescendant as Mock).mockResolvedValue(INFECTIVE_PNEUMONIA_PAYLOAD)
-    useConceptDetailStore().hierarchy = PNEUMONIA_ANCESTOR_AND_DESCENDANT
-  })
-
-  afterEach(() => {
-    activeWrapper?.unmount()
-    activeWrapper = null
-    document.body.innerHTML = ''
-  })
-
-  const tree = () => document.querySelector('[data-testid="hierarchy-view-tree"]') as HTMLButtonElement
-  const flat = () => document.querySelector('[data-testid="hierarchy-view-flat"]') as HTMLButtonElement
-  const spinner = () => document.querySelector('[data-testid="hierarchy-view-switching"]')
-
-  it('shows nothing while the current view is settled', async () => {
-    const wrapper = mountDialog()
-    await wrapper.vm.$nextTick()
-
-    expect(spinner()).toBeNull()
-    expect(document.querySelectorAll('[data-descendant-row]').length).toBeGreaterThan(0)
-  })
-
-  // The switch has to reach the screen before the rows are rebuilt, otherwise
-  // the expensive render blocks the frame and the user sees nothing happen.
-  it('paints a loading row before rebuilding the rows', async () => {
-    const wrapper = mountDialog()
-    await wrapper.vm.$nextTick()
-
-    flat().click()
-    await wrapper.vm.$nextTick()
-
-    expect(spinner()).not.toBeNull()
-    expect(document.querySelectorAll('[data-descendant-row]')).toHaveLength(0)
-  })
-
-  it('disables both view buttons while the switch is in flight', async () => {
-    const wrapper = mountDialog()
-    await wrapper.vm.$nextTick()
-
-    flat().click()
-    await wrapper.vm.$nextTick()
-
-    expect(flat().disabled).toBe(true)
-    expect(tree().disabled).toBe(true)
-  })
-
-  it('clears the loading row and re-enables the buttons once the rows are up', async () => {
-    const wrapper = mountDialog()
-    await wrapper.vm.$nextTick()
-
-    flat().click()
-    await flushViewSwitch(wrapper)
-
-    expect(spinner()).toBeNull()
-    expect(flat().disabled).toBe(false)
-    expect(flat().getAttribute('aria-pressed')).toBe('true')
-    expect(document.querySelectorAll('[data-descendant-row]').length).toBeGreaterThan(0)
-  })
-
-  it('ignores a click on the view already showing', async () => {
-    const wrapper = mountDialog()
-    await wrapper.vm.$nextTick()
-
-    tree().click()
-    await wrapper.vm.$nextTick()
-
-    expect(spinner()).toBeNull()
-    expect(document.querySelectorAll('[data-descendant-row]').length).toBeGreaterThan(0)
-  })
-
-  // The reporter clicked repeatedly because nothing appeared to happen. The
-  // disabled buttons swallow those extra clicks, so the view still settles on
-  // the one first asked for rather than ping-ponging.
-  it('settles on the first requested view despite rapid repeated clicks', async () => {
-    const wrapper = mountDialog()
-    await wrapper.vm.$nextTick()
-
-    flat().click()
-    await wrapper.vm.$nextTick()
-    flat().click()
-    tree().click()
-    await flushViewSwitch(wrapper)
-
-    expect(spinner()).toBeNull()
-    expect(flat().getAttribute('aria-pressed')).toBe('true')
-    expect(tree().getAttribute('aria-pressed')).toBe('false')
-  })
 })

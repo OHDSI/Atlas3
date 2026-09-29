@@ -140,4 +140,14 @@ describe('ConceptHierarchyMiniMap', () => {
     expect(openSpy).not.toHaveBeenCalled()
     expect(pushSpy).not.toHaveBeenCalled()
   })
+
+  it('opens a clicked hierarchy dialog concept in the same drawer', async () => {
+    const { wrapper } = mountMiniMap({ sourceKey: 'OHDSI' })
+    const drawer = useConceptDetailDrawerStore()
+    const openSpy = vi.spyOn(drawer, 'open')
+
+    await wrapper.findComponent(ConceptHierarchyDialog).vm.$emit('navigate', 421326000)
+
+    expect(openSpy).toHaveBeenCalledWith('OHDSI', 421326000)
+  })
 })
