@@ -533,6 +533,9 @@ onMounted(() => {
 
 <style scoped>
 .nav-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   width: 100%;
   height: 60px;
   background-color: rgb(var(--v-theme-surface));

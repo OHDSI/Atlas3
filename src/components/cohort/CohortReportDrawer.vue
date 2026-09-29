@@ -175,6 +175,7 @@ onBeforeUnmount(() => {
 .crd__body {
   flex: 1 1 auto;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 24px;
 }
 
