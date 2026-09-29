@@ -1,8 +1,13 @@
 import { PluginMessageBus, HostMessage } from '@/models/PluginModels'
 import { logger } from '@/utils/logger'
 import { usePluginConceptSetChooserStore } from '@/stores/plugin-concept-set-chooser'
+import { usePluginConceptSetEditorStore } from '@/stores/plugin-concept-set-editor'
 
 type MessageCallback<T = unknown> = (payload: T) => void
+
+// These requests wait on a person working in an Atlas dialog or drawer, which
+// can take far longer than any fixed timeout; the host always settles them.
+const UNTIMED_REQUEST_TYPES = new Set(['conceptSet:choose', 'conceptSet:edit'])
 
 export class HostMessageBus implements PluginMessageBus {
   private pluginId: string
@@ -55,7 +60,8 @@ export class HostMessageBus implements PluginMessageBus {
 
       window.dispatchEvent(new CustomEvent('plugin-message', { detail: message }))
 
-      // Timeout after 30 seconds
+      if (UNTIMED_REQUEST_TYPES.has(type)) return
+
       setTimeout(() => {
         if (this.pendingRequests.has(callbackId)) {
           this.pendingRequests.delete(callbackId)
@@ -188,6 +194,19 @@ export function setupGlobalMessageHandler(
         void usePluginConceptSetChooserStore()
           .open(payload.title)
           .then(choice => messageBus?.handleResponse(message.callbackId as string, choice))
+        break
+      }
+
+      case 'conceptSet:edit': {
+        const messageBus = getHostMessageBus(message.sourcePluginId)
+        if (!message.callbackId) {
+          logger.debug('HostMessageBus', 'conceptSet:edit ignored: no callbackId to answer')
+          break
+        }
+        const payload = (message.payload ?? {}) as { conceptSetId?: number | string }
+        void usePluginConceptSetEditorStore()
+          .open(payload.conceptSetId)
+          .then(result => messageBus?.handleResponse(message.callbackId as string, result))
         break
       }
 
