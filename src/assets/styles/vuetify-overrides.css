@@ -15,6 +15,11 @@
   opacity: 1;
 }
 
+/* Keep scroll gestures inside the active drawer when its content reaches an edge. */
+.v-navigation-drawer__content {
+  overscroll-behavior: contain;
+}
+
 /* Page tabs — shared modern tab look used by ConceptsView, AnalysisHubView,
  * and any future tabbed page. Pair the rail wrapper (.page-tabs-rail)
  * with a v-tabs that has align-tabs="start" + density="comfortable" + color="primary".
