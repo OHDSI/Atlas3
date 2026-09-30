@@ -77,7 +77,7 @@ describe('services/characterization.service', () => {
         expect.fail(`expected success, got ${result.error.message}`)
       }
       const [url] = mockFetch.mock.calls[0]
-      expect(url).toContain('/cohort-characterization?size=10000')
+      expect(url).toContain('/cohort-characterization?size=1000000')
     })
 
     it('handles a `{ content: [...] }` page wrapper', async () => {

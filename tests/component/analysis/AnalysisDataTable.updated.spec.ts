@@ -14,6 +14,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
 import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
+import { AtlasDataTable } from '@/components/ui'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../helpers/i18n-mock')
@@ -55,5 +56,130 @@ describe('AnalysisDataTable Updated column (#292)', () => {
 
   it('opens with the most recently touched analysis first, creation date included', () => {
     expect(rowNames(mountTable())).toEqual(['Just created', 'Edited months ago'])
+  })
+
+  it('forwards ordered sort changes and removes order-less Vuetify sort items', async () => {
+    const wrapper = mountTable()
+
+    wrapper.findComponent(AtlasDataTable).vm.$emit('update:sortBy', [
+      { key: 'name', order: 'desc' },
+      { key: 'description' },
+    ])
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.emitted('update:sortBy')).toEqual([[
+      [{ key: 'name', order: 'desc' }],
+    ]])
+  })
+
+  it('renders tags, truncates descriptions, and applies action permissions', () => {
+    const wrapper = mount(AnalysisDataTable, {
+      global: { plugins: [vuetify] },
+      props: {
+        headers: [
+          ...headers,
+          { title: 'Description', key: 'description' },
+          { title: 'Actions', key: 'actions' },
+        ],
+        testid: 'analysis-table',
+        items: [{
+          id: 1,
+          name: 'Restricted analysis',
+          description: 'A description longer than the configured display limit',
+          tags: [
+            { name: 'First', color: '#ffffff' },
+            { name: 'Second', color: '#000000' },
+            { name: 'Third', color: '#888888' },
+          ],
+        }],
+        descriptionLimit: 12,
+        maxVisibleTags: 2,
+        canOpenItem: () => false,
+        canCopyItem: () => false,
+        canDeleteItem: () => false,
+      },
+    })
+
+    expect(wrapper.get('[data-testid="analysis-table-row-name"]').text()).toBe('Restricted analysis')
+    expect(wrapper.find('a[data-testid="analysis-table-row-name"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('A descriptio…')
+    expect(wrapper.text()).toContain('First')
+    expect(wrapper.text()).toContain('Second')
+    expect(wrapper.get('.analysis-data-table__tag-overflow').text()).toBe('+1')
+    expect(wrapper.findAll('.analysis-data-table__row-actions button')).toHaveLength(2)
+  })
+
+  it('forwards a consumer item slot that is not owned by the table', () => {
+    const wrapper = mount(AnalysisDataTable, {
+      global: { plugins: [vuetify] },
+      props: {
+        headers: [...headers, { title: 'Custom', key: 'custom' }],
+        items: [{ id: 1, name: 'Custom column', custom: 'value' }],
+      },
+      slots: {
+        'item.custom': '<span class="custom-cell">custom value</span>',
+      },
+    })
+
+    expect(wrapper.get('.custom-cell').text()).toBe('custom value')
+  })
+
+  it('renders empty and loading states', () => {
+    const emptyWrapper = mount(AnalysisDataTable, {
+      global: { plugins: [vuetify] },
+      props: { headers, items: [], emptyText: 'Nothing here' },
+    })
+    const loadingWrapper = mount(AnalysisDataTable, {
+      global: { plugins: [vuetify] },
+      props: { headers, items: [], loading: true },
+    })
+
+    expect(emptyWrapper.text()).toContain('Nothing here')
+    expect(loadingWrapper.findAll('.analysis-data-table__skeleton')).toHaveLength(5)
+  })
+
+  it('forwards open, copy, and delete row actions', async () => {
+    const wrapper = mount(AnalysisDataTable, {
+      global: { plugins: [vuetify] },
+      props: {
+        headers: [...headers, { title: 'Actions', key: 'actions' }],
+        items: [{ id: 1, name: 'Editable analysis' }],
+      },
+    })
+
+    await wrapper.get('.analysis-data-table__name-link').trigger('click')
+    const actions = wrapper.findAll('.analysis-data-table__row-actions button')
+    await actions[0]!.trigger('click')
+    await actions[1]!.trigger('click')
+    await actions[2]!.trigger('click')
+
+    expect(wrapper.emitted('open')).toHaveLength(2)
+    expect(wrapper.emitted('copy')).toHaveLength(1)
+    expect(wrapper.emitted('delete')).toHaveLength(1)
+  })
+
+  it('synchronizes a parent sort and formats created dates and users', async () => {
+    const wrapper = mount(AnalysisDataTable, {
+      global: { plugins: [vuetify] },
+      props: {
+        headers: [
+          ...headers,
+          { title: 'Created', key: 'createdDate' },
+          { title: 'Created by', key: 'createdBy' },
+          { title: 'Description', key: 'description' },
+        ],
+        items: [
+          { id: 1, name: 'Known fields', createdDate: 0, createdBy: { login: 'owner' } },
+          { id: 2, name: 'Missing fields' },
+        ],
+      },
+    })
+
+    await wrapper.setProps({ sortBy: [{ key: 'name', order: 'asc' }] })
+
+    expect(wrapper.findComponent(AtlasDataTable).props('sortBy')).toEqual([{ key: 'name', order: 'asc' }])
+    expect(wrapper.text()).toContain('owner')
+    expect(wrapper.text()).toContain('Unknown')
+    expect(wrapper.text()).toContain('—')
   })
 })
