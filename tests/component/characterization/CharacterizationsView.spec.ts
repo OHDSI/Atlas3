@@ -45,6 +45,7 @@ import CharacterizationsView from '@/views/CharacterizationsView.vue'
 import { useCharacterizationStore } from '@/stores/characterization'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
+import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -88,9 +89,9 @@ function makeRouter(): Router {
   })
 }
 
-async function mountView() {
+async function mountView(initialPath = '/characterizations') {
   const router = makeRouter()
-  await router.push('/characterizations')
+  await router.push(initialPath)
   await router.isReady()
 
   // Pinia must be installed AND active before the component sets up, so that
@@ -162,6 +163,29 @@ describe('CharacterizationsView', () => {
 
     expect(mounted.wrapper.text()).toContain('Diabetes Cohort Profile')
     expect(mounted.wrapper.text()).toContain('Hypertension Profile')
+  })
+
+  it('sorts all characterizations before selecting the current page', async () => {
+    const characterizations = Array.from({ length: 61 }, (_, index) => ({
+      id: index + 1,
+      name: `Characterization ${String(index + 1).padStart(3, '0')}`,
+      description: '',
+      cohorts: [],
+      featureAnalyses: [],
+      createdBy: 'ohdsi',
+      createdDate: 0,
+      modifiedDate: 0,
+    }))
+    vi.mocked(listCharacterizations).mockResolvedValue(success(characterizations))
+    mounted = await mountView('/characterizations?page=2')
+
+    expect(mounted.wrapper.text()).toContain('Characterization 061')
+
+    mounted.wrapper.findComponent(AnalysisDataTable).vm.$emit('update:sortBy', [{ key: 'name', order: 'desc' }])
+    await flushPromises()
+
+    expect(mounted.wrapper.text()).toContain('Characterization 001')
+    expect(mounted.wrapper.text()).not.toContain('Characterization 061')
   })
 
   it('shows empty state when there are no items', async () => {

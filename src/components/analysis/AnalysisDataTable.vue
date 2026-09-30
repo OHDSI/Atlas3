@@ -1,6 +1,6 @@
 <template>
   <AtlasDataTable
-    v-model:sort-by="sortByModel"
+    :sort-by="sortByModel"
     :headers="tableHeaders"
     :items="items"
     :loading="loading"
@@ -8,6 +8,7 @@
     hide-default-footer
     class="analysis-data-table"
     :data-testid="testid"
+    @update:sort-by="handleSortByUpdate"
   >
     <template #[`item.${nameKey}`]="{ item }">
       <div class="analysis-data-table__name-cell">
@@ -196,10 +197,11 @@ const props = withDefaults(defineProps<Props>(), {
   canOpenItem: () => () => true,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'open', item: T): void
   (e: 'copy', item: T): void
   (e: 'delete', item: T): void
+  (e: 'update:sortBy', sortBy: { key: string; order: 'asc' | 'desc' }[]): void
 }>()
 
 const { t } = useI18n()
@@ -217,6 +219,14 @@ watch(
     sortByModel.value = [...v]
   }
 )
+
+function handleSortByUpdate(value: { key: string; order?: 'asc' | 'desc' }[]) {
+  const normalized = value.flatMap(item =>
+    item.order ? [{ key: item.key, order: item.order }] : []
+  )
+  sortByModel.value = normalized
+  emit('update:sortBy', normalized)
+}
 
 // Forward any item.<key> or other custom slots that the consumer passed
 // in but that we don't render ourselves.
