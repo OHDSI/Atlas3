@@ -24,11 +24,11 @@ const CONTEXT = 'CharacterizationService'
 
 /**
  * List all characterizations.
- * Endpoint: GET /cohort-characterization?size=10000
+ * Endpoint: GET /cohort-characterization?size=1000000
  */
 export async function listCharacterizations(): Promise<ApiResult<CharacterizationListItem[]>> {
   return unwrap(async () => {
-    const data = await httpGet<unknown>('/cohort-characterization?size=10000')
+    const data = await httpGet<unknown>('/cohort-characterization?size=1000000')
     const list = unwrapList(data)
     return parseOrThrow(z.array(CharacterizationListItemSchema), list, 'Invalid response from /cohort-characterization')
   }, CONTEXT)

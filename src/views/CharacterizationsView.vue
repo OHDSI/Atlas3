@@ -39,6 +39,7 @@
     </template>
 
     <AnalysisDataTable
+      v-model:sort-by="sortBy"
       :headers="headers"
       :items="paginatedCharacterizations"
       :loading="loading"
@@ -125,6 +126,8 @@ import EntityImportButton from '@/components/shared/EntityImportButton.vue'
 import { importCharacterization } from '@/services/characterization.service'
 import { useNotifications } from '@/stores/notifications'
 
+type SortItem = { key: string; order: 'asc' | 'desc' }
+
 const router = useRouter()
 const { t } = useI18n()
 const store = useCharacterizationStore()
@@ -138,8 +141,9 @@ const notify = useNotifications()
 const {
   loading,
   error,
-  paginatedCharacterizations,
+  filteredCharacterizations,
   totalItems,
+  page,
   itemsPerPage,
   canGoPrevious,
   canGoNext,
@@ -151,6 +155,35 @@ const {
 } = useCharacterizations()
 
 const searchInput = ref<string>('')
+const sortBy = ref<SortItem[]>([{ key: 'modifiedDate', order: 'desc' }])
+
+function sortValue(item: CharacterizationListItem, key: string): string | number {
+  const value = item[key as keyof CharacterizationListItem]
+  if (key === 'createdBy' && value && typeof value === 'object') {
+    const user = value as { name?: string; login?: string; id?: number }
+    return (user.name ?? user.login ?? user.id ?? '').toString().toLowerCase()
+  }
+  if (typeof value === 'string') return value.toLowerCase()
+  return typeof value === 'number' ? value : ''
+}
+
+const sortedCharacterizations = computed(() => {
+  const activeSort = sortBy.value[0]
+  if (!activeSort) return filteredCharacterizations.value
+
+  const direction = activeSort.order === 'asc' ? 1 : -1
+  return [...filteredCharacterizations.value].sort((left, right) => {
+    const leftValue = sortValue(left, activeSort.key)
+    const rightValue = sortValue(right, activeSort.key)
+    if (leftValue === rightValue) return 0
+    return leftValue > rightValue ? direction : -direction
+  })
+})
+
+const paginatedCharacterizations = computed(() => {
+  const start = (page.value - 1) * itemsPerPage.value
+  return sortedCharacterizations.value.slice(start, start + itemsPerPage.value)
+})
 
 const headers = computed(() => [
   { title: t('columns.id', 'ID').value, key: 'id' },
