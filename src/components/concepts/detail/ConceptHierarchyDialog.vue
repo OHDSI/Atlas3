@@ -16,6 +16,7 @@ import { formatRecordCount } from '@/components/concepts/detail/record-count-for
 import { useConceptDetailStore } from '@/stores/concept-detail'
 import { useConceptHierarchyStore } from '@/stores/concept-hierarchy'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { getConceptAncestorAndDescendant } from '@/services/concept-detail.service'
 import type { Concept, ConceptAddFlags, ConceptSetItem } from '@/models/concept-set.types'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 import { matchesTerms } from '@/utils/list-filters'
@@ -35,9 +36,18 @@ const { t } = useI18n()
 const detail = useConceptDetailStore()
 const tree = useConceptHierarchyStore()
 const conceptSets = useConceptSetsStore()
-const { hierarchy, hierarchyError, isLoading } = storeToRefs(detail)
+const { hierarchy, hierarchyError } = storeToRefs(detail)
 
-const isNonStandard = computed(() => props.concept.standardConcept === 'N')
+// The drawer owns the complete concept-details load. The dialog only needs
+// hierarchy data, so it keeps an independent focused payload and is free to
+// render as soon as that one endpoint answers.
+const focusedConcept = ref<Concept>(props.concept)
+const focusedHierarchy = ref<RelatedConcept[]>(hierarchy.value)
+const isHierarchyLoading = ref(false)
+const focusedHierarchyError = ref<string | null>(hierarchyError.value)
+let hierarchyRequestGeneration = 0
+
+const isNonStandard = computed(() => focusedConcept.value.standardConcept === 'N')
 
 interface AncestorRow {
   concept: RelatedConcept
@@ -48,7 +58,7 @@ interface AncestorRow {
 // advertises the full count, so a truncated list would repeat the very bug
 // this dialog exists to fix.
 const ancestors = computed<AncestorRow[]>(() =>
-  hierarchy.value
+  focusedHierarchy.value
     .flatMap(concept => {
       const distances = concept.relationships
         .filter(r => r.relationshipName === 'Has ancestor of')
@@ -66,7 +76,7 @@ interface DescendantRow {
 }
 
 const descendants = computed<DescendantRow[]>(() =>
-  hierarchy.value.flatMap(concept => {
+  focusedHierarchy.value.flatMap(concept => {
     const distances = concept.relationships
       .filter(r => r.relationshipName === 'Has descendant of')
       .map(r => r.relationshipDistance)
@@ -93,22 +103,19 @@ const visibleDescendants = computed(() =>
   descendantsExpanded.value ? descendants.value : directDescendants.value
 )
 
-const isEmpty = computed(() => hierarchy.value.length === 0)
+const isEmpty = computed(() => focusedHierarchy.value.length === 0)
 
 const filterText = ref('')
 const classFilter = ref<string | null>(null)
 const domainFilter = ref<string | null>(null)
 const vocabularyFilter = ref<string | null>(null)
-const pendingConcept = ref<Concept | null>(null)
-
-const displayedConcept = computed(() =>
-  isLoading.value && pendingConcept.value ? pendingConcept.value : props.concept
-)
-
+type CountSortKey = 'recordCount' | 'descendantRecordCount'
+type SortDirection = 'asc' | 'desc'
+const countSort = ref<{ key: CountSortKey; direction: SortDirection } | null>(null)
 const allDescendantCount = computed(() => descendants.value.length)
 
 function optionsFor(key: 'conceptClassId' | 'domainId' | 'vocabularyId') {
-  return [...new Set(hierarchy.value.map(c => c[key]))].sort()
+  return [...new Set(focusedHierarchy.value.map(c => c[key]))].sort()
 }
 
 function matches(row: RelatedConcept): boolean {
@@ -128,6 +135,44 @@ const filteredVisibleAncestors = computed(() =>
 const visibleDescendantRows = computed(() =>
   visibleDescendants.value.filter(({ concept }) => matches(concept))
 )
+
+function sortedRows<T extends AncestorRow | DescendantRow>(rows: T[]): T[] {
+  const sort = countSort.value
+  if (!sort) return rows
+
+  return [...rows].sort((left, right) => {
+    const leftCount = counts(left.concept.conceptId)?.[sort.key]
+    const rightCount = counts(right.concept.conceptId)?.[sort.key]
+    if (leftCount === undefined) return rightCount === undefined ? 0 : 1
+    if (rightCount === undefined) return -1
+    if (leftCount === rightCount) return left.concept.conceptId - right.concept.conceptId
+    return sort.direction === 'asc' ? leftCount - rightCount : rightCount - leftCount
+  })
+}
+
+const sortedVisibleAncestors = computed(() => sortedRows(filteredVisibleAncestors.value))
+const sortedVisibleDescendantRows = computed(() => sortedRows(visibleDescendantRows.value))
+
+function toggleCountSort(key: CountSortKey) {
+  if (countSort.value?.key !== key) {
+    countSort.value = { key, direction: 'asc' }
+  } else {
+    countSort.value = {
+      key,
+      direction: countSort.value.direction === 'asc' ? 'desc' : 'asc',
+    }
+  }
+}
+
+function sortIndicator(key: CountSortKey): string {
+  if (countSort.value?.key !== key) return ''
+  return countSort.value.direction === 'asc' ? ' ▲' : ' ▼'
+}
+
+function ariaSort(key: CountSortKey): 'none' | 'ascending' | 'descending' {
+  if (countSort.value?.key !== key) return 'none'
+  return countSort.value.direction === 'asc' ? 'ascending' : 'descending'
+}
 
 const selected = ref<number[]>([])
 const addFlags = ref<Required<ConceptAddFlags>>({
@@ -221,33 +266,42 @@ watch(
   }
 )
 
-// One dialog instance is reused as the drawer moves between concepts, so ticks
-// made for the previous concept would otherwise stay live — and get added.
-// The ancestor collapse is scoped to the same lifetime: an expand toggled for
-// concept A must not leak into concept B rendering pre-expanded when the user
-// never touched B's toggle.
+function resetForFocusedConcept() {
+  selected.value = []
+  ancestorsExpanded.value = false
+  descendantsExpanded.value = false
+  filterText.value = ''
+  classFilter.value = null
+  domainFilter.value = null
+  vocabularyFilter.value = null
+}
+
+// External navigation still arrives through the root drawer. Adopt its payload
+// only when it points somewhere other than the dialog's current local focus;
+// a dialog-initiated click fetches its own hierarchy and must not be replaced
+// by the root loader's in-flight shared state.
 watch(
   () => props.concept.conceptId,
   () => {
-    selected.value = []
-    pendingConcept.value = null
-    ancestorsExpanded.value = false
-    descendantsExpanded.value = false
-    filterText.value = ''
-    classFilter.value = null
-    domainFilter.value = null
-    vocabularyFilter.value = null
+    if (props.concept.conceptId === focusedConcept.value.conceptId) return
+    hierarchyRequestGeneration++
+    focusedConcept.value = props.concept
+    focusedHierarchy.value = hierarchy.value
+    focusedHierarchyError.value = hierarchyError.value
+    isHierarchyLoading.value = false
+    resetForFocusedConcept()
   }
 )
 
 // The rows on screen when the dialog opens come from the concept-detail store,
 // not from an expansion, so nothing else would ever fetch their counts.
 watch(
-  [() => props.modelValue, () => props.concept.conceptId, () => props.sourceKey, hierarchy],
+  [() => props.modelValue, () => focusedConcept.value.conceptId, () => props.sourceKey, focusedHierarchy],
   ([open]) => {
     if (!open) return
     void tree.loadCounts(
       [
+        focusedConcept.value.conceptId,
         ...ancestors.value.map(a => a.concept.conceptId),
         ...directDescendants.value.map(d => d.concept.conceptId),
       ],
@@ -266,10 +320,46 @@ function close() {
   emit('update:modelValue', false)
 }
 
+async function loadFocusedHierarchy(concept: Concept) {
+  const requestGeneration = ++hierarchyRequestGeneration
+  isHierarchyLoading.value = true
+  focusedHierarchyError.value = null
+  try {
+    const payload = await getConceptAncestorAndDescendant(props.sourceKey, concept.conceptId)
+    if (requestGeneration !== hierarchyRequestGeneration) return
+    focusedHierarchy.value = payload
+    void tree.loadCounts(
+      [
+        concept.conceptId,
+        ...payload
+          .filter(row => row.relationships.some(r => r.relationshipName === 'Has ancestor of'))
+          .map(row => row.conceptId),
+        ...payload
+          .filter(row => row.relationships.some(
+            r => r.relationshipName === 'Has descendant of' && r.relationshipDistance === 1
+          ))
+          .map(row => row.conceptId),
+      ],
+      props.sourceKey
+    )
+  } catch {
+    if (requestGeneration === hierarchyRequestGeneration) {
+      focusedHierarchy.value = []
+      focusedHierarchyError.value = 'Failed to load hierarchy'
+    }
+  } finally {
+    if (requestGeneration === hierarchyRequestGeneration) isHierarchyLoading.value = false
+  }
+}
+
 function navigate(conceptId: number) {
-  if (conceptId === props.concept.conceptId) return
-  const target = hierarchy.value.find(concept => concept.conceptId === conceptId)
-  pendingConcept.value = target ? toRow(target) : null
+  if (conceptId === focusedConcept.value.conceptId) return
+  const target = focusedHierarchy.value.find(concept => concept.conceptId === conceptId)
+  if (target) {
+    focusedConcept.value = toRow(target)
+    resetForFocusedConcept()
+    void loadFocusedHierarchy(focusedConcept.value)
+  }
   emit('navigate', conceptId)
 }
 
@@ -277,20 +367,25 @@ function counts(conceptId: number) {
   return tree.countsFor(conceptId)
 }
 
-const anchorCounts = computed(() => detail.recordCountsBySource.get(props.sourceKey))
+const anchorCounts = computed(() =>
+  counts(focusedConcept.value.conceptId) ??
+  (focusedConcept.value.conceptId === props.concept.conceptId
+    ? detail.recordCountsBySource.get(props.sourceKey)
+    : undefined)
+)
 </script>
 
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    :title="t('components.conceptHierarchyDialog.title', 'Hierarchy · {concept}', { concept: displayedConcept.conceptName }).value"
-    :subtitle="`${displayedConcept.conceptId} · ${displayedConcept.vocabularyId} · ${displayedConcept.conceptCode} · ${displayedConcept.domainId}`"
+    :title="t('components.conceptHierarchyDialog.title', 'Hierarchy · {concept}', { concept: focusedConcept.conceptName }).value"
+    :subtitle="`${focusedConcept.conceptId} · ${focusedConcept.vocabularyId} · ${focusedConcept.conceptCode} · ${focusedConcept.domainId}`"
     max-width="1100"
     data-testid="concept-hierarchy-dialog"
     @update:model-value="close"
   >
     <div
-      v-if="isLoading"
+      v-if="isHierarchyLoading"
       class="hierarchy-loading-state"
       data-testid="hierarchy-loading"
       aria-live="polite"
@@ -310,7 +405,7 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
     </p>
 
     <p
-      v-else-if="hierarchyError"
+      v-else-if="focusedHierarchyError"
       data-testid="hierarchy-load-failed"
     >
       {{ t('components.conceptDetail.hierarchyLoadFailed', 'Could not load the hierarchy for this concept.').value }}
@@ -369,11 +464,33 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
             <th>{{ t('columns.class', 'Class').value }}</th>
             <th>{{ t('columns.domain', 'Domain').value }}</th>
             <th>{{ t('columns.vocabulary', 'Vocabulary').value }}</th>
-            <th class="num">
-              {{ t('columns.rc', 'RC').value }}
+            <th
+              class="num"
+              :aria-sort="ariaSort('recordCount')"
+            >
+              <button
+                type="button"
+                class="count-sort"
+                data-testid="hierarchy-sort-rc"
+                :aria-label="t('components.conceptHierarchyDialog.sortRecordCount', 'Sort by record count').value"
+                @click="toggleCountSort('recordCount')"
+              >
+                {{ t('columns.rc', 'RC').value }}{{ sortIndicator('recordCount') }}
+              </button>
             </th>
-            <th class="num">
-              {{ t('columns.drc', 'DRC').value }}
+            <th
+              class="num"
+              :aria-sort="ariaSort('descendantRecordCount')"
+            >
+              <button
+                type="button"
+                class="count-sort"
+                data-testid="hierarchy-sort-drc"
+                :aria-label="t('components.conceptHierarchyDialog.sortDescendantRecordCount', 'Sort by descendant record count').value"
+                @click="toggleCountSort('descendantRecordCount')"
+              >
+                {{ t('columns.drc', 'DRC').value }}{{ sortIndicator('descendantRecordCount') }}
+              </button>
             </th>
           </tr>
         </thead>
@@ -399,7 +516,7 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
             </td>
           </tr>
           <tr
-            v-for="{ concept: a, distance } in filteredVisibleAncestors"
+            v-for="{ concept: a, distance } in sortedVisibleAncestors"
             :key="`a-${a.conceptId}`"
             :data-testid="`hierarchy-row-${a.conceptId}`"
             data-ancestor-row
@@ -451,11 +568,11 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
             data-testid="hierarchy-anchor"
           >
             <td />
-            <td>{{ concept.conceptName }}</td>
-            <td>{{ concept.conceptCode }}</td>
-            <td>{{ concept.conceptClassId }}</td>
-            <td>{{ concept.domainId }}</td>
-            <td>{{ concept.vocabularyId }}</td>
+            <td>{{ focusedConcept.conceptName }}</td>
+            <td>{{ focusedConcept.conceptCode }}</td>
+            <td>{{ focusedConcept.conceptClassId }}</td>
+            <td>{{ focusedConcept.domainId }}</td>
+            <td>{{ focusedConcept.vocabularyId }}</td>
             <td class="num">
               {{ formatRecordCount(anchorCounts?.recordCount) }}
             </td>
@@ -485,7 +602,7 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
             </td>
           </tr>
           <template
-            v-for="{ concept: row, distance } in visibleDescendantRows"
+            v-for="{ concept: row, distance } in sortedVisibleDescendantRows"
             :key="row.conceptId"
           >
             <ConceptHierarchyRow
@@ -540,6 +657,7 @@ const anchorCounts = computed(() => detail.recordCountsBySource.get(props.source
 }
 .hierarchy-table :deep(td) { border-bottom: 1px solid var(--atlas-color-outline-variant); padding: 5px 8px; }
 .hierarchy-table :deep(td.num) { text-align: right; font-variant-numeric: tabular-nums; }
+.count-sort { background: none; border: 0; color: inherit; cursor: pointer; font: inherit; padding: 0; }
 .section-row td { font-size: 11px; text-transform: uppercase; opacity: 0.6; }
 .ancestors-toggle {
   background: none;

@@ -392,6 +392,7 @@
                 :source-key="viewingConcept.sourceKey"
                 :concept-id="viewingConcept.conceptId"
                 :on-back="() => (viewingConcept = null)"
+                @navigate="onInlineConceptNavigate"
               />
             </div>
           </div>
@@ -840,6 +841,11 @@ const viewingConcept = ref<{ sourceKey: string; conceptId: number } | null>(null
 
 function onViewConcept(payload: { conceptId: number; sourceKey: string }) {
   viewingConcept.value = { sourceKey: payload.sourceKey, conceptId: payload.conceptId }
+}
+
+function onInlineConceptNavigate(conceptId: number) {
+  if (!viewingConcept.value) return
+  onViewConcept({ sourceKey: viewingConcept.value.sourceKey, conceptId })
 }
 
 // Reset the inline detail view when the editor closes so reopening starts on

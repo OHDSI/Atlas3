@@ -7,7 +7,6 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import ConceptHierarchyMiniMap from '@/components/concepts/detail/ConceptHierarchyMiniMap.vue'
 import ConceptHierarchyDialog from '@/components/concepts/detail/ConceptHierarchyDialog.vue'
-import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import type { Concept } from '@/models/concept-set.types'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
@@ -66,8 +65,6 @@ function mountMiniMap(props: Record<string, unknown> = {}) {
 }
 
 describe('ConceptHierarchyMiniMap', () => {
-  // The component reads the concept-detail drawer store in setup (the in-place
-  // "View full" overlay), so an active Pinia must exist before mounting.
   beforeEach(() => {
     setActivePinia(createPinia())
   })
@@ -102,15 +99,12 @@ describe('ConceptHierarchyMiniMap', () => {
     expect(wrapper.find('[data-testid="view-full"]').exists()).toBe(false)
   })
 
-  it('opens a parent/child concept in the side-panel drawer instead of routing', async () => {
+  it('emits navigation when a parent or child concept is clicked', async () => {
     const { wrapper } = mountMiniMap({ sourceKey: 'OHDSI' })
-
-    const drawer = useConceptDetailDrawerStore()
-    const openSpy = vi.spyOn(drawer, 'open')
 
     // First clickable node link is the parent concept.
     await wrapper.find('a.node-link').trigger('click')
-    expect(openSpy).toHaveBeenCalledWith('OHDSI', 73211009)
+    expect(wrapper.emitted('navigate')).toEqual([[73211009]])
   })
 
   it('shows empty placeholder when no parents and no children', () => {
@@ -127,27 +121,23 @@ describe('ConceptHierarchyMiniMap', () => {
     expect(wrapper.text()).not.toContain('No hierarchy found for this concept.')
   })
 
-  it('opens the hierarchy dialog rather than the concept drawer, and does not navigate via the router', async () => {
+  it('opens the hierarchy dialog without emitting navigation', async () => {
     const { wrapper, router } = mountMiniMap({ sourceKey: 'OHDSI' })
 
-    const drawer = useConceptDetailDrawerStore()
-    const openSpy = vi.spyOn(drawer, 'open')
     const pushSpy = vi.spyOn(router, 'push')
 
     await wrapper.find('[data-testid="view-full"]').trigger('click')
 
     expect(wrapper.findComponent(ConceptHierarchyDialog).props('modelValue')).toBe(true)
-    expect(openSpy).not.toHaveBeenCalled()
+    expect(wrapper.emitted('navigate')).toBeUndefined()
     expect(pushSpy).not.toHaveBeenCalled()
   })
 
-  it('opens a clicked hierarchy dialog concept in the same drawer', async () => {
+  it('forwards hierarchy dialog navigation to its host', async () => {
     const { wrapper } = mountMiniMap({ sourceKey: 'OHDSI' })
-    const drawer = useConceptDetailDrawerStore()
-    const openSpy = vi.spyOn(drawer, 'open')
 
     await wrapper.findComponent(ConceptHierarchyDialog).vm.$emit('navigate', 421326000)
 
-    expect(openSpy).toHaveBeenCalledWith('OHDSI', 421326000)
+    expect(wrapper.emitted('navigate')).toEqual([[421326000]])
   })
 })

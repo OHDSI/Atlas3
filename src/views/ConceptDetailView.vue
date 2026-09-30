@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useConceptDetailStore } from '@/stores/concept-detail'
 import { useConceptSetsStore } from '@/stores/concept-sets'
@@ -19,6 +20,9 @@ const props = defineProps<{
   sourceKey: string
   conceptId: number
 }>()
+
+const route = useRoute()
+const router = useRouter()
 
 const store = useConceptDetailStore()
 const { concept, isLoading, error, related, parents, children, recordCountsBySource, hierarchyError } =
@@ -54,6 +58,16 @@ const isStale = computed(
 async function load() {
   await store.loadConcept(props.sourceKey, props.conceptId)
   await store.loadDrilldown(props.sourceKey)
+}
+
+function navigate(conceptId: number) {
+  if (conceptId === props.conceptId) return
+  void router.push({
+    name: 'concept-detail',
+    params: { sourceKey: props.sourceKey, conceptId },
+    query: route.query,
+    hash: route.hash,
+  })
 }
 
 onMounted(load)
@@ -102,7 +116,9 @@ watch(() => [props.sourceKey, props.conceptId], load)
             :concept="concept"
             :parents="parents"
             :children="children"
+            :source-key="props.sourceKey"
             :load-failed="!!hierarchyError"
+            @navigate="navigate"
           />
         </div>
 

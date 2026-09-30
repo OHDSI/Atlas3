@@ -39,6 +39,13 @@ const ConceptDetailHeaderStub = defineComponent({
   template: '<button @click="$emit(\'add-to-concept-set\', concept)">add</button>',
 })
 
+const ConceptHierarchyMiniMapStub = defineComponent({
+  name: 'ConceptHierarchyMiniMap',
+  inheritAttrs: false,
+  emits: ['navigate'],
+  template: '<button data-testid="hierarchy-navigate" @click="$emit(\'navigate\', 421326000)">navigate</button>',
+})
+
 describe('ConceptDetailView', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
@@ -56,7 +63,7 @@ describe('ConceptDetailView', () => {
           ConceptDetailHeader: ConceptDetailHeaderStub,
           ConceptStatCards: true,
           ConceptAttributesCard: true,
-          ConceptHierarchyMiniMap: true,
+          ConceptHierarchyMiniMap: ConceptHierarchyMiniMapStub,
           ConceptRelatedTable: true,
           DrilldownDetails: true,
         },
@@ -105,5 +112,20 @@ describe('ConceptDetailView', () => {
     store.error = 'Unable to load concept'
     await wrapper.vm.$nextTick()
     expect(wrapper.text()).toContain('Unable to load concept')
+  })
+
+  it('updates the standalone concept-detail route when hierarchy navigation selects a concept', async () => {
+    const wrapper = mountView()
+    const router = wrapper.vm.$router
+
+    await new Promise(resolve => setTimeout(resolve, 0))
+    await wrapper.find('[data-testid="hierarchy-navigate"]').trigger('click')
+    await router.isReady()
+
+    expect(router.currentRoute.value.name).toBe('concept-detail')
+    expect(router.currentRoute.value.params).toMatchObject({
+      sourceKey: 'SYNPUF1K',
+      conceptId: '421326000',
+    })
   })
 })

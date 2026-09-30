@@ -20,6 +20,11 @@ const drawerOpen = computed({
 
 const drawerWidth = ref<number>(0)
 
+function navigate(conceptId: number) {
+  if (!sourceKey.value) return
+  drawer.open(sourceKey.value, conceptId)
+}
+
 function updateDrawerWidth() {
   drawerWidth.value = Math.max(500, Math.floor(window.innerWidth * 0.95))
 }
@@ -59,6 +64,7 @@ onBeforeUnmount(() => {
           v-if="isOpen && sourceKey && conceptId"
           :source-key="sourceKey"
           :concept-id="conceptId"
+          @navigate="navigate"
         />
       </div>
     </v-navigation-drawer>

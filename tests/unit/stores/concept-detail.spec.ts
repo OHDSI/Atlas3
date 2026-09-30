@@ -361,7 +361,7 @@ describe('concept-detail store', () => {
     expect(store.hierarchyError).toBeNull()
   })
 
-  it('does not let an overlapping failed load flag or uncache a successful one', async () => {
+  it('keeps the latest concept when an earlier overlapping load settles later', async () => {
     (getConceptById as Mock).mockImplementation(async (_sourceKey: string, id: number) => ({
       conceptId: id,
       conceptName: `C${id}`,
@@ -376,8 +376,8 @@ describe('concept-detail store', () => {
     ;(getConceptRecordCounts as Mock).mockResolvedValue(new Map())
 
     // The view re-runs loadConcept on every concept switch without waiting for
-    // the previous one, so hold both hierarchy fetches open and settle the
-    // first (rejecting) one after the second load has already started.
+    // the previous one. Settle the newest request first, then make the old
+    // request fail; the failure must not replace the current concept or error.
     let rejectFirst!: (reason: Error) => void
     let resolveSecond!: (rows: never[]) => void
     ;(getConceptAncestorAndDescendant as Mock)
@@ -388,12 +388,14 @@ describe('concept-detail store', () => {
     const first = store.loadConcept('SYNPUF1K', 1)
     const second = store.loadConcept('SYNPUF1K', 2)
 
-    rejectFirst(new Error('network error'))
-    await first
-    expect(store.hierarchyError).toBe('Failed to load hierarchy')
-
     resolveSecond([])
     await second
+
+    expect(store.concept?.conceptId).toBe(2)
+    expect(store.hierarchyError).toBeNull()
+
+    rejectFirst(new Error('network error'))
+    await first
 
     expect(store.concept?.conceptId).toBe(2)
     expect(store.hierarchyError).toBeNull()

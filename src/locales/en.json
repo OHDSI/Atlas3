@@ -1962,6 +1962,8 @@
       "filterByClass": "Filter by class",
       "filterByDomain": "Filter by domain",
       "filterByVocabulary": "Filter by vocabulary",
+      "sortRecordCount": "Sort by record count",
+      "sortDescendantRecordCount": "Sort by descendant record count",
       "anyClass": "Class: any",
       "anyDomain": "Domain: any",
       "anyVocabulary": "Vocabulary: any",

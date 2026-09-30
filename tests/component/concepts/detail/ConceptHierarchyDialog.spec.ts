@@ -271,6 +271,54 @@ describe('ConceptHierarchyDialog', () => {
     )
   })
 
+  it('sorts ancestor and descendant rows independently by each count column', async () => {
+    useConceptDetailStore().hierarchy = [
+      relatedConcept(101, 'Ancestor with more records', {
+        relationships: [{ relationshipName: 'Has ancestor of', relationshipDistance: 1 }],
+      }),
+      relatedConcept(102, 'Ancestor with fewer records', {
+        relationships: [{ relationshipName: 'Has ancestor of', relationshipDistance: 1 }],
+      }),
+      relatedConcept(201, 'Descendant with more records'),
+      relatedConcept(202, 'Descendant with fewer records'),
+    ]
+    ;(getConceptRecordCounts as Mock).mockResolvedValue(
+      new Map([
+        [101, { recordCount: 20, descendantRecordCount: 1, personCount: 1, descendantPersonCount: 1 }],
+        [102, { recordCount: 10, descendantRecordCount: 2, personCount: 1, descendantPersonCount: 1 }],
+        [201, { recordCount: 40, descendantRecordCount: 3, personCount: 1, descendantPersonCount: 1 }],
+        [202, { recordCount: 30, descendantRecordCount: 4, personCount: 1, descendantPersonCount: 1 }],
+      ])
+    )
+    const wrapper = mountDialog()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    await wrapper.vm.$nextTick()
+
+    ;(document.querySelector('[data-testid="hierarchy-sort-rc"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+
+    expect([...document.querySelectorAll('[data-ancestor-row]')].map(row => row.getAttribute('data-testid')))
+      .toEqual(['hierarchy-row-102', 'hierarchy-row-101'])
+    expect([...document.querySelectorAll('[data-descendant-row]')].map(row => row.getAttribute('data-testid')))
+      .toEqual(['hierarchy-row-202', 'hierarchy-row-201'])
+
+    ;(document.querySelector('[data-testid="hierarchy-sort-rc"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+
+    expect([...document.querySelectorAll('[data-ancestor-row]')].map(row => row.getAttribute('data-testid')))
+      .toEqual(['hierarchy-row-101', 'hierarchy-row-102'])
+    expect([...document.querySelectorAll('[data-descendant-row]')].map(row => row.getAttribute('data-testid')))
+      .toEqual(['hierarchy-row-201', 'hierarchy-row-202'])
+
+    ;(document.querySelector('[data-testid="hierarchy-sort-drc"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+
+    expect([...document.querySelectorAll('[data-ancestor-row]')].map(row => row.getAttribute('data-testid')))
+      .toEqual(['hierarchy-row-101', 'hierarchy-row-102'])
+    expect([...document.querySelectorAll('[data-descendant-row]')].map(row => row.getAttribute('data-testid')))
+      .toEqual(['hierarchy-row-201', 'hierarchy-row-202'])
+  })
+
   it('does not show descendant expand controls or view-mode controls', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
@@ -360,9 +408,23 @@ describe('ConceptHierarchyDialog', () => {
     expect(document.body.textContent).toContain('No hierarchy found for non-standard concepts.')
   })
 
-  it('shows progress inside the dialog while the focused concept reloads', async () => {
-    useConceptDetailStore().isLoading = true
+  it('loads only the clicked hierarchy while root details reload in the background', async () => {
     const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+
+    // The drawer starts a full detail reload after navigation, but that shared
+    // loading flag must not hide the hierarchy currently visible in the dialog.
+    useConceptDetailStore().isLoading = true
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[data-testid="hierarchy-loading"]')).toBeNull()
+    expect(document.querySelector('.hierarchy-table')).not.toBeNull()
+
+    let resolveHierarchy: ((rows: RelatedConcept[]) => void) | undefined
+    ;(getConceptAncestorAndDescendant as Mock).mockImplementationOnce(
+      () => new Promise<RelatedConcept[]>(resolve => { resolveHierarchy = resolve })
+    )
+    ;(document.querySelector('[data-testid="hierarchy-navigate-4309106"]') as HTMLElement).click()
     await wrapper.vm.$nextTick()
 
     expect(document.querySelector('[data-testid="hierarchy-loading"]')?.textContent).toContain(
@@ -370,6 +432,15 @@ describe('ConceptHierarchyDialog', () => {
     )
     expect(document.querySelector('[data-testid="hierarchy-filter"]')).toBeNull()
     expect(document.querySelector('.hierarchy-table')).toBeNull()
+
+    resolveHierarchy?.(INFECTIVE_PNEUMONIA_PAYLOAD)
+    await new Promise(resolve => setTimeout(resolve, 0))
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[data-testid="hierarchy-loading"]')).toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-anchor"]')?.textContent).toContain(
+      'Aspiration pneumonia'
+    )
   })
 })
 
