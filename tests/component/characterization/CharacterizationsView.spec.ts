@@ -108,7 +108,12 @@ async function mountView(initialPath = '/characterizations') {
   })
 
   const wrapper = mount(CharacterizationsView, {
-    global: { plugins: [vuetify, pinia, router] },
+    global: {
+      plugins: [vuetify, pinia, router],
+      stubs: {
+        AtlasDialog: { template: '<div><slot /><slot name="actions" /></div>' },
+      },
+    },
   })
 
   await flushPromises()
@@ -188,6 +193,50 @@ describe('CharacterizationsView', () => {
     expect(mounted.wrapper.text()).not.toContain('Characterization 061')
   })
 
+  it('sorts user, numeric, and text columns locally and supports clearing the sort', async () => {
+    const characterizations: CharacterizationListItem[] = [
+      {
+        id: 20,
+        name: 'Zulu',
+        description: 'last',
+        cohorts: [],
+        featureAnalyses: [],
+        createdBy: { login: 'zoe', name: 'Zoe' },
+        createdDate: 0,
+        modifiedDate: 0,
+      },
+      {
+        id: 10,
+        name: 'Alpha',
+        description: 'first',
+        cohorts: [],
+        featureAnalyses: [],
+        createdBy: 'adam',
+        createdDate: 0,
+        modifiedDate: 0,
+      },
+    ]
+    vi.mocked(listCharacterizations).mockResolvedValue(success(characterizations))
+    mounted = await mountView()
+
+    const table = mounted.wrapper.findComponent(AnalysisDataTable)
+    table.vm.$emit('update:sortBy', [{ key: 'createdBy', order: 'asc' }])
+    await flushPromises()
+    expect(table.props('items')[0]?.name).toBe('Alpha')
+
+    table.vm.$emit('update:sortBy', [{ key: 'id', order: 'desc' }])
+    await flushPromises()
+    expect(table.props('items')[0]?.name).toBe('Zulu')
+
+    table.vm.$emit('update:sortBy', [{ key: 'description', order: 'asc' }])
+    await flushPromises()
+    expect(table.props('items')[0]?.name).toBe('Alpha')
+
+    table.vm.$emit('update:sortBy', [])
+    await flushPromises()
+    expect(table.props('items')[0]?.name).toBe('Zulu')
+  })
+
   it('shows empty state when there are no items', async () => {
     vi.mocked(listCharacterizations).mockResolvedValue(success([]))
     mounted = await mountView()
@@ -244,5 +293,52 @@ describe('CharacterizationsView', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.path).toBe('/characterizations/1')
+  })
+
+  it('opens a copied characterization returned by the store', async () => {
+    vi.mocked(listCharacterizations).mockResolvedValue(success(sampleList))
+    mounted = await mountView()
+    const store = useCharacterizationStore()
+    vi.spyOn(store, 'copy').mockResolvedValue({ id: 99 } as never)
+
+    mounted.wrapper.findComponent(AnalysisDataTable).vm.$emit('copy', sampleList[0])
+    await flushPromises()
+    await new Promise<void>(resolve => setTimeout(resolve, 0))
+    await flushPromises()
+
+    expect(store.copy).toHaveBeenCalledWith(1)
+    expect(mounted.router.currentRoute.value.path).toBe('/characterizations/99')
+  })
+
+  it('removes a selected characterization after confirmation', async () => {
+    vi.mocked(listCharacterizations).mockResolvedValue(success(sampleList))
+    mounted = await mountView()
+    const store = useCharacterizationStore()
+    vi.spyOn(store, 'remove').mockResolvedValue(true)
+
+    mounted.wrapper.findComponent(AnalysisDataTable).vm.$emit('delete', sampleList[0])
+    await flushPromises()
+
+    const deleteButtons = mounted.wrapper.findAll('button').filter(button => button.text() === 'Delete')
+    await deleteButtons.at(-1)!.trigger('click')
+    await flushPromises()
+
+    expect(store.remove).toHaveBeenCalledWith(1)
+  })
+
+  it('keeps the delete dialog usable when removal fails', async () => {
+    vi.mocked(listCharacterizations).mockResolvedValue(success(sampleList))
+    mounted = await mountView()
+    const store = useCharacterizationStore()
+    vi.spyOn(store, 'remove').mockRejectedValue(new Error('Delete failed'))
+
+    mounted.wrapper.findComponent(AnalysisDataTable).vm.$emit('delete', sampleList[0])
+    await flushPromises()
+
+    const deleteButtons = mounted.wrapper.findAll('button').filter(button => button.text() === 'Delete')
+    await deleteButtons.at(-1)!.trigger('click')
+    await flushPromises()
+
+    expect(store.remove).toHaveBeenCalledWith(1)
   })
 })
