@@ -1,9 +1,28 @@
 import { useAuthStore } from '@/stores/auth'
 import { logger } from '@/utils/logger'
 import { getAuthConfig } from '@/config/auth.config'
+import { getWebAPIBaseUrl } from '@/config/webapi'
 
 /**
- * Sets up fetch interceptor that handles 401 responses.
+ * Only a 401 from the WebAPI means the Atlas session is gone. Plugin and
+ * sibling-service endpoints share the global fetch but have their own auth.
+ */
+function isWebAPIRequest(url: string): boolean {
+  try {
+    const base = new URL(getWebAPIBaseUrl(), window.location.href)
+    const target = new URL(url, window.location.href)
+    const basePath = base.pathname.replace(/\/+$/, '')
+    return (
+      target.origin === base.origin &&
+      (target.pathname === basePath || target.pathname.startsWith(`${basePath}/`))
+    )
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Sets up fetch interceptor that handles 401 responses from the WebAPI.
  * Token injection is handled by the centralized http-client.
  */
 export function setupAuthInterceptor() {
@@ -19,7 +38,7 @@ export function setupAuthInterceptor() {
         const isAuthRequest =
           url.includes('/user/refresh') || url.includes('/user/login') || url.includes('/user/me')
 
-        if (isAuthRequest) {
+        if (isAuthRequest || !isWebAPIRequest(url)) {
           return response
         }
 

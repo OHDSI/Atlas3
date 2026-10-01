@@ -105,8 +105,8 @@ test.describe('Cohort SQL export', () => {
 
     await expect(page.locator(SQL_FIELD)).toHaveValue(TRANSLATED_SQL)
     expect(translateRequestBody).toMatchObject({
-      sql: TEMPLATE_SQL,
-      targetDialect: 'postgresql',
+      SQL: TEMPLATE_SQL,
+      targetdialect: 'postgresql',
     })
   })
 

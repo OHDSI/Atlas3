@@ -51,6 +51,15 @@ export const ConceptSearchResponseSchema = z.array(ConceptSearchResponseItemSche
 
 export type ConceptSearchResponse = z.infer<typeof ConceptSearchResponseSchema>
 
+// WebAPI RecommendedConcept extends the circe Concept, which has no validity dates.
+export const RecommendedConceptSchema = ConceptSearchResponseItemSchema.extend({
+  VALID_START_DATE: z.number().optional(),
+  VALID_END_DATE: z.number().optional(),
+})
+export type RecommendedConcept = z.infer<typeof RecommendedConceptSchema>
+
+export const RecommendedConceptsResponseSchema = z.array(RecommendedConceptSchema)
+
 // ============================================================================
 // Concept Set Item (concept with configuration flags)
 // ============================================================================

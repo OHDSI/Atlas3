@@ -93,8 +93,8 @@ describe('services/cohort-sql.service', () => {
       expect(String(url)).toContain('/sqlrender/translate')
       expect(init.method).toBe('POST')
       expect(JSON.parse(init.body as string)).toEqual({
-        sql: TEMPLATE_SQL,
-        targetDialect: 'postgresql',
+        SQL: TEMPLATE_SQL,
+        targetdialect: 'postgresql',
       })
     })
 

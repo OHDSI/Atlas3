@@ -69,7 +69,9 @@ export function normalizeInvalidReason(invalidReason: string | null | undefined)
 /**
  * Map a WebAPI concept-search response item (UPPERCASE) to Concept interface (camelCase)
  */
-export function mapConceptFromAPI(raw: ConceptSearchResponseItem): Concept {
+export function mapConceptFromAPI(
+  raw: Omit<ConceptSearchResponseItem, 'VALID_START_DATE' | 'VALID_END_DATE'>
+): Concept {
   const concept: Concept = {
     conceptId: raw.CONCEPT_ID,
     conceptName: raw.CONCEPT_NAME,

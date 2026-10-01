@@ -4,6 +4,7 @@
  */
 import {
   ConceptSearchResponseSchema,
+  RecommendedConceptsResponseSchema,
   ComparisonResultSchema,
   type Concept,
   type ComparisonResultItem,
@@ -255,7 +256,7 @@ export async function getRecommendedConcepts(
     throw error
   }
 
-  const parsed = ConceptSearchResponseSchema.safeParse(data)
+  const parsed = RecommendedConceptsResponseSchema.safeParse(data)
 
   if (!parsed.success) {
     logger.error('ConceptSearch', 'Recommended concepts validation error', parsed.error)

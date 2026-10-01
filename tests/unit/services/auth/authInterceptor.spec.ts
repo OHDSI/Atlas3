@@ -31,6 +31,12 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
+const webApiBaseUrl = vi.hoisted(() => ({ value: 'http://api.example.com/WebAPI' }))
+
+vi.mock('@/config/webapi', () => ({
+  getWebAPIBaseUrl: () => webApiBaseUrl.value,
+}))
+
 import { setupAuthInterceptor, addBearerToken } from '@/services/auth/authInterceptor'
 import { useAuthStore } from '@/stores/auth'
 import { tokenManager } from '@/services/auth/tokenManager'
@@ -43,6 +49,7 @@ describe('AuthInterceptor', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    webApiBaseUrl.value = 'http://api.example.com/WebAPI'
 
     // Re-setup tokenManager mock after clearAllMocks
     vi.mocked(tokenManager.parseToken).mockReturnValue({
@@ -93,7 +100,7 @@ describe('AuthInterceptor', () => {
       )
     })
 
-    it('should clear auth on 401 response', async () => {
+    it('should clear auth on 401 response from the WebAPI', async () => {
       setupAuthInterceptor()
 
       const authStore = useAuthStore()
@@ -104,9 +111,69 @@ describe('AuthInterceptor', () => {
         ok: false,
       })
 
-      await window.fetch('http://api.example.com/data')
+      await window.fetch('http://api.example.com/WebAPI/cohortdefinition')
 
       expect(authStore.token).toBeNull()
+    })
+
+    it('should clear auth on 401 from a relative WebAPI base URL', async () => {
+      webApiBaseUrl.value = '/WebAPI'
+      setupAuthInterceptor()
+
+      const authStore = useAuthStore()
+      authStore.setToken('test-token')
+      const clearAuthSpy = vi.spyOn(authStore, 'clearAuth')
+
+      mockFetch.mockResolvedValueOnce({ status: 401, ok: false })
+
+      await window.fetch(new Request(new URL('/WebAPI/cohortdefinition/1', window.location.href)))
+
+      expect(clearAuthSpy).toHaveBeenCalled()
+    })
+
+    it('should NOT clear auth on 401 from a non-WebAPI endpoint', async () => {
+      webApiBaseUrl.value = '/WebAPI'
+      setupAuthInterceptor()
+
+      const authStore = useAuthStore()
+      authStore.setToken('test-token')
+      const clearAuthSpy = vi.spyOn(authStore, 'clearAuth')
+      const openLoginModalSpy = vi.spyOn(authStore, 'openLoginModal')
+
+      mockFetch.mockResolvedValueOnce({ status: 401, ok: false })
+
+      const response = await window.fetch('/network-api/studies')
+
+      expect(response.status).toBe(401)
+      expect(clearAuthSpy).not.toHaveBeenCalled()
+      expect(openLoginModalSpy).not.toHaveBeenCalled()
+      expect(authStore.token).toBe('test-token')
+    })
+
+    it('should NOT treat a path that merely shares the WebAPI prefix as WebAPI', async () => {
+      setupAuthInterceptor()
+
+      const authStore = useAuthStore()
+      authStore.setToken('test-token')
+
+      mockFetch.mockResolvedValueOnce({ status: 401, ok: false })
+
+      await window.fetch('http://api.example.com/WebAPIExtra/data')
+
+      expect(authStore.token).toBe('test-token')
+    })
+
+    it('should NOT clear auth on 401 from another origin with the same path', async () => {
+      setupAuthInterceptor()
+
+      const authStore = useAuthStore()
+      authStore.setToken('test-token')
+
+      mockFetch.mockResolvedValueOnce({ status: 401, ok: false })
+
+      await window.fetch('http://other.example.com/WebAPI/cohortdefinition')
+
+      expect(authStore.token).toBe('test-token')
     })
 
     it('should NOT attempt token refresh on 403 response (handled by caller)', async () => {
