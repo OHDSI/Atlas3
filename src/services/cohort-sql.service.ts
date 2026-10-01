@@ -77,7 +77,10 @@ export async function translateSql(
   targetDialect: string
 ): Promise<ApiResult<string>> {
   return unwrap(async () => {
-    const data = await httpPostRead<unknown>('/sqlrender/translate', { sql, targetDialect })
+    const data = await httpPostRead<unknown>('/sqlrender/translate', {
+      SQL: sql,
+      targetdialect: targetDialect,
+    })
     return parseOrThrow(
       TranslatedStatementSchema,
       data,
