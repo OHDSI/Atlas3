@@ -73,6 +73,7 @@ vi.mock('@/services/cohort-definition.service', () => ({
   validateCohortDefinition: vi.fn().mockResolvedValue({ success: true, data: { warnings: [] } }),
   assignTagToCohort: vi.fn().mockResolvedValue({ success: true, data: undefined }),
   unassignTagFromCohort: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+  getCohortPrintFriendly: vi.fn().mockResolvedValue({ success: true, data: '<p>Print friendly</p>' }),
 }))
 
 vi.mock('@/services/cohort-sql.service', () => ({
@@ -2316,6 +2317,21 @@ describe('CohortBuilder', () => {
 
     const sqlDialog = wrapper.findComponent({ name: 'CohortSqlDialog' })
     expect(sqlDialog.props('modelValue')).toBe(true)
+  })
+
+  it('openPrintFriendlyDialog opens the print-friendly dialog with the current expression', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+
+    ;(wrapper.vm as any).openPrintFriendlyDialog()
+    await flushPromises()
+
+    const printFriendlyDialog = wrapper.findComponent({ name: 'CohortPrintFriendlyDialog' })
+    expect(printFriendlyDialog.props('modelValue')).toBe(true)
+    expect(printFriendlyDialog.props('expression')).toMatchObject({
+      PrimaryCriteria: expect.any(Object),
+      ConceptSets: expect.any(Array),
+    })
   })
 
   // ---------------------------------------------------------------------------

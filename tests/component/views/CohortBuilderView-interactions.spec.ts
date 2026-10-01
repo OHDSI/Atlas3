@@ -32,6 +32,7 @@ const {
   openTagsDialog,
   openAccessDialog,
   openJsonDialog,
+  openPrintFriendlyDialog,
   handleCancel,
   handleSave,
   handleExportDownload,
@@ -43,6 +44,7 @@ const {
   openTagsDialog: vi.fn(),
   openAccessDialog: vi.fn(),
   openJsonDialog: vi.fn(),
+  openPrintFriendlyDialog: vi.fn(),
   handleCancel: vi.fn(),
   handleSave: vi.fn(),
   handleExportDownload: vi.fn(),
@@ -76,6 +78,7 @@ vi.mock('@/components/cohort/CohortBuilder.vue', () => ({
       'openTagsDialog',
       'openAccessDialog',
       'openJsonDialog',
+      'openPrintFriendlyDialog',
       'handleCancel',
       'handleSave',
       'handleExportDownload',
@@ -101,6 +104,7 @@ vi.mock('@/components/cohort/CohortBuilder.vue', () => ({
       openTagsDialog,
       openAccessDialog,
       openJsonDialog,
+      openPrintFriendlyDialog,
       handleCancel,
       handleSave,
       handleExportDownload,
@@ -129,7 +133,7 @@ vi.mock('@/components/cohort/CohortToolbarActions.vue', () => ({
   default: {
     name: 'CohortToolbarActions',
     props: ['canSave', 'isPreviewingVersion'],
-    emits: ['cancel', 'save', 'export-download', 'export-copy', 'view-json'],
+    emits: ['cancel', 'save', 'export-download', 'export-copy', 'view-json', 'view-print-friendly'],
     template:
       '<div class="stub-toolbar-actions">' +
       '<button class="actions-cancel" @click="$emit(\'cancel\')" />' +
@@ -137,6 +141,7 @@ vi.mock('@/components/cohort/CohortToolbarActions.vue', () => ({
       '<button class="actions-export-download" @click="$emit(\'export-download\')" />' +
       '<button class="actions-export-copy" @click="$emit(\'export-copy\')" />' +
       '<button class="actions-view-json" @click="$emit(\'view-json\')" />' +
+      '<button class="actions-view-print-friendly" @click="$emit(\'view-print-friendly\')" />' +
       '</div>',
   },
 }))
@@ -251,6 +256,13 @@ describe('CohortBuilderView interactions', () => {
     await wrapper.vm.$nextTick()
     await wrapper.find('.actions-view-json').trigger('click')
     expect(openJsonDialog).toHaveBeenCalled()
+  })
+
+  it('forwards toolbar view-print-friendly to the builder ref handle', async () => {
+    const wrapper = mountIt()
+    await wrapper.vm.$nextTick()
+    await wrapper.find('.actions-view-print-friendly').trigger('click')
+    expect(openPrintFriendlyDialog).toHaveBeenCalled()
   })
 
   it('passes the id prop through to CohortBuilder and surfaces it in the eyebrow', async () => {

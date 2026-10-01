@@ -80,6 +80,7 @@
             @export-copy="handleExportCopy"
             @view-json="openJsonDialog"
             @view-sql="openSqlDialog"
+            @view-print-friendly="openPrintFriendlyDialog"
           />
         </template>
       </AtlasActionToolbar>
@@ -120,6 +121,11 @@
       v-model="showSqlDialog"
       :expression="sqlDialogExpression"
       :filename="sqlExportFilename()"
+    />
+
+    <cohort-print-friendly-dialog
+      v-model="showPrintFriendlyDialog"
+      :expression="printFriendlyExpression"
     />
 
     <AtlasAlert
@@ -342,6 +348,7 @@ import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import CohortJsonDialog from './CohortJsonDialog.vue'
 import CohortSqlDialog from './CohortSqlDialog.vue'
+import CohortPrintFriendlyDialog from './CohortPrintFriendlyDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import { EntityAccessDialog } from '@/components/access'
@@ -486,7 +493,9 @@ const showTagsDialog = ref(false)
 const showAccessDialog = ref(false)
 const showJsonDialog = ref(false)
 const showSqlDialog = ref(false)
+const showPrintFriendlyDialog = ref(false)
 const sqlDialogExpression = ref<CohortExpression | null>(null)
+const printFriendlyExpression = ref<CohortExpression | null>(null)
 // Snapshot of the expression taken when the JSON dialog opens, so the
 // editor is not re-seeded under the user while they type.
 const jsonDialogSource = ref('')
@@ -1473,6 +1482,12 @@ function openSqlDialog() {
   showSqlDialog.value = true
 }
 
+/** Open the legacy WebAPI-rendered, readable cohort definition view. */
+function openPrintFriendlyDialog() {
+  printFriendlyExpression.value = normalizeForCirce(toRaw(expression.value))
+  showPrintFriendlyDialog.value = true
+}
+
 function handleExportDownload() {
   const json = exportableExpression()
   const blob = new Blob([json], { type: 'application/json' })
@@ -1607,6 +1622,7 @@ defineExpose({
   handleExportCopy,
   openJsonDialog,
   openSqlDialog,
+  openPrintFriendlyDialog,
   // Test-support contract: routing/UI state and pure helpers that have no
   // child component to observe or drive them through. Named here instead of
   // reached via Vue's private `$.setupState`/`$.provides`, so a rename shows

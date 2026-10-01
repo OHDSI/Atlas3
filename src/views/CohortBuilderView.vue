@@ -72,6 +72,7 @@
           @export-copy="builderRef.handleExportCopy()"
           @view-json="builderRef.openJsonDialog()"
           @view-sql="builderRef.openSqlDialog()"
+          @view-print-friendly="builderRef.openPrintFriendlyDialog()"
         />
       </div>
     </template>

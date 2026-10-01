@@ -53,6 +53,13 @@
           :subtitle="t('components.cohortBuilder.sqlMenuSubtitle', 'View and download the generated SQL').value"
           @click="$emit('view-sql')"
         />
+        <AtlasListItem
+          data-testid="view-print-friendly"
+          prepend-icon="mdi-file-document-outline"
+          :title="t('components.cohortBuilder.printFriendlyMenuTitle', 'Print Friendly').value"
+          :subtitle="t('components.cohortBuilder.printFriendlyMenuSubtitle', 'View a readable cohort definition').value"
+          @click="$emit('view-print-friendly')"
+        />
       </AtlasList>
     </AtlasMenu>
 
@@ -101,6 +108,7 @@ defineEmits<{
   (e: 'export-copy'): void
   (e: 'view-sql'): void
   (e: 'view-json'): void
+  (e: 'view-print-friendly'): void
 }>()
 
 const { t } = useI18n()
