@@ -4,7 +4,6 @@ import { useRoute } from 'vue-router'
 import { AtlasCard } from '@/components/ui'
 import ConceptHierarchyDialog from '@/components/concepts/detail/ConceptHierarchyDialog.vue'
 import { useI18n } from '@/composables/useI18n'
-import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import type { Concept } from '@/models/concept-set.types'
 
 const { t } = useI18n()
@@ -18,6 +17,10 @@ const props = defineProps<{
   loadFailed?: boolean
 }>()
 
+const emit = defineEmits<{
+  navigate: [conceptId: number]
+}>()
+
 // Prefer the explicit sourceKey prop (the drawer renders this component over
 // other routes, so route.params.sourceKey is empty there and links would
 // resolve to /concept//<id>, a 404). Fall back to the route param for
@@ -26,8 +29,6 @@ const route = useRoute()
 const sourceKey = computed(
   () => props.sourceKey || ((route.params.sourceKey as string) ?? '')
 )
-
-const conceptDrawer = useConceptDetailDrawerStore()
 
 const canViewFull = computed(() => !!sourceKey.value && !!props.concept.conceptId)
 
@@ -38,12 +39,9 @@ function viewFull() {
   dialogOpen.value = true
 }
 
-// Jumping to a parent/child concept opens it in the same side-panel drawer
-// rather than routing the whole app to the stand-alone concept page — that
-// keeps the user in their current flow (cohort editor, search, etc.).
 function openConcept(conceptId: number) {
   if (!sourceKey.value) return
-  conceptDrawer.open(sourceKey.value, conceptId)
+  emit('navigate', conceptId)
 }
 
 const isEmpty = computed(() => props.parents.length === 0 && props.children.length === 0)
@@ -132,6 +130,7 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
     v-model="dialogOpen"
     :concept="concept"
     :source-key="sourceKey"
+    @navigate="openConcept"
   />
 </template>
 

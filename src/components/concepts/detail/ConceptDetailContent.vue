@@ -26,6 +26,10 @@ const props = defineProps<{
   onBack?: () => void
 }>()
 
+const emit = defineEmits<{
+  navigate: [conceptId: number]
+}>()
+
 const store = useConceptDetailStore()
 const { concept, isLoading, error, related, parents, children, recordCountsBySource, hierarchyError } =
   storeToRefs(store)
@@ -117,6 +121,7 @@ watch(() => [props.sourceKey, props.conceptId], load)
             :children="children"
             :source-key="props.sourceKey"
             :load-failed="!!hierarchyError"
+            @navigate="emit('navigate', $event)"
           />
         </div>
 
