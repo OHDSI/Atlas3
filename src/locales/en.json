@@ -1957,6 +1957,7 @@
       "switchingView": "Rebuilding the list…",
       "treeView": "Tree",
       "flatView": "Flat",
+      "tabularView": "Tabular",
       "loading": "Loading hierarchy…",
       "filterPlaceholder": "Filter by name or code…",
       "filterByClass": "Filter by class",

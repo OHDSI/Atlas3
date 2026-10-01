@@ -3,6 +3,8 @@ import { computed, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import {
   AtlasDialog,
+  AtlasTab,
+  AtlasTabs,
   AtlasProgressCircular,
   AtlasTextField,
   AtlasSelect,
@@ -75,6 +77,13 @@ interface DescendantRow {
   distance: number
 }
 
+interface TreeRow {
+  row: RelatedConcept
+  depth: number
+  key: string
+  path: number[]
+}
+
 const descendants = computed<DescendantRow[]>(() =>
   focusedHierarchy.value.flatMap(concept => {
     const distances = concept.relationships
@@ -97,11 +106,25 @@ const hiddenAncestorCount = computed(() => ancestors.value.length - directAncest
 const visibleAncestors = computed(() => (ancestorsExpanded.value ? ancestors.value : directAncestors.value))
 
 const descendantsExpanded = ref(false)
+const view = ref<'tabular' | 'tree'>('tabular')
 const directDescendants = computed(() => descendants.value.filter(d => d.distance === 1))
 const hiddenDescendantCount = computed(() => descendants.value.length - directDescendants.value.length)
 const visibleDescendants = computed(() =>
   descendantsExpanded.value ? descendants.value : directDescendants.value
 )
+
+const treeRoots = computed(() => directDescendants.value.map(({ concept }) => concept))
+
+function flattenTree(rows: RelatedConcept[], depth: number, path: number[]): TreeRow[] {
+  return rows.flatMap(row => {
+    const nextPath = [...path, row.conceptId]
+    const treeRow: TreeRow = { row, depth, key: nextPath.join('>'), path: nextPath }
+    if (!tree.isExpanded(row.conceptId) || path.includes(row.conceptId)) return [treeRow]
+    return [treeRow, ...flattenTree(tree.childrenOf(row.conceptId), depth + 1, nextPath)]
+  })
+}
+
+const treeRows = computed(() => flattenTree(treeRoots.value, 0, [focusedConcept.value.conceptId]))
 
 const isEmpty = computed(() => focusedHierarchy.value.length === 0)
 
@@ -217,6 +240,10 @@ function toggleSelected(conceptId: number) {
 // exactly like a row hidden by the filter or a closed tree node.
 const visibleById = computed(() => {
   const map = new Map<number, RelatedConcept>()
+  if (view.value === 'tree') {
+    for (const treeRow of treeRows.value) map.set(treeRow.row.conceptId, treeRow.row)
+    return map
+  }
   for (const { concept } of filteredVisibleAncestors.value) map.set(concept.conceptId, concept)
   for (const { concept } of visibleDescendantRows.value) map.set(concept.conceptId, concept)
   return map
@@ -267,6 +294,7 @@ watch(
 )
 
 function resetForFocusedConcept() {
+  tree.reset()
   selected.value = []
   ancestorsExpanded.value = false
   descendantsExpanded.value = false
@@ -363,6 +391,14 @@ function navigate(conceptId: number) {
   emit('navigate', conceptId)
 }
 
+function toggleTreeNode(conceptId: number) {
+  if (tree.isExpanded(conceptId)) {
+    tree.collapseNode(conceptId)
+  } else {
+    void tree.expandNode(conceptId)
+  }
+}
+
 function counts(conceptId: number) {
   return tree.countsFor(conceptId)
 }
@@ -423,7 +459,29 @@ const anchorCounts = computed(() =>
         {{ t('components.conceptHierarchyDialog.counts', '{ancestors} ancestors · {descendants} descendants', { ancestors: allAncestorCount, descendants: allDescendantCount }).value }}
       </p>
 
-      <div class="toolbar">
+      <AtlasTabs
+        v-model="view"
+        class="hierarchy-view-tabs"
+        data-testid="hierarchy-view-tabs"
+      >
+        <AtlasTab
+          value="tabular"
+          data-testid="hierarchy-view-tabular"
+        >
+          {{ t('components.conceptHierarchyDialog.tabularView', 'Tabular').value }}
+        </AtlasTab>
+        <AtlasTab
+          value="tree"
+          data-testid="hierarchy-view-tree"
+        >
+          {{ t('components.conceptHierarchyDialog.treeView', 'Tree').value }}
+        </AtlasTab>
+      </AtlasTabs>
+
+      <div
+        v-if="view === 'tabular'"
+        class="toolbar"
+      >
         <AtlasTextField
           v-model="filterText"
           :placeholder="t('components.conceptHierarchyDialog.filterPlaceholder', 'Filter by name or code…').value"
@@ -455,7 +513,10 @@ const anchorCounts = computed(() =>
         />
       </div>
 
-      <table class="hierarchy-table">
+      <table
+        v-if="view === 'tabular'"
+        class="hierarchy-table"
+      >
         <thead>
           <tr>
             <th />
@@ -621,6 +682,122 @@ const anchorCounts = computed(() =>
               @navigate="navigate"
             />
           </template>
+        </tbody>
+      </table>
+
+      <table
+        v-else
+        class="hierarchy-table hierarchy-tree-table"
+        data-testid="hierarchy-tree"
+      >
+        <thead>
+          <tr>
+            <th />
+            <th>{{ t('columns.conceptName', 'Concept Name').value }}</th>
+            <th>{{ t('columns.code', 'Code').value }}</th>
+            <th>{{ t('columns.class', 'Class').value }}</th>
+            <th>{{ t('columns.domain', 'Domain').value }}</th>
+            <th>{{ t('columns.vocabulary', 'Vocabulary').value }}</th>
+            <th class="num">
+              {{ t('columns.rc', 'RC').value }}
+            </th>
+            <th class="num">
+              {{ t('columns.drc', 'DRC').value }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            class="section-row"
+            data-testid="hierarchy-tree-ancestors-section"
+          >
+            <td colspan="8">
+              {{ t('components.conceptHierarchyDialog.ancestors', 'Ancestors').value }}
+            </td>
+          </tr>
+          <tr
+            v-for="{ concept: ancestor } in directAncestors"
+            :key="`tree-ancestor-${ancestor.conceptId}`"
+            :data-testid="`hierarchy-tree-ancestor-${ancestor.conceptId}`"
+          >
+            <td />
+            <td>
+              <button
+                type="button"
+                class="concept-link"
+                :data-testid="`hierarchy-tree-navigate-${ancestor.conceptId}`"
+                @click="navigate(ancestor.conceptId)"
+              >
+                {{ ancestor.conceptName }}
+              </button>
+            </td>
+            <td>{{ ancestor.conceptCode }}</td>
+            <td>{{ ancestor.conceptClassId }}</td>
+            <td>{{ ancestor.domainId }}</td>
+            <td>{{ ancestor.vocabularyId }}</td>
+            <td class="num">
+              {{ formatRecordCount(counts(ancestor.conceptId)?.recordCount) }}
+            </td>
+            <td class="num">
+              {{ formatRecordCount(counts(ancestor.conceptId)?.descendantRecordCount) }}
+            </td>
+          </tr>
+          <tr
+            class="section-row"
+            data-testid="hierarchy-tree-current-section"
+          >
+            <td colspan="8">
+              {{ t('components.conceptHierarchyDialog.currentConcept', 'Current concept').value }}
+            </td>
+          </tr>
+          <tr
+            class="anchor"
+            data-testid="hierarchy-tree-anchor"
+          >
+            <td />
+            <td>{{ focusedConcept.conceptName }}</td>
+            <td>{{ focusedConcept.conceptCode }}</td>
+            <td>{{ focusedConcept.conceptClassId }}</td>
+            <td>{{ focusedConcept.domainId }}</td>
+            <td>{{ focusedConcept.vocabularyId }}</td>
+            <td class="num">
+              {{ formatRecordCount(anchorCounts?.recordCount) }}
+            </td>
+            <td class="num">
+              {{ formatRecordCount(anchorCounts?.descendantRecordCount) }}
+            </td>
+          </tr>
+          <tr
+            class="section-row"
+            data-testid="hierarchy-tree-descendants-section"
+          >
+            <td colspan="8">
+              {{ t('components.conceptHierarchyDialog.descendants', 'Descendants').value }}
+            </td>
+          </tr>
+          <ConceptHierarchyRow
+            v-for="treeRow in treeRows"
+            :key="treeRow.key"
+            :row="treeRow.row"
+            :depth="treeRow.depth"
+            :can-add="canAdd"
+            :selected="selected.includes(treeRow.row.conceptId)"
+            :show-distance="false"
+            :in-set="itemsById.has(treeRow.row.conceptId)"
+            :is-excluded="!!itemsById.get(treeRow.row.conceptId)?.isExcluded"
+            :include-descendants="!!itemsById.get(treeRow.row.conceptId)?.includeDescendants"
+            :record-count="counts(treeRow.row.conceptId)?.recordCount"
+            :descendant-record-count="counts(treeRow.row.conceptId)?.descendantRecordCount"
+            :expandable="!tree.isLeaf(treeRow.row.conceptId) && !tree.isLoading(treeRow.row.conceptId) && !tree.hasFailed(treeRow.row.conceptId)"
+            :expanded="tree.isExpanded(treeRow.row.conceptId)"
+            :loading="tree.isLoading(treeRow.row.conceptId)"
+            :failed="tree.hasFailed(treeRow.row.conceptId)"
+            :leaf="tree.isLeaf(treeRow.row.conceptId)"
+            show-expansion-column
+            @toggle-select="toggleSelected(treeRow.row.conceptId)"
+            @toggle-expand="toggleTreeNode(treeRow.row.conceptId)"
+            @navigate="navigate"
+          />
         </tbody>
       </table>
 

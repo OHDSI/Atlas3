@@ -319,13 +319,91 @@ describe('ConceptHierarchyDialog', () => {
       .toEqual(['hierarchy-row-201', 'hierarchy-row-202'])
   })
 
-  it('does not show descendant expand controls or view-mode controls', async () => {
+  it('keeps Tabular as the default view and opens a separate Tree tab', async () => {
     const wrapper = mountDialog()
     await wrapper.vm.$nextTick()
 
-    expect(document.querySelector('[data-testid^="hierarchy-expand-"]')).toBeNull()
-    expect(document.querySelector('[data-testid="hierarchy-view-tree"]')).toBeNull()
-    expect(document.querySelector('[data-testid="hierarchy-view-flat"]')).toBeNull()
+    expect(document.querySelector('.hierarchy-table')).not.toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-tree"]')).toBeNull()
+
+    ;(document.querySelector('[data-testid="hierarchy-view-tree"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+
+    expect(document.querySelector('[data-testid="hierarchy-tree"]')).not.toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-filter"]')).toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-tree-ancestor-253506"]')).not.toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-tree-ancestor-257907"]')).toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-tree-anchor"]')?.textContent).toContain('Pneumonia')
+  })
+
+  it('loads, collapses, and reuses cached direct children from the Tree tab', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+    ;(document.querySelector('[data-testid="hierarchy-view-tree"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+    ;(getConceptAncestorAndDescendant as Mock).mockClear()
+
+    ;(document.querySelector('[data-testid="hierarchy-expand-443410"]') as HTMLElement).click()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    await wrapper.vm.$nextTick()
+
+    expect(getConceptAncestorAndDescendant).toHaveBeenCalledWith('SYNPUF1K', 443410)
+    expect(document.querySelector('[data-testid="hierarchy-row-257315"]')).not.toBeNull()
+
+    ;(document.querySelector('[data-testid="hierarchy-expand-443410"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+    expect(document.querySelector('[data-testid="hierarchy-row-257315"]')).toBeNull()
+
+    ;(document.querySelector('[data-testid="hierarchy-expand-443410"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+    expect(getConceptAncestorAndDescendant).toHaveBeenCalledTimes(1)
+    expect(document.querySelector('[data-testid="hierarchy-row-257315"]')).not.toBeNull()
+  })
+
+  it('refocuses the dialog when a Tree ancestor is clicked', async () => {
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+    ;(document.querySelector('[data-testid="hierarchy-view-tree"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+
+    ;(document.querySelector('[data-testid="hierarchy-tree-navigate-253506"]') as HTMLElement).click()
+
+    expect(wrapper.emitted('navigate')).toEqual([[253506]])
+  })
+
+  it('shows per-node loading, failure retry, and leaf states in the Tree tab', async () => {
+    let resolveChildren: ((rows: RelatedConcept[]) => void) | undefined
+    ;(getConceptAncestorAndDescendant as Mock).mockImplementationOnce(
+      () => new Promise<RelatedConcept[]>(resolve => { resolveChildren = resolve })
+    )
+    const wrapper = mountDialog()
+    await wrapper.vm.$nextTick()
+    ;(document.querySelector('[data-testid="hierarchy-view-tree"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+
+    ;(document.querySelector('[data-testid="hierarchy-expand-443410"]') as HTMLElement).click()
+    await wrapper.vm.$nextTick()
+    expect(document.querySelector('[data-testid="hierarchy-loading-443410"]')).not.toBeNull()
+
+    resolveChildren!(INFECTIVE_PNEUMONIA_PAYLOAD)
+    await new Promise(resolve => setTimeout(resolve, 0))
+    await wrapper.vm.$nextTick()
+
+    ;(getConceptAncestorAndDescendant as Mock).mockRejectedValueOnce(new Error('children unavailable'))
+    ;(document.querySelector('[data-testid="hierarchy-expand-4309106"]') as HTMLElement).click()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    await wrapper.vm.$nextTick()
+    expect(document.querySelector('[data-testid="hierarchy-retry-4309106"]')).not.toBeNull()
+    expect(document.querySelector('[data-testid="hierarchy-expand-4309106"]')).toBeNull()
+
+    ;(getConceptAncestorAndDescendant as Mock).mockResolvedValueOnce([])
+    ;(document.querySelector('[data-testid="hierarchy-retry-4309106"]') as HTMLElement).click()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    await wrapper.vm.$nextTick()
+    expect(document.querySelector('[data-testid="hierarchy-retry-4309106"]')).toBeNull()
+    const leafIndicator = document.querySelector('[data-testid="hierarchy-expand-4309106"]')
+    expect(leafIndicator).not.toBeNull()
+    expect(leafIndicator?.getAttribute('aria-hidden')).toBe('true')
   })
 
   it('lists direct ancestors and highlights the anchor concept', async () => {
