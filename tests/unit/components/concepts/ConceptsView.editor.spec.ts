@@ -2,7 +2,7 @@
  * ConceptsView — page-level concept set editor
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount, flushPromises } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
@@ -89,16 +89,4 @@ describe('ConceptsView — page-level editor', () => {
     expect(fetchAll).toHaveBeenCalledOnce()
   })
 
-  it('removes the set and closes the editor when the editor emits delete', async () => {
-    const wrapper = mountView()
-    const sets = useConceptSetsStore()
-    const remove = vi.spyOn(sets, 'remove').mockResolvedValue(true)
-    sets.openCreateEditor()
-    await nextTick()
-
-    await wrapper.findComponent(ConceptSetEditor).vm.$emit('delete', 42)
-    expect(remove).toHaveBeenCalledWith(42)
-    await flushPromises()
-    expect(sets.editorOpen).toBe(false)
-  })
 })

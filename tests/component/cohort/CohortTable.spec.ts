@@ -107,11 +107,10 @@ describe('CohortTable', () => {
   })
 
   it('emits action events from the row buttons without bubbling row click', async () => {
-    // Refresh: removed the row-level Generate button. Action column
-    // now contains Copy, Info and Delete.
+    // The action column contains Print Friendly, Copy, and Delete.
     const wrapper = makeWrapper({ cohorts: [sampleCohorts[0]!], canCopy: true })
 
-    await wrapper.find('[data-testid=cohort-table-info]').trigger('click')
+    await wrapper.find('[data-testid=cohort-table-print-friendly]').trigger('click')
     await wrapper.find('[data-testid=cohort-table-copy]').trigger('click')
     await wrapper.find('[data-testid=cohort-table-delete]').trigger('click')
 

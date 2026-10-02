@@ -142,17 +142,16 @@ describe('CohortCard', () => {
     expect(wrapper.emitted('delete')![0]).toEqual([mockCohort])
   })
 
-  it('should emit show-info event', async () => {
+  it('should emit preview event', async () => {
     const wrapper = mountComponent()
 
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    // Refresh: aria-label is now sentence-case "Cohort information".
-    const infoBtn = buttons.find(btn =>
-      (btn.attributes('aria-label') ?? '').toLowerCase().includes('cohort information')
+    const printFriendlyBtn = buttons.find(btn =>
+      (btn.attributes('aria-label') ?? '').toLowerCase().includes('preview')
     )
 
-    expect(infoBtn).toBeDefined()
-    await infoBtn!.trigger('click')
+    expect(printFriendlyBtn).toBeDefined()
+    await printFriendlyBtn!.trigger('click')
     expect(wrapper.emitted('show-info')).toBeTruthy()
     expect(wrapper.emitted('show-info')![0]).toEqual([mockCohort])
   })

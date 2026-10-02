@@ -297,6 +297,46 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   }
 
   /**
+   * Create and open a duplicate of an existing concept set.
+   */
+  async function copy(id: number | string) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const source = await getConceptSetById(id, { rethrow: true })
+      if (!source) {
+        error.value = 'Concept set not found'
+        return null
+      }
+
+      const existingNames = new Set(conceptSets.value.map(set => set.name))
+      const baseName = `${source.name} (copy)`
+      let name = baseName
+      let copyNumber = 2
+      while (existingNames.has(name)) {
+        name = `${baseName} ${copyNumber++}`
+      }
+
+      const created = await createConceptSet({
+        name,
+        description: source.description,
+        items: source.items.map(item => ({ ...item })),
+      })
+      await fetchAll()
+      currentSet.value = created
+      editorOpen.value = true
+      return created
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to copy concept set'
+      logger.error('ConceptSetsStore', 'Copy concept set error', err)
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * Sync tags for a concept set: assign added tags and unassign removed tags.
    */
   async function syncTags(
@@ -1087,6 +1127,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     fetchOne,
     create,
     update,
+    copy,
     remove,
     syncTags,
     setFilter,

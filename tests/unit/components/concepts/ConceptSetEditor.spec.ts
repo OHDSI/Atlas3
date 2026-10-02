@@ -185,14 +185,6 @@ describe('ConceptSetEditor', () => {
     expect(createBtn).toBeTruthy()
   })
 
-  it('should display edit mode title when concept set has ID', () => {
-    const wrapper = mountComponent({ conceptSet: mockConceptSet })
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    // Should have delete button in edit mode
-    const deleteBtn = buttons.find(btn => btn.props('color') === 'error')
-    expect(deleteBtn).toBeTruthy()
-  })
-
   // Discussion #97: new concept sets open on the Search tab so the user can
   // start adding concepts immediately; existing sets open on Selected.
   it('opens new concept sets on the Search tab', async () => {
@@ -312,20 +304,6 @@ describe('ConceptSetEditor', () => {
     expect(accessDialog.props('subtitle')).toBe('Test Concept Set')
   })
 
-  it('should render delete button in edit mode', () => {
-    const wrapper = mountComponent({ conceptSet: mockConceptSet })
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const deleteBtn = buttons.find(btn => btn.text().includes('Delete'))
-    expect(deleteBtn).toBeTruthy()
-  })
-
-  it('should not render delete button in create mode', () => {
-    const wrapper = mountComponent({ conceptSet: { name: '', items: [] } })
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const deleteBtn = buttons.find(btn => btn.text().includes('Delete'))
-    expect(deleteBtn).toBeFalsy()
-  })
-
   it('should disable save button when form is invalid', async () => {
     const wrapper = mountComponent()
     await wrapper.vm.$nextTick()
@@ -384,42 +362,6 @@ describe('ConceptSetEditor', () => {
     await flushPromises()
 
     expect(createSpy).toHaveBeenCalled()
-  })
-
-  it('should emit delete when delete button is clicked and confirmed via the dialog', async () => {
-    const wrapper = mountComponent({ conceptSet: mockConceptSet })
-
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const deleteBtn = buttons.find(btn => btn.text().includes('Delete'))
-
-    expect(deleteBtn).toBeDefined()
-    await deleteBtn!.trigger('click')
-    // Native window.confirm has been replaced with a v-dialog, the
-    // click sets the dialog flag rather than emitting delete immediately.
-    expect((wrapper.vm as unknown as { showDeleteConfirm: boolean }).showDeleteConfirm).toBe(true)
-    expect(wrapper.emitted('delete')).toBeFalsy()
-
-    // Invoking the confirm handler emits the delete event.
-    ;(wrapper.vm as unknown as { confirmDelete: () => void }).confirmDelete()
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.emitted('delete')).toBeTruthy()
-    expect(wrapper.emitted('delete')![0]).toEqual([123])
-  })
-
-  it('should not emit delete when confirmation is cancelled via the dialog', async () => {
-    const wrapper = mountComponent({ conceptSet: mockConceptSet })
-
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const deleteBtn = buttons.find(btn => btn.text().includes('Delete'))
-
-    expect(deleteBtn).toBeDefined()
-    await deleteBtn!.trigger('click')
-    // Cancel by closing the dialog without invoking confirmDelete.
-    ;(wrapper.vm as unknown as { showDeleteConfirm: boolean }).showDeleteConfirm = false
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.emitted('delete')).toBeFalsy()
   })
 
   it('should open confirmation dialog when closing with unsaved changes', async () => {

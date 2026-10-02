@@ -29,7 +29,7 @@ vi.mock('@/composables/usePermissions', () => ({
 }))
 
 vi.mock('@/composables/useEntityAccess', () => ({
-  useEntityAccessFor: () => ({ canWrite: () => true }),
+  useEntityAccessFor: () => ({ canWrite: () => true, canDelete: () => true }),
 }))
 
 import ConceptSetList from '@/components/concepts/ConceptSetList.vue'

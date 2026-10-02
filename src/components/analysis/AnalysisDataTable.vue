@@ -78,25 +78,19 @@
     <template #[`item.actions`]="{ item }">
       <div class="analysis-data-table__row-actions">
         <AtlasIconButton
-          v-if="canOpenItem(item)"
-          icon="mdi-pencil"
-          v-bind="{ ariaLabel: t('configuration.tagManagement.edit', 'Edit').value }"
-          variant="text"
-          size="sm"
-          @click.stop="$emit('open', item)"
-        />
-        <AtlasIconButton
           v-if="enableCopy"
-          icon="mdi-content-copy"
+          title="Clone"
           v-bind="{ ariaLabel: t('common.copy', 'Copy').value }"
+          icon="mdi-content-copy"
           variant="text"
           size="sm"
           :disabled="!canCopyItem(item)"
           @click.stop="$emit('copy', item)"
         />
         <AtlasIconButton
-          icon="mdi-delete"
+          :title="t('common.delete', 'Delete').value"
           v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
+          icon="mdi-delete"
           variant="text"
           tone="danger"
           size="sm"
@@ -340,6 +334,9 @@ function formatUser(user: unknown): string {
 .analysis-data-table :deep(tbody tr:hover) .analysis-data-table__row-actions {
   opacity: 1;
 }
+.analysis-data-table :deep(tbody tr:focus-within) .analysis-data-table__row-actions {
+  opacity: 1;
+}
 
 .analysis-data-table__name-cell {
   display: flex;
@@ -386,9 +383,9 @@ function formatUser(user: unknown): string {
 
 .analysis-data-table__row-actions {
   display: flex;
-  gap: 2px;
+  gap: 8px;
   justify-content: flex-end;
-  opacity: 0.5;
+  opacity: 0;
   transition: opacity 120ms ease;
 }
 

@@ -93,23 +93,15 @@ test.describe('Concept Set list', () => {
     await editButton.click()
 
     await expect(page.getByTestId('cs-editor-primary-btn')).toBeVisible()
-    // Not getByTestId('conceptset-delete'): the source declares that testid
-    // but it never reaches the DOM (pre-existing bug the old tolerant test
-    // hid by skipping when the locator came up empty).
     await expect(
       page.locator('.cs-editor__actions').getByRole('button', { name: 'Delete', exact: true })
-    ).toBeVisible()
+    ).toHaveCount(0)
   })
 
   test('deletes a concept set after confirmation', async ({ page }) => {
-    const editButton = page
-      .locator('table tbody tr', { hasText: 'Test Concept Set 1' })
-      .locator('button[aria-label="Edit"]')
-    await expect(editButton).toBeEnabled()
-    await editButton.click()
     const deleteButton = page
-      .locator('.cs-editor__actions')
-      .getByRole('button', { name: 'Delete', exact: true })
+      .locator('table tbody tr', { hasText: 'Test Concept Set 1' })
+      .locator('button[aria-label="Delete"]')
     await expect(deleteButton).toBeEnabled()
     await deleteButton.click()
 
