@@ -47,7 +47,27 @@
       @update:facet="({ key, values }) => store.setFacet(key, values)"
       @update:result-filter="(v: string) => store.setResultFilter(v)"
       @clear="store.clearFacets()"
-    />
+    >
+      <template
+        v-if="recordCountSources.length > 0"
+        #append
+      >
+        <AtlasSelect
+          :model-value="effectiveRecordCountSource"
+          :items="recordCountSources"
+          item-title="sourceName"
+          item-value="sourceKey"
+          :label="viewCountsForLabel"
+          density="compact"
+          variant="outlined"
+          hide-details
+          :loading="store.loadingRecordCounts"
+          :menu-props="{ zIndex: 2300 }"
+          data-testid="record-count-source"
+          @update:model-value="(v: unknown) => store.setRecordCountSource(String(v))"
+        />
+      </template>
+    </ConceptFacetFilters>
 
     <ConceptAddOptions
       v-if="!store.isEmpty"
@@ -62,10 +82,10 @@
       v-model:selected="selected"
       :concepts="store.concepts"
       :loading="store.loading"
+      :loading-record-counts="store.loadingRecordCounts"
       :total-items="store.totalCount"
       :page="store.page"
       :items-per-page="store.itemsPerPage"
-      :show-add-button="true"
       :selectable="true"
       :concepts-in-set="conceptsInSet"
       @update:page="onPageChange"
@@ -79,10 +99,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { AtlasAlert, AtlasButton, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useWebAPIStore } from '@/stores/webapi'
+import { getSourceKey } from '@/config/webapi'
 import ConceptTable from './ConceptTable.vue'
 import ConceptFacetFilters from './ConceptFacetFilters.vue'
 import ConceptAddOptions from './ConceptAddOptions.vue'
@@ -96,6 +118,18 @@ const { t, tv } = useI18n()
 
 const store = useConceptSearchStore()
 const conceptSetsStore = useConceptSetsStore()
+const webapiStore = useWebAPIStore()
+
+const selectedSourceKey = computed(
+  () => webapiStore.getValidVocabularySource() || getSourceKey() || ''
+)
+const viewCountsForLabel = t('search.viewCountMessage', 'View record count for:')
+
+// Only sources that can report counts; a vocabulary-only source would blank the columns.
+const recordCountSources = computed(() => webapiStore.resultsSources ?? [])
+const effectiveRecordCountSource = computed(
+  () => store.recordCountSourceKey ?? selectedSourceKey.value
+)
 
 // ============================================================================
 // Emits

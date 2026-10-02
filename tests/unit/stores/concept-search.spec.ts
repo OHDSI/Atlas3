@@ -91,8 +91,8 @@ describe('Concept Search Store', () => {
       expect(store.error).toBeNull()
       expect(store.page).toBe(1)
       expect(store.itemsPerPage).toBe(25)
-      expect(store.sortBy).toBe('conceptId')
-      expect(store.sortDesc).toBe(false)
+      expect(store.sortBy).toBe('descendantRecordCount')
+      expect(store.sortDesc).toBe(true)
     })
 
     it('should have correct computed properties', () => {
@@ -259,6 +259,25 @@ describe('Concept Search Store', () => {
       })
       const store = useConceptSearchStore()
       await store.search('diabetes')
+    })
+
+    it('defaults to descendant record count descending', async () => {
+      const store = useConceptSearchStore()
+      vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
+        success: true,
+        data: mockConcepts,
+      })
+      vi.mocked(conceptSearchService.getConceptRecordCounts).mockResolvedValue(
+        new Map([
+          [201826, { recordCount: 0, descendantRecordCount: 100, personCount: 0, descendantPersonCount: 0 }],
+          [201820, { recordCount: 0, descendantRecordCount: 300, personCount: 0, descendantPersonCount: 0 }],
+          [4193704, { recordCount: 0, descendantRecordCount: 200, personCount: 0, descendantPersonCount: 0 }],
+        ])
+      )
+
+      await store.search('diabetes')
+
+      expect(store.concepts.map(c => c.conceptId)).toEqual([201820, 4193704, 201826])
     })
 
     it('should sort by concept name ascending', () => {

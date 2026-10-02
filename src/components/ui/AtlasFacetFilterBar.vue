@@ -1,6 +1,9 @@
 <template>
   <div class="facet-filter-bar">
-    <div class="facet-filter-bar__bar">
+    <div
+      class="facet-filter-bar__bar"
+      :class="{ 'facet-filter-bar__bar--with-append': $slots.append }"
+    >
       <AtlasTextField
         :model-value="resultFilter"
         :label="filterResultsLabel"
@@ -19,6 +22,7 @@
         :close-on-content-click="false"
         location="bottom end"
         offset="8"
+        :z-index="2201"
       >
         <template #activator="{ props: activatorProps }">
           <AtlasButton
@@ -72,11 +76,19 @@
               clearable
               variant="outlined"
               hide-details
+              :menu-props="{ zIndex: 2300 }"
               @update:model-value="(v) => onUpdate(facet.key, v as string[])"
             />
           </div>
         </AtlasCard>
       </AtlasMenu>
+
+      <div
+        v-if="$slots.append"
+        class="facet-filter-bar__append"
+      >
+        <slot name="append" />
+      </div>
     </div>
 
     <div
@@ -194,6 +206,16 @@ function removeValue(key: FacetKey, value: string) {
 .facet-filter-bar__text {
   max-width: 260px;
   flex: 1 1 200px;
+}
+
+.facet-filter-bar__bar--with-append .facet-filter-bar__text {
+  flex: 0 1 50%;
+  max-width: 50%;
+}
+
+.facet-filter-bar__append {
+  margin-inline-start: auto;
+  min-width: 240px;
 }
 
 .facet-filter-bar__count {

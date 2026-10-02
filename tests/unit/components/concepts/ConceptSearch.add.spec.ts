@@ -66,9 +66,9 @@ function mountSearch() {
 describe('ConceptSearch — add to concept set', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('passes show-add-button to the results table', () => {
+  it('does not show the per-row Add button column in the results table', () => {
     const wrapper = mountSearch()
-    expect(wrapper.findComponent(ConceptTable).props('showAddButton')).toBe(true)
+    expect(wrapper.findComponent(ConceptTable).props('showAddButton')).toBe(false)
   })
 
   it('first Add creates a new set, opens the editor, and adds the concept', async () => {

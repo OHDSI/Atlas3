@@ -6,56 +6,64 @@
     :title="pageTitle"
     :subtitle="pageSubtitle"
   >
-    <div class="concepts-view">
-      <nav class="page-tabs-rail concepts-view__tabs-rail">
-        <AtlasTabs
+    <div class="concepts-view-outer">
+      <div class="concepts-view">
+        <nav class="page-tabs-rail concepts-view__tabs-rail">
+          <AtlasTabs
+            v-model="activeTab"
+            align-tabs="start"
+            density="comfortable"
+            color="primary"
+            slider-color="primary"
+            bg-color="transparent"
+            class="page-tabs"
+          >
+            <AtlasTab value="sets">
+              <AtlasIcon
+                start
+                icon="mdi-shape"
+              />
+              {{ t('cs.browser.caption', 'Concept Sets') }}
+            </AtlasTab>
+            <AtlasTab value="search">
+              <AtlasIcon
+                start
+                icon="mdi-magnify"
+              />
+              {{ t('search.tabs.search', 'Concept Search') }}
+            </AtlasTab>
+          </AtlasTabs>
+        </nav>
+
+        <v-window
           v-model="activeTab"
-          align-tabs="start"
-          density="comfortable"
-          color="primary"
-          slider-color="primary"
-          bg-color="transparent"
-          class="page-tabs"
+          class="concepts-view__window"
         >
-          <AtlasTab value="sets">
-            <AtlasIcon
-              start
-              icon="mdi-shape"
-            />
-            {{ t('cs.browser.caption', 'Concept Sets') }}
-          </AtlasTab>
-          <AtlasTab value="search">
-            <AtlasIcon
-              start
-              icon="mdi-magnify"
-            />
-            {{ t('search.tabs.search', 'Concept Search') }}
-          </AtlasTab>
-        </AtlasTabs>
-      </nav>
+          <v-window-item value="sets">
+            <ConceptSetList />
+          </v-window-item>
 
-      <v-window v-model="activeTab">
-        <v-window-item value="sets">
-          <ConceptSetList />
-        </v-window-item>
+          <v-window-item
+            value="search"
+            class="concepts-view__search"
+          >
+            <ConceptSearch />
+          </v-window-item>
+        </v-window>
 
-        <v-window-item value="search">
-          <ConceptSearch />
-        </v-window-item>
-      </v-window>
-
-      <!-- Page-level concept set editor (overlays both tabs) -->
-      <ConceptSetEditor
-        v-if="conceptSetsStore.editorOpen"
-        :model-value="conceptSetsStore.editorOpen"
-        :concept-set="conceptSetsStore.currentSet"
-        @update:model-value="
-          value => {
-            if (!value) conceptSetsStore.closeEditor()
-          }
-        "
-        @save="onEditorSave"
-      />
+        <!-- Page-level concept set editor (overlays both tabs) -->
+        <ConceptSetEditor
+          v-if="conceptSetsStore.editorOpen"
+          :model-value="conceptSetsStore.editorOpen"
+          :concept-set="conceptSetsStore.currentSet"
+          @update:model-value="
+            value => {
+              if (!value) conceptSetsStore.closeEditor()
+            }
+          "
+          @save="onEditorSave"
+        />
+      </div>
     </div>
   </AtlasPageShell>
 </template>
@@ -116,10 +124,25 @@ watch(
 </script>
 
 <style scoped>
+.concepts-view-outer {
+  container-type: inline-size;
+  width: 100%;
+}
+
 .concepts-view {
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+}
+
+/* Search content breaks out of the 1400px column to 95% of the page; the tab rail is untouched. */
+.concepts-view__window {
+  overflow: visible;
+}
+
+.concepts-view__search {
+  width: max(100%, 95cqw);
+  margin-inline: min(0px, calc(50% - 47.5cqw));
 }
 
 /* The shared .page-tabs-rail provides padding + bottom border;

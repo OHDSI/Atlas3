@@ -33,8 +33,8 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
   const itemsPerPage = ref<number>(25)
 
   // Sorting state
-  const sortBy = ref<string | null>('conceptId')
-  const sortDesc = ref<boolean>(false)
+  const sortBy = ref<string | null>('descendantRecordCount')
+  const sortDesc = ref<boolean>(true)
 
   // Faceted filtering over the result columns (vocabulary, domain, etc.)
   const facets = useConceptFacets(allConcepts)

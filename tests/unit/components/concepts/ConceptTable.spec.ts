@@ -97,6 +97,14 @@ describe('ConceptTable', () => {
     expect(dataTable.exists()).toBe(true)
   })
 
+  it('defaults to descending descendant record count and requires a sort direction', () => {
+    const wrapper = mountComponent()
+    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
+
+    expect(dataTable.props('sortBy')).toEqual([{ key: 'descendantRecordCount', order: 'desc' }])
+    expect(dataTable.props('mustSort')).toBe(true)
+  })
+
   it('should display concepts in table', () => {
     const wrapper = mountComponent({ concepts: mockConcepts })
     const dataTable = wrapper.findComponent({ name: 'VDataTable' })
@@ -322,12 +330,12 @@ describe('ConceptTable', () => {
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const addButton = buttons.find(btn => btn.text().includes('Add'))
 
-    // Note: Items are sorted by conceptId ascending, so first item is mockConcepts[2] (192855)
+    // Items default to descendant record count descending, so the first row is mockConcepts[0] (313217).
     expect(addButton).toBeDefined()
     await addButton!.trigger('click')
 
     expect(wrapper.emitted('add-concept')).toBeTruthy()
-    expect(wrapper.emitted('add-concept')![0]).toEqual([mockConcepts[2]])
+    expect(wrapper.emitted('add-concept')![0]).toEqual([mockConcepts[0]])
   })
 
   it('should emit remove-concept when Remove button is clicked', async () => {

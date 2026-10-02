@@ -7,6 +7,7 @@
       :loading="loading"
       :items-per-page="itemsPerPage"
       :page="page"
+      must-sort
       hide-default-footer
       class="elevation-1"
     >
@@ -245,7 +246,7 @@ const instance = getCurrentInstance()
 // Local State
 // ============================================================================
 
-const sortBy = ref([{ key: 'conceptId', order: 'asc' as const }])
+const sortBy = ref([{ key: 'descendantRecordCount', order: 'desc' as const }])
 
 // ============================================================================
 // Props & Emits
