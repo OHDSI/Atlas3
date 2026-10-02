@@ -111,12 +111,23 @@
         <template #item.actions="{ item }">
           <div class="concept-set-list__actions">
             <AtlasIconButton
-              icon="mdi-pencil-outline"
-              v-bind="{ ariaLabel: 'Edit' }"
+              title="Clone"
+              v-bind="{ ariaLabel: t('common.duplicate', 'Clone').value }"
+              icon="mdi-content-copy"
               variant="text"
               size="sm"
-              :disabled="!access.canWrite(item.id)"
-              @click.stop="onEditClick(item.id)"
+              :disabled="!canCreate || store.loading"
+              @click.stop="onCopyClick(item.id)"
+            />
+            <AtlasIconButton
+              :title="t('common.delete', 'Delete').value"
+              v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
+              icon="mdi-delete-outline"
+              variant="text"
+              tone="danger"
+              size="sm"
+              :disabled="!access.canDelete(item.id) || store.loading"
+              @click.stop="onDeleteClick(item)"
             />
           </div>
         </template>
@@ -162,6 +173,32 @@
         {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set') }}
       </AtlasButton>
     </div>
+
+    <AtlasDialog
+      v-model="showDeleteDialog"
+      :eyebrow="t('common.confirm', 'Confirm').value"
+      :title="t('common.delete', 'Delete').value"
+      max-width="440"
+      @close="showDeleteDialog = false"
+    >
+      {{ t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete').value }}
+      "{{ selectedSet?.name }}"?
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showDeleteDialog = false"
+        >
+          {{ t('common.cancel', 'Cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          :loading="store.loading"
+          @click="confirmDelete"
+        >
+          {{ t('common.delete', 'Delete') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
   </div>
 </template>
 
@@ -175,7 +212,7 @@ import { formatDate, lastTouchedDate } from '@/utils/date-format'
 import { tagColor, tagContrastColor } from '@/utils/tag-color'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetFilters from './ConceptSetFilters.vue'
-import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
 import EntityImportButton from '@/components/shared/EntityImportButton.vue'
 import { importConceptSet } from '@/services/concept-set.service'
 
@@ -196,6 +233,8 @@ const store = useConceptSetsStore()
 
 const itemsPerPage = ref(25)
 const sortBy = ref([{ key: 'modifiedDate', order: 'desc' as const }])
+const showDeleteDialog = ref(false)
+const selectedSet = ref<ConceptSetListItem | null>(null)
 
 const countLabel = computed(() => {
   const n = store.filteredSets.length
@@ -254,9 +293,23 @@ function onAddClick() {
   store.openCreateEditor()
 }
 
-function onEditClick(id: number | string | undefined) {
+async function onCopyClick(id: number | string | undefined) {
   if (id !== undefined) {
-    store.openEditEditor(id)
+    await store.copy(id)
+  }
+}
+
+function onDeleteClick(set: ConceptSetListItem) {
+  selectedSet.value = set
+  showDeleteDialog.value = true
+}
+
+async function confirmDelete() {
+  if (!selectedSet.value?.id) return
+  const success = await store.remove(selectedSet.value.id)
+  if (success) {
+    showDeleteDialog.value = false
+    selectedSet.value = null
   }
 }
 
@@ -331,6 +384,7 @@ defineExpose({ importDesign, onImported })
  * during editing flows. */
 .concept-set-list__actions {
   display: flex;
+  gap: 8px;
   justify-content: center;
   opacity: 0;
   transition: opacity 120ms ease;

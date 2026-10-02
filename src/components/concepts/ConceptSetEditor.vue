@@ -131,17 +131,6 @@
               </AtlasTooltip>
 
               <AtlasButton
-                v-if="!embedded && isEditMode"
-                variant="ghost"
-                tone="danger"
-                :disabled="loading || !canDelete"
-                data-testid="conceptset-delete"
-                @click="onDelete"
-              >
-                {{ t('common.delete', 'Delete') }}
-              </AtlasButton>
-
-              <AtlasButton
                 v-if="embedded"
                 variant="ghost"
                 data-testid="cs-editor-cancel-btn"
@@ -718,34 +707,6 @@
     @overwrite="onOptimizeOverwrite"
     @create="onOptimizeCreate"
   />
-
-  <AtlasDialog
-    v-model="showDeleteConfirm"
-    :eyebrow="t('common.confirm', 'Confirm').value"
-    :title="`${t('common.delete', 'Delete').value} ${t('common.conceptSet', 'Concept Set').value}`"
-    max-width="440"
-    @close="showDeleteConfirm = false"
-  >
-    {{
-      t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete')
-        .value
-    }}
-    "{{ props.conceptSet?.name }}"?
-    <template #actions>
-      <AtlasButton
-        variant="ghost"
-        @click="showDeleteConfirm = false"
-      >
-        {{ t('common.cancel', 'Cancel').value }}
-      </AtlasButton>
-      <AtlasButton
-        variant="danger"
-        @click="confirmDelete"
-      >
-        {{ t('common.delete', 'Delete').value }}
-      </AtlasButton>
-    </template>
-  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
@@ -897,7 +858,6 @@ const versionCount = ref(0)
 // Confirmation dialog state — replaces native window.confirm calls
 // so close + delete confirmations match the rest of the app.
 const showCloseConfirm = ref(false)
-const showDeleteConfirm = ref(false)
 
 // Tag selection dialog state.
 const showTagsDialog = ref(false)
@@ -985,7 +945,7 @@ const conceptSetAccessId = computed<number | null>(() =>
   typeof props.conceptSet?.id === 'number' ? props.conceptSet.id : null
 )
 const { hasPermission } = usePermissions()
-const { canWrite, canDelete } = useEntityAccess('conceptSet', conceptSetId)
+const { canWrite } = useEntityAccess('conceptSet', conceptSetId)
 const canSubmit = computed<boolean>(() => {
   // Embedded sets carry cohort-local codeset ids; entity access on that id
   // would check an unrelated repository concept set. The cohort's own save
@@ -1283,18 +1243,6 @@ function onDrawerModelValueChange(value: boolean) {
 function confirmClose() {
   showCloseConfirm.value = false
   hasUnsavedChanges.value = false
-  emit('update:modelValue', false)
-}
-
-function onDelete() {
-  if (!props.conceptSet?.id) return
-  showDeleteConfirm.value = true
-}
-
-function confirmDelete() {
-  if (!props.conceptSet?.id) return
-  showDeleteConfirm.value = false
-  emit('delete', props.conceptSet.id)
   emit('update:modelValue', false)
 }
 

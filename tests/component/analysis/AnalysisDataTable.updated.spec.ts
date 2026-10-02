@@ -151,9 +151,8 @@ describe('AnalysisDataTable Updated column (#292)', () => {
     const actions = wrapper.findAll('.analysis-data-table__row-actions button')
     await actions[0]!.trigger('click')
     await actions[1]!.trigger('click')
-    await actions[2]!.trigger('click')
 
-    expect(wrapper.emitted('open')).toHaveLength(2)
+    expect(wrapper.emitted('open')).toHaveLength(1)
     expect(wrapper.emitted('copy')).toHaveLength(1)
     expect(wrapper.emitted('delete')).toHaveLength(1)
   })

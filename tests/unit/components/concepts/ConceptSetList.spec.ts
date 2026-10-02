@@ -205,30 +205,42 @@ describe('ConceptSetList', () => {
     expect(store.error).toBe(null)
   })
 
-  it('should open edit editor when edit button is clicked', async () => {
+  it('should duplicate a concept set when the duplicate button is clicked', async () => {
     const store = useConceptSetsStore()
-    // The real fetchAll() rejects against the unmocked HTTP layer and
-    // resets conceptSets to [] once it settles, racing the loading flag
-    // back to true and hiding the action-column buttons behind
-    // VDataTable's loading rows. Stub it so the seeded fixture below is
-    // what actually renders.
     vi.spyOn(store, 'fetchAll').mockResolvedValue()
-
+    const copySpy = vi.spyOn(store, 'copy').mockResolvedValue(null)
     const wrapper = mountComponent()
-
-    // filteredSets is a computed derived from conceptSets; assigning to it
-    // directly is a silent no-op, so seed the underlying source list instead.
     store.conceptSets = mockConceptSets
-    const openEditEditorSpy = vi.spyOn(store, 'openEditEditor')
-
     await wrapper.vm.$nextTick()
 
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const editButtons = buttons.filter(btn => btn.props('icon') === 'mdi-pencil-outline')
+    const copyButtons = wrapper
+      .findAllComponents({ name: 'VBtn' })
+      .filter(button => button.props('icon') === 'mdi-content-copy')
 
-    expect(editButtons.length).toBeGreaterThan(0)
-    await editButtons[0].trigger('click')
-    expect(openEditEditorSpy).toHaveBeenCalledWith(123)
+    expect(copyButtons).toHaveLength(2)
+    await copyButtons[0].trigger('click')
+    expect(copySpy).toHaveBeenCalledWith(123)
+  })
+
+  it('should delete a concept set after list confirmation', async () => {
+    const store = useConceptSetsStore()
+    vi.spyOn(store, 'fetchAll').mockResolvedValue()
+    const removeSpy = vi.spyOn(store, 'remove').mockResolvedValue(true)
+    const wrapper = mountComponent()
+    store.conceptSets = mockConceptSets
+    await wrapper.vm.$nextTick()
+
+    const deleteButtons = wrapper
+      .findAllComponents({ name: 'VBtn' })
+      .filter(button => button.props('icon') === 'mdi-delete-outline')
+
+    expect(deleteButtons).toHaveLength(2)
+    await deleteButtons[0].trigger('click')
+    expect((wrapper.vm as unknown as { showDeleteDialog: boolean }).showDeleteDialog).toBe(true)
+
+    await (wrapper.vm as unknown as { confirmDelete: () => Promise<void> }).confirmDelete()
+    expect(removeSpy).toHaveBeenCalledWith(123)
+    expect((wrapper.vm as unknown as { showDeleteDialog: boolean }).showDeleteDialog).toBe(false)
   })
 
   it('should format author name from object', async () => {

@@ -55,7 +55,6 @@
           }
         "
         @save="onEditorSave"
-        @delete="onEditorDelete"
       />
     </div>
   </AtlasPageShell>
@@ -101,13 +100,6 @@ provide('sourceKey', sourceKey)
 
 async function onEditorSave() {
   await conceptSetsStore.fetchAll()
-}
-
-async function onEditorDelete(id: number | string) {
-  await conceptSetsStore.remove(id)
-  // The editor also emits update:modelValue(false) on delete, which closes the
-  // drawer too; this explicit close is intentional, idempotent defense.
-  conceptSetsStore.closeEditor()
 }
 
 // Watch for tab changes and update URL. `immediate: true` syncs the URL to

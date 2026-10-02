@@ -77,57 +77,40 @@
 
       <AtlasSpacer />
 
-      <AtlasTooltip
-        :text="infoTooltip"
-        location="top"
-      >
-        <template #activator="{ props: tooltipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tooltipProps, ariaLabel: infoTooltip }"
-            icon="mdi-information-outline"
-            variant="text"
-            size="sm"
-            class="cohort-card__action-btn"
-            @click.stop="$emit('show-info', cohort)"
-          />
-        </template>
-      </AtlasTooltip>
+      <AtlasIconButton
+        :title="previewTooltip"
+        v-bind="{ ariaLabel: previewTooltip }"
+        icon="mdi-printer-outline"
+        variant="text"
+        size="sm"
+        class="cohort-card__action-btn"
+        @click.stop="$emit('show-info', cohort)"
+      />
 
-      <AtlasTooltip
-        :text="copyTooltip"
-        location="top"
-      >
-        <template #activator="{ props: tooltipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tooltipProps, ariaLabel: copyTooltip }"
-            icon="mdi-content-copy"
-            variant="text"
-            size="sm"
-            class="cohort-card__action-btn"
-            :disabled="!canCopy || copying"
-            :loading="copying"
-            data-testid="cohort-card-copy"
-            @click.stop="$emit('copy', cohort)"
-          />
-        </template>
-      </AtlasTooltip>
+      <AtlasIconButton
+        title="Clone"
+        v-bind="{ ariaLabel: copyTooltip }"
+        icon="mdi-content-copy"
+        variant="text"
+        size="sm"
+        class="cohort-card__action-btn"
+        :disabled="!canCopy || copying"
+        :loading="copying"
+        data-testid="cohort-card-copy"
+        @click.stop="$emit('copy', cohort)"
+      />
 
-      <AtlasTooltip
-        :text="deleteTooltipText"
-        location="top"
-      >
-        <template #activator="{ props: tooltipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tooltipProps, ariaLabel: deleteTooltip }"
-            icon="mdi-delete-outline"
-            variant="text"
-            size="sm"
-            class="cohort-card__action-btn"
-            :disabled="!canDelete"
-            @click.stop="$emit('delete', cohort)"
-          />
-        </template>
-      </AtlasTooltip>
+      <AtlasIconButton
+        :title="deleteTooltipText"
+        v-bind="{ ariaLabel: deleteTooltip }"
+        icon="mdi-delete-outline"
+        variant="text"
+        tone="danger"
+        size="sm"
+        class="cohort-card__action-btn"
+        :disabled="!canDelete"
+        @click.stop="$emit('delete', cohort)"
+      />
     </div>
   </AtlasCard>
 </template>
@@ -168,8 +151,8 @@ const idLabel = t('columns.id', 'ID')
 const byLabel = t('columns.author', 'Author')
 const createdLabel = t('columns.created', 'Created')
 const updatedOnLabel = t('columns.updated', 'Updated')
-const infoTooltip = t('common.cohortInformation', 'Cohort information')
-const copyTooltip = t('common.duplicate', 'Duplicate')
+const previewTooltip = t('common.preview', 'Preview')
+const copyTooltip = t('common.duplicate', 'Clone')
 const deleteTooltip = t('common.delete', 'Delete')
 const noPermissionTooltip = t('common.noPermission', 'You do not have permission for this action')
 const unknownLabel = t('common.anonymous', 'Unknown')
@@ -279,7 +262,7 @@ function handleCardClick() {
 .cohort-card__footer {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 8px 10px;
   border-top: 1px solid rgb(var(--v-theme-outline-variant, 224, 224, 224));
 }
@@ -296,7 +279,7 @@ function handleCardClick() {
 }
 
 .cohort-card__action-btn {
-  opacity: 0.7;
+  opacity: 0;
   transition: opacity 120ms ease;
 }
 .cohort-card:hover .cohort-card__action-btn,

@@ -384,6 +384,42 @@ describe('Concept Sets Store', () => {
     })
   })
 
+  describe('copy Action', () => {
+    it('should create a renamed copy and open it in the editor', async () => {
+      const store = useConceptSetsStore()
+      store.conceptSets = [
+        ...mockConceptSetList,
+        { id: 4, name: 'Diabetes Conditions (copy)' },
+      ]
+      const copiedSet = { ...mockConceptSet, id: 5, name: 'Diabetes Conditions (copy) 2' }
+      vi.mocked(getConceptSetById).mockResolvedValue(mockConceptSet)
+      vi.mocked(createConceptSet).mockResolvedValue(copiedSet)
+      vi.mocked(getAllConceptSets).mockResolvedValue([...store.conceptSets, copiedSet])
+
+      const result = await store.copy(1)
+
+      expect(createConceptSet).toHaveBeenCalledWith({
+        name: 'Diabetes Conditions (copy) 2',
+        description: undefined,
+        items: mockConceptSet.items,
+      })
+      expect(result).toEqual(copiedSet)
+      expect(store.currentSet).toEqual(copiedSet)
+      expect(store.editorOpen).toBe(true)
+    })
+
+    it('should handle a missing source concept set', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(getConceptSetById).mockResolvedValue(null)
+
+      const result = await store.copy(1)
+
+      expect(result).toBeNull()
+      expect(store.error).toBe('Concept set not found')
+      expect(createConceptSet).not.toHaveBeenCalled()
+    })
+  })
+
   describe('remove Action', () => {
     it('should delete a concept set', async () => {
       const store = useConceptSetsStore()

@@ -231,16 +231,18 @@
             <td class="cohort-table__col-actions">
               <div class="cohort-table__actions">
                 <AtlasIconButton
-                  icon="mdi-information-outline"
-                  v-bind="{ ariaLabel: t('common.cohortInformation', 'Cohort information').value }"
+                  :title="t('common.preview', 'Preview').value"
+                  v-bind="{ ariaLabel: t('common.preview', 'Preview').value }"
+                  icon="mdi-printer-outline"
                   variant="text"
                   size="sm"
-                  data-testid="cohort-table-info"
+                  data-testid="cohort-table-print-friendly"
                   @click.stop="$emit('show-info', cohort)"
                 />
                 <AtlasIconButton
+                  title="Clone"
+                  v-bind="{ ariaLabel: t('common.duplicate', 'Clone').value }"
                   icon="mdi-content-copy"
-                  v-bind="{ ariaLabel: t('common.duplicate', 'Duplicate').value }"
                   variant="text"
                   size="sm"
                   data-testid="cohort-table-copy"
@@ -249,9 +251,11 @@
                   @click.stop="$emit('copy', cohort)"
                 />
                 <AtlasIconButton
-                  icon="mdi-delete-outline"
+                  :title="t('common.delete', 'Delete').value"
                   v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
+                  icon="mdi-delete-outline"
                   variant="text"
+                  tone="danger"
                   size="sm"
                   data-testid="cohort-table-delete"
                   :disabled="!access.canDelete(cohort.id)"
@@ -468,7 +472,7 @@ function openCohort(cohort: CohortDefinitionSummary) {
 /* Hover-only action icons — keeps the long list reading as data first. */
 .cohort-table__actions {
   display: inline-flex;
-  gap: 0;
+  gap: 8px;
   opacity: 0;
   transition: opacity 120ms ease;
 }
