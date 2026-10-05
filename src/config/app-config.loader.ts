@@ -29,6 +29,9 @@ export async function loadAppConfig(): Promise<AppConfig> {
         ...defaultAppConfig,
         ...overrides,
         api: { ...defaultAppConfig.api, ...overrides.api },
+        // Merged, not replaced, so a config-local.json that sets only
+        // `apiKey` keeps the PHI-safe defaults for everything else.
+        analytics: { ...defaultAppConfig.analytics, ...overrides.analytics },
       }
     } else {
       // eslint-disable-next-line no-console -- runs before app bootstrap; logger not yet available

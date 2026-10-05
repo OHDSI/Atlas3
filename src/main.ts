@@ -21,6 +21,7 @@ import { initWebMcp } from './plugins/host/webmcp'
 import { tokenExpiryService } from './services/auth/tokenExpiry'
 import { configLoaderService } from './services/config-loader.service'
 import { loadAppConfig } from './config/app-config.loader'
+import { initTelemetry } from './services/analytics/telemetry'
 import { getAuthConfig } from './config/auth.config'
 import { logger } from './utils/logger'
 import '@/assets/styles/typography.css'
@@ -210,6 +211,10 @@ loadAppConfig()
     // Mount the app first so it's interactive. Everything below runs after the
     // mount, so nothing here may re-enter it.
     app.mount('#app')
+
+    // Browser telemetry. Resolves to a no-op unless config-local.json sets
+    // `analytics.provider`, and never rejects, so it cannot affect bootstrap.
+    void initTelemetry(router)
 
     // Setup token expiry watcher
     watch(
