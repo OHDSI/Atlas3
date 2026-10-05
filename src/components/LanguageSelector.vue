@@ -1,16 +1,23 @@
 <template>
   <AtlasMenu>
-    <template #activator="{ props }">
-      <AtlasIconButton
-        v-bind="props"
-        :loading="loading"
-        :disabled="loading"
-        variant="text"
-        icon="mdi-translate"
-        aria-label="Select language"
-        data-testid="language-selector"
-        @click.shift.exact="handleShiftClick"
-      />
+    <template #activator="{ props: menuProps }">
+      <AtlasTooltip
+        text="Select language"
+        location="bottom"
+      >
+        <template #activator="{ props: tooltipProps }">
+          <AtlasIconButton
+            v-bind="{ ...menuProps, ...tooltipProps }"
+            :loading="loading"
+            :disabled="loading"
+            variant="text"
+            icon="mdi-translate"
+            aria-label="Select language"
+            data-testid="language-selector"
+            @click.shift.exact="handleShiftClick"
+          />
+        </template>
+      </AtlasTooltip>
     </template>
 
     <AtlasList>
@@ -31,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
+import { AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasTooltip } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useLocaleStore } from '@/stores/locale'
 import { logger } from '@/utils/logger'

@@ -230,6 +230,16 @@ describe('NavBar', () => {
       })
       expect(configBtn).toBeDefined()
     })
+
+    it('renders the Jobs button without a jobs permission', () => {
+      vi.mocked(usePermissions).mockReturnValue({
+        ...mockPermissions,
+        hasAnyPermission: () => false,
+      })
+      const wrapper = mountComponent()
+      const jobsButton = wrapper.find('[data-testid="nav-jobs"]')
+      expect(jobsButton.exists()).toBe(true)
+    })
   })
 
   describe('Navigation Items', () => {

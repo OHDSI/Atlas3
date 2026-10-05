@@ -1,15 +1,22 @@
 <template>
   <AtlasMenu location="bottom end">
-    <template #activator="{ props }">
-      <AtlasIconButton
-        v-bind="props"
-        :icon="activeIcon"
-        variant="text"
-        size="sm"
-        density="compact"
-        :aria-label="t('theme.label', 'Theme').value"
-        data-testid="nav-theme-toggle"
-      />
+    <template #activator="{ props: menuProps }">
+      <AtlasTooltip
+        :text="t('theme.label', 'Theme').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tooltipProps }">
+          <AtlasIconButton
+            v-bind="{ ...menuProps, ...tooltipProps }"
+            :icon="activeIcon"
+            variant="text"
+            size="sm"
+            density="compact"
+            :aria-label="t('theme.label', 'Theme').value"
+            data-testid="nav-theme-toggle"
+          />
+        </template>
+      </AtlasTooltip>
     </template>
     <AtlasList>
       <AtlasListItem
@@ -32,7 +39,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
+import { AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasTooltip } from '@/components/ui'
 import { useThemeStore, type ThemeMode } from '@/stores/theme'
 import { useI18n } from '@/composables/useI18n'
 

@@ -6,20 +6,28 @@
     location="bottom end"
   >
     <template #activator="{ props: menuProps }">
-      <AtlasBadge
-        :content="store.unreadCount"
-        :model-value="store.unreadCount > 0"
-        color="error"
-        data-testid="notification-bell"
+      <AtlasTooltip
+        :text="t('components.notifications.heading', 'Notifications').value"
+        location="bottom"
       >
-        <AtlasIconButton
-          v-bind="menuProps"
-          icon="mdi-bell-outline"
-          :aria-label="t('components.notifications.bellAriaLabel', 'Notifications ({count} unread)', { count: store.unreadCount }).value"
-          variant="text"
-          size="sm"
-        />
-      </AtlasBadge>
+        <template #activator="{ props: tooltipProps }">
+          <AtlasBadge
+            v-bind="tooltipProps"
+            :content="store.unreadCount"
+            :model-value="store.unreadCount > 0"
+            color="error"
+            data-testid="notification-bell"
+          >
+            <AtlasIconButton
+              v-bind="menuProps"
+              icon="mdi-bell-outline"
+              :aria-label="t('components.notifications.bellAriaLabel', 'Notifications ({count} unread)', { count: store.unreadCount }).value"
+              variant="text"
+              size="sm"
+            />
+          </AtlasBadge>
+        </template>
+      </AtlasTooltip>
     </template>
 
     <div class="notification-inbox">
@@ -81,6 +89,7 @@ import AtlasBadge from '@/components/ui/AtlasBadge.vue'
 import AtlasIconButton from '@/components/ui/AtlasIconButton.vue'
 import AtlasButton from '@/components/ui/AtlasButton.vue'
 import AtlasFeedbackBody from '@/components/ui/AtlasFeedbackBody.vue'
+import AtlasTooltip from '@/components/ui/AtlasTooltip.vue'
 import { useNotifications } from '@/stores/notifications'
 import { useI18n } from '@/composables/useI18n'
 

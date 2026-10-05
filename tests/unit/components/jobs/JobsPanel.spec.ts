@@ -4,8 +4,8 @@
  * top-level nav entry).
  *
  * The component is a thin shell around JobsSection: the goal here is to
- * cover the script-side wiring (open/close, permission gating, window
- * resize), not to exercise Vuetify's drawer internals.
+ * cover the script-side wiring (open/close and window resize), not to
+ * exercise Vuetify's drawer internals.
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
@@ -24,12 +24,6 @@ vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../helpers/i18n-mock')
   return mockUseI18n
 })
-
-// Permission gate inside the panel reads from this composable.
-const hasPermission = vi.fn<(perm: string) => boolean>(() => true)
-vi.mock('@/composables/usePermissions', () => ({
-  usePermissions: () => ({ hasPermission }),
-}))
 
 // JobsSection itself has its own service-layer plumbing; stub it so the
 // drawer test stays focused on shell behavior.
@@ -63,8 +57,6 @@ describe('JobsPanel', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     ui = useUIStore()
-    hasPermission.mockClear()
-    hasPermission.mockReturnValue(true)
     vi.spyOn(console, 'warn').mockImplementation(() => {})
   })
 
@@ -73,18 +65,9 @@ describe('JobsPanel', () => {
     vi.restoreAllMocks()
   })
 
-  it('renders the JobsSection when the user has job:execution:get', () => {
+  it('renders the JobsSection for every user', () => {
     wrapper = mountPanel()
     expect(wrapper.find('[data-testid="jobs-section-stub"]').exists()).toBe(true)
-    expect(hasPermission).toHaveBeenCalledWith('job:execution:get')
-  })
-
-  it('renders a no-access alert when the user lacks the jobs permission', () => {
-    hasPermission.mockImplementation(() => false)
-    wrapper = mountPanel()
-    expect(wrapper.find('[data-testid="jobs-section-stub"]').exists()).toBe(false)
-    // The i18n mock returns the fallback text passed to `t(key, fallback)`.
-    expect(wrapper.text()).toContain("You don't have access to the jobs panel.")
   })
 
   it('reflects ui store state via the computed isOpen getter/setter', async () => {
