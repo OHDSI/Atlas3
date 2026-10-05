@@ -19,7 +19,14 @@
     @update:facet="payload => emit('update:facet', payload)"
     @update:result-filter="value => emit('update:resultFilter', value)"
     @clear="emit('clear')"
-  />
+  >
+    <template
+      v-if="$slots.append"
+      #append
+    >
+      <slot name="append" />
+    </template>
+  </AtlasFacetFilterBar>
 </template>
 
 <script setup lang="ts">
