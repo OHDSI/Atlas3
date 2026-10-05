@@ -9,5 +9,14 @@
       "icon": "mdi-database",
       "isUseCredentialsForm": true
     }
-  ]
+  ],
+  "analytics": {
+    "provider": "${ANALYTICS_PROVIDER}",
+    "endpoint": "${OTLP_ENDPOINT}",
+    "sampleRatio": ${OTEL_SAMPLE_RATIO},
+    "traceApiCalls": true,
+    "traceDocumentLoad": true,
+    "identifyUsers": true,
+    "scrubUrlQueryStrings": true
+  }
 }

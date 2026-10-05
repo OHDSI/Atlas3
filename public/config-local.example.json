@@ -30,5 +30,20 @@
   "enablePersonCount": true,
   "enableTaggingSection": false,
   "defaultLocale": "en",
-  "pollInterval": 60000
+  "pollInterval": 60000,
+  "analytics": {
+    "$comment": [
+      "Browser telemetry via OpenTelemetry. Omit the whole block to send nothing.",
+      "Spans go to the same collector as the WebAPI Java agent, so nothing leaves the deployment. endpoint is same-origin by default (Caddy proxies /otlp to the gateway), which avoids CORS and keeps the collector off any public port.",
+      "scrubUrlQueryStrings is ON whenever omitted and is only disabled by a literal false. Atlas puts free-text concept searches and filter values in query strings, so switching it off is a deliberate act with a privacy review behind it.",
+      "Unlike DOM-autocapture analytics, OTel never reads element text, so cohort and concept names cannot leak through page content."
+    ],
+    "provider": "otlp",
+    "endpoint": "/otlp",
+    "sampleRatio": 1,
+    "traceApiCalls": true,
+    "traceDocumentLoad": true,
+    "identifyUsers": true,
+    "scrubUrlQueryStrings": true
+  }
 }
