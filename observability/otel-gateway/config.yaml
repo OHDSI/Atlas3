@@ -1,0 +1,106 @@
+# Telemetry gateway in front of SigNoz, fed by two producers: the WebAPI Java
+# agent (OTLP/gRPC, direct) and Atlas's browser SDK (OTLP/HTTP, proxied by
+# Caddy at /otlp so the collector needs no public port).
+#
+# Two things belong here rather than in WebAPI:
+#   1. severity filtering — the Java agent has no level threshold, and adding
+#      one would mean editing WebAPI's logback.xml
+#   2. a scrub pass — defence in depth behind the agent's SQL sanitizer, so a
+#      future agent upgrade or instrumentation change cannot start forwarding
+#      values on its own
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 75
+    spike_limit_percentage: 20
+
+  # WARN and above only. UNSPECIFIED (0) is kept rather than dropped: an
+  # unlabelled record is more likely a mapping gap than something to discard.
+  filter/warn_and_above:
+    error_mode: ignore
+    logs:
+      log_record:
+        - severity_number != SEVERITY_NUMBER_UNSPECIFIED and severity_number < SEVERITY_NUMBER_WARN
+
+  # The compose healthcheck hits /WebAPI/info every 10s. Left in, it is the
+  # large majority of spans on an idle dev stack and buries real traffic.
+  filter/drop_health_probes:
+    error_mode: ignore
+    traces:
+      span:
+        - attributes["url.path"] == "/WebAPI/info"
+        - attributes["http.target"] == "/WebAPI/info"
+
+  # PHI scrub. Atlas puts concept searches and filter values in query strings,
+  # so query strings never leave this hop, on spans or logs.
+  transform/scrub:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          - delete_key(attributes, "url.query")
+          # http.target is path+query with nothing worth keeping once the
+          # query is gone; browser spans are the ones that set it.
+          - delete_key(attributes, "http.target")
+          - replace_pattern(attributes["url.full"], "\\?.*$", "")
+          - replace_pattern(attributes["http.url"], "\\?.*$", "")
+          # Belt-and-braces: these only exist if someone enables the agent's
+          # capture-query-parameters option, which the overlay pins to false.
+          - delete_matching_keys(attributes, "^db\\.query\\.parameter\\.")
+          - delete_key(attributes, "http.request.header.authorization")
+          - delete_key(attributes, "http.request.header.cookie")
+    log_statements:
+      - context: log
+        statements:
+          - delete_key(attributes, "url.query")
+
+  batch:
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+    timeout: 5s
+
+exporters:
+  otlp/signoz:
+    endpoint: ${env:SIGNOZ_OTLP_ENDPOINT}
+    tls:
+      # Plaintext on the shared docker network. Use real TLS if SigNoz is
+      # reached over anything wider than that.
+      insecure: true
+    retry_on_failure:
+      enabled: true
+    sending_queue:
+      enabled: true
+      # Buffers a SigNoz restart instead of dropping telemetry.
+      queue_size: 2000
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions: [health_check]
+  telemetry:
+    logs:
+      level: info
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, filter/drop_health_probes, transform/scrub, batch]
+      exporters: [otlp/signoz]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlp/signoz]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, filter/warn_and_above, transform/scrub, batch]
+      exporters: [otlp/signoz]
