@@ -8,6 +8,22 @@
 		reverse_proxy {$WEBAPI_HOST:atlas3-webapi}:{$WEBAPI_PORT:8080}
 	}
 
+	# OTLP ingest for browser telemetry.
+	#
+	# Same-origin, so no CORS and no public port on the collector: the gateway
+	# publishes nothing, and only Caddy can reach it. Browser spans join the
+	# WebAPI agent's spans in the same SigNoz instance.
+	#
+	# Inert when telemetry is off: nothing requests this path.
+	#
+	# Note this is a publicly writable ingest path — inherent to any client-side
+	# telemetry, since the browser must be able to post. Put a rate limit in
+	# front of it if Atlas is internet-facing.
+	handle /otlp/* {
+		uri strip_prefix /otlp
+		reverse_proxy {$OTEL_GATEWAY_HOST:atlas3-otel-gateway}:{$OTEL_GATEWAY_PORT:4318}
+	}
+
 	handle /atlas/* {
 		root * /srv
 		try_files {path} /atlas/index.html

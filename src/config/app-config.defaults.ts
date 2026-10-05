@@ -16,4 +16,16 @@ export const defaultAppConfig: AppConfig = {
   enableTaggingSection: false,
   defaultLocale: 'en',
   pollInterval: 60000,
+  // Telemetry is opt-in: a deployment that never writes an `analytics` block
+  // into config-local.json sends nothing and never fetches the SDK chunk.
+  analytics: {
+    provider: 'none',
+    endpoint: '/otlp',
+    sampleRatio: 1,
+    traceApiCalls: true,
+    traceDocumentLoad: true,
+    identifyUsers: true,
+    // Safe side of the switch. Flipping it requires a literal `false`.
+    scrubUrlQueryStrings: true,
+  },
 }
