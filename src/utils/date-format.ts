@@ -3,13 +3,10 @@
  * Format dates for display in UI
  */
 
+import { format } from 'date-fns'
+
 import { logger } from '@/utils/logger'
 
-/**
- * Format ISO 8601 date string or timestamp to MM/DD/YYYY format
- * @param isoDate ISO 8601 date string or Unix timestamp (milliseconds)
- * @returns Formatted date string or "Invalid Date" if parsing fails
- */
 /**
  * The moment an asset was last touched, for both sorting and display.
  *
@@ -26,6 +23,12 @@ export function lastTouchedDate(entity: {
   return entity.modifiedDate ?? entity.createdDate ?? undefined
 }
 
+/**
+ * Format ISO 8601 date string or timestamp to MM/DD/YYYY in the viewer's
+ * timezone.
+ * @param isoDate ISO 8601 date string or Unix timestamp (milliseconds)
+ * @returns Formatted date string, or an em dash for missing/invalid input
+ */
 export function formatDate(isoDate: string | number | undefined | null): string {
   if (!isoDate) {
     return '—' // em dash for missing dates
@@ -39,11 +42,14 @@ export function formatDate(isoDate: string | number | undefined | null): string 
       return '—' // em dash for invalid dates
     }
 
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
-    const day = String(date.getUTCDate()).padStart(2, '0')
-    const year = date.getUTCFullYear()
-
-    return `${month}/${day}/${year}`
+    // Rendered in the viewer's timezone, not UTC. These are WebAPI
+    // created/modified instants shown to an operator, so the calendar day that
+    // matters is theirs: an asset saved at 22:00 UTC reads as the next day in
+    // Tokyo, and showing the UTC day would put it one off. It also keeps this
+    // consistent with `formatDateLocalized` in utils/format.ts, which goes
+    // through Intl and has always been local — the two disagreeing about the
+    // same instant is what made this a bug rather than a preference.
+    return format(date, 'MM/dd/yyyy')
   } catch (error) {
     logger.error('DateFormat', 'Date formatting error', error)
     return '—' // em dash for error cases
