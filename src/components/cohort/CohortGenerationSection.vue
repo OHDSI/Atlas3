@@ -72,6 +72,7 @@ import AtlasSwitch from '@/components/ui/AtlasSwitch.vue'
 import type { AtlasChipTone } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { ValidationStatus } from '@/composables/useCohortValidation'
+import { trackAction } from '@/services/analytics/telemetry'
 import { useWebAPIStore } from '@/stores/webapi'
 import AtlasCollapsibleSection from '@/components/ui/AtlasCollapsibleSection.vue'
 import CohortReportDrawer from './CohortReportDrawer.vue'
@@ -235,6 +236,14 @@ const generateDisabledReason = computed(() => {
 
 async function onRun(sourceKey: string) {
   if (props.cohortId === null || generateBlocked.value) return
+  trackAction('cohort.generate', {
+    'cohort.id': props.cohortId,
+    // Numeric source id rather than the key string: lower cardinality and
+    // nothing deployment-specific leaks into the attribute.
+    'source.id': sources.value.find(s => s.sourceKey === sourceKey)?.sourceId,
+    'cohort.critical_count': props.criticalCount,
+    'cohort.validation_status': props.validationStatus,
+  })
   try {
     await webapiStore.generateCohort(props.cohortId, sourceKey)
   } catch (error) {
