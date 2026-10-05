@@ -362,6 +362,39 @@ describe('Concept Search Store', () => {
     })
   })
 
+  describe('Record count source', () => {
+    it('resets to the first page when the result filter changes', async () => {
+      vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
+        success: true,
+        data: mockConcepts,
+      })
+      const store = useConceptSearchStore()
+      await store.search('diabetes')
+      store.updatePagination(2, 1)
+
+      store.setResultFilter('metformin')
+      await Promise.resolve()
+
+      expect(store.page).toBe(1)
+    })
+
+    it('keeps the results and surfaces an error when the counts cannot be loaded', async () => {
+      vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
+        success: true,
+        data: mockConcepts,
+      })
+      const store = useConceptSearchStore()
+      await store.search('diabetes')
+      vi.mocked(conceptSearchService.getConceptRecordCounts).mockRejectedValueOnce(new Error('down'))
+
+      await store.setRecordCountSource('OTHER')
+
+      expect(store.recordCountSourceKey).toBe('OTHER')
+      expect(store.error).toBe('Failed to load record counts for the selected source.')
+      expect(store.allConcepts).toHaveLength(3)
+    })
+  })
+
   describe('Pagination', () => {
     beforeEach(async () => {
       const manyConcepts = Array.from({ length: 100 }, (_, i) => ({

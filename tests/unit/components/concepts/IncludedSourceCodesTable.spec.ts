@@ -1,11 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import IncludedSourceCodesTable from '@/components/concepts/IncludedSourceCodesTable.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useWebAPIStore } from '@/stores/webapi'
+import { getConceptRecordCounts } from '@/services/concept-search.service'
 
 vi.mock('@/composables/useI18n', () => ({
   useI18n: () => ({ t: (_k: string, fallback: string) => ({ value: fallback }) }),
+}))
+
+vi.mock('@/services/concept-search.service', () => ({
+  getConceptRecordCounts: vi.fn().mockResolvedValue(new Map()),
 }))
 
 const stubs = {
@@ -313,5 +319,120 @@ describe('IncludedSourceCodesTable multi-select (#224)', () => {
     await wrapper.vm.$nextTick()
     const [concepts] = wrapper.emitted('add-concepts')![0] as [Array<{ conceptId: number }>]
     expect(concepts.map(c => c.conceptId)).toEqual([1])
+  })
+
+  it('unchecks a row and clears select-all for the visible rows', async () => {
+    seed([code(1), code(2)])
+    const wrapper = makeWrapper()
+
+    await wrapper.get('[data-testid="included-source-codes-select-all"] input').setValue(true)
+    expect(addOptions(wrapper).props('selectedCount')).toBe(2)
+
+    await wrapper.get('[data-testid="included-source-codes-row-checkbox-1"] input').setValue(false)
+    expect(addOptions(wrapper).props('selectedCount')).toBe(1)
+
+    await wrapper.get('[data-testid="included-source-codes-select-all"] input').setValue(true)
+    expect(addOptions(wrapper).props('selectedCount')).toBe(2)
+
+    await wrapper.get('[data-testid="included-source-codes-select-all"] input').setValue(false)
+    expect(addOptions(wrapper).props('selectedCount')).toBe(0)
+  })
+})
+
+describe('IncludedSourceCodesTable record counts', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.spyOn(useConceptSetsStore(), 'resolveSourceCodes').mockResolvedValue()
+    vi.mocked(getConceptRecordCounts).mockReset().mockResolvedValue(new Map())
+  })
+
+  const row = {
+    conceptId: 1,
+    conceptName: 'Code 1',
+    conceptCode: 'C1',
+    domainId: 'Condition',
+    vocabularyId: 'ICD10CM',
+    conceptClassId: 'ICD10 code',
+    standardConcept: null,
+    invalidReason: null,
+  }
+
+  // Renders the slots the shared stub leaves out: name link and the count cells.
+  const richTable = {
+    name: 'AtlasDataTable',
+    props: { items: { type: Array, default: () => [] }, sortBy: { type: Array, default: () => [] }, mustSort: Boolean },
+    template:
+      '<table><tbody><tr v-for="i in items" :key="i.conceptId"><td><slot name="item.conceptName" :item="i" /></td><td class="rc"><slot name="item.recordCount" :item="i" /></td><td class="drc"><slot name="item.descendantRecordCount" :item="i" /></td></tr></tbody></table>',
+  }
+
+  const picker = {
+    name: 'AtlasSelect',
+    props: ['modelValue', 'items'],
+    emits: ['update:modelValue'],
+    template: '<select class="stub-picker" />',
+  }
+
+  const progress = { name: 'AtlasProgressCircular', template: '<i class="stub-progress" />' }
+
+  function mountRich(props: Record<string, unknown> = {}) {
+    useConceptSetsStore().sourceCodeItems = [row] as never
+    return mount(IncludedSourceCodesTable, {
+      props: { active: true, sourceKey: 'SYNPUF1K', ...props },
+      global: {
+        stubs: {
+          ...stubs,
+          AtlasDataTable: richTable,
+          AtlasSelect: picker,
+          AtlasProgressCircular: progress,
+          ConceptFacetFilters: { template: '<div><slot name="append" /></div>' },
+        },
+      },
+    })
+  }
+
+  it('links the name to the concept detail when a source key is present', async () => {
+    const wrapper = mountRich()
+    await wrapper.get('[data-testid="source-code-name-link-1"]').trigger('click')
+
+    expect(wrapper.emitted('view-concept')).toEqual([[{ conceptId: 1, sourceKey: 'SYNPUF1K' }]])
+  })
+
+  it('renders the name as plain text without a source key', () => {
+    const wrapper = mountRich({ sourceKey: undefined })
+
+    expect(wrapper.find('[data-testid="source-code-name-link-1"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Code 1')
+  })
+
+  it('sorts by descendant record count and requires a direction', () => {
+    const table = mountRich().findComponent({ name: 'AtlasDataTable' })
+
+    expect(table.props('sortBy')).toEqual([{ key: 'descendantRecordCount', order: 'desc' }])
+    expect(table.props('mustSort')).toBe(true)
+  })
+
+  it('offers a record count source picker and shows the fetched counts', async () => {
+    useWebAPIStore().sources = [
+      { sourceKey: 'RES', sourceName: 'Results', daimons: [{ daimonType: 'Results' }] },
+    ] as never
+    vi.mocked(getConceptRecordCounts).mockResolvedValue(
+      new Map([[1, { recordCount: 1234, descendantRecordCount: 5678, personCount: 1, descendantPersonCount: 2 }]])
+    )
+    const wrapper = mountRich()
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'AtlasSelect' }).vm.$emit('update:modelValue', 'RES')
+    await flushPromises()
+    expect(getConceptRecordCounts).toHaveBeenLastCalledWith('RES', [1])
+    expect(wrapper.find('.rc').text()).toMatch(/^1.?234$/)
+    expect(wrapper.find('.drc').text()).toMatch(/^5.?678$/)
+  })
+
+  it('shows a spinner in the count cells while the counts load', async () => {
+    vi.mocked(getConceptRecordCounts).mockReturnValue(new Promise(() => {}))
+    const wrapper = mountRich()
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.rc .stub-progress').exists()).toBe(true)
   })
 })

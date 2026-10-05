@@ -31,7 +31,27 @@
       @update:facet="({ key, values }) => setFacet(key, values)"
       @update:result-filter="setTextFilter"
       @clear="clearFilters()"
-    />
+    >
+      <template
+        v-if="recordCountSources.length > 0"
+        #append
+      >
+        <AtlasSelect
+          :model-value="effectiveRecordCountSource"
+          :items="recordCountSources"
+          item-title="sourceName"
+          item-value="sourceKey"
+          :label="viewCountsForLabel"
+          density="compact"
+          variant="outlined"
+          hide-details
+          :loading="loadingRecordCounts"
+          :menu-props="{ zIndex: 2300 }"
+          data-testid="included-record-count-source"
+          @update:model-value="(v: unknown) => setRecordCountSource(String(v))"
+        />
+      </template>
+    </ConceptFacetFilters>
 
     <!-- These rows are the resolved expansion of the expression, not its items,
          so the way to drop one is to add an item excluding it (#224). -->
@@ -53,6 +73,7 @@
         :headers="headers"
         :items="visibleConcepts"
         :loading="loading"
+        must-sort
         multi-sort
         hover
         class="included-concepts-table__table"
@@ -144,6 +165,23 @@
           </AtlasChip>
         </template>
 
+        <template
+          v-for="key in COUNT_KEYS"
+          :key="key"
+          #[`item.${key}`]="{ item }"
+        >
+          <div class="d-flex align-center justify-end">
+            <AtlasProgressCircular
+              v-if="loadingRecordCounts && item[key] === undefined"
+              indeterminate
+              size="16"
+              width="2"
+              color="primary"
+            />
+            <span v-else>{{ formatCount(item[key]) }}</span>
+          </div>
+        </template>
+
         <template #no-data>
           <div class="included-concepts-table__no-match">
             <p class="included-concepts-table__no-match-text">
@@ -198,11 +236,14 @@ import {
   AtlasChip,
   AtlasDataTable,
   AtlasIcon,
+  AtlasProgressCircular,
+  AtlasSelect,
   AtlasSkeleton,
 } from '@/components/ui'
 import ConceptFacetFilters from './ConceptFacetFilters.vue'
 import ConceptAddOptions from './ConceptAddOptions.vue'
 import { CONCEPT_FACETS, useConceptFacets } from '@/composables/useConceptFacets'
+import { useConceptRecordCounts } from '@/composables/useConceptRecordCounts'
 import { getDomainColor } from '@/utils/domain-colors'
 import { useThemeStore } from '@/stores/theme'
 
@@ -266,7 +307,28 @@ function onAddSelected() {
   selected.value = []
 }
 
-const sortBy = ref([{ key: 'conceptId', order: 'asc' as const }])
+const sortBy = ref([{ key: 'descendantRecordCount', order: 'desc' as const }])
+
+const COUNT_KEYS = [
+  'recordCount',
+  'descendantRecordCount',
+  'personCount',
+  'descendantPersonCount',
+] as const
+
+function formatCount(count: number | undefined): string {
+  return count === undefined ? '-' : count.toLocaleString()
+}
+
+const {
+  conceptsWithCounts,
+  loading: loadingRecordCounts,
+  sources: recordCountSources,
+  effectiveSourceKey: effectiveRecordCountSource,
+  setSource: setRecordCountSource,
+} = useConceptRecordCounts(toRef(props, 'items'))
+
+const viewCountsForLabel = t('search.viewCountMessage', 'View record count for:')
 
 /**
  * The footer's rows-per-page control only works when the caller round-trips the
@@ -292,7 +354,7 @@ const {
   setFacet,
   setTextFilter,
   clearFilters,
-} = useConceptFacets(toRef(props, 'items'), facets)
+} = useConceptFacets(conceptsWithCounts, facets)
 
 const headers = [
   { title: '', key: 'select', sortable: false, width: '48px' },
@@ -303,6 +365,10 @@ const headers = [
   { title: t('columns.vocabulary', 'Vocabulary').value, key: 'vocabularyId', sortable: true, width: '120px' },
   { title: t('columns.type', 'Type').value, key: 'standardConcept', sortable: true, width: '120px' },
   { title: t('columns.validity', 'Validity').value, key: 'invalidReason', sortable: true, width: '90px' },
+  { title: t('columns.rcTooltip', 'RC').value, key: 'recordCount', sortable: true, width: '100px', align: 'end' as const },
+  { title: t('columns.drcTooltip', 'DRC').value, key: 'descendantRecordCount', sortable: true, width: '100px', align: 'end' as const },
+  { title: t('columns.pcTooltip', 'PC').value, key: 'personCount', sortable: true, width: '100px', align: 'end' as const },
+  { title: t('columns.dpcTooltip', 'DPC').value, key: 'descendantPersonCount', sortable: true, width: '100px', align: 'end' as const },
 ]
 
 const emptyMessage = computed(() => {
