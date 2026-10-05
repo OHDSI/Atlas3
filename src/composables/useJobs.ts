@@ -7,8 +7,6 @@
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useJobsStore } from '@/stores/jobs'
-import { useAuthStore } from '@/stores/auth'
-import { permissionChecker } from '@/services/auth/permissionChecker'
 import {
   type Job,
   type JobStatusFilter,
@@ -19,25 +17,9 @@ import {
   formatDuration,
 } from '@/models/jobs.types'
 
-/**
- * Permission string for reading job executions. The store hits
- * `GET /job/execution?comprehensivePage=true`, which Apache Shiro maps to
- * `job:execution:get`. The earlier `job:*:get` wildcard form was never
- * registered server-side, so it always resolved to false.
- */
-const JOBS_READ_PERMISSION = 'job:execution:get'
-
 export function useJobs() {
   const jobsStore = useJobsStore()
-  const authStore = useAuthStore()
   const router = useRouter()
-
-  /**
-   * Check if user has permission to read jobs
-   */
-  const canReadJobs = computed(() => {
-    return permissionChecker.hasPermission(JOBS_READ_PERMISSION, authStore.permissions).granted
-  })
 
   // Computed properties from store
   const jobs = computed(() => jobsStore.jobs)
@@ -157,9 +139,6 @@ export function useJobs() {
   }
 
   return {
-    // Permissions
-    canReadJobs,
-
     // State
     jobs,
     filteredJobs,

@@ -42,7 +42,6 @@ vi.mock('@/utils/logger', () => ({
 
 import { useJobs } from '@/composables/useJobs'
 import { useJobsStore } from '@/stores/jobs'
-import { useAuthStore } from '@/stores/auth'
 import type { Job } from '@/models/jobs.types'
 
 function makeJob(overrides: Partial<Job> = {}): Job {
@@ -120,22 +119,6 @@ describe('useJobs', () => {
       const { pollingEnabled, statusFilter } = useJobs()
       expect(pollingEnabled.value).toBe(true)
       expect(statusFilter.value).toBe('failed')
-    })
-  })
-
-  describe('canReadJobs', () => {
-    it('returns true when permission is granted', () => {
-      const auth = useAuthStore()
-      auth.permissions = { job: ['job:*:get'] } as never
-      const { canReadJobs } = useJobs()
-      expect(canReadJobs.value).toBe(true)
-    })
-
-    it('returns false when permission is missing', () => {
-      const auth = useAuthStore()
-      auth.permissions = {} as never
-      const { canReadJobs } = useJobs()
-      expect(canReadJobs.value).toBe(false)
     })
   })
 

@@ -126,39 +126,62 @@
         />
 
         <!-- Docs (user manual) -->
-        <AtlasIconButton
-          icon="mdi-book-open-page-variant-outline"
-          v-bind="{ ariaLabel: t('navigation.docs', 'User manual').value }"
-          variant="text"
-          size="sm"
-          data-testid="nav-docs"
-          @click="handleDocsClick"
-        />
+        <AtlasTooltip
+          :text="t('navigation.docs', 'User manual').value"
+          location="bottom"
+        >
+          <template #activator="{ props: tooltipProps }">
+            <AtlasIconButton
+              v-bind="tooltipProps"
+              icon="mdi-book-open-page-variant-outline"
+              :aria-label="t('navigation.docs', 'User manual').value"
+              variant="text"
+              size="sm"
+              data-testid="nav-docs"
+              @click="handleDocsClick"
+            />
+          </template>
+        </AtlasTooltip>
 
         <!-- Notifications bell + inbox -->
         <NotificationInbox />
 
         <!-- Jobs Panel Icon: separate side drawer, sits left of the cog. -->
-        <AtlasIconButton
-          v-if="hasJobsAccess"
-          icon="mdi-briefcase-clock-outline"
-          v-bind="{ ariaLabel: t('jobs.openPanel', 'Open jobs panel').value }"
-          variant="text"
-          size="sm"
-          data-testid="nav-jobs"
-          @click="handleJobsClick"
-        />
+        <AtlasTooltip
+          :text="t('jobs.openPanel', 'Open jobs panel').value"
+          location="bottom"
+        >
+          <template #activator="{ props: tooltipProps }">
+            <AtlasIconButton
+              v-bind="tooltipProps"
+              icon="mdi-briefcase-clock-outline"
+              :aria-label="t('jobs.openPanel', 'Open jobs panel').value"
+              variant="text"
+              size="sm"
+              data-testid="nav-jobs"
+              @click="handleJobsClick"
+            />
+          </template>
+        </AtlasTooltip>
 
         <!-- Configuration Panel Icon: hidden when user has no admin perms -->
-        <AtlasIconButton
+        <AtlasTooltip
           v-if="showConfigButton && hasAnyAdminAccess"
-          icon="mdi-cog"
-          v-bind="{ ariaLabel: t('config.accessibility.openPanel', 'Open configuration panel').value }"
-          variant="text"
-          size="sm"
-          data-testid="nav-config"
-          @click="handleConfigClick"
-        />
+          :text="t('config.accessibility.openPanel', 'Open configuration panel').value"
+          location="bottom"
+        >
+          <template #activator="{ props: tooltipProps }">
+            <AtlasIconButton
+              v-bind="tooltipProps"
+              icon="mdi-cog"
+              :aria-label="t('config.accessibility.openPanel', 'Open configuration panel').value"
+              variant="text"
+              size="sm"
+              data-testid="nav-config"
+              @click="handleConfigClick"
+            />
+          </template>
+        </AtlasTooltip>
 
         <!-- Authentication UI -->
         <div
@@ -237,7 +260,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
@@ -282,14 +305,13 @@ const { items: accountMenuItems } = usePluginMounts('account-menu')
 // Hide the cog icon entirely for users without any admin permission. Mirrors
 // the per-tab gating in ConfigPanel — if every section would be hidden, the
 // entry point shouldn't be visible at all. Jobs now has its own nav entry
-// (hasJobsAccess) and is no longer gating the cog. Plugin-contributed admin
-// tabs also keep the cog visible, even with no core admin permission.
+// Plugin-contributed admin tabs also keep the cog visible, even with no core
+// admin permission.
 const hasAnyAdminAccess = computed(
   () =>
     hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security']) ||
     adminTabMounts.value.length > 0
 )
-const hasJobsAccess = computed(() => hasAnyPermission(['job:execution:get']))
 
 // The brand navy logo measures 1.70:1 on the dark surface — effectively invisible.
 const themeStore = useThemeStore()
