@@ -88,6 +88,23 @@ describe('Date Format Utils', () => {
 
       expect(result).toBe('01/05/2024')
     })
+
+    // Regression: formatDate used getUTC* and so showed the UTC calendar day.
+    // An asset saved just after local midnight read as the previous day for
+    // anyone east of UTC, and just before local midnight as the next day for
+    // anyone west of it. These two cases bracket midnight from both sides, so
+    // whichever side of UTC the machine sits on, one of them catches it.
+    //
+    // Both are vacuous under TZ=UTC, which is why CI never saw the original
+    // bug — it surfaced on a developer machine in Asia/Tokyo.
+    it.each([
+      { hour: 0, minute: 30, label: 'just after local midnight' },
+      { hour: 23, minute: 30, label: 'just before local midnight' },
+    ])('renders the viewer-local calendar day $label', ({ hour, minute }) => {
+      const local = new Date(2024, 2, 10, hour, minute)
+
+      expect(formatDate(local.getTime())).toBe('03/10/2024')
+    })
   })
 
   describe('formatRelativeTime', () => {
