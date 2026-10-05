@@ -308,6 +308,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, toRef, toRaw } from '
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
 import { assignedTags, syncAssetTags } from '@/utils/asset-tags'
+import { trackAction } from '@/services/analytics/telemetry'
 import { useCohortStore, type CohortDocument } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
@@ -1427,6 +1428,15 @@ function handleExportDownload() {
   a.download = exportFilename()
   a.click()
   URL.revokeObjectURL(url)
+  // Payload size and shape only. The filename is a slug of the user-entered
+  // cohort name, so it is deliberately not recorded.
+  trackAction('cohort.export', {
+    'export.format': 'json',
+    'export.channel': 'download',
+    'export.bytes': json.length,
+    'cohort.id': cohortId.value ?? undefined,
+    'cohort.concept_set_count': expression.value.ConceptSets?.length ?? 0,
+  })
   successMessage.value = tv('components.cohortBuilder.exportDownloaded')
   showSuccess.value = true
 }
