@@ -1,0 +1,47 @@
+# Override for SigNoz's own compose file. Two jobs: join its collector to the
+# network Atlas publishes telemetry on, and move the SigNoz UI off port 8080,
+# which Atlas's WebAPI already publishes. Nothing else upstream is changed.
+#
+#   cd observability/signoz/upstream/docker
+#   docker compose -f docker-compose.yaml \
+#                  -f ../../docker-compose.override.yml up -d
+#
+# Kept as an override rather than a patch so fetch.sh can re-download without
+# losing this wiring.
+#
+# Note the `!override` tags. Compose *appends* sequences like `ports` when
+# merging files, so a plain mapping here would publish both the upstream port
+# and ours — leaving the 8080 collision in place. `!override` replaces the list
+# instead. Needs Compose v2.24+.
+
+networks:
+  atlas3-observability:
+    external: true
+    name: atlas3-observability
+
+services:
+  otel-collector:
+    # signoz-net is upstream's own network name; keep it or the collector loses
+    # its route to ClickHouse and the SigNoz server.
+    networks:
+      signoz-net: {}
+      atlas3-observability:
+        # The name atlas3-otel-gateway dials via SIGNOZ_OTLP_ENDPOINT. Pinning
+        # an alias means a future upstream rename of the service does not break
+        # the Atlas side.
+        aliases:
+          - signoz-otel-collector
+    # Upstream publishes 4317/4318 on all interfaces. Atlas does not need that
+    # — the gateway reaches the collector over the shared network — and leaving
+    # it open lets anything that can reach this host inject spans. Bind to
+    # loopback so manual otel testing still works.
+    ports: !override
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
+
+  signoz:
+    # Upstream maps 8080:8080, which collides with Atlas's WebAPI
+    # (`8080:8080` in docker-compose.yml). Both stacks are meant to run at the
+    # same time, so SigNoz's UI moves.
+    ports: !override
+      - "${SIGNOZ_UI_PORT:-3301}:8080"
