@@ -11,8 +11,8 @@
 import { z } from 'zod'
 
 import type { Tag } from './cohort.types'
-import type { FeatureAnalysisType } from './feature-analysis.types'
-import { FeatureAnalysisTypeSchema } from './feature-analysis.types'
+import type { FeatureAnalysisDomain, FeatureAnalysisType } from './feature-analysis.types'
+import { FeatureAnalysisDomainSchema, FeatureAnalysisTypeSchema } from './feature-analysis.types'
 import { StoredCriteriaGroupSchema } from '@/models/stored-criteria-group'
 import type { CriteriaGroup, ConceptSet } from '@/models/circe-types'
 
@@ -39,6 +39,7 @@ export interface LinkedFeatureAnalysis {
   id: number
   name?: string
   description?: string
+  domain?: FeatureAnalysisDomain
   // `supports*` flags come from the backing FeatureAnalysis design and tell the
   // editor whether the toggle is even available; `include*` flags are the
   // user's choice for this particular characterization.
@@ -54,6 +55,7 @@ export const LinkedFeatureAnalysisSchema = z
     id: z.number(),
     name: z.string().optional(),
     description: z.string().optional(),
+    domain: FeatureAnalysisDomainSchema.optional(),
     supportsAnnual: z.boolean().optional(),
     supportsTemporal: z.boolean().optional(),
     includeAnnual: z.boolean().optional(),
@@ -251,6 +253,66 @@ export const CharacterizationExecutionSchema = z
 // Result statistics
 // ============================================================================
 
+/** A cohort column supplied by a WebAPI characterization result report. */
+export interface CharacterizationResultCohort {
+  cohortId: number
+  cohortName: string
+}
+
+export const CharacterizationResultCohortSchema = z
+  .object({
+    cohortId: z.number(),
+    cohortName: z.string(),
+  })
+  .passthrough()
+
+/**
+ * One analysis report in WebAPI's GenerationResults response. Items remain
+ * unparsed here because prevalence and distribution rows have distinct shapes.
+ */
+export interface CharacterizationResultReport {
+  analysisId: number | null
+  analysisName: string
+  cohorts: CharacterizationResultCohort[]
+  domainIds: string[]
+  items: unknown[]
+  resultType?: 'PREVALENCE' | 'DISTRIBUTION'
+  isComparative?: boolean
+  isSummary?: boolean
+  faType?: FeatureAnalysisType | null
+}
+
+export const CharacterizationResultReportSchema = z
+  .object({
+    analysisId: z.number().nullable(),
+    analysisName: z.string(),
+    cohorts: z.array(CharacterizationResultCohortSchema),
+    domainIds: z.array(z.string()),
+    items: z.array(z.unknown()),
+    resultType: z.enum(['PREVALENCE', 'DISTRIBUTION']).optional(),
+    isComparative: z.boolean().optional(),
+    isSummary: z.boolean().optional(),
+    faType: FeatureAnalysisTypeSchema.nullable().optional(),
+  })
+  .passthrough()
+
+/** The authoritative response from POST generation/{id}/result. */
+export interface GenerationResults {
+  reports: CharacterizationResultReport[]
+  count?: number
+  prevalenceThreshold?: number
+  showEmptyResults?: boolean | null
+}
+
+export const GenerationResultsSchema = z
+  .object({
+    reports: z.array(CharacterizationResultReportSchema),
+    count: z.number().optional(),
+    prevalenceThreshold: z.number().optional(),
+    showEmptyResults: z.boolean().nullable().optional(),
+  })
+  .passthrough()
+
 // Two-level keying [strataId][cohortId] -> value. Strings because the report
 // service serialises numeric ids as JSON object keys.
 const NestedNumberMapSchema = z.record(z.record(z.number()))
@@ -265,9 +327,11 @@ export interface PrevalenceStat {
   domainId?: string
   faType?: FeatureAnalysisType
   cohorts: LinkedCohort[]
+  strataNames: Record<string, string>
   count: Record<string, Record<string, number>>
   pct: Record<string, Record<string, number>>
   stdDiff?: number
+  stdDiffByStrata?: Record<string, number>
 }
 
 export const PrevalenceStatSchema = z
@@ -281,9 +345,11 @@ export const PrevalenceStatSchema = z
     domainId: z.string().optional(),
     faType: FeatureAnalysisTypeSchema.optional(),
     cohorts: z.array(LinkedCohortSchema),
+    strataNames: z.record(z.string()).default({}),
     count: NestedNumberMapSchema,
     pct: NestedNumberMapSchema,
     stdDiff: z.number().optional(),
+    stdDiffByStrata: z.record(z.number()).optional(),
   })
   .passthrough()
 
@@ -297,6 +363,7 @@ export interface DistributionStat {
   domainId?: string
   faType?: FeatureAnalysisType
   cohorts: LinkedCohort[]
+  strataNames: Record<string, string>
   avg: Record<string, Record<string, number>>
   stdDev: Record<string, Record<string, number>>
   min: Record<string, Record<string, number>>
@@ -319,6 +386,7 @@ export const DistributionStatSchema = z
     domainId: z.string().optional(),
     faType: FeatureAnalysisTypeSchema.optional(),
     cohorts: z.array(LinkedCohortSchema),
+    strataNames: z.record(z.string()).default({}),
     avg: NestedNumberMapSchema,
     stdDev: NestedNumberMapSchema,
     min: NestedNumberMapSchema,
@@ -427,7 +495,7 @@ export interface Table1Filters {
   threshold: number
   selectedAnalysisIds: number[]
   selectedDomains: string[]
-  selectedCohortId: number | null
+  selectedCohortIds: number[]
   /** Free text narrowing the covariate rows; empty keeps them all. */
   search: string
 }
@@ -436,6 +504,6 @@ export const DEFAULT_TABLE1_FILTERS: Table1Filters = {
   threshold: 0,
   selectedAnalysisIds: [],
   selectedDomains: [],
-  selectedCohortId: null,
+  selectedCohortIds: [],
   search: '',
 }

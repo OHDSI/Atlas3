@@ -62,6 +62,50 @@ describe('PrevalenceTable', () => {
     wrapper.unmount()
   })
 
+  it('labels the default strata column Overall when WebAPI supplies All strata', () => {
+    const row = makeRow({ strataNames: { [DEFAULT_STRATA_KEY]: 'All strata' } })
+    const wrapper = mount(PrevalenceTable, {
+      props: {
+        analysisId: 100,
+        analysisName: 'Race',
+        rows: [row],
+        cohorts: row.cohorts,
+      },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    expect(wrapper.text()).toContain('Overall')
+    expect(wrapper.text()).not.toContain('All strata')
+    wrapper.unmount()
+  })
+
+  it('truncates covariate labels with the full name available as a tooltip', () => {
+    const row = makeRow({ covariateName: 'A covariate label that is intentionally long' })
+    const wrapper = mount(PrevalenceTable, {
+      props: { analysisId: 100, analysisName: 'Race', rows: [row], cohorts: row.cohorts },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    const covariate = wrapper.find('.prevalence-table__covariate')
+    expect(covariate.text()).toBe(row.covariateName)
+    expect(covariate.attributes('title')).toBe(row.covariateName)
+    wrapper.unmount()
+  })
+
+  it('marks Count and Pct headers as right-aligned numeric columns', () => {
+    const row = makeRow()
+    const wrapper = mount(PrevalenceTable, {
+      props: { analysisId: 100, analysisName: 'Race', rows: [row], cohorts: row.cohorts },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    expect(wrapper.findAll('th.prevalence-table__numeric')).toHaveLength(2)
+    wrapper.unmount()
+  })
+
   it('renders a Std Diff column when there are exactly two cohorts', () => {
     const row = makeRow({
       cohorts: [
@@ -84,6 +128,11 @@ describe('PrevalenceTable', () => {
     })
     const headers = wrapper.findAll('th').map((h) => h.text())
     expect(headers.some((h) => /Std Diff/i.test(h))).toBe(true)
+    expect(wrapper.find('table').classes()).toContain('prevalence-table__table--comparison')
+    expect(wrapper.findAll('col.prevalence-table__metric-col')).toHaveLength(4)
+    expect(wrapper.findAll('th.prevalence-table__cohort-header')).toHaveLength(2)
+    expect(wrapper.find('col.prevalence-table__concept-col').exists()).toBe(true)
+    expect(wrapper.find('col.prevalence-table__std-diff-col').exists()).toBe(true)
     wrapper.unmount()
   })
 

@@ -12,6 +12,7 @@
  * defers temporal visualisations).
  */
 import type {
+  CharacterizationResultReport,
   DistributionStat,
   LinkedCohort,
   PrevalenceStat,
@@ -50,6 +51,7 @@ interface RawRow {
   cohortName?: string
   strataId?: number | string
   strataName?: string
+  diff?: number
   resultType?: string
   // Prevalence fields
   count?: number
@@ -87,6 +89,7 @@ function expandComparative(value: Record<string, unknown>): RawRow[] {
     faType: value.faType as RawRow['faType'],
     strataId: value.strataId as number | string | undefined,
     strataName: value.strataName as string | undefined,
+    diff: value.diff as number | undefined,
   }
   const rows: RawRow[] = []
   const target: RawRow = {
@@ -210,8 +213,10 @@ function newPrevalenceStat(row: RawRow): PrevalenceStat {
     domainId: row.domainId,
     faType: row.faType,
     cohorts: [],
+    strataNames: {},
     count: {},
     pct: {},
+    stdDiffByStrata: {},
   }
 }
 
@@ -226,6 +231,7 @@ function newDistributionStat(row: RawRow): DistributionStat {
     domainId: row.domainId,
     faType: row.faType,
     cohorts: [],
+    strataNames: {},
     avg: {},
     stdDev: {},
     min: {},
@@ -301,8 +307,13 @@ export function mapCharacterizationResults(raw: unknown[]): MappedCharacterizati
           prevalenceMap.set(groupKey, stat)
         }
         ensureCohort(stat.cohorts, row)
+        stat.strataNames[sKey] = row.strataName ?? sKey
         setNested(stat.count, sKey, cKey, row.count)
         setNested(stat.pct, sKey, cKey, row.pct)
+        if (typeof row.diff === 'number') {
+          stat.stdDiffByStrata ??= {}
+          stat.stdDiffByStrata[sKey] = row.diff
+        }
       } else {
         let stat = distributionMap.get(groupKey)
         if (!stat) {
@@ -310,6 +321,7 @@ export function mapCharacterizationResults(raw: unknown[]): MappedCharacterizati
           distributionMap.set(groupKey, stat)
         }
         ensureCohort(stat.cohorts, row)
+        stat.strataNames[sKey] = row.strataName ?? sKey
         setNested(stat.avg, sKey, cKey, row.avg)
         setNested(stat.stdDev, sKey, cKey, row.stdDev)
         setNested(stat.min, sKey, cKey, row.min)
@@ -360,4 +372,70 @@ export function mapCharacterizationResults(raw: unknown[]): MappedCharacterizati
     prevalence: Array.from(prevalenceMap.values()),
     distribution: Array.from(distributionMap.values()),
   }
+}
+
+export interface MappedCharacterizationReport {
+  report: CharacterizationResultReport
+  cohorts: LinkedCohort[]
+  prevalence: PrevalenceStat[]
+  distribution: DistributionStat[]
+}
+
+/**
+ * Map one WebAPI report without losing its report-level cohort metadata.
+ * Missing prevalence values are materialized as zero so every subgroup and
+ * cohort table shares the same covariate grid, matching Atlas 2.x behavior.
+ */
+export function mapCharacterizationResultReport(
+  report: CharacterizationResultReport
+): MappedCharacterizationReport {
+  const cohorts = report.cohorts.map(({ cohortId, cohortName }) => ({ id: cohortId, name: cohortName }))
+  const raw = report.items.flatMap(item => {
+    if (!isRecord(item)) return []
+    return [{
+      ...item,
+      analysisId: item.analysisId ?? report.analysisId,
+      analysisName: item.analysisName ?? report.analysisName,
+      resultType: item.resultType ?? report.resultType,
+      faType: item.faType ?? report.faType,
+    }]
+  })
+  const mapped = mapCharacterizationResults(raw)
+  const prevalenceStrataNames = new Map<string, string>()
+  for (const row of mapped.prevalence) {
+    for (const [strataKey, strataName] of Object.entries(row.strataNames)) {
+      prevalenceStrataNames.set(strataKey, strataName)
+    }
+  }
+
+  for (const row of mapped.prevalence) {
+    row.cohorts = cohorts
+    for (const [strataKey, strataName] of prevalenceStrataNames) {
+      row.strataNames[strataKey] ??= strataName
+      row.count[strataKey] ??= {}
+      row.pct[strataKey] ??= {}
+      for (const cohort of cohorts) {
+        const cohortKey = String(cohort.id)
+        row.count[strataKey][cohortKey] ??= 0
+        row.pct[strataKey][cohortKey] ??= 0
+      }
+    }
+    if (cohorts.length === 2) {
+      const stratumKey = Object.keys(row.pct).includes(DEFAULT_STRATA_KEY)
+        ? DEFAULT_STRATA_KEY
+        : Object.keys(row.pct)[0]
+      if (stratumKey) {
+        row.stdDiff = computeBinaryStdDiff(
+          row.pct[stratumKey]?.[String(cohorts[0]?.id)],
+          row.pct[stratumKey]?.[String(cohorts[1]?.id)]
+        )
+      }
+    }
+  }
+
+  for (const row of mapped.distribution) {
+    row.cohorts = cohorts
+  }
+
+  return { report, cohorts, ...mapped }
 }

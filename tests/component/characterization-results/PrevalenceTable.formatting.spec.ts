@@ -55,16 +55,6 @@ function mountTable(
   })
 }
 
-function cellForHeader(wrapper: VueWrapper, headerLabel: string, rowIndex = 0): string {
-  const headers = wrapper.findAll('th').map((h) => h.text())
-  const colIndex = headers.findIndex((h) => h.includes(headerLabel))
-  if (colIndex === -1) {
-    throw new Error(`No header found matching "${headerLabel}"`)
-  }
-  const row = wrapper.findAll('tbody tr')[rowIndex]
-  return row.findAll('td')[colIndex]?.text() ?? ''
-}
-
 describe('PrevalenceTable value formatting', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
@@ -130,7 +120,7 @@ describe('PrevalenceTable value formatting', () => {
     expect(wrapper.findAll('td').map((c) => c.text())).toContain('—')
   })
 
-  it('renders an em-rule placeholder for a missing std diff', () => {
+  it('calculates std diff when WebAPI does not provide one', () => {
     const row = makeRow({
       cohorts: [
         { id: 1, name: 'A' },
@@ -141,7 +131,7 @@ describe('PrevalenceTable value formatting', () => {
       stdDiff: undefined,
     })
     const wrapper = mountTable([row], row.cohorts)
-    expect(cellForHeader(wrapper, 'Std Diff')).toBe('—')
+    expect(wrapper.find('[data-testid="char-results-stddiff-8527-overall"]').text()).toBe('-0.2828')
   })
 
   it('renders an em-rule placeholder for a NaN std diff', () => {
@@ -156,7 +146,7 @@ describe('PrevalenceTable value formatting', () => {
     })
     const wrapper = mountTable([row], row.cohorts)
     expect(wrapper.text()).not.toContain('NaN')
-    expect(cellForHeader(wrapper, 'Std Diff')).toBe('—')
+    expect(wrapper.find('[data-testid="char-results-stddiff-8527-overall"]').text()).toBe('—')
   })
 })
 
@@ -166,13 +156,13 @@ describe('PrevalenceTable stratum selection', () => {
     setActivePinia(createPinia())
   })
 
-  it('prefers the default stratum key when present', () => {
+  it('renders every stratum as a nested column when the default stratum is present', () => {
     const row = makeRow({
       pct: { zzz: { '1': 99 }, [DEFAULT_STRATA_KEY]: { '1': 7.5 } },
     })
     const wrapper = mountTable([row])
     expect(wrapper.text()).toContain('7.50%')
-    expect(wrapper.text()).not.toContain('99.00%')
+    expect(wrapper.text()).toContain('99.00%')
   })
 
   it('falls back to the first stratum key when the default is absent', () => {

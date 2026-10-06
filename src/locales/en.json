@@ -3348,7 +3348,7 @@
       "executions": {
         "title": "Executions",
         "prevalenceStatConverter": {
-          "allStrata": "All strata",
+          "allStrata": "Overall",
           "explore": "Explore",
           "loadingPrevalenceStats": "Loading prevalence stats...",
           "cohort": "Cohort:",

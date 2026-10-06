@@ -587,12 +587,12 @@ describe('services/characterization.service', () => {
   })
 
   describe('getCharacterizationDesignSnapshot', () => {
-    it('returns the raw design', async () => {
-      ok({ some: 'snapshot' })
+    it('returns the generation design snapshot', async () => {
+      ok({ name: 'Snapshot', cohorts: [], featureAnalyses: [], stratas: [] })
       const result = await getCharacterizationDesignSnapshot(99)
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data).toEqual({ some: 'snapshot' })
+        expect(result.data).toMatchObject({ name: 'Snapshot', cohorts: [] })
       } else {
         expect.fail(`expected success, got ${result.error.message}`)
       }
@@ -619,30 +619,60 @@ describe('services/characterization.service', () => {
   })
 
   describe('getCharacterizationResults', () => {
-    it('returns the raw array', async () => {
-      ok([{ row: 1 }, { row: 2 }])
+    it('preserves the structured report envelope', async () => {
+      ok({
+        count: 2,
+        prevalenceThreshold: 0.01,
+        showEmptyResults: false,
+        reports: [{
+          analysisId: 1,
+          analysisName: 'Conditions',
+          cohorts: [{ cohortId: 10, cohortName: 'Target' }],
+          domainIds: ['CONDITION'],
+          items: [{ row: 1 }],
+        }],
+      })
 
       const result = await getCharacterizationResults(1, { thresholdValuePct: 0 })
 
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data).toHaveLength(2)
+        expect(result.data.count).toBe(2)
+        expect(result.data.reports).toHaveLength(1)
+        expect(result.data.reports[0]?.cohorts).toEqual([{ cohortId: 10, cohortName: 'Target' }])
+        expect(result.data.reports[0]?.items).toEqual([{ row: 1 }])
       } else {
         expect.fail(`expected success, got ${result.error.message}`)
       }
     })
 
-    it('flattens the `{ reports: [...] }` wrapper', async () => {
-      ok({ reports: [{ analysisId: 1, items: [{ row: 1 }] }, { analysisId: 2, items: [{ row: 2 }] }] })
+    it('rejects a flat result array', async () => {
+      ok([{ row: 1 }, { row: 2 }])
 
       const result = await getCharacterizationResults(1, { thresholdValuePct: 0 })
 
+      expect(result.success).toBe(false)
+    })
+
+    it('accepts nullable summary-report fields returned by WebAPI', async () => {
+      ok({
+        count: 1,
+        prevalenceThreshold: 0.01,
+        showEmptyResults: null,
+        reports: [{
+          analysisId: null,
+          analysisName: 'All prevalence covariates',
+          cohorts: [{ cohortId: 10, cohortName: 'Target' }],
+          domainIds: ['DEMOGRAPHICS'],
+          items: [{ analysisId: 1 }],
+          faType: null,
+          isSummary: true,
+        }],
+      })
+
+      const result = await getCharacterizationResults(1, {})
+
       expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data).toHaveLength(2)
-      } else {
-        expect.fail(`expected success, got ${result.error.message}`)
-      }
     })
 
     it('reports an unexpected shape as ApiResult failure carrying the offending payload', async () => {

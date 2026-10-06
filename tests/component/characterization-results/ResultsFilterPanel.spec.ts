@@ -12,6 +12,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import ResultsFilterPanel from '@/components/characterization-results/ResultsFilterPanel.vue'
+import { AtlasSelect } from '@/components/ui'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -24,7 +25,7 @@ function mountPanel(search = '') {
       availableCohorts: [{ id: 1, name: 'Metformin' }],
       selectedAnalysisIds: [],
       selectedDomains: [],
-      selectedCohortId: null,
+      selectedCohortIds: [],
       search,
     },
   })
@@ -60,5 +61,58 @@ describe('ResultsFilterPanel search', () => {
     await w.find('[data-testid="char-results-filter-search"] input').setValue('')
 
     expect(w.emitted('update:search')?.at(-1)).toEqual([''])
+  })
+
+  it('commits cohort selections when the menu closes, not for each option click', async () => {
+    const w = mount(ResultsFilterPanel, {
+      global: { plugins: [vuetify] },
+      props: {
+        availableAnalyses: [],
+        availableDomains: [],
+        availableCohorts: [{ id: 1, name: 'Metformin' }, { id: 2, name: 'Warfarin' }],
+        selectedAnalysisIds: [],
+        selectedDomains: [],
+        selectedCohortIds: [],
+        search: '',
+      },
+    })
+    const cohortSelect = w.findAllComponents(AtlasSelect)[2]
+    const onMenuUpdate = cohortSelect.vm.$attrs['onUpdate:menu'] as (isOpen: boolean) => void
+
+    onMenuUpdate(true)
+    await cohortSelect.vm.$emit('update:modelValue', [1])
+    await cohortSelect.vm.$emit('update:modelValue', [1, 2])
+
+    expect(w.emitted('update:selectedCohortIds')).toBeUndefined()
+
+    onMenuUpdate(false)
+
+    expect(w.emitted('update:selectedCohortIds')).toEqual([[[1, 2]]])
+  })
+
+  it('does not emit a cohort update when the menu closes without changes', () => {
+    const w = mountPanel()
+    const cohortSelect = w.findAllComponents(AtlasSelect)[2]
+    const onMenuUpdate = cohortSelect.vm.$attrs['onUpdate:menu'] as (isOpen: boolean) => void
+
+    onMenuUpdate(true)
+    onMenuUpdate(false)
+
+    expect(w.emitted('update:selectedCohortIds')).toBeUndefined()
+  })
+
+  it('normalizes analysis and domain selector values', async () => {
+    const w = mountPanel()
+    const [domainSelect, analysisSelect, cohortSelect] = w.findAllComponents(AtlasSelect)
+
+    await domainSelect!.vm.$emit('update:modelValue', ['Condition', 3])
+    await analysisSelect!.vm.$emit('update:modelValue', [1, 'invalid'])
+    await domainSelect!.vm.$emit('update:modelValue', null)
+    await analysisSelect!.vm.$emit('update:modelValue', undefined)
+    await cohortSelect!.vm.$emit('update:modelValue', ['invalid'])
+
+    expect(w.emitted('update:selectedDomains')).toEqual([[['Condition']], [[]]])
+    expect(w.emitted('update:selectedAnalysisIds')).toEqual([[[1]], [[]]])
+    expect(w.emitted('update:selectedCohortIds')).toEqual([[[]]])
   })
 })

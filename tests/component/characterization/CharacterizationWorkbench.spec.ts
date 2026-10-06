@@ -9,12 +9,14 @@ import CharacterizationWorkbench from '@/components/characterization/Characteriz
 import { useCharacterizationStore } from '@/stores/characterization'
 import {
   getCharacterizationExecution,
+  getCharacterizationDesignSnapshot,
   getCharacterizationResultCount,
   getCharacterizationResults,
 } from '@/services/characterization.service'
 
 const mockResultCount = vi.mocked(getCharacterizationResultCount)
 const mockResults = vi.mocked(getCharacterizationResults)
+const mockGenerationDesign = vi.mocked(getCharacterizationDesignSnapshot)
 const mockDataSources = {
   sources: [{ sourceId: 12, sourceKey: 'CCAE', sourceName: 'CCAE' }],
   isLoading: false,
@@ -28,8 +30,12 @@ vi.mock('@/services/characterization.service', () => ({
     success: true,
     data: { id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0 },
   }),
+  getCharacterizationDesignSnapshot: vi.fn().mockResolvedValue({
+    success: true,
+    data: { name: 'Snapshot', cohorts: [], featureAnalyses: [], stratas: [] },
+  }),
   getCharacterizationResultCount: vi.fn().mockResolvedValue({ success: true, data: 0 }),
-  getCharacterizationResults: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  getCharacterizationResults: vi.fn().mockResolvedValue({ success: true, data: { reports: [] } }),
   listCharacterizationExecutions: vi.fn().mockResolvedValue({
     success: true,
     data: [{ id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0 }],
@@ -87,7 +93,12 @@ describe('CharacterizationWorkbench', () => {
     mockResultCount.mockReset()
     mockResultCount.mockResolvedValue({ success: true, data: 0 })
     mockResults.mockReset()
-    mockResults.mockResolvedValue({ success: true, data: [] })
+    mockResults.mockResolvedValue({ success: true, data: { reports: [] } })
+    mockGenerationDesign.mockReset()
+    mockGenerationDesign.mockResolvedValue({
+      success: true,
+      data: { name: 'Snapshot', cohorts: [], featureAnalyses: [], stratas: [] },
+    })
     vi.mocked(getCharacterizationExecution).mockResolvedValue({
       success: true,
       data: { id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0 },
@@ -118,6 +129,48 @@ describe('CharacterizationWorkbench', () => {
     const toolbar = w.findComponent({ name: 'CharacterizationCanvasToolbar' })
     await toolbar.vm.$emit('update:mode', 'perAnalysis')
     expect(w.findComponent({ name: 'CharacterizationPerAnalysisView' }).exists()).toBe(true)
+  })
+
+  it('uses the generation design for filter options when result data is cohort-filtered', async () => {
+    const router = makeRouter()
+    await router.push('/characterizations/5?run=7')
+    mockGenerationDesign.mockResolvedValue({
+      success: true,
+      data: {
+        name: 'Snapshot',
+        cohorts: [{ id: 1, name: 'Cohort A' }, { id: 2, name: 'Cohort B' }],
+        featureAnalyses: [
+          { id: 10, name: 'Conditions', domain: 'CONDITION' },
+          { id: 20, name: 'Drugs', domain: 'DRUG' },
+        ],
+        stratas: [],
+      },
+    })
+    mockResults.mockResolvedValue({ success: true, data: { reports: [{
+      analysisId: 10,
+      analysisName: 'Conditions',
+      cohorts: [{ cohortId: 1, cohortName: 'Cohort A' }],
+      domainIds: ['CONDITION'],
+      items: [{
+        analysisId: 10, analysisName: 'Conditions', covariateId: 1, covariateName: 'Covariate',
+        conceptId: 0, cohortId: 1, cohortName: 'Cohort A', count: 5, pct: 1, resultType: 'PREVALENCE',
+      }],
+    }] } })
+
+    const w = mount(CharacterizationWorkbench, {
+      global: { plugins: [router, vuetify], stubs },
+      props: { modelValue: baseDraft(), characterizationId: 5, availableCohorts: [], availableFeatureAnalyses: [] },
+    })
+    await flushPromises()
+
+    const filtersPanel = w.findComponent({ name: 'ResultsFilterPanel' })
+    expect(filtersPanel.props('availableCohorts')).toEqual([
+      { id: 1, name: 'Cohort A' }, { id: 2, name: 'Cohort B' },
+    ])
+    expect(filtersPanel.props('availableAnalyses')).toEqual([
+      { id: 10, name: 'Conditions' }, { id: 20, name: 'Drugs' },
+    ])
+    expect(filtersPanel.props('availableDomains')).toEqual(['CONDITION', 'DRUG'])
   })
 
   it('parses invalid run ids as null when no executions are loaded', async () => {
@@ -190,7 +243,9 @@ describe('CharacterizationWorkbench', () => {
     mockDataSources.sources = []
     const router = makeRouter()
     await router.push('/characterizations/5')
-    mockResults.mockResolvedValue({ success: true, data: [
+    mockResults.mockResolvedValue({ success: true, data: { reports: [{
+      analysisId: 1, analysisName: 'Analysis A', cohorts: [{ cohortId: 1, cohortName: 'Cohort A' }], domainIds: [],
+      items: [
       {
         analysisId: 1,
         analysisName: 'Analysis A',
@@ -203,7 +258,8 @@ describe('CharacterizationWorkbench', () => {
         pct: 5,
         resultType: 'PREVALENCE',
       },
-    ] })
+      ],
+    }] } })
     const w = mount(CharacterizationWorkbench, {
       global: { plugins: [router, vuetify], stubs },
       props: { modelValue: baseDraft(), characterizationId: 5, availableCohorts: [], availableFeatureAnalyses: [] },
@@ -240,7 +296,9 @@ describe('CharacterizationWorkbench', () => {
     await router.push('/characterizations/5')
 
     mockResultCount.mockResolvedValue({ success: true, data: 1 })
-    mockResults.mockResolvedValue({ success: true, data: [
+    mockResults.mockResolvedValue({ success: true, data: { reports: [{
+      analysisId: 1, analysisName: 'Analysis A', cohorts: [{ cohortId: 1, cohortName: 'Cohort A' }], domainIds: [],
+      items: [
       {
         analysisId: 1,
         analysisName: 'Analysis A',
@@ -265,7 +323,8 @@ describe('CharacterizationWorkbench', () => {
         pct: 2,
         resultType: 'DISTRIBUTION',
       },
-    ] })
+      ],
+    }] } })
 
     const w = mount(CharacterizationWorkbench, {
       global: { plugins: [router, vuetify], stubs },
@@ -288,7 +347,7 @@ describe('CharacterizationWorkbench', () => {
     const filtersPanel = w.findComponent({ name: 'ResultsFilterPanel' })
     await filtersPanel.vm.$emit('update:selected-analysis-ids', [1])
     await filtersPanel.vm.$emit('update:selected-domains', ['D1'])
-    await filtersPanel.vm.$emit('update:selected-cohort-id', 1)
+    await filtersPanel.vm.$emit('update:selected-cohort-ids', [1])
 
     const inspector = w.findComponent({ name: 'ConfigureInspector' })
     await inspector.vm.$emit('update:config', { ...inspector.props('config'), showStdDiffCI: true })
@@ -488,6 +547,27 @@ describe('CharacterizationWorkbench', () => {
 
     expect(cancelSpy).toHaveBeenCalledWith(5, 'CCAE', 7)
     expect(loadSpy).toHaveBeenCalled()
+  })
+
+  it('surfaces run and cancel failures as error snackbars', async () => {
+    const router = makeRouter()
+    await router.push('/characterizations/5')
+    const store = useCharacterizationStore()
+    vi.spyOn(store, 'runExecution').mockRejectedValue(new Error('run failed'))
+    vi.spyOn(store, 'cancelExecution').mockRejectedValue(new Error('cancel failed'))
+    const w = mount(CharacterizationWorkbench, {
+      global: { plugins: [router, vuetify], stubs },
+      props: { modelValue: baseDraft(), characterizationId: 5, availableCohorts: [], availableFeatureAnalyses: [] },
+    })
+    await flushPromises()
+
+    await w.findComponent({ name: 'DataSourceRunTable' }).vm.$emit('run', 'CCAE')
+    await w.findComponent({ name: 'DataSourceRunTable' }).vm.$emit('cancel', 'CCAE')
+    await flushPromises()
+
+    expect(w.emitted('snackbar')).toEqual([
+      ['run failed', 'error'], ['cancel failed', 'error'],
+    ])
   })
 
   it('select-result from the main table changes the selected execution', async () => {

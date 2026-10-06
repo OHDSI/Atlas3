@@ -1,22 +1,26 @@
 <template>
   <div class="char-per-analysis">
-    <PrevalenceTable
-      v-for="g in prevalenceGroups"
-      :key="`prev-${g.analysisId}`"
-      :analysis-id="g.analysisId"
-      :analysis-name="g.analysisName"
-      :rows="g.rows"
-      :cohorts="g.cohorts"
-      @explore="(row) => $emit('explore', row)"
-    />
-    <DistributionTable
-      v-for="g in distributionGroups"
-      :key="`dist-${g.analysisId}`"
-      :analysis-id="g.analysisId"
-      :analysis-name="g.analysisName"
-      :rows="g.rows"
-      :cohorts="g.cohorts"
-    />
+    <template
+      v-for="group in analysisGroups"
+      :key="group.analysisId"
+    >
+      <PrevalenceTable
+        v-if="group.prevalence"
+        :analysis-id="group.analysisId"
+        :analysis-name="group.analysisName"
+        :rows="group.prevalence.rows"
+        :cohorts="group.prevalence.cohorts"
+        :selected-cohort-ids="selectedCohortIds"
+        @explore="(row) => $emit('explore', row)"
+      />
+      <DistributionTable
+        v-if="group.distribution"
+        :analysis-id="group.analysisId"
+        :analysis-name="group.analysisName"
+        :rows="group.distribution.rows"
+        :cohorts="group.distribution.cohorts"
+      />
+    </template>
     <div
       v-if="prevalenceGroups.length === 0 && distributionGroups.length === 0"
       class="char-per-analysis__empty"
@@ -44,7 +48,7 @@ const props = defineProps<{
   threshold: number
   selectedAnalysisIds: number[]
   selectedDomains: string[]
-  selectedCohortId: number | null
+  selectedCohortIds: number[]
   /** Free text narrowing the covariate rows; empty keeps them all (#327). */
   search?: string
 }>()
@@ -78,8 +82,8 @@ function passesSearch(row: { covariateName: string; conceptName?: string }) {
   return matchesTerms([row.covariateName, row.conceptName], props.search)
 }
 function filterCohorts(list: LinkedCohort[]): LinkedCohort[] {
-  if (props.selectedCohortId === null) return list
-  const f = list.filter(c => c.id === props.selectedCohortId)
+  if (props.selectedCohortIds.length === 0) return list
+  const f = list.filter(c => props.selectedCohortIds.includes(c.id))
   return f.length ? f : list
 }
 
@@ -116,6 +120,27 @@ const distributionGroups = computed<Group<DistributionStat>[]>(() => {
       groups.set(row.analysisId, g)
     }
     g.rows.push(row)
+  }
+  return Array.from(groups.values())
+})
+
+const analysisGroups = computed(() => {
+  const groups = new Map<number, {
+    analysisId: number
+    analysisName: string
+    prevalence?: Group<PrevalenceStat>
+    distribution?: Group<DistributionStat>
+  }>()
+  for (const group of prevalenceGroups.value) {
+    groups.set(group.analysisId, { ...group, prevalence: group })
+  }
+  for (const group of distributionGroups.value) {
+    const existing = groups.get(group.analysisId)
+    if (existing) {
+      existing.distribution = group
+    } else {
+      groups.set(group.analysisId, { ...group, distribution: group })
+    }
   }
   return Array.from(groups.values())
 })

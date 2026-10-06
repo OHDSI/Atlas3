@@ -301,8 +301,8 @@ function keepBinary(row: Extract<Table1Row, { kind: 'binary' }>, input: BuildTab
     if (!cleared) return false
   }
   if (
-    input.filters.selectedCohortId !== null &&
-    !row._source.cohorts.some(c => c.id === input.filters.selectedCohortId)
+    input.filters.selectedCohortIds.length > 0 &&
+    !row._source.cohorts.some(c => input.filters.selectedCohortIds.includes(c.id))
   ) {
     return false
   }
@@ -310,7 +310,7 @@ function keepBinary(row: Extract<Table1Row, { kind: 'binary' }>, input: BuildTab
 }
 
 // keepContinuous deliberately skips threshold (a prevalence percent — meaningless for
-// continuous covariates) and selectedCohortId (continuous rows always show all cohorts).
+// continuous covariates) and selectedCohortIds (continuous rows always show all cohorts).
 function keepContinuous(
   row: Extract<Table1Row, { kind: 'continuous' }>,
   input: BuildTable1Input
