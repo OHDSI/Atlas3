@@ -58,8 +58,7 @@ function collectLeaves(node: RawNode, out: TreemapNode[], names: string[]): void
   const cases = node.cases ?? 0
   const tar = node.timeAtRisk ?? 0
   const persons = node.size ?? 0
-  const py = tar / 365.25
-  const rate = py > 0 ? cases / py : 0
+  const rate = tar > 0 ? cases / tar : 0
 
   const label = names.length > 0 && /^[01]+$/.test(node.name)
     ? decodeBitmask(node.name, names)

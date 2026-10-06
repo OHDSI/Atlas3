@@ -21,6 +21,7 @@ describe('IncidenceRateInsightsRail', () => {
     expect(kpis.length).toBe(4)
     // Rate = 0.0005 * 1000 = 0.50
     expect(kpis[3].text()).toContain('0.50')
+    expect(kpis[2].text()).toContain('365,250')
   })
 
   it('renders the stratification table only when stratifyStats is non-empty', () => {
@@ -29,6 +30,8 @@ describe('IncidenceRateInsightsRail', () => {
       props: { report, multiplier: 1000 },
     })
     expect(w.find('[data-testid="ir-insights-strata"]').exists()).toBe(true)
+    // 20 cases / 182,625 person-years * 1000 = 0.11
+    expect(w.find('[data-testid="ir-insights-strata"]').text()).toContain('0.11')
 
     const w2 = mount(IncidenceRateInsightsRail, {
       global: { plugins: [pristinePinia(), vuetify] },

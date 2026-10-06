@@ -135,7 +135,7 @@ export const IncidenceRateSummaryStatsSchema = z
   .transform(s => ({
     ...s,
     proportion: s.proportion || (s.totalPersons > 0 ? s.cases / s.totalPersons : 0),
-    rate: s.rate || (s.timeAtRisk > 0 ? s.cases / (s.timeAtRisk / 365.25) : 0),
+    rate: s.rate || (s.timeAtRisk > 0 ? s.cases / s.timeAtRisk : 0),
   }))
 export type IncidenceRateSummaryStats = z.infer<typeof IncidenceRateSummaryStatsSchema>
 

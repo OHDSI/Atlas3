@@ -3598,7 +3598,7 @@
       "stratifyRule": "Stratify Rule",
       "summaryStatistics": "Summary Statistics:",
       "timeAtRisk": "Time At Risk",
-      "timeAtRiskYears": "(years)"
+      "timeAtRiskYears": "Person-years"
     },
     "savingError": "An error occurred while attempting to save an incidence rate.",
     "tabs": {
