@@ -38,4 +38,57 @@ describe('IncidenceRateTreemap', () => {
     })
     expect(w.html()).toBeDefined()
   })
+
+  it('maps nested bitmask leaves and handles missing time at risk', () => {
+    const w = mount(IncidenceRateTreemap, {
+      props: {
+        treemapJson: JSON.stringify({
+          name: 'root',
+          children: [
+            {
+              name: 'group',
+              children: [
+                { name: '10', size: 0, cases: 2, timeAtRisk: 20 },
+                { name: '01', size: 4, cases: 1 },
+              ],
+            },
+          ],
+        }),
+        strataNames: ['Female', 'Age 65+'],
+      },
+      global: { plugins: [vuetify, createPinia()], stubs: { 'v-chart': true } },
+    })
+
+    const data = w.findComponent({ name: 'AtlasTreemapChart' }).props('data') as Array<{
+      name: string
+      value: number
+      colorValue: number
+      conceptPath: string
+    }>
+    expect(data).toEqual([
+      expect.objectContaining({
+        name: 'Female',
+        value: 1,
+        colorValue: 0.1,
+        conceptPath: expect.stringContaining('Rate: 100.0 per 1,000 PY'),
+      }),
+      expect.objectContaining({ name: 'Age 65+', value: 4, colorValue: 0 }),
+    ])
+  })
+
+  it('returns no nodes for malformed JSON', () => {
+    const w = mount(IncidenceRateTreemap, {
+      props: { treemapJson: '{not json' },
+      global: { plugins: [vuetify, createPinia()], stubs: { 'v-chart': true } },
+    })
+    expect(w.findComponent({ name: 'AtlasTreemapChart' }).props('data')).toEqual([])
+  })
+
+  it('returns no nodes for a root without children', () => {
+    const w = mount(IncidenceRateTreemap, {
+      props: { treemapJson: JSON.stringify({ name: 'root' }) },
+      global: { plugins: [vuetify, createPinia()], stubs: { 'v-chart': true } },
+    })
+    expect(w.findComponent({ name: 'AtlasTreemapChart' }).props('data')).toEqual([])
+  })
 })

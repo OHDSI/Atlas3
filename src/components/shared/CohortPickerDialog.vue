@@ -74,6 +74,7 @@ import type { CohortDefinitionSummary } from '@/models/webapi.types'
 interface CohortReference {
   id: number
   name: string
+  [key: string]: unknown
 }
 
 const props = withDefaults(defineProps<{

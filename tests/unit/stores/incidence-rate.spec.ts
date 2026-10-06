@@ -578,6 +578,35 @@ describe('incidence-rate store — tags', () => {
 })
 
 describe('incidence-rate store — UI state setters and computed', () => {
+  it('applyProposal updates every supported design field and reports whether it applied changes', () => {
+    const s = useIncidenceRateStore()
+    expect(s.applyProposal({ name: 'Ignored without a design' })).toBe(false)
+
+    s.createNewIR()
+    expect(s.applyProposal({
+      name: 'Proposed analysis',
+      description: 'A proposed description',
+      targetIds: [1],
+      outcomeIds: [2],
+      timeAtRisk: { end: { DateField: 'EndDate', Offset: 30 } },
+      studyWindow: { startDate: '2020-01-01', endDate: '2020-12-31' },
+    })).toBe(true)
+    expect(s.currentIR?.name).toBe('Proposed analysis')
+    expect(s.currentIR?.expression.targetIds).toEqual([1])
+    expect(s.currentIR?.expression.outcomeIds).toEqual([2])
+    expect(s.currentIR?.expression.timeAtRisk.end.Offset).toBe(30)
+    expect(s.currentIR?.expression.studyWindow?.endDate).toBe('2020-12-31')
+
+    expect(s.applyProposal({
+      targetIdsToAdd: [{ id: 3, name: 'Target 3' }],
+      outcomeIdsToAdd: [{ id: 4, name: 'Outcome 4' }],
+      studyWindow: null,
+    })).toBe(true)
+    expect(s.currentIR?.expression.targetIds).toEqual([1, 3])
+    expect(s.currentIR?.expression.outcomeIds).toEqual([2, 4])
+    expect(s.currentIR?.expression.studyWindow).toBeUndefined()
+  })
+
   it('setExecutionInfo writes per-source key', () => {
     const s = useIncidenceRateStore()
     s.createNewIR()

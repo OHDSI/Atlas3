@@ -45,6 +45,7 @@ import { listFeatureAnalyses } from '@/services/feature-analysis.service'
 import { success } from '@/types/api'
 import FeatureAnalysesView from '@/views/FeatureAnalysesView.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
 import { emptyEntityAccess } from '@/models/auth.types'
 import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
 
@@ -186,6 +187,41 @@ describe('FeatureAnalysesView', () => {
     const rows = table.props('items') as FeatureAnalysisListItem[]
     expect(rows[0]?.id).toBe(26)
     expect(rows.at(-1)?.id).toBe(2)
+  })
+
+  it('sorts user values and restores the filtered order when sorting is cleared', async () => {
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success(sampleList))
+    mounted = await mountView()
+    const table = mounted.wrapper.findComponent({ name: 'AnalysisDataTable' })
+
+    table.vm.$emit('update:sortBy', [{ key: 'createdBy', order: 'asc' }])
+    await flushPromises()
+    expect((table.props('items') as FeatureAnalysisListItem[])[0]?.id).toBe(1)
+
+    table.vm.$emit('update:sortBy', [])
+    await flushPromises()
+    expect((table.props('items') as FeatureAnalysisListItem[])[0]?.id).toBe(1)
+  })
+
+  it('copies and deletes editable analyses', async () => {
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success([sampleList[1]!]))
+    mounted = await mountView()
+    const store = useFeatureAnalysesStore()
+    vi.spyOn(store, 'copy').mockResolvedValue({ ...sampleList[1]!, id: 3 })
+    vi.spyOn(store, 'remove').mockResolvedValue(true)
+
+    const table = mounted.wrapper.findComponent({ name: 'AnalysisDataTable' })
+    table.vm.$emit('copy', sampleList[1])
+    await flushPromises()
+    await new Promise<void>(resolve => setTimeout(resolve, 0))
+    await flushPromises()
+    expect(store.copy).toHaveBeenCalledWith(2)
+    expect(mounted.router.currentRoute.value.path).toBe('/feature-analyses/3')
+
+    table.vm.$emit('delete', sampleList[1])
+    await flushPromises()
+    await (mounted.wrapper.vm as unknown as { confirmDelete(): Promise<void> }).confirmDelete()
+    expect(store.remove).toHaveBeenCalledWith(2)
   })
 
   it('shows empty state when there are no items', async () => {
