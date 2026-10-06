@@ -22,7 +22,7 @@
         @rename="(id, name) => store.renameTargetCohort(id, name)"
         @remove="id => store.removeTargetCohort(id)"
       />
-      <PathwayCohortPicker
+      <CohortPickerDialog
         v-model="showTargetPicker"
         :excluded-ids="targetIds"
         @select="refs => refs.forEach(r => store.addTargetCohort(r))"
@@ -48,7 +48,7 @@
         @rename="(id, name) => store.renameEventCohort(id, name)"
         @remove="id => store.removeEventCohort(id)"
       />
-      <PathwayCohortPicker
+      <CohortPickerDialog
         v-model="showEventPicker"
         :excluded-ids="eventIds"
         @select="refs => refs.forEach(r => store.addEventCohort(r))"
@@ -73,8 +73,8 @@ import { AtlasButton } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePathwayStore } from '@/stores/pathway'
+import CohortPickerDialog from '@/components/shared/CohortPickerDialog.vue'
 import PathwayCohortList from './PathwayCohortList.vue'
-import PathwayCohortPicker from './PathwayCohortPicker.vue'
 import PathwaySettings from './PathwaySettings.vue'
 import { useI18n } from '@/composables/useI18n'
 

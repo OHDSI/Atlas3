@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type {
   IncidenceRate,
   IncidenceRateExpression,
@@ -349,6 +349,11 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     if (!ir.name || ir.name.trim() === '') {
       errors.push({ field: 'name', message: 'Name is required', severity: 'error' })
     }
+    if (!ir.expression?.timeAtRisk) {
+      errors.push({ field: 'expression', message: 'Analysis design is incomplete', severity: 'error' })
+      validationErrors.value = errors
+      return
+    }
     if (ir.expression.targetIds.length === 0) {
       errors.push({
         field: 'targetIds',
@@ -382,6 +387,32 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     }
     validationErrors.value = errors
   }
+
+  // Track only inputs used by validateIR. Vue batches this watcher within a
+  // tick, keeping Run disabled state current without revalidating for
+  // descriptions, tags, concept sets, or other unrelated design changes.
+  const validationInputs = computed(() => {
+    const ir = currentIR.value
+    if (!ir) return null
+    const { expression } = ir
+    if (!expression?.timeAtRisk) return [ir.name, 'incomplete-design']
+    const { timeAtRisk, studyWindow } = expression
+    return [
+      ir.name,
+      expression.targetIds.join(','),
+      expression.outcomeIds.join(','),
+      timeAtRisk.start.DateField,
+      timeAtRisk.start.Offset,
+      timeAtRisk.end.DateField,
+      timeAtRisk.end.Offset,
+      studyWindow?.startDate ?? '',
+      studyWindow?.endDate ?? '',
+    ]
+  })
+
+  watch(validationInputs, () => {
+    void validateIR()
+  }, { immediate: true })
 
   async function addTag(tag: Tag): Promise<boolean> {
     if (!currentIR.value?.id) return false
@@ -437,7 +468,9 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     rateMultiplier.value = m
   }
 
-  const canSave = computed(() => isDirty.value && !hasErrors.value && !isPreviewMode.value)
+  const canSave = computed(
+    () => isDirty.value && !!currentIR.value?.name?.trim() && !isPreviewMode.value
+  )
   const canGenerate = computed(
     () =>
       !isDirty.value &&

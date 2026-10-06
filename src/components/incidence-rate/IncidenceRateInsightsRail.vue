@@ -43,13 +43,13 @@
         {{ t('components.incidenceRate.personYearsAtRisk', 'Person-years at risk').value }}
       </div>
       <div class="k-val">
-        {{ formatYears(report.summary.timeAtRisk) }}
+        {{ format(report.summary.timeAtRisk) }}
       </div>
     </div>
     <div
       class="ir-insights__kpi"
       data-testid="ir-kpi"
-      :title="tv('components.incidenceRate.incidenceRateTooltip', 'Incidence rate: {cases} cases per {years} person-years, scaled by {multiplier}', { cases: format(report.summary.cases), years: formatYears(report.summary.timeAtRisk), multiplier: multiplier.toLocaleString() })"
+      :title="tv('components.incidenceRate.incidenceRateTooltip', 'Incidence rate: {cases} cases per {years} person-years, scaled by {multiplier}', { cases: format(report.summary.cases), years: format(report.summary.timeAtRisk), multiplier: multiplier.toLocaleString() })"
     >
       <div class="k-label">
         {{ tv('components.incidenceRate.incidenceRatePerPy', 'Incidence rate per {multiplier} PY', { multiplier: multiplier.toLocaleString() }) }}
@@ -133,7 +133,7 @@
               {{ format(r.cases) }}
             </td>
             <td class="num">
-              {{ rate(r.cases / Math.max(r.timeAtRisk / 365.25, 1)) }}
+              {{ rate(r.cases / Math.max(r.timeAtRisk, 1)) }}
             </td>
           </tr>
         </tbody>
@@ -152,8 +152,8 @@ const { t, tv } = useI18n()
 
 const sortedStrata = computed(() =>
   [...props.report.stratifyStats].sort((a, b) => {
-    const ra = a.cases / Math.max(a.timeAtRisk / 365.25, 1)
-    const rb = b.cases / Math.max(b.timeAtRisk / 365.25, 1)
+    const ra = a.cases / Math.max(a.timeAtRisk, 1)
+    const rb = b.cases / Math.max(b.timeAtRisk, 1)
     return rb - ra
   })
 )
@@ -175,9 +175,6 @@ const casesArc = computed(() => {
 
 function format(n: number | null | undefined) {
   return n == null ? '—' : Math.round(n).toLocaleString()
-}
-function formatYears(days: number | null | undefined) {
-  return days == null ? '—' : Math.round(days / 365.25).toLocaleString()
 }
 function rate(r: number) {
   return (r * props.multiplier).toFixed(2)

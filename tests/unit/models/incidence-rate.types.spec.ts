@@ -87,6 +87,14 @@ describe('Incidence Rate schemas', () => {
     expect(r.treemapData).toBe('{}')
   })
 
+  it('derives a rate from person-years without converting the API value from days', () => {
+    const r = IncidenceRateInfoBySourceSchema.parse({
+      executionInfo: { id: { analysisId: 1, sourceId: 2 }, status: 'COMPLETE' },
+      summaryList: [{ targetId: 1, outcomeId: 2, totalPersons: 31946, cases: 582, timeAtRisk: 54297 }],
+    })
+    expect(r.summaryList[0]?.rate).toBeCloseTo(582 / 54297)
+  })
+
   it('exposes the expected constants', () => {
     expect(IR_DEFAULTS.timeAtRisk.start.DateField).toBe('StartDate')
     expect(IR_AUTO_SAVE_INTERVAL_MS).toBe(30000)

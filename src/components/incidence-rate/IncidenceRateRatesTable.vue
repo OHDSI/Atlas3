@@ -13,10 +13,10 @@
           {{ t('ir.results.cases', 'Cases').value }}
         </th>
         <th class="num">
-          {{ t('ir.results.timeAtRiskYears', 'TAR (years)').value }}
+          {{ t('ir.results.timeAtRiskYears', 'Person-years').value }}
         </th>
         <th class="num">
-          {{ t('ir.results.rate', 'Rate').value }} / {{ multiplier.toLocaleString() }}
+          {{ t('ir.results.rate', 'Rate').value }} / {{ multiplier.toLocaleString() }} PY
         </th>
       </tr>
     </thead>
@@ -33,7 +33,7 @@
           {{ format(report.summary.cases) }}
         </td>
         <td class="num">
-          {{ formatYears(report.summary.timeAtRisk) }}
+          {{ format(report.summary.timeAtRisk) }}
         </td>
         <td class="num">
           {{ rate(report.summary.rate) }}
@@ -52,10 +52,10 @@
           {{ format(row.cases) }}
         </td>
         <td class="num">
-          {{ formatYears(row.timeAtRisk) }}
+          {{ format(row.timeAtRisk) }}
         </td>
         <td class="num">
-          {{ rate(row.cases / Math.max(row.timeAtRisk / 365.25, 1)) }}
+          {{ rate(row.cases / Math.max(row.timeAtRisk, 1)) }}
         </td>
       </tr>
     </tbody>
@@ -71,9 +71,6 @@ const { t } = useI18n()
 
 function format(n: number | null | undefined) {
   return n == null ? '—' : Math.round(n).toLocaleString()
-}
-function formatYears(days: number | null | undefined) {
-  return days == null ? '—' : (days / 365.25).toLocaleString(undefined, { maximumFractionDigits: 0 })
 }
 function rate(r: number) {
   return (r * props.multiplier).toFixed(2)

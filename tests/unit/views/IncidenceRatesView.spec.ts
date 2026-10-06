@@ -408,6 +408,22 @@ describe('IncidenceRatesView', () => {
   })
 
   describe('Pagination', () => {
+    it('sorts all incidence rates before selecting the current page', async () => {
+      const data = Array.from({ length: 51 }, (_, index) => mkIR(index + 1))
+      vi.mocked(listIncidenceRates).mockResolvedValue({ success: true, data })
+      wrapper = mountView()
+      await flushPromises()
+      wrapper.vm.page = 1
+
+      const table = wrapper.findComponent({ name: 'AnalysisDataTable' })
+      table.vm.$emit('update:sortBy', [{ key: 'id', order: 'desc' }])
+      await flushPromises()
+
+      const rows = table.props('items') as IncidenceRate[]
+      expect(rows[0]?.id).toBe(26)
+      expect(rows.at(-1)?.id).toBe(2)
+    })
+
     it('renders pagination controls and paginates across pages', async () => {
       const data = Array.from({ length: 30 }, (_, i) => mkIR(i + 1))
       vi.mocked(listIncidenceRates).mockResolvedValue({ success: true, data })

@@ -2219,6 +2219,9 @@
       "showDesignPanel": "Show design panel",
       "hideAnalysisDesign": "Hide Analysis Design",
       "showAnalysisDesign": "Show Analysis Design",
+      "viewValidationMessages": "View validation messages",
+      "analysisDesign": "Analysis design",
+      "validationMessages": "Validation messages",
       "noCasesFound": "No cases found for this target/outcome combination. Try selecting a different outcome."
     },
     "pathwayCohortList": {
@@ -3598,7 +3601,7 @@
       "stratifyRule": "Stratify Rule",
       "summaryStatistics": "Summary Statistics:",
       "timeAtRisk": "Time At Risk",
-      "timeAtRiskYears": "(years)"
+      "timeAtRiskYears": "Person-years"
     },
     "savingError": "An error occurred while attempting to save an incidence rate.",
     "tabs": {

@@ -40,8 +40,8 @@ const stubs = {
       '<button class="stub-remove" @click="$emit(\'remove\', (cohorts && cohorts[0] && cohorts[0].id) || 1)" />' +
       '</div>',
   },
-  PathwayCohortPicker: {
-    name: 'PathwayCohortPicker',
+  CohortPickerDialog: {
+    name: 'CohortPickerDialog',
     props: ['modelValue', 'excludedIds'],
     emits: ['update:modelValue', 'select'],
     template:
@@ -158,12 +158,12 @@ describe('PathwayDesignForm interactions', () => {
     expect(lists[1]!.props('cohorts')).toEqual([{ id: 2, name: 'B' }])
   })
 
-  it('passes excluded ids to PathwayCohortPicker based on current cohorts', async () => {
+  it('passes excluded ids to CohortPickerDialog based on current cohorts', async () => {
     const { store, wrapper } = setup()
     store.addTargetCohort({ id: 7, name: 'A' })
     store.addEventCohort({ id: 8, name: 'B' })
     await flushPromises()
-    const pickers = wrapper.findAllComponents({ name: 'PathwayCohortPicker' })
+    const pickers = wrapper.findAllComponents({ name: 'CohortPickerDialog' })
     expect(pickers[0]!.props('excludedIds')).toEqual([7])
     expect(pickers[1]!.props('excludedIds')).toEqual([8])
   })

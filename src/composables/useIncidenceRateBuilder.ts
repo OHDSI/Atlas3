@@ -26,17 +26,8 @@ export function useIncidenceRateBuilder() {
   async function save(): Promise<boolean> {
     const ir = store.currentIR
     if (!ir) return false
-
-    await store.validateIR()
-    if (store.hasErrors) {
-      const messages = store.validationErrors
-        .filter(e => e.severity === 'error')
-        .map(e => e.message)
-        .join(' · ')
-      notify(
-        messages ? `Cannot save: ${messages}` : 'Cannot save — fix validation errors first',
-        'error'
-      )
+    if (!ir.name?.trim()) {
+      notify('Cannot save: Name is required', 'error')
       return false
     }
 

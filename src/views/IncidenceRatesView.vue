@@ -37,6 +37,7 @@
     </template>
 
     <AnalysisDataTable
+      v-model:sort-by="sortBy"
       :headers="headers"
       :items="paginatedIncidenceRates"
       :loading="loading"
@@ -126,6 +127,8 @@ import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
 import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
 import EntityImportButton from '@/components/shared/EntityImportButton.vue'
 
+type SortItem = { key: string; order: 'asc' | 'desc' }
+
 const {
   loading,
   error,
@@ -133,7 +136,7 @@ const {
   page,
   itemsPerPage,
   fetchIncidenceRates,
-  paginatedIncidenceRates,
+  filteredIncidenceRates,
   totalPages,
 } = useIncidenceRates()
 
@@ -148,6 +151,35 @@ const { t, tv } = useI18n()
 const showDelete = ref(false)
 const deleteTarget = ref<number | null>(null)
 const searchInput = ref('')
+const sortBy = ref<SortItem[]>([{ key: 'modifiedDate', order: 'desc' }])
+
+function sortValue(item: IncidenceRate, key: string): string | number {
+  const value = item[key as keyof IncidenceRate]
+  if (key === 'createdBy' && value && typeof value === 'object') {
+    const user = value as { name?: string; login?: string; id?: number }
+    return (user.name ?? user.login ?? user.id ?? '').toString().toLowerCase()
+  }
+  if (typeof value === 'string') return value.toLowerCase()
+  return typeof value === 'number' ? value : ''
+}
+
+const sortedIncidenceRates = computed(() => {
+  const activeSort = sortBy.value[0]
+  if (!activeSort) return filteredIncidenceRates.value
+
+  const direction = activeSort.order === 'asc' ? 1 : -1
+  return [...filteredIncidenceRates.value].sort((left, right) => {
+    const leftValue = sortValue(left, activeSort.key)
+    const rightValue = sortValue(right, activeSort.key)
+    if (leftValue === rightValue) return 0
+    return leftValue > rightValue ? direction : -direction
+  })
+})
+
+const paginatedIncidenceRates = computed(() => {
+  const start = page.value * itemsPerPage.value
+  return sortedIncidenceRates.value.slice(start, start + itemsPerPage.value)
+})
 
 const headers = computed(() => [
   { title: t('columns.id', 'ID').value, key: 'id' },

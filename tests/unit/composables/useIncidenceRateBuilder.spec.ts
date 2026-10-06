@@ -79,7 +79,7 @@ describe('useIncidenceRateBuilder', () => {
       expect(feedback.value).toBeNull()
     })
 
-    it('returns false and notifies error when validation fails', async () => {
+    it('requires a name when saving', async () => {
       const store = useIncidenceRateStore()
       store.setIR({
         name: '',
@@ -101,8 +101,28 @@ describe('useIncidenceRateBuilder', () => {
       const ok = await save()
 
       expect(ok).toBe(false)
-      expect(feedback.value?.color).toBe('error')
-      expect(feedback.value?.message).toMatch(/^Cannot save/)
+      expect(webapi.createIncidenceRate).not.toHaveBeenCalled()
+      expect(feedback.value).toEqual({ message: 'Cannot save: Name is required', color: 'error' })
+    })
+
+    it('saves an incomplete design that has a name', async () => {
+      const store = useIncidenceRateStore()
+      store.setIR(makeValidIR({
+        expression: {
+          ...makeValidIR().expression,
+          targetIds: [],
+          outcomeIds: [],
+        },
+      }))
+      vi.mocked(webapi.existsIncidenceRate).mockResolvedValue({ success: true, data: 0 })
+      vi.mocked(webapi.createIncidenceRate).mockResolvedValue({
+        success: true,
+        data: { ...store.currentIR!, id: 99 },
+      })
+
+      const { save } = useIncidenceRateBuilder()
+      expect(await save()).toBe(true)
+      expect(webapi.createIncidenceRate).toHaveBeenCalled()
     })
 
     it('returns false and notifies if name is taken', async () => {

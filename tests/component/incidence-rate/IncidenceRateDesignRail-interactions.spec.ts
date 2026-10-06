@@ -39,13 +39,13 @@ const stubs = {
       '<button class="stub-remove" @click="$emit(\'remove\', (cohorts && cohorts[0] && cohorts[0].id) || 1)" />' +
       '</div>',
   },
-  IncidenceRateCohortPicker: {
-    name: 'IncidenceRateCohortPicker',
+  CohortPickerDialog: {
+    name: 'CohortPickerDialog',
     props: ['modelValue'],
     emits: ['update:modelValue', 'select'],
     template:
       '<div class="stub-picker" :data-open="String(modelValue)">' +
-      '<button class="stub-select" @click="$emit(\'select\', { id: 999, name: \'picked\' })" />' +
+      '<button class="stub-select" @click="$emit(\'select\', [{ id: 999, name: \'picked\' }])" />' +
       '</div>',
   },
   IncidenceRateTimeAtRiskEditor: true,

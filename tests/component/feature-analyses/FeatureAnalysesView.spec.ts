@@ -45,6 +45,7 @@ import { listFeatureAnalyses } from '@/services/feature-analysis.service'
 import { success } from '@/types/api'
 import FeatureAnalysesView from '@/views/FeatureAnalysesView.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
 import { emptyEntityAccess } from '@/models/auth.types'
 import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
 
@@ -91,9 +92,9 @@ function makeRouter(): Router {
   })
 }
 
-async function mountView() {
+async function mountView(initialPath = '/feature-analyses') {
   const router = makeRouter()
-  await router.push('/feature-analyses')
+  await router.push(initialPath)
   await router.isReady()
 
   // Set up a permitted user so the new permission gate doesn't disable the
@@ -165,6 +166,62 @@ describe('FeatureAnalysesView', () => {
     expect(mounted.wrapper.text()).toContain('Conditions Criteria')
     expect(mounted.wrapper.text()).toContain('PRESET')
     expect(mounted.wrapper.text()).toContain('CRITERIA_SET')
+  })
+
+  it('sorts all feature analyses before selecting the current page', async () => {
+    const analyses: FeatureAnalysisListItem[] = Array.from({ length: 51 }, (_, index) => ({
+      id: index + 1,
+      name: `Feature analysis ${String(index + 1).padStart(3, '0')}`,
+      type: 'CUSTOM_FE',
+      createdBy: 'ohdsi',
+      createdDate: index,
+      modifiedDate: index,
+    }))
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success(analyses))
+    mounted = await mountView('/feature-analyses?page=2&perPage=25')
+
+    const table = mounted.wrapper.findComponent({ name: 'AnalysisDataTable' })
+    table.vm.$emit('update:sortBy', [{ key: 'id', order: 'desc' }])
+    await flushPromises()
+
+    const rows = table.props('items') as FeatureAnalysisListItem[]
+    expect(rows[0]?.id).toBe(26)
+    expect(rows.at(-1)?.id).toBe(2)
+  })
+
+  it('sorts user values and restores the filtered order when sorting is cleared', async () => {
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success(sampleList))
+    mounted = await mountView()
+    const table = mounted.wrapper.findComponent({ name: 'AnalysisDataTable' })
+
+    table.vm.$emit('update:sortBy', [{ key: 'createdBy', order: 'asc' }])
+    await flushPromises()
+    expect((table.props('items') as FeatureAnalysisListItem[])[0]?.id).toBe(1)
+
+    table.vm.$emit('update:sortBy', [])
+    await flushPromises()
+    expect((table.props('items') as FeatureAnalysisListItem[])[0]?.id).toBe(1)
+  })
+
+  it('copies and deletes editable analyses', async () => {
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success([sampleList[1]!]))
+    mounted = await mountView()
+    const store = useFeatureAnalysesStore()
+    vi.spyOn(store, 'copy').mockResolvedValue({ ...sampleList[1]!, id: 3 })
+    vi.spyOn(store, 'remove').mockResolvedValue(true)
+
+    const table = mounted.wrapper.findComponent({ name: 'AnalysisDataTable' })
+    table.vm.$emit('copy', sampleList[1])
+    await flushPromises()
+    await new Promise<void>(resolve => setTimeout(resolve, 0))
+    await flushPromises()
+    expect(store.copy).toHaveBeenCalledWith(2)
+    expect(mounted.router.currentRoute.value.path).toBe('/feature-analyses/3')
+
+    table.vm.$emit('delete', sampleList[1])
+    await flushPromises()
+    await (mounted.wrapper.vm as unknown as { confirmDelete(): Promise<void> }).confirmDelete()
+    expect(store.remove).toHaveBeenCalledWith(2)
   })
 
   it('shows empty state when there are no items', async () => {

@@ -66,7 +66,13 @@ describe('IncidenceRateWorkbench', () => {
   function loadedStore() {
     const store = useIncidenceRateStore()
     store.createNewIR()
-    if (store.currentIR) store.currentIR.id = 42
+    if (store.currentIR) {
+      store.currentIR.id = 42
+      store.updateMeta({ name: 'Test IR' })
+      store.addTargetCohortId(1, 'Target')
+      store.addOutcomeCohortId(2, 'Outcome')
+      store.markClean()
+    }
     return store
   }
 
@@ -87,6 +93,46 @@ describe('IncidenceRateWorkbench', () => {
     expect(w.find('[data-testid="ir-workbench-rail"]').exists()).toBe(true)
     expect(w.find('[data-testid="ir-workbench-canvas"]').exists()).toBe(true)
     expect(w.find('[data-testid="ir-workbench-insights"]').exists()).toBe(true)
+  })
+
+  it('disables Run when a validation-relevant design field becomes invalid', async () => {
+    const store = loadedStore()
+    const w = mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+
+    const runTable = w.findComponent({ name: 'DataSourceRunTable' })
+    expect(runTable.props('runDisabled')).toBe(false)
+
+    store.removeTargetCohortId(1)
+    store.markClean()
+    await flushPromises()
+
+    expect(runTable.props('runDisabled')).toBe(true)
+    expect(runTable.props('runDisabledReason')).toMatch(/validation/i)
+  })
+
+  it('shows validation messages from the warning indicator', async () => {
+    const store = loadedStore()
+    const w = mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+    expect(w.find('[data-testid="ir-validation-messages-toggle"]').exists()).toBe(false)
+
+    store.removeTargetCohortId(1)
+    store.markClean()
+    await flushPromises()
+
+    await w.get('[data-testid="ir-validation-messages-toggle"]').trigger('click')
+    expect(w.findComponent({ name: 'AtlasDialog' }).props('modelValue')).toBe(true)
+    expect(document.body.textContent).toContain('At least one target cohort is required')
+
+    store.addTargetCohortId(1, 'Target')
+    store.markClean()
+    await flushPromises()
+    expect(w.find('[data-testid="ir-validation-messages-toggle"]').exists()).toBe(false)
   })
 
   it('auto-selects the latest completed run when no ?run is set', async () => {

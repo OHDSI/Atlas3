@@ -138,6 +138,24 @@ describe('IncidenceRateBuilder', () => {
     )
   })
 
+  it('disables Save and explains why when the draft has no name', async () => {
+    const store = useIncidenceRateStore()
+    store.createNewIR()
+    store.addTargetCohortId(1, 'Target')
+    const w = mount(IncidenceRateBuilder, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+
+    expect(w.get('[data-testid="ir-builder-save"]').attributes('disabled')).toBeDefined()
+    expect((w.vm as unknown as { saveDisabledReason: string }).saveDisabledReason).toMatch(/name/i)
+
+    store.updateMeta({ name: 'Named draft' })
+    await w.vm.$nextTick()
+    expect(w.get('[data-testid="ir-builder-save"]').attributes('disabled')).toBeUndefined()
+    expect((w.vm as unknown as { saveDisabledReason: string }).saveDisabledReason).toBe('')
+  })
+
   it('routes back and forwards save/copy/delete actions to the builder composable', async () => {
     const store = loadIR()
     const pushSpy = vi.spyOn(router, 'push')

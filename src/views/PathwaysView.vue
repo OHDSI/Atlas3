@@ -37,6 +37,7 @@
     </template>
 
     <AnalysisDataTable
+      v-model:sort-by="sortBy"
       :headers="headers"
       :items="paginatedPathways"
       :loading="loading"
@@ -131,6 +132,8 @@ import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
 import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
 import EntityImportButton from '@/components/shared/EntityImportButton.vue'
 
+type SortItem = { key: string; order: 'asc' | 'desc' }
+
 const {
   loading,
   error,
@@ -138,7 +141,7 @@ const {
   page,
   itemsPerPage,
   fetchPathways,
-  paginatedPathways,
+  filteredPathways,
   totalPages,
 } = usePathways()
 
@@ -156,6 +159,35 @@ const feedbackSeverity = computed<AtlasSnackbarSeverity>(() =>
   feedback.value?.color === 'error' ? 'danger' : (feedback.value?.color ?? 'info')
 )
 const searchInput = ref('')
+const sortBy = ref<SortItem[]>([{ key: 'modifiedDate', order: 'desc' }])
+
+function sortValue(item: Pathway, key: string): string | number {
+  const value = item[key as keyof Pathway]
+  if (key === 'createdBy' && value && typeof value === 'object') {
+    const user = value as { name?: string; login?: string; id?: number }
+    return (user.name ?? user.login ?? user.id ?? '').toString().toLowerCase()
+  }
+  if (typeof value === 'string') return value.toLowerCase()
+  return typeof value === 'number' ? value : ''
+}
+
+const sortedPathways = computed(() => {
+  const activeSort = sortBy.value[0]
+  if (!activeSort) return filteredPathways.value
+
+  const direction = activeSort.order === 'asc' ? 1 : -1
+  return [...filteredPathways.value].sort((left, right) => {
+    const leftValue = sortValue(left, activeSort.key)
+    const rightValue = sortValue(right, activeSort.key)
+    if (leftValue === rightValue) return 0
+    return leftValue > rightValue ? direction : -direction
+  })
+})
+
+const paginatedPathways = computed(() => {
+  const start = page.value * itemsPerPage.value
+  return sortedPathways.value.slice(start, start + itemsPerPage.value)
+})
 
 const headers = computed(() => [
   { title: t('columns.id', 'ID').value, key: 'id' },
