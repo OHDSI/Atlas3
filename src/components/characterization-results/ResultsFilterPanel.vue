@@ -1,7 +1,7 @@
 <!--
   ResultsFilterPanel
 
-  Compact filter strip: Domain / Analysis (multi), Cohort (single) and a free
+  Compact filter strip: Domain / Analysis / Cohort (multi) and a free
   text filter over the covariate names (#327).
   Pure controlled component — emits update:* for each binding.
 -->
@@ -43,17 +43,21 @@
         @update:model-value="(v) => onAnalysisChange(v as number[])"
       />
       <AtlasSelect
-        :model-value="selectedCohortId"
+        :model-value="draftCohortIds"
         :items="cohortItems"
         item-title="title"
         item-value="value"
         :label="tv('common.cohort', 'Cohort')"
         variant="outlined"
+        multiple
+        chips
+        closable-chips
         clearable
         hide-details
         class="results-filter__select"
         data-testid="char-results-filter-cohort"
-        @update:model-value="(v) => onCohortChange(v as number | null)"
+        @update:menu="onCohortMenuChange"
+        @update:model-value="(v) => onCohortChange(v as number[])"
       />
       <AtlasTextField
         :model-value="search"
@@ -71,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
 import type { LinkedCohort } from '@/models/characterization.types'
@@ -88,7 +92,7 @@ interface Props {
   availableCohorts: LinkedCohort[]
   selectedAnalysisIds: number[]
   selectedDomains: string[]
-  selectedCohortId: number | null
+  selectedCohortIds: number[]
   search: string
 }
 
@@ -96,7 +100,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'update:selectedAnalysisIds', value: number[]): void
   (e: 'update:selectedDomains', value: string[]): void
-  (e: 'update:selectedCohortId', value: number | null): void
+  (e: 'update:selectedCohortIds', value: number[]): void
   (e: 'update:search', value: string): void
 }>()
 
@@ -108,6 +112,17 @@ const analysisItems = computed(() =>
 
 const cohortItems = computed(() =>
   props.availableCohorts.map(c => ({ title: c.name, value: c.id }))
+)
+
+const cohortMenuOpen = ref(false)
+const draftCohortIds = ref<number[]>([...props.selectedCohortIds])
+
+watch(
+  () => props.selectedCohortIds,
+  (value) => {
+    if (!cohortMenuOpen.value) draftCohortIds.value = [...value]
+  },
+  { deep: true },
 )
 
 function onDomainChange(value: unknown): void {
@@ -133,11 +148,25 @@ function onAnalysisChange(value: unknown): void {
 }
 
 function onCohortChange(value: unknown): void {
-  if (typeof value === 'number') {
-    emit('update:selectedCohortId', value)
-  } else {
-    emit('update:selectedCohortId', null)
+  draftCohortIds.value = Array.isArray(value)
+    ? value.filter((v): v is number => typeof v === 'number')
+    : []
+
+  if (!cohortMenuOpen.value) emit('update:selectedCohortIds', draftCohortIds.value)
+}
+
+function onCohortMenuChange(isOpen: boolean): void {
+  cohortMenuOpen.value = isOpen
+
+  if (isOpen) {
+    draftCohortIds.value = [...props.selectedCohortIds]
+  } else if (!sameCohortIds(draftCohortIds.value, props.selectedCohortIds)) {
+    emit('update:selectedCohortIds', draftCohortIds.value)
   }
+}
+
+function sameCohortIds(left: number[], right: number[]): boolean {
+  return left.length === right.length && left.every(id => right.includes(id))
 }
 </script>
 

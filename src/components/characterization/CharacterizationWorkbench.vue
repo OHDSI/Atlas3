@@ -66,12 +66,12 @@
           :available-cohorts="availableCohortsForFilter"
           :selected-analysis-ids="filters.selectedAnalysisIds"
           :selected-domains="filters.selectedDomains"
-          :selected-cohort-id="filters.selectedCohortId"
+          :selected-cohort-ids="filters.selectedCohortIds"
           :search="filters.search"
           @update:search="(v) => (filters.search = v)"
           @update:selected-analysis-ids="(v) => (filters.selectedAnalysisIds = v)"
           @update:selected-domains="(v) => (filters.selectedDomains = v)"
-          @update:selected-cohort-id="(v) => (filters.selectedCohortId = v)"
+          @update:selected-cohort-ids="(v) => (filters.selectedCohortIds = v)"
         />
 
         <CharacterizationEmptyState
@@ -106,7 +106,7 @@
             :selected-analysis-ids="filters.selectedAnalysisIds"
             :selected-domains="filters.selectedDomains"
             :search="filters.search"
-            :selected-cohort-id="filters.selectedCohortId"
+            :selected-cohort-ids="filters.selectedCohortIds"
             @explore="onExplore"
           />
         </template>
@@ -164,6 +164,7 @@ import { useDataSourcesStore } from '@/stores/datasources'
 import { useCharacterizationResults } from '@/composables/useCharacterizationResults'
 import { isTerminalStatus } from '@/composables/useExecutionPolling'
 import { getCohortGenerationInfo } from '@/services/cohort-definition.service'
+import { getCharacterizationDesignSnapshot } from '@/services/characterization.service'
 import { logger } from '@/utils/logger'
 import {
   DEFAULT_TABLE1_CONFIG, DEFAULT_TABLE1_FILTERS,
@@ -179,8 +180,6 @@ import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
 import { exportCharacterizationResults } from './characterization-export'
 import {
   resolveActiveRunSummary,
-  resolveAvailableCohortsForFilter,
-  resolveAvailableDomains,
   resolveCohorts,
   resolveEmptyVariant,
   resolveHasStrata,
@@ -218,6 +217,7 @@ const config = ref<Table1Config>({ ...DEFAULT_TABLE1_CONFIG })
 const filters = ref<Table1Filters>({ ...DEFAULT_TABLE1_FILTERS })
 const configureOpen = ref<boolean>(false)
 const errorMessage = ref<string>('')
+const generationDesign = ref<CharacterizationDefinition | null>(null)
 
 const historyOpen = ref<boolean>(false)
 const historySourceKey = ref<string | null>(null)
@@ -262,21 +262,35 @@ const hasStrata = computed<boolean>(() => resolveHasStrata({
 }))
 
 const availableAnalyses = computed<{ id: number; name: string }[]>(() => {
+  if (generationDesign.value) {
+    return generationDesign.value.featureAnalyses.map(analysis => ({
+      id: analysis.id,
+      name: analysis.name ?? String(analysis.id),
+    }))
+  }
   const map = new Map<number, string>()
   for (const r of prevalence.value) map.set(r.analysisId, r.analysisName)
   for (const r of distribution.value) map.set(r.analysisId, r.analysisName)
   return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
 })
 
-const availableDomains = computed<string[]>(() => resolveAvailableDomains({
-  prevalence: prevalence.value,
-  distribution: distribution.value,
-}))
+const availableDomains = computed<string[]>(() => {
+  if (generationDesign.value) {
+    const domains = new Set<string>()
+    for (const analysis of generationDesign.value.featureAnalyses) {
+      if (analysis.domain) domains.add(analysis.domain)
+    }
+    return Array.from(domains).sort()
+  }
+  const domains = new Set<string>()
+  for (const result of prevalence.value) if (result.domainId) domains.add(result.domainId)
+  for (const result of distribution.value) if (result.domainId) domains.add(result.domainId)
+  return Array.from(domains).sort()
+})
 
-const availableCohortsForFilter = computed<LinkedCohort[]>(() => resolveAvailableCohortsForFilter({
-  prevalence: prevalence.value,
-  distribution: distribution.value,
-}))
+const availableCohortsForFilter = computed<LinkedCohort[]>(() =>
+  generationDesign.value?.cohorts ?? props.modelValue.cohorts
+)
 
 const selectedExecutionId = computed<number | null>(() => resolveSelectedExecutionId(route.query?.run))
 
@@ -343,11 +357,33 @@ watch(
 )
 
 watch(
+  [
+    selectedExecutionId,
+    () => filters.value.selectedAnalysisIds,
+    () => filters.value.selectedDomains,
+    () => filters.value.selectedCohortIds,
+    () => filters.value.threshold,
+  ],
+  async ([id]) => {
+    if (id === null) { reset(); cohortSizes.value = {}; return }
+    const ok = await load(id, {
+      analysisIds: filters.value.selectedAnalysisIds,
+      domainIds: filters.value.selectedDomains,
+      cohortIds: filters.value.selectedCohortIds,
+      thresholdValuePct: filters.value.threshold / 100,
+    })
+    errorMessage.value = ok ? '' : (error.value ?? '')
+  },
+  { immediate: true, deep: true },
+)
+
+watch(
   selectedExecutionId,
   async (id) => {
-    if (id === null) { reset(); cohortSizes.value = {}; return }
-    const ok = await load(id)
-    if (!ok) errorMessage.value = error.value ?? ''
+    generationDesign.value = null
+    if (id === null) return
+    const result = await getCharacterizationDesignSnapshot(id)
+    if (selectedExecutionId.value === id && result.success) generationDesign.value = result.data
   },
   { immediate: true },
 )

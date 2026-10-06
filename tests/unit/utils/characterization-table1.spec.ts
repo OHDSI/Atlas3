@@ -411,7 +411,7 @@ describe('buildTable1', () => {
                cohorts: [COHORT_A],
                byCohort: { '1': { count: 50, pct: 25 } } }),
       ],
-      filters: { ...DEFAULT_TABLE1_FILTERS, selectedCohortId: 2 },
+      filters: { ...DEFAULT_TABLE1_FILTERS, selectedCohortIds: [2] },
     }))
     const labels = result.rows.filter(r => r.kind === 'binary')
                               .map(r => (r as { label: string }).label)

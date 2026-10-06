@@ -19,6 +19,18 @@ const mockExec = vi.mocked(getCharacterizationExecution)
 const mockCount = vi.mocked(getCharacterizationResultCount)
 const mockResults = vi.mocked(getCharacterizationResults)
 
+function resultEnvelope(items: unknown[]) {
+  return {
+    reports: [{
+      analysisId: 1,
+      analysisName: 'A',
+      cohorts: [{ cohortId: 1, cohortName: 'C' }],
+      domainIds: [],
+      items,
+    }],
+  }
+}
+
 describe('useCharacterizationResults', () => {
   beforeEach(() => {
     mockExec.mockReset()
@@ -40,11 +52,11 @@ describe('useCharacterizationResults', () => {
       id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0,
     } as any))
     mockCount.mockResolvedValue(success(123))
-    mockResults.mockResolvedValue(success([
+    mockResults.mockResolvedValue(success(resultEnvelope([
       { analysisId: 1, analysisName: 'A', covariateId: 11, covariateName: 'X',
         conceptId: 0, cohortId: 1, cohortName: 'C', count: 10, pct: 5,
         resultType: 'PREVALENCE' },
-    ]))
+    ])))
     const r = useCharacterizationResults()
     const ok = await r.load(7)
     expect(ok).toBe(true)
@@ -57,10 +69,10 @@ describe('useCharacterizationResults', () => {
   it('clears stale results when load is called for a new id', async () => {
     mockExec.mockResolvedValueOnce(success({ id: 7, sourceKey: 'A', status: 'COMPLETED', startTime: 0, executionDuration: 0 } as any))
     mockCount.mockResolvedValueOnce(success(1))
-    mockResults.mockResolvedValueOnce(success([
+    mockResults.mockResolvedValueOnce(success(resultEnvelope([
       { analysisId: 1, analysisName: 'A', covariateId: 11, covariateName: 'X', conceptId: 0,
         cohortId: 1, cohortName: 'C', count: 10, pct: 5, resultType: 'PREVALENCE' },
-    ]))
+    ])))
     const r = useCharacterizationResults()
     await r.load(7)
     expect(r.prevalence.value).toHaveLength(1)
@@ -74,7 +86,7 @@ describe('useCharacterizationResults', () => {
   it('records error on failure', async () => {
     mockExec.mockResolvedValue(failure(new ApiError('boom', 0, null)))
     mockCount.mockResolvedValue(success(0))
-    mockResults.mockResolvedValue(success([]))
+    mockResults.mockResolvedValue(success(resultEnvelope([])))
     const r = useCharacterizationResults()
     const ok = await r.load(9)
     expect(ok).toBe(false)
