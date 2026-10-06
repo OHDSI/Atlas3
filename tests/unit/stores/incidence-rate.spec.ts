@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { nextTick } from 'vue'
 import { ApiError } from '@/services/api-error'
 
 vi.mock('@/services/incidence-rate.service', () => ({
@@ -611,14 +612,19 @@ describe('incidence-rate store — UI state setters and computed', () => {
     expect(s.rateMultiplier).toBe(100000)
   })
 
-  it('canSave is true when dirty + valid + not preview', async () => {
+  it('canSave is true when dirty + named + not preview, even with validation errors', async () => {
     const s = useIncidenceRateStore()
     s.createNewIR()
-    s.updateMeta({ name: 'X' })
-    s.addTargetCohortId(1, 'A')
-    s.addOutcomeCohortId(2, 'B')
+    s.updateMeta({ name: 'Incomplete draft' })
     await s.validateIR()
     expect(s.canSave).toBe(true)
+  })
+
+  it('canSave is false when dirty but the name is blank', () => {
+    const s = useIncidenceRateStore()
+    s.createNewIR()
+    s.updateMeta({ description: 'Untitled draft' })
+    expect(s.canSave).toBe(false)
   })
 
   it('canSave is false when not dirty', async () => {
@@ -644,6 +650,29 @@ describe('incidence-rate store — UI state setters and computed', () => {
 
     s.currentIR!.id = 42
     expect(s.canGenerate).toBe(true)
+  })
+
+  it('updates generation validation when relevant design fields change', async () => {
+    const s = useIncidenceRateStore()
+    s.createNewIR()
+    s.currentIR!.id = 42
+    s.markClean()
+    await nextTick()
+    expect(s.canGenerate).toBe(false)
+
+    s.updateMeta({ name: 'Complete design' })
+    s.addTargetCohortId(1, 'Target')
+    s.addOutcomeCohortId(2, 'Outcome')
+    s.markClean()
+    await nextTick()
+    expect(s.validationErrors).toEqual([])
+    expect(s.canGenerate).toBe(true)
+
+    s.removeTargetCohortId(1)
+    s.markClean()
+    await nextTick()
+    expect(s.hasErrors).toBe(true)
+    expect(s.canGenerate).toBe(false)
   })
 
   it('canSave / canGenerate are false in preview mode', async () => {

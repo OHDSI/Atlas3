@@ -16,13 +16,33 @@
       class="ir-workbench__canvas"
       data-testid="ir-workbench-canvas"
     >
-      <button
-        class="rail-toggle"
-        :title="railOpen ? tv('components.incidenceRate.hideDesignPanel', 'Hide design panel') : tv('components.incidenceRate.showDesignPanel', 'Show design panel')"
-        @click="railOpen = !railOpen"
-      >
-        {{ railOpen ? `◂ ${tv('components.incidenceRate.hideAnalysisDesign', 'Hide Analysis Design')}` : `▸ ${tv('components.incidenceRate.showAnalysisDesign', 'Show Analysis Design')}` }}
-      </button>
+      <div class="ir-workbench__canvas-controls">
+        <button
+          class="rail-toggle"
+          :title="railOpen ? tv('components.incidenceRate.hideDesignPanel', 'Hide design panel') : tv('components.incidenceRate.showDesignPanel', 'Show design panel')"
+          @click="railOpen = !railOpen"
+        >
+          {{ railOpen ? `◂ ${tv('components.incidenceRate.hideAnalysisDesign', 'Hide Analysis Design')}` : `▸ ${tv('components.incidenceRate.showAnalysisDesign', 'Show Analysis Design')}` }}
+        </button>
+        <AtlasTooltip
+          v-if="validationMessages.length"
+          :text="t('components.incidenceRate.viewValidationMessages', 'View validation messages').value"
+          location="bottom"
+        >
+          <template #activator="{ props }">
+            <AtlasIconButton
+              v-bind="{ ...props, ariaLabel: t('components.incidenceRate.viewValidationMessages', 'View validation messages').value }"
+              icon="mdi-alert"
+              variant="text"
+              size="sm"
+              tone="danger"
+              class="ir-workbench__validation-toggle"
+              data-testid="ir-validation-messages-toggle"
+              @click="showValidationDialog = true"
+            />
+          </template>
+        </AtlasTooltip>
+      </div>
       <template v-if="!store.currentIR?.id">
         <IncidenceRateEmptyState variant="no-id" />
       </template>
@@ -107,6 +127,34 @@
         :executions="runTableExecutions"
         @select="onSelectFromHistory"
       />
+
+      <AtlasDialog
+        v-if="validationMessages.length"
+        v-model="showValidationDialog"
+        :eyebrow="t('components.incidenceRate.analysisDesign', 'Analysis design').value"
+        :title="t('components.incidenceRate.validationMessages', 'Validation messages').value"
+        :close-label="t('common.close', 'Close').value"
+        max-width="560"
+      >
+        <ul class="ir-workbench__validation-list">
+          <li
+            v-for="validationError in validationMessages"
+            :key="`${validationError.field}-${validationError.message}`"
+            :class="`ir-workbench__validation-message--${validationError.severity}`"
+          >
+            <AtlasIcon>{{ validationError.severity === 'error' ? 'mdi-alert-circle' : 'mdi-alert' }}</AtlasIcon>
+            <span>{{ validationError.message }}</span>
+          </li>
+        </ul>
+        <template #actions>
+          <AtlasButton
+            variant="secondary"
+            @click="showValidationDialog = false"
+          >
+            {{ t('common.close', 'Close') }}
+          </AtlasButton>
+        </template>
+      </AtlasDialog>
     </main>
 
     <aside
@@ -145,7 +193,7 @@ import IncidenceRateTreemap from './IncidenceRateTreemap.vue'
 import IncidenceRateComparisonChart from './IncidenceRateComparisonChart.vue'
 import IncidenceRateRatesTable from './IncidenceRateRatesTable.vue'
 import IncidenceRateInsightsRail from './IncidenceRateInsightsRail.vue'
-import { AtlasAlert } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasTooltip } from '@/components/ui'
 import IncidenceRateEmptyState from './IncidenceRateEmptyState.vue'
 import IncidenceRateStratifyInspector from './IncidenceRateStratifyInspector.vue'
 import DataSourceRunTable, {
@@ -182,6 +230,8 @@ const railOpen = ref(!route.params.id)
 const ds = useDataSourcesStore()
 
 const mode = ref<ViewMode>('treemap')
+const showValidationDialog = ref(false)
+const validationMessages = computed(() => store.validationErrors)
 
 const strataInspectorOpen = ref(false)
 const strataInspectorIndex = ref<number | null>(null)
@@ -387,6 +437,11 @@ function onExport(format: 'csv' | 'svg' | 'png') {
   display: flex; flex-direction: column; gap: 10px;
   min-height: 540px; min-width: 0; position: relative;
 }
+.ir-workbench__canvas-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
 @media (max-width: 1280px) {
   .ir-workbench { grid-template-columns: 320px minmax(0, 1fr); }
   .ir-workbench__insights { display: none; }
@@ -403,11 +458,25 @@ function onExport(format: 'csv' | 'svg' | 'png') {
   font-weight: 600;
   color: var(--atlas-color-on-primary);
   cursor: pointer;
-  align-self: flex-start;
 }
 .rail-toggle:hover {
   opacity: 0.9;
 }
+.ir-workbench__validation-toggle { color: rgb(var(--v-theme-warning)); }
+.ir-workbench__validation-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ir-workbench__validation-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.ir-workbench__validation-message--error { color: rgb(var(--v-theme-error)); }
+.ir-workbench__validation-message--warning { color: rgb(var(--v-theme-warning)); }
 @media (max-width: 1024px) {
   .ir-workbench { grid-template-columns: 1fr; }
   .ir-workbench__rail { display: none; }

@@ -641,10 +641,9 @@ const saveDisabledReason = computed<string>(() =>
   resolveSaveDisabledReason({
     entity: tv('const.entityName.incidenceRate', 'incidence rate analysis'),
     isNew: irId.value === null,
-    hasName: true,
+    hasName: !!store.currentIR?.name?.trim(),
     hasPermission: canSave.value,
     isPreviewing: store.isPreviewMode,
-    hasValidationErrors: store.hasErrors,
     isSaving: saving.value,
     translate: tv,
   })

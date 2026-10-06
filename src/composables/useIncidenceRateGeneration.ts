@@ -71,6 +71,14 @@ export function useIncidenceRateGeneration(irId: number) {
 
   async function start(sourceKey: string): Promise<boolean> {
     error.value = null
+    await store.validateIR()
+    if (store.hasErrors) {
+      error.value = store.validationErrors
+        .filter(validationError => validationError.severity === 'error')
+        .map(validationError => validationError.message)
+        .join(' · ')
+      return false
+    }
     const result = await generateIncidenceRate(irId, sourceKey)
     if (!result.success) {
       error.value = result.error.message

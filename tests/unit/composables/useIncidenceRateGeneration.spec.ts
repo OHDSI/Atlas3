@@ -37,6 +37,18 @@ beforeEach(() => {
 })
 
 describe('useIncidenceRateGeneration', () => {
+  it('rejects an invalid design before calling the generation API', async () => {
+    const store = useIncidenceRateStore()
+    store.createNewIR()
+
+    const gen = useIncidenceRateGeneration(1)
+    const ok = await gen.start('CCAE')
+
+    expect(ok).toBe(false)
+    expect(mockGenerate).not.toHaveBeenCalled()
+    expect(gen.error.value).toContain('Name is required')
+  })
+
   it('start triggers polling and keeps polling until terminal status arrives', async () => {
     const store = useIncidenceRateStore()
     const ds = useDataSourcesStore()
