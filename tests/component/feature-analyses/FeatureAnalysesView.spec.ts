@@ -91,9 +91,9 @@ function makeRouter(): Router {
   })
 }
 
-async function mountView() {
+async function mountView(initialPath = '/feature-analyses') {
   const router = makeRouter()
-  await router.push('/feature-analyses')
+  await router.push(initialPath)
   await router.isReady()
 
   // Set up a permitted user so the new permission gate doesn't disable the
@@ -165,6 +165,27 @@ describe('FeatureAnalysesView', () => {
     expect(mounted.wrapper.text()).toContain('Conditions Criteria')
     expect(mounted.wrapper.text()).toContain('PRESET')
     expect(mounted.wrapper.text()).toContain('CRITERIA_SET')
+  })
+
+  it('sorts all feature analyses before selecting the current page', async () => {
+    const analyses: FeatureAnalysisListItem[] = Array.from({ length: 51 }, (_, index) => ({
+      id: index + 1,
+      name: `Feature analysis ${String(index + 1).padStart(3, '0')}`,
+      type: 'CUSTOM_FE',
+      createdBy: 'ohdsi',
+      createdDate: index,
+      modifiedDate: index,
+    }))
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success(analyses))
+    mounted = await mountView('/feature-analyses?page=2&perPage=25')
+
+    const table = mounted.wrapper.findComponent({ name: 'AnalysisDataTable' })
+    table.vm.$emit('update:sortBy', [{ key: 'id', order: 'desc' }])
+    await flushPromises()
+
+    const rows = table.props('items') as FeatureAnalysisListItem[]
+    expect(rows[0]?.id).toBe(26)
+    expect(rows.at(-1)?.id).toBe(2)
   })
 
   it('shows empty state when there are no items', async () => {

@@ -65,6 +65,7 @@
     </template>
 
     <AnalysisDataTable
+      v-model:sort-by="sortBy"
       :headers="headers"
       :items="paginatedFeatureAnalyses"
       :loading="loading"
@@ -173,6 +174,8 @@ import {
 } from '@/composables/useFeatureAnalysisFacets'
 import { useAuthStore } from '@/stores/auth'
 
+type SortItem = { key: string; order: 'asc' | 'desc' }
+
 const router = useRouter()
 const { t } = useI18n()
 const store = useFeatureAnalysesStore()
@@ -220,10 +223,34 @@ const {
 // text filter, which the bar above has replaced, so counting that instead
 // would offer pages the filters have already emptied.
 const totalItems = computed<number>(() => filteredAnalyses.value.length)
+const sortBy = ref<SortItem[]>([{ key: 'modifiedDate', order: 'desc' }])
+
+function sortValue(item: FeatureAnalysisListItem, key: string): string | number {
+  const value = item[key as keyof FeatureAnalysisListItem]
+  if (key === 'createdBy' && value && typeof value === 'object') {
+    const user = value as { name?: string; login?: string; id?: number }
+    return (user.name ?? user.login ?? user.id ?? '').toString().toLowerCase()
+  }
+  if (typeof value === 'string') return value.toLowerCase()
+  return typeof value === 'number' ? value : ''
+}
+
+const sortedFeatureAnalyses = computed(() => {
+  const activeSort = sortBy.value[0]
+  if (!activeSort) return filteredAnalyses.value
+
+  const direction = activeSort.order === 'asc' ? 1 : -1
+  return [...filteredAnalyses.value].sort((left, right) => {
+    const leftValue = sortValue(left, activeSort.key)
+    const rightValue = sortValue(right, activeSort.key)
+    if (leftValue === rightValue) return 0
+    return leftValue > rightValue ? direction : -direction
+  })
+})
 
 const paginatedFeatureAnalyses = computed<FeatureAnalysisListItem[]>(() => {
   const start = (page.value - 1) * itemsPerPage.value
-  return filteredAnalyses.value.slice(start, start + itemsPerPage.value)
+  return sortedFeatureAnalyses.value.slice(start, start + itemsPerPage.value)
 })
 
 // Mirrors usePagination's own range string, over the filtered total rather
