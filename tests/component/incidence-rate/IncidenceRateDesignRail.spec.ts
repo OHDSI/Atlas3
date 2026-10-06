@@ -6,7 +6,7 @@ import { useIncidenceRateStore } from '@/stores/incidence-rate'
 
 const stubs = [
   'IncidenceRateCohortList',
-  'IncidenceRateCohortPicker',
+  'CohortPickerDialog',
   'IncidenceRateTimeAtRiskEditor',
   'IncidenceRateStudyWindowEditor',
   'IncidenceRateStratifyRulesList',

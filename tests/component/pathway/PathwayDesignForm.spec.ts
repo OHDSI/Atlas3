@@ -36,7 +36,7 @@ describe('PathwayDesignForm', () => {
     const store = usePathwayStore()
     store.createNewPathway()
     const w = mount(PathwayDesignForm, {
-      global: { plugins: [vuetify], stubs: ['PathwayCohortList', 'PathwayCohortPicker', 'PathwaySettings'] },
+      global: { plugins: [vuetify], stubs: ['PathwayCohortList', 'CohortPickerDialog', 'PathwaySettings'] },
     })
     const sections = w.findAll('section.rail-section')
     expect(sections.length).toBe(3)

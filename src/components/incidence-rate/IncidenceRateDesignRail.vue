@@ -23,9 +23,10 @@
         :cohorts="targetCohorts"
         @remove="(id: number) => store.removeTargetCohortId(id)"
       />
-      <IncidenceRateCohortPicker
+      <CohortPickerDialog
         v-model="openTarget"
-        @select="(c: { id: number; name: string }) => store.addTargetCohortId(c.id, c.name)"
+        :excluded-ids="targetCohorts.map(cohort => cohort.id)"
+        @select="cohorts => cohorts.forEach(cohort => store.addTargetCohortId(cohort.id, cohort.name))"
       />
     </section>
 
@@ -49,9 +50,10 @@
         :cohorts="outcomeCohorts"
         @remove="(id: number) => store.removeOutcomeCohortId(id)"
       />
-      <IncidenceRateCohortPicker
+      <CohortPickerDialog
         v-model="openOutcome"
-        @select="(c: { id: number; name: string }) => store.addOutcomeCohortId(c.id, c.name)"
+        :excluded-ids="outcomeCohorts.map(cohort => cohort.id)"
+        @select="cohorts => cohorts.forEach(cohort => store.addOutcomeCohortId(cohort.id, cohort.name))"
       />
     </section>
 
@@ -100,8 +102,8 @@ import { AtlasButton } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
+import CohortPickerDialog from '@/components/shared/CohortPickerDialog.vue'
 import IncidenceRateCohortList from './IncidenceRateCohortList.vue'
-import IncidenceRateCohortPicker from './IncidenceRateCohortPicker.vue'
 import IncidenceRateTimeAtRiskEditor from './IncidenceRateTimeAtRiskEditor.vue'
 import IncidenceRateStudyWindowEditor from './IncidenceRateStudyWindowEditor.vue'
 import IncidenceRateStratifyRulesList from './IncidenceRateStratifyRulesList.vue'
