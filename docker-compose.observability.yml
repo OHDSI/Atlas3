@@ -1,0 +1,129 @@
+# Observability overlay — OpenTelemetry for both WebAPI and the browser.
+#
+#   docker network create atlas3-observability          # once
+#   docker compose -f docker-compose.yml \
+#                  -f docker-compose.observability.yml up -d
+#
+# Nothing here is required to run Atlas. The base `docker compose up` is
+# untouched: the OTel agent sits inert in the WebAPI image until
+# JAVA_TOOL_OPTIONS names it, and the frontend renders
+# ANALYTICS_PROVIDER=none unless this file sets otherwise. Every addition is
+# either a new service or extra env on an existing one — no base service is
+# redefined, repointed or reordered.
+
+networks:
+  # Shared with the SigNoz compose project (see observability/signoz/README.md).
+  # External on both sides so neither project owns the other's lifecycle, and
+  # `docker compose down` on Atlas cannot take SigNoz's network with it.
+  observability:
+    external: true
+    name: atlas3-observability
+
+services:
+  atlas3-webapi:
+    # `default` must be listed explicitly: naming any network here replaces the
+    # implicit project default the base file relies on for Postgres access.
+    networks:
+      - default
+      - observability
+    environment:
+      # --- Agent attachment ------------------------------------------------
+      # The single hook into WebAPI. The jar is baked into the image by
+      # docker/webapi/Dockerfile; this line is what makes the JVM load it.
+      # No Java source, logback.xml or application.properties is modified.
+      #
+      # Caveat worth knowing: JAVA_TOOL_OPTIONS applies to *every* JVM started
+      # in this container. A plugin that forks its own `java` (trexsql ships a
+      # Main-Class) is instrumented too and reports under the same service
+      # name. Harmless, but it explains extra spans in SigNoz.
+      JAVA_TOOL_OPTIONS: "-javaagent:/opt/otel/opentelemetry-javaagent.jar"
+
+      OTEL_SERVICE_NAME: atlas3-webapi
+      OTEL_RESOURCE_ATTRIBUTES: "service.namespace=atlas3,deployment.environment=${OTEL_ENVIRONMENT:-local}"
+
+      # --- Export ----------------------------------------------------------
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://atlas3-otel-gateway:4317"
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_LOGS_EXPORTER: otlp
+
+      # --- Logs ------------------------------------------------------------
+      # The logback-appender instrumentation lifts WebAPI's existing log
+      # statements into OTLP records with the active trace id attached, so an
+      # error in SigNoz links to the request that produced it.
+      #
+      # The agent has no severity threshold, so the WARN/ERROR filter lives in
+      # the gateway instead. That is deliberate: filtering there leaves
+      # WebAPI's own console logging completely intact for `docker logs`.
+      OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_LOG_ATTRIBUTES: "true"
+      OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_MDC_ATTRIBUTES: "*"
+      OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_CODE_ATTRIBUTES: "true"
+
+      # --- JDBC / SQL ------------------------------------------------------
+      # Sanitizer ON (the agent default, pinned here so it cannot drift):
+      # literals in the statement are replaced with `?`. OMOP queries carry
+      # concept ids, date ranges and person ids as inline literals, so this is
+      # what keeps span text to query *shape* rather than query *content*.
+      OTEL_INSTRUMENTATION_COMMON_DB_STATEMENT_SANITIZER_ENABLED: "true"
+      # Must stay false. Enabling it attaches prepared-statement bind values —
+      # the actual arguments — to every span.
+      OTEL_INSTRUMENTATION_JDBC_EXPERIMENTAL_CAPTURE_QUERY_PARAMETERS: "false"
+
+      # --- Metrics ---------------------------------------------------------
+      # JVM heap/GC/threads, plus HikariCP pool saturation, which is the usual
+      # first symptom of a runaway cohort-generation query.
+      OTEL_INSTRUMENTATION_RUNTIME_TELEMETRY_ENABLED: "true"
+      OTEL_INSTRUMENTATION_HIKARICP_ENABLED: "true"
+      OTEL_METRIC_EXPORT_INTERVAL: "30000"
+
+      # --- Sampling --------------------------------------------------------
+      # 1.0 is right for a dev box. Lower it on a shared deployment, where
+      # Atlas's long-running analysis requests make traces expensive.
+      OTEL_TRACES_SAMPLER: parentbased_traceidratio
+      OTEL_TRACES_SAMPLER_ARG: "${OTEL_TRACES_SAMPLE_RATIO:-1.0}"
+    depends_on:
+      atlas3-postgres:
+        condition: service_healthy
+      # Start order only, not a hard requirement: the agent buffers and retries,
+      # so WebAPI comes up fine with the gateway still starting.
+      atlas3-otel-gateway:
+        condition: service_started
+
+  # Collector between WebAPI and SigNoz. It exists for two jobs that must not
+  # be done inside WebAPI: dropping logs below WARN (the agent cannot), and a
+  # second scrub pass over anything that might carry a value rather than a
+  # shape. Point OTEL_EXPORTER_OTLP_ENDPOINT straight at SigNoz to skip it —
+  # at the cost of both of those.
+  atlas3-otel-gateway:
+    image: otel/opentelemetry-collector-contrib:${OTEL_COLLECTOR_VERSION:-0.115.1}
+    container_name: atlas3-otel-gateway
+    restart: unless-stopped
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./observability/otel-gateway/config.yaml:/etc/otel/config.yaml:ro
+    environment:
+      SIGNOZ_OTLP_ENDPOINT: ${SIGNOZ_OTLP_ENDPOINT:-signoz-otel-collector:4317}
+    networks:
+      - default
+      - observability
+    # No published ports: nothing outside the compose networks should be able
+    # to inject telemetry.
+    expose:
+      - "4317"
+      - "4318"
+
+  atlas3-frontend:
+    # Caddy proxies /otlp to the gateway, so the frontend container needs a
+    # route to it. Both already share `default`; listed for clarity alongside
+    # the base file's implicit membership.
+    networks:
+      - default
+    environment:
+      # Rendered into /srv/atlas/config-local.json at container start, so one
+      # built image serves deployments with and without telemetry.
+      ANALYTICS_PROVIDER: ${ANALYTICS_PROVIDER:-otlp}
+      OTLP_ENDPOINT: ${OTLP_ENDPOINT:-/otlp}
+      OTEL_SAMPLE_RATIO: ${OTEL_BROWSER_SAMPLE_RATIO:-1}
+      OTEL_GATEWAY_HOST: atlas3-otel-gateway
+      OTEL_GATEWAY_PORT: "4318"
