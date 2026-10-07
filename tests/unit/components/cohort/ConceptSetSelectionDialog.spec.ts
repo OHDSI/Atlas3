@@ -154,6 +154,17 @@ describe('ConceptSetSelectionDialog', () => {
       expect(names).not.toContain('Hypertension')
     })
 
+    it('should filter the table items by ID', async () => {
+      const wrapper = mountComponent()
+      const searchInput = wrapper.findComponent({ name: 'VTextField' })
+
+      await searchInput.vm.$emit('update:modelValue', '3')
+      await nextTick()
+
+      const vm = wrapper.vm as unknown as { filteredSets: ConceptSetListItem[] }
+      expect(vm.filteredSets.map(set => set.name)).toEqual(['Hypertension'])
+    })
+
     it('should show the filtered-empty container when nothing matches', async () => {
       const wrapper = mountComponent()
       const searchInput = wrapper.findComponent({ name: 'VTextField' })
