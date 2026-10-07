@@ -72,6 +72,32 @@ describe('CohortExpressionEditor', () => {
     expect(wrapper.text()).toContain('Exit & Eras')
     expect(wrapper.text()).toContain('Cohort Eras')
   })
+
+  it('renders restricted events below rather than within the entry-event rail', () => {
+    const wrapper = mount(CohortExpressionEditor, {
+      props: { expression: cloneFixture(), conceptSets: [] },
+      global: { plugins: [vuetify] },
+    })
+
+    const restrictedEvents = wrapper.get('.additional-criteria-section')
+    const entryEvents = wrapper.get('.events-container')
+    const railBody = wrapper.get('.events-container__body')
+
+    expect(entryEvents.element.contains(restrictedEvents.element)).toBe(true)
+    expect(railBody.element.contains(restrictedEvents.element)).toBe(false)
+  })
+
+  it('renders the restricted-event limit before its criteria group', () => {
+    const wrapper = mount(CohortExpressionEditor, {
+      props: { expression: cloneFixture(), conceptSets: [] },
+      global: { plugins: [vuetify] },
+    })
+
+    const limit = wrapper.get('.additional-criteria-section__limit')
+    const criteriaGroup = wrapper.findComponent(CriteriaGroup)
+
+    expect(limit.element.compareDocumentPosition(criteriaGroup.element) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  })
 })
 describe('observation window day inputs', () => {
   function mountWithObservationWindow(priorDays: number, postDays: number) {
