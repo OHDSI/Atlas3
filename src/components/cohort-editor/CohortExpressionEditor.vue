@@ -157,57 +157,57 @@
                   @edit-concept-set="emit('edit-concept-set', $event)"
                   @clear-concept-set="emit('clear-concept-set')"
                 />
-
-                <div class="additional-criteria-section mt-4">
-                  <AtlasButton
-                    v-if="!expression.AdditionalCriteria"
-                    variant="secondary"
-                    prepend-icon="mdi-filter-plus"
-                    @click="addAdditionalCriteria"
-                  >
-                    {{ restrictInitialEventsLabel }}
-                  </AtlasButton>
-
-                  <CriteriaGroup
-                    v-else
-                    :group="expression.AdditionalCriteria"
-                    :concept-sets="conceptSets"
-                    @remove="removeAdditionalCriteria"
-                    @select-concept-set="emit('select-concept-set', $event)"
-                    @edit-concept-set="emit('edit-concept-set', $event)"
-                    @clear-concept-set="emit('clear-concept-set')"
-                  />
-
-                  <div
-                    v-if="expression.AdditionalCriteria"
-                    class="additional-criteria-section__limit section-controls align-self-end mt-3"
-                  >
-                    <div class="section-controls__label">
-                      {{ limitRestrictedEventsLabel }}
-                    </div>
-
-                    <v-btn-toggle
-                      :model-value="qualifiedLimitType"
-                      mandatory
-                      variant="outlined"
-                      density="compact"
-                      divided
-                      @update:model-value="qualifiedLimitType = $event"
-                    >
-                      <AtlasButton value="First">
-                        {{ earliestLabel }}
-                      </AtlasButton>
-                      <AtlasButton value="All">
-                        {{ allLabel }}
-                      </AtlasButton>
-                      <AtlasButton value="Last">
-                        {{ latestLabel }}
-                      </AtlasButton>
-                    </v-btn-toggle>
-                  </div>
-                </div>
               </div>
             </div>
+          </div>
+
+          <div class="additional-criteria-section">
+            <AtlasButton
+              v-if="!expression.AdditionalCriteria"
+              variant="secondary"
+              prepend-icon="mdi-filter-plus"
+              @click="addAdditionalCriteria"
+            >
+              {{ restrictInitialEventsLabel }}
+            </AtlasButton>
+
+            <div
+              v-if="expression.AdditionalCriteria"
+              class="additional-criteria-section__limit section-controls align-self-end"
+            >
+              <div class="section-controls__label">
+                {{ limitRestrictedEventsLabel }}
+              </div>
+
+              <v-btn-toggle
+                :model-value="qualifiedLimitType"
+                mandatory
+                variant="outlined"
+                density="compact"
+                divided
+                @update:model-value="qualifiedLimitType = $event"
+              >
+                <AtlasButton value="First">
+                  {{ earliestLabel }}
+                </AtlasButton>
+                <AtlasButton value="All">
+                  {{ allLabel }}
+                </AtlasButton>
+                <AtlasButton value="Last">
+                  {{ latestLabel }}
+                </AtlasButton>
+              </v-btn-toggle>
+            </div>
+
+            <CriteriaGroup
+              v-if="expression.AdditionalCriteria"
+              :group="expression.AdditionalCriteria"
+              :concept-sets="conceptSets"
+              @remove="removeAdditionalCriteria"
+              @select-concept-set="emit('select-concept-set', $event)"
+              @edit-concept-set="emit('edit-concept-set', $event)"
+              @clear-concept-set="emit('clear-concept-set')"
+            />
           </div>
         </div>
       </div>
@@ -574,6 +574,7 @@ function removeAdditionalCriteria() {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 16px 20px;
 }
 
 .entry-events-list {
