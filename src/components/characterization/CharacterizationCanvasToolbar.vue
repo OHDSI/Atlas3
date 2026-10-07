@@ -65,15 +65,26 @@
 
     <AtlasSpacer />
 
-    <AtlasButton
-      size="sm"
-      variant="secondary"
-      icon="mdi-tune-variant"
-      data-testid="char-toolbar-configure"
-      @click="$emit('open-configure')"
+    <AtlasMenu
+      :model-value="configureOpen"
+      attach="body"
+      location="top end"
+      :close-on-content-click="false"
+      @update:model-value="$emit('update:configureOpen', $event)"
     >
-      {{ t('cc.viewEdit.workbench.configure', 'Configure').value }}
-    </AtlasButton>
+      <template #activator="{ props: activatorProps }">
+        <AtlasButton
+          v-bind="activatorProps"
+          size="sm"
+          variant="secondary"
+          icon="mdi-tune-variant"
+          data-testid="char-toolbar-configure"
+        >
+          {{ t('cc.viewEdit.workbench.configure', 'Configure').value }}
+        </AtlasButton>
+      </template>
+      <slot name="configure-panel" />
+    </AtlasMenu>
     <AtlasButton
       variant="ghost"
       size="sm"
@@ -88,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasChip, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasMenu, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 export type ViewMode = 'table1' | 'perAnalysis' | 'dashboard'
@@ -104,12 +115,13 @@ defineProps<{
   activeRun: ActiveRun | null
   threshold: number
   hasResults: boolean
+  configureOpen: boolean
 }>()
 
 defineEmits<{
   'update:mode': [mode: ViewMode]
   'update:threshold': [value: number]
-  'open-configure': []
+  'update:configureOpen': [value: boolean]
   'export': []
 }>()
 

@@ -422,7 +422,7 @@ function onExport(format: 'csv' | 'svg' | 'png') {
 <style scoped>
 .ir-workbench {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr) 280px;
+  grid-template-columns: 50% minmax(0, 1fr) 280px;
   background: rgb(var(--v-theme-surface));
   border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
   border-radius: 12px;
@@ -443,7 +443,7 @@ function onExport(format: 'csv' | 'svg' | 'png') {
   gap: 4px;
 }
 @media (max-width: 1280px) {
-  .ir-workbench { grid-template-columns: 320px minmax(0, 1fr); }
+  .ir-workbench { grid-template-columns: 50% minmax(0, 1fr); }
   .ir-workbench__insights { display: none; }
 }
 .ir-workbench--rail-collapsed {

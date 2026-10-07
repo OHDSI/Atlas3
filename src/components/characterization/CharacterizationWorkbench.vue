@@ -43,15 +43,26 @@
 
       <template v-if="characterizationId">
         <CharacterizationCanvasToolbar
+          v-model:configure-open="configureOpen"
           :mode="viewMode"
           :active-run="activeRunSummary"
           :threshold="filters.threshold"
           :has-results="prevalence.length > 0 || distribution.length > 0"
           @update:mode="(m) => (viewMode = m)"
           @update:threshold="(v) => (filters.threshold = v)"
-          @open-configure="configureOpen = true"
           @export="onExport"
-        />
+        >
+          <template #configure-panel>
+            <ConfigureInspector
+              :open="true"
+              :config="config"
+              :cohort-count="cohorts.length"
+              :has-strata="hasStrata"
+              @update:config="(c) => (config = c)"
+              @close="configureOpen = false"
+            />
+          </template>
+        </CharacterizationCanvasToolbar>
 
         <CharacterizationRunMeta
           v-if="execution"
@@ -110,15 +121,6 @@
             @explore="onExplore"
           />
         </template>
-
-        <ConfigureInspector
-          :open="configureOpen"
-          :config="config"
-          :cohort-count="cohorts.length"
-          :has-strata="hasStrata"
-          @update:config="(c) => (config = c)"
-          @close="configureOpen = false"
-        />
       </template>
 
       <CharacterizationEmptyState
@@ -495,7 +497,7 @@ function onExport(): void {
 <style scoped>
 .char-workbench {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: 50% minmax(0, 1fr);
   background: rgb(var(--v-theme-surface));
   border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
   border-radius: 12px;
