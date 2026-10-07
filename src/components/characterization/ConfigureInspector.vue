@@ -157,16 +157,12 @@ function patch(partial: Partial<Table1Config>): void {
 
 <style scoped>
 .configure-inspector {
-  position: absolute;
-  top: 56px;
-  right: 12px;
   width: 320px;
   background: rgb(var(--v-theme-surface));
   border: 1px solid rgba(var(--v-theme-on-surface), 0.10);
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   padding: 12px;
-  z-index: 5;
   display: flex; flex-direction: column; gap: 12px;
 }
 .configure-inspector__header {

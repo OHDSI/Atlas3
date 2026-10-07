@@ -65,13 +65,22 @@ vi.mock('@/services/cohort-definition.service', () => ({
 }))
 
 const vuetify = createVuetify({ components, directives })
-const stubs = [
-  'CharacterizationDesignRail', 'CharacterizationCanvasToolbar',
-  'CharacterizationRunMeta', 'ResultsFilterPanel',
-  'CharacterizationTable1View', 'CharacterizationPerAnalysisView',
-  'CharacterizationEmptyState', 'ConfigureInspector',
-  'DataSourceRunTable', 'PreviousRunsDialog',
-]
+const stubs = {
+  CharacterizationDesignRail: true,
+  CharacterizationCanvasToolbar: {
+    name: 'CharacterizationCanvasToolbar',
+    props: ['configureOpen'],
+    template: '<div><slot name="configure-panel" /></div>',
+  },
+  CharacterizationRunMeta: true,
+  ResultsFilterPanel: true,
+  CharacterizationTable1View: true,
+  CharacterizationPerAnalysisView: true,
+  CharacterizationEmptyState: true,
+  ConfigureInspector: true,
+  DataSourceRunTable: true,
+  PreviousRunsDialog: true,
+}
 
 function makeRouter() {
   return createRouter({
@@ -265,7 +274,7 @@ describe('CharacterizationWorkbench', () => {
       props: { modelValue: baseDraft(), characterizationId: 5, availableCohorts: [], availableFeatureAnalyses: [] },
     })
     await flushPromises()
-    await w.findComponent({ name: 'CharacterizationCanvasToolbar' }).vm.$emit('open-configure')
+    await w.findComponent({ name: 'CharacterizationCanvasToolbar' }).vm.$emit('update:configureOpen', true)
     await w.findComponent({ name: 'ConfigureInspector' }).vm.$emit('update:config', {
       ...w.findComponent({ name: 'ConfigureInspector' }).props('config'),
       showStdDiffCI: true,
@@ -284,11 +293,14 @@ describe('CharacterizationWorkbench', () => {
                availableCohorts: [], availableFeatureAnalyses: [] },
     })
     await flushPromises()
-    expect(w.findComponent({ name: 'ConfigureInspector' }).props('open')).toBe(false)
-    await w.findComponent({ name: 'CharacterizationCanvasToolbar' }).vm.$emit('open-configure')
-    expect(w.findComponent({ name: 'ConfigureInspector' }).props('open')).toBe(true)
+    const toolbar = w.findComponent({ name: 'CharacterizationCanvasToolbar' })
+    expect(toolbar.props('configureOpen')).toBe(false)
+    await toolbar.vm.$emit('update:configureOpen', true)
+    await flushPromises()
+    expect(toolbar.props('configureOpen')).toBe(true)
     await w.findComponent({ name: 'ConfigureInspector' }).vm.$emit('close')
-    expect(w.findComponent({ name: 'ConfigureInspector' }).props('open')).toBe(false)
+    await flushPromises()
+    expect(toolbar.props('configureOpen')).toBe(false)
   })
 
   it('wires the toolbar, filters, design rail, history, and cohort-size watcher branches', async () => {

@@ -4,42 +4,51 @@
       <div class="pathway-settings__label">
         {{ t('pathway.combinationWindow', 'Collapse window (days)') }}
       </div>
-      <AtlasSelect
-        :model-value="modelValue.combinationWindow as (typeof combinationWindowOptions)[number]"
+      <VCombobox
+        :model-value="modelValue.combinationWindow"
         :items="combinationWindowOptions"
         :aria-label="t('pathway.combinationWindow', 'Collapse window (days)').value"
         variant="underlined"
         hide-details
-        :readonly="readonly"
-        @update:model-value="(v) => v !== null && update('combinationWindow', v as number)"
+        :disabled="readonly"
+        type="number"
+        step="1"
+        inputmode="numeric"
+        @update:model-value="updateNumber('combinationWindow', $event)"
       />
     </div>
     <div class="pathway-settings__row">
       <div class="pathway-settings__label">
         {{ t('pathway.minCellCount', 'Minimum cell count') }}
       </div>
-      <AtlasSelect
-        :model-value="modelValue.minCellCount as (typeof minCellCountOptions)[number]"
+      <VCombobox
+        :model-value="modelValue.minCellCount"
         :items="minCellCountOptions"
         :aria-label="t('pathway.minCellCount', 'Minimum cell count').value"
         variant="underlined"
         hide-details
-        :readonly="readonly"
-        @update:model-value="(v) => v !== null && update('minCellCount', v as number)"
+        :disabled="readonly"
+        type="number"
+        step="1"
+        inputmode="numeric"
+        @update:model-value="updateNumber('minCellCount', $event)"
       />
     </div>
     <div class="pathway-settings__row">
       <div class="pathway-settings__label">
         {{ t('pathway.maxDepth', 'Maximum path length') }}
       </div>
-      <AtlasSelect
-        :model-value="modelValue.maxDepth as (typeof maxDepthOptions)[number]"
+      <VCombobox
+        :model-value="modelValue.maxDepth"
         :items="maxDepthOptions"
         :aria-label="t('pathway.maxDepth', 'Maximum path length').value"
         variant="underlined"
         hide-details
-        :readonly="readonly"
-        @update:model-value="(v) => v !== null && update('maxDepth', v as number)"
+        :disabled="readonly"
+        type="number"
+        step="1"
+        inputmode="numeric"
+        @update:model-value="updateNumber('maxDepth', $event)"
       />
     </div>
     <div class="pathway-settings__row">
@@ -59,7 +68,8 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasSelect, AtlasSwitch } from '@/components/ui'
+import { VCombobox } from 'vuetify/components'
+import { AtlasSwitch } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { PathwayDesign } from '@/models/pathway.types'
 import {
@@ -79,12 +89,25 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const combinationWindowOptions = [...COMBINATION_WINDOW_OPTIONS]
-const minCellCountOptions = [...MIN_CELL_COUNT_OPTIONS]
-const maxDepthOptions = [...MAX_DEPTH_OPTIONS]
+const combinationWindowOptions: number[] = [...COMBINATION_WINDOW_OPTIONS]
+const minCellCountOptions: number[] = [...MIN_CELL_COUNT_OPTIONS]
+const maxDepthOptions: number[] = [...MAX_DEPTH_OPTIONS]
 
 function update<K extends keyof PathwayDesign>(key: K, value: PathwayDesign[K]) {
   emit('update:modelValue', { ...props.modelValue, [key]: value })
+}
+
+function updateNumber(
+  key: 'combinationWindow' | 'minCellCount' | 'maxDepth',
+  value: unknown
+) {
+  const numericValue = typeof value === 'number' ? value : Number(value)
+  const minimum = key === 'maxDepth' ? 1 : 0
+  const maximum = key === 'maxDepth' ? 10 : Infinity
+
+  if (Number.isInteger(numericValue) && numericValue >= minimum && numericValue <= maximum) {
+    update(key, numericValue)
+  }
 }
 </script>
 
@@ -96,7 +119,7 @@ function update<K extends keyof PathwayDesign>(key: K, value: PathwayDesign[K]) 
 }
 .pathway-settings__row {
   display: grid;
-  grid-template-columns: 1fr 110px;
+  grid-template-columns: 220px 110px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
 }

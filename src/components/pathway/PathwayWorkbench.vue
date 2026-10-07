@@ -404,7 +404,7 @@ defineExpose({ onPathSelect })
 <style scoped>
 .workbench {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr) 320px;
+  grid-template-columns: 50% minmax(0, 1fr) 320px;
   background: rgb(var(--v-theme-surface));
   border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
   border-radius: 12px;
@@ -512,7 +512,7 @@ defineExpose({ onPathSelect })
 }
 @media (max-width: 1280px) {
   .workbench {
-    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-columns: 50% minmax(0, 1fr);
   }
   .workbench__insights {
     display: none;

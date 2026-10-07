@@ -1,10 +1,15 @@
 <template>
-  <v-table density="compact">
+  <v-table
+    class="pathway-cohort-list"
+    density="compact"
+  >
     <thead>
       <tr>
-        <th>{{ t('columns.id', 'ID') }}</th>
+        <th class="pathway-cohort-list__id">
+          {{ t('columns.id', 'ID') }}
+        </th>
         <th>{{ t('columns.name', 'Display name') }}</th>
-        <th />
+        <th class="pathway-cohort-list__actions" />
       </tr>
     </thead>
     <tbody>
@@ -12,7 +17,9 @@
         v-for="c in cohorts"
         :key="c.id"
       >
-        <td>{{ c.id }}</td>
+        <td class="pathway-cohort-list__id">
+          {{ c.id }}
+        </td>
         <td>
           <AtlasTextField
             :model-value="c.name"
@@ -21,7 +28,7 @@
             @update:model-value="(v) => emit('rename', c.id, String(v))"
           />
         </td>
-        <td>
+        <td class="pathway-cohort-list__actions">
           <AtlasIconButton
             icon="mdi-close"
             size="sm"
@@ -53,3 +60,20 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 </script>
+
+<style scoped>
+.pathway-cohort-list :deep(table) {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.pathway-cohort-list__id,
+.pathway-cohort-list__actions {
+  width: 56px;
+  white-space: nowrap;
+}
+
+.pathway-cohort-list__actions {
+  text-align: center;
+}
+</style>

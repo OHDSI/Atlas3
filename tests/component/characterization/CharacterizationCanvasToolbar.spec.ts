@@ -13,6 +13,7 @@ const baseProps = () => ({
   activeRun: null,
   threshold: 0,
   hasResults: true,
+  configureOpen: false,
 })
 
 describe('CharacterizationCanvasToolbar', () => {
@@ -26,12 +27,21 @@ describe('CharacterizationCanvasToolbar', () => {
     expect(w.emitted('update:mode')?.[0]).toEqual(['perAnalysis'])
   })
 
-  it('emits open-configure on configure button click', async () => {
+  it('updates the Configure menu state on configure button click', async () => {
     const w = mount(CharacterizationCanvasToolbar, {
       global: { plugins: [vuetify] }, props: baseProps(),
     })
     await w.find('[data-testid="char-toolbar-configure"]').trigger('click')
-    expect(w.emitted('open-configure')).toHaveLength(1)
+    expect(w.emitted('update:configureOpen')?.[0]).toEqual([true])
+  })
+
+  it('renders the Configure panel in the menu overlay', () => {
+    const w = mount(CharacterizationCanvasToolbar, {
+      global: { plugins: [vuetify] },
+      props: { ...baseProps(), configureOpen: true },
+      slots: { 'configure-panel': '<div data-testid="configure-panel" />' },
+    })
+    expect(w.findComponent({ name: 'VMenu' }).exists()).toBe(true)
   })
 
   it('emits export on export button click', async () => {

@@ -55,6 +55,11 @@ describe('IncidenceRateTimeAtRiskEditor interactions', () => {
     vi.clearAllMocks()
   })
 
+  it('presents the start and end controls in one row', () => {
+    const { wrapper } = setup()
+    expect(wrapper.findAll('.row')).toHaveLength(1)
+  })
+
   it('updates start.DateField when start select fires update', async () => {
     const { store, wrapper } = setup()
     const selects = wrapper.findAll('.stub-select')

@@ -2,7 +2,7 @@
  * PathwaySettings interaction tests
  *
  * Verifies every `update:modelValue` handler fires its expected emit when the
- * underlying AtlasSelect / AtlasSwitch input changes. Lifts function coverage
+ * underlying VCombobox / AtlasSwitch input changes. Lifts function coverage
  * from ~0% by triggering the inline arrow handlers that existing render-only
  * specs don't exercise.
  */
@@ -36,12 +36,12 @@ function mountIt(modelValue: PathwayDesign = baseModel) {
     global: {
       plugins: [vuetify],
       stubs: {
-        AtlasSelect: {
-          name: 'AtlasSelect',
+        VCombobox: {
+          name: 'VCombobox',
           props: ['modelValue', 'items', 'ariaLabel'],
           emits: ['update:modelValue'],
           template:
-            '<button class="stub-select" :aria-label="ariaLabel" @click="$emit(\'update:modelValue\', items && items[1])">{{ modelValue }}</button>',
+            '<button class="stub-combobox" :aria-label="ariaLabel" @click="$emit(\'update:modelValue\', items && items[1])">{{ modelValue }}</button>',
         },
         AtlasSwitch: {
           name: 'AtlasSwitch',
@@ -61,7 +61,7 @@ describe('PathwaySettings interactions', () => {
     vi.clearAllMocks()
   })
 
-  it('emits update:modelValue with new combinationWindow when select changes', async () => {
+  it('emits update:modelValue with new combinationWindow when a preset is selected', async () => {
     const wrapper = mountIt()
     await wrapper.find('[aria-label="Collapse window (days)"]').trigger('click')
     const emits = wrapper.emitted('update:modelValue')
@@ -71,7 +71,7 @@ describe('PathwaySettings interactions', () => {
     expect(next.minCellCount).toBe(baseModel.minCellCount)
   })
 
-  it('emits update:modelValue with new minCellCount when select changes', async () => {
+  it('emits update:modelValue with new minCellCount when a preset is selected', async () => {
     const wrapper = mountIt()
     await wrapper.find('[aria-label="Minimum cell count"]').trigger('click')
     const emits = wrapper.emitted('update:modelValue')
@@ -80,7 +80,7 @@ describe('PathwaySettings interactions', () => {
     expect(next.minCellCount).not.toBe(baseModel.minCellCount)
   })
 
-  it('emits update:modelValue with new maxDepth when select changes', async () => {
+  it('emits update:modelValue with new maxDepth when a preset is selected', async () => {
     const wrapper = mountIt()
     await wrapper.find('[aria-label="Maximum path length"]').trigger('click')
     const emits = wrapper.emitted('update:modelValue')
@@ -98,19 +98,27 @@ describe('PathwaySettings interactions', () => {
     expect(next.allowRepeats).toBe(true)
   })
 
-  it('does not emit when select returns null', async () => {
-    // Stub that emits null on click. PathwaySettings guards `v !== null`.
+  it('emits a typed numeric value that is not a preset', async () => {
+    const wrapper = mountIt()
+    await wrapper.findComponent({ name: 'VCombobox' }).vm.$emit('update:modelValue', '11')
+
+    const next = wrapper.emitted('update:modelValue')![0]![0] as PathwayDesign
+    expect(next.combinationWindow).toBe(11)
+  })
+
+  it('does not emit when a combobox returns an invalid value', async () => {
+    // PathwaySettings accepts only integers within the model's valid range.
     const wrapper = mount(PathwaySettings, {
       props: { modelValue: baseModel, readonly: false },
       global: {
         plugins: [vuetify],
         stubs: {
-          AtlasSelect: {
-            name: 'AtlasSelect',
+          VCombobox: {
+            name: 'VCombobox',
             props: ['modelValue'],
             emits: ['update:modelValue'],
             template:
-              '<button class="stub-select" @click="$emit(\'update:modelValue\', null)" />',
+              '<button class="stub-combobox" @click="$emit(\'update:modelValue\', \'invalid\')" />',
           },
           AtlasSwitch: {
             name: 'AtlasSwitch',
@@ -122,8 +130,8 @@ describe('PathwaySettings interactions', () => {
         },
       },
     })
-    const selects = wrapper.findAll('.stub-select')
-    for (const sel of selects) await sel.trigger('click')
+    const comboboxes = wrapper.findAll('.stub-combobox')
+    for (const combobox of comboboxes) await combobox.trigger('click')
     await wrapper.find('.stub-switch').trigger('click')
     expect(wrapper.emitted('update:modelValue')).toBeFalsy()
   })
