@@ -9,6 +9,20 @@ import { logger } from '@/utils/logger'
 let pluginLoader: PluginLoader | null = null
 let initialized = false
 
+let resolveFrameworkReady: () => void
+const frameworkReady = new Promise<void>(resolve => {
+  resolveFrameworkReady = resolve
+})
+
+/**
+ * Resolves once initialization has finished (successfully or not), i.e. every
+ * configured plugin has been registered. Lookups that miss before this point
+ * should wait rather than report "not found".
+ */
+export function whenPluginFrameworkReady(): Promise<void> {
+  return frameworkReady
+}
+
 export async function initializePluginFramework(authContext: AuthContext): Promise<void> {
   if (initialized) {
     logger.warn('PluginFramework', 'Already initialized')
@@ -35,14 +49,19 @@ export async function initializePluginFramework(authContext: AuthContext): Promi
     ;(window as unknown as { __pluginLoader: PluginLoader }).__pluginLoader = pluginLoader
     ;(window as unknown as { __pluginRegistry: PluginRegistry }).__pluginRegistry = pluginRegistry
 
-    for (const registration of manifest.plugins) {
-      const messageBus = createHostMessageBus(registration.id)
+    // Register every plugin up front so containers can find them (in
+    // not-loaded/loading state) while their bundles are still downloading.
+    const instances = manifest.plugins.map(registration =>
+      pluginRegistry.registerPlugin(
+        registration,
+        authContext,
+        createHostMessageBus(registration.id)
+      )
+    )
+    resolveFrameworkReady()
 
-      const instance = pluginRegistry.registerPlugin(registration, authContext, messageBus)
-
-      // Load plugin
-      await pluginLoader.loadPlugin(instance)
-    }
+    const loader = pluginLoader
+    await Promise.allSettled(instances.map(instance => loader.loadPlugin(instance)))
 
     // Start single-spa
     pluginLoader.startPluginFramework()
@@ -57,6 +76,8 @@ export async function initializePluginFramework(authContext: AuthContext): Promi
     // Don't throw error - allow app to continue without plugins
     logger.warn('PluginFramework', 'Continuing without plugin support')
     initialized = true
+  } finally {
+    resolveFrameworkReady()
   }
 }
 
