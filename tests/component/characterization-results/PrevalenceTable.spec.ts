@@ -156,3 +156,68 @@ describe('PrevalenceTable', () => {
     wrapper.unmount()
   })
 })
+
+describe('PrevalenceTable sorting and paging', () => {
+  function manyRows(n: number): PrevalenceStat[] {
+    return Array.from({ length: n }, (_, i) => makeRow({
+      covariateId: i + 1,
+      covariateName: `covariate ${i + 1}`,
+      count: { [DEFAULT_STRATA_KEY]: { '1': i + 1 } },
+      // Spread the percentages so the most prevalent row is in the middle.
+      pct: { [DEFAULT_STRATA_KEY]: { '1': (i * 7) % n } },
+    }))
+  }
+
+  function mountMany(n: number) {
+    const rows = manyRows(n)
+    return mount(PrevalenceTable, {
+      props: { analysisId: 100, analysisName: 'Drug exposure', rows, cohorts: rows[0]!.cohorts },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+  }
+
+  beforeEach(() => {
+    document.body.innerHTML = ''
+    setActivePinia(createPinia())
+  })
+
+  it('shows 25 rows per page with a pager while the title keeps the full count', () => {
+    const wrapper = mountMany(60)
+    expect(wrapper.findAll('tbody tr')).toHaveLength(25)
+    expect(wrapper.find('.prevalence-table__count').text()).toBe('(60)')
+    expect(wrapper.find('[data-testid="char-results-prevalence-pager-100"]').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('hides the pager for short tables', () => {
+    const wrapper = mountMany(5)
+    expect(wrapper.findAll('tbody tr')).toHaveLength(5)
+    expect(wrapper.find('[data-testid="char-results-prevalence-pager-100"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('sorts by Pct, most prevalent first, then flips on a second click', async () => {
+    const wrapper = mountMany(30)
+    const pctHeader = wrapper.findAll('th.prevalence-table__numeric')[1]!
+    const pcts = () => wrapper.findAll('tbody tr').map(tr => parseFloat(tr.findAll('td')[3]!.text()))
+
+    await pctHeader.find('button').trigger('click')
+    expect(pctHeader.attributes('aria-sort')).toBe('descending')
+    expect(pcts()[0]).toBe(29)
+    expect(pcts()).toEqual([...pcts()].sort((a, b) => b - a))
+
+    await pctHeader.find('button').trigger('click')
+    expect(pctHeader.attributes('aria-sort')).toBe('ascending')
+    expect(pcts()[0]).toBe(0)
+    wrapper.unmount()
+  })
+
+  it('sorts by Count across all pages, not just the visible one', async () => {
+    const wrapper = mountMany(60)
+    const countHeader = wrapper.findAll('th.prevalence-table__numeric')[0]!
+    await countHeader.find('button').trigger('click')
+    expect(wrapper.find('tbody .prevalence-table__covariate').text()).toBe('covariate 60')
+    wrapper.unmount()
+  })
+})

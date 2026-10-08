@@ -46,11 +46,25 @@
         </colgroup>
         <thead>
           <tr>
-            <th rowspan="2">
-              {{ tv('columns.covariate', 'Covariate') }}
+            <th
+              rowspan="2"
+              :aria-sort="ariaSort('covariate')"
+            >
+              <SortHeaderButton
+                :label="tv('columns.covariate', 'Covariate')"
+                :direction="sortDirection('covariate')"
+                @sort="toggleSort('covariate')"
+              />
             </th>
-            <th rowspan="2">
-              {{ tv('columns.conceptId', 'Concept ID') }}
+            <th
+              rowspan="2"
+              :aria-sort="ariaSort('concept')"
+            >
+              <SortHeaderButton
+                :label="tv('columns.conceptId', 'Concept ID')"
+                :direction="sortDirection('concept')"
+                @sort="toggleSort('concept', true)"
+              />
             </th>
             <template v-if="comparisonMode">
               <th
@@ -61,8 +75,15 @@
               >
                 {{ cohort.name }}
               </th>
-              <th rowspan="2">
-                {{ tv('characterizations.results.table.stdDiff', 'Std Diff') }}
+              <th
+                rowspan="2"
+                :aria-sort="ariaSort(sortKey('stdDiff', table.partitionKey))"
+              >
+                <SortHeaderButton
+                  :label="tv('characterizations.results.table.stdDiff', 'Std Diff')"
+                  :direction="sortDirection(sortKey('stdDiff', table.partitionKey))"
+                  @sort="toggleSort(sortKey('stdDiff', table.partitionKey), true)"
+                />
               </th>
             </template>
             <template v-else>
@@ -82,11 +103,17 @@
                 v-for="cohort in effectiveCohorts"
                 :key="cohort.id"
               >
-                <th class="prevalence-table__numeric">
-                  {{ tv('columns.count', 'Count') }}
-                </th>
-                <th class="prevalence-table__numeric">
-                  {{ tv('columns.pct', 'Pct') }}
+                <th
+                  v-for="metric in metrics"
+                  :key="metric.key"
+                  class="prevalence-table__numeric"
+                  :aria-sort="ariaSort(sortKey(metric.key, table.partitionKey, cohort.id))"
+                >
+                  <SortHeaderButton
+                    :label="metric.label"
+                    :direction="sortDirection(sortKey(metric.key, table.partitionKey, cohort.id))"
+                    @sort="toggleSort(sortKey(metric.key, table.partitionKey, cohort.id), true)"
+                  />
                 </th>
               </template>
             </template>
@@ -95,11 +122,17 @@
                 v-for="partition in partitions"
                 :key="partition.key"
               >
-                <th class="prevalence-table__numeric">
-                  {{ tv('columns.count', 'Count') }}
-                </th>
-                <th class="prevalence-table__numeric">
-                  {{ tv('columns.pct', 'Pct') }}
+                <th
+                  v-for="metric in metrics"
+                  :key="metric.key"
+                  class="prevalence-table__numeric"
+                  :aria-sort="ariaSort(sortKey(metric.key, partition.key, table.cohort.id))"
+                >
+                  <SortHeaderButton
+                    :label="metric.label"
+                    :direction="sortDirection(sortKey(metric.key, partition.key, table.cohort.id))"
+                    @sort="toggleSort(sortKey(metric.key, partition.key, table.cohort.id), true)"
+                  />
                 </th>
               </template>
             </template>
@@ -107,7 +140,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="row in rows"
+            v-for="row in pageRows"
             :key="row.covariateId"
           >
             <td>
@@ -162,6 +195,22 @@
         </tbody>
       </table>
     </div>
+
+    <div
+      v-if="rows.length > itemsPerPageOptions[0]!"
+      class="prevalence-table__pager"
+      :data-testid="`char-results-prevalence-pager-${analysisId}`"
+    >
+      <CohortPagination
+        :page="page"
+        :items-per-page="itemsPerPage"
+        :items-per-page-options="itemsPerPageOptions"
+        :total-items="totalItems"
+        :range-display="rangeDisplay"
+        @update:page="setPage"
+        @update:items-per-page="setItemsPerPage"
+      />
+    </div>
   </AtlasCard>
 </template>
 
@@ -169,9 +218,12 @@
 import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
+import { useSortedPage, type SortValue } from '@/composables/useSortedPage'
 import { computeBinaryStdDiff, DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { LinkedCohort, PrevalenceStat } from '@/models/characterization.types'
 import { AtlasCard, AtlasIconButton } from '@/components/ui'
+import CohortPagination from '@/components/cohort/CohortPagination.vue'
+import SortHeaderButton from './SortHeaderButton.vue'
 
 interface Props {
   analysisId: number
@@ -245,17 +297,52 @@ function formatPercent(value: number | undefined): string {
   return typeof value === 'number' && Number.isFinite(value) ? `${value.toFixed(2)}%` : '—'
 }
 
-function formatStdDiff(row: PrevalenceStat, partitionKey: string): string {
+function stdDiff(row: PrevalenceStat, partitionKey: string): number | undefined {
   const [first, second] = effectiveCohorts.value
-  if (!first || !second) return '—'
-  const diff = row.stdDiffByStrata?.[partitionKey]
+  if (!first || !second) return undefined
+  return row.stdDiffByStrata?.[partitionKey]
     ?? (isOverall(partitionKey) ? row.stdDiff : undefined)
     ?? computeBinaryStdDiff(
       value(row.pct, partitionKey, first.id),
       value(row.pct, partitionKey, second.id)
     )
+}
+
+function formatStdDiff(row: PrevalenceStat, partitionKey: string): string {
+  const diff = stdDiff(row, partitionKey)
   return typeof diff === 'number' && Number.isFinite(diff) ? diff.toFixed(4) : '—'
 }
+
+const metrics = computed(() => [
+  { key: 'count', label: tv('columns.count', 'Count') },
+  { key: 'pct', label: tv('columns.pct', 'Pct') },
+] as const)
+
+// Sort keys are `field|partition|cohort`; partition keys never contain '|'.
+function sortKey(field: string, partitionKey: string, cohortId?: number): string {
+  return cohortId === undefined ? `${field}|${partitionKey}` : `${field}|${partitionKey}|${cohortId}`
+}
+
+function sortValue(row: PrevalenceStat, key: string): SortValue {
+  if (key === 'covariate') return row.covariateName
+  if (key === 'concept') return row.conceptId || undefined
+  const [field, partitionKey = '', cohortId] = key.split('|')
+  if (field === 'stdDiff') return stdDiff(row, partitionKey)
+  if (field === 'count') return value(row.count, partitionKey, Number(cohortId))
+  if (field === 'pct') return value(row.pct, partitionKey, Number(cohortId))
+  return undefined
+}
+
+const {
+  page, itemsPerPage, itemsPerPageOptions, pageRows, totalItems, rangeStart, rangeEnd,
+  toggleSort, sortDirection, ariaSort, setPage, setItemsPerPage,
+} = useSortedPage(() => props.rows, sortValue)
+
+const rangeDisplay = computed(() => tv(
+  'components.domainPrevalenceTable.showingRange',
+  'Showing {start} to {end} of {total} entries',
+  { start: rangeStart.value, end: rangeEnd.value, total: totalItems.value }
+))
 </script>
 
 <style scoped>
@@ -266,6 +353,7 @@ function formatStdDiff(row: PrevalenceStat, partitionKey: string): string {
 .prevalence-table__title { display: flex; align-items: baseline; gap: 8px; font-size: 18px; font-weight: 500; margin: 0; color: rgb(var(--v-theme-primary)); }
 .prevalence-table__count { font-size: 0.85rem; color: rgba(var(--v-theme-on-surface), 0.6); font-weight: 400; }
 .prevalence-table__wrap { overflow-x: auto; padding: 0 20px 20px; }
+.prevalence-table__pager { padding: 0 20px 16px; }
 .prevalence-table__partition-title { font-size: 13px; margin: 0 0 8px; }
 .prevalence-table__table { border-collapse: collapse; font-size: 12px; min-width: 100%; }
 .prevalence-table__table--comparison { table-layout: fixed; width: 100%; }
