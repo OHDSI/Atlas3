@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { isReactive } from 'vue'
 import { useCharacterizationResults } from '@/composables/useCharacterizationResults'
 
 vi.mock('@/services/characterization.service', () => ({
@@ -63,7 +64,30 @@ describe('useCharacterizationResults', () => {
     expect(r.execution.value!.id).toBe(7)
     expect(r.resultCount.value).toBe(123)
     expect(r.prevalence.value).toHaveLength(1)
+    expect(isReactive(r.prevalence.value[0])).toBe(false)
     expect(r.error.value).toBeNull()
+  })
+
+  it('excludes the all-prevalence summary report from mapped results', async () => {
+    const item = {
+      analysisId: 1, analysisName: 'A', covariateId: 11, covariateName: 'X',
+      conceptId: 0, cohortId: 1, cohortName: 'C', count: 10, pct: 5,
+      resultType: 'PREVALENCE',
+    }
+    mockExec.mockResolvedValue(success({ id: 7, sourceKey: 'CCAE', status: 'COMPLETED' } as any))
+    mockCount.mockResolvedValue(success(1))
+    mockResults.mockResolvedValue(success({
+      reports: [
+        { analysisId: 1, analysisName: 'A', cohorts: [{ cohortId: 1, cohortName: 'C' }], domainIds: [], items: [item] },
+        { analysisId: null, analysisName: 'All prevalence covariates', cohorts: [{ cohortId: 1, cohortName: 'C' }], domainIds: [], items: [item] },
+      ],
+    }))
+
+    const r = useCharacterizationResults()
+    await r.load(7)
+
+    expect(r.prevalence.value).toHaveLength(1)
+    expect(r.prevalence.value[0]?.covariateId).toBe(11)
   })
 
   it('clears stale results when load is called for a new id', async () => {

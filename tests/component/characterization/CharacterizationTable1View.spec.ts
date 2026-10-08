@@ -8,6 +8,7 @@ import CharacterizationTable1View from '@/components/characterization/Characteri
 import {
   DEFAULT_TABLE1_CONFIG,
   DEFAULT_TABLE1_FILTERS,
+  type DistributionStat,
   type LinkedCohort,
   type PrevalenceStat,
 } from '@/models/characterization.types'
@@ -39,6 +40,24 @@ const minimalRowSingle: PrevalenceStat = {
   cohorts: [COHORTS[0]!],
   count: { overall: { '1': 50 } },
   pct: { overall: { '1': 25 } },
+}
+
+const continuousRow: DistributionStat = {
+  analysisId: 2,
+  analysisName: 'Measurements',
+  covariateId: 12,
+  covariateName: 'Weight',
+  conceptId: 0,
+  cohorts: COHORTS,
+  avg: { overall: { '1': 70, '2': 80 } },
+  stdDev: { overall: { '1': 8, '2': 10 } },
+  min: { overall: {} },
+  p10: { overall: {} },
+  p25: { overall: { '1': 65, '2': 72 } },
+  median: { overall: { '1': 70, '2': 80 } },
+  p75: { overall: { '1': 75, '2': 88 } },
+  p90: { overall: {} },
+  max: { overall: {} },
 }
 
 const baseProps = (over: Record<string, unknown> = {}) => ({
@@ -94,5 +113,45 @@ describe('CharacterizationTable1View', () => {
       props: baseProps(),
     })
     expect(w.find('[data-testid="char-t1-empty"]').exists()).toBe(true)
+  })
+
+  it('pages result rows and resets to the first page when the page size changes', async () => {
+    const prevalence = Array.from({ length: 16 }, (_, index) => ({
+      ...minimalRow,
+      covariateId: index + 1,
+      covariateName: `Covariate ${index + 1}`,
+    }))
+    const w = mount(CharacterizationTable1View, {
+      global: { plugins: [vuetify] },
+      props: baseProps({ prevalence }),
+    })
+
+    const pager = w.findComponent({ name: 'ResultsTablePagination' })
+    expect(pager.exists()).toBe(true)
+    await pager.vm.$emit('update:page', 2)
+    expect(w.text()).not.toContain('Covariate 1')
+
+    await pager.vm.$emit('update:page-size', 50)
+    expect(w.text()).toContain('Covariate 1')
+    expect(w.text()).toContain('Covariate 16')
+  })
+
+  it('formats continuous summary values using the configured statistic', () => {
+    const meanSd = mount(CharacterizationTable1View, {
+      global: { plugins: [vuetify] },
+      props: baseProps({ distribution: [continuousRow] }),
+    })
+    expect(meanSd.text()).toContain('70.0 (8.0)')
+    expect(meanSd.text()).toContain('75.0')
+
+    const medianIqr = mount(CharacterizationTable1View, {
+      global: { plugins: [vuetify] },
+      props: baseProps({
+        distribution: [continuousRow],
+        config: { ...DEFAULT_TABLE1_CONFIG, continuousFormat: 'median-iqr' },
+      }),
+    })
+    expect(medianIqr.text()).toContain('70.0 [10.0]')
+    expect(medianIqr.text()).toContain('75.0')
   })
 })
