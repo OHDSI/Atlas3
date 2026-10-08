@@ -86,11 +86,8 @@ test.describe('Concept Set list', () => {
   })
 
   test('opens the editor for an existing concept set', async ({ page }) => {
-    const editButton = page
-      .locator('table tbody tr', { hasText: 'Test Concept Set 1' })
-      .locator('button[aria-label="Edit"]')
-    await expect(editButton).toBeEnabled()
-    await editButton.click()
+    // Rows open the editor on click; the list has no separate Edit button.
+    await page.locator('table tbody tr', { hasText: 'Test Concept Set 1' }).click()
 
     await expect(page.getByTestId('cs-editor-primary-btn')).toBeVisible()
     await expect(

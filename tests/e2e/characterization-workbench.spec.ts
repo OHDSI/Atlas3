@@ -51,20 +51,32 @@ async function setupCharacterizationDetailMocks(page: import('@playwright/test')
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify([
-        {
-          analysisId: 1,
-          analysisName: 'DemographicsGender',
-          covariateId: 101,
-          covariateName: 'Male',
-          conceptId: 8507,
-          domainId: 'Demographics',
-          cohortId: 10,
-          cohortName: 'Diabetes cohort',
-          count: 500,
-          pct: 0.5,
-        },
-      ]),
+      // POST generation/{id}/result returns reports grouped by analysis.
+      body: JSON.stringify({
+        reports: [
+          {
+            analysisId: 1,
+            analysisName: 'DemographicsGender',
+            cohorts: [{ cohortId: 10, cohortName: 'Diabetes cohort' }],
+            domainIds: ['Demographics'],
+            items: [
+              {
+                analysisId: 1,
+                analysisName: 'DemographicsGender',
+                covariateId: 101,
+                covariateName: 'Male',
+                conceptId: 8507,
+                domainId: 'Demographics',
+                cohortId: 10,
+                cohortName: 'Diabetes cohort',
+                count: 500,
+                pct: 0.5,
+                resultType: 'PREVALENCE',
+              },
+            ],
+          },
+        ],
+      }),
     })
   })
 }
