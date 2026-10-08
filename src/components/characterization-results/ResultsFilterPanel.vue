@@ -13,7 +13,7 @@
   >
     <div class="results-filter__row">
       <AtlasSelect
-        :model-value="selectedDomains"
+        :model-value="draftDomains"
         :items="availableDomains"
         :label="tv('columns.domain', 'Domain')"
         variant="outlined"
@@ -24,10 +24,11 @@
         hide-details
         class="results-filter__select"
         data-testid="char-results-filter-domain"
+        @update:menu="onDomainMenuChange"
         @update:model-value="(v) => onDomainChange(v as string[])"
       />
       <AtlasSelect
-        :model-value="selectedAnalysisIds"
+        :model-value="draftAnalysisIds"
         :items="analysisItems"
         item-title="title"
         item-value="value"
@@ -40,6 +41,7 @@
         hide-details
         class="results-filter__select"
         data-testid="char-results-filter-analysis"
+        @update:menu="onAnalysisMenuChange"
         @update:model-value="(v) => onAnalysisChange(v as number[])"
       />
       <AtlasSelect
@@ -114,8 +116,28 @@ const cohortItems = computed(() =>
   props.availableCohorts.map(c => ({ title: c.name, value: c.id }))
 )
 
+const domainMenuOpen = ref(false)
+const draftDomains = ref<string[]>([...props.selectedDomains])
+const analysisMenuOpen = ref(false)
+const draftAnalysisIds = ref<number[]>([...props.selectedAnalysisIds])
 const cohortMenuOpen = ref(false)
 const draftCohortIds = ref<number[]>([...props.selectedCohortIds])
+
+watch(
+  () => props.selectedDomains,
+  (value) => {
+    if (!domainMenuOpen.value) draftDomains.value = [...value]
+  },
+  { deep: true },
+)
+
+watch(
+  () => props.selectedAnalysisIds,
+  (value) => {
+    if (!analysisMenuOpen.value) draftAnalysisIds.value = [...value]
+  },
+  { deep: true },
+)
 
 watch(
   () => props.selectedCohortIds,
@@ -127,24 +149,22 @@ watch(
 
 function onDomainChange(value: unknown): void {
   if (Array.isArray(value)) {
-    emit(
-      'update:selectedDomains',
-      value.filter((v): v is string => typeof v === 'string')
-    )
+    draftDomains.value = value.filter((v): v is string => typeof v === 'string')
   } else if (value === null || value === undefined) {
-    emit('update:selectedDomains', [])
+    draftDomains.value = []
   }
+
+  if (!domainMenuOpen.value) emit('update:selectedDomains', draftDomains.value)
 }
 
 function onAnalysisChange(value: unknown): void {
   if (Array.isArray(value)) {
-    emit(
-      'update:selectedAnalysisIds',
-      value.filter((v): v is number => typeof v === 'number')
-    )
+    draftAnalysisIds.value = value.filter((v): v is number => typeof v === 'number')
   } else if (value === null || value === undefined) {
-    emit('update:selectedAnalysisIds', [])
+    draftAnalysisIds.value = []
   }
+
+  if (!analysisMenuOpen.value) emit('update:selectedAnalysisIds', draftAnalysisIds.value)
 }
 
 function onCohortChange(value: unknown): void {
@@ -155,17 +175,37 @@ function onCohortChange(value: unknown): void {
   if (!cohortMenuOpen.value) emit('update:selectedCohortIds', draftCohortIds.value)
 }
 
+function onDomainMenuChange(isOpen: boolean): void {
+  domainMenuOpen.value = isOpen
+
+  if (isOpen) {
+    draftDomains.value = [...props.selectedDomains]
+  } else if (!sameValues(draftDomains.value, props.selectedDomains)) {
+    emit('update:selectedDomains', draftDomains.value)
+  }
+}
+
+function onAnalysisMenuChange(isOpen: boolean): void {
+  analysisMenuOpen.value = isOpen
+
+  if (isOpen) {
+    draftAnalysisIds.value = [...props.selectedAnalysisIds]
+  } else if (!sameValues(draftAnalysisIds.value, props.selectedAnalysisIds)) {
+    emit('update:selectedAnalysisIds', draftAnalysisIds.value)
+  }
+}
+
 function onCohortMenuChange(isOpen: boolean): void {
   cohortMenuOpen.value = isOpen
 
   if (isOpen) {
     draftCohortIds.value = [...props.selectedCohortIds]
-  } else if (!sameCohortIds(draftCohortIds.value, props.selectedCohortIds)) {
+  } else if (!sameValues(draftCohortIds.value, props.selectedCohortIds)) {
     emit('update:selectedCohortIds', draftCohortIds.value)
   }
 }
 
-function sameCohortIds(left: number[], right: number[]): boolean {
+function sameValues<T>(left: T[], right: T[]): boolean {
   return left.length === right.length && left.every(id => right.includes(id))
 }
 </script>

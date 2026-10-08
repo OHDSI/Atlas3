@@ -5,99 +5,130 @@
     :data-testid="`char-results-distribution-${analysisId}`"
   >
     <div class="distribution-table__header">
-      <div class="distribution-table__eyebrow-row">
+      <button
+        class="distribution-table__eyebrow-row distribution-table__toggle"
+        type="button"
+        :aria-expanded="expanded"
+        :aria-controls="`char-results-distribution-content-${analysisId}`"
+        @click="emit('update:expanded', !expanded)"
+      >
+        <AtlasIcon
+          icon="mdi-chevron-down"
+          size="18"
+          class="distribution-table__chevron"
+          :class="{ 'distribution-table__chevron--collapsed': !expanded }"
+        />
         <span class="text-eyebrow">{{ analysisName }}</span>
         <span class="distribution-table__accent-rule" />
-      </div>
-      <h3 class="distribution-table__title">
+      </button>
+      <h3
+        v-if="expanded"
+        class="distribution-table__title"
+      >
         {{ tv('characterizations.results.table.distribution', 'Distribution') }}
         <span class="distribution-table__count">({{ rows.length }})</span>
       </h3>
     </div>
 
-    <div
-      v-for="partition in partitions"
-      :key="partition.key"
-      class="distribution-table__wrap"
-      :data-testid="`char-results-distribution-table-${analysisId}-${partition.key}`"
-    >
-      <h4
-        v-if="partitions.length > 1"
-        class="distribution-table__partition-title"
+    <template v-if="expanded">
+      <div
+        :id="`char-results-distribution-content-${analysisId}`"
       >
-        {{ partition.label }}
-      </h4>
-      <table class="distribution-table__table">
-        <thead>
-          <tr>
-            <th rowspan="2">
-              {{ tv('columns.covariate', 'Covariate') }}
-            </th>
-            <th rowspan="2">
-              {{ tv('columns.conceptId', 'Concept ID') }}
-            </th>
-            <th
-              v-for="cohort in cohorts"
-              :key="cohort.id"
-              :colspan="statistics.length"
-            >
-              {{ cohort.name }}
-            </th>
-          </tr>
-          <tr>
-            <template
-              v-for="cohort in cohorts"
-              :key="cohort.id"
-            >
-              <th
-                v-for="statistic in statistics"
-                :key="statistic.key"
-                class="distribution-table__numeric"
-              >
-                {{ statistic.label }}
-              </th>
-            </template>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="row in rows"
-            :key="row.covariateId"
+        <div
+          v-for="partition in partitions"
+          :key="partition.key"
+          class="distribution-table__wrap"
+          :data-testid="`char-results-distribution-table-${analysisId}-${partition.key}`"
+        >
+          <h4
+            v-if="partitions.length > 1"
+            class="distribution-table__partition-title"
           >
-            <td>{{ row.covariateName }}</td>
-            <td>{{ row.conceptId || '—' }}</td>
-            <template
-              v-for="cohort in cohorts"
-              :key="cohort.id"
-            >
-              <td
-                v-for="statistic in statistics"
-                :key="statistic.key"
-                class="distribution-table__numeric"
+            {{ partition.label }}
+          </h4>
+          <table class="distribution-table__table">
+            <thead>
+              <tr>
+                <th rowspan="2">
+                  {{ tv('columns.covariate', 'Covariate') }}
+                </th>
+                <th rowspan="2">
+                  {{ tv('columns.conceptId', 'Concept ID') }}
+                </th>
+                <th
+                  v-for="cohort in cohorts"
+                  :key="cohort.id"
+                  :colspan="statistics.length"
+                >
+                  {{ cohort.name }}
+                </th>
+              </tr>
+              <tr>
+                <template
+                  v-for="cohort in cohorts"
+                  :key="cohort.id"
+                >
+                  <th
+                    v-for="statistic in statistics"
+                    :key="statistic.key"
+                    class="distribution-table__numeric"
+                  >
+                    {{ statistic.label }}
+                  </th>
+                </template>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in pagedRows"
+                :key="row.covariateId"
               >
-                {{ statistic.format(row, partition.key, cohort.id) }}
-              </td>
-            </template>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+                <td>{{ row.covariateName }}</td>
+                <td>{{ row.conceptId || '—' }}</td>
+                <template
+                  v-for="cohort in cohorts"
+                  :key="cohort.id"
+                >
+                  <td
+                    v-for="statistic in statistics"
+                    :key="statistic.key"
+                    class="distribution-table__numeric"
+                  >
+                    {{ statistic.format(row, partition.key, cohort.id) }}
+                  </td>
+                </template>
+              </tr>
+            </tbody>
+          </table>
+          <ResultsTablePagination
+            v-if="pageCount > 1"
+            :page="page"
+            :page-size="pageSize"
+            :total-items="rows.length"
+            @update:page="page = $event"
+            @update:page-size="onPageSizeChange"
+          />
+        </div>
+      </div>
+    </template>
   </AtlasCard>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { DistributionStat, LinkedCohort } from '@/models/characterization.types'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasIcon } from '@/components/ui'
+import ResultsTablePagination from './ResultsTablePagination.vue'
 
 interface Props {
   analysisId: number
   analysisName: string
   rows: DistributionStat[]
   cohorts: LinkedCohort[]
+  expanded?: boolean
 }
 
 interface Partition {
@@ -111,8 +142,24 @@ interface Statistic {
   format: (row: DistributionStat, partitionKey: string, cohortId: number) => string
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), { expanded: true })
+const emit = defineEmits<{ 'update:expanded': [value: boolean] }>()
 const { tv } = useI18n()
+const DEFAULT_PAGE_SIZE = 15
+const page = ref(1)
+const pageSize = ref(DEFAULT_PAGE_SIZE)
+
+const pageCount = computed(() => Math.max(1, Math.ceil(props.rows.length / pageSize.value)))
+const pagedRows = computed(() => props.rows.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
+
+watch(() => props.rows, () => {
+  page.value = 1
+})
+
+function onPageSizeChange(value: number): void {
+  pageSize.value = value
+  page.value = 1
+}
 
 function isOverall(key: string): boolean {
   return key === DEFAULT_STRATA_KEY || key === '0'
@@ -174,13 +221,17 @@ const partitions = computed<Partition[]>(() => {
 .distribution-table { margin-bottom: 16px; }
 .distribution-table__header { padding: 20px 20px 12px; }
 .distribution-table__eyebrow-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.distribution-table__toggle { background: transparent; border: 0; cursor: pointer; padding: 0; }
+.distribution-table__toggle:focus-visible { outline: 2px solid rgb(var(--v-theme-primary)); outline-offset: 2px; }
+.distribution-table__chevron { color: rgba(var(--v-theme-on-surface), 0.62); transition: transform 0.15s ease; }
+.distribution-table__chevron--collapsed { transform: rotate(-90deg); }
 .distribution-table__accent-rule { width: 28px; height: 2px; background-color: rgb(var(--v-theme-orange)); }
 .distribution-table__title { display: flex; align-items: baseline; gap: 8px; font-size: 18px; font-weight: 500; margin: 0; color: rgb(var(--v-theme-primary)); }
 .distribution-table__count { font-size: 0.85rem; color: rgba(var(--v-theme-on-surface), 0.6); font-weight: 400; }
 .distribution-table__wrap { overflow-x: auto; padding: 0 20px 20px; }
 .distribution-table__partition-title { font-size: 13px; margin: 0 0 8px; }
 .distribution-table__table { border-collapse: collapse; font-size: 12px; min-width: 100%; }
-.distribution-table__table th, .distribution-table__table td { border: 1px solid rgba(var(--v-theme-on-surface), 0.12); padding: 6px 8px; text-align: right; white-space: nowrap; }
+.distribution-table__table th, .distribution-table__table td { border: 1px solid rgba(var(--v-theme-on-surface), 0.12); padding: 2px 4px; text-align: right; white-space: nowrap; }
 .distribution-table__table th:first-child, .distribution-table__table td:first-child { text-align: left; }
 .distribution-table__table thead th { background: rgba(var(--v-theme-on-surface), 0.03); font-weight: 600; }
 .distribution-table__table thead .distribution-table__numeric { text-align: right; }

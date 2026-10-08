@@ -39,6 +39,31 @@ describe('CharacterizationPerAnalysisView', () => {
     expect(tables).toHaveLength(2)
   })
 
+  it('passes collapsed analysis state to its result table', async () => {
+    const w = mount(CharacterizationPerAnalysisView, {
+      global: { plugins: [vuetify], stubs: ['PrevalenceTable', 'DistributionTable'] },
+      props: {
+        prevalence: [
+          { analysisId: 1, analysisName: 'A', covariateId: 11, covariateName: 'X',
+            conceptId: 0, cohorts: COHORTS,
+            count: { overall: { '1': 1, '2': 1 } },
+            pct: { overall: { '1': 50, '2': 50 } } },
+          { analysisId: 2, analysisName: 'B', covariateId: 21, covariateName: 'Y',
+            conceptId: 0, cohorts: COHORTS,
+            count: { overall: { '1': 1, '2': 1 } },
+            pct: { overall: { '1': 30, '2': 30 } } },
+        ],
+        distribution: [], cohorts: COHORTS, threshold: 0,
+        selectedAnalysisIds: [], selectedDomains: [], selectedCohortIds: [],
+      },
+    })
+
+    const firstTable = w.findAllComponents({ name: 'PrevalenceTable' })[0]!
+    expect(firstTable.props('expanded')).toBe(true)
+    await firstTable.vm.$emit('update:expanded', false)
+    expect(firstTable.props('expanded')).toBe(false)
+  })
+
   it('places an analysis distribution table after its prevalence table', () => {
     const prevalence = {
       analysisId: 1, analysisName: 'Measures', covariateId: 11, covariateName: 'Weight', conceptId: 0,

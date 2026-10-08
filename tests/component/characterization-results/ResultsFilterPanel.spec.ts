@@ -101,6 +101,26 @@ describe('ResultsFilterPanel search', () => {
     expect(w.emitted('update:selectedCohortIds')).toBeUndefined()
   })
 
+  it('commits domain and analysis selections when their menus close', async () => {
+    const w = mountPanel()
+    const [domainSelect, analysisSelect] = w.findAllComponents(AtlasSelect)
+    const onDomainMenuUpdate = domainSelect!.vm.$attrs['onUpdate:menu'] as (isOpen: boolean) => void
+    const onAnalysisMenuUpdate = analysisSelect!.vm.$attrs['onUpdate:menu'] as (isOpen: boolean) => void
+
+    onDomainMenuUpdate(true)
+    await domainSelect!.vm.$emit('update:modelValue', ['Condition'])
+    expect(w.emitted('update:selectedDomains')).toBeUndefined()
+    onDomainMenuUpdate(false)
+
+    onAnalysisMenuUpdate(true)
+    await analysisSelect!.vm.$emit('update:modelValue', [1])
+    expect(w.emitted('update:selectedAnalysisIds')).toBeUndefined()
+    onAnalysisMenuUpdate(false)
+
+    expect(w.emitted('update:selectedDomains')).toEqual([[['Condition']]])
+    expect(w.emitted('update:selectedAnalysisIds')).toEqual([[[1]]])
+  })
+
   it('normalizes analysis and domain selector values', async () => {
     const w = mountPanel()
     const [domainSelect, analysisSelect, cohortSelect] = w.findAllComponents(AtlasSelect)
