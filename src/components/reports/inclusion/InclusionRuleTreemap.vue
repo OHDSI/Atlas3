@@ -35,6 +35,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { InclusionTreemapNode } from '@/models/report.types'
+import { leafMatchesSelection, type IntersectMode } from '@/utils/inclusion-attrition'
 import { useI18n } from '@/composables/useI18n'
 import { trackChartTheme } from '@/ui/chart-config'
 
@@ -48,8 +49,10 @@ const props = withDefaults(
     /** Inclusion-rule names indexed by rule number (rule 1 first). Used for friendly leaf labels. */
     ruleNames?: string[]
     height?: number
+    /** Intersect view: leaves that don't match all/any of these rules are dimmed. */
+    selection?: { rules: readonly number[]; mode: IntersectMode } | null
   }>(),
-  { height: 420, ruleNames: () => [] }
+  { height: 420, ruleNames: () => [], selection: null }
 )
 
 const hasData = computed(() => {
@@ -98,6 +101,9 @@ function themeOnSurfaceColor(alpha: number): string {
 }
 
 function colorForLeaf(name: string): string {
+  if (props.selection && !leafMatchesSelection(name, props.selection.rules, props.selection.mode)) {
+    return themeOnSurfaceColor(0.08)
+  }
   if (props.ruleCount === 0) return themeColor('success', 0.6)
   const passing = props.ruleCount - failuresFromName(name, props.ruleCount)
   const retention = passing / props.ruleCount

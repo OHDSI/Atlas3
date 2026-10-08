@@ -50,6 +50,44 @@
       </thead>
       <tbody>
         <tr
+          v-if="showInitialRow"
+          class="attrition-table__initial-row"
+          data-testid="inclusion-attrition-initial-row"
+        >
+          <td class="attrition-table__col-idx">
+            0
+          </td>
+          <td class="attrition-table__col-name">
+            {{ initialLabel || t('components.inclusionRuleReport.initialPopulation', 'Initial population').value }}
+          </td>
+          <td
+            class="attrition-table__col-num"
+            data-testid="inclusion-attrition-initial-count"
+          >
+            {{ formatCount(baseCount ?? 0) }}
+          </td>
+          <td class="attrition-table__col-num">
+            {{ baseCount ? '100.00%' : '—' }}
+          </td>
+          <td class="attrition-table__col-num">
+            —
+          </td>
+          <td class="attrition-table__col-num">
+            —
+          </td>
+          <td class="attrition-table__col-num">
+            —
+          </td>
+          <td class="attrition-table__col-bar">
+            <div class="attrition-table__bar-track">
+              <div
+                class="attrition-table__bar-fill"
+                :style="initialBarStyle"
+              />
+            </div>
+          </td>
+        </tr>
+        <tr
           v-for="(rule, idx) in rules"
           :key="rule.id"
           data-testid="inclusion-attrition-row"
@@ -112,6 +150,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { trackChartTheme } from '@/ui/chart-config'
 import type { InclusionRuleStatistic } from '@/models/report.types'
@@ -129,7 +168,13 @@ const props = defineProps<{
    * percentages, which use a different denominator than the funnel.
    */
   baseCount?: number
+  /** Label for the row-0 initial-population step; defaults to "Initial population". */
+  initialLabel?: string
 }>()
+
+// Row 0 mirrors the funnel's first step so the table carries the full
+// attrition on its own (#371). Needs the cumulative columns to line up.
+const showInitialRow = computed(() => !!props.cumulativeRemaining && props.baseCount !== undefined)
 
 function formatCount(n: number): string {
   return new Intl.NumberFormat().format(n)
@@ -181,6 +226,12 @@ function cumulativePercentOfInitial(idx: number): string {
   return `${((cum / base) * 100).toFixed(2)}%`
 }
 
+const initialBarStyle = computed<Record<string, string>>(() =>
+  props.baseCount
+    ? { width: '100%', background: themeColor('success', 0.85) }
+    : { width: '0%', background: 'transparent' }
+)
+
 function cumulativeBarStyle(idx: number): Record<string, string> {
   const cum = props.cumulativeRemaining?.[idx]
   if (cum === undefined) return { width: '0%', background: 'transparent' }
@@ -212,6 +263,9 @@ function cumulativeBarStyle(idx: number): Record<string, string> {
   background: var(--atlas-color-surface-variant);
   font-weight: 600;
   color: var(--atlas-color-on-surface);
+}
+.attrition-table__initial-row td {
+  font-weight: 500;
 }
 .attrition-table__col-idx {
   width: 36px;

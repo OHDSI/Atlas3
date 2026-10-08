@@ -24,6 +24,25 @@
       </AtlasTab>
     </AtlasTabs>
 
+    <AtlasRadioGroup
+      v-model="view"
+      inline
+      class="inclusion-rule-report__view mb-3"
+      :label="t('components.inclusionRuleReport.view', 'View').value"
+      data-testid="inclusion-view"
+    >
+      <AtlasRadio
+        value="attrition"
+        :label="t('components.inclusionRuleReport.attritionView', 'Attrition view').value"
+        data-testid="inclusion-view-attrition"
+      />
+      <AtlasRadio
+        value="intersect"
+        :label="t('components.inclusionRuleReport.intersectView', 'Intersect view').value"
+        data-testid="inclusion-view-intersect"
+      />
+    </AtlasRadioGroup>
+
     <!-- Loading -->
     <div
       v-if="loading"
@@ -92,24 +111,93 @@
         />
       </div>
 
-      <!-- Attrition funnel (cumulative — lazy-loaded) -->
-      <section class="mt-6">
-        <h3 class="text-subtitle-1 font-weight-medium mb-2">
-          {{ t('components.inclusionRuleReport.attritionFunnel', 'Attrition funnel').value }}
-        </h3>
-        <InclusionRuleAttritionFunnel :report="report" />
-      </section>
+      <template v-if="view === 'attrition'">
+        <!-- Attrition funnel (cumulative — lazy-loaded) -->
+        <section class="mt-6">
+          <h3 class="text-subtitle-1 font-weight-medium mb-2">
+            {{ t('components.inclusionRuleReport.attritionFunnel', 'Attrition funnel').value }}
+          </h3>
+          <AtlasTextField
+            :model-value="customInitialLabel"
+            class="inclusion-rule-report__initial-label mb-3"
+            :label="t('components.inclusionRuleReport.initialPopulationLabel', 'Initial population label').value"
+            :placeholder="defaultInitialLabel"
+            :hint="t('components.inclusionRuleReport.initialPopulationLabelHint', 'Shown in the funnel, table and CSV. Saved in this browser only.').value"
+            data-testid="inclusion-initial-label"
+            @update:model-value="setInitialLabel(String($event ?? ''))"
+          />
+          <InclusionRuleAttritionFunnel
+            :report="report"
+            :initial-label="initialLabel"
+          />
+        </section>
 
-      <!-- Per-rule satisfaction table -->
-      <section class="mt-6">
+        <!-- Per-rule satisfaction table -->
+        <section class="mt-6">
+          <h3 class="text-subtitle-1 font-weight-medium mb-2">
+            {{ t('components.inclusionRuleReport.perRuleSatisfaction', 'Per-rule satisfaction').value }}
+          </h3>
+          <InclusionRuleAttritionTable
+            :rules="report.inclusionRuleStats"
+            :cumulative-remaining="cumulativeRemaining"
+            :base-count="report.summary.baseCount"
+            :initial-label="initialLabel"
+          />
+        </section>
+      </template>
+
+      <!-- Intersect view (Atlas 2 parity): who satisfies all / any of the checked rules -->
+      <section
+        v-else
+        class="mt-6 inclusion-rule-report__intersect"
+        data-testid="inclusion-intersect"
+      >
         <h3 class="text-subtitle-1 font-weight-medium mb-2">
-          {{ t('components.inclusionRuleReport.perRuleSatisfaction', 'Per-rule satisfaction').value }}
+          {{ t('components.inclusionRuleReport.intersectTitle', 'Rule intersection').value }}
         </h3>
-        <InclusionRuleAttritionTable
-          :rules="report.inclusionRuleStats"
-          :cumulative-remaining="cumulativeRemaining"
-          :base-count="report.summary.baseCount"
-        />
+        <AtlasRadioGroup
+          v-model="intersectMode"
+          inline
+          :label="t('components.inclusionRuleReport.intersectMatch', 'Persons satisfying').value"
+          data-testid="inclusion-intersect-mode"
+        >
+          <AtlasRadio
+            value="all"
+            :label="t('components.inclusionRuleReport.intersectAll', 'All selected rules').value"
+            data-testid="inclusion-intersect-mode-all"
+          />
+          <AtlasRadio
+            value="any"
+            :label="t('components.inclusionRuleReport.intersectAny', 'Any selected rule').value"
+            data-testid="inclusion-intersect-mode-any"
+          />
+        </AtlasRadioGroup>
+        <div class="inclusion-rule-report__intersect-rules">
+          <AtlasCheckbox
+            v-for="(rule, idx) in report.inclusionRuleStats"
+            :key="rule.id"
+            :model-value="selectedRules.includes(idx)"
+            :label="`${idx + 1}. ${rule.name}`"
+            :data-testid="`inclusion-intersect-rule-${idx}`"
+            @update:model-value="toggleRule(idx, $event)"
+          />
+        </div>
+        <p
+          class="inclusion-rule-report__intersect-result"
+          data-testid="inclusion-intersect-result"
+        >
+          <template v-if="intersectCount !== null">
+            <strong>{{ formatCount(intersectCount) }}</strong>
+            {{
+              tv('components.inclusionRuleReport.intersectResult', 'persons ({percent} of initial population)', {
+                percent: intersectPercent,
+              })
+            }}
+          </template>
+          <template v-else>
+            {{ t('components.inclusionRuleReport.intersectUnavailable', 'No population breakdown is available to intersect.').value }}
+          </template>
+        </p>
       </section>
 
       <!-- Treemap -->
@@ -121,6 +209,7 @@
           :treemap="report.treemap"
           :rule-count="report.inclusionRuleStats.length"
           :rule-names="report.inclusionRuleStats.map(r => r.name)"
+          :selection="view === 'intersect' ? { rules: selectedRules, mode: intersectMode } : null"
         />
       </section>
     </template>
@@ -128,12 +217,26 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasSkeleton, AtlasTab, AtlasTabs } from '@/components/ui'
+import {
+  AtlasAlert,
+  AtlasCheckbox,
+  AtlasRadio,
+  AtlasRadioGroup,
+  AtlasSkeleton,
+  AtlasTab,
+  AtlasTabs,
+  AtlasTextField,
+} from '@/components/ui'
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { getInclusionRuleReport } from '@/services/report.service'
 import type { InclusionRuleReport, InclusionRuleReportMode } from '@/models/report.types'
-import { computeAttritionSteps } from '@/utils/inclusion-attrition'
+import {
+  computeAttritionSteps,
+  computeIntersectCount,
+  type IntersectMode,
+} from '@/utils/inclusion-attrition'
 import { useI18n } from '@/composables/useI18n'
+import { useInitialPopulationLabel } from '@/composables/useInitialPopulationLabel'
 import InclusionRuleAttritionTable from './InclusionRuleAttritionTable.vue'
 import InclusionRuleTreemap from './InclusionRuleTreemap.vue'
 import SummaryStat from './SummaryStat.vue'
@@ -152,6 +255,7 @@ const props = defineProps<{
 const { t, tv } = useI18n()
 
 const mode = ref<InclusionRuleReportMode>(1)
+const view = ref<'attrition' | 'intersect'>('attrition')
 const report = ref<InclusionRuleReport | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -172,6 +276,41 @@ const hasStatistics = computed<boolean>(() => {
     summary.finalCount !== 0 ||
     summary.lostCount !== 0
   )
+})
+
+const { label: customInitialLabel, setLabel: setInitialLabel } = useInitialPopulationLabel(
+  computed(() => props.cohortId)
+)
+const defaultInitialLabel = computed(() =>
+  tv('components.inclusionRuleReport.initialPopulation', 'Initial population')
+)
+const initialLabel = computed(() => customInitialLabel.value.trim() || defaultInitialLabel.value)
+
+const selectedRules = ref<number[]>([])
+const intersectMode = ref<IntersectMode>('all')
+
+// Start each report with every rule checked, which reproduces the final count.
+watch(
+  () => report.value?.inclusionRuleStats.length ?? 0,
+  count => {
+    selectedRules.value = Array.from({ length: count }, (_, i) => i)
+  }
+)
+
+function toggleRule(idx: number, checked: boolean) {
+  selectedRules.value = checked
+    ? [...selectedRules.value, idx].sort((a, b) => a - b)
+    : selectedRules.value.filter(i => i !== idx)
+}
+
+const intersectCount = computed<number | null>(() =>
+  report.value ? computeIntersectCount(report.value, selectedRules.value, intersectMode.value) : null
+)
+
+const intersectPercent = computed(() => {
+  const base = report.value?.summary.baseCount ?? 0
+  if (intersectCount.value === null || base <= 0) return '—'
+  return `${((intersectCount.value / base) * 100).toFixed(2)}%`
 })
 
 const cumulativeRemaining = computed<number[] | undefined>(() => {
@@ -218,10 +357,26 @@ function formatPercent(s: string | null): string {
 defineOptions({ name: 'InclusionRuleReport' })
 
 // Expose internal refs so tests can drive the tab switch deterministically
-defineExpose({ mode, report, loading, error, hasStatistics })
+defineExpose({ mode, view, report, loading, error, hasStatistics, selectedRules, intersectMode })
 </script>
 
 <style scoped>
+.inclusion-rule-report__initial-label {
+  max-width: 420px;
+}
+.inclusion-rule-report__intersect-rules {
+  display: flex;
+  flex-direction: column;
+  margin: 4px 0 8px;
+}
+.inclusion-rule-report__intersect-result {
+  font-size: 14px;
+  color: var(--atlas-color-on-surface-variant);
+}
+.inclusion-rule-report__intersect-result strong {
+  color: var(--atlas-color-on-surface);
+  font-variant-numeric: tabular-nums;
+}
 .inclusion-rule-report__summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

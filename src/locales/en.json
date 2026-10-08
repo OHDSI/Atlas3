@@ -496,7 +496,19 @@
       "rulesSatisfiedHigh": "≥ 80% rules satisfied",
       "rulesSatisfiedLow": "< 40% rules satisfied",
       "tooltipRemaining": "Remaining",
-      "tooltipExcludedAtStep": "Excluded at this step"
+      "tooltipExcludedAtStep": "Excluded at this step",
+      "view": "View",
+      "attritionView": "Attrition view",
+      "intersectView": "Intersect view",
+      "initialPopulation": "Initial population",
+      "initialPopulationLabel": "Initial population label",
+      "initialPopulationLabelHint": "Shown in the funnel, table and CSV. Saved in this browser only.",
+      "intersectTitle": "Rule intersection",
+      "intersectMatch": "Persons satisfying",
+      "intersectAll": "All selected rules",
+      "intersectAny": "Any selected rule",
+      "intersectResult": "persons ({percent} of initial population)",
+      "intersectUnavailable": "No population breakdown is available to intersect."
     },
     "cardinalityInput": {
       "title": "Cardinality",
