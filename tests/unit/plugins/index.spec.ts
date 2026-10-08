@@ -110,6 +110,84 @@ describe('Plugin Framework Index', () => {
       expect(pluginRegistry.registerPlugin).toHaveBeenCalled()
     })
 
+    it('should register every plugin before loading any of them', async () => {
+      const { pluginConfigService } = await import('@/services/PluginConfigService')
+      const { pluginRegistry } = await import('@/plugins/core/PluginRegistry')
+      const { PluginLoader } = await import('@/plugins/core/PluginLoader')
+
+      vi.mocked(pluginConfigService.loadConfig).mockResolvedValue({
+        plugins: [
+          { id: 'plugin1', name: 'Plugin 1', entryUrl: '/plugin1.js', menuItems: [] },
+          { id: 'plugin2', name: 'Plugin 2', entryUrl: '/plugin2.js', menuItems: [] }
+        ]
+      } as any)
+
+      const order: string[] = []
+      vi.mocked(pluginRegistry.registerPlugin).mockImplementation(registration => {
+        order.push(`register:${registration.id}`)
+        return { registration, state: 'not-loaded' } as any
+      })
+      vi.mocked(PluginLoader).mockImplementation(
+        () =>
+          ({
+            loadPlugin: vi.fn(async (instance: any) => {
+              order.push(`load:${instance.registration.id}`)
+            }),
+            startPluginFramework: vi.fn()
+          }) as any
+      )
+
+      const { initializePluginFramework } = await import('@/plugins/index')
+      await initializePluginFramework({ token: 'test' } as any)
+
+      expect(order).toEqual([
+        'register:plugin1',
+        'register:plugin2',
+        'load:plugin1',
+        'load:plugin2'
+      ])
+    })
+
+    it('should resolve whenPluginFrameworkReady once plugins are registered, before loading finishes', async () => {
+      const { pluginConfigService } = await import('@/services/PluginConfigService')
+      const { pluginRegistry } = await import('@/plugins/core/PluginRegistry')
+      const { PluginLoader } = await import('@/plugins/core/PluginLoader')
+
+      vi.mocked(pluginConfigService.loadConfig).mockResolvedValue({
+        plugins: [{ id: 'plugin1', name: 'Plugin 1', entryUrl: '/plugin1.js', menuItems: [] }]
+      } as any)
+      vi.mocked(pluginRegistry.registerPlugin).mockImplementation(
+        registration => ({ registration, state: 'not-loaded' }) as any
+      )
+      let finishLoad!: () => void
+      vi.mocked(PluginLoader).mockImplementation(
+        () =>
+          ({
+            loadPlugin: vi.fn(() => new Promise<void>(resolve => (finishLoad = resolve))),
+            startPluginFramework: vi.fn()
+          }) as any
+      )
+
+      const { initializePluginFramework, whenPluginFrameworkReady } = await import('@/plugins/index')
+      const init = initializePluginFramework({ token: 'test' } as any)
+
+      await whenPluginFrameworkReady()
+      expect(pluginRegistry.registerPlugin).toHaveBeenCalledTimes(1)
+
+      finishLoad()
+      await init
+    })
+
+    it('should resolve whenPluginFrameworkReady when initialization fails', async () => {
+      const { pluginConfigService } = await import('@/services/PluginConfigService')
+      vi.mocked(pluginConfigService.loadConfig).mockRejectedValue(new Error('boom'))
+
+      const { initializePluginFramework, whenPluginFrameworkReady } = await import('@/plugins/index')
+      await initializePluginFramework({ token: 'test' } as any)
+
+      await expect(whenPluginFrameworkReady()).resolves.toBeUndefined()
+    })
+
     it('should handle initialization errors gracefully', async () => {
       const { pluginConfigService } = await import('@/services/PluginConfigService')
       vi.mocked(pluginConfigService.loadConfig).mockRejectedValue(
