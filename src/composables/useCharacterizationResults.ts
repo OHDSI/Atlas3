@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 import {
   getCharacterizationExecution,
   getCharacterizationResultCount,
@@ -16,8 +16,11 @@ import { logger } from '@/utils/logger'
 export function useCharacterizationResults() {
   const execution = ref<CharacterizationExecution | null>(null)
   const resultCount = ref<number>(0)
-  const prevalence = ref<PrevalenceStat[]>([])
-  const distribution = ref<DistributionStat[]>([])
+  // Shallow: a run can return tens of thousands of rows, each with nested
+  // count/pct maps. They are only ever replaced wholesale, so deep proxies
+  // would just tax every filter, sort and render pass.
+  const prevalence = shallowRef<PrevalenceStat[]>([])
+  const distribution = shallowRef<DistributionStat[]>([])
   const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
 

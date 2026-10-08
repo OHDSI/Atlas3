@@ -84,22 +84,21 @@
             <td class="char-t1__cell-action" />
           </tr>
 
-          <template
-            v-for="row in rows"
+          <!-- v-memo lets each progressive chunk render only its new rows
+               instead of re-rendering every row already on screen. -->
+          <tr
+            v-for="row in visibleRows"
             :key="rowKey(row)"
+            v-memo="[row, rowMemoDeps]"
+            :class="row.kind === 'group' ? 'char-t1__group' : 'char-t1__row'"
           >
-            <tr
+            <td
               v-if="row.kind === 'group'"
-              class="char-t1__group"
+              :colspan="totalColumnCount"
             >
-              <td :colspan="totalColumnCount">
-                {{ row.label }}
-              </td>
-            </tr>
-            <tr
-              v-else
-              class="char-t1__row"
-            >
+              {{ row.label }}
+            </td>
+            <template v-else>
               <td class="char-t1__cell-label">
                 {{ row.label }}
               </td>
@@ -124,18 +123,26 @@
                 {{ formatStdDiff(row) }}
               </td>
               <td class="char-t1__cell-action">
-                <AtlasIconButton
+                <!-- A native button rather than AtlasIconButton: Table 1 can
+                     hold thousands of rows, and a Vuetify button per row made
+                     switching to this view take seconds. -->
+                <button
                   v-if="row.kind === 'binary'"
-                  icon="mdi-magnify"
-                  size="sm"
-                  variant="text"
-                  v-bind="{ ariaLabel: tv('columns.explore', 'Explore') }"
+                  type="button"
+                  class="char-t1__explore"
+                  :aria-label="exploreLabel"
+                  :title="exploreLabel"
                   data-testid="char-t1-explore"
                   @click="$emit('explore', row._source)"
-                />
+                >
+                  <span
+                    class="mdi mdi-magnify"
+                    aria-hidden="true"
+                  />
+                </button>
               </td>
-            </tr>
-          </template>
+            </template>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -145,7 +152,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import { AtlasCard, AtlasIconButton } from '@/components/ui'
+import { useProgressiveList } from '@/composables/useProgressiveList'
+import { AtlasCard } from '@/components/ui'
 import { buildTable1, deriveCohortSizes } from '@/utils/characterization-table1'
 import type {
   DistributionStat,
@@ -168,6 +176,7 @@ const props = defineProps<{
 defineEmits<{ explore: [row: PrevalenceStat] }>()
 
 const { tv } = useI18n()
+const exploreLabel = computed(() => tv('columns.explore', 'Explore'))
 
 const built = computed(() =>
   buildTable1({
@@ -181,6 +190,9 @@ const built = computed(() =>
 )
 
 const rows = computed<Table1Row[]>(() => built.value.rows)
+// Long-term drug/condition analyses can put thousands of rows in Table 1;
+// rendering them all in one pass froze the view switch for seconds.
+const { visible: visibleRows } = useProgressiveList(() => rows.value)
 const columns = computed(() => built.value.columns)
 const includeStdDiff = computed<boolean>(() => built.value.includeStdDiff)
 const showOverall = computed(() => props.cohorts.length > 1)
@@ -202,6 +214,17 @@ function cohortN(key: string): string {
 const totalColumnCount = computed(() =>
   1 + (showOverall.value ? 1 : 0) + columns.value.length + (includeStdDiff.value ? 1 : 0) + 1
 )
+
+// Everything a row's cells read besides the row itself; a new object here
+// re-renders every memoized row.
+const rowMemoDeps = computed(() => ({
+  columns: columns.value,
+  sizes: sizes.value,
+  showOverall: showOverall.value,
+  includeStdDiff: includeStdDiff.value,
+  totalColumnCount: totalColumnCount.value,
+  exploreLabel: exploreLabel.value,
+}))
 
 function rowKey(row: Table1Row): string {
   if (row.kind === 'group') return `g-${row.analysisId}`
@@ -338,6 +361,27 @@ function isHighStdDiff(row: Table1Row): boolean {
 .char-t1__cell-action {
   text-align: center;
   width: 40px;
+}
+.char-t1__explore {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: rgba(var(--v-theme-on-surface), 0.7);
+  font-size: 18px;
+  cursor: pointer;
+}
+.char-t1__explore:hover {
+  background: rgba(var(--v-theme-on-surface), 0.08);
+}
+.char-t1__explore:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 1px;
 }
 .char-t1__cell-label {
   max-width: 280px;
