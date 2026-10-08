@@ -181,8 +181,9 @@ test.describe('Plugin Error Handling', () => {
     // PluginContainer.vue sets `recoverable: false` for a not-found plugin
     // specifically (unlike a load/network failure), and PluginErrorUI.vue
     // only renders its Retry button when the error is recoverable, so no
-    // Retry button is genuinely expected here.
-    const retryButton = page.locator('text=Retry');
+    // Retry button is genuinely expected here. Scoped to the error UI because
+    // the always-mounted jobs panel has its own Retry button.
+    const retryButton = page.locator('.plugin-error-ui').getByRole('button', { name: 'Retry' });
     await expect(retryButton).toHaveCount(0);
   });
 });
