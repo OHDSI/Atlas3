@@ -46,4 +46,22 @@ describe('DistributionTable', () => {
     expect(wrapper.text()).toContain('70.00 (8.00)')
     expect(wrapper.text()).not.toContain('Std Diff')
   })
+
+  it('sorts rows by the clicked statistic for that cohort', async () => {
+    const light = { ...row, covariateId: 2, covariateName: 'Light', median: { [DEFAULT_STRATA_KEY]: { '1': 50, '2': 99 } } }
+    const heavy = { ...row, covariateId: 3, covariateName: 'Heavy', median: { [DEFAULT_STRATA_KEY]: { '1': 90, '2': 10 } } }
+    const wrapper = mount(DistributionTable, {
+      props: { analysisId: 1, analysisName: 'Measurement', rows: [light, heavy], cohorts },
+      global: { plugins: [vuetify] },
+    })
+    const names = () => wrapper.findAll('tbody tr').map(tr => tr.find('td').text())
+    const medianHeaders = wrapper.findAll('thead tr')[1]!.findAll('th').filter(th => th.text() === 'Median')
+
+    await medianHeaders[0]!.find('button').trigger('click')
+    expect(names()).toEqual(['Heavy', 'Light'])
+
+    await medianHeaders[1]!.find('button').trigger('click')
+    expect(names()).toEqual(['Light', 'Heavy'])
+    expect(medianHeaders[0]!.attributes('aria-sort')).toBe('none')
+  })
 })

@@ -30,11 +30,25 @@
       <table class="distribution-table__table">
         <thead>
           <tr>
-            <th rowspan="2">
-              {{ tv('columns.covariate', 'Covariate') }}
+            <th
+              rowspan="2"
+              :aria-sort="ariaSort('covariate')"
+            >
+              <SortHeaderButton
+                :label="tv('columns.covariate', 'Covariate')"
+                :direction="sortDirection('covariate')"
+                @sort="toggleSort('covariate')"
+              />
             </th>
-            <th rowspan="2">
-              {{ tv('columns.conceptId', 'Concept ID') }}
+            <th
+              rowspan="2"
+              :aria-sort="ariaSort('concept')"
+            >
+              <SortHeaderButton
+                :label="tv('columns.conceptId', 'Concept ID')"
+                :direction="sortDirection('concept')"
+                @sort="toggleSort('concept', true)"
+              />
             </th>
             <th
               v-for="cohort in cohorts"
@@ -53,15 +67,20 @@
                 v-for="statistic in statistics"
                 :key="statistic.key"
                 class="distribution-table__numeric"
+                :aria-sort="ariaSort(sortKey(statistic.key, partition.key, cohort.id))"
               >
-                {{ statistic.label }}
+                <SortHeaderButton
+                  :label="statistic.label"
+                  :direction="sortDirection(sortKey(statistic.key, partition.key, cohort.id))"
+                  @sort="toggleSort(sortKey(statistic.key, partition.key, cohort.id), true)"
+                />
               </th>
             </template>
           </tr>
         </thead>
         <tbody>
           <tr
-            v-for="row in rows"
+            v-for="row in pageRows"
             :key="row.covariateId"
           >
             <td>{{ row.covariateName }}</td>
@@ -82,6 +101,22 @@
         </tbody>
       </table>
     </div>
+
+    <div
+      v-if="rows.length > itemsPerPageOptions[0]!"
+      class="distribution-table__pager"
+      :data-testid="`char-results-distribution-pager-${analysisId}`"
+    >
+      <CohortPagination
+        :page="page"
+        :items-per-page="itemsPerPage"
+        :items-per-page-options="itemsPerPageOptions"
+        :total-items="totalItems"
+        :range-display="rangeDisplay"
+        @update:page="setPage"
+        @update:items-per-page="setItemsPerPage"
+      />
+    </div>
   </AtlasCard>
 </template>
 
@@ -89,9 +124,12 @@
 import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
+import { useSortedPage, type SortValue } from '@/composables/useSortedPage'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { DistributionStat, LinkedCohort } from '@/models/characterization.types'
 import { AtlasCard } from '@/components/ui'
+import CohortPagination from '@/components/cohort/CohortPagination.vue'
+import SortHeaderButton from './SortHeaderButton.vue'
 
 interface Props {
   analysisId: number
@@ -109,6 +147,8 @@ interface Statistic {
   key: string
   label: string
   format: (row: DistributionStat, partitionKey: string, cohortId: number) => string
+  /** The per-cohort values this column sorts by. */
+  values: (row: DistributionStat) => Record<string, Record<string, number>>
 }
 
 const props = defineProps<Props>()
@@ -146,13 +186,37 @@ function formatStatistic(
 }
 
 const statistics = computed<Statistic[]>(() => [
-  { key: 'avgSd', label: 'Avg (SD)', format: formatAvgSd },
-  { key: 'min', label: tv('characterizations.results.table.min', 'Min'), format: (row, key, cohortId) => formatStatistic(row.min, key, cohortId) },
-  { key: 'p25', label: tv('columns.p25', 'P25'), format: (row, key, cohortId) => formatStatistic(row.p25, key, cohortId) },
-  { key: 'median', label: tv('columns.median', 'Median'), format: (row, key, cohortId) => formatStatistic(row.median, key, cohortId) },
-  { key: 'p75', label: tv('columns.p75', 'P75'), format: (row, key, cohortId) => formatStatistic(row.p75, key, cohortId) },
-  { key: 'max', label: tv('columns.max', 'Max'), format: (row, key, cohortId) => formatStatistic(row.max, key, cohortId) },
+  { key: 'avgSd', label: 'Avg (SD)', format: formatAvgSd, values: row => row.avg },
+  { key: 'min', label: tv('characterizations.results.table.min', 'Min'), format: (row, key, cohortId) => formatStatistic(row.min, key, cohortId), values: row => row.min },
+  { key: 'p25', label: tv('columns.p25', 'P25'), format: (row, key, cohortId) => formatStatistic(row.p25, key, cohortId), values: row => row.p25 },
+  { key: 'median', label: tv('columns.median', 'Median'), format: (row, key, cohortId) => formatStatistic(row.median, key, cohortId), values: row => row.median },
+  { key: 'p75', label: tv('columns.p75', 'P75'), format: (row, key, cohortId) => formatStatistic(row.p75, key, cohortId), values: row => row.p75 },
+  { key: 'max', label: tv('columns.max', 'Max'), format: (row, key, cohortId) => formatStatistic(row.max, key, cohortId), values: row => row.max },
 ])
+
+// Sort keys are `statistic|partition|cohort`; partition keys never contain '|'.
+function sortKey(statistic: string, partitionKey: string, cohortId: number): string {
+  return `${statistic}|${partitionKey}|${cohortId}`
+}
+
+function sortValue(row: DistributionStat, key: string): SortValue {
+  if (key === 'covariate') return row.covariateName
+  if (key === 'concept') return row.conceptId || undefined
+  const [statisticKey, partitionKey = '', cohortId] = key.split('|')
+  const statistic = statistics.value.find(s => s.key === statisticKey)
+  return statistic ? value(statistic.values(row), partitionKey, Number(cohortId)) : undefined
+}
+
+const {
+  page, itemsPerPage, itemsPerPageOptions, pageRows, totalItems, rangeStart, rangeEnd,
+  toggleSort, sortDirection, ariaSort, setPage, setItemsPerPage,
+} = useSortedPage(() => props.rows, sortValue)
+
+const rangeDisplay = computed(() => tv(
+  'components.domainPrevalenceTable.showingRange',
+  'Showing {start} to {end} of {total} entries',
+  { start: rangeStart.value, end: rangeEnd.value, total: totalItems.value }
+))
 
 const partitions = computed<Partition[]>(() => {
   const names = new Map<string, string>()
@@ -178,6 +242,7 @@ const partitions = computed<Partition[]>(() => {
 .distribution-table__title { display: flex; align-items: baseline; gap: 8px; font-size: 18px; font-weight: 500; margin: 0; color: rgb(var(--v-theme-primary)); }
 .distribution-table__count { font-size: 0.85rem; color: rgba(var(--v-theme-on-surface), 0.6); font-weight: 400; }
 .distribution-table__wrap { overflow-x: auto; padding: 0 20px 20px; }
+.distribution-table__pager { padding: 0 20px 16px; }
 .distribution-table__partition-title { font-size: 13px; margin: 0 0 8px; }
 .distribution-table__table { border-collapse: collapse; font-size: 12px; min-width: 100%; }
 .distribution-table__table th, .distribution-table__table td { border: 1px solid rgba(var(--v-theme-on-surface), 0.12); padding: 6px 8px; text-align: right; white-space: nowrap; }
