@@ -600,8 +600,10 @@ describe('DataSourcesView', () => {
       wrapper = mountComponent()
       // Sidebar lives in the page body
       expect(wrapper.findComponent({ name: 'DataSourceSidebar' }).exists()).toBe(true)
-      // Source picker lives in the PageShell #actions slot (page header)
-      expect(wrapper.findComponent({ name: 'DataSourceSelector' }).exists()).toBe(true)
+      // Source picker lives in the sticky toolbar atop the content column,
+      // not the page header, so it stays visible after the header scrolls away
+      expect(wrapper.find('.datasources-view__toolbar [data-testid="datasource-selector"]').exists()).toBe(true)
+      expect(wrapper.find('.page-header__actions').exists()).toBe(false)
     })
   })
 
