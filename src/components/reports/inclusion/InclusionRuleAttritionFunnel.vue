@@ -66,9 +66,15 @@ import { trackChartTheme } from '@/ui/chart-config'
 
 const { t, tv } = useI18n()
 
-const props = defineProps<{ report: InclusionRuleReport }>()
+const props = defineProps<{
+  report: InclusionRuleReport
+  /** Label for the first (entry-event) step; defaults to "Initial Population". */
+  initialLabel?: string
+}>()
 
-const steps = computed<AttritionStep[]>(() => computeAttritionSteps(props.report))
+const steps = computed<AttritionStep[]>(() =>
+  computeAttritionSteps(props.report, props.initialLabel || undefined)
+)
 const chartHeight = computed(() => Math.max(260, steps.value.length * 52))
 const initial = computed(() => steps.value[0]!)
 const final = computed(() => steps.value[steps.value.length - 1]!)
