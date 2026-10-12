@@ -85,7 +85,7 @@
           </tr>
 
           <template
-            v-for="row in rows"
+            v-for="row in pagedRows"
             :key="rowKey(row)"
           >
             <tr
@@ -138,14 +138,23 @@
           </template>
         </tbody>
       </table>
+      <ResultsTablePagination
+        v-if="pageCount > 1"
+        :page="page"
+        :page-size="pageSize"
+        :total-items="rows.length"
+        @update:page="page = $event"
+        @update:page-size="onPageSizeChange"
+      />
     </div>
   </AtlasCard>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { AtlasCard, AtlasIconButton } from '@/components/ui'
+import ResultsTablePagination from '@/components/characterization-results/ResultsTablePagination.vue'
 import { buildTable1, deriveCohortSizes } from '@/utils/characterization-table1'
 import type {
   DistributionStat,
@@ -168,6 +177,9 @@ const props = defineProps<{
 defineEmits<{ explore: [row: PrevalenceStat] }>()
 
 const { tv } = useI18n()
+const DEFAULT_PAGE_SIZE = 15
+const page = ref(1)
+const pageSize = ref(DEFAULT_PAGE_SIZE)
 
 const built = computed(() =>
   buildTable1({
@@ -181,9 +193,20 @@ const built = computed(() =>
 )
 
 const rows = computed<Table1Row[]>(() => built.value.rows)
+const pageCount = computed(() => Math.max(1, Math.ceil(rows.value.length / pageSize.value)))
+const pagedRows = computed(() => rows.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
 const columns = computed(() => built.value.columns)
 const includeStdDiff = computed<boolean>(() => built.value.includeStdDiff)
 const showOverall = computed(() => props.cohorts.length > 1)
+
+watch(rows, () => {
+  page.value = 1
+})
+
+function onPageSizeChange(value: number): void {
+  pageSize.value = value
+  page.value = 1
+}
 
 const sizes = computed(() => {
   if (props.cohortSizes && Object.keys(props.cohortSizes).length > 0) return props.cohortSizes
@@ -295,7 +318,7 @@ function isHighStdDiff(row: Table1Row): boolean {
 }
 .char-t1__table th,
 .char-t1__table td {
-  padding: 5px 10px;
+  padding: 2px 4px;
   vertical-align: top;
 }
 .char-t1__table thead th {

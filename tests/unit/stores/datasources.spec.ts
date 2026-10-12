@@ -30,7 +30,11 @@ vi.mock('@/utils/logger', () => ({
 import {
   listDataSources,
   getDashboardReport,
-  getClinicalDomainReport
+  getClinicalDomainReport,
+  getDataDensityReport,
+  getPersonReport,
+  getObservationPeriodReport,
+  getDeathReport,
 } from '@/services/datasource.service'
 
 const mockDataSources: DataSource[] = [
@@ -62,6 +66,7 @@ describe('DataSources Store', () => {
     it('should have empty sources initially', () => {
       const store = useDataSourcesStore()
       expect(store.sources).toEqual([])
+      expect(store.sourcesLoaded).toBe(false)
     })
 
     it('should have null selected source initially', () => {
@@ -169,7 +174,44 @@ describe('DataSources Store', () => {
       await store.fetchDataSources()
 
       expect(store.sources).toEqual(mockDataSources)
+      expect(store.sourcesLoaded).toBe(true)
       expect(store.loading.sources).toBe(false)
+    })
+
+    it('should reuse an in-flight data-source request', async () => {
+      const store = useDataSourcesStore()
+      let resolveSources: (sources: DataSource[]) => void
+      vi.mocked(listDataSources).mockImplementation(
+        () => new Promise<DataSource[]>(resolve => { resolveSources = resolve })
+      )
+
+      const firstFetch = store.fetchDataSources()
+      const secondFetch = store.fetchDataSources()
+      resolveSources!(mockDataSources)
+
+      await Promise.all([firstFetch, secondFetch])
+
+      expect(listDataSources).toHaveBeenCalledTimes(1)
+    })
+
+    it('should leave sourcesLoaded false when fetching data sources fails', async () => {
+      const store = useDataSourcesStore()
+      vi.mocked(listDataSources).mockRejectedValue(new Error('Network error'))
+
+      await store.fetchDataSources()
+
+      expect(store.sourcesLoaded).toBe(false)
+    })
+
+    it('should only fetch sources once when ensuring the catalogue', async () => {
+      const store = useDataSourcesStore()
+      vi.mocked(listDataSources).mockResolvedValue([])
+
+      await store.ensureDataSources()
+      await store.ensureDataSources()
+
+      expect(listDataSources).toHaveBeenCalledTimes(1)
+      expect(store.sourcesLoaded).toBe(true)
     })
 
     it('should auto-select first source if none selected', async () => {
@@ -317,6 +359,26 @@ describe('DataSources Store', () => {
       expect(store.reportCache.has('1-conditionOccurrence')).toBe(true)
     })
 
+    it('should fetch each specialized report type', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      vi.mocked(getDataDensityReport).mockResolvedValue({} as never)
+      vi.mocked(getPersonReport).mockResolvedValue({} as never)
+      vi.mocked(getObservationPeriodReport).mockResolvedValue({} as never)
+      vi.mocked(getDeathReport).mockResolvedValue({} as never)
+
+      await store.fetchReport('datadensity')
+      await store.fetchReport('person')
+      await store.fetchReport('observationPeriod')
+      await store.fetchReport('death')
+
+      expect(getDataDensityReport).toHaveBeenCalledWith('TEST_CDM_1')
+      expect(getPersonReport).toHaveBeenCalledWith('TEST_CDM_1')
+      expect(getObservationPeriodReport).toHaveBeenCalledWith('TEST_CDM_1')
+      expect(getDeathReport).toHaveBeenCalledWith('TEST_CDM_1')
+    })
+
     it('should handle fetch error', async () => {
       const store = useDataSourcesStore()
       store.sources = mockDataSources
@@ -395,6 +457,30 @@ describe('DataSources Store', () => {
       await store.fetchReport('measurement')
 
       expect(getClinicalDomainReport).toHaveBeenCalledWith('TEST_CDM_1', 'measurement')
+    })
+
+    it.each(['conditionEra', 'drugEra', 'observation'] as const)(
+      'should fetch the %s clinical report type',
+      async (reportType) => {
+        const store = useDataSourcesStore()
+        store.sources = mockDataSources
+        store.selectedSourceId = 1
+        vi.mocked(getClinicalDomainReport).mockResolvedValue([])
+
+        await store.fetchReport(reportType)
+
+        expect(getClinicalDomainReport).toHaveBeenCalledWith('TEST_CDM_1', reportType)
+      }
+    )
+
+    it('should report unsupported report types', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+
+      await store.fetchReport('unsupported' as never)
+
+      expect(store.error.report).toBe('Report type unsupported not yet implemented')
     })
   })
 

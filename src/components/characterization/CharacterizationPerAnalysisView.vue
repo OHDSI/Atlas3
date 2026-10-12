@@ -1,8 +1,9 @@
 <template>
   <div class="char-per-analysis">
-    <template
+    <section
       v-for="group in analysisGroups"
       :key="group.analysisId"
+      class="char-per-analysis__group"
     >
       <PrevalenceTable
         v-if="group.prevalence"
@@ -11,6 +12,8 @@
         :rows="group.prevalence.rows"
         :cohorts="group.prevalence.cohorts"
         :selected-cohort-ids="selectedCohortIds"
+        :expanded="isAnalysisExpanded(group.analysisId)"
+        @update:expanded="setAnalysisExpanded(group.analysisId, $event)"
         @explore="(row) => $emit('explore', row)"
       />
       <DistributionTable
@@ -19,8 +22,10 @@
         :analysis-name="group.analysisName"
         :rows="group.distribution.rows"
         :cohorts="group.distribution.cohorts"
+        :expanded="isAnalysisExpanded(group.analysisId)"
+        @update:expanded="setAnalysisExpanded(group.analysisId, $event)"
       />
-    </template>
+    </section>
     <div
       v-if="prevalenceGroups.length === 0 && distributionGroups.length === 0"
       class="char-per-analysis__empty"
@@ -31,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { matchesTerms } from '@/utils/list-filters'
 import PrevalenceTable from '@/components/characterization-results/PrevalenceTable.vue'
@@ -55,6 +60,20 @@ const props = defineProps<{
 
 defineEmits<{ explore: [row: PrevalenceStat] }>()
 const { tv } = useI18n()
+const collapsedAnalysisIds = ref<number[]>([])
+
+function isAnalysisExpanded(analysisId: number): boolean {
+  return !collapsedAnalysisIds.value.includes(analysisId)
+}
+
+function setAnalysisExpanded(analysisId: number, expanded: boolean): void {
+  const isCollapsed = collapsedAnalysisIds.value.includes(analysisId)
+  if (expanded && isCollapsed) {
+    collapsedAnalysisIds.value = collapsedAnalysisIds.value.filter(id => id !== analysisId)
+  } else if (!expanded && !isCollapsed) {
+    collapsedAnalysisIds.value = [...collapsedAnalysisIds.value, analysisId]
+  }
+}
 
 function pickStratumKey(rec: Record<string, Record<string, number>>): string | null {
   const keys = Object.keys(rec)
@@ -147,7 +166,10 @@ const analysisGroups = computed(() => {
 </script>
 
 <style scoped>
-.char-per-analysis { display: flex; flex-direction: column; gap: 16px; }
+.char-per-analysis { display: flex; flex-direction: column; gap: 8px; }
+.char-per-analysis__group { display: flex; flex-direction: column; gap: 8px; margin: 0; }
+.char-per-analysis :deep(.prevalence-table),
+.char-per-analysis :deep(.distribution-table) { margin-bottom: 0; }
 .char-per-analysis__empty {
   padding: 32px; text-align: center;
   color: rgba(var(--v-theme-on-surface), 0.6); font-size: 13px;

@@ -5,118 +5,131 @@
     :data-testid="`char-results-distribution-${analysisId}`"
   >
     <div class="distribution-table__header">
-      <div class="distribution-table__eyebrow-row">
+      <button
+        class="distribution-table__eyebrow-row distribution-table__toggle"
+        type="button"
+        :aria-expanded="expanded"
+        :aria-controls="`char-results-distribution-content-${analysisId}`"
+        @click="emit('update:expanded', !expanded)"
+      >
+        <AtlasIcon
+          icon="mdi-chevron-down"
+          size="18"
+          class="distribution-table__chevron"
+          :class="{ 'distribution-table__chevron--collapsed': !expanded }"
+        />
         <span class="text-eyebrow">{{ analysisName }}</span>
         <span class="distribution-table__accent-rule" />
-      </div>
-      <h3 class="distribution-table__title">
+      </button>
+      <h3
+        v-if="expanded"
+        class="distribution-table__title"
+      >
         {{ tv('characterizations.results.table.distribution', 'Distribution') }}
         <span class="distribution-table__count">({{ rows.length }})</span>
       </h3>
     </div>
 
-    <div
-      v-for="partition in partitions"
-      :key="partition.key"
-      class="distribution-table__wrap"
-      :data-testid="`char-results-distribution-table-${analysisId}-${partition.key}`"
-    >
-      <h4
-        v-if="partitions.length > 1"
-        class="distribution-table__partition-title"
+    <template v-if="expanded">
+      <div
+        :id="`char-results-distribution-content-${analysisId}`"
       >
-        {{ partition.label }}
-      </h4>
-      <table class="distribution-table__table">
-        <thead>
-          <tr>
-            <th
-              rowspan="2"
-              :aria-sort="ariaSort('covariate')"
-            >
-              <SortHeaderButton
-                :label="tv('columns.covariate', 'Covariate')"
-                :direction="sortDirection('covariate')"
-                @sort="toggleSort('covariate')"
-              />
-            </th>
-            <th
-              rowspan="2"
-              :aria-sort="ariaSort('concept')"
-            >
-              <SortHeaderButton
-                :label="tv('columns.conceptId', 'Concept ID')"
-                :direction="sortDirection('concept')"
-                @sort="toggleSort('concept', true)"
-              />
-            </th>
-            <th
-              v-for="cohort in cohorts"
-              :key="cohort.id"
-              :colspan="statistics.length"
-            >
-              {{ cohort.name }}
-            </th>
-          </tr>
-          <tr>
-            <template
-              v-for="cohort in cohorts"
-              :key="cohort.id"
-            >
-              <th
-                v-for="statistic in statistics"
-                :key="statistic.key"
-                class="distribution-table__numeric"
-                :aria-sort="ariaSort(sortKey(statistic.key, partition.key, cohort.id))"
-              >
-                <SortHeaderButton
-                  :label="statistic.label"
-                  :direction="sortDirection(sortKey(statistic.key, partition.key, cohort.id))"
-                  @sort="toggleSort(sortKey(statistic.key, partition.key, cohort.id), true)"
-                />
-              </th>
-            </template>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="row in pageRows"
-            :key="row.covariateId"
+        <div
+          v-for="partition in partitions"
+          :key="partition.key"
+          class="distribution-table__wrap"
+          :data-testid="`char-results-distribution-table-${analysisId}-${partition.key}`"
+        >
+          <h4
+            v-if="partitions.length > 1"
+            class="distribution-table__partition-title"
           >
-            <td>{{ row.covariateName }}</td>
-            <td>{{ row.conceptId || '—' }}</td>
-            <template
-              v-for="cohort in cohorts"
-              :key="cohort.id"
-            >
-              <td
-                v-for="statistic in statistics"
-                :key="statistic.key"
-                class="distribution-table__numeric"
+            {{ partition.label }}
+          </h4>
+          <table class="distribution-table__table">
+            <thead>
+              <tr>
+                <th
+                  rowspan="2"
+                  :aria-sort="ariaSort('covariate')"
+                >
+                  <SortHeaderButton
+                    :label="tv('columns.covariate', 'Covariate')"
+                    :direction="sortDirection('covariate')"
+                    @sort="toggleSort('covariate')"
+                  />
+                </th>
+                <th
+                  rowspan="2"
+                  :aria-sort="ariaSort('concept')"
+                >
+                  <SortHeaderButton
+                    :label="tv('columns.conceptId', 'Concept ID')"
+                    :direction="sortDirection('concept')"
+                    @sort="toggleSort('concept', true)"
+                  />
+                </th>
+                <th
+                  v-for="cohort in cohorts"
+                  :key="cohort.id"
+                  :colspan="statistics.length"
+                >
+                  {{ cohort.name }}
+                </th>
+              </tr>
+              <tr>
+                <template
+                  v-for="cohort in cohorts"
+                  :key="cohort.id"
+                >
+                  <th
+                    v-for="statistic in statistics"
+                    :key="statistic.key"
+                    class="distribution-table__numeric"
+                    :aria-sort="ariaSort(sortKey(statistic.key, partition.key, cohort.id))"
+                  >
+                    <SortHeaderButton
+                      :label="statistic.label"
+                      :direction="sortDirection(sortKey(statistic.key, partition.key, cohort.id))"
+                      @sort="toggleSort(sortKey(statistic.key, partition.key, cohort.id), true)"
+                    />
+                  </th>
+                </template>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in pageRows"
+                :key="row.covariateId"
               >
-                {{ statistic.format(row, partition.key, cohort.id) }}
-              </td>
-            </template>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div
-      v-if="rows.length > itemsPerPageOptions[0]!"
-      class="distribution-table__pager"
-      :data-testid="`char-results-distribution-pager-${analysisId}`"
-    >
-      <CohortPagination
-        :page="page"
-        :items-per-page="itemsPerPage"
-        :items-per-page-options="itemsPerPageOptions"
-        :total-items="totalItems"
-        :range-display="rangeDisplay"
-        @update:page="setPage"
-        @update:items-per-page="setItemsPerPage"
-      />
-    </div>
+                <td>{{ row.covariateName }}</td>
+                <td>{{ row.conceptId || '—' }}</td>
+                <template
+                  v-for="cohort in cohorts"
+                  :key="cohort.id"
+                >
+                  <td
+                    v-for="statistic in statistics"
+                    :key="statistic.key"
+                    class="distribution-table__numeric"
+                  >
+                    {{ statistic.format(row, partition.key, cohort.id) }}
+                  </td>
+                </template>
+              </tr>
+            </tbody>
+          </table>
+          <ResultsTablePagination
+            v-if="totalPages > 1"
+            :page="page"
+            :page-size="itemsPerPage"
+            :total-items="totalItems"
+            @update:page="setPage"
+            @update:page-size="setItemsPerPage"
+          />
+        </div>
+      </div>
+    </template>
   </AtlasCard>
 </template>
 
@@ -127,8 +140,8 @@ import { useI18n } from '@/composables/useI18n'
 import { useSortedPage, type SortValue } from '@/composables/useSortedPage'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { DistributionStat, LinkedCohort } from '@/models/characterization.types'
-import { AtlasCard } from '@/components/ui'
-import CohortPagination from '@/components/cohort/CohortPagination.vue'
+import { AtlasCard, AtlasIcon } from '@/components/ui'
+import ResultsTablePagination from './ResultsTablePagination.vue'
 import SortHeaderButton from './SortHeaderButton.vue'
 
 interface Props {
@@ -136,6 +149,7 @@ interface Props {
   analysisName: string
   rows: DistributionStat[]
   cohorts: LinkedCohort[]
+  expanded?: boolean
 }
 
 interface Partition {
@@ -151,9 +165,9 @@ interface Statistic {
   values: (row: DistributionStat) => Record<string, Record<string, number>>
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), { expanded: true })
+const emit = defineEmits<{ 'update:expanded': [value: boolean] }>()
 const { tv } = useI18n()
-
 function isOverall(key: string): boolean {
   return key === DEFAULT_STRATA_KEY || key === '0'
 }
@@ -208,15 +222,9 @@ function sortValue(row: DistributionStat, key: string): SortValue {
 }
 
 const {
-  page, itemsPerPage, itemsPerPageOptions, pageRows, totalItems, rangeStart, rangeEnd,
+  page, itemsPerPage, pageRows, totalItems, totalPages,
   toggleSort, sortDirection, ariaSort, setPage, setItemsPerPage,
-} = useSortedPage(() => props.rows, sortValue)
-
-const rangeDisplay = computed(() => tv(
-  'components.domainPrevalenceTable.showingRange',
-  'Showing {start} to {end} of {total} entries',
-  { start: rangeStart.value, end: rangeEnd.value, total: totalItems.value }
-))
+} = useSortedPage(() => props.rows, sortValue, { defaultItemsPerPage: 15 })
 
 const partitions = computed<Partition[]>(() => {
   const names = new Map<string, string>()
@@ -238,14 +246,17 @@ const partitions = computed<Partition[]>(() => {
 .distribution-table { margin-bottom: 16px; }
 .distribution-table__header { padding: 20px 20px 12px; }
 .distribution-table__eyebrow-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.distribution-table__toggle { background: transparent; border: 0; cursor: pointer; padding: 0; }
+.distribution-table__toggle:focus-visible { outline: 2px solid rgb(var(--v-theme-primary)); outline-offset: 2px; }
+.distribution-table__chevron { color: rgba(var(--v-theme-on-surface), 0.62); transition: transform 0.15s ease; }
+.distribution-table__chevron--collapsed { transform: rotate(-90deg); }
 .distribution-table__accent-rule { width: 28px; height: 2px; background-color: rgb(var(--v-theme-orange)); }
 .distribution-table__title { display: flex; align-items: baseline; gap: 8px; font-size: 18px; font-weight: 500; margin: 0; color: rgb(var(--v-theme-primary)); }
 .distribution-table__count { font-size: 0.85rem; color: rgba(var(--v-theme-on-surface), 0.6); font-weight: 400; }
 .distribution-table__wrap { overflow-x: auto; padding: 0 20px 20px; }
-.distribution-table__pager { padding: 0 20px 16px; }
 .distribution-table__partition-title { font-size: 13px; margin: 0 0 8px; }
 .distribution-table__table { border-collapse: collapse; font-size: 12px; min-width: 100%; }
-.distribution-table__table th, .distribution-table__table td { border: 1px solid rgba(var(--v-theme-on-surface), 0.12); padding: 6px 8px; text-align: right; white-space: nowrap; }
+.distribution-table__table th, .distribution-table__table td { border: 1px solid rgba(var(--v-theme-on-surface), 0.12); padding: 2px 4px; text-align: right; white-space: nowrap; }
 .distribution-table__table th:first-child, .distribution-table__table td:first-child { text-align: left; }
 .distribution-table__table thead th { background: rgba(var(--v-theme-on-surface), 0.03); font-weight: 600; }
 .distribution-table__table thead .distribution-table__numeric { text-align: right; }

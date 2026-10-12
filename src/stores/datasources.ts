@@ -15,6 +15,7 @@ import { logger } from '@/utils/logger'
 export const useDataSourcesStore = defineStore('datasources', () => {
   // State
   const sources = ref<DataSource[]>([])
+  const sourcesLoaded = ref(false)
   const selectedSourceId = ref<number | null>(null)
   const selectedReportType = ref<AnyReportType | null>(null)
   const reportCache = ref<Map<string, ReportData>>(new Map())
@@ -58,12 +59,18 @@ export const useDataSourcesStore = defineStore('datasources', () => {
     try { await fetchPromise } finally { fetchPromise = null }
   }
 
+  async function ensureDataSources() {
+    if (sourcesLoaded.value) return
+    await fetchDataSources()
+  }
+
   async function doFetchDataSources() {
     loading.value.sources = true
     error.value.sources = null
 
     try {
       sources.value = await listDataSources()
+      sourcesLoaded.value = true
 
       // Auto-select first source if none selected
       if (sources.value.length > 0 && selectedSourceId.value === null) {
@@ -202,6 +209,7 @@ export const useDataSourcesStore = defineStore('datasources', () => {
   return {
     // State
     sources,
+    sourcesLoaded,
     selectedSourceId,
     selectedReportType,
     reportCache,
@@ -215,6 +223,7 @@ export const useDataSourcesStore = defineStore('datasources', () => {
 
     // Actions
     fetchDataSources,
+    ensureDataSources,
     selectDataSource,
     selectReportType,
     fetchReport,
