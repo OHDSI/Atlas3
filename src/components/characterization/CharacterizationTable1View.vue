@@ -84,21 +84,22 @@
             <td class="char-t1__cell-action" />
           </tr>
 
-          <!-- v-memo lets each progressive chunk render only its new rows
-               instead of re-rendering every row already on screen. -->
-          <tr
-            v-for="row in visibleRows"
+          <template
+            v-for="row in pagedRows"
             :key="rowKey(row)"
-            v-memo="[row, rowMemoDeps]"
-            :class="row.kind === 'group' ? 'char-t1__group' : 'char-t1__row'"
           >
-            <td
+            <tr
               v-if="row.kind === 'group'"
-              :colspan="totalColumnCount"
+              class="char-t1__group"
             >
-              {{ row.label }}
-            </td>
-            <template v-else>
+              <td :colspan="totalColumnCount">
+                {{ row.label }}
+              </td>
+            </tr>
+            <tr
+              v-else
+              class="char-t1__row"
+            >
               <td class="char-t1__cell-label">
                 {{ row.label }}
               </td>
@@ -123,37 +124,37 @@
                 {{ formatStdDiff(row) }}
               </td>
               <td class="char-t1__cell-action">
-                <!-- A native button rather than AtlasIconButton: Table 1 can
-                     hold thousands of rows, and a Vuetify button per row made
-                     switching to this view take seconds. -->
-                <button
+                <AtlasIconButton
                   v-if="row.kind === 'binary'"
-                  type="button"
-                  class="char-t1__explore"
-                  :aria-label="exploreLabel"
-                  :title="exploreLabel"
+                  icon="mdi-magnify"
+                  size="sm"
+                  variant="text"
+                  v-bind="{ ariaLabel: tv('columns.explore', 'Explore') }"
                   data-testid="char-t1-explore"
                   @click="$emit('explore', row._source)"
-                >
-                  <span
-                    class="mdi mdi-magnify"
-                    aria-hidden="true"
-                  />
-                </button>
+                />
               </td>
-            </template>
-          </tr>
+            </tr>
+          </template>
         </tbody>
       </table>
+      <ResultsTablePagination
+        v-if="pageCount > 1"
+        :page="page"
+        :page-size="pageSize"
+        :total-items="rows.length"
+        @update:page="page = $event"
+        @update:page-size="onPageSizeChange"
+      />
     </div>
   </AtlasCard>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import { useProgressiveList } from '@/composables/useProgressiveList'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasIconButton } from '@/components/ui'
+import ResultsTablePagination from '@/components/characterization-results/ResultsTablePagination.vue'
 import { buildTable1, deriveCohortSizes } from '@/utils/characterization-table1'
 import type {
   DistributionStat,
@@ -176,7 +177,9 @@ const props = defineProps<{
 defineEmits<{ explore: [row: PrevalenceStat] }>()
 
 const { tv } = useI18n()
-const exploreLabel = computed(() => tv('columns.explore', 'Explore'))
+const DEFAULT_PAGE_SIZE = 15
+const page = ref(1)
+const pageSize = ref(DEFAULT_PAGE_SIZE)
 
 const built = computed(() =>
   buildTable1({
@@ -190,12 +193,20 @@ const built = computed(() =>
 )
 
 const rows = computed<Table1Row[]>(() => built.value.rows)
-// Long-term drug/condition analyses can put thousands of rows in Table 1;
-// rendering them all in one pass froze the view switch for seconds.
-const { visible: visibleRows } = useProgressiveList(() => rows.value)
+const pageCount = computed(() => Math.max(1, Math.ceil(rows.value.length / pageSize.value)))
+const pagedRows = computed(() => rows.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
 const columns = computed(() => built.value.columns)
 const includeStdDiff = computed<boolean>(() => built.value.includeStdDiff)
 const showOverall = computed(() => props.cohorts.length > 1)
+
+watch(rows, () => {
+  page.value = 1
+})
+
+function onPageSizeChange(value: number): void {
+  pageSize.value = value
+  page.value = 1
+}
 
 const sizes = computed(() => {
   if (props.cohortSizes && Object.keys(props.cohortSizes).length > 0) return props.cohortSizes
@@ -214,17 +225,6 @@ function cohortN(key: string): string {
 const totalColumnCount = computed(() =>
   1 + (showOverall.value ? 1 : 0) + columns.value.length + (includeStdDiff.value ? 1 : 0) + 1
 )
-
-// Everything a row's cells read besides the row itself; a new object here
-// re-renders every memoized row.
-const rowMemoDeps = computed(() => ({
-  columns: columns.value,
-  sizes: sizes.value,
-  showOverall: showOverall.value,
-  includeStdDiff: includeStdDiff.value,
-  totalColumnCount: totalColumnCount.value,
-  exploreLabel: exploreLabel.value,
-}))
 
 function rowKey(row: Table1Row): string {
   if (row.kind === 'group') return `g-${row.analysisId}`
@@ -318,7 +318,7 @@ function isHighStdDiff(row: Table1Row): boolean {
 }
 .char-t1__table th,
 .char-t1__table td {
-  padding: 5px 10px;
+  padding: 2px 4px;
   vertical-align: top;
 }
 .char-t1__table thead th {
@@ -361,27 +361,6 @@ function isHighStdDiff(row: Table1Row): boolean {
 .char-t1__cell-action {
   text-align: center;
   width: 40px;
-}
-.char-t1__explore {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: none;
-  color: rgba(var(--v-theme-on-surface), 0.7);
-  font-size: 18px;
-  cursor: pointer;
-}
-.char-t1__explore:hover {
-  background: rgba(var(--v-theme-on-surface), 0.08);
-}
-.char-t1__explore:focus-visible {
-  outline: 2px solid rgb(var(--v-theme-primary));
-  outline-offset: 1px;
 }
 .char-t1__cell-label {
   max-width: 280px;

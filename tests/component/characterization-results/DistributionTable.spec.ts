@@ -46,4 +46,38 @@ describe('DistributionTable', () => {
     expect(wrapper.text()).toContain('70.00 (8.00)')
     expect(wrapper.text()).not.toContain('Std Diff')
   })
+
+  it('renders each named partition and synchronizes its pagers', async () => {
+    const rows = Array.from({ length: 16 }, (_, index) => ({
+      ...row,
+      covariateId: index + 1,
+      covariateName: `Measurement ${index + 1}`,
+      strataNames: { [DEFAULT_STRATA_KEY]: 'All strata', age65: 'Age 65+' },
+      avg: {
+        [DEFAULT_STRATA_KEY]: { '1': 70, '2': 75 },
+        age65: { '1': 71, '2': 76 },
+      },
+    }))
+    const wrapper = mount(DistributionTable, {
+      props: { analysisId: 1, analysisName: 'Measurement', rows, cohorts },
+      global: { plugins: [vuetify] },
+    })
+
+    expect(wrapper.findAll('.distribution-table__partition-title').map(title => title.text()))
+      .toEqual(['Overall', 'Age 65+'])
+    const pagers = wrapper.findAllComponents({ name: 'ResultsTablePagination' })
+    expect(pagers).toHaveLength(2)
+
+    await pagers[0]!.vm.$emit('update:page', 2)
+    expect(wrapper.findAll('.distribution-table__table tbody').map(body => body.findAll('tr')))
+      .toSatisfy(rows => rows.every(rows => rows.length === 1))
+
+    await pagers[0]!.vm.$emit('update:page-size', 50)
+    expect(wrapper.findAll('.distribution-table__table tbody').map(body => body.findAll('tr')))
+      .toSatisfy(rows => rows.every(rows => rows.length === 16))
+
+    await wrapper.setProps({ rows: [...rows] })
+    expect(wrapper.findAll('.distribution-table__table tbody').map(body => body.findAll('tr')))
+      .toSatisfy(rows => rows.every(rows => rows.length === 16))
+  })
 })

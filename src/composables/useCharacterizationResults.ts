@@ -60,7 +60,12 @@ export function useCharacterizationResults() {
       if (!countResult.success) throw countResult.error
       if (!resultsResult.success) throw resultsResult.error
 
-      const mapped = resultsResult.data.reports.map(mapCharacterizationResultReport)
+      // The response includes an all-prevalence aggregate report without an
+      // analysis ID. Its items repeat the rows in the concrete analysis
+      // reports, so it must not be rendered in the per-analysis result view.
+      const mapped = resultsResult.data.reports
+        .filter(report => typeof report.analysisId === 'number')
+        .map(mapCharacterizationResultReport)
       resultCount.value = countResult.data
       prevalence.value = mapped.flatMap(report => report.prevalence)
       distribution.value = mapped.flatMap(report => report.distribution)
