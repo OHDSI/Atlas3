@@ -5,7 +5,7 @@
  */
 import { logger } from '@/utils/logger'
 import { httpGet, httpPost } from '@/services/http-client'
-import { unwrap, ApiError, parseOrThrow } from '@/services/api-error'
+import { unwrap, ApiError, parseOrThrow, zodIssues } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import {
   WebAPIReportResponseSchema,
@@ -82,7 +82,19 @@ export async function getInclusionRuleReport(
       `/cohortdefinition/${cohortId}/report/${sourceKey}/inclusion?mode=${mode}`
     )
 
-    const parsed = parseOrThrow(InclusionRuleReportSchema, data, 'Invalid inclusion-rule report response')
+    const result = InclusionRuleReportSchema.safeParse(data)
+    if (!result.success) {
+      // WebAPI can answer an exception with a `{ message }` body; that says
+      // more than a schema mismatch does.
+      const serverMessage = (data as { message?: unknown } | null)?.message
+      if (typeof serverMessage === 'string' && serverMessage) {
+        throw new ApiError(serverMessage, 0, JSON.stringify(data))
+      }
+      const issue = result.error.issues[0]
+      const where = issue ? ` (${issue.path.join('.') || 'root'}: ${issue.message})` : ''
+      throw new ApiError(`Invalid inclusion-rule report response${where}`, 0, zodIssues(result.error))
+    }
+    const parsed = result.data
 
     let treemap: InclusionTreemapNode | null = null
     const raw = parsed.treemapData?.trim()
@@ -96,7 +108,7 @@ export async function getInclusionRuleReport(
 
     return {
       summary: parsed.summary,
-      inclusionRuleStats: parsed.inclusionRuleStats,
+      inclusionRuleStats: parsed.inclusionRuleStats.map(rule => ({ ...rule, name: rule.name ?? '' })),
       treemap,
       prevalenceThreshold: parsed.prevalenceThreshold,
     }

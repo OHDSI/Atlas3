@@ -35,79 +35,35 @@
         :id="`char-results-distribution-content-${analysisId}`"
       >
         <div
-          v-for="partition in partitions"
-          :key="partition.key"
+          v-for="table in tables"
+          :key="table.key"
           class="distribution-table__wrap"
-          :data-testid="`char-results-distribution-table-${analysisId}-${partition.key}`"
+          :data-testid="`char-results-distribution-table-${analysisId}-${table.key}`"
         >
           <h4
-            v-if="partitions.length > 1"
+            v-if="tables.length > 1"
             class="distribution-table__partition-title"
           >
-            {{ partition.label }}
+            {{ table.label }}
           </h4>
-          <table class="distribution-table__table">
-            <thead>
-              <tr>
-                <th rowspan="2">
-                  {{ tv('columns.covariate', 'Covariate') }}
-                </th>
-                <th rowspan="2">
-                  {{ tv('columns.conceptId', 'Concept ID') }}
-                </th>
-                <th
-                  v-for="cohort in cohorts"
-                  :key="cohort.id"
-                  :colspan="statistics.length"
-                >
-                  {{ cohort.name }}
-                </th>
-              </tr>
-              <tr>
-                <template
-                  v-for="cohort in cohorts"
-                  :key="cohort.id"
-                >
-                  <th
-                    v-for="statistic in statistics"
-                    :key="statistic.key"
-                    class="distribution-table__numeric"
-                  >
-                    {{ statistic.label }}
-                  </th>
-                </template>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="row in pagedRows"
-                :key="row.covariateId"
-              >
-                <td>{{ row.covariateName }}</td>
-                <td>{{ row.conceptId || '—' }}</td>
-                <template
-                  v-for="cohort in cohorts"
-                  :key="cohort.id"
-                >
-                  <td
-                    v-for="statistic in statistics"
-                    :key="statistic.key"
-                    class="distribution-table__numeric"
-                  >
-                    {{ statistic.format(row, partition.key, cohort.id) }}
-                  </td>
-                </template>
-              </tr>
-            </tbody>
-          </table>
-          <ResultsTablePagination
-            v-if="pageCount > 1"
-            :page="page"
-            :page-size="pageSize"
-            :total-items="rows.length"
-            @update:page="page = $event"
-            @update:page-size="onPageSizeChange"
-          />
+          <ResultsDataTable
+            v-model:page="page"
+            v-model:page-size="pageSize"
+            v-model:sort-by="sortBy"
+            :headers="table.headers"
+            :items="rows"
+            item-value="covariateId"
+          >
+            <template #item.conceptId="{ item }">
+              {{ item.conceptId || '—' }}
+            </template>
+            <template
+              v-for="cell in table.cells"
+              #[`item.${cell.key}`]="{ item }"
+            >
+              {{ cell.format(item) }}
+            </template>
+          </ResultsDataTable>
         </div>
       </div>
     </template>
@@ -115,13 +71,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { DistributionStat, LinkedCohort } from '@/models/characterization.types'
 import { AtlasCard, AtlasIcon } from '@/components/ui'
-import ResultsTablePagination from './ResultsTablePagination.vue'
+import ResultsDataTable, { type ResultsHeader, type ResultsSortItem } from './ResultsDataTable.vue'
 
 interface Props {
   analysisId: number
@@ -136,8 +92,11 @@ interface Partition {
   label: string
 }
 
+type StatisticField = 'avg' | 'min' | 'p25' | 'median' | 'p75' | 'max'
+
 interface Statistic {
-  key: string
+  /** The row field this column sorts by. */
+  field: StatisticField
   label: string
   format: (row: DistributionStat, partitionKey: string, cohortId: number) => string
 }
@@ -145,21 +104,11 @@ interface Statistic {
 const props = withDefaults(defineProps<Props>(), { expanded: true })
 const emit = defineEmits<{ 'update:expanded': [value: boolean] }>()
 const { tv } = useI18n()
-const DEFAULT_PAGE_SIZE = 15
+
+// Shared by every partition table in the card so their rows stay aligned.
 const page = ref(1)
-const pageSize = ref(DEFAULT_PAGE_SIZE)
-
-const pageCount = computed(() => Math.max(1, Math.ceil(props.rows.length / pageSize.value)))
-const pagedRows = computed(() => props.rows.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
-
-watch(() => props.rows, () => {
-  page.value = 1
-})
-
-function onPageSizeChange(value: number): void {
-  pageSize.value = value
-  page.value = 1
-}
+const pageSize = ref(15)
+const sortBy = ref<ResultsSortItem[]>([])
 
 function isOverall(key: string): boolean {
   return key === DEFAULT_STRATA_KEY || key === '0'
@@ -193,12 +142,12 @@ function formatStatistic(
 }
 
 const statistics = computed<Statistic[]>(() => [
-  { key: 'avgSd', label: 'Avg (SD)', format: formatAvgSd },
-  { key: 'min', label: tv('characterizations.results.table.min', 'Min'), format: (row, key, cohortId) => formatStatistic(row.min, key, cohortId) },
-  { key: 'p25', label: tv('columns.p25', 'P25'), format: (row, key, cohortId) => formatStatistic(row.p25, key, cohortId) },
-  { key: 'median', label: tv('columns.median', 'Median'), format: (row, key, cohortId) => formatStatistic(row.median, key, cohortId) },
-  { key: 'p75', label: tv('columns.p75', 'P75'), format: (row, key, cohortId) => formatStatistic(row.p75, key, cohortId) },
-  { key: 'max', label: tv('columns.max', 'Max'), format: (row, key, cohortId) => formatStatistic(row.max, key, cohortId) },
+  { field: 'avg', label: 'Avg (SD)', format: formatAvgSd },
+  { field: 'min', label: tv('characterizations.results.table.min', 'Min'), format: (row, key, cohortId) => formatStatistic(row.min, key, cohortId) },
+  { field: 'p25', label: tv('columns.p25', 'P25'), format: (row, key, cohortId) => formatStatistic(row.p25, key, cohortId) },
+  { field: 'median', label: tv('columns.median', 'Median'), format: (row, key, cohortId) => formatStatistic(row.median, key, cohortId) },
+  { field: 'p75', label: tv('columns.p75', 'P75'), format: (row, key, cohortId) => formatStatistic(row.p75, key, cohortId) },
+  { field: 'max', label: tv('columns.max', 'Max'), format: (row, key, cohortId) => formatStatistic(row.max, key, cohortId) },
 ])
 
 const partitions = computed<Partition[]>(() => {
@@ -215,6 +164,36 @@ const partitions = computed<Partition[]>(() => {
   return Array.from(names, ([key, label]) => ({ key, label }))
     .sort((a, b) => Number(isOverall(b.key)) - Number(isOverall(a.key)))
 })
+
+/**
+ * One column per statistic for a partition and cohort. The key is the path
+ * to the value in the row (`median.<partition>.<cohort>`; strata ids are
+ * numeric), so v-data-table sorts by it directly, in every table that shares
+ * `sortBy`.
+ */
+function statisticCells(partitionKey: string, cohortId: number) {
+  return statistics.value.map(statistic => ({
+    key: `${statistic.field}.${partitionKey}.${cohortId}`,
+    title: statistic.label,
+    align: 'end',
+    format: (row: DistributionStat) => statistic.format(row, partitionKey, cohortId),
+  }))
+}
+
+const tables = computed(() => partitions.value.map(partition => {
+  const groups = props.cohorts.map(cohort => ({
+    key: `cohort-${cohort.id}`,
+    title: cohort.name,
+    align: 'center',
+    children: statisticCells(partition.key, cohort.id),
+  }))
+  const headers: ResultsHeader[] = [
+    { key: 'covariateName', title: tv('columns.covariate', 'Covariate'), sortable: false },
+    { key: 'conceptId', title: tv('columns.conceptId', 'Concept ID'), sortable: false },
+    ...groups,
+  ]
+  return { ...partition, headers, cells: groups.flatMap(group => group.children) }
+}))
 </script>
 
 <style scoped>
@@ -230,9 +209,4 @@ const partitions = computed<Partition[]>(() => {
 .distribution-table__count { font-size: 0.85rem; color: rgba(var(--v-theme-on-surface), 0.6); font-weight: 400; }
 .distribution-table__wrap { overflow-x: auto; padding: 0 20px 20px; }
 .distribution-table__partition-title { font-size: 13px; margin: 0 0 8px; }
-.distribution-table__table { border-collapse: collapse; font-size: 12px; min-width: 100%; }
-.distribution-table__table th, .distribution-table__table td { border: 1px solid rgba(var(--v-theme-on-surface), 0.12); padding: 2px 4px; text-align: right; white-space: nowrap; }
-.distribution-table__table th:first-child, .distribution-table__table td:first-child { text-align: left; }
-.distribution-table__table thead th { background: rgba(var(--v-theme-on-surface), 0.03); font-weight: 600; }
-.distribution-table__table thead .distribution-table__numeric { text-align: right; }
 </style>

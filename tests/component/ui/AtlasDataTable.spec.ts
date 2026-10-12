@@ -242,4 +242,20 @@ describe('AtlasDataTable', () => {
     expect(wrapper.findAll('tbody tr')[0].findAll('td')[0].text()).toBe('alpha')
     expect((wrapper.vm as unknown as { sortBy: unknown }).sortBy).toEqual([{ key: 'name', order: 'asc' }])
   })
+
+  it('marks the sorted column header with aria-sort, including nested headers', async () => {
+    const headers = [
+      { key: 'name', title: 'Name' },
+      { key: 'group', title: 'Group', children: [{ key: 'value', title: 'Value' }] },
+    ]
+    const wrapper = mountWith({ headers })
+    const valueHeader = () => wrapper.findAll('th').find(th => th.text().includes('Value'))!
+    expect(valueHeader().attributes('aria-sort')).toBeUndefined()
+
+    await valueHeader().trigger('click')
+    expect(valueHeader().attributes('aria-sort')).toBe('ascending')
+    await valueHeader().trigger('click')
+    expect(valueHeader().attributes('aria-sort')).toBe('descending')
+    expect(wrapper.findAll('th').find(th => th.text().includes('Name'))!.attributes('aria-sort')).toBeUndefined()
+  })
 })

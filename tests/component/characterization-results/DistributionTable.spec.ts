@@ -47,6 +47,25 @@ describe('DistributionTable', () => {
     expect(wrapper.text()).not.toContain('Std Diff')
   })
 
+  it('sorts rows by the clicked statistic for that cohort', async () => {
+    const light = { ...row, covariateId: 2, covariateName: 'Light', median: { [DEFAULT_STRATA_KEY]: { '1': 50, '2': 99 } } }
+    const heavy = { ...row, covariateId: 3, covariateName: 'Heavy', median: { [DEFAULT_STRATA_KEY]: { '1': 90, '2': 10 } } }
+    const wrapper = mount(DistributionTable, {
+      props: { analysisId: 1, analysisName: 'Measurement', rows: [light, heavy], cohorts },
+      global: { plugins: [vuetify] },
+    })
+    const names = () => wrapper.findAll('tbody tr').map(tr => tr.find('td').text())
+    const medianHeaders = () => wrapper.findAll('thead tr')[1]!.findAll('th').filter(th => th.text() === 'Median')
+
+    await medianHeaders()[0]!.trigger('click')
+    expect(names()).toEqual(['Heavy', 'Light'])
+    expect(medianHeaders()[0]!.attributes('aria-sort')).toBe('descending')
+
+    await medianHeaders()[1]!.trigger('click')
+    expect(names()).toEqual(['Light', 'Heavy'])
+    expect(medianHeaders()[0]!.attributes('aria-sort')).toBeUndefined()
+  })
+
   it('renders each named partition and synchronizes its pagers', async () => {
     const rows = Array.from({ length: 16 }, (_, index) => ({
       ...row,
