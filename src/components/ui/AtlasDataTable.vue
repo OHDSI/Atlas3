@@ -2,7 +2,7 @@
 <template>
   <v-data-table
     v-model:sort-by="sortByModel"
-    :headers="headers"
+    :headers="ariaHeaders"
     :items="items"
     :loading="loading"
     :height="height"
@@ -94,6 +94,27 @@ const sortByModel = computed<SortItem[]>({
     emit('update:sortBy', v)
   },
 })
+
+// v-data-table shows the sort only as an icon; expose it to assistive tech
+// by putting aria-sort on the sorted column header (nested headers included).
+// Unsorted headers pass through untouched.
+function withAriaSort(headers: Header[]): Header[] {
+  return headers.map(header => {
+    const next = Array.isArray(header.children)
+      ? { ...header, children: withAriaSort(header.children as Header[]) }
+      : header
+    const order = sortByModel.value.find(item => item.key === header.key)?.order
+    if (!order) return next
+    return {
+      ...next,
+      headerProps: {
+        ...(header.headerProps as Record<string, unknown> | undefined),
+        'aria-sort': order === 'desc' ? 'descending' : 'ascending',
+      },
+    }
+  })
+}
+const ariaHeaders = computed(() => withAriaSort(props.headers))
 
 // Vuetify treats `page`/`items-per-page` as externally controlled when the
 // vnode carries the prop key AND an `onUpdate:` listener. This wrapper always
