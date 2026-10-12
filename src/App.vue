@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app :style="{ '--atlas-nav-height': showNavBar ? '60px' : '0px' }">
     <a
       href="#main"
       class="skip-link"
