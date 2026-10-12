@@ -169,10 +169,11 @@
     </aside>
 
     <IncidenceRateStratifyInspector
+      :key="strataInspectorSession"
       v-model="strataInspectorOpen"
       :rule="strataInspectorRule"
       :concept-sets="irConceptSets"
-      @update="(p) => strataInspectorIndex !== null && store.updateStratifyRule(strataInspectorIndex, p)"
+      @apply="(rule) => strataInspectorIndex !== null && store.applyStratifyRule(strataInspectorIndex, rule)"
       @add-concept-set="onAddStratifyConceptSet"
     />
   </div>
@@ -235,6 +236,7 @@ const validationMessages = computed(() => store.validationErrors)
 
 const strataInspectorOpen = ref(false)
 const strataInspectorIndex = ref<number | null>(null)
+const strataInspectorSession = ref(0)
 const strataInspectorRule = computed<StratifyRule | null>(() =>
   strataInspectorIndex.value === null
     ? null
@@ -254,10 +256,12 @@ function onAddStratifyConceptSet(cs: ConceptSet) {
     const next = [...sets]
     next[index] = cs
     store.currentIR.expression.ConceptSets = next
+    store.markDirty()
     return
   }
 
   store.currentIR.expression.ConceptSets = [...sets, cs]
+  store.markDirty()
 }
 
 const selectedExecutionId = computed<number | null>(() => resolveSelectedExecutionId(route.query?.run))
@@ -401,11 +405,13 @@ function onStrataAdd() {
   }
   store.addStratifyRule(newRule)
   strataInspectorIndex.value = (store.currentIR?.expression.strata.length ?? 1) - 1
+  strataInspectorSession.value += 1
   strataInspectorOpen.value = true
 }
 
 function onStrataEdit(index: number) {
   strataInspectorIndex.value = index
+  strataInspectorSession.value += 1
   strataInspectorOpen.value = true
 }
 

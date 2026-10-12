@@ -193,6 +193,14 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     markDirty()
   }
 
+  function applyStratifyRule(index: number, draft: StratifyRule) {
+    if (!currentIR.value) return
+    const rule = currentIR.value.expression.strata[index]
+    if (!rule) return
+    Object.assign(rule, JSON.parse(JSON.stringify(draft)) as StratifyRule)
+    markDirty()
+  }
+
   function removeStratifyRule(index: number) {
     if (!currentIR.value) return
     currentIR.value.expression.strata.splice(index, 1)
@@ -605,6 +613,7 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     clearStudyWindow,
     addStratifyRule,
     updateStratifyRule,
+    applyStratifyRule,
     removeStratifyRule,
     moveStratifyRule,
     // lifecycle

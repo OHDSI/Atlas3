@@ -181,32 +181,6 @@
             data-testid="ir-builder-import-input"
             @change="handleImportFileChange"
           >
-          <AtlasTooltip
-            :text="t('common.duplicate', 'Duplicate').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tipProps }">
-              <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.duplicate', 'Duplicate').value }"
-                icon="mdi-content-copy"
-                variant="text"
-                size="sm"
-                :disabled="!store.currentIR?.id || !canCopy"
-                data-testid="ir-builder-copy"
-                @click="onCopy"
-              />
-            </template>
-          </AtlasTooltip>
-          <AtlasButton
-            variant="ghost"
-            tone="danger"
-            icon="mdi-delete-outline"
-            :disabled="!store.currentIR?.id || !canDelete"
-            data-testid="ir-builder-delete"
-            @click="askDelete = true"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </AtlasButton>
           <DisabledReasonTooltip :reason="saveDisabledReason">
             <AtlasButton
               variant="primary"
@@ -315,35 +289,6 @@
       @apply="handleConceptSetApplied"
     />
 
-    <AtlasDialog
-      v-model="askDelete"
-      :eyebrow="t('common.confirm', 'Confirm').value"
-      :title="t('common.delete', 'Delete incidence rate').value"
-      max-width="400"
-      @close="askDelete = false"
-    >
-      {{
-        t(
-          'ir.deleteConfirmation',
-          'Delete incidence rate analysis? Warning: deletion can not be undone!'
-        )
-      }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="askDelete = false"
-        >
-          {{ t('common.cancel', 'Cancel') }}
-        </AtlasButton>
-        <AtlasButton
-          variant="danger"
-          @click="onDelete"
-        >
-          {{ t('common.delete', 'Delete') }}
-        </AtlasButton>
-      </template>
-    </AtlasDialog>
-
     <AtlasSnackbar
       :model-value="!!feedback"
       :severity="feedbackSeverity"
@@ -387,12 +332,11 @@ const { t, tv } = useI18n()
 const store = useIncidenceRateStore()
 const conceptSetsStore = useConceptSetsStore()
 const router = useRouter()
-const { save, copy, remove, feedback } = useIncidenceRateBuilder()
+const { save, feedback } = useIncidenceRateBuilder()
 const feedbackSeverity = computed<AtlasSnackbarSeverity>(() =>
   feedback.value?.color === 'error' ? 'danger' : (feedback.value?.color ?? 'info')
 )
 const saving = ref(false)
-const askDelete = ref(false)
 const showConceptSetsDialog = ref(false)
 const showVersionsDialog = ref(false)
 const showTagsDialog = ref(false)
@@ -631,8 +575,7 @@ async function handleImportFileChange(event: Event) {
 
 const irId = computed<number | null>(() => store.currentIR?.id ?? null)
 const { hasPermission } = usePermissions()
-const { canWrite, canDelete } = useEntityAccess('incidenceRate', irId)
-const canCopy = computed<boolean>(() => hasPermission('create:incidence'))
+const { canWrite } = useEntityAccess('incidenceRate', irId)
 const canSave = computed<boolean>(() =>
   irId.value === null ? hasPermission('create:incidence') : canWrite.value
 )
@@ -672,13 +615,6 @@ async function onSave() {
   } finally {
     saving.value = false
   }
-}
-async function onCopy() {
-  await copy()
-}
-async function onDelete() {
-  askDelete.value = false
-  await remove()
 }
 </script>
 

@@ -343,6 +343,28 @@ describe('IncidenceRateWorkbench', () => {
     expect(w.findComponent({ name: 'IncidenceRateStratifyInspector' }).props('modelValue')).toBe(true)
   })
 
+  it('commits an applied inspector draft through the stratify-rule store action', async () => {
+    const store = loadedStore()
+    store.addStratifyRule({ name: 'Original', expression: { Type: 'ALL', CriteriaList: [] } })
+    store.markClean()
+    const w = mount(IncidenceRateWorkbench, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+
+    await w.findComponent({ name: 'IncidenceRateDesignRail' }).vm.$emit('strata:edit', 0)
+    await w.findComponent({ name: 'IncidenceRateStratifyInspector' }).vm.$emit('apply', {
+      name: 'Applied',
+      expression: { Type: 'ANY', CriteriaList: [] },
+    })
+
+    expect(store.currentIR!.expression.strata[0]).toMatchObject({
+      name: 'Applied',
+      expression: { Type: 'ANY' },
+    })
+    expect(store.isDirty).toBe(true)
+  })
+
   it('routes history selections back to the run query', async () => {
     loadedStore()
     const r = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: { template: '<div/>' } }] })

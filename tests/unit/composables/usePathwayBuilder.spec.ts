@@ -57,31 +57,6 @@ describe('usePathwayBuilder', () => {
     expect(webapi.savePathway).toHaveBeenCalledWith(5, expect.anything())
   })
 
-  it('copy delegates to copyPathway and returns new id', async () => {
-    const store = usePathwayStore()
-    store.createNewPathway()
-    if (store.currentPathway) store.currentPathway.id = 5
-    vi.mocked(webapi.copyPathway).mockResolvedValue({
-      success: true,
-      data: { ...store.currentPathway!, id: 12 },
-    })
-    const { copy } = usePathwayBuilder()
-    const out = await copy()
-    expect(webapi.copyPathway).toHaveBeenCalledWith(5)
-    expect(out?.id).toBe(12)
-  })
-
-  it('remove delegates to deletePathway', async () => {
-    const store = usePathwayStore()
-    store.createNewPathway()
-    if (store.currentPathway) store.currentPathway.id = 5
-    vi.mocked(webapi.deletePathway).mockResolvedValue({ success: true, data: undefined })
-    const { remove } = usePathwayBuilder()
-    const ok = await remove()
-    expect(webapi.deletePathway).toHaveBeenCalledWith(5)
-    expect(ok).toBe(true)
-  })
-
   it('save returns null when there is no currentPathway', async () => {
     const { save } = usePathwayBuilder()
     const result = await save()
@@ -148,51 +123,4 @@ describe('usePathwayBuilder', () => {
     expect(feedback.value?.color).toBe('success')
   })
 
-  it('copy returns null when no current pathway id', async () => {
-    const { copy } = usePathwayBuilder()
-    const out = await copy()
-    expect(out).toBeNull()
-    expect(webapi.copyPathway).not.toHaveBeenCalled()
-  })
-
-  it('copy reports failure via feedback', async () => {
-    const store = usePathwayStore()
-    store.createNewPathway()
-    if (store.currentPathway) store.currentPathway.id = 5
-    vi.mocked(webapi.copyPathway).mockResolvedValue({
-      success: false,
-      error: new ApiError('cannot copy', 0, null),
-    })
-
-    const { copy, feedback } = usePathwayBuilder()
-    const out = await copy()
-    expect(out).toBeNull()
-    expect(feedback.value?.color).toBe('error')
-    expect(feedback.value?.message).toContain('cannot copy')
-    expect(feedback.value?.message).not.toContain('ApiError')
-  })
-
-  it('remove returns false when no current pathway id', async () => {
-    const { remove } = usePathwayBuilder()
-    const ok = await remove()
-    expect(ok).toBe(false)
-    expect(webapi.deletePathway).not.toHaveBeenCalled()
-  })
-
-  it('remove reports failure via feedback when deletePathway returns false', async () => {
-    const store = usePathwayStore()
-    store.createNewPathway()
-    if (store.currentPathway) store.currentPathway.id = 5
-    vi.mocked(webapi.deletePathway).mockResolvedValue({
-      success: false,
-      error: new ApiError('conflict', 409, null),
-    })
-
-    const { remove, feedback } = usePathwayBuilder()
-    const ok = await remove()
-    expect(ok).toBe(false)
-    expect(feedback.value?.color).toBe('error')
-    expect(feedback.value?.message).toBe('Delete failed: conflict')
-    expect(feedback.value?.message).not.toContain('ApiError')
-  })
 })

@@ -120,10 +120,12 @@
     "daysAbbr": "d",
     "delete": "Delete",
     "deselectAll": "Deselect All",
+    "discardChanges": "Discard changes?",
     "download": "Download",
     "downloading": "Downloading...",
     "export": "Export",
     "import": "Import",
+    "keepEditing": "Keep editing",
     "loading": "Loading",
     "loadingWithDots": "Loading...",
     "min": "min",
@@ -2396,7 +2398,8 @@
         "invalidJson": "Invalid JSON",
         "eventCount": "1 event",
         "eventsCount": "{n} events",
-        "noCriteria": "No criteria"
+        "noCriteria": "No criteria",
+        "discardChanges": "Your changes to this subgroup criteria will be lost."
       },
       "conceptSetsTab": {
         "title": "Concept Sets",
@@ -6476,6 +6479,7 @@
     "noStratifyRules": "No stratify rules yet.",
     "selectRulePrompt": "Select a rule to edit, or add one.",
     "untitled": "Untitled rule",
+    "discardStratifyChanges": "Your changes to this stratify rule will be lost.",
     "conceptSets": "Concept Sets",
     "noConceptSets": "This incidence rate has no concept sets attached.",
     "generation": "Generation",
