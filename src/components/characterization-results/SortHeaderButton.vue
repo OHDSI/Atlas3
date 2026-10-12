@@ -2,7 +2,7 @@
   <button
     type="button"
     class="sort-header-button"
-    :class="{ 'sort-header-button--active': direction }"
+    :class="{ 'sort-header-button--active': direction !== 'none' }"
     @click="emit('sort')"
   >
     <span class="sort-header-button__label">{{ label }}</span>
@@ -18,18 +18,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { AtlasIcon } from '@/components/ui'
-import type { SortDirection } from '@/composables/useSortedPage'
+import type { SortDirection } from '@/composables/useResultsTable'
 
 const props = defineProps<{
   label: string
-  direction: SortDirection | null
+  direction: SortDirection | 'none'
 }>()
 
 const emit = defineEmits<{ sort: [] }>()
 
 const icon = computed(() => {
-  if (props.direction === 'asc') return 'mdi-arrow-up'
-  if (props.direction === 'desc') return 'mdi-arrow-down'
+  if (props.direction === 'ascending') return 'mdi-arrow-up'
+  if (props.direction === 'descending') return 'mdi-arrow-down'
   return 'mdi-swap-vertical'
 })
 </script>

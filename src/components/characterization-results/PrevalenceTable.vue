@@ -79,26 +79,14 @@
             </colgroup>
             <thead>
               <tr>
-                <th
-                  rowspan="2"
-                  :aria-sort="ariaSort('covariate')"
-                >
-                  <SortHeaderButton
-                    :label="tv('columns.covariate', 'Covariate')"
-                    :direction="sortDirection('covariate')"
-                    @sort="toggleSort('covariate')"
-                  />
+                <th rowspan="2">
+                  {{ tv('columns.covariate', 'Covariate') }}
                 </th>
                 <th
                   rowspan="2"
                   class="prevalence-table__concept"
-                  :aria-sort="ariaSort('concept')"
                 >
-                  <SortHeaderButton
-                    :label="tv('columns.conceptId', 'Concept ID')"
-                    :direction="sortDirection('concept')"
-                    @sort="toggleSort('concept', true)"
-                  />
+                  {{ tv('columns.conceptId', 'Concept ID') }}
                 </th>
                 <template v-if="comparisonMode">
                   <th
@@ -109,15 +97,8 @@
                   >
                     {{ cohort.name }}
                   </th>
-                  <th
-                    rowspan="2"
-                    :aria-sort="ariaSort(sortKey('stdDiff', table.partitionKey))"
-                  >
-                    <SortHeaderButton
-                      :label="tv('characterizations.results.table.stdDiff', 'Std Diff')"
-                      :direction="sortDirection(sortKey('stdDiff', table.partitionKey))"
-                      @sort="toggleSort(sortKey('stdDiff', table.partitionKey), true)"
-                    />
+                  <th rowspan="2">
+                    {{ tv('characterizations.results.table.stdDiff', 'Std Diff') }}
                   </th>
                 </template>
                 <template v-else>
@@ -141,25 +122,16 @@
                     :key="cohort.id"
                   >
                     <th
+                      v-for="metric in metrics"
+                      :key="metric.field"
                       class="prevalence-table__numeric prevalence-table__metric"
-                      :aria-sort="ariaSort(sortKey('count', table.partitionKey, cohort.id))"
+                      :aria-sort="ariaSort(metric.field, table.partitionKey, cohort.id)"
                     >
                       <SortHeaderButton
-                        :label="tv('columns.count', 'Count')"
-                        :direction="sortDirection(sortKey('count', table.partitionKey, cohort.id))"
-                        :data-testid="`char-results-sort-count-${analysisId}-${table.partitionKey}-${cohort.id}`"
-                        @sort="toggleSort(sortKey('count', table.partitionKey, cohort.id), true)"
-                      />
-                    </th>
-                    <th
-                      class="prevalence-table__numeric prevalence-table__metric"
-                      :aria-sort="ariaSort(sortKey('pct', table.partitionKey, cohort.id))"
-                    >
-                      <SortHeaderButton
-                        :label="tv('columns.pct', 'Pct')"
-                        :direction="sortDirection(sortKey('pct', table.partitionKey, cohort.id))"
-                        :data-testid="`char-results-sort-pct-${analysisId}-${table.partitionKey}-${cohort.id}`"
-                        @sort="toggleSort(sortKey('pct', table.partitionKey, cohort.id), true)"
+                        :label="metric.label"
+                        :direction="ariaSort(metric.field, table.partitionKey, cohort.id)"
+                        :data-testid="`char-results-sort-${metric.field}-${analysisId}-${table.partitionKey}-${cohort.id}`"
+                        @sort="toggleSort(metric.field, table.partitionKey, cohort.id)"
                       />
                     </th>
                   </template>
@@ -170,25 +142,16 @@
                     :key="partition.key"
                   >
                     <th
+                      v-for="metric in metrics"
+                      :key="metric.field"
                       class="prevalence-table__numeric prevalence-table__metric"
-                      :aria-sort="ariaSort(sortKey('count', partition.key, table.cohort.id))"
+                      :aria-sort="ariaSort(metric.field, partition.key, table.cohort.id)"
                     >
                       <SortHeaderButton
-                        :label="tv('columns.count', 'Count')"
-                        :direction="sortDirection(sortKey('count', partition.key, table.cohort.id))"
-                        :data-testid="`char-results-sort-count-${analysisId}-${partition.key}-${table.cohort.id}`"
-                        @sort="toggleSort(sortKey('count', partition.key, table.cohort.id), true)"
-                      />
-                    </th>
-                    <th
-                      class="prevalence-table__numeric prevalence-table__metric"
-                      :aria-sort="ariaSort(sortKey('pct', partition.key, table.cohort.id))"
-                    >
-                      <SortHeaderButton
-                        :label="tv('columns.pct', 'Pct')"
-                        :direction="sortDirection(sortKey('pct', partition.key, table.cohort.id))"
-                        :data-testid="`char-results-sort-pct-${analysisId}-${partition.key}-${table.cohort.id}`"
-                        @sort="toggleSort(sortKey('pct', partition.key, table.cohort.id), true)"
+                        :label="metric.label"
+                        :direction="ariaSort(metric.field, partition.key, table.cohort.id)"
+                        :data-testid="`char-results-sort-${metric.field}-${analysisId}-${partition.key}-${table.cohort.id}`"
+                        @sort="toggleSort(metric.field, partition.key, table.cohort.id)"
                       />
                     </th>
                   </template>
@@ -255,12 +218,12 @@
             </tbody>
           </table>
           <ResultsTablePagination
-            v-if="totalPages > 1"
+            v-if="pageCount > 1"
             :page="page"
-            :page-size="itemsPerPage"
+            :page-size="pageSize"
             :total-items="totalItems"
             @update:page="setPage"
-            @update:page-size="setItemsPerPage"
+            @update:page-size="setPageSize"
           />
         </div>
       </div>
@@ -272,7 +235,7 @@
 import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
-import { useSortedPage, type SortValue } from '@/composables/useSortedPage'
+import { useResultsTable } from '@/composables/useResultsTable'
 import { computeBinaryStdDiff, DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { LinkedCohort, PrevalenceStat } from '@/models/characterization.types'
 import { AtlasCard, AtlasIcon, AtlasIconButton } from '@/components/ui'
@@ -297,6 +260,14 @@ const emit = defineEmits<{
   (e: 'update:expanded', value: boolean): void
 }>()
 const { tv } = useI18n()
+const { page, pageSize, pageCount, pageRows, totalItems, toggleSort, ariaSort, setPage, setPageSize } =
+  useResultsTable<'count' | 'pct', PrevalenceStat>(() => props.rows)
+
+const metrics = computed(() => [
+  { field: 'count', label: tv('columns.count', 'Count') },
+  { field: 'pct', label: tv('columns.pct', 'Pct') },
+] as const)
+
 interface Partition { key: string; label: string }
 interface RenderTable { key: string; label?: string; partitionKey: string; cohort: LinkedCohort }
 
@@ -357,41 +328,17 @@ function formatPercent(value: number | undefined): string {
   return typeof value === 'number' && Number.isFinite(value) ? `${value.toFixed(2)}%` : '—'
 }
 
-function stdDiff(row: PrevalenceStat, partitionKey: string): number | undefined {
+function formatStdDiff(row: PrevalenceStat, partitionKey: string): string {
   const [first, second] = effectiveCohorts.value
-  if (!first || !second) return undefined
-  return row.stdDiffByStrata?.[partitionKey]
+  if (!first || !second) return '—'
+  const diff = row.stdDiffByStrata?.[partitionKey]
     ?? (isOverall(partitionKey) ? row.stdDiff : undefined)
     ?? computeBinaryStdDiff(
       value(row.pct, partitionKey, first.id),
       value(row.pct, partitionKey, second.id)
     )
-}
-
-function formatStdDiff(row: PrevalenceStat, partitionKey: string): string {
-  const diff = stdDiff(row, partitionKey)
   return typeof diff === 'number' && Number.isFinite(diff) ? diff.toFixed(4) : '—'
 }
-
-// Sort keys are `field|partition|cohort`; partition keys never contain '|'.
-function sortKey(field: string, partitionKey: string, cohortId?: number): string {
-  return cohortId === undefined ? `${field}|${partitionKey}` : `${field}|${partitionKey}|${cohortId}`
-}
-
-function sortValue(row: PrevalenceStat, key: string): SortValue {
-  if (key === 'covariate') return row.covariateName
-  if (key === 'concept') return row.conceptId || undefined
-  const [field, partitionKey = '', cohortId] = key.split('|')
-  if (field === 'stdDiff') return stdDiff(row, partitionKey)
-  if (field === 'count') return value(row.count, partitionKey, Number(cohortId))
-  if (field === 'pct') return value(row.pct, partitionKey, Number(cohortId))
-  return undefined
-}
-
-const {
-  page, itemsPerPage, pageRows, totalItems, totalPages,
-  toggleSort, sortDirection, ariaSort, setPage, setItemsPerPage,
-} = useSortedPage(() => props.rows, sortValue, { defaultItemsPerPage: 15 })
 </script>
 
 <style scoped>

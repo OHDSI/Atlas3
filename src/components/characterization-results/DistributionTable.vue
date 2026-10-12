@@ -49,25 +49,11 @@
           <table class="distribution-table__table">
             <thead>
               <tr>
-                <th
-                  rowspan="2"
-                  :aria-sort="ariaSort('covariate')"
-                >
-                  <SortHeaderButton
-                    :label="tv('columns.covariate', 'Covariate')"
-                    :direction="sortDirection('covariate')"
-                    @sort="toggleSort('covariate')"
-                  />
+                <th rowspan="2">
+                  {{ tv('columns.covariate', 'Covariate') }}
                 </th>
-                <th
-                  rowspan="2"
-                  :aria-sort="ariaSort('concept')"
-                >
-                  <SortHeaderButton
-                    :label="tv('columns.conceptId', 'Concept ID')"
-                    :direction="sortDirection('concept')"
-                    @sort="toggleSort('concept', true)"
-                  />
+                <th rowspan="2">
+                  {{ tv('columns.conceptId', 'Concept ID') }}
                 </th>
                 <th
                   v-for="cohort in cohorts"
@@ -84,14 +70,14 @@
                 >
                   <th
                     v-for="statistic in statistics"
-                    :key="statistic.key"
+                    :key="statistic.field"
                     class="distribution-table__numeric"
-                    :aria-sort="ariaSort(sortKey(statistic.key, partition.key, cohort.id))"
+                    :aria-sort="ariaSort(statistic.field, partition.key, cohort.id)"
                   >
                     <SortHeaderButton
                       :label="statistic.label"
-                      :direction="sortDirection(sortKey(statistic.key, partition.key, cohort.id))"
-                      @sort="toggleSort(sortKey(statistic.key, partition.key, cohort.id), true)"
+                      :direction="ariaSort(statistic.field, partition.key, cohort.id)"
+                      @sort="toggleSort(statistic.field, partition.key, cohort.id)"
                     />
                   </th>
                 </template>
@@ -110,7 +96,7 @@
                 >
                   <td
                     v-for="statistic in statistics"
-                    :key="statistic.key"
+                    :key="statistic.field"
                     class="distribution-table__numeric"
                   >
                     {{ statistic.format(row, partition.key, cohort.id) }}
@@ -120,12 +106,12 @@
             </tbody>
           </table>
           <ResultsTablePagination
-            v-if="totalPages > 1"
+            v-if="pageCount > 1"
             :page="page"
-            :page-size="itemsPerPage"
+            :page-size="pageSize"
             :total-items="totalItems"
             @update:page="setPage"
-            @update:page-size="setItemsPerPage"
+            @update:page-size="setPageSize"
           />
         </div>
       </div>
@@ -137,7 +123,7 @@
 import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
-import { useSortedPage, type SortValue } from '@/composables/useSortedPage'
+import { useResultsTable } from '@/composables/useResultsTable'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { DistributionStat, LinkedCohort } from '@/models/characterization.types'
 import { AtlasCard, AtlasIcon } from '@/components/ui'
@@ -157,17 +143,21 @@ interface Partition {
   label: string
 }
 
+type StatisticField = 'avg' | 'min' | 'p25' | 'median' | 'p75' | 'max'
+
 interface Statistic {
-  key: string
+  /** The row field this column shows and sorts by. */
+  field: StatisticField
   label: string
   format: (row: DistributionStat, partitionKey: string, cohortId: number) => string
-  /** The per-cohort values this column sorts by. */
-  values: (row: DistributionStat) => Record<string, Record<string, number>>
 }
 
 const props = withDefaults(defineProps<Props>(), { expanded: true })
 const emit = defineEmits<{ 'update:expanded': [value: boolean] }>()
 const { tv } = useI18n()
+const { page, pageSize, pageCount, pageRows, totalItems, toggleSort, ariaSort, setPage, setPageSize } =
+  useResultsTable<StatisticField, DistributionStat>(() => props.rows)
+
 function isOverall(key: string): boolean {
   return key === DEFAULT_STRATA_KEY || key === '0'
 }
@@ -200,31 +190,13 @@ function formatStatistic(
 }
 
 const statistics = computed<Statistic[]>(() => [
-  { key: 'avgSd', label: 'Avg (SD)', format: formatAvgSd, values: row => row.avg },
-  { key: 'min', label: tv('characterizations.results.table.min', 'Min'), format: (row, key, cohortId) => formatStatistic(row.min, key, cohortId), values: row => row.min },
-  { key: 'p25', label: tv('columns.p25', 'P25'), format: (row, key, cohortId) => formatStatistic(row.p25, key, cohortId), values: row => row.p25 },
-  { key: 'median', label: tv('columns.median', 'Median'), format: (row, key, cohortId) => formatStatistic(row.median, key, cohortId), values: row => row.median },
-  { key: 'p75', label: tv('columns.p75', 'P75'), format: (row, key, cohortId) => formatStatistic(row.p75, key, cohortId), values: row => row.p75 },
-  { key: 'max', label: tv('columns.max', 'Max'), format: (row, key, cohortId) => formatStatistic(row.max, key, cohortId), values: row => row.max },
+  { field: 'avg', label: 'Avg (SD)', format: formatAvgSd },
+  { field: 'min', label: tv('characterizations.results.table.min', 'Min'), format: (row, key, cohortId) => formatStatistic(row.min, key, cohortId) },
+  { field: 'p25', label: tv('columns.p25', 'P25'), format: (row, key, cohortId) => formatStatistic(row.p25, key, cohortId) },
+  { field: 'median', label: tv('columns.median', 'Median'), format: (row, key, cohortId) => formatStatistic(row.median, key, cohortId) },
+  { field: 'p75', label: tv('columns.p75', 'P75'), format: (row, key, cohortId) => formatStatistic(row.p75, key, cohortId) },
+  { field: 'max', label: tv('columns.max', 'Max'), format: (row, key, cohortId) => formatStatistic(row.max, key, cohortId) },
 ])
-
-// Sort keys are `statistic|partition|cohort`; partition keys never contain '|'.
-function sortKey(statistic: string, partitionKey: string, cohortId: number): string {
-  return `${statistic}|${partitionKey}|${cohortId}`
-}
-
-function sortValue(row: DistributionStat, key: string): SortValue {
-  if (key === 'covariate') return row.covariateName
-  if (key === 'concept') return row.conceptId || undefined
-  const [statisticKey, partitionKey = '', cohortId] = key.split('|')
-  const statistic = statistics.value.find(s => s.key === statisticKey)
-  return statistic ? value(statistic.values(row), partitionKey, Number(cohortId)) : undefined
-}
-
-const {
-  page, itemsPerPage, pageRows, totalItems, totalPages,
-  toggleSort, sortDirection, ariaSort, setPage, setItemsPerPage,
-} = useSortedPage(() => props.rows, sortValue, { defaultItemsPerPage: 15 })
 
 const partitions = computed<Partition[]>(() => {
   const names = new Map<string, string>()
