@@ -263,8 +263,6 @@
       "noAttritionHint": "이탈을 보려면 포함 규칙이 있는 코호트를 생성하세요",
       "patients": "명",
       "retained": "유지",
-      "rulesSatisfiedHigh": "규칙 80% 이상 충족",
-      "rulesSatisfiedLow": "규칙 40% 미만 충족",
       "tooltipRemaining": "잔여",
       "tooltipExcludedAtStep": "이 단계에서 제외"
     },

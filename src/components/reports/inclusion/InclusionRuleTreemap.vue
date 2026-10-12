@@ -8,11 +8,12 @@
       :option="chartOption"
       :style="{ height: `${height}px`, width: '100%' }"
       autoresize
+      v-on="chartEvents"
     />
     <div class="inclusion-treemap__legend">
       <span
-        v-for="(item, idx) in legend"
-        :key="idx"
+        v-for="item in legend"
+        :key="item.label"
         class="inclusion-treemap__swatch"
       >
         <span
@@ -28,7 +29,7 @@
     class="text-center py-6 text-grey-darken-1"
     data-testid="inclusion-treemap-empty"
   >
-    No population breakdown available.
+    {{ t('components.inclusionRuleReport.noBreakdown', 'No population breakdown available.').value }}
   </div>
 </template>
 
@@ -38,121 +39,87 @@ import type { InclusionTreemapNode } from '@/models/report.types'
 import { leafMatchesSelection, type IntersectSelection } from '@/utils/inclusion-attrition'
 import { escapeHtml } from '@/utils/html'
 import { useI18n } from '@/composables/useI18n'
-import { trackChartTheme } from '@/ui/chart-config'
+import { prevalenceRamp, trackChartTheme } from '@/ui/chart-config'
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
 const props = withDefaults(
   defineProps<{
     treemap: InclusionTreemapNode | null
     /** Total number of inclusion rules — used to count failures from leaf bit-strings */
     ruleCount: number
-    /** Inclusion-rule names indexed by rule number (rule 1 first). Used for friendly leaf labels. */
+    /** Inclusion-rule names indexed by rule number (rule 1 first). Used in the tooltip. */
     ruleNames?: string[]
+    /** Initial population, for the share shown in the tooltip */
+    baseCount?: number
     height?: number
-    /** Intersect view: leaves that don't match the selection are dimmed. */
+    /** Intersect view: leaves that don't match the selection are grayed out. */
     selection?: IntersectSelection | null
     /** Tooltip label for a leaf's size: "Persons" in By Person mode, "Events" in By Event mode. */
     unitLabel?: string
   }>(),
-  { height: 420, ruleNames: () => [], selection: null, unitLabel: 'Persons' }
+  { height: 400, ruleNames: () => [], baseCount: 0, selection: null, unitLabel: 'Persons' }
 )
 
-const hasData = computed(() => {
-  if (!props.treemap) return false
-  const root = props.treemap
-  return !!root.children && root.children.length > 0
-})
+/** Hovered leaf (bit-string, rule 0 first, '1' = passed) or null when the pointer leaves it. */
+const emit = defineEmits<{ 'leaf-hover': [leaf: { bits: string; size: number } | null] }>()
 
-// Tone palette matches the cohort-builder rail and the attrition funnel:
-// success (green) when most/all rules pass, warning (amber) for partial,
-// error (red) when most/all rules fail. Reads the runtime CSS variable
-// so it tracks the active Vuetify theme.
-function themeColor(token: 'success' | 'warning' | 'error', alpha: number): string {
-  // getComputedStyle is a one-shot read, so the computeds calling this need an
-  // explicit reactive dependency on the active theme to rebuild after a switch.
-  trackChartTheme()
-  if (typeof window === 'undefined') return '#7BB209'
-  const root = getComputedStyle(document.documentElement)
-  const triplet = root.getPropertyValue(`--v-theme-${token}`).trim()
-  if (!triplet) {
-    const fallback = { success: '52, 199, 89', warning: '255, 149, 0', error: '255, 59, 48' }[token]
-    return `rgba(${fallback}, ${alpha})`
-  }
-  return `rgba(${triplet}, ${alpha})`
-}
+const hasData = computed(() => !!props.treemap?.children?.length)
 
 function failuresFromName(name: string, ruleCount: number): number {
-  // The server encodes each leaf as a bit-string of length ruleCount where
-  // '1' = inclusion rule satisfied, '0' = not satisfied.
+  // Each leaf is a bit-string of length ruleCount: '1' = rule passed, '0' = failed.
   if (!name || ruleCount <= 0) return 0
   let zeros = 0
   for (const ch of name) if (ch === '0') zeros++
   return Math.min(zeros, ruleCount)
 }
 
-// In-tile label sits on a 60%-alpha status tint over the chart's own
-// background — reads the live on-surface var the same way themeColor()
-// does so the label stays legible against a dark surface.
-function themeOnSurfaceColor(alpha: number): string {
-  trackChartTheme()
-  if (typeof window === 'undefined') return `rgba(0, 0, 0, ${alpha})`
-  const root = getComputedStyle(document.documentElement)
-  const triplet = root.getPropertyValue('--v-theme-on-surface').trim()
-  if (!triplet) return `rgba(0, 0, 0, ${alpha})`
-  return `rgba(${triplet}, ${alpha})`
+// As in Atlas 2, a leaf is coloured by how many rules it failed, on the
+// theme's blue ramp: darkest when every rule passed, lighter as failures add up.
+type Band = { key: string; step: number; label: () => string }
+const BANDS: Record<string, Band> = {
+  all: { key: 'all', step: 4, label: () => tv('components.inclusionRuleReport.bandAllPassed', 'All rules passed') },
+  one: { key: 'one', step: 3, label: () => tv('components.inclusionRuleReport.bandOneFailed', '1 rule failed') },
+  two: { key: 'two', step: 2, label: () => tv('components.inclusionRuleReport.bandTwoFailed', '2 rules failed') },
+  few: { key: 'few', step: 1, label: () => tv('components.inclusionRuleReport.bandFewFailed', '3–4 rules failed') },
+  many: { key: 'many', step: 0, label: () => tv('components.inclusionRuleReport.bandManyFailed', '5 or more / all rules failed') },
+}
+function bandColor(band: Band): string {
+  return prevalenceRamp()[band.step]!
+}
+const BAND_ORDER = ['all', 'one', 'two', 'few', 'many']
+
+function bandFor(bits: string): Band {
+  const failed = failuresFromName(bits, props.ruleCount)
+  if (failed === 0) return BANDS.all!
+  if (failed === props.ruleCount) return BANDS.many!
+  if (failed === 1) return BANDS.one!
+  if (failed === 2) return BANDS.two!
+  if (failed < 5) return BANDS.few!
+  return BANDS.many!
 }
 
-// Leaves outside the intersect selection fade toward the surface (Atlas 2 grays them out).
+// Leaves outside the intersect selection are grayed out, as in Atlas 2.
 function notSelectedColor(): string {
-  return themeOnSurfaceColor(0.08)
+  trackChartTheme()
+  if (typeof window === 'undefined') return '#CCCCCC'
+  const triplet = getComputedStyle(document.documentElement).getPropertyValue('--v-theme-on-surface').trim()
+  return triplet ? `rgba(${triplet}, 0.26)` : '#BDBDBD'
 }
 
-function colorForLeaf(name: string): string {
-  if (props.selection && !leafMatchesSelection(name, props.selection)) {
-    return notSelectedColor()
-  }
-  if (props.ruleCount === 0) return themeColor('success', 0.6)
-  const passing = props.ruleCount - failuresFromName(name, props.ruleCount)
-  const retention = passing / props.ruleCount
-  // Same thresholds as InclusionRuleRail.toneForIndex.
-  if (retention >= 0.8) return themeColor('success', 0.6)
-  if (retention >= 0.4) return themeColor('warning', 0.6)
-  return themeColor('error', 0.6)
-}
-
-function truncate(s: string, max: number): string {
-  return s.length > max ? `${s.slice(0, max - 1)}…` : s
-}
-
-// Build a human-readable label for a leaf bit-string. Rule i in the
-// bit-string maps to ruleNames[i]; '1' means satisfied, '0' means not.
-// Falls back to numeric "Rule N" when names aren't passed.
-function friendlyName(bitString: string): string {
-  if (!bitString || !/^[01]+$/.test(bitString)) return bitString
-  const lines: string[] = []
-  for (let i = 0; i < bitString.length; i++) {
-    const passed = bitString[i] === '1'
-    const name = props.ruleNames[i] || `Rule ${i + 1}`
-    lines.push(`${passed ? '✓' : '✗'} ${truncate(name, 28)}`)
-  }
-  return lines.join('\n')
+function colorForLeaf(bits: string): string {
+  if (props.selection && !leafMatchesSelection(bits, props.selection)) return notSelectedColor()
+  return bandColor(bandFor(bits))
 }
 
 function decorate(node: InclusionTreemapNode): Record<string, unknown> {
   const isLeaf = !node.children || node.children.length === 0
-  // Only emit `value` for leaves. The server's tree has interior `Group N`
-  // nodes with no `size` field — emitting `value: 0` for them made echarts
-  // draw zero-area rectangles for the entire subtree, leaving the chart
-  // an empty white box. Without `value`, echarts sums the children.
+  // Only emit `value` for leaves; interior `Group N` nodes have no size and
+  // echarts sums their children (a `value: 0` drew zero-area rectangles).
   const out: Record<string, unknown> = { name: node.name }
   if (isLeaf) {
     out.value = node.size ?? 0
     out.itemStyle = { color: colorForLeaf(node.name) }
-    // Stash the friendly label and the original bit-string separately so
-    // the formatter can pick the right one without losing the
-    // algorithmic identifier (failuresFromName / tooltip rely on it).
-    out._friendly = friendlyName(node.name)
     out._bitString = node.name
   } else {
     out.children = node.children!.map(decorate)
@@ -160,42 +127,60 @@ function decorate(node: InclusionTreemapNode): Record<string, unknown> {
   return out
 }
 
-function buildTooltip(
-  info: { name: string; value: number; data?: { _friendly?: string; _bitString?: string } },
-  ruleCount: number
-): string {
-  const bitString = info.data?._bitString || info.name
-  const failures = failuresFromName(bitString, ruleCount)
-  const passing = ruleCount - failures
-  const heading = info.data?._friendly
-    ? escapeHtml(info.data._friendly).replace(/\n/g, '<br/>')
-    : escapeHtml(bitString || '(root)')
-  return `<strong>${heading}</strong><br/>${escapeHtml(props.unitLabel)}: ${info.value}<br/>Rules satisfied: ${passing} of ${ruleCount}`
+function percentOfBase(size: number): string {
+  return props.baseCount > 0 ? `${((size / props.baseCount) * 100).toFixed(2)}%` : '—'
+}
+
+function buildTooltip(info: { name: string; value: number; data?: { _bitString?: string } }): string {
+  const bits = info.data?._bitString ?? info.name
+  if (!bits || !/^[01]+$/.test(bits)) return escapeHtml(info.name || '')
+  const failed = failuresFromName(bits, props.ruleCount)
+  const rules = [...bits]
+    .map((bit, i) => {
+      const name = escapeHtml(props.ruleNames[i] || `Rule ${i + 1}`)
+      return bit === '1'
+        ? `<strong>✓</strong> ${name}`
+        : `<span style="opacity:0.6">✗ ${name}</span>`
+    })
+    .join('<br/>')
+  const counts = tv('components.inclusionRuleReport.leafCounts', '{passed} passed, {failed} failed', {
+    passed: props.ruleCount - failed,
+    failed,
+  })
+  return `<strong>${escapeHtml(props.unitLabel)}: ${new Intl.NumberFormat().format(info.value)} (${percentOfBase(info.value)})</strong><br/>${escapeHtml(counts)}<br/>${rules}`
+}
+
+function onHover(params: { data?: { _bitString?: string; value?: number } }) {
+  const bits = params.data?._bitString
+  if (bits && /^[01]+$/.test(bits)) emit('leaf-hover', { bits, size: params.data?.value ?? 0 })
+}
+
+// ECharts events (not DOM events), bound as an object; the same detail is in
+// the tooltip, and the rule table stays usable without a pointer.
+const chartEvents = {
+  mouseover: onHover,
+  mouseout: () => emit('leaf-hover', null),
+  globalout: () => emit('leaf-hover', null),
 }
 
 const chartOption = computed(() => {
   const root = props.treemap
   if (!root) return {}
   return {
-    tooltip: {
-      formatter: (info: { name: string; value: number }) => buildTooltip(info, props.ruleCount),
-    },
+    tooltip: { formatter: buildTooltip },
     series: [
       {
         type: 'treemap',
         roam: false,
         nodeClick: false,
         breadcrumb: { show: false },
-        label: {
-          show: true,
-          // Show the friendly per-rule list ("✓ Age >= 18 / ✗ New rule")
-          // for leaves; interior group nodes keep their group label.
-          formatter: (info: { name: string; data?: { _friendly?: string } }) =>
-            info.data?._friendly || info.name,
-          fontSize: 11,
-          lineHeight: 14,
-          color: themeOnSurfaceColor(0.82),
-        },
+        // Draw every leaf, however small (echarts hides < 10px² by default; Atlas 2 doesn't).
+        visibleMin: 0,
+        // Colour carries the meaning (as in Atlas 2); per-rule detail lives in the tooltip.
+        label: { show: false },
+        upperLabel: { show: false },
+        itemStyle: { borderColor: 'transparent', gapWidth: 1 },
+        emphasis: { itemStyle: { borderColor: '#555', borderWidth: 2 } },
         data: root.children?.map(decorate) ?? [],
       },
     ],
@@ -204,15 +189,19 @@ const chartOption = computed(() => {
 
 defineExpose({ buildTooltip })
 
+function collectLeaves(node: InclusionTreemapNode, out: string[]): string[] {
+  if (!node.children?.length) out.push(node.name)
+  else node.children.forEach(c => collectLeaves(c, out))
+  return out
+}
+
+// Only the bands that actually occur in this breakdown.
 const legend = computed(() => {
   if (props.ruleCount === 0) {
-    return [{ color: themeColor('success', 0.6), label: t('components.expressionCartoonBindings.noInclusionRules', 'No inclusion rules').value }]
+    return [{ color: bandColor(BANDS.all!), label: t('components.expressionCartoonBindings.noInclusionRules', 'No inclusion rules').value }]
   }
-  const items = [
-    { color: themeColor('success', 0.6), label: t('components.inclusionRuleReport.rulesSatisfiedHigh', '≥ 80% rules satisfied').value },
-    { color: themeColor('warning', 0.6), label: `40–80%` },
-    { color: themeColor('error', 0.6), label: t('components.inclusionRuleReport.rulesSatisfiedLow', '< 40% rules satisfied').value },
-  ]
+  const present = new Set(props.treemap ? collectLeaves(props.treemap, []).map(b => bandFor(b).key) : [])
+  const items = BAND_ORDER.filter(k => present.has(k)).map(k => ({ color: bandColor(BANDS[k]!), label: BANDS[k]!.label() }))
   if (props.selection) {
     items.push({ color: notSelectedColor(), label: t('components.inclusionRuleReport.notInSelection', 'Not in selection').value })
   }

@@ -40,7 +40,11 @@
       <tr
         v-for="(rule, idx) in rules"
         :key="rule.id"
-        :class="{ 'intersect-table__row--off': !selected.includes(idx) }"
+        :class="{
+          'intersect-table__row--off': !selected.includes(idx),
+          'intersect-table__row--pass': hoverBits?.[idx] === '1',
+          'intersect-table__row--fail': hoverBits?.[idx] === '0',
+        }"
         :data-testid="`inclusion-intersect-row-${idx}`"
       >
         <td class="intersect-table__col-check">
@@ -82,6 +86,8 @@ const props = defineProps<{
   rules: InclusionRuleStatistic[]
   /** Checked rule indexes (rule 0 first), kept sorted. */
   selected: number[]
+  /** Treemap leaf under the pointer ('1' = rule passed): marks each row passed / failed, as in Atlas 2. */
+  hoverBits?: string | null
 }>()
 
 const emit = defineEmits<{ 'update:selected': [value: number[]] }>()
@@ -139,6 +145,13 @@ function formatPercent(s: string): string {
   width: 110px;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+.intersect-table__row--pass td {
+  background: rgba(var(--v-theme-primary), 0.12);
+  font-weight: 600;
+}
+.intersect-table__row--fail td:not(.intersect-table__col-check) {
+  color: var(--atlas-color-on-surface-variant);
 }
 .intersect-table__row--off td:not(.intersect-table__col-check) {
   color: var(--atlas-color-on-surface-variant);

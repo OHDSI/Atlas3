@@ -313,3 +313,68 @@ describe('computeIntersectCount', () => {
     expect(computeIntersectCount({ ...twoRuleReport, treemap: null }, sel([0], 'all'))).toBeNull()
   })
 })
+
+describe('intersect parity with Atlas 2', () => {
+  // Cohort 19 on atlas-preview (SYNPUF5PCT, by person): five rules, leaf name =
+  // pass ('1') / fail ('0') per rule, rule 0 first.
+  const leaves: Record<string, number> = {
+    '11111': 105, '11110': 1032, '01111': 167, '10111': 755, '00111': 1197, '01110': 1396,
+    '10110': 8713, '11100': 87, '10100': 793, '01100': 95, '00110': 11530, '00100': 944,
+  }
+  const report: InclusionRuleReport = {
+    summary: { baseCount: 26814, finalCount: 105, lostCount: 0, percentMatched: '0.39%' },
+    inclusionRuleStats: [0, 1, 2, 3, 4].map(id => ({
+      id, name: `Rule ${id}`, countSatisfying: 0, percentSatisfying: '0', percentExcluded: '0',
+    })),
+    treemap: {
+      name: 'Everyone',
+      children: [{ name: 'Group', children: Object.entries(leaves).map(([name, size]) => ({ name, size })) }],
+    },
+  }
+
+  // Atlas 2 FeasibilityIntersectReport.grayRectsInTreemap, ported unchanged:
+  // a rect stays coloured (and counts towards the summary) when this returns true.
+  function atlas2Included(rectId: string, checked: number[], allAny: 'ALL' | 'ANY', passFail: 'PASSED' | 'FAILED') {
+    const checkRulesAll = (id: string, checkForFail?: boolean) => {
+      if (checked.length === 0) return false
+      for (let i = 0; i < checked.length; i++) {
+        if (id[checked[i]!] !== (checkForFail ? '0' : '1')) return false
+      }
+      return true
+    }
+    const checkRulesAny = (id: string, checkForFail?: boolean) => {
+      let checkPassed = false
+      checked.forEach(r => {
+        if (id[r] === (checkForFail ? '0' : '1')) checkPassed = true
+      })
+      return checkPassed
+    }
+    return (
+      (allAny === 'ANY' && passFail === 'PASSED' && checkRulesAny(rectId)) ||
+      (allAny === 'ALL' && passFail === 'PASSED' && checkRulesAll(rectId)) ||
+      (allAny === 'ANY' && passFail === 'FAILED' && checkRulesAny(rectId, true)) ||
+      (allAny === 'ALL' && passFail === 'FAILED' && checkRulesAll(rectId, true))
+    )
+  }
+
+  const subsets = Array.from({ length: 32 }, (_, m) => [0, 1, 2, 3, 4].filter(r => m & (1 << r)))
+
+  it.each(['all', 'any'] as const)('highlights the same leaves and count as Atlas 2 (%s)', mode => {
+    for (const outcome of ['passed', 'failed'] as const) {
+      for (const rules of subsets) {
+        const selection = { rules, mode, outcome }
+        const allAny = mode === 'all' ? 'ALL' : 'ANY'
+        const passFail = outcome === 'passed' ? 'PASSED' : 'FAILED'
+        for (const bits of Object.keys(leaves)) {
+          expect(leafMatchesSelection(bits, selection), `${bits} ${mode} ${outcome} [${rules}]`).toBe(
+            atlas2Included(bits, rules, allAny, passFail)
+          )
+        }
+        const atlas2Sum = Object.entries(leaves)
+          .filter(([bits]) => atlas2Included(bits, rules, allAny, passFail))
+          .reduce((n, [, size]) => n + size, 0)
+        expect(computeIntersectCount(report, selection)).toBe(atlas2Sum)
+      }
+    }
+  })
+})

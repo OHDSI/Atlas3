@@ -378,8 +378,6 @@
       "noAttritionHint": "脱落を確認するには、包含ルールを含むコホートを生成してください",
       "patients": "人",
       "retained": "保持",
-      "rulesSatisfiedHigh": "ルールの80%以上を充足",
-      "rulesSatisfiedLow": "ルールの40%未満を充足",
       "tooltipRemaining": "残数",
       "tooltipExcludedAtStep": "このステップで除外"
     },

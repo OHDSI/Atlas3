@@ -92,26 +92,28 @@
         />
       </div>
 
-      <!-- Only meaningful once there are rules to look at -->
-      <AtlasRadioGroup
+      <!-- Attrition / Intersect, as in Atlas 2; only meaningful once there are rules -->
+      <AtlasTabs
         v-if="report.inclusionRuleStats.length > 0"
         v-model="view"
-        inline
+        density="compact"
+        color="primary"
         class="inclusion-rule-report__view mt-4"
-        :label="t('components.inclusionRuleReport.view', 'View').value"
         data-testid="inclusion-view"
       >
-        <AtlasRadio
+        <AtlasTab
           value="attrition"
-          :label="t('components.inclusionRuleReport.attritionView', 'Attrition view').value"
           data-testid="inclusion-view-attrition"
-        />
-        <AtlasRadio
+        >
+          {{ t('components.inclusionRuleReport.attritionView', 'Attrition').value }}
+        </AtlasTab>
+        <AtlasTab
           value="intersect"
-          :label="t('components.inclusionRuleReport.intersectView', 'Intersect view').value"
           data-testid="inclusion-view-intersect"
-        />
-      </AtlasRadioGroup>
+        >
+          {{ t('components.inclusionRuleReport.intersectView', 'Intersect').value }}
+        </AtlasTab>
+      </AtlasTabs>
 
       <template v-if="view === 'attrition' || report.inclusionRuleStats.length === 0">
         <!-- Attrition funnel (cumulative — lazy-loaded) -->
@@ -153,83 +155,74 @@
       <!-- Intersect view (Atlas 2 parity): who passed / failed all / any of the checked rules -->
       <section
         v-else
-        class="mt-6 inclusion-rule-report__intersect"
+        class="mt-4 inclusion-rule-report__intersect"
         data-testid="inclusion-intersect"
       >
-        <h3 class="text-subtitle-1 font-weight-medium mb-2">
-          {{ t('components.inclusionRuleReport.intersectTitle', 'Rule intersection').value }}
-        </h3>
-        <div class="inclusion-rule-report__intersect-options">
-          <AtlasRadioGroup
-            v-model="intersectMode"
-            inline
-            :label="t('components.inclusionRuleReport.intersectHaving', 'Having').value"
-            data-testid="inclusion-intersect-mode"
+        <div class="inclusion-rule-report__intersect-rules">
+          <p
+            class="inclusion-rule-report__intersect-sentence"
+            data-testid="inclusion-intersect-sentence"
           >
-            <AtlasRadio
-              value="all"
-              :label="t('components.inclusionRuleReport.intersectAll', 'All selected rules').value"
-              data-testid="inclusion-intersect-mode-all"
+            {{ t('components.inclusionRuleReport.intersectHaving', 'Having').value }}
+            <InclusionChoiceMenu
+              v-model="intersectMode"
+              :items="intersectModeItems"
+              :label="t('components.inclusionRuleReport.intersectModeLabel', 'All or any of the selected rules').value"
+              testid="inclusion-intersect-mode"
             />
-            <AtlasRadio
-              value="any"
-              :label="t('components.inclusionRuleReport.intersectAny', 'Any selected rule').value"
-              data-testid="inclusion-intersect-mode-any"
+            {{ t('components.inclusionRuleReport.intersectOfSelected', 'of the selected rules').value }}
+            <InclusionChoiceMenu
+              v-model="intersectOutcome"
+              :items="intersectOutcomeItems"
+              :label="t('components.inclusionRuleReport.intersectOutcome', 'Rule outcome').value"
+              testid="inclusion-intersect-outcome"
             />
-          </AtlasRadioGroup>
-          <AtlasRadioGroup
-            v-model="intersectOutcome"
-            inline
-            :label="t('components.inclusionRuleReport.intersectOutcome', 'Rule outcome').value"
-            data-testid="inclusion-intersect-outcome"
+          </p>
+          <InclusionRuleIntersectTable
+            v-model:selected="selectedRules"
+            :rules="report.inclusionRuleStats"
+            :hover-bits="hoveredLeaf?.bits ?? null"
+          />
+          <p
+            class="inclusion-rule-report__intersect-result"
+            data-testid="inclusion-intersect-result"
           >
-            <AtlasRadio
-              value="passed"
-              :label="t('components.inclusionRuleReport.intersectPassed', 'Passed').value"
-              data-testid="inclusion-intersect-outcome-passed"
-            />
-            <AtlasRadio
-              value="failed"
-              :label="t('components.inclusionRuleReport.intersectFailed', 'Failed').value"
-              data-testid="inclusion-intersect-outcome-failed"
-            />
-          </AtlasRadioGroup>
+            <template v-if="intersectCount === null">
+              {{ t('components.inclusionRuleReport.intersectUnavailable', 'No population breakdown is available to intersect.').value }}
+            </template>
+            <template v-else-if="selectedRules.length === 0">
+              {{ t('components.inclusionRuleReport.intersectNoneSelected', 'Select at least one rule to see who matches.').value }}
+            </template>
+            <template v-else>
+              <strong>{{ formatCount(intersectCount) }}</strong>
+              {{ intersectResultText }}
+            </template>
+          </p>
         </div>
-        <InclusionRuleIntersectTable
-          v-model:selected="selectedRules"
-          :rules="report.inclusionRuleStats"
-        />
-        <p
-          class="inclusion-rule-report__intersect-result"
-          data-testid="inclusion-intersect-result"
-        >
-          <template v-if="intersectCount === null">
-            {{ t('components.inclusionRuleReport.intersectUnavailable', 'No population breakdown is available to intersect.').value }}
-          </template>
-          <template v-else-if="selectedRules.length === 0">
-            {{ t('components.inclusionRuleReport.intersectNoneSelected', 'Select at least one rule to see who matches.').value }}
-          </template>
-          <template v-else>
-            <strong>{{ formatCount(intersectCount) }}</strong>
-            {{ intersectResultText }}
-          </template>
-        </p>
-      </section>
 
-      <!-- Treemap -->
-      <section class="mt-6">
-        <h3 class="text-subtitle-1 font-weight-medium mb-2">
-          {{ t('components.inclusionRuleReport.populationBreakdown', 'Population breakdown').value }}
-        </h3>
-        <InclusionRuleTreemap
-          :treemap="report.treemap"
-          :rule-count="report.inclusionRuleStats.length"
-          :rule-names="report.inclusionRuleStats.map(r => r.name)"
-          :selection="treemapSelection"
-          :unit-label="isEventMode
-            ? t('components.inclusionRuleReport.unitEvents', 'Events').value
-            : t('components.inclusionRuleReport.unitPersons', 'Persons').value"
-        />
+        <!-- Population visualization: hover a box to see which rules it passed -->
+        <div class="inclusion-rule-report__intersect-viz">
+          <h3 class="text-subtitle-1 font-weight-medium mb-1">
+            {{ t('components.inclusionRuleReport.populationBreakdown', 'Population breakdown').value }}
+          </h3>
+          <p
+            class="inclusion-rule-report__hover-summary"
+            data-testid="inclusion-hover-summary"
+          >
+            {{ hoverSummary }}
+          </p>
+          <InclusionRuleTreemap
+            :treemap="report.treemap"
+            :rule-count="report.inclusionRuleStats.length"
+            :rule-names="report.inclusionRuleStats.map(r => r.name)"
+            :base-count="report.summary.baseCount"
+            :selection="intersectSelection"
+            :unit-label="isEventMode
+              ? t('components.inclusionRuleReport.unitEvents', 'Events').value
+              : t('components.inclusionRuleReport.unitPersons', 'Persons').value"
+            @leaf-hover="hoveredLeaf = $event"
+          />
+        </div>
       </section>
     </template>
   </div>
@@ -238,8 +231,6 @@
 <script setup lang="ts">
 import {
   AtlasAlert,
-  AtlasRadio,
-  AtlasRadioGroup,
   AtlasSkeleton,
   AtlasTab,
   AtlasTabs,
@@ -257,6 +248,7 @@ import {
 } from '@/utils/inclusion-attrition'
 import { useI18n } from '@/composables/useI18n'
 import { useInitialPopulationLabel } from '@/composables/useInitialPopulationLabel'
+import InclusionChoiceMenu from './InclusionChoiceMenu.vue'
 import InclusionRuleAttritionTable from './InclusionRuleAttritionTable.vue'
 import InclusionRuleIntersectTable from './InclusionRuleIntersectTable.vue'
 import InclusionRuleTreemap from './InclusionRuleTreemap.vue'
@@ -334,11 +326,39 @@ const intersectSelection = computed<IntersectSelection>(() => ({
   outcome: intersectOutcome.value,
 }))
 
-// Only handed to the treemap in the intersect view; computed so the treemap
-// doesn't rebuild its chart on every parent render.
-const treemapSelection = computed<IntersectSelection | null>(() =>
-  view.value === 'intersect' ? intersectSelection.value : null
-)
+const intersectModeItems = computed(() => [
+  { value: 'any' as const, title: tv('components.inclusionRuleReport.intersectAny', 'any') },
+  { value: 'all' as const, title: tv('components.inclusionRuleReport.intersectAll', 'all') },
+])
+const intersectOutcomeItems = computed(() => [
+  { value: 'passed' as const, title: tv('components.inclusionRuleReport.intersectPassed', 'passed') },
+  { value: 'failed' as const, title: tv('components.inclusionRuleReport.intersectFailed', 'failed') },
+])
+
+// Treemap leaf under the pointer: drives the summary line and the pass / fail
+// row highlight, as in Atlas 2.
+const hoveredLeaf = ref<{ bits: string; size: number } | null>(null)
+
+const hoverSummary = computed(() => {
+  const leaf = hoveredLeaf.value
+  if (!leaf) {
+    return tv('components.inclusionRuleReport.hoverHint', 'Hover over a box to see which rules it passed and failed.')
+  }
+  const base = report.value?.summary.baseCount ?? 0
+  const passed = [...leaf.bits].filter(b => b === '1').length
+  return tv(
+    isEventMode.value ? 'components.inclusionRuleReport.hoverSummaryEvents' : 'components.inclusionRuleReport.hoverSummaryPersons',
+    isEventMode.value
+      ? '{size} events ({percent}), {passed} rules passed, {failed} rules failed'
+      : '{size} persons ({percent}), {passed} rules passed, {failed} rules failed',
+    {
+      size: formatCount(leaf.size),
+      percent: base > 0 ? `${((leaf.size / base) * 100).toFixed(2)}%` : '—',
+      passed,
+      failed: leaf.bits.length - passed,
+    }
+  )
+})
 
 const intersectCount = computed<number | null>(() =>
   report.value ? computeIntersectCount(report.value, intersectSelection.value) : null
@@ -393,6 +413,9 @@ async function load() {
 }
 
 watch(() => [props.cohortId, props.sourceKey, mode.value] as const, load, { immediate: true })
+watch([report, view], () => {
+  hoveredLeaf.value = null
+})
 
 function formatCount(n: number): string {
   return new Intl.NumberFormat().format(n)
@@ -408,18 +431,46 @@ function formatPercent(s: string | null): string {
 defineOptions({ name: 'InclusionRuleReport' })
 
 // Expose internal refs so tests can drive the tab switch deterministically
-defineExpose({ mode, view, report, loading, error, hasStatistics, selectedRules, intersectMode, intersectOutcome })
+defineExpose({ mode, view, report, loading, error, hasStatistics, selectedRules, intersectMode, intersectOutcome, hoveredLeaf })
 </script>
 
 <style scoped>
 .inclusion-rule-report__initial-label {
   max-width: 420px;
 }
-.inclusion-rule-report__intersect-options {
+.inclusion-rule-report__intersect {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 960px) {
+  .inclusion-rule-report__intersect {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.inclusion-rule-report__intersect-viz {
+  padding-left: 24px;
+  border-left: 1px solid var(--atlas-color-outline-variant);
+}
+@media (max-width: 960px) {
+  .inclusion-rule-report__intersect-viz {
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+.inclusion-rule-report__intersect-sentence {
   display: flex;
   flex-wrap: wrap;
-  column-gap: 32px;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.inclusion-rule-report__hover-summary {
+  min-height: 20px;
   margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--atlas-color-on-surface-variant);
 }
 .inclusion-rule-report__intersect-result {
   margin-top: 12px;
