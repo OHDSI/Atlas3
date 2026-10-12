@@ -371,7 +371,18 @@ async function load() {
       report.value = null
       return
     }
-    report.value = result.data
+    // A rule saved without a name would show up as a blank row / funnel step
+    report.value = {
+      ...result.data,
+      inclusionRuleStats: result.data.inclusionRuleStats.map(rule =>
+        rule.name.trim()
+          ? rule
+          : {
+              ...rule,
+              name: tv('components.inclusionRuleReport.unnamedRule', 'Inclusion rule {n}', { n: rule.id + 1 }),
+            }
+      ),
+    }
   } catch (e) {
     const prefix = tv('components.inclusionRuleReport.loadError', 'Failed to load the inclusion-rule report')
     error.value = e instanceof Error ? `${prefix}: ${e.message}` : `${prefix}.`

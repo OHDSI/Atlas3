@@ -1216,6 +1216,7 @@ export interface InclusionRuleSummary {
 
 export interface InclusionRuleStatistic {
   id: number
+  /** '' when the rule has no name */
   name: string
   countSatisfying: number
   /** Percent strings as the server returns them (server formats as "12.34") */
@@ -1251,7 +1252,8 @@ export const InclusionRuleReportSchema = z.object({
   inclusionRuleStats: z.array(
     z.object({
       id: z.number(),
-      name: z.string(),
+      // null for a rule saved without a name; the service maps it to ''
+      name: z.string().nullable(),
       countSatisfying: z.number(),
       percentSatisfying: z.string(),
       percentExcluded: z.string(),

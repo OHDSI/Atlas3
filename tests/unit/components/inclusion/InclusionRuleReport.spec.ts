@@ -163,6 +163,18 @@ describe('InclusionRuleReport', () => {
     expect(result()).not.toContain('persons')
   })
 
+  it('labels a rule saved without a name instead of leaving it blank', async () => {
+    const { getInclusionRuleReport } = await import('@/services/report.service')
+    vi.mocked(getInclusionRuleReport).mockResolvedValueOnce({
+      success: true,
+      data: { ...report, inclusionRuleStats: [report.inclusionRuleStats[0], { ...report.inclusionRuleStats[1], name: '' }] },
+    } as never)
+
+    const wrapper = await mountReport()
+    const vm = wrapper.vm as unknown as { report: { inclusionRuleStats: { name: string }[] } }
+    expect(vm.report.inclusionRuleStats.map(r => r.name)).toEqual(['Has Osteoarthritis', 'Inclusion rule 2'])
+  })
+
   it('hides the view toggle until a report with rules has loaded', async () => {
     const { getInclusionRuleReport } = await import('@/services/report.service')
     vi.mocked(getInclusionRuleReport).mockResolvedValueOnce({

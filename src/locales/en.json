@@ -514,6 +514,7 @@
       "intersectResultEvents": "events ({percent} of all entry events)",
       "intersectNoneSelected": "Select at least one rule to see who matches.",
       "intersectUnavailable": "No population breakdown is available to intersect.",
+      "unnamedRule": "Inclusion rule {n}",
       "selectAllRules": "Select all rules",
       "colPercentToGain": "% to-gain",
       "hintPercentToGain": "Share of the initial population that satisfies every other rule but fails this one, so would be gained by removing it",
