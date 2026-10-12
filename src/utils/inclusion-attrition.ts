@@ -7,9 +7,18 @@ export interface AttritionStep {
   percentOfInitial: number
 }
 
-export const DEFAULT_INITIAL_POPULATION_LABEL = 'Initial Population'
+export const DEFAULT_INITIAL_POPULATION_LABEL = 'Initial population'
 
 export type IntersectMode = 'all' | 'any'
+
+/** Whether the intersect view counts people who passed or failed the selected rules. */
+export type IntersectOutcome = 'passed' | 'failed'
+
+export interface IntersectSelection {
+  rules: readonly number[]
+  mode: IntersectMode
+  outcome: IntersectOutcome
+}
 
 function parseTreemapGroups(root: InclusionTreemapNode | null): Map<string, number> {
   const groups = new Map<string, number>()
@@ -85,33 +94,31 @@ export function computeAttritionSteps(
 
 /**
  * Whether a treemap leaf (bit-string, '1' = rule satisfied, rule 0 first)
- * satisfies all / any of the selected rule indexes. An empty selection
- * matches everyone in 'all' mode and no one in 'any' mode.
+ * passed / failed all / any of the selected rule indexes. As in Atlas 2, an
+ * empty selection matches no one.
  */
-export function leafMatchesSelection(
-  bitString: string,
-  selectedRules: readonly number[],
-  mode: IntersectMode
-): boolean {
-  const satisfied = (rule: number) => bitString[rule] === '1'
-  return mode === 'all' ? selectedRules.every(satisfied) : selectedRules.some(satisfied)
+export function leafMatchesSelection(bitString: string, selection: IntersectSelection): boolean {
+  const { rules, mode, outcome } = selection
+  if (rules.length === 0) return false
+  const expected = outcome === 'passed' ? '1' : '0'
+  const matches = (rule: number) => bitString[rule] === expected
+  return mode === 'all' ? rules.every(matches) : rules.some(matches)
 }
 
 /**
  * Intersect view (Atlas 2 parity): the number of people whose rule results
- * satisfy all / any of the selected rules, ignoring the unselected ones.
+ * pass / fail all / any of the selected rules, ignoring the unselected ones.
  * Returns null when the report carries no treemap breakdown to count from.
  */
 export function computeIntersectCount(
   report: InclusionRuleReport,
-  selectedRules: readonly number[],
-  mode: IntersectMode
+  selection: IntersectSelection
 ): number | null {
   const groups = parseTreemapGroups(report.treemap)
   if (groups.size === 0) return null
   let count = 0
   for (const [code, size] of groups) {
-    if (leafMatchesSelection(code, selectedRules, mode)) count += size
+    if (leafMatchesSelection(code, selection)) count += size
   }
   return count
 }

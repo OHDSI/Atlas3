@@ -70,7 +70,7 @@ describe('computeAttritionSteps', () => {
 
     expect(steps).toHaveLength(3)
 
-    expect(steps[0]!.label).toBe('Initial Population')
+    expect(steps[0]!.label).toBe('Initial population')
     expect(steps[0]!.remaining).toBe(2689)
     expect(steps[0]!.excluded).toBe(0)
     expect(steps[0]!.percentOfInitial).toBe(100)
@@ -249,47 +249,67 @@ describe('computeAttritionSteps initial label', () => {
     )
   })
 
-  it('defaults to "Initial Population"', () => {
-    expect(computeAttritionSteps(twoRuleReport)[0]!.label).toBe('Initial Population')
+  it('defaults to "Initial population"', () => {
+    expect(computeAttritionSteps(twoRuleReport)[0]!.label).toBe('Initial population')
   })
 })
 
+const sel = (
+  rules: number[],
+  mode: 'all' | 'any',
+  outcome: 'passed' | 'failed' = 'passed'
+) => ({ rules, mode, outcome })
+
 describe('leafMatchesSelection', () => {
-  it('requires every selected rule in "all" mode', () => {
-    expect(leafMatchesSelection('101', [0, 2], 'all')).toBe(true)
-    expect(leafMatchesSelection('101', [0, 1], 'all')).toBe(false)
+  it('requires every selected rule to pass in "all" / passed mode', () => {
+    expect(leafMatchesSelection('101', sel([0, 2], 'all'))).toBe(true)
+    expect(leafMatchesSelection('101', sel([0, 1], 'all'))).toBe(false)
   })
 
-  it('requires at least one selected rule in "any" mode', () => {
-    expect(leafMatchesSelection('001', [0, 2], 'any')).toBe(true)
-    expect(leafMatchesSelection('010', [0, 2], 'any')).toBe(false)
+  it('requires at least one selected rule to pass in "any" / passed mode', () => {
+    expect(leafMatchesSelection('001', sel([0, 2], 'any'))).toBe(true)
+    expect(leafMatchesSelection('010', sel([0, 2], 'any'))).toBe(false)
   })
 
-  it('matches everyone for an empty "all" selection and no one for an empty "any"', () => {
-    expect(leafMatchesSelection('00', [], 'all')).toBe(true)
-    expect(leafMatchesSelection('11', [], 'any')).toBe(false)
+  it('looks for failures in "failed" mode', () => {
+    expect(leafMatchesSelection('010', sel([0, 2], 'all', 'failed'))).toBe(true)
+    expect(leafMatchesSelection('011', sel([0, 2], 'all', 'failed'))).toBe(false)
+    expect(leafMatchesSelection('011', sel([0, 2], 'any', 'failed'))).toBe(true)
+    expect(leafMatchesSelection('111', sel([0, 2], 'any', 'failed'))).toBe(false)
+  })
+
+  it('matches no one for an empty selection, like Atlas 2', () => {
+    expect(leafMatchesSelection('00', sel([], 'all'))).toBe(false)
+    expect(leafMatchesSelection('11', sel([], 'any'))).toBe(false)
+    expect(leafMatchesSelection('00', sel([], 'all', 'failed'))).toBe(false)
   })
 })
 
 describe('computeIntersectCount', () => {
-  it('all rules selected in "all" mode equals the final count', () => {
-    expect(computeIntersectCount(twoRuleReport, [0, 1], 'all')).toBe(511)
+  it('all rules selected in "all" / passed mode equals the final count', () => {
+    expect(computeIntersectCount(twoRuleReport, sel([0, 1], 'all'))).toBe(511)
   })
 
-  it('counts persons satisfying a single rule regardless of the others', () => {
-    expect(computeIntersectCount(twoRuleReport, [1], 'all')).toBe(511 + 1437)
-    expect(computeIntersectCount(twoRuleReport, [0], 'all')).toBe(511 + 225)
+  it('counts persons passing a single rule regardless of the others', () => {
+    expect(computeIntersectCount(twoRuleReport, sel([1], 'all'))).toBe(511 + 1437)
+    expect(computeIntersectCount(twoRuleReport, sel([0], 'all'))).toBe(511 + 225)
   })
 
-  it('counts persons satisfying any selected rule', () => {
-    expect(computeIntersectCount(twoRuleReport, [0, 1], 'any')).toBe(511 + 1437 + 225)
+  it('counts persons passing any selected rule', () => {
+    expect(computeIntersectCount(twoRuleReport, sel([0, 1], 'any'))).toBe(511 + 1437 + 225)
   })
 
-  it('returns everyone when nothing is selected in "all" mode', () => {
-    expect(computeIntersectCount(twoRuleReport, [], 'all')).toBe(2689)
+  it('counts persons failing all / any selected rules', () => {
+    expect(computeIntersectCount(twoRuleReport, sel([0, 1], 'all', 'failed'))).toBe(516)
+    expect(computeIntersectCount(twoRuleReport, sel([0, 1], 'any', 'failed'))).toBe(1437 + 225 + 516)
+  })
+
+  it('returns 0 when nothing is selected', () => {
+    expect(computeIntersectCount(twoRuleReport, sel([], 'all'))).toBe(0)
+    expect(computeIntersectCount(twoRuleReport, sel([], 'any'))).toBe(0)
   })
 
   it('returns null without a treemap', () => {
-    expect(computeIntersectCount({ ...twoRuleReport, treemap: null }, [0], 'all')).toBeNull()
+    expect(computeIntersectCount({ ...twoRuleReport, treemap: null }, sel([0], 'all'))).toBeNull()
   })
 })

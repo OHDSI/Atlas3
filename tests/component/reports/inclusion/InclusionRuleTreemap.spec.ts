@@ -151,4 +151,39 @@ describe('InclusionRuleTreemap', () => {
     // empty name → labelled "(root)"
     expect(vm.buildTooltip({ name: '', value: 1000 }, 3)).toContain('(root)')
   })
+
+  it('escapes rule names and uses the unit label in the tooltip', () => {
+    const wrapper = mount(InclusionRuleTreemap, {
+      global,
+      props: {
+        treemap: { name: 'Everyone', children: [{ name: '1', size: 1 }] },
+        ruleCount: 1,
+        unitLabel: 'Events',
+      },
+    })
+    type Info = { name: string; value: number; data?: { _friendly?: string; _bitString?: string } }
+    const vm = wrapper.vm as unknown as { buildTooltip: (info: Info, ruleCount: number) => string }
+
+    const html = vm.buildTooltip(
+      { name: '1', value: 5, data: { _friendly: '✓ <img src=x onerror=alert(1)>', _bitString: '1' } },
+      1
+    )
+    expect(html).not.toContain('<img')
+    expect(html).toContain('&lt;img')
+    expect(html).toContain('Events: 5')
+  })
+
+  it('adds a "not in selection" legend entry in the intersect view', async () => {
+    const wrapper = mount(InclusionRuleTreemap, {
+      global,
+      props: {
+        treemap: { name: 'Everyone', children: [{ name: '11', size: 1 }] },
+        ruleCount: 2,
+      },
+    })
+    expect(wrapper.text()).not.toContain('Not in selection')
+
+    await wrapper.setProps({ selection: { rules: [0], mode: 'any', outcome: 'passed' } })
+    expect(wrapper.text()).toContain('Not in selection')
+  })
 })

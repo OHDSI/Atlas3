@@ -35,7 +35,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { InclusionTreemapNode } from '@/models/report.types'
-import { leafMatchesSelection, type IntersectMode } from '@/utils/inclusion-attrition'
+import { leafMatchesSelection, type IntersectSelection } from '@/utils/inclusion-attrition'
+import { escapeHtml } from '@/utils/html'
 import { useI18n } from '@/composables/useI18n'
 import { trackChartTheme } from '@/ui/chart-config'
 
@@ -49,10 +50,12 @@ const props = withDefaults(
     /** Inclusion-rule names indexed by rule number (rule 1 first). Used for friendly leaf labels. */
     ruleNames?: string[]
     height?: number
-    /** Intersect view: leaves that don't match all/any of these rules are dimmed. */
-    selection?: { rules: readonly number[]; mode: IntersectMode } | null
+    /** Intersect view: leaves that don't match the selection are dimmed. */
+    selection?: IntersectSelection | null
+    /** Tooltip label for a leaf's size: "Persons" in By Person mode, "Events" in By Event mode. */
+    unitLabel?: string
   }>(),
-  { height: 420, ruleNames: () => [], selection: null }
+  { height: 420, ruleNames: () => [], selection: null, unitLabel: 'Persons' }
 )
 
 const hasData = computed(() => {
@@ -100,9 +103,14 @@ function themeOnSurfaceColor(alpha: number): string {
   return `rgba(${triplet}, ${alpha})`
 }
 
+// Leaves outside the intersect selection fade toward the surface (Atlas 2 grays them out).
+function notSelectedColor(): string {
+  return themeOnSurfaceColor(0.08)
+}
+
 function colorForLeaf(name: string): string {
-  if (props.selection && !leafMatchesSelection(name, props.selection.rules, props.selection.mode)) {
-    return themeOnSurfaceColor(0.08)
+  if (props.selection && !leafMatchesSelection(name, props.selection)) {
+    return notSelectedColor()
   }
   if (props.ruleCount === 0) return themeColor('success', 0.6)
   const passing = props.ruleCount - failuresFromName(name, props.ruleCount)
@@ -160,9 +168,9 @@ function buildTooltip(
   const failures = failuresFromName(bitString, ruleCount)
   const passing = ruleCount - failures
   const heading = info.data?._friendly
-    ? info.data._friendly.replace(/\n/g, '<br/>')
-    : (bitString || '(root)')
-  return `<strong>${heading}</strong><br/>Persons: ${info.value}<br/>Rules satisfied: ${passing} of ${ruleCount}`
+    ? escapeHtml(info.data._friendly).replace(/\n/g, '<br/>')
+    : escapeHtml(bitString || '(root)')
+  return `<strong>${heading}</strong><br/>${escapeHtml(props.unitLabel)}: ${info.value}<br/>Rules satisfied: ${passing} of ${ruleCount}`
 }
 
 const chartOption = computed(() => {
@@ -200,11 +208,15 @@ const legend = computed(() => {
   if (props.ruleCount === 0) {
     return [{ color: themeColor('success', 0.6), label: t('components.expressionCartoonBindings.noInclusionRules', 'No inclusion rules').value }]
   }
-  return [
+  const items = [
     { color: themeColor('success', 0.6), label: t('components.inclusionRuleReport.rulesSatisfiedHigh', '≥ 80% rules satisfied').value },
     { color: themeColor('warning', 0.6), label: `40–80%` },
     { color: themeColor('error', 0.6), label: t('components.inclusionRuleReport.rulesSatisfiedLow', '< 40% rules satisfied').value },
   ]
+  if (props.selection) {
+    items.push({ color: notSelectedColor(), label: t('components.inclusionRuleReport.notInSelection', 'Not in selection').value })
+  }
+  return items
 })
 </script>
 
@@ -227,5 +239,7 @@ const legend = computed(() => {
   width: 12px;
   height: 12px;
   border-radius: 2px;
+  /* Keeps the faint "not in selection" swatch visible against the surface. */
+  box-shadow: inset 0 0 0 1px var(--atlas-color-outline-variant);
 }
 </style>

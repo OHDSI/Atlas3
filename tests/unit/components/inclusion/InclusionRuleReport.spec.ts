@@ -82,30 +82,98 @@ describe('InclusionRuleReport', () => {
     expect(otherCohort.find('[data-testid="stub-funnel"]').text()).toBe('Initial population')
   })
 
-  it('counts persons for the checked rules in the intersect view (#372)', async () => {
-    const wrapper = await mountReport()
-    const vm = wrapper.vm as unknown as {
-      view: string
-      selectedRules: number[]
-      intersectMode: string
-    }
+  type IntersectVm = {
+    view: string
+    mode: number
+    selectedRules: number[]
+    intersectMode: string
+    intersectOutcome: string
+  }
+  const fmt = (n: number) => new Intl.NumberFormat().format(n)
 
+  async function openIntersect(cohortId = 7) {
+    const wrapper = await mountReport(cohortId)
+    const vm = wrapper.vm as unknown as IntersectVm
     vm.view = 'intersect'
     await flushPromises()
     const result = () => wrapper.find('[data-testid="inclusion-intersect-result"]').text()
-    const fmt = (n: number) => new Intl.NumberFormat().format(n)
+    return { wrapper, vm, result }
+  }
 
-    // Every rule checked + "all" reproduces the final count
-    expect(result()).toContain(fmt(511))
+  it('counts persons for the checked rules in the intersect view (#372)', async () => {
+    const { wrapper, vm, result } = await openIntersect()
+
+    // Atlas 2 defaults: every rule checked, "any" rule "passed"
+    expect(vm.selectedRules).toEqual([0, 1])
+    expect(vm.intersectMode).toBe('any')
+    expect(vm.intersectOutcome).toBe('passed')
+    expect(result()).toContain(fmt(511 + 1437 + 225))
     expect(wrapper.find('[data-testid="inclusion-attrition-table"]').exists()).toBe(false)
+
+    vm.intersectMode = 'all'
+    await flushPromises()
+    expect(result()).toContain(fmt(511))
 
     await wrapper.find('[data-testid="inclusion-intersect-rule-0"] input').setValue(false)
     expect(vm.selectedRules).toEqual([1])
     expect(result()).toContain(fmt(511 + 1437))
+    expect(wrapper.find('[data-testid="inclusion-intersect-row-0"]').classes()).toContain(
+      'intersect-table__row--off'
+    )
 
-    vm.intersectMode = 'any'
-    vm.selectedRules = [0, 1]
+    vm.intersectOutcome = 'failed'
     await flushPromises()
-    expect(result()).toContain(fmt(511 + 1437 + 225))
+    expect(result()).toContain(fmt(225 + 516))
+  })
+
+  it('header checkbox clears and re-checks every rule', async () => {
+    const { wrapper, vm, result } = await openIntersect()
+    const selectAll = () => wrapper.find('[data-testid="inclusion-intersect-select-all"] input')
+
+    await selectAll().setValue(false)
+    expect(vm.selectedRules).toEqual([])
+    expect(result()).toContain('Select at least one rule')
+
+    await selectAll().setValue(true)
+    expect(vm.selectedRules).toEqual([0, 1])
+  })
+
+  it('resets the selection when a different cohort loads', async () => {
+    const { wrapper, vm } = await openIntersect()
+    vm.selectedRules = [1]
+    vm.intersectMode = 'all'
+
+    vm.mode = 0
+    await flushPromises()
+    expect(vm.selectedRules).toEqual([1])
+
+    await wrapper.setProps({ cohortId: 8 })
+    await flushPromises()
+    expect(vm.selectedRules).toEqual([0, 1])
+    expect(vm.intersectMode).toBe('any')
+  })
+
+  it('talks about events, not persons, in By Event mode', async () => {
+    const { vm, result } = await openIntersect()
+    expect(result()).toContain('persons')
+
+    vm.mode = 0
+    await flushPromises()
+    expect(result()).toContain('events')
+    expect(result()).not.toContain('persons')
+  })
+
+  it('hides the view toggle until a report with rules has loaded', async () => {
+    const { getInclusionRuleReport } = await import('@/services/report.service')
+    vi.mocked(getInclusionRuleReport).mockResolvedValueOnce({
+      success: true,
+      data: { ...report, inclusionRuleStats: [], treemap: null },
+    } as never)
+
+    const wrapper = await mountReport()
+    expect(wrapper.find('[data-testid="inclusion-view"]').exists()).toBe(false)
+
+    const withRules = await mountReport()
+    expect(withRules.find('[data-testid="inclusion-view"]').exists()).toBe(true)
   })
 })
