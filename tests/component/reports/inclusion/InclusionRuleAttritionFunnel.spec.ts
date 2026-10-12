@@ -93,7 +93,7 @@ describe('InclusionRuleAttritionFunnel', () => {
 
     const data = vm.chartOption.series[0]!.data
     expect(data).toHaveLength(3)
-    expect(data[0]!.name).toBe('Initial Population')
+    expect(data[0]!.name).toBe('Initial population')
     expect(data[0]!.value).toBe(2689)
     // The funnel now uses ECharts' "sizingValue = previous step's count"
     // trick so segment i is labelled with rule i but visually anchored to
@@ -177,7 +177,7 @@ describe('InclusionRuleAttritionFunnel', () => {
       const lines = text.split('\n')
       expect(lines[0]).toBe('Step,Rule,Remaining,Excluded,Percent of Initial')
       expect(lines).toHaveLength(4) // header + 3 steps
-      expect(lines[1]).toBe('0,"Initial Population",2689,0,100.0')
+      expect(lines[1]).toBe('0,"Initial population",2689,0,100.0')
       expect(lines[2]).toContain('Has Osteoarthritis')
       expect(lines[2]).toContain('736')
       expect(revokeObjectURL).toHaveBeenCalledWith('blob:mock')

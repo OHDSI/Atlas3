@@ -60,15 +60,22 @@
 import { computed } from 'vue'
 import AtlasButton from '@/components/ui/AtlasButton.vue'
 import { computeAttritionSteps, type AttritionStep } from '@/utils/inclusion-attrition'
+import { escapeHtml } from '@/utils/html'
 import type { InclusionRuleReport } from '@/models/report.types'
 import { useI18n } from '@/composables/useI18n'
 import { trackChartTheme } from '@/ui/chart-config'
 
 const { t, tv } = useI18n()
 
-const props = defineProps<{ report: InclusionRuleReport }>()
+const props = defineProps<{
+  report: InclusionRuleReport
+  /** Label for the first (entry-event) step; defaults to "Initial population". */
+  initialLabel?: string
+}>()
 
-const steps = computed<AttritionStep[]>(() => computeAttritionSteps(props.report))
+const steps = computed<AttritionStep[]>(() =>
+  computeAttritionSteps(props.report, props.initialLabel || undefined)
+)
 const chartHeight = computed(() => Math.max(260, steps.value.length * 52))
 const initial = computed(() => steps.value[0]!)
 const final = computed(() => steps.value[steps.value.length - 1]!)
@@ -204,7 +211,7 @@ const chartOption = computed(() => {
         const s = steps.value[seg._stepIndex]
         if (!s) return ''
         const lines = [
-          `<strong>${s.label}</strong>`,
+          `<strong>${escapeHtml(s.label)}</strong>`,
           `${tv('components.inclusionRuleReport.tooltipRemaining', 'Remaining')}: ${formatCount(s.remaining)}`,
           `${tv('components.inclusionRuleReport.colPercentOfInitial', '% of initial')}: ${s.percentOfInitial.toFixed(1)}%`,
         ]

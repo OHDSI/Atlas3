@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { computeAttritionSteps } from '@/utils/inclusion-attrition'
+import {
+  computeAttritionSteps,
+  computeIntersectCount,
+  leafMatchesSelection,
+} from '@/utils/inclusion-attrition'
 import type { InclusionRuleReport, InclusionTreemapNode } from '@/models/report.types'
 
 function makeReport(overrides: Partial<InclusionRuleReport>): InclusionRuleReport {
@@ -66,7 +70,7 @@ describe('computeAttritionSteps', () => {
 
     expect(steps).toHaveLength(3)
 
-    expect(steps[0]!.label).toBe('Initial Population')
+    expect(steps[0]!.label).toBe('Initial population')
     expect(steps[0]!.remaining).toBe(2689)
     expect(steps[0]!.excluded).toBe(0)
     expect(steps[0]!.percentOfInitial).toBe(100)
@@ -195,5 +199,117 @@ describe('computeAttritionSteps', () => {
     })
     const steps = computeAttritionSteps(report)
     expect(steps[1]!.percentOfInitial).toBe(0)
+  })
+})
+
+// Same shape as WebAPI cohort 7: rule 0 = Osteoarthritis, rule 1 = Otitis media
+const twoRuleReport = makeReport({
+  summary: { baseCount: 2689, finalCount: 511, lostCount: 2178, percentMatched: '19.0' },
+  inclusionRuleStats: [
+    {
+      id: 0,
+      name: 'A',
+      countSatisfying: 736,
+      percentSatisfying: '27.37',
+      percentExcluded: '72.63',
+    },
+    {
+      id: 1,
+      name: 'B',
+      countSatisfying: 1948,
+      percentSatisfying: '72.45',
+      percentExcluded: '27.55',
+    },
+  ],
+  treemap: {
+    name: 'Everyone',
+    children: [
+      {
+        name: 'Group 2',
+        children: [
+          { name: '11', size: 511 },
+          {
+            name: 'Group 1',
+            children: [
+              { name: '01', size: 1437 },
+              { name: '10', size: 225 },
+              { name: 'Group 0', children: [{ name: '00', size: 516 }] },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+})
+
+describe('computeAttritionSteps initial label', () => {
+  it('uses the given label for the initial step', () => {
+    expect(computeAttritionSteps(twoRuleReport, 'Adults with sinusitis')[0]!.label).toBe(
+      'Adults with sinusitis'
+    )
+  })
+
+  it('defaults to "Initial population"', () => {
+    expect(computeAttritionSteps(twoRuleReport)[0]!.label).toBe('Initial population')
+  })
+})
+
+const sel = (
+  rules: number[],
+  mode: 'all' | 'any',
+  outcome: 'passed' | 'failed' = 'passed'
+) => ({ rules, mode, outcome })
+
+describe('leafMatchesSelection', () => {
+  it('requires every selected rule to pass in "all" / passed mode', () => {
+    expect(leafMatchesSelection('101', sel([0, 2], 'all'))).toBe(true)
+    expect(leafMatchesSelection('101', sel([0, 1], 'all'))).toBe(false)
+  })
+
+  it('requires at least one selected rule to pass in "any" / passed mode', () => {
+    expect(leafMatchesSelection('001', sel([0, 2], 'any'))).toBe(true)
+    expect(leafMatchesSelection('010', sel([0, 2], 'any'))).toBe(false)
+  })
+
+  it('looks for failures in "failed" mode', () => {
+    expect(leafMatchesSelection('010', sel([0, 2], 'all', 'failed'))).toBe(true)
+    expect(leafMatchesSelection('011', sel([0, 2], 'all', 'failed'))).toBe(false)
+    expect(leafMatchesSelection('011', sel([0, 2], 'any', 'failed'))).toBe(true)
+    expect(leafMatchesSelection('111', sel([0, 2], 'any', 'failed'))).toBe(false)
+  })
+
+  it('matches no one for an empty selection, like Atlas 2', () => {
+    expect(leafMatchesSelection('00', sel([], 'all'))).toBe(false)
+    expect(leafMatchesSelection('11', sel([], 'any'))).toBe(false)
+    expect(leafMatchesSelection('00', sel([], 'all', 'failed'))).toBe(false)
+  })
+})
+
+describe('computeIntersectCount', () => {
+  it('all rules selected in "all" / passed mode equals the final count', () => {
+    expect(computeIntersectCount(twoRuleReport, sel([0, 1], 'all'))).toBe(511)
+  })
+
+  it('counts persons passing a single rule regardless of the others', () => {
+    expect(computeIntersectCount(twoRuleReport, sel([1], 'all'))).toBe(511 + 1437)
+    expect(computeIntersectCount(twoRuleReport, sel([0], 'all'))).toBe(511 + 225)
+  })
+
+  it('counts persons passing any selected rule', () => {
+    expect(computeIntersectCount(twoRuleReport, sel([0, 1], 'any'))).toBe(511 + 1437 + 225)
+  })
+
+  it('counts persons failing all / any selected rules', () => {
+    expect(computeIntersectCount(twoRuleReport, sel([0, 1], 'all', 'failed'))).toBe(516)
+    expect(computeIntersectCount(twoRuleReport, sel([0, 1], 'any', 'failed'))).toBe(1437 + 225 + 516)
+  })
+
+  it('returns 0 when nothing is selected', () => {
+    expect(computeIntersectCount(twoRuleReport, sel([], 'all'))).toBe(0)
+    expect(computeIntersectCount(twoRuleReport, sel([], 'any'))).toBe(0)
+  })
+
+  it('returns null without a treemap', () => {
+    expect(computeIntersectCount({ ...twoRuleReport, treemap: null }, sel([0], 'all'))).toBeNull()
   })
 })
