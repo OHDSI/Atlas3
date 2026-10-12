@@ -168,6 +168,12 @@ const DEFAULT_PREVALENCE_RAMP: readonly string[] = [
 
 const DARK_PREVALENCE_RAMP: readonly string[] = ['#1b3a5c', '#2f5d8a', '#4a86c4', '#7fb3e0', '#b3d4f0']
 
+/** The theme's five-stop blue ramp, low → high emphasis. Tracks theme switches. */
+export function prevalenceRamp(): readonly string[] {
+  trackChartTheme()
+  return chartMode === 'dark' ? DARK_PREVALENCE_RAMP : DEFAULT_PREVALENCE_RAMP
+}
+
 let chartMode: 'light' | 'dark' = 'light'
 let paletteOverride: readonly string[] | null = null
 let gradientOverride: readonly string[] | null = null

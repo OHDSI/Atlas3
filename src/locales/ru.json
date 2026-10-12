@@ -263,8 +263,6 @@
       "noAttritionHint": "Сформируйте когорту с правилами включения, чтобы увидеть отсев",
       "patients": "пациентов",
       "retained": "сохранено",
-      "rulesSatisfiedHigh": "≥ 80% правил выполнено",
-      "rulesSatisfiedLow": "< 40% правил выполнено",
       "tooltipRemaining": "Осталось",
       "tooltipExcludedAtStep": "Исключено на этом шаге"
     },

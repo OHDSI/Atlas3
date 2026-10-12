@@ -66,7 +66,7 @@ describe('InclusionRuleReport', () => {
     expect(wrapper.text()).toContain('HTTP 500')
   })
 
-  it('renders summary, attrition table and treemap when data arrives', async () => {
+  it('renders summary and attrition table, and the treemap in the intersect tab', async () => {
     fetchMock.mockResolvedValueOnce({ success: true, data: fullReport })
 
     const wrapper = mount(InclusionRuleReport, {
@@ -79,6 +79,11 @@ describe('InclusionRuleReport', () => {
     expect(wrapper.text()).toContain('820') // formatted finalCount
     expect(wrapper.text()).toContain('82.00%') // percent match rate
     expect(wrapper.find('[data-testid=inclusion-attrition-table]').exists()).toBe(true)
+    // As in Atlas 2, the population treemap belongs to the intersect view
+    expect(wrapper.find('[data-testid=inclusion-treemap]').exists()).toBe(false)
+
+    ;(wrapper.vm as unknown as { view: string }).view = 'intersect'
+    await flushPromises()
     expect(wrapper.find('[data-testid=inclusion-treemap]').exists()).toBe(true)
   })
 

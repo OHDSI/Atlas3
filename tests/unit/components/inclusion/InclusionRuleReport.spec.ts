@@ -163,6 +163,41 @@ describe('InclusionRuleReport', () => {
     expect(result()).not.toContain('persons')
   })
 
+  it('describes the hovered treemap box and marks each rule passed / failed (Atlas 2)', async () => {
+    const { wrapper } = await openIntersect()
+    const vm = wrapper.vm as unknown as { hoveredLeaf: { bits: string; size: number } | null }
+    const summary = () => wrapper.find('[data-testid="inclusion-hover-summary"]').text()
+    expect(summary()).toContain('Hover over a box')
+
+    vm.hoveredLeaf = { bits: '10', size: 225 }
+    await flushPromises()
+    expect(summary()).toBe(`${fmt(225)} persons (8.37%), 1 rules passed, 1 rules failed`)
+    expect(wrapper.find('[data-testid="inclusion-intersect-row-0"]').classes()).toContain('intersect-table__row--pass')
+    expect(wrapper.find('[data-testid="inclusion-intersect-row-1"]').classes()).toContain('intersect-table__row--fail')
+  })
+
+  it('switches between attrition and intersect with tabs', async () => {
+    const wrapper = await mountReport()
+    expect(wrapper.find('[data-testid="inclusion-attrition-table"]').exists()).toBe(true)
+
+    await wrapper.find('[data-testid="inclusion-view-intersect"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[data-testid="inclusion-intersect"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="inclusion-attrition-table"]').exists()).toBe(false)
+  })
+
+  it('labels a rule saved without a name instead of leaving it blank', async () => {
+    const { getInclusionRuleReport } = await import('@/services/report.service')
+    vi.mocked(getInclusionRuleReport).mockResolvedValueOnce({
+      success: true,
+      data: { ...report, inclusionRuleStats: [report.inclusionRuleStats[0], { ...report.inclusionRuleStats[1], name: '' }] },
+    } as never)
+
+    const wrapper = await mountReport()
+    const vm = wrapper.vm as unknown as { report: { inclusionRuleStats: { name: string }[] } }
+    expect(vm.report.inclusionRuleStats.map(r => r.name)).toEqual(['Has Osteoarthritis', 'Inclusion rule 2'])
+  })
+
   it('hides the view toggle until a report with rules has loaded', async () => {
     const { getInclusionRuleReport } = await import('@/services/report.service')
     vi.mocked(getInclusionRuleReport).mockResolvedValueOnce({

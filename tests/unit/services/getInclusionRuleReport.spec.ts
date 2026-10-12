@@ -142,6 +142,59 @@ describe('getInclusionRuleReport', () => {
     expect(result.data.treemap).toBeNull()
   })
 
+  it('accepts an inclusion rule with no name', async () => {
+    // A rule saved without a name comes back as `name: null`; rejecting it
+    // discarded the whole report ("Invalid inclusion-rule report response").
+    mockFetch.mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          summary: { baseCount: 100, finalCount: 99, lostCount: 1, percentMatched: '99.00%' },
+          inclusionRuleStats: [
+            { id: 0, name: 'Rule A', countSatisfying: 100, percentSatisfying: '100.00%', percentExcluded: '0.00%' },
+            { id: 1, name: null, countSatisfying: 99, percentSatisfying: '99.00%', percentExcluded: '1.00%' },
+          ],
+        }),
+    })
+
+    const result = await getInclusionRuleReport(77, 'SYNPUF5PCT', 1)
+
+    expect(result.success).toBe(true)
+    if (!result.success) return
+    expect(result.data.inclusionRuleStats.map(r => r.name)).toEqual(['Rule A', ''])
+  })
+
+  it('surfaces the server message when WebAPI answers with an error body', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      text: async () => JSON.stringify({ message: 'An exception occurred: java.lang.NullPointerException' }),
+    })
+
+    const result = await getInclusionRuleReport(1, 'EUNOMIA', 1)
+
+    expect(result.success).toBe(false)
+    if (result.success) return
+    expect(result.error.message).toBe('An exception occurred: java.lang.NullPointerException')
+  })
+
+  it('names the offending field when the response does not validate', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          summary: { baseCount: 1, finalCount: 1, lostCount: 0, percentMatched: '100' },
+          inclusionRuleStats: [{ id: 0, name: 'A', countSatisfying: 'many', percentSatisfying: '1', percentExcluded: '0' }],
+        }),
+    })
+
+    const result = await getInclusionRuleReport(1, 'EUNOMIA', 1)
+
+    expect(result.success).toBe(false)
+    if (result.success) return
+    expect(result.error.message).toContain('Invalid inclusion-rule report response')
+    expect(result.error.message).toContain('inclusionRuleStats.0.countSatisfying')
+  })
+
   it('still returns the summary and inclusion rule stats when treemapData is null (#202)', async () => {
     mockFetch.mockResolvedValue({
       ok: true,

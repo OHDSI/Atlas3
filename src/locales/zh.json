@@ -263,8 +263,6 @@
       "noAttritionHint": "生成带有包含规则的队列以查看减员",
       "patients": "名患者",
       "retained": "保留",
-      "rulesSatisfiedHigh": "满足 ≥ 80% 的规则",
-      "rulesSatisfiedLow": "满足 < 40% 的规则",
       "tooltipRemaining": "剩余",
       "tooltipExcludedAtStep": "此步骤排除"
     },
