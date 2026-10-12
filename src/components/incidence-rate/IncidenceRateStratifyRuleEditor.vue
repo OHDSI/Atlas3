@@ -5,17 +5,17 @@
       :label="t('incidenceRate.stratifyName', 'Rule name').value"
       hide-details
       class="mb-2"
-      @update:model-value="(v) => emit('update', { name: String(v) })"
+      @update:model-value="(v) => { rule.name = String(v) }"
     />
     <AtlasTextField
       :model-value="rule.description ?? ''"
       :label="t('columns.description', 'Description').value"
       hide-details
       class="mb-3"
-      @update:model-value="(v) => emit('update', { description: String(v) })"
+      @update:model-value="(v) => { rule.description = String(v) }"
     />
     <CriteriaGroup
-      :group="currentGroup"
+      :group="criteriaGroup"
       :concept-sets="conceptSetOptions"
       @select-concept-set="onSelectConceptSet"
       @edit-concept-set="handleCriteriaEditConceptSet"
@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed } from 'vue'
 import { AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
@@ -60,26 +60,12 @@ const { rule, conceptSets } = defineProps<{
   conceptSets: ConceptSet[]
 }>()
 const emit = defineEmits<{
-  (e: 'update', partial: Partial<StratifyRule>): void
   (e: 'add-concept-set', cs: ConceptSet): void
 }>()
 const { t } = useI18n()
 const conceptSetsStore = useConceptSetsStore()
 
-// Local reactive copy of the expression group so CriteriaGroup can mutate
-// it in-place.  Synced back to the parent via watch.
-const currentGroup = reactive<CriteriaGroupType>(
-  (rule.expression as CriteriaGroupType) ?? { Type: 'ALL', CriteriaList: [] },
-)
-
-watch(
-  () => rule.expression,
-  (next) => {
-    const g = (next as CriteriaGroupType) ?? { Type: 'ALL', CriteriaList: [] }
-    Object.assign(currentGroup, g)
-  },
-  { deep: true },
-)
+const criteriaGroup = computed(() => rule.expression as CriteriaGroupType)
 
 const localConceptSets = computed<ConceptSetReference[]>(() =>
   conceptSets
@@ -90,11 +76,6 @@ const localConceptSets = computed<ConceptSetReference[]>(() =>
       items: (cs.expression?.items ?? []).map(convertCirceItemToAtlas),
     }))
 )
-
-// Emit mutations whenever CriteriaGroup changes the reactive object.
-watch(currentGroup, (g) => {
-  emit('update', { expression: { ...g } })
-}, { deep: true })
 
 const {
   pickerOpen: csPickerOpen,

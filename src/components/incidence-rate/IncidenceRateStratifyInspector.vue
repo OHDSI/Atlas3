@@ -1,13 +1,13 @@
 <template>
   <v-navigation-drawer
-    v-if="rule"
+    v-if="draftRule"
     :model-value="modelValue"
     class="ir-stratify-inspector"
     location="right"
     temporary
     :width="drawerWidth"
     :scrim="!conceptSetsStore.editorOpen"
-    @update:model-value="(v: boolean) => $emit('update:modelValue', v)"
+    @update:model-value="onDrawerModelValue"
   >
     <div class="ir-stratify-inspector__shell">
       <aside
@@ -26,55 +26,129 @@
               {{ t('navigation.incidenceRates', 'Incidence rate').value }}
             </p>
             <h3 class="ir-stratify-inspector__title">
-              {{ rule.name || t('incidenceRate.untitled', 'Untitled rule').value }}
+              {{ draftRule.name || t('incidenceRate.untitled', 'Untitled rule').value }}
             </h3>
           </div>
 
-          <AtlasButton
-            variant="ghost"
-            size="sm"
-            @click="$emit('update:modelValue', false)"
-          >
-            {{ t('common.close', 'Close').value }}
-          </AtlasButton>
+          <div class="d-flex ga-2">
+            <AtlasButton
+              variant="ghost"
+              size="sm"
+              data-testid="ir-strata-cancel"
+              @click="requestCancel"
+            >
+              {{ t('common.cancel', 'Cancel').value }}
+            </AtlasButton>
+            <AtlasButton
+              variant="primary"
+              size="sm"
+              data-testid="ir-strata-apply"
+              @click="apply"
+            >
+              {{ t('common.apply', 'Apply').value }}
+            </AtlasButton>
+          </div>
         </header>
 
         <div class="ir-stratify-inspector__content">
           <IncidenceRateStratifyRuleEditor
-            :rule="rule"
+            :rule="draftRule"
             :concept-sets="conceptSets"
-            @update="(p: Partial<StratifyRule>) => $emit('update', p)"
             @add-concept-set="(cs) => $emit('add-concept-set', cs)"
           />
         </div>
       </div>
     </div>
+
+    <AtlasDialog
+      v-model="discardConfirmationOpen"
+      :title="t('common.discardChanges', 'Discard changes?').value"
+      :close-label="t('common.cancel', 'Cancel').value"
+      max-width="420"
+    >
+      <p>{{ t('incidenceRate.discardStratifyChanges', 'Your changes to this stratify rule will be lost.').value }}</p>
+      <template #actions>
+        <AtlasButton
+          variant="secondary"
+          data-testid="ir-strata-keep-editing"
+          @click="discardConfirmationOpen = false"
+        >
+          {{ t('common.keepEditing', 'Keep editing').value }}
+        </AtlasButton>
+        <AtlasButton
+          variant="primary"
+          tone="danger"
+          data-testid="ir-strata-discard"
+          @click="discard"
+        >
+          {{ t('common.discard', 'Discard').value }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
   </v-navigation-drawer>
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import { AtlasButton } from '@/components/ui'
+import { AtlasButton, AtlasDialog } from '@/components/ui'
 import IncidenceRateStratifyRuleEditor from '@/components/incidence-rate/IncidenceRateStratifyRuleEditor.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { StratifyRule } from '@/models/incidence-rate.types'
 import type { ConceptSet } from '@/models/circe-types'
 
-defineProps<{
+const props = defineProps<{
   modelValue: boolean
   rule: StratifyRule | null
   conceptSets: ConceptSet[]
 }>()
-defineEmits<{
+const emit = defineEmits<{
   'update:modelValue': [v: boolean]
-  update: [partial: Partial<StratifyRule>]
+  apply: [rule: StratifyRule]
   'add-concept-set': [cs: ConceptSet]
 }>()
 const { t } = useI18n()
 const conceptSetsStore = useConceptSetsStore()
 
 const drawerWidth = ref<number>(0)
+const originalRule = props.rule ? cloneRule(props.rule) : null
+const draftRule = ref<StratifyRule | null>(originalRule ? cloneRule(originalRule) : null)
+const discardConfirmationOpen = ref(false)
+const hasUnsavedChanges = computed(() =>
+  draftRule.value !== null
+    && originalRule !== null
+    && JSON.stringify(draftRule.value) !== JSON.stringify(originalRule),
+)
+
+function cloneRule(rule: StratifyRule): StratifyRule {
+  return JSON.parse(JSON.stringify(rule)) as StratifyRule
+}
+
+function close() {
+  emit('update:modelValue', false)
+}
+
+function requestCancel() {
+  if (hasUnsavedChanges.value) {
+    discardConfirmationOpen.value = true
+    return
+  }
+  close()
+}
+
+function discard() {
+  discardConfirmationOpen.value = false
+  close()
+}
+
+function apply() {
+  if (draftRule.value) emit('apply', draftRule.value)
+  close()
+}
+
+function onDrawerModelValue(value: boolean) {
+  if (!value) requestCancel()
+}
 
 function updateDrawerWidth() {
   drawerWidth.value = Math.max(500, Math.floor(window.innerWidth * 0.95))

@@ -14,6 +14,7 @@ import * as directives from 'vuetify/directives'
 import StrataEditor from '@/components/characterization/StrataEditor.vue'
 import type { Stratum } from '@/models/characterization.types'
 import type { CriteriaGroup } from '@/models/circe-types'
+import type { ConceptSet } from '@/models/circe-types'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../helpers/i18n-mock')
@@ -28,10 +29,11 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }))
 
-function mountEditor(initial: Stratum[] = []) {
+function mountEditor(initial: Stratum[] = [], strataConceptSets: ConceptSet[] = []) {
   return mount(StrataEditor, {
     props: {
       modelValue: initial,
+      strataConceptSets,
       'onUpdate:modelValue': (value: Stratum[]) => {
         wrapper.setProps({ modelValue: value })
       },
@@ -52,7 +54,8 @@ function mountEditor(initial: Stratum[] = []) {
         },
         AtlasDialog: {
           name: 'AtlasDialog',
-          template: '<div><slot /><slot name="actions" /></div>',
+          props: ['modelValue'],
+          template: '<div><slot /><slot v-if="modelValue" name="actions" /></div>',
         },
         ConceptSetSelectionDialog: true,
       },
@@ -108,7 +111,80 @@ describe('StrataEditor', () => {
     expect(next[0]!.id).toBe('b')
   })
 
-  it('closes the dialog and emits updated criteria when close button is clicked', async () => {
+  it('updates subgroup-only mode and subgroup names', async () => {
+    const initial: Stratum[] = [
+      { id: 'a', name: 'A', criteria: {} },
+      { id: 'b', name: 'B', criteria: {} },
+    ]
+    wrapper = mountEditor(initial)
+
+    await wrapper.findComponent({ name: 'AtlasSwitch' }).vm.$emit('update:modelValue', true)
+    ;(wrapper.vm as any).$.setupState.updateName(0, 'Renamed')
+
+    expect(wrapper.emitted('update:strataOnly')).toEqual([[true]])
+    expect(wrapper.emitted('update:modelValue')).toContainEqual([
+      expect.arrayContaining([expect.objectContaining({ id: 'a', name: 'Renamed' })]),
+    ])
+  })
+
+  it('adds and updates subgroup concept sets through the embedded editor flow', () => {
+    wrapper = mountEditor([])
+    const setupState = (wrapper.vm as any).$.setupState
+
+    setupState.handleConceptSetApplied({ name: 'New set', items: [] })
+    setupState.handleConceptSetApplied({ id: 0, name: 'Updated set', items: [] })
+
+    const emitted = wrapper.emitted('update:strataConceptSets')
+    expect(emitted).toHaveLength(2)
+    expect((emitted![0]![0] as any[])[0]).toMatchObject({ id: 0 })
+    expect((emitted![1]![0] as any[])[0]).toMatchObject({ id: 0, name: 'Updated set' })
+  })
+
+  it('validates subgroup names and summarizes criteria counts', () => {
+    wrapper = mountEditor([
+      { id: 'empty', name: '', criteria: {} },
+      { id: 'first', name: 'Repeated', criteria: { CriteriaList: [{}] } },
+      { id: 'second', name: 'Repeated', criteria: { DemographicCriteriaList: [{}, {}] } },
+    ])
+    const setupState = (wrapper.vm as any).$.setupState
+
+    expect(setupState.nameErrors('')).toHaveLength(1)
+    expect(setupState.nameErrors('Repeated')).toHaveLength(1)
+    expect(setupState.nameErrors('Unique')).toEqual([])
+    expect(setupState.criteriaSummary({ criteria: null })).toBe('No criteria')
+    expect(setupState.criteriaSummary({ criteria: { CriteriaList: [{}] } })).toBe('1 event')
+    expect(setupState.criteriaSummary({ criteria: { DemographicCriteriaList: [{}, {}] } })).toBe('2 events')
+  })
+
+  it('closes an unchanged drawer and ignores criteria edits without a concept-set target', () => {
+    wrapper = mountEditor([{ id: 'a', name: 'A', criteria: { Type: 'ALL', CriteriaList: [] } }])
+    const setupState = (wrapper.vm as any).$.setupState
+
+    setupState.openCriteriaDialog('a')
+    setupState.onDrawerModelValue(false)
+    setupState.handleCriteriaEditConceptSet()
+    setupState.handleCriteriaEditConceptSet({ targetRef: { value: null } })
+
+    expect(setupState.drawerOpen).toBe(false)
+    expect(setupState.editingStratumId).toBeNull()
+  })
+
+  it('opens and closes the embedded concept-set editor for an existing concept set', () => {
+    const conceptSet: ConceptSet = { id: 9, name: 'Existing', expression: { items: [] } }
+    wrapper = mountEditor([], [conceptSet])
+    const setupState = (wrapper.vm as any).$.setupState
+
+    setupState.handleCreateNewConceptSet()
+    expect(setupState.conceptSetsStore.editorOpen).toBe(true)
+
+    setupState.onConceptSetEditorVisibilityChange(false)
+    expect(setupState.conceptSetsStore.editorOpen).toBe(false)
+
+    setupState.handleCriteriaEditConceptSet({ targetRef: { value: 9 } })
+    expect(setupState.conceptSetsStore.currentSet).toMatchObject({ id: 9, name: 'Existing' })
+  })
+
+  it('applies edited criteria when Apply is clicked', async () => {
     const initial: Stratum[] = [
       { id: 'a', name: 'A', criteria: { Type: 'ALL', CriteriaList: [] } },
     ]
@@ -117,14 +193,9 @@ describe('StrataEditor', () => {
     await wrapper.get('[data-testid="strata-editor-edit-criteria-0"]').trigger('click')
     await flushPromises()
 
-    // Trigger close via the dialog close action button
-    const closeBtn = wrapper.findAll('button').find(b => b.text().toLowerCase().includes('close'))
-    if (closeBtn) {
-      await closeBtn.trigger('click')
-      await flushPromises()
-    }
+    await wrapper.get('[data-testid="strata-editor-apply-criteria"]').trigger('click')
+    await flushPromises()
 
-    // After close, an update should have been emitted
     const emitted = wrapper.emitted('update:modelValue')
     expect(emitted).toBeTruthy()
     const next = emitted![0]![0] as Stratum[]
@@ -158,10 +229,7 @@ describe('StrataEditor', () => {
     await wrapper.get('[data-testid="strata-editor-edit-criteria-0"]').trigger('click')
     await flushPromises()
     await wrapper.get('[data-testid="criteria-group-mutate"]').trigger('click')
-    const closeBtn = wrapper.findAll('button').find(b => b.text().toLowerCase().includes('close'))
-    if (closeBtn) {
-      await closeBtn.trigger('click')
-    }
+    await wrapper.get('[data-testid="strata-editor-apply-criteria"]').trigger('click')
     await flushPromises()
 
     await wrapper.get('[data-testid="strata-editor-edit-criteria-1"]').trigger('click')
@@ -177,5 +245,23 @@ describe('StrataEditor', () => {
       CriteriaList: expect.any(Array),
     })
     expect((strata[1]!.criteria as CriteriaGroup).CriteriaList).toHaveLength(2)
+  })
+
+  it('requires confirmation before discarding changed criteria', async () => {
+    const initial: Stratum[] = [
+      { id: 'a', name: 'A', criteria: { Type: 'ALL', CriteriaList: [] } },
+    ]
+    wrapper = mountEditor(initial)
+
+    await wrapper.get('[data-testid="strata-editor-edit-criteria-0"]').trigger('click')
+    await wrapper.get('[data-testid="criteria-group-mutate"]').trigger('click')
+    await wrapper.get('[data-testid="strata-editor-cancel-criteria"]').trigger('click')
+
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    expect(wrapper.get('[data-testid="strata-editor-discard-criteria"]').exists()).toBe(true)
+
+    await wrapper.get('[data-testid="strata-editor-discard-criteria"]').trigger('click')
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    expect(initial[0]!.criteria).toMatchObject({ Type: 'ALL', CriteriaList: [] })
   })
 })

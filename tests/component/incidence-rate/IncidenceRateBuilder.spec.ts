@@ -8,8 +8,6 @@ import { useIncidenceRateStore } from '@/stores/incidence-rate'
 
 const builderMocks = vi.hoisted(() => ({
   save: vi.fn(),
-  copy: vi.fn(),
-  remove: vi.fn(),
   feedback: { value: null as { message: string; color: 'success' | 'error' | 'info' } | null },
 }))
 
@@ -28,8 +26,6 @@ const accessMocks = vi.hoisted(() => ({
 vi.mock('@/composables/useIncidenceRateBuilder', () => ({
   useIncidenceRateBuilder: () => ({
     save: builderMocks.save,
-    copy: builderMocks.copy,
-    remove: builderMocks.remove,
     feedback: builderMocks.feedback,
   }),
 }))
@@ -39,7 +35,7 @@ vi.mock('@/composables/usePermissions', () => ({
 }))
 
 vi.mock('@/composables/useEntityAccess', () => ({
-  useEntityAccess: () => ({ canWrite: { value: true }, canDelete: { value: true } }),
+  useEntityAccess: () => ({ canWrite: { value: true } }),
 }))
 
 vi.mock('@/services/incidence-rate.service', () => ({
@@ -66,6 +62,7 @@ const stubs = [
   'EntityAccessDialog',
   'IncidenceRateConceptSetsPanel',
   'IncidenceRateVersionsPanel',
+  'ConceptSetEditor',
   'AtlasDialog',
 ]
 
@@ -156,12 +153,10 @@ describe('IncidenceRateBuilder', () => {
     expect((w.vm as unknown as { saveDisabledReason: string }).saveDisabledReason).toBe('')
   })
 
-  it('routes back and forwards save/copy/delete actions to the builder composable', async () => {
+  it('routes back and forwards save actions to the builder composable', async () => {
     const store = loadIR()
     const pushSpy = vi.spyOn(router, 'push')
     builderMocks.save.mockResolvedValue(true)
-    builderMocks.copy.mockResolvedValue(true)
-    builderMocks.remove.mockResolvedValue(true)
 
     const w = mount(IncidenceRateBuilder, {
       global: { plugins: [vuetify, router], stubs },
@@ -172,13 +167,12 @@ describe('IncidenceRateBuilder', () => {
 
     await w.get('[data-testid="ir-builder-cancel"]').trigger('click')
     await w.get('[data-testid="ir-builder-save"]').trigger('click')
-    await w.get('[data-testid="ir-builder-copy"]').trigger('click')
-    await w.get('[data-testid="ir-builder-delete"]').trigger('click')
     await flushPromises()
 
     expect(pushSpy).toHaveBeenCalledWith('/analysis/incidence-rates')
     expect(builderMocks.save).toHaveBeenCalled()
-    expect(builderMocks.copy).toHaveBeenCalled()
+    expect(w.find('[data-testid="ir-builder-delete"]').exists()).toBe(false)
+    expect(w.find('[data-testid="ir-builder-copy"]').exists()).toBe(false)
     expect(store.currentIR?.id).toBe(42)
   })
 
@@ -217,24 +211,6 @@ describe('IncidenceRateBuilder', () => {
 
     expect(serviceMocks.importIncidenceRate).toHaveBeenCalled()
     expect(pushSpy).not.toHaveBeenCalled()
-  })
-
-  it('confirms deletion through the incidence-rate delete dialog', async () => {
-    loadIR()
-    builderMocks.remove.mockResolvedValue(true)
-
-    const w = mount(IncidenceRateBuilder, {
-      global: { plugins: [vuetify, router], stubs },
-    })
-    await flushPromises()
-
-    await w.get('[data-testid="ir-builder-delete"]').trigger('click')
-    await flushPromises()
-
-    await (w.vm as any).$.setupState.onDelete()
-    await flushPromises()
-
-    expect(builderMocks.remove).toHaveBeenCalled()
   })
 
   it('handles concept-set helper branches with real items and both delete paths', async () => {
@@ -347,6 +323,20 @@ describe('IncidenceRateBuilder', () => {
     await flushPromises()
 
     expect(w.findComponent({ name: 'EntityAccessDialog' }).props('modelValue')).toBe(true)
+  })
+
+  it('closes the embedded concept-set editor when it is dismissed', async () => {
+    loadIR()
+    const conceptSetsStore = useConceptSetsStore()
+    conceptSetsStore.openCreateEditor()
+
+    const w = mount(IncidenceRateBuilder, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+
+    await w.findComponent({ name: 'ConceptSetEditor' }).vm.$emit('update:modelValue', false)
+    expect(conceptSetsStore.editorOpen).toBe(false)
   })
 
   it('exports and imports incidence rate designs through the file handlers', async () => {

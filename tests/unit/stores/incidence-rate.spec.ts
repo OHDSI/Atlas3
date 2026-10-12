@@ -99,6 +99,28 @@ describe('incidence-rate store', () => {
     expect(s.currentIR!.expression.strata).toHaveLength(1)
   })
 
+  it('applies a cloned stratify-rule draft and marks the design dirty', () => {
+    const s = useIncidenceRateStore()
+    s.createNewIR()
+    s.addStratifyRule({ name: 'Original', expression: { Type: 'ALL', CriteriaList: [] } })
+    s.markClean()
+    const draft = {
+      name: 'Applied',
+      description: 'Committed from the inspector',
+      expression: { Type: 'ANY', CriteriaList: [] },
+    }
+
+    s.applyStratifyRule(0, draft)
+    draft.expression.Type = 'ALL'
+
+    expect(s.currentIR!.expression.strata[0]).toMatchObject({
+      name: 'Applied',
+      description: 'Committed from the inspector',
+      expression: { Type: 'ANY' },
+    })
+    expect(s.isDirty).toBe(true)
+  })
+
   it('validateIR errors when name empty / no targets / no outcomes / TAR conflict', async () => {
     const s = useIncidenceRateStore()
     s.createNewIR()

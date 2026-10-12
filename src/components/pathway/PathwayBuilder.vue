@@ -8,15 +8,11 @@
     testid="pathway-builder"
     @back="handleBack"
   >
-    <template
-      v-if="currentPathway"
-      #title
-    >
+    <template #title>
       <input
-        :value="currentPathway.name"
+        :value="currentPathway?.name ?? ''"
         :placeholder="t('home.newEntityNames.pathway', 'New pathway').value"
-        :aria-label="t('columns.name', 'Name').value"
-        :readonly="!canEdit"
+        :readonly="!currentPathway || !canEdit"
         class="pathway-builder__title-input"
         data-testid="pathway-builder-name"
         @input="(e: Event) => store.updateMeta({ name: (e.target as HTMLInputElement).value })"
@@ -167,32 +163,6 @@
             data-testid="pathway-builder-import-input"
             @change="handleImportFileChange"
           >
-          <AtlasTooltip
-            :text="t('common.duplicate', 'Duplicate').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tipProps }">
-              <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.duplicate', 'Duplicate').value }"
-                icon="mdi-content-copy"
-                variant="text"
-                size="sm"
-                :disabled="!currentPathway?.id || !canCopy"
-                data-testid="pathway-builder-copy"
-                @click="onCopy"
-              />
-            </template>
-          </AtlasTooltip>
-          <AtlasButton
-            variant="ghost"
-            tone="danger"
-            icon="mdi-delete-outline"
-            :disabled="!currentPathway?.id || !hasPermission('write:pathway')"
-            data-testid="pathway-builder-delete"
-            @click="onDelete"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </AtlasButton>
           <DisabledReasonTooltip :reason="saveDisabledReason">
             <AtlasButton
               variant="primary"
@@ -278,7 +248,6 @@ import { storeToRefs } from 'pinia'
 import { usePathwayStore } from '@/stores/pathway'
 import { useI18n } from '@/composables/useI18n'
 import { usePathwayBuilder } from '@/composables/usePathwayBuilder'
-import { usePermissions } from '@/composables/usePermissions'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import PathwayWorkbench from './PathwayWorkbench.vue'
@@ -294,10 +263,9 @@ import type { Tag } from '@/models/webapi.types'
 const store = usePathwayStore()
 const router = useRouter()
 const { currentPathway, previewVersion, isDirty, isPreviewMode, canSave } = storeToRefs(store)
-const { save, copy, remove, feedback } = usePathwayBuilder()
-const { hasPermission } = usePermissions()
+const { save, feedback } = usePathwayBuilder()
 
-// hasPermission is true here because this button does not gate on write access
+// The save button does not gate on write access
 // at all, unlike every sibling editor. Reporting a permission reason it does
 // not actually enforce would be a lie; the gap is raised in OHDSI/Atlas3#300.
 const saveDisabledReason = computed<string>(() =>
@@ -344,13 +312,6 @@ const subtitle = computed(() => {
     : t('home.newEntityNames.pathway', 'New pathway').value
 })
 
-// Mirrors the server's @PreAuthorize on POST /pathway-analysis/{id}:
-//   (read:pathway OR write:pathway) AND create:pathway
-const canCopy = computed(() => {
-  const hasRead = hasPermission('read:pathway') || hasPermission('write:pathway')
-  return hasRead && hasPermission('create:pathway')
-})
-
 function handleBack() {
   router.push('/analysis/pathways')
 }
@@ -361,12 +322,6 @@ async function handleTagsUpdate(newTags: Tag[]) {
 
 async function onSave() {
   await save()
-}
-async function onCopy() {
-  await copy()
-}
-async function onDelete() {
-  await remove()
 }
 
 function slugifyName(name: string): string {

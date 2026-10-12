@@ -171,32 +171,6 @@
             data-testid="char-builder-import-input"
             @change="handleImportFileChange"
           >
-          <AtlasTooltip
-            :text="t('common.duplicate', 'Duplicate').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tipProps }">
-              <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.duplicate', 'Duplicate').value }"
-                icon="mdi-content-copy"
-                variant="text"
-                size="sm"
-                :disabled="!isEditing || loading || !canCopy"
-                data-testid="char-builder-copy"
-                @click="handleSaveCopy"
-              />
-            </template>
-          </AtlasTooltip>
-          <AtlasButton
-            variant="ghost"
-            tone="danger"
-            icon="mdi-delete-outline"
-            :disabled="!isEditing || loading || !canDelete"
-            data-testid="char-builder-delete"
-            @click="handleDeleteClick"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </AtlasButton>
           <DisabledReasonTooltip :reason="saveDisabledReason">
             <AtlasButton
               variant="primary"
@@ -227,6 +201,17 @@
       v-model="exploreOpen"
       :stat="exploreStat"
     />
+
+    <AtlasDialog
+      v-model="showValidationDialog"
+      :eyebrow="t('cc.title', 'Characterization').value"
+      :title="t('cc.viewEdit.tabs.messages', 'Validation messages').value"
+      :close-label="t('common.close', 'Close').value"
+      max-width="720"
+      @close="showValidationDialog = false"
+    >
+      <CharacterizationMessagesTab :characterization="draft" />
+    </AtlasDialog>
 
     <ConceptSetsListDialog
       v-model="showConceptSetsDialog"
@@ -318,46 +303,6 @@
       :subtitle="draft.name || undefined"
       @close="showAccessDialog = false"
     />
-
-    <AtlasDialog
-      v-model="showValidationDialog"
-      :eyebrow="t('cc.title', 'Characterization').value"
-      :title="t('cc.viewEdit.tabs.messages', 'Validation').value"
-      :close-label="t('common.close', 'Close').value"
-      max-width="800"
-      @close="showValidationDialog = false"
-    >
-      <CharacterizationMessagesTab
-        :characterization="draft"
-        data-testid="char-builder-validation-tab"
-      />
-    </AtlasDialog>
-
-    <AtlasDialog
-      v-model="showDeleteDialog"
-      eyebrow="CONFIRM"
-      :title="t('common.delete', 'Delete').value"
-      max-width="500"
-      @close="showDeleteDialog = false"
-    >
-      {{ deleteMessage }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="showDeleteDialog = false"
-        >
-          {{ t('common.cancel', 'Cancel') }}
-        </AtlasButton>
-        <AtlasButton
-          variant="danger"
-          :loading="loading"
-          data-testid="char-builder-delete-confirm"
-          @click="confirmDelete"
-        >
-          {{ t('common.delete', 'Delete') }}
-        </AtlasButton>
-      </template>
-    </AtlasDialog>
 
     <!-- Unsaved-changes confirmation dialog (same pattern as CohortBuilder.vue) -->
     <AtlasDialog
@@ -460,7 +405,6 @@ function makeEmptyDraft(): CharacterizationDefinition {
 
 const draft = ref<CharacterizationDefinition>(makeEmptyDraft())
 const saving = ref<boolean>(false)
-const showDeleteDialog = ref<boolean>(false)
 const showConceptSetsDialog = ref<boolean>(false)
 const showVersionsDialog = ref<boolean>(false)
 const showAccessDialog = ref<boolean>(false)
@@ -559,8 +503,7 @@ const showDeleteConceptSetDialog = ref<boolean>(false)
 // Permission gating: new characterizations need create:cohort-characterization;
 // existing ones need write access on the specific entity (ownership counts).
 const { hasPermission } = usePermissions()
-const { canWrite, canDelete } = useEntityAccess('cohortCharacterization', draftId)
-const canCopy = computed<boolean>(() => hasPermission('create:cohort-characterization'))
+const { canWrite } = useEntityAccess('cohortCharacterization', draftId)
 
 const canSave = computed<boolean>(() => {
   if (saving.value || loading.value) return false
@@ -578,12 +521,6 @@ const saveDisabledReason = computed<string>(() =>
     translate: tv,
   })
 )
-
-const deleteMessage = computed<string>(() => {
-  return t('cc.viewEdit.deleteConfirmation', `Delete characterization '${draft.value.name}'?`, {
-    name: draft.value.name,
-  }).value
-})
 
 // ---------------------------------------------------------------------------
 // Hydration
@@ -768,28 +705,6 @@ async function handleSave() {
   }
 }
 
-async function handleSaveCopy() {
-  if (!props.id) return
-  const numericId = Number(props.id)
-  if (Number.isNaN(numericId)) return
-
-  saving.value = true
-  try {
-    const copied = await store.copy(numericId)
-    if (copied?.id) {
-      store.markClean()
-      await router.push(`/characterizations/${copied.id}`)
-    } else {
-      showSnackbar(t('cc.fa.saveError', 'Failed to save characterization').value, 'error')
-    }
-  } catch (err) {
-    logger.error('CharacterizationBuilder', 'Save Copy failed', err)
-    showSnackbar(t('cc.fa.saveError', 'Failed to save characterization').value, 'error')
-  } finally {
-    saving.value = false
-  }
-}
-
 const canExport = computed<boolean>(() => Boolean(draft.value.id))
 
 function slugifyName(name: string): string {
@@ -880,26 +795,6 @@ async function handleImportFileChange(event: Event) {
     )
   }
   importing.value = false
-}
-
-function handleDeleteClick() {
-  if (!props.id) return
-  showDeleteDialog.value = true
-}
-
-async function confirmDelete() {
-  if (!props.id) return
-  const numericId = Number(props.id)
-  if (Number.isNaN(numericId)) return
-
-  const ok = await store.remove(numericId)
-  if (ok) {
-    store.markClean()
-    showDeleteDialog.value = false
-    await router.push('/characterizations')
-  } else {
-    showSnackbar(t('cc.fa.saveError', 'Failed to save characterization').value, 'error')
-  }
 }
 
 function handleBack() {

@@ -35,7 +35,6 @@ vi.mock('@/services/characterization.service', () => ({
   createCharacterization: vi.fn(),
   updateCharacterization: vi.fn(),
   deleteCharacterization: vi.fn(),
-  copyCharacterization: vi.fn(),
   characterizationNameExists: vi.fn(),
   exportCharacterization: vi.fn(),
   importCharacterization: vi.fn(),
@@ -90,7 +89,6 @@ vi.mock('@/components/characterization/CharacterizationWorkbench.vue', () => ({
 import {
   getCharacterization,
   createCharacterization,
-  copyCharacterization,
   importCharacterization,
   listCharacterizations,
   listCharacterizationExecutions,
@@ -371,27 +369,6 @@ describe('CharacterizationBuilderView — props.id navigation', () => {
     expect(getCharacterization).toHaveBeenCalledWith(99)
     expect(workbenchId(mounted.wrapper)).toBe('99')
     expect(nameInputValue(mounted.wrapper)).toBe('Brand New')
-  })
-
-  it('loads the copy after Duplicate navigates to the new :id', async () => {
-    const copy = makeDesign(43, 'Characterization 42 (copy)')
-    vi.mocked(copyCharacterization).mockResolvedValue(success(copy))
-
-    mounted = await mountAt('/characterizations/42')
-    expect(nameInputValue(mounted.wrapper)).toBe('Characterization 42')
-
-    vi.mocked(getCharacterization).mockResolvedValue(success(copy))
-
-    const copyBtn = mounted.wrapper.get('[data-testid="char-builder-copy"]')
-      .element as HTMLButtonElement
-    expect(copyBtn.disabled).toBe(false)
-    copyBtn.click()
-    await waitForPath(mounted.router, '/characterizations/43')
-
-    expect(copyCharacterization).toHaveBeenCalledWith(42)
-    expect(getCharacterization).toHaveBeenCalledWith(43)
-    expect(nameInputValue(mounted.wrapper)).toBe('Characterization 42 (copy)')
-    expect(workbenchId(mounted.wrapper)).toBe('43')
   })
 
   it('covers the unsaved-changes confirmation helpers', async () => {
