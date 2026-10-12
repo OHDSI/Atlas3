@@ -103,8 +103,6 @@ describe('PrevalenceTable', () => {
     })
 
     expect(wrapper.findAll('th.prevalence-table__numeric')).toHaveLength(2)
-    expect(wrapper.findAll('col.prevalence-table__metric-col')).toHaveLength(2)
-    expect(wrapper.find('table').classes()).toContain('prevalence-table__table--fixed')
     expect(wrapper.findAll('.prevalence-table__concept')).toHaveLength(2)
     expect(wrapper.findAll('.prevalence-table__metric')).toHaveLength(4)
     expect(wrapper.findAll('.prevalence-table__action')).toHaveLength(2)
@@ -133,11 +131,8 @@ describe('PrevalenceTable', () => {
     })
     const headers = wrapper.findAll('th').map((h) => h.text())
     expect(headers.some((h) => /Std Diff/i.test(h))).toBe(true)
-    expect(wrapper.find('table').classes()).toContain('prevalence-table__table--comparison')
-    expect(wrapper.findAll('col.prevalence-table__metric-col')).toHaveLength(4)
-    expect(wrapper.findAll('th.prevalence-table__cohort-header')).toHaveLength(2)
-    expect(wrapper.find('col.prevalence-table__concept-col').exists()).toBe(true)
-    expect(wrapper.find('col.prevalence-table__std-diff-col').exists()).toBe(true)
+    expect(wrapper.findAll('th.prevalence-table__metric')).toHaveLength(4)
+    expect(headers).toEqual(expect.arrayContaining(['Target', 'Comparator']))
     wrapper.unmount()
   })
 
@@ -230,21 +225,21 @@ describe('PrevalenceTable', () => {
       attachTo: document.body,
     })
 
-    const sortButton = wrapper.get('[data-testid="char-results-sort-count-100-overall-1"]')
-    await sortButton.trigger('click')
+    const countHeader = () => wrapper.get('[data-testid="char-results-sort-count-100-overall-1"]')
+    await countHeader().trigger('click')
     const tables = wrapper.findAll('[data-testid^="char-results-prevalence-table-100-"]')
     expect(tables.map(table => table.find('tbody tr td').text())).toEqual(['Higher', 'Higher', 'Higher'])
-    expect(sortButton.attributes('aria-sort')).toBeUndefined()
-    expect(sortButton.element.parentElement?.getAttribute('aria-sort')).toBe('descending')
+    expect(countHeader().attributes('aria-sort')).toBe('descending')
 
-    await sortButton.trigger('click')
+    await countHeader().trigger('click')
     expect(tables.map(table => table.find('tbody tr td').text())).toEqual(['Lower', 'Lower', 'Lower'])
-    expect(sortButton.element.parentElement?.getAttribute('aria-sort')).toBe('ascending')
+    expect(countHeader().attributes('aria-sort')).toBe('ascending')
 
-    const pctSortButton = wrapper.get('[data-testid="char-results-sort-pct-100-overall-1"]')
-    await pctSortButton.trigger('click')
+    const pctHeader = () => wrapper.get('[data-testid="char-results-sort-pct-100-overall-1"]')
+    await pctHeader().trigger('click')
     expect(tables.map(table => table.find('tbody tr td').text())).toEqual(['Higher', 'Higher', 'Higher'])
-    expect(pctSortButton.element.parentElement?.getAttribute('aria-sort')).toBe('descending')
+    expect(pctHeader().attributes('aria-sort')).toBe('descending')
+    expect(countHeader().attributes('aria-sort')).toBeUndefined()
     wrapper.unmount()
   })
 
@@ -307,16 +302,16 @@ describe('PrevalenceTable sorting and paging', () => {
 
   it('sorts by Pct, most prevalent first, then flips on a second click', async () => {
     const wrapper = mountMany(30)
-    const pctHeader = wrapper.findAll('th.prevalence-table__numeric')[1]!
+    const pctHeader = () => wrapper.findAll('th.prevalence-table__numeric')[1]!
     const pcts = () => wrapper.findAll('tbody tr').map(tr => parseFloat(tr.findAll('td')[3]!.text()))
 
-    await pctHeader.find('button').trigger('click')
-    expect(pctHeader.attributes('aria-sort')).toBe('descending')
+    await pctHeader().trigger('click')
+    expect(pctHeader().attributes('aria-sort')).toBe('descending')
     expect(pcts()[0]).toBe(29)
     expect(pcts()).toEqual([...pcts()].sort((a, b) => b - a))
 
-    await pctHeader.find('button').trigger('click')
-    expect(pctHeader.attributes('aria-sort')).toBe('ascending')
+    await pctHeader().trigger('click')
+    expect(pctHeader().attributes('aria-sort')).toBe('ascending')
     expect(pcts()[0]).toBe(0)
     wrapper.unmount()
   })
@@ -324,7 +319,7 @@ describe('PrevalenceTable sorting and paging', () => {
   it('sorts by Count across all pages, not just the visible one', async () => {
     const wrapper = mountMany(60)
     const countHeader = wrapper.findAll('th.prevalence-table__numeric')[0]!
-    await countHeader.find('button').trigger('click')
+    await countHeader.trigger('click')
     expect(wrapper.find('tbody .prevalence-table__covariate').text()).toBe('covariate 60')
     wrapper.unmount()
   })

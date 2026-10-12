@@ -55,14 +55,15 @@ describe('DistributionTable', () => {
       global: { plugins: [vuetify] },
     })
     const names = () => wrapper.findAll('tbody tr').map(tr => tr.find('td').text())
-    const medianHeaders = wrapper.findAll('thead tr')[1]!.findAll('th').filter(th => th.text() === 'Median')
+    const medianHeaders = () => wrapper.findAll('thead tr')[1]!.findAll('th').filter(th => th.text() === 'Median')
 
-    await medianHeaders[0]!.find('button').trigger('click')
+    await medianHeaders()[0]!.trigger('click')
     expect(names()).toEqual(['Heavy', 'Light'])
+    expect(medianHeaders()[0]!.attributes('aria-sort')).toBe('descending')
 
-    await medianHeaders[1]!.find('button').trigger('click')
+    await medianHeaders()[1]!.trigger('click')
     expect(names()).toEqual(['Light', 'Heavy'])
-    expect(medianHeaders[0]!.attributes('aria-sort')).toBe('none')
+    expect(medianHeaders()[0]!.attributes('aria-sort')).toBeUndefined()
   })
 
   it('renders each named partition and synchronizes its pagers', async () => {
