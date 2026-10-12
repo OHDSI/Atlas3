@@ -1,13 +1,16 @@
 <template>
   <AtlasDataTable
-    v-model:page="page"
-    v-model:items-per-page="pageSize"
-    v-model:sort-by="sortBy"
+    :page="page"
+    :items-per-page="pageSize"
+    :sort-by="sortBy"
     :headers="headers"
     :items="items"
     must-sort
     initial-sort-order="desc"
     class="results-data-table"
+    @update:page="emit('update:page', $event)"
+    @update:items-per-page="emit('update:pageSize', $event)"
+    @update:sort-by="emit('update:sortBy', $event)"
   >
     <template
       v-for="(_, name) in $slots"
@@ -24,7 +27,7 @@
         :page="page"
         :page-size="pageSize"
         :total-items="items.length"
-        @update:page="page = $event"
+        @update:page="emit('update:page', $event)"
         @update:page-size="onPageSizeChange"
       />
     </template>
@@ -35,7 +38,7 @@
 /**
  * AtlasDataTable in the compact characterization-results style, paged with
  * ResultsTablePagination. Sorting and paging are v-data-table's own; the
- * state is a v-model so sibling tables (one per cohort or strata) can share
+ * state is passed in (v-model) so sibling tables (one per cohort or strata) can share
  * it and stay row-aligned.
  */
 import { AtlasDataTable } from '@/components/ui'
@@ -54,15 +57,20 @@ export interface ResultsSortItem {
 defineProps<{
   headers: ResultsHeader[]
   items: unknown[]
+  page: number
+  pageSize: number
+  sortBy: ResultsSortItem[]
 }>()
 
-const page = defineModel<number>('page', { default: 1 })
-const pageSize = defineModel<number>('pageSize', { default: 15 })
-const sortBy = defineModel<ResultsSortItem[]>('sortBy', { default: () => [] })
+const emit = defineEmits<{
+  'update:page': [page: number]
+  'update:pageSize': [pageSize: number]
+  'update:sortBy': [sortBy: ResultsSortItem[]]
+}>()
 
 function onPageSizeChange(value: number): void {
-  pageSize.value = value
-  page.value = 1
+  emit('update:pageSize', value)
+  emit('update:page', 1)
 }
 </script>
 
