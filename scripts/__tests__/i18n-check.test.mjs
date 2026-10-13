@@ -9,6 +9,7 @@ import {
   lintEnglish,
   findRedundantFallbacks,
   stripFallbacks,
+  unescapeLiteral,
 } from '../i18n-check.core.mjs'
 
 describe('extractKeys', () => {
@@ -189,5 +190,17 @@ describe('findRedundantFallbacks', () => {
   it('reports key and line of each redundant fallback', () => {
     const src = `x\nt('a.b', 'Save')\nt('x.y', 'New')`
     expect(findRedundantFallbacks(src, { a: { b: 'Save' } })).toEqual([{ key: 'a.b', line: 2 }])
+  })
+})
+
+describe('unescapeLiteral', () => {
+  it('unescapes quotes, backslashes and common escapes', () => {
+    expect(unescapeLiteral("Data source \\'{key}\\' not found")).toBe("Data source '{key}' not found")
+    expect(unescapeLiteral('a\\\\b')).toBe('a\\b')
+    expect(unescapeLiteral('line\\nnext \\u2014 \\x41')).toBe('line\nnext \u2014 A')
+  })
+
+  it('leaves plain text alone', () => {
+    expect(unescapeLiteral('Hi {name}')).toBe('Hi {name}')
   })
 })

@@ -9,6 +9,7 @@ import {
   convertLegacyPlaceholders,
   restoreKeys,
   adoptableKeys,
+  recoverByText,
 } from '../i18n-refactor.core.mjs'
 
 describe('deleteByPath', () => {
@@ -183,5 +184,47 @@ describe('adoptableKeys', () => {
 
   it('ignores translations for keys that are no longer in English', () => {
     expect(adoptableKeys(m({}), m({ 'a.save': '저장' }), refEn, refKo)).toEqual([])
+  })
+})
+
+describe('recoverByText', () => {
+  const m = obj => new Map(Object.entries(obj))
+
+  it('reuses a translation of identical English from the reference', () => {
+    const out = recoverByText(
+      m({ 'criteriaAttributes.age.label': 'Age', 'x.keep': 'Keep' }),
+      m({ 'x.keep': 'K' }),
+      m({ 'attributes.age.name': 'Age' }),
+      m({ 'attributes.age.name': '年齢' })
+    )
+    expect(out).toEqual([['criteriaAttributes.age.label', '年齢']])
+  })
+
+  it('picks the most common translation when the reference disagrees', () => {
+    const out = recoverByText(
+      m({ 'n.k': 'Remove' }),
+      m({}),
+      m({ a: 'Remove', b: 'Remove', c: 'Remove' }),
+      m({ a: '削除', b: '除去', c: '除去' })
+    )
+    expect(out).toEqual([['n.k', '除去']])
+  })
+
+  it('skips reference translations that were stale per the manifest', async () => {
+    const { hashSource } = await import('../i18n-lib.mjs')
+    const out = recoverByText(
+      m({ 'n.k': 'Save' }),
+      m({}),
+      m({ a: 'Save', b: 'Save' }),
+      m({ a: 'stale', b: '保存' }),
+      { a: hashSource('Old text'), b: hashSource('Save') }
+    )
+    expect(out).toEqual([['n.k', '保存']])
+  })
+
+  it('never overwrites an existing translation', () => {
+    expect(recoverByText(m({ k: 'Save' }), m({ k: 'mine' }), m({ a: 'Save' }), m({ a: 'theirs' }))).toEqual(
+      []
+    )
   })
 })

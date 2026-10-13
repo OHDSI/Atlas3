@@ -6,7 +6,7 @@
  * These helpers move the en value, each locale's translation and the manifest
  * hash together.
  */
-import { getByPath, setByPath } from './i18n-lib.mjs'
+import { getByPath, setByPath, hashSource } from './i18n-lib.mjs'
 
 const isObject = v => v !== null && typeof v === 'object'
 
@@ -151,4 +151,31 @@ export function adoptableKeys(en, locale, refEn, refLocale) {
   return [...locale.keys()].filter(
     key => en.has(key) && pairs.has(`${en.get(key)}\u0000${locale.get(key)}`)
   )
+}
+
+/**
+ * Translations for keys `locale` lacks, taken from a reference snapshot by
+ * exact English text: if some key at the reference had the same English and
+ * an in-sync translation, reuse it (the most common one when they differ).
+ * Pass `refManifest` for locales tracked in the manifest so only translations
+ * that were current at the reference are reused.
+ * @returns {[string, string][]} [key, translation] pairs to add
+ */
+export function recoverByText(en, locale, refEn, refLocale, refManifest) {
+  const byText = new Map()
+  for (const [key, value] of refLocale) {
+    const english = refEn.get(key)
+    if (english === undefined) continue
+    if (refManifest && refManifest[key] !== hashSource(english)) continue
+    if (!byText.has(english)) byText.set(english, new Map())
+    const counts = byText.get(english)
+    counts.set(value, (counts.get(value) ?? 0) + 1)
+  }
+  const out = []
+  for (const [key, english] of en) {
+    if (locale.has(key) || !byText.has(english)) continue
+    const [best] = [...byText.get(english)].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+    out.push([key, best[0]])
+  }
+  return out
 }

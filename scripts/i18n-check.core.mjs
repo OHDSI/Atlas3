@@ -137,3 +137,12 @@ export function stripFallbacks(source, en) {
     typeof getByPath(en, key) === 'string' ? head : match
   )
 }
+
+/** The value of a single-quoted JS string literal body (`It\'s` → `It's`). */
+export function unescapeLiteral(body) {
+  return body.replace(/\\(u\{[0-9a-fA-F]+\}|u[0-9a-fA-F]{4}|x[0-9a-fA-F]{2}|.)/g, (_, esc) => {
+    if (esc[0] === 'u') return String.fromCodePoint(parseInt(esc.replace(/[u{}]/g, ''), 16))
+    if (esc[0] === 'x') return String.fromCharCode(parseInt(esc.slice(1), 16))
+    return { n: '\n', t: '\t', r: '\r' }[esc] ?? esc
+  })
+}

@@ -27,6 +27,7 @@ import {
   lintEnglish,
   findRedundantFallbacks,
   stripFallbacks,
+  unescapeLiteral,
 } from './i18n-check.core.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -138,7 +139,7 @@ async function reportMissing(en, usages, backfill) {
       process.exit(1)
     }
     for (const { key, fallback } of withFallback) {
-      setByPath(en, key, fallback)
+      setByPath(en, key, unescapeLiteral(fallback))
     }
     await writeFile(EN_PATH, `${JSON.stringify(en, null, 2)}\n`, 'utf8')
     console.log(`[i18n-check] backfilled ${withFallback.length} keys into en.json`)

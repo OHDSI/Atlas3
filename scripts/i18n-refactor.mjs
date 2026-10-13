@@ -13,6 +13,9 @@
  *                                       record <code> translations as in sync in the
  *                                       manifest when their English/translation pair
  *                                       already existed at <git-ref> (e.g. the import)
+ *   node scripts/i18n-refactor.mjs recover <code> <git-ref>
+ *                                       fill <code> keys that have no translation with
+ *                                       the <git-ref> translation of identical English
  *
  * Add --dry-run to print what would change without writing.
  */
@@ -31,6 +34,7 @@ import {
   convertLegacyPlaceholders,
   restoreKeys,
   adoptableKeys,
+  recoverByText,
 } from './i18n-refactor.core.mjs'
 
 const LOCALES_DIR = join(ROOT, 'src', 'locales')
@@ -162,6 +166,28 @@ async function cmdAdopt(code, ref, dryRun) {
   await saveAll(all)
 }
 
+async function cmdRecover(code, ref, dryRun) {
+  if (!code || code === SOURCE_LOCALE || !ref) throw new Error('usage: i18n-refactor.mjs recover <code> <git-ref>')
+  const all = await loadAll()
+  const en = translatableSource(all.locales[SOURCE_LOCALE])
+  const refManifest = gitJson(ref, 'src/locales/.i18n-manifest.json')[code]
+  const pairs = recoverByText(
+    en,
+    flattenStrings(all.locales[code]),
+    flattenStrings(gitJson(ref, 'src/locales/en.json')),
+    flattenStrings(gitJson(ref, `src/locales/${code}.json`)),
+    refManifest
+  )
+  log(`[i18n-refactor] ${code}: recovered ${pairs.length} translations from ${ref}`)
+  if (dryRun) return
+  const manifest = (all.manifest[code] ||= {})
+  for (const [key, value] of pairs) {
+    setByPath(all.locales[code], key, value)
+    manifest[key] = hashSource(en.get(key))
+  }
+  await saveAll(all)
+}
+
 async function main() {
   const [cmd, ...rest] = process.argv.slice(2)
   const dryRun = rest.includes('--dry-run')
@@ -171,8 +197,9 @@ async function main() {
   else if (cmd === 'placeholders') await cmdPlaceholders(dryRun)
   else if (cmd === 'restore') await cmdRestore(args[0], args[1], dryRun)
   else if (cmd === 'adopt') await cmdAdopt(args[0], args[1], dryRun)
+  else if (cmd === 'recover') await cmdRecover(args[0], args[1], dryRun)
   else {
-    console.error('usage: i18n-refactor.mjs prune | rename <map.json> | placeholders | restore <map.json> <ref> | adopt <code> <ref> [--dry-run]')
+    console.error('usage: i18n-refactor.mjs prune | rename <map.json> | placeholders | restore <map.json> <ref> | adopt <code> <ref> | recover <code> <ref> [--dry-run]')
     process.exit(1)
   }
 }
