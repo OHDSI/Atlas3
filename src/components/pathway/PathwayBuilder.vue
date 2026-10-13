@@ -12,6 +12,7 @@
       <input
         :value="currentPathway?.name ?? ''"
         :placeholder="t('home.newEntityNames.pathway', 'New pathway').value"
+        :aria-label="t('columns.name', 'Name').value"
         :readonly="!currentPathway || !canEdit"
         class="pathway-builder__title-input"
         data-testid="pathway-builder-name"
