@@ -208,6 +208,7 @@
     <DataSourceDialog
       v-model="showDialog"
       :source-key="editingSourceKey"
+      :source-id="editingSourceId"
       @saved="handleDialogSaved"
       @deleted="handleDialogDeleted"
       @error="handleDialogError"
@@ -317,6 +318,7 @@ const errorMessage = ref('')
 // Dialog state
 const showDialog = ref(false)
 const editingSourceKey = ref<string | null>(null)
+const editingSourceId = ref<number | null>(null)
 
 const showAccessDialog = ref(false)
 const accessSourceId = ref<number | null>(null)
@@ -508,6 +510,7 @@ async function clearServerCache() {
  */
 function openCreateDialog() {
   editingSourceKey.value = null
+  editingSourceId.value = null
   showDialog.value = true
 }
 
@@ -516,6 +519,7 @@ function openCreateDialog() {
  */
 function openEditDialog(source: DataSourceDisplay) {
   editingSourceKey.value = source.sourceKey
+  editingSourceId.value = source.sourceId
   showDialog.value = true
 }
 

@@ -66,12 +66,12 @@ const details = {
   daimons: [{ daimonType: 'CDM', tableQualifier: 'demo_cdm', priority: 0 }],
 }
 
-async function mountDialog(sourceKey: string | null) {
+async function mountDialog(sourceKey: string | null, sourceId: number | null = null) {
   const pinia = createPinia()
   setActivePinia(pinia)
   const wrapper = mount(DataSourceDialog, {
     global: { plugins: [vuetify, pinia], stubs: makeStubs() },
-    props: { modelValue: false, sourceKey },
+    props: { modelValue: false, sourceKey, sourceId },
   })
   // The dialog loads the source on open, so it has to transition closed → open.
   await wrapper.setProps({ modelValue: true })
@@ -150,10 +150,11 @@ describe('DataSourceDialog save', () => {
   })
 
   it('updates through the numeric sourceId, not the sourceKey prop', async () => {
-    const wrapper = await mountDialog('CDM')
+    const wrapper = await mountDialog('CDM', 42)
 
     await clickSave(wrapper)
 
+    expect(getSourceDetails).toHaveBeenCalledWith(42)
     expect(createSource).not.toHaveBeenCalled()
     expect(updateSource).toHaveBeenCalledTimes(1)
     const [sourceId, request] = updateSource.mock.calls[0]
@@ -165,7 +166,7 @@ describe('DataSourceDialog save', () => {
 
   it('reports the failure and stays open when the save is rejected', async () => {
     updateSource.mockRejectedValue(new Error('Unable to update data source. Please try again.'))
-    const wrapper = await mountDialog('CDM')
+    const wrapper = await mountDialog('CDM', 42)
 
     await clickSave(wrapper)
 

@@ -162,7 +162,7 @@ describe('SourceService', () => {
 
       const result = await getSourceDetails(1)
 
-      expect(httpGet).toHaveBeenCalledWith('/source/1')
+      expect(httpGet).toHaveBeenCalledWith('/source/details/1')
       expect(result.sourceName).toBe('Test CDM')
       expect(result.sourceKey).toBe('TEST_CDM')
     })

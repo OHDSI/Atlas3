@@ -760,6 +760,7 @@ describe('DataSourcesSection.vue', () => {
       const dialog = wrapper.findComponent(DataSourceDialog)
       expect(dialog.props('modelValue')).toBe(true)
       expect(dialog.props('sourceKey')).toBeNull()
+      expect(dialog.props('sourceId')).toBeNull()
     })
 
     it('opens the source dialog for the source being edited', async () => {
@@ -767,6 +768,7 @@ describe('DataSourcesSection.vue', () => {
 
       const dialog = wrapper.findComponent(DataSourceDialog)
       expect(dialog.props('sourceKey')).toBe('SYNPUF-5PCT')
+      expect(dialog.props('sourceId')).toBe(2)
     })
 
     it('reloads the list and reports success when the dialog saves', async () => {
