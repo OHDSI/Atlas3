@@ -3,12 +3,16 @@
  * Manages CDM sources and generation jobs
  */
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useSourceAccessFor } from '@/composables/useEntityAccess'
 import type { CDMSource, GenerationJob, CohortGenerationInfoList } from '@/models/webapi.types'
 import { fetchCDMSources } from '@/services/source.service'
 import { generateCohort as generateCohortRequest, getCohortGenerationInfo } from '@/services/cohort-definition.service'
 import { useExecutionPolling } from '@/composables/useExecutionPolling'
 import { logger } from '@/utils/logger'
+
+const SELECTION_STORAGE_KEYS = ['selectedVocabulary', 'selectedEvidence', 'selectedResults']
 
 export const useWebAPIStore = defineStore('webapi', () => {
   // State
@@ -16,6 +20,11 @@ export const useWebAPIStore = defineStore('webapi', () => {
   const selectedSource = ref<string | null>(null)
   const generationJobs = ref<Map<number, GenerationJob>>(new Map())
   const isLoadingSources = ref(false)
+
+  const authStore = useAuthStore()
+  const sourceAccess = useSourceAccessFor()
+  // admin:source can list sources it cannot query, so selection must only consider readable ones.
+  const isReadable = (s: CDMSource) => sourceAccess.canRead(s.sourceId)
 
   // Getters
   const sourcesList = computed(() => sources.value)
@@ -42,7 +51,9 @@ export const useWebAPIStore = defineStore('webapi', () => {
   }
 
   const vocabularySources = computed(() => {
-    return sources.value.filter(s => s.daimons?.some(d => d.daimonType === 'Vocabulary'))
+    return sources.value.filter(
+      s => isReadable(s) && s.daimons?.some(d => d.daimonType === 'Vocabulary')
+    )
   })
 
   /**
@@ -51,7 +62,9 @@ export const useWebAPIStore = defineStore('webapi', () => {
    * they occur in that data.
    */
   const resultsSources = computed(() => {
-    return sources.value.filter(s => s.daimons?.some(d => d.daimonType === 'Results'))
+    return sources.value.filter(
+      s => isReadable(s) && s.daimons?.some(d => d.daimonType === 'Results')
+    )
   })
 
   /** Returns validated vocabulary source key, auto-correcting invalid localStorage values */
@@ -70,7 +83,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
       logger.warn('WebAPIStore', 'Stored vocabulary source not found', { stored: storedVocab })
     }
 
-    const firstVocabSource = vocabularySources.value[0]
+    const firstVocabSource = priorityDefault('Vocabulary')
     if (firstVocabSource) {
       localStorage.setItem('selectedVocabulary', firstVocabSource.sourceKey)
       return firstVocabSource.sourceKey
@@ -79,13 +92,55 @@ export const useWebAPIStore = defineStore('webapi', () => {
     return null
   }
 
+  /** Highest daimon priority of the given type wins; list order breaks ties. */
+  function priorityDefault(daimonType: string): CDMSource | undefined {
+    const priorityOf = (s: CDMSource) =>
+      Math.max(...s.daimons.filter(d => d.daimonType === daimonType).map(d => d.priority ?? 0))
+    return sources.value
+      .filter(s => isReadable(s) && s.daimons?.some(d => d.daimonType === daimonType))
+      .reduce<CDMSource | undefined>(
+        (best, s) => (!best || priorityOf(s) > priorityOf(best) ? s : best),
+        undefined
+      )
+  }
+
+  /** Drops stored selections the current user can no longer see so defaults apply again. */
+  function reconcileStoredSelections(): void {
+    const stored: Array<[string, string]> = [
+      ['selectedVocabulary', 'Vocabulary'],
+      ['selectedEvidence', 'CEM'],
+      ['selectedResults', 'Results'],
+    ]
+    for (const [storageKey, daimonType] of stored) {
+      const value = localStorage.getItem(storageKey)
+      if (!value) continue
+      const visible = sources.value.some(
+        s =>
+          s.sourceKey === value &&
+          isReadable(s) &&
+          s.daimons?.some(d => d.daimonType === daimonType)
+      )
+      if (!visible) {
+        logger.info('WebAPIStore', 'Stored source no longer available, resetting', {
+          storageKey,
+          value,
+        })
+        localStorage.removeItem(storageKey)
+      }
+    }
+  }
+
   // Actions
   function setSources(sourcesList: CDMSource[]) {
     sources.value = sourcesList
-    // Auto-select first source if none selected
-    if (!selectedSource.value && sourcesList.length > 0) {
-      selectedSource.value = sourcesList[0]?.sourceKey ?? null
-      logger.debug('WebAPIStore', 'Auto-selected first source', {
+    // An empty list is usually a failed fetch; keep the user's choices.
+    if (sourcesList.length === 0) return
+    reconcileStoredSelections()
+    const stillVisible = sourcesList.some(s => s.sourceKey === selectedSource.value && isReadable(s))
+    if (!stillVisible) {
+      selectedSource.value =
+        priorityDefault('Results')?.sourceKey ?? sourcesList.find(isReadable)?.sourceKey ?? null
+      logger.debug('WebAPIStore', 'Auto-selected default source', {
         selected: selectedSource.value,
         sources: sourcesList.map(s => s.sourceKey),
       })
@@ -138,6 +193,27 @@ export const useWebAPIStore = defineStore('webapi', () => {
       setLoadingSources(false)
     }
   }
+
+  /** True when any tracked selection (stored or in-memory) is a known source the user can no longer read. */
+  function hasLostSelectedSourceAccess(): boolean {
+    const keys = [
+      selectedSource.value,
+      ...SELECTION_STORAGE_KEYS.map(k => localStorage.getItem(k)),
+    ]
+    return keys.some(key => {
+      const source = key ? sources.value.find(s => s.sourceKey === key) : undefined
+      return !!source && !isReadable(source)
+    })
+  }
+
+  // The user/me poll replaces permissions and entityAccess each cycle, so this runs
+  // every refresh but only fetches when a selected source lost read access or the user changed.
+  watch(
+    [() => authStore.user?.login ?? null, () => authStore.permissions, () => authStore.entityAccess],
+    ([login], [previousLogin]) => {
+      if (login !== previousLogin || hasLostSelectedSourceAccess()) void fetchSources()
+    }
+  )
 
   /**
    * Generate cohort for a specific data source.

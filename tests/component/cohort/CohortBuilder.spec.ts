@@ -119,6 +119,10 @@ vi.mock('@/composables/useEntityAccess', async () => {
       canWrite: computed(() => true),
       canDelete: computed(() => true),
     }),
+    useSourceAccessFor: () => ({
+      canRead: () => true,
+      canWrite: () => true,
+    }),
   }
 })
 

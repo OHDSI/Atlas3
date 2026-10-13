@@ -13,6 +13,10 @@ vi.mock('@/services/source.service', () => ({
   fetchCDMSources: vi.fn(),
 }))
 
+vi.mock('@/config/auth.config', () => ({
+  getAuthConfig: () => ({ userAuthenticationEnabled: false }),
+}))
+
 vi.mock('@/utils/logger', () => ({
   logger: {
     debug: vi.fn(),
@@ -208,23 +212,44 @@ describe('WebAPI Store', () => {
       expect(store.selectedSource).toBe('source1')
     })
 
-    it('should not auto-select if source already selected', () => {
+    it('should keep the selected source when it is still visible', () => {
       const store = useWebAPIStore()
-      store.setSelectedSource('existing-source')
+      store.setSelectedSource('source2')
 
       const sources: CDMSource[] = [
-        {
-          sourceId: 1,
-          sourceKey: 'source1',
-          sourceName: 'Test Source 1',
-          sourceDialect: 'postgresql',
-          daimons: [],
-        },
+        { sourceId: 1, sourceKey: 'source1', sourceName: 'S1', sourceDialect: 'postgresql', daimons: [] },
+        { sourceId: 2, sourceKey: 'source2', sourceName: 'S2', sourceDialect: 'postgresql', daimons: [] },
       ]
 
       store.setSources(sources)
 
-      expect(store.selectedSource).toBe('existing-source')
+      expect(store.selectedSource).toBe('source2')
+    })
+
+    it('should re-select by Results priority when the selected source is no longer visible', () => {
+      const store = useWebAPIStore()
+      store.setSelectedSource('gone')
+      const results = (priority: number) => [
+        { sourceDaimonId: priority, daimonType: 'Results', tableQualifier: 'r', priority },
+      ]
+
+      store.setSources([
+        { sourceId: 1, sourceKey: 'low', sourceName: 'L', sourceDialect: 'postgresql', daimons: results(0) },
+        { sourceId: 2, sourceKey: 'high', sourceName: 'H', sourceDialect: 'postgresql', daimons: results(1) },
+      ])
+
+      expect(store.selectedSource).toBe('high')
+    })
+
+    it('should drop stored selections that are not in the new source list', () => {
+      localStorage.setItem('selectedVocabulary', 'gone')
+      const store = useWebAPIStore()
+
+      store.setSources([
+        { sourceId: 1, sourceKey: 'a', sourceName: 'A', sourceDialect: 'postgresql', daimons: [] },
+      ])
+
+      expect(localStorage.getItem('selectedVocabulary')).toBeNull()
     })
 
     it('should handle empty sources array', () => {
