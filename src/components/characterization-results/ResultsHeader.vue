@@ -58,7 +58,7 @@
         </div>
         <div class="results-header__field">
           <div class="results-header__label">
-            {{ tv('columns.results') }}
+            {{ tv('columns.totalRows') }}
           </div>
           <div class="results-header__value">
             {{ resultCount }}

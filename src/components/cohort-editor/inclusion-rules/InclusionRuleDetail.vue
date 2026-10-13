@@ -25,7 +25,7 @@
           <div
             class="rule-detail__header-info"
             v-bind="menuProps"
-            :title="t('common.edit').value"
+            :title="t('cohortDefinitions.inclusionRules.editRule').value"
           >
             <div class="rule-detail__name">
               {{ ruleName || t('inclusionRail.unnamedRule').value }}
@@ -71,7 +71,7 @@
           size="sm"
           icon="mdi-delete"
           color="error"
-          :title="t('common.delete').value"
+          :title="t('cohortDefinitions.inclusionRules.deleteRule').value"
           data-testid="inclusion-detail-remove"
           @click="emit('remove')"
         />

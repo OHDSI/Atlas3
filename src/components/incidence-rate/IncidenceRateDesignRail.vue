@@ -35,7 +35,7 @@
       data-testid="ir-rail-panel-outcomes"
     >
       <header class="rail-section__header">
-        <span class="text-eyebrow">{{ t('columns.outcomes').value }}</span>
+        <span class="text-eyebrow">{{ t('ir.editor.outcomeCohorts').value }}</span>
         <AtlasButton
           variant="ghost"
           size="sm"

@@ -8,7 +8,7 @@
         <th class="pathway-cohort-list__id">
           {{ t('columns.id') }}
         </th>
-        <th>{{ t('columns.name') }}</th>
+        <th>{{ t('pathways.cohortList.displayName') }}</th>
         <th class="pathway-cohort-list__actions" />
       </tr>
     </thead>

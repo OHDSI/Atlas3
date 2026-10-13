@@ -61,18 +61,18 @@ const emit = defineEmits<Emits>()
 const { t } = useI18n()
 
 // Concept facets reuse the column labels the concept tables already translate.
-const labelKeys: Record<string, [string, string]> = {
-  vocabularyId: ['columns.vocabulary', 'Vocabulary'],
-  domainId: ['columns.domain', 'Domain'],
-  standardConcept: ['columns.standard', 'Standard'],
-  conceptClassId: ['columns.class', 'Class'],
-  invalidReason: ['columns.validity', 'Validity'],
-  match: ['common.match', 'Match'],
+const labelKeys: Record<string, string> = {
+  vocabularyId: 'columns.vocabulary',
+  domainId: 'columns.domain',
+  standardConcept: 'columns.standard',
+  conceptClassId: 'columns.class',
+  invalidReason: 'columns.validity',
+  match: 'common.match',
 }
 
 function facetLabel(key: FacetKey): string {
   const entry = labelKeys[key]
-  if (entry) return t(entry[0], entry[1]).value
+  if (entry) return t(entry).value
   return props.facets.find(f => f.key === key)?.label ?? key
 }
 </script>

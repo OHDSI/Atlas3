@@ -46,6 +46,7 @@ import { useCharacterizationStore } from '@/stores/characterization'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
 import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
+import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -242,7 +243,7 @@ describe('CharacterizationsView', () => {
     mounted = await mountView()
 
     // After i18n migration, the empty-state label uses the generic "No data" string
-    expect(mounted.wrapper.text()).toContain('No data')
+    expect(mounted.wrapper.text()).toContain(tr('cc.list.empty'))
   })
 
   it('search input drives the store filter (after debounce)', async () => {

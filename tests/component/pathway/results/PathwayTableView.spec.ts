@@ -41,6 +41,6 @@ describe('PathwayTableView', () => {
     expect(w.text()).toContain(tr('pathway.results.allPathways'))
     expect(w.text()).toContain(tr('pathway.results.countsByRank'))
     expect(w.text()).toContain(tr('pathway.results.eventCohortCounts'))
-    expect(w.text()).toContain(tr('columns.distinctEventCohorts'))
+    expect(w.text()).toContain(tr('pathway.results.distinctEventCohortCounts'))
   })
 })

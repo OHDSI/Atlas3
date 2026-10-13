@@ -25,7 +25,7 @@
           <AtlasListItem
             v-for="type in criteriaTypes"
             :key="type"
-            :title="tv(criteriaTypeLabelKeys[type])"
+            :title="tv(CRITERIA_TYPE_BY_KEY[type].i18nKey)"
             @click="addCriteria(type)"
           />
         </AtlasList>
@@ -75,10 +75,11 @@ import {
   AtlasListItem,
   AtlasMenu,
 } from '@/components/ui'
-import type { Criteria } from '@/models/circe-types'
+import type { Criteria, CriteriaWrapperKey } from '@/models/circe-types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 import CriteriaRenderer from '@/components/circe/criteria/CriteriaRenderer.vue'
 import { useI18n } from '@/composables/useI18n'
+import { CRITERIA_TYPE_BY_KEY } from '@/components/circe/criteria/criteria-registry'
 
 const { tv } = useI18n()
 
@@ -94,25 +95,23 @@ const emit = defineEmits<{
   'clear-concept-set': []
 }>()
 
-const criteriaTypeLabelKeys = {
-  ConditionOccurrence: 'criteria.conditionOccurrence.name',
-  ConditionEra: 'criteria.conditionEra.name',
-  DrugExposure: 'criteria.drugExposure.name',
-  DoseEra: 'criteria.doseEra.name',
-  DeviceExposure: 'criteria.deviceExposure.name',
-  DrugEra: 'criteria.drugEra.name',
-  Measurement: 'criteria.measurement.name',
-  Observation: 'criteria.observation.name',
-  ObservationPeriod: 'criteria.observationPeriod.name',
-  PayerPlanPeriod: 'criteria.payerPlanPeriod.name',
-  ProcedureOccurrence: 'criteria.procedureOccurrence.name',
-  Specimen: 'criteria.specimen.name',
-  VisitDetail: 'criteria.visitDetail.name',
-  VisitOccurrence: 'criteria.visitOccurrence.name',
-  Death: 'criteria.death.name',
-} as const
-
-const criteriaTypes = Object.keys(criteriaTypeLabelKeys) as (keyof typeof criteriaTypeLabelKeys)[]
+const criteriaTypes: CriteriaWrapperKey[] = [
+  'ConditionOccurrence',
+  'ConditionEra',
+  'DrugExposure',
+  'DoseEra',
+  'DeviceExposure',
+  'DrugEra',
+  'Measurement',
+  'Observation',
+  'ObservationPeriod',
+  'PayerPlanPeriod',
+  'ProcedureOccurrence',
+  'Specimen',
+  'VisitDetail',
+  'VisitOccurrence',
+  'Death',
+]
 
 const criteriaFactories: Record<string, () => Criteria> = {
   ConditionOccurrence: () => ({ ConditionOccurrence: {} }),

@@ -115,7 +115,7 @@ const itemsPerPage = ref(10)
 const itemsPerPageOptions = [10, 25, 50]
 
 const title = computed(() => props.title ?? t('components.incidenceRate.selectCohorts').value)
-const confirmLabel = computed(() => props.confirmLabel ?? t('common.add').value)
+const confirmLabel = computed(() => props.confirmLabel ?? t('common.addCohort').value)
 const headers = computed(() => [
   { title: t('columns.id').value, key: 'id', width: '96px' },
   { title: t('columns.name').value, key: 'name' },

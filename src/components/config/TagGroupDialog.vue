@@ -197,7 +197,7 @@ async function handleSubmit() {
     // Map Zod errors to form fields
     result.error.errors.forEach(err => {
       const field = err.path[0] as string
-      errors.value[field] = err.message
+      errors.value[field] = tv(err.message)
     })
     return
   }

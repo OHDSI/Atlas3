@@ -85,7 +85,7 @@
         <div class="cs-picker__toolbar">
           <AtlasTextField
             v-model="searchTerm"
-            :placeholder="t('common.search').value"
+            :placeholder="t('cs.searchPlaceholder').value"
             prepend-icon="mdi-magnify"
             clearable
             variant="outlined"

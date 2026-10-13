@@ -97,7 +97,6 @@
     "feedback": "意见反馈",
     "jobs": "执行历史",
     "pathways": "队列路径",
-    "profiles": "数据概要",
     "incidenceRates": "Incidence Rates",
     "analysis": "分析"
   },
@@ -815,7 +814,6 @@
     "message": "讯息",
     "modified": "修改",
     "name": "名称",
-    "outcomes": "结果队列",
     "p25": "四分位数25％",
     "p75": "四分位数75％",
     "pct": "百分比",
@@ -943,7 +941,7 @@
     "clearAllSelections": "清除所有选择",
     "domains": "域",
     "headingTitle": "搜索",
-    "noResultsFoundFor": "找不到结果",
+    "noResultsFoundFor": "找不到“{query}”的结果",
     "nonStandard": "非标准",
     "placeholder": "在这里输入您的搜索",
     "standard": "标准",
@@ -1020,7 +1018,6 @@
   },
   "cc": {
     "title": "队列特征",
-    "new": "新",
     "tabs": {
       "featureAnalyses": {
         "title": "特征分析",
@@ -1070,7 +1067,8 @@
       "featureExtractionPresetName": "FeatureExtraction预设名称：",
       "preset": "预设值",
       "saveError": "尝试保存特征分析时发生错误。"
-    }
+    },
+    "newCharacterization": "新建特征描述"
   },
   "home": {
     "description": "ATLAS作为<a href='http://www.ohdsi.org' target='_new'>OHDSI</a>的开发的开源应用程序，旨在为患者水平的数据和分析提供集成界面。",
@@ -1689,6 +1687,11 @@
     },
     "specimenType": {
       "label": "标本类型"
+    }
+  },
+  "auth": {
+    "credentials": {
+      "username": "用户名"
     }
   }
 }

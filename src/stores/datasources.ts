@@ -2,7 +2,7 @@
  * Data Sources Pinia Store
  */
 import { defineStore } from 'pinia'
-import { ref, computed, triggerRef } from 'vue'
+import { ref, computed, triggerRef, watch } from 'vue'
 import type { DataSource, ReportData } from '@/models/datasource.types'
 import { isPluginReportType, type AnyReportType, type ReportType } from '@/models/datasource.types'
 import {
@@ -12,6 +12,7 @@ import {
 } from '@/services/datasource.service'
 import { logger } from '@/utils/logger'
 import { useI18n } from '@/composables/useI18n'
+import { useLocaleStore } from '@/stores/locale'
 
 export const useDataSourcesStore = defineStore('datasources', () => {
   const { tv } = useI18n()
@@ -202,7 +203,19 @@ export const useDataSourcesStore = defineStore('datasources', () => {
 
   function clearCache() {
     reportCache.value.clear()
+    triggerRef(reportCache)
   }
+
+  // Report data carries translated axis/series labels (datasource-formatters),
+  // so cached reports go stale when the language changes. Refetch the open one.
+  watch(
+    () => useLocaleStore().locale,
+    () => {
+      if (reportCache.value.size === 0) return
+      clearCache()
+      void retryFetchReport()
+    }
+  )
 
   function retryFetchSources() {
     return fetchDataSources()

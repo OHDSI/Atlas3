@@ -95,7 +95,6 @@
     "cohortdefinitions": "Когорты",
     "characterizations": "Характеризации",
     "pathways": "Исходы когорты",
-    "profiles": "Профили",
     "jobs": "Задания",
     "feedback": "Обратная связь",
     "incidenceRates": "Инцидентность",
@@ -810,7 +809,6 @@
     "results": "Результаты",
     "target": "Цель",
     "comparator": "Компаратор",
-    "outcomes": "Результаты",
     "description": "Описание",
     "executionId": "ID генерации",
     "startDate": "Дата начала",
@@ -952,7 +950,7 @@
     "standard": "Стандартный",
     "nonStandard": "Нестандартный",
     "classification": "Классификация",
-    "noResultsFoundFor": "Ничего не найдено для",
+    "noResultsFoundFor": "Ничего не найдено для «{query}»",
     "viewCountMessage": "Отображать количество записей (RC, DRC) для:"
   },
   "cs": {
@@ -1023,7 +1021,6 @@
   },
   "cc": {
     "title": "Характеризация Когорт",
-    "new": "Создать",
     "tabs": {
       "featureAnalyses": {
         "title": "Функциональные анализы",
@@ -1073,7 +1070,8 @@
       "copiedToClipboard": "Скопировано!",
       "availableVariables": "Доступные переменные",
       "availableVariablesNote": "переменные, определенные в параметрах Характеризации"
-    }
+    },
+    "newCharacterization": "Новая характеристика"
   },
   "home": {
     "description": "АТЛАС это продукт с открытым исходным кодом, разработанный в рамках <a href=\"http://www.ohdsi.org\" target=\"_new\">OHDSI</a>, предоставляющий доступ к данным пациентов и аналитике.",
@@ -1692,6 +1690,11 @@
     },
     "specimenType": {
       "label": "v"
+    }
+  },
+  "auth": {
+    "credentials": {
+      "username": "Пользователь"
     }
   }
 }

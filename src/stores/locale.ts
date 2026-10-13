@@ -76,7 +76,7 @@ function deepMergeTranslations(base: Translations, override: Translations): Tran
 }
 
 function withFallback(bundle: Translations): Translations {
-  return deepMergeTranslations(EN_TRANSLATIONS, bundle)
+  return bundle === EN_TRANSLATIONS ? bundle : deepMergeTranslations(EN_TRANSLATIONS, bundle)
 }
 
 export const useLocaleStore = defineStore('locale', {
@@ -110,7 +110,7 @@ export const useLocaleStore = defineStore('locale', {
     async initialize(): Promise<void> {
       try {
         // Load English translations immediately (bundled)
-        await this.loadFallbackTranslations()
+        this.loadFallbackTranslations()
 
         this.availableLocales = [...BUNDLED_LOCALES]
 
@@ -144,7 +144,7 @@ export const useLocaleStore = defineStore('locale', {
       const bundledLoader = bundledTranslationLoaders[locale]
       if (!bundledLoader) {
         logger.warn('LocaleStore', `No bundled translations for ${locale}, keeping English`)
-        await this.loadFallbackTranslations()
+        this.loadFallbackTranslations()
         return
       }
 
@@ -166,7 +166,7 @@ export const useLocaleStore = defineStore('locale', {
       } catch (error) {
         logger.error('LocaleStore', `Failed to load bundled translations for ${locale}`, error)
         this.error = `Failed to load ${locale} translations. Falling back to English.`
-        await this.loadFallbackTranslations()
+        this.loadFallbackTranslations()
       } finally {
         this.loading = false
       }
@@ -224,7 +224,7 @@ export const useLocaleStore = defineStore('locale', {
     /**
      * Reset to the bundled English translations
      */
-    async loadFallbackTranslations(): Promise<void> {
+    loadFallbackTranslations(): void {
       this.translations = EN_TRANSLATIONS
     },
 

@@ -96,7 +96,12 @@
     "cannotUndo": "この操作は元に戻せません。",
     "between": "の間",
     "startDate": "開始日",
-    "endDate": "終了日"
+    "endDate": "終了日",
+    "exportCsv": "CSV をエクスポート",
+    "addCohort": "コホートを追加",
+    "addFeatureAnalysis": "特徴量解析を追加",
+    "exportDesign": "デザインをエクスポート",
+    "importDesign": "デザインをインポート"
   },
   "commonErrors": {
     "noSources": "現在の WebAPI にはソースが定義されていません。<br/><a href=\"#/configure\">構成</a>ページで1つ以上追加してください。",
@@ -116,7 +121,6 @@
     "incidenceRates": "発生率",
     "jobs": "ジョブ",
     "pathways": "コホートパスウェイ",
-    "profiles": "プロファイル",
     "analysis": "解析"
   },
   "route": {
@@ -1021,7 +1025,6 @@
     "message": "メッセージ",
     "modified": "変更日時",
     "name": "名前",
-    "outcomes": "アウトカム",
     "p25": "P25",
     "p75": "P75",
     "patients": "患者数",
@@ -1065,7 +1068,8 @@
     "outcome": "アウトカム",
     "createdBy": "作成者",
     "role": "ロール",
-    "source": "ソース"
+    "source": "ソース",
+    "totalRows": "総行数"
   },
   "dataSources": {
     "dashboardReport": {
@@ -1155,7 +1159,7 @@
     "clearAllSelections": "すべての選択をクリア",
     "domains": "ドメイン",
     "headingTitle": "検索",
-    "noResultsFoundFor": "次の検索結果が見つかりませんでした:",
+    "noResultsFoundFor": "「{query}」の検索結果が見つかりませんでした",
     "nonStandard": "非標準",
     "placeholder": "ここに検索語を入力してください",
     "standard": "標準",
@@ -1261,7 +1265,6 @@
   },
   "cc": {
     "title": "コホート特性化",
-    "new": "新規",
     "modals": {
       "selectFeatureAnalyses": "リンクする特徴分析を選択"
     },
@@ -1320,7 +1323,16 @@
       "messages": {
         "noIssues": "問題はありません。デザインは有効です。"
       },
-      "saveError": "特性評価の保存に失敗しました"
+      "saveError": "特性評価の保存に失敗しました",
+      "conceptSets": {
+        "empty": "コンセプトセットがありません。"
+      },
+      "cohorts": {
+        "emptyLinked": "リンクされたコホートはありません。"
+      },
+      "featureAnalyses": {
+        "emptyLinked": "リンクされた特徴量解析はありません。"
+      }
     },
     "fa": {
       "tabs": {
@@ -1338,7 +1350,8 @@
       "saveError": "特徴量解析の保存中にエラーが発生しました。",
       "statType": "統計タイプ",
       "customSqlTitle": "カスタムSQL"
-    }
+    },
+    "newCharacterization": "新規特性化"
   },
   "home": {
     "description": "ATLASは<a href='http://www.ohdsi.org' target='_new'>OHDSI</a>の一環として開発されたオープンソースアプリケーションであり、患者レベルのデータと分析への統一されたインターフェースを提供することを目的としています。",
@@ -1365,7 +1378,8 @@
       "stratifyCriteria": "層別化条件",
       "outcomes": "アウトカム",
       "noConceptSets": "この発生率にはコンセプトセットが添付されていません。",
-      "timeAtRiskEndBeforeStart": "両方が同じ日付を基準とする場合、リスク期間の終了は開始より後である必要があります"
+      "timeAtRiskEndBeforeStart": "両方が同じ日付を基準とする場合、リスク期間の終了は開始より後である必要があります",
+      "loading": "発生率を読み込み中…"
     },
     "results": {
       "cases": "症例数",
@@ -1398,6 +1412,9 @@
       "selectToTitle": "ターゲットと転帰を選択してください",
       "treemap": "ツリーマップ",
       "table": "テーブル"
+    },
+    "list": {
+      "empty": "発生率はまだありません。"
     }
   },
   "profiles": {
@@ -1775,7 +1792,10 @@
     "enterUsernameToImpersonate": "なりすますユーザー名を入力",
     "runAsWarning": "別のユーザーとして実行すると、そのユーザーの権限と識別情報が引き継がれます。すべての操作はターゲットユーザーとして実行されます。",
     "failedToRunAsUser": "別ユーザーとしての実行に失敗しました",
-    "failedToExitRunAs": "別ユーザー実行の終了に失敗しました"
+    "failedToExitRunAs": "別ユーザー実行の終了に失敗しました",
+    "credentials": {
+      "username": "ユーザー名"
+    }
   },
   "conceptSets": {
     "conceptCount": "{count} 件のコンセプト",

@@ -22,7 +22,7 @@
       class="char-conceptsets-tab__empty"
       data-testid="char-conceptsets-empty"
     >
-      {{ t('common.noData') }}
+      {{ t('cc.viewEdit.conceptSets.empty') }}
     </div>
     <AtlasList
       v-else

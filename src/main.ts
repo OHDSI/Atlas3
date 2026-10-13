@@ -4,9 +4,10 @@
  */
 import { createApp, watch } from 'vue'
 import { createPinia } from 'pinia'
+import { useI18n } from '@/composables/useI18n'
 import router from './router'
 import { createVuetifyInstance } from './plugins/vuetify'
-import { setChartPalette, setChartTheme } from '@/ui/chart-config'
+import { setChartLabelResolver, setChartPalette, setChartTheme } from '@/ui/chart-config'
 import { pluginConfigService } from './services/PluginConfigService'
 import { useThemeStore } from './stores/theme'
 import App from './App.vue'
@@ -130,6 +131,11 @@ async function initializeApp() {
 
   // Install Pinia (state management)
   app.use(createPinia())
+
+  // Default chart labels come from @/ui, which stays i18n-free for the
+  // @ohdsi/atlas-ui library; the host translates them.
+  const { tv } = useI18n()
+  setChartLabelResolver(key => tv(key))
 
   // Install Vue Router
   app.use(router)

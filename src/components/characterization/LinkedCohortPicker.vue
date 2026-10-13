@@ -17,7 +17,7 @@
         data-testid="linked-cohort-picker-add"
         @click="openDialog"
       >
-        {{ t('common.add') }}
+        {{ t('common.addCohort') }}
       </AtlasButton>
     </div>
 
@@ -26,7 +26,7 @@
       class="linked-cohort-picker__empty"
       data-testid="linked-cohort-picker-empty"
     >
-      {{ t('common.noData') }}
+      {{ t('cc.viewEdit.cohorts.emptyLinked') }}
     </div>
 
     <AtlasList

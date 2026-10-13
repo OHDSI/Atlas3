@@ -21,7 +21,7 @@
     <template #primary-action>
       <AtlasButton
         icon="mdi-plus"
-        :aria-label="t('cc.new').value"
+        :aria-label="t('cc.newCharacterization').value"
         data-testid="characterizations-create"
         :disabled="!canCreate"
         @click="handleCreate"
@@ -44,7 +44,7 @@
       :items="paginatedCharacterizations"
       :loading="loading"
       :items-per-page="itemsPerPage"
-      :empty-text="t('common.noData').value"
+      :empty-text="t('cc.list.empty').value"
       testid="characterizations-table"
       :can-copy-item="item => canCopy && !!item.id"
       :can-delete-item="item => entityAccess.canDelete(item.id)"

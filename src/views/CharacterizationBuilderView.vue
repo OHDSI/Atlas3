@@ -130,12 +130,12 @@
             <span class="d-none d-md-inline">{{ t('common.cancel').value }}</span>
           </AtlasButton>
           <AtlasTooltip
-            :text="t('common.import').value"
+            :text="t('common.importDesign').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.import').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.importDesign').value }"
                 icon="mdi-upload"
                 variant="text"
                 size="sm"
@@ -146,7 +146,7 @@
             </template>
           </AtlasTooltip>
           <AtlasTooltip
-            :text="t('common.export').value"
+            :text="t('common.exportDesign').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
@@ -452,7 +452,7 @@ const isEditing = computed<boolean>(() => Boolean(props.id))
 
 const titleText = computed(() => {
   if (!isEditing.value) {
-    return t('cc.new').value
+    return t('cc.newCharacterization').value
   }
   const name = draft.value.name?.trim()
   if (name && name.length > 0) return name

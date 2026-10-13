@@ -55,7 +55,7 @@
                 icon="mdi-refresh"
                 @click="handleReset"
               >
-                {{ t('common.refresh') }}
+                {{ t('common.reloadPage') }}
               </AtlasButton>
               <AtlasButton
                 variant="ghost"

@@ -394,22 +394,11 @@ function loadPluginMenuItems() {
 }
 
 function getNavTitle(key: string): string {
-  const defaults: Record<string, string> = {
-    'navigation.conceptsets': 'Concepts',
-    'navigation.cohortdefinitions': 'Cohorts',
-    'navigation.profiles': 'Profiles',
-    'navigation.datasources': 'Data Sources',
-    'navigation.analysis': 'Analysis',
-    'navigation.characterizations': 'Characterizations',
-    'navigation.featureAnalyses': 'Feature Analyses',
-    'navigation.pathways': 'Pathways',
-    'navigation.incidenceRates': 'Incidence Rates',
-  }
   // If key starts with a capital letter, it's likely a direct title (from plugin)
   if (key && key.length > 0 && key[0] && key[0] === key[0].toUpperCase()) {
     return key
   }
-  return t(key, defaults[key] || key).value
+  return t(key).value
 }
 
 const handleLogoClick = async () => {

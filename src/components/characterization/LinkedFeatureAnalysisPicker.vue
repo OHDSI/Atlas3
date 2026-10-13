@@ -19,7 +19,7 @@
         data-testid="linked-fa-picker-add"
         @click="openDialog"
       >
-        {{ t('common.add') }}
+        {{ t('common.addFeatureAnalysis') }}
       </AtlasButton>
     </div>
 
@@ -28,7 +28,7 @@
       class="linked-fa-picker__empty"
       data-testid="linked-fa-picker-empty"
     >
-      {{ t('common.noData') }}
+      {{ t('cc.viewEdit.featureAnalyses.emptyLinked') }}
     </div>
 
     <AtlasList
@@ -130,7 +130,7 @@
           data-testid="linked-fa-picker-confirm"
           @click="confirmAdd"
         >
-          {{ t('common.add') }}
+          {{ t('common.addFeatureAnalysis') }}
         </AtlasButton>
       </template>
     </AtlasDialog>

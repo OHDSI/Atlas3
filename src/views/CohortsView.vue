@@ -64,7 +64,7 @@
             <AtlasButton
               variant="secondary"
               icon="mdi-upload-outline"
-              :aria-label="t('common.import').value"
+              :aria-label="t('cohortDefinitions.importFromJson').value"
               :disabled="!canCreateCohort"
               data-testid="import-cohort-btn"
               @click="handleImportCohort"
@@ -170,7 +170,7 @@
 
         <AtlasTextField
           v-model="importName"
-          :label="t('columns.name').value"
+          :label="t('cohortDefinitions.cohortName').value"
           variant="outlined"
           :disabled="importing"
           class="mb-3"
@@ -278,7 +278,7 @@
       >
         <AtlasTextField
           v-model="newCohortName"
-          :label="t('columns.name').value"
+          :label="t('cohortDefinitions.cohortName').value"
           variant="outlined"
           @keyup.enter="confirmCreateCohort"
         />

@@ -112,7 +112,7 @@ describe('IncidenceRateBuilder', () => {
     })
     await flushPromises()
 
-    expect(w.findComponent({ name: 'AnalysisBuilderShell' }).props('title')).toBe(tr('navigation.incidenceRates'))
+    expect(w.findComponent({ name: 'AnalysisBuilderShell' }).props('title')).toBe(tr('ir.editor.analysisTitle'))
     expect(w.find('[data-testid="ir-builder-name"]').exists()).toBe(false)
     expect(w.find('[data-testid="ir-builder-description"]').exists()).toBe(false)
     expect(w.findComponent({ name: 'IncidenceRateWorkbench' }).exists()).toBe(false)

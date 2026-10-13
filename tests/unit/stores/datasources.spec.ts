@@ -5,6 +5,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useDataSourcesStore } from '@/stores/datasources'
+import { useLocaleStore } from '@/stores/locale'
+import { nextTick } from 'vue'
 import type { DataSource } from '@/models/datasource.types'
 
 // Mock dependencies
@@ -345,6 +347,21 @@ describe('DataSources Store', () => {
 
       expect(getDashboardReport).toHaveBeenCalledWith('TEST_CDM_1')
       expect(store.reportCache.has('1-dashboard')).toBe(true)
+    })
+
+    it('refetches the open report when the language changes, since its labels are translated', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      store.selectedReportType = 'dashboard'
+      vi.mocked(getDashboardReport).mockResolvedValue({ summary: {} })
+      await store.fetchReport('dashboard')
+      expect(getDashboardReport).toHaveBeenCalledTimes(1)
+
+      useLocaleStore().locale = 'ja'
+      await nextTick()
+
+      expect(getDashboardReport).toHaveBeenCalledTimes(2)
     })
 
     it('should fetch clinical domain report', async () => {

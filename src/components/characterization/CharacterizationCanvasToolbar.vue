@@ -93,7 +93,7 @@
       data-testid="char-toolbar-export"
       @click="$emit('export')"
     >
-      {{ t('cc.viewEdit.results.exportAll').value }}
+      {{ t('common.exportCsv').value }}
     </AtlasButton>
   </div>
 </template>

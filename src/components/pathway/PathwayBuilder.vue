@@ -123,12 +123,12 @@
             </template>
           </AtlasTooltip>
           <AtlasTooltip
-            :text="t('common.import').value"
+            :text="t('common.importDesign').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.import').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.importDesign').value }"
                 icon="mdi-upload"
                 variant="text"
                 size="sm"
@@ -139,12 +139,12 @@
             </template>
           </AtlasTooltip>
           <AtlasTooltip
-            :text="t('common.export').value"
+            :text="t('common.exportDesign').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.export').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.exportDesign').value }"
                 icon="mdi-download"
                 variant="text"
                 size="sm"

@@ -281,7 +281,7 @@ const emit = defineEmits<Emits>()
 const { t, locale } = useI18n()
 
 const filtersLabel = t('common.filters')
-const searchLabel = t('common.search')
+const searchLabel = t('cs.searchPlaceholder')
 const authorLabel = t('columns.author')
 const createdLabel = t('columns.created')
 const modifiedLabel = t('columns.modified')

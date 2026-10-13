@@ -37,7 +37,7 @@
     <AtlasDialog
       v-model="showEditDialog"
       eyebrow="COHORT"
-      :title="t('columns.name').value"
+      :title="t('cohortDefinitions.editName').value"
       max-width="600"
       @close="showEditDialog = false"
     >

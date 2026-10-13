@@ -40,7 +40,7 @@
       </div>
       <div class="char-run-meta__field">
         <div class="char-run-meta__label">
-          {{ tv('columns.results') }}
+          {{ tv('columns.totalRows') }}
         </div>
         <div class="char-run-meta__value">
           {{ resultCount.toLocaleString() }}

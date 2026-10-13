@@ -10,7 +10,7 @@
     v-else
     class="state"
   >
-    {{ t('common.loading') }}
+    {{ t('ir.editor.loading') }}
   </div>
 </template>
 

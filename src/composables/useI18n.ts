@@ -62,20 +62,12 @@ function getTranslation(
     translationParams = params
   }
 
+  // Every locale bundle is deep-merged over English in the store, so a miss
+  // here is a key en.json lacks too.
   let translation = getNestedValue(localeStore.translations, key)
 
-  // Fallback to English
-  if (!translation) {
-    const englishBundle = localeStore.translationCache.get('en')
-    if (englishBundle) {
-      translation = getNestedValue(englishBundle.bundle.translations, key)
-    }
-
-    // Log missing translation in dev mode
-    // Only warn if translations have been initialized to avoid noise during app startup
-    if (!translation && localeStore.initialized) {
-      logger.warn('i18n', `Missing translation for key: "${key}" in locale: ${localeStore.locale}`)
-    }
+  if (!translation && localeStore.initialized) {
+    logger.warn('i18n', `Missing translation for key: "${key}" in locale: ${localeStore.locale}`)
   }
 
   // Fallback to default value or key itself

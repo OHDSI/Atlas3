@@ -122,7 +122,7 @@
             mdi-database-off-outline
           </AtlasIcon>
           <div class="analysis-data-table__empty-title">
-            {{ emptyText ?? t('common.noData').value }}
+            {{ emptyText ?? t('components.analysisDataTable.empty').value }}
           </div>
           <slot name="empty-action" />
         </div>

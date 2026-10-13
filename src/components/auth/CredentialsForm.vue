@@ -6,8 +6,8 @@
   >
     <AtlasTextField
       v-model="credentials.username"
-      :label="provider.loginPlaceholder || t('columns.login').value"
-      :placeholder="provider.loginPlaceholder || t('columns.login').value"
+      :label="provider.loginPlaceholder || t('auth.credentials.username').value"
+      :placeholder="provider.loginPlaceholder || t('auth.credentials.usernamePlaceholder').value"
       variant="outlined"
       prepend-icon="mdi-account-outline"
       autocomplete="username"

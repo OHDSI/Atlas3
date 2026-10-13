@@ -42,7 +42,7 @@
       :items="paginatedIncidenceRates"
       :loading="loading"
       :items-per-page="itemsPerPage"
-      :empty-text="t('common.noData').value"
+      :empty-text="t('ir.list.empty').value"
       testid="incidence-rates-table"
       :can-copy-item="item => canCopy && !!item.id"
       :can-delete-item="item => entityAccess.canDelete(item.id)"

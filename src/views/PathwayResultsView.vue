@@ -43,7 +43,7 @@
       v-if="loading"
       class="pathway-results__state"
     >
-      {{ t('common.loading').value }}
+      {{ t('pathway.results.loading').value }}
     </div>
     <template v-else-if="design && results && targetGroup">
       <div

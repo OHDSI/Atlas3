@@ -10,7 +10,7 @@
         type="text"
         class="cohort-builder-view__title-input"
         :placeholder="placeholder"
-        :aria-label="t('columns.name').value"
+        :aria-label="t('cohortDefinitions.cohortName').value"
         @input="onTitleInput"
       >
     </template>

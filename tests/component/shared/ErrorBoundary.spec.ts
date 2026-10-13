@@ -237,7 +237,7 @@ describe('ErrorBoundary', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const reloadButton = buttons.find(btn => btn.text().includes(tr('common.refresh')))
+      const reloadButton = buttons.find(btn => btn.text().includes(tr('common.reloadPage')))
 
       expect(reloadButton).toBeDefined()
       expect(reloadButton?.props('prependIcon')).toBe('mdi-refresh')
@@ -306,7 +306,7 @@ describe('ErrorBoundary', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const reloadButton = buttons.find(btn => btn.text().includes(tr('common.refresh')))
+      const reloadButton = buttons.find(btn => btn.text().includes(tr('common.reloadPage')))
 
       await reloadButton?.trigger('click')
 
@@ -432,7 +432,7 @@ describe('ErrorBoundary', () => {
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
       const buttonTexts = buttons.map(btn => btn.text())
 
-      expect(buttonTexts).toContain(tr('common.refresh'))
+      expect(buttonTexts).toContain(tr('common.reloadPage'))
       expect(buttonTexts).toContain(tr('common.goBack'))
     })
   })

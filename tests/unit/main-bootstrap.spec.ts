@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 vi.mock('@/ui/chart-config', () => ({
   setChartPalette: vi.fn(),
   setChartTheme: vi.fn(),
+  setChartLabelResolver: vi.fn(),
 }))
 
 vi.mock('@/config/app-config.loader', () => ({
@@ -116,5 +117,17 @@ describe('main.ts bootstrap', () => {
     await import('@/main')
 
     await vi.waitFor(() => expect(setChartTheme).toHaveBeenCalledWith('light'), { timeout: 60000 })
+  }, 90000)
+
+  it('registers the host translator for default chart labels', async () => {
+    vi.resetModules()
+
+    const { setChartLabelResolver } = await import('@/ui/chart-config')
+
+    await import('@/main')
+
+    await vi.waitFor(() => expect(setChartLabelResolver).toHaveBeenCalledWith(expect.any(Function)), {
+      timeout: 60000,
+    })
   }, 90000)
 })

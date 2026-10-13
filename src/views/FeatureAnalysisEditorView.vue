@@ -744,7 +744,7 @@ const isEditing = computed<boolean>(() => Boolean(props.id))
 const titleText = computed(() => {
   return isEditing.value
     ? t('featureAnalyses.editor.title.edit').value
-    : t('cc.new').value
+    : t('cc.tabs.featureAnalyses.createLabel').value
 })
 
 // ---------------------------------------------------------------------------

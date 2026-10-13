@@ -152,7 +152,13 @@
     "endDate": "end date",
     "dayCountOne": "1 day",
     "dayCount": "{count} days",
-    "notAvailable": "N/A"
+    "notAvailable": "N/A",
+    "exportCsv": "Export CSV",
+    "addCohort": "Add cohort",
+    "addFeatureAnalysis": "Add feature analysis",
+    "exportDesign": "Export design",
+    "importDesign": "Import design",
+    "reloadPage": "Reload Page"
   },
   "commonErrors": {
     "noSources": "The current WebAPI has no sources defined.<br/>Please add one or more on <a href=\"#/configure\">configuration</a> page.",
@@ -178,7 +184,6 @@
     "incidenceRates": "Incidence Rates",
     "jobs": "Jobs",
     "pathways": "Cohort Pathways",
-    "profiles": "Profiles",
     "docs": "User manual",
     "analysis": "Analysis"
   },
@@ -1310,6 +1315,9 @@
       "ageGroupGender": "Age Group / Gender",
       "year": "Year",
       "prevalencePer1000": "Prevalence Per 1000 People"
+    },
+    "analysisDataTable": {
+      "empty": "No items yet."
     }
   },
   "characterizations": {
@@ -1371,7 +1379,8 @@
   },
   "featureAnalyses": {
     "list": {
-      "deleteConfirm": "Delete feature analysis '{name}'?"
+      "deleteConfirm": "Delete feature analysis '{name}'?",
+      "empty": "No feature analyses yet."
     },
     "create": {
       "prevalence": "Prevalence Criteria",
@@ -1457,7 +1466,6 @@
     "message": "Message",
     "modified": "Modified",
     "name": "Name",
-    "outcomes": "Outcomes",
     "p25": "P25",
     "p75": "P75",
     "patients": "Patients",
@@ -1502,7 +1510,8 @@
     "outcome": "Outcome",
     "createdBy": "Created By",
     "role": "Role",
-    "source": "Source"
+    "source": "Source",
+    "totalRows": "Total rows"
   },
   "dataSources": {
     "dashboardReport": {
@@ -1611,7 +1620,7 @@
     "clearAllSelections": "Clear All Selections",
     "domains": "Domains",
     "headingTitle": "Search",
-    "noResultsFoundFor": "No results found for",
+    "noResultsFoundFor": "No results found for “{query}”",
     "nonStandard": "Non-Standard",
     "placeholder": "Type your search here",
     "standard": "Standard",
@@ -1739,11 +1748,11 @@
         "recommendations": "recommendations"
       },
       "loadingRecommendedConcepts": "Loading Recommended Concepts"
-    }
+    },
+    "searchPlaceholder": "Search concept sets…"
   },
   "cc": {
     "title": "Cohort Characterizations",
-    "new": "New",
     "modals": {
       "selectFeatureAnalyses": "Select feature analyses to link"
     },
@@ -1839,7 +1848,16 @@
       "messages": {
         "noIssues": "No issues. Design is valid."
       },
-      "saveError": "Failed to save characterization"
+      "saveError": "Failed to save characterization",
+      "conceptSets": {
+        "empty": "No concept sets."
+      },
+      "cohorts": {
+        "emptyLinked": "No cohorts linked."
+      },
+      "featureAnalyses": {
+        "emptyLinked": "No feature analyses linked."
+      }
     },
     "fa": {
       "tabs": {
@@ -1862,6 +1880,10 @@
       "statType": "Stat Type",
       "customSqlTitle": "Custom SQL",
       "copySqlTemplateFailed": "Failed to copy SQL template"
+    },
+    "newCharacterization": "New Characterization",
+    "list": {
+      "empty": "No characterizations yet."
     }
   },
   "home": {
@@ -1900,7 +1922,10 @@
       "timeAtRiskCohortEnd": "Cohort end",
       "outcomes": "Outcomes",
       "noConceptSets": "This incidence rate has no concept sets attached.",
-      "timeAtRiskEndBeforeStart": "Time-at-risk end must be after start when both reference the same date"
+      "timeAtRiskEndBeforeStart": "Time-at-risk end must be after start when both reference the same date",
+      "analysisTitle": "Incidence rate analysis",
+      "outcomeCohorts": "Outcome cohorts",
+      "loading": "Loading incidence rate…"
     },
     "results": {
       "cases": "Cases",
@@ -1934,6 +1959,9 @@
       "selectToTitle": "Pick a target and outcome",
       "treemap": "Treemap",
       "table": "Table"
+    },
+    "list": {
+      "empty": "No incidence rates yet."
     }
   },
   "profiles": {
@@ -2210,7 +2238,15 @@
       "unrecognizedField": "unrecognized field",
       "didYouMean": "(did you mean \"{suggestion}\"?)"
     },
-    "nameRequired": "Cohort name is required"
+    "nameRequired": "Cohort name is required",
+    "editName": "Edit Cohort Name",
+    "searchPlaceholder": "Search cohorts…",
+    "inclusionRules": {
+      "deleteRule": "Delete rule",
+      "editRule": "Edit rule name and description"
+    },
+    "cohortName": "Cohort name",
+    "importFromJson": "Import cohort from JSON"
   },
   "const": {
     "entityName": {
@@ -2397,7 +2433,11 @@
     },
     "oauthNoToken": "Authentication failed - no token received",
     "authenticationFailed": "Authentication failed",
-    "noTokenReceived": "No token received from server"
+    "noTokenReceived": "No token received from server",
+    "credentials": {
+      "usernamePlaceholder": "Enter username",
+      "username": "Username"
+    }
   },
   "conceptSets": {
     "conceptCount": "{count} concept(s)",
@@ -2689,7 +2729,9 @@
       "countsByRank": "Counts by Rank",
       "eventCohortCounts": "Event Cohort Counts",
       "title": "Pathway results",
-      "loadFailed": "Failed to load results"
+      "loadFailed": "Failed to load results",
+      "distinctEventCohortCounts": "Distinct Event Cohort Counts",
+      "loading": "Loading results…"
     },
     "workbench": {
       "noRunsYet": "No runs yet",
@@ -2795,6 +2837,12 @@
     "editor": {
       "previewBanner": "Previewing version — saving will create a new pathway",
       "noPathwayLoaded": "No pathway loaded"
+    },
+    "cohortList": {
+      "displayName": "Display name"
+    },
+    "list": {
+      "empty": "No pathways yet."
     }
   },
   "criteriaAttributes": {

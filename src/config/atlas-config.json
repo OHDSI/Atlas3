@@ -468,8 +468,8 @@
         "name": "Drug Source Concept",
         "description": "Filter by drug source concept",
         "type": "concept",
-        "nameKey": "const.eventsList.addSourceConcept.title_drugexposure",
-        "descriptionKey": "const.eventsList.addSourceConcept.desc_drugexposure"
+        "nameKey": "criteriaAttributes.drugSourceConcept.label",
+        "descriptionKey": "criteriaAttributes.drugSourceConcept.description"
       },
       {
         "id": "nested",

@@ -16,7 +16,7 @@
       class="char-t1__empty"
       data-testid="char-t1-empty"
     >
-      {{ tv('common.noData') }}
+      {{ tv('cc.viewEdit.workbench.empty.noDataTitle') }}
     </div>
 
     <div

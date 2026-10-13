@@ -97,7 +97,6 @@
     "feedback": "피드백",
     "jobs": "실행내역",
     "pathways": "코호트 경로",
-    "profiles": "프로필",
     "incidenceRates": "Incidence Rates",
     "analysis": "분석"
   },
@@ -815,7 +814,6 @@
     "message": "메시지",
     "modified": "수정일",
     "name": "이름",
-    "outcomes": "결과",
     "p25": "분위수 25%",
     "p75": "분위수 75%",
     "pct": "퍼센트",
@@ -943,7 +941,7 @@
     "clearAllSelections": "모든 선택 지우기",
     "domains": "도메인",
     "headingTitle": "검색",
-    "noResultsFoundFor": "에 대한 결과가 없습니다.",
+    "noResultsFoundFor": "“{query}”에 대한 결과가 없습니다.",
     "nonStandard": "비표준",
     "placeholder": "여기에 검색어 입력",
     "standard": "표준",
@@ -1020,7 +1018,6 @@
   },
   "cc": {
     "title": "코호트 특성",
-    "new": "새",
     "tabs": {
       "featureAnalyses": {
         "title": "특성 분석",
@@ -1070,7 +1067,8 @@
       "featureExtractionPresetName": "FeatureExtraction 사전 설정 이름 :",
       "preset": "사전 설정",
       "saveError": "기능(Feature 분석을 저장하는 중에 오류가 발생했습니다."
-    }
+    },
+    "newCharacterization": "새 특성"
   },
   "home": {
     "description": "ATLAS는 환자 수준의 데이터 및 분석에 통합된 인터페이스를 제공하기 위해 <a href='http://www.ohdsi.org' target='_new'>OHDSI</a>의 일부로 개발된 오픈 소스 응용 프로그램입니다.",
@@ -1689,6 +1687,11 @@
     },
     "specimenType": {
       "label": "검체(Specimen) 타입"
+    }
+  },
+  "auth": {
+    "credentials": {
+      "username": "사용자 이름"
     }
   }
 }

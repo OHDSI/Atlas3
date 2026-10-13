@@ -70,7 +70,7 @@
       :items="paginatedFeatureAnalyses"
       :loading="loading"
       :items-per-page="itemsPerPage"
-      :empty-text="t('common.noData').value"
+      :empty-text="t('featureAnalyses.list.empty').value"
       testid="feature-analyses-table"
       :can-open-item="item => !isPreset(item)"
       :can-copy-item="item => !isPreset(item) && canCopy && !!item.id"
