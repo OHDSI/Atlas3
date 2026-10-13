@@ -39,6 +39,7 @@ vi.mock('@/plugins/core/pluginRuntime', () => ({
 import { mountRootParcel } from 'single-spa'
 import { logger } from '@/utils/logger'
 import { storageManager } from '@/services/auth/storageManager'
+import { storageManager } from '@/services/auth/storageManager'
 import { ensurePluginRuntime } from '@/plugins/core/pluginRuntime'
 
 function makePluginModule() {
@@ -92,6 +93,8 @@ describe('parcelLoader', () => {
     systemImportMock.mockReset()
     ;(mountRootParcel as unknown as Mock).mockClear()
     ;(logger.debug as Mock).mockClear()
+    // afterEach's restoreAllMocks drops the factory's return value.
+    ;(storageManager.getToken as Mock).mockReturnValue('test-token')
     ;(ensurePluginRuntime as Mock).mockReset().mockImplementation(() =>
       Promise.resolve(window.System)
     )
@@ -99,6 +102,22 @@ describe('parcelLoader', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+  })
+
+  it('gives plugins host translations and warns once about unknown host keys', async () => {
+    registerTestPlugin('p-i18n')
+    systemImportMock.mockResolvedValue(makePluginModule())
+
+    await mountPluginParcel('p-i18n', dom)
+    const [, parcelProps] = (mountRootParcel as unknown as Mock).mock.calls[0]
+
+    expect(parcelProps.t('common.save')).toBe('Save')
+    expect(parcelProps.t('plugin.only.key', 'Plugin default')).toBe('Plugin default')
+    expect(parcelProps.t('plugin.only.key')).toBe('plugin.only.key')
+    const warnings = (logger.warn as Mock).mock.calls.filter(([, msg]) =>
+      String(msg).includes('"plugin.only.key"')
+    )
+    expect(warnings).toHaveLength(1)
   })
 
   it('mounts a parcel via System.import on success', async () => {

@@ -5,8 +5,20 @@ import { useLocaleStore } from '@/stores/locale'
 import { logger } from '@/utils/logger'
 import { ensurePluginRuntime } from '@/plugins/core/pluginRuntime'
 
+// Host keys are not a stable plugin API (they get renamed and pruned with the
+// host UI), so a plugin asking for one that does not exist is worth a dev
+// warning — once per key — instead of silently rendering its default.
+const warnedMissingKeys = new Set<string>()
+
 function buildI18n() {
   const localeStore = useLocaleStore()
+  const missing = (key: string, defaultValue?: string): string => {
+    if (import.meta.env.DEV && !warnedMissingKeys.has(key)) {
+      warnedMissingKeys.add(key)
+      logger.warn('parcelLoader', `Plugin asked for unknown host i18n key "${key}"; ship plugin strings with the plugin`)
+    }
+    return defaultValue ?? key
+  }
   return (key: string, defaultValue?: string): string => {
     const parts = key.split('.')
     let cursor: unknown = localeStore.translations
@@ -14,10 +26,10 @@ function buildI18n() {
       if (cursor && typeof cursor === 'object' && part in (cursor as Record<string, unknown>)) {
         cursor = (cursor as Record<string, unknown>)[part]
       } else {
-        return defaultValue ?? key
+        return missing(key, defaultValue)
       }
     }
-    return typeof cursor === 'string' ? cursor : defaultValue ?? key
+    return typeof cursor === 'string' ? cursor : missing(key, defaultValue)
   }
 }
 

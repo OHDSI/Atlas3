@@ -9,6 +9,10 @@
  *   node scripts/i18n-refactor.mjs restore <map.json> <git-ref>
  *                                       re-add { newKey: oldKey } from an older commit,
  *                                       translations and manifest hashes included
+ *   node scripts/i18n-refactor.mjs adopt <code> <git-ref>
+ *                                       record <code> translations as in sync in the
+ *                                       manifest when their English/translation pair
+ *                                       already existed at <git-ref> (e.g. the import)
  *
  * Add --dry-run to print what would change without writing.
  */
@@ -16,7 +20,7 @@ import { readFile, writeFile, readdir } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
-import { flattenStrings, getByPath, setByPath, SOURCE_LOCALE } from './i18n-lib.mjs'
+import { flattenStrings, getByPath, setByPath, hashSource, translatableSource, SOURCE_LOCALE } from './i18n-lib.mjs'
 import { findUnused } from './i18n-usage.core.mjs'
 import { ROOT, sourceFiles, scanReferences } from './i18n-usage.mjs'
 import {
@@ -26,6 +30,7 @@ import {
   rewriteSource,
   convertLegacyPlaceholders,
   restoreKeys,
+  adoptableKeys,
 } from './i18n-refactor.core.mjs'
 
 const LOCALES_DIR = join(ROOT, 'src', 'locales')
@@ -56,10 +61,22 @@ async function saveAll({ locales, manifest }) {
 
 async function cmdPrune(dryRun) {
   const all = await loadAll()
-  const unused = findUnused([...flattenStrings(all.locales[SOURCE_LOCALE]).keys()], await scanReferences())
+  const en = all.locales[SOURCE_LOCALE]
+  const enKeys = [...flattenStrings(en).keys()]
+  const unused = findUnused(enKeys, await scanReferences())
   log(`[i18n-refactor] pruning ${unused.length} unused keys from ${Object.keys(all.locales).join(', ')}`)
+  // Translated keys en.json never had (left over from imported bundles).
+  const enSet = new Set(enKeys)
+  const orphans = {}
+  for (const [code, locale] of Object.entries(all.locales)) {
+    if (code === SOURCE_LOCALE) continue
+    orphans[code] = [...flattenStrings(locale).keys()].filter(key => !enSet.has(key))
+    if (orphans[code].length) log(`[i18n-refactor] ${code}: ${orphans[code].length} keys not in en.json`)
+  }
   if (dryRun) return
-  for (const [code, locale] of Object.entries(all.locales)) pruneKeys(locale, all.manifest[code], unused)
+  for (const [code, locale] of Object.entries(all.locales)) {
+    pruneKeys(locale, all.manifest[code], [...unused, ...(orphans[code] ?? [])])
+  }
   await saveAll(all)
 }
 
@@ -127,6 +144,24 @@ async function cmdRestore(mapPath, ref, dryRun) {
   await saveAll(all)
 }
 
+async function cmdAdopt(code, ref, dryRun) {
+  if (!code || code === SOURCE_LOCALE || !ref) throw new Error('usage: i18n-refactor.mjs adopt <code> <git-ref>')
+  const all = await loadAll()
+  const en = translatableSource(all.locales[SOURCE_LOCALE])
+  const keys = adoptableKeys(
+    en,
+    flattenStrings(all.locales[code]),
+    flattenStrings(gitJson(ref, 'src/locales/en.json')),
+    flattenStrings(gitJson(ref, `src/locales/${code}.json`))
+  )
+  const manifest = (all.manifest[code] ||= {})
+  const added = keys.filter(key => manifest[key] === undefined)
+  log(`[i18n-refactor] ${code}: ${added.length} translations adopted as in sync (${keys.length} matched ${ref})`)
+  if (dryRun) return
+  for (const key of added) manifest[key] = hashSource(en.get(key))
+  await saveAll(all)
+}
+
 async function main() {
   const [cmd, ...rest] = process.argv.slice(2)
   const dryRun = rest.includes('--dry-run')
@@ -135,8 +170,9 @@ async function main() {
   else if (cmd === 'rename') await cmdRename(args[0], dryRun)
   else if (cmd === 'placeholders') await cmdPlaceholders(dryRun)
   else if (cmd === 'restore') await cmdRestore(args[0], args[1], dryRun)
+  else if (cmd === 'adopt') await cmdAdopt(args[0], args[1], dryRun)
   else {
-    console.error('usage: i18n-refactor.mjs prune | rename <map.json> | placeholders | restore <map.json> <ref> [--dry-run]')
+    console.error('usage: i18n-refactor.mjs prune | rename <map.json> | placeholders | restore <map.json> <ref> | adopt <code> <ref> [--dry-run]')
     process.exit(1)
   }
 }

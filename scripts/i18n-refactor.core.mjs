@@ -131,3 +131,24 @@ export function restoreKeys(locale, manifest, oldLocale, oldManifest, pairs) {
     if (manifest && oldManifest?.[from] !== undefined) manifest[to] = oldManifest[from]
   }
 }
+
+/**
+ * Keys whose current (English, translation) pair also appears in a reference
+ * snapshot of the same locale — e.g. the commit that imported a bundle. Such a
+ * translation was made from exactly the English it sits next to today, so it
+ * can be recorded in the manifest as in sync. Anything else stays untracked
+ * and is reported as new by i18n-sync.
+ * @param {Map<string,string>} en       current English, flattened
+ * @param {Map<string,string>} locale   current translations, flattened
+ * @param {Map<string,string>} refEn    English at the reference commit
+ * @param {Map<string,string>} refLocale translations at the reference commit
+ */
+export function adoptableKeys(en, locale, refEn, refLocale) {
+  const pairs = new Set()
+  for (const [key, value] of refLocale) {
+    if (refEn.has(key)) pairs.add(`${refEn.get(key)}\u0000${value}`)
+  }
+  return [...locale.keys()].filter(
+    key => en.has(key) && pairs.has(`${en.get(key)}\u0000${locale.get(key)}`)
+  )
+}

@@ -8,6 +8,7 @@ import {
   rewriteSource,
   convertLegacyPlaceholders,
   restoreKeys,
+  adoptableKeys,
 } from '../i18n-refactor.core.mjs'
 
 describe('deleteByPath', () => {
@@ -158,5 +159,29 @@ describe('restoreKeys', () => {
       ['other.key', 'missing.key'],
     ])
     expect(locale).toEqual({ new: { key: 'current' } })
+  })
+})
+
+describe('adoptableKeys', () => {
+  const m = obj => new Map(Object.entries(obj))
+  const refEn = m({ 'a.save': 'Save', 'a.old': 'Delete' })
+  const refKo = m({ 'a.save': '저장', 'a.old': '삭제' })
+
+  it('adopts a translation whose English is unchanged since the reference', () => {
+    expect(adoptableKeys(m({ 'a.save': 'Save' }), m({ 'a.save': '저장' }), refEn, refKo)).toEqual(['a.save'])
+  })
+
+  it('adopts a renamed key when the same English/translation pair existed', () => {
+    expect(adoptableKeys(m({ 'b.remove': 'Delete' }), m({ 'b.remove': '삭제' }), refEn, refKo)).toEqual([
+      'b.remove',
+    ])
+  })
+
+  it('does not adopt when the English changed since the reference', () => {
+    expect(adoptableKeys(m({ 'a.save': 'Save changes' }), m({ 'a.save': '저장' }), refEn, refKo)).toEqual([])
+  })
+
+  it('ignores translations for keys that are no longer in English', () => {
+    expect(adoptableKeys(m({}), m({ 'a.save': '저장' }), refEn, refKo)).toEqual([])
   })
 })
