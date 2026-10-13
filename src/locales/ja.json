@@ -81,9 +81,11 @@
   },
   "commonErrors": {
     "noSources": "現在の WebAPI にはソースが定義されていません。<br/><a href=\"#/configure\">構成</a>ページで1つ以上追加してください。",
+    "nameRequired": "名前は必須です",
+    "somethingWentWrong": "問題が発生しました",
+    "exportFailed": "エクスポートに失敗しました",
     "copyFailed": "コピーに失敗しました",
-    "deleteFailed": "削除に失敗しました",
-    "nameRequired": "名前は必須です"
+    "deleteFailed": "削除に失敗しました"
   },
   "navigation": {
     "characterizations": "特性化",
@@ -187,13 +189,19 @@
       "tooltipRemaining": "残数",
       "tooltipExcludedAtStep": "このステップで除外"
     },
+    "access": {
+      "searchRoles": "ロールを検索..."
+    },
     "analysisExecution": {
       "buttons": {
         "generate": "生成"
       }
     },
     "atlasCohortEditor": {
-      "enterCohortPlaceholder": "ここにコホート定義の説明を入力してください"
+      "enterCohortNamePlaceholder": "コホート名を入力"
+    },
+    "episode": {
+      "title": "次のエピソード"
     },
     "expressionCartoonBindings": {
       "noInclusionRules": "包含ルールなし"
@@ -206,7 +214,8 @@
       "noCensoring": "打ち切りなし",
       "eraCollapseGap": "エラ統合のギャップサイズを指定:",
       "leftCensorStartDates": "コホート開始日を左側で打ち切る対象:",
-      "rightCensorEndDates": "コホート終了日を右側で打ち切る対象:"
+      "rightCensorEndDates": "コホート終了日を右側で打ち切る対象:",
+      "limitRestrictedEventsTo": "制限イベントを次に限定"
     },
     "conceptSet": {
       "addConcepts": "コンセプトを追加"
@@ -256,7 +265,7 @@
     },
     "generation": {
       "generate": "生成",
-      "pickAtLeastOneSourceAlert": "生成するソースを少なくとも1つ選択してください"
+      "noSourcesConfigured": "データソースが設定されていません。"
     },
     "nameValidation": {
       "empty": "名前が空です。"
@@ -723,12 +732,25 @@
     "navBar": {
       "mainNavigation": "メイン"
     },
+    "windowExpression": {
+      "before": "前",
+      "after": "後"
+    },
     "drugExposure": {
       "title": "次の薬剤曝露"
     },
     "correlatedCriteria": {
       "restrictToSameVisit": "同一の受診（Visit）の発生に限定する",
-      "allowEventsOutsideObservation": "観察期間外のイベントを許可する"
+      "allowEventsOutsideObservation": "観察期間外のイベントを許可する",
+      "distinctBy": "重複を除く基準",
+      "usingDistinctEvents": "重複を除いたイベントを使用",
+      "usingAllEvents": "すべてのイベントを使用",
+      "ofDistinct": "（重複を除く）",
+      "distinctColumn": {
+        "startDate": "開始日",
+        "standardConcept": "標準コンセプト",
+        "visit": "受診"
+      }
     },
     "deviceExposure": {
       "title": "次のデバイス曝露"
@@ -760,6 +782,12 @@
     "observationPeriod": {
       "title": "観察期間"
     },
+    "death": {
+      "title": "次の死亡"
+    },
+    "payerPlanPeriod": {
+      "title": "次の保険加入期間"
+    },
     "criteria": {
       "addAttribute": "属性を追加...",
       "selectConceptSet": "コンセプトセットを選択"
@@ -770,8 +798,11 @@
       "hideDesignPanel": "デザインパネルを隠す",
       "showDesignPanel": "デザインパネルを表示"
     },
-    "access": {
-      "searchRoles": "ロールを検索..."
+    "conceptSetDelete": {
+      "title": "コンセプトセットを削除しますか？",
+      "usageOne": "1 件の条件がまだ使用しています",
+      "usageMany": "{count} 件の条件がまだ使用しています",
+      "warning": "「{name}」を削除すると、それらの条件から解除され、コンセプトセットのない条件はそのドメイン全体に一致します。{usage}。"
     }
   },
   "characterizations": {
@@ -885,7 +916,6 @@
     "pct": "割合",
     "diff": "差分",
     "remain": "残り",
-    "permission": "権限",
     "personCount": "人数カウント",
     "rc": "RC",
     "refreshCache": "キャッシュを更新",
@@ -916,7 +946,8 @@
     "rcTooltip": "レコード数",
     "drcTooltip": "子孫レコード数",
     "pcTooltip": "人数",
-    "dpcTooltip": "子孫人数"
+    "dpcTooltip": "子孫人数",
+    "source": "ソース"
   },
   "dataSources": {
     "dashboardReport": {
@@ -991,7 +1022,8 @@
     "tabs": {
       "search": "検索"
     },
-    "viewCountMessage": "レコード数を表示する対象:"
+    "viewCountMessage": "レコード数を表示する対象:",
+    "minLengthHint": "{min} 文字以上入力してください"
   },
   "cs": {
     "browser": {
@@ -1010,7 +1042,8 @@
         "modalTitle": "コンセプトセットを選択してください",
         "vennDiagram": "ベン図",
         "vennDiagramTotalAmountConcepts": "コンセプトの総数: {count}"
-      }
+      },
+      "pageTitle": "コンセプト"
     },
     "manager": {
       "attemptingToFindMessage": "このコンセプトセットの最適な定義を検索しています...",
@@ -1069,19 +1102,22 @@
           }
         }
       },
-      "conceptSetOptimization": "コンセプトセットの最適化"
+      "conceptSetOptimization": "コンセプトセットの最適化",
+      "editorRailLabel": "コンセプトセットエディター",
+      "untitledPlaceholder": "無題のコンセプトセット",
+      "deleteConfirmation": "削除してもよろしいですか"
     }
   },
   "cc": {
     "title": "コホート特性化",
     "new": "新規",
     "modals": {
-      "chooseAFeatureAnalyses": "特徴量解析を選択..."
+      "selectFeatureAnalyses": "リンクする特徴分析を選択"
     },
     "tabs": {
       "featureAnalyses": {
-        "newLabel": "特徴量解析",
-        "title": "特徴量解析"
+        "title": "特徴量解析",
+        "createLabel": "新しい特徴分析"
       }
     },
     "viewEdit": {
@@ -1104,27 +1140,29 @@
       },
       "results": {
         "detail": {
-          "design": "デザイン:"
+          "designHash": "デザインハッシュ"
         },
         "exportAll": "すべてエクスポート",
         "filters": {
           "cohorts": "コホート"
         },
         "threshold": {
-          "label": "結果を次の有病率を超える共変量に絞り込む:"
+          "showAtLeast": "有病率が {n}% 以上の共変量を表示"
         }
       },
       "tabs": {
         "versions": "バージョン",
         "messages": "メッセージ"
-      }
+      },
+      "messages": {
+        "noIssues": "問題はありません。デザインは有効です。"
+      },
+      "saveError": "特性評価の保存に失敗しました"
     },
     "fa": {
       "tabs": {
         "conceptSets": "コンセプトセット"
       },
-      "analysisSql": "解析SQL:",
-      "analysisType": "解析タイプ:",
       "availableVariables": "利用可能な変数:",
       "availableVariablesNote": "コホート特性化パラメータで指定されたすべての変数",
       "copiedToClipboard": "クリップボードにコピーしました！",
@@ -1134,7 +1172,8 @@
       "domain": "ドメイン:",
       "featureExtractionPresetName": "FeatureExtractionプリセット名:",
       "preset": "プリセット",
-      "saveError": "特徴量解析の保存中にエラーが発生しました。"
+      "saveError": "特徴量解析の保存中にエラーが発生しました。",
+      "customSqlTitle": "カスタムSQL"
     }
   },
   "home": {
@@ -1150,14 +1189,15 @@
         "button": "ボキャブラリを検索"
       }
     },
-    "title": "ホーム"
+    "heroTitle": "患者レベルの分析を、ひとつに。"
   },
   "ir": {
     "deleteConfirmation": "発生率解析を削除しますか？警告: 削除は元に戻せません！",
     "editor": {
       "chooseACohort": "コホートを選択",
-      "stratifyCriteria": "層別化条件:",
-      "timeAtRiskWarningMessage": "エラー: リスク期間の開始がリスク期間の終了と同時かそれ以降のため、リスク期間がゼロになっています。開始オフセットが終了オフセットより大きくなるようにしてください。"
+      "stratifyCriteria": "層別化条件",
+      "noConceptSets": "この発生率にはコンセプトセットが添付されていません。",
+      "timeAtRiskEndBeforeStart": "両方が同じ日付を基準とする場合、リスク期間の終了は開始より後である必要があります"
     },
     "results": {
       "cases": "症例数",
@@ -1168,8 +1208,8 @@
       "running": "実行中",
       "started": "開始済み",
       "stratifyRule": "層別化ルール",
-      "summaryStatistics": "要約統計量:",
-      "timeAtRiskYears": "(年)"
+      "timeAtRiskYears": "人年",
+      "summaryRow": "要約"
     },
     "tabs": {
       "conceptSets": "コンセプトセット",
@@ -1192,19 +1232,12 @@
     }
   },
   "profiles": {
-    "clickHereToSelectACohort": "ここをクリックしてコホートを選択",
-    "personId": "人ID"
+    "personId": "人ID",
+    "noCohortSelected": "コホートが選択されていません"
   },
   "ple": {
     "spec": {
       "analysisSettings": "解析設定"
-    }
-  },
-  "reusables": {
-    "manager": {
-      "messages": {
-        "deleteConfirmation": "再利用可能アセットを削除しますか? 警告: 削除は元に戻せません!"
-      }
     }
   },
   "tagging": {
@@ -1300,11 +1333,6 @@
         "label": "パスワード:"
       },
       "source": {
-        "alerts": {
-          "save": {
-            "error": "データソースは保存されませんでした。{message}"
-          }
-        },
         "confirms": {
           "delete": "ソースを削除しますか？警告: 削除は元に戻せません！"
         },
@@ -1330,8 +1358,6 @@
     "title": "ライセンス契約"
   },
   "cohortDefinitions": {
-    "copyLoadForbidden": "このコホートを読み取る権限がありません。",
-    "deleteError": "コホートの削除に失敗しました。",
     "cohort": {
       "modals": {
         "cohortDefinition": {
@@ -1386,7 +1412,16 @@
     "newDefinition": "新規コホート",
     "newDefinitionTitle": "新しいコホート定義を作成",
     "noConceptSets": "エクスポートするコンセプトセットがありません",
-    "saveDefinitionBefore": "エクスポートする前に定義を保存する必要があります"
+    "copyLoadForbidden": "このコホートを読み取る権限がありません。",
+    "deleteError": "コホートの削除に失敗しました。",
+    "saveBeforeGenerate": "生成する前にコホートを保存してください。",
+    "conceptSetPicker": {
+      "empty": "コンセプトセットはまだありません。作成して始めましょう。"
+    },
+    "conceptSetsDialog": {
+      "title": "コンセプトセット",
+      "empty": "このコホートにはコンセプトセットがありません"
+    }
   },
   "const": {
     "disabledReason": {
@@ -1528,9 +1563,6 @@
         "title_visitDetail": "サービス提供場所距離条件を追加",
         "desc_visitDetail": "サービス提供場所から患者までの距離に基づいて来院詳細をフィルターします。"
       }
-    },
-    "newEntityNames": {
-      "source": "新規ソース"
     }
   },
   "notifications": {
@@ -1622,14 +1654,6 @@
     "age": {
       "name": "年齢",
       "description": "イベント発生時の年齢でフィルター"
-    }
-  },
-  "exitCriteria": {
-    "validation": {
-      "startGreaterThanEnd": "開始オフセットは終了オフセット以下にする必要があります"
-    },
-    "warnings": {
-      "legacyConflict": "このコホートにはレガシー形式と新しい終了条件形式の両方が含まれています。Atlas 形式を表示しています。"
     }
   },
   "config": {
@@ -1766,5 +1790,16 @@
     "light": "ライト",
     "dark": "ダーク",
     "system": "システム"
+  },
+  "censorWindow": {
+    "validation": {
+      "startAfterEnd": "開始日は終了日以前である必要があります"
+    }
+  },
+  "pathways": {
+    "editor": {
+      "previewBanner": "バージョンをプレビュー中 — 保存すると新しいパスウェイが作成されます",
+      "noPathwayLoaded": "パスウェイが読み込まれていません"
+    }
   }
 }

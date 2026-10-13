@@ -167,9 +167,6 @@
         "generate": "실행"
       }
     },
-    "atlasCohortEditor": {
-      "enterCohortPlaceholder": "여기에 코호트 정의에 대한 설명을 입력하세요."
-    },
     "cohortExpressionEditor": {
       "addTrimmingOptions": "트리밍 옵션 추가",
       "days": "일",
@@ -221,8 +218,7 @@
       "ignoreObservationPeriod": "관찰기록 기간을 무시함"
     },
     "generation": {
-      "generate": "생성",
-      "pickAtLeastOneSourceAlert": "생성할 소스를 하나 이상 선택하세요."
+      "generate": "생성"
     },
     "nameValidation": {
       "empty": "이름이 비어 있습니다."
@@ -784,7 +780,6 @@
     "pct": "퍼센트",
     "diff": "차이",
     "remain": "잔류",
-    "permission": "승인",
     "personCount": "환자수",
     "rc": "기록 개수",
     "refreshCache": "캐시 새로 고침",
@@ -946,12 +941,8 @@
   "cc": {
     "title": "코호트 특성",
     "new": "새",
-    "modals": {
-      "chooseAFeatureAnalyses": "기능(Feature) 분석 선택..."
-    },
     "tabs": {
       "featureAnalyses": {
-        "newLabel": "특성 분석",
         "title": "특성 분석"
       }
     },
@@ -974,15 +965,9 @@
         }
       },
       "results": {
-        "detail": {
-          "design": "설계:"
-        },
         "exportAll": "모두 내보내기",
         "filters": {
           "cohorts": "코호트"
-        },
-        "threshold": {
-          "label": "결과를 필터링하여 출현율(Prevalence)이 다음보다 큰 공변량 :"
         }
       },
       "tabs": {
@@ -994,8 +979,6 @@
       "tabs": {
         "conceptSets": "컨셉 세트"
       },
-      "analysisSql": "분석 SQL:",
-      "analysisType": "분석 타입:",
       "availableVariables": "사용 가능한 변수:",
       "availableVariablesNote": "코호트 특성(Characterization) 파라미터에 지정된 모든 변수",
       "copiedToClipboard": "클립 보드에 복사되었습니다!",
@@ -1020,15 +1003,13 @@
       "vocabulary": {
         "button": "어휘(Vocabulary) 검색"
       }
-    },
-    "title": "홈"
+    }
   },
   "ir": {
     "deleteConfirmation": "발생률(incidence rate) 분석을 삭제 하시겠습니까? 경고 : 경고 : 삭제시 다시 되돌릴 수 없습니다!",
     "editor": {
       "chooseACohort": "코호트 선택",
-      "stratifyCriteria": "계층화 기준 :",
-      "timeAtRiskWarningMessage": "오류 : 위험 측정 기간 (Time At Risk)이 위험 측정 기간 종료 시점 또는 그 이후에 시작되어 위험 측정기간이 0이됩니다. 시작 오프셋이 끝 오프셋보다 큰지 확인하십시오."
+      "stratifyCriteria": "계층화 기준 :"
     },
     "results": {
       "cases": "이벤트 환자수",
@@ -1039,7 +1020,6 @@
       "running": "실행중",
       "started": "생성 시작 시간",
       "stratifyRule": "계층화 규칙",
-      "summaryStatistics": "통계 요약:",
       "timeAtRiskYears": "(년수)"
     },
     "tabs": {
@@ -1048,19 +1028,11 @@
     }
   },
   "profiles": {
-    "clickHereToSelectACohort": "코호트를 선택하려면 여기를 클릭하십시오",
     "personId": "사람(Person) ID"
   },
   "ple": {
     "spec": {
       "analysisSettings": "분석 설정"
-    }
-  },
-  "reusables": {
-    "manager": {
-      "messages": {
-        "deleteConfirmation": "Are you sure?"
-      }
     }
   },
   "tagging": {
@@ -1148,11 +1120,6 @@
         "label": "비밀번호:"
       },
       "source": {
-        "alerts": {
-          "save": {
-            "error": "소스가 저장되지 않았습니다. {message}"
-          }
-        },
         "confirms": {
           "delete": "소스를 삭제 하시겠습니까? 경고 : 삭제시 다시 되돌릴 수 없습니다!"
         },
@@ -1215,8 +1182,7 @@
     },
     "newDefinition": "새 코호트",
     "newDefinitionTitle": "새로운 코호트 정의 만들기",
-    "noConceptSets": "내보낼 컨셉 세트 없음",
-    "saveDefinitionBefore": "내보내기 전에 저장해야 합니다"
+    "noConceptSets": "내보낼 컨셉 세트 없음"
   },
   "const": {
     "disabledReason": {
@@ -1358,9 +1324,6 @@
         "title_visitDetail": "Add Place of Service Distance Criteria",
         "desc_visitDetail": "Filter Visit detail based on distance from Place of Service to Patient."
       }
-    },
-    "newEntityNames": {
-      "source": "새로운 소스"
     }
   },
   "notifications": {

@@ -343,7 +343,6 @@
       "noPreviousRuns": "No previous runs."
     },
     "atlasCohortEditor": {
-      "enterCohortPlaceholder": "Enter a cohort definition description here",
       "enterCohortNamePlaceholder": "Enter cohort name"
     },
     "customEra": {
@@ -445,7 +444,6 @@
     },
     "generation": {
       "generate": "Generate",
-      "pickAtLeastOneSourceAlert": "Pick at least one source to generate",
       "unsavedChanges": "Save changes before running",
       "fixErrors": "Resolve validation errors before running",
       "noSourcesConfigured": "No data sources configured."
@@ -1204,7 +1202,6 @@
     "pct": "Pct",
     "diff": "Diff",
     "remain": "Remain",
-    "permission": "Permissions",
     "personCount": "Person Count",
     "rc": "RC",
     "refreshCache": "Refresh cache",
@@ -1469,12 +1466,10 @@
     "title": "Cohort Characterizations",
     "new": "New",
     "modals": {
-      "chooseAFeatureAnalyses": "Choose a Feature Analyses...",
       "selectFeatureAnalyses": "Select feature analyses to link"
     },
     "tabs": {
       "featureAnalyses": {
-        "newLabel": "Feature analysis",
         "title": "Feature analyses",
         "createLabel": "New Feature Analysis"
       }
@@ -1499,7 +1494,6 @@
       },
       "results": {
         "detail": {
-          "design": "Design:",
           "designHash": "Design Hash"
         },
         "exportAll": "Export all",
@@ -1507,7 +1501,6 @@
           "cohorts": "Cohorts"
         },
         "threshold": {
-          "label": "Filter results to covariates with prevalence greater than:",
           "showAtLeast": "Show covariates with prevalence ≥ {n}%"
         },
         "thresholdLabel": "Threshold ≥"
@@ -1573,8 +1566,6 @@
       "tabs": {
         "conceptSets": "Concept Sets"
       },
-      "analysisSql": "Analysis SQL:",
-      "analysisType": "Analysis type:",
       "availableVariables": "Available variables:",
       "availableVariablesNote": "all variables specified in Cohort Characterization parameters",
       "aggregate": "Aggregate",
@@ -1612,7 +1603,6 @@
         "button": "Search the Vocabulary"
       }
     },
-    "title": "Home",
     "newEntityNames": {
       "incidenceRate": "New incidence rate",
       "pathway": "New pathway",
@@ -1626,7 +1616,6 @@
     "editor": {
       "chooseACohort": "Choose a Cohort",
       "stratifyCriteria": "Stratify Criteria",
-      "timeAtRiskWarningMessage": "Error: Time at risk starts on or after time at risk end, resulting in zero time at risk.  Please ensure the start offset is greater than the end offset.",
       "timeAtRiskCohortStart": "Cohort start",
       "timeAtRiskCohortEnd": "Cohort end",
       "outcomes": "Outcomes",
@@ -1642,7 +1631,6 @@
       "running": "Running",
       "started": "Started",
       "stratifyRule": "Stratify Rule",
-      "summaryStatistics": "Summary Statistics:",
       "timeAtRiskYears": "Person-years",
       "summaryRow": "Summary"
     },
@@ -1668,7 +1656,6 @@
     }
   },
   "profiles": {
-    "clickHereToSelectACohort": "Click Here to Select a Cohort",
     "personId": "Person Id",
     "searchConceptsToHighlight": "Search concepts to highlight",
     "highlightNone": "None",
@@ -1694,13 +1681,6 @@
   "ple": {
     "spec": {
       "analysisSettings": "Analysis Settings"
-    }
-  },
-  "reusables": {
-    "manager": {
-      "messages": {
-        "deleteConfirmation": "Delete Reusable? Warning: deletion can not be undone!"
-      }
     }
   },
   "tagging": {
@@ -1799,11 +1779,6 @@
         "label": "Password:"
       },
       "source": {
-        "alerts": {
-          "save": {
-            "error": "The Source was not saved. {message}"
-          }
-        },
         "confirms": {
           "delete": "Delete source? Warning: deletion can not be undone!"
         },
@@ -1896,7 +1871,6 @@
     "newDefinition": "New Cohort",
     "newDefinitionTitle": "Create a new cohort definition",
     "noConceptSets": "No concept sets to export",
-    "saveDefinitionBefore": "You must save the definition before you can export",
     "designTab": {
       "countingOptions": {
         "distinctConcept": "Distinct concept",
@@ -2091,9 +2065,6 @@
         "title_visitDetail": "Add Place of Service Distance Criteria",
         "desc_visitDetail": "Filter Visit detail based on distance from Place of Service to Patient."
       }
-    },
-    "newEntityNames": {
-      "source": "New Source"
     }
   },
   "notifications": {
@@ -2187,11 +2158,6 @@
     "age": {
       "name": "Age",
       "description": "Filter by age at time of event"
-    }
-  },
-  "exitCriteria": {
-    "validation": {
-      "startGreaterThanEnd": "Start offset must be less than or equal to end offset"
     }
   },
   "config": {

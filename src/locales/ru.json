@@ -187,9 +187,6 @@
       "username": "Имя пользователя",
       "password": "Пароль"
     },
-    "atlasCohortEditor": {
-      "enterCohortPlaceholder": "Введите описание определения когорты здесь"
-    },
     "cohortExpressionEditor": {
       "inclusionCriteria": "Критерии включения",
       "addTrimmingOptions": "добавить параметры обрезки ...",
@@ -224,8 +221,7 @@
       "selectConceptSet": "Выберите набор концепций..."
     },
     "generation": {
-      "generate": "Генерировать",
-      "pickAtLeastOneSourceAlert": "Пожалуйста, выберите хотя бы один источник"
+      "generate": "Генерировать"
     },
     "nameValidation": {
       "empty": "Имя не может быть пустым."
@@ -781,7 +777,6 @@
     "endDay": "День окончания",
     "enabled": "Включено",
     "login": "Логин",
-    "permission": "Разрешения",
     "started": "Запущено",
     "finished": "Завершено",
     "message": "Сообщение",
@@ -949,13 +944,9 @@
   "cc": {
     "title": "Характеризация Когорт",
     "new": "Создать",
-    "modals": {
-      "chooseAFeatureAnalyses": "Выбрать функциональные анализы..."
-    },
     "tabs": {
       "featureAnalyses": {
-        "title": "Функциональные анализы",
-        "newLabel": "Функциональный анализ"
+        "title": "Функциональные анализы"
       }
     },
     "viewEdit": {
@@ -981,14 +972,8 @@
         }
       },
       "results": {
-        "detail": {
-          "design": "Дизайн:"
-        },
         "filters": {
           "cohorts": "Когорты"
-        },
-        "threshold": {
-          "label": "Показать в результатах ковариаты с уровнем выше чем:"
         },
         "exportAll": "Экспортировать все"
       }
@@ -1002,9 +987,7 @@
       "preset": "Пресет",
       "custom": "Пользовательский",
       "featureExtractionPresetName": "Имя пресета",
-      "analysisType": "Тип анализа",
       "criteriaName": "Имя критерия",
-      "analysisSql": "SQL анализа",
       "copySqlToClipboard": "Скопировать SQL шаблона в бфер обмена",
       "copiedToClipboard": "Скопировано!",
       "availableVariables": "Доступные переменные",
@@ -1023,8 +1006,7 @@
       "vocabulary": {
         "button": "Поиск по Словарю"
       }
-    },
-    "title": "Начало"
+    }
   },
   "ir": {
     "deleteConfirmation": "Удаление Анализа инцидентности нельзя будет отменить! Вы уверены?",
@@ -1034,7 +1016,6 @@
     },
     "editor": {
       "chooseACohort": "Выберите когорту",
-      "timeAtRiskWarningMessage": "Ошибка: дата начала позже даты оканчания",
       "stratifyCriteria": "Критерий стратификации:"
     },
     "results": {
@@ -1046,24 +1027,15 @@
       "started": "Запущено",
       "running": "Запущено",
       "failed": "ОШИБКА",
-      "summaryStatistics": "Сводная статистика:",
       "stratifyRule": "Правило стратификации"
     }
   },
   "profiles": {
-    "personId": "ID профиля",
-    "clickHereToSelectACohort": "Нажмите здесь, чтобы выбрать когорту"
+    "personId": "ID профиля"
   },
   "ple": {
     "spec": {
       "analysisSettings": "Настройки анализа"
-    }
-  },
-  "reusables": {
-    "manager": {
-      "messages": {
-        "deleteConfirmation": "Удаление Сниппета нельзя будет отменить! Вы уверены?"
-      }
     }
   },
   "tagging": {
@@ -1100,11 +1072,6 @@
           "empty": "Имя источника не может быть пустым"
         },
         "label": "Ключ источника:",
-        "alerts": {
-          "save": {
-            "error": "Источник не сохранен. {message}"
-          }
-        },
         "confirms": {
           "delete": "Удалить источник? Это действие необратимо!"
         }
@@ -1218,8 +1185,7 @@
     },
     "newDefinition": "Новая когорта",
     "newDefinitionTitle": "Создать новую когорту",
-    "noConceptSets": "Нет концепций для экспорта",
-    "saveDefinitionBefore": "Вы должны сохранить определение, прежде чем сможете экспортировать"
+    "noConceptSets": "Нет концепций для экспорта"
   },
   "const": {
     "disabledReason": {
@@ -1361,9 +1327,6 @@
         "title_visitDetail": "Добавить критерий расстояния до места обслуживания",
         "desc_visitDetail": "Фильтр деталей посещения в зависимости от расстояния от места обслуживания до пациента."
       }
-    },
-    "newEntityNames": {
-      "source": "Новый источник"
     }
   },
   "notifications": {

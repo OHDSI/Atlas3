@@ -167,9 +167,6 @@
         "generate": "生成"
       }
     },
-    "atlasCohortEditor": {
-      "enterCohortPlaceholder": "在此输入队列定义描述"
-    },
     "expressionCartoonBindings": {
       "noInclusionRules": "没有包含规则"
     },
@@ -221,8 +218,7 @@
       "ignoreObservationPeriod": "忽略观察期"
     },
     "generation": {
-      "generate": "生成",
-      "pickAtLeastOneSourceAlert": "至少选择一个来源来生成"
+      "generate": "生成"
     },
     "nameValidation": {
       "empty": "名称为空。"
@@ -784,7 +780,6 @@
     "pct": "百分比",
     "diff": "差异",
     "remain": "保留",
-    "permission": "权限",
     "personCount": "病人数",
     "rc": "记录数RC",
     "refreshCache": "刷新缓存",
@@ -946,12 +941,8 @@
   "cc": {
     "title": "队列特征",
     "new": "新",
-    "modals": {
-      "chooseAFeatureAnalyses": "选择一个功能分析…"
-    },
     "tabs": {
       "featureAnalyses": {
-        "newLabel": "特征分析",
         "title": "特征分析"
       }
     },
@@ -974,15 +965,9 @@
         }
       },
       "results": {
-        "detail": {
-          "design": "设计:"
-        },
         "exportAll": "全部导出",
         "filters": {
           "cohorts": "队列"
-        },
-        "threshold": {
-          "label": "筛选协变量结果以将患病率大于："
         }
       },
       "tabs": {
@@ -994,8 +979,6 @@
       "tabs": {
         "conceptSets": "概念集"
       },
-      "analysisSql": "分析SQL:",
-      "analysisType": "分析类型：",
       "availableVariables": "可用变量",
       "availableVariablesNote": "队列表征参数中指定的所有变量",
       "copiedToClipboard": "已复制到剪贴板！",
@@ -1020,15 +1003,13 @@
       "vocabulary": {
         "button": "词汇检索"
       }
-    },
-    "title": "首页"
+    }
   },
   "ir": {
     "deleteConfirmation": "删除发病率分析？ 警告：删除操作无法撤消！",
     "editor": {
       "chooseACohort": "选择一个队列",
-      "stratifyCriteria": "分层标准：",
-      "timeAtRiskWarningMessage": "错误：风险时间在风险时间结束时或之后开始，导致风险时间为零。 请确保起始偏移量大于结束偏移量。"
+      "stratifyCriteria": "分层标准："
     },
     "results": {
       "cases": "患者事件数",
@@ -1039,7 +1020,6 @@
       "running": "正在运行",
       "started": "创建开始时间",
       "stratifyRule": "分层条件",
-      "summaryStatistics": "统计摘要",
       "timeAtRiskYears": "（年）"
     },
     "tabs": {
@@ -1048,19 +1028,11 @@
     }
   },
   "profiles": {
-    "clickHereToSelectACohort": "单击此处选择一个队列",
     "personId": "病人ID"
   },
   "ple": {
     "spec": {
       "analysisSettings": "分析设置"
-    }
-  },
-  "reusables": {
-    "manager": {
-      "messages": {
-        "deleteConfirmation": "Are you sure?"
-      }
     }
   },
   "jobs": {
@@ -1148,11 +1120,6 @@
         "label": "密码："
       },
       "source": {
-        "alerts": {
-          "save": {
-            "error": "来源未被保存。 {message}"
-          }
-        },
         "confirms": {
           "delete": "删除来源？ 警告：删除操作无法撤消！"
         },
@@ -1215,8 +1182,7 @@
     },
     "newDefinition": "新建队列",
     "newDefinitionTitle": "创建新的队列定义",
-    "noConceptSets": "没有要导出的概念",
-    "saveDefinitionBefore": "队列定义必须在导出之前保存"
+    "noConceptSets": "没有要导出的概念"
   },
   "const": {
     "disabledReason": {
@@ -1358,9 +1324,6 @@
         "title_visitDetail": "Add Place of Service Distance Criteria",
         "desc_visitDetail": "Filter Visit detail based on distance from Place of Service to Patient."
       }
-    },
-    "newEntityNames": {
-      "source": "新来源"
     }
   },
   "notifications": {
