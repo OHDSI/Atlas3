@@ -1,9 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
-import { tr } from '../../helpers/i18n-mock'
+import { describe, it, expect } from 'vitest'
 import { useNestedCriteria } from '@/composables/useNestedCriteria'
 import type { NestedCriteria, CohortEvent } from '@/models/cohort.types'
-
-vi.mock('@/composables/useI18n', async () => (await import('../../helpers/i18n-mock')).mockUseI18n)
 
 describe('useNestedCriteria', () => {
   describe('initialization', () => {
@@ -81,10 +78,7 @@ describe('useNestedCriteria', () => {
 
       const event = addEvent('ConditionOccurrence')
 
-      expect(event.conceptSet).toEqual({
-        id: null,
-        name: tr('components.conceptSetBuilder.selectConceptSet'),
-      })
+      expect(event.conceptSet).toEqual({ id: null, name: 'Select concept set...' })
     })
 
     it('generates unique IDs for multiple events', () => {

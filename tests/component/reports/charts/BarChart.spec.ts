@@ -20,8 +20,6 @@ import { nextTick } from 'vue'
 import BarChart from '@/components/ui/charts/AtlasBarChart.vue'
 import type { BarChartData } from '@/models/report.types'
 
-vi.mock('@/composables/useI18n', async () => (await import('../../../helpers/i18n-mock')).mockUseI18n)
-
 const vuetify = createVuetify({
   components,
   directives,

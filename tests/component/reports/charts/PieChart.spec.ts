@@ -20,8 +20,6 @@ import { nextTick } from 'vue'
 import PieChart from '@/components/ui/charts/AtlasPieChart.vue'
 import type { PieChartData } from '@/models/report.types'
 
-vi.mock('@/composables/useI18n', async () => (await import('../../../helpers/i18n-mock')).mockUseI18n)
-
 const vuetify = createVuetify({
   components,
   directives,

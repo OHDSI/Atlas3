@@ -1,7 +1,6 @@
 import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import type { NestedCriteria, CohortEvent, LogicType, CriteriaType } from '@/models/cohort.types'
-import { useI18n } from '@/composables/useI18n'
 
 /**
  * Composable for managing nested criteria groups
@@ -9,7 +8,6 @@ import { useI18n } from '@/composables/useI18n'
  * validating depth, and detecting circular references
  */
 export function useNestedCriteria(initial?: NestedCriteria) {
-  const { tv } = useI18n()
   const nested = ref<NestedCriteria>(
     initial || {
       id: uuidv4(),
@@ -31,10 +29,7 @@ export function useNestedCriteria(initial?: NestedCriteria) {
     const newEvent: CohortEvent = {
       id: uuidv4(),
       criteriaType,
-      conceptSet: conceptSet || {
-        id: null as unknown as number,
-        name: tv('components.conceptSetBuilder.selectConceptSet'),
-      },
+      conceptSet: conceptSet || { id: null as unknown as number, name: 'Select concept set...' },
       attributes: [],
     }
     nested.value.events.push(newEvent)

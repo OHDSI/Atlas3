@@ -1,16 +1,28 @@
 import { getByPath, translatableSource } from './i18n-lib.mjs'
 
-const KEY_RE = /\b(?:t|tv)\(\s*'([A-Za-z0-9_.-]+)'(?:\s*,\s*'((?:[^'\\]|\\.)*)')?/g
+const KEY_RE = /\b(?:t|tv)\(\s*(['"])([A-Za-z0-9_.-]+)\1(?:\s*,\s*'((?:[^'\\]|\\.)*)')?/g
 
 export function extractKeys(source) {
   const out = []
   KEY_RE.lastIndex = 0
   let match
   while ((match = KEY_RE.exec(source))) {
-    const [, key, fallback] = match
+    const [, , key, fallback] = match
     if (!key.includes('.')) continue
     out.push({ key, fallback: fallback === undefined ? null : fallback })
   }
+  return out
+}
+
+// "nameKey": "attributes.age.name" — i18n keys held in JSON config.
+const CONFIG_KEY_RE = /"(\w*Key)"\s*:\s*"([A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+)"/g
+
+/** i18n keys referenced from JSON config (`*Key` fields), as fallback-less usages. */
+export function extractConfigKeys(json) {
+  const out = []
+  CONFIG_KEY_RE.lastIndex = 0
+  let match
+  while ((match = CONFIG_KEY_RE.exec(json))) out.push({ key: match[2], fallback: null })
   return out
 }
 
@@ -114,27 +126,46 @@ export function lintEnglish(en) {
 const FALLBACK_RE =
   /(\b(?:t|tv)\(\s*(['"])([A-Za-z0-9_.-]+)\2)(\s*,\s*(?:'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`[^`$\\]*`))(?=\s*[,)])/g
 
+/** The fallback literal's value, without its quotes and leading comma. */
+function literalValue(withComma) {
+  const literal = withComma.replace(/^\s*,\s*/, '')
+  return literal[0] === '`' ? literal.slice(1, -1) : unescapeLiteral(literal.slice(1, -1))
+}
+
 /**
  * Inline English fallbacks on keys en.json already has. They are dead text at
- * runtime (en.json is loaded before the first render) and drift from the real
- * copy, so en.json stays the single source of English.
- * @returns {{ key: string, line: number }[]}
+ * runtime (en.json is loaded before the first render), so en.json stays the
+ * single source of English. `divergent` marks a fallback whose wording differs
+ * from en.json — the call site probably wants its own key, so it is reported
+ * for a person to decide instead of being stripped.
+ * @returns {{ key: string, line: number, divergent: boolean, fallback: string, english: string }[]}
  */
 export function findRedundantFallbacks(source, en) {
   const out = []
   FALLBACK_RE.lastIndex = 0
   let match
   while ((match = FALLBACK_RE.exec(source))) {
-    if (typeof getByPath(en, match[3]) !== 'string') continue
-    out.push({ key: match[3], line: source.slice(0, match.index).split('\n').length })
+    const english = getByPath(en, match[3])
+    if (typeof english !== 'string') continue
+    const fallback = literalValue(match[4])
+    out.push({
+      key: match[3],
+      line: source.slice(0, match.index).split('\n').length,
+      divergent: fallback !== english,
+      fallback,
+      english,
+    })
   }
   return out
 }
 
-/** Drop redundant inline fallbacks, keeping any params argument that follows. */
+/**
+ * Drop inline fallbacks that repeat en.json exactly, keeping any params
+ * argument that follows. Divergent fallbacks are left in place.
+ */
 export function stripFallbacks(source, en) {
-  return source.replace(FALLBACK_RE, (match, head, _quote, key) =>
-    typeof getByPath(en, key) === 'string' ? head : match
+  return source.replace(FALLBACK_RE, (match, head, _quote, key, literal) =>
+    getByPath(en, key) === literalValue(literal) ? head : match
   )
 }
 

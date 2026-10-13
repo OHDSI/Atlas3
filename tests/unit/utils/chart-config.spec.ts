@@ -28,8 +28,6 @@ import type {
   MultiLineChartData as DatasourceMultiLineChartData
 } from '@/models/datasource.types'
 
-vi.mock('@/composables/useI18n', async () => (await import('../../helpers/i18n-mock')).mockUseI18n)
-
 // Type helpers for accessing ECharts option properties in tests
 interface ChartSeriesItem {
   type: string

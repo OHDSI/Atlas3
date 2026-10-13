@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, vi } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { computed } from 'vue'
 import {
   parseYyyymm,
@@ -29,8 +29,6 @@ import {
 import { contrastRatio } from '@/ui/contrast'
 import { tokens } from '@/ui/tokens'
 import type { TrellisChartData, BoxPlotData, TreemapNode } from '@/models/report.types'
-
-vi.mock('@/composables/useI18n', async () => (await import('../../helpers/i18n-mock')).mockUseI18n)
 
 describe('setChartPalette', () => {
   afterEach(() => {

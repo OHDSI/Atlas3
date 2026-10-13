@@ -20,6 +20,7 @@ import { dirname, join, relative } from 'node:path'
 import { setByPath } from './i18n-lib.mjs'
 import {
   extractKeys,
+  extractConfigKeys,
   findMissing,
   findParentCollision,
   findBatchCollision,
@@ -33,6 +34,7 @@ import {
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const SRC = join(ROOT, 'src')
 const EN_PATH = join(ROOT, 'src', 'locales', 'en.json')
+const CONFIG_DIR = join(ROOT, 'src', 'config')
 
 function sourceFiles(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -43,27 +45,44 @@ function sourceFiles(dir, out = []) {
   return out
 }
 
-/** Report (or, with `strip`, remove) inline fallbacks on keys en.json has. */
-async function handleRedundantFallbacks(en, strip) {
-  let count = 0
+/**
+ * Inline fallbacks on keys en.json has. With `strip`, removes the ones that
+ * repeat en.json; ones whose wording differs are always reported — give the
+ * call site its own key, or update en.json — and never stripped.
+ * @returns {{ redundant: number, divergent: number }} counts left in src/
+ */
+async function handleInlineFallbacks(en, strip) {
+  let redundant = 0
+  let divergent = 0
+  let stripped = 0
   for (const file of sourceFiles(SRC)) {
     const source = await readFile(file, 'utf8')
-    const redundant = findRedundantFallbacks(source, en)
-    if (redundant.length === 0) continue
-    count += redundant.length
-    if (strip) {
+    const found = findRedundantFallbacks(source, en)
+    if (found.length === 0) continue
+    const where = line => `${relative(ROOT, file)}:${line}`
+    for (const f of found.filter(f => f.divergent)) {
+      divergent++
+      console.error(
+        `[i18n-check] fallback differs from en.json: ${f.key}  (${where(f.line)})\n    inline:  ${JSON.stringify(f.fallback)}\n    en.json: ${JSON.stringify(f.english)}`
+      )
+    }
+    const same = found.filter(f => !f.divergent)
+    if (strip && same.length) {
       await writeFile(file, stripFallbacks(source, en), 'utf8')
+      stripped += same.length
     } else {
-      for (const { key, line } of redundant) {
-        console.error(`[i18n-check] redundant inline fallback: ${key}  (${relative(ROOT, file)}:${line})`)
-      }
+      redundant += same.length
+      for (const f of same) console.error(`[i18n-check] redundant inline fallback: ${f.key}  (${where(f.line)})`)
     }
   }
-  if (strip && count > 0) console.log(`[i18n-check] stripped ${count} inline fallbacks`)
-  if (!strip && count > 0) {
-    console.error(`[i18n-check] ${count} inline fallbacks duplicate en.json — run: npm run i18n:check -- --fix`)
+  if (stripped) console.log(`[i18n-check] stripped ${stripped} inline fallbacks`)
+  if (redundant) console.error(`[i18n-check] ${redundant} inline fallbacks duplicate en.json — run: npm run i18n:check -- --fix`)
+  if (divergent) {
+    console.error(
+      `[i18n-check] ${divergent} inline fallbacks differ from en.json — give the call site its own key or update en.json`
+    )
   }
-  return count
+  return { redundant, divergent }
 }
 
 async function main() {
@@ -78,14 +97,20 @@ async function main() {
       usages.push({ ...usage, file: relative(ROOT, file) })
     }
   }
+  for (const entry of readdirSync(CONFIG_DIR).filter(f => f.endsWith('.json'))) {
+    const file = join(CONFIG_DIR, entry)
+    for (const usage of extractConfigKeys(await readFile(file, 'utf8'))) {
+      usages.push({ ...usage, file: relative(ROOT, file) })
+    }
+  }
 
   const lintErrors = lintEnglish(en)
   for (const error of lintErrors) console.error(`[i18n-check] en.json: ${error}`)
   if (lintErrors.length > 0) process.exit(1)
 
   const unresolved = await reportMissing(en, usages, backfill)
-  const redundant = await handleRedundantFallbacks(en, backfill || fix)
-  if (unresolved > 0 || (redundant > 0 && !(backfill || fix))) process.exit(1)
+  const { redundant, divergent } = await handleInlineFallbacks(en, backfill || fix)
+  if (unresolved > 0 || redundant > 0 || divergent > 0) process.exit(1)
   if (unresolved === 0) console.log(`[i18n-check] ok — ${usages.length} call sites, no missing keys`)
 }
 
