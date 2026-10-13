@@ -7,7 +7,7 @@
       >
         mdi-information-outline
       </AtlasIcon>
-      <span>Cohort members exit when their continuous observation period ends. No additional configuration is needed.</span>
+      <span>{{ tv('components.endStrategy.observation.hint') }}</span>
     </div>
   </div>
 </template>
@@ -15,6 +15,9 @@
 <script setup lang="ts">
 // No props or emits — purely informational
 import { AtlasIcon } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
+
+const { tv } = useI18n()
 </script>
 
 <style scoped>

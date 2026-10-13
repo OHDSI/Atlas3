@@ -1,11 +1,11 @@
 <template>
   <div class="censoring-criteria-editor">
     <div class="censoring-criteria-editor__heading">
-      <span class="censoring-criteria-editor__eyebrow">Censoring Events</span>
+      <span class="censoring-criteria-editor__eyebrow">{{ tv('components.endStrategy.censoring.title') }}</span>
       <span class="censoring-criteria-editor__heading-rule" />
     </div>
     <p class="censoring-criteria-editor__lede">
-      Cohort members exit early when any of these events occur.
+      {{ tv('components.endStrategy.censoring.lede') }}
     </p>
 
     <div class="mt-3">
@@ -17,7 +17,7 @@
             size="sm"
             prepend-icon="mdi-plus"
           >
-            Add Censoring Event
+            {{ tv('components.endStrategy.censoring.add') }}
           </AtlasButton>
         </template>
 
@@ -25,7 +25,7 @@
           <AtlasListItem
             v-for="type in criteriaTypes"
             :key="type"
-            :title="type"
+            :title="tv(criteriaTypeLabelKeys[type])"
             @click="addCriteria(type)"
           />
         </AtlasList>
@@ -62,7 +62,7 @@
       >
         mdi-information-outline
       </AtlasIcon>
-      <span>No censoring events defined. Cohort exit is determined only by the end strategy above.</span>
+      <span>{{ tv('components.endStrategy.censoring.empty') }}</span>
     </div>
   </div>
 </template>
@@ -78,6 +78,9 @@ import {
 import type { Criteria } from '@/models/circe-types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 import CriteriaRenderer from '@/components/circe/criteria/CriteriaRenderer.vue'
+import { useI18n } from '@/composables/useI18n'
+
+const { tv } = useI18n()
 
 const props = defineProps<{
   modelValue: Criteria[]
@@ -91,23 +94,25 @@ const emit = defineEmits<{
   'clear-concept-set': []
 }>()
 
-const criteriaTypes = [
-  'ConditionOccurrence',
-  'ConditionEra',
-  'DrugExposure',
-  'DoseEra',
-  'DeviceExposure',
-  'DrugEra',
-  'Measurement',
-  'Observation',
-  'ObservationPeriod',
-  'PayerPlanPeriod',
-  'ProcedureOccurrence',
-  'Specimen',
-  'VisitDetail',
-  'VisitOccurrence',
-  'Death',
-]
+const criteriaTypeLabelKeys = {
+  ConditionOccurrence: 'criteria.conditionOccurrence.name',
+  ConditionEra: 'criteria.conditionEra.name',
+  DrugExposure: 'criteria.drugExposure.name',
+  DoseEra: 'criteria.doseEra.name',
+  DeviceExposure: 'criteria.deviceExposure.name',
+  DrugEra: 'criteria.drugEra.name',
+  Measurement: 'criteria.measurement.name',
+  Observation: 'criteria.observation.name',
+  ObservationPeriod: 'criteria.observationPeriod.name',
+  PayerPlanPeriod: 'criteria.payerPlanPeriod.name',
+  ProcedureOccurrence: 'criteria.procedureOccurrence.name',
+  Specimen: 'criteria.specimen.name',
+  VisitDetail: 'criteria.visitDetail.name',
+  VisitOccurrence: 'criteria.visitOccurrence.name',
+  Death: 'criteria.death.name',
+} as const
+
+const criteriaTypes = Object.keys(criteriaTypeLabelKeys) as (keyof typeof criteriaTypeLabelKeys)[]
 
 const criteriaFactories: Record<string, () => Criteria> = {
   ConditionOccurrence: () => ({ ConditionOccurrence: {} }),

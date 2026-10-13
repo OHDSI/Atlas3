@@ -142,7 +142,7 @@ function formatStatistic(
 }
 
 const statistics = computed<Statistic[]>(() => [
-  { field: 'avg', label: 'Avg (SD)', format: formatAvgSd },
+  { field: 'avg', label: tv('characterizations.results.table.avgSd'), format: formatAvgSd },
   { field: 'min', label: tv('characterizations.results.table.min'), format: (row, key, cohortId) => formatStatistic(row.min, key, cohortId) },
   { field: 'p25', label: tv('columns.p25'), format: (row, key, cohortId) => formatStatistic(row.p25, key, cohortId) },
   { field: 'median', label: tv('columns.median'), format: (row, key, cohortId) => formatStatistic(row.median, key, cohortId) },

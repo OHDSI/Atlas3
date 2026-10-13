@@ -1128,7 +1128,7 @@ async function copyCustomSqlTemplate() {
     showSnackbar(t('cc.fa.copiedToClipboard').value, 'success')
   } catch (error) {
     logger.error('FeatureAnalysisEditor', 'Failed to copy custom SQL template', error)
-    showSnackbar('Failed to copy SQL template', 'error')
+    showSnackbar(t('cc.fa.copySqlTemplateFailed').value, 'error')
   }
 }
 

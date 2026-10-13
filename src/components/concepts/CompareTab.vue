@@ -279,7 +279,7 @@ const searchedRows = computed<Row[]>(() => {
 })
 
 const compareFacets = computed<FacetDefinition<Row>[]>(() => [
-  { key: 'match', label: 'Match', display: r => r.match },
+  { key: 'match', label: t('common.match').value, display: r => r.match },
   ...CONCEPT_FACETS,
 ])
 

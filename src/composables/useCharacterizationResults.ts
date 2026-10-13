@@ -12,8 +12,10 @@ import type {
 } from '@/models/characterization.types'
 import type { CharacterizationResultsBody } from '@/services/characterization.service'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
 
 export function useCharacterizationResults() {
+  const { tv } = useI18n()
   const execution = ref<CharacterizationExecution | null>(null)
   const resultCount = ref<number>(0)
   const prevalence = shallowRef<PrevalenceStat[]>([])
@@ -69,7 +71,10 @@ export function useCharacterizationResults() {
       return true
     } catch (err) {
       if (request !== latestRequest) return false
-      error.value = err instanceof Error ? err.message : 'Failed to load results'
+      error.value =
+        err instanceof Error
+          ? err.message
+          : tv('characterizations.results.loadFailed')
       logger.error('CharacterizationResults', 'load failed', err)
       return false
     } finally {

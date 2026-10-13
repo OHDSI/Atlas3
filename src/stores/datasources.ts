@@ -11,8 +11,10 @@ import {
   getClinicalDomainReport,
 } from '@/services/datasource.service'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
 
 export const useDataSourcesStore = defineStore('datasources', () => {
+  const { tv } = useI18n()
   // State
   const sources = ref<DataSource[]>([])
   const sourcesLoaded = ref(false)
@@ -77,7 +79,10 @@ export const useDataSourcesStore = defineStore('datasources', () => {
         selectedSourceId.value = sources.value[0]?.sourceId || null
       }
     } catch (err) {
-      error.value.sources = err instanceof Error ? err.message : 'Failed to load data sources'
+      error.value.sources =
+        err instanceof Error
+          ? err.message
+          : tv('dataSources.loadFailed')
       logger.error('DataSourcesStore', 'Error fetching sources', err)
     } finally {
       loading.value.sources = false
@@ -175,7 +180,10 @@ export const useDataSourcesStore = defineStore('datasources', () => {
         return
       }
 
-      error.value.report = err instanceof Error ? err.message : 'Failed to load report'
+      error.value.report =
+        err instanceof Error
+          ? err.message
+          : tv('dataSources.reportLoadFailed')
       logger.error('DataSourcesStore', 'Error fetching report', {
         reportType,
         sourceKey: source.sourceKey,

@@ -22,6 +22,7 @@ import {
   circeConceptSetFromAtlas,
   type AtlasConceptSetItem,
 } from '@/components/cohort-editor/atlas-concept-set'
+import { useI18n } from '@/composables/useI18n'
 
 const STORAGE_KEY = 'atlas3_cohort_draft'
 export const AUTO_SAVE_INTERVAL_MS = 30000 // 30 seconds
@@ -107,6 +108,7 @@ interface RetryState {
 }
 
 export const useCohortStore = defineStore('cohort', () => {
+  const { tv } = useI18n()
   // State
   const currentCohort = ref<CohortDocument | null>(null)
   const isDirty = ref(false)
@@ -198,7 +200,7 @@ export const useCohortStore = defineStore('cohort', () => {
 
   function createNewCohort() {
     currentCohort.value = {
-      name: 'New Cohort',
+      name: tv('cohortDefinitions.newDefinition'),
       // Cloned so this session's edits never mutate the shared default.
       expression: JSON.parse(JSON.stringify(defaultExpression)) as CohortExpression,
     }
@@ -687,7 +689,7 @@ export const useCohortStore = defineStore('cohort', () => {
     if (!cohort.name || cohort.name.trim() === '') {
       errors.push({
         field: 'name',
-        message: 'Cohort name is required',
+        message: tv('cohortDefinitions.nameRequired'),
         severity: 'error',
       })
     }

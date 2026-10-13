@@ -9,6 +9,7 @@ import type { EChartsType } from 'echarts/core'
 import * as Papa from 'papaparse'
 import type { ChartExportOptions, CSVExportData } from '@/models/report.types'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
 
 /**
  * Options for renderToSVGString including backgroundColor
@@ -20,6 +21,7 @@ interface SVGRenderOptions {
 }
 
 export function useChartExport() {
+  const { tv } = useI18n()
   const exporting = ref(false)
   const exportError = ref<string | null>(null)
 
@@ -52,7 +54,10 @@ export function useChartExport() {
 
       logger.info('ChartExport', 'Exported chart to PNG', filename)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to export PNG'
+      const message =
+        error instanceof Error
+          ? error.message
+          : tv('components.chartExport.pngFailed')
       exportError.value = message
       logger.error('ChartExport', 'PNG export error', error)
       throw error
@@ -88,7 +93,10 @@ export function useChartExport() {
 
       logger.info('ChartExport', 'Exported chart to SVG', filename)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to export SVG'
+      const message =
+        error instanceof Error
+          ? error.message
+          : tv('components.chartExport.svgFailed')
       exportError.value = message
       logger.error('ChartExport', 'SVG export error', error)
       throw error
@@ -125,7 +133,10 @@ export function useChartExport() {
 
       logger.info('ChartExport', 'Exported data to CSV', filename)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to export CSV'
+      const message =
+        error instanceof Error
+          ? error.message
+          : tv('components.chartExport.csvFailed')
       exportError.value = message
       logger.error('ChartExport', 'CSV export error', error)
       throw error
@@ -164,7 +175,10 @@ export function useChartExport() {
 
       logger.info('ChartExport', 'Copied data to clipboard')
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to copy to clipboard'
+      const message =
+        error instanceof Error
+          ? error.message
+          : tv('components.chartExport.clipboardFailed')
       exportError.value = message
       logger.error('ChartExport', 'Clipboard copy error', error)
       throw error

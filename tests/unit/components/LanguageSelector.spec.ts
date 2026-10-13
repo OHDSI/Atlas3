@@ -22,7 +22,8 @@ vi.mock('@/composables/useI18n', () => ({
       { code: 'fr', name: 'French' }
     ]),
     changeLocale: mockChangeLocale,
-    loading: ref(false)
+    loading: ref(false),
+    tv: (_key: string, fallback?: string) => fallback ?? _key
   })
 }))
 

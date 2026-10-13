@@ -6,8 +6,10 @@ import {
 } from '@/services/pathway.service'
 import type { Pathway, PathwayExecution, PathwayResults } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
 
 export function usePathwayResults() {
+  const { tv } = useI18n()
   const execution = ref<PathwayExecution | null>(null)
   const design = ref<Pathway | null>(null)
   const results = ref<PathwayResults | null>(null)
@@ -27,7 +29,10 @@ export function usePathwayResults() {
         const errs = [execRes, designRes, resultsRes]
           .map(r => (r.success ? null : r.error.message))
           .filter((e): e is string => Boolean(e))
-        error.value = errs.length > 0 ? errs.join('; ') : 'Failed to load results'
+        error.value =
+          errs.length > 0
+            ? errs.join('; ')
+            : tv('pathway.results.loadFailed')
         return false
       }
       execution.value = execRes.data
@@ -35,7 +40,10 @@ export function usePathwayResults() {
       results.value = resultsRes.data
       return true
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to load'
+      error.value =
+        err instanceof Error
+          ? err.message
+          : tv('pathway.results.loadFailed')
       logger.error('PathwayResults', 'load failed', err)
       return false
     } finally {

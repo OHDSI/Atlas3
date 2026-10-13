@@ -44,6 +44,7 @@ import { getVersions as getConceptSetVersions } from '@/services/concept-set-ver
 import { getPathwayVersions } from '@/services/pathway-versions.service'
 import { getIncidenceRateVersions } from '@/services/incidence-rate-versions.service'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
 
 export interface VersionFilters {
   author: string | null
@@ -51,6 +52,7 @@ export interface VersionFilters {
 }
 
 export function useVersions(config: VersionsConfig) {
+  const { tv } = useI18n()
   // State
   const versions = ref<VersionsTableItem[]>([])
   const loading = ref(false)
@@ -109,7 +111,10 @@ export function useVersions(config: VersionsConfig) {
       const currentRow = getCurrentVersionRow()
       versions.value = [currentRow, ...tableItems]
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to load version history'
+      error.value =
+        err instanceof Error
+          ? err.message
+          : tv('versions.loadError')
       logger.error('useVersions', 'Failed to load versions', err)
       versions.value = []
     } finally {

@@ -3,6 +3,7 @@
  * State management for concept search functionality
  */
 import { defineStore } from 'pinia'
+import { useI18n } from '@/composables/useI18n'
 import { ref, computed, watch } from 'vue'
 import { searchConcepts, getConceptRecordCounts } from '@/services/concept-search.service'
 import type { Concept } from '@/models/concept-set.types'
@@ -13,6 +14,7 @@ import { debounce } from '@/utils/debounce'
 import { useConceptFacets } from '@/composables/useConceptFacets'
 
 export const useConceptSearchStore = defineStore('concept-search', () => {
+  const { tv } = useI18n()
   // ============================================================================
   // State
   // ============================================================================
@@ -192,7 +194,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
       await loadRecordCounts(sourceKey)
     } catch (err) {
       logger.error('ConceptSearchStore', 'Failed to load record counts', err)
-      error.value = 'Failed to load record counts for the selected source.'
+      error.value = tv('search.errors.recordCountsFailed')
     }
   }
 

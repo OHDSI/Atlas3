@@ -21,7 +21,7 @@
           {{ wrapperKey }}
         </div>
         <div class="text-caption">
-          Editor not implemented yet.
+          {{ tv('components.criteria.editorNotImplemented') }}
         </div>
       </div>
 
@@ -41,6 +41,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { AtlasButton, AtlasSpacer } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
 import { getCriteriaWrapperKey, type Criteria } from '@/models/circe-types'
 import ConditionEra from './ConditionEra.vue'
 import ConditionOccurrence from './ConditionOccurrence.vue'
@@ -73,6 +74,8 @@ defineEmits<{
   'edit-concept-set': [target: ConceptSetSelectionTarget | undefined]
   'clear-concept-set': []
 }>()
+
+const { tv } = useI18n()
 
 const wrapperKey = computed(() => getCriteriaWrapperKey(props.criteria))
 

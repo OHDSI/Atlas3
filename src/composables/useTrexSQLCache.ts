@@ -1,6 +1,7 @@
 import { ref, computed, watch, onUnmounted } from 'vue'
 import type { Ref, ComputedRef } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
 import {
@@ -49,6 +50,7 @@ let initializePromise: Promise<void> | null = null
 
 export function useTrexSQLCache() {
   const authStore = useAuthStore()
+  const { tv } = useI18n()
 
   const isTrexSQLEnabled: ComputedRef<boolean> = computed(() => {
     // Trust an explicit `true` from the auth store; otherwise (false or
@@ -94,21 +96,28 @@ export function useTrexSQLCache() {
 
   const cacheStatusMessage: ComputedRef<string> = computed(() => {
     const status = selectedCacheStatus.value?.status
-    if (!status) return 'No data source selected'
+    if (!status) return tv('trexsql.statusMessage.noSource')
 
     switch (status) {
       case 'ready':
-        return 'Cache ready'
+        return tv('trexsql.statusMessage.ready')
       case 'building':
-        return 'Cache is building...'
+        return tv('trexsql.statusMessage.building')
       case 'not_built':
-        return 'Cache not built. Build the cache to enable patient counting.'
+        return tv(
+          'trexsql.statusMessage.notBuilt'
+        )
       case 'stale':
-        return 'Cache is stale. Consider rebuilding for accurate counts.'
+        return tv(
+          'trexsql.statusMessage.stale'
+        )
       case 'error':
-        return selectedCacheStatus.value?.errorMessage || 'Cache error'
+        return (
+          selectedCacheStatus.value?.errorMessage ||
+          tv('trexsql.statusMessage.error')
+        )
       default:
-        return 'Unknown cache status'
+        return tv('trexsql.statusMessage.unknown')
     }
   })
 
@@ -255,7 +264,10 @@ export function useTrexSQLCache() {
         return
       }
 
-      const errorMessage = error instanceof Error ? error.message : 'Failed to get patient count'
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : tv('trexsql.patientCountFailed')
       countError.value = errorMessage
       countState.value.error = errorMessage
       countState.value.isLoading = false

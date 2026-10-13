@@ -11,6 +11,7 @@ import type { EChartsType } from 'echarts/core'
 import type { CSVExportData } from '@/models/report.types'
 
 // Mock papaparse
+vi.mock('@/composables/useI18n', async () => (await import('../../helpers/i18n-mock')).mockUseI18n)
 vi.mock('papaparse', () => ({
   unparse: vi.fn((data: unknown, _options?: unknown) => {
     // Simple CSV conversion for testing

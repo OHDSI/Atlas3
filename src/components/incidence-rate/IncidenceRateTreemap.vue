@@ -45,7 +45,7 @@ function decodeBitmask(mask: string, names: string[]): string {
     if (bits[i] === '1') matched.push(names[i]!)
     else unmatched.push(names[i]!)
   }
-  if (matched.length === 0) return 'None matched'
+  if (matched.length === 0) return tv('components.incidenceRate.noneMatched')
   if (unmatched.length === 0) return matched.join(', ')
   return matched.join(', ')
 }
@@ -69,7 +69,10 @@ function collectLeaves(node: RawNode, out: TreemapNode[], names: string[]): void
     name: `${label}`,
     value: persons || 1,
     colorValue: rate,
-    conceptPath: `${persons.toLocaleString()} persons || ${cases.toLocaleString()} cases || Rate: ${ratePer1000} per 1,000 PY`,
+    conceptPath: tv(
+      'components.incidenceRate.treemapNodeSummary',
+      { persons: persons.toLocaleString(), cases: cases.toLocaleString(), rate: ratePer1000 }
+    ),
   })
 }
 

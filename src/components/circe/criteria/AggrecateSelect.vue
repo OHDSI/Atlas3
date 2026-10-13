@@ -62,6 +62,7 @@ import { AtlasButton, AtlasDivider, AtlasList, AtlasListItem, AtlasMenu } from '
 import { CRITERIA_TYPE_BY_KEY } from '@/components/circe/criteria/criteria-registry'
 import { getCriteriaWrapperKey, type Criteria } from '@/models/circe-types'
 import type { FeatureAnalysisAggregate, FeatureAnalysisDistributionItem } from '@/models/feature-analysis.types'
+import { useI18n } from '@/composables/useI18n'
 
 defineOptions({ name: 'AggrecateSelect' })
 
@@ -70,6 +71,8 @@ const props = defineProps<{
   aggregates: FeatureAnalysisAggregate[]
   label: string
 }>()
+
+const { tv } = useI18n()
 
 const showMenu = ref(false)
 
@@ -116,7 +119,7 @@ const groupedAggregateOptions = computed<AggregateGroup[]>(() => {
 
   for (const aggregate of aggregateOptions.value) {
     const key = aggregate.domain ?? 'ANY'
-    const label = aggregate.domain ? domainLabel(aggregate.domain) : 'Any'
+    const label = aggregate.domain ? domainLabel(aggregate.domain) : tv('options.any')
     addGroup(key, label).items.push(aggregate)
   }
 
@@ -132,25 +135,25 @@ const groupedAggregateOptions = computed<AggregateGroup[]>(() => {
 function domainLabel(domain: NonNullable<FeatureAnalysisAggregate['domain']>) {
   switch (domain) {
     case 'CONDITION':
-      return 'Condition'
+      return tv('featureAnalyses.aggregateDomain.condition')
     case 'CONDITION_ERA':
-      return 'Condition Era'
+      return tv('featureAnalyses.aggregateDomain.conditionEra')
     case 'DEMOGRAPHICS':
-      return 'Demographics'
+      return tv('featureAnalyses.aggregateDomain.demographics')
     case 'DEVICE':
-      return 'Device'
+      return tv('featureAnalyses.aggregateDomain.device')
     case 'DRUG':
-      return 'Drug'
+      return tv('featureAnalyses.aggregateDomain.drug')
     case 'DRUG_ERA':
-      return 'Drug Era'
+      return tv('featureAnalyses.aggregateDomain.drugEra')
     case 'MEASUREMENT':
-      return 'Measurement'
+      return tv('featureAnalyses.aggregateDomain.measurement')
     case 'OBSERVATION':
-      return 'Observation'
+      return tv('featureAnalyses.aggregateDomain.observation')
     case 'PROCEDURE':
-      return 'Procedure'
+      return tv('featureAnalyses.aggregateDomain.procedure')
     case 'VISIT':
-      return 'Visit'
+      return tv('featureAnalyses.aggregateDomain.visit')
     default:
       return domain
   }

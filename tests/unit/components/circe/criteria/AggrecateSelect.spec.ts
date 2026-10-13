@@ -15,6 +15,8 @@ import AggrecateSelect from '@/components/circe/criteria/AggrecateSelect.vue'
 import type { FeatureAnalysisDistributionItem } from '@/models/feature-analysis.types'
 import type { FeatureAnalysisAggregate } from '@/models/feature-analysis.types'
 
+vi.mock('@/composables/useI18n', async () => (await import('../../../../helpers/i18n-mock')).mockUseI18n)
+
 const vuetify = createVuetify({ components, directives })
 
 global.ResizeObserver = vi.fn().mockImplementation(() => ({

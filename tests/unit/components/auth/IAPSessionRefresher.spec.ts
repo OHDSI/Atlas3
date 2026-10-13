@@ -5,6 +5,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, VueWrapper } from '@vue/test-utils'
 import IAPSessionRefresher from '@/components/auth/IAPSessionRefresher.vue'
 
+vi.mock('@/composables/useI18n', async () => (await import('../../../helpers/i18n-mock')).mockUseI18n)
+
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {

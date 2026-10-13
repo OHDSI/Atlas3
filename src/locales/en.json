@@ -27,7 +27,8 @@
       "datetime": "MM/DD/YYYY h:mm A",
       "datetimeWithSeconds": "MM/DD/YYYY h:mm:ss A",
       "minutes": "min",
-      "seconds": "sec"
+      "seconds": "sec",
+      "invalid": "Invalid Date"
     }
   },
   "executionStatus": {
@@ -150,7 +151,8 @@
     "startDate": "start date",
     "endDate": "end date",
     "dayCountOne": "1 day",
-    "dayCount": "{count} days"
+    "dayCount": "{count} days",
+    "notAvailable": "N/A"
   },
   "commonErrors": {
     "noSources": "The current WebAPI has no sources defined.<br/>Please add one or more on <a href=\"#/configure\">configuration</a> page.",
@@ -163,7 +165,8 @@
     "somethingWentWrong": "Something Went Wrong",
     "exportFailed": "Export failed",
     "copyFailed": "Copy failed",
-    "deleteFailed": "Delete failed"
+    "deleteFailed": "Delete failed",
+    "unknown": "Unknown error"
   },
   "navigation": {
     "characterizations": "Characterizations",
@@ -280,7 +283,6 @@
       "hintPercentExcluded": "Marginal cost of this rule: percent of patients who satisfy every OTHER rule but fail this one. High = removing this rule would recover that share.",
       "downloadCsv": "Download CSV",
       "noAttritionHint": "Generate a cohort with inclusion rules to see attrition",
-      "patients": "patients",
       "retained": "retained",
       "tooltipRemaining": "Remaining",
       "tooltipExcludedAtStep": "Excluded at this step",
@@ -731,8 +733,6 @@
       "goBack": "Go back",
       "addToConceptSet": "Add to Concept Set",
       "copyId": "Copy ID",
-      "persons": "persons",
-      "descAbbr": "desc.",
       "sourcesLoadFailed": "Unable to load data sources.",
       "noResultsSources": "No data sources with a Results schema are available.",
       "showFewerSources": "Show fewer sources",
@@ -806,7 +806,11 @@
         "updated": "Vocabulary schema updated to \"{value}\"",
         "updateError": "Failed to update schema. Please try again.",
         "reverted": "Reverted to \"{value}\"",
-        "undoError": "Failed to undo. Please try again."
+        "undoError": "Failed to undo. Please try again.",
+        "schemaRequired": "Schema name is required",
+        "schemaTooLong": "Schema name too long (max {max} characters)",
+        "schemaInvalidStart": "Schema must start with a letter or underscore",
+        "schemaInvalidChars": "Schema can only contain letters, numbers, and underscores"
       },
       "trexsql": {
         "loadError": "Failed to load data sources",
@@ -998,7 +1002,9 @@
       "viewValidationMessages": "View validation messages",
       "analysisDesign": "Analysis design",
       "validationMessages": "Validation messages",
-      "noCasesFound": "No cases found for this target/outcome combination. Try selecting a different outcome."
+      "noCasesFound": "No cases found for this target/outcome combination. Try selecting a different outcome.",
+      "noneMatched": "None matched",
+      "treemapNodeSummary": "{persons} persons || {cases} cases || Rate: {rate} per 1,000 PY"
     },
     "pathwayCohortList": {
       "removeCohort": "Remove cohort"
@@ -1049,8 +1055,6 @@
       "eventStarts": "event starts",
       "indexEnd": "index end",
       "indexStart": "index start",
-      "before": "before",
-      "after": "after",
       "summary": "{anchor} between {start} and {end} {indexAnchor}",
       "endpointBefore": "{days} before",
       "endpointAfter": "{days} after",
@@ -1071,7 +1075,6 @@
       "distinctBy": "Distinct by",
       "usingDistinctEvents": "Using distinct events",
       "usingAllEvents": "Using all events",
-      "ofDistinct": "of distinct",
       "distinctColumn": {
         "startDate": "Start Date",
         "standardConcept": "Standard Concept",
@@ -1242,7 +1245,8 @@
     },
     "criteria": {
       "addAttribute": "Add attribute...",
-      "selectConceptSet": "Select Concept Set"
+      "selectConceptSet": "Select Concept Set",
+      "editorNotImplemented": "Editor not implemented yet."
     },
     "workbench": {
       "hideAnalysisDesign": "Hide Analysis Design",
@@ -1258,6 +1262,54 @@
     },
     "characterizationWorkbench": {
       "personCount": "{count} persons"
+    },
+    "languageSelector": {
+      "selectLanguage": "Select language"
+    },
+    "endStrategy": {
+      "censoring": {
+        "title": "Censoring Events",
+        "lede": "Cohort members exit early when any of these events occur.",
+        "add": "Add Censoring Event",
+        "empty": "No censoring events defined. Cohort exit is determined only by the end strategy above."
+      },
+      "customEra": {
+        "hint": "Cohort exit is based on continuous drug exposure, allowing configurable gaps between exposures.",
+        "selectConceptSet": "Select Drug Concept Set",
+        "daysSupplyOverride": "Days Supply Override",
+        "daysSupplyHint": "If days supply is missing from the records, the system assumes 1 day per exposure."
+      },
+      "dateOffset": {
+        "hint": "Cohort exit is a fixed number of days from a date derived from the qualifying event.",
+        "dateField": "Date Field"
+      },
+      "selector": {
+        "label": "Strategy",
+        "observation": "Continuous Observation",
+        "dateOffset": "Fixed Duration",
+        "customEra": "Drug Exposure"
+      },
+      "observation": {
+        "hint": "Cohort members exit when their continuous observation period ends. No additional configuration is needed."
+      }
+    },
+    "chartExport": {
+      "pngFailed": "Failed to export PNG",
+      "svgFailed": "Failed to export SVG",
+      "csvFailed": "Failed to export CSV",
+      "clipboardFailed": "Failed to copy to clipboard"
+    },
+    "charts": {
+      "distribution": "Distribution",
+      "value": "Value",
+      "percentage": "Percentage",
+      "genderDistribution": "Gender Distribution",
+      "years": "Years",
+      "observations": "Observations",
+      "metric": "Metric",
+      "ageGroupGender": "Age Group / Gender",
+      "year": "Year",
+      "prevalencePer1000": "Prevalence Per 1000 People"
     }
   },
   "characterizations": {
@@ -1307,8 +1359,14 @@
         "stdDiff": "Std Diff",
         "min": "Min",
         "distribution": "Distribution",
-        "prevalence": "Prevalence"
-      }
+        "prevalence": "Prevalence",
+        "avgSd": "Avg (SD)"
+      },
+      "pagination": {
+        "rowsPerPage": "Rows per page",
+        "range": "{start}-{end} of {total}"
+      },
+      "loadFailed": "Failed to load results"
     }
   },
   "featureAnalyses": {
@@ -1335,6 +1393,18 @@
       },
       "deleteConfirm": "Delete feature analysis '{name}'?",
       "aggregatesUnavailable": "Unable to load the default aggregate"
+    },
+    "aggregateDomain": {
+      "condition": "Condition",
+      "conditionEra": "Condition Era",
+      "demographics": "Demographics",
+      "device": "Device",
+      "drug": "Drug",
+      "drugEra": "Drug Era",
+      "measurement": "Measurement",
+      "observation": "Observation",
+      "procedure": "Procedure",
+      "visit": "Visit"
     }
   },
   "facets": {
@@ -1517,7 +1587,21 @@
       "measurement": "Measurement",
       "observation": "Observation"
     },
-    "pageSubtitle": "Browse CDM data sources and run pre-built reports against them."
+    "pageSubtitle": "Browse CDM data sources and run pre-built reports against them.",
+    "loadFailed": "Failed to load data sources",
+    "reportLoadFailed": "Failed to load report",
+    "reportFetchFailed": "Failed to fetch {reportType} report: {detail}",
+    "charts": {
+      "percentOfPersons": "Percent of Persons",
+      "month": "Month",
+      "observationCount": "Observation Count",
+      "total": "Total",
+      "records": "Records",
+      "unknown": "Unknown",
+      "cumulativePercent": "Cumulative %",
+      "persons": "Persons",
+      "prevalencePer1000": "Prevalence per 1000"
+    }
   },
   "search": {
     "addedCountToSet": "Added {count} concepts → {set}",
@@ -1536,7 +1620,10 @@
     },
     "viewCountMessage": "View record count for:",
     "vocabulariesInfo": "Type at least 3 characters; press Enter to search across SNOMED, ICD, RxNorm, LOINC, and other vocabularies.",
-    "minLengthHint": "Please enter at least {min} characters"
+    "minLengthHint": "Please enter at least {min} characters",
+    "errors": {
+      "recordCountsFailed": "Failed to load record counts for the selected source."
+    }
   },
   "cs": {
     "browser": {
@@ -1773,7 +1860,8 @@
       "runError": "Failed to start generation",
       "cancelError": "Failed to cancel generation",
       "statType": "Stat Type",
-      "customSqlTitle": "Custom SQL"
+      "customSqlTitle": "Custom SQL",
+      "copySqlTemplateFailed": "Failed to copy SQL template"
     }
   },
   "home": {
@@ -1824,7 +1912,8 @@
       "started": "Started",
       "stratifyRule": "Stratify Rule",
       "timeAtRiskYears": "Person-years",
-      "summaryRow": "Summary"
+      "summaryRow": "Summary",
+      "reportLoadFailed": "Failed to fetch report"
     },
     "tabs": {
       "conceptSets": "Concept Sets",
@@ -1868,7 +1957,8 @@
     "chooseSourceAndPerson": "Choose a data source and enter a person ID",
     "dataSource": "Data source",
     "emptyHint": "Use the source picker and person ID above to load a profile.",
-    "noCohortSelected": "No cohort selected"
+    "noCohortSelected": "No cohort selected",
+    "loadFailed": "Failed to load profile"
   },
   "ple": {
     "spec": {
@@ -1884,7 +1974,8 @@
     "refreshJobs": "Refresh Jobs",
     "title": "Jobs",
     "close": "Close jobs panel",
-    "openPanel": "Open jobs panel"
+    "openPanel": "Open jobs panel",
+    "loadFailed": "Failed to fetch jobs"
   },
   "configuration": {
     "alerts": {
@@ -1922,7 +2013,18 @@
         "users": "Users",
         "utilities": "Utilities"
       },
-      "title": "Roles"
+      "title": "Roles",
+      "errors": {
+        "loadListFailed": "Failed to fetch roles",
+        "loadFailed": "Failed to fetch role",
+        "createFailed": "Failed to create role",
+        "updateFailed": "Failed to update role",
+        "deleteFailed": "Failed to delete role",
+        "loadPermissionsFailed": "Failed to fetch permissions",
+        "loadRolePermissionsFailed": "Failed to fetch role permissions",
+        "loadUsersFailed": "Failed to fetch users",
+        "loadRoleUsersFailed": "Failed to fetch role users"
+      }
     },
     "title": "Configuration",
     "userImport": {
@@ -2005,7 +2107,8 @@
     "datasetPatients": "dataset patients",
     "qualifyingCohort": "Qualifying cohort",
     "ofEntry": "of entry",
-    "unnamedRule": "Unnamed Rule"
+    "unnamedRule": "Unnamed Rule",
+    "statsLoadFailed": "Failed to fetch inclusion stats"
   },
   "cohortDefinitions": {
     "cohort": {
@@ -2049,7 +2152,8 @@
       "drawer": {
         "inclusionTitle": "Inclusion rule report",
         "samplesTitle": "Cohort samples"
-      }
+      },
+      "failed": "Generation failed"
     },
     "cohortreports": {
       "tabs": {
@@ -2100,7 +2204,13 @@
     "conceptSetsDialog": {
       "title": "Concept Sets",
       "empty": "No concept sets in this cohort"
-    }
+    },
+    "importValidation": {
+      "notAnObject": "Expression must be a JSON object.",
+      "unrecognizedField": "unrecognized field",
+      "didYouMean": "(did you mean \"{suggestion}\"?)"
+    },
+    "nameRequired": "Cohort name is required"
   },
   "const": {
     "entityName": {
@@ -2281,14 +2391,42 @@
     "enterUsernameToImpersonate": "Enter username to impersonate",
     "runAsWarning": "Running as another user will assume their permissions and identity. All actions will be performed as the target user.",
     "failedToRunAsUser": "Failed to run as user",
-    "failedToExitRunAs": "Failed to exit run-as"
+    "failedToExitRunAs": "Failed to exit run-as",
+    "iap": {
+      "sessionRefreshFrame": "Identity-aware proxy session refresh"
+    },
+    "oauthNoToken": "Authentication failed - no token received",
+    "authenticationFailed": "Authentication failed",
+    "noTokenReceived": "No token received from server"
   },
   "conceptSets": {
     "conceptCount": "{count} concept(s)",
     "concepts": "Concepts:",
     "defaultName": "Concept Set {number}",
     "tagUpdateFailed": "Failed to update tags",
-    "pluginEditLoadFailed": "Could not open concept set {id}"
+    "pluginEditLoadFailed": "Could not open concept set {id}",
+    "loadListFailed": "Failed to fetch concept sets",
+    "notFound": "Concept set not found",
+    "loadFailed": "Failed to fetch concept set",
+    "createFailed": "Failed to create concept set",
+    "updateFailed": "Failed to update concept set",
+    "copyFailed": "Failed to copy concept set",
+    "tagAssignFailed": "Failed to assign tag \"{name}\"",
+    "tagUnassignFailed": "Failed to unassign tag \"{name}\"",
+    "deleteFailed": "Failed to delete concept set",
+    "noneSelected": "No concept set selected",
+    "duplicateItem": "Concept already exists in this set with the same options",
+    "duplicateItemOptions": "Another entry for this concept already uses those options",
+    "versionLoadFailed": "Failed to load version {version}",
+    "saveVersionFailed": "Failed to save preview as current",
+    "compare": {
+      "noneLoaded": "No concept set loaded",
+      "sameSet": "Cannot compare a concept set with itself",
+      "otherNotFound": "Other concept set not found"
+    },
+    "noVocabularySource": "No vocabulary source available",
+    "resolveFailed": "Failed to resolve concept set",
+    "resolveSourceCodesFailed": "Failed to resolve source codes"
   },
   "conceptSearch": {
     "instructions": "Enter a search term to find concepts in the OHDSI vocabulary"
@@ -2414,6 +2552,12 @@
       "delete": {
         "confirmTitle": "Delete Tag Group",
         "error": "Failed to delete tag group"
+      },
+      "validation": {
+        "nameTooLong": "Name must be less than 255 characters",
+        "invalidColor": "Invalid color format (must be hex: #RRGGBB)",
+        "iconTooLong": "Icon name too long",
+        "descriptionTooLong": "Description too long"
       }
     },
     "accessibility": {
@@ -2428,7 +2572,8 @@
     "commentSaved": "Comment saved successfully",
     "saveSuccess": "Version saved as current successfully",
     "saveError": "Failed to save version as current. Please try again.",
-    "filterClear": "Clear filters"
+    "filterClear": "Clear filters",
+    "loadError": "Failed to load version history"
   },
   "incidenceRate": {
     "editor": {
@@ -2441,7 +2586,14 @@
     "noStratifyRules": "No stratify rules yet.",
     "untitled": "Untitled rule",
     "discardStratifyChanges": "Your changes to this stratify rule will be lost.",
-    "studyWindowEmpty": "No study window"
+    "studyWindowEmpty": "No study window",
+    "validation": {
+      "designIncomplete": "Analysis design is incomplete",
+      "targetRequired": "At least one target cohort is required",
+      "outcomeRequired": "At least one outcome cohort is required",
+      "timeAtRiskOrder": "Time-at-risk end must be after start when both reference the same date",
+      "studyWindowOrder": "Study window start must be before end"
+    }
   },
   "views": {
     "cohorts": {
@@ -2504,7 +2656,31 @@
     "statusBuilding": "Building",
     "statusStale": "Stale",
     "statusError": "Error",
-    "statusNotBuilt": "Not Built"
+    "statusNotBuilt": "Not Built",
+    "statusMessage": {
+      "noSource": "No data source selected",
+      "ready": "Cache ready",
+      "building": "Cache is building...",
+      "notBuilt": "Cache not built. Build the cache to enable patient counting.",
+      "stale": "Cache is stale. Consider rebuilding for accurate counts.",
+      "error": "Cache error",
+      "unknown": "Unknown cache status"
+    },
+    "patientCountFailed": "Failed to get patient count",
+    "errors": {
+      "sourceNotFound": "Data source '{sourceKey}' not found",
+      "buildInProgress": "Cache build already in progress",
+      "extensionUnavailable": "TrexSQL extension not available",
+      "buildFailed": "Build failed: {detail}",
+      "statusFailed": "Failed to get cache status: {detail}",
+      "invalidExpression": "Invalid cohort expression",
+      "cacheUnavailable": "Cache not available. Please build the cache first.",
+      "incompleteExpression": "The cohort expression is incomplete or invalid.",
+      "countFailed": "Count failed: {detail}",
+      "listFilesFailed": "Failed to list cache files: {status} {detail}",
+      "deleteFailed": "Failed to delete cache: {status} {detail}",
+      "inclusionStatsFailed": "Inclusion stats failed: {detail}"
+    }
   },
   "pathway": {
     "results": {
@@ -2512,7 +2688,8 @@
       "allPathways": "All Pathways",
       "countsByRank": "Counts by Rank",
       "eventCohortCounts": "Event Cohort Counts",
-      "title": "Pathway results"
+      "title": "Pathway results",
+      "loadFailed": "Failed to load results"
     },
     "workbench": {
       "noRunsYet": "No runs yet",
@@ -2526,7 +2703,6 @@
       "insightsEmptyHint": "Insights appear after the first run.",
       "runDisabledReason": "Save the design before generating",
       "coverage": "Cohort coverage",
-      "coverageSuffix": "persons with pathway",
       "persons": "persons",
       "ofCohort": "of cohort",
       "ofPathways": "of pathways",
@@ -2537,7 +2713,13 @@
     "combinationWindow": "Collapse window (days)",
     "minCellCount": "Minimum cell count",
     "maxDepth": "Maximum path length",
-    "allowRepeats": "Allow repeats"
+    "allowRepeats": "Allow repeats",
+    "validation": {
+      "targetRequired": "At least one target cohort is required",
+      "eventRequired": "At least one event cohort is required",
+      "maxDepthMin": "Max depth must be at least {min}",
+      "minCellCountMin": "Min cell count must be at least {min}"
+    }
   },
   "analysis": {
     "subtitle": "Characterize cohorts, build features, trace pathways, and compute incidence rates."
@@ -3075,6 +3257,26 @@
     "placeOfService": {
       "label": "Place of Service",
       "description": "Filter by place of service"
+    }
+  },
+  "plugins": {
+    "overlay": {
+      "close": "Close plugin"
+    },
+    "error": {
+      "title": "Plugin Failed to Load",
+      "unknown": "Unknown error occurred",
+      "pluginId": "Plugin ID:",
+      "timestamp": "Timestamp:",
+      "hideDetails": "Hide Details",
+      "showDetails": "Show Details"
+    },
+    "loading": "Loading plugin..."
+  },
+  "conceptDetail": {
+    "errors": {
+      "loadFailed": "Failed to load concept",
+      "notFound": "Concept not found"
     }
   }
 }

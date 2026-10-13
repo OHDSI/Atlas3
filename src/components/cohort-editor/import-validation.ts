@@ -21,6 +21,7 @@
 import { z } from 'zod'
 import { CohortExpressionSchema, type CohortExpression } from '@/models/circe-types'
 import { unwrapType } from './schema-walk'
+import { useI18n } from '@/composables/useI18n'
 
 /** A single reason an imported expression was refused, as a displayable line. */
 export interface ImportProblem {
@@ -41,10 +42,11 @@ export type ImportValidation =
  * rejects and the fields it does not recognise.
  */
 export function validateCohortExpression(data: unknown): ImportValidation {
+  const { tv } = useI18n()
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     return {
       ok: false,
-      problems: [{ path: '', message: 'Expression must be a JSON object.' }],
+      problems: [{ path: '', message: tv('cohortDefinitions.importValidation.notAnObject') }],
     }
   }
 
@@ -52,7 +54,8 @@ export function validateCohortExpression(data: unknown): ImportValidation {
   // reports the correctly-spelled one as missing, and "unrecognized: title" is
   // the more useful of the two messages.
   const unrecognized: ImportProblem[] = []
-  collectUnrecognized(CohortExpressionSchema, data, '', unrecognized)
+  const unrecognizedField = tv('cohortDefinitions.importValidation.unrecognizedField')
+  collectUnrecognized(CohortExpressionSchema, data, '', unrecognized, unrecognizedField)
   if (unrecognized.length > 0) return { ok: false, problems: unrecognized }
 
   const result = CohortExpressionSchema.safeParse(data)
@@ -71,9 +74,12 @@ export function validateCohortExpression(data: unknown): ImportValidation {
 
 /** Renders problems as the lines shown to the user, most specific first. */
 export function describeImportProblems(problems: ImportProblem[]): string[] {
+  const { tv } = useI18n()
   return problems.map((problem) => {
     const where = problem.path ? `${problem.path}: ` : ''
-    const hint = problem.suggestion ? ` (did you mean "${problem.suggestion}"?)` : ''
+    const hint = problem.suggestion
+      ? ` ${tv('cohortDefinitions.importValidation.didYouMean', { suggestion: problem.suggestion })}`
+      : ''
     return `${where}${problem.message}${hint}`
   })
 }
@@ -101,27 +107,28 @@ function collectUnrecognized(
   schema: z.ZodTypeAny,
   data: unknown,
   path: string,
-  out: ImportProblem[]
+  out: ImportProblem[],
+  unrecognizedField: string
 ): void {
   if (data === null || data === undefined) return
 
   const type = unwrapType(schema)
 
   if (type instanceof z.ZodLazy) {
-    collectUnrecognized(type.schema, data, path, out)
+    collectUnrecognized(type.schema, data, path, out, unrecognizedField)
     return
   }
 
   if (type instanceof z.ZodArray) {
     if (!Array.isArray(data)) return
-    data.forEach((item, index) => collectUnrecognized(type.element, item, `${path}[${index}]`, out))
+    data.forEach((item, index) => collectUnrecognized(type.element, item, `${path}[${index}]`, out, unrecognizedField))
     return
   }
 
   if (type instanceof z.ZodRecord) {
     if (typeof data !== 'object' || Array.isArray(data)) return
     for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
-      collectUnrecognized(type.valueSchema, value, join(path, key), out)
+      collectUnrecognized(type.valueSchema, value, join(path, key), out, unrecognizedField)
     }
     return
   }
@@ -140,7 +147,7 @@ function collectUnrecognized(
       if (!match) {
         out.push({
           path: join(path, key),
-          message: 'unrecognized field',
+          message: unrecognizedField,
           suggestion: closestKey(
             key,
             objectOptions.flatMap((option) => Object.keys((unwrapType(option) as z.AnyZodObject).shape))
@@ -150,7 +157,7 @@ function collectUnrecognized(
       }
       const shape = (unwrapType(match) as z.AnyZodObject).shape as Record<string, z.ZodTypeAny>
       const inner = shape[key]
-      if (inner) collectUnrecognized(inner, value, join(path, key), out)
+      if (inner) collectUnrecognized(inner, value, join(path, key), out, unrecognizedField)
     }
     return
   }
@@ -163,12 +170,12 @@ function collectUnrecognized(
       if (!declared) {
         out.push({
           path: join(path, key),
-          message: 'unrecognized field',
+          message: unrecognizedField,
           suggestion: closestKey(key, Object.keys(shape)),
         })
         continue
       }
-      collectUnrecognized(declared, value, join(path, key), out)
+      collectUnrecognized(declared, value, join(path, key), out, unrecognizedField)
     }
   }
 }

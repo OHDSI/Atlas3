@@ -67,28 +67,22 @@
     "savePreviewWarning": "Save as current version?",
     "conceptSet": "Concept Set",
     "cohort": "Cohort",
-    "addTools": "도구 추가",
-    "url": "URL",
     "apply": "적용하다",
-    "tools": "도구",
     "confirm": "확인",
     "edit": "Edit",
-    "cannotUndo": "이 작업은 취소할 수 없습니다."
-  },
-  "tool": {
-    "name": "* 이름",
-    "url": "* URL",
-    "nameValidMess": "도구 이름은 비워둘 수 없습니다.",
-    "urlValidMess": "도구 URL은 비워둘 수 없습니다.",
-    "loading": "도구 로딩",
-    "error": {
-      "list": "현재 목록 데이터를 가져올 수 없습니다. 나중에 다시 시도해주세요.",
-      "create": "도구를 만들지 못했습니다.",
-      "update": "도구 업데이트에 실패했습니다.",
-      "delete": "도구 삭제에 실패했습니다."
+    "cannotUndo": "이 작업은 취소할 수 없습니다.",
+    "authorship": {
+      "created": "등록일",
+      "updated": "수정일"
     },
-    "toolDisabled": "도구 비활성화됨",
-    "toolEnabled": "도구 활성화됨"
+    "description": "설명",
+    "both": "둘다",
+    "match": "매치(Match)",
+    "of": "의",
+    "cohortDefinition": "코호트 정의",
+    "between": "사이에",
+    "startDate": "시작일",
+    "endDate": "종료일"
   },
   "commonErrors": {
     "noSources": "현재 WebAPI에 정의된 소스가 없습니다. <br/> 해당 페이지에서 하나 이상을 추가하십시오 <a href=\"#/configure\">configuration</a> page.",
@@ -104,7 +98,8 @@
     "jobs": "실행내역",
     "pathways": "코호트 경로",
     "profiles": "프로필",
-    "tools": "도구"
+    "incidenceRates": "Incidence Rates",
+    "analysis": "분석"
   },
   "options": {
     "after": "다음",
@@ -123,7 +118,10 @@
     "notEndsWith": "끝나지 않는",
     "notStartsWith": "시작하지 않음",
     "startDate": "시작일",
-    "startsWith": "로 시작"
+    "startsWith": "로 시작",
+    "onOrBefore": "이전에",
+    "on": "~에",
+    "onOrAfter": "이후"
   },
   "components": {
     "inclusionRuleReport": {
@@ -153,18 +151,19 @@
       "hintPercentExcluded": "이 규칙의 한계 비용: 다른 모든 규칙은 충족하지만 이 규칙만 충족하지 못하는 환자의 비율. 값이 크면 이 규칙을 제거할 경우 그만큼 회복됩니다.",
       "downloadCsv": "CSV 다운로드",
       "noAttritionHint": "이탈을 보려면 포함 규칙이 있는 코호트를 생성하세요",
-      "patients": "명",
       "retained": "유지",
       "tooltipRemaining": "잔여",
-      "tooltipExcludedAtStep": "이 단계에서 제외"
-    },
-    "authorship": {
-      "createdLabel": "{createdBy}가 {createdDate} 경에 생성",
-      "modifiedLabel": "{modifiedBy}가 {modifiedDate} 경에 수정"
+      "tooltipExcludedAtStep": "이 단계에서 제외",
+      "intersectHaving": "다음 조건 중",
+      "intersectAll": "모두",
+      "intersectAny": "어느 하나",
+      "unitPersons": "환자수"
     },
     "analysisExecution": {
       "buttons": {
-        "generate": "실행"
+        "generate": "실행",
+        "cancel": "취소",
+        "rerun": "재실행"
       }
     },
     "cohortExpressionEditor": {
@@ -174,13 +173,16 @@
       "noCensoring": "센서링(Censoring) 없음",
       "eraCollapseGap": "Era collapse gap 기간을 설정합니다:",
       "leftCensorStartDates": " ",
-      "rightCensorEndDates": " "
+      "rightCensorEndDates": " ",
+      "entryEvents": "코호트 진입 이벤트",
+      "cohortEras": "코호트 기간 기준"
     },
     "conceptSet": {
       "addConcepts": "컨셉 추가"
     },
     "conceptAddBox": {
-      "selectConceptSet": "컨셉 세트 선택하기"
+      "selectConceptSet": "컨셉 세트 선택하기",
+      "addConcepts": "컨셉 추가"
     },
     "conceptSetBuilder": {
       "newConceptSet": "새 컨셉 세트",
@@ -190,7 +192,12 @@
       "title": "진단 기간 (condition era)"
     },
     "conditionOccurrence": {
-      "title": "진단 발생(Condition occurrence)"
+      "title": "진단 발생(Condition occurrence)",
+      "attributes": {
+        "visitType": {
+          "label": "방문"
+        }
+      }
     },
     "criteriaGroup": {
       "addCriteria": "그룹에 기준 추가...",
@@ -401,15 +408,15 @@
       "loadError": "코호트를 불러오지 못했습니다",
       "exportDownloaded": "코호트 JSON을 다운로드했습니다",
       "copiedToClipboard": "코호트 JSON을 클립보드에 복사했습니다",
-      "copyFailed": "클립보드에 복사할 수 없습니다"
+      "copyFailed": "클립보드에 복사할 수 없습니다",
+      "sqlMenuTitle": "SQL",
+      "sqlDialect": "통용어"
     },
     "conceptDetail": {
       "closeDetails": "개념 세부정보 닫기",
       "goBack": "뒤로",
       "addToConceptSet": "개념 집합에 추가",
       "copyId": "ID 복사",
-      "persons": "명",
-      "descAbbr": "하위",
       "conceptDetailsTitle": "개념 세부정보",
       "conceptId": "개념 ID",
       "conceptClass": "개념 클래스",
@@ -677,10 +684,19 @@
     },
     "correlatedCriteria": {
       "restrictToSameVisit": "동일한 방문 발생 (Visit occurrence)으로 제한",
-      "allowEventsOutsideObservation": "관찰기록 기간을 벗어나는 이벤트도 허용함"
+      "allowEventsOutsideObservation": "관찰기록 기간을 벗어나는 이벤트도 허용함",
+      "distinctColumn": {
+        "standardConcept": "표준 컨셉",
+        "visit": "방문"
+      }
     },
     "deviceExposure": {
-      "title": "디바이스 노출 (Device exposure)"
+      "title": "디바이스 노출 (Device exposure)",
+      "attributes": {
+        "visitType": {
+          "label": "방문"
+        }
+      }
     },
     "doseEra": {
       "title": "도즈 기간 (Dose Era)"
@@ -720,7 +736,33 @@
       "showDesignPanel": "디자인 패널 표시"
     },
     "access": {
-      "searchRoles": "역할 검색..."
+      "searchRoles": "역할 검색...",
+      "configureAccess": "액세스 구성"
+    },
+    "conceptHierarchyDialog": {
+      "ancestors": "조상",
+      "descendants": "하위 컨셉"
+    },
+    "windowExpression": {
+      "eventEnds": "이벤트 종료",
+      "eventStarts": "이벤트 시작"
+    },
+    "endStrategy": {
+      "censoring": {
+        "title": "Censoring 이벤트"
+      },
+      "customEra": {
+        "selectConceptSet": "Drug Concept Set을 선택합니다"
+      },
+      "selector": {
+        "customEra": "약물 노출 (Drug Exposure)"
+      }
+    },
+    "charts": {
+      "value": "값",
+      "years": "년",
+      "year": "년",
+      "prevalencePer1000": "1000명당 유병율"
     }
   },
   "facets": {
@@ -773,7 +815,6 @@
     "message": "메시지",
     "modified": "수정일",
     "name": "이름",
-    "originConceptSets": "오리진 컨셉트 세트",
     "outcomes": "결과",
     "p25": "분위수 25%",
     "p75": "분위수 75%",
@@ -809,10 +850,11 @@
     "drcTooltip": "Descendant Record Count",
     "pcTooltip": "Person Count",
     "dpcTooltip": "Descendant Person Count",
-    "conceptID": "개념 ID",
-    "searchData": "데이터 검색",
     "createdBy": "만든 사람",
-    "createdDate": "생성 날짜"
+    "standard": "표준",
+    "age": "나이",
+    "role": "역할",
+    "source": "소스"
   },
   "dataSources": {
     "dashboardReport": {
@@ -872,6 +914,28 @@
     },
     "treemap": {
       "treemapTab": "트리 맵"
+    },
+    "sidebar": {
+      "demographics": "인구 통계 (Demographics)"
+    },
+    "reportTypes": {
+      "dashboard": "대시보드(Dashboard)",
+      "datadensity": "데이터 밀도(Density)",
+      "person": "사람",
+      "observationPeriod": "관찰기간",
+      "death": "사망",
+      "visit": "방문",
+      "conditionOccurrence": "진단 발생(Condition occurrence)",
+      "conditionEra": "진단 기간 (condition era)",
+      "procedure": "수술 및 처치(Procedure)",
+      "drugExposure": "약물 노출 (Drug Exposure)",
+      "drugEra": "약물 기간 (Drug Era)",
+      "measurement": "검사(Measurement)",
+      "observation": "관찰기록(Observation)"
+    },
+    "charts": {
+      "records": "기록 수",
+      "persons": "환자수"
     }
   },
   "search": {
@@ -898,7 +962,8 @@
         "headingMessage": "이 유틸리티를 사용하여 두 컨셉 세트가 공유하고 있는 컨셉을 확인하세요",
         "modalTitle": "컨셉 세트 선택",
         "vennDiagram": "Venn Diagram",
-        "vennDiagramTotalAmountConcepts": "The total amount of concepts: {count}"
+        "vennDiagramTotalAmountConcepts": "The total amount of concepts: {count}",
+        "compare": "비교"
       }
     },
     "manager": {
@@ -935,7 +1000,22 @@
           }
         }
       },
-      "conceptSetOptimization": "컨셉 세트 최적화"
+      "conceptSetOptimization": "컨셉 세트 최적화",
+      "pasteIdsAddBtn": "추가",
+      "tabs": {
+        "included": "포함된",
+        "sourceCodes": "소스 코드",
+        "selected": "선택된"
+      }
+    },
+    "conceptAddBox": {
+      "addToConceptSet": "컨셉 세트에 추가",
+      "descendants": "하위 컨셉",
+      "exclude": "제외 컨셉",
+      "mapped": "매핑된 컨셉"
+    },
+    "conceptSet": {
+      "loadingRecommendedConcepts": "Loading Recommended Concepts"
     }
   },
   "cc": {
@@ -943,7 +1023,8 @@
     "new": "새",
     "tabs": {
       "featureAnalyses": {
-        "title": "특성 분석"
+        "title": "특성 분석",
+        "createLabel": "새 특성 분석"
       }
     },
     "viewEdit": {
@@ -1009,7 +1090,8 @@
     "deleteConfirmation": "발생률(incidence rate) 분석을 삭제 하시겠습니까? 경고 : 경고 : 삭제시 다시 되돌릴 수 없습니다!",
     "editor": {
       "chooseACohort": "코호트 선택",
-      "stratifyCriteria": "계층화 기준 :"
+      "stratifyCriteria": "계층화 기준 :",
+      "outcomes": "결과"
     },
     "results": {
       "cases": "이벤트 환자수",
@@ -1025,10 +1107,17 @@
     "tabs": {
       "conceptSets": "컨셉 세트",
       "versions": "Versions"
+    },
+    "workbench": {
+      "treemap": "트리 맵",
+      "table": "테이블"
     }
   },
   "profiles": {
-    "personId": "사람(Person) ID"
+    "personId": "사람(Person) ID",
+    "highlightNone": "없음",
+    "gender": "성별",
+    "age": "나이"
   },
   "ple": {
     "spec": {
@@ -1041,7 +1130,8 @@
     }
   },
   "jobs": {
-    "refreshJobs": "작업 새로 고침"
+    "refreshJobs": "작업 새로 고침",
+    "title": "실행내역"
   },
   "configuration": {
     "alerts": {
@@ -1094,10 +1184,7 @@
         "title": "연결 문자열"
       },
       "dialect": {
-        "label": "소스 dialect:",
-        "options": {
-          "iris": "InterSystems IRIS"
-        }
+        "label": "소스 dialect:"
       },
       "krb": {
         "adminServer": {
@@ -1182,7 +1269,20 @@
     },
     "newDefinition": "새 코호트",
     "newDefinitionTitle": "새로운 코호트 정의 만들기",
-    "noConceptSets": "내보낼 컨셉 세트 없음"
+    "noConceptSets": "내보낼 컨셉 세트 없음",
+    "generation": {
+      "section": {
+        "title": "생성"
+      },
+      "row": {
+        "samples": "샘플"
+      }
+    },
+    "cohortDefinitions": "코호트 정의",
+    "ruleDescription": "설명",
+    "conceptSetsDialog": {
+      "title": "컨셉 세트"
+    }
   },
   "const": {
     "disabledReason": {
@@ -1324,6 +1424,11 @@
         "title_visitDetail": "Add Place of Service Distance Criteria",
         "desc_visitDetail": "Filter Visit detail based on distance from Place of Service to Patient."
       }
+    },
+    "entityName": {
+      "characterization": "특성",
+      "conceptSet": "컨셉 세트",
+      "featureAnalysis": "특성 분석"
     }
   },
   "notifications": {
@@ -1377,5 +1482,213 @@
     "light": "라이트",
     "dark": "다크",
     "system": "시스템"
+  },
+  "route": {
+    "home": {
+      "title": "홈"
+    },
+    "cohorts": {
+      "title": "Cohorts"
+    },
+    "conceptSets": {
+      "title": "컨셉 세트"
+    },
+    "profiles": {
+      "title": "프로필"
+    },
+    "analysis": {
+      "title": "분석"
+    },
+    "characterizations": {
+      "title": "특성"
+    },
+    "pathways": {
+      "title": "Cohort Pathways"
+    },
+    "incidenceRates": {
+      "title": "Incidence Rates"
+    },
+    "dataSources": {
+      "title": "데이터 소스"
+    }
+  },
+  "characterizations": {
+    "results": {
+      "table": {
+        "min": "최소값",
+        "prevalence": "유병율"
+      }
+    }
+  },
+  "featureAnalyses": {
+    "editor": {
+      "prevalence": {
+        "addCriteria": "기준 기능(Feature) 추가"
+      },
+      "distribution": {
+        "addCriteria": "기준 기능(Feature) 추가"
+      }
+    },
+    "aggregateDomain": {
+      "condition": "진단(Condition)",
+      "conditionEra": "진단 기간 (condition era)",
+      "demographics": "인구 통계 (Demographics)",
+      "device": "디바이스 (Device)",
+      "drug": "약물",
+      "drugEra": "약물 기간 (Drug Era)",
+      "measurement": "검사(Measurement)",
+      "observation": "관찰기록(Observation)",
+      "procedure": "수술 및 처치(Procedure)",
+      "visit": "방문"
+    }
+  },
+  "inclusionRail": {
+    "title": "포함 규칙(rules)",
+    "of": "의"
+  },
+  "criteria": {
+    "conditionEra": {
+      "name": "진단 기간 (condition era)"
+    },
+    "conditionOccurrence": {
+      "name": "진단 발생(Condition occurrence)",
+      "description": {
+        "initial": "특정 진단을 가진 환자를 찾습니다."
+      }
+    },
+    "death": {
+      "name": "사망"
+    },
+    "drugEra": {
+      "name": "약물 기간 (Drug Era)"
+    },
+    "drugExposure": {
+      "name": "약물 노출 (Drug Exposure)"
+    },
+    "measurement": {
+      "name": "검사(Measurement)"
+    },
+    "observation": {
+      "name": "관찰기록(Observation)"
+    },
+    "observationPeriod": {
+      "name": "관찰기간"
+    }
+  },
+  "attributes": {
+    "age": {
+      "name": "나이"
+    }
+  },
+  "config": {
+    "title": "환경설정",
+    "cache": {
+      "clearButton": "구성 캐시 지우기"
+    },
+    "tags": {
+      "title": "Tag Management",
+      "table": {
+        "headers": {
+          "color": "Color",
+          "icon": "Icon",
+          "mandatory": "Mandatory",
+          "multiple": "Multiple"
+        }
+      },
+      "dialog": {
+        "editTitle": "Edit Tag Group",
+        "fields": {
+          "name": {
+            "label": "이름"
+          },
+          "color": {
+            "label": "Color"
+          },
+          "icon": {
+            "label": "Icon"
+          },
+          "description": {
+            "label": "설명"
+          },
+          "mandatory": {
+            "label": "Mandatory"
+          }
+        }
+      }
+    }
+  },
+  "versions": {
+    "current": "Current"
+  },
+  "incidenceRate": {
+    "studyWindowStart": "시작일"
+  },
+  "apiKeys": {
+    "list": {
+      "never": "결코 아닌 (Never)",
+      "revoke": "취소"
+    },
+    "create": {
+      "name": "이름",
+      "description": "설명",
+      "generate": "생성",
+      "done": "완료"
+    }
+  },
+  "criteriaAttributes": {
+    "gender": {
+      "label": "성별"
+    },
+    "eraEndDate": {
+      "label": "종료일"
+    },
+    "age": {
+      "label": "나이"
+    },
+    "occurrenceEndDate": {
+      "label": "종료일"
+    },
+    "conditionType": {
+      "label": "진단 타입"
+    },
+    "endDate": {
+      "label": "종료일"
+    },
+    "duration": {
+      "label": "지속일"
+    },
+    "deathType": {
+      "label": "사망 타입"
+    },
+    "race": {
+      "label": "인종"
+    },
+    "ethnicity": {
+      "label": "민족"
+    },
+    "deviceType": {
+      "label": "디바이스(Device) 타입"
+    },
+    "drugType": {
+      "label": "약물 타입"
+    },
+    "episodeEndDate": {
+      "label": "종료일"
+    },
+    "measurementType": {
+      "label": "검사(measurement) 타입"
+    },
+    "visitType": {
+      "label": "방문 타입"
+    },
+    "observationType": {
+      "label": "관찰기록(observation) 타입"
+    },
+    "procedureType": {
+      "label": "수술 및 처치(Procedure) 타입"
+    },
+    "specimenType": {
+      "label": "검체(Specimen) 타입"
+    }
   }
 }

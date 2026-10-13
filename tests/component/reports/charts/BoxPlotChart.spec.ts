@@ -18,6 +18,8 @@ import { nextTick } from 'vue'
 import BoxPlotChart from '@/components/ui/charts/AtlasBoxPlotChart.vue'
 import type { BoxPlotData } from '@/models/report.types'
 
+vi.mock('@/composables/useI18n', async () => (await import('../../../helpers/i18n-mock')).mockUseI18n)
+
 const vuetify = createVuetify({ components, directives })
 
 global.ResizeObserver = vi.fn().mockImplementation(() => ({

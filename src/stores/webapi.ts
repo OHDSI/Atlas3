@@ -9,8 +9,10 @@ import { fetchCDMSources } from '@/services/source.service'
 import { generateCohort as generateCohortRequest, getCohortGenerationInfo } from '@/services/cohort-definition.service'
 import { useExecutionPolling } from '@/composables/useExecutionPolling'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
 
 export const useWebAPIStore = defineStore('webapi', () => {
+  const { tv } = useI18n()
   // State
   const sources = ref<CDMSource[]>([])
   const selectedSource = ref<string | null>(null)
@@ -205,7 +207,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
           cohortDefinitionId: cohortId,
           sourceKey,
           status: 'FAILED',
-          failMessage: error instanceof Error ? error.message : 'Generation failed',
+          failMessage: error instanceof Error ? error.message : tv('cohortDefinitions.generation.failed'),
         })
       }
       logger.error('WebAPIStore', 'Failed to generate cohort', error)

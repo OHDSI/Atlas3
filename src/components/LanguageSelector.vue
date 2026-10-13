@@ -2,7 +2,7 @@
   <AtlasMenu>
     <template #activator="{ props: menuProps }">
       <AtlasTooltip
-        text="Select language"
+        :text="tv('components.languageSelector.selectLanguage')"
         location="bottom"
       >
         <template #activator="{ props: tooltipProps }">
@@ -12,7 +12,7 @@
             :disabled="loading"
             variant="text"
             icon="mdi-translate"
-            aria-label="Select language"
+            :aria-label="tv('components.languageSelector.selectLanguage')"
             data-testid="language-selector"
             @click.shift.exact="handleShiftClick"
           />
@@ -43,7 +43,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useLocaleStore } from '@/stores/locale'
 import { logger } from '@/utils/logger'
 
-const { locale: currentLocale, availableLocales, changeLocale, loading } = useI18n()
+const { locale: currentLocale, availableLocales, changeLocale, loading, tv } = useI18n()
 const localeStore = useLocaleStore()
 
 async function handleLocaleChange(newLocale: string) {

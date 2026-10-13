@@ -67,28 +67,22 @@
     "anonymous": "аноним",
     "conceptSet": "Набор концепций",
     "cohort": "Когорта",
-    "addTools": "Добавить инструмент",
-    "url": "URL-адрес",
     "apply": "Применять",
-    "tools": "Инструменты",
     "confirm": "Подтвердить",
     "edit": "Редактировать",
-    "cannotUndo": "Это действие нельзя отменить."
-  },
-  "tool": {
-    "name": "* Имя",
-    "url": "* URL",
-    "nameValidMess": "Имя инструмента не может быть пустым.",
-    "urlValidMess": "URL инструмента не может быть пустым.",
-    "loading": "Загрузка инструментов",
-    "error": {
-      "list": "Невозможно получить список данных в данный момент; попробуйте снова позже.",
-      "create": "Не удалось создать инструмент.",
-      "update": "Не удалось обновить инструмент.",
-      "delete": "Не удалось удалить инструмент."
+    "cannotUndo": "Это действие нельзя отменить.",
+    "authorship": {
+      "created": "Создано",
+      "updated": "Обновлено"
     },
-    "toolDisabled": "Инструмент отключен",
-    "toolEnabled": "Инструмент включен"
+    "description": "Описание",
+    "both": "Оба",
+    "match": "Соответствие",
+    "of": "из",
+    "cohortDefinition": "Когорты",
+    "between": "между",
+    "startDate": "Дата начала",
+    "endDate": "Дата окончания"
   },
   "commonErrors": {
     "noSources": "В текущем WebAPI не определено ни одного источника.<br/>Пожалуйста, добавьте источники на странице <a href=\"#/configure\">конфигурации</a>.",
@@ -104,7 +98,8 @@
     "profiles": "Профили",
     "jobs": "Задания",
     "feedback": "Обратная связь",
-    "tools": "Инструменты"
+    "incidenceRates": "Инцидентность",
+    "analysis": "Анализ"
   },
   "options": {
     "atMost": "В большинстве",
@@ -123,7 +118,10 @@
     "endsWith": "заканчивая",
     "notStartsWith": "не начиная с",
     "notContains": "не содержащий",
-    "notEndsWith": "не заканчивается"
+    "notEndsWith": "не заканчивается",
+    "onOrBefore": "Или раньше",
+    "on": "На",
+    "onOrAfter": "На или после"
   },
   "components": {
     "inclusionRuleReport": {
@@ -153,19 +151,20 @@
       "hintPercentExcluded": "Предельная «стоимость» этого правила: доля пациентов, удовлетворяющих всем ДРУГИМ правилам, но не этому. Высокое значение — удаление правила вернёт эту долю.",
       "downloadCsv": "Скачать CSV",
       "noAttritionHint": "Сформируйте когорту с правилами включения, чтобы увидеть отсев",
-      "patients": "пациентов",
       "retained": "сохранено",
       "tooltipRemaining": "Осталось",
-      "tooltipExcludedAtStep": "Исключено на этом шаге"
+      "tooltipExcludedAtStep": "Исключено на этом шаге",
+      "intersectHaving": "Имеющий",
+      "intersectAll": "Все",
+      "intersectAny": "Любые",
+      "unitPersons": "Люди"
     },
     "analysisExecution": {
       "buttons": {
-        "generate": "Выполнить"
+        "generate": "Выполнить",
+        "cancel": "Отмена",
+        "rerun": "Перезапуск"
       }
-    },
-    "authorship": {
-      "createdLabel": "создано: {createdBy} {createdDate}",
-      "modifiedLabel": "изменено: {modifiedBy} {modifiedDate}"
     },
     "windowedCriteria": {
       "ignoreObservationPeriod": "игнорировать период наблюдения"
@@ -194,13 +193,20 @@
       "days": "дней",
       "eraCollapseGap": "Укажите размер разрыва коллапса эпохи:",
       "leftCensorStartDates": "Даты начала когорты левого цензора в",
-      "rightCensorEndDates": "Дата окончания когорты правого цензора"
+      "rightCensorEndDates": "Дата окончания когорты правого цензора",
+      "entryEvents": "События входа",
+      "cohortEras": "Когорт Эра"
     },
     "conditionEra": {
       "title": "состояние эпохи"
     },
     "conditionOccurrence": {
-      "title": "возникновение условия"
+      "title": "возникновение условия",
+      "attributes": {
+        "visitType": {
+          "label": "Посещение"
+        }
+      }
     },
     "criteriaGroup": {
       "addCriteria": "Добавить критерии в группу ...",
@@ -214,7 +220,8 @@
       "addConcepts": "Добавить концепции"
     },
     "conceptAddBox": {
-      "selectConceptSet": "Выбрать набор концепций"
+      "selectConceptSet": "Выбрать набор концепций",
+      "addConcepts": "Добавить концепции"
     },
     "conceptSetBuilder": {
       "newConceptSet": "Новый набор концепций",
@@ -404,15 +411,15 @@
       "loadError": "Не удалось загрузить когорту",
       "exportDownloaded": "JSON когорты загружен",
       "copiedToClipboard": "JSON когорты скопирован в буфер обмена",
-      "copyFailed": "Не удалось скопировать в буфер обмена"
+      "copyFailed": "Не удалось скопировать в буфер обмена",
+      "sqlMenuTitle": "SQL",
+      "sqlDialect": "Диалект"
     },
     "conceptDetail": {
       "closeDetails": "Закрыть сведения о концепте",
       "goBack": "Назад",
       "addToConceptSet": "Добавить в набор концептов",
       "copyId": "Копировать ID",
-      "persons": "чел.",
-      "descAbbr": "потом.",
       "conceptDetailsTitle": "Сведения о концепте",
       "conceptId": "ID концепта",
       "conceptClass": "Класс концепта",
@@ -680,10 +687,19 @@
     },
     "correlatedCriteria": {
       "restrictToSameVisit": "ограничить одно и то же посещение",
-      "allowEventsOutsideObservation": "разрешить события за пределами периода наблюдения"
+      "allowEventsOutsideObservation": "разрешить события за пределами периода наблюдения",
+      "distinctColumn": {
+        "standardConcept": "Стандартная концепция",
+        "visit": "Посещение"
+      }
     },
     "deviceExposure": {
-      "title": "устройство воздействия"
+      "title": "устройство воздействия",
+      "attributes": {
+        "visitType": {
+          "label": "Посещение"
+        }
+      }
     },
     "doseEra": {
       "title": "эра дозы"
@@ -723,7 +739,33 @@
       "showDesignPanel": "Показать панель дизайна"
     },
     "access": {
-      "searchRoles": "Поиск ролей..."
+      "searchRoles": "Поиск ролей...",
+      "configureAccess": "Настроить доступ"
+    },
+    "conceptHierarchyDialog": {
+      "ancestors": "Предки",
+      "descendants": "Наследники"
+    },
+    "windowExpression": {
+      "eventEnds": "событие заканчивается",
+      "eventStarts": "событие начинается"
+    },
+    "endStrategy": {
+      "censoring": {
+        "title": "Цензура События"
+      },
+      "customEra": {
+        "selectConceptSet": "Выберите набор концепций лекарств"
+      },
+      "selector": {
+        "customEra": "Воздействие лекарств"
+      }
+    },
+    "charts": {
+      "value": "Значение",
+      "years": "Годы",
+      "year": "Год",
+      "prevalencePer1000": "Распространенность на 1000 человек"
     }
   },
   "facets": {
@@ -761,7 +803,6 @@
     "descendants": "Наследники",
     "mapped": "Сопоставлено",
     "severity": "Строгость",
-    "originConceptSets": "Исходные наборы концепций",
     "temporal": "Временной",
     "date": "Дата",
     "status": "Статус",
@@ -812,10 +853,11 @@
     "drcTooltip": "Количество записей-потомков",
     "pcTooltip": "Количество пациентов",
     "dpcTooltip": "Количество пациентов-потомков",
-    "conceptID": "Идентификатор концепции",
-    "searchData": "Данные поиска",
     "createdBy": "Автор",
-    "createdDate": "Дата создания"
+    "standard": "Стандартный",
+    "age": "Возраст",
+    "role": "Роль",
+    "source": "Источник"
   },
   "dataSources": {
     "headingTitle": "Источники данных",
@@ -875,6 +917,28 @@
       "percentOfPopulation": "Процент населения",
       "years": "Годы",
       "date": "Дата"
+    },
+    "sidebar": {
+      "demographics": "Демография"
+    },
+    "reportTypes": {
+      "dashboard": "Дашборд",
+      "datadensity": "Плотность данных",
+      "person": "Люди",
+      "observationPeriod": "Период наблюдений",
+      "death": "Смерти",
+      "visit": "Посещение",
+      "conditionOccurrence": "Встречаемость состояния",
+      "conditionEra": "Эра состояния",
+      "procedure": "Процедура",
+      "drugExposure": "Воздействие лекарств",
+      "drugEra": "Эра лекарств",
+      "measurement": "Измерение",
+      "observation": "Наблюдение"
+    },
+    "charts": {
+      "records": "Записей",
+      "persons": "Люди"
     }
   },
   "search": {
@@ -926,7 +990,13 @@
           }
         }
       },
-      "conceptSetOptimization": "Concept Set Optimization"
+      "conceptSetOptimization": "Concept Set Optimization",
+      "pasteIdsAddBtn": "Добавить",
+      "tabs": {
+        "included": "Включено",
+        "sourceCodes": "Исходные коды",
+        "selected": "Выбрано"
+      }
     },
     "browser": {
       "caption": "Наборы концепций",
@@ -937,8 +1007,18 @@
         "vennDiagramTotalAmountConcepts": "Общее количество концептов: {count}",
         "conceptSet1": "Набор концепций 1:",
         "compareConceptSets": "Сравнение наборов концепций",
-        "conceptSet2": "Набор концепций 2:"
+        "conceptSet2": "Набор концепций 2:",
+        "compare": "Сравнение"
       }
+    },
+    "conceptAddBox": {
+      "addToConceptSet": "Добавить в набор концепций",
+      "descendants": "Наследники",
+      "exclude": "Исключенные",
+      "mapped": "Сопоставленные"
+    },
+    "conceptSet": {
+      "loadingRecommendedConcepts": "Loading Recommended Concepts"
     }
   },
   "cc": {
@@ -946,7 +1026,8 @@
     "new": "Создать",
     "tabs": {
       "featureAnalyses": {
-        "title": "Функциональные анализы"
+        "title": "Функциональные анализы",
+        "createLabel": "Новый функциональный анализ"
       }
     },
     "viewEdit": {
@@ -1016,7 +1097,8 @@
     },
     "editor": {
       "chooseACohort": "Выберите когорту",
-      "stratifyCriteria": "Критерий стратификации:"
+      "stratifyCriteria": "Критерий стратификации:",
+      "outcomes": "Результаты"
     },
     "results": {
       "persons": "Люди",
@@ -1028,10 +1110,17 @@
       "running": "Запущено",
       "failed": "ОШИБКА",
       "stratifyRule": "Правило стратификации"
+    },
+    "workbench": {
+      "treemap": "TreeMap",
+      "table": "Таблица"
     }
   },
   "profiles": {
-    "personId": "ID профиля"
+    "personId": "ID профиля",
+    "highlightNone": "Нет",
+    "gender": "Пол",
+    "age": "Возраст"
   },
   "ple": {
     "spec": {
@@ -1044,7 +1133,8 @@
     }
   },
   "jobs": {
-    "refreshJobs": "Обновить список"
+    "refreshJobs": "Обновить список",
+    "title": "Задания"
   },
   "configuration": {
     "title": "Конфигурация",
@@ -1077,10 +1167,7 @@
         }
       },
       "dialect": {
-        "label": "Диалект источника:",
-        "options": {
-          "iris": "InterSystems IRIS"
-        }
+        "label": "Диалект источника:"
       },
       "connectionString": {
         "label": "Строка подключения:",
@@ -1185,7 +1272,20 @@
     },
     "newDefinition": "Новая когорта",
     "newDefinitionTitle": "Создать новую когорту",
-    "noConceptSets": "Нет концепций для экспорта"
+    "noConceptSets": "Нет концепций для экспорта",
+    "generation": {
+      "section": {
+        "title": "Генерация"
+      },
+      "row": {
+        "samples": "Образцы"
+      }
+    },
+    "cohortDefinitions": "Когорты",
+    "ruleDescription": "Описание",
+    "conceptSetsDialog": {
+      "title": "Наборы концепций"
+    }
   },
   "const": {
     "disabledReason": {
@@ -1327,6 +1427,11 @@
         "title_visitDetail": "Добавить критерий расстояния до места обслуживания",
         "desc_visitDetail": "Фильтр деталей посещения в зависимости от расстояния от места обслуживания до пациента."
       }
+    },
+    "entityName": {
+      "characterization": "характеризации",
+      "conceptSet": "набора концепций",
+      "featureAnalysis": "функционального анализа"
     }
   },
   "notifications": {
@@ -1380,5 +1485,213 @@
     "light": "Светлая",
     "dark": "Тёмная",
     "system": "Системная"
+  },
+  "route": {
+    "home": {
+      "title": "Начало"
+    },
+    "cohorts": {
+      "title": "Когорты"
+    },
+    "conceptSets": {
+      "title": "Наборы концепций"
+    },
+    "profiles": {
+      "title": "Профили"
+    },
+    "analysis": {
+      "title": "Анализ"
+    },
+    "characterizations": {
+      "title": "Характеризации"
+    },
+    "pathways": {
+      "title": "Исходы Когорты"
+    },
+    "incidenceRates": {
+      "title": "Инцидентность"
+    },
+    "dataSources": {
+      "title": "Источники данных"
+    }
+  },
+  "characterizations": {
+    "results": {
+      "table": {
+        "min": "Минимум",
+        "prevalence": "Распространенность"
+      }
+    }
+  },
+  "featureAnalyses": {
+    "editor": {
+      "prevalence": {
+        "addCriteria": "Добавить критерий"
+      },
+      "distribution": {
+        "addCriteria": "Добавить критерий"
+      }
+    },
+    "aggregateDomain": {
+      "condition": "Условие",
+      "conditionEra": "Эра состояния",
+      "demographics": "Демография",
+      "device": "Устройство",
+      "drug": "Лекарство",
+      "drugEra": "Эра лекарств",
+      "measurement": "Измерение",
+      "observation": "Наблюдение",
+      "procedure": "Процедура",
+      "visit": "Посещение"
+    }
+  },
+  "inclusionRail": {
+    "title": "Правила включения",
+    "of": "из"
+  },
+  "criteria": {
+    "conditionEra": {
+      "name": "Эра состояния"
+    },
+    "conditionOccurrence": {
+      "name": "Встречаемость состояния",
+      "description": {
+        "initial": "Найти пациентов с конкретными диагнозами."
+      }
+    },
+    "death": {
+      "name": "Смерти"
+    },
+    "drugEra": {
+      "name": "Эра лекарств"
+    },
+    "drugExposure": {
+      "name": "Воздействие лекарств"
+    },
+    "measurement": {
+      "name": "Измерение"
+    },
+    "observation": {
+      "name": "Наблюдение"
+    },
+    "observationPeriod": {
+      "name": "Период наблюдений"
+    }
+  },
+  "attributes": {
+    "age": {
+      "name": "Возраст"
+    }
+  },
+  "config": {
+    "title": "Конфигурация",
+    "cache": {
+      "clearButton": "Очистить кэш конфигурации"
+    },
+    "tags": {
+      "title": "Управление тегами",
+      "table": {
+        "headers": {
+          "color": "Цвет",
+          "icon": "Иконка",
+          "mandatory": "Обязательный",
+          "multiple": "Несколько"
+        }
+      },
+      "dialog": {
+        "editTitle": "Редактировать группу тегов",
+        "fields": {
+          "name": {
+            "label": "Имя"
+          },
+          "color": {
+            "label": "Цвет"
+          },
+          "icon": {
+            "label": "Иконка"
+          },
+          "description": {
+            "label": "Описание"
+          },
+          "mandatory": {
+            "label": "Обязательный"
+          }
+        }
+      }
+    }
+  },
+  "versions": {
+    "current": "Текущая"
+  },
+  "incidenceRate": {
+    "studyWindowStart": "Дата начала"
+  },
+  "apiKeys": {
+    "list": {
+      "never": "Никогда",
+      "revoke": "Отозвать"
+    },
+    "create": {
+      "name": "Имя",
+      "description": "Описание",
+      "generate": "генерировать",
+      "done": "Выполнено"
+    }
+  },
+  "criteriaAttributes": {
+    "gender": {
+      "label": "Пол"
+    },
+    "eraEndDate": {
+      "label": "Дата окончания"
+    },
+    "age": {
+      "label": "Возраст"
+    },
+    "occurrenceEndDate": {
+      "label": "Дата окончания"
+    },
+    "conditionType": {
+      "label": "Тип условия"
+    },
+    "endDate": {
+      "label": "Дата окончания"
+    },
+    "duration": {
+      "label": "Длительность"
+    },
+    "deathType": {
+      "label": "Тип смерти"
+    },
+    "race": {
+      "label": "Раса"
+    },
+    "ethnicity": {
+      "label": "Национальность"
+    },
+    "deviceType": {
+      "label": "Тип устройства"
+    },
+    "drugType": {
+      "label": "Тип лекарства"
+    },
+    "episodeEndDate": {
+      "label": "Дата окончания"
+    },
+    "measurementType": {
+      "label": "Тип измерения"
+    },
+    "visitType": {
+      "label": "Тип посещения"
+    },
+    "observationType": {
+      "label": "Тип наблюдения"
+    },
+    "procedureType": {
+      "label": "Тип процедуры"
+    },
+    "specimenType": {
+      "label": "v"
+    }
   }
 }

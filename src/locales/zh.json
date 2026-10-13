@@ -67,28 +67,22 @@
     "savePreviewWarning": "Save as current version?",
     "conceptSet": "Concept Set",
     "cohort": "Cohort",
-    "addTools": "添加工具",
-    "url": "网址",
     "apply": "申请",
-    "tools": "工具",
     "confirm": "确认",
     "edit": "Edit",
-    "cannotUndo": "此操作无法撤销。"
-  },
-  "tool": {
-    "name": "* 名称",
-    "url": "* URL",
-    "nameValidMess": "工具名称不能为空。",
-    "urlValidMess": "工具网址不能为空。",
-    "loading": "装载工具",
-    "error": {
-      "list": "当前无法检索列表数据，请稍后重试。",
-      "create": "创建工具失败。",
-      "update": "更新工具失败。",
-      "delete": "删除工具失败。"
+    "cannotUndo": "此操作无法撤销。",
+    "authorship": {
+      "created": "建立",
+      "updated": "更新"
     },
-    "toolDisabled": "工具已禁用",
-    "toolEnabled": "工具已启用"
+    "description": "描述",
+    "both": "都",
+    "match": "匹配",
+    "of": "的",
+    "cohortDefinition": "队列定义",
+    "between": "之间",
+    "startDate": "开始日期",
+    "endDate": "结束日期"
   },
   "commonErrors": {
     "noSources": "当前的WebAPI尚未定义源。<br/>请在<a href=\"#/configure\">配置</a>页上添加一个或多个。",
@@ -104,7 +98,8 @@
     "jobs": "执行历史",
     "pathways": "队列路径",
     "profiles": "数据概要",
-    "tools": "工具"
+    "incidenceRates": "Incidence Rates",
+    "analysis": "分析"
   },
   "options": {
     "after": "在  之后",
@@ -123,7 +118,10 @@
     "notEndsWith": "不以 结尾",
     "notStartsWith": "不以...开头",
     "startDate": "开始日期",
-    "startsWith": "从...开始"
+    "startsWith": "从...开始",
+    "onOrBefore": "在或之前",
+    "on": "基于/在",
+    "onOrAfter": "在或之后"
   },
   "components": {
     "inclusionRuleReport": {
@@ -153,18 +151,19 @@
       "hintPercentExcluded": "此规则的边际成本：满足其他所有规则但未通过此规则的患者百分比。数值高表示移除此规则可恢复该部分。",
       "downloadCsv": "下载 CSV",
       "noAttritionHint": "生成带有包含规则的队列以查看减员",
-      "patients": "名患者",
       "retained": "保留",
       "tooltipRemaining": "剩余",
-      "tooltipExcludedAtStep": "此步骤排除"
-    },
-    "authorship": {
-      "createdLabel": "被创造 由 {createdBy}创建 基于/在 {createdDate}",
-      "modifiedLabel": "修改的 由 {modifiedBy}修改 基于/在 {modifiedDate}"
+      "tooltipExcludedAtStep": "此步骤排除",
+      "intersectHaving": "必须满足以下",
+      "intersectAll": "所有",
+      "intersectAny": "任意",
+      "unitPersons": "患者人数"
     },
     "analysisExecution": {
       "buttons": {
-        "generate": "生成"
+        "generate": "生成",
+        "cancel": "取消",
+        "rerun": "重新运行"
       }
     },
     "expressionCartoonBindings": {
@@ -177,13 +176,16 @@
       "noCensoring": "无审查",
       "eraCollapseGap": "设置周期时间间隔为：",
       "leftCensorStartDates": "左删失队列开始日期至",
-      "rightCensorEndDates": "右删失队列结束日期至"
+      "rightCensorEndDates": "右删失队列结束日期至",
+      "entryEvents": "队列入组事件",
+      "cohortEras": "队列周期"
     },
     "conceptSet": {
       "addConcepts": "添加概念"
     },
     "conceptAddBox": {
-      "selectConceptSet": "选择概念集"
+      "selectConceptSet": "选择概念集",
+      "addConcepts": "添加概念"
     },
     "conceptSetBuilder": {
       "newConceptSet": "新建概念集",
@@ -193,7 +195,12 @@
       "title": "一个    的诊断周期"
     },
     "conditionOccurrence": {
-      "title": "一个    的诊断"
+      "title": "一个    的诊断",
+      "attributes": {
+        "visitType": {
+          "label": "就诊"
+        }
+      }
     },
     "criteriaGroup": {
       "addCriteria": "添加条件到组",
@@ -401,15 +408,15 @@
       "loadError": "加载队列失败",
       "exportDownloaded": "已下载队列 JSON",
       "copiedToClipboard": "已将队列 JSON 复制到剪贴板",
-      "copyFailed": "无法复制到剪贴板"
+      "copyFailed": "无法复制到剪贴板",
+      "sqlMenuTitle": "SQL",
+      "sqlDialect": "方言"
     },
     "conceptDetail": {
       "closeDetails": "关闭概念详情",
       "goBack": "返回",
       "addToConceptSet": "添加到概念集",
       "copyId": "复制 ID",
-      "persons": "人",
-      "descAbbr": "后代",
       "conceptDetailsTitle": "概念详情",
       "conceptId": "概念 ID",
       "conceptClass": "概念类别",
@@ -677,10 +684,19 @@
     },
     "correlatedCriteria": {
       "restrictToSameVisit": "仅限同一次就诊",
-      "allowEventsOutsideObservation": "允许观察期以外的事件"
+      "allowEventsOutsideObservation": "允许观察期以外的事件",
+      "distinctColumn": {
+        "standardConcept": "标准概念",
+        "visit": "就诊"
+      }
     },
     "deviceExposure": {
-      "title": "一个    的医疗设备使用"
+      "title": "一个    的医疗设备使用",
+      "attributes": {
+        "visitType": {
+          "label": "就诊"
+        }
+      }
     },
     "doseEra": {
       "title": "一个    的计量周期"
@@ -720,7 +736,33 @@
       "showDesignPanel": "显示设计面板"
     },
     "access": {
-      "searchRoles": "搜索角色..."
+      "searchRoles": "搜索角色...",
+      "configureAccess": "配合访问"
+    },
+    "conceptHierarchyDialog": {
+      "ancestors": "祖先",
+      "descendants": "后代"
+    },
+    "windowExpression": {
+      "eventEnds": "事件终止",
+      "eventStarts": "事件开始"
+    },
+    "endStrategy": {
+      "censoring": {
+        "title": "审查事件"
+      },
+      "customEra": {
+        "selectConceptSet": "选择药物概念集"
+      },
+      "selector": {
+        "customEra": "药物使用"
+      }
+    },
+    "charts": {
+      "value": "值",
+      "years": "年",
+      "year": "年",
+      "prevalencePer1000": "每1000人的患病率"
     }
   },
   "facets": {
@@ -773,7 +815,6 @@
     "message": "讯息",
     "modified": "修改",
     "name": "名称",
-    "originConceptSets": "起源概念集",
     "outcomes": "结果队列",
     "p25": "四分位数25％",
     "p75": "四分位数75％",
@@ -809,10 +850,11 @@
     "drcTooltip": "Descendant Record Count",
     "pcTooltip": "Person Count",
     "dpcTooltip": "Descendant Person Count",
-    "conceptID": "概念 ID",
-    "searchData": "搜索数据",
     "createdBy": "由...制作",
-    "createdDate": "创建日期"
+    "standard": "标准",
+    "age": "年龄",
+    "role": "角色",
+    "source": "来源"
   },
   "dataSources": {
     "dashboardReport": {
@@ -872,6 +914,28 @@
     },
     "treemap": {
       "treemapTab": "树状图"
+    },
+    "sidebar": {
+      "demographics": "人口统计"
+    },
+    "reportTypes": {
+      "dashboard": "仪表板",
+      "datadensity": "数据密度",
+      "person": "患者信息",
+      "observationPeriod": "观察期",
+      "death": "死亡",
+      "visit": "就诊",
+      "conditionOccurrence": "疾病/症状",
+      "conditionEra": "疾病/症状持续时间",
+      "procedure": "手术操作",
+      "drugExposure": "药物使用",
+      "drugEra": "用药持续时间",
+      "measurement": "检查检验",
+      "observation": "观察"
+    },
+    "charts": {
+      "records": "记录",
+      "persons": "患者人数"
     }
   },
   "search": {
@@ -898,7 +962,8 @@
         "headingMessage": "使用此实用程序可以比较两个概念集的内容，以查看它们可以共享哪些概念。",
         "modalTitle": "选择一个概念集",
         "vennDiagram": "Venn Diagram",
-        "vennDiagramTotalAmountConcepts": "The total amount of concepts: {count}"
+        "vennDiagramTotalAmountConcepts": "The total amount of concepts: {count}",
+        "compare": "比较"
       }
     },
     "manager": {
@@ -935,7 +1000,22 @@
           }
         }
       },
-      "conceptSetOptimization": "概念集优化"
+      "conceptSetOptimization": "概念集优化",
+      "pasteIdsAddBtn": "添加",
+      "tabs": {
+        "included": "已包含",
+        "sourceCodes": "源代码",
+        "selected": "已选的"
+      }
+    },
+    "conceptAddBox": {
+      "addToConceptSet": "添加到概念集",
+      "descendants": "后代",
+      "exclude": "排除",
+      "mapped": "映射的"
+    },
+    "conceptSet": {
+      "loadingRecommendedConcepts": "Loading Recommended Concepts"
     }
   },
   "cc": {
@@ -943,7 +1023,8 @@
     "new": "新",
     "tabs": {
       "featureAnalyses": {
-        "title": "特征分析"
+        "title": "特征分析",
+        "createLabel": "新特性分析"
       }
     },
     "viewEdit": {
@@ -1009,7 +1090,8 @@
     "deleteConfirmation": "删除发病率分析？ 警告：删除操作无法撤消！",
     "editor": {
       "chooseACohort": "选择一个队列",
-      "stratifyCriteria": "分层标准："
+      "stratifyCriteria": "分层标准：",
+      "outcomes": "结果队列"
     },
     "results": {
       "cases": "患者事件数",
@@ -1025,10 +1107,17 @@
     "tabs": {
       "conceptSets": "概念集",
       "versions": "Versions"
+    },
+    "workbench": {
+      "treemap": "树状图",
+      "table": "表"
     }
   },
   "profiles": {
-    "personId": "病人ID"
+    "personId": "病人ID",
+    "highlightNone": "无",
+    "gender": "性别",
+    "age": "年龄"
   },
   "ple": {
     "spec": {
@@ -1036,7 +1125,8 @@
     }
   },
   "jobs": {
-    "refreshJobs": "刷新工作"
+    "refreshJobs": "刷新工作",
+    "title": "执行历史"
   },
   "tagging": {
     "multiAssign": {
@@ -1094,10 +1184,7 @@
         "title": "连接字符串"
       },
       "dialect": {
-        "label": "源语言：",
-        "options": {
-          "iris": "InterSystems IRIS"
-        }
+        "label": "源语言："
       },
       "krb": {
         "adminServer": {
@@ -1182,7 +1269,20 @@
     },
     "newDefinition": "新建队列",
     "newDefinitionTitle": "创建新的队列定义",
-    "noConceptSets": "没有要导出的概念"
+    "noConceptSets": "没有要导出的概念",
+    "generation": {
+      "section": {
+        "title": "生成"
+      },
+      "row": {
+        "samples": "样本"
+      }
+    },
+    "cohortDefinitions": "队列定义",
+    "ruleDescription": "描述",
+    "conceptSetsDialog": {
+      "title": "概念集"
+    }
   },
   "const": {
     "disabledReason": {
@@ -1324,6 +1424,11 @@
         "title_visitDetail": "Add Place of Service Distance Criteria",
         "desc_visitDetail": "Filter Visit detail based on distance from Place of Service to Patient."
       }
+    },
+    "entityName": {
+      "characterization": "建特征描述",
+      "conceptSet": "概念集",
+      "featureAnalysis": "特性分析"
     }
   },
   "notifications": {
@@ -1377,5 +1482,213 @@
     "light": "浅色",
     "dark": "深色",
     "system": "跟随系统"
+  },
+  "route": {
+    "home": {
+      "title": "首页"
+    },
+    "cohorts": {
+      "title": "Cohorts"
+    },
+    "conceptSets": {
+      "title": "概念集"
+    },
+    "profiles": {
+      "title": "数据概要"
+    },
+    "analysis": {
+      "title": "分析"
+    },
+    "characterizations": {
+      "title": "特征描述"
+    },
+    "pathways": {
+      "title": "Cohort Pathways"
+    },
+    "incidenceRates": {
+      "title": "Incidence Rates"
+    },
+    "dataSources": {
+      "title": "数据来源"
+    }
+  },
+  "characterizations": {
+    "results": {
+      "table": {
+        "min": "最小值",
+        "prevalence": "患病率"
+      }
+    }
+  },
+  "featureAnalyses": {
+    "editor": {
+      "prevalence": {
+        "addCriteria": "添加条件功能"
+      },
+      "distribution": {
+        "addCriteria": "添加条件功能"
+      }
+    },
+    "aggregateDomain": {
+      "condition": "诊断",
+      "conditionEra": "疾病/症状持续时间",
+      "demographics": "人口统计",
+      "device": "医疗设备",
+      "drug": "用药",
+      "drugEra": "用药持续时间",
+      "measurement": "检查检验",
+      "observation": "观察",
+      "procedure": "手术操作",
+      "visit": "就诊"
+    }
+  },
+  "inclusionRail": {
+    "title": "纳入规则",
+    "of": "的"
+  },
+  "criteria": {
+    "conditionEra": {
+      "name": "疾病/症状持续时间"
+    },
+    "conditionOccurrence": {
+      "name": "疾病/症状",
+      "description": {
+        "initial": "查找具有特定诊断的患者"
+      }
+    },
+    "death": {
+      "name": "死亡"
+    },
+    "drugEra": {
+      "name": "用药持续时间"
+    },
+    "drugExposure": {
+      "name": "药物使用"
+    },
+    "measurement": {
+      "name": "检查检验"
+    },
+    "observation": {
+      "name": "观察"
+    },
+    "observationPeriod": {
+      "name": "观察期"
+    }
+  },
+  "attributes": {
+    "age": {
+      "name": "年龄"
+    }
+  },
+  "config": {
+    "title": "环境设定",
+    "cache": {
+      "clearButton": "清除配置缓存"
+    },
+    "tags": {
+      "title": "Tag Management",
+      "table": {
+        "headers": {
+          "color": "Color",
+          "icon": "Icon",
+          "mandatory": "Mandatory",
+          "multiple": "Multiple"
+        }
+      },
+      "dialog": {
+        "editTitle": "Edit Tag Group",
+        "fields": {
+          "name": {
+            "label": "名称"
+          },
+          "color": {
+            "label": "Color"
+          },
+          "icon": {
+            "label": "Icon"
+          },
+          "description": {
+            "label": "描述"
+          },
+          "mandatory": {
+            "label": "Mandatory"
+          }
+        }
+      }
+    }
+  },
+  "versions": {
+    "current": "Current"
+  },
+  "incidenceRate": {
+    "studyWindowStart": "开始日期"
+  },
+  "apiKeys": {
+    "list": {
+      "never": "决不",
+      "revoke": "撤消"
+    },
+    "create": {
+      "name": "名称",
+      "description": "描述",
+      "generate": "生成",
+      "done": "完成"
+    }
+  },
+  "criteriaAttributes": {
+    "gender": {
+      "label": "性别"
+    },
+    "eraEndDate": {
+      "label": "结束日期"
+    },
+    "age": {
+      "label": "年龄"
+    },
+    "occurrenceEndDate": {
+      "label": "结束日期"
+    },
+    "conditionType": {
+      "label": "诊断类别"
+    },
+    "endDate": {
+      "label": "结束日期"
+    },
+    "duration": {
+      "label": "持续时间"
+    },
+    "deathType": {
+      "label": "死亡类型"
+    },
+    "race": {
+      "label": "种族"
+    },
+    "ethnicity": {
+      "label": "民族"
+    },
+    "deviceType": {
+      "label": "医疗设备类别"
+    },
+    "drugType": {
+      "label": "药物种类"
+    },
+    "episodeEndDate": {
+      "label": "结束日期"
+    },
+    "measurementType": {
+      "label": "检查检验类型"
+    },
+    "visitType": {
+      "label": "就诊类别"
+    },
+    "observationType": {
+      "label": "观察类型"
+    },
+    "procedureType": {
+      "label": "手术操作种类"
+    },
+    "specimenType": {
+      "label": "标本类型"
+    }
   }
 }

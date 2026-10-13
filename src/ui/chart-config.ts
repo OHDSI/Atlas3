@@ -8,6 +8,7 @@ import { shallowRef } from 'vue'
 import type { EChartsOption } from 'echarts'
 import type { BarChartData, PieChartData, LineChartData, TreemapNode } from '@/models/report.types'
 import { tokens } from './tokens'
+import { useI18n } from '@/composables/useI18n'
 
 /**
  * Convert a YYYYMM code (e.g. 200301) to a UTC millisecond timestamp
@@ -264,6 +265,7 @@ export function chartRootTextStyle(): { textStyle: { color: string } } | Record<
  */
 export function defaultBarChartOptions(data: BarChartData): EChartsOption {
   trackChartTheme()
+  const { tv } = useI18n()
   return {
     ...chartRootTextStyle(),
     tooltip: {
@@ -307,7 +309,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
     },
     yAxis: {
       type: 'value',
-      name: data.unit || 'Count',
+      name: data.unit || tv('columns.count'),
       // Render the y-axis name vertically along the LEFT side of
       // the axis (rotated 90°) instead of the default top-of-axis
       // placement. The top placement bled into the previous chart's
@@ -327,7 +329,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
     },
     series: [
       {
-        name: data.unit || 'Count',
+        name: data.unit || tv('columns.count'),
         type: 'bar',
         data: data.values,
         itemStyle: {
@@ -350,6 +352,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
  */
 export function defaultPieChartOptions(data: PieChartData[], title?: string): EChartsOption {
   trackChartTheme()
+  const { tv } = useI18n()
   return {
     ...chartRootTextStyle(),
     title: title
@@ -389,7 +392,7 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
     },
     series: [
       {
-        name: title || 'Distribution',
+        name: title || tv('components.charts.distribution'),
         type: 'pie',
         radius: ['40%', '70%'],
         center: ['50%', '45%'],
@@ -436,6 +439,7 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
  */
 export function defaultLineChartOptions(data: LineChartData, title?: string): EChartsOption {
   trackChartTheme()
+  const { tv } = useI18n()
   return {
     ...chartRootTextStyle(),
     title: title
@@ -477,7 +481,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
     },
     series: [
       {
-        name: data.seriesName || 'Value',
+        name: data.seriesName || tv('components.charts.value'),
         type: 'line',
         smooth: true,
         data: mapLineSeriesData(data, data.yAxis),
@@ -818,6 +822,7 @@ import { logger } from '@/utils/logger'
  */
 export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChartsOption {
   trackChartTheme()
+  const { tv } = useI18n()
   return {
     ...chartRootTextStyle(),
     tooltip: {
@@ -826,7 +831,7 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
         const p = params as { name: string; value: number; percent: number }
         const value = formatSINumber(p.value)
         const percent = p.percent.toFixed(1)
-        return `<strong>${p.name}</strong><br/>Count: ${value}<br/>Percentage: ${percent}%`
+        return `<strong>${p.name}</strong><br/>${tv('columns.count')}: ${value}<br/>${tv('components.charts.percentage')}: ${percent}%`
       },
     },
     legend: {
@@ -836,7 +841,7 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
     },
     series: [
       {
-        name: 'Gender Distribution',
+        name: tv('components.charts.genderDistribution'),
         type: 'pie',
         radius: ['35%', '65%'],
         center: ['50%', '45%'],
@@ -883,6 +888,7 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
  */
 export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): EChartsOption {
   trackChartTheme()
+  const { tv } = useI18n()
   const validBins = data.bins.filter(
     b => Number.isFinite(b.intervalIndex) && Number.isFinite(b.countValue) && b.countValue >= 0
   )
@@ -897,7 +903,7 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
   const offset = data.offset
   const binStarts = validBins.map(bin => offset + bin.intervalIndex * intervalSize)
   const yValues = validBins.map(bin => bin.countValue)
-  const axisLabel = data.xAxisLabel || 'Age'
+  const axisLabel = data.xAxisLabel || tv('columns.age')
   // Bin bounds can be fractional (e.g. days expressed as years, interval
   // ~0.082), so round for display instead of dumping raw floats. Shared by
   // the tooltip and the x-axis tick labels so both charts and this one
@@ -919,7 +925,7 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
         const [xStart, xEnd, yValue] = point
         const value = formatSINumber(yValue)
         const label = intervalSize === 1 ? fmtBin(xStart) : `${fmtBin(xStart)} - ${fmtBin(xEnd)}`
-        return `<strong>${axisLabel}: ${label}</strong><br/>${data.seriesName || data.unit || 'Count'}: ${value}`
+        return `<strong>${axisLabel}: ${label}</strong><br/>${data.seriesName || data.unit || tv('columns.count')}: ${value}`
       },
     },
     grid: {
@@ -943,7 +949,7 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
     },
     yAxis: {
       type: 'value',
-      name: data.unit || 'Person Count',
+      name: data.unit || tv('columns.personCount'),
       nameLocation: 'middle',
       nameGap: 60,
       axisLabel: {
@@ -953,7 +959,7 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
     },
     series: [
       {
-        name: data.seriesName || data.unit || 'Count',
+        name: data.seriesName || data.unit || tv('columns.count'),
         type: 'custom',
         encode: {
           x: [ENCODE_X_START, ENCODE_X_END],
@@ -1004,6 +1010,7 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
  */
 export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): EChartsOption {
   trackChartTheme()
+  const { tv } = useI18n()
   return {
     ...chartRootTextStyle(),
     tooltip: {
@@ -1011,7 +1018,7 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
       formatter: (params: unknown) => {
         const arr = Array.isArray(params) ? params : [params]
         const p = arr[0] as { value: [number, number] }
-        return `<strong>${data.xAxisLabel || 'Years'}: ${p.value[0]}</strong><br/>${data.yAxisLabel || 'Percentage'}: ${(p.value[1] * 100).toFixed(1)}%`
+        return `<strong>${data.xAxisLabel || tv('components.charts.years')}: ${p.value[0]}</strong><br/>${data.yAxisLabel || tv('components.charts.percentage')}: ${(p.value[1] * 100).toFixed(1)}%`
       },
     },
     grid: {
@@ -1023,14 +1030,14 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
     },
     xAxis: {
       type: 'value',
-      name: data.xAxisLabel || 'Years',
+      name: data.xAxisLabel || tv('components.charts.years'),
       nameLocation: 'middle',
       nameGap: 30,
       axisLabel: { fontSize: 11 },
     },
     yAxis: {
       type: 'value',
-      name: data.yAxisLabel || 'Percent of Persons',
+      name: data.yAxisLabel || tv('dataSources.charts.percentOfPersons'),
       nameLocation: 'middle',
       nameGap: 50,
       min: 0,
@@ -1081,6 +1088,7 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
  */
 export function dashboardObservationMonthLineOptions(data: DatasourceLineChartData): EChartsOption {
   trackChartTheme()
+  const { tv } = useI18n()
   return {
     ...chartRootTextStyle(),
     tooltip: {
@@ -1090,7 +1098,7 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
         const p = arr[0] as { value: [number, number] }
         const d = new Date(p.value[0])
         const label = `${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`
-        return `<strong>${label}</strong><br/>${data.yAxisLabel || 'Observations'}: ${formatSINumber(p.value[1])}`
+        return `<strong>${label}</strong><br/>${data.yAxisLabel || tv('components.charts.observations')}: ${formatSINumber(p.value[1])}`
       },
     },
     grid: {
@@ -1102,14 +1110,14 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
     },
     xAxis: {
       type: 'time',
-      name: data.xAxisLabel || 'Month',
+      name: data.xAxisLabel || tv('dataSources.charts.month'),
       nameLocation: 'middle',
       nameGap: 40,
       axisLabel: { fontSize: 10 },
     },
     yAxis: {
       type: 'value',
-      name: data.yAxisLabel || 'Observation Count',
+      name: data.yAxisLabel || tv('dataSources.charts.observationCount'),
       nameLocation: 'middle',
       nameGap: 50,
       axisLabel: {
@@ -1237,6 +1245,7 @@ export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLin
  */
 export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOption {
   trackChartTheme()
+  const { tv } = useI18n()
   // Calculate prevalence range for color mapping
   const values = extractAllValues(nodes)
   const minValue = Math.min(...values)
@@ -1258,12 +1267,12 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
         const metric = p.data?.metric
 
         let tooltip = `<strong>${name}</strong><br/>`
-        tooltip += `Value: ${value}<br/>`
+        tooltip += `${tv('components.charts.value')}: ${value}<br/>`
         if (prevalence !== undefined) {
-          tooltip += `Prevalence: ${prevalence.toFixed(2)}%<br/>`
+          tooltip += `${tv('characterizations.results.table.prevalence')}: ${prevalence.toFixed(2)}%<br/>`
         }
         if (metric !== undefined) {
-          tooltip += `Metric: ${metric.toFixed(2)}`
+          tooltip += `${tv('components.charts.metric')}: ${metric.toFixed(2)}`
         }
 
         return tooltip
@@ -1359,6 +1368,7 @@ export function trellisChartOptions(
   maxPlotsPerRow: number = 5
 ): EChartsOption {
   trackChartTheme()
+  const { tv } = useI18n()
   // Sort categories by leading numeric prefix so age brackets come
   // out 0-9, 10-19, 20-29, ..., 100-109 instead of the ASCII order
   // 0-9, 10-19, 100-109, 20-29.
@@ -1408,7 +1418,7 @@ export function trellisChartOptions(
   // top offset.
   const lastRowTop = (numRows - 1) * (GRID_HEIGHT + GRID_VERTICAL_GAP) + GRID_TOP_MARGIN
   gridTitles.push({
-    text: 'Age Group / Gender',
+    text: tv('components.charts.ageGroupGender'),
     top: `${Math.max(GRID_TOP_MARGIN - 7, 1)}%`,
     left: 'center',
     textStyle: {
@@ -1417,7 +1427,7 @@ export function trellisChartOptions(
     },
   })
   gridTitles.push({
-    text: 'Year',
+    text: tv('components.charts.year'),
     top: `${lastRowTop + GRID_HEIGHT + 6}%`,
     left: 'center',
     textStyle: {
@@ -1506,7 +1516,7 @@ export function trellisChartOptions(
       // area or collide with the row above. nameGap stays modest
       // so the label sits next to the tick numbers, not far left.
       ...(colIndex === 0 && {
-        name: 'Prevalence Per 1000 People',
+        name: tv('components.charts.prevalencePer1000'),
         nameLocation: 'middle',
         nameRotate: 90,
         nameGap: 38,
@@ -1601,6 +1611,7 @@ export function boxPlotChartOptions(
   title?: string
 ): EChartsOption {
   trackChartTheme()
+  const { tv } = useI18n()
   const categories = data.map(d => d.category)
 
   // Convert data to ECharts boxplot format: [min, Q1, median, Q3, max]
@@ -1639,16 +1650,16 @@ export function boxPlotChartOptions(
         if (params.seriesType === 'boxplot') {
           const value = params.value
           const dataPoint = data[params.dataIndex]
-          const p90 = dataPoint?.p90 != null ? formatSINumber(dataPoint.p90) : 'N/A'
-          const p10 = dataPoint?.p10 != null ? formatSINumber(dataPoint.p10) : 'N/A'
+          const p90 = dataPoint?.p90 != null ? formatSINumber(dataPoint.p90) : tv('common.notAvailable')
+          const p10 = dataPoint?.p10 != null ? formatSINumber(dataPoint.p10) : tv('common.notAvailable')
           return `${params.name}<br/>
-            Max: ${formatSINumber(value[5])}<br/>
+            ${tv('columns.max')}: ${formatSINumber(value[5])}<br/>
             P90: ${p90}<br/>
-            P75: ${formatSINumber(value[4])}<br/>
-            Median: ${formatSINumber(value[3])}<br/>
-            P25: ${formatSINumber(value[2])}<br/>
+            ${tv('columns.p75')}: ${formatSINumber(value[4])}<br/>
+            ${tv('columns.median')}: ${formatSINumber(value[3])}<br/>
+            ${tv('columns.p25')}: ${formatSINumber(value[2])}<br/>
             P10: ${p10}<br/>
-            Min: ${formatSINumber(value[1])}`
+            ${tv('characterizations.results.table.min')}: ${formatSINumber(value[1])}`
         }
         return params.name
       },
@@ -1677,7 +1688,7 @@ export function boxPlotChartOptions(
     },
     yAxis: {
       type: 'value',
-      name: 'Value',
+      name: tv('components.charts.value'),
       splitArea: {
         show: true,
       },
@@ -1698,11 +1709,11 @@ export function boxPlotChartOptions(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           formatter: (param: any) => {
             return `${param.name}<br/>
-              Max: ${formatSINumber(param.value[5])}<br/>
-              P75: ${formatSINumber(param.value[4])}<br/>
-              Median: ${formatSINumber(param.value[3])}<br/>
-              P25: ${formatSINumber(param.value[2])}<br/>
-              Min: ${formatSINumber(param.value[1])}`
+              ${tv('columns.max')}: ${formatSINumber(param.value[5])}<br/>
+              ${tv('columns.p75')}: ${formatSINumber(param.value[4])}<br/>
+              ${tv('columns.median')}: ${formatSINumber(param.value[3])}<br/>
+              ${tv('columns.p25')}: ${formatSINumber(param.value[2])}<br/>
+              ${tv('characterizations.results.table.min')}: ${formatSINumber(param.value[1])}`
           },
         },
       },

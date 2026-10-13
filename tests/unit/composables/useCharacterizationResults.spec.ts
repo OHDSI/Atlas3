@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { isReactive } from 'vue'
 import { useCharacterizationResults } from '@/composables/useCharacterizationResults'
 
+vi.mock('@/composables/useI18n', async () => (await import('../../helpers/i18n-mock')).mockUseI18n)
 vi.mock('@/services/characterization.service', () => ({
   getCharacterizationExecution: vi.fn(),
   getCharacterizationResultCount: vi.fn(),

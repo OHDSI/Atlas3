@@ -32,7 +32,7 @@
               <AtlasTextField
                 v-model.number="gapDays"
                 type="number"
-                label="Gap days"
+                :label="t('criteriaAttributes.gapDays.label').value"
                 variant="outlined"
                 density="compact"
                 hide-details

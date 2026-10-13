@@ -7,7 +7,7 @@
       >
         mdi-information-outline
       </AtlasIcon>
-      <span>Cohort exit is based on continuous drug exposure, allowing configurable gaps between exposures.</span>
+      <span>{{ tv('components.endStrategy.customEra.hint') }}</span>
     </div>
 
     <div class="custom-era-end-strategy__concept-set mt-4">
@@ -18,7 +18,7 @@
         prepend-icon="mdi-plus"
         @click="emit('select-concept-set', selectionTarget)"
       >
-        Select Drug Concept Set
+        {{ tv('components.endStrategy.customEra.selectConceptSet') }}
       </AtlasButton>
 
       <AtlasChip
@@ -39,7 +39,7 @@
         <AtlasTextField
           v-model.number="gapDays"
           type="number"
-          label="Gap Days"
+          :label="tv('criteriaAttributes.gapDays.label')"
           variant="outlined"
           density="compact"
           hide-details
@@ -49,7 +49,7 @@
         <AtlasTextField
           v-model.number="offset"
           type="number"
-          label="Offset (days)"
+          :label="tv('common.offsetDays')"
           variant="outlined"
           density="compact"
           hide-details
@@ -59,7 +59,7 @@
         <AtlasTextField
           v-model.number="daysSupplyOverride"
           type="number"
-          label="Days Supply Override"
+          :label="tv('components.endStrategy.customEra.daysSupplyOverride')"
           variant="outlined"
           density="compact"
           hide-details
@@ -74,7 +74,7 @@
         >
           mdi-information-outline
         </AtlasIcon>
-        <span>If days supply is missing from the records, the system assumes 1 day per exposure.</span>
+        <span>{{ tv('components.endStrategy.customEra.daysSupplyHint') }}</span>
       </div>
     </template>
   </div>
@@ -90,6 +90,9 @@ import {
 } from '@/components/ui'
 import type { CustomEraStrategy } from '@/models/circe-types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
+import { useI18n } from '@/composables/useI18n'
+
+const { tv } = useI18n()
 
 const props = defineProps<{
   strategy: CustomEraStrategy
