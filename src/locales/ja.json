@@ -986,7 +986,7 @@
         "headingMessage": "このユーティリティを使用して2つのコンセプトセットの内容を比較し、共有しているコンセプトを確認します",
         "modalTitle": "コンセプトセットを選択してください",
         "vennDiagram": "ベン図",
-        "vennDiagramTotalAmountConcepts": "コンセプトの総数: <%=count%>"
+        "vennDiagramTotalAmountConcepts": "コンセプトの総数: {count}"
       }
     },
     "manager": {
@@ -1281,7 +1281,7 @@
       "source": {
         "alerts": {
           "save": {
-            "error": "データソースは保存されませんでした。<%= message %>"
+            "error": "データソースは保存されませんでした。{message}"
           }
         },
         "confirms": {
@@ -1525,12 +1525,12 @@
     "extendSession": "セッションを延長",
     "tokenInfoNotAvailable": "トークン情報は利用できません",
     "sessionExpired": "セッションの有効期限が切れました。再度サインインしてください。",
-    "sessionExpiringMinutes": "セッションは <%=minutes%> 分後に期限切れになります。「セッションを延長」をクリックして続行してください。",
-    "sessionExpiringInMinutes": "セッションは <%=minutes%> 分後に期限切れになります。",
-    "sessionActiveHours": "セッション有効時間: <%=hours%> 時間",
-    "sessionActiveMinutes": "セッション有効時間: <%=minutes%> 分",
+    "sessionExpiringMinutes": "セッションは {minutes} 分後に期限切れになります。「セッションを延長」をクリックして続行してください。",
+    "sessionExpiringInMinutes": "セッションは {minutes} 分後に期限切れになります。",
+    "sessionActiveHours": "セッション有効時間: {hours} 時間",
+    "sessionActiveMinutes": "セッション有効時間: {minutes} 分",
     "currentlyRunningAs": "現在実行中のユーザー:",
-    "originalUser": "元のユーザー: <%=username%>",
+    "originalUser": "元のユーザー: {username}",
     "targetUsername": "ターゲットユーザー名",
     "enterUsernameToImpersonate": "なりすますユーザー名を入力",
     "runAsWarning": "別のユーザーとして実行すると、そのユーザーの権限と識別情報が引き継がれます。すべての操作はターゲットユーザーとして実行されます。",
@@ -1538,9 +1538,9 @@
     "failedToExitRunAs": "別ユーザー実行の終了に失敗しました"
   },
   "conceptSets": {
-    "conceptCount": "<%=count%> 件のコンセプト",
+    "conceptCount": "{count} 件のコンセプト",
     "concepts": "コンセプト:",
-    "defaultName": "コンセプトセット <%=number%>"
+    "defaultName": "コンセプトセット {number}"
   },
   "conceptSearch": {
     "instructions": "OHDSIボキャブラリ内のコンセプトを検索するための検索語を入力してください"

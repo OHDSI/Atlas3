@@ -6,6 +6,7 @@ import {
   findParentCollision,
   findBatchCollision,
   findFallbackConflicts,
+  lintEnglish,
 } from '../i18n-check.core.mjs'
 
 describe('extractKeys', () => {
@@ -114,5 +115,21 @@ describe('findFallbackConflicts', () => {
       { key: 'common.save', fallback: null, file: 'b.vue' },
     ])
     expect(conflicts).toEqual([])
+  })
+})
+
+describe('lintEnglish', () => {
+  it('accepts {name} placeholders', () => {
+    expect(lintEnglish({ a: { b: 'Hi {name}' } })).toEqual([])
+  })
+
+  it('rejects <%= %> placeholders', () => {
+    expect(lintEnglish({ a: { b: 'Hi <%= name %>' } })).toEqual([
+      '"a.b" uses a <%= %> placeholder; write {name} instead',
+    ])
+  })
+
+  it('ignores the untranslated format subtree', () => {
+    expect(lintEnglish({ format: { x: '<%= y %>' } })).toEqual([])
   })
 })

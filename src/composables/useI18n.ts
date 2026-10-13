@@ -32,18 +32,12 @@ function getNestedValue(obj: Record<string, unknown>, path: string): string | un
 }
 
 /**
- * Interpolate parameters into translation string. Handles both Atlas 3
- * `{name}` style and the legacy Atlas 2.x `<%= name %>` / `<%=name%>` style
- * inherited from the WebAPI translation bundles.
+ * Interpolate `{name}` parameters into a translation string.
  */
 function interpolate(template: string, params: TranslationParams): string {
-  return template
-    .replace(/\{(\w+)\}/g, (match, key) =>
-      params[key] !== undefined ? String(params[key]) : match
-    )
-    .replace(/<%=\s*(\w+)\s*%>/g, (match, key) =>
-      params[key] !== undefined ? String(params[key]) : match
-    )
+  return template.replace(/\{(\w+)\}/g, (match, key) =>
+    params[key] !== undefined ? String(params[key]) : match
+  )
 }
 
 /**

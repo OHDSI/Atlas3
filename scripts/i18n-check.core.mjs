@@ -1,4 +1,4 @@
-import { getByPath } from './i18n-lib.mjs'
+import { getByPath, translatableSource } from './i18n-lib.mjs'
 
 const KEY_RE = /\b(?:t|tv)\(\s*'([A-Za-z0-9_.-]+)'(?:\s*,\s*'((?:[^'\\]|\\.)*)')?/g
 
@@ -86,4 +86,15 @@ export function findFallbackConflicts(usages) {
     })
   }
   return conflicts
+}
+/**
+ * Rules for en.json itself. Placeholders are `{name}` only — the Atlas 2.x
+ * `<%= name %>` style is not interpolated by useI18n.
+ */
+export function lintEnglish(en) {
+  const errors = []
+  for (const [key, value] of translatableSource(en)) {
+    if (value.includes('<%')) errors.push(`"${key}" uses a <%= %> placeholder; write {name} instead`)
+  }
+  return errors
 }

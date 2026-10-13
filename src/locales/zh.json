@@ -155,8 +155,8 @@
       "tooltipExcludedAtStep": "此步骤排除"
     },
     "authorship": {
-      "createdLabel": "被创造 由 <%=createdBy%>创建 基于/在 <%=createdDate%>",
-      "modifiedLabel": "修改的 由 <%=modifiedBy%>修改 基于/在 <%=modifiedDate%>"
+      "createdLabel": "被创造 由 {createdBy}创建 基于/在 {createdDate}",
+      "modifiedLabel": "修改的 由 {modifiedBy}修改 基于/在 {modifiedDate}"
     },
     "analysisExecution": {
       "buttons": {
@@ -881,7 +881,7 @@
         "headingMessage": "使用此实用程序可以比较两个概念集的内容，以查看它们可以共享哪些概念。",
         "modalTitle": "选择一个概念集",
         "vennDiagram": "Venn Diagram",
-        "vennDiagramTotalAmountConcepts": "The total amount of concepts: <%=count%>"
+        "vennDiagramTotalAmountConcepts": "The total amount of concepts: {count}"
       }
     },
     "manager": {
@@ -1129,7 +1129,7 @@
       "source": {
         "alerts": {
           "save": {
-            "error": "来源未被保存。 <%=message%>"
+            "error": "来源未被保存。 {message}"
           }
         },
         "confirms": {

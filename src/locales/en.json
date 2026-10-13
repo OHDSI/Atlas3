@@ -1330,7 +1330,7 @@
         "headingMessage": "Use this utility to compare the contents of two concept sets to see which concepts they may share",
         "modalTitle": "Choose a concept set",
         "vennDiagram": "Venn Diagram",
-        "vennDiagramTotalAmountConcepts": "The total amount of concepts: <%=count%>",
+        "vennDiagramTotalAmountConcepts": "The total amount of concepts: {count}",
         "compare": "Compare",
         "noMatches": "No concept sets match"
       },
@@ -1750,7 +1750,7 @@
       "source": {
         "alerts": {
           "save": {
-            "error": "The Source was not saved. <%= message %>"
+            "error": "The Source was not saved. {message}"
           }
         },
         "confirms": {
@@ -2050,12 +2050,12 @@
     "extendSession": "Extend Session",
     "tokenInfoNotAvailable": "Token information not available",
     "sessionExpired": "Your session has expired. Please sign in again.",
-    "sessionExpiringMinutes": "Your session will expire in <%=minutes%> minute(s). Click \"Extend Session\" to continue.",
-    "sessionExpiringInMinutes": "Your session will expire in <%=minutes%> minutes.",
-    "sessionActiveHours": "Session active for <%=hours%> hour(s)",
-    "sessionActiveMinutes": "Session active for <%=minutes%> minutes",
+    "sessionExpiringMinutes": "Your session will expire in {minutes} minute(s). Click \"Extend Session\" to continue.",
+    "sessionExpiringInMinutes": "Your session will expire in {minutes} minutes.",
+    "sessionActiveHours": "Session active for {hours} hour(s)",
+    "sessionActiveMinutes": "Session active for {minutes} minutes",
     "currentlyRunningAs": "Currently running as:",
-    "originalUser": "Original user: <%=username%>",
+    "originalUser": "Original user: {username}",
     "targetUsername": "Target Username",
     "enterUsernameToImpersonate": "Enter username to impersonate",
     "runAsWarning": "Running as another user will assume their permissions and identity. All actions will be performed as the target user.",
@@ -2063,9 +2063,9 @@
     "failedToExitRunAs": "Failed to exit run-as"
   },
   "conceptSets": {
-    "conceptCount": "<%=count%> concept(s)",
+    "conceptCount": "{count} concept(s)",
     "concepts": "Concepts:",
-    "defaultName": "Concept Set <%=number%>",
+    "defaultName": "Concept Set {number}",
     "tagUpdateFailed": "Failed to update tags",
     "pluginEditLoadFailed": "Could not open concept set {id}"
   },

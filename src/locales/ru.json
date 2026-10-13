@@ -160,8 +160,8 @@
       }
     },
     "authorship": {
-      "createdLabel": "создано: <%=createdBy%> <%=createdDate%>",
-      "modifiedLabel": "изменено: <%=modifiedBy%> <%=modifiedDate%>"
+      "createdLabel": "создано: {createdBy} {createdDate}",
+      "modifiedLabel": "изменено: {modifiedBy} {modifiedDate}"
     },
     "windowedCriteria": {
       "windowedCriteriaText_5": "ограничить одно и то же посещение",
@@ -918,7 +918,7 @@
         "headingMessage": "Сравнение двух наборов концепций на предмет содержания общих концепций",
         "modalTitle": "Выберите набор концепций",
         "vennDiagram": "Диаграмма Венна",
-        "vennDiagramTotalAmountConcepts": "Общее количество концептов: <%=count%>",
+        "vennDiagramTotalAmountConcepts": "Общее количество концептов: {count}",
         "conceptSet1": "Набор концепций 1:",
         "compareConceptSets": "Сравнение наборов концепций",
         "conceptSet2": "Набор концепций 2:"
@@ -1081,7 +1081,7 @@
         "label": "Ключ источника:",
         "alerts": {
           "save": {
-            "error": "Источник не сохранен. <%= message %>"
+            "error": "Источник не сохранен. {message}"
           }
         },
         "confirms": {
