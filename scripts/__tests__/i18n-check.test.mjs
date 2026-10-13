@@ -7,6 +7,8 @@ import {
   findBatchCollision,
   findFallbackConflicts,
   lintEnglish,
+  findRedundantFallbacks,
+  stripFallbacks,
 } from '../i18n-check.core.mjs'
 
 describe('extractKeys', () => {
@@ -129,7 +131,63 @@ describe('lintEnglish', () => {
     ])
   })
 
+  it('rejects numbered Atlas 2.x style keys', () => {
+    expect(lintEnglish({ a: { cohortErasText_2: 'x', textfield: 'y', field_17: 'z' } })).toEqual([
+      '"a.cohortErasText_2" is a numbered key; name it after what the string is for',
+      '"a.textfield" is a numbered key; name it after what the string is for',
+      '"a.field_17" is a numbered key; name it after what the string is for',
+    ])
+  })
+
+  it('accepts keys that merely contain digits', () => {
+    expect(lintEnglish({ columns: { p25: 'P25' }, x: { accessDenied403: 'No' } })).toEqual([])
+  })
+
   it('ignores the untranslated format subtree', () => {
     expect(lintEnglish({ format: { x: '<%= y %>' } })).toEqual([])
+  })
+})
+
+describe('stripFallbacks', () => {
+  const en = { a: { b: 'Save', c: 'Hi {n}' } }
+
+  it('drops a fallback on a key en.json has', () => {
+    expect(stripFallbacks(`t('a.b', 'Save').value`, en)).toBe(`t('a.b').value`)
+  })
+
+  it('keeps the params argument after the fallback', () => {
+    expect(stripFallbacks(`tv('a.c', 'Hi {n}', { n })`, en)).toBe(`tv('a.c', { n })`)
+  })
+
+  it('handles escaped quotes, double quotes and plain templates', () => {
+    expect(stripFallbacks(`t('a.b', 'It\\'s')`, en)).toBe(`t('a.b')`)
+    expect(stripFallbacks(`t("a.b", "Say \\"hi\\"")`, en)).toBe(`t("a.b")`)
+    expect(stripFallbacks('t(\'a.b\', `Save`)', en)).toBe(`t('a.b')`)
+  })
+
+  it('handles calls spread over several lines', () => {
+    expect(stripFallbacks(`t(\n  'a.b',\n  'Save'\n)`, en)).toBe(`t(\n  'a.b'\n)`)
+  })
+
+  it('leaves keys missing from en.json alone so --backfill can lift them', () => {
+    const src = `t('x.y', 'New text')`
+    expect(stripFallbacks(src, en)).toBe(src)
+  })
+
+  it('leaves interpolated templates and non-literal fallbacks alone', () => {
+    const src = 't(\'a.b\', `Save ${x}`); t(\'a.b\', label)'
+    expect(stripFallbacks(src, en)).toBe(src)
+  })
+
+  it('does not touch identifiers ending in t', () => {
+    const src = `emit('a.b', 'Save')`
+    expect(stripFallbacks(src, en)).toBe(src)
+  })
+})
+
+describe('findRedundantFallbacks', () => {
+  it('reports key and line of each redundant fallback', () => {
+    const src = `x\nt('a.b', 'Save')\nt('x.y', 'New')`
+    expect(findRedundantFallbacks(src, { a: { b: 'Save' } })).toEqual([{ key: 'a.b', line: 2 }])
   })
 })

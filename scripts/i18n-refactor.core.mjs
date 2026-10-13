@@ -116,3 +116,18 @@ export function rewriteSource(source, map) {
 export function convertLegacyPlaceholders(str) {
   return str.replace(/<%=\s*(\w+)\s*%>/g, '{$1}')
 }
+
+/**
+ * Re-add keys from an older copy of the same locale under new names, in
+ * place — used to revive translations for strings that were pruned while
+ * unused and later wired up again. `pairs` is [[newKey, oldKey]]; a pair is
+ * skipped when the old copy has no string for it or the new key already exists.
+ */
+export function restoreKeys(locale, manifest, oldLocale, oldManifest, pairs) {
+  for (const [to, from] of pairs) {
+    const value = getByPath(oldLocale, from)
+    if (typeof value !== 'string' || getByPath(locale, to) !== undefined) continue
+    setByPath(locale, to, value)
+    if (manifest && oldManifest?.[from] !== undefined) manifest[to] = oldManifest[from]
+  }
+}

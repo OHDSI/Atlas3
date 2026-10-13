@@ -171,6 +171,25 @@ For a tautology, assert the value the expression was supposed to be checking.
 6. **Counting is not comparing.** Asserting `result.length === 3` leaves every field inside
    those three items unchecked. Compare the content.
 
+7. **Assert translated text through the key, not the English.** UI copy lives in
+   `src/locales/en.json`; a test that hard-codes `'Save'` breaks on every copy edit and
+   says nothing about whether the right key is used. Mock `useI18n` with the shared helper
+   and resolve the expected text with `tr()`:
+
+       vi.mock('@/composables/useI18n', async () => {
+         const { mockUseI18n } = await import('../../helpers/i18n-mock')
+         return mockUseI18n
+       })
+       import { tr } from '../../helpers/i18n-mock'
+
+       expect(wrapper.text()).toContain(tr('common.save'))
+       expect(label).toBe(tr('cs.browser.compare.vennDiagramTotalAmountConcepts', { count: 3 }))
+
+   `tr()` throws on a key that is not in en.json, so a renamed key fails loudly. Do not
+   write ad-hoc `t: (key, fallback) => fallback || key` mocks: call sites carry no inline
+   fallback, so such a mock renders raw keys. Literals that are test data (a cohort name,
+   an id) stay literals. See [i18n.md](i18n.md).
+
 ## Baseline
 
 Per-file worked examples, measured on commit 5884245:

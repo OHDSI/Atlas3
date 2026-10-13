@@ -6,13 +6,17 @@
  *   node scripts/i18n-refactor.mjs prune               delete keys nothing references
  *   node scripts/i18n-refactor.mjs rename <map.json>   apply { oldKey: newKey } renames/merges
  *   node scripts/i18n-refactor.mjs placeholders        <%= x %> → {x} in every locale
+ *   node scripts/i18n-refactor.mjs restore <map.json> <git-ref>
+ *                                       re-add { newKey: oldKey } from an older commit,
+ *                                       translations and manifest hashes included
  *
  * Add --dry-run to print what would change without writing.
  */
 import { readFile, writeFile, readdir } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
-import { flattenStrings, setByPath, SOURCE_LOCALE } from './i18n-lib.mjs'
+import { execFileSync } from 'node:child_process'
+import { flattenStrings, getByPath, setByPath, SOURCE_LOCALE } from './i18n-lib.mjs'
 import { findUnused } from './i18n-usage.core.mjs'
 import { ROOT, sourceFiles, scanReferences } from './i18n-usage.mjs'
 import {
@@ -21,6 +25,7 @@ import {
   pruneKeys,
   rewriteSource,
   convertLegacyPlaceholders,
+  restoreKeys,
 } from './i18n-refactor.core.mjs'
 
 const LOCALES_DIR = join(ROOT, 'src', 'locales')
@@ -99,6 +104,29 @@ async function cmdPlaceholders(dryRun) {
   if (!dryRun) await saveAll(all)
 }
 
+const gitJson = (ref, path) =>
+  JSON.parse(execFileSync('git', ['show', `${ref}:${path}`], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 << 20 }))
+
+async function cmdRestore(mapPath, ref, dryRun) {
+  if (!mapPath || !ref) throw new Error('usage: i18n-refactor.mjs restore <map.json> <git-ref>')
+  const pairs = Object.entries(await readJson(mapPath))
+  const all = await loadAll()
+  const oldManifest = gitJson(ref, 'src/locales/.i18n-manifest.json')
+  const oldEn = gitJson(ref, 'src/locales/en.json')
+  const unknown = pairs.filter(([, from]) => typeof getByPath(oldEn, from) !== 'string')
+  const taken = pairs.filter(([to]) => getByPath(all.locales[SOURCE_LOCALE], to) !== undefined)
+  for (const [to, from] of unknown) console.error(`[i18n-refactor] "${from}" (for "${to}") is not a string at ${ref}`)
+  for (const [to] of taken) console.error(`[i18n-refactor] "${to}" already exists`)
+  if (unknown.length || taken.length) process.exit(1)
+  log(`[i18n-refactor] restoring ${pairs.length} keys from ${ref}`)
+  if (dryRun) return
+  for (const [code, locale] of Object.entries(all.locales)) {
+    const oldLocale = code === SOURCE_LOCALE ? oldEn : gitJson(ref, `src/locales/${code}.json`)
+    restoreKeys(locale, all.manifest[code], oldLocale, oldManifest[code], pairs)
+  }
+  await saveAll(all)
+}
+
 async function main() {
   const [cmd, ...rest] = process.argv.slice(2)
   const dryRun = rest.includes('--dry-run')
@@ -106,8 +134,9 @@ async function main() {
   if (cmd === 'prune') await cmdPrune(dryRun)
   else if (cmd === 'rename') await cmdRename(args[0], dryRun)
   else if (cmd === 'placeholders') await cmdPlaceholders(dryRun)
+  else if (cmd === 'restore') await cmdRestore(args[0], args[1], dryRun)
   else {
-    console.error('usage: i18n-refactor.mjs prune | rename <map.json> | placeholders [--dry-run]')
+    console.error('usage: i18n-refactor.mjs prune | rename <map.json> | placeholders | restore <map.json> <ref> [--dry-run]')
     process.exit(1)
   }
 }

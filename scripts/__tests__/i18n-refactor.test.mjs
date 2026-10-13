@@ -7,6 +7,7 @@ import {
   pruneKeys,
   rewriteSource,
   convertLegacyPlaceholders,
+  restoreKeys,
 } from '../i18n-refactor.core.mjs'
 
 describe('deleteByPath', () => {
@@ -138,5 +139,24 @@ describe('convertLegacyPlaceholders', () => {
 
   it('leaves {x} placeholders alone', () => {
     expect(convertLegacyPlaceholders('Hi {name}')).toBe('Hi {name}')
+  })
+})
+
+describe('restoreKeys', () => {
+  it('copies an old value and manifest hash under the new key', () => {
+    const locale = { keep: 'k' }
+    const manifest = {}
+    restoreKeys(locale, manifest, { old: { key: 'V' } }, { 'old.key': 'h1' }, [['new.key', 'old.key']])
+    expect(locale).toEqual({ keep: 'k', new: { key: 'V' } })
+    expect(manifest).toEqual({ 'new.key': 'h1' })
+  })
+
+  it('skips pairs with no old value or an existing new key', () => {
+    const locale = { new: { key: 'current' } }
+    restoreKeys(locale, undefined, { old: { key: 'V' } }, undefined, [
+      ['new.key', 'old.key'],
+      ['other.key', 'missing.key'],
+    ])
+    expect(locale).toEqual({ new: { key: 'current' } })
   })
 })

@@ -88,6 +88,12 @@ export function findFallbackConflicts(usages) {
   return conflicts
 }
 /**
+ * Atlas 2.x numbered keys (`cohortErasText_2`, `textfield_17`) say nothing
+ * about what the string is for. Name keys after their role instead.
+ */
+const NUMBERED_KEY_RE = /(_\d+|Text\d+)$|textfield/i
+
+/**
  * Rules for en.json itself. Placeholders are `{name}` only — the Atlas 2.x
  * `<%= name %>` style is not interpolated by useI18n.
  */
@@ -95,6 +101,39 @@ export function lintEnglish(en) {
   const errors = []
   for (const [key, value] of translatableSource(en)) {
     if (value.includes('<%')) errors.push(`"${key}" uses a <%= %> placeholder; write {name} instead`)
+    if (NUMBERED_KEY_RE.test(key.split('.').pop())) {
+      errors.push(`"${key}" is a numbered key; name it after what the string is for`)
+    }
   }
   return errors
+}
+
+// t('key', <string literal> — the literal is '…' or "…" with escapes, or a
+// `…` template without interpolation. Group 1 is the call head up to the key,
+// group 2 the key, group 3 the literal (with its leading comma).
+const FALLBACK_RE =
+  /(\b(?:t|tv)\(\s*(['"])([A-Za-z0-9_.-]+)\2)(\s*,\s*(?:'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`[^`$\\]*`))(?=\s*[,)])/g
+
+/**
+ * Inline English fallbacks on keys en.json already has. They are dead text at
+ * runtime (en.json is loaded before the first render) and drift from the real
+ * copy, so en.json stays the single source of English.
+ * @returns {{ key: string, line: number }[]}
+ */
+export function findRedundantFallbacks(source, en) {
+  const out = []
+  FALLBACK_RE.lastIndex = 0
+  let match
+  while ((match = FALLBACK_RE.exec(source))) {
+    if (typeof getByPath(en, match[3]) !== 'string') continue
+    out.push({ key: match[3], line: source.slice(0, match.index).split('\n').length })
+  }
+  return out
+}
+
+/** Drop redundant inline fallbacks, keeping any params argument that follows. */
+export function stripFallbacks(source, en) {
+  return source.replace(FALLBACK_RE, (match, head, _quote, key) =>
+    typeof getByPath(en, key) === 'string' ? head : match
+  )
 }
