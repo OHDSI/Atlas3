@@ -164,7 +164,9 @@ const selectedDomain = ref<string | null>(props.domainFilter || null)
 const selectedConcepts = ref<Concept[]>([])
 const hasSearched = ref(false)
 
-const domainOptions = [
+// OMOP domains a concept picker may need, including attribute domains such
+// as Unit (measurement units) and Meas Value (value-as-concept answers).
+const STANDARD_DOMAINS = [
   'Condition',
   'Drug',
   'Procedure',
@@ -172,7 +174,25 @@ const domainOptions = [
   'Measurement',
   'Visit',
   'Device',
+  'Specimen',
+  'Unit',
+  'Meas Value',
+  'Meas Value Operator',
+  'Route',
+  'Type Concept',
+  'Gender',
+  'Race',
+  'Ethnicity',
+  'Provider',
+  'Episode',
 ]
+
+// Keep a caller-supplied domain selectable even if it isn't in the list above.
+const domainOptions = computed(() =>
+  props.domainFilter && !STANDARD_DOMAINS.includes(props.domainFilter)
+    ? [...STANDARD_DOMAINS, props.domainFilter]
+    : STANDARD_DOMAINS
+)
 
 const isSearching = computed(() => conceptPickerStore.isSearching)
 const searchResults = computed(() => {

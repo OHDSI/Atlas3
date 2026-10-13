@@ -234,6 +234,18 @@ describe('ConceptSearchDialog', () => {
       expect(select.props('modelValue')).toBe('Drug')
     })
 
+    it('should offer the Unit domain', () => {
+      const wrapper = mountComponent()
+      const select = wrapper.findComponent({ name: 'VSelect' })
+      expect(select.props('items')).toContain('Unit')
+    })
+
+    it('should offer a domainFilter outside the standard list', () => {
+      const wrapper = mountComponent({ domainFilter: 'Custom Domain' })
+      const select = wrapper.findComponent({ name: 'VSelect' })
+      expect(select.props('items')).toContain('Custom Domain')
+    })
+
     it('should filter results by selected domain', async () => {
       const wrapper = mountComponent()
       const store = useConceptPickerStore()
