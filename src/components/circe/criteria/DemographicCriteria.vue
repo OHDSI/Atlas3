@@ -123,8 +123,8 @@ function hasAttribute(key: keyof DemographicCriteria): boolean {
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {
     key: 'Age',
-    label: 'Age',
-    description: 'Filter by age',
+    label: t('criteriaAttributes.age.label').value,
+    description: t('components.demographicCriteria.attributes.age.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(demographicCriteriaData.value, 'Age', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -139,8 +139,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Gender',
-    label: 'Gender',
-    description: 'Filter by gender',
+    label: t('criteriaAttributes.gender.label').value,
+    description: t('components.demographicCriteria.attributes.gender.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -157,8 +157,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'GenderCS',
-    label: 'Gender Concept Set',
-    description: 'Filter gender by a concept set',
+    label: t('criteriaAttributes.genderCS.label').value,
+    description: t('criteriaAttributes.genderCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(demographicCriteriaData.value, 'GenderCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -177,8 +177,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Race',
-    label: 'Race',
-    description: 'Filter by race',
+    label: t('criteriaAttributes.race.label').value,
+    description: t('criteriaAttributes.race.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -195,8 +195,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'RaceCS',
-    label: 'Race Concept Set',
-    description: 'Filter race by a concept set',
+    label: t('criteriaAttributes.raceCS.label').value,
+    description: t('criteriaAttributes.raceCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(demographicCriteriaData.value, 'RaceCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -215,8 +215,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Ethnicity',
-    label: 'Ethnicity',
-    description: 'Filter by ethnicity',
+    label: t('criteriaAttributes.ethnicity.label').value,
+    description: t('criteriaAttributes.ethnicity.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -233,8 +233,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'EthnicityCS',
-    label: 'Ethnicity Concept Set',
-    description: 'Filter ethnicity by a concept set',
+    label: t('criteriaAttributes.ethnicityCS.label').value,
+    description: t('criteriaAttributes.ethnicityCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(demographicCriteriaData.value, 'EthnicityCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -253,8 +253,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'OccurrenceStartDate',
-    label: 'Occurrence Start Date',
-    description: 'Filter by occurrence start date',
+    label: t('components.demographicCriteria.attributes.occurrenceStartDate.label').value,
+    description: t('components.demographicCriteria.attributes.occurrenceStartDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(demographicCriteriaData.value, 'OccurrenceStartDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -269,8 +269,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'OccurrenceEndDate',
-    label: 'Occurrence End Date',
-    description: 'Filter by occurrence end date',
+    label: t('components.demographicCriteria.attributes.occurrenceEndDate.label').value,
+    description: t('components.demographicCriteria.attributes.occurrenceEndDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(demographicCriteriaData.value, 'OccurrenceEndDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange

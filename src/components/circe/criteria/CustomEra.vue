@@ -252,8 +252,8 @@ const gapDays = computed<number>({
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {
     key: 'First',
-    label: 'First Era',
-    description: 'Limit to the first qualifying era',
+    label: t('components.customEra.attributes.first.label').value,
+    description: t('components.customEra.attributes.first.description').value,
     init: () => {
       customEraData.value.First = true
     },
@@ -264,8 +264,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'DateAdjustment',
-    label: 'Date Adjustment',
-    description: 'Adjust event dates',
+    label: t('criteriaAttributes.dateAdjustment.label').value,
+    description: t('criteriaAttributes.dateAdjustment.description').value,
     kind: 'dateAdjustment',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(customEraData.value, 'DateAdjustment', createDefaultDateAdjustment)
@@ -280,8 +280,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'StartDate',
-    label: 'Start Date',
-    description: 'Filter by custom era start date',
+    label: t('criteriaAttributes.startDate.label').value,
+    description: t('criteriaAttributes.startDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(customEraData.value, 'StartDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -296,8 +296,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'EndDate',
-    label: 'End Date',
-    description: 'Filter by custom era end date',
+    label: t('criteriaAttributes.endDate.label').value,
+    description: t('criteriaAttributes.endDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(customEraData.value, 'EndDate', () => ({ Value: '', Op: 'lte', Extent: undefined })) as DateRange
@@ -312,8 +312,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'AgeAtStart',
-    label: 'Age at Start',
-    description: 'Filter by age at era start',
+    label: t('criteriaAttributes.ageAtStart.label').value,
+    description: t('criteriaAttributes.ageAtStart.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(customEraData.value, 'AgeAtStart', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -328,8 +328,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'GenderCS',
-    label: 'Gender Concept Set',
-    description: 'Filter gender by a concept set',
+    label: t('criteriaAttributes.genderCS.label').value,
+    description: t('criteriaAttributes.genderCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(customEraData.value, 'GenderCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -348,8 +348,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Duration',
-    label: 'Duration',
-    description: 'Filter by era duration',
+    label: t('criteriaAttributes.duration.label').value,
+    description: t('criteriaAttributes.duration.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(customEraData.value, 'Duration', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -364,8 +364,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'CorrelatedCriteria',
-    label: 'Nested Criteria',
-    description: 'Filter using nested criteria',
+    label: t('criteriaAttributes.correlatedCriteria.label').value,
+    description: t('components.customEra.attributes.correlatedCriteria.description').value,
     kind: 'criteriaGroup',
     componentProps: () => ({
       group: ensureObjectField(customEraData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup),

@@ -355,10 +355,28 @@
       "addCriteria": "Add Criteria...",
       "additionalAttributes": "Additional Attributes",
       "noCriteria": "No criteria yet.",
-      "noOptionalAttributes": "No additional attributes yet."
+      "noOptionalAttributes": "No additional attributes yet.",
+      "attributes": {
+        "first": {
+          "label": "First Era",
+          "description": "Limit to the first qualifying era"
+        },
+        "correlatedCriteria": {
+          "description": "Filter using nested criteria"
+        }
+      }
     },
     "episode": {
-      "title": "an episode of"
+      "title": "an episode of",
+      "attributes": {
+        "first": {
+          "label": "First Episode",
+          "description": "Limit to first episode in history"
+        },
+        "age": {
+          "description": "Filter by age at episode start"
+        }
+      }
     },
     "expressionCartoonBindings": {
       "noInclusionRules": "No inclusion rules"
@@ -406,7 +424,19 @@
       "title": "a condition era of"
     },
     "conditionOccurrence": {
-      "title": "a condition occurrence of"
+      "title": "a condition occurrence of",
+      "attributes": {
+        "occurrenceStartDate": {
+          "label": "Condition Start Date"
+        },
+        "occurrenceEndDate": {
+          "label": "Condition End Date"
+        },
+        "visitType": {
+          "label": "Visit",
+          "description": "Filter based on visit occurrence"
+        }
+      }
     },
     "criteriaGroup": {
       "addCriteria": "Add criteria to group...",
@@ -421,7 +451,23 @@
       "matchAtMost": "At most {count}"
     },
     "demographicCriteria": {
-      "name": "Demographic Criteria"
+      "name": "Demographic Criteria",
+      "attributes": {
+        "age": {
+          "description": "Filter by age"
+        },
+        "gender": {
+          "description": "Filter by gender"
+        },
+        "occurrenceStartDate": {
+          "label": "Occurrence Start Date",
+          "description": "Filter by occurrence start date"
+        },
+        "occurrenceEndDate": {
+          "label": "Occurrence End Date",
+          "description": "Filter by occurrence end date"
+        }
+      }
     },
     "entityImport": {
       "failed": "Import failed.",
@@ -1011,7 +1057,13 @@
       "startAndEnd": "{start} and {end}"
     },
     "drugExposure": {
-      "title": "a drug exposure of"
+      "title": "a drug exposure of",
+      "attributes": {
+        "first": {
+          "label": "First Exposure",
+          "description": "Limit to first exposure in history"
+        }
+      }
     },
     "correlatedCriteria": {
       "restrictToSameVisit": "restrict to the same visit occurrence",
@@ -1033,40 +1085,160 @@
       "occurrenceDistinct": "{occurrence} of distinct {column}"
     },
     "deviceExposure": {
-      "title": "a device exposure of"
+      "title": "a device exposure of",
+      "attributes": {
+        "first": {
+          "label": "First Exposure",
+          "description": "Limit to first exposure in history"
+        },
+        "visitType": {
+          "label": "Visit",
+          "description": "Filter based on visit occurrence"
+        }
+      }
     },
     "doseEra": {
-      "title": "a dose era of"
+      "title": "a dose era of",
+      "attributes": {
+        "first": {
+          "label": "First Dose Era",
+          "description": "Limit to first dose era in history"
+        },
+        "unit": {
+          "description": "Filter by dosing unit"
+        }
+      }
     },
     "drugEra": {
-      "title": "a drug era of"
+      "title": "a drug era of",
+      "attributes": {
+        "first": {
+          "label": "First Drug Era",
+          "description": "Limit to first drug era in history"
+        },
+        "occurrenceCount": {
+          "label": "Occurrence Count",
+          "description": "Filter by occurrence count"
+        }
+      }
     },
     "measurement": {
-      "title": "a measurement of"
+      "title": "a measurement of",
+      "attributes": {
+        "first": {
+          "label": "First Measurement",
+          "description": "Limit to first measurement in history"
+        },
+        "occurrenceStartDate": {
+          "label": "Measurement Date",
+          "description": "Filter by measurement date"
+        },
+        "unit": {
+          "description": "Filter by measurement unit"
+        }
+      }
     },
     "procedureOccurrence": {
-      "title": "a procedure occurrence of"
+      "title": "a procedure occurrence of",
+      "attributes": {
+        "first": {
+          "label": "First Procedure",
+          "description": "Limit to first procedure in history"
+        },
+        "occurrenceStartDate": {
+          "label": "Procedure Date",
+          "description": "Filter by procedure date"
+        }
+      }
     },
     "observation": {
-      "title": "an observation of"
+      "title": "an observation of",
+      "attributes": {
+        "first": {
+          "label": "First Observation",
+          "description": "Limit to first observation in history"
+        },
+        "occurrenceStartDate": {
+          "label": "Observation Date",
+          "description": "Filter by observation date"
+        }
+      }
     },
     "visitDetail": {
-      "title": "a visit detail of"
+      "title": "a visit detail of",
+      "attributes": {
+        "first": {
+          "label": "First Visit Detail",
+          "description": "Limit to first visit detail in history"
+        }
+      }
     },
     "specimen": {
-      "title": "a specimen of"
+      "title": "a specimen of",
+      "attributes": {
+        "first": {
+          "label": "First Specimen",
+          "description": "Limit to first specimen in history"
+        },
+        "occurrenceStartDate": {
+          "label": "Specimen Date",
+          "description": "Filter by specimen date"
+        }
+      }
     },
     "visitOccurrence": {
-      "title": "a visit occurrence of"
+      "title": "a visit occurrence of",
+      "attributes": {
+        "first": {
+          "label": "First Visit",
+          "description": "Limit to first visit in history"
+        },
+        "occurrenceStartDate": {
+          "label": "Visit Start Date"
+        },
+        "occurrenceEndDate": {
+          "label": "Visit End Date"
+        }
+      }
     },
     "observationPeriod": {
-      "title": "observation period"
+      "title": "observation period",
+      "attributes": {
+        "first": {
+          "label": "First Observation Period",
+          "description": "Limit to first observation period in history"
+        },
+        "ageAtStart": {
+          "description": "Filter by age at start of period"
+        },
+        "ageAtEnd": {
+          "description": "Filter by age at end of period"
+        }
+      }
     },
     "death": {
-      "title": "a death of"
+      "title": "a death of",
+      "attributes": {
+        "occurrenceStartDate": {
+          "label": "Death Date",
+          "description": "Filter by date"
+        }
+      }
     },
     "payerPlanPeriod": {
-      "title": "a payer plan period of"
+      "title": "a payer plan period of",
+      "attributes": {
+        "first": {
+          "label": "First Payer Plan Period",
+          "description": "Limit to first payer plan period in history"
+        },
+        "ageAtStart": {
+          "description": "Filter by age at start of period"
+        },
+        "ageAtEnd": {
+          "description": "Filter by age at end of period"
+        }
+      }
     },
     "criteria": {
       "addAttribute": "Add attribute...",
@@ -2441,6 +2613,468 @@
     "editor": {
       "previewBanner": "Previewing version — saving will create a new pathway",
       "noPathwayLoaded": "No pathway loaded"
+    }
+  },
+  "criteriaAttributes": {
+    "first": {
+      "label": "First Diagnosis",
+      "description": "Limit to first diagnosis in history"
+    },
+    "ageAtStart": {
+      "label": "Age at Start",
+      "description": "Filter by age at era start"
+    },
+    "ageAtEnd": {
+      "label": "Age at End",
+      "description": "Filter by age at era end"
+    },
+    "gender": {
+      "label": "Gender",
+      "description": "Filter by patient gender"
+    },
+    "genderCS": {
+      "label": "Gender Concept Set",
+      "description": "Filter gender by a concept set"
+    },
+    "eraStartDate": {
+      "label": "Start Date",
+      "description": "Filter by start date"
+    },
+    "eraEndDate": {
+      "label": "End Date",
+      "description": "Filter by end date"
+    },
+    "dateAdjustment": {
+      "label": "Date Adjustment",
+      "description": "Adjust event dates"
+    },
+    "occurrenceCount": {
+      "label": "Condition Count",
+      "description": "Filter by condition count"
+    },
+    "eraLength": {
+      "label": "Era Length",
+      "description": "Filter by era duration"
+    },
+    "correlatedCriteria": {
+      "label": "Nested Criteria",
+      "description": "Add nested criteria group"
+    },
+    "age": {
+      "label": "Age",
+      "description": "Filter by age at time of event"
+    },
+    "conditionStatus": {
+      "label": "Condition Status",
+      "description": "Filter by condition status"
+    },
+    "conditionStatusCS": {
+      "label": "Condition Status Concept Set",
+      "description": "Filter condition status by a concept set"
+    },
+    "occurrenceStartDate": {
+      "description": "Filter by start date",
+      "label": "Start Date"
+    },
+    "occurrenceEndDate": {
+      "description": "Filter by end date",
+      "label": "End Date"
+    },
+    "conditionType": {
+      "label": "Condition Type",
+      "description": "Filter by condition type"
+    },
+    "conditionTypeCS": {
+      "label": "Condition Type Concept Set",
+      "description": "Filter condition type by a concept set"
+    },
+    "visitTypeCS": {
+      "label": "Visit Type Concept Set",
+      "description": "Filter visit type by a concept set"
+    },
+    "stopReason": {
+      "label": "Stop Reason",
+      "description": "Filter by stop reason text"
+    },
+    "providerSpecialty": {
+      "label": "Provider Specialty",
+      "description": "Filter by provider specialty"
+    },
+    "providerSpecialtyCS": {
+      "label": "Provider Specialty Concept Set",
+      "description": "Filter provider specialty by a concept set"
+    },
+    "conditionSourceConcept": {
+      "label": "Condition Source Concept",
+      "description": "Filter by condition source concept"
+    },
+    "startDate": {
+      "label": "Start Date",
+      "description": "Filter by custom era start date"
+    },
+    "endDate": {
+      "label": "End Date",
+      "description": "Filter by custom era end date"
+    },
+    "duration": {
+      "label": "Duration",
+      "description": "Filter by era duration"
+    },
+    "deathType": {
+      "label": "Death Type",
+      "description": "Filter by death type"
+    },
+    "deathTypeCS": {
+      "label": "Death Type Concept Set",
+      "description": "Filter death type by a concept set"
+    },
+    "deathSourceConcept": {
+      "label": "Death Source Concept",
+      "description": "Filter by death source concept"
+    },
+    "race": {
+      "label": "Race",
+      "description": "Filter by race"
+    },
+    "raceCS": {
+      "label": "Race Concept Set",
+      "description": "Filter race by a concept set"
+    },
+    "ethnicity": {
+      "label": "Ethnicity",
+      "description": "Filter by ethnicity"
+    },
+    "ethnicityCS": {
+      "label": "Ethnicity Concept Set",
+      "description": "Filter ethnicity by a concept set"
+    },
+    "deviceType": {
+      "label": "Device Type",
+      "description": "Filter by device type"
+    },
+    "deviceTypeCS": {
+      "label": "Device Type Concept Set",
+      "description": "Filter device type by a concept set"
+    },
+    "uniqueDeviceId": {
+      "label": "Unique Device ID",
+      "description": "Filter by unique device identifier"
+    },
+    "quantity": {
+      "label": "Quantity",
+      "description": "Filter by quantity"
+    },
+    "deviceSourceConcept": {
+      "label": "Device Source Concept",
+      "description": "Filter by device source concept"
+    },
+    "doseValue": {
+      "label": "Dose Value",
+      "description": "Filter by dose amount"
+    },
+    "unit": {
+      "label": "Unit",
+      "description": "Filter by unit"
+    },
+    "unitCS": {
+      "label": "Unit Concept Set",
+      "description": "Filter unit by a concept set"
+    },
+    "gapDays": {
+      "label": "Gap Days",
+      "description": "Filter by gap between eras"
+    },
+    "drugType": {
+      "label": "Drug Type",
+      "description": "Filter by drug type"
+    },
+    "drugTypeCS": {
+      "label": "Drug Type Concept Set",
+      "description": "Filter drug type by a concept set"
+    },
+    "refills": {
+      "label": "Refills",
+      "description": "Filter by number of refills"
+    },
+    "daysSupply": {
+      "label": "Days Supply",
+      "description": "Filter by days of drug supply"
+    },
+    "routeConcept": {
+      "label": "Route",
+      "description": "Filter by route of administration"
+    },
+    "routeConceptCS": {
+      "label": "Route Concept Set",
+      "description": "Filter route by a concept set"
+    },
+    "effectiveDrugDose": {
+      "label": "Effective Drug Dose",
+      "description": "Filter by effective drug dose"
+    },
+    "doseUnit": {
+      "label": "Dose Unit",
+      "description": "Filter by dose unit"
+    },
+    "doseUnitCS": {
+      "label": "Dose Unit Concept Set",
+      "description": "Filter dose unit by a concept set"
+    },
+    "lotNumber": {
+      "label": "Lot Number",
+      "description": "Filter by lot number"
+    },
+    "drugSourceConcept": {
+      "label": "Drug Source Concept",
+      "description": "Filter by drug source concept"
+    },
+    "episodeStartDate": {
+      "label": "Start Date",
+      "description": "Filter by episode start date"
+    },
+    "episodeEndDate": {
+      "label": "End Date",
+      "description": "Filter by episode end date"
+    },
+    "episodeNumber": {
+      "label": "Episode Number",
+      "description": "Filter by episode number"
+    },
+    "episodeObjectConceptCS": {
+      "label": "Episode Object Concept Set",
+      "description": "Filter episode object concept by a concept set"
+    },
+    "episodeTypeCS": {
+      "label": "Episode Type Concept Set",
+      "description": "Filter episode type by a concept set"
+    },
+    "measurementType": {
+      "label": "Measurement Type",
+      "description": "Filter by measurement type"
+    },
+    "measurementTypeCS": {
+      "label": "Measurement Type Concept Set",
+      "description": "Filter measurement type by a concept set"
+    },
+    "operator": {
+      "label": "Operator",
+      "description": "Filter by measurement operator"
+    },
+    "operatorCS": {
+      "label": "Operator Concept Set",
+      "description": "Filter operator by a concept set"
+    },
+    "valueAsNumber": {
+      "label": "Value as Number",
+      "description": "Filter by numeric value"
+    },
+    "valueAsConcept": {
+      "label": "Value as Concept",
+      "description": "Filter by concept value"
+    },
+    "valueAsConceptCS": {
+      "label": "Value as Concept Set",
+      "description": "Filter concept value by a concept set"
+    },
+    "rangeLow": {
+      "label": "Range Low",
+      "description": "Filter by range low"
+    },
+    "rangeHigh": {
+      "label": "Range High",
+      "description": "Filter by range high"
+    },
+    "rangeLowRatio": {
+      "label": "Range Low Ratio",
+      "description": "Filter by range low ratio"
+    },
+    "rangeHighRatio": {
+      "label": "Range High Ratio",
+      "description": "Filter by range high ratio"
+    },
+    "abnormal": {
+      "label": "Abnormal",
+      "description": "Limit to abnormal measurements"
+    },
+    "measurementSourceConcept": {
+      "label": "Measurement Source Concept",
+      "description": "Filter by measurement source concept"
+    },
+    "visitType": {
+      "label": "Visit Type",
+      "description": "Filter by visit type"
+    },
+    "observationType": {
+      "label": "Observation Type",
+      "description": "Filter by observation type"
+    },
+    "observationTypeCS": {
+      "label": "Observation Type Concept Set",
+      "description": "Filter observation type by a concept set"
+    },
+    "valueAsString": {
+      "label": "Value as String",
+      "description": "Filter by text value"
+    },
+    "qualifier": {
+      "label": "Qualifier",
+      "description": "Filter by qualifier"
+    },
+    "qualifierCS": {
+      "label": "Qualifier Concept Set",
+      "description": "Filter qualifier by a concept set"
+    },
+    "observationSourceConcept": {
+      "label": "Observation Source Concept",
+      "description": "Filter by observation source concept"
+    },
+    "periodStartDate": {
+      "label": "Period Start Date",
+      "description": "Filter by period start date"
+    },
+    "periodEndDate": {
+      "label": "Period End Date",
+      "description": "Filter by period end date"
+    },
+    "userDefinedPeriod": {
+      "label": "User Defined Period",
+      "description": "Set the user-defined period range"
+    },
+    "periodType": {
+      "label": "Period Type",
+      "description": "Filter by period type"
+    },
+    "periodTypeCS": {
+      "label": "Period Type Concept Set",
+      "description": "Filter period type by a concept set"
+    },
+    "periodLength": {
+      "label": "Period Length",
+      "description": "Filter by period length"
+    },
+    "payerConcept": {
+      "label": "Payer Concept",
+      "description": "Filter by payer concept set"
+    },
+    "planConcept": {
+      "label": "Plan Concept",
+      "description": "Filter by plan concept set"
+    },
+    "sponsorConcept": {
+      "label": "Sponsor Concept",
+      "description": "Filter by sponsor concept set"
+    },
+    "stopReasonConcept": {
+      "label": "Stop Reason Concept",
+      "description": "Filter by stop reason concept set"
+    },
+    "payerSourceConcept": {
+      "label": "Payer Source Concept",
+      "description": "Filter by payer source concept set"
+    },
+    "planSourceConcept": {
+      "label": "Plan Source Concept",
+      "description": "Filter by plan source concept set"
+    },
+    "sponsorSourceConcept": {
+      "label": "Sponsor Source Concept",
+      "description": "Filter by sponsor source concept set"
+    },
+    "stopReasonSourceConcept": {
+      "label": "Stop Reason Source Concept",
+      "description": "Filter by stop reason source concept set"
+    },
+    "procedureType": {
+      "label": "Procedure Type",
+      "description": "Filter by procedure type"
+    },
+    "procedureTypeCS": {
+      "label": "Procedure Type Concept Set",
+      "description": "Filter procedure type by a concept set"
+    },
+    "modifier": {
+      "label": "Modifier",
+      "description": "Filter by modifier"
+    },
+    "modifierCS": {
+      "label": "Modifier Concept Set",
+      "description": "Filter modifier by a concept set"
+    },
+    "procedureSourceConcept": {
+      "label": "Procedure Source Concept",
+      "description": "Filter by procedure source concept"
+    },
+    "specimenType": {
+      "label": "Specimen Type",
+      "description": "Filter by specimen type"
+    },
+    "specimenTypeCS": {
+      "label": "Specimen Type Concept Set",
+      "description": "Filter specimen type by a concept set"
+    },
+    "anatomicSite": {
+      "label": "Anatomic Site",
+      "description": "Filter by anatomic site"
+    },
+    "anatomicSiteCS": {
+      "label": "Anatomic Site Concept Set",
+      "description": "Filter anatomic site by a concept set"
+    },
+    "diseaseStatus": {
+      "label": "Disease Status",
+      "description": "Filter by disease status"
+    },
+    "diseaseStatusCS": {
+      "label": "Disease Status Concept Set",
+      "description": "Filter disease status by a concept set"
+    },
+    "sourceId": {
+      "label": "Source ID",
+      "description": "Filter by specimen source ID"
+    },
+    "specimenSourceConcept": {
+      "label": "Specimen Source Concept",
+      "description": "Filter by specimen source concept"
+    },
+    "visitDetailStartDate": {
+      "label": "Visit Detail Start Date",
+      "description": "Filter by start date"
+    },
+    "visitDetailEndDate": {
+      "label": "Visit Detail End Date",
+      "description": "Filter by end date"
+    },
+    "visitDetailTypeCS": {
+      "label": "Visit Detail Type Concept Set",
+      "description": "Filter visit detail type by a concept set"
+    },
+    "visitDetailSourceConcept": {
+      "label": "Visit Detail Source Concept",
+      "description": "Filter by visit detail source concept"
+    },
+    "visitDetailLength": {
+      "label": "Visit Detail Length",
+      "description": "Filter by visit detail length"
+    },
+    "placeOfServiceCS": {
+      "label": "Place of Service Concept Set",
+      "description": "Filter place of service by a concept set"
+    },
+    "placeOfServiceLocation": {
+      "label": "Place of Service Location",
+      "description": "Filter by place of service location"
+    },
+    "visitSourceConcept": {
+      "label": "Visit Source Concept",
+      "description": "Filter by visit source concept"
+    },
+    "visitLength": {
+      "label": "Visit Length",
+      "description": "Filter by visit length"
+    },
+    "placeOfService": {
+      "label": "Place of Service",
+      "description": "Filter by place of service"
     }
   }
 }

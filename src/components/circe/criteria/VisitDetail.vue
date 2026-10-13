@@ -113,8 +113,8 @@ const selectConceptSetLabel = computed(() => t('components.conceptAddBox.selectC
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {
     key: 'First',
-    label: 'First Visit Detail',
-    description: 'Limit to first visit detail in history',
+    label: t('components.visitDetail.attributes.first.label').value,
+    description: t('components.visitDetail.attributes.first.description').value,
     init: () => {
       visitDetailData.value.First = true
     },
@@ -125,8 +125,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'VisitDetailStartDate',
-    label: 'Visit Detail Start Date',
-    description: 'Filter by start date',
+    label: t('criteriaAttributes.visitDetailStartDate.label').value,
+    description: t('criteriaAttributes.visitDetailStartDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(visitDetailData.value, 'VisitDetailStartDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -141,8 +141,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'VisitDetailEndDate',
-    label: 'Visit Detail End Date',
-    description: 'Filter by end date',
+    label: t('criteriaAttributes.visitDetailEndDate.label').value,
+    description: t('criteriaAttributes.visitDetailEndDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(visitDetailData.value, 'VisitDetailEndDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -157,8 +157,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'VisitDetailTypeCS',
-    label: 'Visit Detail Type Concept Set',
-    description: 'Filter visit detail type by a concept set',
+    label: t('criteriaAttributes.visitDetailTypeCS.label').value,
+    description: t('criteriaAttributes.visitDetailTypeCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(visitDetailData.value, 'VisitDetailTypeCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -177,8 +177,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'VisitDetailSourceConcept',
-    label: 'Visit Detail Source Concept',
-    description: 'Filter by visit detail source concept',
+    label: t('criteriaAttributes.visitDetailSourceConcept.label').value,
+    description: t('criteriaAttributes.visitDetailSourceConcept.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       visitDetailSourceConceptModel as ConceptSetSelection,
@@ -197,8 +197,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'VisitDetailLength',
-    label: 'Visit Detail Length',
-    description: 'Filter by visit detail length',
+    label: t('criteriaAttributes.visitDetailLength.label').value,
+    description: t('criteriaAttributes.visitDetailLength.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(visitDetailData.value, 'VisitDetailLength', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -213,8 +213,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'DateAdjustment',
-    label: 'Date Adjustment',
-    description: 'Adjust event dates',
+    label: t('criteriaAttributes.dateAdjustment.label').value,
+    description: t('criteriaAttributes.dateAdjustment.description').value,
     kind: 'dateAdjustment',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(visitDetailData.value, 'DateAdjustment', createDefaultDateAdjustment) as DateAdjustment
@@ -229,8 +229,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Age',
-    label: 'Age',
-    description: 'Filter by age at time of event',
+    label: t('criteriaAttributes.age.label').value,
+    description: t('criteriaAttributes.age.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(visitDetailData.value, 'Age', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -245,8 +245,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'GenderCS',
-    label: 'Gender Concept Set',
-    description: 'Filter gender by a concept set',
+    label: t('criteriaAttributes.genderCS.label').value,
+    description: t('criteriaAttributes.genderCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(visitDetailData.value, 'GenderCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -265,8 +265,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'ProviderSpecialtyCS',
-    label: 'Provider Specialty Concept Set',
-    description: 'Filter provider specialty by a concept set',
+    label: t('criteriaAttributes.providerSpecialtyCS.label').value,
+    description: t('criteriaAttributes.providerSpecialtyCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(visitDetailData.value, 'ProviderSpecialtyCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -285,8 +285,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PlaceOfServiceCS',
-    label: 'Place of Service Concept Set',
-    description: 'Filter place of service by a concept set',
+    label: t('criteriaAttributes.placeOfServiceCS.label').value,
+    description: t('criteriaAttributes.placeOfServiceCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(visitDetailData.value, 'PlaceOfServiceCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -305,8 +305,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PlaceOfServiceLocation',
-    label: 'Place of Service Location',
-    description: 'Filter by place of service location',
+    label: t('criteriaAttributes.placeOfServiceLocation.label').value,
+    description: t('criteriaAttributes.placeOfServiceLocation.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       placeOfServiceLocationModel as ConceptSetSelection,
@@ -325,8 +325,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'CorrelatedCriteria',
-    label: 'Nested Criteria',
-    description: 'Add nested criteria group',
+    label: t('criteriaAttributes.correlatedCriteria.label').value,
+    description: t('criteriaAttributes.correlatedCriteria.description').value,
     kind: 'criteriaGroup',
     componentProps: () => ({
       group: ensureObjectField(visitDetailData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup) as CriteriaGroup,
