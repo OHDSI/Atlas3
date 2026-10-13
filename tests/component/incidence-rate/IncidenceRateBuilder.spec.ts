@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
-import { vuetify, pristinePinia } from './_test-helpers'
 import IncidenceRateBuilder from '@/components/incidence-rate/IncidenceRateBuilder.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
+import { tr } from '../../helpers/i18n-mock'
+import { vuetify, pristinePinia } from './_test-helpers'
+
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 const builderMocks = vi.hoisted(() => ({
   save: vi.fn(),
@@ -106,7 +112,7 @@ describe('IncidenceRateBuilder', () => {
     })
     await flushPromises()
 
-    expect(w.findComponent({ name: 'AnalysisBuilderShell' }).props('title')).toBe('Incidence rate analysis')
+    expect(w.findComponent({ name: 'AnalysisBuilderShell' }).props('title')).toBe(tr('navigation.incidenceRates'))
     expect(w.find('[data-testid="ir-builder-name"]').exists()).toBe(false)
     expect(w.find('[data-testid="ir-builder-description"]').exists()).toBe(false)
     expect(w.findComponent({ name: 'IncidenceRateWorkbench' }).exists()).toBe(false)
@@ -202,7 +208,7 @@ describe('IncidenceRateBuilder', () => {
     await flushPromises()
 
     await (w.vm as any).$.setupState.handleExport()
-    expect(builderMocks.feedback.value?.message).toBe('Export failed')
+    expect(builderMocks.feedback.value?.message).toBe(tr('ir.editor.exportError'))
     expect(builderMocks.feedback.value?.color).toBe('error')
 
     const importedFile = { text: async () => JSON.stringify({ name: 'Imported' }) }

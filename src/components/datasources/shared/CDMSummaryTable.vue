@@ -4,7 +4,7 @@
     padding="none"
   >
     <div class="cdm-summary-table__title">
-      {{ t('dataSources.dashboardReport.cdmSummary', 'CDM Summary') }}
+      {{ t('dataSources.dashboardReport.cdmSummary') }}
     </div>
     <v-table
       density="comfortable"
@@ -13,13 +13,13 @@
       <tbody>
         <tr>
           <td class="font-weight-medium">
-            {{ t('columns.sourceName', 'Source Name') }}
+            {{ t('columns.sourceName') }}
           </td>
           <td>{{ data.sourceName }}</td>
         </tr>
         <tr>
           <td class="font-weight-medium">
-            {{ t('dataSources.numberOfPeople', 'Number of People') }}
+            {{ t('dataSources.numberOfPeople') }}
           </td>
           <td>{{ formatNumber(data.personCount) }}</td>
         </tr>

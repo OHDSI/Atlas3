@@ -34,7 +34,7 @@
                 size="sm"
                 @click="groupType = 'ALL'"
               >
-                {{ t('options.all', 'All').value }}
+                {{ t('options.all').value }}
               </AtlasButton>
               <AtlasButton
                 :variant="groupType === 'ANY' ? 'tonal' : 'secondary'"
@@ -42,7 +42,7 @@
                 size="sm"
                 @click="groupType = 'ANY'"
               >
-                {{ t('options.any', 'Any').value }}
+                {{ t('options.any').value }}
               </AtlasButton>
               <AtlasButton
                 :variant="groupType === 'AT_LEAST' ? 'tonal' : 'secondary'"
@@ -50,7 +50,7 @@
                 size="sm"
                 @click="groupType = 'AT_LEAST'"
               >
-                {{ t('options.atLeast', 'At least').value }}
+                {{ t('options.atLeast').value }}
               </AtlasButton>
               <AtlasButton
                 :variant="groupType === 'AT_MOST' ? 'tonal' : 'secondary'"
@@ -58,7 +58,7 @@
                 size="sm"
                 @click="groupType = 'AT_MOST'"
               >
-                {{ t('options.atMost', 'At most').value }}
+                {{ t('options.atMost').value }}
               </AtlasButton>
             </div>
 
@@ -127,7 +127,7 @@
           density="compact"
           class="mb-3"
         >
-          {{ deepNestingLabel }} ({{ depth }})
+          {{ deepNestingLabel }}
         </AtlasAlert>
 
         <div v-if="demographicCriteriaList.length > 0">
@@ -263,28 +263,30 @@ const groupCount = computed({
 const groupTypeLabel = computed(() => {
   switch (groupType.value) {
     case 'ANY':
-      return t('options.any', 'Any').value
+      return t('options.any').value
     case 'AT_LEAST': {
       const n = props.group.Count ?? '?'
-      return `${t('options.atLeast', 'At least').value} ${n}`
+      return `${t('options.atLeast').value} ${n}`
     }
     case 'AT_MOST': {
       const n = props.group.Count ?? '?'
-      return `${t('options.atMost', 'At most').value} ${n}`
+      return `${t('options.atMost').value} ${n}`
     }
     case 'ALL':
     default:
-      return t('options.all', 'All').value
+      return t('options.all').value
   }
 })
 
-const matchTypeChangeLabel = computed(() => t('components.criteriaGroup.clickToChangeMatchType', 'Click to change group match type').value)
-const groupCountLabel = computed(() => t('columns.count', 'Count').value)
-const addCriteriaLabel = computed(() => t('components.criteriaGroup.addCriteria', 'Add Criteria').value)
-const addGroupLabel = computed(() => t('components.criteriaGroup.addNestedGroup', 'Add Group').value)
-const deepNestingLabel = computed(() => t('components.criteriaGroup.nestedCriteria.depthWarning', 'Deep nesting detected').value)
-const noCriteriaLabel = computed(() => t('components.criteriaGroup.noEventsInGroup', 'No correlated criteria in this group yet.').value)
-const demographicCriteriaLabel = computed(() => 'Demographic Criteria')
+const matchTypeChangeLabel = computed(() => t('components.criteriaGroup.clickToChangeMatchType').value)
+const groupCountLabel = computed(() => t('columns.count').value)
+const addCriteriaLabel = computed(() => t('components.criteriaGroup.addCriteria').value)
+const addGroupLabel = computed(() => t('components.criteriaGroup.addNestedGroup').value)
+const deepNestingLabel = computed(() =>
+  t('components.criteriaGroup.nestedCriteria.depthWarning', { depth: depth.value }).value
+)
+const noCriteriaLabel = computed(() => t('components.criteriaGroup.noEventsInGroup').value)
+const demographicCriteriaLabel = computed(() => t('components.demographicCriteria.name').value)
 const criteriaTypeOptions = computed<Array<{ title: string; value: CriteriaType }>>(() => [
   { title: demographicCriteriaLabel.value, value: 'DemographicCriteria' },
   ...EDITABLE_CRITERIA_TYPES.map(type => ({

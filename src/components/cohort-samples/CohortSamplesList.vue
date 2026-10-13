@@ -5,10 +5,7 @@
     data-testid="cohort-samples-list-empty"
   >
     {{
-      tv(
-        'components.cohortSamplesList.empty',
-        'No samples have been generated for this cohort and source yet.'
-      )
+      tv('components.cohortSamplesList.empty')
     }}
   </div>
   <v-table
@@ -19,15 +16,15 @@
   >
     <thead>
       <tr>
-        <th>{{ tv('columns.name', 'Name') }}</th>
+        <th>{{ tv('columns.name') }}</th>
         <th class="text-right">
-          {{ tv('components.cohortSamplesList.persons', 'Persons') }}
+          {{ tv('components.cohortSamplesList.persons') }}
         </th>
-        <th>{{ tv('columns.selectionCriteria', 'Selection criteria') }}</th>
-        <th>{{ tv('columns.author', 'Author') }}</th>
-        <th>{{ tv('columns.created', 'Created') }}</th>
+        <th>{{ tv('columns.selectionCriteria') }}</th>
+        <th>{{ tv('columns.author') }}</th>
+        <th>{{ tv('columns.created') }}</th>
         <th class="text-right">
-          {{ tv('columns.actions', 'Actions') }}
+          {{ tv('columns.actions') }}
         </th>
       </tr>
     </thead>
@@ -60,7 +57,7 @@
         <td class="text-right">
           <AtlasIconButton
             icon="mdi-refresh"
-            v-bind="{ ariaLabel: tv('components.cohortSamplesList.refreshSample', 'Refresh sample') }"
+            v-bind="{ ariaLabel: tv('components.cohortSamplesList.refreshSample') }"
             variant="text"
             size="sm"
             data-testid="cohort-samples-list-refresh"
@@ -68,7 +65,7 @@
           />
           <AtlasIconButton
             icon="mdi-delete"
-            v-bind="{ ariaLabel: tv('components.cohortSamplesList.deleteSample', 'Delete sample') }"
+            v-bind="{ ariaLabel: tv('components.cohortSamplesList.deleteSample') }"
             variant="text"
             size="sm"
             data-testid="cohort-samples-list-delete"
@@ -147,13 +144,13 @@ function summarizeCriteria(sample: CohortSample): string {
   if (g) {
     const labels: string[] = []
     if (g.conceptIds.includes(GENDER_MALE_CONCEPT_ID))
-      labels.push(tv('components.cohortSamples.male', 'Male'))
+      labels.push(tv('components.cohortSamples.male'))
     if (g.conceptIds.includes(GENDER_FEMALE_CONCEPT_ID))
-      labels.push(tv('components.cohortSamples.female', 'Female'))
-    if (g.otherNonBinary) labels.push(tv('components.cohortSamples.otherNonBinary', 'Other / non-binary'))
+      labels.push(tv('components.cohortSamples.female'))
+    if (g.otherNonBinary) labels.push(tv('components.cohortSamples.otherNonBinary'))
     if (labels.length > 0) parts.push(labels.join(', '))
   }
-  return parts.length > 0 ? parts.join(' · ') : tv('components.cohortSamples.allPersons', 'All persons')
+  return parts.length > 0 ? parts.join(' · ') : tv('components.cohortSamples.allPersons')
 }
 </script>
 

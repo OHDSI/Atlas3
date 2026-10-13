@@ -171,12 +171,12 @@
     },
     "cohortExpressionEditor": {
       "addTrimmingOptions": "添加修剪选项",
-      "cohortErasText_1": "设置周期时间间隔为：",
-      "cohortErasText_2": "左删失队列开始日期至",
-      "cohortErasText_3": "右删失队列结束日期至",
       "days": "天",
       "inclusionCriteria": "纳入标准",
-      "noCensoring": "无审查"
+      "noCensoring": "无审查",
+      "eraCollapseGap": "设置周期时间间隔为：",
+      "leftCensorStartDates": "左删失队列开始日期至",
+      "rightCensorEndDates": "右删失队列结束日期至"
     },
     "conceptSet": {
       "addConcepts": "添加概念"
@@ -188,22 +188,14 @@
       "newConceptSet": "新建概念集",
       "selectConceptSet": "选择概念集..."
     },
-    "conditionDrugExposure": {
-      "addAttribute": "添加属性",
-      "conditionDrugExposureText_1": "一个    的药物暴露"
-    },
     "conditionEra": {
-      "addAttribute": "添加属性",
-      "criteriaText_1": "一个    的诊断周期"
+      "title": "一个    的诊断周期"
     },
     "conditionOccurrence": {
-      "addAttribute": "添加属性",
-      "conditionOccurrenceText_1": "一个    的诊断"
+      "title": "一个    的诊断"
     },
     "criteriaGroup": {
       "addCriteria": "添加条件到组",
-      "criteriaGroupText_1": "仅限同一次就诊",
-      "criteriaGroupText_2": "允许观察期以外的事件",
       "clickToChangeMatchType": "点击更改匹配类型",
       "noEventsInGroup": "组内没有事件。添加事件以构建条件逻辑。"
     },
@@ -223,8 +215,7 @@
       "username": "用户名"
     },
     "windowedCriteria": {
-      "windowedCriteriaText_5": "仅限同一次就诊",
-      "windowedCriteriaText_6": "忽略观察期"
+      "ignoreObservationPeriod": "忽略观察期"
     },
     "generation": {
       "generate": "生成",
@@ -703,6 +694,47 @@
     },
     "navBar": {
       "mainNavigation": "主导航"
+    },
+    "drugExposure": {
+      "title": "一个    的药物暴露"
+    },
+    "correlatedCriteria": {
+      "restrictToSameVisit": "仅限同一次就诊",
+      "allowEventsOutsideObservation": "允许观察期以外的事件"
+    },
+    "deviceExposure": {
+      "title": "一个    的医疗设备使用"
+    },
+    "doseEra": {
+      "title": "一个    的计量周期"
+    },
+    "drugEra": {
+      "title": "一个    的用药周期"
+    },
+    "measurement": {
+      "title": "一个    的检查检验"
+    },
+    "procedureOccurrence": {
+      "title": "一个    的操作"
+    },
+    "observation": {
+      "title": "一个       的观察"
+    },
+    "visitDetail": {
+      "title": "a visit detail of"
+    },
+    "specimen": {
+      "title": "一个    的标本信息"
+    },
+    "visitOccurrence": {
+      "title": "一个    的就诊"
+    },
+    "observationPeriod": {
+      "title": "观察期"
+    },
+    "criteria": {
+      "addAttribute": "添加属性",
+      "selectConceptSet": "选择概念集"
     }
   },
   "facets": {

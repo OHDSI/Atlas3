@@ -107,11 +107,7 @@ export function useCirceConceptSetPicker(opts: {
           error: conceptSetsStore.error,
         })
         notify.danger(
-          tv(
-            'components.cohortBuilder.conceptSetLoadFailed',
-            'Could not add concept set "{name}"',
-            { name: conceptSet.name }
-          ),
+          tv('components.cohortBuilder.conceptSetLoadFailed', { name: conceptSet.name }),
           { message: conceptSetsStore.error ?? undefined }
         )
         cancelSelection()
@@ -124,17 +120,9 @@ export function useCirceConceptSetPicker(opts: {
     const missingIds = items.filter(item => item.missingFromVocabulary).map(item => item.conceptId)
     if (missingIds.length > 0) {
       notify.warning(
-        tv(
-          'components.cohortBuilder.conceptSetMissingConcepts',
-          'Concept set "{name}" has concepts that are not in the selected vocabulary',
-          { name: conceptSet.name }
-        ),
+        tv('components.cohortBuilder.conceptSetMissingConcepts', { name: conceptSet.name }),
         {
-          message: tv(
-            'components.cohortBuilder.conceptSetMissingConceptsDetail',
-            'Concept IDs {ids} are kept in the cohort definition, but they cannot be shown with the current vocabulary source.',
-            { ids: missingIds.join(', ') }
-          ),
+          message: tv('components.cohortBuilder.conceptSetMissingConceptsDetail', { ids: missingIds.join(', ') }),
         }
       )
     }

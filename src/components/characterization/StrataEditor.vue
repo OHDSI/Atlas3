@@ -11,7 +11,7 @@
   <div class="strata-editor">
     <div class="strata-editor__header">
       <h2 class="strata-editor__title">
-        {{ t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value }}
+        {{ t('cc.viewEdit.design.subgroups.title').value }}
       </h2>
       <AtlasButton
         variant="secondary"
@@ -20,7 +20,7 @@
         data-testid="strata-editor-add"
         @click="addStratum"
       >
-        {{ t('cc.viewEdit.design.subgroups.newSubgroup', 'New subgroup').value }}
+        {{ t('cc.viewEdit.design.subgroups.newSubgroup').value }}
       </AtlasButton>
     </div>
 
@@ -29,14 +29,14 @@
       class="strata-editor__empty"
       data-testid="strata-editor-empty"
     >
-      {{ t('cc.viewEdit.design.subgroups.noSubgroups', 'No subgroups defined').value }}
+      {{ t('cc.viewEdit.design.subgroups.noSubgroups').value }}
     </div>
 
     <AtlasSwitch
       v-if="modelValue.length > 0"
       :model-value="strataOnly"
       :label="
-        t('cc.viewEdit.design.subgroups.subgroupOnly', 'Calculate subgroup analyses only').value
+        t('cc.viewEdit.design.subgroups.subgroupOnly').value
       "
       hide-details
       data-testid="strata-editor-only"
@@ -53,7 +53,7 @@
         <AtlasTextField
           :model-value="stratum.name"
           :label="
-            t('cc.viewEdit.design.subgroups.namePlaceholder', 'Subgroup name').value
+            t('cc.viewEdit.design.subgroups.namePlaceholder').value
           "
           :error="nameErrors(stratum.name)?.[0]"
           variant="outlined"
@@ -64,7 +64,7 @@
         />
         <AtlasIconButton
           icon="mdi-delete"
-          v-bind="{ ariaLabel: t('columns.remove', 'Remove').value }"
+          v-bind="{ ariaLabel: t('columns.remove').value }"
           variant="text"
           tone="danger"
           size="sm"
@@ -88,7 +88,7 @@
           :data-testid="`strata-editor-edit-criteria-${index}`"
           @click="openCriteriaDialog(stratum.id)"
         >
-          {{ t('common.editCriteria', 'Edit criteria').value }}
+          {{ t('common.editCriteria').value }}
         </AtlasButton>
       </div>
     </div>
@@ -109,7 +109,7 @@
           aria-hidden="true"
         >
           <div class="strata-editor__drawer-rail-text">
-            {{ t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value }}
+            {{ t('cc.viewEdit.design.subgroups.title').value }}
           </div>
         </aside>
 
@@ -117,7 +117,7 @@
           <header class="strata-editor__drawer-header">
             <div>
               <p class="strata-editor__drawer-eyebrow">
-                {{ t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value }}
+                {{ t('cc.viewEdit.design.subgroups.title').value }}
               </p>
               <h3 class="strata-editor__drawer-title">
                 {{ drawerTitle }}
@@ -131,7 +131,7 @@
                 data-testid="strata-editor-cancel-criteria"
                 @click="requestCancel"
               >
-                {{ t('common.cancel', 'Cancel').value }}
+                {{ t('common.cancel').value }}
               </AtlasButton>
               <AtlasButton
                 variant="primary"
@@ -139,7 +139,7 @@
                 data-testid="strata-editor-apply-criteria"
                 @click="applyCriteriaChanges"
               >
-                {{ t('common.apply', 'Apply').value }}
+                {{ t('common.apply').value }}
               </AtlasButton>
             </div>
           </header>
@@ -159,18 +159,18 @@
 
     <AtlasDialog
       v-model="discardConfirmationOpen"
-      :title="t('common.discardChanges', 'Discard changes?').value"
-      :close-label="t('common.cancel', 'Cancel').value"
+      :title="t('common.discardChanges').value"
+      :close-label="t('common.cancel').value"
       max-width="420"
     >
-      <p>{{ t('characterizations.editor.strata.discardChanges', 'Your changes to this subgroup criteria will be lost.').value }}</p>
+      <p>{{ t('characterizations.editor.strata.discardChanges').value }}</p>
       <template #actions>
         <AtlasButton
           variant="secondary"
           data-testid="strata-editor-keep-editing"
           @click="discardConfirmationOpen = false"
         >
-          {{ t('common.keepEditing', 'Keep editing').value }}
+          {{ t('common.keepEditing').value }}
         </AtlasButton>
         <AtlasButton
           variant="primary"
@@ -178,7 +178,7 @@
           data-testid="strata-editor-discard-criteria"
           @click="discardCriteriaChanges"
         >
-          {{ t('common.discard', 'Discard').value }}
+          {{ t('common.discard').value }}
         </AtlasButton>
       </template>
     </AtlasDialog>
@@ -271,7 +271,7 @@ const drawerTitle = computed<string>(() => {
   const stratum = dialogStratum.value
   if (!stratum) return ''
   return stratum.name.trim()
-    || tv('cc.viewEdit.design.subgroups.namePlaceholder', 'Subgroup name')
+    || tv('cc.viewEdit.design.subgroups.namePlaceholder')
 })
 
 // ── Concept-set picker ────────────────────────────────────────────────────
@@ -428,11 +428,11 @@ function isDuplicate(name: string): boolean {
 
 function nameErrors(name: string): string[] {
   if (!name.trim()) {
-    return [tv('cc.viewEdit.design.subgroups.messages.nameIsEmpty', 'Subgroup name is empty.')]
+    return [tv('cc.viewEdit.design.subgroups.messages.nameIsEmpty')]
   }
   if (isDuplicate(name)) {
     return [
-      tv('cc.viewEdit.design.subgroups.messages.nameIsNotUnique', 'Subgroup name is duplicated.'),
+      tv('cc.viewEdit.design.subgroups.messages.nameIsNotUnique'),
     ]
   }
   return []
@@ -451,12 +451,12 @@ function hasCriteria(stratum: Stratum): boolean {
 
 function criteriaSummary(stratum: Stratum): string {
   if (!hasCriteria(stratum)) {
-    return tv('characterizations.editor.strata.noCriteria', 'No criteria')
+    return tv('characterizations.editor.strata.noCriteria')
   }
   const c = stratum.criteria as CriteriaGroupType
   const n = (c.CriteriaList?.length ?? 0) + (c.DemographicCriteriaList?.length ?? 0)
   return n === 1
-    ? tv('characterizations.editor.strata.eventCount', '1 event')
+    ? tv('characterizations.editor.strata.eventCount')
     : tv('characterizations.editor.strata.eventsCount', `${n} events`, {
         n,
       })

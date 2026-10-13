@@ -29,20 +29,20 @@
       <div class="path-stats__persons">
         {{ stats.summary.persons.toLocaleString() }}
         <span class="path-stats__persons-label">{{
-          t('pathway.workbench.persons', 'persons').value
+          t('pathway.workbench.persons').value
         }}</span>
       </div>
       <div class="path-stats__sub">
         {{ stats.summary.pctOfCohort.toFixed(1) }}%
-        {{ t('pathway.workbench.ofCohort', 'of cohort').value }}
+        {{ t('pathway.workbench.ofCohort').value }}
         ·
         {{ stats.summary.pctOfPathways.toFixed(1) }}%
-        {{ t('pathway.workbench.ofPathways', 'of pathways').value }}
+        {{ t('pathway.workbench.ofPathways').value }}
       </div>
     </div>
 
     <div class="path-stats__section-label">
-      {{ t('pathway.workbench.stepBreakdown', 'Step breakdown').value }}
+      {{ t('pathway.workbench.stepBreakdown').value }}
     </div>
     <AtlasList
       density="compact"
@@ -77,7 +77,7 @@
     </AtlasList>
 
     <div class="path-stats__section-label">
-      {{ t('pathway.workbench.pathStats', 'Path stats').value }}
+      {{ t('pathway.workbench.pathStats').value }}
     </div>
   </div>
 </template>

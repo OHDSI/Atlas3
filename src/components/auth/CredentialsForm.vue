@@ -6,8 +6,8 @@
   >
     <AtlasTextField
       v-model="credentials.username"
-      :label="provider.loginPlaceholder || t('columns.login', 'Username').value"
-      :placeholder="provider.loginPlaceholder || t('columns.login', 'Enter username').value"
+      :label="provider.loginPlaceholder || t('columns.login').value"
+      :placeholder="provider.loginPlaceholder || t('columns.login').value"
       variant="outlined"
       prepend-icon="mdi-account-outline"
       autocomplete="username"
@@ -19,9 +19,9 @@
 
     <AtlasTextField
       v-model="credentials.password"
-      :label="provider.passwordPlaceholder || t('components.welcome.password', 'Password').value"
+      :label="provider.passwordPlaceholder || t('components.welcome.password').value"
       :placeholder="
-        provider.passwordPlaceholder || t('components.welcome.password', 'Enter password').value
+        provider.passwordPlaceholder || t('components.welcome.password').value
       "
       type="password"
       variant="outlined"
@@ -40,7 +40,7 @@
       :loading="loading"
       class="credentials-form__submit"
     >
-      {{ t('components.userBar.signin', 'Sign in') }}
+      {{ t('components.userBar.signin') }}
     </AtlasButton>
   </v-form>
 </template>
@@ -73,7 +73,7 @@ const credentials = ref<LoginCredentials>({
 })
 
 function required(value: string) {
-  return !!value || t('common.requiredField', 'This field is required').value
+  return !!value || t('common.requiredField').value
 }
 
 async function handleSubmit() {

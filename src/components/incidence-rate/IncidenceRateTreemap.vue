@@ -5,13 +5,13 @@
       :height="400"
       :show-export="false"
       :enable-zoom="true"
-      :title="tv('components.incidenceRate.stratifiedIncidence', 'Stratified Incidence')"
+      :title="tv('components.incidenceRate.stratifiedIncidence')"
     />
     <div class="ir-treemap__legend">
-      <span class="ir-treemap__legend-label">{{ t('components.incidenceRate.lowerRate', 'Lower rate').value }}</span>
+      <span class="ir-treemap__legend-label">{{ t('components.incidenceRate.lowerRate').value }}</span>
       <div class="ir-treemap__legend-bar" />
-      <span class="ir-treemap__legend-label">{{ t('components.incidenceRate.higherRate', 'Higher rate').value }}</span>
-      <span class="ir-treemap__legend-hint">{{ t('components.incidenceRate.treemapLegendHint', '(color = incidence rate per person-year; area = persons at risk)').value }}</span>
+      <span class="ir-treemap__legend-label">{{ t('components.incidenceRate.higherRate').value }}</span>
+      <span class="ir-treemap__legend-hint">{{ t('components.incidenceRate.treemapLegendHint').value }}</span>
     </div>
   </div>
 </template>

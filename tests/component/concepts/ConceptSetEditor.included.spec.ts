@@ -6,13 +6,12 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { tr } from '../../helpers/i18n-mock'
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (_k: string, fallback?: string) => ({ value: fallback ?? _k }),
-    tv: (_k: string, fallback?: string) => fallback ?? _k,
-  }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../helpers/i18n-mock')
+  return mockUseI18n
+})
 vi.mock('@/composables/usePermissions', () => ({
   usePermissions: () => ({ hasPermission: () => true }),
 }))
@@ -61,9 +60,10 @@ describe('ConceptSetEditor — Included tab', () => {
     ]
     await wrapper.vm.$nextTick()
 
+    const includedLabel = tr('cs.manager.tabs.included')
     const tabs = wrapper.findAll('[role="tab"]').map((t) => t.text())
-    expect(tabs.some((t) => /Included/.test(t))).toBe(true)
-    expect(wrapper.text()).toMatch(/Included[\s\S]*1/)
+    expect(tabs.some((t) => t.includes(includedLabel))).toBe(true)
+    expect(wrapper.text()).toMatch(new RegExp(`${includedLabel}[\\s\\S]*1`))
   })
 
   it('calls store.resetIncluded when the drawer closes', async () => {

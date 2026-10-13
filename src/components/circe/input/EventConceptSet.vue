@@ -72,9 +72,9 @@ const props = withDefaults(
   }
 )
 
-const titleLabel = computed(() => props.label ?? t('common.conceptSet', 'Concept Set').value)
+const titleLabel = computed(() => props.label ?? t('common.conceptSet').value)
 const selectLabel = computed(() =>
-  props.selectLabel ?? t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value
+  props.selectLabel ?? t('components.conceptAddBox.selectConceptSet').value
 )
 
 const selectionTarget = computed<ConceptSetSelectionTarget | undefined>(() => {

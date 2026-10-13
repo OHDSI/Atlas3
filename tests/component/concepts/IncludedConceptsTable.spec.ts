@@ -6,10 +6,12 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import IncludedConceptsTable from '@/components/concepts/IncludedConceptsTable.vue'
 import type { Concept } from '@/models/concept-set.types'
+import { tr } from '../../helpers/i18n-mock'
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({ t: (_k: string, fallback?: string) => ({ value: fallback ?? _k }) }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 const vuetify = createVuetify({ components, directives })
 
@@ -53,7 +55,7 @@ describe('IncludedConceptsTable', () => {
       global: { plugins: [vuetify] },
       props: { items: [], loading: false, error: null, manualCount: 0 },
     })
-    expect(wrapper.text()).toMatch(/Add concepts on the Selected tab/i)
+    expect(wrapper.text()).toContain(tr('cs.manager.includedEmptyNoManual'))
   })
 
   it('renders the "no resolved concepts" copy when manualCount > 0 and items is empty', () => {
@@ -61,7 +63,7 @@ describe('IncludedConceptsTable', () => {
       global: { plugins: [vuetify] },
       props: { items: [], loading: false, error: null, manualCount: 3 },
     })
-    expect(wrapper.text()).toMatch(/No concepts resolved/i)
+    expect(wrapper.text()).toContain(tr('cs.manager.includedEmptyNoResolve'))
   })
 
   it('renders error alert and emits retry on click', async () => {
@@ -124,10 +126,12 @@ describe('IncludedConceptsTable', () => {
         manualCount: 1,
       },
     })
-    const headings = wrapper.findAll('thead th').map(th => th.text().toLowerCase()).join(' ')
-    expect(headings).not.toContain('descendant')
-    expect(headings).not.toContain('mapped')
-    expect(headings).not.toContain('exclude')
+    // Compared as whole headings: the count columns legitimately say
+    // "Descendant Record Count", which is not the Descendants flag column.
+    const headings = wrapper.findAll('thead th').map(th => th.text())
+    expect(headings).not.toContain(tr('columns.descendants'))
+    expect(headings).not.toContain(tr('columns.mapped'))
+    expect(headings).not.toContain(tr('columns.exclude'))
   })
 })
 
@@ -206,7 +210,7 @@ describe('IncludedConceptsTable — filtering, sorting and pagination (issue #26
 
     facetBar(wrapper).vm.$emit('update:resultFilter', 'no-such-concept')
     await wrapper.vm.$nextTick()
-    expect(wrapper.text()).toMatch(/No concepts match the active filters/i)
+    expect(wrapper.text()).toContain(tr('cs.manager.emptyFilteredMessage'))
 
     await wrapper.find('[data-testid="included-clear-filters-btn"]').trigger('click')
     await wrapper.vm.$nextTick()

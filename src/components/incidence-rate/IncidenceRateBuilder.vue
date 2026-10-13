@@ -1,6 +1,6 @@
 <template>
   <AnalysisBuilderShell
-    :eyebrow="t('navigation.incidenceRates', 'Incidence rate analysis').value"
+    :eyebrow="t('navigation.incidenceRates').value"
     :title="title"
     :subtitle="subtitle"
     :authorship="store.currentIR"
@@ -14,8 +14,8 @@
     >
       <input
         :value="store.currentIR.name"
-        :placeholder="t('home.newEntityNames.incidenceRate', 'New incidence rate').value"
-        :aria-label="t('columns.name', 'Name').value"
+        :placeholder="t('home.newEntityNames.incidenceRate').value"
+        :aria-label="t('columns.name').value"
         :readonly="!canEdit"
         class="ir-builder__title-input"
         data-testid="ir-builder-name"
@@ -28,8 +28,8 @@
     >
       <input
         :value="store.currentIR.description ?? ''"
-        :placeholder="t('cc.viewEdit.descriptionPlaceholder', 'Add a short description').value"
-        :aria-label="t('columns.description', 'Description').value"
+        :placeholder="t('cc.viewEdit.descriptionPlaceholder').value"
+        :aria-label="t('columns.description').value"
         :readonly="!canEdit"
         class="ir-builder__subtitle-input"
         data-testid="ir-builder-description"
@@ -40,12 +40,12 @@
       <AtlasActionToolbar>
         <template #status>
           <AtlasTooltip
-            :text="t('ir.tabs.conceptSets', 'Concept Sets').value"
+            :text="t('ir.tabs.conceptSets').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('ir.tabs.conceptSets', 'Concept Sets').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('ir.tabs.conceptSets').value }"
                 icon="mdi-shape"
                 variant="text"
                 size="sm"
@@ -55,12 +55,12 @@
             </template>
           </AtlasTooltip>
           <AtlasTooltip
-            :text="t('ir.tabs.versions', 'Versions').value"
+            :text="t('ir.tabs.versions').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('ir.tabs.versions', 'Versions').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('ir.tabs.versions').value }"
                 icon="mdi-history"
                 variant="text"
                 size="sm"
@@ -71,7 +71,7 @@
             </template>
           </AtlasTooltip>
           <AtlasTooltip
-            :text="t('common.tags', 'Tags').value"
+            :text="t('common.tags').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
@@ -84,7 +84,7 @@
                 offset-y="6"
               >
                 <AtlasIconButton
-                  v-bind="{ ariaLabel: t('common.tags', 'Tags').value }"
+                  v-bind="{ ariaLabel: t('common.tags').value }"
                   icon="mdi-tag-outline"
                   variant="text"
                   size="sm"
@@ -97,12 +97,12 @@
           </AtlasTooltip>
           <AtlasTooltip
             v-if="store.currentIR?.id"
-            :text="t('components.access.configureAccess', 'Configure access').value"
+            :text="t('components.access.configureAccess').value"
             location="bottom"
           >
             <template #activator="{ props }">
               <EntityAccessLockButton
-                v-bind="{ ...props, ariaLabel: t('components.access.configureAccess', 'Configure access').value }"
+                v-bind="{ ...props, ariaLabel: t('components.access.configureAccess').value }"
                 size="sm"
                 :disabled="!store.currentIR?.id || store.isPreviewMode"
                 data-testid="ir-builder-access-icon"
@@ -121,16 +121,16 @@
             <AtlasIcon class="d-md-none">
               mdi-close
             </AtlasIcon>
-            <span class="d-none d-md-inline">{{ t('common.cancel', 'Cancel').value }}</span>
+            <span class="d-none d-md-inline">{{ t('common.cancel').value }}</span>
           </AtlasButton>
           <AtlasTooltip
             v-if="store.isPreviewMode"
-            :text="t('common.backToCurrent', 'Back to current version').value"
+            :text="t('common.backToCurrent').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.backToCurrent', 'Back to current version').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.backToCurrent').value }"
                 icon="mdi-undo"
                 variant="text"
                 size="sm"
@@ -140,12 +140,12 @@
             </template>
           </AtlasTooltip>
           <AtlasTooltip
-            :text="t('common.import', 'Import design').value"
+            :text="t('common.import').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.import', 'Import design').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.import').value }"
                 icon="mdi-upload"
                 variant="text"
                 size="sm"
@@ -156,12 +156,12 @@
             </template>
           </AtlasTooltip>
           <AtlasTooltip
-            :text="t('common.export', 'Export design').value"
+            :text="t('common.export').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.export', 'Export design').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.export').value }"
                 icon="mdi-download"
                 variant="text"
                 size="sm"
@@ -176,7 +176,7 @@
             ref="importFileInput"
             type="file"
             accept="application/json,.json"
-            :aria-label="t('components.incidenceRate.importInputAria', 'Import incidence rate design').value"
+            :aria-label="t('components.incidenceRate.importInputAria').value"
             style="display: none"
             data-testid="ir-builder-import-input"
             @change="handleImportFileChange"
@@ -189,7 +189,7 @@
               data-testid="ir-builder-save"
               @click="onSave"
             >
-              {{ t('common.save', 'Save') }}
+              {{ t('common.save') }}
             </AtlasButton>
           </DisabledReasonTooltip>
         </template>
@@ -212,7 +212,7 @@
           data-testid="ir-builder-conceptset-create"
           @click="createConceptSet()"
         >
-          {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
+          {{ t('components.conceptSetBuilder.newConceptSet').value }}
         </AtlasButton>
       </template>
     </ConceptSetsListDialog>
@@ -220,7 +220,7 @@
     <AtlasDialog
       v-model="showDeleteConceptSetDialog"
       eyebrow="CONCEPT SET"
-      :title="t('components.featureAnalysisEditor.deleteConceptSetTitle', 'Delete concept set?').value"
+      :title="t('components.featureAnalysisEditor.deleteConceptSetTitle').value"
       max-width="480"
       @close="cancelDeleteConceptSet"
     >
@@ -230,23 +230,23 @@
           variant="ghost"
           @click="cancelDeleteConceptSet"
         >
-          {{ t('common.cancel', 'Cancel').value }}
+          {{ t('common.cancel').value }}
         </AtlasButton>
         <AtlasButton
           variant="danger"
           data-testid="ir-builder-delete-concept-set-confirm"
           @click="confirmDeleteConceptSet"
         >
-          {{ t('common.delete', 'Delete').value }}
+          {{ t('common.delete').value }}
         </AtlasButton>
       </template>
     </AtlasDialog>
 
     <AtlasDialog
       v-model="showVersionsDialog"
-      :eyebrow="t('navigation.incidenceRates', 'Incidence rate').value"
-      :title="t('ir.tabs.versions', 'Versions').value"
-      :close-label="t('common.close', 'Close').value"
+      :eyebrow="t('navigation.incidenceRates').value"
+      :title="t('ir.tabs.versions').value"
+      :close-label="t('common.close').value"
       max-width="1000"
       @close="showVersionsDialog = false"
     >
@@ -269,7 +269,7 @@
       v-model="showAccessDialog"
       entity-type="INCIDENCE_RATE"
       :entity-id="store.currentIR.id"
-      :title="t('components.access.configureAccess', 'Configure access').value"
+      :title="t('components.access.configureAccess').value"
       :subtitle="store.currentIR.name || undefined"
       @close="showAccessDialog = false"
     />
@@ -448,12 +448,11 @@ const deleteConceptSetWarning = computed(() => {
   const count = conceptSetPendingDeleteUsage.value
   const usage =
     count === 1
-      ? t('components.featureAnalysisEditor.deleteConceptSetUsageOne', '1 criterion still uses it').value
-      : t('components.featureAnalysisEditor.deleteConceptSetUsageMany', '{count} criteria still use it', { count }).value
+      ? t('components.featureAnalysisEditor.deleteConceptSetUsageOne').value
+      : t('components.featureAnalysisEditor.deleteConceptSetUsageMany', { count }).value
 
   return t(
     'components.featureAnalysisEditor.deleteConceptSetWarning',
-    'Deleting "{name}" will clear it from those criteria. {usage}.',
     { name, usage },
   ).value
 })
@@ -517,7 +516,7 @@ async function handleExport() {
   } catch (err) {
     logger.error('IRBuilder', 'Export failed', err)
     feedback.value = {
-      message: t('characterizations.editor.utilities.import.importError', 'Export failed').value,
+      message: t('ir.editor.exportError').value,
       color: 'error',
     }
   } finally {
@@ -542,10 +541,7 @@ async function handleImportFileChange(event: Event) {
   } catch (err) {
     logger.error('IRBuilder', 'Import parse failed', err)
     feedback.value = {
-      message: t(
-        'characterizations.editor.utilities.import.parseError',
-        'Could not parse design JSON'
-      ).value,
+      message: t('characterizations.editor.utilities.import.parseError').value,
       color: 'error',
     }
     importing.value = false
@@ -555,7 +551,7 @@ async function handleImportFileChange(event: Event) {
   try {
     const created = await importIncidenceRate(parsed)
     feedback.value = {
-      message: t('characterizations.editor.utilities.import.importSuccess', 'Imported successfully')
+      message: t('characterizations.editor.utilities.import.importSuccess')
         .value,
       color: 'success',
     }
@@ -565,7 +561,7 @@ async function handleImportFileChange(event: Event) {
   } catch (err) {
     logger.error('IRBuilder', 'Import failed', err)
     feedback.value = {
-      message: t('characterizations.editor.utilities.import.importError', 'Import failed').value,
+      message: t('characterizations.editor.utilities.import.importError').value,
       color: 'error',
     }
   } finally {
@@ -582,7 +578,7 @@ const canSave = computed<boolean>(() =>
 
 const saveDisabledReason = computed<string>(() =>
   resolveSaveDisabledReason({
-    entity: tv('const.entityName.incidenceRate', 'incidence rate analysis'),
+    entity: tv('const.entityName.incidenceRate'),
     isNew: irId.value === null,
     hasName: !!store.currentIR?.name?.trim(),
     hasPermission: canSave.value,
@@ -594,8 +590,8 @@ const saveDisabledReason = computed<string>(() =>
 
 const title = computed(() => {
   const ir = store.currentIR
-  if (!ir) return t('navigation.incidenceRates', 'Incidence rate analysis').value
-  return ir.name?.trim() || t('home.newEntityNames.incidenceRate', 'New incidence rate').value
+  if (!ir) return t('navigation.incidenceRates').value
+  return ir.name?.trim() || t('home.newEntityNames.incidenceRate').value
 })
 
 const subtitle = computed(() => {

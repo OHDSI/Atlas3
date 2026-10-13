@@ -40,7 +40,7 @@
       </template>
       <nav
         class="nav-bar__nav-wrapper"
-        :aria-label="t('components.navBar.mainNavigation', 'Main').value"
+        :aria-label="t('components.navBar.mainNavigation').value"
       >
         <!-- Full menu for larger screens -->
         <ul class="nav-bar__nav nav-bar__nav-list d-none d-md-flex">
@@ -77,7 +77,7 @@
                 <AtlasIcon start>
                   mdi-menu
                 </AtlasIcon>
-                {{ t('common.menu', 'Menu') }}
+                {{ t('common.menu') }}
               </AtlasButton>
             </template>
             <AtlasList>
@@ -113,7 +113,7 @@
           target="_blank"
           class="mr-4"
         >
-          {{ t('navigation.feedback', 'Feedback').value }}
+          {{ t('navigation.feedback').value }}
         </AtlasButton>
 
         <!-- Language Selector -->
@@ -127,14 +127,14 @@
 
         <!-- Docs (user manual) -->
         <AtlasTooltip
-          :text="t('navigation.docs', 'User manual').value"
+          :text="t('navigation.docs').value"
           location="bottom"
         >
           <template #activator="{ props: tooltipProps }">
             <AtlasIconButton
               v-bind="tooltipProps"
               icon="mdi-book-open-page-variant-outline"
-              :aria-label="t('navigation.docs', 'User manual').value"
+              :aria-label="t('navigation.docs').value"
               variant="text"
               size="sm"
               data-testid="nav-docs"
@@ -148,14 +148,14 @@
 
         <!-- Jobs Panel Icon: separate side drawer, sits left of the cog. -->
         <AtlasTooltip
-          :text="t('jobs.openPanel', 'Open jobs panel').value"
+          :text="t('jobs.openPanel').value"
           location="bottom"
         >
           <template #activator="{ props: tooltipProps }">
             <AtlasIconButton
               v-bind="tooltipProps"
               icon="mdi-briefcase-clock-outline"
-              :aria-label="t('jobs.openPanel', 'Open jobs panel').value"
+              :aria-label="t('jobs.openPanel').value"
               variant="text"
               size="sm"
               data-testid="nav-jobs"
@@ -167,14 +167,14 @@
         <!-- Configuration Panel Icon: hidden when user has no admin perms -->
         <AtlasTooltip
           v-if="showConfigButton && hasAnyAdminAccess"
-          :text="t('config.accessibility.openPanel', 'Open configuration panel').value"
+          :text="t('config.accessibility.openPanel').value"
           location="bottom"
         >
           <template #activator="{ props: tooltipProps }">
             <AtlasIconButton
               v-bind="tooltipProps"
               icon="mdi-cog"
-              :aria-label="t('config.accessibility.openPanel', 'Open configuration panel').value"
+              :aria-label="t('config.accessibility.openPanel').value"
               variant="text"
               size="sm"
               data-testid="nav-config"
@@ -327,10 +327,10 @@ const showThemeToggle = ref(true)
 const feedbackUrl = ref('https://forms.office.com/r/2JzrYy1yDP')
 const logoNavigateTo = ref('/')
 
-const signInLabel = t('components.userBar.signin', 'Sign In')
-const signOutLabel = t('components.userBar.signout', 'Sign Out')
-const apiKeysLabel = t('components.userBar.apiKeys', 'API Keys')
-const logoAriaLabel = computed(() => t('a11y.logoHome', 'OHDSI ATLAS Home').value)
+const signInLabel = t('components.userBar.signin')
+const signOutLabel = t('components.userBar.signout')
+const apiKeysLabel = t('components.userBar.apiKeys')
+const logoAriaLabel = computed(() => t('a11y.logoHome').value)
 
 // Core navigation items (will be filtered based on plugin configuration)
 const coreNavigationItems: NavigationItem[] = [

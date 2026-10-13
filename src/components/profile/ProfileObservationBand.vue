@@ -2,10 +2,10 @@
   <AtlasCard padding="md">
     <div class="section-header">
       <div class="section-header__title-row">
-        <span class="text-eyebrow">{{ tv('components.profileObservationBand.eyebrow', 'OBSERVATION') }}</span>
+        <span class="text-eyebrow">{{ tv('components.profileObservationBand.eyebrow') }}</span>
         <span class="section-header__rule" />
         <h2 class="section-title">
-          {{ tv('components.profileObservationBand.title', 'Observation periods') }}
+          {{ tv('components.profileObservationBand.title') }}
         </h2>
       </div>
     </div>
@@ -40,7 +40,7 @@
             icon="mdi-information-outline"
             size="14"
           />
-          <span>{{ tv('components.profileObservationBand.empty', 'No observation periods recorded') }}</span>
+          <span>{{ tv('components.profileObservationBand.empty') }}</span>
         </div>
       </div>
     </div>

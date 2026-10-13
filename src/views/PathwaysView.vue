@@ -6,7 +6,7 @@
     <template #actions>
       <AtlasTextField
         :model-value="searchInput"
-        :label="t('datatable.language.searchPlaceholder', 'Search pathways…').value"
+        :label="t('datatable.language.searchPlaceholder').value"
         prepend-icon="mdi-magnify"
         variant="outlined"
         hide-details
@@ -24,10 +24,10 @@
         :disabled="!canCreate"
         @click="handleNew"
       >
-        {{ t('home.newEntityNames.pathway', 'New pathway') }}
+        {{ t('home.newEntityNames.pathway') }}
       </AtlasButton>
       <EntityImportButton
-        :label="t('common.import', 'Import').value"
+        :label="t('common.import').value"
         testid="pathways-import"
         :disabled="!canCreate"
         :import-design="importDesign"
@@ -42,7 +42,7 @@
       :items="paginatedPathways"
       :loading="loading"
       :items-per-page="itemsPerPage"
-      :empty-text="t('common.noData', 'No pathways yet.').value"
+      :empty-text="t('common.noData').value"
       testid="pathways-table"
       :can-copy-item="item => canCopy && !!item.id"
       :can-delete-item="item => entityAccess.canDelete(item.id)"
@@ -67,7 +67,7 @@
         :disabled="page === 0"
         @click="updatePage(page - 1)"
       >
-        {{ t('datatable.language.paginate.previous', 'Previous') }}
+        {{ t('datatable.language.paginate.previous') }}
       </AtlasButton>
       <span class="pathways-view__range">{{ page + 1 }} / {{ totalPages }}</span>
       <AtlasButton
@@ -75,7 +75,7 @@
         :disabled="page + 1 >= totalPages"
         @click="updatePage(page + 1)"
       >
-        {{ t('configuration.userImport.wizard.buttons.next', 'Next') }}
+        {{ t('configuration.userImport.wizard.buttons.next') }}
       </AtlasButton>
     </template>
   </AnalysisListLayout>
@@ -83,25 +83,25 @@
   <AtlasDialog
     v-model="showDelete"
     eyebrow="CONFIRM"
-    :title="t('common.delete', 'Delete').value"
+    :title="t('common.delete').value"
     max-width="400"
     @close="showDelete = false"
   >
     {{
-      t('pathwayDefinitions.deleteConfirm', 'Delete this pathway? This cannot be undone.')
+      t('pathwayDefinitions.deleteConfirm')
     }}
     <template #actions>
       <AtlasButton
         variant="ghost"
         @click="showDelete = false"
       >
-        {{ t('common.cancel', 'Cancel') }}
+        {{ t('common.cancel') }}
       </AtlasButton>
       <AtlasButton
         variant="danger"
         @click="confirmDelete"
       >
-        {{ t('common.delete', 'Delete') }}
+        {{ t('common.delete') }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -190,19 +190,19 @@ const paginatedPathways = computed(() => {
 })
 
 const headers = computed(() => [
-  { title: t('columns.id', 'ID').value, key: 'id' },
-  { title: t('columns.name', 'Name').value, key: 'name' },
-  { title: t('columns.description', 'Description').value, key: 'description' },
+  { title: t('columns.id').value, key: 'id' },
+  { title: t('columns.name').value, key: 'name' },
+  { title: t('columns.description').value, key: 'description' },
   {
-    title: t('facets.caption.targetCohorts', 'Targets').value,
+    title: t('facets.caption.targetCohorts').value,
     key: 'targetCount',
     sortable: false,
   },
-  { title: t('columns.eventCohort', 'Events').value, key: 'eventCount', sortable: false },
-  { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
-  { title: t('columns.created', 'Created').value, key: 'createdDate' },
-  { title: t('columns.updated', 'Updated').value, key: 'modifiedDate' },
-  { title: t('columns.actions', 'Actions').value, key: 'actions', sortable: false },
+  { title: t('columns.eventCohort').value, key: 'eventCount', sortable: false },
+  { title: t('columns.createdBy').value, key: 'createdBy' },
+  { title: t('columns.created').value, key: 'createdDate' },
+  { title: t('columns.updated').value, key: 'modifiedDate' },
+  { title: t('columns.actions').value, key: 'actions', sortable: false },
 ])
 
 onMounted(fetchPathways)
@@ -231,10 +231,10 @@ async function handleCopy(p: Pathway) {
   if (!p.id) return
   const result = await copyPathway(p.id)
   if (result.success && result.data.id) {
-    feedback.value = { message: tv('views.pathways.copied', 'Pathway copied'), color: 'success' }
+    feedback.value = { message: tv('views.pathways.copied'), color: 'success' }
     router.push(`/pathways/${result.data.id}`)
   } else {
-    feedback.value = { message: tv('views.pathways.copyFailed', 'Copy failed'), color: 'error' }
+    feedback.value = { message: tv('views.pathways.copyFailed'), color: 'error' }
     logger.error('PathwaysView', 'copyPathway failed', !result.success ? result.error : null)
   }
 }
@@ -249,11 +249,11 @@ async function confirmDelete() {
   if (!deleteTarget.value) return
   const result = await deletePathway(deleteTarget.value)
   if (result.success) {
-    feedback.value = { message: tv('views.pathways.deleted', 'Pathway deleted'), color: 'success' }
+    feedback.value = { message: tv('views.pathways.deleted'), color: 'success' }
     await fetchPathways()
   } else {
     feedback.value = {
-      message: result.error.message || tv('views.pathways.deleteFailed', 'Delete failed'),
+      message: result.error.message || tv('views.pathways.deleteFailed'),
       color: 'error',
     }
     logger.error('PathwaysView', 'deletePathway failed', result.error)

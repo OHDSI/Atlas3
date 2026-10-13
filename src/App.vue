@@ -4,7 +4,7 @@
       href="#main"
       class="skip-link"
     >
-      {{ t('a11y.skipToMain', 'Skip to main content') }}
+      {{ t('a11y.skipToMain') }}
     </a>
 
     <!-- Initial loading overlay while translations load -->
@@ -20,7 +20,7 @@
           color="primary"
         />
         <div class="mt-4 text-h6">
-          {{ t('common.loading', 'Loading...') }}
+          {{ t('common.loading') }}
         </div>
       </div>
     </v-overlay>

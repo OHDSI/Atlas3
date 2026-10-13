@@ -14,10 +14,10 @@
             class="text-left"
             style="width: 120px"
           >
-            {{ t('columns.severity', 'Severity') }}
+            {{ t('columns.severity') }}
           </th>
           <th class="text-left">
-            {{ t('columns.message', 'Message') }}
+            {{ t('columns.message') }}
           </th>
         </tr>
       </thead>

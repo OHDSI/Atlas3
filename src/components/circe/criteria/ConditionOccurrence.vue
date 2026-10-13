@@ -109,15 +109,15 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const occurrenceTitle = computed(() =>
-  t('components.conditionOccurrence.conditionOccurrenceText_1', 'a condition occurrence of').value
+  t('components.conditionOccurrence.title').value
 )
 
 const addAttributeLabel = computed(() =>
-  t('components.conditionOccurrence.addAttribute', 'Add attribute...').value
+  t('components.criteria.addAttribute').value
 )
 
 const selectConceptSetLabel = computed(() =>
-  t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value
+  t('components.conceptAddBox.selectConceptSet').value
 )
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
@@ -175,7 +175,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(conditionOccurrenceData.value, 'GenderCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -213,7 +213,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(conditionOccurrenceData.value, 'ConditionStatusCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -302,7 +302,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(conditionOccurrenceData.value, 'ConditionTypeCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -340,7 +340,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(conditionOccurrenceData.value, 'VisitTypeCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -394,7 +394,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(conditionOccurrenceData.value, 'ProviderSpecialtyCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -414,7 +414,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       conditionSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
-      t('components.eventCard.selectSourceConcept', 'Select Source Concept').value,
+      t('components.eventCard.selectSourceConcept').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),

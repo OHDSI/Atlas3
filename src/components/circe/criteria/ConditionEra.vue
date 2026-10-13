@@ -106,10 +106,10 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const eraTitle = computed(() => t('components.conditionEra.criteriaText_1', 'a condition era of').value)
-const addAttributeLabel = computed(() => t('components.conditionEra.addAttribute', 'Add attribute...').value)
+const eraTitle = computed(() => t('components.conditionEra.title').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
 const selectConceptSetLabel = computed(() =>
-  t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value
+  t('components.conceptAddBox.selectConceptSet').value
 )
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
@@ -183,7 +183,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(conditionEraData.value, 'GenderCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),

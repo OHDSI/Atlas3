@@ -81,7 +81,7 @@ async function onFileChange(event: Event) {
       design = JSON.parse(await readFileAsText(file))
     } catch (err) {
       logger.error('EntityImportButton', `Import parse failed for ${file.name}`, err)
-      emit('failed', tv('components.entityImport.invalidJson', '{file} is not valid JSON.', { file: file.name }))
+      emit('failed', tv('components.entityImport.invalidJson', { file: file.name }))
       return
     }
     emit('imported', await props.importDesign(design, { fileName: file.name }))
@@ -91,7 +91,7 @@ async function onFileChange(event: Event) {
       'failed',
       err instanceof Error && err.message
         ? err.message
-        : tv('components.entityImport.failed', 'Import failed.')
+        : tv('components.entityImport.failed')
     )
   } finally {
     importing.value = false

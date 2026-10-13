@@ -5,7 +5,7 @@
       class="ir-strata-list__empty"
       data-testid="ir-strata-empty"
     >
-      {{ t('incidenceRate.noStratifyRules', 'No stratify rules yet.').value }}
+      {{ t('incidenceRate.noStratifyRules').value }}
     </div>
     <div
       v-for="(rule, idx) in rules"
@@ -20,14 +20,14 @@
         :disabled="readonly"
         @click="$emit('edit', idx)"
       >
-        {{ rule.name || t('incidenceRate.untitled', 'Untitled rule').value }}
+        {{ rule.name || t('incidenceRate.untitled').value }}
       </button>
       <AtlasIconButton
         icon="mdi-arrow-up"
         size="sm"
         variant="text"
         density="compact"
-        v-bind="{ ariaLabel: t('components.incidenceRate.moveUp', 'Move up').value }"
+        v-bind="{ ariaLabel: t('components.incidenceRate.moveUp').value }"
         :disabled="readonly || idx === 0"
         :data-testid="`ir-strata-up-${idx}`"
         @click="$emit('move', idx, idx - 1)"
@@ -37,7 +37,7 @@
         size="sm"
         variant="text"
         density="compact"
-        v-bind="{ ariaLabel: t('components.incidenceRate.moveDown', 'Move down').value }"
+        v-bind="{ ariaLabel: t('components.incidenceRate.moveDown').value }"
         :disabled="readonly || idx === rules.length - 1"
         :data-testid="`ir-strata-down-${idx}`"
         @click="$emit('move', idx, idx + 1)"
@@ -48,7 +48,7 @@
         variant="text"
         density="compact"
         tone="danger"
-        v-bind="{ ariaLabel: t('components.incidenceRate.removeRule', 'Remove rule').value }"
+        v-bind="{ ariaLabel: t('components.incidenceRate.removeRule').value }"
         :disabled="readonly"
         :data-testid="`ir-strata-remove-${idx}`"
         @click="$emit('remove', idx)"
@@ -62,7 +62,7 @@
       data-testid="ir-strata-add"
       @click="$emit('add')"
     >
-      {{ t('common.add', 'Add').value }}
+      {{ t('common.add').value }}
     </AtlasButton>
   </div>
 </template>

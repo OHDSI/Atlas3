@@ -3,17 +3,17 @@
     <div class="compare-tab__bar mb-4">
       <div class="compare-tab__bar-left">
         <span class="text-body-2 text-medium-emphasis">
-          {{ t('cs.browser.compare.conceptSet1', 'Concept Set 1:') }}
+          {{ t('cs.browser.compare.conceptSet1') }}
         </span>
         <AtlasChip
           size="sm"
           tone="primary"
         >
-          {{ store.currentSet?.name || t('common.untitled', 'Untitled').value }}
+          {{ store.currentSet?.name || t('common.untitled').value }}
         </AtlasChip>
 
         <span class="text-body-2 text-medium-emphasis ml-4">
-          {{ t('cs.browser.compare.conceptSet2', 'Concept Set 2:') }}
+          {{ t('cs.browser.compare.conceptSet2') }}
         </span>
         <AtlasChip
           v-if="store.comparisonOtherSet"
@@ -33,7 +33,7 @@
           data-testid="compare-pick-other"
           @click="showChooser = true"
         >
-          {{ t('common.choose', 'Choose').value }}
+          {{ t('common.choose').value }}
         </AtlasButton>
       </div>
 
@@ -46,7 +46,7 @@
           data-testid="compare-export"
           @click="onExport"
         >
-          {{ t('common.export', 'Export').value }}
+          {{ t('common.export').value }}
         </AtlasButton>
         <AtlasButton
           size="sm"
@@ -56,7 +56,7 @@
           data-testid="compare-run"
           @click="onCompare"
         >
-          {{ t('cs.browser.compare.compareConceptSets', 'Compare Concept Sets') }}
+          {{ t('cs.browser.compare.compareConceptSets') }}
         </AtlasButton>
       </div>
     </div>
@@ -64,7 +64,7 @@
     <div
       class="compare-tab__modes mb-4"
       role="group"
-      :aria-label="t('cs.browser.compare.modeGroupLabel', 'Comparison level').value"
+      :aria-label="t('cs.browser.compare.modeGroupLabel').value"
     >
       <AtlasButton
         v-for="m in modes"
@@ -96,10 +96,7 @@
       data-testid="compare-no-current"
     >
       {{
-        t(
-          'cs.browser.compare.headingMessage',
-          'Use this utility to compare the contents of two concept sets to see which concepts they may share'
-        )
+        t('cs.browser.compare.headingMessage')
       }}
     </AtlasAlert>
 
@@ -114,7 +111,7 @@
         size="32"
         class="mr-3"
       />
-      <span>{{ t('cs.browser.compare.compareConceptSets', 'Compare Concept Sets') }}…</span>
+      <span>{{ t('cs.browser.compare.compareConceptSets') }}…</span>
     </div>
 
     <template v-if="store.comparison.length > 0">
@@ -123,7 +120,7 @@
         class="compare-tab__venn-wrap mb-4"
       >
         <v-card-title class="text-subtitle-1">
-          {{ t('cs.browser.compare.vennDiagram', 'Venn Diagram') }}
+          {{ t('cs.browser.compare.vennDiagram') }}
         </v-card-title>
         <v-card-text class="d-flex justify-center">
           <ComparisonVennDiagram
@@ -140,7 +137,7 @@
       <div class="compare-tab__filters mb-4">
         <AtlasTextField
           v-model="searchText"
-          :placeholder="t('common.searchTable', 'Search table…').value"
+          :placeholder="t('common.searchTable').value"
           prepend-inner-icon="mdi-magnify"
           clearable
           hide-details
@@ -254,7 +251,7 @@ const rows = computed<Row[]>(() =>
     ...r,
     match:
       r.conceptIn1And2 === 1
-        ? t('common.both', 'Both').value
+        ? t('common.both').value
         : r.conceptIn1Only === 1
           ? leftLabel.value
           : rightLabel.value,
@@ -308,33 +305,33 @@ watch(
 const isSourceMode = computed(() => store.comparisonMode === 'source')
 
 const headers = computed(() => [
-  { title: t('common.match', 'Match').value, key: 'match', sortable: true, width: '120px' },
+  { title: t('common.match').value, key: 'match', sortable: true, width: '120px' },
   {
-    title: t('columns.conceptId', 'Concept Id').value,
+    title: t('columns.conceptId').value,
     key: 'conceptId',
     sortable: true,
     width: '110px',
   },
   {
     title: isSourceMode.value
-      ? t('cs.browser.compare.sourceCode', 'Source Code').value
-      : t('columns.conceptCode', 'Concept Code').value,
+      ? t('cs.browser.compare.sourceCode').value
+      : t('columns.conceptCode').value,
     key: 'conceptCode',
     sortable: true,
     width: '130px',
   },
-  { title: t('columns.conceptName', 'Concept Name').value, key: 'conceptName', sortable: true },
-  { title: t('columns.domain', 'Domain').value, key: 'domainId', sortable: true, width: '120px' },
+  { title: t('columns.conceptName').value, key: 'conceptName', sortable: true },
+  { title: t('columns.domain').value, key: 'domainId', sortable: true, width: '120px' },
   {
     title: isSourceMode.value
-      ? t('cs.browser.compare.sourceVocabulary', 'Source Vocabulary').value
-      : t('columns.vocabulary', 'Vocabulary').value,
+      ? t('cs.browser.compare.sourceVocabulary').value
+      : t('columns.vocabulary').value,
     key: 'vocabularyId',
     sortable: true,
     width: '120px',
   },
   {
-    title: t('columns.class', 'Class').value,
+    title: t('columns.class').value,
     key: 'conceptClassId',
     sortable: true,
     width: '140px',
@@ -342,7 +339,7 @@ const headers = computed(() => [
 ])
 
 function matchTone(label: string): 'neutral' | 'primary' | 'info' | 'success' | 'warning' | 'danger' {
-  if (label === t('common.both', 'Both').value) return 'success'
+  if (label === t('common.both').value) return 'success'
   if (label === leftLabel.value) return 'primary'
   return 'info'
 }
@@ -377,9 +374,9 @@ const SOURCE_MODE_ENABLED = false
 
 const modes = computed(() => {
   const all = [
-    { value: 'expression', label: t('cs.browser.compare.modeExpression', 'Expression concepts').value },
-    { value: 'included', label: t('cs.browser.compare.modeIncluded', 'Included concepts').value },
-    { value: 'source', label: t('cs.browser.compare.modeSource', 'Source concepts').value },
+    { value: 'expression', label: t('cs.browser.compare.modeExpression').value },
+    { value: 'included', label: t('cs.browser.compare.modeIncluded').value },
+    { value: 'source', label: t('cs.browser.compare.modeSource').value },
   ] as const
   return SOURCE_MODE_ENABLED ? all : all.filter(m => m.value !== 'source')
 })

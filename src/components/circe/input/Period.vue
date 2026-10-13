@@ -37,9 +37,9 @@ const props = defineProps<{
 
 const modelValue = toRef(props, 'modelValue')
 
-const startLabel = computed(() => t('common.startDate', 'start date').value)
-const endLabel = computed(() => t('common.endDate', 'end date').value)
-const andLabel = computed(() => t('common.and', 'and').value)
+const startLabel = computed(() => t('common.startDate').value)
+const endLabel = computed(() => t('common.endDate').value)
+const andLabel = computed(() => t('common.and').value)
 
 const startDate = optionalTextBinding(modelValue, 'StartDate')
 const endDate = optionalTextBinding(modelValue, 'EndDate')

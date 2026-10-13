@@ -14,16 +14,16 @@
       <header class="cs-picker__header">
         <div class="cs-picker__title-block">
           <div class="cs-picker__eyebrow-row">
-            <span class="text-eyebrow">{{ t('common.conceptSet', 'Concept set').value }}</span>
+            <span class="text-eyebrow">{{ t('common.conceptSet').value }}</span>
             <span class="cs-picker__accent-rule" />
           </div>
           <h2 class="cs-picker__title">
-            {{ t('components.conceptSetBuilder.selectConceptSet', 'Select concept set').value }}
+            {{ t('components.conceptSetBuilder.selectConceptSet').value }}
           </h2>
         </div>
         <AtlasIconButton
           icon="mdi-close"
-          v-bind="{ ariaLabel: t('common.close', 'Close').value }"
+          v-bind="{ ariaLabel: t('common.close').value }"
           variant="text"
           size="sm"
           @click="close"
@@ -38,7 +38,7 @@
             variant="secondary"
             @click="onCreateNew"
           >
-            {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
+            {{ t('components.conceptSetBuilder.newConceptSet').value }}
           </AtlasButton>
         </div>
 
@@ -50,7 +50,7 @@
           data-testid="local-concept-sets"
         >
           <h3 class="cs-picker__section-title">
-            {{ t('components.conceptSetBuilder.inThisDefinition', 'In this definition').value }}
+            {{ t('components.conceptSetBuilder.inThisDefinition').value }}
           </h3>
           <AtlasCard padding="none">
             <button
@@ -67,7 +67,7 @@
                 tone="neutral"
                 variant="outlined"
               >
-                {{ t('columns.id', 'ID').value }} {{ set.id }}
+                {{ t('columns.id').value }} {{ set.id }}
               </AtlasChip>
             </button>
           </AtlasCard>
@@ -77,7 +77,7 @@
           v-if="selectableLocalSets.length > 0"
           class="cs-picker__section-title"
         >
-          {{ t('components.conceptSetBuilder.importFromRepository', 'Import from repository').value }}
+          {{ t('components.conceptSetBuilder.importFromRepository').value }}
         </h3>
 
         <!-- Toolbar: search + count chip + create-new button.
@@ -85,7 +85,7 @@
         <div class="cs-picker__toolbar">
           <AtlasTextField
             v-model="searchTerm"
-            :placeholder="t('common.search', 'Search concept sets…').value"
+            :placeholder="t('common.search').value"
             prepend-icon="mdi-magnify"
             clearable
             variant="outlined"
@@ -123,7 +123,7 @@
             :items="filteredSets"
             :loading="loading"
             :items-per-page="itemsPerPage"
-            :items-per-page-text="t('datatable.itemsPerPage', 'Rows per page:').value"
+            :items-per-page-text="t('datatable.itemsPerPage').value"
             hover
             class="cs-picker__table"
             @click:row="onRowClick"
@@ -164,11 +164,8 @@
           <p class="cs-picker__empty-text">
             {{
               searchTerm
-                ? t('search.noResultsFoundFor', 'No concept sets match your search.').value
-                : t(
-                  'cohortDefinitions.noConceptSets',
-                  'No concept sets yet — create one to get started.'
-                ).value
+                ? t('search.noMatchingConceptSets').value
+                : t('cohortDefinitions.conceptSetPicker.empty').value
             }}
           </p>
           <AtlasButton
@@ -176,7 +173,7 @@
             icon="mdi-plus"
             @click="onCreateNew"
           >
-            {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
+            {{ t('components.conceptSetBuilder.newConceptSet').value }}
           </AtlasButton>
           <AtlasButton
             v-else
@@ -185,7 +182,7 @@
             icon="mdi-close"
             @click="searchTerm = ''"
           >
-            {{ t('common.clearSearch', 'Clear search').value }}
+            {{ t('common.clearSearch').value }}
           </AtlasButton>
         </div>
       </div>
@@ -242,21 +239,21 @@ const filteredSets = computed(() => {
 const countLabel = computed(() => {
   const n = filteredSets.value.length
   return n === 1
-    ? tv('components.conceptSetPicker.setCountOne', '1 set')
-    : tv('components.conceptSetPicker.setCountOther', '{count} sets', { count: n })
+    ? tv('components.conceptSetPicker.setCountOne')
+    : tv('components.conceptSetPicker.setCountOther', { count: n })
 })
 
 const headers = [
-  { title: t('columns.id', 'ID').value, key: 'id', sortable: true, width: '80px' },
-  { title: t('columns.name', 'Name').value, key: 'name', sortable: true },
+  { title: t('columns.id').value, key: 'id', sortable: true, width: '80px' },
+  { title: t('columns.name').value, key: 'name', sortable: true },
   {
-    title: t('columns.created', 'Created').value,
+    title: t('columns.created').value,
     key: 'createdDate',
     sortable: true,
     width: '120px',
   },
   {
-    title: t('columns.updated', 'Updated').value,
+    title: t('columns.updated').value,
     key: 'modifiedDate',
     sortable: true,
     width: '120px',

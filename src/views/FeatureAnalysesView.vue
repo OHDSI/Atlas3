@@ -31,12 +31,12 @@
           <AtlasButton
             icon="mdi-plus"
             append-icon="mdi-menu-down"
-            :aria-label="t('cc.tabs.featureAnalyses.newLabel', 'New Feature Analysis').value"
+            :aria-label="t('cc.tabs.featureAnalyses.createLabel').value"
             data-testid="feature-analyses-create"
             :disabled="!canCreate"
             v-bind="menuProps"
           >
-            {{ t('home.newEntityNames.featureAnalysis', 'New feature analysis') }}
+            {{ t('home.newEntityNames.featureAnalysis') }}
           </AtlasButton>
         </template>
         <AtlasCard
@@ -46,17 +46,17 @@
           <AtlasList>
             <AtlasListItem
               data-testid="feature-analyses-create-prevalence"
-              :title="t('featureAnalyses.create.prevalence', 'Prevalence Criteria').value"
+              :title="t('featureAnalyses.create.prevalence').value"
               @click="handleCreate('CRITERIA_SET', 'PREVALENCE')"
             />
             <AtlasListItem
               data-testid="feature-analyses-create-distribution"
-              :title="t('featureAnalyses.create.distribution', 'Distribution Criteria').value"
+              :title="t('featureAnalyses.create.distribution').value"
               @click="handleCreate('CRITERIA_SET', 'DISTRIBUTION')"
             />
             <AtlasListItem
               data-testid="feature-analyses-create-custom"
-              :title="t('featureAnalyses.create.custom', 'Custom SQL').value"
+              :title="t('featureAnalyses.create.custom').value"
               @click="handleCreate('CUSTOM_FE')"
             />
           </AtlasList>
@@ -70,7 +70,7 @@
       :items="paginatedFeatureAnalyses"
       :loading="loading"
       :items-per-page="itemsPerPage"
-      :empty-text="t('common.noData', 'No feature analyses yet.').value"
+      :empty-text="t('common.noData').value"
       testid="feature-analyses-table"
       :can-open-item="item => !isPreset(item)"
       :can-copy-item="item => !isPreset(item) && canCopy && !!item.id"
@@ -105,7 +105,7 @@
         :disabled="!canGoPrevious"
         @click="previousPage"
       >
-        {{ t('datatable.language.paginate.previous', 'Previous') }}
+        {{ t('datatable.language.paginate.previous') }}
       </AtlasButton>
       <span class="feature-analyses-view__range">{{ rangeDisplay }}</span>
       <AtlasButton
@@ -113,7 +113,7 @@
         :disabled="!canGoNext"
         @click="nextPage"
       >
-        {{ t('configuration.userImport.wizard.buttons.next', 'Next') }}
+        {{ t('configuration.userImport.wizard.buttons.next') }}
       </AtlasButton>
     </template>
   </AnalysisListLayout>
@@ -121,7 +121,7 @@
   <AtlasDialog
     v-model="showDeleteDialog"
     eyebrow="CONFIRM"
-    :title="t('common.delete', 'Delete').value"
+    :title="t('common.delete').value"
     max-width="500"
     @close="showDeleteDialog = false"
   >
@@ -131,14 +131,14 @@
         variant="ghost"
         @click="showDeleteDialog = false"
       >
-        {{ t('common.cancel', 'Cancel') }}
+        {{ t('common.cancel') }}
       </AtlasButton>
       <AtlasButton
         variant="danger"
         :loading="deleting"
         @click="confirmDelete"
       >
-        {{ t('common.delete', 'Delete') }}
+        {{ t('common.delete') }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -263,15 +263,15 @@ const rangeDisplay = computed<string>(() => {
 })
 
 const headers = computed(() => [
-  { title: t('columns.id', 'ID').value, key: 'id' },
-  { title: t('columns.name', 'Name').value, key: 'name' },
-  { title: t('cc.fa.analysisType', 'Type').value, key: 'type' },
-  { title: t('cc.fa.domain', 'Domain').value, key: 'domain' },
-  { title: t('cc.fa.statType', 'Stat Type').value, key: 'statType' },
-  { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
-  { title: t('columns.created', 'Created').value, key: 'createdDate' },
-  { title: t('columns.updated', 'Updated').value, key: 'modifiedDate' },
-  { title: t('columns.actions', 'Actions').value, key: 'actions', sortable: false },
+  { title: t('columns.id').value, key: 'id' },
+  { title: t('columns.name').value, key: 'name' },
+  { title: t('cc.fa.columns.type').value, key: 'type' },
+  { title: t('cc.fa.domain').value, key: 'domain' },
+  { title: t('cc.fa.statType').value, key: 'statType' },
+  { title: t('columns.createdBy').value, key: 'createdBy' },
+  { title: t('columns.created').value, key: 'createdDate' },
+  { title: t('columns.updated').value, key: 'modifiedDate' },
+  { title: t('columns.actions').value, key: 'actions', sortable: false },
 ])
 
 const showDeleteDialog = ref(false)

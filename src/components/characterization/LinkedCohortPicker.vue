@@ -8,7 +8,7 @@
   <div class="linked-cohort-picker">
     <div class="linked-cohort-picker__header">
       <h2 class="linked-cohort-picker__title">
-        {{ t('cc.viewEdit.results.filters.cohorts', 'Linked Cohorts') }}
+        {{ t('cc.viewEdit.results.filters.cohorts') }}
       </h2>
       <AtlasButton
         variant="secondary"
@@ -17,7 +17,7 @@
         data-testid="linked-cohort-picker-add"
         @click="openDialog"
       >
-        {{ t('common.add', 'Add cohort') }}
+        {{ t('common.add') }}
       </AtlasButton>
     </div>
 
@@ -26,7 +26,7 @@
       class="linked-cohort-picker__empty"
       data-testid="linked-cohort-picker-empty"
     >
-      {{ t('common.noData', 'No cohorts linked.') }}
+      {{ t('common.noData') }}
     </div>
 
     <AtlasList
@@ -49,12 +49,12 @@
           {{ cohort.name }}
         </v-list-item-title>
         <v-list-item-subtitle :data-testid="`linked-cohort-picker-id-${cohort.id}`">
-          {{ t('columns.id', 'ID').value }} {{ cohort.id }}
+          {{ t('columns.id').value }} {{ cohort.id }}
         </v-list-item-subtitle>
         <template #append>
           <AtlasIconButton
             icon="mdi-close"
-            v-bind="{ ariaLabel: t('columns.remove', 'Remove').value }"
+            v-bind="{ ariaLabel: t('columns.remove').value }"
             variant="text"
             size="sm"
             :data-testid="`linked-cohort-picker-remove-${cohort.id}`"
@@ -66,7 +66,7 @@
 
     <CohortPickerDialog
       v-model="dialogOpen"
-      :title="t('ir.editor.chooseACohort', 'Select cohorts to link').value"
+      :title="t('ir.editor.chooseACohort').value"
       :available-cohorts="availableCohorts"
       :excluded-ids="modelValue.map(cohort => cohort.id)"
       @select="confirmAdd"

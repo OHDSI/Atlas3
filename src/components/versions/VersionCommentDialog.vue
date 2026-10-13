@@ -13,7 +13,7 @@
     >
       <AtlasTextField
         v-model="commentText"
-        :label="tv('columns.comment', 'Comment')"
+        :label="tv('columns.comment')"
         :placeholder="tv('components.versions.commentPlaceholder')"
         :rules="[commentMaxLengthRule]"
         :counter="500"
@@ -100,7 +100,7 @@ const isCommentChanged = computed(() => {
 function commentMaxLengthRule(value: string): boolean | string {
   if (!value) return true
   if (value.length > 500) {
-    return tv('components.versions.commentMaxLength', 'Comment must be less than 500 characters')
+    return tv('components.versions.commentMaxLength')
   }
   return true
 }
@@ -163,7 +163,7 @@ async function handleSave(): Promise<void> {
     // Close dialog
     handleClose()
   } catch (err) {
-    error.value = err instanceof Error ? err.message : tv('components.versions.saveCommentError', 'Failed to save comment')
+    error.value = err instanceof Error ? err.message : tv('components.versions.saveCommentError')
     logger.error('VersionCommentDialog', 'Failed to save comment', err)
   } finally {
     saving.value = false

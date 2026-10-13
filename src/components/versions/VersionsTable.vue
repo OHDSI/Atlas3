@@ -158,7 +158,7 @@
             mdi-history
           </AtlasIcon>
           <p class="text-body-1 text-medium-emphasis">
-            {{ t('common.noData', 'No data available') }}
+            {{ t('common.noData') }}
           </p>
         </div>
       </template>
@@ -199,7 +199,7 @@ const selectedAuthor = ref<string | null>(null)
 // Table headers (T025)
 const headers = computed(() => [
   {
-    title: tv('columns.version', 'Version'),
+    title: tv('columns.version'),
     key: 'displayVersion',
     sortable: true,
     width: '120px',
@@ -217,12 +217,12 @@ const headers = computed(() => [
     width: '220px',
   },
   {
-    title: tv('columns.comment', 'Comment'),
+    title: tv('columns.comment'),
     key: 'comment',
     sortable: false,
   },
   {
-    title: tv('columns.actions', 'Actions'),
+    title: tv('columns.actions'),
     key: 'actions',
     sortable: false,
     width: '300px',

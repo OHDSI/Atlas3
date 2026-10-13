@@ -107,10 +107,10 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const episodeTitle = computed(() => t('components.episode.criteriaText_1', 'an episode of').value)
-const addAttributeLabel = computed(() => t('components.episode.addAttribute', 'Add attribute...').value)
+const episodeTitle = computed(() => t('components.episode.title').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
 const selectConceptSetLabel = computed(() =>
-  t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value
+  t('components.conceptAddBox.selectConceptSet').value
 )
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
@@ -150,7 +150,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(episodeData.value, 'GenderCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -218,7 +218,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(episodeData.value, 'EpisodeObjectConceptCS', () => ({ CodesetId: undefined })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -238,7 +238,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(episodeData.value, 'EpisodeTypeCS', () => ({ CodesetId: undefined })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),

@@ -167,15 +167,15 @@ const { t } = useI18n()
 const startDaysMenu = ref(false)
 const endDaysMenu = ref(false)
 
-const eventAnchorLabel = computed(() => (props.window.UseEventEnd ? t('common.eventEnds', 'Event ends').value : t('common.eventStarts', 'Event starts').value))
-const indexAnchorLabel = computed(() => (props.window.UseIndexEnd ? t('common.indexEnds', 'Index ends').value : t('common.indexStarts', 'Index starts').value))
-const startDirectionLabel = computed(() => (windowDirection('Start') === -1 ? t('options.before', 'Before').value : t('options.after', 'After').value))
-const endDirectionLabel = computed(() => (windowDirection('End') === -1 ? t('options.before', 'Before').value : t('options.after', 'After').value))
+const eventAnchorLabel = computed(() => (props.window.UseEventEnd ? t('common.eventEnds').value : t('common.eventStarts').value))
+const indexAnchorLabel = computed(() => (props.window.UseIndexEnd ? t('common.indexEnds').value : t('common.indexStarts').value))
+const startDirectionLabel = computed(() => (windowDirection('Start') === -1 ? t('options.before').value : t('options.after').value))
+const endDirectionLabel = computed(() => (windowDirection('End') === -1 ? t('options.before').value : t('options.after').value))
 const startDaysLabel = computed(() => daysChipLabel('Start'))
 const endDaysLabel = computed(() => daysChipLabel('End'))
-const daysLabel = computed(() => t('common.days', 'Days').value)
-const betweenLabel = computed(() => t('common.between', 'between').value)
-const andLabel = computed(() => t('common.and', 'and').value)
+const daysLabel = computed(() => t('common.days').value)
+const betweenLabel = computed(() => t('common.between').value)
+const andLabel = computed(() => t('common.and').value)
 const hasStartDays = computed(() => props.window.Start?.Days !== null && props.window.Start?.Days !== undefined)
 const hasEndDays = computed(() => props.window.End?.Days !== null && props.window.End?.Days !== undefined)
 const startDaysValue = computed<string>({
@@ -257,10 +257,10 @@ function daysChipLabel(side: 'Start' | 'End') {
   const endpoint = props.window[side]
   const days = endpoint?.Days
   if (days === null || days === undefined) {
-    return t('common.allDays', 'all days').value
+    return t('common.allDays').value
   }
 
-  return `${days} ${days === 1 ? t('common.day', 'day').value : t('common.days', 'days').value}`
+  return `${days} ${days === 1 ? t('common.day').value : t('common.days').value}`
 }
 
 function ensureEndpoint(side: 'Start' | 'End') {

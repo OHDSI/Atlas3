@@ -29,6 +29,7 @@ vi.mock('@/utils/logger', () => ({
 }))
 
 import DataSourceDialog from '@/components/config/DataSourceDialog.vue'
+import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
@@ -83,12 +84,12 @@ async function fillRequiredFields(wrapper: VueWrapper, dialect = 'POSTGRESQL') {
   const byLabel = (name: string, label: string) =>
     wrapper.findAllComponents({ name }).find(c => c.props('label') === label)!
 
-  await byLabel('AtlasTextField', 'columns.name').setValue('New Source')
-  await byLabel('AtlasTextField', 'configuration.viewEdit.source.label').setValue('NEW_SOURCE')
-  await byLabel('AtlasTextField', 'configuration.viewEdit.connectionString.label').setValue(
+  await byLabel('AtlasTextField', tr('columns.name')).setValue('New Source')
+  await byLabel('AtlasTextField', tr('configuration.viewEdit.source.label')).setValue('NEW_SOURCE')
+  await byLabel('AtlasTextField', tr('configuration.viewEdit.connectionString.label')).setValue(
     'jdbc:postgresql://localhost:5432/newdb'
   )
-  await byLabel('AtlasSelect', 'configuration.viewEdit.dialect.label').setValue(dialect)
+  await byLabel('AtlasSelect', tr('configuration.viewEdit.dialect.label')).setValue(dialect)
   await flushPromises()
 }
 

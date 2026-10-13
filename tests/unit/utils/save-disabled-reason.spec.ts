@@ -4,10 +4,10 @@
  */
 import { describe, it, expect } from 'vitest'
 import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
+import { tr } from '../../helpers/i18n-mock'
 
-/** Stands in for useI18n's tv: returns the fallback with params interpolated. */
-const translate = (_key: string, fallback: string, params?: Record<string, string>) =>
-  fallback.replace(/\{(\w+)\}/g, (_m, k: string) => params?.[k] ?? `{${k}}`)
+/** Stands in for useI18n's tv: resolves the key against en.json. */
+const translate = (key: string, params?: Record<string, string>) => tr(key, params)
 
 const base = {
   entity: 'characterization',
@@ -31,15 +31,15 @@ describe('resolveSaveDisabledReason (#300)', () => {
 
   it('explains a version preview', () => {
     const reason = resolveSaveDisabledReason({ ...base, isPreviewing: true })
-    expect(reason).toContain('version')
+    expect(reason).toBe(tr('const.disabledReason.previewingVersion'))
   })
 
   it('distinguishes not being allowed to create from not being allowed to edit', () => {
     const create = resolveSaveDisabledReason({ ...base, isNew: true, hasPermission: false })
     const edit = resolveSaveDisabledReason({ ...base, isNew: false, hasPermission: false })
 
-    expect(create).toContain('permission')
-    expect(edit).toMatch(/own|granted|access/i)
+    expect(create).toBe(tr('const.disabledReason.noCreatePermission', { entity: 'characterization' }))
+    expect(edit).toBe(tr('const.disabledReason.noWriteAccess', { entity: 'characterization' }))
     expect(create).not.toBe(edit)
   })
 
@@ -55,12 +55,12 @@ describe('resolveSaveDisabledReason (#300)', () => {
 
   it('asks for a name when one is missing', () => {
     const reason = resolveSaveDisabledReason({ ...base, hasName: false })
-    expect(reason).toMatch(/name/i)
+    expect(reason).toBe(tr('const.disabledReason.needsName', { entity: 'characterization' }))
   })
 
   it('reports validation errors', () => {
     const reason = resolveSaveDisabledReason({ ...base, hasValidationErrors: true })
-    expect(reason).toMatch(/error/i)
+    expect(reason).toBe(tr('const.disabledReason.hasErrors'))
   })
 
   // Priority matters: telling someone to fill in a name they are not allowed to
@@ -71,8 +71,7 @@ describe('resolveSaveDisabledReason (#300)', () => {
       hasName: false,
       hasPermission: false,
     })
-    expect(reason).toMatch(/own|granted|access|permission/i)
-    expect(reason).not.toMatch(/give it a name/i)
+    expect(reason).toBe(tr('const.disabledReason.noWriteAccess', { entity: 'characterization' }))
   })
 
   it('reports the version preview ahead of everything else', () => {
@@ -82,6 +81,6 @@ describe('resolveSaveDisabledReason (#300)', () => {
       hasPermission: false,
       hasName: false,
     })
-    expect(reason).toContain('version')
+    expect(reason).toBe(tr('const.disabledReason.previewingVersion'))
   })
 })

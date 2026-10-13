@@ -12,11 +12,7 @@
       />
       <span>
         {{
-          t(
-            'components.domainPrevalenceTable.largeDatasetHint',
-            'Large dataset detected ({count} entries). Displaying top 1,000 entries by prevalence for performance — use search or export CSV for the full dataset.',
-            { count: formatNumber(props.data.length) }
-          ).value
+          t('components.domainPrevalenceTable.largeDatasetHint', { count: formatNumber(props.data.length) }).value
         }}
       </span>
     </div>
@@ -29,7 +25,7 @@
         >
           <AtlasTextField
             v-model="search"
-            :label="t('common.search', 'Search').value"
+            :label="t('common.search').value"
             prepend-icon="mdi-magnify"
             variant="outlined"
             hide-details
@@ -46,7 +42,7 @@
             icon="mdi-content-copy"
             @click="copyToClipboard"
           >
-            {{ t('common.copy', 'Copy').value }}
+            {{ t('common.copy').value }}
           </AtlasButton>
           <AtlasButton
             variant="secondary"
@@ -62,7 +58,7 @@
                 icon="mdi-view-column"
                 v-bind="menuProps"
               >
-                {{ t('common.columns', 'Columns').value }}
+                {{ t('common.columns').value }}
               </AtlasButton>
             </template>
             <AtlasList>
@@ -93,7 +89,7 @@
       :items="filteredData"
       :search="search"
       :items-per-page="itemsPerPage"
-      :items-per-page-options="[25, 50, 75, 100, { value: -1, title: t('datatable.language.all', 'All').value }]"
+      :items-per-page-options="[25, 50, 75, 100, { value: -1, title: t('datatable.language.all').value }]"
       class="elevation-1"
       @update:items-per-page="handleItemsPerPageChange"
       @click:row="onRowClick"
@@ -170,11 +166,11 @@ interface TableHeader {
 }
 
 const headers = ref<TableHeader[]>([
-  { title: tv('columns.conceptId', 'Concept ID'), key: 'conceptId', sortable: true },
-  { title: tv('columns.name', 'Name'), key: 'conceptName', sortable: true },
-  { title: tv('columns.personCount', 'Person Count'), key: 'personCount', sortable: true },
+  { title: tv('columns.conceptId'), key: 'conceptId', sortable: true },
+  { title: tv('columns.name'), key: 'conceptName', sortable: true },
+  { title: tv('columns.personCount'), key: 'personCount', sortable: true },
   {
-    title: tv('components.domainPrevalenceTable.prevalencePercent', 'Prevalence (%)'),
+    title: tv('components.domainPrevalenceTable.prevalencePercent'),
     key: 'prevalence',
     sortable: true,
   },
@@ -236,20 +232,15 @@ const endItem = computed(() => {
 // Table status text
 const tableStatusText = computed(() => {
   if (totalItems.value === 0) {
-    return tv('components.domainPrevalenceTable.noEntriesFound', 'No entries found')
+    return tv('components.domainPrevalenceTable.noEntriesFound')
   }
 
   if (itemsPerPage.value === -1) {
-    return tv(
-      'components.domainPrevalenceTable.showingAllEntries',
-      'Showing all {count} entries',
-      { count: formatNumber(totalItems.value) }
-    )
+    return tv('components.domainPrevalenceTable.showingAllEntries', { count: formatNumber(totalItems.value) })
   }
 
   return tv(
     'components.domainPrevalenceTable.showingRange',
-    'Showing {start} to {end} of {total} entries',
     {
       start: formatNumber(startItem.value),
       end: formatNumber(endItem.value),

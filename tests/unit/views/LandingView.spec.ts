@@ -6,9 +6,9 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref } from 'vue'
 import LandingView from '@/views/LandingView.vue'
 import { pluginConfigService } from '@/services/PluginConfigService'
+import { tr } from '../../helpers/i18n-mock'
 
 // Mock vue-router
 const mockPush = vi.fn()
@@ -20,12 +20,10 @@ vi.mock('vue-router', () => ({
 }))
 
 // Mock useI18n composable
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, fallback: string) => ref(fallback),
-    tv: (key: string, fallback: string) => fallback
-  })
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 vi.mock('@/services/PluginConfigService', () => ({
   pluginConfigService: {
@@ -88,7 +86,7 @@ describe('LandingView', () => {
       const wrapper = mountComponent()
       const title = wrapper.find('.landing__title')
       expect(title.exists()).toBe(true)
-      expect(title.text()).toBe('Patient-level analytics, unified.')
+      expect(title.text()).toBe(tr('home.heroTitle'))
     })
 
     it('should render the Atlas logo image', () => {
@@ -176,7 +174,7 @@ describe('LandingView', () => {
     it('should render the documentation title text', () => {
       const wrapper = mountComponent()
       const docs = wrapper.find('.landing__feature--docs')
-      expect(docs.text()).toContain('Documentation')
+      expect(docs.text()).toContain(tr('home.documentation.title'))
     })
 
     it('should link the entire documentation tile to /docs', () => {
@@ -339,22 +337,19 @@ describe('LandingView', () => {
     it('should use translation for cohort button text', () => {
       const wrapper = mountComponent()
       const buttons = wrapper.findAll('.landing__actions .v-btn')
-      // The mock returns the fallback value; new casing: lowercase "n"
-      expect(buttons[0].text()).toBe('Define a new cohort')
+      expect(buttons[0].text()).toBe(tr('home.gettingStarted.newCohort.button'))
     })
 
     it('should use translation for vocabulary button text', () => {
       const wrapper = mountComponent()
       const buttons = wrapper.findAll('.landing__actions .v-btn')
-      // The mock returns the fallback value; new casing: lowercase "t"
-      expect(buttons[1].text()).toBe('Search the vocabulary')
+      expect(buttons[1].text()).toBe(tr('home.gettingStarted.vocabulary.button'))
     })
 
     it('should use translation for documentation title', () => {
       const wrapper = mountComponent()
       const title = wrapper.find('.landing__feature--docs .landing__feature-title')
-      // The mock returns the fallback value
-      expect(title.text()).toBe('Documentation')
+      expect(title.text()).toBe(tr('home.documentation.title'))
     })
   })
 

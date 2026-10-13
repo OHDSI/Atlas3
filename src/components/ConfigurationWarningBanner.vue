@@ -2,17 +2,14 @@
   <AtlasAlert
     v-if="validationResult && validationResult.invalidFilterTypes.length > 0"
     severity="warning"
-    :title="t('components.configurationWarningBanner.title', 'Configuration Validation Warnings').value"
+    :title="t('components.configurationWarningBanner.title').value"
     :closable="true"
     class="configuration-warning-banner"
   >
     <div class="mt-2">
       <p class="mb-2">
         {{
-          t(
-            'components.configurationWarningBanner.description',
-            'Some filter types in the configuration are invalid or misconfigured. These filters will not be available in the UI:'
-          ).value
+          t('components.configurationWarningBanner.description').value
         }}
       </p>
 
@@ -21,7 +18,7 @@
         <v-expansion-panel>
           <v-expansion-panel-title>
             <span class="font-weight-medium">
-              {{ t('components.configurationWarningBanner.invalidFilterTypes', 'Invalid Filter Types').value }}
+              {{ t('components.configurationWarningBanner.invalidFilterTypes').value }}
               ({{ validationResult.invalidFilterTypes.length }})
             </span>
           </v-expansion-panel-title>
@@ -47,10 +44,7 @@
 
       <p class="mt-3 text-caption">
         {{
-          t(
-            'components.configurationWarningBanner.contactAdmin',
-            'Contact your administrator to update the configuration file (atlas-config.json).'
-          ).value
+          t('components.configurationWarningBanner.contactAdmin').value
         }}
       </p>
     </div>

@@ -2,15 +2,15 @@
   <v-card>
     <v-card-title>
       {{
-        t('cohortDefinitions.cohort.modals.cohortDefinition.title', 'Cohort Definition')
+        t('cohortDefinitions.cohort.modals.cohortDefinition.title')
       }}
     </v-card-title>
     <v-card-text>
       <AtlasTextField
         v-model="localName"
-        :label="t('columns.name', 'Name').value"
+        :label="t('columns.name').value"
         :placeholder="
-          t('components.atlasCohortEditor.enterCohortPlaceholder', 'Enter cohort name').value
+          t('components.atlasCohortEditor.enterCohortNamePlaceholder').value
         "
         variant="outlined"
         :rules="[rules.required]"
@@ -19,9 +19,9 @@
 
       <AtlasTextField
         v-model="localDescription"
-        :label="t('columns.description', 'Description').value"
+        :label="t('columns.description').value"
         :placeholder="
-          t('common.enterCohortDescription', 'Enter cohort description (optional)').value
+          t('common.enterCohortDescription').value
         "
         variant="outlined"
         :rows="3"
@@ -32,7 +32,7 @@
       <!-- Tags Editor -->
       <div class="metadata-tags">
         <div class="metadata-tags__label">
-          {{ t('common.tags', 'Tags') }}
+          {{ t('common.tags') }}
         </div>
 
         <!-- Existing tags -->
@@ -56,8 +56,8 @@
         <div class="metadata-tags__add">
           <AtlasTextField
             v-model="newTagName"
-            :label="t('common.addTag', 'Add tag').value"
-            :placeholder="t('components.tags.tagNamePlaceholder', 'Tag name').value"
+            :label="t('common.addTag').value"
+            :placeholder="t('components.tags.tagNamePlaceholder').value"
             variant="outlined"
             hide-details
             class="metadata-tags__input"
@@ -70,7 +70,7 @@
               >
                 <template #activator="{ props: menuProps }">
                   <AtlasIconButton
-                    v-bind="{ ...menuProps, ariaLabel: t('common.pickColor', 'Pick color').value }"
+                    v-bind="{ ...menuProps, ariaLabel: t('common.pickColor').value }"
                     icon="mdi-palette"
                     size="sm"
                     variant="text"
@@ -88,7 +88,7 @@
                 </v-card>
               </AtlasMenu>
               <AtlasIconButton
-                v-bind="{ ariaLabel: t('common.addTag', 'Add tag').value }"
+                v-bind="{ ariaLabel: t('common.addTag').value }"
                 icon="mdi-plus"
                 size="sm"
                 variant="text"
@@ -200,7 +200,7 @@ function removeTag(index: number) {
 
 const rules = {
   required: (value: string) =>
-    !!value || t('commonErrors.required', 'This field is required').value,
+    !!value || t('commonErrors.required').value,
 }
 </script>
 

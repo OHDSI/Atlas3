@@ -164,8 +164,7 @@
       "modifiedLabel": "изменено: {modifiedBy} {modifiedDate}"
     },
     "windowedCriteria": {
-      "windowedCriteriaText_5": "ограничить одно и то же посещение",
-      "windowedCriteriaText_6": "игнорировать период наблюдения"
+      "ignoreObservationPeriod": "игнорировать период наблюдения"
     },
     "feasibilityAttritionReport": {
       "inclusionRule": "Правило включения"
@@ -190,29 +189,21 @@
     },
     "cohortExpressionEditor": {
       "inclusionCriteria": "Критерии включения",
-      "cohortErasText_1": "Укажите размер разрыва коллапса эпохи:",
-      "cohortErasText_2": "Даты начала когорты левого цензора в",
-      "cohortErasText_3": "Дата окончания когорты правого цензора",
       "addTrimmingOptions": "добавить параметры обрезки ...",
       "noCensoring": "Нет цензуры",
-      "days": "дней"
+      "days": "дней",
+      "eraCollapseGap": "Укажите размер разрыва коллапса эпохи:",
+      "leftCensorStartDates": "Даты начала когорты левого цензора в",
+      "rightCensorEndDates": "Дата окончания когорты правого цензора"
     },
     "conditionEra": {
-      "criteriaText_1": "состояние эпохи",
-      "addAttribute": "Добавить атрибут ..."
+      "title": "состояние эпохи"
     },
     "conditionOccurrence": {
-      "conditionOccurrenceText_1": "возникновение условия",
-      "addAttribute": "Добавить атрибут..."
-    },
-    "conditionDrugExposure": {
-      "addAttribute": "Добавить атрибут...",
-      "conditionDrugExposureText_1": "наркотическое воздействие"
+      "title": "возникновение условия"
     },
     "criteriaGroup": {
       "addCriteria": "Добавить критерии в группу ...",
-      "criteriaGroupText_1": "ограничить одно и то же посещение",
-      "criteriaGroupText_2": "разрешить события за пределами периода наблюдения",
       "clickToChangeMatchType": "Нажмите, чтобы изменить тип соответствия",
       "noEventsInGroup": "В группе нет событий. Добавьте события для построения логики критериев."
     },
@@ -706,6 +697,47 @@
     },
     "navBar": {
       "mainNavigation": "Основная"
+    },
+    "drugExposure": {
+      "title": "наркотическое воздействие"
+    },
+    "correlatedCriteria": {
+      "restrictToSameVisit": "ограничить одно и то же посещение",
+      "allowEventsOutsideObservation": "разрешить события за пределами периода наблюдения"
+    },
+    "deviceExposure": {
+      "title": "устройство воздействия"
+    },
+    "doseEra": {
+      "title": "эра дозы"
+    },
+    "drugEra": {
+      "title": "и другая эра"
+    },
+    "measurement": {
+      "title": "измерение"
+    },
+    "procedureOccurrence": {
+      "title": "процедура возникновения"
+    },
+    "observation": {
+      "title": "наблюдение"
+    },
+    "visitDetail": {
+      "title": "деталь посещения"
+    },
+    "specimen": {
+      "title": "образец"
+    },
+    "visitOccurrence": {
+      "title": "посещение"
+    },
+    "observationPeriod": {
+      "title": "период наблюдения"
+    },
+    "criteria": {
+      "addAttribute": "Добавить атрибут...",
+      "selectConceptSet": "Выбрать набор концепций"
     }
   },
   "facets": {

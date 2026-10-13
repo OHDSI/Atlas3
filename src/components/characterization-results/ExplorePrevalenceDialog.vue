@@ -7,7 +7,7 @@
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    :eyebrow="tv('components.characterizationResults.covariateDetail', 'COVARIATE DETAIL')"
+    :eyebrow="tv('components.characterizationResults.covariateDetail')"
     :title="stat?.covariateName ?? ''"
     max-width="720"
     data-testid="char-results-explore-dialog"
@@ -18,15 +18,15 @@
       <div class="explore__meta">
         <dl class="explore__dl">
           <div>
-            <dt>{{ tv('columns.analysis', 'Analysis') }}</dt>
+            <dt>{{ tv('columns.analysis') }}</dt>
             <dd>{{ stat.analysisName }}</dd>
           </div>
           <div v-if="stat.domainId">
-            <dt>{{ tv('columns.domain', 'Domain') }}</dt>
+            <dt>{{ tv('columns.domain') }}</dt>
             <dd>{{ stat.domainId }}</dd>
           </div>
           <div>
-            <dt>{{ tv('columns.conceptId', 'Concept ID') }}</dt>
+            <dt>{{ tv('columns.conceptId') }}</dt>
             <dd>
               <a
                 v-if="stat.conceptId"
@@ -38,7 +38,7 @@
             </dd>
           </div>
           <div v-if="stat.conceptName">
-            <dt>{{ tv('components.characterizationResults.concept', 'Concept') }}</dt>
+            <dt>{{ tv('components.characterizationResults.concept') }}</dt>
             <dd>{{ stat.conceptName }}</dd>
           </div>
         </dl>
@@ -48,13 +48,13 @@
         <thead>
           <tr>
             <th class="explore__th-label">
-              {{ tv('common.cohort', 'Cohort') }}
+              {{ tv('common.cohort') }}
             </th>
             <th class="explore__th-num">
-              {{ tv('columns.count', 'Count') }}
+              {{ tv('columns.count') }}
             </th>
             <th class="explore__th-num">
-              {{ tv('columns.pct', '%') }}
+              {{ tv('columns.pct') }}
             </th>
             <th class="explore__th-bar" />
           </tr>
@@ -87,7 +87,7 @@
         v-if="stat.stdDiff != null"
         class="explore__stddiff"
       >
-        {{ tv('components.characterizationResults.smdLabel', 'Standardised mean difference') }}: <strong>{{ stat.stdDiff.toFixed(4) }}</strong>
+        {{ tv('components.characterizationResults.smdLabel') }}: <strong>{{ stat.stdDiff.toFixed(4) }}</strong>
       </div>
     </template>
 
@@ -95,7 +95,7 @@
       v-else
       class="explore__empty"
     >
-      {{ tv('components.characterizationResults.noCovariateSelected', 'No covariate selected.') }}
+      {{ tv('components.characterizationResults.noCovariateSelected') }}
     </div>
 
     <template #actions>
@@ -103,7 +103,7 @@
         variant="ghost"
         @click="close"
       >
-        {{ tv('common.close', 'Close') }}
+        {{ tv('common.close') }}
       </AtlasButton>
     </template>
   </AtlasDialog>

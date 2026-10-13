@@ -5,7 +5,7 @@
   >
     <section class="rail-section">
       <header class="rail-section__header">
-        <span class="text-eyebrow">{{ t('facets.caption.targetCohorts', 'Target Cohorts').value }}</span>
+        <span class="text-eyebrow">{{ t('facets.caption.targetCohorts').value }}</span>
         <AtlasButton
           variant="ghost"
           size="sm"
@@ -13,7 +13,7 @@
           :disabled="readonly"
           @click="showTargetPicker = true"
         >
-          {{ t('common.add', 'Add').value }}
+          {{ t('common.add').value }}
         </AtlasButton>
       </header>
       <PathwayCohortList
@@ -31,7 +31,7 @@
 
     <section class="rail-section">
       <header class="rail-section__header">
-        <span class="text-eyebrow">{{ t('columns.eventCohort', 'Event Cohorts').value }}</span>
+        <span class="text-eyebrow">{{ t('columns.eventCohort').value }}</span>
         <AtlasButton
           variant="ghost"
           size="sm"
@@ -39,7 +39,7 @@
           :disabled="readonly"
           @click="showEventPicker = true"
         >
-          {{ t('common.add', 'Add').value }}
+          {{ t('common.add').value }}
         </AtlasButton>
       </header>
       <PathwayCohortList
@@ -57,7 +57,7 @@
 
     <section class="rail-section">
       <header class="rail-section__header">
-        <span class="text-eyebrow">{{ t('ple.spec.analysisSettings', 'Settings').value }}</span>
+        <span class="text-eyebrow">{{ t('ple.spec.analysisSettings').value }}</span>
       </header>
       <PathwaySettings
         :model-value="settings"

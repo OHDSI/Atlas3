@@ -1,10 +1,10 @@
 <template>
   <div class="concept-add-options">
     <div class="concept-add-options__flags">
-      <span class="concept-add-options__caption">{{ t('cs.conceptAddBox.addWith', 'Add with') }}</span>
+      <span class="concept-add-options__caption">{{ t('cs.conceptAddBox.addWith') }}</span>
       <v-checkbox-btn
         :model-value="modelValue.includeDescendants"
-        :label="t('cs.conceptAddBox.descendants', 'Descendants').value"
+        :label="t('cs.conceptAddBox.descendants').value"
         density="compact"
         hide-details
         data-testid="add-option-descendants"
@@ -12,7 +12,7 @@
       />
       <v-checkbox-btn
         :model-value="modelValue.includeMapped"
-        :label="t('cs.conceptAddBox.mapped', 'Mapped').value"
+        :label="t('cs.conceptAddBox.mapped').value"
         density="compact"
         hide-details
         data-testid="add-option-mapped"
@@ -20,7 +20,7 @@
       />
       <v-checkbox-btn
         :model-value="modelValue.isExcluded"
-        :label="t('cs.conceptAddBox.exclude', 'Exclude').value"
+        :label="t('cs.conceptAddBox.exclude').value"
         density="compact"
         hide-details
         data-testid="add-option-exclude"
@@ -34,7 +34,7 @@
       data-testid="add-selected"
       @click="emit('add')"
     >
-      {{ t('cs.conceptAddBox.addToConceptSet', 'Add To Concept Set') }}
+      {{ t('cs.conceptAddBox.addToConceptSet') }}
       <span
         v-if="selectedCount > 0"
         class="ml-1"

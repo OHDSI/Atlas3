@@ -5,10 +5,12 @@ import IncludedSourceCodesTable from '@/components/concepts/IncludedSourceCodesT
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
 import { getConceptRecordCounts } from '@/services/concept-search.service'
+import { tr } from '../../../helpers/i18n-mock'
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({ t: (_k: string, fallback: string) => ({ value: fallback }) }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 vi.mock('@/services/concept-search.service', () => ({
   getConceptRecordCounts: vi.fn().mockResolvedValue(new Map()),
@@ -93,7 +95,7 @@ describe('IncludedSourceCodesTable', () => {
     const store = useConceptSetsStore()
     store.sourceCodeItems = []
     const wrapper = makeWrapper()
-    expect(wrapper.text()).toContain('Add concepts')
+    expect(wrapper.text()).toContain(tr('cs.manager.sourceCodesEmptyNoIncluded'))
   })
 
   it('triggers resolveSourceCodes when activated', async () => {
@@ -216,7 +218,7 @@ describe('IncludedSourceCodesTable — filtering and pagination (issue #266)', (
 
     facetBar(wrapper).vm.$emit('update:resultFilter', 'no-such-code')
     await wrapper.vm.$nextTick()
-    expect(wrapper.text()).toMatch(/No concepts match the active filters/i)
+    expect(wrapper.text()).toContain(tr('cs.manager.emptyFilteredMessage'))
 
     await wrapper.find('[data-testid="source-codes-clear-filters-btn"]').trigger('click')
     await wrapper.vm.$nextTick()

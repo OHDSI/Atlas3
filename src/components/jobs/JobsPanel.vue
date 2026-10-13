@@ -11,10 +11,10 @@
       flat
     >
       <v-card-title class="jobs-panel__header d-flex align-center justify-space-between">
-        <span class="jobs-panel-title">{{ t('jobs.title', 'Jobs').value }}</span>
+        <span class="jobs-panel-title">{{ t('jobs.title').value }}</span>
         <AtlasIconButton
           icon="mdi-close"
-          v-bind="{ ariaLabel: t('jobs.close', 'Close jobs panel').value }"
+          v-bind="{ ariaLabel: t('jobs.close').value }"
           variant="text"
           size="sm"
           @click="handleClose"

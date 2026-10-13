@@ -105,9 +105,9 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const specimenTitle = computed(() => 'a specimen of')
-const addAttributeLabel = computed(() => 'Add attribute...')
-const selectConceptSetLabel = computed(() => t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value)
+const specimenTitle = computed(() => t('components.specimen.title').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
+const selectConceptSetLabel = computed(() => t('components.conceptAddBox.selectConceptSet').value)
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {

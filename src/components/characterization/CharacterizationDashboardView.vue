@@ -5,7 +5,7 @@
       class="char-dashboard__section"
     >
       <h3 class="char-dashboard__heading">
-        {{ tv('components.characterizationDashboard.distributions', 'Distributions') }}
+        {{ tv('components.characterizationDashboard.distributions') }}
       </h3>
       <div class="char-dashboard__grid">
         <AtlasCard
@@ -30,14 +30,14 @@
       class="char-dashboard__section"
     >
       <h3 class="char-dashboard__heading">
-        {{ tv('components.characterizationDashboard.demographicProfile', 'Demographic Profile') }}
+        {{ tv('components.characterizationDashboard.demographicProfile') }}
       </h3>
       <AtlasCard
         v-if="genderGroup"
         padding="sm"
       >
         <div class="char-dashboard__chart-title">
-          {{ tv('columns.gender', 'Gender') }}
+          {{ tv('columns.gender') }}
         </div>
         <v-chart
           :option="demographicBarOption(genderGroup)"
@@ -50,7 +50,7 @@
         padding="sm"
       >
         <div class="char-dashboard__chart-title">
-          {{ tv('components.characterizationDashboard.ageDistribution', 'Age Distribution') }}
+          {{ tv('components.characterizationDashboard.ageDistribution') }}
         </div>
         <v-chart
           :option="ageGroupOption"
@@ -84,7 +84,7 @@
       class="char-dashboard__section"
     >
       <h3 class="char-dashboard__heading">
-        {{ tv('components.characterizationDashboard.prevalenceComparison', 'Prevalence Comparison') }}
+        {{ tv('components.characterizationDashboard.prevalenceComparison') }}
       </h3>
       <AtlasCard padding="sm">
         <div class="char-dashboard__chart-title">
@@ -103,11 +103,11 @@
       class="char-dashboard__section"
     >
       <h3 class="char-dashboard__heading">
-        {{ tv('components.characterizationDashboard.covariateBalance', 'Covariate Balance (Std. Mean Difference)') }}
+        {{ tv('components.characterizationDashboard.covariateBalance') }}
       </h3>
       <AtlasCard padding="sm">
         <div class="char-dashboard__chart-subtitle">
-          {{ tv('components.characterizationDashboard.imbalanceNote', 'Covariates with |SMD| > 0.1 (dashed lines) are considered imbalanced') }}
+          {{ tv('components.characterizationDashboard.imbalanceNote') }}
         </div>
         <v-chart
           :option="smdOption"
@@ -122,7 +122,7 @@
       class="char-dashboard__section"
     >
       <h3 class="char-dashboard__heading">
-        {{ tv('components.characterizationDashboard.topCovariates', 'Top Covariates by Prevalence') }}
+        {{ tv('components.characterizationDashboard.topCovariates') }}
       </h3>
       <AtlasCard padding="sm">
         <v-chart
@@ -137,7 +137,7 @@
       v-if="boxPlotGroups.length === 0 && scatterPoints.length === 0 && topPrevalence.length === 0"
       class="char-dashboard__empty"
     >
-      {{ tv('components.characterizationDashboard.noVisualizationData', 'No data available for visualization.') }}
+      {{ tv('components.characterizationDashboard.noVisualizationData') }}
     </div>
   </div>
 </template>
@@ -383,7 +383,7 @@ const scatterOption = computed(() => {
     legend: { top: 0, type: 'scroll' as const },
     grid: { top: 40, right: 20, bottom: 50, left: 60 },
     xAxis: {
-      name: props.cohorts[0]?.name ?? tv('components.characterizationDashboard.cohortIndexed', 'Cohort 1', { n: 1 }),
+      name: props.cohorts[0]?.name ?? tv('components.characterizationDashboard.cohortIndexed', { n: 1 }),
       nameLocation: 'center' as const,
       nameGap: 35,
       type: 'value' as const,
@@ -392,7 +392,7 @@ const scatterOption = computed(() => {
       axisLabel: { formatter: '{value}%' },
     },
     yAxis: {
-      name: props.cohorts[1]?.name ?? tv('components.characterizationDashboard.cohortIndexed', 'Cohort 2', { n: 2 }),
+      name: props.cohorts[1]?.name ?? tv('components.characterizationDashboard.cohortIndexed', { n: 2 }),
       nameLocation: 'center' as const,
       nameGap: 45,
       type: 'value' as const,
@@ -451,13 +451,13 @@ const smdOption = computed(() => {
       trigger: 'item' as const,
       formatter: (p: { name: string; data: { value: [number, number] } }) => {
         const pt = reversed[p.data.value[1]]
-        return `<strong>${pt?.name ?? ''}</strong><br/>${tv('columns.domain', 'Domain')}: ${pt?.domain ?? ''}<br/>${tv('components.characterizationDashboard.smdShort', 'SMD')}: ${p.data.value[0].toFixed(4)}`
+        return `<strong>${pt?.name ?? ''}</strong><br/>${tv('columns.domain')}: ${pt?.domain ?? ''}<br/>${tv('components.characterizationDashboard.smdShort')}: ${p.data.value[0].toFixed(4)}`
       },
     },
     grid: { top: 20, right: 40, bottom: 40, left: 200 },
     xAxis: {
       type: 'value' as const,
-      name: tv('components.characterizationDashboard.smdAxis', 'Standardised Mean Difference'),
+      name: tv('components.characterizationDashboard.smdAxis'),
       nameLocation: 'center' as const,
       nameGap: 25,
     },

@@ -12,10 +12,10 @@
     >
       <!-- Header -->
       <v-card-title class="config-panel__header d-flex align-center justify-space-between">
-        <span class="config-panel-title">{{ t('config.title', 'Configuration').value }}</span>
+        <span class="config-panel-title">{{ t('config.title').value }}</span>
         <AtlasIconButton
           icon="mdi-close"
-          v-bind="{ ariaLabel: tv('components.config.panel.closeAria', 'Close configuration panel') }"
+          v-bind="{ ariaLabel: tv('components.config.panel.closeAria') }"
           variant="text"
           size="sm"
           @click="handleClose"
@@ -39,7 +39,7 @@
             <AtlasIcon start>
               mdi-database
             </AtlasIcon>
-            {{ t('components.config.panel.tabCache', 'Cache').value }}
+            {{ t('components.config.panel.tabCache').value }}
           </AtlasTab>
           <AtlasTab
             v-if="canSeeSources"
@@ -48,7 +48,7 @@
             <AtlasIcon start>
               mdi-database-cog
             </AtlasIcon>
-            {{ t('navigation.datasources', 'Data Sources').value }}
+            {{ t('navigation.datasources').value }}
           </AtlasTab>
           <AtlasTab
             v-if="canSeeTags"
@@ -57,7 +57,7 @@
             <AtlasIcon start>
               mdi-tag-multiple
             </AtlasIcon>
-            {{ t('common.tags', 'Tags').value }}
+            {{ t('common.tags').value }}
           </AtlasTab>
           <AtlasTab
             v-if="canSeePermissions"
@@ -66,7 +66,7 @@
             <AtlasIcon start>
               mdi-shield-account
             </AtlasIcon>
-            {{ t('configuration.roles.tabs.permissions', 'Permissions').value }}
+            {{ t('configuration.roles.tabs.permissions').value }}
           </AtlasTab>
           <AtlasTab
             v-for="tab in pluginTabs"
@@ -140,10 +140,7 @@
           >
             <AtlasAlert severity="info">
               {{
-                t(
-                  'components.config.panel.noAdminAccess',
-                  "You don't have access to any administrative settings."
-                ).value
+                t('components.config.panel.noAdminAccess').value
               }}
             </AtlasAlert>
           </div>

@@ -5,7 +5,7 @@
       data-test="cs-empty"
       class="text-disabled"
     >
-      {{ tv('profiles.clickHereToSelectACohort', 'No cohort selected') }}
+      {{ tv('profiles.noCohortSelected') }}
     </div>
     <AtlasList
       v-else
@@ -27,10 +27,7 @@
                highlight. Until then the dot is inert. -->
           <AtlasTooltip
             :text="
-              tv(
-                'profiles.conceptSetHighlightingComingSoon',
-                'Concept-set highlighting coming soon'
-              )
+              tv('profiles.conceptSetHighlightingComingSoon')
             "
             location="top"
           >

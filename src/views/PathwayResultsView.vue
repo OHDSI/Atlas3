@@ -24,7 +24,7 @@
           <AtlasIcon start>
             mdi-chart-donut
           </AtlasIcon>
-          {{ t('cohortDefinitions.costUtilization.visualization', 'Visualization') }}
+          {{ t('cohortDefinitions.costUtilization.visualization') }}
         </AtlasButton>
         <AtlasButton
           toggle
@@ -34,7 +34,7 @@
           <AtlasIcon start>
             mdi-table
           </AtlasIcon>
-          {{ t('pathway.results.tabular', 'Tabular') }}
+          {{ t('pathway.results.tabular') }}
         </AtlasButton>
       </v-btn-toggle>
     </template>
@@ -43,7 +43,7 @@
       v-if="loading"
       class="pathway-results__state"
     >
-      {{ t('common.loading', 'Loading results…').value }}
+      {{ t('common.loading').value }}
     </div>
     <template v-else-if="design && results && targetGroup">
       <div
@@ -136,13 +136,13 @@ const targetGroup = computed(() => {
 
 const title = computed(() => {
   const name = design.value?.name?.trim()
-  return name || t('pathway.results.title', 'Pathway results').value
+  return name || t('pathway.results.title').value
 })
 
 const subtitle = computed(() => {
   const exec = execution.value
   if (!exec) return undefined
-  return `${t('columns.executionId', 'Execution').value} #${exec.id} · ${exec.sourceKey}`
+  return `${t('columns.executionId').value} #${exec.id} · ${exec.sourceKey}`
 })
 
 const targetCohortName = computed(() => {

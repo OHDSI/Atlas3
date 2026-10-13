@@ -18,7 +18,7 @@ const { tv } = useI18n()
     <v-checkbox-btn
       v-if="canAdd"
       :model-value="selected"
-      :aria-label="tv('components.conceptTable.selectConcept', 'Select {name}', { name: conceptName })"
+      :aria-label="tv('components.conceptTable.selectConcept', { name: conceptName })"
       density="compact"
       hide-details
       :data-testid="`hierarchy-select-${conceptId}`"

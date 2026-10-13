@@ -6,6 +6,7 @@ import * as directives from 'vuetify/directives'
 import { createPinia, setActivePinia } from 'pinia'
 import ConceptDetailHeader from '@/components/concepts/detail/ConceptDetailHeader.vue'
 import type { Concept } from '@/models/concept-set.types'
+import { tr } from '../../../helpers/i18n-mock'
 
 const concept: Concept = {
   conceptId: 201826,
@@ -58,6 +59,6 @@ describe('ConceptDetailHeader', () => {
       global: { plugins: [vuetify] },
     })
 
-    expect(wrapper.text()).toContain('Non-standard')
+    expect(wrapper.text()).toContain(tr('cs.manager.concept.nonStandard'))
   })
 })

@@ -19,13 +19,13 @@
       <button
         class="rail-toggle"
         :title="railOpen
-          ? tv('components.characterizationWorkbench.hideDesignPanel', 'Hide design panel')
-          : tv('components.characterizationWorkbench.showDesignPanel', 'Show design panel')"
+          ? tv('components.characterizationWorkbench.hideDesignPanel')
+          : tv('components.characterizationWorkbench.showDesignPanel')"
         @click="railOpen = !railOpen"
       >
         {{ railOpen
-          ? '◂ ' + tv('components.characterizationWorkbench.hideAnalysisDesign', 'Hide Analysis Design')
-          : '▸ ' + tv('components.characterizationWorkbench.showAnalysisDesign', 'Show Analysis Design') }}
+          ? '◂ ' + tv('components.characterizationWorkbench.hideAnalysisDesign')
+          : '▸ ' + tv('components.characterizationWorkbench.showAnalysisDesign') }}
       </button>
       <DataSourceRunTable
         :sources="runTableSources"
@@ -438,7 +438,7 @@ async function handleRun(sourceKey: string): Promise<void> {
     if (exec) onRunStarted(exec)
   } catch (err) {
     logger.error('CharacterizationWorkbench', 'Run failed', err)
-    const msg = err instanceof Error ? err.message : tv('cc.fa.runError', 'Failed to start generation')
+    const msg = err instanceof Error ? err.message : tv('cc.fa.runError')
     emit('snackbar', msg, 'error')
   }
 }
@@ -452,7 +452,7 @@ async function handleCancel(sourceKey: string): Promise<void> {
     await store.cancelExecution(props.characterizationId, sourceKey, latest?.id)
   } catch (err) {
     logger.error('CharacterizationWorkbench', 'Cancel failed', err)
-    const msg = err instanceof Error ? err.message : tv('cc.fa.cancelError', 'Failed to cancel generation')
+    const msg = err instanceof Error ? err.message : tv('cc.fa.cancelError')
     emit('snackbar', msg, 'error')
   }
 }

@@ -107,13 +107,13 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const drugExposureTitle = computed(() =>
-  t('components.conditionDrugExposure.conditionDrugExposureText_1', 'a drug exposure of').value
+  t('components.drugExposure.title').value
 )
 const addAttributeLabel = computed(() =>
-  t('components.conditionDrugExposure.addAttribute', 'Add attribute...').value
+  t('components.criteria.addAttribute').value
 )
 const selectConceptSetLabel = computed(() =>
-  t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value
+  t('components.conceptAddBox.selectConceptSet').value
 )
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
@@ -171,7 +171,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(drugExposureData.value, 'GenderCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -260,7 +260,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(drugExposureData.value, 'DrugTypeCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -362,7 +362,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(drugExposureData.value, 'RouteConceptCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -416,7 +416,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(drugExposureData.value, 'DoseUnitCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -470,7 +470,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(drugExposureData.value, 'ProviderSpecialtyCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -490,7 +490,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       drugSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
-      t('components.eventCard.selectSourceConcept', 'Select Source Concept').value,
+      t('components.eventCard.selectSourceConcept').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),

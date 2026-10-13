@@ -33,7 +33,7 @@
         :data-testid="testid ? `${testid}-back` : undefined"
         @click="$emit('back')"
       >
-        {{ backLabel ?? t('common.back', 'Back').value }}
+        {{ backLabel ?? t('common.back').value }}
       </AtlasButton>
       <slot name="actions" />
     </template>

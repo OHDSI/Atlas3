@@ -168,12 +168,12 @@
     },
     "cohortExpressionEditor": {
       "addTrimmingOptions": "트리밍 옵션 추가",
-      "cohortErasText_1": "Era collapse gap 기간을 설정합니다:",
-      "cohortErasText_2": " ",
-      "cohortErasText_3": " ",
       "days": "일",
       "inclusionCriteria": "포함 기준",
-      "noCensoring": "센서링(Censoring) 없음"
+      "noCensoring": "센서링(Censoring) 없음",
+      "eraCollapseGap": "Era collapse gap 기간을 설정합니다:",
+      "leftCensorStartDates": " ",
+      "rightCensorEndDates": " "
     },
     "conceptSet": {
       "addConcepts": "컨셉 추가"
@@ -185,22 +185,14 @@
       "newConceptSet": "새 컨셉 세트",
       "selectConceptSet": "컨셉 세트 선택하기"
     },
-    "conditionDrugExposure": {
-      "addAttribute": "속성 추가",
-      "conditionDrugExposureText_1": "약물 노출 (Drug exposure)"
-    },
     "conditionEra": {
-      "addAttribute": "속성 추가",
-      "criteriaText_1": "진단 기간 (condition era)"
+      "title": "진단 기간 (condition era)"
     },
     "conditionOccurrence": {
-      "addAttribute": "속성 추가",
-      "conditionOccurrenceText_1": "진단 발생(Condition occurrence)"
+      "title": "진단 발생(Condition occurrence)"
     },
     "criteriaGroup": {
       "addCriteria": "그룹에 기준 추가...",
-      "criteriaGroupText_1": "동일한 방문 발생 (Visit occurrence)으로 제한",
-      "criteriaGroupText_2": "관찰기록 기간을 벗어나는 이벤트도 허용함",
       "clickToChangeMatchType": "클릭하여 일치 유형 변경",
       "noEventsInGroup": "그룹에 이벤트가 없습니다. 이벤트를 추가하여 기준 로직을 구성하세요."
     },
@@ -223,8 +215,7 @@
       "username": "사용자 이름"
     },
     "windowedCriteria": {
-      "windowedCriteriaText_5": "동일한 방문 발생 (Visit occurrence)으로 제한",
-      "windowedCriteriaText_6": "관찰기록 기간을 무시함"
+      "ignoreObservationPeriod": "관찰기록 기간을 무시함"
     },
     "generation": {
       "generate": "생성",
@@ -703,6 +694,47 @@
     },
     "navBar": {
       "mainNavigation": "기본"
+    },
+    "drugExposure": {
+      "title": "약물 노출 (Drug exposure)"
+    },
+    "correlatedCriteria": {
+      "restrictToSameVisit": "동일한 방문 발생 (Visit occurrence)으로 제한",
+      "allowEventsOutsideObservation": "관찰기록 기간을 벗어나는 이벤트도 허용함"
+    },
+    "deviceExposure": {
+      "title": "디바이스 노출 (Device exposure)"
+    },
+    "doseEra": {
+      "title": "도즈 기간 (Dose Era)"
+    },
+    "drugEra": {
+      "title": "약물 기간 (Drug Era)"
+    },
+    "measurement": {
+      "title": "검사(Measurement)"
+    },
+    "procedureOccurrence": {
+      "title": "수술 및 처치 발생(procedure occurrence)"
+    },
+    "observation": {
+      "title": "관찰기록(Observation)"
+    },
+    "visitDetail": {
+      "title": "a visit detail of"
+    },
+    "specimen": {
+      "title": "검체(Specimen)"
+    },
+    "visitOccurrence": {
+      "title": "방문 발생 (Visit occurrence)"
+    },
+    "observationPeriod": {
+      "title": "관찰기록 기간"
+    },
+    "criteria": {
+      "addAttribute": "속성 추가",
+      "selectConceptSet": "컨셉 세트 선택하기"
     }
   },
   "facets": {

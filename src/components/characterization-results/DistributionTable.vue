@@ -25,7 +25,7 @@
         v-if="expanded"
         class="distribution-table__title"
       >
-        {{ tv('characterizations.results.table.distribution', 'Distribution') }}
+        {{ tv('characterizations.results.table.distribution') }}
         <span class="distribution-table__count">({{ rows.length }})</span>
       </h3>
     </div>
@@ -143,11 +143,11 @@ function formatStatistic(
 
 const statistics = computed<Statistic[]>(() => [
   { field: 'avg', label: 'Avg (SD)', format: formatAvgSd },
-  { field: 'min', label: tv('characterizations.results.table.min', 'Min'), format: (row, key, cohortId) => formatStatistic(row.min, key, cohortId) },
-  { field: 'p25', label: tv('columns.p25', 'P25'), format: (row, key, cohortId) => formatStatistic(row.p25, key, cohortId) },
-  { field: 'median', label: tv('columns.median', 'Median'), format: (row, key, cohortId) => formatStatistic(row.median, key, cohortId) },
-  { field: 'p75', label: tv('columns.p75', 'P75'), format: (row, key, cohortId) => formatStatistic(row.p75, key, cohortId) },
-  { field: 'max', label: tv('columns.max', 'Max'), format: (row, key, cohortId) => formatStatistic(row.max, key, cohortId) },
+  { field: 'min', label: tv('characterizations.results.table.min'), format: (row, key, cohortId) => formatStatistic(row.min, key, cohortId) },
+  { field: 'p25', label: tv('columns.p25'), format: (row, key, cohortId) => formatStatistic(row.p25, key, cohortId) },
+  { field: 'median', label: tv('columns.median'), format: (row, key, cohortId) => formatStatistic(row.median, key, cohortId) },
+  { field: 'p75', label: tv('columns.p75'), format: (row, key, cohortId) => formatStatistic(row.p75, key, cohortId) },
+  { field: 'max', label: tv('columns.max'), format: (row, key, cohortId) => formatStatistic(row.max, key, cohortId) },
 ])
 
 const partitions = computed<Partition[]>(() => {
@@ -156,7 +156,7 @@ const partitions = computed<Partition[]>(() => {
     for (const values of [row.avg, row.stdDev, row.min, row.p25, row.median, row.p75, row.max]) {
       for (const key of Object.keys(values)) {
         names.set(key, isOverall(key)
-          ? tv('components.characterizationTable1.overall', 'Overall')
+          ? tv('components.characterizationTable1.overall')
           : (row.strataNames[key] ?? key))
       }
     }
@@ -188,8 +188,8 @@ const tables = computed(() => partitions.value.map(partition => {
     children: statisticCells(partition.key, cohort.id),
   }))
   const headers: ResultsHeader[] = [
-    { key: 'covariateName', title: tv('columns.covariate', 'Covariate'), sortable: false },
-    { key: 'conceptId', title: tv('columns.conceptId', 'Concept ID'), sortable: false },
+    { key: 'covariateName', title: tv('columns.covariate'), sortable: false },
+    { key: 'conceptId', title: tv('columns.conceptId'), sortable: false },
     ...groups,
   ]
   return { ...partition, headers, cells: groups.flatMap(group => group.children) }

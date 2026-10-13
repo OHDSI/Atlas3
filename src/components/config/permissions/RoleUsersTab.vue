@@ -5,7 +5,7 @@
       <div class="role-users-tab__header">
         <AtlasTextField
           v-model="searchQuery"
-          :placeholder="tv('components.config.permissions.searchUsers', 'Search users by login or email...')"
+          :placeholder="tv('components.config.permissions.searchUsers')"
           prepend-icon="mdi-magnify"
           variant="outlined"
           hide-details
@@ -23,10 +23,10 @@
           >
             {{
               changeCount !== 1
-                ? t('components.config.permissions.changesCount', '{count} changes', {
+                ? t('components.config.permissions.changesCount', {
                   count: changeCount,
                 }).value
-                : t('components.config.permissions.changeCount', '{count} change', {
+                : t('components.config.permissions.changeCount', {
                   count: changeCount,
                 }).value
             }}
@@ -37,7 +37,7 @@
             :loading="isSaving"
             @click="handleSave"
           >
-            {{ t('components.config.permissions.saveChanges', 'Save Changes').value }}
+            {{ t('components.config.permissions.saveChanges').value }}
           </AtlasButton>
         </div>
       </div>
@@ -53,7 +53,7 @@
           size="64"
         />
         <p class="text-body-1 mt-4">
-          {{ t('components.config.permissions.loadingUsers', 'Loading users...').value }}
+          {{ t('components.config.permissions.loadingUsers').value }}
         </p>
       </div>
 
@@ -80,16 +80,12 @@
           </AtlasIcon>
           <span class="text-body-2">
             <strong>{{ selectedUserIds.size }}</strong>
-            {{ t('components.config.permissions.ofWord', 'of').value }}
+            {{ t('components.config.permissions.ofWord').value }}
             <strong>{{ filteredUsers.length }}</strong>
-            {{ t('components.config.permissions.usersAssigned', 'users assigned').value }}
+            {{ t('components.config.permissions.usersAssigned').value }}
             <span v-if="debouncedSearchQuery">
               {{
-                t(
-                  'components.config.permissions.filteredFromTotal',
-                  '(filtered from {total} total)',
-                  { total: users.length }
-                ).value
+                t('components.config.permissions.filteredFromTotal', { total: users.length }).value
               }}
             </span>
           </span>
@@ -225,9 +221,9 @@ const originalUserIds = ref<Set<number>>(new Set())
 // Table headers
 const headers = [
   { title: '', key: 'selected', sortable: false, width: '50px' },
-  { title: tv('columns.login', 'Login'), key: 'login', sortable: true },
-  { title: tv('columns.name', 'Name'), key: 'name', sortable: true },
-  { title: tv('components.config.permissions.emailColumn', 'Email'), key: 'email', sortable: true },
+  { title: tv('columns.login'), key: 'login', sortable: true },
+  { title: tv('columns.name'), key: 'name', sortable: true },
+  { title: tv('components.config.permissions.emailColumn'), key: 'email', sortable: true },
 ]
 
 /**
@@ -368,17 +364,17 @@ async function handleSave() {
 
     successMessage.value =
       changeCount.value !== 1
-        ? tv('components.config.permissions.userAssignmentsUpdated', 'Successfully updated {count} user assignments', {
+        ? tv('components.config.permissions.userAssignmentsUpdated', {
             count: changeCount.value,
           })
-        : tv('components.config.permissions.userAssignmentUpdated', 'Successfully updated {count} user assignment', {
+        : tv('components.config.permissions.userAssignmentUpdated', {
             count: changeCount.value,
           })
   } catch (error) {
     errorMessage.value =
       error instanceof Error
         ? error.message
-        : tv('components.config.permissions.saveUsersError', 'Failed to save user assignments')
+        : tv('components.config.permissions.saveUsersError')
   } finally {
     isSaving.value = false
   }

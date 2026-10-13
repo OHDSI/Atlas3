@@ -123,7 +123,7 @@ const webapiStore = useWebAPIStore()
 const selectedSourceKey = computed(
   () => webapiStore.getValidVocabularySource() || getSourceKey() || ''
 )
-const viewCountsForLabel = t('search.viewCountMessage', 'View record count for:')
+const viewCountsForLabel = t('search.viewCountMessage')
 
 // Only sources that can report counts; a vocabulary-only source would blank the columns.
 const recordCountSources = computed(() => webapiStore.resultsSources ?? [])
@@ -168,7 +168,7 @@ const isSearchValid = computed(() => {
 const validationError = computed(() => {
   const trimmed = searchInput.value.trim()
   if (trimmed.length > 0 && trimmed.length < 3) {
-    return 'Please enter at least 3 characters'
+    return t('search.minLengthHint', { min: 3 }).value
   }
   return undefined
 })

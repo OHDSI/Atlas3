@@ -3,8 +3,8 @@
     hero
     compact
     eyebrow="ACCOUNT"
-    :title="t('apiKeys.list.title', 'API Keys').value"
-    :subtitle="t('apiKeys.list.subtitle', 'Manage personal API keys for programmatic access to WebAPI.').value"
+    :title="t('apiKeys.list.title').value"
+    :subtitle="t('apiKeys.list.subtitle').value"
   >
     <template #actions>
       <AtlasButton
@@ -12,7 +12,7 @@
         data-testid="apikeys-create"
         @click="showCreateDialog = true"
       >
-        {{ t('apiKeys.list.newButton', 'New Key') }}
+        {{ t('apiKeys.list.newButton') }}
       </AtlasButton>
     </template>
 
@@ -29,7 +29,7 @@
           size="sm"
           @click="loadKeys"
         >
-          {{ t('common.retry', 'Retry') }}
+          {{ t('common.retry') }}
         </AtlasButton>
       </div>
     </AtlasAlert>
@@ -38,7 +38,7 @@
       :headers="headers"
       :items="keys"
       :loading="loading"
-      :no-data-text="t('apiKeys.list.empty', 'You haven\'t created any API keys yet.').value"
+      :no-data-text="t('apiKeys.list.empty').value"
       data-testid="apikeys-table"
     >
       <template #item.expiresAt="{ item }">
@@ -65,7 +65,7 @@
           size="sm"
           variant="text"
           tone="neutral"
-          :aria-label="t('apiKeys.list.revoke', 'Revoke').value"
+          :aria-label="t('apiKeys.list.revoke').value"
           :data-testid="`apikeys-revoke-${(item as ApiKeyInfo).keyIdentifier}`"
           @click="confirmRevoke(item as ApiKeyInfo)"
         />
@@ -74,7 +74,7 @@
           size="sm"
           variant="text"
           tone="danger"
-          :aria-label="t('apiKeys.list.delete', 'Delete').value"
+          :aria-label="t('apiKeys.list.delete').value"
           :data-testid="`apikeys-delete-${(item as ApiKeyInfo).keyIdentifier}`"
           @click="confirmDelete(item as ApiKeyInfo)"
         />
@@ -90,7 +90,7 @@
   <AtlasDialog
     v-model="showRevokeDialog"
     eyebrow="CONFIRM"
-    :title="t('apiKeys.list.revokeConfirmTitle', 'Revoke API Key').value"
+    :title="t('apiKeys.list.revokeConfirmTitle').value"
     max-width="480"
     @close="showRevokeDialog = false"
   >
@@ -101,7 +101,7 @@
         data-testid="apikeys-revoke-cancel"
         @click="showRevokeDialog = false"
       >
-        {{ t('common.cancel', 'Cancel') }}
+        {{ t('common.cancel') }}
       </AtlasButton>
       <AtlasButton
         variant="danger"
@@ -109,7 +109,7 @@
         data-testid="apikeys-revoke-confirm"
         @click="performRevoke"
       >
-        {{ t('apiKeys.list.revoke', 'Revoke') }}
+        {{ t('apiKeys.list.revoke') }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -117,7 +117,7 @@
   <AtlasDialog
     v-model="showDeleteDialog"
     eyebrow="CONFIRM"
-    :title="t('apiKeys.list.deleteConfirmTitle', 'Delete API Key').value"
+    :title="t('apiKeys.list.deleteConfirmTitle').value"
     max-width="480"
     @close="showDeleteDialog = false"
   >
@@ -128,7 +128,7 @@
         data-testid="apikeys-delete-cancel"
         @click="showDeleteDialog = false"
       >
-        {{ t('common.cancel', 'Cancel') }}
+        {{ t('common.cancel') }}
       </AtlasButton>
       <AtlasButton
         variant="danger"
@@ -136,7 +136,7 @@
         data-testid="apikeys-delete-confirm"
         @click="performDelete"
       >
-        {{ t('apiKeys.list.delete', 'Delete') }}
+        {{ t('apiKeys.list.delete') }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -174,14 +174,14 @@ const selectedKey = ref<ApiKeyInfo | null>(null)
 const actioning = ref(false)
 
 const headers = computed(() => [
-  { title: t('apiKeys.list.columns.name', 'Name').value, key: 'name' },
-  { title: t('apiKeys.list.columns.description', 'Description').value, key: 'description' },
-  { title: t('apiKeys.list.columns.identifier', 'Key Identifier').value, key: 'keyIdentifier' },
-  { title: t('apiKeys.list.columns.created', 'Created').value, key: 'createdAt' },
-  { title: t('apiKeys.list.columns.expires', 'Expires').value, key: 'expiresAt' },
-  { title: t('apiKeys.list.columns.lastUsed', 'Last Used').value, key: 'lastUsedAt' },
-  { title: t('apiKeys.list.columns.status', 'Status').value, key: 'status', sortable: false },
-  { title: t('apiKeys.list.columns.actions', 'Actions').value, key: 'actions', sortable: false },
+  { title: t('apiKeys.list.columns.name').value, key: 'name' },
+  { title: t('apiKeys.list.columns.description').value, key: 'description' },
+  { title: t('apiKeys.list.columns.identifier').value, key: 'keyIdentifier' },
+  { title: t('apiKeys.list.columns.created').value, key: 'createdAt' },
+  { title: t('apiKeys.list.columns.expires').value, key: 'expiresAt' },
+  { title: t('apiKeys.list.columns.lastUsed').value, key: 'lastUsedAt' },
+  { title: t('apiKeys.list.columns.status').value, key: 'status', sortable: false },
+  { title: t('apiKeys.list.columns.actions').value, key: 'actions', sortable: false },
 ])
 
 function formatDate(value: string | number | null | undefined): string {
@@ -191,12 +191,12 @@ function formatDate(value: string | number | null | undefined): string {
 
 function formatExpires(value: string | number | null | undefined): string {
   const date = apiKeyInstantToDate(value)
-  return date ? formatDateTime(date) : t('apiKeys.list.never', 'Never').value
+  return date ? formatDateTime(date) : t('apiKeys.list.never').value
 }
 
 function formatLastUsed(value: string | number | null | undefined): string {
   const date = apiKeyInstantToDate(value)
-  return date ? formatDateTime(date) : t('apiKeys.list.neverUsed', 'Never used').value
+  return date ? formatDateTime(date) : t('apiKeys.list.neverUsed').value
 }
 
 function isExpired(key: ApiKeyInfo): boolean {
@@ -205,9 +205,9 @@ function isExpired(key: ApiKeyInfo): boolean {
 }
 
 function statusLabel(key: ApiKeyInfo): string {
-  if (key.disabled) return t('apiKeys.list.status.disabled', 'Disabled').value
-  if (isExpired(key)) return t('apiKeys.list.status.expired', 'Expired').value
-  return t('apiKeys.list.status.active', 'Active').value
+  if (key.disabled) return t('apiKeys.list.status.disabled').value
+  if (isExpired(key)) return t('apiKeys.list.status.expired').value
+  return t('apiKeys.list.status.active').value
 }
 
 function statusTone(key: ApiKeyInfo): AtlasChipTone {
@@ -263,10 +263,10 @@ async function performRevoke() {
   actioning.value = false
   showRevokeDialog.value = false
   if (result.success) {
-    notify.success(t('apiKeys.list.revoked', 'API key revoked').value)
+    notify.success(t('apiKeys.list.revoked').value)
     await loadKeys()
   } else {
-    notify.danger(t('apiKeys.list.revokeError', 'Failed to revoke API key').value)
+    notify.danger(t('apiKeys.list.revokeError').value)
   }
 }
 
@@ -277,10 +277,10 @@ async function performDelete() {
   actioning.value = false
   showDeleteDialog.value = false
   if (result.success) {
-    notify.success(t('apiKeys.list.deleted', 'API key deleted').value)
+    notify.success(t('apiKeys.list.deleted').value)
     await loadKeys()
   } else {
-    notify.danger(t('apiKeys.list.deleteError', 'Failed to delete API key').value)
+    notify.danger(t('apiKeys.list.deleteError').value)
   }
 }
 

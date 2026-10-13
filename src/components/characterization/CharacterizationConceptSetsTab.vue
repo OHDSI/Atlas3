@@ -9,14 +9,11 @@
 <template>
   <div class="char-conceptsets-tab">
     <h2 class="char-conceptsets-tab__title">
-      {{ t('cc.fa.tabs.conceptSets', 'Concept Sets') }}
+      {{ t('cc.fa.tabs.conceptSets') }}
     </h2>
     <p class="char-conceptsets-tab__placeholder">
       {{
-        t(
-          'characterizations.editor.conceptSetsTab.placeholder',
-          'Stratum-derived concept sets will appear here once the criteria builder lands.'
-        )
+        t('characterizations.editor.conceptSetsTab.placeholder')
       }}
     </p>
 
@@ -25,7 +22,7 @@
       class="char-conceptsets-tab__empty"
       data-testid="char-conceptsets-empty"
     >
-      {{ t('common.noData', 'No concept sets.') }}
+      {{ t('common.noData') }}
     </div>
     <AtlasList
       v-else

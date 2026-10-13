@@ -6,22 +6,22 @@
     data-testid="ir-comparison-chart"
   >
     <div class="ir-overview__title">
-      {{ t('components.incidenceRate.outcomeOverview', 'Outcome Overview').value }}
+      {{ t('components.incidenceRate.outcomeOverview').value }}
     </div>
     <div class="ir-overview__note">
-      {{ t('components.incidenceRate.outcomeOverviewNote', 'Click a row to inspect. Each outcome excludes persons who already had the event at index.').value }}
+      {{ t('components.incidenceRate.outcomeOverviewNote').value }}
     </div>
     <table class="ir-overview__table">
       <thead>
         <tr>
           <th class="ir-overview__th">
-            {{ t('columns.outcome', 'Outcome').value }}
+            {{ t('columns.outcome').value }}
           </th>
           <th class="ir-overview__th ir-overview__th--num">
-            {{ t('components.incidenceRate.personsAtRisk', 'Persons at risk').value }}
+            {{ t('components.incidenceRate.personsAtRisk').value }}
           </th>
           <th class="ir-overview__th ir-overview__th--num">
-            {{ t('ir.results.cases', 'Cases').value }}
+            {{ t('ir.results.cases').value }}
           </th>
         </tr>
       </thead>

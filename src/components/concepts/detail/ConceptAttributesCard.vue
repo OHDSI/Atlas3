@@ -14,21 +14,21 @@ defineProps<{ concept: Concept }>()
     data-testid="concept-attributes-card"
   >
     <header class="card-title">
-      {{ t('components.conceptDetail.conceptDetailsTitle', 'Concept Details').value }}
+      {{ t('components.conceptDetail.conceptDetailsTitle').value }}
     </header>
     <div class="card-body">
       <dl class="kv">
-        <dt>{{ t('components.conceptDetail.conceptId', 'Concept ID').value }}</dt><dd class="mono">
+        <dt>{{ t('components.conceptDetail.conceptId').value }}</dt><dd class="mono">
           {{ concept.conceptId }}
         </dd>
-        <dt>{{ t('cs.manager.concept.tabs.details.conceptCode', 'Concept Code').value }}</dt><dd class="mono">
+        <dt>{{ t('cs.manager.concept.tabs.details.conceptCode').value }}</dt><dd class="mono">
           {{ concept.conceptCode }}
         </dd>
-        <dt>{{ t('columns.domain', 'Domain').value }}</dt><dd>{{ concept.domainId }}</dd>
-        <dt>{{ t('columns.vocabulary', 'Vocabulary').value }}</dt><dd>{{ concept.vocabularyId }}</dd>
-        <dt>{{ t('components.conceptDetail.conceptClass', 'Concept Class').value }}</dt><dd>{{ concept.conceptClassId }}</dd>
-        <dt>{{ t('cs.manager.concept.tabs.details.standardConcept', 'Standard Concept').value }}</dt><dd>{{ concept.standardConcept ?? '—' }}</dd>
-        <dt>{{ t('cs.manager.concept.tabs.details.invalidReason', 'Invalid Reason').value }}</dt><dd>{{ concept.invalidReason ?? '—' }}</dd>
+        <dt>{{ t('columns.domain').value }}</dt><dd>{{ concept.domainId }}</dd>
+        <dt>{{ t('columns.vocabulary').value }}</dt><dd>{{ concept.vocabularyId }}</dd>
+        <dt>{{ t('components.conceptDetail.conceptClass').value }}</dt><dd>{{ concept.conceptClassId }}</dd>
+        <dt>{{ t('cs.manager.concept.tabs.details.standardConcept').value }}</dt><dd>{{ concept.standardConcept ?? '—' }}</dd>
+        <dt>{{ t('cs.manager.concept.tabs.details.invalidReason').value }}</dt><dd>{{ concept.invalidReason ?? '—' }}</dd>
       </dl>
     </div>
   </AtlasCard>

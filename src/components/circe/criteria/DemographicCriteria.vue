@@ -81,6 +81,7 @@
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import {
   AtlasButton,
   AtlasDivider,
@@ -107,9 +108,10 @@ const emit = defineEmits<{
   'clear-concept-set': []
 }>()
 
-const demographicTitle = computed(() => 'Demographic Criteria')
-const addAttributeLabel = computed(() => 'Add attribute...')
-const selectConceptSetLabel = computed(() => 'Select Concept Set')
+const { t } = useI18n()
+const demographicTitle = computed(() => t('components.demographicCriteria.name').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
+const selectConceptSetLabel = computed(() => t('components.criteria.selectConceptSet').value)
 const compact = computed(() => props.compact ?? false)
 
 const demographicCriteriaData = computed<DemographicCriteria>(() => props.criteria)

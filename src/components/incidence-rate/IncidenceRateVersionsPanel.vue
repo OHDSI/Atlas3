@@ -38,7 +38,7 @@ const versionsConfig = computed<VersionsConfig | null>(() => {
           : '',
     comment: null,
     archived: false,
-    displayVersion: tv('versions.current', 'Current'),
+    displayVersion: tv('versions.current'),
     isCurrent: true,
     isPreviewing: false,
     formattedDate: '',

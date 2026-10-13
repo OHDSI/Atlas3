@@ -12,7 +12,7 @@
             <span class="landing__accent-rule" />
           </div>
           <h1 class="landing__title text-display">
-            {{ t('home.title', 'Patient-level analytics, unified.') }}
+            {{ t('home.heroTitle') }}
           </h1>
           <div class="landing__description">
             <!-- eslint-disable-next-line vue/no-v-html -- trusted i18n content -->
@@ -23,14 +23,14 @@
               size="lg"
               @click="handleNewCohort"
             >
-              {{ t('home.gettingStarted.newCohort.button', 'Define a new cohort') }}
+              {{ t('home.gettingStarted.newCohort.button') }}
             </AtlasButton>
             <AtlasButton
               variant="secondary"
               size="lg"
               @click="handleSearchConcepts"
             >
-              {{ t('home.gettingStarted.vocabulary.button', 'Search the vocabulary') }}
+              {{ t('home.gettingStarted.vocabulary.button') }}
             </AtlasButton>
           </div>
         </div>
@@ -82,14 +82,11 @@
         class="landing__feature-icon"
       />
       <div class="landing__feature-title">
-        {{ t('home.documentation.title', 'Documentation') }}
+        {{ t('home.documentation.title') }}
       </div>
       <div class="landing__feature-description">
         {{
-          t(
-            'home.features.docs',
-            'Browse the ATLAS v3.0 user guide without leaving the app.'
-          )
+          t('home.features.docs')
         }}
       </div>
     </AtlasCard>
@@ -115,37 +112,28 @@ interface FeatureTile {
 const router = useRouter()
 const { t, tv } = useI18n()
 
-const descriptionHtml = tv(
-  'home.description',
-  "ATLAS is an open source application developed as a part of <a href='http://www.ohdsi.org' target='_new'>OHDSI</a> intended to provide a unified interface to patient level data and analytics."
-)
+const descriptionHtml = tv('home.description')
 
 const features: FeatureTile[] = [
   {
     id: 'characterization',
-    title: t('navigation.characterizations', 'Characterization').value,
-    description: t(
-      'home.features.characterization',
-      "Describe a population's baseline features and outcomes."
-    ).value,
+    title: t('navigation.characterizations').value,
+    description: t('home.features.characterization').value,
     icon: 'mdi-microscope',
     route: '/characterizations',
   },
   {
     id: 'pathway',
-    title: t('navigation.pathways', 'Treatment pathways').value,
-    description: t('home.features.pathway', 'Visualize sequences of interventions over time.')
+    title: t('navigation.pathways').value,
+    description: t('home.features.pathway')
       .value,
     icon: 'mdi-vector-polyline',
     route: '/pathways',
   },
   {
     id: 'incidence-rate',
-    title: t('navigation.incidenceRates', 'Incidence rates').value,
-    description: t(
-      'home.features.incidenceRate',
-      'Estimate event rates over time across populations.'
-    ).value,
+    title: t('navigation.incidenceRates').value,
+    description: t('home.features.incidenceRate').value,
     icon: 'mdi-chart-line',
     route: '/incidence-rates',
   },

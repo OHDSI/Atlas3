@@ -1,0 +1,14 @@
+{
+  "components.episode.criteriaText_1": "components.episode.title",
+  "components.conditionEra.criteriaText_1": "components.conditionEra.title",
+  "components.conditionOccurrence.conditionOccurrenceText_1": "components.conditionOccurrence.title",
+  "components.conditionDrugExposure.conditionDrugExposureText_1": "components.drugExposure.title",
+  "components.conditionDrugExposure.addAttribute": "components.drugExposure.addAttribute",
+  "components.cohortExpressionEditor.cohortErasText_1": "components.cohortExpressionEditor.eraCollapseGap",
+  "components.cohortExpressionEditor.cohortErasText_2": "components.cohortExpressionEditor.leftCensorStartDates",
+  "components.cohortExpressionEditor.cohortErasText_3": "components.cohortExpressionEditor.rightCensorEndDates",
+  "components.criteriaGroup.criteriaGroupText_1": "components.correlatedCriteria.restrictToSameVisit",
+  "components.criteriaGroup.criteriaGroupText_2": "components.correlatedCriteria.allowEventsOutsideObservation",
+  "components.windowedCriteria.windowedCriteriaText_5": "components.correlatedCriteria.restrictToSameVisit",
+  "components.windowedCriteria.windowedCriteriaText_6": "components.windowedCriteria.ignoreObservationPeriod"
+}

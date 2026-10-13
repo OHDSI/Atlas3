@@ -196,12 +196,12 @@
     "cohortExpressionEditor": {
       "addTrimmingOptions": "トリミングオプションを追加...",
       "entryEventsAnyHint": "登録イベントはいずれか（または）で照合されます",
-      "cohortErasText_1": "エラ統合のギャップサイズを指定:",
-      "cohortErasText_2": "コホート開始日を左側で打ち切る対象:",
-      "cohortErasText_3": "コホート終了日を右側で打ち切る対象:",
       "days": "日",
       "inclusionCriteria": "包含条件",
-      "noCensoring": "打ち切りなし"
+      "noCensoring": "打ち切りなし",
+      "eraCollapseGap": "エラ統合のギャップサイズを指定:",
+      "leftCensorStartDates": "コホート開始日を左側で打ち切る対象:",
+      "rightCensorEndDates": "コホート終了日を右側で打ち切る対象:"
     },
     "conceptSet": {
       "addConcepts": "コンセプトを追加"
@@ -213,23 +213,15 @@
       "newConceptSet": "新しいコンセプトセット",
       "selectConceptSet": "コンセプトセットを選択..."
     },
-    "conditionDrugExposure": {
-      "addAttribute": "属性を追加...",
-      "conditionDrugExposureText_1": "次の薬剤曝露"
-    },
     "conditionEra": {
-      "addAttribute": "属性を追加...",
-      "criteriaText_1": "次の状態エラ"
+      "title": "次の状態エラ"
     },
     "conditionOccurrence": {
-      "addAttribute": "属性を追加...",
-      "conditionOccurrenceText_1": "次の状態（Condition）の発生："
+      "title": "次の状態（Condition）の発生："
     },
     "criteriaGroup": {
       "addCriteria": "グループに条件を追加...",
       "addNestedGroup": "ネストグループを追加",
-      "criteriaGroupText_1": "同一の受診（Visit）の発生に限定する",
-      "criteriaGroupText_2": "観察期間外のイベントを許可する",
       "nestedCriteria": {
         "selectLogicType": "ロジックタイプを選択",
         "depthWarning": "ネスト深度は {depth}/10 です"
@@ -256,8 +248,7 @@
       "username": "ユーザー名"
     },
     "windowedCriteria": {
-      "windowedCriteriaText_5": "同じ受診発生に限定",
-      "windowedCriteriaText_6": "観察期間を無視"
+      "ignoreObservationPeriod": "観察期間を無視"
     },
     "generation": {
       "generate": "生成",
@@ -749,6 +740,47 @@
     },
     "navBar": {
       "mainNavigation": "メイン"
+    },
+    "drugExposure": {
+      "title": "次の薬剤曝露"
+    },
+    "correlatedCriteria": {
+      "restrictToSameVisit": "同一の受診（Visit）の発生に限定する",
+      "allowEventsOutsideObservation": "観察期間外のイベントを許可する"
+    },
+    "deviceExposure": {
+      "title": "次のデバイス曝露"
+    },
+    "doseEra": {
+      "title": "次の用量エラ"
+    },
+    "drugEra": {
+      "title": "次の薬剤エラ"
+    },
+    "measurement": {
+      "title": "次の測定"
+    },
+    "procedureOccurrence": {
+      "title": "次の処置（Procedure）の発生："
+    },
+    "observation": {
+      "title": "次の観察"
+    },
+    "visitDetail": {
+      "title": "次の受診詳細（Visit Detail）："
+    },
+    "specimen": {
+      "title": "次の検体（Specimen）："
+    },
+    "visitOccurrence": {
+      "title": "次の受診（Visit）の発生："
+    },
+    "observationPeriod": {
+      "title": "観察期間"
+    },
+    "criteria": {
+      "addAttribute": "属性を追加...",
+      "selectConceptSet": "コンセプトセットを選択"
     }
   },
   "characterizations": {

@@ -9,7 +9,7 @@
          stable across builders. Disabled (dim, no click) when there
          are no concept sets to navigate to. -->
     <AtlasTooltip
-      :text="t('cohortDefinitions.cohortDefinitionManager.tabs.conceptSets', 'Concept Sets').value"
+      :text="t('cohortDefinitions.cohortDefinitionManager.tabs.conceptSets').value"
       location="bottom"
     >
       <template #activator="{ props: tooltipProps }">
@@ -35,7 +35,7 @@
     <!-- Versions Icon — always shown; disabled when entity isn't
          saved yet or the user is previewing a historical version. -->
     <AtlasTooltip
-      :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
+      :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions').value"
       location="bottom"
     >
       <template #activator="{ props: tooltipProps }">
@@ -60,7 +60,7 @@
 
     <!-- Tags Icon — always shown; disabled in version-preview mode. -->
     <AtlasTooltip
-      :text="t('configuration.buttons.tagManagement', 'Manage Tags').value"
+      :text="t('configuration.buttons.tagManagement').value"
       location="bottom"
     >
       <template #activator="{ props: tooltipProps }">
@@ -83,12 +83,12 @@
     </AtlasTooltip>
 
     <AtlasTooltip
-      :text="t('components.access.configureAccess', 'Configure access').value"
+      :text="t('components.access.configureAccess').value"
       location="bottom"
     >
       <template #activator="{ props }">
         <AtlasIconButton
-          v-bind="{ ...props, ariaLabel: t('components.access.configureAccess', 'Configure access').value }"
+          v-bind="{ ...props, ariaLabel: t('components.access.configureAccess').value }"
           icon="mdi-lock"
           variant="text"
           size="sm"
@@ -103,8 +103,8 @@
     <AtlasTooltip
       :text="
         isValidating
-          ? t('common.loadingWithDots', 'Loading...').value
-          : t('cc.viewEdit.tabs.messages', 'View validation messages').value
+          ? t('common.loadingWithDots').value
+          : t('cc.viewEdit.tabs.messages').value
       "
       location="bottom"
     >

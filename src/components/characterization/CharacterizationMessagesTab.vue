@@ -25,7 +25,7 @@
       >
         mdi-check-circle
       </AtlasIcon>
-      {{ t('common.noData', 'No issues. Design is valid.') }}
+      {{ t('cc.viewEdit.messages.noIssues') }}
     </div>
 
     <template v-else>
@@ -35,7 +35,7 @@
         data-testid="char-messages-group-errors"
       >
         <h3 class="char-messages-tab__group-title">
-          {{ t('characterizations.editor.validation.headers.errors', 'Errors') }}
+          {{ t('characterizations.editor.validation.headers.errors') }}
           ({{ errors.length }})
         </h3>
         <AtlasList
@@ -71,7 +71,7 @@
         data-testid="char-messages-group-warnings"
       >
         <h3 class="char-messages-tab__group-title">
-          {{ t('facets.values.warning', 'Warnings') }}
+          {{ t('facets.values.warning') }}
           ({{ warnings.length }})
         </h3>
         <AtlasList
@@ -107,7 +107,7 @@
         data-testid="char-messages-group-infos"
       >
         <h3 class="char-messages-tab__group-title">
-          {{ t('facets.values.info', 'Notes') }}
+          {{ t('facets.values.info') }}
           ({{ infos.length }})
         </h3>
         <AtlasList

@@ -3,10 +3,10 @@
     <thead>
       <tr>
         <th />
-        <th>{{ t('components.pathwayPathDetails.event', 'Event').value }}</th>
-        <th>{{ t('columns.remain', 'Remain').value }}</th>
+        <th>{{ t('components.pathwayPathDetails.event').value }}</th>
+        <th>{{ t('columns.remain').value }}</th>
         <th>%</th>
-        <th>{{ t('columns.diff', 'Diff').value }}</th>
+        <th>{{ t('columns.diff').value }}</th>
         <th>%</th>
       </tr>
     </thead>

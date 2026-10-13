@@ -1,0 +1,12 @@
+{
+  "components.deviceExposure.title": "components.conditionDevice.conditionDeviceText_1",
+  "components.doseEra.title": "components.conditionDose.conditionDoseText_1",
+  "components.drugEra.title": "components.conditionDrug.conditionDrugText_1",
+  "components.measurement.title": "components.conditionMeasurement.conditionMeasurementText_1",
+  "components.procedureOccurrence.title": "components.conditionProcedureOccurrence.conditionProcedureOccurrenceText_1",
+  "components.observation.title": "components.conditionObservation.conditionObservationText_1",
+  "components.visitDetail.title": "components.conditionVisitDetail.conditionVisitDetailText_1",
+  "components.specimen.title": "components.conditionSpecimen.conditionSpecimeText_1",
+  "components.visitOccurrence.title": "components.conditionVisit.conditionSpecimeText_1",
+  "components.observationPeriod.title": "components.expressionCartoonBindings.observationPeriod"
+}

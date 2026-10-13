@@ -84,6 +84,7 @@ import { getCohorts } from '@/services/cohort-definition.service'
 import CharacterizationBuilderView from '@/views/CharacterizationBuilderView.vue'
 import { success, failure } from '@/types/api'
 import { ApiError } from '@/services/api-error'
+import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -233,7 +234,7 @@ describe('CharacterizationBuilderView', () => {
     expect(accessDialog.props('modelValue')).toBe(true)
     expect(accessDialog.props('entityType')).toBe('COHORT_CHARACTERIZATION')
     expect(accessDialog.props('entityId')).toBe(42)
-    expect(accessDialog.props('title')).toBe('Configure access')
+    expect(accessDialog.props('title')).toBe(tr('components.access.configureAccess'))
     expect(accessDialog.props('subtitle')).toBe('Diabetes Cohort Profile')
 
     await accessDialog.vm.$emit('close')
@@ -284,7 +285,7 @@ describe('CharacterizationBuilderView', () => {
     const setupState = builder.vm as any
 
     await setupState.$.setupState.handleSave()
-    expect(mounted.wrapper.findComponent({ name: 'AtlasSnackbar' }).props('text')).toBe('The name is empty.')
+    expect(mounted.wrapper.findComponent({ name: 'AtlasSnackbar' }).props('text')).toBe(tr('components.nameValidation.empty'))
   })
 
   it('covers the export early-return branch and omits list-level actions', async () => {
@@ -543,9 +544,9 @@ describe('CharacterizationBuilderView', () => {
 
     const snackbar = mounted.wrapper.findComponent({ name: 'AtlasSnackbar' })
     // 'characterizations.editor.utilities.export.exportError'
-    expect(snackbar.props('text')).toBe('Export failed.')
+    expect(snackbar.props('text')).toBe(tr('characterizations.editor.utilities.export.exportError'))
     // ...and specifically not the import-side key it used to reuse.
-    expect(snackbar.props('text')).not.toBe('Import failed.')
+    expect(snackbar.props('text')).not.toBe(tr('characterizations.editor.utilities.import.importError'))
     expect(snackbar.props('severity')).toBe('danger')
     expect(snackbar.props('modelValue')).toBe(true)
   })
@@ -584,7 +585,7 @@ describe('CharacterizationBuilderView', () => {
 
     await setupState.handleSave()
     expect(mounted.wrapper.findComponent({ name: 'AtlasSnackbar' }).props('text')).toBe(
-      'An error occurred while attempting to save a feature analysis.'
+      tr('cc.viewEdit.saveError')
     )
 
     vi.mocked(importCharacterization).mockResolvedValue(
@@ -599,7 +600,7 @@ describe('CharacterizationBuilderView', () => {
     await flushPromises()
 
     expect(mounted.wrapper.findComponent({ name: 'AtlasSnackbar' }).props('text')).toBe(
-      'Import failed.'
+      tr('characterizations.editor.utilities.import.importError')
     )
   })
 
@@ -653,7 +654,7 @@ describe('CharacterizationBuilderView', () => {
 
     expect(importCharacterization).not.toHaveBeenCalled()
     expect(mounted.wrapper.findComponent({ name: 'AtlasSnackbar' }).props('text')).toBe(
-      'Could not parse design JSON.'
+      tr('characterizations.editor.utilities.import.parseError')
     )
   })
 

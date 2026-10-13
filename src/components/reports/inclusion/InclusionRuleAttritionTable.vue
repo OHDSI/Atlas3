@@ -11,38 +11,38 @@
             #
           </th>
           <th class="attrition-table__col-name">
-            {{ t('components.feasibilityAttritionReport.inclusionRule', 'Inclusion rule').value }}
+            {{ t('components.feasibilityAttritionReport.inclusionRule').value }}
           </th>
           <th
             v-if="cumulativeRemaining"
             class="attrition-table__col-num"
             data-testid="inclusion-attrition-cumulative-header"
           >
-            <span :title="t('components.inclusionRuleReport.hintCumulativeRemaining', 'Patients remaining after applying this rule and all preceding rules in order').value">
-              {{ t('components.inclusionRuleReport.colCumulativeRemaining', 'Cumulative remaining').value }}
+            <span :title="t('components.inclusionRuleReport.hintCumulativeRemaining').value">
+              {{ t('components.inclusionRuleReport.colCumulativeRemaining').value }}
             </span>
           </th>
           <th
             v-if="cumulativeRemaining"
             class="attrition-table__col-num"
           >
-            <span :title="t('components.inclusionRuleReport.hintPercentOfInitial', 'Cumulative remaining as a percent of the initial entry-event count — same metric the funnel uses').value">
-              {{ t('components.inclusionRuleReport.colPercentOfInitial', '% of initial').value }}
+            <span :title="t('components.inclusionRuleReport.hintPercentOfInitial').value">
+              {{ t('components.inclusionRuleReport.colPercentOfInitial').value }}
             </span>
           </th>
           <th class="attrition-table__col-num">
-            <span :title="t('components.inclusionRuleReport.hintPersonsSatisfying', 'Patients who satisfy THIS rule independently, regardless of the other rules').value">
-              {{ t('components.inclusionRuleReport.colPersonsSatisfying', 'Persons satisfying').value }}
+            <span :title="t('components.inclusionRuleReport.hintPersonsSatisfying').value">
+              {{ t('components.inclusionRuleReport.colPersonsSatisfying').value }}
             </span>
           </th>
           <th class="attrition-table__col-num">
-            <span :title="t('components.inclusionRuleReport.hintPercentSatisfying', 'Percent of the entry-event population who satisfy this rule on its own (independent of order)').value">
-              {{ t('components.inclusionRuleReport.colPercentSatisfying', '% satisfying').value }}
+            <span :title="t('components.inclusionRuleReport.hintPercentSatisfying').value">
+              {{ t('components.inclusionRuleReport.colPercentSatisfying').value }}
             </span>
           </th>
           <th class="attrition-table__col-num">
-            <span :title="t('components.inclusionRuleReport.hintPercentExcluded', 'Marginal cost of this rule: percent of patients who satisfy every OTHER rule but fail this one. High = removing this rule would recover that share.').value">
-              {{ t('components.inclusionRuleReport.colPercentExcluded', '% excluded').value }}
+            <span :title="t('components.inclusionRuleReport.hintPercentExcluded').value">
+              {{ t('components.inclusionRuleReport.colPercentExcluded').value }}
             </span>
           </th>
           <th class="attrition-table__col-bar" />
@@ -58,7 +58,7 @@
             0
           </td>
           <td class="attrition-table__col-name">
-            {{ initialLabel || t('components.inclusionRuleReport.initialPopulation', 'Initial population').value }}
+            {{ initialLabel || t('components.inclusionRuleReport.initialPopulation').value }}
           </td>
           <td
             class="attrition-table__col-num"
@@ -141,10 +141,7 @@
     data-testid="inclusion-attrition-empty"
   >
     {{
-      t(
-        'components.expressionCartoonBindings.noInclusionRules',
-        'This cohort has no inclusion rules to report.'
-      ).value
+      t('components.expressionCartoonBindings.noInclusionRules').value
     }}
   </div>
 </template>

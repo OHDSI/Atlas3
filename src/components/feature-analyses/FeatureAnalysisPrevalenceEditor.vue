@@ -15,7 +15,7 @@
       data-testid="fa-prevalence-add-criteria"
       @click="addCriteria"
     >
-      {{ t('featureAnalyses.editor.prevalence.addCriteria', 'Add Criteria feature') }}
+      {{ t('featureAnalyses.editor.prevalence.addCriteria') }}
     </AtlasButton>
 
     <AtlasAlert
@@ -24,7 +24,7 @@
       density="compact"
       class="fa-prevalence-editor__empty"
     >
-      {{ t('featureAnalyses.editor.prevalence.empty', 'No criteria features yet.') }}
+      {{ t('featureAnalyses.editor.prevalence.empty') }}
     </AtlasAlert>
 
     <div
@@ -36,7 +36,7 @@
       <div class="fa-prevalence-editor__row-header">
         <AtlasTextField
           v-model="row.name"
-          :label="t('cc.fa.criteriaName', 'Criteria name').value"
+          :label="t('cc.fa.criteriaName').value"
           variant="outlined"
           density="compact"
           hide-details
@@ -47,7 +47,7 @@
           icon="mdi-delete-outline"
           variant="text"
           size="sm"
-          :aria-label="t('common.delete', 'Delete').value"
+          :aria-label="t('common.delete').value"
           :data-testid="`fa-prevalence-row-${index}-delete`"
           @click="removeCriteria(index)"
         />

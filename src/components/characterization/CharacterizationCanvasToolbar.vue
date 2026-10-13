@@ -14,7 +14,7 @@
         size="sm"
         data-testid="char-toolbar-mode-perAnalysis"
       >
-        {{ t('cc.viewEdit.workbench.modePerAnalysis', 'Per-analysis').value }}
+        {{ t('cc.viewEdit.workbench.modePerAnalysis').value }}
       </AtlasButton>
       <AtlasButton
         toggle
@@ -22,7 +22,7 @@
         size="sm"
         data-testid="char-toolbar-mode-table1"
       >
-        {{ t('cc.viewEdit.workbench.modeTable1', 'Baseline').value }}
+        {{ t('cc.viewEdit.workbench.modeTable1').value }}
       </AtlasButton>
       <AtlasButton
         toggle
@@ -30,7 +30,7 @@
         size="sm"
         data-testid="char-toolbar-mode-dashboard"
       >
-        {{ t('cc.viewEdit.workbench.modeDashboard', 'Overview').value }}
+        {{ t('cc.viewEdit.workbench.modeDashboard').value }}
       </AtlasButton>
     </v-btn-toggle>
 
@@ -46,13 +46,13 @@
         v-if="activeRun.personCount"
         class="char-toolbar__muted"
       >
-        · {{ activeRun.personCount.toLocaleString() }} {{ tv('columns.results', 'rows').toLowerCase() }}
+        · {{ activeRun.personCount.toLocaleString() }} {{ tv('columns.results').toLowerCase() }}
       </span>
     </AtlasChip>
 
     <AtlasTextField
       :model-value="threshold"
-      :label="t('cc.viewEdit.results.thresholdLabel', 'Threshold ≥').value"
+      :label="t('cc.viewEdit.results.thresholdLabel').value"
       type="number"
       variant="outlined"
       hide-details
@@ -80,7 +80,7 @@
           icon="mdi-tune-variant"
           data-testid="char-toolbar-configure"
         >
-          {{ t('cc.viewEdit.workbench.configure', 'Configure').value }}
+          {{ t('cc.viewEdit.workbench.configure').value }}
         </AtlasButton>
       </template>
       <slot name="configure-panel" />
@@ -93,7 +93,7 @@
       data-testid="char-toolbar-export"
       @click="$emit('export')"
     >
-      {{ t('cc.viewEdit.results.exportAll', 'Export CSV').value }}
+      {{ t('cc.viewEdit.results.exportAll').value }}
     </AtlasButton>
   </div>
 </template>

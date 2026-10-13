@@ -2,12 +2,12 @@
   <div class="pathway-settings">
     <div class="pathway-settings__row">
       <div class="pathway-settings__label">
-        {{ t('pathway.combinationWindow', 'Collapse window (days)') }}
+        {{ t('pathway.combinationWindow') }}
       </div>
       <VCombobox
         :model-value="modelValue.combinationWindow"
         :items="combinationWindowOptions"
-        :aria-label="t('pathway.combinationWindow', 'Collapse window (days)').value"
+        :aria-label="t('pathway.combinationWindow').value"
         variant="underlined"
         hide-details
         :disabled="readonly"
@@ -19,12 +19,12 @@
     </div>
     <div class="pathway-settings__row">
       <div class="pathway-settings__label">
-        {{ t('pathway.minCellCount', 'Minimum cell count') }}
+        {{ t('pathway.minCellCount') }}
       </div>
       <VCombobox
         :model-value="modelValue.minCellCount"
         :items="minCellCountOptions"
-        :aria-label="t('pathway.minCellCount', 'Minimum cell count').value"
+        :aria-label="t('pathway.minCellCount').value"
         variant="underlined"
         hide-details
         :disabled="readonly"
@@ -36,12 +36,12 @@
     </div>
     <div class="pathway-settings__row">
       <div class="pathway-settings__label">
-        {{ t('pathway.maxDepth', 'Maximum path length') }}
+        {{ t('pathway.maxDepth') }}
       </div>
       <VCombobox
         :model-value="modelValue.maxDepth"
         :items="maxDepthOptions"
-        :aria-label="t('pathway.maxDepth', 'Maximum path length').value"
+        :aria-label="t('pathway.maxDepth').value"
         variant="underlined"
         hide-details
         :disabled="readonly"
@@ -53,11 +53,11 @@
     </div>
     <div class="pathway-settings__row">
       <div class="pathway-settings__label">
-        {{ t('pathway.allowRepeats', 'Allow repeats') }}
+        {{ t('pathway.allowRepeats') }}
       </div>
       <AtlasSwitch
         :model-value="modelValue.allowRepeats"
-        :aria-label="t('pathway.allowRepeats', 'Allow repeats').value"
+        :aria-label="t('pathway.allowRepeats').value"
         hide-details
         :readonly="readonly"
         class="pathway-settings__switch"

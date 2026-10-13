@@ -8,9 +8,10 @@
  * pattern this mirrors).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { reactive, ref } from 'vue'
+import { reactive } from 'vue'
 import { mount, VueWrapper } from '@vue/test-utils'
 import IncidenceRateManagerView from '@/views/IncidenceRateManagerView.vue'
+import { tr } from '../../helpers/i18n-mock'
 
 const mockRoute = reactive<{ params: Record<string, string> }>({ params: {} })
 
@@ -18,12 +19,10 @@ vi.mock('vue-router', () => ({
   useRoute: () => mockRoute,
 }))
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (_key: string, fallback: string) => ref(fallback),
-    tv: (_key: string, fallback: string) => fallback,
-  }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 vi.mock('@/components/incidence-rate/IncidenceRateBuilder.vue', () => ({
   default: {
@@ -159,7 +158,7 @@ describe('IncidenceRateManagerView.vue', () => {
     await wrapper.vm.$nextTick()
 
     expect(store.loadVersionPreview).toHaveBeenCalledWith(5, 3)
-    expect(wrapper.find('.state.error').text()).toBe('Failed to load incidence rate')
+    expect(wrapper.find('.state.error').text()).toBe(tr('incidenceRate.editor.loadError'))
   })
 
   it('reuses an unsaved draft already in the store when navigating to "new"', async () => {

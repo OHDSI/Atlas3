@@ -2,8 +2,8 @@
   <AtlasDialog
     :model-value="modelValue"
     eyebrow="COHORT"
-    :title="t('components.cohortBuilder.printFriendlyDialogTitle', 'Print Friendly').value"
-    :subtitle="t('components.cohortBuilder.printFriendlyDialogSubtitle', 'A readable view of this cohort definition.').value"
+    :title="t('components.cohortBuilder.printFriendlyDialogTitle').value"
+    :subtitle="t('components.cohortBuilder.printFriendlyDialogSubtitle').value"
     max-width="900"
     data-testid="cohort-print-friendly-dialog"
     @update:model-value="$emit('update:modelValue', $event)"
@@ -42,7 +42,7 @@
         data-testid="cohort-print-friendly-close"
         @click="$emit('update:modelValue', false)"
       >
-        {{ t('common.close', 'Close') }}
+        {{ t('common.close') }}
       </AtlasButton>
     </template>
   </AtlasDialog>

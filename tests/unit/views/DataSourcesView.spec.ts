@@ -6,13 +6,14 @@ import { mount, VueWrapper, flushPromises } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'
 import DataSourcesView from '@/views/DataSourcesView.vue'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { usePluginMounts } from '@/composables/usePluginMounts'
 import { createMockDataSource } from '@/../tests/helpers/mock-factories'
 import type { DashboardReport } from '@/models/datasource.types'
+import { tr } from '../../helpers/i18n-mock'
 
 // Mock vue-router
 const mockPush = vi.fn()
@@ -26,11 +27,10 @@ vi.mock('vue-router', () => ({
 }))
 
 // Mock useI18n composable
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, fallback: string) => ref(fallback),
-  }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 // Mock logger
 vi.mock('@/utils/logger', () => ({
@@ -200,7 +200,7 @@ describe('DataSourcesView', () => {
       wrapper = mountComponent()
       const heading = wrapper.find('.page-header__title')
       expect(heading.exists()).toBe(true)
-      expect(heading.text()).toContain('Data Sources')
+      expect(heading.text()).toContain(tr('dataSources.headingTitle'))
     })
 
     it('should render DataSourceSelector component', () => {
@@ -261,7 +261,7 @@ describe('DataSourcesView', () => {
 
       const subtitle = wrapper.find('.page-header__subtitle')
       expect(subtitle.exists()).toBe(true)
-      expect(subtitle.text().toLowerCase()).toContain('data source')
+      expect(subtitle.text()).toContain(tr('dataSources.pageSubtitle'))
     })
   })
 
@@ -314,7 +314,7 @@ describe('DataSourcesView', () => {
       await flushPromises()
 
       const retryButtons = wrapper.findAll('button')
-      const hasRetryButton = retryButtons.some(btn => btn.text().includes('Retry'))
+      const hasRetryButton = retryButtons.some(btn => btn.text().includes(tr('common.retry')))
       expect(hasRetryButton).toBe(true)
     })
   })
@@ -430,7 +430,7 @@ describe('DataSourcesView', () => {
 
       const empty = wrapper.find('.datasources-view__empty')
       expect(empty.exists()).toBe(true)
-      expect(empty.text()).toContain('not yet implemented')
+      expect(empty.text()).toContain(tr('views.dataSources.reportNotImplemented', { type: 'report' }))
     })
   })
 
@@ -443,7 +443,7 @@ describe('DataSourcesView', () => {
 
       const emptyState = wrapper.find('.datasources-view__empty')
       expect(emptyState.exists()).toBe(true)
-      expect(emptyState.text()).toContain('No data sources available')
+      expect(emptyState.text()).toContain(tr('views.dataSources.noSources'))
     })
 
     it('should show database icon in empty state', async () => {
@@ -593,7 +593,7 @@ describe('DataSourcesView', () => {
       wrapper = mountComponent()
       const heading = wrapper.find('h1.page-header__title')
       expect(heading.exists()).toBe(true)
-      expect(heading.text()).toContain('Data Sources')
+      expect(heading.text()).toContain(tr('dataSources.headingTitle'))
     })
 
     it('should render the report-type sidebar and the source picker', () => {

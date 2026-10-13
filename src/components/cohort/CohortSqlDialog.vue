@@ -2,11 +2,8 @@
   <AtlasDialog
     :model-value="modelValue"
     eyebrow="SQL"
-    :title="t('components.cohortBuilder.sqlDialogTitle', 'Cohort SQL').value"
-    :subtitle="t(
-      'components.cohortBuilder.sqlDialogSubtitle',
-      'The query this cohort generates. Template SQL keeps its @parameters so it runs anywhere; pick a dialect to see it rendered for one database.'
-    ).value"
+    :title="t('components.cohortBuilder.sqlDialogTitle').value"
+    :subtitle="t('components.cohortBuilder.sqlDialogSubtitle').value"
     max-width="900"
     data-testid="cohort-sql-dialog"
     @update:model-value="$emit('update:modelValue', $event)"
@@ -17,8 +14,8 @@
       :items="dialectItems"
       item-title="title"
       item-value="value"
-      :label="t('components.cohortBuilder.sqlDialect', 'Dialect').value"
-      :placeholder="t('components.cohortBuilder.sqlDialectTemplate', 'Template (no dialect)').value"
+      :label="t('components.cohortBuilder.sqlDialect').value"
+      :placeholder="t('components.cohortBuilder.sqlDialectTemplate').value"
       variant="outlined"
       clearable
       hide-details
@@ -45,7 +42,7 @@
       :rows="20"
       class="cohort-sql-dialog__viewer"
       spellcheck="false"
-      :aria-label="t('components.cohortBuilder.sqlDialogTitle', 'Cohort SQL').value"
+      :aria-label="t('components.cohortBuilder.sqlDialogTitle').value"
       data-testid="cohort-sql-field"
     />
 
@@ -67,7 +64,7 @@
         data-testid="cohort-sql-copy"
         @click="handleCopy"
       >
-        {{ copied ? t('components.cohortBuilder.jsonCopied', 'Copied') : t('common.copy', 'Copy') }}
+        {{ copied ? t('components.cohortBuilder.jsonCopied') : t('common.copy') }}
       </AtlasButton>
 
       <AtlasButton
@@ -77,7 +74,7 @@
         data-testid="cohort-sql-download"
         @click="handleDownload"
       >
-        {{ t('common.download', 'Download') }}
+        {{ t('common.download') }}
       </AtlasButton>
 
       <AtlasSpacer />
@@ -87,7 +84,7 @@
         data-testid="cohort-sql-close"
         @click="$emit('update:modelValue', false)"
       >
-        {{ t('common.close', 'Close') }}
+        {{ t('common.close') }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -215,7 +212,7 @@ async function handleCopy() {
     }, 2000)
   } catch (error) {
     logger.error('CohortSqlDialog', 'Clipboard copy failed', error)
-    errorMessage.value = tv('components.cohortBuilder.copyFailed', 'Could not copy to clipboard')
+    errorMessage.value = tv('components.cohortBuilder.copyFailed')
   }
 }
 

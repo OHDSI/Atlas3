@@ -4,7 +4,7 @@
     class="rule-detail rule-detail--empty"
     data-testid="inclusion-detail-empty"
   >
-    {{ t('inclusionRail.selectRule', 'Select a rule on the left to edit it.').value }}
+    {{ t('inclusionRail.selectRule').value }}
   </div>
 
   <div
@@ -25,16 +25,16 @@
           <div
             class="rule-detail__header-info"
             v-bind="menuProps"
-            :title="t('common.edit', 'Edit rule name and description').value"
+            :title="t('common.edit').value"
           >
             <div class="rule-detail__name">
-              {{ ruleName || t('inclusionRail.unnamedRule', 'Unnamed Rule').value }}
+              {{ ruleName || t('inclusionRail.unnamedRule').value }}
             </div>
             <div
               class="rule-detail__description"
               :class="{ 'rule-detail__description--placeholder': !ruleDescription }"
             >
-              {{ ruleDescription || t('cohortDefinitions.noRuleDescription', 'No description').value }}
+              {{ ruleDescription || t('cohortDefinitions.noRuleDescription').value }}
             </div>
           </div>
         </template>
@@ -43,7 +43,7 @@
           <v-card-text class="rule-detail__edit-menu-body">
             <AtlasTextField
               :model-value="rule?.name ?? ''"
-              :label="t('cohortDefinitions.ruleName', 'Rule name').value"
+              :label="t('cohortDefinitions.ruleName').value"
               variant="outlined"
               density="compact"
               hide-details="auto"
@@ -53,7 +53,7 @@
             <AtlasTextField
               multiline
               :model-value="rule?.description ?? ''"
-              :label="t('cohortDefinitions.ruleDescription', 'Description').value"
+              :label="t('cohortDefinitions.ruleDescription').value"
               variant="outlined"
               density="compact"
               hide-details
@@ -71,7 +71,7 @@
           size="sm"
           icon="mdi-delete"
           color="error"
-          :title="t('common.delete', 'Delete rule').value"
+          :title="t('common.delete').value"
           data-testid="inclusion-detail-remove"
           @click="emit('remove')"
         />
@@ -90,7 +90,7 @@
           prepend-icon="mdi-plus"
           @click="addExpressionGroup"
         >
-          {{ t('inclusionRail.addCriteriaGroup', 'Add Group Criteria to Inclusion Rule').value }}
+          {{ t('inclusionRail.addCriteriaGroup').value }}
         </AtlasButton>
       </div>
 

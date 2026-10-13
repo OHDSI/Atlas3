@@ -3,10 +3,7 @@
     <v-card-text>
       <p class="text-body-1 mb-6">
         {{
-          t(
-            'components.config.permissions.utilitiesIntro',
-            'Import and export role configurations for backup, deployment, or sharing across environments.'
-          ).value
+          t('components.config.permissions.utilitiesIntro').value
         }}
       </p>
 
@@ -22,14 +19,11 @@
           </AtlasIcon>
           <div>
             <h3 class="text-h6">
-              {{ t('components.config.permissions.exportRole', 'Export Role').value }}
+              {{ t('components.config.permissions.exportRole').value }}
             </h3>
             <p class="text-body-2 text-medium-emphasis">
               {{
-                t(
-                  'components.config.permissions.exportRoleDescription',
-                  "Download this role's configuration as a JSON file, including all permissions and user assignments."
-                ).value
+                t('components.config.permissions.exportRoleDescription').value
               }}
             </p>
           </div>
@@ -41,10 +35,7 @@
             class="mb-4"
           >
             {{
-              t(
-                'components.config.permissions.exportCompatNote',
-                'The exported file will be compatible with Atlas 2.x and can be imported into any Atlas instance.'
-              ).value
+              t('components.config.permissions.exportCompatNote').value
             }}
           </AtlasAlert>
 
@@ -53,7 +44,7 @@
             :loading="isExporting"
             @click="handleExport"
           >
-            {{ t('components.config.permissions.exportRoleAsJson', 'Export Role as JSON').value }}
+            {{ t('components.config.permissions.exportRoleAsJson').value }}
           </AtlasButton>
         </div>
       </div>
@@ -72,14 +63,11 @@
           </AtlasIcon>
           <div>
             <h3 class="text-h6">
-              {{ t('components.config.permissions.importRole', 'Import Role').value }}
+              {{ t('components.config.permissions.importRole').value }}
             </h3>
             <p class="text-body-2 text-medium-emphasis">
               {{
-                t(
-                  'components.config.permissions.importRoleDescription',
-                  'Import a role configuration from a JSON file. This will create a new role with the specified permissions and users.'
-                ).value
+                t('components.config.permissions.importRoleDescription').value
               }}
             </p>
           </div>
@@ -90,12 +78,9 @@
             severity="warning"
             class="mb-4"
           >
-            <strong>{{ t('components.config.permissions.noteLabel', 'Note:').value }}</strong>
+            <strong>{{ t('components.config.permissions.noteLabel').value }}</strong>
             {{
-              t(
-                'components.config.permissions.importRoleNote',
-                'Importing a role will create a new role. If a role with the same name exists, you will be prompted to rename it.'
-              ).value
+              t('components.config.permissions.importRoleNote').value
             }}
           </AtlasAlert>
 
@@ -103,7 +88,7 @@
             icon="mdi-upload"
             @click="importDialogOpen = true"
           >
-            {{ t('components.config.permissions.importRoleFromJson', 'Import Role from JSON').value }}
+            {{ t('components.config.permissions.importRoleFromJson').value }}
           </AtlasButton>
         </div>
       </div>
@@ -174,7 +159,7 @@ async function handleExport() {
     const jsonData = await exportRole(props.roleId)
 
     if (!jsonData) {
-      throw new Error(tv('components.config.permissions.exportRoleError', 'Failed to export role'))
+      throw new Error(tv('components.config.permissions.exportRoleError'))
     }
 
     // Create blob and download
@@ -193,16 +178,12 @@ async function handleExport() {
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
 
-    successMessage.value = tv(
-      'components.config.permissions.roleExported',
-      'Role "{name}" exported successfully',
-      { name: props.roleName }
-    )
+    successMessage.value = tv('components.config.permissions.roleExported', { name: props.roleName })
   } catch (error) {
     errorMessage.value =
       error instanceof Error
         ? error.message
-        : tv('components.config.permissions.exportRoleError', 'Failed to export role')
+        : tv('components.config.permissions.exportRoleError')
   } finally {
     isExporting.value = false
   }
@@ -212,11 +193,7 @@ async function handleExport() {
  * Handle import success
  */
 function handleImportSuccess(roleName: string) {
-  successMessage.value = tv(
-    'components.config.permissions.roleImported',
-    'Role "{name}" imported successfully',
-    { name: roleName }
-  )
+  successMessage.value = tv('components.config.permissions.roleImported', { name: roleName })
   // Could emit event to parent to refresh role list if needed
 }
 </script>

@@ -95,9 +95,9 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const payerPlanPeriodTitle = computed(() => 'a payer plan period of')
-const addAttributeLabel = computed(() => 'Add attribute...')
-const selectConceptSetLabel = computed(() => t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value)
+const payerPlanPeriodTitle = computed(() => t('components.payerPlanPeriod.title').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
+const selectConceptSetLabel = computed(() => t('components.conceptAddBox.selectConceptSet').value)
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {

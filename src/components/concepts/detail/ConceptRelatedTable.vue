@@ -78,7 +78,7 @@ const rowsWithCounts = computed<Row[]>(() => {
 const facets: FacetDefinition<Row>[] = [
   {
     key: 'relationship',
-    label: t('facets.caption.relationship', 'Relationship').value,
+    label: t('facets.caption.relationship').value,
     display: row => row.relationship,
   },
   { key: 'vocabularyId', label: 'Vocabulary', display: row => row.vocabularyId },
@@ -111,18 +111,18 @@ const {
   row => [row.conceptId, row.conceptCode]
 )
 
-const viewCountsForLabel = t('search.viewCountMessage', 'View record count for:')
+const viewCountsForLabel = t('search.viewCountMessage')
 const sortBy = ref([{ key: 'descendantRecordCount', order: 'desc' as const }])
 
 const headers = computed(() => [
-  { title: t('facets.caption.relationship', 'Relationship').value, key: 'relationship', sortable: true },
-  { title: t('columns.conceptName', 'Concept Name').value, key: 'conceptName', sortable: true },
-  { title: t('columns.vocabulary', 'Vocabulary').value, key: 'vocabularyId', sortable: true },
-  { title: t('columns.code', 'Code').value, key: 'conceptCode', sortable: true },
-  { title: t('columns.domain', 'Domain').value, key: 'domainId', sortable: true },
-  { title: t('columns.standard', 'Standard').value, key: 'standardConcept', sortable: true, width: 80 },
-  { title: t('columns.rcTooltip', 'RC').value, key: 'recordCount', sortable: true, width: 100, align: 'end' as const },
-  { title: t('columns.drcTooltip', 'DRC').value, key: 'descendantRecordCount', sortable: true, width: 100, align: 'end' as const },
+  { title: t('facets.caption.relationship').value, key: 'relationship', sortable: true },
+  { title: t('columns.conceptName').value, key: 'conceptName', sortable: true },
+  { title: t('columns.vocabulary').value, key: 'vocabularyId', sortable: true },
+  { title: t('columns.code').value, key: 'conceptCode', sortable: true },
+  { title: t('columns.domain').value, key: 'domainId', sortable: true },
+  { title: t('columns.standard').value, key: 'standardConcept', sortable: true, width: 80 },
+  { title: t('columns.rcTooltip').value, key: 'recordCount', sortable: true, width: 100, align: 'end' as const },
+  { title: t('columns.drcTooltip').value, key: 'descendantRecordCount', sortable: true, width: 100, align: 'end' as const },
 ])
 
 function formatCount(count: number | undefined): string {
@@ -136,8 +136,8 @@ function formatCount(count: number | undefined): string {
     data-testid="concept-related-table"
   >
     <header class="card-title">
-      <span>{{ t('cs.manager.concept.tabs.relatedConcepts.caption', 'Related Concepts').value }}</span>
-      <span class="muted">{{ t('components.conceptDetail.relationshipsCount', '{count} relationships', { count: rows.length }).value }}</span>
+      <span>{{ t('cs.manager.concept.tabs.relatedConcepts.caption').value }}</span>
+      <span class="muted">{{ t('components.conceptDetail.relationshipsCount', { count: rows.length }).value }}</span>
     </header>
     <ConceptFacetFilters
       v-if="rows.length > 0"
@@ -175,7 +175,7 @@ function formatCount(count: number | undefined): string {
       v-if="rows.length === 0"
       class="empty"
     >
-      {{ t('components.conceptDetail.noRelatedConcepts', 'No related concepts found.').value }}
+      {{ t('components.conceptDetail.noRelatedConcepts').value }}
     </p>
     <AtlasDataTable
       v-else
@@ -244,7 +244,7 @@ function formatCount(count: number | undefined): string {
       </template>
       <template #no-data>
         <p class="empty">
-          {{ t('cs.manager.emptyFilteredMessage', 'No concepts match the active filters.').value }}
+          {{ t('cs.manager.emptyFilteredMessage').value }}
         </p>
       </template>
     </AtlasDataTable>

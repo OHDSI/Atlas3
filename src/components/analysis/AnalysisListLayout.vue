@@ -26,7 +26,7 @@
               toggle
               value="tile"
               size="sm"
-              :aria-label="t('common.tileView', 'Tile view').value"
+              :aria-label="t('common.tileView').value"
               :data-testid="testid ? `${testid}-view-toggle-tile` : undefined"
             >
               <AtlasIcon>mdi-view-grid</AtlasIcon>
@@ -35,7 +35,7 @@
               toggle
               value="table"
               size="sm"
-              :aria-label="t('dataSources.table.tableTab', 'Table view').value"
+              :aria-label="t('dataSources.table.tableTab').value"
               :data-testid="testid ? `${testid}-view-toggle-table` : undefined"
             >
               <AtlasIcon>mdi-view-list</AtlasIcon>

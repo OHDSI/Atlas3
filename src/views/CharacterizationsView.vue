@@ -7,7 +7,7 @@
     <template #actions>
       <AtlasTextField
         :model-value="searchInput"
-        :label="t('datatable.language.searchPlaceholder', 'Search characterizations…').value"
+        :label="t('datatable.language.searchPlaceholder').value"
         prepend-icon="mdi-magnify"
         variant="outlined"
         hide-details
@@ -21,15 +21,15 @@
     <template #primary-action>
       <AtlasButton
         icon="mdi-plus"
-        :aria-label="t('cc.new', 'New Characterization').value"
+        :aria-label="t('cc.new').value"
         data-testid="characterizations-create"
         :disabled="!canCreate"
         @click="handleCreate"
       >
-        {{ t('home.newEntityNames.characterization', 'New characterization') }}
+        {{ t('home.newEntityNames.characterization') }}
       </AtlasButton>
       <EntityImportButton
-        :label="t('common.import', 'Import').value"
+        :label="t('common.import').value"
         testid="characterizations-import"
         :disabled="!canCreate"
         :import-design="importDesign"
@@ -44,7 +44,7 @@
       :items="paginatedCharacterizations"
       :loading="loading"
       :items-per-page="itemsPerPage"
-      :empty-text="t('common.noData', 'No characterizations yet.').value"
+      :empty-text="t('common.noData').value"
       testid="characterizations-table"
       :can-copy-item="item => canCopy && !!item.id"
       :can-delete-item="item => entityAccess.canDelete(item.id)"
@@ -69,7 +69,7 @@
         :disabled="!canGoPrevious"
         @click="previousPage"
       >
-        {{ t('datatable.language.paginate.previous', 'Previous') }}
+        {{ t('datatable.language.paginate.previous') }}
       </AtlasButton>
       <span class="characterizations-view__range">{{ rangeDisplay }}</span>
       <AtlasButton
@@ -77,7 +77,7 @@
         :disabled="!canGoNext"
         @click="nextPage"
       >
-        {{ t('configuration.userImport.wizard.buttons.next', 'Next') }}
+        {{ t('configuration.userImport.wizard.buttons.next') }}
       </AtlasButton>
     </template>
   </AnalysisListLayout>
@@ -85,7 +85,7 @@
   <AtlasDialog
     v-model="showDeleteDialog"
     eyebrow="CONFIRM"
-    :title="t('common.delete', 'Delete').value"
+    :title="t('common.delete').value"
     max-width="500"
     @close="showDeleteDialog = false"
   >
@@ -95,14 +95,14 @@
         variant="ghost"
         @click="showDeleteDialog = false"
       >
-        {{ t('common.cancel', 'Cancel') }}
+        {{ t('common.cancel') }}
       </AtlasButton>
       <AtlasButton
         variant="danger"
         :loading="deleting"
         @click="confirmDelete"
       >
-        {{ t('common.delete', 'Delete') }}
+        {{ t('common.delete') }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -186,23 +186,23 @@ const paginatedCharacterizations = computed(() => {
 })
 
 const headers = computed(() => [
-  { title: t('columns.id', 'ID').value, key: 'id' },
-  { title: t('columns.name', 'Name').value, key: 'name' },
-  { title: t('columns.description', 'Description').value, key: 'description' },
+  { title: t('columns.id').value, key: 'id' },
+  { title: t('columns.name').value, key: 'name' },
+  { title: t('columns.description').value, key: 'description' },
   {
-    title: t('cc.viewEdit.results.filters.cohorts', 'Cohorts').value,
+    title: t('cc.viewEdit.results.filters.cohorts').value,
     key: 'cohorts',
     sortable: false,
   },
   {
-    title: t('cc.tabs.featureAnalyses.title', 'Feature Analyses').value,
+    title: t('cc.tabs.featureAnalyses.title').value,
     key: 'featureAnalyses',
     sortable: false,
   },
-  { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
-  { title: t('columns.created', 'Created').value, key: 'createdDate' },
-  { title: t('columns.updated', 'Updated').value, key: 'modifiedDate' },
-  { title: t('columns.actions', 'Actions').value, key: 'actions', sortable: false },
+  { title: t('columns.createdBy').value, key: 'createdBy' },
+  { title: t('columns.created').value, key: 'createdDate' },
+  { title: t('columns.updated').value, key: 'modifiedDate' },
+  { title: t('columns.actions').value, key: 'actions', sortable: false },
 ])
 
 const showDeleteDialog = ref(false)

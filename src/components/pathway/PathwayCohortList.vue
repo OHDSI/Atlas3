@@ -6,9 +6,9 @@
     <thead>
       <tr>
         <th class="pathway-cohort-list__id">
-          {{ t('columns.id', 'ID') }}
+          {{ t('columns.id') }}
         </th>
-        <th>{{ t('columns.name', 'Display name') }}</th>
+        <th>{{ t('columns.name') }}</th>
         <th class="pathway-cohort-list__actions" />
       </tr>
     </thead>
@@ -33,7 +33,7 @@
             icon="mdi-close"
             size="sm"
             variant="text"
-            v-bind="{ ariaLabel: t('components.pathwayCohortList.removeCohort', 'Remove cohort').value }"
+            v-bind="{ ariaLabel: t('components.pathwayCohortList.removeCohort').value }"
             :disabled="readonly"
             @click="emit('remove', c.id)"
           />

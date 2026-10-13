@@ -156,18 +156,18 @@ const conceptSetsStore = useConceptSetsStore()
 const showAddMenu = ref(false)
 
 const defaultAggregate = computed<FeatureAnalysisAggregate | null>(() => props.aggregates.find(aggregate => aggregate.isDefault) ?? null)
-const addCriteriaLabel = computed(() => t('featureAnalyses.editor.distribution.addCriteria', 'Add Criteria feature').value)
-const emptyLabel = computed(() => t('featureAnalyses.editor.distribution.empty', 'No criteria features yet.').value)
-const criteriaNameLabel = computed(() => t('cc.fa.criteriaName', 'Criteria name').value)
-const aggregateLabel = computed(() => t('cc.fa.aggregate', 'Aggregate').value)
-const deleteLabel = computed(() => t('common.delete', 'Delete').value)
-const demographicCriteriaLabel = computed(() => t('components.demographicCriteria.name', 'Demographic Criteria').value)
-const demographicCriteriaSubtitle = computed(() => t('featureAnalyses.editor.distribution.demographicSubtitle', 'Demographic criteria are not windowed').value)
+const addCriteriaLabel = computed(() => t('featureAnalyses.editor.distribution.addCriteria').value)
+const emptyLabel = computed(() => t('featureAnalyses.editor.distribution.empty').value)
+const criteriaNameLabel = computed(() => t('cc.fa.criteriaName').value)
+const aggregateLabel = computed(() => t('cc.fa.aggregate').value)
+const deleteLabel = computed(() => t('common.delete').value)
+const demographicCriteriaLabel = computed(() => t('components.demographicCriteria.name').value)
+const demographicCriteriaSubtitle = computed(() => t('featureAnalyses.editor.distribution.demographicSubtitle').value)
 
 const criteriaOptions = EDITABLE_CRITERIA_TYPES.map(type => ({
   value: type.key as EditableCriteriaKey,
   title: t(type.i18nKey, type.label).value,
-  subtitle: type.domains.length > 0 ? type.domains.join(', ') : t('common.allDomains', 'All domains').value,
+  subtitle: type.domains.length > 0 ? type.domains.join(', ') : t('common.allDomains').value,
 }))
 
 const conceptSetsStorePicker = useCirceConceptSetPicker({

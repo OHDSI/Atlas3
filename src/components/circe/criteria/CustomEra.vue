@@ -215,15 +215,15 @@ const { t } = useI18n()
 const getObjectKey = createObjectKeyGenerator()
 const CriteriaRenderer = defineAsyncComponent(() => import('./CriteriaRenderer.vue'))
 
-const eraPrefixLabel = computed(() => t('components.customEra.criteriaPrefix', 'a custom era using').value)
-const eraSuffixLabel = computed(() => t('components.customEra.criteriaSuffix', 'gap of:').value)
+const eraPrefixLabel = computed(() => t('components.customEra.criteriaPrefix').value)
+const eraSuffixLabel = computed(() => t('components.customEra.criteriaSuffix').value)
 const gapDaysChipLabel = computed(() => `${gapDays.value} days`)
-const criteriaListLabel = computed(() => t('components.customEra.criteriaList', 'Criteria List').value)
-const addCriteriaLabel = computed(() => t('components.customEra.addCriteria', 'Add Criteria...').value)
-const additionalAttributesLabel = computed(() => t('components.customEra.additionalAttributes', 'Additional Attributes').value)
-const addAttributeLabel = computed(() => t('components.customEra.addAttribute', 'Add Attribute...').value)
-const noCriteriaLabel = computed(() => t('components.customEra.noCriteria', 'No criteria yet.').value)
-const noOptionalAttributesLabel = computed(() => t('components.customEra.noOptionalAttributes', 'No additional attributes yet.').value)
+const criteriaListLabel = computed(() => t('components.customEra.criteriaList').value)
+const addCriteriaLabel = computed(() => t('components.customEra.addCriteria').value)
+const additionalAttributesLabel = computed(() => t('components.customEra.additionalAttributes').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
+const noCriteriaLabel = computed(() => t('components.customEra.noCriteria').value)
+const noOptionalAttributesLabel = computed(() => t('components.customEra.noOptionalAttributes').value)
 
 const criteriaTypeOptions = computed(() =>
   EDITABLE_CRITERIA_TYPES.map(type => ({
@@ -334,7 +334,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(customEraData.value, 'GenderCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),

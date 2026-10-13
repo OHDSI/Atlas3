@@ -19,15 +19,15 @@
         class="rail-toggle"
         :title="
           railOpen
-            ? t('components.pathwayWorkbench.hideDesignPanel', 'Hide design panel').value
-            : t('components.pathwayWorkbench.showDesignPanel', 'Show design panel').value
+            ? t('components.pathwayWorkbench.hideDesignPanel').value
+            : t('components.pathwayWorkbench.showDesignPanel').value
         "
         @click="railOpen = !railOpen"
       >
         {{
           railOpen
-            ? '◂ ' + t('components.pathwayWorkbench.hideAnalysisDesign', 'Hide Analysis Design').value
-            : '▸ ' + t('components.pathwayWorkbench.showAnalysisDesign', 'Show Analysis Design').value
+            ? '◂ ' + t('components.pathwayWorkbench.hideAnalysisDesign').value
+            : '▸ ' + t('components.pathwayWorkbench.showAnalysisDesign').value
         }}
       </button>
       <PathwayCanvasToolbar
@@ -58,14 +58,11 @@
       >
         <div class="workbench__canvas-empty-icon" />
         <h3>
-          {{ t('pathway.workbench.emptyChartTitle', 'Your sunburst will appear here').value }}
+          {{ t('pathway.workbench.emptyChartTitle').value }}
         </h3>
         <p>
           {{
-            t(
-              'pathway.workbench.emptyChartHint',
-              'Pick at least one target cohort and a few event cohorts on the left, then run a generation against a data source.'
-            ).value
+            t('pathway.workbench.emptyChartHint').value
           }}
         </p>
       </div>
@@ -76,13 +73,10 @@
         data-testid="canvas-no-run"
       >
         <div class="workbench__canvas-empty-icon" />
-        <h3>{{ t('pathway.workbench.noRunYetTitle', 'No runs yet').value }}</h3>
+        <h3>{{ t('pathway.workbench.noRunYetTitle').value }}</h3>
         <p>
           {{
-            t(
-              'pathway.workbench.noRunYetHint',
-              'Generate against a data source to see the sunburst.'
-            ).value
+            t('pathway.workbench.noRunYetHint').value
           }}
         </p>
       </div>
@@ -119,7 +113,7 @@
           :target-cohort-name="targetCohortName"
         />
         <div class="workbench__sec-label">
-          {{ t('pathway.workbench.legend', 'Legend').value }}
+          {{ t('pathway.workbench.legend').value }}
         </div>
         <PathwayLegend
           :design="design!"
@@ -130,7 +124,7 @@
           :total-pathways-count="targetGroup.totalPathwaysCount"
         />
         <div class="workbench__sec-label">
-          {{ t('pathway.workbench.selectedPath', 'Selected path').value }}
+          {{ t('pathway.workbench.selectedPath').value }}
         </div>
         <PathwayPathStats
           v-if="pathStats"
@@ -143,7 +137,7 @@
           data-testid="insights-empty-hint"
         >
           {{
-            t('pathway.workbench.selectPathHint', 'Click a slice to inspect a treatment path').value
+            t('pathway.workbench.selectPathHint').value
           }}
         </div>
       </template>
@@ -152,7 +146,7 @@
         class="workbench__insights-hint"
         data-testid="insights-empty-hint"
       >
-        {{ t('pathway.workbench.insightsEmptyHint', 'Insights appear after the first run.').value }}
+        {{ t('pathway.workbench.insightsEmptyHint').value }}
       </div>
     </aside>
 
@@ -243,10 +237,7 @@ const executionsLoading = ref(false)
 const historyOpen = ref(false)
 const historySourceKey = ref('')
 
-const runDisabledReason = tv(
-  'pathway.workbench.runDisabledReason',
-  'Save the design before generating'
-)
+const runDisabledReason = tv('pathway.workbench.runDisabledReason')
 
 const targetGroup = computed(() => resolveTargetGroup(results.value))
 

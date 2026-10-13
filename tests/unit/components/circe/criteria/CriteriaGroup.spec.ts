@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { nextTick, reactive } from 'vue'
 import { InlineAtlasMenuStub, mountComponent } from '../../../../helpers/component-wrapper'
+import { tr } from '../../../../helpers/i18n-mock'
 
 import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 
@@ -89,7 +90,7 @@ async function selectAddMenuItem(wrapper: ReturnType<typeof mountGroup>['wrapper
 }
 
 async function clickAddGroup(wrapper: ReturnType<typeof mountGroup>['wrapper']) {
-  const addGroupButton = wrapper.findAllComponents({ name: 'AtlasButton' }).find(button => button.text().includes('Nested Group'))
+  const addGroupButton = wrapper.findAllComponents({ name: 'AtlasButton' }).find(button => button.text().includes(tr('components.criteriaGroup.addNestedGroup')))
   expect(addGroupButton).toBeTruthy()
   await addGroupButton!.trigger('click')
   await nextTick()
@@ -104,8 +105,8 @@ describe('CriteriaGroup', () => {
     const wrapper = mountGroup()
     const setup = getSetupState(wrapper)
 
-    expect(wrapper.find('.match-type-label').text()).toBe('at least 2')
-    expect(wrapper.findAll('.match-type-label').map(node => node.text())).toEqual(expect.arrayContaining(['at least 2', 'any']))
+    expect(wrapper.find('.match-type-label').text()).toBe(`${tr('options.atLeast')} 2`)
+    expect(wrapper.findAll('.match-type-label').map(node => node.text())).toEqual(expect.arrayContaining([`${tr('options.atLeast')} 2`, tr('options.any')]))
 
     const matchTypeMenu = wrapper.findAllComponents({ name: 'AtlasMenu' })[0]
     await matchTypeMenu.vm.$emit('update:modelValue', true)
@@ -167,7 +168,7 @@ describe('CriteriaGroup', () => {
 
     await wrapper.get('.match-chip--any').trigger('click')
     await nextTick()
-    expect(wrapper.find('.match-type-label').text()).toBe('any')
+    expect(wrapper.find('.match-type-label').text()).toBe(tr('options.any'))
 
     await wrapper.get('.match-chip--at_least').trigger('click')
     await nextTick()
@@ -175,28 +176,28 @@ describe('CriteriaGroup', () => {
     await countField.vm.$emit('update:modelValue', '5')
     await nextTick()
 
-    expect(wrapper.find('.match-type-label').text()).toBe('at least 5')
+    expect(wrapper.find('.match-type-label').text()).toBe(`${tr('options.atLeast')} 5`)
 
     await wrapper.get('.match-chip--at_most').trigger('click')
     await nextTick()
-    expect(wrapper.find('.match-type-label').text()).toBe('at most 5')
+    expect(wrapper.find('.match-type-label').text()).toBe(`${tr('options.atMost')} 5`)
 
     await wrapper.get('.match-chip--all').trigger('click')
     await nextTick()
-    expect(wrapper.find('.match-type-label').text()).toBe('all')
+    expect(wrapper.find('.match-type-label').text()).toBe(tr('options.all'))
   })
 
   it('adds and removes demographic, correlated, and nested groups', async () => {
     const { wrapper, group } = mountEmptyGroup()
 
-    await selectAddMenuItem(wrapper, 'Demographic Criteria')
+    await selectAddMenuItem(wrapper, tr('components.demographicCriteria.name'))
     expect(group.DemographicCriteriaList).toHaveLength(1)
 
     wrapper.findComponent({ name: 'DemographicCriteria' }).vm.$emit('remove')
     await nextTick()
     expect(group.DemographicCriteriaList).toHaveLength(0)
 
-    await selectAddMenuItem(wrapper, 'Procedure Occurrence')
+    await selectAddMenuItem(wrapper, tr('criteria.procedureOccurrence.name'))
     expect(group.CriteriaList).toHaveLength(1)
     expect(group.CriteriaList[0].Criteria.ProcedureOccurrence).toBeDefined()
 
@@ -269,7 +270,6 @@ describe('CriteriaGroup', () => {
 
   it('shows the deep nesting warning when the depth exceeds the threshold', () => {
     const { wrapper } = mountEmptyGroup(11)
-    expect(wrapper.text()).toContain('Nesting depth is')
-    expect(wrapper.text()).toContain('(11)')
+    expect(wrapper.text()).toContain(tr('components.criteriaGroup.nestedCriteria.depthWarning', { depth: 11 }))
   })
 })

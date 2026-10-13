@@ -56,14 +56,14 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
     data-testid="concept-hierarchy-minimap"
   >
     <header class="card-title">
-      <span>{{ t('cs.manager.concept.tabs.hierarchy.caption', 'Hierarchy').value }}</span>
+      <span>{{ t('cs.manager.concept.tabs.hierarchy.caption').value }}</span>
       <a
         v-if="!isEmpty && canViewFull"
         href="#"
         class="view-full"
         data-testid="view-full"
         @click.prevent="viewFull"
-      >{{ t('components.conceptHierarchyDialog.viewFullHierarchy', 'View full hierarchy').value }} →</a>
+      >{{ t('components.conceptHierarchyDialog.viewFullHierarchy').value }} →</a>
     </header>
     <div class="card-body">
       <p
@@ -71,13 +71,13 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
         class="empty"
         data-testid="minimap-load-failed"
       >
-        {{ t('components.conceptDetail.hierarchyLoadFailed', 'Could not load the hierarchy for this concept.').value }}
+        {{ t('components.conceptDetail.hierarchyLoadFailed').value }}
       </p>
       <p
         v-else-if="isEmpty"
         class="empty"
       >
-        {{ t('components.conceptDetail.noHierarchyForConcept', 'No hierarchy found for this concept.').value }}
+        {{ t('components.conceptDetail.noHierarchyForConcept').value }}
       </p>
       <template v-else>
         <ul class="tree">
@@ -120,7 +120,7 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
             v-if="children.length > visibleChildren.length"
             class="node muted"
           >
-            … {{ t('components.conceptDetail.moreDescendants', '{count} more descendants', { count: children.length - visibleChildren.length }).value }}
+            … {{ t('components.conceptDetail.moreDescendants', { count: children.length - visibleChildren.length }).value }}
           </li>
         </ul>
       </template>

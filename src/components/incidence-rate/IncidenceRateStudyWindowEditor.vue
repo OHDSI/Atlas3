@@ -4,13 +4,13 @@
       v-if="!hasWindow"
       class="sw-empty"
     >
-      <span class="sw-empty__hint">{{ t('incidenceRate.studyWindowEmpty', 'No study window').value }}</span>
+      <span class="sw-empty__hint">{{ t('incidenceRate.studyWindowEmpty').value }}</span>
       <AtlasButton
         size="sm"
         variant="ghost"
         @click="enable"
       >
-        {{ t('common.add', 'Add') }}
+        {{ t('common.add') }}
       </AtlasButton>
     </div>
     <template v-else>
@@ -19,14 +19,14 @@
           :model-value="store.currentIR?.expression.studyWindow?.startDate ?? ''"
           type="date"
           hide-details
-          :label="t('incidenceRate.studyWindowStart', 'Start date').value"
+          :label="t('incidenceRate.studyWindowStart').value"
           @update:model-value="(v: string | number) => update('startDate', String(v))"
         />
         <AtlasTextField
           :model-value="store.currentIR?.expression.studyWindow?.endDate ?? ''"
           type="date"
           hide-details
-          :label="t('incidenceRate.studyWindowEnd', 'End date').value"
+          :label="t('incidenceRate.studyWindowEnd').value"
           @update:model-value="(v: string | number) => update('endDate', String(v))"
         />
       </div>
@@ -37,7 +37,7 @@
           tone="danger"
           @click="store.clearStudyWindow"
         >
-          {{ t('columns.remove', 'Remove') }}
+          {{ t('columns.remove') }}
         </AtlasButton>
       </div>
     </template>

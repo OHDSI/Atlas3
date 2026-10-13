@@ -42,10 +42,10 @@
                   type="text"
                   class="cs-editor__title-input"
                   :placeholder="
-                    t('cs.manager.pleaseProvideNameMessage', 'Untitled concept set').value
+                    t('cs.manager.untitledPlaceholder').value
                   "
                   :disabled="loading"
-                  :aria-label="t('columns.name', 'Name').value"
+                  :aria-label="t('columns.name').value"
                   @input="onTitleInput"
                 >
                 <p
@@ -65,7 +65,7 @@
             <div class="cs-editor__actions">
               <AtlasTooltip
                 v-if="!embedded"
-                :text="t('common.tags', 'Tags').value"
+                :text="t('common.tags').value"
                 location="bottom"
               >
                 <template #activator="{ props: tooltipProps }">
@@ -80,7 +80,7 @@
                     <AtlasIconButton
                       icon="mdi-tag-multiple"
                       data-testid="cs-editor-tags-btn"
-                      v-bind="{ ariaLabel: t('common.tags', 'Tags').value }"
+                      v-bind="{ ariaLabel: t('common.tags').value }"
                       variant="text"
                       size="sm"
                       :disabled="loading || !!store.previewVersion"
@@ -92,12 +92,12 @@
 
               <AtlasTooltip
                 v-if="!embedded && isEditMode && props.conceptSet?.id"
-                :text="t('components.access.configureAccess', 'Configure access').value"
+                :text="t('components.access.configureAccess').value"
                 location="bottom"
               >
                 <template #activator="{ props: tooltipProps }">
                   <EntityAccessLockButton
-                    v-bind="{ ...tooltipProps, ariaLabel: t('components.access.configureAccess', 'Configure access').value }"
+                    v-bind="{ ...tooltipProps, ariaLabel: t('components.access.configureAccess').value }"
                     size="sm"
                     data-testid="cs-editor-access-btn"
                     @click="showAccessDialog = true"
@@ -107,7 +107,7 @@
 
               <AtlasTooltip
                 v-if="!embedded && isEditMode && props.conceptSet?.id"
-                :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
+                :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions').value"
                 location="bottom"
               >
                 <template #activator="{ props: tooltipProps }">
@@ -136,7 +136,7 @@
                 data-testid="cs-editor-cancel-btn"
                 @click="onClose"
               >
-                {{ t('common.cancel', 'Cancel') }}
+                {{ t('common.cancel') }}
               </AtlasButton>
 
               <DisabledReasonTooltip :reason="saveDisabledReason">
@@ -148,17 +148,17 @@
                 >
                   {{
                     embedded
-                      ? t('common.apply', 'Apply')
+                      ? t('common.apply')
                       : isEditMode
-                        ? t('common.save', 'Save')
-                        : t('common.create', 'Create')
+                        ? t('common.save')
+                        : t('common.create')
                   }}
                 </AtlasButton>
               </DisabledReasonTooltip>
 
               <AtlasIconButton
                 icon="mdi-close"
-                v-bind="{ ariaLabel: t('common.close', 'Close').value }"
+                v-bind="{ ariaLabel: t('common.close').value }"
                 variant="text"
                 size="sm"
                 @click="onClose"
@@ -183,7 +183,7 @@
                     start
                     icon="mdi-checkbox-marked-circle-outline"
                   />
-                  {{ t('cs.manager.tabs.selected', 'Selected') }}
+                  {{ t('cs.manager.tabs.selected') }}
                   <AtlasChip
                     size="sm"
                     tone="primary"
@@ -197,7 +197,7 @@
                     start
                     icon="mdi-family-tree"
                   />
-                  {{ t('cs.manager.tabs.included', 'Included') }}
+                  {{ t('cs.manager.tabs.included') }}
                   <AtlasChip
                     size="sm"
                     tone="primary"
@@ -211,7 +211,7 @@
                     start
                     icon="mdi-barcode-scan"
                   />
-                  {{ t('cs.manager.tabs.sourceCodes', 'Source Codes') }}
+                  {{ t('cs.manager.tabs.sourceCodes') }}
                   <AtlasChip
                     size="sm"
                     tone="primary"
@@ -225,21 +225,21 @@
                     start
                     icon="mdi-magnify"
                   />
-                  {{ t('search.tabs.search', 'Search') }}
+                  {{ t('search.tabs.search') }}
                 </AtlasTab>
                 <AtlasTab value="recommend">
                   <AtlasIcon
                     start
                     icon="mdi-lightbulb-on-outline"
                   />
-                  {{ t('cs.manager.tabs.recommend', 'Recommend') }}
+                  {{ t('cs.manager.tabs.recommend') }}
                 </AtlasTab>
                 <AtlasTab value="compare">
                   <AtlasIcon
                     start
                     icon="mdi-compare"
                   />
-                  {{ t('cs.browser.compare.compare', 'Compare') }}
+                  {{ t('cs.browser.compare.compare') }}
                 </AtlasTab>
               </AtlasTabs>
 
@@ -252,7 +252,7 @@
                 class="cs-editor__paste-btn"
                 @click="showPasteDialog = true"
               >
-                {{ t('cs.manager.pasteIds', 'Paste IDs') }}
+                {{ t('cs.manager.pasteIds') }}
               </AtlasButton>
 
               <AtlasButton
@@ -262,7 +262,7 @@
                 class="cs-editor__paste-btn"
                 @click="showSourceCodeDialog = true"
               >
-                {{ t('cs.manager.importSourceCodesButton', 'Import by source code') }}
+                {{ t('cs.manager.importSourceCodesButton') }}
               </AtlasButton>
 
               <AtlasButton
@@ -272,7 +272,7 @@
                 class="cs-editor__paste-btn"
                 @click="showJsonDialog = true"
               >
-                {{ t('cs.manager.importJson', 'Import JSON') }}
+                {{ t('cs.manager.importJson') }}
               </AtlasButton>
 
               <DisabledReasonTooltip :reason="optimizeDisabledReason">
@@ -285,7 +285,7 @@
                   data-testid="cs-editor-optimize-btn"
                   @click="showOptimizeDialog = true"
                 >
-                  {{ t('cs.manager.optimize', 'Optimize') }}
+                  {{ t('cs.manager.optimize') }}
                 </AtlasButton>
               </DisabledReasonTooltip>
             </nav>
@@ -297,16 +297,12 @@
                   <AtlasAlert
                     v-if="missingConceptIds.length > 0"
                     severity="warning"
-                    :title="t('cs.manager.missingConceptsTitle', 'Some concepts are not in the selected vocabulary').value"
+                    :title="t('cs.manager.missingConceptsTitle').value"
                     class="mb-3"
                     data-testid="cs-editor-missing-concepts"
                   >
                     {{
-                      t(
-                        'cs.manager.missingConceptsMessage',
-                        'The vocabulary of source {sourceKey} does not contain {count} of the concepts in this concept set: {ids}. They stay in the concept set, but their details cannot be shown. Choose a different vocabulary source in Configuration to see them.',
-                        { sourceKey, count: missingConceptIds.length, ids: missingConceptIds.join(', ') }
-                      ).value
+                      t('cs.manager.missingConceptsMessage', { sourceKey, count: missingConceptIds.length, ids: missingConceptIds.join(', ') }).value
                     }}
                   </AtlasAlert>
                   <ConceptSetTable
@@ -391,9 +387,9 @@
       <!-- Versions Dialog -->
       <AtlasDialog
         v-model="showVersionsDialog"
-        :eyebrow="t('common.history', 'History').value"
-        :title="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
-        :close-label="t('common.close', 'Close').value"
+        :eyebrow="t('common.history').value"
+        :title="t('cohortDefinitions.cohortDefinitionManager.tabs.versions').value"
+        :close-label="t('common.close').value"
         max-width="1200"
         @close="showVersionsDialog = false"
       >
@@ -416,7 +412,7 @@
     v-model="showAccessDialog"
     entity-type="CONCEPT_SET"
     :entity-id="conceptSetAccessId"
-    :title="t('components.access.configureAccess', 'Configure access').value"
+    :title="t('components.access.configureAccess').value"
     :subtitle="props.conceptSet?.name || undefined"
     @close="showAccessDialog = false"
   />
@@ -426,29 +422,26 @@
        v-dialogs (which Vuetify already teleports to body). -->
   <AtlasDialog
     v-model="showCloseConfirm"
-    :eyebrow="t('common.confirm', 'Confirm').value"
-    :title="t('common.unsavedChanges', 'Unsaved changes').value"
+    :eyebrow="t('common.confirm').value"
+    :title="t('common.unsavedChanges').value"
     max-width="440"
     @close="showCloseConfirm = false"
   >
     {{
-      t(
-        'common.unsavedChangesMessage',
-        'You have unsaved changes. Are you sure you want to close?'
-      ).value
+      t('common.unsavedChangesMessage').value
     }}
     <template #actions>
       <AtlasButton
         variant="ghost"
         @click="showCloseConfirm = false"
       >
-        {{ t('common.cancel', 'Cancel').value }}
+        {{ t('common.cancel').value }}
       </AtlasButton>
       <AtlasButton
         variant="danger"
         @click="confirmClose"
       >
-        {{ t('common.discard', 'Discard changes').value }}
+        {{ t('common.discard').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -458,17 +451,14 @@
        set. -->
   <AtlasDialog
     v-model="showPasteDialog"
-    :eyebrow="t('cs.manager.pasteIds', 'Paste IDs').value"
-    :title="t('cs.manager.pasteIdsTitle', 'Paste concept IDs').value"
+    :eyebrow="t('cs.manager.pasteIds').value"
+    :title="t('cs.manager.pasteIdsTitle').value"
     max-width="640"
     @close="closePasteDialog"
   >
     <p class="cs-paste__hint">
       {{
-        t(
-          'cs.manager.pasteIdsHint',
-          'Separate IDs with spaces, commas, semicolons, or newlines. We resolve each ID against the vocabulary before adding.'
-        ).value
+        t('cs.manager.pasteIdsHint').value
       }}
     </p>
     <AtlasTextField
@@ -494,7 +484,7 @@
           icon="mdi-check-circle-outline"
           size="18"
         />
-        <span>{{ t('cs.manager.pasteIdsResolved', 'Resolved').value }}:
+        <span>{{ t('cs.manager.pasteIdsResolved').value }}:
           {{ pasteResolved.length }}</span>
       </div>
       <div
@@ -505,7 +495,7 @@
           icon="mdi-alert-circle-outline"
           size="18"
         />
-        <span>{{ t('cs.manager.pasteIdsUnresolved', 'Not found').value }}:
+        <span>{{ t('cs.manager.pasteIdsUnresolved').value }}:
           {{ pasteUnresolved.join(', ') }}</span>
       </div>
     </div>
@@ -516,7 +506,7 @@
         :disabled="pasteResolving"
         @click="closePasteDialog"
       >
-        {{ t('common.cancel', 'Cancel').value }}
+        {{ t('common.cancel').value }}
       </AtlasButton>
       <AtlasButton
         v-if="!pasteResolved.length && !pasteUnresolved.length"
@@ -524,14 +514,14 @@
         :disabled="!pasteInput.trim()"
         @click="resolvePastedIds"
       >
-        {{ t('cs.manager.pasteIdsResolveBtn', 'Resolve').value }}
+        {{ t('cs.manager.pasteIdsResolveBtn').value }}
       </AtlasButton>
       <AtlasButton
         v-else
         :disabled="!pasteResolved.length"
         @click="applyPastedConcepts"
       >
-        {{ t('cs.manager.pasteIdsAddBtn', 'Add').value }} {{ pasteResolved.length || '' }}
+        {{ t('cs.manager.pasteIdsAddBtn').value }} {{ pasteResolved.length || '' }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -541,17 +531,14 @@
        summary before adding to the set. -->
   <AtlasDialog
     v-model="showSourceCodeDialog"
-    :eyebrow="t('cs.manager.importSourceCodes', 'Import codes').value"
-    :title="t('cs.manager.importSourceCodesTitle', 'Import by source code').value"
+    :eyebrow="t('cs.manager.importSourceCodes').value"
+    :title="t('cs.manager.importSourceCodesTitle').value"
     max-width="640"
     @close="closeSourceCodeDialog"
   >
     <p class="cs-paste__hint">
       {{
-        t(
-          'cs.manager.importSourceCodesHint',
-          'Separate source codes with commas, semicolons, or newlines. We resolve each code against the vocabulary before adding.'
-        ).value
+        t('cs.manager.importSourceCodesHint').value
       }}
     </p>
     <AtlasTextField
@@ -577,7 +564,7 @@
           icon="mdi-check-circle-outline"
           size="18"
         />
-        <span>{{ t('cs.manager.pasteIdsResolved', 'Resolved').value }}:
+        <span>{{ t('cs.manager.pasteIdsResolved').value }}:
           {{ sourceCodeResolved.length }}</span>
       </div>
       <div
@@ -588,7 +575,7 @@
           icon="mdi-alert-circle-outline"
           size="18"
         />
-        <span>{{ t('cs.manager.pasteIdsUnresolved', 'Not found').value }}:
+        <span>{{ t('cs.manager.pasteIdsUnresolved').value }}:
           {{ sourceCodeUnresolved.join(', ') }}</span>
       </div>
     </div>
@@ -599,7 +586,7 @@
         :disabled="sourceCodeResolving"
         @click="closeSourceCodeDialog"
       >
-        {{ t('common.cancel', 'Cancel').value }}
+        {{ t('common.cancel').value }}
       </AtlasButton>
       <AtlasButton
         v-if="!sourceCodeResolved.length && !sourceCodeUnresolved.length"
@@ -607,14 +594,14 @@
         :disabled="!sourceCodeInput.trim()"
         @click="resolvePastedSourceCodes"
       >
-        {{ t('cs.manager.pasteIdsResolveBtn', 'Resolve').value }}
+        {{ t('cs.manager.pasteIdsResolveBtn').value }}
       </AtlasButton>
       <AtlasButton
         v-else
         :disabled="!sourceCodeResolved.length"
         @click="applySourceCodeConcepts"
       >
-        {{ t('cs.manager.pasteIdsAddBtn', 'Add').value }} {{ sourceCodeResolved.length || '' }}
+        {{ t('cs.manager.pasteIdsAddBtn').value }} {{ sourceCodeResolved.length || '' }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -623,17 +610,14 @@
        ({ items: [...] }) and adds the resolved items to the set. -->
   <AtlasDialog
     v-model="showJsonDialog"
-    :eyebrow="t('cs.manager.importJson', 'Import JSON').value"
-    :title="t('cs.manager.importJsonTitle', 'Import concept set JSON').value"
+    :eyebrow="t('cs.manager.importJson').value"
+    :title="t('cs.manager.importJsonTitle').value"
     max-width="640"
     @close="closeJsonDialog"
   >
     <p class="cs-paste__hint">
       {{
-        t(
-          'cs.manager.importJsonHint',
-          'Paste a concept set expression JSON ({ "items": [ ... ] }). Each item\'s concept and its flags will be added to the set.'
-        ).value
+        t('cs.manager.importJsonHint').value
       }}
     </p>
     <AtlasTextField
@@ -655,7 +639,7 @@
           icon="mdi-check-circle-outline"
           size="18"
         />
-        <span>{{ t('cs.manager.pasteIdsResolved', 'Resolved').value }}:
+        <span>{{ t('cs.manager.pasteIdsResolved').value }}:
           {{ jsonItems.length }}</span>
       </div>
     </div>
@@ -677,21 +661,21 @@
         variant="ghost"
         @click="closeJsonDialog"
       >
-        {{ t('common.cancel', 'Cancel').value }}
+        {{ t('common.cancel').value }}
       </AtlasButton>
       <AtlasButton
         v-if="!jsonParsed || !jsonItems.length"
         :disabled="!jsonInput.trim()"
         @click="parseJsonImport"
       >
-        {{ t('cs.manager.importJsonParseBtn', 'Parse').value }}
+        {{ t('cs.manager.importJsonParseBtn').value }}
       </AtlasButton>
       <AtlasButton
         v-else
         :disabled="!jsonItems.length"
         @click="applyJsonItems"
       >
-        {{ t('cs.manager.pasteIdsAddBtn', 'Add').value }} {{ jsonItems.length || '' }}
+        {{ t('cs.manager.pasteIdsAddBtn').value }} {{ jsonItems.length || '' }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -909,15 +893,12 @@ const optimizeSaving = ref(false)
 
 const optimizeDisabledReason = computed<string>(() => {
   if ((store.currentSet?.items.length ?? 0) < 2) {
-    return tv('cs.manager.optimizeNeedsTwoItems', 'Add at least two concepts to optimize the concept set.')
+    return tv('cs.manager.optimizeNeedsTwoItems')
   }
   // The optimizer resolves against the vocabulary, so a concept the vocabulary
   // lacks would silently drop out of the optimized set.
   if (missingConceptIds.value.length > 0) {
-    return tv(
-      'cs.manager.optimizeMissingConcepts',
-      'Some concepts are not in the selected vocabulary, so the concept set cannot be optimized.'
-    )
+    return tv('cs.manager.optimizeMissingConcepts')
   }
   return ''
 })
@@ -956,7 +937,7 @@ const canSubmit = computed<boolean>(() => {
 
 const saveDisabledReason = computed<string>(() =>
   resolveSaveDisabledReason({
-    entity: tv('const.entityName.conceptSet', 'concept set'),
+    entity: tv('const.entityName.conceptSet'),
     isNew: !isEditMode.value,
     // nameError already says what is wrong with the name, so it is surfaced
     // verbatim rather than replaced with the generic "give it a name".
@@ -973,12 +954,12 @@ const itemCount = computed(() => {
 
 const eyebrowText = computed(() => {
   if (isEditMode.value && props.conceptSet?.id !== undefined) {
-    return `${t('common.conceptSet', 'Concept set').value} · #${props.conceptSet.id}`
+    return `${t('common.conceptSet').value} · #${props.conceptSet.id}`
   }
-  return t('common.conceptSet', 'Concept set').value
+  return t('common.conceptSet').value
 })
 
-const drawerRailLabel = computed(() => 'Concept set editor')
+const drawerRailLabel = computed(() => t('cs.manager.editorRailLabel').value)
 
 // Lightweight name validation surfaced under the inline title input
 // (replaces the v-text-field error-messages slot — the inline title
@@ -986,10 +967,10 @@ const drawerRailLabel = computed(() => 'Concept set editor')
 const nameError = computed(() => {
   const v = form.value.name
   if (!v || v.trim().length === 0) {
-    return t('commonErrors.nameRequired', 'Name is required').value
+    return t('commonErrors.nameRequired').value
   }
   if (v.length > 255) {
-    return t('commonErrors.lengthValidation', 'Name must be between 1 and 255 characters').value
+    return t('commonErrors.lengthValidation').value
   }
   return ''
 })
@@ -1188,7 +1169,7 @@ async function onSave() {
       if (savedId !== undefined && savedId !== null) {
         const tagResult = await store.syncTags(savedId, tagsBeforeSave, tagsToPersist)
         if (!tagResult.success) {
-          notify.danger(tv('conceptSets.tagUpdateFailed', 'Failed to update tags'), {
+          notify.danger(tv('conceptSets.tagUpdateFailed'), {
             message: tagResult.error,
           })
         }
@@ -1506,7 +1487,7 @@ async function onOptimizeCreate(payload: { name: string; items: ConceptSetItem[]
   try {
     const created = await store.create(payload)
     if (!created) {
-      notify.danger(tv('cs.manager.optimizeCreateFailed', 'Could not create the optimized concept set'), {
+      notify.danger(tv('cs.manager.optimizeCreateFailed'), {
         message: store.error ?? undefined,
       })
       return
@@ -1515,7 +1496,7 @@ async function onOptimizeCreate(payload: { name: string; items: ConceptSetItem[]
     hasUnsavedChanges.value = false
     activeTab.value = 'selected'
     notify.success(
-      tv('cs.manager.optimizeCreated', 'Created concept set "{name}"', { name: created.name })
+      tv('cs.manager.optimizeCreated', { name: created.name })
     )
   } finally {
     optimizeSaving.value = false

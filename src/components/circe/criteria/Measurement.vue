@@ -77,6 +77,7 @@
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import {
   AtlasButton,
   AtlasDivider,
@@ -104,9 +105,10 @@ const emit = defineEmits<{
   'clear-concept-set': []
 }>()
 
-const measurementTitle = computed(() => 'a measurement of')
-const addAttributeLabel = computed(() => 'Add attribute...')
-const selectConceptSetLabel = computed(() => 'Select Concept Set')
+const { t } = useI18n()
+const measurementTitle = computed(() => t('components.measurement.title').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
+const selectConceptSetLabel = computed(() => t('components.criteria.selectConceptSet').value)
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {

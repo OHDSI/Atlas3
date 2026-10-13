@@ -158,7 +158,8 @@
     "invalid": "Invalid",
     "valid": "Valid",
     "unexpectedError": "An unexpected error occurred. This has been logged for investigation.",
-    "errorDetails": "Error Details"
+    "errorDetails": "Error Details",
+    "somethingWentWrong": "Something Went Wrong"
   },
   "navigation": {
     "characterizations": "Characterizations",
@@ -340,7 +341,8 @@
       "noPreviousRuns": "No previous runs."
     },
     "atlasCohortEditor": {
-      "enterCohortPlaceholder": "Enter a cohort definition description here"
+      "enterCohortPlaceholder": "Enter a cohort definition description here",
+      "enterCohortNamePlaceholder": "Enter cohort name"
     },
     "customEra": {
       "criteriaPrefix": "a custom era using",
@@ -348,13 +350,11 @@
       "criteriaList": "Criteria List",
       "addCriteria": "Add Criteria...",
       "additionalAttributes": "Additional Attributes",
-      "addAttribute": "Add Attribute...",
       "noCriteria": "No criteria yet.",
       "noOptionalAttributes": "No additional attributes yet."
     },
     "episode": {
-      "criteriaText_1": "an episode of",
-      "addAttribute": "Add attribute..."
+      "title": "an episode of"
     },
     "expressionCartoonBindings": {
       "noInclusionRules": "No inclusion rules"
@@ -362,9 +362,6 @@
     "cohortExpressionEditor": {
       "addTrimmingOptions": "add trimming options...",
       "entryEventsAnyHint": "Entry events are matched with ANY (or)",
-      "cohortErasText_1": "Specify era collapse gap size:",
-      "cohortErasText_2": "Left censor cohort start dates to",
-      "cohortErasText_3": "Right censor cohort end dates to",
       "days": "days",
       "inclusionCriteria": "Inclusion Criteria",
       "noCensoring": "No Censoring",
@@ -378,7 +375,11 @@
       "noPrimaryCriteria": "No primary criteria yet. Click \"Add Criteria to Group\" to start.",
       "restrictInitialEvents": "Restrict Initial Events",
       "exitCriteria": "Exit & Eras",
-      "cohortEras": "Cohort Eras"
+      "cohortEras": "Cohort Eras",
+      "eraCollapseGap": "Specify era collapse gap size:",
+      "leftCensorStartDates": "Left censor cohort start dates to",
+      "rightCensorEndDates": "Right censor cohort end dates to",
+      "limitRestrictedEventsTo": "Limit Restricted Events to"
     },
     "conceptSet": {
       "addConcepts": "Add Concepts"
@@ -396,23 +397,15 @@
       "inThisDefinition": "In this definition",
       "importFromRepository": "Import from repository"
     },
-    "conditionDrugExposure": {
-      "addAttribute": "Add attribute...",
-      "conditionDrugExposureText_1": "a drug exposure of"
-    },
     "conditionEra": {
-      "addAttribute": "Add attribute...",
-      "criteriaText_1": "a condition era of"
+      "title": "a condition era of"
     },
     "conditionOccurrence": {
-      "addAttribute": "Add attribute...",
-      "conditionOccurrenceText_1": "a condition occurrence of"
+      "title": "a condition occurrence of"
     },
     "criteriaGroup": {
       "addCriteria": "Add criteria to group...",
       "addNestedGroup": "Add Nested Group",
-      "criteriaGroupText_1": "restrict to the same visit occurrence",
-      "criteriaGroupText_2": "allow events from outside observation period",
       "nestedCriteria": {
         "selectLogicType": "Select logic type",
         "depthWarning": "Nesting depth is {depth}/10"
@@ -447,14 +440,14 @@
       "username": "Username"
     },
     "windowedCriteria": {
-      "windowedCriteriaText_5": "restrict to the same visit occurrence",
-      "windowedCriteriaText_6": "ignore observation period"
+      "ignoreObservationPeriod": "ignore observation period"
     },
     "generation": {
       "generate": "Generate",
       "pickAtLeastOneSourceAlert": "Pick at least one source to generate",
       "unsavedChanges": "Save changes before running",
-      "fixErrors": "Resolve validation errors before running"
+      "fixErrors": "Resolve validation errors before running",
+      "noSourcesConfigured": "No data sources configured."
     },
     "nameValidation": {
       "empty": "The name is empty."
@@ -620,7 +613,7 @@
       "ninetyDayFollowUp": "90-day follow-up (0 to 90 days after)",
       "oneYearFollowUp": "1-year follow-up (0 to 365 days after)",
       "allTimeAfterIndex": "All time after index",
-      "eventOverlapsWithIndex": "event overlapps with index"
+      "eventOverlapsWithIndex": "event overlaps with index"
     },
     "conceptSetPicker": {
       "setCountOne": "1 set",
@@ -1035,7 +1028,65 @@
       "eventEnds": "event ends",
       "eventStarts": "event starts",
       "indexEnd": "index end",
-      "indexStart": "index start"
+      "indexStart": "index start",
+      "before": "before",
+      "after": "after"
+    },
+    "drugExposure": {
+      "title": "a drug exposure of"
+    },
+    "correlatedCriteria": {
+      "restrictToSameVisit": "restrict to the same visit occurrence",
+      "allowEventsOutsideObservation": "allow events from outside observation period",
+      "distinctBy": "Distinct by",
+      "usingDistinctEvents": "Using distinct events",
+      "usingAllEvents": "Using all events",
+      "ofDistinct": "of distinct",
+      "distinctColumn": {
+        "startDate": "Start Date",
+        "standardConcept": "Standard Concept",
+        "visit": "Visit"
+      }
+    },
+    "deviceExposure": {
+      "title": "a device exposure of"
+    },
+    "doseEra": {
+      "title": "a dose era of"
+    },
+    "drugEra": {
+      "title": "a drug era of"
+    },
+    "measurement": {
+      "title": "a measurement of"
+    },
+    "procedureOccurrence": {
+      "title": "a procedure occurrence of"
+    },
+    "observation": {
+      "title": "an observation of"
+    },
+    "visitDetail": {
+      "title": "a visit detail of"
+    },
+    "specimen": {
+      "title": "a specimen of"
+    },
+    "visitOccurrence": {
+      "title": "a visit occurrence of"
+    },
+    "observationPeriod": {
+      "title": "observation period"
+    },
+    "death": {
+      "title": "a death of"
+    },
+    "payerPlanPeriod": {
+      "title": "a payer plan period of"
+    },
+    "criteria": {
+      "addAttribute": "Add attribute...",
+      "selectConceptSet": "Select Concept Set"
     }
   },
   "characterizations": {
@@ -1209,7 +1260,9 @@
     "age": "Age",
     "lastRun": "Last run",
     "outcome": "Outcome",
-    "createdBy": "Created By"
+    "createdBy": "Created By",
+    "role": "Role",
+    "source": "Source"
   },
   "dataSources": {
     "dashboardReport": {
@@ -1312,7 +1365,9 @@
       "search": "Search"
     },
     "viewCountMessage": "View record count for:",
-    "vocabulariesInfo": "Type at least 3 characters; press Enter to search across SNOMED, ICD, RxNorm, LOINC, and other vocabularies."
+    "vocabulariesInfo": "Type at least 3 characters; press Enter to search across SNOMED, ICD, RxNorm, LOINC, and other vocabularies.",
+    "noMatchingConceptSets": "No concept sets match your search.",
+    "minLengthHint": "Please enter at least {min} characters"
   },
   "cs": {
     "browser": {
@@ -1334,7 +1389,8 @@
         "compare": "Compare",
         "noMatches": "No concept sets match"
       },
-      "subtitle": "Browse the OMOP vocabulary and curate reusable concept sets."
+      "subtitle": "Browse the OMOP vocabulary and curate reusable concept sets.",
+      "pageTitle": "Concepts"
     },
     "conceptAddBox": {
       "addToConceptSet": "Add To Concept Set",
@@ -1415,7 +1471,10 @@
       "emptyStateMessage": "No concept sets yet — create one to start curating concepts.",
       "filters": "Filter",
       "emptyFilteredMessage": "No concepts match the active filters.",
-      "emptyConceptsMessage": "No concepts in this set yet — search for concepts or paste IDs to add them."
+      "emptyConceptsMessage": "No concepts in this set yet — search for concepts or paste IDs to add them.",
+      "editorRailLabel": "Concept set editor",
+      "untitledPlaceholder": "Untitled concept set",
+      "deleteConfirmation": "Are you sure you want to delete"
     },
     "conceptSet": {
       "recommend": {
@@ -1431,12 +1490,14 @@
     "title": "Cohort Characterizations",
     "new": "New",
     "modals": {
-      "chooseAFeatureAnalyses": "Choose a Feature Analyses..."
+      "chooseAFeatureAnalyses": "Choose a Feature Analyses...",
+      "selectFeatureAnalyses": "Select feature analyses to link"
     },
     "tabs": {
       "featureAnalyses": {
         "newLabel": "Feature analysis",
-        "title": "Feature analyses"
+        "title": "Feature analyses",
+        "createLabel": "New Feature Analysis"
       }
     },
     "viewEdit": {
@@ -1459,14 +1520,16 @@
       },
       "results": {
         "detail": {
-          "design": "Design:"
+          "design": "Design:",
+          "designHash": "Design Hash"
         },
         "exportAll": "Export all",
         "filters": {
           "cohorts": "Cohorts"
         },
         "threshold": {
-          "label": "Filter results to covariates with prevalence greater than:"
+          "label": "Filter results to covariates with prevalence greater than:",
+          "showAtLeast": "Show covariates with prevalence ≥ {n}%"
         },
         "thresholdLabel": "Threshold ≥"
       },
@@ -1521,7 +1584,11 @@
         }
       },
       "descriptionPlaceholder": "Add a short description",
-      "namePlaceholder": "Name this characterization"
+      "namePlaceholder": "Name this characterization",
+      "messages": {
+        "noIssues": "No issues. Design is valid."
+      },
+      "saveError": "Failed to save characterization"
     },
     "fa": {
       "tabs": {
@@ -1543,7 +1610,11 @@
       "saveError": "An error occurred while attempting to save a feature analysis.",
       "runError": "Failed to start generation",
       "cancelError": "Failed to cancel generation",
-      "statType": "Stat Type"
+      "statType": "Stat Type",
+      "columns": {
+        "type": "Type"
+      },
+      "customSqlTitle": "Custom SQL"
     }
   },
   "home": {
@@ -1571,7 +1642,8 @@
       "pathway": "New pathway",
       "characterization": "New characterization",
       "featureAnalysis": "New feature analysis"
-    }
+    },
+    "heroTitle": "Patient-level analytics, unified."
   },
   "ir": {
     "deleteConfirmation": "Delete incidence rate analysis? Warning: deletion can not be undone!",
@@ -1581,7 +1653,10 @@
       "timeAtRiskWarningMessage": "Error: Time at risk starts on or after time at risk end, resulting in zero time at risk.  Please ensure the start offset is greater than the end offset.",
       "timeAtRiskCohortStart": "Cohort start",
       "timeAtRiskCohortEnd": "Cohort end",
-      "outcomes": "Outcomes"
+      "outcomes": "Outcomes",
+      "exportError": "Export failed",
+      "noConceptSets": "This incidence rate has no concept sets attached.",
+      "timeAtRiskEndBeforeStart": "Time-at-risk end must be after start when both reference the same date"
     },
     "results": {
       "cases": "Cases",
@@ -1593,7 +1668,8 @@
       "started": "Started",
       "stratifyRule": "Stratify Rule",
       "summaryStatistics": "Summary Statistics:",
-      "timeAtRiskYears": "Person-years"
+      "timeAtRiskYears": "Person-years",
+      "summaryRow": "Summary"
     },
     "tabs": {
       "conceptSets": "Concept Sets",
@@ -1637,7 +1713,8 @@
     "findAPerson": "Find a person",
     "chooseSourceAndPerson": "Choose a data source and enter a person ID",
     "dataSource": "Data source",
-    "emptyHint": "Use the source picker and person ID above to load a profile."
+    "emptyHint": "Use the source picker and person ID above to load a profile.",
+    "noCohortSelected": "No cohort selected"
   },
   "ple": {
     "spec": {
@@ -1876,7 +1953,15 @@
     "copyError": "Failed to copy the cohort.",
     "deleteError": "Failed to delete the cohort.",
     "noRuleDescription": "No description",
-    "ruleDescription": "Description"
+    "ruleDescription": "Description",
+    "saveBeforeGenerate": "Please save the cohort before generating.",
+    "conceptSetPicker": {
+      "empty": "No concept sets yet — create one to get started."
+    },
+    "conceptSetsDialog": {
+      "title": "Concept Sets",
+      "empty": "No concept sets in this cohort"
+    }
   },
   "const": {
     "entityName": {
@@ -2410,6 +2495,18 @@
       "copied": "Copied to clipboard",
       "copyFailed": "Could not copy to clipboard",
       "done": "Done"
+    }
+  },
+  "censorWindow": {
+    "validation": {
+      "startAfterEnd": "Start date must be on or before end date"
+    }
+  },
+  "pathways": {
+    "editor": {
+      "previewBanner": "Previewing version — saving will create a new pathway",
+      "exportError": "Export failed",
+      "noPathwayLoaded": "No pathway loaded"
     }
   }
 }

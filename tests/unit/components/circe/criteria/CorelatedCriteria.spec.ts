@@ -121,7 +121,7 @@ describe('CorelatedCriteria', () => {
     expect(presetSelect).toBeTruthy()
     await presetSelect.vm.$emit('update:modelValue', preset)
     await nextTick()
-    expect(wrapper.text()).toContain('30 days Before')
+    expect(wrapper.text()).toContain('30 days before')
 
     const closeButton = wrapper.findAllComponents({ name: 'AtlasButton' }).find(button => button.text().includes('Close'))
     expect(closeButton).toBeTruthy()

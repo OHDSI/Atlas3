@@ -106,9 +106,9 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const procedureOccurrenceTitle = computed(() => 'a procedure occurrence of')
-const addAttributeLabel = computed(() => 'Add attribute...')
-const selectConceptSetLabel = computed(() => t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value)
+const procedureOccurrenceTitle = computed(() => t('components.procedureOccurrence.title').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
+const selectConceptSetLabel = computed(() => t('components.conceptAddBox.selectConceptSet').value)
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {

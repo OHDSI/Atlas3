@@ -2,12 +2,12 @@
   <AtlasTextField
     :model-value="modelValue"
     class="cohort-search"
-    :placeholder="t('datatable.language.searchPlaceholder', 'Filter cohorts...').value"
+    :placeholder="t('datatable.language.searchPlaceholder').value"
     prepend-icon="mdi-magnify"
     clearable
     variant="outlined"
     hide-details
-    :aria-label="t('datatable.language.search', 'Search cohorts by name').value"
+    :aria-label="t('datatable.language.search').value"
     @update:model-value="(v) => handleInput(v as string | null)"
   />
 </template>

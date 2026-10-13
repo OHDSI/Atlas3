@@ -48,17 +48,17 @@ const props = defineProps<{
 const modelValue = toRef(props, 'modelValue')
 
 const operators = computed(() => [
-  { title: t('options.before', 'before').value, value: 'lt' },
-  { title: t('options.onOrBefore', 'on or before').value, value: 'lte' },
-  { title: t('options.on', 'on').value, value: 'eq' },
-  { title: t('options.notOn', 'not on').value, value: '!eq' },
-  { title: t('options.after', 'after').value, value: 'gt' },
-  { title: t('options.onOrAfter', 'on or after').value, value: 'gte' },
-  { title: t('options.between', 'between').value, value: 'bt' },
-  { title: t('options.notBetween', 'not between').value, value: '!bt' },
+  { title: t('options.before').value, value: 'lt' },
+  { title: t('options.onOrBefore').value, value: 'lte' },
+  { title: t('options.on').value, value: 'eq' },
+  { title: t('options.notOn').value, value: '!eq' },
+  { title: t('options.after').value, value: 'gt' },
+  { title: t('options.onOrAfter').value, value: 'gte' },
+  { title: t('options.between').value, value: 'bt' },
+  { title: t('options.notBetween').value, value: '!bt' },
 ])
 
-const andLabel = computed(() => t('common.and', 'and').value)
+const andLabel = computed(() => t('common.and').value)
 
 const operator = computed<DateRangeOp | null | undefined>({
   get: () => modelValue.value.Op,

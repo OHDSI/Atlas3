@@ -6,6 +6,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import DrilldownDetails from '@/components/reports/DrilldownDetails.vue'
 import type { DrilldownReport } from '@/models/report.types'
+import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -151,10 +152,10 @@ describe('DrilldownDetails', () => {
       const line = w.findComponent({ name: 'AtlasLineChart' })
       const data = line.props('data') as { monthCodes: (number | string)[]; series: Array<{ name: string; data: number[] }>; yAxisLabel: string }
       expect(data.series).toHaveLength(1)
-      expect(data.series[0].name).toBe('Prevalence per 1000 people')
+      expect(data.series[0].name).toBe(tr('dataSources.drilldown.chartFormat.prevalencePer1000People'))
       expect(data.series[0].data).toEqual([10, 15])
       expect(data.monthCodes).toEqual([202001, 202002])
-      expect(data.yAxisLabel).toBe('Prevalence per 1000 people')
+      expect(data.yAxisLabel).toBe(tr('dataSources.drilldown.chartFormat.prevalencePer1000People'))
     })
   })
 

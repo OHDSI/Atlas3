@@ -19,7 +19,7 @@
           <v-checkbox-btn
             :model-value="allVisibleSelected"
             :indeterminate="someVisibleSelected && !allVisibleSelected"
-            :aria-label="t('components.conceptTable.selectAllConcepts', 'Select all concepts').value"
+            :aria-label="t('components.conceptTable.selectAllConcepts').value"
             density="compact"
             hide-details
             @update:model-value="onToggleSelectAll"
@@ -34,7 +34,7 @@
         <div :data-testid="`concept-table-row-checkbox-${item.conceptId}`">
           <v-checkbox-btn
             :model-value="isSelected(item.conceptId)"
-            :aria-label="tv('components.conceptTable.selectConcept', 'Select {name}', { name: item.conceptName })"
+            :aria-label="tv('components.conceptTable.selectConcept', { name: item.conceptName })"
             density="compact"
             hide-details
             @update:model-value="(v: boolean | null) => onToggleRow(item.conceptId, v)"
@@ -62,8 +62,8 @@
         >
           {{
             item.invalidReason
-              ? t('commonErrors.invalid', 'Invalid').value
-              : t('commonErrors.valid', 'Valid').value
+              ? t('commonErrors.invalid').value
+              : t('commonErrors.valid').value
           }}
         </AtlasChip>
       </template>
@@ -161,7 +161,7 @@
             icon="mdi-plus"
             @click="onAddConcept(item)"
           >
-            {{ t('common.add', 'Add').value }}
+            {{ t('common.add').value }}
           </AtlasButton>
           <AtlasButton
             v-else
@@ -171,7 +171,7 @@
             icon="mdi-minus"
             @click="onRemoveConcept(item)"
           >
-            {{ t('columns.remove', 'Remove').value }}
+            {{ t('columns.remove').value }}
           </AtlasButton>
         </div>
       </template>
@@ -186,7 +186,7 @@
             mdi-database-search
           </AtlasIcon>
           <p class="text-body-1 mt-4 text-grey">
-            {{ loading ? t('common.loadingWithDots', 'Loading...').value : t('components.conceptTable.noRecords', 'No records to display').value }}
+            {{ loading ? t('common.loadingWithDots').value : t('components.conceptTable.noRecords').value }}
           </p>
         </div>
       </template>
@@ -209,7 +209,7 @@
       </div>
 
       <div class="d-flex align-center gap-2">
-        <span class="text-body-2">{{ t('components.conceptTable.itemsPerPage', 'Items per page:').value }}</span>
+        <span class="text-body-2">{{ t('components.conceptTable.itemsPerPage').value }}</span>
         <AtlasSelect
           :model-value="itemsPerPage"
           :items="itemsPerPageOptions"
@@ -342,62 +342,62 @@ function onConceptNameClick(event: MouseEvent, concept: Concept) {
 // Add actions column if showAddButton is true
 const headers = computed(() => {
   const baseHeaders = [
-    { title: t('columns.conceptId', 'ID').value, key: 'conceptId', sortable: true, width: '100px' },
+    { title: t('columns.conceptId').value, key: 'conceptId', sortable: true, width: '100px' },
     {
-      title: t('columns.conceptCode', 'Code').value,
+      title: t('columns.conceptCode').value,
       key: 'conceptCode',
       sortable: true,
       width: '120px',
     },
-    { title: t('columns.conceptName', 'Name').value, key: 'conceptName', sortable: true },
+    { title: t('columns.conceptName').value, key: 'conceptName', sortable: true },
     {
-      title: t('columns.vocabulary', 'Vocabulary').value,
+      title: t('columns.vocabulary').value,
       key: 'vocabularyId',
       sortable: true,
       width: '120px',
     },
     {
-      title: t('columns.type', 'Type').value,
+      title: t('columns.type').value,
       key: 'standardConcept',
       sortable: true,
       width: '140px',
     },
-    { title: t('columns.domain', 'Domain').value, key: 'domainId', sortable: true, width: '120px' },
+    { title: t('columns.domain').value, key: 'domainId', sortable: true, width: '120px' },
     {
-      title: t('columns.class', 'Class').value,
+      title: t('columns.class').value,
       key: 'conceptClassId',
       sortable: true,
       width: '150px',
     },
     {
-      title: t('columns.validity', 'Validity').value,
+      title: t('columns.validity').value,
       key: 'invalidReason',
       sortable: true,
       width: '100px',
     },
     {
-      title: t('columns.rcTooltip', 'RC').value,
+      title: t('columns.rcTooltip').value,
       key: 'recordCount',
       sortable: true,
       width: '100px',
       align: 'end' as const,
     },
     {
-      title: t('columns.drcTooltip', 'DRC').value,
+      title: t('columns.drcTooltip').value,
       key: 'descendantRecordCount',
       sortable: true,
       width: '100px',
       align: 'end' as const,
     },
     {
-      title: t('columns.pcTooltip', 'PC').value,
+      title: t('columns.pcTooltip').value,
       key: 'personCount',
       sortable: true,
       width: '100px',
       align: 'end' as const,
     },
     {
-      title: t('columns.dpcTooltip', 'DPC').value,
+      title: t('columns.dpcTooltip').value,
       key: 'descendantPersonCount',
       sortable: true,
       width: '100px',
@@ -491,9 +491,9 @@ function getConceptTypeColor(concept: Concept): string {
 }
 
 function getConceptTypeLabel(concept: Concept): string {
-  if (concept.standardConcept === 'S') return t('search.standard', 'Standard').value
-  if (concept.standardConcept === 'C') return t('search.classification', 'Classification').value
-  return t('search.nonStandard', 'Non-Standard').value
+  if (concept.standardConcept === 'S') return t('search.standard').value
+  if (concept.standardConcept === 'C') return t('search.classification').value
+  return t('search.nonStandard').value
 }
 
 function onPageChange(newPage: number) {

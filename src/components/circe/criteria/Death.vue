@@ -106,11 +106,11 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const deathTitle = computed(() => 'a death of')
+const deathTitle = computed(() => t('components.death.title').value)
 
-const addAttributeLabel = computed(() => 'Add attribute...')
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
 
-const selectConceptSetLabel = computed(() => t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value)
+const selectConceptSetLabel = computed(() => t('components.conceptAddBox.selectConceptSet').value)
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {
@@ -248,7 +248,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
     componentProps: () => createConceptSetComponentProps(
       deathSourceConceptModel as ConceptSetSelection,
       props.conceptSets,
-      t('components.eventCard.selectSourceConcept', 'Select Source Concept').value,
+      t('components.eventCard.selectSourceConcept').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
