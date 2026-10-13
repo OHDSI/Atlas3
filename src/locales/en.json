@@ -148,7 +148,9 @@
     "noWindow": "No window",
     "unset": "unset",
     "startDate": "start date",
-    "endDate": "end date"
+    "endDate": "end date",
+    "dayCountOne": "1 day",
+    "dayCount": "{count} days"
   },
   "commonErrors": {
     "noSources": "The current WebAPI has no sources defined.<br/>Please add one or more on <a href=\"#/configure\">configuration</a> page.",
@@ -220,21 +222,21 @@
   },
   "options": {
     "after": "After",
-    "all": "all",
-    "any": "any",
-    "atLeast": "at least",
-    "atMost": "at most",
+    "all": "All",
+    "any": "Any",
+    "atLeast": "At least",
+    "atMost": "At most",
     "before": "Before",
     "between": "between",
     "contains": "containing",
-    "endDate": "end date",
+    "endDate": "End Date",
     "endsWith": "ending with",
-    "exactly": "exactly",
+    "exactly": "Exactly",
     "notBetween": "not between",
     "notContains": "not containing",
     "notEndsWith": "not ending with",
     "notStartsWith": "not starting with",
-    "startDate": "start date",
+    "startDate": "Start Date",
     "startsWith": "starting with",
     "earliest": "Earliest",
     "latest": "Latest",
@@ -315,7 +317,8 @@
       "hoverSummaryPersons": "{size} persons ({percent}), {passed} rules passed, {failed} rules failed",
       "hoverSummaryEvents": "{size} events ({percent}), {passed} rules passed, {failed} rules failed",
       "unitPersons": "Persons",
-      "unitEvents": "Events"
+      "unitEvents": "Events",
+      "patientCount": "{count} patients"
     },
     "access": {
       "configureAccess": "Configure access",
@@ -380,7 +383,8 @@
       "eraCollapseGap": "Specify era collapse gap size:",
       "leftCensorStartDates": "Left censor cohort start dates to",
       "rightCensorEndDates": "Right censor cohort end dates to",
-      "limitRestrictedEventsTo": "Limit Restricted Events to"
+      "limitRestrictedEventsTo": "Limit Restricted Events to",
+      "observationSummary": "Continuous observation: {prior}d before · {post}d after"
     },
     "conceptSet": {
       "addConcepts": "Add Concepts"
@@ -412,7 +416,9 @@
         "depthWarning": "Nesting depth is {depth}/10"
       },
       "clickToChangeMatchType": "Click to change match type",
-      "noEventsInGroup": "No events in group. Add events to build criteria logic."
+      "noEventsInGroup": "No events in group. Add events to build criteria logic.",
+      "matchAtLeast": "At least {count}",
+      "matchAtMost": "At most {count}"
     },
     "demographicCriteria": {
       "name": "Demographic Criteria"
@@ -692,7 +698,8 @@
       "hierarchyLoadFailed": "Could not load the hierarchy for this concept.",
       "moreDescendants": "{count} more descendants",
       "noRelatedConcepts": "No related concepts found.",
-      "relationshipsCount": "{count} relationships"
+      "relationshipsCount": "{count} relationships",
+      "statSummary": "{persons} persons · {descendants} desc."
     },
     "conceptHierarchyDialog": {
       "title": "Hierarchy · {concept}",
@@ -997,7 +1004,11 @@
       "indexEnd": "index end",
       "indexStart": "index start",
       "before": "before",
-      "after": "after"
+      "after": "after",
+      "summary": "{anchor} between {start} and {end} {indexAnchor}",
+      "endpointBefore": "{days} before",
+      "endpointAfter": "{days} after",
+      "startAndEnd": "{start} and {end}"
     },
     "drugExposure": {
       "title": "a drug exposure of"
@@ -1013,7 +1024,13 @@
         "startDate": "Start Date",
         "standardConcept": "Standard Concept",
         "visit": "Visit"
-      }
+      },
+      "occurrence": {
+        "exactly": "Exactly {count}",
+        "atLeast": "At least {count}",
+        "atMost": "At most {count}"
+      },
+      "occurrenceDistinct": "{occurrence} of distinct {column}"
     },
     "deviceExposure": {
       "title": "a device exposure of"
@@ -1066,6 +1083,9 @@
       "usageOne": "1 criterion still uses it",
       "usageMany": "{count} criteria still use it",
       "warning": "Deleting \"{name}\" will clear it from those criteria, and a criterion with no concept set matches its entire domain. {usage}."
+    },
+    "characterizationWorkbench": {
+      "personCount": "{count} persons"
     }
   },
   "characterizations": {
@@ -2339,7 +2359,8 @@
       "ofCohort": "of cohort",
       "ofPathways": "of pathways",
       "stepBreakdown": "Step breakdown",
-      "pathStats": "Path stats"
+      "pathStats": "Path stats",
+      "coverageSummary": "{count} of {total} persons with pathway"
     },
     "combinationWindow": "Collapse window (days)",
     "minCellCount": "Minimum cell count",

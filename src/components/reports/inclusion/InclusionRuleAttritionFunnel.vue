@@ -41,10 +41,10 @@
         data-testid="inclusion-attrition-funnel-footer"
       >
         <span>{{ t('components.inclusionRuleReport.initial').value }}:</span>
-        <span class="attrition-funnel__count">{{ formatCount(initial.remaining) }} {{ t('components.inclusionRuleReport.patients').value }}</span>
+        <span class="attrition-funnel__count">{{ t('components.inclusionRuleReport.patientCount', { count: formatCount(initial.remaining) }).value }}</span>
         <span class="attrition-funnel__arrow">→</span>
         <span>{{ t('components.inclusionRuleReport.final').value }}:</span>
-        <span class="attrition-funnel__count">{{ formatCount(final.remaining) }} {{ t('components.inclusionRuleReport.patients').value }}</span>
+        <span class="attrition-funnel__count">{{ t('components.inclusionRuleReport.patientCount', { count: formatCount(final.remaining) }).value }}</span>
         <span
           class="attrition-funnel__retained"
           :style="{ color: finalColor }"

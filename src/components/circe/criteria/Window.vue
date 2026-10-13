@@ -156,6 +156,7 @@ import {
   AtlasTextField,
 } from '@/components/ui'
 import { isClearedInput, toFiniteNumber } from '@/components/circe/input/bindings'
+import { formatDayCount } from './window-utils'
 import type { Window } from '@/models/circe-types'
 
 const props = defineProps<{
@@ -254,13 +255,7 @@ function windowDirection(side: 'Start' | 'End') {
 }
 
 function daysChipLabel(side: 'Start' | 'End') {
-  const endpoint = props.window[side]
-  const days = endpoint?.Days
-  if (days === null || days === undefined) {
-    return t('common.allDays').value
-  }
-
-  return `${days} ${days === 1 ? t('common.day').value : t('common.days').value}`
+  return formatDayCount(props.window[side]?.Days)
 }
 
 function ensureEndpoint(side: 'Start' | 'End') {

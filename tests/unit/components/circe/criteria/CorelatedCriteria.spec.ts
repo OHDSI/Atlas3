@@ -4,6 +4,7 @@ import { InlineAtlasMenuStub, mountComponent } from '../../../../helpers/compone
 
 import CorelatedCriteria from '@/components/circe/criteria/CorelatedCriteria.vue'
 import { getWindowPresetOptions } from '@/components/circe/criteria/window-utils'
+import { tr } from '../../../../helpers/i18n-mock'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../../helpers/i18n-mock')
@@ -40,7 +41,7 @@ describe('CorelatedCriteria', () => {
     await occurrenceMenu.vm.$emit('update:modelValue', true)
     await nextTick()
 
-    expect(wrapper.find('.occurrence-label').text()).toBe('at least 3')
+    expect(wrapper.find('.occurrence-label').text()).toBe(tr('components.correlatedCriteria.occurrence.atLeast', { count: 3 }))
     expect(wrapper.text()).toContain('restrict to the same visit occurrence')
     expect(wrapper.text()).toContain('allow events from outside observation period')
 
@@ -69,20 +70,20 @@ describe('CorelatedCriteria', () => {
 
     await wrapper.get('.occurrence-chip--exactly').trigger('click')
     await nextTick()
-    expect(wrapper.find('.occurrence-label').text()).toBe('exactly 3')
+    expect(wrapper.find('.occurrence-label').text()).toBe(tr('components.correlatedCriteria.occurrence.exactly', { count: 3 }))
 
     await wrapper.get('.occurrence-chip--at_least').trigger('click')
     await nextTick()
-    expect(wrapper.find('.occurrence-label').text()).toBe('at least 3')
+    expect(wrapper.find('.occurrence-label').text()).toBe(tr('components.correlatedCriteria.occurrence.atLeast', { count: 3 }))
 
     const occurrenceCount = wrapper.findAllComponents({ name: 'AtlasTextField' })[0]
     await occurrenceCount.vm.$emit('update:modelValue', '4')
     await nextTick()
-    expect(wrapper.find('.occurrence-label').text()).toBe('at least 4')
+    expect(wrapper.find('.occurrence-label').text()).toBe(tr('components.correlatedCriteria.occurrence.atLeast', { count: 4 }))
 
     await wrapper.get('.occurrence-chip--at_most').trigger('click')
     await nextTick()
-    expect(wrapper.find('.occurrence-label').text()).toBe('at most 4')
+    expect(wrapper.find('.occurrence-label').text()).toBe(tr('components.correlatedCriteria.occurrence.atMost', { count: 4 }))
 
     await wrapper.get('.corelated-criteria-editor__distinct-chip').trigger('click')
     await nextTick()

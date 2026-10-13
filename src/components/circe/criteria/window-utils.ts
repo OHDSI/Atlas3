@@ -36,7 +36,12 @@ export function formatWindowExpression(window?: Window): string {
     return t('common.noWindow').value
   }
 
-  return `${formatAnchor(window)} ${t('common.between').value} ${formatEndpoint(window.Start)} ${t('common.and').value} ${formatEndpoint(window.End)} ${formatIndexAnchor(window)}`
+  return t('components.windowExpression.summary', {
+    anchor: formatAnchor(window),
+    start: formatEndpoint(window.Start),
+    end: formatEndpoint(window.End),
+    indexAnchor: formatIndexAnchor(window),
+  }).value
 }
 
 export function getWindowPresetOptions(): WindowPresetOption[] {
@@ -134,16 +139,23 @@ function formatEndpoint(endpoint: Offset | null | undefined): string {
     return t('common.unset').value
   }
 
-  const direction =
-    endpoint.Coeff === -1
-      ? t('components.windowExpression.before').value
-      : t('components.windowExpression.after').value
-  const days = endpoint.Days === null || endpoint.Days === undefined ? t('common.allDays').value : `${endpoint.Days} ${endpoint.Days === 1 ? t('common.day').value : t('common.days').value}`
-
-  return `${days} ${direction}`
+  const days = formatDayCount(endpoint.Days)
+  return endpoint.Coeff === -1
+    ? t('components.windowExpression.endpointBefore', { days }).value
+    : t('components.windowExpression.endpointAfter', { days }).value
 }
 
-// These read as fragments inside the sentence built by formatWindowExpression
+/** "30 days", "1 day", or "all days" when the endpoint is unbounded. */
+export function formatDayCount(days: number | null | undefined): string {
+  const { t } = useI18n()
+
+  if (days === null || days === undefined) {
+    return t('common.allDays').value
+  }
+  return days === 1 ? t('common.dayCountOne').value : t('common.dayCount', { count: days }).value
+}
+
+// These fill the {anchor}/{indexAnchor} slots of components.windowExpression.summary
 // ("event starts between 30 days before and 0 days after index start"), so they
 // are lowercase and keyed separately from the capitalised chip labels that
 // Window.vue renders for the same concepts.

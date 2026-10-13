@@ -316,24 +316,30 @@ type DistinctCountColumnOption = {
 }
 
 const occurrenceLabel = computed(() => {
-  const labelByType = {
-    EXACTLY: t('options.exactly').value,
-    AT_LEAST: t('options.atLeast').value,
-    AT_MOST: t('options.atMost').value,
-  }
+  const keyByType = {
+    EXACTLY: 'components.correlatedCriteria.occurrence.exactly',
+    AT_LEAST: 'components.correlatedCriteria.occurrence.atLeast',
+    AT_MOST: 'components.correlatedCriteria.occurrence.atMost',
+  } as const
+  const occurrence = t(keyByType[occurrenceTypeKey.value], { count: occurrenceCount.value }).value
 
   if (!isDistinct.value) {
-    return `${labelByType[occurrenceTypeKey.value]} ${occurrenceCount.value}`
+    return occurrence
   }
 
-  return `${labelByType[occurrenceTypeKey.value]} ${occurrenceCount.value} ${t('components.correlatedCriteria.ofDistinct').value} ${distinctCountColumnLabel.value}`
+  return t('components.correlatedCriteria.occurrenceDistinct', {
+    occurrence,
+    column: distinctCountColumnLabel.value,
+  }).value
 })
 
 const windowSummaryLabel = computed(() => {
   const startSummary = formatWindowExpression(props.criteria.StartWindow)
   const endSummary = props.criteria.EndWindow ? formatWindowExpression(props.criteria.EndWindow) : ''
 
-  return endSummary ? `${startSummary} ${t('common.and').value} ${endSummary}` : startSummary
+  return endSummary
+    ? t('components.windowExpression.startAndEnd', { start: startSummary, end: endSummary }).value
+    : startSummary
 })
 
 const occurrenceChangeLabel = computed(() => t('components.criteriaGroup.nestedCriteria.selectLogicType').value)

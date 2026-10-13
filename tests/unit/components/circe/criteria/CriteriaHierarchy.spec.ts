@@ -5,6 +5,7 @@ import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import CorelatedCriteria from '@/components/circe/criteria/CorelatedCriteria.vue'
 import ConditionOccurrence from '@/components/circe/criteria/ConditionOccurrence.vue'
 import fixture from '../../cohort-editor/fixtures/editor-surface.json'
+import { tr } from '../../../../helpers/i18n-mock'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../../helpers/i18n-mock')
@@ -32,13 +33,13 @@ describe('Criteria editor hierarchy', () => {
       conceptSets: data.conceptSets,
     })
 
-    expect(wrapper.find('.match-type-label').text()).toBe('at least 2')
+    expect(wrapper.find('.match-type-label').text()).toBe(tr('components.criteriaGroup.matchAtLeast', { count: 2 }))
 
     const groupNodes = wrapper.findAll('.criteria-group-editor')
     expect(groupNodes).toHaveLength(2)
 
     const groupLabels = wrapper.findAll('.match-type-label').map(node => node.text())
-    expect(groupLabels).toEqual(expect.arrayContaining(['at least 2', 'any']))
+    expect(groupLabels).toEqual(expect.arrayContaining([tr('components.criteriaGroup.matchAtLeast', { count: 2 }), tr('options.any')]))
 
     const corelatedCriteria = wrapper.findComponent(CorelatedCriteria)
     expect(corelatedCriteria.props('criteria')).toStrictEqual(data.criteriaGroup.CriteriaList[0])
@@ -71,7 +72,12 @@ describe('Criteria editor hierarchy', () => {
       conceptSets: data.conceptSets,
     })
 
-    expect(wrapper.find('.occurrence-label').text()).toBe('at most 3 of distinct Visit')
+    expect(wrapper.find('.occurrence-label').text()).toBe(
+      tr('components.correlatedCriteria.occurrenceDistinct', {
+        occurrence: tr('components.correlatedCriteria.occurrence.atMost', { count: 3 }),
+        column: tr('components.correlatedCriteria.distinctColumn.visit'),
+      })
+    )
     expect(wrapper.text()).toContain('restrict to the same visit occurrence')
     expect(wrapper.text()).toContain('allow events from outside observation period')
 

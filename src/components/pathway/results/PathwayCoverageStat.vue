@@ -7,9 +7,12 @@
       {{ pct.toFixed(1) }}%
     </div>
     <div class="coverage-stat__sub">
-      {{ formatNumber(totalPathwaysCount) }} {{ t('common.of').value }}
-      {{ formatNumber(targetCohortCount) }}
-      {{ t('pathway.workbench.coverageSuffix').value }}
+      {{
+        t('pathway.workbench.coverageSummary', {
+          count: formatNumber(totalPathwaysCount),
+          total: formatNumber(targetCohortCount),
+        }).value
+      }}
     </div>
     <div
       v-if="targetCohortName"

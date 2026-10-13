@@ -96,7 +96,7 @@
                         mdi-clock-outline
                       </AtlasIcon>
                       <span class="d-none d-md-inline">
-                        {{ continuousObservationLabel }}: {{ observationPriorDays }}d {{ t('options.before').value }} · {{ observationPostDays }}d {{ t('options.after').value }}
+                        {{ t('components.cohortExpressionEditor.observationSummary', { prior: observationPriorDays, post: observationPostDays }).value }}
                       </span>
                       <span class="d-md-none">
                         {{ observationPriorDays }}d / {{ observationPostDays }}d

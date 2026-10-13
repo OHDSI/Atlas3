@@ -266,11 +266,11 @@ const groupTypeLabel = computed(() => {
       return t('options.any').value
     case 'AT_LEAST': {
       const n = props.group.Count ?? '?'
-      return `${t('options.atLeast').value} ${n}`
+      return t('components.criteriaGroup.matchAtLeast', { count: n }).value
     }
     case 'AT_MOST': {
       const n = props.group.Count ?? '?'
-      return `${t('options.atMost').value} ${n}`
+      return t('components.criteriaGroup.matchAtMost', { count: n }).value
     }
     case 'ALL':
     default:

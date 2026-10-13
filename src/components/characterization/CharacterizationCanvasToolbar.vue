@@ -46,7 +46,7 @@
         v-if="activeRun.personCount"
         class="char-toolbar__muted"
       >
-        · {{ activeRun.personCount.toLocaleString() }} {{ tv('columns.results').toLowerCase() }}
+        · {{ tv('components.characterizationWorkbench.personCount', { count: activeRun.personCount.toLocaleString() }) }}
       </span>
     </AtlasChip>
 

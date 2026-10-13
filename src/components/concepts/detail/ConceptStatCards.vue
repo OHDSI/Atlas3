@@ -141,8 +141,12 @@ watch(
             {{ formatCount(countsBySource.get(source.sourceKey)?.recordCount) }}
           </div>
           <div class="stat-sub">
-            {{ formatPercent(countsBySource.get(source.sourceKey)?.personCount) }} {{ t('components.conceptDetail.persons').value }} ·
-            {{ formatCount(countsBySource.get(source.sourceKey)?.descendantRecordCount) }} {{ t('components.conceptDetail.descAbbr').value }}
+            {{
+              t('components.conceptDetail.statSummary', {
+                persons: formatPercent(countsBySource.get(source.sourceKey)?.personCount),
+                descendants: formatCount(countsBySource.get(source.sourceKey)?.descendantRecordCount),
+              }).value
+            }}
           </div>
         </AtlasCard>
       </div>
