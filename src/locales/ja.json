@@ -75,10 +75,15 @@
     "cohort": "コホート",
     "columns": "列",
     "description": "説明",
-    "confirm": "確認"
+    "confirm": "確認",
+    "edit": "編集",
+    "cannotUndo": "この操作は元に戻せません。"
   },
   "commonErrors": {
-    "noSources": "現在の WebAPI にはソースが定義されていません。<br/><a href=\"#/configure\">構成</a>ページで1つ以上追加してください。"
+    "noSources": "現在の WebAPI にはソースが定義されていません。<br/><a href=\"#/configure\">構成</a>ページで1つ以上追加してください。",
+    "copyFailed": "コピーに失敗しました",
+    "deleteFailed": "削除に失敗しました",
+    "nameRequired": "名前は必須です"
   },
   "navigation": {
     "characterizations": "特性化",
@@ -234,7 +239,6 @@
     },
     "filterPanel": {
       "buttons": {
-        "apply": "適用",
         "clear": "クリア"
       }
     },
@@ -389,12 +393,6 @@
       "colHint": "N（%）／平均（SD）",
       "n": "N"
     },
-    "characterizationWorkbench": {
-      "hideDesignPanel": "デザインパネルを隠す",
-      "showDesignPanel": "デザインパネルを表示",
-      "hideAnalysisDesign": "分析デザインを隠す",
-      "showAnalysisDesign": "分析デザインを表示"
-    },
     "characterizationResults": {
       "covariateDetail": "共変量の詳細",
       "concept": "概念",
@@ -512,12 +510,8 @@
         "colorHexHint": "視覚的識別のための 16 進数カラーコード",
         "iconMdiFolderHint": "Material Design アイコン名（例: mdi-tag、mdi-folder）",
         "nameTooLong": "名前は 255 文字未満である必要があります",
-        "colorOptional": "色（任意）",
         "inheritColorHint": "グループから継承するには空のままにします",
-        "iconOptional": "アイコン（任意）",
         "iconInheritHint": "Material Design アイコン名、またはグループから継承するには空のままにします",
-        "permissionProtected": "権限で保護",
-        "permissionProtectedHint": "このタグの割り当て/解除には特別な権限が必要です",
         "tagColumn": "タグ",
         "usageColumn": "使用回数",
         "editTagAria": "タグを編集",
@@ -568,10 +562,8 @@
         "userWord": "ユーザー",
         "deleteRemovesFromUsers": "このロールを削除すると、割り当てられているすべてのユーザーから削除されます。",
         "confirmDeleteRolePrefix": "次のロールを削除してもよろしいですか:",
-        "cannotBeUndone": "この操作は元に戻せません。",
         "deleteRoleButton": "ロールを削除",
         "deleteRoleError": "ロールの削除に失敗しました。もう一度お試しください。",
-        "searchRoles": "ロールを検索...",
         "newRole": "新しいロール",
         "noRolesFound": "ロールが見つかりません。最初のロールを作成して開始してください。",
         "noDescription": "説明なし",
@@ -692,20 +684,10 @@
       "lowerRate": "低発生率",
       "higherRate": "高発生率",
       "treemapLegendHint": "（色＝人年あたりの発生率、面積＝リスク集団の人数）",
-      "hideDesignPanel": "デザインパネルを非表示",
-      "showDesignPanel": "デザインパネルを表示",
-      "hideAnalysisDesign": "分析デザインを非表示",
-      "showAnalysisDesign": "分析デザインを表示",
       "noCasesFound": "この対象／アウトカムの組み合わせでは症例が見つかりませんでした。別のアウトカムを選択してください。"
     },
     "pathwayCohortList": {
       "removeCohort": "コホートを削除"
-    },
-    "pathwayWorkbench": {
-      "hideDesignPanel": "デザインパネルを非表示",
-      "showDesignPanel": "デザインパネルを表示",
-      "hideAnalysisDesign": "分析デザインを非表示",
-      "showAnalysisDesign": "分析デザインを表示"
     },
     "pathwayBuilder": {
       "importPathwayDesign": "パスウェイデザインをインポート",
@@ -781,6 +763,15 @@
     "criteria": {
       "addAttribute": "属性を追加...",
       "selectConceptSet": "コンセプトセットを選択"
+    },
+    "workbench": {
+      "hideAnalysisDesign": "分析デザインを隠す",
+      "showAnalysisDesign": "分析デザインを表示",
+      "hideDesignPanel": "デザインパネルを隠す",
+      "showDesignPanel": "デザインパネルを表示"
+    },
+    "access": {
+      "searchRoles": "ロールを検索..."
     }
   },
   "characterizations": {
@@ -1050,7 +1041,6 @@
       "overwriteOption": "現在のコンセプトセットを上書き",
       "pleaseProvideNameMessage": "新しいコンセプトセットの名前を入力してください:",
       "pleaseReviewMessage": "最適化された定義と保存オプションを確認してください。",
-      "saveButton": "保存",
       "tabs": {
         "included": "含む",
         "sourceCodes": "ソースコード",
@@ -1242,8 +1232,7 @@
     "jobs": {
       "actions": {
         "startPolling": "自動更新を開始",
-        "stopPolling": "自動更新を停止",
-        "retry": "再試行"
+        "stopPolling": "自動更新を停止"
       },
       "empty": {
         "title": "ジョブが見つかりません"
@@ -1331,7 +1320,6 @@
     "tagManagement": {
       "createTag": "タグを作成",
       "editTag": "タグを編集",
-      "edit": "編集",
       "protected": "保護済み"
     }
   },
@@ -1660,17 +1648,12 @@
       "createButton": "タググループを作成",
       "table": {
         "headers": {
-          "name": "名前",
           "color": "色",
           "icon": "アイコン",
           "mandatory": "必須",
           "showColumn": "列を表示",
           "multiple": "複数可",
-          "freeForm": "自由入力",
-          "created": "作成日",
-          "author": "作成者",
-          "description": "説明",
-          "actions": "操作"
+          "freeForm": "自由入力"
         },
         "empty": "タググループが見つかりません"
       },
@@ -1679,8 +1662,7 @@
         "editTitle": "タググループを編集",
         "fields": {
           "name": {
-            "label": "名前",
-            "required": "名前は必須です"
+            "label": "名前"
           },
           "color": {
             "label": "色"
@@ -1707,11 +1689,6 @@
             "label": "自由入力",
             "hint": "このグループでユーザーがカスタムタグを作成できるようにします"
           }
-        },
-        "actions": {
-          "save": "保存",
-          "create": "作成",
-          "cancel": "キャンセル"
         }
       },
       "delete": {
@@ -1770,19 +1747,14 @@
     },
     "incidenceRates": {
       "copied": "インシデンス率をコピーしました",
-      "copyFailed": "コピーに失敗しました",
-      "deleted": "インシデンス率を削除しました",
-      "deleteFailed": "削除に失敗しました"
+      "deleted": "インシデンス率を削除しました"
     },
     "pathways": {
       "copied": "パスウェイをコピーしました",
-      "copyFailed": "コピーに失敗しました",
-      "deleted": "パスウェイを削除しました",
-      "deleteFailed": "削除に失敗しました"
+      "deleted": "パスウェイを削除しました"
     },
     "roleDetails": {
-      "roleNotFound": "ロールが見つかりません",
-      "backToRoles": "ロール一覧に戻る"
+      "roleNotFound": "ロールが見つかりません"
     },
     "roleManagement": {
       "title": "ロールと権限の管理",

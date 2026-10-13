@@ -286,7 +286,7 @@ describe('IncidenceRatesView', () => {
 
       await wrapper.vm.handleCopy(mkIR(1))
 
-      expect(notifications.items.at(-1)).toMatchObject({ severity: 'danger', title: tr('views.incidenceRates.copyFailed') })
+      expect(notifications.items.at(-1)).toMatchObject({ severity: 'danger', title: tr('commonErrors.copyFailed') })
       expect(mockPush).not.toHaveBeenCalled()
     })
 

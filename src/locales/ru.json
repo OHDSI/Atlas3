@@ -71,7 +71,9 @@
     "url": "URL-адрес",
     "apply": "Применять",
     "tools": "Инструменты",
-    "confirm": "Подтвердить"
+    "confirm": "Подтвердить",
+    "edit": "Редактировать",
+    "cannotUndo": "Это действие нельзя отменить."
   },
   "tool": {
     "name": "* Имя",
@@ -89,7 +91,9 @@
     "toolEnabled": "Инструмент включен"
   },
   "commonErrors": {
-    "noSources": "В текущем WebAPI не определено ни одного источника.<br/>Пожалуйста, добавьте источники на странице <a href=\"#/configure\">конфигурации</a>."
+    "noSources": "В текущем WebAPI не определено ни одного источника.<br/>Пожалуйста, добавьте источники на странице <a href=\"#/configure\">конфигурации</a>.",
+    "copyFailed": "Не удалось скопировать",
+    "deleteFailed": "Не удалось удалить"
   },
   "navigation": {
     "datasources": "Источники данных",
@@ -171,7 +175,6 @@
     },
     "filterPanel": {
       "buttons": {
-        "apply": "Применить",
         "clear": "Сбросить"
       }
     },
@@ -359,12 +362,6 @@
       "colHint": "N (%) / Среднее (SD)",
       "n": "N"
     },
-    "characterizationWorkbench": {
-      "hideDesignPanel": "Скрыть панель дизайна",
-      "showDesignPanel": "Показать панель дизайна",
-      "hideAnalysisDesign": "Скрыть дизайн анализа",
-      "showAnalysisDesign": "Показать дизайн анализа"
-    },
     "characterizationResults": {
       "covariateDetail": "Сведения о ковариате",
       "concept": "Концепт",
@@ -469,12 +466,8 @@
         "colorHexHint": "Шестнадцатеричный код цвета для визуальной идентификации",
         "iconMdiFolderHint": "Имя значка Material Design (например, mdi-tag, mdi-folder)",
         "nameTooLong": "Имя должно содержать менее 255 символов",
-        "colorOptional": "Цвет (необязательно)",
         "inheritColorHint": "Оставьте пустым для наследования от группы",
-        "iconOptional": "Значок (необязательно)",
         "iconInheritHint": "Имя значка Material Design или оставьте пустым для наследования от группы",
-        "permissionProtected": "Защищено правами доступа",
-        "permissionProtectedHint": "Требуются особые права для назначения/отмены назначения этого тега",
         "tagColumn": "Тег",
         "usageColumn": "Использование",
         "editTagAria": "Изменить тег",
@@ -525,10 +518,8 @@
         "userWord": "пользователь",
         "deleteRemovesFromUsers": "Удаление этой роли удалит её у всех назначенных пользователей.",
         "confirmDeleteRolePrefix": "Вы уверены, что хотите удалить роль",
-        "cannotBeUndone": "Это действие нельзя отменить.",
         "deleteRoleButton": "Удалить роль",
         "deleteRoleError": "Не удалось удалить роль. Пожалуйста, попробуйте снова.",
-        "searchRoles": "Поиск ролей...",
         "newRole": "Новая роль",
         "noRolesFound": "Роли не найдены. Создайте свою первую роль, чтобы начать.",
         "noDescription": "Нет описания",
@@ -649,20 +640,10 @@
       "lowerRate": "Ниже частота",
       "higherRate": "Выше частота",
       "treemapLegendHint": "(цвет = частота новых случаев на человеко-год; площадь = лица под риском)",
-      "hideDesignPanel": "Скрыть панель дизайна",
-      "showDesignPanel": "Показать панель дизайна",
-      "hideAnalysisDesign": "Скрыть дизайн анализа",
-      "showAnalysisDesign": "Показать дизайн анализа",
       "noCasesFound": "Для этой комбинации цель/исход случаи не найдены. Попробуйте выбрать другой исход."
     },
     "pathwayCohortList": {
       "removeCohort": "Удалить когорту"
-    },
-    "pathwayWorkbench": {
-      "hideDesignPanel": "Скрыть панель дизайна",
-      "showDesignPanel": "Показать панель дизайна",
-      "hideAnalysisDesign": "Скрыть дизайн анализа",
-      "showAnalysisDesign": "Показать дизайн анализа"
     },
     "pathwayBuilder": {
       "importPathwayDesign": "Импортировать дизайн пути",
@@ -738,6 +719,15 @@
     "criteria": {
       "addAttribute": "Добавить атрибут...",
       "selectConceptSet": "Выбрать набор концепций"
+    },
+    "workbench": {
+      "hideAnalysisDesign": "Скрыть дизайн анализа",
+      "showAnalysisDesign": "Показать дизайн анализа",
+      "hideDesignPanel": "Скрыть панель дизайна",
+      "showDesignPanel": "Показать панель дизайна"
+    },
+    "access": {
+      "searchRoles": "Поиск ролей..."
     }
   },
   "facets": {
@@ -912,7 +902,6 @@
       "optimizedConceptSetHeading": "Оптимизированный набор концепций",
       "optimize": "Оптимизировать",
       "conceptsRemovedHeading": "Наборы концепций удалены",
-      "saveButton": "Сохранить",
       "pleaseReviewMessage": "Пожалуйста пересмотрите параметры оптимизации и сохранения",
       "pleaseProvideNameMessage": "Пожалуйста, назовите ваш новый набор концепций:",
       "overwriteOption": "Перезаписать текущий набор концепций",
@@ -1182,7 +1171,6 @@
     "tagManagement": {
       "createTag": "Создать тег",
       "editTag": "Редактировать тег",
-      "edit": "Редактировать",
       "protected": "Защищенный"
     }
   },
@@ -1410,19 +1398,14 @@
     },
     "incidenceRates": {
       "copied": "Частота случаев скопирована",
-      "copyFailed": "Не удалось скопировать",
-      "deleted": "Частота случаев удалена",
-      "deleteFailed": "Не удалось удалить"
+      "deleted": "Частота случаев удалена"
     },
     "pathways": {
       "copied": "Путь скопирован",
-      "copyFailed": "Не удалось скопировать",
-      "deleted": "Путь удалён",
-      "deleteFailed": "Не удалось удалить"
+      "deleted": "Путь удалён"
     },
     "roleDetails": {
-      "roleNotFound": "Роль не найдена",
-      "backToRoles": "Назад к ролям"
+      "roleNotFound": "Роль не найдена"
     },
     "roleManagement": {
       "title": "Управление ролями и разрешениями",

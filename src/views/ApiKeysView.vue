@@ -74,7 +74,7 @@
           size="sm"
           variant="text"
           tone="danger"
-          :aria-label="t('apiKeys.list.delete').value"
+          :aria-label="t('common.delete').value"
           :data-testid="`apikeys-delete-${(item as ApiKeyInfo).keyIdentifier}`"
           @click="confirmDelete(item as ApiKeyInfo)"
         />
@@ -136,7 +136,7 @@
         data-testid="apikeys-delete-confirm"
         @click="performDelete"
       >
-        {{ t('apiKeys.list.delete') }}
+        {{ t('common.delete') }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -174,14 +174,14 @@ const selectedKey = ref<ApiKeyInfo | null>(null)
 const actioning = ref(false)
 
 const headers = computed(() => [
-  { title: t('apiKeys.list.columns.name').value, key: 'name' },
-  { title: t('apiKeys.list.columns.description').value, key: 'description' },
+  { title: t('columns.name').value, key: 'name' },
+  { title: t('columns.description').value, key: 'description' },
   { title: t('apiKeys.list.columns.identifier').value, key: 'keyIdentifier' },
-  { title: t('apiKeys.list.columns.created').value, key: 'createdAt' },
+  { title: t('columns.created').value, key: 'createdAt' },
   { title: t('apiKeys.list.columns.expires').value, key: 'expiresAt' },
   { title: t('apiKeys.list.columns.lastUsed').value, key: 'lastUsedAt' },
-  { title: t('apiKeys.list.columns.status').value, key: 'status', sortable: false },
-  { title: t('apiKeys.list.columns.actions').value, key: 'actions', sortable: false },
+  { title: t('columns.status').value, key: 'status', sortable: false },
+  { title: t('columns.actions').value, key: 'actions', sortable: false },
 ])
 
 function formatDate(value: string | number | null | undefined): string {

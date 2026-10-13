@@ -99,7 +99,7 @@
         variant="ghost"
         @click="handleClose"
       >
-        {{ t('config.tags.dialog.actions.cancel').value }}
+        {{ t('common.cancel').value }}
       </AtlasButton>
       <AtlasButton
         :disabled="!formValid"
@@ -108,8 +108,8 @@
       >
         {{
           isEditMode
-            ? t('config.tags.dialog.actions.save').value
-            : t('config.tags.dialog.actions.create').value
+            ? t('common.save').value
+            : t('common.create').value
         }}
       </AtlasButton>
     </template>
@@ -155,7 +155,7 @@ const isEditMode = computed(() => !!props.tagGroup?.id)
 
 
 const nameRules = [
-  (v: string) => !!v || tv('config.tags.dialog.fields.name.required'),
+  (v: string) => !!v || tv('commonErrors.nameRequired'),
   (v: string) =>
     v?.length <= 255 ||
     tv('components.config.tags.nameTooLong'),

@@ -220,7 +220,7 @@
     <AtlasDialog
       v-model="showDeleteConceptSetDialog"
       eyebrow="CONCEPT SET"
-      :title="t('components.featureAnalysisEditor.deleteConceptSetTitle').value"
+      :title="t('components.conceptSetDelete.title').value"
       max-width="480"
       @close="cancelDeleteConceptSet"
     >
@@ -448,11 +448,11 @@ const deleteConceptSetWarning = computed(() => {
   const count = conceptSetPendingDeleteUsage.value
   const usage =
     count === 1
-      ? t('components.featureAnalysisEditor.deleteConceptSetUsageOne').value
-      : t('components.featureAnalysisEditor.deleteConceptSetUsageMany', { count }).value
+      ? t('components.conceptSetDelete.usageOne').value
+      : t('components.conceptSetDelete.usageMany', { count }).value
 
   return t(
-    'components.featureAnalysisEditor.deleteConceptSetWarning',
+    'components.conceptSetDelete.warning',
     { name, usage },
   ).value
 })
@@ -516,7 +516,7 @@ async function handleExport() {
   } catch (err) {
     logger.error('IRBuilder', 'Export failed', err)
     feedback.value = {
-      message: t('ir.editor.exportError').value,
+      message: t('commonErrors.exportFailed').value,
       color: 'error',
     }
   } finally {

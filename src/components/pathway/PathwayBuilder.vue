@@ -363,7 +363,7 @@ async function handleExport() {
   } catch (err) {
     logger.error('PathwayBuilder', 'Export failed', err)
     feedback.value = {
-      message: t('pathways.editor.exportError').value,
+      message: t('commonErrors.exportFailed').value,
       color: 'error',
     }
   } finally {

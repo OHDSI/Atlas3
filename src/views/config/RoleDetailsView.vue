@@ -46,7 +46,7 @@
                   class="mb-4"
                   @click="handleBack"
                 >
-                  {{ t('views.roleDetails.backToRoles').value }}
+                  {{ t('components.config.permissions.backToRoles').value }}
                 </AtlasButton>
 
                 <div class="role-details-view__title-section">

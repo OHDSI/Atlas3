@@ -109,7 +109,7 @@
                   <DisabledReasonTooltip :reason="writeDisabledReason(source)">
                     <AtlasIconButton
                       icon="mdi-pencil"
-                      v-bind="{ ariaLabel: tv('configuration.tagManagement.edit') }"
+                      v-bind="{ ariaLabel: tv('common.edit') }"
                       size="sm"
                       :disabled="!canWriteSource(source.sourceId)"
                       @click="openEditDialog(source)"

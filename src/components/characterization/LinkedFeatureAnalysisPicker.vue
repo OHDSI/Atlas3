@@ -198,7 +198,7 @@ const {
 
 const dialogHeaders = computed(() => [
   { title: t('columns.name').value, key: 'name' },
-  { title: t('cc.fa.columns.type').value, key: 'type' },
+  { title: t('columns.type').value, key: 'type' },
   {
     title: t('columns.description').value,
     key: 'description',

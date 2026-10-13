@@ -281,7 +281,7 @@ describe('PathwaysView', () => {
 
       await wrapper.vm.handleCopy(mkPathway(1))
 
-      expect(wrapper.vm.feedback).toEqual({ message: tr('views.pathways.copyFailed'), color: 'error' })
+      expect(wrapper.vm.feedback).toEqual({ message: tr('commonErrors.copyFailed'), color: 'error' })
       expect(mockPush).not.toHaveBeenCalled()
     })
 
@@ -413,7 +413,7 @@ describe('PathwaysView', () => {
 
     it('maps snackbar error severity to danger', () => {
       wrapper = mountView()
-      wrapper.vm.feedback = { message: tr('views.pathways.copyFailed'), color: 'error' }
+      wrapper.vm.feedback = { message: tr('commonErrors.copyFailed'), color: 'error' }
 
       expect(wrapper.vm.feedbackSeverity).toBe('danger')
     })

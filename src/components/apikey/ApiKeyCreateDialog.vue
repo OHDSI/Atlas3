@@ -77,7 +77,7 @@
             icon="mdi-content-copy"
             size="sm"
             variant="text"
-            :aria-label="t('apiKeys.create.copy').value"
+            :aria-label="t('common.copy').value"
             data-testid="apikey-create-copy"
             @click="copyRawKey"
           />
@@ -91,7 +91,7 @@
           variant="ghost"
           @click="close"
         >
-          {{ t('apiKeys.create.cancel') }}
+          {{ t('common.cancel') }}
         </AtlasButton>
         <AtlasButton
           :loading="submitting"
@@ -188,7 +188,7 @@ watch(
 async function handleGenerate() {
   const trimmedName = name.value.trim()
   if (!trimmedName) {
-    nameError.value = t('apiKeys.create.nameRequired').value
+    nameError.value = t('commonErrors.nameRequired').value
     return
   }
   nameError.value = undefined

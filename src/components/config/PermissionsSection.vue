@@ -9,7 +9,7 @@
       <div class="permissions-section__header">
         <AtlasTextField
           v-model="searchQuery"
-          :placeholder="tv('components.config.permissions.searchRoles')"
+          :placeholder="tv('components.access.searchRoles')"
           prepend-icon="mdi-magnify"
           variant="outlined"
           hide-details

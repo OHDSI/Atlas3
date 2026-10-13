@@ -71,7 +71,9 @@
     "url": "URL",
     "apply": "적용하다",
     "tools": "도구",
-    "confirm": "확인"
+    "confirm": "확인",
+    "edit": "Edit",
+    "cannotUndo": "이 작업은 취소할 수 없습니다."
   },
   "tool": {
     "name": "* 이름",
@@ -89,7 +91,9 @@
     "toolEnabled": "도구 활성화됨"
   },
   "commonErrors": {
-    "noSources": "현재 WebAPI에 정의된 소스가 없습니다. <br/> 해당 페이지에서 하나 이상을 추가하십시오 <a href=\"#/configure\">configuration</a> page."
+    "noSources": "현재 WebAPI에 정의된 소스가 없습니다. <br/> 해당 페이지에서 하나 이상을 추가하십시오 <a href=\"#/configure\">configuration</a> page.",
+    "copyFailed": "복사에 실패했습니다",
+    "deleteFailed": "삭제에 실패했습니다"
   },
   "navigation": {
     "characterizations": "특성",
@@ -201,7 +205,6 @@
     },
     "filterPanel": {
       "buttons": {
-        "apply": "적용",
         "clear": "지우기"
       }
     },
@@ -356,12 +359,6 @@
       "colHint": "N(%) / 평균(SD)",
       "n": "N"
     },
-    "characterizationWorkbench": {
-      "hideDesignPanel": "디자인 패널 숨기기",
-      "showDesignPanel": "디자인 패널 표시",
-      "hideAnalysisDesign": "분석 디자인 숨기기",
-      "showAnalysisDesign": "분석 디자인 표시"
-    },
     "characterizationResults": {
       "covariateDetail": "공변량 상세",
       "concept": "개념",
@@ -466,12 +463,8 @@
         "colorHexHint": "시각적 식별을 위한 16진수 색상 코드",
         "iconMdiFolderHint": "Material Design 아이콘 이름 (예: mdi-tag, mdi-folder)",
         "nameTooLong": "이름은 255자 미만이어야 합니다",
-        "colorOptional": "색상 (선택 사항)",
         "inheritColorHint": "그룹에서 상속하려면 비워 두십시오",
-        "iconOptional": "아이콘 (선택 사항)",
         "iconInheritHint": "Material Design 아이콘 이름 또는 그룹에서 상속하려면 비워 두십시오",
-        "permissionProtected": "권한 보호됨",
-        "permissionProtectedHint": "이 태그를 할당/해제하려면 특별한 권한이 필요합니다",
         "tagColumn": "태그",
         "usageColumn": "사용",
         "editTagAria": "태그 편집",
@@ -522,10 +515,8 @@
         "userWord": "명의 사용자",
         "deleteRemovesFromUsers": "이 역할을 삭제하면 할당된 모든 사용자에서 제거됩니다.",
         "confirmDeleteRolePrefix": "다음 역할을 삭제하시겠습니까:",
-        "cannotBeUndone": "이 작업은 취소할 수 없습니다.",
         "deleteRoleButton": "역할 삭제",
         "deleteRoleError": "역할을 삭제하지 못했습니다. 다시 시도하십시오.",
-        "searchRoles": "역할 검색...",
         "newRole": "새 역할",
         "noRolesFound": "역할을 찾을 수 없습니다. 시작하려면 첫 번째 역할을 만드십시오.",
         "noDescription": "설명 없음",
@@ -646,20 +637,10 @@
       "lowerRate": "낮은 발생률",
       "higherRate": "높은 발생률",
       "treemapLegendHint": "(색상 = 인년당 발생률, 면적 = 위험 대상자 수)",
-      "hideDesignPanel": "디자인 패널 숨기기",
-      "showDesignPanel": "디자인 패널 표시",
-      "hideAnalysisDesign": "분석 디자인 숨기기",
-      "showAnalysisDesign": "분석 디자인 표시",
       "noCasesFound": "이 대상/결과 조합에서 발생 건수를 찾을 수 없습니다. 다른 결과를 선택해 보십시오."
     },
     "pathwayCohortList": {
       "removeCohort": "코호트 제거"
-    },
-    "pathwayWorkbench": {
-      "hideDesignPanel": "디자인 패널 숨기기",
-      "showDesignPanel": "디자인 패널 표시",
-      "hideAnalysisDesign": "분석 디자인 숨기기",
-      "showAnalysisDesign": "분석 디자인 표시"
     },
     "pathwayBuilder": {
       "importPathwayDesign": "경로 디자인 가져오기",
@@ -735,6 +716,15 @@
     "criteria": {
       "addAttribute": "속성 추가",
       "selectConceptSet": "컨셉 세트 선택하기"
+    },
+    "workbench": {
+      "hideAnalysisDesign": "분석 디자인 숨기기",
+      "showAnalysisDesign": "분석 디자인 표시",
+      "hideDesignPanel": "디자인 패널 숨기기",
+      "showDesignPanel": "디자인 패널 표시"
+    },
+    "access": {
+      "searchRoles": "역할 검색..."
     }
   },
   "facets": {
@@ -927,7 +917,6 @@
       "overwriteOption": "현재 컨셉 세트 덮어 쓰기",
       "pleaseProvideNameMessage": "새 컨셉 세트의 이름을 입력하십시오.",
       "pleaseReviewMessage": "최적화된 정의 및 저장 옵션을 검토하십시오.",
-      "saveButton": "저장",
       "concept": {
         "standard": "표준",
         "nonStandard": "비표준",
@@ -1179,7 +1168,6 @@
     "tagManagement": {
       "createTag": "Create Tag",
       "editTag": "Edit Tag",
-      "edit": "Edit",
       "protected": "Protected"
     }
   },
@@ -1407,19 +1395,14 @@
     },
     "incidenceRates": {
       "copied": "발생률이 복사되었습니다",
-      "copyFailed": "복사에 실패했습니다",
-      "deleted": "발생률이 삭제되었습니다",
-      "deleteFailed": "삭제에 실패했습니다"
+      "deleted": "발생률이 삭제되었습니다"
     },
     "pathways": {
       "copied": "경로가 복사되었습니다",
-      "copyFailed": "복사에 실패했습니다",
-      "deleted": "경로가 삭제되었습니다",
-      "deleteFailed": "삭제에 실패했습니다"
+      "deleted": "경로가 삭제되었습니다"
     },
     "roleDetails": {
-      "roleNotFound": "역할을 찾을 수 없습니다",
-      "backToRoles": "역할 목록으로 돌아가기"
+      "roleNotFound": "역할을 찾을 수 없습니다"
     },
     "roleManagement": {
       "title": "역할 및 권한 관리",

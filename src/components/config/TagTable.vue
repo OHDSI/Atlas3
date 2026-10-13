@@ -146,9 +146,9 @@ defineEmits<{
 const headers = [
   { title: tv('components.config.tags.tagColumn'), key: 'name', sortable: true, width: '200px' },
   { title: tv('configuration.tagManagement.protected'), key: 'permissionProtected', sortable: true, width: '100px' },
-  { title: tv('config.tags.table.headers.created'), key: 'createdDate', sortable: true, width: '120px' },
+  { title: tv('columns.created'), key: 'createdDate', sortable: true, width: '120px' },
   { title: tv('columns.author'), key: 'createdBy', sortable: true, width: '120px' },
-  { title: tv('config.tags.table.headers.description'), key: 'description', sortable: false, width: '250px' },
+  { title: tv('columns.description'), key: 'description', sortable: false, width: '250px' },
   { title: tv('components.config.tags.usageColumn'), key: 'count', sortable: true, width: '80px' },
   { title: tv('columns.actions'), key: 'actions', sortable: false, align: 'end' as const, width: '100px' },
 ]

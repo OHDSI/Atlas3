@@ -208,7 +208,7 @@ describe('IncidenceRateBuilder', () => {
     await flushPromises()
 
     await (w.vm as any).$.setupState.handleExport()
-    expect(builderMocks.feedback.value?.message).toBe(tr('ir.editor.exportError'))
+    expect(builderMocks.feedback.value?.message).toBe(tr('commonErrors.exportFailed'))
     expect(builderMocks.feedback.value?.color).toBe('error')
 
     const importedFile = { text: async () => JSON.stringify({ name: 'Imported' }) }

@@ -204,7 +204,7 @@
       <AtlasButton
         @click="apply"
       >
-        {{ t('components.filterPanel.buttons.apply').value }}
+        {{ t('common.apply').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>

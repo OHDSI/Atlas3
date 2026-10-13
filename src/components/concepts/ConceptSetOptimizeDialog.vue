@@ -153,7 +153,7 @@
             data-testid="cs-optimize-save-new"
             @click="emit('create', { name: newName.trim(), items: optimizedItems })"
           >
-            {{ t('cs.manager.saveButton').value }}
+            {{ t('common.save').value }}
           </AtlasButton>
         </template>
         <template v-else>

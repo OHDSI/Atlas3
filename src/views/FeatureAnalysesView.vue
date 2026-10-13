@@ -265,7 +265,7 @@ const rangeDisplay = computed<string>(() => {
 const headers = computed(() => [
   { title: t('columns.id').value, key: 'id' },
   { title: t('columns.name').value, key: 'name' },
-  { title: t('cc.fa.columns.type').value, key: 'type' },
+  { title: t('columns.type').value, key: 'type' },
   { title: t('cc.fa.domain').value, key: 'domain' },
   { title: t('cc.fa.statType').value, key: 'statType' },
   { title: t('columns.createdBy').value, key: 'createdBy' },

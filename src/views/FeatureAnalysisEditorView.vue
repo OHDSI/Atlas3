@@ -335,7 +335,7 @@
     <AtlasDialog
       v-model="showDeleteConceptSetDialog"
       eyebrow="CONCEPT SET"
-      :title="t('components.featureAnalysisEditor.deleteConceptSetTitle').value"
+      :title="t('components.conceptSetDelete.title').value"
       max-width="480"
       @close="cancelDeleteConceptSet"
     >
@@ -686,12 +686,12 @@ const deleteConceptSetWarning = computed(() => {
   const count = conceptSetPendingDeleteUsage.value
   const usage =
     count === 1
-      ? t('components.featureAnalysisEditor.deleteConceptSetUsageOne').value
-      : t('components.featureAnalysisEditor.deleteConceptSetUsageMany', {
+      ? t('components.conceptSetDelete.usageOne').value
+      : t('components.conceptSetDelete.usageMany', {
         count,
       }).value
 
-  return t('components.featureAnalysisEditor.deleteConceptSetWarning', { name, usage }).value
+  return t('components.conceptSetDelete.warning', { name, usage }).value
 })
 
 function deleteConceptSet(conceptSet: ConceptSetReference) {

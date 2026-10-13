@@ -19,10 +19,10 @@
       <div class="ir-workbench__canvas-controls">
         <button
           class="rail-toggle"
-          :title="railOpen ? tv('components.incidenceRate.hideDesignPanel') : tv('components.incidenceRate.showDesignPanel')"
+          :title="railOpen ? tv('components.workbench.hideDesignPanel') : tv('components.workbench.showDesignPanel')"
           @click="railOpen = !railOpen"
         >
-          {{ railOpen ? `◂ ${tv('components.incidenceRate.hideAnalysisDesign')}` : `▸ ${tv('components.incidenceRate.showAnalysisDesign')}` }}
+          {{ railOpen ? `◂ ${tv('components.workbench.hideAnalysisDesign')}` : `▸ ${tv('components.workbench.showAnalysisDesign')}` }}
         </button>
         <AtlasTooltip
           v-if="validationMessages.length"

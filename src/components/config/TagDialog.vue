@@ -28,7 +28,7 @@
 
       <AtlasTextField
         v-model="form.color"
-        :label="tv('components.config.tags.colorOptional')"
+        :label="tv('components.tags.colorOptional')"
         type="color"
         :hint="tv('components.config.tags.inheritColorHint')"
         persistent-hint
@@ -47,7 +47,7 @@
 
       <AtlasTextField
         v-model="form.icon"
-        :label="tv('components.config.tags.iconOptional')"
+        :label="tv('components.tags.iconOptional')"
         :hint="tv('components.config.tags.iconInheritHint')"
         persistent-hint
         :error="errors.icon"
@@ -57,8 +57,8 @@
 
       <AtlasCheckbox
         v-model="form.permissionProtected"
-        :label="tv('components.config.tags.permissionProtected')"
-        :hint="tv('components.config.tags.permissionProtectedHint')"
+        :label="tv('components.tags.permissionProtected')"
+        :hint="tv('components.tags.permissionProtectedHint')"
         persistent-hint
       />
 
@@ -78,7 +78,7 @@
         variant="ghost"
         @click="handleClose"
       >
-        {{ t('config.tags.dialog.actions.cancel').value }}
+        {{ t('common.cancel').value }}
       </AtlasButton>
       <AtlasButton
         :disabled="!formValid"
@@ -87,8 +87,8 @@
       >
         {{
           isEditMode
-            ? t('config.tags.dialog.actions.save').value
-            : t('config.tags.dialog.actions.create').value
+            ? t('common.save').value
+            : t('common.create').value
         }}
       </AtlasButton>
     </template>
@@ -132,7 +132,7 @@ const isEditMode = computed(() => !!props.tag?.id)
 
 
 const nameRules = [
-  (v: string) => !!v || tv('config.tags.dialog.fields.name.required'),
+  (v: string) => !!v || tv('commonErrors.nameRequired'),
   (v: string) =>
     v?.length <= 255 ||
     tv('components.config.tags.nameTooLong'),

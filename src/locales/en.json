@@ -152,14 +152,16 @@
   },
   "commonErrors": {
     "noSources": "The current WebAPI has no sources defined.<br/>Please add one or more on <a href=\"#/configure\">configuration</a> page.",
-    "required": "This field is required",
     "nameRequired": "Name is required",
     "lengthValidation": "Name must be between 1 and 255 characters",
     "invalid": "Invalid",
     "valid": "Valid",
     "unexpectedError": "An unexpected error occurred. This has been logged for investigation.",
     "errorDetails": "Error Details",
-    "somethingWentWrong": "Something Went Wrong"
+    "somethingWentWrong": "Something Went Wrong",
+    "exportFailed": "Export failed",
+    "copyFailed": "Copy failed",
+    "deleteFailed": "Delete failed"
   },
   "navigation": {
     "characterizations": "Characterizations",
@@ -425,7 +427,6 @@
     },
     "filterPanel": {
       "buttons": {
-        "apply": "Apply",
         "clear": "Clear"
       }
     },
@@ -587,12 +588,6 @@
       "colHint": "N (%) / Mean (SD)",
       "n": "N"
     },
-    "characterizationWorkbench": {
-      "hideDesignPanel": "Hide design panel",
-      "showDesignPanel": "Show design panel",
-      "hideAnalysisDesign": "Hide Analysis Design",
-      "showAnalysisDesign": "Show Analysis Design"
-    },
     "characterizationResults": {
       "covariateDetail": "COVARIATE DETAIL",
       "searchCovariates": "Filter results by name",
@@ -679,17 +674,7 @@
       "jsonInvalid": "Invalid JSON: {error}",
       "jsonInvalidExpression": "Not a valid Atlas cohort expression",
       "jsonImportFailed": "Import failed: {error}",
-      "jsonReadFailed": "Could not read file",
-      "deleteConceptSetTitle": "Delete concept set?",
-      "deleteConceptSetUsageOne": "1 criterion still uses it",
-      "deleteConceptSetUsageMany": "{count} criteria still use it",
-      "deleteConceptSetWarning": "Deleting \"{name}\" will clear it from those criteria, and a criterion with no concept set matches its entire domain. {usage}."
-    },
-    "featureAnalysisEditor": {
-      "deleteConceptSetTitle": "Delete concept set?",
-      "deleteConceptSetUsageOne": "1 criterion still uses it",
-      "deleteConceptSetUsageMany": "{count} criteria still use it",
-      "deleteConceptSetWarning": "Deleting \"{name}\" will clear it from those criteria, and a criterion with no concept set matches its entire domain. {usage}."
+      "jsonReadFailed": "Could not read file"
     },
     "conceptDetail": {
       "closeDetails": "Close concept details",
@@ -785,12 +770,8 @@
         "colorHexHint": "Hex color code for visual identification",
         "iconMdiFolderHint": "Material Design Icon name (e.g., mdi-tag, mdi-folder)",
         "nameTooLong": "Name must be less than 255 characters",
-        "colorOptional": "Color (optional)",
         "inheritColorHint": "Leave empty to inherit from group",
-        "iconOptional": "Icon (optional)",
         "iconInheritHint": "Material Design Icon name or leave empty to inherit from group",
-        "permissionProtected": "Permission Protected",
-        "permissionProtectedHint": "Require special permissions to assign/unassign this tag",
         "tagColumn": "Tag",
         "usageColumn": "Usage",
         "editTagAria": "Edit tag",
@@ -841,10 +822,8 @@
         "userWord": "user",
         "deleteRemovesFromUsers": "Deleting this role will remove it from all assigned users.",
         "confirmDeleteRolePrefix": "Are you sure you want to delete the role",
-        "cannotBeUndone": "This action cannot be undone.",
         "deleteRoleButton": "Delete Role",
         "deleteRoleError": "Failed to delete role. Please try again.",
-        "searchRoles": "Search roles...",
         "newRole": "New Role",
         "noRolesFound": "No roles found. Create your first role to get started.",
         "noDescription": "No description",
@@ -965,10 +944,6 @@
       "lowerRate": "Lower rate",
       "higherRate": "Higher rate",
       "treemapLegendHint": "(color = incidence rate per person-year; area = persons at risk)",
-      "hideDesignPanel": "Hide design panel",
-      "showDesignPanel": "Show design panel",
-      "hideAnalysisDesign": "Hide Analysis Design",
-      "showAnalysisDesign": "Show Analysis Design",
       "viewValidationMessages": "View validation messages",
       "analysisDesign": "Analysis design",
       "validationMessages": "Validation messages",
@@ -976,12 +951,6 @@
     },
     "pathwayCohortList": {
       "removeCohort": "Remove cohort"
-    },
-    "pathwayWorkbench": {
-      "hideDesignPanel": "Hide design panel",
-      "showDesignPanel": "Show design panel",
-      "hideAnalysisDesign": "Hide Analysis Design",
-      "showAnalysisDesign": "Show Analysis Design"
     },
     "pathwayBuilder": {
       "importPathwayDesign": "Import pathway design",
@@ -1087,6 +1056,18 @@
     "criteria": {
       "addAttribute": "Add attribute...",
       "selectConceptSet": "Select Concept Set"
+    },
+    "workbench": {
+      "hideAnalysisDesign": "Hide Analysis Design",
+      "showAnalysisDesign": "Show Analysis Design",
+      "hideDesignPanel": "Hide design panel",
+      "showDesignPanel": "Show design panel"
+    },
+    "conceptSetDelete": {
+      "title": "Delete concept set?",
+      "usageOne": "1 criterion still uses it",
+      "usageMany": "{count} criteria still use it",
+      "warning": "Deleting \"{name}\" will clear it from those criteria, and a criterion with no concept set matches its entire domain. {usage}."
     }
   },
   "characterizations": {
@@ -1366,7 +1347,6 @@
     },
     "viewCountMessage": "View record count for:",
     "vocabulariesInfo": "Type at least 3 characters; press Enter to search across SNOMED, ICD, RxNorm, LOINC, and other vocabularies.",
-    "noMatchingConceptSets": "No concept sets match your search.",
     "minLengthHint": "Please enter at least {min} characters"
   },
   "cs": {
@@ -1436,7 +1416,6 @@
       "overwriteOption": "Overwrite Current Concept Set",
       "pleaseProvideNameMessage": "Please provide a name for your new concept set:",
       "pleaseReviewMessage": "Please review the optimized definition and options for saving.",
-      "saveButton": "Save",
       "tabs": {
         "included": "Included",
         "sourceCodes": "Source Codes",
@@ -1611,9 +1590,6 @@
       "runError": "Failed to start generation",
       "cancelError": "Failed to cancel generation",
       "statType": "Stat Type",
-      "columns": {
-        "type": "Type"
-      },
       "customSqlTitle": "Custom SQL"
     }
   },
@@ -1654,7 +1630,6 @@
       "timeAtRiskCohortStart": "Cohort start",
       "timeAtRiskCohortEnd": "Cohort end",
       "outcomes": "Outcomes",
-      "exportError": "Export failed",
       "noConceptSets": "This incidence rate has no concept sets attached.",
       "timeAtRiskEndBeforeStart": "Time-at-risk end must be after start when both reference the same date"
     },
@@ -1756,8 +1731,7 @@
     "jobs": {
       "actions": {
         "startPolling": "Start auto-refresh",
-        "stopPolling": "Stop auto-refresh",
-        "retry": "Retry"
+        "stopPolling": "Stop auto-refresh"
       },
       "empty": {
         "title": "No Jobs Found"
@@ -1845,7 +1819,6 @@
     "tagManagement": {
       "createTag": "Create Tag",
       "editTag": "Edit Tag",
-      "edit": "Edit",
       "protected": "Protected"
     }
   },
@@ -2237,17 +2210,12 @@
       "createButton": "Create Tag Group",
       "table": {
         "headers": {
-          "name": "Name",
           "color": "Color",
           "icon": "Icon",
           "mandatory": "Mandatory",
           "showColumn": "Show Column",
           "multiple": "Multiple",
-          "freeForm": "Free-form",
-          "created": "Created",
-          "author": "Author",
-          "description": "Description",
-          "actions": "Actions"
+          "freeForm": "Free-form"
         },
         "empty": "No tag groups found"
       },
@@ -2256,8 +2224,7 @@
         "editTitle": "Edit Tag Group",
         "fields": {
           "name": {
-            "label": "Name",
-            "required": "Name is required"
+            "label": "Name"
           },
           "color": {
             "label": "Color"
@@ -2284,11 +2251,6 @@
             "label": "Free-form",
             "hint": "Allow users to create custom tags in this group"
           }
-        },
-        "actions": {
-          "save": "Save",
-          "create": "Create",
-          "cancel": "Cancel"
         }
       },
       "delete": {
@@ -2349,19 +2311,14 @@
     },
     "incidenceRates": {
       "copied": "Incidence rate copied",
-      "copyFailed": "Copy failed",
-      "deleted": "Incidence rate deleted",
-      "deleteFailed": "Delete failed"
+      "deleted": "Incidence rate deleted"
     },
     "pathways": {
       "copied": "Pathway copied",
-      "copyFailed": "Copy failed",
-      "deleted": "Pathway deleted",
-      "deleteFailed": "Delete failed"
+      "deleted": "Pathway deleted"
     },
     "roleDetails": {
-      "roleNotFound": "Role not found",
-      "backToRoles": "Back to Roles"
+      "roleNotFound": "Role not found"
     },
     "roleManagement": {
       "title": "Role & Permissions Management",
@@ -2445,14 +2402,9 @@
       "newButton": "New Key",
       "empty": "You haven't created any API keys yet.",
       "columns": {
-        "name": "Name",
-        "description": "Description",
         "identifier": "Key Identifier",
-        "created": "Created",
         "expires": "Expires",
-        "lastUsed": "Last Used",
-        "status": "Status",
-        "actions": "Actions"
+        "lastUsed": "Last Used"
       },
       "status": {
         "active": "Active",
@@ -2464,7 +2416,6 @@
       "revoke": "Revoke",
       "revokeConfirmTitle": "Revoke API Key",
       "revokeConfirm": "Revoke the key '{name}'? It will stop working immediately, but stays listed here.",
-      "delete": "Delete",
       "deleteConfirmTitle": "Delete API Key",
       "deleteConfirm": "Permanently delete the key '{name}'? This cannot be undone.",
       "revoked": "API key revoked",
@@ -2486,12 +2437,9 @@
       "customDays": "Number of days",
       "customDaysPlaceholder": "Blank = never expires",
       "generate": "Generate",
-      "cancel": "Cancel",
-      "nameRequired": "Name is required",
       "resultTitle": "API Key Created",
       "resultWarning": "Copy this key now — you won't be able to see it again.",
       "rawKeyLabel": "API Key",
-      "copy": "Copy",
       "copied": "Copied to clipboard",
       "copyFailed": "Could not copy to clipboard",
       "done": "Done"
@@ -2505,7 +2453,6 @@
   "pathways": {
     "editor": {
       "previewBanner": "Previewing version — saving will create a new pathway",
-      "exportError": "Export failed",
       "noPathwayLoaded": "No pathway loaded"
     }
   }

@@ -207,7 +207,7 @@ describe('PathwayBuilder', () => {
     await flushPromises()
 
     await (w.vm as any).$.setupState.handleExport()
-    expect(builderMocks.feedback.value).toMatchObject({ message: tr('pathways.editor.exportError'), color: 'error' })
+    expect(builderMocks.feedback.value).toMatchObject({ message: tr('commonErrors.exportFailed'), color: 'error' })
 
     const file = { text: async () => JSON.stringify({ name: 'Imported' }) }
     await (w.vm as any).$.setupState.handleImportFileChange({ target: { files: [file], value: '' } })

@@ -19,13 +19,13 @@
       <button
         class="rail-toggle"
         :title="railOpen
-          ? tv('components.characterizationWorkbench.hideDesignPanel')
-          : tv('components.characterizationWorkbench.showDesignPanel')"
+          ? tv('components.workbench.hideDesignPanel')
+          : tv('components.workbench.showDesignPanel')"
         @click="railOpen = !railOpen"
       >
         {{ railOpen
-          ? '◂ ' + tv('components.characterizationWorkbench.hideAnalysisDesign')
-          : '▸ ' + tv('components.characterizationWorkbench.showAnalysisDesign') }}
+          ? '◂ ' + tv('components.workbench.hideAnalysisDesign')
+          : '▸ ' + tv('components.workbench.showAnalysisDesign') }}
       </button>
       <DataSourceRunTable
         :sources="runTableSources"

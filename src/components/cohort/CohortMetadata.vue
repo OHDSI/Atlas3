@@ -200,7 +200,7 @@ function removeTag(index: number) {
 
 const rules = {
   required: (value: string) =>
-    !!value || t('commonErrors.required').value,
+    !!value || t('common.requiredField').value,
 }
 </script>
 

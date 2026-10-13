@@ -195,18 +195,18 @@ defineEmits<{
 }>()
 
 const headers = [
-  { title: tv('config.tags.table.headers.name'), key: 'name', sortable: true, width: '150px' },
+  { title: tv('columns.name'), key: 'name', sortable: true, width: '150px' },
   { title: tv('config.tags.table.headers.color'), key: 'color', sortable: false, width: '80px' },
   { title: tv('config.tags.table.headers.icon'), key: 'icon', sortable: false, width: '80px' },
   { title: tv('config.tags.table.headers.mandatory'), key: 'mandatory', sortable: true, width: '100px' },
   { title: tv('config.tags.table.headers.showColumn'), key: 'showGroup', sortable: true, width: '120px' },
   { title: tv('config.tags.table.headers.multiple'), key: 'multiSelection', sortable: true, width: '100px' },
   { title: tv('config.tags.table.headers.freeForm'), key: 'allowCustom', sortable: true, width: '100px' },
-  { title: tv('config.tags.table.headers.created'), key: 'createdDate', sortable: true, width: '120px' },
-  { title: tv('config.tags.table.headers.author'), key: 'createdBy', sortable: true, width: '120px' },
-  { title: tv('config.tags.table.headers.description'), key: 'description', sortable: false, width: '200px' },
+  { title: tv('columns.created'), key: 'createdDate', sortable: true, width: '120px' },
+  { title: tv('columns.author'), key: 'createdBy', sortable: true, width: '120px' },
+  { title: tv('columns.description'), key: 'description', sortable: false, width: '200px' },
   { title: '', key: 'showTagsBtn', sortable: false, width: '100px' },
-  { title: tv('config.tags.table.headers.actions'), key: 'actions', sortable: false, align: 'end' as const, width: '100px' },
+  { title: tv('columns.actions'), key: 'actions', sortable: false, align: 'end' as const, width: '100px' },
 ]
 
 /**

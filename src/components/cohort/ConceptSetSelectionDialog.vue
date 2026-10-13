@@ -164,7 +164,7 @@
           <p class="cs-picker__empty-text">
             {{
               searchTerm
-                ? t('search.noMatchingConceptSets').value
+                ? t('cs.manager.emptyFilterMessage').value
                 : t('cohortDefinitions.conceptSetPicker.empty').value
             }}
           </p>

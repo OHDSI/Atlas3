@@ -223,7 +223,7 @@ async function handleCopy(ir: IncidenceRate) {
     notify.success(tv('views.incidenceRates.copied'))
     router.push(`/incidence-rates/${result.data.id}`)
   } else {
-    notify.danger(tv('views.incidenceRates.copyFailed'))
+    notify.danger(tv('commonErrors.copyFailed'))
     logger.error(
       'IncidenceRatesView',
       'copyIncidenceRate failed',
@@ -246,7 +246,7 @@ async function confirmDelete() {
     await fetchIncidenceRates()
   } else {
     notify.danger(
-      result.error.message || tv('views.incidenceRates.deleteFailed')
+      result.error.message || tv('commonErrors.deleteFailed')
     )
     logger.error('IncidenceRatesView', 'deleteIncidenceRate failed', result.error)
   }

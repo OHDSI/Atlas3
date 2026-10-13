@@ -234,7 +234,7 @@ async function handleCopy(p: Pathway) {
     feedback.value = { message: tv('views.pathways.copied'), color: 'success' }
     router.push(`/pathways/${result.data.id}`)
   } else {
-    feedback.value = { message: tv('views.pathways.copyFailed'), color: 'error' }
+    feedback.value = { message: tv('commonErrors.copyFailed'), color: 'error' }
     logger.error('PathwaysView', 'copyPathway failed', !result.success ? result.error : null)
   }
 }
@@ -253,7 +253,7 @@ async function confirmDelete() {
     await fetchPathways()
   } else {
     feedback.value = {
-      message: result.error.message || tv('views.pathways.deleteFailed'),
+      message: result.error.message || tv('commonErrors.deleteFailed'),
       color: 'error',
     }
     logger.error('PathwaysView', 'deletePathway failed', result.error)

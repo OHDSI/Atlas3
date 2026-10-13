@@ -71,7 +71,9 @@
     "url": "网址",
     "apply": "申请",
     "tools": "工具",
-    "confirm": "确认"
+    "confirm": "确认",
+    "edit": "Edit",
+    "cannotUndo": "此操作无法撤销。"
   },
   "tool": {
     "name": "* 名称",
@@ -89,7 +91,9 @@
     "toolEnabled": "工具已启用"
   },
   "commonErrors": {
-    "noSources": "当前的WebAPI尚未定义源。<br/>请在<a href=\"#/configure\">配置</a>页上添加一个或多个。"
+    "noSources": "当前的WebAPI尚未定义源。<br/>请在<a href=\"#/configure\">配置</a>页上添加一个或多个。",
+    "copyFailed": "复制失败",
+    "deleteFailed": "删除失败"
   },
   "navigation": {
     "characterizations": "特征描述",
@@ -201,7 +205,6 @@
     },
     "filterPanel": {
       "buttons": {
-        "apply": "应用",
         "clear": "清除"
       }
     },
@@ -356,12 +359,6 @@
       "colHint": "N（%）/ 均值（SD）",
       "n": "N"
     },
-    "characterizationWorkbench": {
-      "hideDesignPanel": "隐藏设计面板",
-      "showDesignPanel": "显示设计面板",
-      "hideAnalysisDesign": "隐藏分析设计",
-      "showAnalysisDesign": "显示分析设计"
-    },
     "characterizationResults": {
       "covariateDetail": "协变量详情",
       "concept": "概念",
@@ -466,12 +463,8 @@
         "colorHexHint": "用于视觉识别的十六进制颜色代码",
         "iconMdiFolderHint": "Material Design 图标名称（例如 mdi-tag、mdi-folder）",
         "nameTooLong": "名称必须少于 255 个字符",
-        "colorOptional": "颜色（可选）",
         "inheritColorHint": "留空以从组继承",
-        "iconOptional": "图标（可选）",
         "iconInheritHint": "Material Design 图标名称，或留空以从组继承",
-        "permissionProtected": "权限保护",
-        "permissionProtectedHint": "分配/取消分配此标签需要特殊权限",
         "tagColumn": "标签",
         "usageColumn": "使用",
         "editTagAria": "编辑标签",
@@ -522,10 +515,8 @@
         "userWord": "个用户",
         "deleteRemovesFromUsers": "删除此角色将从所有已分配的用户中移除它。",
         "confirmDeleteRolePrefix": "确定要删除该角色",
-        "cannotBeUndone": "此操作无法撤销。",
         "deleteRoleButton": "删除角色",
         "deleteRoleError": "删除角色失败。请重试。",
-        "searchRoles": "搜索角色...",
         "newRole": "新角色",
         "noRolesFound": "未找到角色。创建您的第一个角色以开始。",
         "noDescription": "无描述",
@@ -646,20 +637,10 @@
       "lowerRate": "较低发生率",
       "higherRate": "较高发生率",
       "treemapLegendHint": "（颜色＝每人年发生率；面积＝风险人群）",
-      "hideDesignPanel": "隐藏设计面板",
-      "showDesignPanel": "显示设计面板",
-      "hideAnalysisDesign": "隐藏分析设计",
-      "showAnalysisDesign": "显示分析设计",
       "noCasesFound": "未找到此目标/结局组合的病例。请尝试选择其他结局。"
     },
     "pathwayCohortList": {
       "removeCohort": "移除队列"
-    },
-    "pathwayWorkbench": {
-      "hideDesignPanel": "隐藏设计面板",
-      "showDesignPanel": "显示设计面板",
-      "hideAnalysisDesign": "隐藏分析设计",
-      "showAnalysisDesign": "显示分析设计"
     },
     "pathwayBuilder": {
       "importPathwayDesign": "导入路径设计",
@@ -735,6 +716,15 @@
     "criteria": {
       "addAttribute": "添加属性",
       "selectConceptSet": "选择概念集"
+    },
+    "workbench": {
+      "hideAnalysisDesign": "隐藏分析设计",
+      "showAnalysisDesign": "显示分析设计",
+      "hideDesignPanel": "隐藏设计面板",
+      "showDesignPanel": "显示设计面板"
+    },
+    "access": {
+      "searchRoles": "搜索角色..."
     }
   },
   "facets": {
@@ -927,7 +917,6 @@
       "overwriteOption": "覆盖当前概念集",
       "pleaseProvideNameMessage": "请提供新概念集的名称：",
       "pleaseReviewMessage": "请查看优化的定义和保存选项。",
-      "saveButton": "保存",
       "concept": {
         "standard": "标准",
         "nonStandard": "非标准",
@@ -1179,7 +1168,6 @@
     "tagManagement": {
       "createTag": "Create Tag",
       "editTag": "Edit Tag",
-      "edit": "Edit",
       "protected": "Protected"
     }
   },
@@ -1407,19 +1395,14 @@
     },
     "incidenceRates": {
       "copied": "已复制发病率",
-      "copyFailed": "复制失败",
-      "deleted": "已删除发病率",
-      "deleteFailed": "删除失败"
+      "deleted": "已删除发病率"
     },
     "pathways": {
       "copied": "已复制路径",
-      "copyFailed": "复制失败",
-      "deleted": "已删除路径",
-      "deleteFailed": "删除失败"
+      "deleted": "已删除路径"
     },
     "roleDetails": {
-      "roleNotFound": "未找到角色",
-      "backToRoles": "返回角色列表"
+      "roleNotFound": "未找到角色"
     },
     "roleManagement": {
       "title": "角色与权限管理",

@@ -235,7 +235,7 @@
     <AtlasDialog
       v-model="showDeleteConceptSetDialog"
       eyebrow="CONCEPT SET"
-      :title="t('components.featureAnalysisEditor.deleteConceptSetTitle').value"
+      :title="t('components.conceptSetDelete.title').value"
       max-width="480"
       @close="cancelDeleteConceptSet"
     >
@@ -456,7 +456,7 @@ const titleText = computed(() => {
   }
   const name = draft.value.name?.trim()
   if (name && name.length > 0) return name
-  return t('configuration.tagManagement.edit').value
+  return t('common.edit').value
 })
 
 const storeError = computed<string | null>(() => store.error)
@@ -614,11 +614,11 @@ const deleteConceptSetWarning = computed(() => {
   const count = conceptSetPendingDeleteUsage.value
   const usage =
     count === 1
-      ? t('components.featureAnalysisEditor.deleteConceptSetUsageOne').value
-      : t('components.featureAnalysisEditor.deleteConceptSetUsageMany', { count }).value
+      ? t('components.conceptSetDelete.usageOne').value
+      : t('components.conceptSetDelete.usageMany', { count }).value
 
   return t(
-    'components.featureAnalysisEditor.deleteConceptSetWarning',
+    'components.conceptSetDelete.warning',
     { name, usage },
   ).value
 })
