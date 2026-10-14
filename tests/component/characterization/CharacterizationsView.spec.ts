@@ -152,7 +152,7 @@ describe('CharacterizationsView', () => {
     const headers = mounted.wrapper
       .findAll('[data-testid="characterizations-table"] thead th')
       .map(h => h.text())
-    expect(headers).toContain('Id')
+    expect(headers).toContain(tr('columns.id'))
     expect(headers).toContain('Created')
     expect(headers).toContain('Updated')
     expect(headers).not.toContain('Modified')

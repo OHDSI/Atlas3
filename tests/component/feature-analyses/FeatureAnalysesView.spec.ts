@@ -148,7 +148,7 @@ describe('FeatureAnalysesView', () => {
     const headers = mounted.wrapper
       .findAll('[data-testid="feature-analyses-table"] thead th')
       .map(h => h.text())
-    expect(headers).toContain('Id')
+    expect(headers).toContain(tr('columns.id'))
     expect(headers).toContain('Created')
     expect(headers).toContain('Updated')
     expect(headers).not.toContain('Modified')
