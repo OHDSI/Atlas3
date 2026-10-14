@@ -531,14 +531,24 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
       confine: true,
       extraCssText: 'max-width: 480px; white-space: normal; overflow-wrap: anywhere;',
       formatter: (params: unknown) => {
-        const p = params as { name: string; value: number; data?: { conceptPath?: string } }
+        const p = params as {
+          name: string
+          value: number
+          data?: { conceptPath?: string }
+          treePathInfo?: { name: string }[]
+        }
         const value = formatSINumber(p.value)
 
-        // Format the concept path with newlines and tabs
+        // Show where the tile sits in the tree, one indented line per level.
+        // treePathInfo covers groups and the Unclassified bucket too; its
+        // first entry is the unnamed series root.
+        let parts = (p.treePathInfo ?? []).map(n => n.name).filter(Boolean)
+        if (parts.length === 0 && p.data?.conceptPath) {
+          parts = p.data.conceptPath.split('||').filter(part => part.trim() !== 'NA')
+        }
+
         let displayName = p.name
-        if (p.data?.conceptPath) {
-          // Unclassified concepts carry `NA` placeholders for every level.
-          const parts = p.data.conceptPath.split('||').filter(part => part.trim() !== 'NA')
+        if (parts.length > 0) {
           displayName = parts
             .map((part, index) => {
               const tabs = '\u00A0\u00A0\u00A0\u00A0'.repeat(index) // 4 non-breaking spaces per level
