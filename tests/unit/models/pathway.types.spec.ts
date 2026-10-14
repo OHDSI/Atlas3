@@ -47,6 +47,14 @@ describe('pathway.types', () => {
     expect(result.success).toBe(false)
   })
 
+  it('PathwayExecutionSchema normalizes stopped executions to canceled', () => {
+    const parsed = PathwayExecutionSchema.parse({
+      id: 1, status: 'STOPPED', sourceKey: 'cdm',
+    })
+
+    expect(parsed.status).toBe('CANCELED')
+  })
+
   it('PathwayResultsSchema parses pathwayGroups + eventCodes', () => {
     const parsed = PathwayResultsSchema.parse({
       pathwayGroups: [{

@@ -217,6 +217,11 @@ export const GenerationStatusSchema = z.enum([
   'STOPPING',
 ])
 
+const CharacterizationExecutionStatusSchema = z.preprocess(
+  status => status === 'STOPPED' ? 'CANCELED' : status,
+  GenerationStatusSchema
+)
+
 export interface CharacterizationExecution {
   id: number
   ccGenerationId?: number
@@ -237,11 +242,11 @@ export const CharacterizationExecutionSchema = z
     id: z.number(),
     ccGenerationId: z.number().optional(),
     hashCode: z.union([z.string(), z.number()]).nullable().optional(),
-    status: GenerationStatusSchema,
+    status: CharacterizationExecutionStatusSchema,
     startTime: z.number().optional(),
     endTime: z.number().nullable().optional(),
     duration: z.number().optional(),
-    executionStatus: GenerationStatusSchema.optional(),
+    executionStatus: CharacterizationExecutionStatusSchema.optional(),
     sourceKey: z.string(),
     designHash: z.string().optional(),
     cdmDatabaseSchema: z.string().optional(),

@@ -316,8 +316,8 @@ export const useCharacterizationStore = defineStore('characterization', () => {
   }
 
   /**
-   * Cancel a characterization generation. Stops polling for the matching
-   * generation id (if registered) and refreshes the executions list.
+    * Cancel a characterization generation, refresh the executions list, and
+    * keep polling until WebAPI reports its terminal status.
    */
   async function cancelExecution(
     characterizationId: number,
@@ -332,10 +332,11 @@ export const useCharacterizationStore = defineStore('characterization', () => {
       logger.error('CharacterizationStore', 'Cancel execution error', result.error)
       throw new Error(result.error.message)
     }
+    await loadExecutions(characterizationId)
     if (generationId != null) {
       stopPolling(generationId)
+      pollExecution(generationId)
     }
-    await loadExecutions(characterizationId)
   }
 
   function updateExecutionInList(updated: CharacterizationExecution): void {

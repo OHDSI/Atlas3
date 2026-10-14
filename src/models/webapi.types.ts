@@ -59,13 +59,17 @@ export interface GenerationJob {
   failMessage?: string
 }
 
-export type GenerationStatus = 'PENDING' | 'RUNNING' | 'COMPLETE' | 'FAILED'
+export type GenerationStatus = 'PENDING' | 'RUNNING' | 'COMPLETE' | 'FAILED' | 'CANCELED'
+
+export function isGenerationActive(status: GenerationStatus): boolean {
+  return status === 'PENDING' || status === 'RUNNING'
+}
 
 export const GenerationJobSchema = z.object({
   id: z.number(),
   cohortDefinitionId: z.number(),
   sourceKey: z.string(),
-  status: z.enum(['PENDING', 'RUNNING', 'COMPLETE', 'FAILED']),
+  status: z.enum(['PENDING', 'RUNNING', 'COMPLETE', 'FAILED', 'CANCELED']),
   startTime: z.string().optional(),
   endTime: z.string().optional(),
   personCount: z.number().optional(),

@@ -105,14 +105,11 @@ export const PathwayResultsSchema = z.object({
 })
 export type PathwayResults = z.infer<typeof PathwayResultsSchema>
 
-// Execution status enum
-export const PathwayExecutionStatusSchema = z.enum([
-  'STARTING',
-  'STARTED',
-  'COMPLETED',
-  'FAILED',
-  'CANCELED',
-])
+// WebAPI reports Spring Batch cancellations as STOPPED.
+export const PathwayExecutionStatusSchema = z.preprocess(
+  status => status === 'STOPPED' ? 'CANCELED' : status,
+  z.enum(['STARTING', 'STARTED', 'COMPLETED', 'FAILED', 'CANCELED'])
+)
 export type PathwayExecutionStatus = z.infer<typeof PathwayExecutionStatusSchema>
 
 // A single generation execution record

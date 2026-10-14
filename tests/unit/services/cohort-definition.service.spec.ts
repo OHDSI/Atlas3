@@ -20,6 +20,7 @@ import {
   assignTagToCohort,
   unassignTagFromCohort,
   generateCohort,
+  cancelCohortGeneration,
   getCohortGenerationInfo,
   getCohorts,
   validateCohortDefinition,
@@ -403,6 +404,19 @@ describe('services/cohort-definition.service', () => {
       } else {
         expect.fail(`expected success, got ${result.error.message}`)
       }
+    })
+  })
+
+  describe('cancelCohortGeneration', () => {
+    it('GETs /{id}/cancel/{sourceKey}', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true, text: async () => '' })
+
+      const result = await cancelCohortGeneration(123, 'SYNPUF1K')
+
+      expect(result.success).toBe(true)
+      const [url, init] = mockFetch.mock.calls[0]
+      expect(url).toContain('/cohortdefinition/123/cancel/SYNPUF1K')
+      expect(init.method).toBe('GET')
     })
   })
 

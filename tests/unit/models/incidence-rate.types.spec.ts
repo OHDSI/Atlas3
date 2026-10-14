@@ -65,6 +65,16 @@ describe('Incidence Rate schemas', () => {
     expect(r.success).toBe(true)
   })
 
+  it('IncidenceRateExecutionInfoSchema gives cancellation precedence over complete status', () => {
+    const execution = IncidenceRateExecutionInfoSchema.parse({
+      id: { analysisId: 1, sourceId: 2 },
+      status: 'COMPLETE',
+      isCanceled: true,
+    })
+
+    expect(execution.status).toBe('CANCELED')
+  })
+
   it('IncidenceRateInfoBySourceSchema defaults summaryList to []', () => {
     const r = IncidenceRateInfoBySourceSchema.parse({
       executionInfo: {

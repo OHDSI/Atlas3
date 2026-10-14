@@ -1,9 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { CohortGenerationInfoSchema, toGenerationStatus } from '@/models/webapi.types'
+import { CohortGenerationInfoSchema, isGenerationActive, toGenerationStatus } from '@/models/webapi.types'
 
 describe('webapi generation status mapping', () => {
   it('maps backend ERROR to terminal FAILED', () => {
     expect(toGenerationStatus('ERROR')).toBe('FAILED')
+  })
+
+  it('identifies only pending and running jobs as active', () => {
+    expect(isGenerationActive('PENDING')).toBe(true)
+    expect(isGenerationActive('RUNNING')).toBe(true)
+    expect(isGenerationActive('COMPLETE')).toBe(false)
+    expect(isGenerationActive('FAILED')).toBe(false)
+    expect(isGenerationActive('CANCELED')).toBe(false)
   })
 
   it('parses cohort generation info ERROR as FAILED', () => {

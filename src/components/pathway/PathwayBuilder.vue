@@ -9,29 +9,31 @@
     @back="handleBack"
   >
     <template #title>
-      <input
+      <textarea
         :value="currentPathway?.name ?? ''"
         :placeholder="t('home.newEntityNames.pathway').value"
         :aria-label="t('columns.name').value"
         :readonly="!currentPathway || !canEdit"
+        rows="1"
         class="pathway-builder__title-input"
         data-testid="pathway-builder-name"
-        @input="(e: Event) => store.updateMeta({ name: (e.target as HTMLInputElement).value })"
-      >
+        @input="onTitleInput"
+      />
     </template>
     <template
       v-if="currentPathway"
       #subtitle
     >
-      <input
+      <textarea
         :value="currentPathway.description ?? ''"
         :placeholder="t('cc.viewEdit.descriptionPlaceholder').value"
         :aria-label="t('columns.description').value"
         :readonly="!canEdit"
+        rows="1"
         class="pathway-builder__subtitle-input"
         data-testid="pathway-builder-description"
-        @input="(e: Event) => store.updateMeta({ description: (e.target as HTMLInputElement).value })"
-      >
+        @input="onDescriptionInput"
+      />
     </template>
     <template #actions>
       <AtlasActionToolbar>
@@ -460,6 +462,23 @@ onMounted(() => {
 onBeforeUnmount(() => {
   store.stopAutoSave()
 })
+
+function resizeTextArea(target: HTMLTextAreaElement) {
+  target.style.height = 'auto'
+  target.style.height = `${target.scrollHeight}px`
+}
+
+function onTitleInput(event: Event) {
+  const target = event.target as HTMLTextAreaElement
+  resizeTextArea(target)
+  store.updateMeta({ name: target.value })
+}
+
+function onDescriptionInput(event: Event) {
+  const target = event.target as HTMLTextAreaElement
+  resizeTextArea(target)
+  store.updateMeta({ description: target.value })
+}
 </script>
 
 <style scoped>
@@ -471,6 +490,9 @@ onBeforeUnmount(() => {
 
 .pathway-builder__title-input {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: block;
   font-size: 26px;
   font-weight: 300;
   line-height: 1.2;
@@ -482,6 +504,9 @@ onBeforeUnmount(() => {
   padding: 0 0 2px;
   margin: 0;
   font-family: inherit;
+  resize: none;
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 .pathway-builder__title-input::placeholder {
   color: rgba(var(--v-theme-on-surface), 0.32);
@@ -498,6 +523,9 @@ onBeforeUnmount(() => {
 
 .pathway-builder__subtitle-input {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: block;
   font-size: 13px;
   line-height: 1.5;
   color: rgb(var(--v-theme-on-surface-variant));
@@ -507,6 +535,9 @@ onBeforeUnmount(() => {
   padding: 0 0 2px;
   margin: 0;
   font-family: inherit;
+  resize: none;
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 .pathway-builder__subtitle-input::placeholder {
   color: rgba(var(--v-theme-on-surface), 0.32);

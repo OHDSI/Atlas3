@@ -467,6 +467,34 @@ describe('Characterization Store', () => {
         expect(listCharacterizationExecutions).toHaveBeenCalledWith(42)
       })
 
+      it('continues polling a stopping execution until it is canceled', async () => {
+        vi.useFakeTimers()
+        try {
+          const store = useCharacterizationStore()
+          vi.mocked(cancelCharacterizationGeneration).mockResolvedValue(success(undefined))
+          vi.mocked(listCharacterizationExecutions).mockResolvedValue(
+            success([{ ...baseExec, id: 300, status: 'STOPPING' }])
+          )
+          vi.mocked(getCharacterizationExecution)
+            .mockResolvedValueOnce(success({ ...baseExec, id: 300, status: 'STOPPING' }))
+            .mockResolvedValueOnce(success({ ...baseExec, id: 300, status: 'CANCELED' }))
+
+          await store.cancelExecution(42, 'CDM_V5', 300)
+          await vi.advanceTimersByTimeAsync(0)
+
+          expect(store.executions[0]?.status).toBe('STOPPING')
+          expect(store.pollingHandles.has(300)).toBe(true)
+
+          await vi.advanceTimersByTimeAsync(3000)
+          await vi.advanceTimersByTimeAsync(0)
+
+          expect(store.executions[0]?.status).toBe('CANCELED')
+          expect(store.pollingHandles.has(300)).toBe(false)
+        } finally {
+          vi.useRealTimers()
+        }
+      })
+
       it('rethrows and sets error on failure', async () => {
         const store = useCharacterizationStore()
         vi.mocked(cancelCharacterizationGeneration).mockResolvedValue(apiErr('Cant'))

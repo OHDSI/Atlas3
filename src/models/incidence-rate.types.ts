@@ -119,6 +119,7 @@ export const IncidenceRateExecutionInfoSchema = z
     message: z.string().nullish(),
   })
   .passthrough()
+  .transform(info => info.isCanceled ? { ...info, status: 'CANCELED' } : info)
 export type IncidenceRateExecutionInfo = z.infer<typeof IncidenceRateExecutionInfoSchema>
 
 export const IncidenceRateSummaryStatsSchema = z
