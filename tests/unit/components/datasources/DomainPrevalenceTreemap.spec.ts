@@ -135,6 +135,23 @@ describe('DomainPrevalenceTreemap', () => {
     expect(treemapChart.props('data')).toEqual(flatData)
   })
 
+  it('groups concepts without a classification under one Unclassified node', () => {
+    const pathData: TreemapNode[] = [
+      { name: 'Knee arthroscopy', value: 30, conceptId: 1, conceptPath: 'Procedure on joint||Arthroscopy||Knee arthroscopy' },
+      { name: 'Hip arthroscopy', value: 20, conceptId: 2, conceptPath: 'Procedure on joint||Arthroscopy||Hip arthroscopy' },
+      { name: 'CPT 99213', value: 50, conceptId: 3, conceptPath: 'NA||NA||CPT 99213' },
+      { name: 'ICD9 00.10', value: 5, conceptId: 4, conceptPath: 'NA||NA||ICD9 00.10' },
+    ]
+    const wrapper2 = mountComponent({ data: pathData })
+    const data = wrapper2.findComponent({ name: 'AtlasTreemapChart' }).props('data') as TreemapNode[]
+
+    expect(data.map(n => n.name)).toEqual(['Procedure on joint', 'Unclassified'])
+    const unclassified = data[1]!
+    expect(unclassified.value).toBe(55)
+    expect(unclassified.children?.map(n => n.conceptId)).toEqual([3, 4])
+    expect(data[0]!.value).toBe(50)
+  })
+
   it('should have controls section for better layout', () => {
     const controls = wrapper.find('.treemap-controls')
     expect(controls.exists()).toBe(true)

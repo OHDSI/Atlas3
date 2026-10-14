@@ -979,7 +979,8 @@
       "clickAction": "Click",
       "clickHint": "on any area to view detailed analytics",
       "noHierarchyNote": "Hierarchical grouping not available for this data source",
-      "groupByHierarchy": "Group by hierarchy"
+      "groupByHierarchy": "Group by hierarchy",
+      "unclassified": "Unclassified"
     },
     "incidenceRate": {
       "importInputAria": "Import incidence rate design",
