@@ -150,12 +150,12 @@ const windowSummaryLabel = computed(() => {
 
   return endSummary ? `${startSummary} ${andLabel.value} ${endSummary}` : startSummary
 })
-const quickPresetsLabel = computed(() => t('common.presets', 'Quick Presets').value)
-const addTimeBoxLabel = computed(() => t('components.eventCard.addTemporalWindow', 'Add Temporal Window').value)
-const closeLabel = computed(() => t('common.close', 'Close').value)
-const andLabel = computed(() => t('common.and', 'and').value)
-const restrictVisitLabel = computed(() => t('components.windowedCriteria.windowedCriteriaText_5', 'restrict to the same visit occurrence').value)
-const ignoreObservationLabel = computed(() => t('components.windowedCriteria.windowedCriteriaText_6', 'ignore observation period').value)
+const quickPresetsLabel = computed(() => t('common.presets').value)
+const addTimeBoxLabel = computed(() => t('components.eventCard.addTemporalWindow').value)
+const closeLabel = computed(() => t('common.close').value)
+const andLabel = computed(() => t('common.and').value)
+const restrictVisitLabel = computed(() => t('components.correlatedCriteria.restrictToSameVisit').value)
+const ignoreObservationLabel = computed(() => t('components.windowedCriteria.ignoreObservationPeriod').value)
 
 function ensureInnerCriteria(): Criteria {
   if (!props.criteria.Criteria) {

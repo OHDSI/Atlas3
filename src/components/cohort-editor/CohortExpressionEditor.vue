@@ -96,7 +96,7 @@
                         mdi-clock-outline
                       </AtlasIcon>
                       <span class="d-none d-md-inline">
-                        {{ continuousObservationLabel }}: {{ observationPriorDays }}d {{ t('options.before', 'before').value }} · {{ observationPostDays }}d {{ t('options.after', 'after').value }}
+                        {{ t('components.cohortExpressionEditor.observationSummary', { prior: observationPriorDays, post: observationPostDays }).value }}
                       </span>
                       <span class="d-md-none">
                         {{ observationPriorDays }}d / {{ observationPostDays }}d
@@ -391,23 +391,23 @@ function setExpressionLimitType(value: 'First' | 'All' | 'Last') {
 
 const { t } = useI18n()
 
-const cohortEntryEventsLabel = computed(() => t('components.cohortExpressionEditor.entryEvents', 'Cohort Entry Events').value)
-const cohortEntryOnLabel = computed(() => t('components.cohortExpressionEditor.entryOn', 'Cohort Entry On').value)
-const earliestLabel = computed(() => t('options.earliest', 'Earliest').value)
-const allLabel = computed(() => t('options.all', 'All').value)
-const latestLabel = computed(() => t('options.latest', 'Latest').value)
-const anyLabel = computed(() => t('options.any', 'any').value)
-const entryEventsAnyHintLabel = computed(() => t('components.cohortExpressionEditor.entryEventsAnyHint', 'Entry events are matched with ANY (or)').value)
-const addCriteriaLabel = computed(() => t('components.cohortExpressionEditor.addCriteriaToGroup', 'Add Criteria to Group').value)
-const continuousObservationLabel = computed(() => t('components.cohortExpressionEditor.continuousObservation', 'Continuous observation').value)
-const daysBeforeLabel = computed(() => t('components.cohortExpressionEditor.daysBefore', 'Days before').value)
-const daysAfterLabel = computed(() => t('components.cohortExpressionEditor.daysAfter', 'Days after').value)
-const noPrimaryCriteriaLabel = computed(() => t('components.cohortExpressionEditor.noPrimaryCriteria', 'No primary criteria yet. Click "Add Criteria to Group" to start.').value)
-const restrictInitialEventsLabel = computed(() => t('components.cohortExpressionEditor.restrictInitialEvents', 'Restrict Initial Events').value)
-const limitRestrictedEventsLabel = computed(() => 'Limit Restricted Events to')
-const inclusionCriteriaLabel = computed(() => t('components.cohortExpressionEditor.inclusionCriteria', 'Inclusion Criteria').value)
-const exitCriteriaLabel = computed(() => t('components.cohortExpressionEditor.exitCriteria', 'Exit & Eras').value)
-const cohortErasLabel = computed(() => t('components.cohortExpressionEditor.cohortEras', 'Cohort Eras').value)
+const cohortEntryEventsLabel = computed(() => t('components.cohortExpressionEditor.entryEvents').value)
+const cohortEntryOnLabel = computed(() => t('components.cohortExpressionEditor.entryOn').value)
+const earliestLabel = computed(() => t('options.earliest').value)
+const allLabel = computed(() => t('options.all').value)
+const latestLabel = computed(() => t('options.latest').value)
+const anyLabel = computed(() => t('options.any').value)
+const entryEventsAnyHintLabel = computed(() => t('components.cohortExpressionEditor.entryEventsAnyHint').value)
+const addCriteriaLabel = computed(() => t('components.cohortExpressionEditor.addCriteriaToGroup').value)
+const continuousObservationLabel = computed(() => t('components.cohortExpressionEditor.continuousObservation').value)
+const daysBeforeLabel = computed(() => t('components.cohortExpressionEditor.daysBefore').value)
+const daysAfterLabel = computed(() => t('components.cohortExpressionEditor.daysAfter').value)
+const noPrimaryCriteriaLabel = computed(() => t('components.cohortExpressionEditor.noPrimaryCriteria').value)
+const restrictInitialEventsLabel = computed(() => t('components.cohortExpressionEditor.restrictInitialEvents').value)
+const limitRestrictedEventsLabel = computed(() => t('components.cohortExpressionEditor.limitRestrictedEventsTo').value)
+const inclusionCriteriaLabel = computed(() => t('components.cohortExpressionEditor.inclusionCriteria').value)
+const exitCriteriaLabel = computed(() => t('components.cohortExpressionEditor.exitCriteria').value)
+const cohortErasLabel = computed(() => t('components.cohortExpressionEditor.cohortEras').value)
 
 // Same list, same wording and same initial shapes as the criteria-group menu,
 // because both read the registry. This menu previously showed raw wrapper keys

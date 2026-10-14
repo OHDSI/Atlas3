@@ -143,7 +143,7 @@
 
               <template v-if="props.criteria.EndWindow">
                 <div class="corelated-criteria-editor__window-separator">
-                  {{ t('common.and', 'and').value }}
+                  {{ t('common.and').value }}
                 </div>
 
                 <Window :window="props.criteria.EndWindow">
@@ -316,56 +316,65 @@ type DistinctCountColumnOption = {
 }
 
 const occurrenceLabel = computed(() => {
-  const labelByType = {
-    EXACTLY: t('options.exactly', 'Exactly').value,
-    AT_LEAST: t('options.atLeast', 'At least').value,
-    AT_MOST: t('options.atMost', 'At most').value,
-  }
+  const keyByType = {
+    EXACTLY: 'components.correlatedCriteria.occurrence.exactly',
+    AT_LEAST: 'components.correlatedCriteria.occurrence.atLeast',
+    AT_MOST: 'components.correlatedCriteria.occurrence.atMost',
+  } as const
+  const occurrence = t(keyByType[occurrenceTypeKey.value], { count: occurrenceCount.value }).value
 
   if (!isDistinct.value) {
-    return `${labelByType[occurrenceTypeKey.value]} ${occurrenceCount.value}`
+    return occurrence
   }
 
-  return `${labelByType[occurrenceTypeKey.value]} ${occurrenceCount.value} of distinct ${distinctCountColumnLabel.value}`
+  return t('components.correlatedCriteria.occurrenceDistinct', {
+    occurrence,
+    column: distinctCountColumnLabel.value,
+  }).value
 })
 
 const windowSummaryLabel = computed(() => {
   const startSummary = formatWindowExpression(props.criteria.StartWindow)
   const endSummary = props.criteria.EndWindow ? formatWindowExpression(props.criteria.EndWindow) : ''
 
-  return endSummary ? `${startSummary} ${t('common.and', 'and').value} ${endSummary}` : startSummary
+  return endSummary
+    ? t('components.windowExpression.startAndEnd', { start: startSummary, end: endSummary }).value
+    : startSummary
 })
 
-const occurrenceChangeLabel = computed(() => t('components.criteriaGroup.nestedCriteria.selectLogicType', 'Select occurrence mode').value)
-const countLabel = computed(() => t('columns.count', 'Count').value)
-const distinctByLabel = computed(() => 'Distinct by')
-const distinctLabel = computed(() => (isDistinct.value ? 'Using distinct events' : 'Using all events'))
+const occurrenceChangeLabel = computed(() => t('components.criteriaGroup.nestedCriteria.selectLogicType').value)
+const countLabel = computed(() => t('columns.count').value)
+const distinctByLabel = computed(() => t('components.correlatedCriteria.distinctBy').value)
+const distinctLabel = computed(() =>
+  isDistinct.value
+    ? t('components.correlatedCriteria.usingDistinctEvents').value
+    : t('components.correlatedCriteria.usingAllEvents').value
+)
 const distinctCountColumnLabel = computed(() => {
   switch (distinctCountColumn.value) {
     case 'START_DATE':
-      return 'Start Date'
-    case 'DOMAIN_CONCEPT':
-      return 'Standard Concept'
+      return t('components.correlatedCriteria.distinctColumn.startDate').value
     case 'VISIT_ID':
-      return 'Visit'
+      return t('components.correlatedCriteria.distinctColumn.visit').value
+    case 'DOMAIN_CONCEPT':
     default:
-      return 'Standard Concept'
+      return t('components.correlatedCriteria.distinctColumn.standardConcept').value
   }
 })
-const quickPresetsLabel = computed(() => t('common.presets', 'Quick Presets').value)
-const addTimeBoxLabel = computed(() => t('components.eventCard.addTemporalWindow', 'Add Temporal Window').value)
-const closeLabel = computed(() => t('common.close', 'Close').value)
-const restrictVisitLabel = computed(() => t('components.criteriaGroup.criteriaGroupText_1', 'restrict to the same visit occurrence').value)
-const ignoreObservationLabel = computed(() => t('components.criteriaGroup.criteriaGroupText_2', 'allow events from outside observation period').value)
-const exactLabel = computed(() => t('options.exactly', 'Exactly').value)
-const atLeastLabel = computed(() => t('options.atLeast', 'At least').value)
-const atMostLabel = computed(() => t('options.atMost', 'At most').value)
+const quickPresetsLabel = computed(() => t('common.presets').value)
+const addTimeBoxLabel = computed(() => t('components.eventCard.addTemporalWindow').value)
+const closeLabel = computed(() => t('common.close').value)
+const restrictVisitLabel = computed(() => t('components.correlatedCriteria.restrictToSameVisit').value)
+const ignoreObservationLabel = computed(() => t('components.correlatedCriteria.allowEventsOutsideObservation').value)
+const exactLabel = computed(() => t('options.exactly').value)
+const atLeastLabel = computed(() => t('options.atLeast').value)
+const atMostLabel = computed(() => t('options.atMost').value)
 
-const distinctColumnOptions: DistinctCountColumnOption[] = [
-  { label: 'Start Date', value: 'START_DATE' },
-  { label: 'Standard Concept', value: 'DOMAIN_CONCEPT' },
-  { label: 'Visit', value: 'VISIT_ID' },
-]
+const distinctColumnOptions = computed<DistinctCountColumnOption[]>(() => [
+  { label: t('components.correlatedCriteria.distinctColumn.startDate').value, value: 'START_DATE' },
+  { label: t('components.correlatedCriteria.distinctColumn.standardConcept').value, value: 'DOMAIN_CONCEPT' },
+  { label: t('components.correlatedCriteria.distinctColumn.visit').value, value: 'VISIT_ID' },
+])
 
 const restrictVisit = computed({
   get: () => props.criteria.RestrictVisit ?? false,

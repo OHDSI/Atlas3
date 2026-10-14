@@ -9,7 +9,7 @@
           <AtlasCheckbox
             :model-value="allSelected"
             :indeterminate="someSelected"
-            :aria-label="t('components.inclusionRuleReport.selectAllRules', 'Select all rules').value"
+            :aria-label="t('components.inclusionRuleReport.selectAllRules').value"
             hide-details
             data-testid="inclusion-intersect-select-all"
             @update:model-value="toggleAll"
@@ -19,19 +19,19 @@
           #
         </th>
         <th>
-          {{ t('components.feasibilityAttritionReport.inclusionRule', 'Inclusion rule').value }}
+          {{ t('components.feasibilityAttritionReport.inclusionRule').value }}
         </th>
         <th class="intersect-table__col-num">
           N
         </th>
         <th class="intersect-table__col-num">
-          <span :title="t('components.inclusionRuleReport.hintPercentSatisfying', 'Percent of the entry-event population who satisfy this rule on its own (independent of order)').value">
-            {{ t('components.inclusionRuleReport.colPercentSatisfying', '% satisfying').value }}
+          <span :title="t('components.inclusionRuleReport.hintPercentSatisfying').value">
+            {{ t('components.inclusionRuleReport.colPercentSatisfying').value }}
           </span>
         </th>
         <th class="intersect-table__col-num">
-          <span :title="t('components.inclusionRuleReport.hintPercentToGain', 'Share of the initial population that satisfies every other rule but fails this one, so would be gained by removing it').value">
-            {{ t('components.inclusionRuleReport.colPercentToGain', '% to-gain').value }}
+          <span :title="t('components.inclusionRuleReport.hintPercentToGain').value">
+            {{ t('components.inclusionRuleReport.colPercentToGain').value }}
           </span>
         </th>
       </tr>

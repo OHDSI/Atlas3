@@ -10,7 +10,7 @@
   <div class="linked-fa-picker">
     <div class="linked-fa-picker__header">
       <h2 class="linked-fa-picker__title">
-        {{ t('cc.viewEdit.design.fa.title', 'Linked Feature Analyses') }}
+        {{ t('cc.viewEdit.design.fa.title') }}
       </h2>
       <AtlasButton
         variant="secondary"
@@ -19,7 +19,7 @@
         data-testid="linked-fa-picker-add"
         @click="openDialog"
       >
-        {{ t('common.add', 'Add feature analysis') }}
+        {{ t('common.addFeatureAnalysis') }}
       </AtlasButton>
     </div>
 
@@ -28,7 +28,7 @@
       class="linked-fa-picker__empty"
       data-testid="linked-fa-picker-empty"
     >
-      {{ t('common.noData', 'No feature analyses linked.') }}
+      {{ t('cc.viewEdit.featureAnalyses.emptyLinked') }}
     </div>
 
     <AtlasList
@@ -59,7 +59,7 @@
             <AtlasCheckbox
               v-if="fa.supportsAnnual"
               :model-value="fa.includeAnnual ?? false"
-              :label="tv('columns.supportsAnnual', 'Annual')"
+              :label="tv('columns.supportsAnnual')"
               hide-details
               :data-testid="`linked-fa-picker-annual-${fa.id}`"
               @update:model-value="(value) => updateFlag(fa.id, 'includeAnnual', !!value)"
@@ -67,14 +67,14 @@
             <AtlasCheckbox
               v-if="fa.supportsTemporal"
               :model-value="fa.includeTemporal ?? false"
-              :label="tv('columns.temporal', 'Temporal')"
+              :label="tv('columns.temporal')"
               hide-details
               :data-testid="`linked-fa-picker-temporal-${fa.id}`"
               @update:model-value="(value) => updateFlag(fa.id, 'includeTemporal', !!value)"
             />
             <AtlasIconButton
               icon="mdi-close"
-              v-bind="{ ariaLabel: tv('columns.remove', 'Remove') }"
+              v-bind="{ ariaLabel: tv('columns.remove') }"
               variant="text"
               size="sm"
               :data-testid="`linked-fa-picker-remove-${fa.id}`"
@@ -87,8 +87,8 @@
 
     <AtlasDialog
       v-model="dialogOpen"
-      :eyebrow="tv('components.characterizationDesign.detailsEyebrow', 'DETAILS')"
-      :title="t('cc.modals.chooseAFeatureAnalyses', 'Select feature analyses to link').value"
+      :eyebrow="tv('components.characterizationDesign.detailsEyebrow')"
+      :title="t('cc.modals.selectFeatureAnalyses').value"
       max-width="800"
       @close="dialogOpen = false"
     >
@@ -123,14 +123,14 @@
           data-testid="linked-fa-picker-cancel"
           @click="dialogOpen = false"
         >
-          {{ t('common.cancel', 'Cancel') }}
+          {{ t('common.cancel') }}
         </AtlasButton>
         <AtlasButton
           :disabled="selectedIds.length === 0"
           data-testid="linked-fa-picker-confirm"
           @click="confirmAdd"
         >
-          {{ t('common.add', 'Add feature analysis') }}
+          {{ t('common.addFeatureAnalysis') }}
         </AtlasButton>
       </template>
     </AtlasDialog>
@@ -197,10 +197,10 @@ const {
 } = useConceptFacets(unlinkedAnalyses, facets, featureAnalysisSearchText)
 
 const dialogHeaders = computed(() => [
-  { title: t('columns.name', 'Name').value, key: 'name' },
-  { title: t('cc.fa.analysisType', 'Type').value, key: 'type' },
+  { title: t('columns.name').value, key: 'name' },
+  { title: t('columns.type').value, key: 'type' },
   {
-    title: t('columns.description', 'Description').value,
+    title: t('columns.description').value,
     key: 'description',
   },
 ])

@@ -10,7 +10,7 @@
   >
     <div class="highlights-panel__header">
       <div class="highlights-panel__eyebrow-row">
-        <span class="text-eyebrow">{{ tv('profiles.highlightEyebrow', 'HIGHLIGHT') }}</span>
+        <span class="text-eyebrow">{{ tv('profiles.highlightEyebrow') }}</span>
         <span class="highlights-panel__accent-rule" />
       </div>
     </div>
@@ -23,14 +23,14 @@
         value="concepts"
         data-test="highlights-tab-concepts"
       >
-        {{ tv('profiles.highlightTabConcepts', 'concepts') }}
+        {{ tv('profiles.highlightTabConcepts') }}
       </AtlasTab>
       <AtlasTab
         value="sets"
         data-test="highlights-tab-sets"
         :disabled="!store.hasCohortContext"
       >
-        {{ tv('profiles.highlightTabSets', 'sets') }}
+        {{ tv('profiles.highlightTabSets') }}
       </AtlasTab>
     </AtlasTabs>
 
@@ -53,7 +53,7 @@
         data-test="highlight-clear-all"
         @click="store.clearHighlights()"
       >
-        {{ tv('profiles.clearAllHighlights', 'Clear all highlights') }}
+        {{ tv('profiles.clearAllHighlights') }}
       </AtlasButton>
     </div>
   </aside>

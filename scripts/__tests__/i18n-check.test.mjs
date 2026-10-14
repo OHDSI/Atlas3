@@ -6,9 +6,18 @@ import {
   findParentCollision,
   findBatchCollision,
   findFallbackConflicts,
+  lintEnglish,
+  findRedundantFallbacks,
+  stripFallbacks,
+  unescapeLiteral,
+  extractConfigKeys,
 } from '../i18n-check.core.mjs'
 
 describe('extractKeys', () => {
+  it('extracts double-quoted keys', () => {
+    expect(extractKeys(`t("common.save")`)).toEqual([{ key: 'common.save', fallback: null }])
+  })
+
   it('extracts a key with an inline fallback', () => {
     expect(extractKeys(`t('common.save', 'Save')`)).toEqual([
       { key: 'common.save', fallback: 'Save' },
@@ -114,5 +123,107 @@ describe('findFallbackConflicts', () => {
       { key: 'common.save', fallback: null, file: 'b.vue' },
     ])
     expect(conflicts).toEqual([])
+  })
+})
+
+describe('lintEnglish', () => {
+  it('accepts {name} placeholders', () => {
+    expect(lintEnglish({ a: { b: 'Hi {name}' } })).toEqual([])
+  })
+
+  it('rejects <%= %> placeholders', () => {
+    expect(lintEnglish({ a: { b: 'Hi <%= name %>' } })).toEqual([
+      '"a.b" uses a <%= %> placeholder; write {name} instead',
+    ])
+  })
+
+  it('rejects numbered Atlas 2.x style keys', () => {
+    expect(lintEnglish({ a: { cohortErasText_2: 'x', textfield: 'y', field_17: 'z' } })).toEqual([
+      '"a.cohortErasText_2" is a numbered key; name it after what the string is for',
+      '"a.textfield" is a numbered key; name it after what the string is for',
+      '"a.field_17" is a numbered key; name it after what the string is for',
+    ])
+  })
+
+  it('accepts keys that merely contain digits', () => {
+    expect(lintEnglish({ columns: { p25: 'P25' }, x: { accessDenied403: 'No' } })).toEqual([])
+  })
+
+  it('ignores the untranslated format subtree', () => {
+    expect(lintEnglish({ format: { x: '<%= y %>' } })).toEqual([])
+  })
+})
+
+describe('stripFallbacks', () => {
+  const en = { a: { b: 'Save', c: 'Hi {n}', q: "It's", d: 'Say "hi"' } }
+
+  it('drops a fallback that repeats en.json', () => {
+    expect(stripFallbacks(`t('a.b', 'Save').value`, en)).toBe(`t('a.b').value`)
+  })
+
+  it('keeps the params argument after the fallback', () => {
+    expect(stripFallbacks(`tv('a.c', 'Hi {n}', { n })`, en)).toBe(`tv('a.c', { n })`)
+  })
+
+  it('compares the unescaped value of quoted and template literals', () => {
+    expect(stripFallbacks(`t('a.q', 'It\\'s')`, en)).toBe(`t('a.q')`)
+    expect(stripFallbacks(`t("a.d", "Say \\"hi\\"")`, en)).toBe(`t("a.d")`)
+    expect(stripFallbacks('t(\'a.b\', `Save`)', en)).toBe(`t('a.b')`)
+  })
+
+  it('handles calls spread over several lines', () => {
+    expect(stripFallbacks(`t(\n  'a.b',\n  'Save'\n)`, en)).toBe(`t(\n  'a.b'\n)`)
+  })
+
+  it('leaves a fallback whose wording differs from en.json for a person to decide', () => {
+    const src = `t('a.b', 'Save cohort')`
+    expect(stripFallbacks(src, en)).toBe(src)
+  })
+
+  it('leaves keys missing from en.json alone so --backfill can lift them', () => {
+    const src = `t('x.y', 'New text')`
+    expect(stripFallbacks(src, en)).toBe(src)
+  })
+
+  it('leaves interpolated templates and non-literal fallbacks alone', () => {
+    const src = 't(\'a.b\', `Save ${x}`); t(\'a.b\', label)'
+    expect(stripFallbacks(src, en)).toBe(src)
+  })
+
+  it('does not touch identifiers ending in t', () => {
+    const src = `emit('a.b', 'Save')`
+    expect(stripFallbacks(src, en)).toBe(src)
+  })
+})
+
+describe('findRedundantFallbacks', () => {
+  it('reports key, line and whether the wording diverges from en.json', () => {
+    const src = `x\nt('a.b', 'Save')\nt('a.b', 'Save all')\nt('x.y', 'New')`
+    expect(findRedundantFallbacks(src, { a: { b: 'Save' } })).toEqual([
+      { key: 'a.b', line: 2, divergent: false, fallback: 'Save', english: 'Save' },
+      { key: 'a.b', line: 3, divergent: true, fallback: 'Save all', english: 'Save' },
+    ])
+  })
+})
+
+describe('unescapeLiteral', () => {
+  it('unescapes quotes, backslashes and common escapes', () => {
+    expect(unescapeLiteral("Data source \\'{key}\\' not found")).toBe("Data source '{key}' not found")
+    expect(unescapeLiteral('a\\\\b')).toBe('a\\b')
+    expect(unescapeLiteral('line\\nnext \\u2014 \\x41')).toBe('line\nnext \u2014 A')
+  })
+
+  it('leaves plain text alone', () => {
+    expect(unescapeLiteral('Hi {name}')).toBe('Hi {name}')
+  })
+})
+
+describe('extractConfigKeys', () => {
+  it('extracts *Key fields from JSON config', () => {
+    const json = '{ "nameKey": "attributes.age.name", "descriptionKey": "a.b", "name": "Age", "key": "x.y" }'
+    expect(extractConfigKeys(json)).toEqual([
+      { key: 'attributes.age.name', fallback: null },
+      { key: 'a.b', fallback: null },
+    ])
   })
 })

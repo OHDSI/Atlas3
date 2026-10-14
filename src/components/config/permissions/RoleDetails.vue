@@ -5,7 +5,7 @@
       <div class="role-details__section">
         <div class="role-details__field">
           <div class="role-details__label">
-            {{ t('components.config.permissions.roleName', 'Role Name').value }}
+            {{ t('components.config.permissions.roleName').value }}
           </div>
           <div
             v-if="!isEditingName"
@@ -14,10 +14,10 @@
             <span class="role-details__name">{{ role.name }}</span>
             <AtlasIconButton
               icon="mdi-pencil"
-              v-bind="{ ariaLabel: tv('components.config.permissions.editRoleNameAria', 'Edit Role Name') }"
+              v-bind="{ ariaLabel: tv('components.config.permissions.editRoleNameAria') }"
               size="sm"
               variant="text"
-              :title="tv('components.config.permissions.editRoleNameAria', 'Edit Role Name')"
+              :title="tv('components.config.permissions.editRoleNameAria')"
               @click="startEditName"
             />
           </div>
@@ -40,7 +40,7 @@
                 :loading="isSaving"
                 @click="saveName"
               >
-                {{ t('common.save', 'Save').value }}
+                {{ t('common.save').value }}
               </AtlasButton>
               <AtlasButton
                 variant="ghost"
@@ -48,7 +48,7 @@
                 :disabled="isSaving"
                 @click="cancelEditName"
               >
-                {{ t('common.cancel', 'Cancel').value }}
+                {{ t('common.cancel').value }}
               </AtlasButton>
             </div>
           </div>
@@ -59,21 +59,21 @@
       <div class="role-details__section">
         <div class="role-details__field">
           <div class="role-details__label">
-            {{ t('common.description', 'Description').value }}
+            {{ t('common.description').value }}
           </div>
           <div
             v-if="!isEditingDescription"
             class="role-details__value"
           >
             <span class="role-details__description">
-              {{ role.description || t('components.config.permissions.noDescriptionProvided', 'No description provided').value }}
+              {{ role.description || t('components.config.permissions.noDescriptionProvided').value }}
             </span>
             <AtlasIconButton
               icon="mdi-pencil"
-              v-bind="{ ariaLabel: tv('components.config.permissions.editDescriptionAria', 'Edit Description') }"
+              v-bind="{ ariaLabel: tv('components.config.permissions.editDescriptionAria') }"
               size="sm"
               variant="text"
-              :title="tv('components.config.permissions.editDescriptionAria', 'Edit Description')"
+              :title="tv('components.config.permissions.editDescriptionAria')"
               @click="startEditDescription"
             />
           </div>
@@ -94,7 +94,7 @@
                 :loading="isSaving"
                 @click="saveDescription"
               >
-                {{ t('common.save', 'Save').value }}
+                {{ t('common.save').value }}
               </AtlasButton>
               <AtlasButton
                 variant="ghost"
@@ -102,7 +102,7 @@
                 :disabled="isSaving"
                 @click="cancelEditDescription"
               >
-                {{ t('common.cancel', 'Cancel').value }}
+                {{ t('common.cancel').value }}
               </AtlasButton>
             </div>
           </div>
@@ -123,7 +123,7 @@
               mdi-calendar-plus
             </AtlasIcon>
             <span class="text-caption">
-              {{ t('columns.created', 'Created').value }}: {{ formatDate(role.createdDate) }}
+              {{ t('columns.created').value }}: {{ formatDate(role.createdDate) }}
             </span>
           </div>
           <div
@@ -137,7 +137,7 @@
               mdi-calendar-edit
             </AtlasIcon>
             <span class="text-caption">
-              {{ t('columns.modified', 'Modified').value }}: {{ formatDate(role.modifiedDate) }}
+              {{ t('columns.modified').value }}: {{ formatDate(role.modifiedDate) }}
             </span>
           </div>
         </div>
@@ -183,13 +183,13 @@ const errorMessage = ref<string | null>(null)
 
 // Validation rules
 const nameRules = [
-  (v: string) => !!v || tv('components.config.permissions.roleNameRequired', 'Role name is required'),
+  (v: string) => !!v || tv('components.config.permissions.roleNameRequired'),
   (v: string) =>
     (v && v.trim().length > 0) ||
-    tv('components.config.permissions.roleNameEmpty', 'Role name cannot be empty'),
+    tv('components.config.permissions.roleNameEmpty'),
   (v: string) =>
     (v && v.length <= 255) ||
-    tv('components.config.permissions.roleNameTooLong', 'Role name must be less than 255 characters'),
+    tv('components.config.permissions.roleNameTooLong'),
   (v: string) => {
     if (!v) return true
     const trimmedName = v.trim().toLowerCase()
@@ -198,7 +198,7 @@ const nameRules = [
     )
     return (
       !isDuplicate ||
-      tv('components.config.permissions.roleNameExists', 'A role with this name already exists')
+      tv('components.config.permissions.roleNameExists')
     )
   },
 ]
@@ -264,16 +264,13 @@ async function saveName() {
       isEditingName.value = false
       editedName.value = ''
     } else {
-      errorMessage.value = tv(
-        'components.config.permissions.updateRoleNameError',
-        'Failed to update role name. Please try again.'
-      )
+      errorMessage.value = tv('components.config.permissions.updateRoleNameError')
     }
   } catch (error) {
     errorMessage.value =
       error instanceof Error
         ? error.message
-        : tv('components.config.permissions.unexpectedError', 'An unexpected error occurred')
+        : tv('components.config.permissions.unexpectedError')
   } finally {
     isSaving.value = false
   }
@@ -313,16 +310,13 @@ async function saveDescription() {
       isEditingDescription.value = false
       editedDescription.value = ''
     } else {
-      errorMessage.value = tv(
-        'components.config.permissions.updateDescriptionError',
-        'Failed to update description. Please try again.'
-      )
+      errorMessage.value = tv('components.config.permissions.updateDescriptionError')
     }
   } catch (error) {
     errorMessage.value =
       error instanceof Error
         ? error.message
-        : tv('components.config.permissions.unexpectedError', 'An unexpected error occurred')
+        : tv('components.config.permissions.unexpectedError')
   } finally {
     isSaving.value = false
   }

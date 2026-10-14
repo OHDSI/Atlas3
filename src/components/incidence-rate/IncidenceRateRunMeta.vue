@@ -7,7 +7,7 @@
     <span
       v-if="startedLabel"
       class="muted"
-    >· {{ t('ir.results.started', 'Started').value }} {{ startedLabel }}</span>
+    >· {{ t('ir.results.started').value }} {{ startedLabel }}</span>
     <span
       v-if="durationLabel"
       class="muted"

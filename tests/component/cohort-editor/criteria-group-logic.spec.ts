@@ -19,6 +19,7 @@ import CorelatedCriteria from '@/components/circe/criteria/CorelatedCriteria.vue
 import type { CriteriaGroup as CriteriaGroupModel } from '@/models/circe-types'
 import { normalizeForCirce } from '@/components/cohort-editor/normalize'
 import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
+import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -40,10 +41,10 @@ describe('CriteriaGroup match type', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it.each([
-    ['ALL', undefined, 'All'],
-    ['ANY', undefined, 'Any'],
-    ['AT_LEAST', 2, 'At least 2'],
-    ['AT_MOST', 3, 'At most 3'],
+    ['ALL', undefined, tr('options.all')],
+    ['ANY', undefined, tr('options.any')],
+    ['AT_LEAST', 2, `${tr('options.atLeast')} 2`],
+    ['AT_MOST', 3, `${tr('options.atMost')} 3`],
   ] as const)('renders a %s group as "%s"', (type, count, expected) => {
     const group: CriteriaGroupModel = { Type: type, CriteriaList: [] }
     if (count !== undefined) group.Count = count
@@ -57,13 +58,13 @@ describe('CriteriaGroup match type', () => {
   it('marks the count as unknown when an AT_LEAST group has none', () => {
     const wrapper = mountGroup({ Type: 'AT_LEAST', CriteriaList: [] })
 
-    expect(matchLabel(wrapper).text()).toBe('At least ?')
+    expect(matchLabel(wrapper).text()).toBe(`${tr('options.atLeast')} ?`)
   })
 
   it('falls back to ALL for display when the group has no Type', () => {
     const wrapper = mountGroup({ CriteriaList: [] })
 
-    expect(matchLabel(wrapper).text()).toBe('All')
+    expect(matchLabel(wrapper).text()).toBe(tr('options.all'))
     expect(matchLabel(wrapper).attributes('data-type')).toBe('ALL')
   })
 
@@ -107,7 +108,7 @@ describe('CriteriaGroup match type', () => {
     const group: CriteriaGroupModel = { CriteriaList: [] }
     const wrapper = mountGroup(group)
 
-    expect(matchLabel(wrapper).text()).toBe('All')
+    expect(matchLabel(wrapper).text()).toBe(tr('options.all'))
     expect(group.Type).toBeUndefined()
 
     const saved = normalizeForCirce({ InclusionRules: [{ name: 'r', expression: group }] })
@@ -134,7 +135,7 @@ describe('CriteriaGroup match type', () => {
     await wrapper.find('input[type="number"]').setValue('')
 
     expect(group.Count).toBeUndefined()
-    expect(matchLabel(wrapper).text()).toBe('At least ?')
+    expect(matchLabel(wrapper).text()).toBe(`${tr('options.atLeast')} ?`)
   })
 
   // A fractional or negative occurrence count is meaningless to
@@ -164,7 +165,7 @@ describe('CriteriaGroup membership', () => {
   it('shows the empty-group message until something is added', () => {
     const wrapper = mountGroup({ Type: 'ALL', CriteriaList: [], Groups: [], DemographicCriteriaList: [] })
 
-    expect(wrapper.text()).toContain('No correlated criteria in this group yet.')
+    expect(wrapper.text()).toContain(tr('components.criteriaGroup.noEventsInGroup'))
   })
 
   // The group's lists used to be created by the computeds the template read, so
@@ -183,7 +184,7 @@ describe('CriteriaGroup membership', () => {
     const group: CriteriaGroupModel = { Type: 'ALL', CriteriaList: [] }
     const wrapper = mountGroup(group)
 
-    await clickAddCriteria(wrapper, 'Drug Exposure')
+    await clickAddCriteria(wrapper, tr('criteria.drugExposure.name'))
 
     expect(group.CriteriaList).toHaveLength(1)
     const added = group.CriteriaList![0]!
@@ -203,7 +204,7 @@ describe('CriteriaGroup membership', () => {
     const group: CriteriaGroupModel = { Type: 'ALL', CriteriaList: [] }
     const wrapper = mountGroup(group)
 
-    await clickAddCriteria(wrapper, 'Demographic Criteria')
+    await clickAddCriteria(wrapper, tr('components.demographicCriteria.name'))
 
     expect(group.DemographicCriteriaList).toHaveLength(1)
     expect(group.CriteriaList).toHaveLength(0)
@@ -213,7 +214,7 @@ describe('CriteriaGroup membership', () => {
     const group: CriteriaGroupModel = { Type: 'ALL', CriteriaList: [] }
     const wrapper = mountGroup(group)
 
-    const addGroup = wrapper.findAll('button').find(button => button.text() === 'Add Group')
+    const addGroup = wrapper.findAll('button').find(button => button.text() === tr('components.criteriaGroup.addNestedGroup'))
     expect(addGroup).toBeDefined()
     await addGroup!.trigger('click')
 
@@ -284,10 +285,10 @@ describe('CriteriaGroup nesting', () => {
 
   it('warns once nesting passes the supported depth', () => {
     const shallow = mountGroup({ Type: 'ALL', CriteriaList: [] }, 10)
-    expect(shallow.text()).not.toContain('Deep nesting detected')
+    expect(shallow.text()).not.toContain(tr('components.criteriaGroup.nestedCriteria.depthWarning', { depth: 10 }))
 
     const deep = mountGroup({ Type: 'ALL', CriteriaList: [] }, 11)
-    expect(deep.text()).toContain('Deep nesting detected (11)')
+    expect(deep.text()).toContain(tr('components.criteriaGroup.nestedCriteria.depthWarning', { depth: 11 }))
   })
 
   it('relays concept-set selection from any depth up to its own parent', async () => {

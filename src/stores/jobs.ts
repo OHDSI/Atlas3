@@ -12,11 +12,13 @@ import { useExecutionPolling } from '@/composables/useExecutionPolling'
 import { logger } from '@/utils/logger'
 import type { Job, JobStatusFilter } from '@/models/jobs.types'
 import { isJobRunning, isJobCompleted, isJobFailed } from '@/models/jobs.types'
+import { useI18n } from '@/composables/useI18n'
 
 /** Polling interval in milliseconds (2 seconds) */
 const POLLING_INTERVAL_MS = 2000
 
 export const useJobsStore = defineStore('jobs', () => {
+  const { tv } = useI18n()
   // State
   const jobs = ref<Job[]>([])
   const isLoading = ref(false)
@@ -70,7 +72,8 @@ export const useJobsStore = defineStore('jobs', () => {
         logger.error('JobsStore', 'Failed to fetch jobs', result.error)
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch jobs'
+      const message =
+        err instanceof Error ? err.message : tv('jobs.loadFailed')
       error.value = message
       logger.error('JobsStore', 'Failed to fetch jobs', err)
     } finally {

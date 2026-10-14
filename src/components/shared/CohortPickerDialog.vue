@@ -1,7 +1,7 @@
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    :eyebrow="t('common.cohort', 'Cohort').value"
+    :eyebrow="t('common.cohort').value"
     :title="title"
     max-width="1000"
     @update:model-value="emit('update:modelValue', $event)"
@@ -49,7 +49,7 @@
         data-testid="cohort-picker-dialog-cancel"
         @click="close"
       >
-        {{ t('common.cancel', 'Cancel') }}
+        {{ t('common.cancel') }}
       </AtlasButton>
       <AtlasButton
         :disabled="selectedIds.length === 0"
@@ -114,11 +114,11 @@ const page = ref(1)
 const itemsPerPage = ref(10)
 const itemsPerPageOptions = [10, 25, 50]
 
-const title = computed(() => props.title ?? t('components.incidenceRate.selectCohorts', 'Select cohorts').value)
-const confirmLabel = computed(() => props.confirmLabel ?? t('common.add', 'Add cohort').value)
+const title = computed(() => props.title ?? t('components.incidenceRate.selectCohorts').value)
+const confirmLabel = computed(() => props.confirmLabel ?? t('common.addCohort').value)
 const headers = computed(() => [
-  { title: t('columns.id', 'ID').value, key: 'id', width: '96px' },
-  { title: t('columns.name', 'Name').value, key: 'name' },
+  { title: t('columns.id').value, key: 'id', width: '96px' },
+  { title: t('columns.name').value, key: 'name' },
 ])
 
 const selectableCohorts = computed(() => {

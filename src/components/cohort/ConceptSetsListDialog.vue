@@ -2,7 +2,7 @@
   <AtlasDialog
     :model-value="modelValue"
     eyebrow="CONCEPTS"
-    :title="t('navigation.conceptsets', 'Concept Sets').value"
+    :title="t('cohortDefinitions.conceptSetsDialog.title').value"
     max-width="900"
     @update:model-value="$emit('update:modelValue', $event)"
     @close="$emit('update:modelValue', false)"
@@ -11,19 +11,19 @@
       <thead>
         <tr>
           <th class="text-left">
-            {{ t('columns.id', 'ID') }}
+            {{ t('columns.id') }}
           </th>
           <th class="text-left">
-            {{ t('columns.name', 'Name') }}
+            {{ t('columns.name') }}
           </th>
           <th class="text-left">
-            {{ t('common.concepts', 'Concepts') }}
+            {{ t('common.concepts') }}
           </th>
           <th class="text-left">
-            {{ t('columns.status', 'Status') }}
+            {{ t('columns.status') }}
           </th>
           <th class="text-left">
-            {{ t('columns.actions', 'Actions') }}
+            {{ t('columns.actions') }}
           </th>
         </tr>
       </thead>
@@ -42,13 +42,13 @@
               variant="outlined"
               tone="warning"
             >
-              {{ t('cohortDefinitions.unused', 'Unused') }}
+              {{ t('cohortDefinitions.unused') }}
             </AtlasChip>
           </td>
           <td>
             <AtlasIconButton
               icon="mdi-pencil-outline"
-              v-bind="{ ariaLabel: t('common.edit', 'Edit').value }"
+              v-bind="{ ariaLabel: t('common.edit').value }"
               variant="text"
               size="sm"
               @click="$emit('view', conceptSet)"
@@ -56,7 +56,7 @@
             <AtlasIconButton
               v-if="showDeleteAction"
               icon="mdi-delete-outline"
-              v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
+              v-bind="{ ariaLabel: t('common.delete').value }"
               variant="text"
               size="sm"
               @click="$emit('delete', conceptSet)"
@@ -69,7 +69,7 @@
       v-if="conceptSets.length === 0"
       class="text-center py-8 text-grey"
     >
-      {{ t('cohortDefinitions.noConceptSets', 'No concept sets in this cohort') }}
+      {{ t('cohortDefinitions.conceptSetsDialog.empty') }}
     </div>
     <template #actions>
       <slot name="actions" />

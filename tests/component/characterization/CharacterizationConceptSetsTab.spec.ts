@@ -5,6 +5,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
+import { tr } from '../../helpers/i18n-mock'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../helpers/i18n-mock')
@@ -24,7 +25,7 @@ describe('CharacterizationConceptSetsTab', () => {
   it('shows the empty state when the characterization has no concept sets', () => {
     const wrapper = mountTab()
 
-    expect(wrapper.get('[data-testid="char-conceptsets-empty"]').text()).toContain('No data')
+    expect(wrapper.get('[data-testid="char-conceptsets-empty"]').text()).toContain(tr('cc.viewEdit.conceptSets.empty'))
     expect(wrapper.find('[data-testid="char-conceptsets-list"]').exists()).toBe(false)
   })
 

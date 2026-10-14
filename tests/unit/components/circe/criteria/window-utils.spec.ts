@@ -58,7 +58,7 @@ describe('window-utils', () => {
         UseIndexEnd: false,
         UseEventEnd: false,
       })
-    ).toBe('event starts between 30 days Before and 0 days After index start')
+    ).toBe('event starts between 30 days before and 0 days after index start')
     expect(
       formatWindowExpression({
         Start: { Days: 1, Coeff: 1 },
@@ -66,7 +66,7 @@ describe('window-utils', () => {
         UseIndexEnd: true,
         UseEventEnd: true,
       })
-    ).toBe('event ends between 1 day After and all days Before index end')
+    ).toBe('event ends between 1 day after and all days before index end')
 
     const presets = getWindowPresetOptions()
     expect(presets).toHaveLength(10)

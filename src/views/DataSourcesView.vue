@@ -46,7 +46,7 @@
               size="sm"
               @click="store.retryFetchSources"
             >
-              {{ t('common.retry', 'Retry') }}
+              {{ t('common.retry') }}
             </AtlasButton>
           </div>
         </AtlasAlert>
@@ -64,7 +64,7 @@
               size="sm"
               @click="store.retryFetchReport"
             >
-              {{ t('common.retry', 'Retry') }}
+              {{ t('common.retry') }}
             </AtlasButton>
           </div>
         </AtlasAlert>
@@ -138,7 +138,7 @@
               class="datasources-view__empty-icon"
             />
             <p class="datasources-view__empty-text">
-              {{ t('views.dataSources.reportNotImplemented', 'Report type "{type}" is not yet implemented.', { type: reportTypeLabel }).value }}
+              {{ t('views.dataSources.reportNotImplemented', { type: reportTypeLabel }).value }}
             </p>
           </div>
         </AtlasCard>
@@ -154,7 +154,7 @@
             class="datasources-view__empty-icon"
           />
           <p class="datasources-view__empty-text">
-            {{ t('views.dataSources.noSources', 'No data sources available.').value }}
+            {{ t('views.dataSources.noSources').value }}
           </p>
         </div>
 
@@ -169,7 +169,7 @@
             class="datasources-view__empty-icon"
           />
           <p class="datasources-view__empty-text">
-            {{ t('views.dataSources.selectSourceHint', 'Select a data source to view its reports.').value }}
+            {{ t('views.dataSources.selectSourceHint').value }}
           </p>
         </div>
       </div>
@@ -231,16 +231,13 @@ const pluginReport = computed(() => {
   return parsePluginReportType(type)
 })
 
-const pageTitle = computed(() => t('dataSources.headingTitle', 'Data Sources').value)
+const pageTitle = computed(() => t('dataSources.headingTitle').value)
 
 const pageSubtitle = computed(() => {
   if (selectedSource.value && store.selectedReportType) {
     return `${selectedSource.value.sourceName} — ${reportTypeLabel.value}`
   }
-  return t(
-    'dataSources.pageSubtitle',
-    'Browse CDM data sources and run pre-built reports against them.'
-  ).value
+  return t('dataSources.pageSubtitle').value
 })
 
 const dashboardData = computed(() => {

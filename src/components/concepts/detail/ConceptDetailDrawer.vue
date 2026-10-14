@@ -54,7 +54,7 @@ onBeforeUnmount(() => {
             icon="mdi-close"
             variant="text"
             size="sm"
-            v-bind="{ ariaLabel: tv('components.conceptDetail.closeDetails', 'Close concept details') }"
+            v-bind="{ ariaLabel: tv('components.conceptDetail.closeDetails') }"
             data-testid="concept-drawer-close"
             @click="drawer.close()"
           />

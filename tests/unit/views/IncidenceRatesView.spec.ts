@@ -13,18 +13,17 @@ import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { useNotifications } from '@/stores/notifications'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
 import { ApiError } from '@/services/api-error'
+import { tr } from '../../helpers/i18n-mock'
 
 const mockPush = vi.fn()
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: mockPush }),
 }))
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (_key: string, fallback: string) => ref(fallback),
-    tv: (_key: string, fallback: string) => fallback,
-  }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
@@ -141,10 +140,10 @@ describe('IncidenceRatesView', () => {
       const headers = wrapper
         .findAll('[data-testid="incidence-rates-table"] thead th')
         .map(h => h.text())
-      expect(headers).toContain('ID')
-      expect(headers).toContain('Created')
-      expect(headers).toContain('Updated')
-      expect(headers).not.toContain('Modified')
+      expect(headers).toContain(tr('columns.id'))
+      expect(headers).toContain(tr('columns.created'))
+      expect(headers).toContain(tr('columns.updated'))
+      expect(headers).not.toContain(tr('columns.modified'))
 
       const row = wrapper
         .find('[data-testid="incidence-rates-table-row-name"]')
@@ -274,7 +273,7 @@ describe('IncidenceRatesView', () => {
 
       expect(copyIncidenceRate).toHaveBeenCalledWith(1)
       expect(mockPush).toHaveBeenCalledWith('/incidence-rates/99')
-      expect(notifications.items.at(-1)).toMatchObject({ severity: 'success', title: 'Incidence rate copied' })
+      expect(notifications.items.at(-1)).toMatchObject({ severity: 'success', title: tr('views.incidenceRates.copied') })
     })
 
     it('shows an error and logs when the copy fails', async () => {
@@ -287,7 +286,7 @@ describe('IncidenceRatesView', () => {
 
       await wrapper.vm.handleCopy(mkIR(1))
 
-      expect(notifications.items.at(-1)).toMatchObject({ severity: 'danger', title: 'Copy failed' })
+      expect(notifications.items.at(-1)).toMatchObject({ severity: 'danger', title: tr('commonErrors.copyFailed') })
       expect(mockPush).not.toHaveBeenCalled()
     })
 
@@ -335,7 +334,7 @@ describe('IncidenceRatesView', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
-      const cancelButton = buttons.find(b => b.text().includes('Cancel'))
+      const cancelButton = buttons.find(b => b.text().includes(tr('common.cancel')))
       await cancelButton?.trigger('click')
 
       expect(wrapper.vm.showDelete).toBe(false)
@@ -377,7 +376,7 @@ describe('IncidenceRatesView', () => {
 
       expect(deleteIncidenceRate).toHaveBeenCalledWith(5)
       expect(listIncidenceRates).toHaveBeenCalledTimes(2)
-      expect(notifications.items.at(-1)).toMatchObject({ severity: 'success', title: 'Incidence rate deleted' })
+      expect(notifications.items.at(-1)).toMatchObject({ severity: 'success', title: tr('views.incidenceRates.deleted') })
       expect(wrapper.vm.showDelete).toBe(false)
       expect(wrapper.vm.deleteTarget).toBeNull()
     })
@@ -433,14 +432,14 @@ describe('IncidenceRatesView', () => {
       expect(wrapper.text()).toContain('1 / 2')
 
       const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
-      const nextButton = buttons.find(b => b.text().includes('Next'))
+      const nextButton = buttons.find(b => b.text().includes(tr('configuration.userImport.wizard.buttons.next')))
       await nextButton?.trigger('click')
       await wrapper.vm.$nextTick()
 
       expect(wrapper.vm.page).toBe(1)
       expect(wrapper.text()).toContain('2 / 2')
 
-      const prevButton = wrapper.findAllComponents({ name: 'AtlasButton' }).find(b => b.text().includes('Previous'))
+      const prevButton = wrapper.findAllComponents({ name: 'AtlasButton' }).find(b => b.text().includes(tr('datatable.language.paginate.previous')))
       await prevButton?.trigger('click')
       expect(wrapper.vm.page).toBe(0)
     })

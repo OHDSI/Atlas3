@@ -5,6 +5,7 @@ import { getInclusionStats as fetchInclusionStats } from '@/services/trexsql.ser
 import type { InclusionStatsResult } from '@/models/trexsql.types'
 import { debounce } from '@/utils/debounce'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
 
 const DEBOUNCE_MS = 500
 
@@ -22,6 +23,7 @@ export function useInclusionStats(
   expression: Ref<Record<string, unknown> | null>
 ): UseInclusionStatsReturn {
   const { isTrexSQLEnabled, selectedSourceKey, isCacheReady } = useTrexSQLCache()
+  const { tv } = useI18n()
 
   const stats = ref<InclusionStatsResult | null>(null)
   const isLoading = ref(false)
@@ -58,7 +60,10 @@ export function useInclusionStats(
       if (err instanceof Error && err.name === 'AbortError') return
       const isInvalid = err instanceof Error && err.name === 'InvalidExpressionError'
       isInvalidExpression.value = isInvalid
-      error.value = err instanceof Error ? err.message : 'Failed to fetch inclusion stats'
+      error.value =
+        err instanceof Error
+          ? err.message
+          : tv('inclusionRail.statsLoadFailed')
       // Mark this expression as "answered" (with an error) so isPending
       // clears — otherwise the spinner stays up forever on a 422.
       lastExpressionKey.value = key

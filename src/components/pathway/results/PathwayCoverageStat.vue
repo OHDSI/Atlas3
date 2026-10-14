@@ -1,15 +1,18 @@
 <template>
   <div class="coverage-stat">
     <div class="coverage-stat__label">
-      {{ t('pathway.workbench.coverage', 'Cohort coverage').value }}
+      {{ t('pathway.workbench.coverage').value }}
     </div>
     <div class="coverage-stat__value">
       {{ pct.toFixed(1) }}%
     </div>
     <div class="coverage-stat__sub">
-      {{ formatNumber(totalPathwaysCount) }} {{ t('common.of', 'of').value }}
-      {{ formatNumber(targetCohortCount) }}
-      {{ t('pathway.workbench.coverageSuffix', 'persons with pathway').value }}
+      {{
+        t('pathway.workbench.coverageSummary', {
+          count: formatNumber(totalPathwaysCount),
+          total: formatNumber(targetCohortCount),
+        }).value
+      }}
     </div>
     <div
       v-if="targetCohortName"

@@ -6,16 +6,15 @@ import { mount, VueWrapper } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref, nextTick } from 'vue'
+import { nextTick } from 'vue'
 import LicenseAgreementDialog from '@/components/shared/LicenseAgreementDialog.vue'
+import { tr } from '../../../helpers/i18n-mock'
 
 // Mock useI18n composable
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, fallback: string) => ref(fallback),
-    tv: (key: string, fallback: string) => fallback
-  })
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 const vuetify = createVuetify({ components, directives })
 
@@ -110,7 +109,7 @@ describe('LicenseAgreementDialog', () => {
 
       await nextTick()
       const html = document.body.innerHTML
-      expect(html).toContain('License Agreement')
+      expect(html).toContain(tr('licenseAgreement.title'))
     })
 
     it('should render SNOMED license section in HTML', async () => {
@@ -123,7 +122,7 @@ describe('LicenseAgreementDialog', () => {
       await nextTick()
       const html = document.body.innerHTML
       expect(html).toContain('SNOMED INTERNATIONAL SNOMED CT LICENSE AGREEMENT')
-      expect(html).toContain('SNOMED International SNOMED CT Browser')
+      expect(html).toContain(tr('licenseAgreement.description'))
     })
 
     it('should render HemOnc license section in HTML', async () => {
@@ -173,7 +172,7 @@ describe('LicenseAgreementDialog', () => {
       })
 
       const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
-      const acceptButton = buttons.find(btn => btn.text().includes('Accept'))
+      const acceptButton = buttons.find(btn => btn.text().includes(tr('licenseAgreement.accept')))
       expect(acceptButton).toBeDefined()
     })
 
@@ -185,7 +184,7 @@ describe('LicenseAgreementDialog', () => {
       })
 
       const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
-      const rejectButton = buttons.find(btn => btn.text().includes('Reject'))
+      const rejectButton = buttons.find(btn => btn.text().includes(tr('licenseAgreement.reject')))
       expect(rejectButton).toBeDefined()
       expect(rejectButton?.props('variant')).toBe('ghost')
     })
@@ -200,7 +199,7 @@ describe('LicenseAgreementDialog', () => {
       })
 
       const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
-      const acceptButton = buttons.find(btn => btn.text().includes('Accept'))
+      const acceptButton = buttons.find(btn => btn.text().includes(tr('licenseAgreement.accept')))
 
       await acceptButton?.trigger('click')
 
@@ -216,7 +215,7 @@ describe('LicenseAgreementDialog', () => {
       })
 
       const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
-      const acceptButton = buttons.find(btn => btn.text().includes('Accept'))
+      const acceptButton = buttons.find(btn => btn.text().includes(tr('licenseAgreement.accept')))
 
       await acceptButton?.trigger('click')
 
@@ -232,7 +231,7 @@ describe('LicenseAgreementDialog', () => {
       })
 
       const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
-      const rejectButton = buttons.find(btn => btn.text().includes('Reject'))
+      const rejectButton = buttons.find(btn => btn.text().includes(tr('licenseAgreement.reject')))
 
       await rejectButton?.trigger('click')
 
@@ -248,7 +247,7 @@ describe('LicenseAgreementDialog', () => {
       })
 
       const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
-      const rejectButton = buttons.find(btn => btn.text().includes('Reject'))
+      const rejectButton = buttons.find(btn => btn.text().includes(tr('licenseAgreement.reject')))
 
       await rejectButton?.trigger('click')
 
@@ -311,8 +310,8 @@ describe('LicenseAgreementDialog', () => {
 
       await nextTick()
       const html = document.body.innerHTML
-      expect(html).toContain('Accept')
-      expect(html).toContain('Reject')
+      expect(html).toContain(tr('licenseAgreement.accept'))
+      expect(html).toContain(tr('licenseAgreement.reject'))
     })
 
     it('should have proper link attributes for security', async () => {

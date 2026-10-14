@@ -10,12 +10,9 @@
           class="treemap-controls__hint-icon"
         />
         <span>
-          <strong>{{ t('components.domainPrevalenceTreemap.clickAction', 'Click').value }}</strong>
+          <strong>{{ t('components.domainPrevalenceTreemap.clickAction').value }}</strong>
           {{
-            t(
-              'components.domainPrevalenceTreemap.clickHint',
-              'on any area to view detailed analytics'
-            ).value
+            t('components.domainPrevalenceTreemap.clickHint').value
           }}
         </span>
         <span
@@ -24,10 +21,7 @@
         >
           ·
           {{
-            t(
-              'components.domainPrevalenceTreemap.noHierarchyNote',
-              'Hierarchical grouping not available for this data source'
-            ).value
+            t('components.domainPrevalenceTreemap.noHierarchyNote').value
           }}
         </span>
       </div>
@@ -38,7 +32,7 @@
         v-if="hasHierarchy"
         v-model="hierarchicalView"
         hide-details
-        :label="t('components.domainPrevalenceTreemap.groupByHierarchy', 'Group by hierarchy').value"
+        :label="t('components.domainPrevalenceTreemap.groupByHierarchy').value"
         class="treemap-controls__switch"
       />
     </div>

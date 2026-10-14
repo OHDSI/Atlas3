@@ -11,6 +11,7 @@ import { getPathway, assignPathwayTag, unassignPathwayTag } from '@/services/pat
 import type { Tag } from '@/models/webapi.types'
 import { getPathwayVersion } from '@/services/pathway-versions.service'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
 
 export interface PathwayValidationError {
   field: string
@@ -33,6 +34,7 @@ function emptyPathway(): Pathway {
 }
 
 export const usePathwayStore = defineStore('pathway', () => {
+  const { tv } = useI18n()
   const currentPathway = ref<Pathway | null>(null)
   const isDirty = ref(false)
   const lastAutoSave = ref<Date | null>(null)
@@ -232,33 +234,35 @@ export const usePathwayStore = defineStore('pathway', () => {
       return
     }
     if (!p.name || p.name.trim() === '') {
-      errors.push({ field: 'name', message: 'Name is required', severity: 'error' })
+      errors.push({ field: 'name', message: tv('commonErrors.nameRequired'), severity: 'error' })
     }
     if (p.targetCohorts.length === 0) {
       errors.push({
         field: 'targetCohorts',
-        message: 'At least one target cohort is required',
+        message: tv('pathway.validation.targetRequired'),
         severity: 'error',
       })
     }
     if (p.eventCohorts.length === 0) {
       errors.push({
         field: 'eventCohorts',
-        message: 'At least one event cohort is required',
+        message: tv('pathway.validation.eventRequired'),
         severity: 'error',
       })
     }
     if (p.maxDepth < 1) {
       errors.push({
         field: 'maxDepth',
-        message: 'Max depth must be at least 1',
+        message: tv('pathway.validation.maxDepthMin', { min: 1 }),
         severity: 'error',
       })
     }
     if (p.minCellCount < 1) {
       errors.push({
         field: 'minCellCount',
-        message: 'Min cell count must be at least 1',
+        message: tv('pathway.validation.minCellCountMin', {
+          min: 1,
+        }),
         severity: 'warning',
       })
     }

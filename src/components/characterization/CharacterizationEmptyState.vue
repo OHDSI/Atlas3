@@ -43,27 +43,27 @@ const icon = computed(() => ({
 } as const)[props.variant])
 
 const title = computed(() => ({
-  'no-id': tv('cc.viewEdit.workbench.empty.noIdTitle', 'Save the design to enable runs'),
-  'no-runs': tv('cc.viewEdit.workbench.empty.noRunsTitle', 'No runs yet'),
-  'run-pending': tv('cc.viewEdit.workbench.empty.runPendingTitle', 'Run in progress'),
-  'run-failed': tv('cc.viewEdit.workbench.empty.runFailedTitle', 'Run failed'),
-  'results-error': tv('cc.viewEdit.workbench.empty.resultsErrorTitle', 'Run finished, but its results could not be loaded'),
-  'no-data': tv('cc.viewEdit.workbench.empty.noDataTitle', 'No rows match the current filter'),
+  'no-id': tv('cc.viewEdit.workbench.empty.noIdTitle'),
+  'no-runs': tv('cc.viewEdit.workbench.empty.noRunsTitle'),
+  'run-pending': tv('cc.viewEdit.workbench.empty.runPendingTitle'),
+  'run-failed': tv('cc.viewEdit.workbench.empty.runFailedTitle'),
+  'results-error': tv('cc.viewEdit.workbench.empty.resultsErrorTitle'),
+  'no-data': tv('cc.viewEdit.workbench.empty.noDataTitle'),
 })[props.variant])
 
 const hint = computed(() => {
   if (props.variant === 'run-failed' || props.variant === 'results-error') return props.errorMessage ?? ''
   if (props.variant === 'run-pending') {
-    return tv('cc.viewEdit.workbench.empty.runPendingHint', 'Polling for completion…')
+    return tv('cc.viewEdit.workbench.empty.runPendingHint')
   }
   if (props.variant === 'no-runs') {
-    return tv('cc.viewEdit.workbench.empty.noRunsHint', 'Generate against a data source to see baseline characteristics.')
+    return tv('cc.viewEdit.workbench.empty.noRunsHint')
   }
   return ''
 })
 
 const runLabel = computed(() =>
-  tv('cohortDefinitions.cohort.modals.configureReportsToRun.run', 'Run')
+  tv('cohortDefinitions.cohort.modals.configureReportsToRun.run')
 )
 </script>
 

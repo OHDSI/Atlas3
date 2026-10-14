@@ -7,7 +7,7 @@
     <div class="stat-strip">
       <div class="stat-strip__item">
         <div class="stat-strip__label">
-          {{ tv('profiles.gender', 'Gender') }}
+          {{ tv('profiles.gender') }}
         </div>
         <div class="stat-strip__value stat-strip__value--with-icon">
           <AtlasIcon
@@ -23,7 +23,7 @@
 
       <div class="stat-strip__item">
         <div class="stat-strip__label">
-          {{ tv('profiles.birthYear', 'Birth Year') }}
+          {{ tv('profiles.birthYear') }}
         </div>
         <div
           class="stat-strip__value"
@@ -37,7 +37,7 @@
 
       <div class="stat-strip__item">
         <div class="stat-strip__label">
-          {{ tv('profiles.age', 'Age') }}
+          {{ tv('profiles.age') }}
         </div>
         <AtlasTooltip
           location="bottom"
@@ -59,7 +59,7 @@
 
       <div class="stat-strip__item">
         <div class="stat-strip__label">
-          {{ tv('profiles.events', 'Events') }}
+          {{ tv('profiles.events') }}
         </div>
         <div
           class="stat-strip__value"
@@ -105,8 +105,8 @@ const ageValue = computed<string>(() => {
 
 const ageTooltip = computed<string>(() =>
   store.hasCohortContext
-    ? tv('profiles.ageAtIndexTooltip', 'Age at cohort index date')
-    : tv('profiles.ageAtObservationStartTooltip', 'Age at start of observation')
+    ? tv('profiles.ageAtIndexTooltip')
+    : tv('profiles.ageAtObservationStartTooltip')
 )
 
 const eventCount = computed<string>(() => {

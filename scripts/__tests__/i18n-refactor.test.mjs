@@ -1,0 +1,230 @@
+// @vitest-environment node
+import { describe, it, expect } from 'vitest'
+import {
+  deleteByPath,
+  planRenames,
+  applyPlan,
+  pruneKeys,
+  rewriteSource,
+  convertLegacyPlaceholders,
+  restoreKeys,
+  adoptableKeys,
+  recoverByText,
+} from '../i18n-refactor.core.mjs'
+
+describe('deleteByPath', () => {
+  it('removes the leaf and emptied parents', () => {
+    const obj = { a: { b: { c: 'x' } }, d: 'y' }
+    deleteByPath(obj, 'a.b.c')
+    expect(obj).toEqual({ d: 'y' })
+  })
+
+  it('keeps parents that still have children', () => {
+    const obj = { a: { b: 'x', c: 'y' } }
+    deleteByPath(obj, 'a.b')
+    expect(obj).toEqual({ a: { c: 'y' } })
+  })
+
+  it('ignores missing paths', () => {
+    const obj = { a: 'x' }
+    deleteByPath(obj, 'a.b.c')
+    deleteByPath(obj, 'z')
+    expect(obj).toEqual({ a: 'x' })
+  })
+})
+
+describe('planRenames', () => {
+  const en = { a: { one: 'Save', two: 'Save', three: 'Other' }, common: { save: 'Save' } }
+
+  it('plans a rename onto a free key', () => {
+    expect(planRenames(en, { 'a.three': 'b.other' })).toEqual({
+      renames: [['a.three', 'b.other']],
+      merges: [],
+      errors: [],
+    })
+  })
+
+  it('plans a merge onto an existing key with the same English', () => {
+    expect(planRenames(en, { 'a.one': 'common.save' }).merges).toEqual([['a.one', 'common.save']])
+  })
+
+  it('merges several sources into one new key', () => {
+    const plan = planRenames(en, { 'a.one': 'shared.save', 'a.two': 'shared.save' })
+    expect(plan.renames).toEqual([['a.one', 'shared.save']])
+    expect(plan.merges).toEqual([['a.two', 'shared.save']])
+    expect(plan.errors).toEqual([])
+  })
+
+  it('refuses a merge whose English differs', () => {
+    expect(planRenames(en, { 'a.three': 'common.save' }).errors).toHaveLength(1)
+  })
+
+  it('refuses unknown sources, nesting under a string, and replacing an object', () => {
+    const { errors } = planRenames(en, {
+      'a.missing': 'x.y',
+      'a.one': 'common.save.deep',
+      'a.two': 'common',
+    })
+    expect(errors).toHaveLength(3)
+  })
+
+  it('refuses chained renames', () => {
+    expect(planRenames(en, { 'a.one': 'a.two', 'a.two': 'x.y' }).errors.length).toBeGreaterThan(0)
+  })
+})
+
+describe('applyPlan', () => {
+  it('moves values and manifest hashes for renames', () => {
+    const locale = { a: { old: 'Hozon' } }
+    const manifest = { 'a.old': 'h1' }
+    applyPlan(locale, manifest, { renames: [['a.old', 'b.new']], merges: [] })
+    expect(locale).toEqual({ b: { new: 'Hozon' } })
+    expect(manifest).toEqual({ 'b.new': 'h1' })
+  })
+
+  it("keeps the target's translation on merge", () => {
+    const locale = { a: { old: 'X' }, common: { save: 'Y' } }
+    const manifest = { 'a.old': 'h1', 'common.save': 'h2' }
+    applyPlan(locale, manifest, { renames: [], merges: [['a.old', 'common.save']] })
+    expect(locale).toEqual({ common: { save: 'Y' } })
+    expect(manifest).toEqual({ 'common.save': 'h2' })
+  })
+
+  it("adopts the source's translation on merge when the target has none", () => {
+    const locale = { a: { old: 'X' } }
+    const manifest = { 'a.old': 'h1' }
+    applyPlan(locale, manifest, { renames: [], merges: [['a.old', 'common.save']] })
+    expect(locale).toEqual({ common: { save: 'X' } })
+    expect(manifest).toEqual({ 'common.save': 'h1' })
+  })
+
+  it('tolerates a locale without the key and no manifest', () => {
+    const locale = { other: 'x' }
+    applyPlan(locale, undefined, { renames: [['a.old', 'b.new']], merges: [] })
+    expect(locale).toEqual({ other: 'x' })
+  })
+})
+
+describe('pruneKeys', () => {
+  it('drops keys from a locale and its manifest', () => {
+    const locale = { a: { b: 'x', c: 'y' } }
+    const manifest = { 'a.b': 'h', 'a.c': 'h' }
+    pruneKeys(locale, manifest, ['a.b'])
+    expect(locale).toEqual({ a: { c: 'y' } })
+    expect(manifest).toEqual({ 'a.c': 'h' })
+  })
+})
+
+describe('rewriteSource', () => {
+  const map = { 'a.b': 'x.y' }
+
+  it('rewrites quoted keys in any quote style', () => {
+    expect(rewriteSource(`t('a.b'); tv("a.b"); k = \`a.b\``, map)).toBe(
+      `t('x.y'); tv("x.y"); k = \`x.y\``
+    )
+  })
+
+  it('leaves longer keys sharing the prefix alone', () => {
+    expect(rewriteSource(`t('a.bc'); t('a.b.c')`, map)).toBe(`t('a.bc'); t('a.b.c')`)
+  })
+
+  it('returns the input unchanged when nothing matches', () => {
+    const src = `t('q.r')`
+    expect(rewriteSource(src, map)).toBe(src)
+  })
+})
+
+describe('convertLegacyPlaceholders', () => {
+  it('converts <%= x %> in all spacing variants', () => {
+    expect(convertLegacyPlaceholders('<%= a %> and <%=b%> and <%=  c%>')).toBe('{a} and {b} and {c}')
+  })
+
+  it('leaves {x} placeholders alone', () => {
+    expect(convertLegacyPlaceholders('Hi {name}')).toBe('Hi {name}')
+  })
+})
+
+describe('restoreKeys', () => {
+  it('copies an old value and manifest hash under the new key', () => {
+    const locale = { keep: 'k' }
+    const manifest = {}
+    restoreKeys(locale, manifest, { old: { key: 'V' } }, { 'old.key': 'h1' }, [['new.key', 'old.key']])
+    expect(locale).toEqual({ keep: 'k', new: { key: 'V' } })
+    expect(manifest).toEqual({ 'new.key': 'h1' })
+  })
+
+  it('skips pairs with no old value or an existing new key', () => {
+    const locale = { new: { key: 'current' } }
+    restoreKeys(locale, undefined, { old: { key: 'V' } }, undefined, [
+      ['new.key', 'old.key'],
+      ['other.key', 'missing.key'],
+    ])
+    expect(locale).toEqual({ new: { key: 'current' } })
+  })
+})
+
+describe('adoptableKeys', () => {
+  const m = obj => new Map(Object.entries(obj))
+  const refEn = m({ 'a.save': 'Save', 'a.old': 'Delete' })
+  const refKo = m({ 'a.save': '저장', 'a.old': '삭제' })
+
+  it('adopts a translation whose English is unchanged since the reference', () => {
+    expect(adoptableKeys(m({ 'a.save': 'Save' }), m({ 'a.save': '저장' }), refEn, refKo)).toEqual(['a.save'])
+  })
+
+  it('adopts a renamed key when the same English/translation pair existed', () => {
+    expect(adoptableKeys(m({ 'b.remove': 'Delete' }), m({ 'b.remove': '삭제' }), refEn, refKo)).toEqual([
+      'b.remove',
+    ])
+  })
+
+  it('does not adopt when the English changed since the reference', () => {
+    expect(adoptableKeys(m({ 'a.save': 'Save changes' }), m({ 'a.save': '저장' }), refEn, refKo)).toEqual([])
+  })
+
+  it('ignores translations for keys that are no longer in English', () => {
+    expect(adoptableKeys(m({}), m({ 'a.save': '저장' }), refEn, refKo)).toEqual([])
+  })
+})
+
+describe('recoverByText', () => {
+  const m = obj => new Map(Object.entries(obj))
+
+  it('reuses a translation of identical English from the reference', () => {
+    const out = recoverByText(
+      m({ 'criteriaAttributes.age.label': 'Age', 'x.keep': 'Keep' }),
+      m({ 'x.keep': 'K' }),
+      m({ 'attributes.age.name': 'Age' }),
+      m({ 'attributes.age.name': '年齢' })
+    )
+    expect(out).toEqual([['criteriaAttributes.age.label', '年齢']])
+  })
+
+  it('picks the most common translation when the reference disagrees', () => {
+    const out = recoverByText(
+      m({ 'n.k': 'Remove' }),
+      m({}),
+      m({ a: 'Remove', b: 'Remove', c: 'Remove' }),
+      m({ a: '削除', b: '除去', c: '除去' })
+    )
+    expect(out).toEqual([['n.k', '除去']])
+  })
+
+  it('skips reference translations that were stale per the manifest', async () => {
+    const { hashSource } = await import('../i18n-lib.mjs')
+    const out = recoverByText(
+      m({ 'n.k': 'Save' }),
+      m({}),
+      m({ a: 'Save', b: 'Save' }),
+      m({ a: 'stale', b: '保存' }),
+      { a: hashSource('Old text'), b: hashSource('Save') }
+    )
+    expect(out).toEqual([['n.k', '保存']])
+  })
+
+  it('never overwrites an existing translation', () => {
+    expect(recoverByText(m({ k: 'Save' }), m({ k: 'mine' }), m({ a: 'Save' }), m({ a: 'theirs' }))).toEqual(
+      []
+    )
+  })
+})

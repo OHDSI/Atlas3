@@ -4,6 +4,7 @@
 
 import type { LocaleCode } from '@/types/i18n'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
 
 /**
  * Format number according to locale
@@ -34,7 +35,7 @@ export function formatDateLocalized(
   try {
     const date = value instanceof Date ? value : new Date(value)
     if (isNaN(date.getTime())) {
-      return 'Invalid Date'
+      return useI18n().tv('format.date.invalid')
     }
     return new Intl.DateTimeFormat(locale, options).format(date)
   } catch (error) {

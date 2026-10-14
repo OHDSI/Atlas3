@@ -14,13 +14,13 @@
         :value="1"
         data-testid="inclusion-mode-by-person"
       >
-        {{ t('cohortDefinitions.cohortreports.tabs.byPerson', 'By Person').value }}
+        {{ t('cohortDefinitions.cohortreports.tabs.byPerson').value }}
       </AtlasTab>
       <AtlasTab
         :value="0"
         data-testid="inclusion-mode-by-event"
       >
-        {{ t('cohortDefinitions.cohortreports.tabs.byEvent', 'By Event').value }}
+        {{ t('cohortDefinitions.cohortreports.tabs.byEvent').value }}
       </AtlasTab>
     </AtlasTabs>
 
@@ -47,10 +47,7 @@
       data-testid="inclusion-rule-report-no-stats"
     >
       {{
-        t(
-          'components.inclusionRuleReport.noStatsRecorded',
-          'This generation recorded no inclusion statistics for this mode, so there is no attrition to report. The cohort itself may still contain records; see the generation panel for its record count.'
-        ).value
+        t('components.inclusionRuleReport.noStatsRecorded').value
       }}
     </AtlasAlert>
 
@@ -60,10 +57,7 @@
       data-testid="inclusion-rule-report-empty"
     >
       {{
-        t(
-          'components.inclusionRuleReport.noReportData',
-          "No inclusion-rule report data is available for this cohort and source. The cohort may have no inclusion rules, or it may not have been generated yet. If you've generated it already, try re-running."
-        ).value
+        t('components.inclusionRuleReport.noReportData').value
       }}
     </AtlasAlert>
 
@@ -71,22 +65,22 @@
       <!-- Summary stats -->
       <div class="inclusion-rule-report__summary">
         <SummaryStat
-          :label="t('components.inclusionRuleReport.matchRate', 'Match rate').value"
+          :label="t('components.inclusionRuleReport.matchRate').value"
           :value="formatPercent(report.summary.percentMatched)"
           data-testid="inclusion-summary-match-rate"
         />
         <SummaryStat
-          :label="t('components.inclusionRuleReport.matches', 'Matches').value"
+          :label="t('components.inclusionRuleReport.matches').value"
           :value="formatCount(report.summary.finalCount)"
           data-testid="inclusion-summary-final-count"
         />
         <SummaryStat
-          :label="t('components.inclusionRuleReport.lost', 'Lost').value"
+          :label="t('components.inclusionRuleReport.lost').value"
           :value="formatCount(report.summary.lostCount)"
           data-testid="inclusion-summary-lost-count"
         />
         <SummaryStat
-          :label="t('components.inclusionRuleReport.totalEvents', 'Total events').value"
+          :label="t('components.inclusionRuleReport.totalEvents').value"
           :value="formatCount(report.summary.baseCount)"
           data-testid="inclusion-summary-base-count"
         />
@@ -105,13 +99,13 @@
           value="attrition"
           data-testid="inclusion-view-attrition"
         >
-          {{ t('components.inclusionRuleReport.attritionView', 'Attrition').value }}
+          {{ t('components.inclusionRuleReport.attritionView').value }}
         </AtlasTab>
         <AtlasTab
           value="intersect"
           data-testid="inclusion-view-intersect"
         >
-          {{ t('components.inclusionRuleReport.intersectView', 'Intersect').value }}
+          {{ t('components.inclusionRuleReport.intersectView').value }}
         </AtlasTab>
       </AtlasTabs>
 
@@ -119,14 +113,14 @@
         <!-- Attrition funnel (cumulative — lazy-loaded) -->
         <section class="mt-6">
           <h3 class="text-subtitle-1 font-weight-medium mb-2">
-            {{ t('components.inclusionRuleReport.attritionFunnel', 'Attrition funnel').value }}
+            {{ t('components.inclusionRuleReport.attritionFunnel').value }}
           </h3>
           <AtlasTextField
             :model-value="customInitialLabel"
             class="inclusion-rule-report__initial-label mb-3"
-            :label="t('components.inclusionRuleReport.initialPopulationLabel', 'Initial population label').value"
+            :label="t('components.inclusionRuleReport.initialPopulationLabel').value"
             :placeholder="defaultInitialLabel"
-            :hint="t('components.inclusionRuleReport.initialPopulationLabelHint', 'Shown in the funnel, table and CSV. Saved in this browser only.').value"
+            :hint="t('components.inclusionRuleReport.initialPopulationLabelHint').value"
             persistent-hint
             persistent-placeholder
             data-testid="inclusion-initial-label"
@@ -141,7 +135,7 @@
         <!-- Per-rule satisfaction table -->
         <section class="mt-6">
           <h3 class="text-subtitle-1 font-weight-medium mb-2">
-            {{ t('components.inclusionRuleReport.perRuleSatisfaction', 'Per-rule satisfaction').value }}
+            {{ t('components.inclusionRuleReport.perRuleSatisfaction').value }}
           </h3>
           <InclusionRuleAttritionTable
             :rules="report.inclusionRuleStats"
@@ -163,18 +157,18 @@
             class="inclusion-rule-report__intersect-sentence"
             data-testid="inclusion-intersect-sentence"
           >
-            {{ t('components.inclusionRuleReport.intersectHaving', 'Having').value }}
+            {{ t('components.inclusionRuleReport.intersectHaving').value }}
             <InclusionChoiceMenu
               v-model="intersectMode"
               :items="intersectModeItems"
-              :label="t('components.inclusionRuleReport.intersectModeLabel', 'All or any of the selected rules').value"
+              :label="t('components.inclusionRuleReport.intersectModeLabel').value"
               testid="inclusion-intersect-mode"
             />
-            {{ t('components.inclusionRuleReport.intersectOfSelected', 'of the selected rules').value }}
+            {{ t('components.inclusionRuleReport.intersectOfSelected').value }}
             <InclusionChoiceMenu
               v-model="intersectOutcome"
               :items="intersectOutcomeItems"
-              :label="t('components.inclusionRuleReport.intersectOutcome', 'Rule outcome').value"
+              :label="t('components.inclusionRuleReport.intersectOutcome').value"
               testid="inclusion-intersect-outcome"
             />
           </p>
@@ -188,10 +182,10 @@
             data-testid="inclusion-intersect-result"
           >
             <template v-if="intersectCount === null">
-              {{ t('components.inclusionRuleReport.intersectUnavailable', 'No population breakdown is available to intersect.').value }}
+              {{ t('components.inclusionRuleReport.intersectUnavailable').value }}
             </template>
             <template v-else-if="selectedRules.length === 0">
-              {{ t('components.inclusionRuleReport.intersectNoneSelected', 'Select at least one rule to see who matches.').value }}
+              {{ t('components.inclusionRuleReport.intersectNoneSelected').value }}
             </template>
             <template v-else>
               <strong>{{ formatCount(intersectCount) }}</strong>
@@ -203,7 +197,7 @@
         <!-- Population visualization: hover a box to see which rules it passed -->
         <div class="inclusion-rule-report__intersect-viz">
           <h3 class="text-subtitle-1 font-weight-medium mb-1">
-            {{ t('components.inclusionRuleReport.populationBreakdown', 'Population breakdown').value }}
+            {{ t('components.inclusionRuleReport.populationBreakdown').value }}
           </h3>
           <p
             class="inclusion-rule-report__hover-summary"
@@ -218,8 +212,8 @@
             :base-count="report.summary.baseCount"
             :selection="intersectSelection"
             :unit-label="isEventMode
-              ? t('components.inclusionRuleReport.unitEvents', 'Events').value
-              : t('components.inclusionRuleReport.unitPersons', 'Persons').value"
+              ? t('components.inclusionRuleReport.unitEvents').value
+              : t('components.inclusionRuleReport.unitPersons').value"
             @leaf-hover="hoveredLeaf = $event"
           />
         </div>
@@ -295,7 +289,7 @@ const { label: customInitialLabel, setLabel: setInitialLabel } = useInitialPopul
   computed(() => props.cohortId)
 )
 const defaultInitialLabel = computed(() =>
-  tv('components.inclusionRuleReport.initialPopulation', 'Initial population')
+  tv('components.inclusionRuleReport.initialPopulation')
 )
 const initialLabel = computed(() => customInitialLabel.value.trim() || defaultInitialLabel.value)
 
@@ -327,12 +321,12 @@ const intersectSelection = computed<IntersectSelection>(() => ({
 }))
 
 const intersectModeItems = computed(() => [
-  { value: 'any' as const, title: tv('components.inclusionRuleReport.intersectAny', 'any') },
-  { value: 'all' as const, title: tv('components.inclusionRuleReport.intersectAll', 'all') },
+  { value: 'any' as const, title: tv('components.inclusionRuleReport.intersectAny') },
+  { value: 'all' as const, title: tv('components.inclusionRuleReport.intersectAll') },
 ])
 const intersectOutcomeItems = computed(() => [
-  { value: 'passed' as const, title: tv('components.inclusionRuleReport.intersectPassed', 'passed') },
-  { value: 'failed' as const, title: tv('components.inclusionRuleReport.intersectFailed', 'failed') },
+  { value: 'passed' as const, title: tv('components.inclusionRuleReport.intersectPassed') },
+  { value: 'failed' as const, title: tv('components.inclusionRuleReport.intersectFailed') },
 ])
 
 // Treemap leaf under the pointer: drives the summary line and the pass / fail
@@ -342,7 +336,7 @@ const hoveredLeaf = ref<{ bits: string; size: number } | null>(null)
 const hoverSummary = computed(() => {
   const leaf = hoveredLeaf.value
   if (!leaf) {
-    return tv('components.inclusionRuleReport.hoverHint', 'Hover over a box to see which rules it passed and failed.')
+    return tv('components.inclusionRuleReport.hoverHint')
   }
   const base = report.value?.summary.baseCount ?? 0
   const passed = [...leaf.bits].filter(b => b === '1').length
@@ -369,8 +363,8 @@ const intersectResultText = computed(() => {
   const percent =
     intersectCount.value === null || base <= 0 ? '—' : `${((intersectCount.value / base) * 100).toFixed(2)}%`
   return isEventMode.value
-    ? tv('components.inclusionRuleReport.intersectResultEvents', 'events ({percent} of all entry events)', { percent })
-    : tv('components.inclusionRuleReport.intersectResultPersons', 'persons ({percent} of initial population)', { percent })
+    ? tv('components.inclusionRuleReport.intersectResultEvents', { percent })
+    : tv('components.inclusionRuleReport.intersectResultPersons', { percent })
 })
 
 const cumulativeRemaining = computed<number[] | undefined>(() => {
@@ -386,7 +380,7 @@ async function load() {
   try {
     const result = await getInclusionRuleReport(props.cohortId, props.sourceKey, mode.value)
     if (!result.success) {
-      const prefix = tv('components.inclusionRuleReport.loadError', 'Failed to load the inclusion-rule report')
+      const prefix = tv('components.inclusionRuleReport.loadError')
       error.value = `${prefix}: ${result.error.message}`
       report.value = null
       return
@@ -399,12 +393,12 @@ async function load() {
           ? rule
           : {
               ...rule,
-              name: tv('components.inclusionRuleReport.unnamedRule', 'Inclusion rule {n}', { n: rule.id + 1 }),
+              name: tv('components.inclusionRuleReport.unnamedRule', { n: rule.id + 1 }),
             }
       ),
     }
   } catch (e) {
-    const prefix = tv('components.inclusionRuleReport.loadError', 'Failed to load the inclusion-rule report')
+    const prefix = tv('components.inclusionRuleReport.loadError')
     error.value = e instanceof Error ? `${prefix}: ${e.message}` : `${prefix}.`
     report.value = null
   } finally {

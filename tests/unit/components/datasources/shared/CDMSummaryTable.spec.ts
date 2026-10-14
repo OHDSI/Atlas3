@@ -7,13 +7,13 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import CDMSummaryTable from '@/components/datasources/shared/CDMSummaryTable.vue'
+import { tr } from '../../../../helpers/i18n-mock'
 
 // Mock i18n
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, fallback: string) => fallback
-  })
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 // Mock formatters
 vi.mock('@/utils/datasource-formatters', () => ({
@@ -56,7 +56,7 @@ describe('CDMSummaryTable', () => {
 
     const title = wrapper.find('.cdm-summary-table__title')
     expect(title.exists()).toBe(true)
-    expect(title.text()).toBe('CDM Summary')
+    expect(title.text()).toBe(tr('dataSources.dashboardReport.cdmSummary'))
   })
 
   it('should render table', () => {
@@ -72,7 +72,7 @@ describe('CDMSummaryTable', () => {
     expect(rows.length).toBeGreaterThanOrEqual(2)
 
     const sourceNameRow = rows[0]
-    expect(sourceNameRow.text()).toContain('Source Name')
+    expect(sourceNameRow.text()).toContain(tr('columns.sourceName'))
     expect(sourceNameRow.text()).toContain('Test Database')
   })
 
@@ -81,7 +81,7 @@ describe('CDMSummaryTable', () => {
 
     const rows = wrapper.findAll('tbody tr')
     const personCountRow = rows[1]
-    expect(personCountRow.text()).toContain('Number of People')
+    expect(personCountRow.text()).toContain(tr('dataSources.numberOfPeople'))
     expect(personCountRow.text()).toContain('1,234,567')
   })
 

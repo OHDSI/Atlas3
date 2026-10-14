@@ -73,10 +73,10 @@ function openConceptSearch() {
   criteriaSelection?.requestConcepts(props.domainFilter, applySelectedConcepts)
 }
 
-const anyOfLabel = computed(() => t('components.conceptAddBox.anyOf', 'any of').value)
-const notAnyOfLabel = computed(() => t('components.conceptAddBox.notAnyOf', 'not any of').value)
-const addConceptsLabel = computed(() => t('components.conceptAddBox.addConcepts', 'Add Concepts').value)
-const noConceptsSelectedLabel = computed(() => t('components.conceptAddBox.noConceptsSelected', 'No concepts selected').value)
+const anyOfLabel = computed(() => t('components.conceptAddBox.anyOf').value)
+const notAnyOfLabel = computed(() => t('components.conceptAddBox.notAnyOf').value)
+const addConceptsLabel = computed(() => t('components.conceptAddBox.addConcepts').value)
+const noConceptsSelectedLabel = computed(() => t('components.conceptAddBox.noConceptsSelected').value)
 
 const selectedConcepts = computed(() => (props.binding ? props.binding.concepts.value : props.modelValue) || [])
 

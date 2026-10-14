@@ -27,11 +27,11 @@
             :disabled="!canCreate"
             @click="onAddClick"
           >
-            {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set') }}
+            {{ t('components.conceptSetBuilder.newConceptSet') }}
           </AtlasButton>
 
           <EntityImportButton
-            :label="t('common.import', 'Import').value"
+            :label="t('common.import').value"
             testid="concept-sets-import"
             :disabled="!canCreate"
             :import-design="importDesign"
@@ -64,7 +64,7 @@
         :items="store.filteredSets"
         :loading="store.loading"
         :items-per-page="itemsPerPage"
-        :items-per-page-text="t('datatable.itemsPerPage', 'Rows per page:').value"
+        :items-per-page-text="t('datatable.itemsPerPage').value"
         hover
         class="concept-set-list__table"
         @click:row="onRowClick"
@@ -112,7 +112,7 @@
           <div class="concept-set-list__actions">
             <AtlasIconButton
               title="Clone"
-              v-bind="{ ariaLabel: t('common.duplicate', 'Clone').value }"
+              v-bind="{ ariaLabel: t('common.duplicate').value }"
               icon="mdi-content-copy"
               variant="text"
               size="sm"
@@ -120,8 +120,8 @@
               @click.stop="onCopyClick(item.id)"
             />
             <AtlasIconButton
-              :title="t('common.delete', 'Delete').value"
-              v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
+              :title="t('common.delete').value"
+              v-bind="{ ariaLabel: t('common.delete').value }"
               icon="mdi-delete-outline"
               variant="text"
               tone="danger"
@@ -158,11 +158,8 @@
       <p class="concept-set-list__empty-text">
         {{
           store.activeFilterCount > 0
-            ? t('cs.manager.emptyFilterMessage', 'No concept sets match your search.')
-            : t(
-              'cs.manager.emptyStateMessage',
-              'No concept sets yet — create one to start curating concepts.'
-            )
+            ? t('cs.manager.emptyFilterMessage')
+            : t('cs.manager.emptyStateMessage')
         }}
       </p>
       <AtlasButton
@@ -170,32 +167,32 @@
         icon="mdi-plus"
         @click="onAddClick"
       >
-        {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set') }}
+        {{ t('components.conceptSetBuilder.newConceptSet') }}
       </AtlasButton>
     </div>
 
     <AtlasDialog
       v-model="showDeleteDialog"
-      :eyebrow="t('common.confirm', 'Confirm').value"
-      :title="t('common.delete', 'Delete').value"
+      :eyebrow="t('common.confirm').value"
+      :title="t('common.delete').value"
       max-width="440"
       @close="showDeleteDialog = false"
     >
-      {{ t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete').value }}
+      {{ t('cs.manager.deleteConfirmation').value }}
       "{{ selectedSet?.name }}"?
       <template #actions>
         <AtlasButton
           variant="ghost"
           @click="showDeleteDialog = false"
         >
-          {{ t('common.cancel', 'Cancel') }}
+          {{ t('common.cancel') }}
         </AtlasButton>
         <AtlasButton
           variant="danger"
           :loading="store.loading"
           @click="confirmDelete"
         >
-          {{ t('common.delete', 'Delete') }}
+          {{ t('common.delete') }}
         </AtlasButton>
       </template>
     </AtlasDialog>
@@ -247,17 +244,17 @@ const countLabel = computed(() => {
 // ============================================================================
 
 const headers = [
-  { title: t('columns.id', 'ID').value, key: 'id', sortable: true, width: '100px' },
-  { title: t('columns.name', 'Name').value, key: 'name', sortable: true },
-  { title: t('common.tags', 'Tags').value, key: 'tags', sortable: false, width: '220px' },
+  { title: t('columns.id').value, key: 'id', sortable: true, width: '100px' },
+  { title: t('columns.name').value, key: 'name', sortable: true },
+  { title: t('common.tags').value, key: 'tags', sortable: false, width: '220px' },
   {
-    title: t('columns.created', 'Created').value,
+    title: t('columns.created').value,
     key: 'createdDate',
     sortable: true,
     width: '120px',
   },
   {
-    title: t('columns.updated', 'Updated').value,
+    title: t('columns.updated').value,
     key: 'modifiedDate',
     // Sorted off the same fallback the cell displays, so a set that was only
     // ever created orders by its creation date rather than sinking (#292).
@@ -265,7 +262,7 @@ const headers = [
     sortable: true,
     width: '120px',
   },
-  { title: t('columns.author', 'Author').value, key: 'createdBy', sortable: true, width: '150px' },
+  { title: t('columns.author').value, key: 'createdBy', sortable: true, width: '150px' },
   { title: '', key: 'actions', sortable: false, width: '80px', align: 'center' as const },
 ]
 

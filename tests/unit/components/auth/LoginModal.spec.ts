@@ -12,6 +12,7 @@ import LoginModal from '@/components/auth/LoginModal.vue'
 import type { AuthProvider } from '@/models/auth.types'
 import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/auth/authService'
+import { tr } from '../../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -128,14 +129,10 @@ vi.mock('@/services/auth/authService', () => ({
   },
 }))
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (_unusedKey: string, defaultValue: string) => ({
-      value: defaultValue,
-      toString: () => defaultValue,
-    }),
-  }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 describe('LoginModal', () => {
   let wrapper: VueWrapper
@@ -213,8 +210,8 @@ describe('LoginModal', () => {
 
       expect(authService.fetchOAuthProviders).toHaveBeenCalledTimes(1)
       expect(wrapper.find('.login-card').exists()).toBe(true)
-      expect(wrapper.get('.login-card__title').text()).toBe('Welcome back')
-      expect(wrapper.get('.login-card__subtitle').text()).toBe('Sign in to continue')
+      expect(wrapper.get('.login-card__title').text()).toBe(tr('components.auth.welcomeBack'))
+      expect(wrapper.get('.login-card__subtitle').text()).toBe(tr('components.auth.signInToAtlas'))
     })
 
     it('renders provider buttons returned from fetch', async () => {
@@ -251,7 +248,7 @@ describe('LoginModal', () => {
       await providerButtonAt(0).trigger('click')
 
       expect(wrapper.find('[data-testid="credentials-form"]').exists()).toBe(true)
-      expect(wrapper.get('.login-card__back-btn').text()).toBe('Back')
+      expect(wrapper.get('.login-card__back-btn').text()).toBe(tr('common.back'))
       expect(wrapper.find('.login-card__providers').exists()).toBe(false)
     })
 

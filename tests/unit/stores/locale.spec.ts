@@ -136,9 +136,9 @@ describe('Locale Store', () => {
       expect(store.locale).toBe('en')
     })
 
-    it('should have empty translations initially', () => {
+    it('should hold the bundled English translations before initialize()', () => {
       const store = useLocaleStore()
-      expect(store.translations).toEqual({})
+      expect(store.translations).toEqual({ common: { save: 'Save', cancel: 'Cancel' } })
     })
 
     it('should have empty available locales initially', () => {
@@ -435,11 +435,11 @@ describe('Locale Store', () => {
   })
 
   describe('loadFallbackTranslations Action', () => {
-    it('should load English translations', async () => {
+    it('should reset to the bundled English translations', async () => {
       const store = useLocaleStore()
+      store.translations = { common: { save: 'Hozon' } }
       await store.loadFallbackTranslations()
-      // The mock returns { common: { save: 'Save', cancel: 'Cancel' } }
-      expect(store.translations).toBeDefined()
+      expect(store.translations).toEqual({ common: { save: 'Save', cancel: 'Cancel' } })
     })
   })
 

@@ -10,6 +10,7 @@ import * as cohortVersionsService from '@/services/cohort-definition-versions.se
 import * as conceptSetVersionsService from '@/services/concept-set-versions.service'
 
 // Mock the services
+vi.mock('@/composables/useI18n', async () => (await import('../../helpers/i18n-mock')).mockUseI18n)
 vi.mock('@/services/cohort-definition-versions.service')
 vi.mock('@/services/concept-set-versions.service')
 

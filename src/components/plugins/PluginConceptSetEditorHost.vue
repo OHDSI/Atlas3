@@ -50,7 +50,7 @@ watch(
   loadError => {
     if (!loadError) return
     notify.danger(
-      tv('conceptSets.pluginEditLoadFailed', 'Could not open concept set {id}', {
+      tv('conceptSets.pluginEditLoadFailed', {
         id: String(loadError.conceptSetId),
       }),
       { message: loadError.message ?? undefined }

@@ -48,11 +48,11 @@ export function resolveRunDisabledReason(input: {
   isPreviewMode: boolean
   isDirty: boolean
   hasErrors: boolean
-  translate: (key: string, fallback: string) => string
+  translate: (key: string) => string
 }): string {
-  if (input.isPreviewMode) return input.translate('common.previewMode', 'Preview mode')
-  if (input.isDirty) return input.translate('components.generation.unsavedChanges', 'Save changes before running')
-  if (input.hasErrors) return input.translate('components.generation.fixErrors', 'Resolve validation errors before running')
+  if (input.isPreviewMode) return input.translate('common.previewMode')
+  if (input.isDirty) return input.translate('components.generation.unsavedChanges')
+  if (input.hasErrors) return input.translate('components.generation.fixErrors')
   return ''
 }
 

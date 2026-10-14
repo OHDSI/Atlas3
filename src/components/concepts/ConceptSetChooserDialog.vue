@@ -1,9 +1,9 @@
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    :eyebrow="t('cs.browser.compare.compare', 'Compare').value"
+    :eyebrow="t('cs.browser.compare.compare').value"
     :title="dialogTitle"
-    :close-label="t('common.close', 'Close').value"
+    :close-label="t('common.close').value"
     max-width="720"
     @update:model-value="onDialogUpdate"
     @close="onCancel"
@@ -17,7 +17,7 @@
     <div class="chooser-body">
       <AtlasTextField
         v-model="searchTerm"
-        :placeholder="t('common.search', 'Search…').value"
+        :placeholder="t('common.search').value"
         prepend-icon="mdi-magnify"
         variant="outlined"
         hide-details
@@ -31,7 +31,7 @@
         class="chooser-empty"
         data-testid="chooser-empty"
       >
-        {{ t('cs.browser.compare.noMatches', 'No concept sets match').value }}
+        {{ t('cs.browser.compare.noMatches').value }}
       </div>
 
       <AtlasDataTable
@@ -53,7 +53,7 @@
                 :data-testid="`chooser-select-${item.id}`"
                 @click="onSelect(item.id)"
               >
-                {{ t('common.select', 'Select').value }}
+                {{ t('common.select').value }}
               </AtlasButton>
             </td>
           </tr>
@@ -67,7 +67,7 @@
         data-testid="chooser-cancel"
         @click="onCancel"
       >
-        {{ t('common.cancel', 'Cancel').value }}
+        {{ t('common.cancel').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -100,13 +100,13 @@ const store = useConceptSetsStore()
 const searchTerm = ref<string>('')
 
 const dialogTitle = computed(
-  () => props.title ?? t('cs.browser.compare.modalTitle', 'Choose a concept set').value
+  () => props.title ?? t('cs.browser.compare.modalTitle').value
 )
 
 const headers = [
-  { title: t('columns.id', 'ID').value, key: 'id', sortable: true, width: '90px' },
-  { title: t('columns.name', 'Name').value, key: 'name', sortable: true },
-  { title: t('columns.author', 'Author').value, key: 'createdBy', sortable: true, width: '160px' },
+  { title: t('columns.id').value, key: 'id', sortable: true, width: '90px' },
+  { title: t('columns.name').value, key: 'name', sortable: true },
+  { title: t('columns.author').value, key: 'createdBy', sortable: true, width: '160px' },
   { title: '', key: 'actions', sortable: false, width: '110px', align: 'end' as const },
 ]
 

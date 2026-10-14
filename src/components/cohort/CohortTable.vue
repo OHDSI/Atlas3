@@ -17,7 +17,7 @@
     >
       <div class="cohort-table__error">
         <div>
-          {{ error.message || t('common.errorLoadingCohorts', 'Failed to load cohorts').value }}
+          {{ error.message || t('common.errorLoadingCohorts').value }}
         </div>
         <AtlasButton
           variant="danger"
@@ -27,7 +27,7 @@
           <AtlasIcon start>
             mdi-refresh
           </AtlasIcon>
-          {{ t('common.refresh', 'Retry').value }}
+          {{ t('common.refresh').value }}
         </AtlasButton>
       </div>
     </AtlasAlert>
@@ -53,14 +53,14 @@
         icon="mdi-close"
         @click="$emit('clear-filters')"
       >
-        {{ t('search.clearAllSelections', 'Clear filters').value }}
+        {{ t('search.clearAllSelections').value }}
       </AtlasButton>
       <AtlasButton
         v-else
         icon="mdi-plus"
         @click="$emit('create-cohort')"
       >
-        {{ t('cohortDefinitions.newDefinition', 'New cohort').value }}
+        {{ t('cohortDefinitions.newDefinition').value }}
       </AtlasButton>
     </div>
 
@@ -87,7 +87,7 @@
                 data-testid="cohort-table-sort-id"
                 @click="toggleSort('id')"
               >
-                {{ t('columns.id', 'ID').value }}
+                {{ t('columns.id').value }}
                 <AtlasIcon
                   v-if="activeSortKey === 'id'"
                   :icon="sortIcon"
@@ -105,7 +105,7 @@
                 data-testid="cohort-table-sort-name"
                 @click="toggleSort('name')"
               >
-                {{ t('columns.name', 'Name').value }}
+                {{ t('columns.name').value }}
                 <AtlasIcon
                   v-if="activeSortKey === 'name'"
                   :icon="sortIcon"
@@ -114,7 +114,7 @@
               </button>
             </th>
             <th class="cohort-table__col-tags">
-              {{ t('common.tags', 'Tags').value }}
+              {{ t('common.tags').value }}
             </th>
             <th
               class="cohort-table__col-author"
@@ -126,7 +126,7 @@
                 data-testid="cohort-table-sort-author"
                 @click="toggleSort('createdBy')"
               >
-                {{ t('columns.author', 'Author').value }}
+                {{ t('columns.author').value }}
                 <AtlasIcon
                   v-if="activeSortKey === 'createdBy'"
                   :icon="sortIcon"
@@ -144,7 +144,7 @@
                 data-testid="cohort-table-sort-created"
                 @click="toggleSort('createdDate')"
               >
-                {{ t('columns.created', 'Created').value }}
+                {{ t('columns.created').value }}
                 <AtlasIcon
                   v-if="activeSortKey === 'createdDate'"
                   :icon="sortIcon"
@@ -162,7 +162,7 @@
                 data-testid="cohort-table-sort-modified"
                 @click="toggleSort('modifiedDate')"
               >
-                {{ t('columns.updated', 'Updated').value }}
+                {{ t('columns.updated').value }}
                 <AtlasIcon
                   v-if="activeSortKey === 'modifiedDate'"
                   :icon="sortIcon"
@@ -231,8 +231,8 @@
             <td class="cohort-table__col-actions">
               <div class="cohort-table__actions">
                 <AtlasIconButton
-                  :title="t('common.preview', 'Preview').value"
-                  v-bind="{ ariaLabel: t('common.preview', 'Preview').value }"
+                  :title="t('common.preview').value"
+                  v-bind="{ ariaLabel: t('common.preview').value }"
                   icon="mdi-printer-outline"
                   variant="text"
                   size="sm"
@@ -241,7 +241,7 @@
                 />
                 <AtlasIconButton
                   title="Clone"
-                  v-bind="{ ariaLabel: t('common.duplicate', 'Clone').value }"
+                  v-bind="{ ariaLabel: t('common.duplicate').value }"
                   icon="mdi-content-copy"
                   variant="text"
                   size="sm"
@@ -251,8 +251,8 @@
                   @click.stop="$emit('copy', cohort)"
                 />
                 <AtlasIconButton
-                  :title="t('common.delete', 'Delete').value"
-                  v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
+                  :title="t('common.delete').value"
+                  v-bind="{ ariaLabel: t('common.delete').value }"
                   icon="mdi-delete-outline"
                   variant="text"
                   tone="danger"
@@ -360,25 +360,18 @@ const isFiltered = computed(
 
 const emptyMessage = computed(() => {
   if (props.searchQuery && (props.selectedTags?.length ?? 0) > 0) {
-    return tv(
-      'components.cohortList.emptyMatchQueryAndTags',
-      'No cohorts match "{query}" with the selected tags.',
-      { query: props.searchQuery }
-    )
+    return tv('components.cohortList.emptyMatchQueryAndTags', { query: props.searchQuery })
   }
   if (props.searchQuery)
-    return tv('components.cohortList.emptyMatchQuery', 'No cohorts match "{query}".', {
+    return tv('components.cohortList.emptyMatchQuery', {
       query: props.searchQuery,
     })
   if ((props.selectedTags?.length ?? 0) > 0)
-    return tv('components.cohortList.emptyMatchTags', 'No cohorts match the selected tags.')
-  return tv(
-    'components.cohortList.emptyNoCohorts',
-    'No cohorts yet — create one to start defining a study population.'
-  )
+    return tv('components.cohortList.emptyMatchTags')
+  return tv('components.cohortList.emptyNoCohorts')
 })
 
-const naLabel = t('common.noData', 'N/A')
+const naLabel = t('common.noData')
 
 function formatUser(userValue: unknown): string {
   return formatCohortSortUser(userValue)

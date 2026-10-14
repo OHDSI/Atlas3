@@ -2,6 +2,7 @@ import { ref, watch, type Ref } from 'vue'
 import { getIncidenceRateReport } from '@/services/incidence-rate.service'
 import type { IncidenceRateReport } from '@/models/incidence-rate.types'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
 
 /**
  * Reactive report fetch keyed on (sourceKey, targetId, outcomeId).
@@ -15,6 +16,7 @@ export function useIncidenceRateReport(
   outcomeId: Ref<number | null>
 ) {
   const report = ref<IncidenceRateReport | null>(null)
+  const { tv } = useI18n()
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -44,7 +46,10 @@ export function useIncidenceRateReport(
       }
     } catch (err) {
       logger.error('IRReport', 'fetch failed', err)
-      error.value = err instanceof Error ? err.message : 'Failed to fetch report'
+      error.value =
+        err instanceof Error
+          ? err.message
+          : tv('ir.results.reportLoadFailed')
     } finally {
       loading.value = false
     }

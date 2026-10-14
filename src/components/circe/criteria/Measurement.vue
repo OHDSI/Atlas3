@@ -77,6 +77,7 @@
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import {
   AtlasButton,
   AtlasDivider,
@@ -104,15 +105,16 @@ const emit = defineEmits<{
   'clear-concept-set': []
 }>()
 
-const measurementTitle = computed(() => 'a measurement of')
-const addAttributeLabel = computed(() => 'Add attribute...')
-const selectConceptSetLabel = computed(() => 'Select Concept Set')
+const { t } = useI18n()
+const measurementTitle = computed(() => t('components.measurement.title').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
+const selectConceptSetLabel = computed(() => t('components.criteria.selectConceptSet').value)
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {
     key: 'First',
-    label: 'First Measurement',
-    description: 'Limit to first measurement in history',
+    label: t('components.measurement.attributes.first.label').value,
+    description: t('components.measurement.attributes.first.description').value,
     init: () => {
       measurementData.value.First = true
     },
@@ -123,8 +125,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'OccurrenceStartDate',
-    label: 'Measurement Date',
-    description: 'Filter by measurement date',
+    label: t('components.measurement.attributes.occurrenceStartDate.label').value,
+    description: t('components.measurement.attributes.occurrenceStartDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(measurementData.value, 'OccurrenceStartDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -139,8 +141,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'MeasurementType',
-    label: 'Measurement Type',
-    description: 'Filter by measurement type',
+    label: t('criteriaAttributes.measurementType.label').value,
+    description: t('criteriaAttributes.measurementType.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -160,8 +162,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'MeasurementTypeCS',
-    label: 'Measurement Type Concept Set',
-    description: 'Filter measurement type by a concept set',
+    label: t('criteriaAttributes.measurementTypeCS.label').value,
+    description: t('criteriaAttributes.measurementTypeCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(measurementData.value, 'MeasurementTypeCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -180,8 +182,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Operator',
-    label: 'Operator',
-    description: 'Filter by measurement operator',
+    label: t('criteriaAttributes.operator.label').value,
+    description: t('criteriaAttributes.operator.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -198,8 +200,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'OperatorCS',
-    label: 'Operator Concept Set',
-    description: 'Filter operator by a concept set',
+    label: t('criteriaAttributes.operatorCS.label').value,
+    description: t('criteriaAttributes.operatorCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(measurementData.value, 'OperatorCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -218,8 +220,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'ValueAsNumber',
-    label: 'Value as Number',
-    description: 'Filter by numeric value',
+    label: t('criteriaAttributes.valueAsNumber.label').value,
+    description: t('criteriaAttributes.valueAsNumber.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(measurementData.value, 'ValueAsNumber', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -234,8 +236,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'ValueAsConcept',
-    label: 'Value as Concept',
-    description: 'Filter by concept value',
+    label: t('criteriaAttributes.valueAsConcept.label').value,
+    description: t('criteriaAttributes.valueAsConcept.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -252,8 +254,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'ValueAsConceptCS',
-    label: 'Value as Concept Set',
-    description: 'Filter concept value by a concept set',
+    label: t('criteriaAttributes.valueAsConceptCS.label').value,
+    description: t('criteriaAttributes.valueAsConceptCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(measurementData.value, 'ValueAsConceptCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -272,8 +274,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Unit',
-    label: 'Unit',
-    description: 'Filter by measurement unit',
+    label: t('criteriaAttributes.unit.label').value,
+    description: t('components.measurement.attributes.unit.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -290,8 +292,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'UnitCS',
-    label: 'Unit Concept Set',
-    description: 'Filter unit by a concept set',
+    label: t('criteriaAttributes.unitCS.label').value,
+    description: t('criteriaAttributes.unitCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(measurementData.value, 'UnitCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -310,8 +312,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'RangeLow',
-    label: 'Range Low',
-    description: 'Filter by range low',
+    label: t('criteriaAttributes.rangeLow.label').value,
+    description: t('criteriaAttributes.rangeLow.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(measurementData.value, 'RangeLow', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -326,8 +328,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'RangeHigh',
-    label: 'Range High',
-    description: 'Filter by range high',
+    label: t('criteriaAttributes.rangeHigh.label').value,
+    description: t('criteriaAttributes.rangeHigh.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(measurementData.value, 'RangeHigh', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -342,8 +344,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'RangeLowRatio',
-    label: 'Range Low Ratio',
-    description: 'Filter by range low ratio',
+    label: t('criteriaAttributes.rangeLowRatio.label').value,
+    description: t('criteriaAttributes.rangeLowRatio.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(measurementData.value, 'RangeLowRatio', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -358,8 +360,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'RangeHighRatio',
-    label: 'Range High Ratio',
-    description: 'Filter by range high ratio',
+    label: t('criteriaAttributes.rangeHighRatio.label').value,
+    description: t('criteriaAttributes.rangeHighRatio.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(measurementData.value, 'RangeHighRatio', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -374,8 +376,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Abnormal',
-    label: 'Abnormal',
-    description: 'Limit to abnormal measurements',
+    label: t('criteriaAttributes.abnormal.label').value,
+    description: t('criteriaAttributes.abnormal.description').value,
     init: () => {
       measurementData.value.Abnormal = true
     },
@@ -386,8 +388,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'MeasurementSourceConcept',
-    label: 'Measurement Source Concept',
-    description: 'Filter by measurement source concept',
+    label: t('criteriaAttributes.measurementSourceConcept.label').value,
+    description: t('criteriaAttributes.measurementSourceConcept.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       measurementSourceConceptModel as ConceptSetSelection,
@@ -406,8 +408,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Age',
-    label: 'Age',
-    description: 'Filter by age at time of event',
+    label: t('criteriaAttributes.age.label').value,
+    description: t('criteriaAttributes.age.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(measurementData.value, 'Age', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -422,8 +424,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Gender',
-    label: 'Gender',
-    description: 'Filter by patient gender',
+    label: t('criteriaAttributes.gender.label').value,
+    description: t('criteriaAttributes.gender.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -440,8 +442,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'GenderCS',
-    label: 'Gender Concept Set',
-    description: 'Filter gender by a concept set',
+    label: t('criteriaAttributes.genderCS.label').value,
+    description: t('criteriaAttributes.genderCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(measurementData.value, 'GenderCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -460,8 +462,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'ProviderSpecialty',
-    label: 'Provider Specialty',
-    description: 'Filter by provider specialty',
+    label: t('criteriaAttributes.providerSpecialty.label').value,
+    description: t('criteriaAttributes.providerSpecialty.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -478,8 +480,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'ProviderSpecialtyCS',
-    label: 'Provider Specialty Concept Set',
-    description: 'Filter provider specialty by a concept set',
+    label: t('criteriaAttributes.providerSpecialtyCS.label').value,
+    description: t('criteriaAttributes.providerSpecialtyCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(measurementData.value, 'ProviderSpecialtyCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -498,8 +500,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'VisitType',
-    label: 'Visit Type',
-    description: 'Filter by visit type',
+    label: t('criteriaAttributes.visitType.label').value,
+    description: t('criteriaAttributes.visitType.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -516,8 +518,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'VisitTypeCS',
-    label: 'Visit Type Concept Set',
-    description: 'Filter visit type by a concept set',
+    label: t('criteriaAttributes.visitTypeCS.label').value,
+    description: t('criteriaAttributes.visitTypeCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(measurementData.value, 'VisitTypeCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -536,8 +538,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'CorrelatedCriteria',
-    label: 'Nested Criteria',
-    description: 'Add nested criteria group',
+    label: t('criteriaAttributes.correlatedCriteria.label').value,
+    description: t('criteriaAttributes.correlatedCriteria.description').value,
     kind: 'criteriaGroup',
     componentProps: () => ({
       group: ensureObjectField(measurementData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup) as CriteriaGroup,

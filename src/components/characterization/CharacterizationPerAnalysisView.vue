@@ -30,7 +30,7 @@
       v-if="prevalenceGroups.length === 0 && distributionGroups.length === 0"
       class="char-per-analysis__empty"
     >
-      {{ tv('common.noData', 'No rows match the current filter.') }}
+      {{ tv('cc.viewEdit.workbench.empty.noDataTitle') }}
     </div>
   </div>
 </template>

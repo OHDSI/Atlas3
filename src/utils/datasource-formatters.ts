@@ -3,6 +3,7 @@
  */
 import { logger } from '@/utils/logger'
 import { arrayToCsv } from '@/utils/csv'
+import { useI18n } from '@/composables/useI18n'
 import type {
   DashboardAPIResponse,
   DashboardReport,
@@ -26,17 +27,19 @@ const DAYS_PER_YEAR = 365.25
  * large (> 1000 days ≈ 2.7y); otherwise keep days. `days` must be sorted ascending.
  */
 function lengthOfObservationAxis(days: number[]): { values: number[]; label: string } {
+  const { tv } = useI18n()
   const span = days.length ? (days[days.length - 1] ?? 0) - (days[0] ?? 0) : 0
   if (span > 1000) {
-    return { values: days.map(d => Math.round((d / DAYS_PER_YEAR) * 100) / 100), label: 'Years' }
+    return { values: days.map(d => Math.round((d / DAYS_PER_YEAR) * 100) / 100), label: tv('dataSources.observationPeriodReport.years') }
   }
-  return { values: days, label: 'Days' }
+  return { values: days, label: tv('dataSources.observationPeriodReport.days') }
 }
 
 /**
  * Transform Dashboard API response to internal format
  */
 export function transformDashboardReport(raw: DashboardAPIResponse): DashboardReport {
+  const { tv } = useI18n()
   const summary = {
     sourceName: raw.summary.find(s => s.attributeName === 'Source name')?.attributeValue || '',
     personCount: parseInt(
@@ -56,9 +59,9 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
       intervalIndex: a.intervalIndex,
       countValue: a.countValue,
     })),
-    unit: 'Person Count',
-    seriesName: 'Person Count',
-    xAxisLabel: 'Age',
+    unit: tv('columns.personCount'),
+    seriesName: tv('columns.personCount'),
+    xAxisLabel: tv('columns.age'),
   }
 
   const cumulativeSorted = (raw.cumulativeObservation || [])
@@ -70,12 +73,12 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
     xValues: cumulativeAxis.values,
     series: [
       {
-        name: 'Cumulative Observation',
+        name: tv('dataSources.dashboardReport.cumulativeObservation'),
         data: cumulativeSorted.map(c => c.yPercentPersons || 0),
       },
     ],
     xAxisLabel: cumulativeAxis.label,
-    yAxisLabel: 'Percent of Persons',
+    yAxisLabel: tv('dataSources.charts.percentOfPersons'),
   }
 
   const observationByMonth: LineChartData = {
@@ -88,14 +91,14 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
         xAxisType: 'time' as const,
         series: [
           {
-            name: 'Observation Count',
+            name: tv('dataSources.charts.observationCount'),
             data: sorted.map(o => o.countValue || 0),
           },
         ],
       }
     })(),
-    xAxisLabel: 'Month',
-    yAxisLabel: 'Count',
+    xAxisLabel: tv('dataSources.charts.month'),
+    yAxisLabel: tv('columns.count'),
   }
 
   return {
@@ -193,7 +196,10 @@ export function isEraReport(reportType: ReportType): boolean {
  * Get metric column label for report type
  */
 export function getMetricLabel(reportType: ReportType): string {
-  return isEraReport(reportType) ? 'Length of Era' : 'Records Per Person'
+  const { tv } = useI18n()
+  return isEraReport(reportType)
+    ? tv('components.drilldownDetails.lengthOfEra')
+    : tv('dataSources.datadensityReport.recordsPerPerson')
 }
 
 /**
@@ -242,6 +248,7 @@ interface DataDensityRaw {
 export function transformDataDensityReport(
   raw: DataDensityRaw
 ): import('@/models/datasource.types').DataDensityReport {
+  const { tv } = useI18n()
   // Build union of months across all series for totalRecords so categories include every month
   const totalRaw = raw.totalRecords || []
     const totalMonthsSet = new Set<number>()
@@ -251,7 +258,7 @@ export function transformDataDensityReport(
       const month = item.xCalendarMonth
       if (month == null) return
       totalMonthsSet.add(month)
-      const seriesName = item.seriesName || 'Total'
+      const seriesName = item.seriesName || tv('dataSources.charts.total')
       totalSeriesNames.add(seriesName)
       totalLookup.set(`${seriesName}|${month}`, item.yRecordCount ?? 0)
     })
@@ -279,7 +286,7 @@ export function transformDataDensityReport(
       const month = item.xCalendarMonth
       if (month == null) return
       recMonthsSet.add(month)
-      const seriesName = item.seriesName || 'Records'
+      const seriesName = item.seriesName || tv('dataSources.charts.records')
       recSeriesNames.add(seriesName)
       recLookup.set(`${seriesName}|${month}`, item.yRecordCount ?? 0)
     })
@@ -354,6 +361,7 @@ interface PersonRaw {
 export function transformPersonReport(
   raw: PersonRaw
 ): import('@/models/datasource.types').PersonReport {
+  const { tv } = useI18n()
   // Year of birth distribution
   const yearOfBirth: import('@/models/datasource.types').HistogramChartData = (() => {
     const yearData = raw.yearOfBirth || []
@@ -362,9 +370,9 @@ export function transformPersonReport(
         intervalSize: 1,
         offset: 0,
         bins: [],
-        unit: 'Person Count',
-        seriesName: 'Person Count',
-        xAxisLabel: 'Year of Birth',
+        unit: tv('columns.personCount'),
+        seriesName: tv('columns.personCount'),
+        xAxisLabel: tv('dataSources.personReport.yearOfBirth'),
       }
     }
 
@@ -383,30 +391,30 @@ export function transformPersonReport(
       intervalSize,
       offset,
       bins,
-      unit: 'Person Count',
-      seriesName: 'Person Count',
-      xAxisLabel: 'Year of Birth',
+      unit: tv('columns.personCount'),
+      seriesName: tv('columns.personCount'),
+      xAxisLabel: tv('dataSources.personReport.yearOfBirth'),
     }
   })()
 
   // Gender distribution
   const gender: import('@/models/datasource.types').PieChartData[] =
     raw.gender?.map(g => ({
-      name: g.conceptName || g.name || 'Unknown',
+      name: g.conceptName || g.name || tv('dataSources.charts.unknown'),
       value: g.countValue || g.count || 0,
     })) || []
 
   // Race distribution
   const race: import('@/models/datasource.types').PieChartData[] =
     raw.race?.map(r => ({
-      name: r.conceptName || r.name || 'Unknown',
+      name: r.conceptName || r.name || tv('dataSources.charts.unknown'),
       value: r.countValue || r.count || 0,
     })) || []
 
   // Ethnicity distribution
   const ethnicity: import('@/models/datasource.types').PieChartData[] =
     raw.ethnicity?.map(e => ({
-      name: e.conceptName || e.name || 'Unknown',
+      name: e.conceptName || e.name || tv('dataSources.charts.unknown'),
       value: e.countValue || e.count || 0,
     })) || []
 
@@ -486,6 +494,7 @@ interface ObservationPeriodRaw {
 export function transformObservationPeriodReport(
   raw: ObservationPeriodRaw
 ): import('@/models/datasource.types').ObservationPeriodReport {
+  const { tv } = useI18n()
   // ageAtFirst: offset=0, intervalSize=1 — intervalIndex IS the age (matches Atlas 2.x parseHistogramData)
   const ageAtFirst: import('@/models/datasource.types').HistogramChartData | undefined =
     raw.ageAtFirst
@@ -498,9 +507,9 @@ export function transformObservationPeriodReport(
               countValue: i.countValue ?? 0,
             }))
             .sort((a, b) => a.intervalIndex - b.intervalIndex),
-          unit: 'Person Count',
-          seriesName: 'Person Count',
-          xAxisLabel: 'Age',
+          unit: tv('columns.personCount'),
+          seriesName: tv('columns.personCount'),
+          xAxisLabel: tv('columns.age'),
         }
       : undefined
 
@@ -525,9 +534,11 @@ export function transformObservationPeriodReport(
             intervalSize: inYears ? intervalSizeDays / DAYS_PER_YEAR : intervalSizeDays,
             offset: 0,
             bins,
-            unit: 'Person Count',
-            seriesName: 'Person Count',
-            xAxisLabel: inYears ? 'Years' : 'Days',
+            unit: tv('columns.personCount'),
+            seriesName: tv('columns.personCount'),
+            xAxisLabel: inYears
+              ? tv('dataSources.observationPeriodReport.years')
+              : tv('dataSources.observationPeriodReport.days'),
           }
         })()
       : undefined
@@ -542,11 +553,11 @@ export function transformObservationPeriodReport(
             xAxisType: 'value' as const,
             xValues: axis.values,
             xAxisLabel: axis.label,
-            yAxisLabel: 'Percent of Persons',
+            yAxisLabel: tv('dataSources.charts.percentOfPersons'),
             yAxisFormat: 'percent' as const,
             series: [
               {
-                name: 'Cumulative %',
+                name: tv('dataSources.charts.cumulativePercent'),
                 data: sorted.map(i => i.yPercentPersons || 0),
               },
             ],
@@ -564,7 +575,7 @@ export function transformObservationPeriodReport(
             monthCodes: sorted.map(i => i.monthYear ?? 0),
             series: [
               {
-                name: 'Persons',
+                name: tv('dataSources.charts.persons'),
                 data: sorted.map(i => i.countValue || 0),
               },
             ],
@@ -586,7 +597,7 @@ export function transformObservationPeriodReport(
     | undefined =
     raw.observationPeriodsPerPerson && raw.observationPeriodsPerPerson.length > 0
       ? raw.observationPeriodsPerPerson.map(i => ({
-          name: i.conceptName || 'Unknown',
+          name: i.conceptName || tv('dataSources.charts.unknown'),
           value: i.countValue || 0,
         }))
       : undefined
@@ -635,11 +646,12 @@ interface DeathRaw {
 export function transformDeathReport(
   raw: DeathRaw
 ): import('@/models/datasource.types').DeathReport {
+  const { tv } = useI18n()
   const ageAtDeath = mapBoxPlotArray(raw.ageAtDeath) || []
 
   const deathByType: import('@/models/datasource.types').PieChartData[] =
     raw.deathByType?.map(item => ({
-      name: item.conceptName || 'Unknown',
+      name: item.conceptName || tv('dataSources.charts.unknown'),
       value: item.countValue || 0,
     })) || []
 
@@ -653,7 +665,7 @@ export function transformDeathReport(
             monthCodes: sorted.map(i => i.xCalendarMonth ?? 0),
             series: [
               {
-                name: 'Prevalence per 1000',
+                name: tv('dataSources.charts.prevalencePer1000'),
                 data: sorted.map(i => i.yPrevalence1000Pp || 0),
               },
             ],
@@ -667,8 +679,8 @@ export function transformDeathReport(
     const categories = new Set<string>()
 
     raw.prevalenceByGenderAgeYear.forEach(item => {
-      const trellisName = item.trellisName || 'Unknown'
-      const seriesName = item.seriesName || 'Total'
+      const trellisName = item.trellisName || tv('dataSources.charts.unknown')
+      const seriesName = item.seriesName || tv('dataSources.charts.total')
       const year = item.xCalendarYear || 0
       const prevalence = item.yPrevalence1000Pp || 0
 

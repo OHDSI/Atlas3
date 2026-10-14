@@ -8,13 +8,13 @@
       <AtlasIcon class="d-md-none">
         mdi-close
       </AtlasIcon>
-      <span class="d-none d-md-inline">{{ isDirty ? t('common.cancel', 'Cancel') : t('common.close', 'Close') }}</span>
+      <span class="d-none d-md-inline">{{ isDirty ? t('common.cancel') : t('common.close') }}</span>
     </AtlasButton>
 
     <AtlasMenu>
       <template #activator="{ props: menuProps }">
         <AtlasIconButton
-          v-bind="{ ...menuProps, ariaLabel: t('common.export', 'Export').value }"
+          v-bind="{ ...menuProps, ariaLabel: t('common.export').value }"
           icon="mdi-download"
           variant="text"
           size="sm"
@@ -28,36 +28,36 @@
         <AtlasListItem
           data-testid="export-download-json"
           prepend-icon="mdi-download"
-          :title="t('cohortDefinitions.cohortDefinitionManager.panels.json', 'JSON').value"
-          :subtitle="t('common.downloadFile', 'Download as file').value"
+          :title="t('cohortDefinitions.cohortDefinitionManager.panels.json').value"
+          :subtitle="t('common.downloadFile').value"
           @click="$emit('export-download')"
         />
         <AtlasListItem
           data-testid="export-copy-json"
           prepend-icon="mdi-clipboard-text-outline"
-          :title="t('common.copyToClipboard', 'Copy To Clipboard').value"
-          :subtitle="t('cohortDefinitions.cohortDefinitionManager.panels.json', 'JSON').value"
+          :title="t('common.copyToClipboard').value"
+          :subtitle="t('cohortDefinitions.cohortDefinitionManager.panels.json').value"
           @click="$emit('export-copy')"
         />
         <AtlasListItem
           data-testid="view-json"
           prepend-icon="mdi-code-json"
-          :title="t('components.cohortBuilder.jsonViewEdit', 'View / Edit').value"
-          :subtitle="t('components.cohortBuilder.jsonViewEditSubtitle', 'Overwrite the cohort from JSON').value"
+          :title="t('components.cohortBuilder.jsonViewEdit').value"
+          :subtitle="t('components.cohortBuilder.jsonViewEditSubtitle').value"
           @click="$emit('view-json')"
         />
         <AtlasListItem
           data-testid="view-sql"
           prepend-icon="mdi-database-search"
-          :title="t('components.cohortBuilder.sqlMenuTitle', 'SQL').value"
-          :subtitle="t('components.cohortBuilder.sqlMenuSubtitle', 'View and download the generated SQL').value"
+          :title="t('components.cohortBuilder.sqlMenuTitle').value"
+          :subtitle="t('components.cohortBuilder.sqlMenuSubtitle').value"
           @click="$emit('view-sql')"
         />
         <AtlasListItem
           data-testid="view-print-friendly"
           prepend-icon="mdi-file-document-outline"
-          :title="t('components.cohortBuilder.printFriendlyMenuTitle', 'Print Friendly').value"
-          :subtitle="t('components.cohortBuilder.printFriendlyMenuSubtitle', 'View a readable cohort definition').value"
+          :title="t('components.cohortBuilder.printFriendlyMenuTitle').value"
+          :subtitle="t('components.cohortBuilder.printFriendlyMenuSubtitle').value"
           @click="$emit('view-print-friendly')"
         />
       </AtlasList>
@@ -67,7 +67,7 @@
       <span
         v-if="isDirty && !isPreviewingVersion"
         class="cohort-toolbar-actions__dirty-dot"
-        :title="t('common.unsavedChanges', 'Unsaved changes').value"
+        :title="t('common.unsavedChanges').value"
         data-testid="save-cohort-dirty-dot"
       />
       <DisabledReasonTooltip :reason="saveDisabledReason">

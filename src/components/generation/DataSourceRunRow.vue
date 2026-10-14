@@ -128,25 +128,22 @@ const latestResultIcon = computed(() => (isActiveLatestResult.value ? 'mdi-eye' 
 
 const primaryLabel = computed(() => {
   if (isStopping.value) {
-    return t('components.analysisExecution.buttons.stopping', 'Stopping…').value
+    return t('components.analysisExecution.buttons.stopping').value
   }
   if (isActive.value && !props.hideCancel) {
-    return t('components.analysisExecution.buttons.cancel', 'Cancel').value
+    return t('components.analysisExecution.buttons.cancel').value
   }
   if (!props.latestStatus) {
-    return t('components.analysisExecution.buttons.generate', 'Generate').value
+    return t('components.analysisExecution.buttons.generate').value
   }
-  return t('components.analysisExecution.buttons.rerun', 'Rerun').value
+  return t('components.analysisExecution.buttons.rerun').value
 })
 
 const primaryVariant = computed<'primary' | 'danger'>(() =>
   isActive.value && !props.hideCancel ? 'danger' : 'primary'
 )
 
-const permissionMessage = tv(
-  'components.analysisExecution.noWritePermission',
-  'You do not have permission to run jobs against this source'
-)
+const permissionMessage = tv('components.analysisExecution.noWritePermission')
 
 const effectiveDisabled = computed(() => {
   if (isStopping.value) return true
@@ -164,8 +161,8 @@ const disabledReason = computed(() => {
 })
 
 const historyDisabled = computed(() => props.historyCount === 0)
-const historyLabel = tv('components.analysisExecution.previousRuns', 'Previous runs')
-const viewLatestLabel = tv('components.analysisExecution.viewResults', 'View results')
+const historyLabel = tv('components.analysisExecution.previousRuns')
+const viewLatestLabel = tv('components.analysisExecution.viewResults')
 
 function onPrimaryClick() {
   if (effectiveDisabled.value) return

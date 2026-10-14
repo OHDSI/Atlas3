@@ -1,19 +1,19 @@
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    :eyebrow="t('components.auth.sessionEyebrow', 'SESSION').value"
-    :title="t('auth.sessionExpiringSoon', 'Session Expiring Soon').value"
+    :eyebrow="t('components.auth.sessionEyebrow').value"
+    :title="t('auth.sessionExpiringSoon').value"
     :persistent="true"
     max-width="480"
     @close="handleDismiss(false)"
     @update:model-value="handleDismiss"
   >
     <p class="text-body-1 mb-4">
-      {{ t('components.auth.sessionWillExpireIn', 'Your session will expire in').value }}
+      {{ t('components.auth.sessionWillExpireIn').value }}
       <strong :class="countdownColorClass">{{ formattedTime }}</strong>.
     </p>
     <p class="text-body-2">
-      {{ t('components.auth.extendSessionPrompt', 'Would you like to extend your session?').value }}
+      {{ t('components.auth.extendSessionPrompt').value }}
     </p>
 
     <AtlasAlert
@@ -29,14 +29,14 @@
         :loading="isExtending"
         @click="$emit('extend')"
       >
-        {{ t('auth.extendSession', 'Extend Session').value }}
+        {{ t('auth.extendSession').value }}
       </AtlasButton>
       <AtlasButton
         variant="danger"
         :disabled="isExtending"
         @click="$emit('logout')"
       >
-        {{ t('components.auth.logout', 'Logout').value }}
+        {{ t('components.auth.logout').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>

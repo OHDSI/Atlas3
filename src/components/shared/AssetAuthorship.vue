@@ -46,8 +46,8 @@ function line(labelWithUser: string, labelDateOnly: string, user: unknown, date:
 
 const createdLabel = computed(() =>
   line(
-    tv('common.authorship.createdBy', 'Created by'),
-    tv('common.authorship.created', 'Created'),
+    tv('common.authorship.createdBy'),
+    tv('common.authorship.created'),
     props.createdBy,
     props.createdDate
   )
@@ -59,8 +59,8 @@ const createdLabel = computed(() =>
 const updatedLabel = computed(() => {
   if (!props.modifiedDate) return null
   return line(
-    tv('common.authorship.updatedBy', 'Updated by'),
-    tv('common.authorship.updated', 'Updated'),
+    tv('common.authorship.updatedBy'),
+    tv('common.authorship.updated'),
     props.modifiedBy,
     props.modifiedDate
   )

@@ -2,14 +2,14 @@
   <div class="rule-editor">
     <AtlasTextField
       :model-value="rule.name ?? ''"
-      :label="t('incidenceRate.stratifyName', 'Rule name').value"
+      :label="t('incidenceRate.stratifyName').value"
       hide-details
       class="mb-2"
       @update:model-value="(v) => { rule.name = String(v) }"
     />
     <AtlasTextField
       :model-value="rule.description ?? ''"
-      :label="t('columns.description', 'Description').value"
+      :label="t('columns.description').value"
       hide-details
       class="mb-3"
       @update:model-value="(v) => { rule.description = String(v) }"

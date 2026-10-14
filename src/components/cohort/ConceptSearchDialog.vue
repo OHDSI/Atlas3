@@ -64,13 +64,13 @@
           indeterminate
         />
         <p class="text-body-2 mt-2">
-          {{ t('components.conceptSearch.searching', 'Searching concepts...').value }}
+          {{ t('components.conceptSearch.searching').value }}
         </p>
       </div>
 
       <div v-else-if="searchResults && searchResults.length > 0">
         <p class="text-subtitle-2 mb-2">
-          {{ t('components.conceptSearch.foundResults', 'Found {count} results', { count: searchResults.length }).value }}
+          {{ t('components.conceptSearch.foundResults', { count: searchResults.length }).value }}
         </p>
 
         <v-virtual-scroll
@@ -92,7 +92,7 @@
               </v-list-item-title>
               <v-list-item-subtitle>
                 {{
-                  t('components.conceptSearch.conceptMeta', 'ID: {id} | Code: {code} | Domain: {domain}', {
+                  t('components.conceptSearch.conceptMeta', {
                     id: item.conceptId,
                     code: item.conceptCode,
                     domain: item.domainId,

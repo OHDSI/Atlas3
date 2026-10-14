@@ -11,10 +11,10 @@
             <div class="role-management-view__header">
               <div>
                 <h1 class="text-h4 mb-2">
-                  {{ t('views.roleManagement.title', 'Role & Permissions Management').value }}
+                  {{ t('views.roleManagement.title').value }}
                 </h1>
                 <p class="text-body-2 text-medium-emphasis">
-                  {{ t('views.roleManagement.subtitle', 'Manage user roles, assign permissions, and control access to system features.').value }}
+                  {{ t('views.roleManagement.subtitle').value }}
                 </p>
               </div>
             </div>

@@ -2,7 +2,7 @@
   <div class="end-strategy-selector">
     <div class="end-strategy-selector__strategy-row">
       <div class="end-strategy-selector__label">
-        Strategy
+        {{ tv('components.endStrategy.selector.label') }}
       </div>
       <v-btn-toggle
         :model-value="currentStrategyType"
@@ -18,21 +18,21 @@
           value="observation"
           size="sm"
         >
-          Continuous Observation
+          {{ tv('components.endStrategy.selector.observation') }}
         </AtlasButton>
         <AtlasButton
           toggle
           value="dateOffset"
           size="sm"
         >
-          Fixed Duration
+          {{ tv('components.endStrategy.selector.dateOffset') }}
         </AtlasButton>
         <AtlasButton
           toggle
           value="customEra"
           size="sm"
         >
-          Drug Exposure
+          {{ tv('components.endStrategy.selector.customEra') }}
         </AtlasButton>
       </v-btn-toggle>
     </div>
@@ -63,6 +63,9 @@ import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/c
 import ObservationEndStrategy from './ObservationEndStrategy.vue'
 import DateOffsetEndStrategy from './DateOffsetEndStrategy.vue'
 import CustomEraEndStrategy from './CustomEraEndStrategy.vue'
+import { useI18n } from '@/composables/useI18n'
+
+const { tv } = useI18n()
 
 type EndStrategyType = 'observation' | 'dateOffset' | 'customEra'
 

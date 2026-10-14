@@ -6,23 +6,14 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref } from 'vue'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
+import { tr } from '../../../helpers/i18n-mock'
 
 // Mock dependencies
-vi.mock('@/composables/useI18n', () => {
-  const interpolate = (template: string, params?: Record<string, unknown>) =>
-    params
-      ? template.replace(/\{(\w+)\}/g, (m, k) => (params[k] !== undefined ? String(params[k]) : m))
-      : template
-  return {
-    useI18n: () => ({
-      t: (key: string, fallback?: string) => ref(fallback || key),
-      tv: (key: string, fallback?: string, params?: Record<string, unknown>) =>
-        interpolate(fallback || key, params)
-    })
-  }
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
 })
 
 const vuetify = createVuetify({ components, directives })
@@ -131,7 +122,7 @@ describe('CohortGrid', () => {
       const error = new Error()
       const wrapper = mountComponent({ error })
 
-      expect(wrapper.text()).toContain('Failed to load cohorts')
+      expect(wrapper.text()).toContain(tr('common.errorLoadingCohorts'))
     })
 
     it('should show retry button on error', () => {
@@ -139,7 +130,7 @@ describe('CohortGrid', () => {
       const wrapper = mountComponent({ error })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const retryBtn = buttons.find(btn => btn.text().includes('Retry'))
+      const retryBtn = buttons.find(btn => btn.text().includes(tr('common.refresh')))
       expect(retryBtn).toBeDefined()
     })
 
@@ -148,7 +139,7 @@ describe('CohortGrid', () => {
       const wrapper = mountComponent({ error })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const retryBtn = buttons.find(btn => btn.text().includes('Retry'))
+      const retryBtn = buttons.find(btn => btn.text().includes(tr('common.refresh')))
       await retryBtn?.trigger('click')
 
       expect(wrapper.emitted('retry')).toBeTruthy()
@@ -189,14 +180,14 @@ describe('CohortGrid', () => {
 
       const text = wrapper.find('.cohort-grid__empty-text')
       expect(text.exists()).toBe(true)
-      expect(text.text().toLowerCase()).toContain('no cohorts')
+      expect(text.text()).toContain(tr('components.cohortList.emptyNoCohorts'))
     })
 
     it('should display the initial empty message when no filters are applied', () => {
       const wrapper = mountComponent({ cohorts: [] })
 
       // Refresh: empty-state copy was tightened.
-      expect(wrapper.text()).toContain('No cohorts yet')
+      expect(wrapper.text()).toContain(tr('components.cohortList.emptyNoCohorts'))
     })
 
     it('should display the filtered-empty message when a search query is set', () => {
@@ -205,7 +196,7 @@ describe('CohortGrid', () => {
         searchQuery: 'diabetes'
       })
 
-      expect(wrapper.text()).toContain('No cohorts match "diabetes"')
+      expect(wrapper.text()).toContain(tr('components.cohortList.emptyMatchQuery', { query: 'diabetes' }))
     })
 
     it('should display the tag-only empty message when a tag filter is set', () => {
@@ -214,7 +205,7 @@ describe('CohortGrid', () => {
         selectedTags: ['Diabetes'],
       })
 
-      expect(wrapper.text()).toContain('No cohorts match the selected tags.')
+      expect(wrapper.text()).toContain(tr('components.cohortList.emptyMatchTags'))
     })
 
     it('should display the query-and-tag empty message when both filters are set', () => {
@@ -224,14 +215,14 @@ describe('CohortGrid', () => {
         selectedTags: ['Diabetes'],
       })
 
-      expect(wrapper.text()).toContain('No cohorts match "diabetes" with the selected tags.')
+      expect(wrapper.text()).toContain(tr('components.cohortList.emptyMatchQueryAndTags', { query: 'diabetes' }))
     })
 
     it('should show the New cohort button in the initial empty state', () => {
       const wrapper = mountComponent({ cohorts: [] })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const createBtn = buttons.find(btn => btn.text().toLowerCase().includes('new cohort'))
+      const createBtn = buttons.find(btn => btn.text().includes(tr('cohortDefinitions.newDefinition')))
       expect(createBtn).toBeDefined()
     })
 
@@ -239,7 +230,7 @@ describe('CohortGrid', () => {
       const wrapper = mountComponent({ cohorts: [] })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const createBtn = buttons.find(btn => btn.text().toLowerCase().includes('new cohort'))
+      const createBtn = buttons.find(btn => btn.text().includes(tr('cohortDefinitions.newDefinition')))
       await createBtn?.trigger('click')
 
       expect(wrapper.emitted('create-cohort')).toBeTruthy()
@@ -249,7 +240,7 @@ describe('CohortGrid', () => {
       const wrapper = mountComponent({ cohorts: [], searchQuery: 'diabetes' })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const clearBtn = buttons.find(btn => btn.text().toLowerCase().includes('clear filters'))
+      const clearBtn = buttons.find(btn => btn.text().includes(tr('search.clearAllSelections')))
       await clearBtn?.trigger('click')
 
       expect(wrapper.emitted('clear-filters')).toBeTruthy()

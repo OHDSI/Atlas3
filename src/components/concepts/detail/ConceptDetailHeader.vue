@@ -46,11 +46,11 @@ function handleBack() {
 const standardLabel = computed(() => {
   switch (props.concept.standardConcept) {
     case 'S':
-      return tv('cs.manager.concept.standard', 'Standard')
+      return tv('cs.manager.concept.standard')
     case 'C':
-      return tv('cs.manager.concept.classification', 'Classification')
+      return tv('cs.manager.concept.classification')
     default:
-      return tv('cs.manager.concept.nonStandard', 'Non-standard')
+      return tv('cs.manager.concept.nonStandard')
   }
 })
 
@@ -79,7 +79,7 @@ async function onCopy() {
       icon="mdi-arrow-left"
       variant="text"
       size="sm"
-      v-bind="{ ariaLabel: tv('components.conceptDetail.goBack', 'Go back') }"
+      v-bind="{ ariaLabel: tv('components.conceptDetail.goBack') }"
       data-testid="concept-detail-back"
       @click="handleBack"
     />
@@ -117,7 +117,7 @@ async function onCopy() {
         data-testid="add-to-concept-set"
         @click="onAdd"
       >
-        {{ t('components.conceptDetail.addToConceptSet', 'Add to Concept Set').value }}
+        {{ t('components.conceptDetail.addToConceptSet').value }}
       </AtlasButton>
       <AtlasButton
         variant="secondary"
@@ -126,7 +126,7 @@ async function onCopy() {
         data-testid="copy-concept-id"
         @click="onCopy"
       >
-        {{ t('components.conceptDetail.copyId', 'Copy ID').value }}
+        {{ t('components.conceptDetail.copyId').value }}
       </AtlasButton>
     </div>
   </div>

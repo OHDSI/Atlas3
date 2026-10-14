@@ -2,7 +2,7 @@
   <div class="highlights-concept-list">
     <AtlasTextField
       v-model="search"
-      :label="tv('profiles.searchConceptsToHighlight', 'Search concepts to highlight')"
+      :label="tv('profiles.searchConceptsToHighlight')"
       hide-details
       clearable
     />
@@ -56,7 +56,7 @@
                   </template>
                 </AtlasTooltip>
                 <AtlasTooltip
-                  :text="tv('profiles.highlightNone', 'None')"
+                  :text="tv('profiles.highlightNone')"
                   location="top"
                 >
                   <template #activator="{ props: tipProps }">
@@ -65,7 +65,7 @@
                       type="button"
                       class="swatch swatch--none"
                       data-test="highlight-color-swatch-none"
-                      :aria-label="tv('profiles.highlightNone', 'None')"
+                      :aria-label="tv('profiles.highlightNone')"
                       @click="apply(c.conceptId, 'none')"
                     >
                       <AtlasIcon
@@ -102,12 +102,12 @@ const search = ref('')
 // Per-row inline picker — no batch selection state. Names line up
 // 1:1 with HIGHLIGHT_PALETTE in src/models/profile.types.ts.
 const PALETTE_LABELS = [
-  tv('components.highlightsConceptList.colorCoral', 'Coral'),
-  tv('components.highlightsConceptList.colorSky', 'Sky'),
-  tv('components.highlightsConceptList.colorMint', 'Mint'),
-  tv('components.highlightsConceptList.colorAmber', 'Amber'),
-  tv('components.highlightsConceptList.colorLavender', 'Lavender'),
-  tv('components.highlightsConceptList.colorRose', 'Rose'),
+  tv('components.highlightsConceptList.colorCoral'),
+  tv('components.highlightsConceptList.colorSky'),
+  tv('components.highlightsConceptList.colorMint'),
+  tv('components.highlightsConceptList.colorAmber'),
+  tv('components.highlightsConceptList.colorLavender'),
+  tv('components.highlightsConceptList.colorRose'),
 ] as const
 const paletteEntries = HIGHLIGHT_PALETTE.map((color, i) => ({
   color,
@@ -132,9 +132,9 @@ function dotStyle(conceptId: number): Record<string, string> {
 
 function dotAriaLabel(conceptId: number): string {
   const color = currentColor(conceptId)
-  if (!color) return tv('profiles.setHighlightColor', 'Set highlight color')
+  if (!color) return tv('profiles.setHighlightColor')
   const entry = paletteEntries.find(e => e.color === color)
-  return entry?.label ?? tv('profiles.setHighlightColor', 'Set highlight color')
+  return entry?.label ?? tv('profiles.setHighlightColor')
 }
 
 function apply(conceptId: number, color: HighlightColor) {

@@ -10,10 +10,7 @@
       />
       <span class="inclusion-rules-panel__empty-text">
         {{
-          t(
-            'components.cohortExpressionEditor.inclusionCriteriaTextShort',
-            'No inclusion rules — adding one narrows which patients qualify beyond the entry events.'
-          ).value
+          t('components.cohortExpressionEditor.inclusionCriteriaTextShort').value
         }}
       </span>
       <AtlasButton
@@ -24,7 +21,7 @@
         data-testid="inclusion-empty-add"
         @click="addNewRule"
       >
-        {{ t('inclusionRail.add', 'Add inclusion rule').value }}
+        {{ t('inclusionRail.add').value }}
       </AtlasButton>
     </div>
 
@@ -154,10 +151,10 @@ const emit = defineEmits<{
 
 const expressionLimitType = computed(() => props.expressionLimit?.Type ?? 'First')
 
-const limitIncludedEventsLabel = computed(() => t('inclusionPanel.limitIncludedEvents', 'Limit Included Events to').value)
-const earliestLabel = computed(() => t('options.earliest', 'Earliest').value)
-const allLabel = computed(() => t('options.all', 'All').value)
-const latestLabel = computed(() => t('options.latest', 'Latest').value)
+const limitIncludedEventsLabel = computed(() => t('inclusionPanel.limitIncludedEvents').value)
+const earliestLabel = computed(() => t('options.earliest').value)
+const allLabel = computed(() => t('options.all').value)
+const latestLabel = computed(() => t('options.latest').value)
 
 const selectedIndex = ref<number | null>(props.modelValue.length > 0 ? 0 : null)
 

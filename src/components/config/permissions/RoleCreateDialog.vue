@@ -4,8 +4,8 @@
     eyebrow="SETTINGS"
     :title="
       isEditMode
-        ? t('components.config.permissions.editRole', 'Edit Role').value
-        : t('components.config.permissions.createNewRole', 'Create New Role').value
+        ? t('components.config.permissions.editRole').value
+        : t('components.config.permissions.createNewRole').value
     "
     max-width="600"
     persistent
@@ -19,7 +19,7 @@
     >
       <AtlasTextField
         v-model="form.name"
-        :label="tv('components.config.permissions.roleNameRequiredLabel', 'Role Name *')"
+        :label="tv('components.config.permissions.roleNameRequiredLabel')"
         :rules="nameRules"
         :error="errors.name"
         variant="outlined"
@@ -30,7 +30,7 @@
 
       <AtlasTextField
         v-model="form.description"
-        :label="tv('common.description', 'Description')"
+        :label="tv('common.description')"
         :rows="3"
         multiline
         :error="errors.description"
@@ -55,7 +55,7 @@
         :disabled="saving"
         @click="handleClose"
       >
-        {{ t('common.cancel', 'Cancel').value }}
+        {{ t('common.cancel').value }}
       </AtlasButton>
       <AtlasButton
         :disabled="!formValid || saving"
@@ -64,8 +64,8 @@
       >
         {{
           isEditMode
-            ? t('common.save', 'Save').value
-            : t('common.create', 'Create').value
+            ? t('common.save').value
+            : t('common.create').value
         }}
       </AtlasButton>
     </template>
@@ -111,13 +111,13 @@ const isEditMode = computed(() => !!props.role?.id)
 
 // Validation rules (FR-007: non-empty, 1-255 chars)
 const nameRules = [
-  (v: string) => !!v || tv('components.config.permissions.roleNameRequired', 'Role name is required'),
+  (v: string) => !!v || tv('components.config.permissions.roleNameRequired'),
   (v: string) =>
     (v && v.trim().length > 0) ||
-    tv('components.config.permissions.roleNameEmpty', 'Role name cannot be empty'),
+    tv('components.config.permissions.roleNameEmpty'),
   (v: string) =>
     (v && v.length <= 255) ||
-    tv('components.config.permissions.roleNameTooLong', 'Role name must be less than 255 characters'),
+    tv('components.config.permissions.roleNameTooLong'),
   // FR-006: Check for duplicate names
   (v: string) => {
     if (!v) return true // Let required rule handle empty
@@ -129,7 +129,7 @@ const nameRules = [
 
     return (
       !isDuplicate ||
-      tv('components.config.permissions.roleNameExists', 'A role with this name already exists')
+      tv('components.config.permissions.roleNameExists')
     )
   },
 ]
@@ -213,14 +213,14 @@ async function handleSubmit() {
       emit('update:modelValue', false)
     } else {
       serverError.value = isEditMode.value
-        ? tv('components.config.permissions.updateRoleError', 'Failed to update role. Please try again.')
-        : tv('components.config.permissions.createRoleError', 'Failed to create role. Please try again.')
+        ? tv('components.config.permissions.updateRoleError')
+        : tv('components.config.permissions.createRoleError')
     }
   } catch (error) {
     const message =
       error instanceof Error
         ? error.message
-        : tv('components.config.permissions.unexpectedError', 'An unexpected error occurred')
+        : tv('components.config.permissions.unexpectedError')
     serverError.value = message
   } finally {
     saving.value = false

@@ -10,21 +10,13 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref } from 'vue'
 import CohortJsonDialog from '@/components/cohort/CohortJsonDialog.vue'
+import { tr } from '../../../helpers/i18n-mock'
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, fallback?: string) => ref(fallback || key),
-    tv: (key: string, fallback?: string, params?: Record<string, unknown>) => {
-      const template = fallback || key
-      if (!params) return template
-      return template.replace(/\{(\w+)\}/g, (match, name) =>
-        params[name] !== undefined ? String(params[name]) : match
-      )
-    },
-  }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 const vuetify = createVuetify({ components, directives })
 
@@ -125,7 +117,7 @@ describe('CohortJsonDialog', () => {
 
       const error = wrapper.find('[data-testid="cohort-json-error"]')
       expect(error.exists()).toBe(true)
-      expect(error.text()).toContain('Invalid JSON')
+      expect(error.text()).toContain(tr('components.cohortBuilder.jsonInvalid', { error: '' }).trim())
     })
 
     it('shows no error for valid JSON', () => {
@@ -165,11 +157,11 @@ describe('CohortJsonDialog', () => {
       const wrapper = mountComponent()
       await wrapper.find('[data-testid="cohort-json-copy"]').trigger('click')
       await vi.advanceTimersByTimeAsync(0)
-      expect(wrapper.find('[data-testid="cohort-json-copy"]').text()).toBe('Copied')
+      expect(wrapper.find('[data-testid="cohort-json-copy"]').text()).toBe(tr('components.cohortBuilder.jsonCopied'))
 
       await vi.advanceTimersByTimeAsync(2000)
       await wrapper.vm.$nextTick()
-      expect(wrapper.find('[data-testid="cohort-json-copy"]').text()).toBe('Copy')
+      expect(wrapper.find('[data-testid="cohort-json-copy"]').text()).toBe(tr('common.copy'))
 
       vi.useRealTimers()
     })
@@ -183,7 +175,7 @@ describe('CohortJsonDialog', () => {
 
       await vi.waitFor(() =>
         expect(wrapper.find('[data-testid="cohort-json-error"]').text()).toContain(
-          'Could not copy to clipboard'
+          tr('components.cohortBuilder.copyFailed')
         )
       )
     })

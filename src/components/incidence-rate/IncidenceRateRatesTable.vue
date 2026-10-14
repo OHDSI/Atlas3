@@ -5,18 +5,18 @@
   >
     <thead>
       <tr>
-        <th>{{ t('ir.results.stratifyRule', 'Stratum').value }}</th>
+        <th>{{ t('ir.results.stratifyRule').value }}</th>
         <th class="num">
-          {{ t('ir.results.persons', 'Persons').value }}
+          {{ t('ir.results.persons').value }}
         </th>
         <th class="num">
-          {{ t('ir.results.cases', 'Cases').value }}
+          {{ t('ir.results.cases').value }}
         </th>
         <th class="num">
-          {{ t('ir.results.timeAtRiskYears', 'Person-years').value }}
+          {{ t('ir.results.timeAtRiskYears').value }}
         </th>
         <th class="num">
-          {{ t('ir.results.rate', 'Rate').value }} / {{ multiplier.toLocaleString() }} PY
+          {{ t('ir.results.rate').value }} / {{ multiplier.toLocaleString() }} PY
         </th>
       </tr>
     </thead>
@@ -25,7 +25,7 @@
         data-testid="ir-rate-row"
         class="ir-rates__sum"
       >
-        <td><strong>{{ t('ir.results.summaryStatistics', 'Summary').value }}</strong></td>
+        <td><strong>{{ t('ir.results.summaryRow').value }}</strong></td>
         <td class="num">
           {{ format(report.summary.totalPersons) }}
         </td>

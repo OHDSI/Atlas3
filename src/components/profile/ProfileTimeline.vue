@@ -2,10 +2,10 @@
   <AtlasCard padding="md">
     <div class="section-header">
       <div class="section-header__title-row">
-        <span class="text-eyebrow">{{ t('components.profileTimeline.eyebrow', 'TIMELINE').value }}</span>
+        <span class="text-eyebrow">{{ t('components.profileTimeline.eyebrow').value }}</span>
         <span class="section-header__rule" />
         <h2 class="section-title">
-          {{ t('components.profileTimeline.title', 'Event timeline').value }}
+          {{ t('components.profileTimeline.title').value }}
         </h2>
       </div>
     </div>
@@ -20,7 +20,7 @@
           data-test="profile-daterange-chip"
           @close="store.setDateRange(null)"
         >
-          {{ t('components.profileTimeline.dayRange', 'Day {start} → {end}', { start: store.dateRange[0], end: store.dateRange[1] }).value }}
+          {{ t('components.profileTimeline.dayRange', { start: store.dateRange[0], end: store.dateRange[1] }).value }}
         </AtlasChip>
       </div>
       <div
@@ -86,7 +86,7 @@ const option = computed(() => {
     grid: { left: 120, right: 24, top: 16, bottom: 60 },
     xAxis: {
       type: 'value',
-      name: tv('components.profileTimeline.axisDay', 'Day (0 = cohort entry)'),
+      name: tv('components.profileTimeline.axisDay'),
       nameGap: 24,
       nameLocation: 'middle',
       min,
@@ -161,7 +161,7 @@ const option = computed(() => {
               // to the on-surface-variant token (7.05:1); light stays '#666'.
               lineStyle: { color: '#888', type: 'dashed', width: 1 },
               label: {
-                formatter: tv('components.profileTimeline.cohortEntry', 'Cohort entry'),
+                formatter: tv('components.profileTimeline.cohortEntry'),
                 position: 'insideEndTop',
                 color: themeStore.resolved === 'dark' ? tokens.colorDark.onSurfaceVariant : '#666',
               },

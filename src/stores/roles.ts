@@ -15,8 +15,10 @@ import * as userService from '@/services/user.service'
 import type { Role, RoleCreate, RoleUpdate, Permission, User } from '@/models/role.types'
 import { logger } from '@/utils/logger'
 import { useAuthStore } from '@/stores/auth'
+import { useI18n } from '@/composables/useI18n'
 
 export const useRolesStore = defineStore('roles', () => {
+  const { tv } = useI18n()
   // ============================================================================
   // State
   // ============================================================================
@@ -83,7 +85,10 @@ export const useRolesStore = defineStore('roles', () => {
         return false
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to fetch roles'
+      const message =
+        error instanceof Error
+          ? error.message
+          : tv('configuration.roles.errors.loadListFailed')
       rolesError.value = message
       logger.error('RolesStore', 'Failed to fetch roles', error)
       return false
@@ -112,7 +117,10 @@ export const useRolesStore = defineStore('roles', () => {
         return false
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to fetch role'
+      const message =
+        error instanceof Error
+          ? error.message
+          : tv('configuration.roles.errors.loadFailed')
       rolesError.value = message
       logger.error('RolesStore', `Failed to fetch role ${roleId}`, error)
       return false
@@ -144,7 +152,10 @@ export const useRolesStore = defineStore('roles', () => {
         return null
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to create role'
+      const message =
+        error instanceof Error
+          ? error.message
+          : tv('configuration.roles.errors.createFailed')
       rolesError.value = message
       logger.error('RolesStore', 'Failed to create role', error)
       return null
@@ -182,7 +193,10 @@ export const useRolesStore = defineStore('roles', () => {
         return false
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to update role'
+      const message =
+        error instanceof Error
+          ? error.message
+          : tv('configuration.roles.errors.updateFailed')
       rolesError.value = message
       logger.error('RolesStore', `Failed to update role ${roleId}`, error)
       return false
@@ -221,7 +235,10 @@ export const useRolesStore = defineStore('roles', () => {
         return false
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to delete role'
+      const message =
+        error instanceof Error
+          ? error.message
+          : tv('configuration.roles.errors.deleteFailed')
       rolesError.value = message
       logger.error('RolesStore', `Failed to delete role ${roleId}`, error)
       return false
@@ -254,7 +271,10 @@ export const useRolesStore = defineStore('roles', () => {
         return false
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to fetch permissions'
+      const message =
+        error instanceof Error
+          ? error.message
+          : tv('configuration.roles.errors.loadPermissionsFailed')
       permissionsError.value = message
       logger.error('RolesStore', 'Failed to fetch permissions', error)
       return false
@@ -283,7 +303,10 @@ export const useRolesStore = defineStore('roles', () => {
         return false
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to fetch role permissions'
+      const message =
+        error instanceof Error
+          ? error.message
+          : tv('configuration.roles.errors.loadRolePermissionsFailed')
       permissionsError.value = message
       logger.error('RolesStore', `Failed to fetch permissions for role ${roleId}`, error)
       return false
@@ -398,7 +421,10 @@ export const useRolesStore = defineStore('roles', () => {
         return false
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to fetch users'
+      const message =
+        error instanceof Error
+          ? error.message
+          : tv('configuration.roles.errors.loadUsersFailed')
       usersError.value = message
       logger.error('RolesStore', 'Failed to fetch users', error)
       return false
@@ -427,7 +453,10 @@ export const useRolesStore = defineStore('roles', () => {
         return false
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to fetch role users'
+      const message =
+        error instanceof Error
+          ? error.message
+          : tv('configuration.roles.errors.loadRoleUsersFailed')
       usersError.value = message
       logger.error('RolesStore', `Failed to fetch users for role ${roleId}`, error)
       return false

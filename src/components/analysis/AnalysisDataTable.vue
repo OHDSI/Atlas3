@@ -80,7 +80,7 @@
         <AtlasIconButton
           v-if="enableCopy"
           title="Clone"
-          v-bind="{ ariaLabel: t('common.copy', 'Copy').value }"
+          v-bind="{ ariaLabel: t('common.copy').value }"
           icon="mdi-content-copy"
           variant="text"
           size="sm"
@@ -88,8 +88,8 @@
           @click.stop="$emit('copy', item)"
         />
         <AtlasIconButton
-          :title="t('common.delete', 'Delete').value"
-          v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
+          :title="t('common.delete').value"
+          v-bind="{ ariaLabel: t('common.delete').value }"
           icon="mdi-delete"
           variant="text"
           tone="danger"
@@ -122,7 +122,7 @@
             mdi-database-off-outline
           </AtlasIcon>
           <div class="analysis-data-table__empty-title">
-            {{ emptyText ?? t('common.noData', 'No items yet.').value }}
+            {{ emptyText ?? t('components.analysisDataTable.empty').value }}
           </div>
           <slot name="empty-action" />
         </div>

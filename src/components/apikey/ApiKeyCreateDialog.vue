@@ -1,9 +1,9 @@
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    :eyebrow="t('apiKeys.create.eyebrow', 'NEW KEY').value"
-    :title="result ? t('apiKeys.create.resultTitle', 'API Key Created').value : t('apiKeys.create.title', 'New API Key').value"
-    :subtitle="result ? undefined : t('apiKeys.create.subtitle', 'Generate a personal API key for programmatic access.').value"
+    :eyebrow="t('apiKeys.create.eyebrow').value"
+    :title="result ? t('apiKeys.create.resultTitle').value : t('apiKeys.create.title').value"
+    :subtitle="result ? undefined : t('apiKeys.create.subtitle').value"
     max-width="520"
     :persistent="!!result"
     @update:model-value="onDialogUpdate"
@@ -20,8 +20,8 @@
 
       <AtlasTextField
         v-model="name"
-        :label="t('apiKeys.create.name', 'Name').value"
-        :placeholder="t('apiKeys.create.namePlaceholder', 'e.g. My laptop').value"
+        :label="t('apiKeys.create.name').value"
+        :placeholder="t('apiKeys.create.namePlaceholder').value"
         required
         :error="nameError"
         data-testid="apikey-create-name"
@@ -30,7 +30,7 @@
 
       <AtlasTextField
         v-model="description"
-        :label="t('apiKeys.create.description', 'Description').value"
+        :label="t('apiKeys.create.description').value"
         multiline
         :rows="2"
         data-testid="apikey-create-description"
@@ -39,7 +39,7 @@
 
       <AtlasSelect
         v-model="expirationPreset"
-        :label="t('apiKeys.create.expiration', 'Expiration').value"
+        :label="t('apiKeys.create.expiration').value"
         :items="expirationOptions"
         data-testid="apikey-create-expiration"
         class="apikey-create-dialog__field"
@@ -49,8 +49,8 @@
         v-if="expirationPreset === 'custom'"
         v-model="customDays"
         type="number"
-        :label="t('apiKeys.create.customDays', 'Number of days').value"
-        :placeholder="t('apiKeys.create.customDaysPlaceholder', 'Blank = never expires').value"
+        :label="t('apiKeys.create.customDays').value"
+        :placeholder="t('apiKeys.create.customDaysPlaceholder').value"
         data-testid="apikey-create-custom-days"
         class="apikey-create-dialog__field"
       />
@@ -62,12 +62,12 @@
         density="compact"
         class="apikey-create-dialog__alert"
       >
-        {{ t('apiKeys.create.resultWarning', "Copy this key now — you won't be able to see it again.").value }}
+        {{ t('apiKeys.create.resultWarning').value }}
       </AtlasAlert>
 
       <AtlasTextField
         :model-value="result.rawKey"
-        :label="t('apiKeys.create.rawKeyLabel', 'API Key').value"
+        :label="t('apiKeys.create.rawKeyLabel').value"
         readonly
         data-testid="apikey-create-rawkey"
         class="apikey-create-dialog__field"
@@ -77,7 +77,7 @@
             icon="mdi-content-copy"
             size="sm"
             variant="text"
-            :aria-label="t('apiKeys.create.copy', 'Copy').value"
+            :aria-label="t('common.copy').value"
             data-testid="apikey-create-copy"
             @click="copyRawKey"
           />
@@ -91,14 +91,14 @@
           variant="ghost"
           @click="close"
         >
-          {{ t('apiKeys.create.cancel', 'Cancel') }}
+          {{ t('common.cancel') }}
         </AtlasButton>
         <AtlasButton
           :loading="submitting"
           data-testid="apikey-create-generate"
           @click="handleGenerate"
         >
-          {{ t('apiKeys.create.generate', 'Generate') }}
+          {{ t('apiKeys.create.generate') }}
         </AtlasButton>
       </template>
       <AtlasButton
@@ -106,7 +106,7 @@
         data-testid="apikey-create-done"
         @click="handleDone"
       >
-        {{ t('apiKeys.create.done', 'Done') }}
+        {{ t('apiKeys.create.done') }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -149,11 +149,11 @@ const nameError = ref<string | undefined>(undefined)
 const result = ref<ApiKeyResult | null>(null)
 
 const expirationOptions = computed(() => [
-  { title: t('apiKeys.create.expirationNever', 'Never expires').value, value: 'never' },
-  { title: t('apiKeys.create.expirationDays', '{days} days', { days: '30' }).value, value: '30' },
-  { title: t('apiKeys.create.expirationDays', '{days} days', { days: '90' }).value, value: '90' },
-  { title: t('apiKeys.create.expirationDays', '{days} days', { days: '365' }).value, value: '365' },
-  { title: t('apiKeys.create.expirationCustom', 'Custom…').value, value: 'custom' },
+  { title: t('apiKeys.create.expirationNever').value, value: 'never' },
+  { title: t('apiKeys.create.expirationDays', { days: '30' }).value, value: '30' },
+  { title: t('apiKeys.create.expirationDays', { days: '90' }).value, value: '90' },
+  { title: t('apiKeys.create.expirationDays', { days: '365' }).value, value: '365' },
+  { title: t('apiKeys.create.expirationCustom').value, value: 'custom' },
 ])
 
 function resolveExpiresInDays(): number | null {
@@ -188,7 +188,7 @@ watch(
 async function handleGenerate() {
   const trimmedName = name.value.trim()
   if (!trimmedName) {
-    nameError.value = t('apiKeys.create.nameRequired', 'Name is required').value
+    nameError.value = t('commonErrors.nameRequired').value
     return
   }
   nameError.value = undefined
@@ -214,10 +214,10 @@ async function copyRawKey() {
   if (!result.value) return
   try {
     await navigator.clipboard.writeText(result.value.rawKey)
-    notify.success(t('apiKeys.create.copied', 'Copied to clipboard').value)
+    notify.success(t('apiKeys.create.copied').value)
   } catch (err) {
     logger.error('ApiKeyCreateDialog', 'Clipboard copy failed', err)
-    notify.danger(t('apiKeys.create.copyFailed', 'Could not copy to clipboard').value)
+    notify.danger(t('apiKeys.create.copyFailed').value)
   }
 }
 

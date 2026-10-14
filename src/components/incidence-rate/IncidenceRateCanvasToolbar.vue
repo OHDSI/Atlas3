@@ -17,7 +17,7 @@
       class="ir-toolbar__chip ir-toolbar__chip--muted"
       data-testid="ir-toolbar-run-chip"
     >
-      {{ t('ir.workbench.noRunsYet', 'No runs yet').value }}
+      {{ t('ir.workbench.noRunsYet').value }}
     </AtlasChip>
 
     <AtlasMenu offset="6">
@@ -28,7 +28,7 @@
           variant="outlined"
           data-testid="ir-toolbar-target-chip"
         >
-          <strong>{{ t('columns.target', 'Target').value }}:</strong>
+          <strong>{{ t('columns.target').value }}:</strong>
           <span class="muted">&nbsp;{{ targetLabel }}</span>
         </AtlasChip>
       </template>
@@ -53,7 +53,7 @@
           variant="outlined"
           data-testid="ir-toolbar-outcome-chip"
         >
-          <strong>{{ t('columns.outcome', 'Outcome').value }}:</strong>
+          <strong>{{ t('columns.outcome').value }}:</strong>
           <span class="muted">&nbsp;{{ outcomeLabel }}</span>
         </AtlasChip>
       </template>
@@ -111,7 +111,7 @@
         size="sm"
         data-testid="ir-toolbar-mode-treemap"
       >
-        {{ t('ir.workbench.treemap', 'Treemap').value }}
+        {{ t('ir.workbench.treemap').value }}
       </AtlasButton>
       <AtlasButton
         toggle
@@ -119,7 +119,7 @@
         size="sm"
         data-testid="ir-toolbar-mode-table"
       >
-        {{ t('ir.workbench.table', 'Table').value }}
+        {{ t('ir.workbench.table').value }}
       </AtlasButton>
     </v-btn-toggle>
 
@@ -133,7 +133,7 @@
           :disabled="!hasResults"
           data-testid="ir-toolbar-export"
         >
-          {{ t('cc.viewEdit.results.exportAll', 'Export').value }}
+          {{ t('cc.viewEdit.results.exportAll').value }}
         </AtlasButton>
       </template>
       <AtlasList density="compact">

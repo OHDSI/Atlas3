@@ -1,12 +1,12 @@
 <template>
   <div class="pathway-tables">
     <section>
-      <h3>{{ t('pathway.results.allPathways', 'All Pathways') }}</h3>
+      <h3>{{ t('pathway.results.allPathways') }}</h3>
       <button
         class="export-btn"
         @click="exportCsv(allRows, 'all')"
       >
-        {{ t('common.export', 'Export CSV') }}
+        {{ t('common.exportCsv') }}
       </button>
       <table>
         <thead>
@@ -36,12 +36,12 @@
     </section>
 
     <section>
-      <h3>{{ t('pathway.results.countsByRank', 'Counts by Rank') }}</h3>
+      <h3>{{ t('pathway.results.countsByRank') }}</h3>
       <button
         class="export-btn"
         @click="exportCsv(rankRows, 'rank')"
       >
-        {{ t('common.export', 'Export CSV') }}
+        {{ t('common.exportCsv') }}
       </button>
       <table>
         <thead>
@@ -71,12 +71,12 @@
     </section>
 
     <section>
-      <h3>{{ t('pathway.results.eventCohortCounts', 'Event Cohort Counts') }}</h3>
+      <h3>{{ t('pathway.results.eventCohortCounts') }}</h3>
       <button
         class="export-btn"
         @click="exportCsv(cohortCountRows, 'cohort-counts')"
       >
-        {{ t('common.export', 'Export CSV') }}
+        {{ t('common.exportCsv') }}
       </button>
       <table>
         <thead>
@@ -106,12 +106,12 @@
     </section>
 
     <section>
-      <h3>{{ t('columns.distinctEventCohorts', 'Distinct Event Cohort Counts') }}</h3>
+      <h3>{{ t('pathway.results.distinctEventCohortCounts') }}</h3>
       <button
         class="export-btn"
         @click="exportCsv(distinctRows, 'distinct')"
       >
-        {{ t('common.export', 'Export CSV') }}
+        {{ t('common.exportCsv') }}
       </button>
       <table>
         <thead>

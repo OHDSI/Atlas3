@@ -1,109 +1,40 @@
 #!/usr/bin/env node
 /**
- * Fails when a t()/tv() key used in src/ has no entry in en.json. Such keys
- * silently render their inline English fallback and are untranslatable,
- * because i18n-sync only ever diffs locale files against en.json.
+ * Keeps en.json the single source of English. Fails when
+ *   - a t()/tv() key used in src/ has no entry in en.json (it would render
+ *     its inline fallback and be untranslatable — i18n-sync only diffs
+ *     locale files against en.json),
+ *   - a call still carries an inline English fallback for a key en.json has
+ *     (dead text that drifts from the real copy),
+ *   - en.json breaks a naming/placeholder rule (see lintEnglish).
  *
- *   node scripts/i18n-check.mjs             report and exit non-zero on a gap
- *   node scripts/i18n-check.mjs --backfill  lift inline fallbacks into en.json
+ *   node scripts/i18n-check.mjs             report and exit non-zero on any problem
+ *   node scripts/i18n-check.mjs --backfill  lift inline fallbacks of new keys into
+ *                                           en.json, then strip them from src/
+ *   node scripts/i18n-check.mjs --fix       strip redundant inline fallbacks from src/
  */
 import { readFile, writeFile } from 'node:fs/promises'
 import { readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join, relative } from 'node:path'
-import { getByPath, setByPath } from './i18n-lib.mjs'
+import { setByPath } from './i18n-lib.mjs'
+import {
+  extractKeys,
+  extractConfigKeys,
+  findMissing,
+  findParentCollision,
+  findBatchCollision,
+  findFallbackConflicts,
+  lintEnglish,
+  findRedundantFallbacks,
+  stripFallbacks,
+  unescapeLiteral,
+} from './i18n-check.core.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const SRC = join(ROOT, 'src')
 const EN_PATH = join(ROOT, 'src', 'locales', 'en.json')
-
-const KEY_RE = /\b(?:t|tv)\(\s*'([A-Za-z0-9_.-]+)'(?:\s*,\s*'((?:[^'\\]|\\.)*)')?/g
-
-export function extractKeys(source) {
-  const out = []
-  KEY_RE.lastIndex = 0
-  let match
-  while ((match = KEY_RE.exec(source))) {
-    const [, key, fallback] = match
-    if (!key.includes('.')) continue
-    out.push({ key, fallback: fallback === undefined ? null : fallback })
-  }
-  return out
-}
-
-export function findMissing(en, usages) {
-  const seen = new Set()
-  const missing = []
-  for (const usage of usages) {
-    if (seen.has(usage.key)) continue
-    if (typeof getByPath(en, usage.key) === 'string') continue
-    seen.add(usage.key)
-    missing.push(usage)
-  }
-  return missing
-}
-
-/**
- * setByPath replaces a non-object parent with {}, so backfilling
- * `common.save.now` would destroy the existing `common.save` string in every
- * locale. Such keys are a source bug, not something to write into en.json.
- */
-export function findParentCollision(en, key) {
-  const parts = key.split('.')
-  for (let i = 1; i < parts.length; i++) {
-    const parent = parts.slice(0, i).join('.')
-    if (typeof getByPath(en, parent) === 'string') return parent
-  }
-  return null
-}
-
-/**
- * findParentCollision only sees strings already in en.json. A batch can
- * still contain two NEW keys where one is a dot-boundary prefix of the
- * other (new `foo.bar` and new `foo.bar.baz`) — neither is a string in the
- * pre-mutation file, so that guard misses it, and setByPath silently
- * destroys whichever of the pair gets written first. Check the batch
- * against itself too.
- */
-export function findBatchCollision(keys, key) {
-  for (const other of keys) {
-    if (other !== key && key.startsWith(`${other}.`)) return other
-  }
-  return null
-}
-
-/**
- * When a key is called with two different literal fallbacks, findMissing's
- * first-wins dedup means whichever call site the file walk visits first
- * decides what actually gets backfilled — every other call site's fallback
- * silently becomes dead text, and its rendered output changes without any
- * source diff at that call site. Catch it before it reaches en.json.
- *
- * Only meaningful for keys findMissing would otherwise hand to --backfill:
- * once a key is a string in en.json, the translation lookup wins outright
- * and inline fallbacks are never consulted, so a mismatch there is inert.
- * Call this with the `missing` list, not every usage in the codebase.
- */
-export function findFallbackConflicts(usages) {
-  const byKey = new Map()
-  for (const { key, fallback, file } of usages) {
-    if (fallback === null) continue
-    if (!byKey.has(key)) byKey.set(key, new Map())
-    const fallbacks = byKey.get(key)
-    if (!fallbacks.has(fallback)) fallbacks.set(fallback, [])
-    fallbacks.get(fallback).push(file)
-  }
-
-  const conflicts = []
-  for (const [key, fallbacks] of byKey) {
-    if (fallbacks.size < 2) continue
-    conflicts.push({
-      key,
-      fallbacks: [...fallbacks.entries()].map(([fallback, files]) => ({ fallback, files })),
-    })
-  }
-  return conflicts
-}
+const CONFIG_DIR = join(ROOT, 'src', 'config')
 
 function sourceFiles(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -114,8 +45,49 @@ function sourceFiles(dir, out = []) {
   return out
 }
 
+/**
+ * Inline fallbacks on keys en.json has. With `strip`, removes the ones that
+ * repeat en.json; ones whose wording differs are always reported — give the
+ * call site its own key, or update en.json — and never stripped.
+ * @returns {{ redundant: number, divergent: number }} counts left in src/
+ */
+async function handleInlineFallbacks(en, strip) {
+  let redundant = 0
+  let divergent = 0
+  let stripped = 0
+  for (const file of sourceFiles(SRC)) {
+    const source = await readFile(file, 'utf8')
+    const found = findRedundantFallbacks(source, en)
+    if (found.length === 0) continue
+    const where = line => `${relative(ROOT, file)}:${line}`
+    for (const f of found.filter(f => f.divergent)) {
+      divergent++
+      console.error(
+        `[i18n-check] fallback differs from en.json: ${f.key}  (${where(f.line)})\n    inline:  ${JSON.stringify(f.fallback)}\n    en.json: ${JSON.stringify(f.english)}`
+      )
+    }
+    const same = found.filter(f => !f.divergent)
+    if (strip && same.length) {
+      await writeFile(file, stripFallbacks(source, en), 'utf8')
+      stripped += same.length
+    } else {
+      redundant += same.length
+      for (const f of same) console.error(`[i18n-check] redundant inline fallback: ${f.key}  (${where(f.line)})`)
+    }
+  }
+  if (stripped) console.log(`[i18n-check] stripped ${stripped} inline fallbacks`)
+  if (redundant) console.error(`[i18n-check] ${redundant} inline fallbacks duplicate en.json — run: npm run i18n:check -- --fix`)
+  if (divergent) {
+    console.error(
+      `[i18n-check] ${divergent} inline fallbacks differ from en.json — give the call site its own key or update en.json`
+    )
+  }
+  return { redundant, divergent }
+}
+
 async function main() {
   const backfill = process.argv.includes('--backfill')
+  const fix = process.argv.includes('--fix')
   const en = JSON.parse(await readFile(EN_PATH, 'utf8'))
 
   const usages = []
@@ -125,12 +97,27 @@ async function main() {
       usages.push({ ...usage, file: relative(ROOT, file) })
     }
   }
-
-  const missing = findMissing(en, usages)
-  if (missing.length === 0) {
-    console.log(`[i18n-check] ok — ${usages.length} call sites, no missing keys`)
-    return
+  for (const entry of readdirSync(CONFIG_DIR).filter(f => f.endsWith('.json'))) {
+    const file = join(CONFIG_DIR, entry)
+    for (const usage of extractConfigKeys(await readFile(file, 'utf8'))) {
+      usages.push({ ...usage, file: relative(ROOT, file) })
+    }
   }
+
+  const lintErrors = lintEnglish(en)
+  for (const error of lintErrors) console.error(`[i18n-check] en.json: ${error}`)
+  if (lintErrors.length > 0) process.exit(1)
+
+  const unresolved = await reportMissing(en, usages, backfill)
+  const { redundant, divergent } = await handleInlineFallbacks(en, backfill || fix)
+  if (unresolved > 0 || redundant > 0 || divergent > 0) process.exit(1)
+  if (unresolved === 0) console.log(`[i18n-check] ok — ${usages.length} call sites, no missing keys`)
+}
+
+/** Missing-key check (and --backfill). Returns the number of unresolved keys. */
+async function reportMissing(en, usages, backfill) {
+  const missing = findMissing(en, usages)
+  if (missing.length === 0) return 0
 
   // findMissing already dedupes to one entry per key — check every usage of
   // each missing key, not just the first one it kept.
@@ -177,7 +164,7 @@ async function main() {
       process.exit(1)
     }
     for (const { key, fallback } of withFallback) {
-      setByPath(en, key, fallback)
+      setByPath(en, key, unescapeLiteral(fallback))
     }
     await writeFile(EN_PATH, `${JSON.stringify(en, null, 2)}\n`, 'utf8')
     console.log(`[i18n-check] backfilled ${withFallback.length} keys into en.json`)
@@ -193,8 +180,7 @@ async function main() {
     }
   }
 
-  const unresolved = backfill ? withoutFallback.length : missing.length
-  if (unresolved > 0) process.exit(1)
+  return backfill ? withoutFallback.length : missing.length
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

@@ -68,6 +68,8 @@ import { generatePluginRoutes } from '@/plugins/navigation/PluginRoutes.ts'
 import { logger } from '@/utils/logger'
 import { authService } from '@/services/auth/authService'
 
+vi.mock('@/composables/useI18n', async () => (await import('../../helpers/i18n-mock')).mockUseI18n)
+
 describe('Vue Router', () => {
   let router: Router
   let mockAuthStore: any

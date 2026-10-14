@@ -18,6 +18,7 @@ import {
 } from '@/services/trexsql.service'
 
 // Mock logger
+vi.mock('@/composables/useI18n', async () => (await import('../../helpers/i18n-mock')).mockUseI18n)
 vi.mock('@/utils/logger', () => ({
   logger: {
     debug: vi.fn(),

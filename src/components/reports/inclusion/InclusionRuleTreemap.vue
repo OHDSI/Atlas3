@@ -29,7 +29,7 @@
     class="text-center py-6 text-grey-darken-1"
     data-testid="inclusion-treemap-empty"
   >
-    {{ t('components.inclusionRuleReport.noBreakdown', 'No population breakdown available.').value }}
+    {{ t('components.inclusionRuleReport.noBreakdown').value }}
   </div>
 </template>
 
@@ -78,11 +78,11 @@ function failuresFromName(name: string, ruleCount: number): number {
 // theme's blue ramp: darkest when every rule passed, lighter as failures add up.
 type Band = { key: string; step: number; label: () => string }
 const BANDS: Record<string, Band> = {
-  all: { key: 'all', step: 4, label: () => tv('components.inclusionRuleReport.bandAllPassed', 'All rules passed') },
-  one: { key: 'one', step: 3, label: () => tv('components.inclusionRuleReport.bandOneFailed', '1 rule failed') },
-  two: { key: 'two', step: 2, label: () => tv('components.inclusionRuleReport.bandTwoFailed', '2 rules failed') },
-  few: { key: 'few', step: 1, label: () => tv('components.inclusionRuleReport.bandFewFailed', '3–4 rules failed') },
-  many: { key: 'many', step: 0, label: () => tv('components.inclusionRuleReport.bandManyFailed', '5 or more / all rules failed') },
+  all: { key: 'all', step: 4, label: () => tv('components.inclusionRuleReport.bandAllPassed') },
+  one: { key: 'one', step: 3, label: () => tv('components.inclusionRuleReport.bandOneFailed') },
+  two: { key: 'two', step: 2, label: () => tv('components.inclusionRuleReport.bandTwoFailed') },
+  few: { key: 'few', step: 1, label: () => tv('components.inclusionRuleReport.bandFewFailed') },
+  many: { key: 'many', step: 0, label: () => tv('components.inclusionRuleReport.bandManyFailed') },
 }
 function bandColor(band: Band): string {
   return prevalenceRamp()[band.step]!
@@ -143,7 +143,7 @@ function buildTooltip(info: { name: string; value: number; data?: { _bitString?:
         : `<span style="opacity:0.6">✗ ${name}</span>`
     })
     .join('<br/>')
-  const counts = tv('components.inclusionRuleReport.leafCounts', '{passed} passed, {failed} failed', {
+  const counts = tv('components.inclusionRuleReport.leafCounts', {
     passed: props.ruleCount - failed,
     failed,
   })
@@ -198,12 +198,12 @@ function collectLeaves(node: InclusionTreemapNode, out: string[]): string[] {
 // Only the bands that actually occur in this breakdown.
 const legend = computed(() => {
   if (props.ruleCount === 0) {
-    return [{ color: bandColor(BANDS.all!), label: t('components.expressionCartoonBindings.noInclusionRules', 'No inclusion rules').value }]
+    return [{ color: bandColor(BANDS.all!), label: t('components.expressionCartoonBindings.noInclusionRules').value }]
   }
   const present = new Set(props.treemap ? collectLeaves(props.treemap, []).map(b => bandFor(b).key) : [])
   const items = BAND_ORDER.filter(k => present.has(k)).map(k => ({ color: bandColor(BANDS[k]!), label: BANDS[k]!.label() }))
   if (props.selection) {
-    items.push({ color: notSelectedColor(), label: t('components.inclusionRuleReport.notInSelection', 'Not in selection').value })
+    items.push({ color: notSelectedColor(), label: t('components.inclusionRuleReport.notInSelection').value })
   }
   return items
 })

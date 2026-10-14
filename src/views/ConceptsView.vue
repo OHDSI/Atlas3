@@ -2,7 +2,7 @@
   <AtlasPageShell
     hero
     compact
-    :eyebrow="`OHDSI · ${t('facets.caption.vocabulary', 'Vocabulary').value}`"
+    :eyebrow="`OHDSI · ${t('facets.caption.vocabulary').value}`"
     :title="pageTitle"
     :subtitle="pageSubtitle"
   >
@@ -23,14 +23,14 @@
                 start
                 icon="mdi-shape"
               />
-              {{ t('cs.browser.caption', 'Concept Sets') }}
+              {{ t('cs.browser.caption') }}
             </AtlasTab>
             <AtlasTab value="search">
               <AtlasIcon
                 start
                 icon="mdi-magnify"
               />
-              {{ t('search.tabs.search', 'Concept Search') }}
+              {{ t('search.tabs.search') }}
             </AtlasTab>
           </AtlasTabs>
         </nav>
@@ -86,10 +86,10 @@ const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
 const { t } = useI18n()
 
-const pageTitle = computed(() => t('cs.browser.caption', 'Concepts').value)
+const pageTitle = computed(() => t('cs.browser.pageTitle').value)
 const pageSubtitle = computed(
   () =>
-    t('cs.browser.subtitle', 'Browse the OMOP vocabulary and curate reusable concept sets.').value
+    t('cs.browser.subtitle').value
 )
 
 // Active tab state - sync with URL query. Default to "sets" (concept sets list).

@@ -179,3 +179,19 @@ export const mockUseI18n = {
 export const mockUseI18nKeyOnly = {
   useI18n: () => createI18nKeyOnlyMock()
 }
+
+/**
+ * Resolve a key against en.json for use in assertions, so tests check the
+ * translated text without hard-coding English:
+ *
+ *   expect(wrapper.text()).toContain(tr('common.save'))
+ *   expect(label).toBe(tr('cs.browser.compare.vennDiagramTotalAmountConcepts', { count: 3 }))
+ *
+ * Throws on an unknown key so a renamed or pruned key fails loudly instead of
+ * the assertion silently comparing against the raw key.
+ */
+export function tr(key: string, params?: TranslationParams): string {
+  const value = getNestedTranslation(key)
+  if (value === key) throw new Error(`tr(): "${key}" is not a string in en.json`)
+  return params ? interpolate(value, params) : value
+}

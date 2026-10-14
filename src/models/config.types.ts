@@ -9,6 +9,7 @@
  */
 
 import { z } from 'zod'
+import { useI18n } from '@/composables/useI18n'
 
 /**
  * Attribute type enum - defines the UI component type for each attribute
@@ -324,19 +325,20 @@ export interface ConfigPanelState {
 /**
  * Zod schema for Tag/TagGroup validation (Atlas format)
  */
+// Messages are i18n keys; the tag forms translate them when showing the error.
 export const tagSchema = z.object({
   id: z.number().optional(),
-  name: z.string().min(1, 'Name is required').max(255, 'Name must be less than 255 characters'),
+  name: z.string().min(1, 'commonErrors.nameRequired').max(255, 'config.tags.validation.nameTooLong'),
   color: z
     .string()
-    .regex(/^(#[0-9A-F]{6})?$/i, 'Invalid color format (must be hex: #RRGGBB)')
+    .regex(/^(#[0-9A-F]{6})?$/i, 'config.tags.validation.invalidColor')
     .optional(),
-  icon: z.string().max(50, 'Icon name too long').optional(),
+  icon: z.string().max(50, 'config.tags.validation.iconTooLong').optional(),
   mandatory: z.boolean().optional(),
   showGroup: z.boolean().optional(),
   multiSelection: z.boolean().optional(),
   allowCustom: z.boolean().optional(),
-  description: z.string().max(1000, 'Description too long').optional(),
+  description: z.string().max(1000, 'config.tags.validation.descriptionTooLong').optional(),
   createdDate: z.union([z.string(), z.number()]).optional(),
   modifiedDate: z.union([z.string(), z.number()]).optional(),
   createdBy: z.object({ login: z.string() }).passthrough().optional(),
@@ -381,20 +383,29 @@ export type VocabularySchemaInput = z.infer<typeof vocabularySchemaSchema>
  * @returns True if valid, error message if invalid
  */
 export function validateSchemaName(schema: string): true | string {
+  const { tv } = useI18n()
+
   if (!schema || schema.length === 0) {
-    return 'Schema name is required'
+    return tv('components.config.vocabulary.schemaRequired')
   }
 
   if (schema.length > 63) {
-    return 'Schema name too long (max 63 characters)'
+    return tv(
+      'components.config.vocabulary.schemaTooLong',
+      { max: 63 }
+    )
   }
 
   if (!/^[a-zA-Z_]/.test(schema)) {
-    return 'Schema must start with a letter or underscore'
+    return tv(
+      'components.config.vocabulary.schemaInvalidStart'
+    )
   }
 
   if (!/^[a-zA-Z0-9_]+$/.test(schema)) {
-    return 'Schema can only contain letters, numbers, and underscores'
+    return tv(
+      'components.config.vocabulary.schemaInvalidChars'
+    )
   }
 
   return true

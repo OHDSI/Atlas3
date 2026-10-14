@@ -6,16 +6,14 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref } from 'vue'
 import CohortBreadcrumb from '@/components/cohort/CohortBreadcrumb.vue'
+import { tr } from '../../../helpers/i18n-mock'
 
 // Mock dependencies
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, fallback?: string) => ref(fallback || key),
-    tv: (key: string, fallback?: string) => fallback || key
-  })
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 const vuetify = createVuetify({ components, directives })
 
@@ -180,7 +178,7 @@ describe('CohortBreadcrumb', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const saveBtn = buttons.find(btn => btn.text().includes('Save'))
+      const saveBtn = buttons.find(btn => btn.text().includes(tr('common.save')))
       await saveBtn?.trigger('click')
 
       expect(wrapper.emitted('update:modelValue')).toBeTruthy()
@@ -199,7 +197,7 @@ describe('CohortBreadcrumb', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const saveBtn = buttons.find(btn => btn.text().includes('Save'))
+      const saveBtn = buttons.find(btn => btn.text().includes(tr('common.save')))
       await saveBtn?.trigger('click')
 
       expect(wrapper.emitted('update:modelValue')![0]).toEqual(['New Name'])
@@ -217,7 +215,7 @@ describe('CohortBreadcrumb', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const saveBtn = buttons.find(btn => btn.text().includes('Save'))
+      const saveBtn = buttons.find(btn => btn.text().includes(tr('common.save')))
       await saveBtn?.trigger('click')
 
       expect(wrapper.emitted('update:modelValue')).toBeFalsy()
@@ -235,7 +233,7 @@ describe('CohortBreadcrumb', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const saveBtn = buttons.find(btn => btn.text().includes('Save'))
+      const saveBtn = buttons.find(btn => btn.text().includes(tr('common.save')))
       await saveBtn?.trigger('click')
       await wrapper.vm.$nextTick()
 
@@ -251,7 +249,7 @@ describe('CohortBreadcrumb', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const cancelBtn = buttons.find(btn => btn.text().includes('Cancel'))
+      const cancelBtn = buttons.find(btn => btn.text().includes(tr('common.cancel')))
       await cancelBtn?.trigger('click')
       await wrapper.vm.$nextTick()
 

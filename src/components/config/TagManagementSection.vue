@@ -2,22 +2,19 @@
   <div class="tag-management-section">
     <v-card>
       <v-card-title class="d-flex align-center justify-space-between">
-        <span>{{ t('config.tags.title', 'Tag Management').value }}</span>
+        <span>{{ t('config.tags.title').value }}</span>
         <AtlasButton
           icon="mdi-plus"
           @click="openCreateGroupDialog"
         >
-          {{ t('config.tags.createButton', 'Create Tag Group').value }}
+          {{ t('config.tags.createButton').value }}
         </AtlasButton>
       </v-card-title>
 
       <v-card-text>
         <p class="text-body-1 mb-4">
           {{
-            t(
-              'components.config.tags.sectionHelp',
-              'Manage tag groups for organizing and categorizing cohorts and concept sets. Tag groups allow you to apply structured metadata to your assets.'
-            ).value
+            t('components.config.tags.sectionHelp').value
           }}
         </p>
 
@@ -39,7 +36,7 @@
             <div>
               <h3 class="text-h6">
                 {{
-                  t('components.config.tags.tagsInGroupTitle', 'Tags in "{name}"', {
+                  t('components.config.tags.tagsInGroupTitle', {
                     name: selectedGroup.name,
                   }).value
                 }}
@@ -50,13 +47,13 @@
                 icon="mdi-arrow-left"
                 @click="selectedGroup = null"
               >
-                {{ t('components.config.tags.backToGroups', 'Back to Tag Groups').value }}
+                {{ t('components.config.tags.backToGroups').value }}
               </AtlasButton>
             </div>
             <AtlasTooltip
               :disabled="selectedGroup.allowCustom"
               location="bottom"
-              :text="tv('components.config.tags.enableFreeFormTooltip', `Enable 'Free-form' on this tag group to allow custom tags.`)"
+              :text="tv('components.config.tags.enableFreeFormTooltip')"
             >
               <template #activator="{ props: tooltipProps }">
                 <span v-bind="tooltipProps">
@@ -66,7 +63,7 @@
                     :disabled="!selectedGroup.allowCustom"
                     @click="openCreateTagDialog"
                   >
-                    {{ t('configuration.tagManagement.createTag', 'Create Tag').value }}
+                    {{ t('configuration.tagManagement.createTag').value }}
                   </AtlasButton>
                 </span>
               </template>
@@ -80,13 +77,10 @@
             class="mb-3"
           >
             {{
-              t(
-                'components.config.tags.noCustomTagsPrefix',
-                'This tag group does not allow custom tags. Edit the group and enable'
-              ).value
+              t('components.config.tags.noCustomTagsPrefix').value
             }}
-            <strong>{{ t('config.tags.table.headers.freeForm', 'Free-form').value }}</strong>
-            {{ t('components.config.tags.noCustomTagsSuffix', 'to add tags here.').value }}
+            <strong>{{ t('config.tags.table.headers.freeForm').value }}</strong>
+            {{ t('components.config.tags.noCustomTagsSuffix').value }}
           </AtlasAlert>
 
           <TagTable
@@ -119,12 +113,12 @@
     <AtlasDialog
       v-model="showDeleteGroupDialog"
       eyebrow="TAGS"
-      :title="t('config.tags.delete.confirmTitle', 'Delete Tag Group').value"
+      :title="t('config.tags.delete.confirmTitle').value"
       max-width="400"
       @close="showDeleteGroupDialog = false"
     >
       {{
-        t('components.config.tags.deleteGroupConfirm', 'Are you sure you want to delete "{name}"?', {
+        t('components.config.tags.deleteGroupConfirm', {
           name: selectedTagGroup?.name ?? '',
         }).value
       }}
@@ -140,14 +134,14 @@
           variant="ghost"
           @click="showDeleteGroupDialog = false"
         >
-          {{ t('common.cancel', 'Cancel').value }}
+          {{ t('common.cancel').value }}
         </AtlasButton>
         <AtlasButton
           variant="danger"
           :loading="isDeleting"
           @click="handleDeleteGroup"
         >
-          {{ t('common.delete', 'Delete').value }}
+          {{ t('common.delete').value }}
         </AtlasButton>
       </template>
     </AtlasDialog>
@@ -156,30 +150,26 @@
     <AtlasDialog
       v-model="showDeleteTagDialog"
       eyebrow="TAGS"
-      :title="t('components.config.tags.deleteTagTitle', 'Delete Tag').value"
+      :title="t('components.config.tags.deleteTagTitle').value"
       max-width="400"
       @close="showDeleteTagDialog = false"
     >
       {{
-        t(
-          'components.config.tags.deleteTagConfirm',
-          'Are you sure you want to delete "{name}"? This will unassign the tag from all assets.',
-          { name: selectedTag?.name ?? '' }
-        ).value
+        t('components.config.tags.deleteTagConfirm', { name: selectedTag?.name ?? '' }).value
       }}
       <template #actions>
         <AtlasButton
           variant="ghost"
           @click="showDeleteTagDialog = false"
         >
-          {{ t('common.cancel', 'Cancel').value }}
+          {{ t('common.cancel').value }}
         </AtlasButton>
         <AtlasButton
           variant="danger"
           :loading="isDeleting"
           @click="handleDeleteTag"
         >
-          {{ t('common.delete', 'Delete').value }}
+          {{ t('common.delete').value }}
         </AtlasButton>
       </template>
     </AtlasDialog>
@@ -247,7 +237,7 @@ onMounted(async () => {
     errorMessage.value =
       error instanceof Error
         ? error.message
-        : tv('components.config.tags.loadGroupsError', 'Failed to load tag groups')
+        : tv('components.config.tags.loadGroupsError')
     showErrorToast.value = true
   }
 })
@@ -293,19 +283,11 @@ async function handleSaveGroup(tagGroup: TagGroup) {
     if (tagGroup.id) {
       // Update existing
       await configStore.updateTagGroup(tagGroup)
-      toastMessage.value = tv(
-        'components.config.tags.groupUpdated',
-        'Tag group "{name}" updated',
-        { name: tagGroup.name }
-      )
+      toastMessage.value = tv('components.config.tags.groupUpdated', { name: tagGroup.name })
     } else {
       // Create new
       await configStore.createTagGroup(tagGroup)
-      toastMessage.value = tv(
-        'components.config.tags.groupCreated',
-        'Tag group "{name}" created',
-        { name: tagGroup.name }
-      )
+      toastMessage.value = tv('components.config.tags.groupCreated', { name: tagGroup.name })
     }
 
     showGroupDialog.value = false
@@ -314,7 +296,7 @@ async function handleSaveGroup(tagGroup: TagGroup) {
     errorMessage.value =
       error instanceof Error
         ? error.message
-        : tv('components.config.tags.saveGroupError', 'Failed to save tag group')
+        : tv('components.config.tags.saveGroupError')
     showErrorToast.value = true
   }
 }
@@ -332,27 +314,20 @@ async function handleDeleteGroup() {
     // Check if group has tags
     const tags = configStore.getTagsForGroup(selectedTagGroup.value.id)
     if (tags.length > 0) {
-      deleteError.value = tv(
-        'components.config.tags.groupNotEmpty',
-        'Cannot delete tag group: the group contains tags'
-      )
+      deleteError.value = tv('components.config.tags.groupNotEmpty')
       return
     }
 
     await configStore.deleteTagGroup(selectedTagGroup.value.id)
 
     showDeleteGroupDialog.value = false
-    toastMessage.value = tv(
-      'components.config.tags.groupDeleted',
-      'Tag group "{name}" deleted',
-      { name: selectedTagGroup.value.name }
-    )
+    toastMessage.value = tv('components.config.tags.groupDeleted', { name: selectedTagGroup.value.name })
     showToast.value = true
   } catch (error: unknown) {
     deleteError.value =
       error instanceof Error
         ? error.message
-        : tv('config.tags.delete.error', 'Failed to delete tag group')
+        : tv('config.tags.delete.error')
   } finally {
     isDeleting.value = false
   }
@@ -391,13 +366,13 @@ async function handleSaveTag(tag: Tag) {
     if (tag.id) {
       // Update existing
       await configStore.updateTag(tag)
-      toastMessage.value = tv('components.config.tags.tagUpdated', 'Tag "{name}" updated', {
+      toastMessage.value = tv('components.config.tags.tagUpdated', {
         name: tag.name,
       })
     } else {
       // Create new
       await configStore.createTag(tag)
-      toastMessage.value = tv('components.config.tags.tagCreated', 'Tag "{name}" created', {
+      toastMessage.value = tv('components.config.tags.tagCreated', {
         name: tag.name,
       })
     }
@@ -408,7 +383,7 @@ async function handleSaveTag(tag: Tag) {
     errorMessage.value =
       error instanceof Error
         ? error.message
-        : tv('components.config.tags.saveTagError', 'Failed to save tag')
+        : tv('components.config.tags.saveTagError')
     showErrorToast.value = true
   }
 }
@@ -425,7 +400,7 @@ async function handleDeleteTag() {
     await configStore.deleteTag(selectedTag.value.id)
 
     showDeleteTagDialog.value = false
-    toastMessage.value = tv('components.config.tags.tagDeleted', 'Tag "{name}" deleted', {
+    toastMessage.value = tv('components.config.tags.tagDeleted', {
       name: selectedTag.value.name,
     })
     showToast.value = true
@@ -433,7 +408,7 @@ async function handleDeleteTag() {
     errorMessage.value =
       error instanceof Error
         ? error.message
-        : tv('components.config.tags.deleteTagError', 'Failed to delete tag')
+        : tv('components.config.tags.deleteTagError')
     showErrorToast.value = true
   } finally {
     isDeleting.value = false

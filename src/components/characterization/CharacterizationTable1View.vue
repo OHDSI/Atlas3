@@ -5,9 +5,9 @@
     data-testid="char-t1"
   >
     <header class="char-t1__header">
-      <span class="text-eyebrow">{{ tv('cc.viewEdit.workbench.table1.eyebrow', 'Run summary') }}</span>
+      <span class="text-eyebrow">{{ tv('cc.viewEdit.workbench.table1.eyebrow') }}</span>
       <h3 class="char-t1__title">
-        {{ tv('cc.viewEdit.workbench.table1.title', 'Baseline Characteristics') }}
+        {{ tv('cc.viewEdit.workbench.table1.title') }}
       </h3>
     </header>
 
@@ -16,7 +16,7 @@
       class="char-t1__empty"
       data-testid="char-t1-empty"
     >
-      {{ tv('common.noData', 'No rows match the current filter.') }}
+      {{ tv('cc.viewEdit.workbench.empty.noDataTitle') }}
     </div>
 
     <div
@@ -27,15 +27,15 @@
         <thead>
           <tr>
             <th class="char-t1__col-label">
-              {{ tv('columns.covariate', 'Covariate') }}
+              {{ tv('columns.covariate') }}
             </th>
             <th
               v-if="showOverall"
               class="char-t1__col-value"
             >
-              {{ tv('components.characterizationTable1.overall', 'Overall') }}
+              {{ tv('components.characterizationTable1.overall') }}
               <div class="char-t1__col-hint">
-                {{ tv('components.characterizationTable1.colHint', 'N (%) / Mean (SD)') }}
+                {{ tv('components.characterizationTable1.colHint') }}
               </div>
             </th>
             <th
@@ -46,7 +46,7 @@
             >
               {{ col.cohortName }}
               <div class="char-t1__col-hint">
-                {{ tv('components.characterizationTable1.colHint', 'N (%) / Mean (SD)') }}
+                {{ tv('components.characterizationTable1.colHint') }}
               </div>
             </th>
             <th
@@ -54,7 +54,7 @@
               class="char-t1__col-value"
               data-testid="char-t1-stddiff-header"
             >
-              {{ tv('characterizations.results.table.stdDiff', 'Std Diff') }}
+              {{ tv('characterizations.results.table.stdDiff') }}
             </th>
             <th class="char-t1__col-action" />
           </tr>
@@ -62,7 +62,7 @@
         <tbody>
           <tr class="char-t1__row char-t1__row--total">
             <td class="char-t1__cell-label">
-              <strong>{{ tv('components.characterizationTable1.n', 'N') }}</strong>
+              <strong>{{ tv('components.characterizationTable1.n') }}</strong>
             </td>
             <td
               v-if="showOverall"
@@ -129,7 +129,7 @@
                   icon="mdi-magnify"
                   size="sm"
                   variant="text"
-                  v-bind="{ ariaLabel: tv('columns.explore', 'Explore') }"
+                  v-bind="{ ariaLabel: tv('columns.explore') }"
                   data-testid="char-t1-explore"
                   @click="$emit('explore', row._source)"
                 />

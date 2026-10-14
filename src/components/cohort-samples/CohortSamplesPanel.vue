@@ -6,14 +6,11 @@
     <div class="cohort-samples-panel__header">
       <div>
         <div class="text-subtitle-1 font-weight-medium">
-          {{ t('components.cohortSamples.title', 'Samples').value }}
+          {{ t('components.cohortSamples.title').value }}
         </div>
         <div class="text-caption text-grey-darken-1">
           {{
-            t(
-              'components.cohortSamples.description',
-              'Random selections of persons drawn from the generated cohort, optionally filtered by age and gender.'
-            ).value
+            t('components.cohortSamples.description').value
           }}
         </div>
       </div>
@@ -24,7 +21,7 @@
         data-testid="cohort-samples-new"
         @click="dialogOpen = true"
       >
-        {{ t('components.cohortSamples.newSample', 'New sample').value }}
+        {{ t('components.cohortSamples.newSample').value }}
       </AtlasButton>
     </div>
 
@@ -122,7 +119,7 @@ async function loadList() {
     samples.value = []
     error.value =
       result.error.message ||
-      tv('components.cohortSamples.failedToLoadSamples', 'Failed to load samples')
+      tv('components.cohortSamples.failedToLoadSamples')
   }
   loading.value = false
 }
@@ -140,7 +137,7 @@ async function loadDetail(sampleId: number) {
       selectedSample.value = null
       error.value =
         result.error.message ||
-        tv('components.cohortSamples.failedToLoadSampleDetail', 'Failed to load sample detail')
+        tv('components.cohortSamples.failedToLoadSampleDetail')
       logger.error('CohortSamplesPanel', 'Failed to load sample detail', result.error)
     }
   } finally {
@@ -168,7 +165,7 @@ async function onCreate(parameters: SampleParameters) {
     // transport error surfaced — both are a failed create now.
     error.value =
       result.error.message ||
-      tv('components.cohortSamples.failedToCreateSample', 'Failed to create sample')
+      tv('components.cohortSamples.failedToCreateSample')
   }
   creating.value = false
 }

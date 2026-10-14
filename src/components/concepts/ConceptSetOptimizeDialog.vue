@@ -1,8 +1,8 @@
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    :eyebrow="t('cs.manager.optimize', 'Optimize').value"
-    :title="t('cs.manager.conceptSetOptimization', 'Concept Set Optimization').value"
+    :eyebrow="t('cs.manager.optimize').value"
+    :title="t('cs.manager.conceptSetOptimization').value"
     max-width="960"
     @update:model-value="emit('update:modelValue', $event)"
     @close="close"
@@ -19,10 +19,7 @@
         class="mr-3"
       />
       <span>{{
-        t(
-          'cs.manager.attemptingToFindMessage',
-          'Attempting to find an optimal definition for this concept set...'
-        ).value
+        t('cs.manager.attemptingToFindMessage').value
       }}</span>
     </div>
 
@@ -39,20 +36,14 @@
       data-testid="cs-optimize-optimal"
     >
       {{
-        t(
-          'cs.manager.fullyOptimizedMessage',
-          'The current concept set definition is fully optimized.'
-        ).value
+        t('cs.manager.fullyOptimizedMessage').value
       }}
     </p>
 
     <template v-else-if="state === 'result'">
       <p class="cs-optimize__intro">
         {{
-          t(
-            'cs.manager.pleaseReviewMessage',
-            'Please review the optimized definition and options for saving.'
-          ).value
+          t('cs.manager.pleaseReviewMessage').value
         }}
       </p>
 
@@ -63,7 +54,7 @@
         <AtlasTextField
           v-model="newName"
           :label="
-            t('cs.manager.pleaseProvideNameMessage', 'Please provide a name for your new concept set:')
+            t('cs.manager.pleaseProvideNameMessage')
               .value
           "
           :disabled="busy"
@@ -72,7 +63,7 @@
       </div>
 
       <h3 class="cs-optimize__heading">
-        {{ t('cs.manager.optimizedConceptSetHeading', 'Optimized Concept Set').value }}
+        {{ t('cs.manager.optimizedConceptSetHeading').value }}
         <AtlasChip
           size="sm"
           tone="primary"
@@ -104,7 +95,7 @@
       </AtlasDataTable>
 
       <h3 class="cs-optimize__heading">
-        {{ t('cs.manager.conceptsRemovedHeading', 'Concepts Removed').value }}
+        {{ t('cs.manager.conceptsRemovedHeading').value }}
         <AtlasChip
           size="sm"
           tone="danger"
@@ -114,10 +105,7 @@
       </h3>
       <p class="cs-optimize__hint">
         {{
-          t(
-            'cs.manager.conceptsRemovedMessage',
-            'The following concepts were removed since the optimized version already includes them.'
-          ).value
+          t('cs.manager.conceptsRemovedMessage').value
         }}
       </p>
       <AtlasDataTable
@@ -150,11 +138,11 @@
         :disabled="busy"
         @click="naming ? (naming = false) : close()"
       >
-        {{ t('common.cancel', 'Cancel').value }}
+        {{ t('common.cancel').value }}
       </AtlasButton>
       <template v-if="state === 'error'">
         <AtlasButton @click="run">
-          {{ t('common.retry', 'Retry').value }}
+          {{ t('common.retry').value }}
         </AtlasButton>
       </template>
       <template v-else-if="state === 'result'">
@@ -165,7 +153,7 @@
             data-testid="cs-optimize-save-new"
             @click="emit('create', { name: newName.trim(), items: optimizedItems })"
           >
-            {{ t('cs.manager.saveButton', 'Save').value }}
+            {{ t('common.save').value }}
           </AtlasButton>
         </template>
         <template v-else>
@@ -175,13 +163,13 @@
             data-testid="cs-optimize-create"
             @click="startNaming"
           >
-            {{ t('cs.manager.createOption', 'Create New Concept Set').value }}
+            {{ t('cs.manager.createOption').value }}
           </AtlasButton>
           <AtlasButton
             data-testid="cs-optimize-overwrite"
             @click="emit('overwrite', optimizedItems)"
           >
-            {{ t('cs.manager.overwriteOption', 'Overwrite Current Concept Set').value }}
+            {{ t('cs.manager.overwriteOption').value }}
           </AtlasButton>
         </template>
       </template>
@@ -235,17 +223,17 @@ const newName = ref('')
 let runId = 0
 
 const headers = computed(() => [
-  { title: t('columns.conceptId', 'ID').value, key: 'conceptId', width: '100px' },
-  { title: t('columns.conceptName', 'Name').value, key: 'conceptName' },
-  { title: t('columns.domain', 'Domain').value, key: 'domainId', width: '120px' },
-  { title: t('columns.vocabulary', 'Vocabulary').value, key: 'vocabularyId', width: '120px' },
+  { title: t('columns.conceptId').value, key: 'conceptId', width: '100px' },
+  { title: t('columns.conceptName').value, key: 'conceptName' },
+  { title: t('columns.domain').value, key: 'domainId', width: '120px' },
+  { title: t('columns.vocabulary').value, key: 'vocabularyId', width: '120px' },
   {
-    title: t('columns.descendants', 'Desc.').value,
+    title: t('columns.descendants').value,
     key: 'includeDescendants',
     sortable: false,
     width: '72px',
   },
-  { title: t('columns.exclude', 'Excl.').value, key: 'isExcluded', sortable: false, width: '64px' },
+  { title: t('columns.exclude').value, key: 'isExcluded', sortable: false, width: '64px' },
 ])
 
 async function run() {

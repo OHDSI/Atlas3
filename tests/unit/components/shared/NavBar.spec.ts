@@ -12,6 +12,7 @@ import { generatePluginMenuItems } from '@/plugins/navigation/PluginMenuIntegrat
 import { usePermissions } from '@/composables/usePermissions'
 import { usePluginMounts } from '@/composables/usePluginMounts'
 import { pluginConfigService } from '@/services/PluginConfigService'
+import { tr } from '../../../helpers/i18n-mock'
 
 // Mock vue-router
 const mockPush = vi.fn()
@@ -60,11 +61,10 @@ vi.mock('@/composables/usePluginMounts', () => ({
   usePluginMounts: vi.fn(() => ({ items: computed(() => []) })),
 }))
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, fallback: string) => ref(fallback)
-  })
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 // Mock stores
 const mockOpenConfigPanel = vi.fn()
@@ -216,7 +216,7 @@ describe('NavBar', () => {
 
     it('should render feedback button', () => {
       const wrapper = mountComponent()
-      const feedbackBtn = wrapper.findAll('.v-btn').find(btn => btn.text().includes('Feedback'))
+      const feedbackBtn = wrapper.findAll('.v-btn').find(btn => btn.text().includes(tr('navigation.feedback')))
       expect(feedbackBtn).toBeDefined()
       expect(feedbackBtn?.attributes('href')).toBe('https://forms.office.com/r/2JzrYy1yDP')
       expect(feedbackBtn?.attributes('target')).toBe('_blank')
@@ -226,7 +226,7 @@ describe('NavBar', () => {
       const wrapper = mountComponent()
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
       const configBtn = buttons.find(btn => {
-        return btn.attributes('aria-label') === 'Open configuration panel'
+        return btn.attributes('aria-label') === tr('config.accessibility.openPanel')
       })
       expect(configBtn).toBeDefined()
     })
@@ -253,7 +253,7 @@ describe('NavBar', () => {
       const wrapper = mountComponent()
       const nav = wrapper.find('nav.nav-bar__nav-wrapper')
       expect(nav.exists()).toBe(true)
-      expect(nav.attributes('aria-label')).toBe('Main')
+      expect(nav.attributes('aria-label')).toBe(tr('components.navBar.mainNavigation'))
     })
 
     it('should render navigation list with items', () => {
@@ -305,7 +305,7 @@ describe('NavBar', () => {
   describe('Authentication UI', () => {
     it('should render sign in button when not authenticated', () => {
       const wrapper = mountComponent()
-      const signInBtn = wrapper.findAll('.v-btn').find(btn => btn.text().includes('Sign In'))
+      const signInBtn = wrapper.findAll('.v-btn').find(btn => btn.text().includes(tr('components.userBar.signin')))
       expect(signInBtn).toBeDefined()
     })
 
@@ -386,7 +386,7 @@ describe('NavBar', () => {
       const wrapper = mountComponent()
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
       const configBtn = buttons.find(btn => {
-        return btn.attributes('aria-label') === 'Open configuration panel'
+        return btn.attributes('aria-label') === tr('config.accessibility.openPanel')
       })
 
       expect(configBtn).toBeDefined()
@@ -399,7 +399,7 @@ describe('NavBar', () => {
   describe('Authentication Actions', () => {
     it('should open login modal when sign in button is clicked', async () => {
       const wrapper = mountComponent()
-      const signInBtn = wrapper.findAll('.v-btn').find(btn => btn.text().includes('Sign In'))
+      const signInBtn = wrapper.findAll('.v-btn').find(btn => btn.text().includes(tr('components.userBar.signin')))
 
       await signInBtn?.trigger('click')
 
@@ -427,10 +427,10 @@ describe('NavBar', () => {
       const wrapper = mountComponent()
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
       const configBtn = buttons.find(btn => {
-        return btn.attributes('aria-label') === 'Open configuration panel'
+        return btn.attributes('aria-label') === tr('config.accessibility.openPanel')
       })
       expect(configBtn).toBeDefined()
-      expect(configBtn?.attributes('aria-label')).toBe('Open configuration panel')
+      expect(configBtn?.attributes('aria-label')).toBe(tr('config.accessibility.openPanel'))
     })
 
     it('should render the logo as a native button', () => {
@@ -452,7 +452,7 @@ describe('NavBar', () => {
 
     it('should have proper external link attributes on feedback button', () => {
       const wrapper = mountComponent()
-      const feedbackBtn = wrapper.findAll('.v-btn').find(btn => btn.text().includes('Feedback'))
+      const feedbackBtn = wrapper.findAll('.v-btn').find(btn => btn.text().includes(tr('navigation.feedback')))
       expect(feedbackBtn?.attributes('target')).toBe('_blank')
     })
   })

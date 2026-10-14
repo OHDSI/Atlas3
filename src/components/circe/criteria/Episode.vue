@@ -107,17 +107,17 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const episodeTitle = computed(() => t('components.episode.criteriaText_1', 'an episode of').value)
-const addAttributeLabel = computed(() => t('components.episode.addAttribute', 'Add attribute...').value)
+const episodeTitle = computed(() => t('components.episode.title').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
 const selectConceptSetLabel = computed(() =>
-  t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value
+  t('components.conceptAddBox.selectConceptSet').value
 )
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {
     key: 'First',
-    label: 'First Episode',
-    description: 'Limit to first episode in history',
+    label: t('components.episode.attributes.first.label').value,
+    description: t('components.episode.attributes.first.description').value,
     init: () => {
       episodeData.value.First = true
     },
@@ -128,8 +128,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Age',
-    label: 'Age',
-    description: 'Filter by age at episode start',
+    label: t('criteriaAttributes.age.label').value,
+    description: t('components.episode.attributes.age.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(episodeData.value, 'Age', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -144,13 +144,13 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'GenderCS',
-    label: 'Gender Concept Set',
-    description: 'Filter gender by a concept set',
+    label: t('criteriaAttributes.genderCS.label').value,
+    description: t('criteriaAttributes.genderCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(episodeData.value, 'GenderCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -164,8 +164,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'EpisodeStartDate',
-    label: 'Start Date',
-    description: 'Filter by episode start date',
+    label: t('criteriaAttributes.episodeStartDate.label').value,
+    description: t('criteriaAttributes.episodeStartDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(episodeData.value, 'EpisodeStartDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -180,8 +180,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'EpisodeEndDate',
-    label: 'End Date',
-    description: 'Filter by episode end date',
+    label: t('criteriaAttributes.episodeEndDate.label').value,
+    description: t('criteriaAttributes.episodeEndDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(episodeData.value, 'EpisodeEndDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -196,8 +196,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'EpisodeNumber',
-    label: 'Episode Number',
-    description: 'Filter by episode number',
+    label: t('criteriaAttributes.episodeNumber.label').value,
+    description: t('criteriaAttributes.episodeNumber.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(episodeData.value, 'EpisodeNumber', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -212,13 +212,13 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'EpisodeObjectConceptCS',
-    label: 'Episode Object Concept Set',
-    description: 'Filter episode object concept by a concept set',
+    label: t('criteriaAttributes.episodeObjectConceptCS.label').value,
+    description: t('criteriaAttributes.episodeObjectConceptCS.description').value,
     kind: 'eventConceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(episodeData.value, 'EpisodeObjectConceptCS', () => ({ CodesetId: undefined })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -232,13 +232,13 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'EpisodeTypeCS',
-    label: 'Episode Type Concept Set',
-    description: 'Filter episode type by a concept set',
+    label: t('criteriaAttributes.episodeTypeCS.label').value,
+    description: t('criteriaAttributes.episodeTypeCS.description').value,
     kind: 'eventConceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(episodeData.value, 'EpisodeTypeCS', () => ({ CodesetId: undefined })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -252,8 +252,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'DateAdjustment',
-    label: 'Date Adjustment',
-    description: 'Adjust event dates',
+    label: t('criteriaAttributes.dateAdjustment.label').value,
+    description: t('criteriaAttributes.dateAdjustment.description').value,
     kind: 'dateAdjustment',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(episodeData.value, 'DateAdjustment', createDefaultDateAdjustment) as DateAdjustment
@@ -268,8 +268,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'CorrelatedCriteria',
-    label: 'Nested Criteria',
-    description: 'Add nested criteria group',
+    label: t('criteriaAttributes.correlatedCriteria.label').value,
+    description: t('criteriaAttributes.correlatedCriteria.description').value,
     kind: 'criteriaGroup',
     componentProps: () => ({
       group: ensureObjectField(episodeData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup) as CriteriaGroup,

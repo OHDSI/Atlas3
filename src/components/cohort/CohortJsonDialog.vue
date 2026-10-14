@@ -2,11 +2,8 @@
   <AtlasDialog
     :model-value="modelValue"
     eyebrow="JSON"
-    :title="t('components.cohortBuilder.jsonDialogTitle', 'Cohort JSON').value"
-    :subtitle="t(
-      'components.cohortBuilder.jsonDialogSubtitle',
-      'Edit the Atlas expression directly. Applying replaces the cohort logic — the name and description are kept.'
-    ).value"
+    :title="t('components.cohortBuilder.jsonDialogTitle').value"
+    :subtitle="t('components.cohortBuilder.jsonDialogSubtitle').value"
     max-width="900"
     data-testid="cohort-json-dialog"
     @update:model-value="$emit('update:modelValue', $event)"
@@ -18,11 +15,8 @@
       :rows="20"
       class="cohort-json-dialog__editor"
       spellcheck="false"
-      :aria-label="t('components.cohortBuilder.jsonDialogTitle', 'Cohort JSON').value"
-      :placeholder="t(
-        'components.cohortBuilder.jsonPlaceholder',
-        'Paste an Atlas cohort expression, or load one from a file…'
-      ).value"
+      :aria-label="t('components.cohortBuilder.jsonDialogTitle').value"
+      :placeholder="t('components.cohortBuilder.jsonPlaceholder').value"
       data-testid="cohort-json-field"
     />
 
@@ -44,7 +38,7 @@
       type="file"
       accept="application/json,.json"
       class="cohort-json-dialog__file-input"
-      :aria-label="t('components.cohortBuilder.jsonLoadFile', 'Load file').value"
+      :aria-label="t('components.cohortBuilder.jsonLoadFile').value"
       data-testid="cohort-json-file-input"
       @change="onFileSelected"
     >
@@ -56,7 +50,7 @@
         data-testid="cohort-json-load-file"
         @click="fileInput?.click()"
       >
-        {{ t('components.cohortBuilder.jsonLoadFile', 'Load file') }}
+        {{ t('components.cohortBuilder.jsonLoadFile') }}
       </AtlasButton>
 
       <AtlasButton
@@ -68,8 +62,8 @@
       >
         {{
           copied
-            ? t('components.cohortBuilder.jsonCopied', 'Copied')
-            : t('common.copy', 'Copy')
+            ? t('components.cohortBuilder.jsonCopied')
+            : t('common.copy')
         }}
       </AtlasButton>
 
@@ -80,7 +74,7 @@
         data-testid="cohort-json-download"
         @click="handleDownload"
       >
-        {{ t('common.download', 'Download') }}
+        {{ t('common.download') }}
       </AtlasButton>
 
       <AtlasSpacer />
@@ -98,7 +92,7 @@
         data-testid="cohort-json-apply"
         @click="handleApply"
       >
-        {{ t('components.cohortBuilder.jsonApply', 'Apply to builder') }}
+        {{ t('components.cohortBuilder.jsonApply') }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -187,7 +181,7 @@ const parseError = computed(() => {
     JSON.parse(draft.value)
     return ''
   } catch (error) {
-    return tv('components.cohortBuilder.jsonInvalid', 'Invalid JSON: {error}', {
+    return tv('components.cohortBuilder.jsonInvalid', {
       error: error instanceof Error ? error.message : String(error),
     })
   }
@@ -209,7 +203,7 @@ async function onFileSelected(event: Event) {
 
   if (text === null) {
     fileError.value =
-      fileError.value || tv('components.cohortBuilder.jsonReadFailed', 'Could not read file')
+      fileError.value || tv('components.cohortBuilder.jsonReadFailed')
   } else {
     draft.value = text
   }
@@ -228,7 +222,7 @@ async function handleCopy() {
     }, 2000)
   } catch (error) {
     logger.error('CohortJsonDialog', 'Clipboard copy failed', error)
-    fileError.value = tv('components.cohortBuilder.copyFailed', 'Could not copy to clipboard')
+    fileError.value = tv('components.cohortBuilder.copyFailed')
   }
 }
 

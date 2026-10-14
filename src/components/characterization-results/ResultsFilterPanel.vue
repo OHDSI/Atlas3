@@ -15,7 +15,7 @@
       <AtlasSelect
         :model-value="draftDomains"
         :items="availableDomains"
-        :label="tv('columns.domain', 'Domain')"
+        :label="tv('columns.domain')"
         variant="outlined"
         multiple
         chips
@@ -32,7 +32,7 @@
         :items="analysisItems"
         item-title="title"
         item-value="value"
-        :label="tv('columns.analysis', 'Analysis')"
+        :label="tv('columns.analysis')"
         variant="outlined"
         multiple
         chips
@@ -49,7 +49,7 @@
         :items="cohortItems"
         item-title="title"
         item-value="value"
-        :label="tv('common.cohort', 'Cohort')"
+        :label="tv('common.cohort')"
         variant="outlined"
         multiple
         chips
@@ -63,8 +63,8 @@
       />
       <AtlasTextField
         :model-value="search"
-        :label="tv('common.search', 'Search')"
-        :placeholder="tv('components.characterizationResults.searchCovariates', 'Filter results by name')"
+        :label="tv('common.search')"
+        :placeholder="tv('components.characterizationResults.searchCovariates')"
         variant="outlined"
         clearable
         hide-details

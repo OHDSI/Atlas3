@@ -27,10 +27,10 @@
           Atlas
         </div>
         <h1 class="login-card__title">
-          {{ t('components.auth.welcomeBack', 'Welcome back') }}
+          {{ t('components.auth.welcomeBack') }}
         </h1>
         <p class="login-card__subtitle">
-          {{ t('components.auth.signInToAtlas', 'Sign in to continue') }}
+          {{ t('components.auth.signInToAtlas') }}
         </p>
       </div>
 
@@ -53,14 +53,14 @@
             size="sm"
             variant="text"
             class="ml-auto"
-            v-bind="{ ariaLabel: t('common.close', 'Dismiss').value }"
+            v-bind="{ ariaLabel: t('common.close').value }"
             @click="clearError"
           />
         </div>
 
         <div v-if="!selectedProvider">
           <p class="login-card__providers-label">
-            {{ t('components.authProviderSelect.info', 'Continue with') }}
+            {{ t('components.authProviderSelect.info') }}
           </p>
 
           <div class="login-card__providers">
@@ -90,7 +90,7 @@
             class="login-card__back-btn"
             @click="backToProviders"
           >
-            {{ t('common.back', 'Back') }}
+            {{ t('common.back') }}
           </AtlasButton>
 
           <CredentialsForm
@@ -110,7 +110,7 @@
             size="sm"
             @click="close"
           >
-            {{ t('components.authProviderSelect.skipLogin', 'Skip Login') }}
+            {{ t('components.authProviderSelect.skipLogin') }}
           </AtlasButton>
         </div>
       </div>

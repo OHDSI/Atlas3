@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { ref, nextTick } from 'vue'
 
+vi.mock('@/composables/useI18n', async () => (await import('../../helpers/i18n-mock')).mockUseI18n)
 vi.mock('@/services/incidence-rate.service', () => ({
   getIncidenceRateReport: vi.fn().mockResolvedValue({
     success: true,

@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { computed } from 'vue'
 import {
+  setChartLabelResolver,
   parseYyyymm,
   dashboardObservationMonthLineOptions,
   dashboardGenderPieOptions,
@@ -29,6 +30,21 @@ import {
 import { contrastRatio } from '@/ui/contrast'
 import { tokens } from '@/ui/tokens'
 import type { TrellisChartData, BoxPlotData, TreemapNode } from '@/models/report.types'
+
+describe('setChartLabelResolver', () => {
+  afterEach(() => setChartLabelResolver(null))
+
+  it('uses English defaults when no host resolver is registered', () => {
+    const options = defaultBarChartOptions({ categories: ['a'], values: [1] })
+    expect((options.yAxis as { name: string }).name).toBe('Count')
+  })
+
+  it('lets the host translate default labels', () => {
+    setChartLabelResolver(key => (key === 'columns.count' ? 'Anzahl' : undefined))
+    const options = defaultBarChartOptions({ categories: ['a'], values: [1] })
+    expect((options.yAxis as { name: string }).name).toBe('Anzahl')
+  })
+})
 
 describe('setChartPalette', () => {
   afterEach(() => {

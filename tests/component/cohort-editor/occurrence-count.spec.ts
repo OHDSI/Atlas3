@@ -17,6 +17,7 @@ import * as directives from 'vuetify/directives'
 import CorelatedCriteria from '@/components/circe/criteria/CorelatedCriteria.vue'
 import type { CorelatedCriteria as CorelatedCriteriaModel } from '@/models/circe-types'
 import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
+import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -54,20 +55,20 @@ describe('CorelatedCriteria occurrence', () => {
     const criteria: CorelatedCriteriaModel = { Criteria: CONDITION }
     const wrapper = mountCriteria(criteria)
 
-    expect(occurrenceLabel(wrapper).text()).toBe('At least 1')
+    expect(occurrenceLabel(wrapper).text()).toBe(`${tr('options.atLeast')} 1`)
     expect(criteria.Occurrence).toBeUndefined()
   })
 
   it.each([
-    [0, 0, 'EXACTLY', 'Exactly 0'],
-    [1, 3, 'AT_MOST', 'At most 3'],
-    [2, 2, 'AT_LEAST', 'At least 2'],
-  ] as const)('reads occurrence type %i as %s', (type, count, key, label) => {
+    [0, 0, 'EXACTLY', 'options.exactly'],
+    [1, 3, 'AT_MOST', 'options.atMost'],
+    [2, 2, 'AT_LEAST', 'options.atLeast'],
+  ] as const)('reads occurrence type %i as %s', (type, count, key, labelKey) => {
     const criteria: CorelatedCriteriaModel = { Criteria: CONDITION, Occurrence: { Type: type, Count: count } }
     const wrapper = mountCriteria(criteria)
 
     expect(occurrenceLabel(wrapper).attributes('data-type')).toBe(key)
-    expect(occurrenceLabel(wrapper).text()).toBe(label)
+    expect(occurrenceLabel(wrapper).text()).toBe(`${tr(labelKey)} ${count}`)
   })
 
   it('treats an occurrence with no type as EXACTLY rather than inventing one', () => {
@@ -75,7 +76,7 @@ describe('CorelatedCriteria occurrence', () => {
     const wrapper = mountCriteria(criteria)
 
     expect(occurrenceLabel(wrapper).attributes('data-type')).toBe('EXACTLY')
-    expect(occurrenceLabel(wrapper).text()).toBe('Exactly 5')
+    expect(occurrenceLabel(wrapper).text()).toBe(`${tr('options.exactly')} 5`)
   })
 
   it.each([
@@ -118,7 +119,7 @@ describe('CorelatedCriteria occurrence', () => {
     await wrapper.find('input[type="number"]').setValue('')
 
     expect(criteria.Occurrence!.Count).toBe(0)
-    expect(occurrenceLabel(wrapper).text()).toBe('At least 0')
+    expect(occurrenceLabel(wrapper).text()).toBe(`${tr('options.atLeast')} 0`)
   })
 })
 
@@ -158,7 +159,7 @@ describe('CorelatedCriteria distinct counting', () => {
     await distinctChip(wrapper).trigger('click')
 
     expect(criteria.Occurrence!.CountColumn).toBe('VISIT_ID')
-    expect(occurrenceLabel(wrapper).text()).toBe('At least 1 of distinct Visit')
+    expect(occurrenceLabel(wrapper).text()).toBe(`${tr('options.atLeast')} 1 of distinct Visit`)
   })
 
   it('turns distinct counting back off without discarding the column', async () => {
@@ -168,7 +169,7 @@ describe('CorelatedCriteria distinct counting', () => {
     }
     const wrapper = mountCriteria(criteria)
 
-    expect(occurrenceLabel(wrapper).text()).toBe('At least 1 of distinct Start Date')
+    expect(occurrenceLabel(wrapper).text()).toBe(`${tr('options.atLeast')} 1 of distinct Start Date`)
 
     await distinctChip(wrapper).trigger('click')
 
@@ -189,8 +190,8 @@ describe('CorelatedCriteria event flags', () => {
     const wrapper = mountCriteria(criteria)
 
     const [restrictVisit, ignoreObservation] = flagChips(wrapper)
-    expect(restrictVisit!.text()).toBe('restrict to the same visit occurrence')
-    expect(ignoreObservation!.text()).toBe('allow events from outside observation period')
+    expect(restrictVisit!.text()).toBe(tr('components.correlatedCriteria.restrictToSameVisit'))
+    expect(ignoreObservation!.text()).toBe(tr('components.correlatedCriteria.allowEventsOutsideObservation'))
     expect(criteria.RestrictVisit).toBeUndefined()
     expect(criteria.IgnoreObservationPeriod).toBeUndefined()
   })

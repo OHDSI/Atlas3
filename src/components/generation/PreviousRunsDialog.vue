@@ -100,29 +100,23 @@ const emit = defineEmits<{
 const { t, tv } = useI18n()
 const em = '—'
 
-const eyebrowText = tv('components.analysisExecution.history', 'HISTORY')
-const viewLabel = tv('components.analysisExecution.viewResults', 'View results')
-const notCompletedLabel = tv(
-  'components.analysisExecution.viewResultsNotCompleted',
-  'Results are available only for completed runs'
-)
-const supersededLabel = tv(
-  'components.analysisExecution.viewResultsSuperseded',
-  'Superseded: only the most recent run keeps its results'
-)
+const eyebrowText = tv('components.analysisExecution.history')
+const viewLabel = tv('components.analysisExecution.viewResults')
+const notCompletedLabel = tv('components.analysisExecution.viewResultsNotCompleted')
+const supersededLabel = tv('components.analysisExecution.viewResultsSuperseded')
 const emptyText = computed(() =>
-  t('components.analysisExecution.noPreviousRuns', 'No previous runs.').value
+  t('components.analysisExecution.noPreviousRuns').value
 )
 
 const dialogTitle = computed(() => {
-  const base = t('components.analysisExecution.previousRuns', 'Previous runs').value
+  const base = t('components.analysisExecution.previousRuns').value
   return `${base} · ${props.sourceName}`
 })
 
 const headers = computed(() => [
-  { key: 'date', title: t('columns.date', 'Date').value, sortable: false },
-  { key: 'status', title: t('columns.status', 'Status').value, sortable: false },
-  { key: 'duration', title: t('columns.duration', 'Duration').value, sortable: false },
+  { key: 'date', title: t('columns.date').value, sortable: false },
+  { key: 'status', title: t('columns.status').value, sortable: false },
+  { key: 'duration', title: t('columns.duration').value, sortable: false },
   { key: 'actions', title: '', sortable: false, align: 'end' as const, width: 80 },
 ])
 

@@ -7,7 +7,7 @@
   >
     <template #activator="{ props: menuProps }">
       <AtlasTooltip
-        :text="t('components.notifications.heading', 'Notifications').value"
+        :text="t('components.notifications.heading').value"
         location="bottom"
       >
         <template #activator="{ props: tooltipProps }">
@@ -21,7 +21,7 @@
             <AtlasIconButton
               v-bind="menuProps"
               icon="mdi-bell-outline"
-              :aria-label="t('components.notifications.bellAriaLabel', 'Notifications ({count} unread)', { count: store.unreadCount }).value"
+              :aria-label="t('components.notifications.bellAriaLabel', { count: store.unreadCount }).value"
               variant="text"
               size="sm"
             />
@@ -32,7 +32,7 @@
 
     <div class="notification-inbox">
       <div class="notification-inbox__head">
-        <span class="notification-inbox__title">{{ t('components.notifications.heading', 'Notifications').value }}</span>
+        <span class="notification-inbox__title">{{ t('components.notifications.heading').value }}</span>
         <div class="notification-inbox__head-actions">
           <AtlasButton
             variant="ghost"
@@ -40,7 +40,7 @@
             data-testid="notification-mark-read"
             @click="store.markAllRead()"
           >
-            {{ t('components.notifications.markAllRead', 'Mark all read').value }}
+            {{ t('components.notifications.markAllRead').value }}
           </AtlasButton>
           <AtlasButton
             variant="ghost"
@@ -48,7 +48,7 @@
             data-testid="notification-clear"
             @click="store.clear()"
           >
-            {{ t('components.notifications.clear', 'Clear').value }}
+            {{ t('components.notifications.clear').value }}
           </AtlasButton>
         </div>
       </div>
@@ -57,7 +57,7 @@
         v-if="store.items.length === 0"
         class="notification-inbox__empty"
       >
-        {{ t('components.notifications.allCaughtUp', "You're all caught up.").value }}
+        {{ t('components.notifications.allCaughtUp').value }}
       </div>
 
       <div
@@ -70,7 +70,7 @@
           :severity="item.severity"
           :title="item.title"
           closable
-          :close-label="t('components.notifications.remove', 'Remove').value"
+          :close-label="t('components.notifications.remove').value"
           @close="store.remove(item.id)"
         >
           <template v-if="item.message">

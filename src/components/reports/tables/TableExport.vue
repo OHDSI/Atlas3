@@ -15,7 +15,7 @@
         :disabled="!data || data.length === 0 || copying || exporting"
         @click="handleCopy"
       >
-        {{ t('datatable.language.buttons.copy', 'Copy').value }}
+        {{ t('datatable.language.buttons.copy').value }}
       </AtlasButton>
       <AtlasButton
         size="sm"
@@ -117,7 +117,7 @@ async function handleCopy() {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(tsvContent)
       showToastNotification(
-        tv('components.tableExport.copiedRows', 'Copied {count} rows to clipboard', {
+        tv('components.tableExport.copiedRows', {
           count: props.data.length,
         }),
         'success'
@@ -137,7 +137,7 @@ async function handleCopy() {
         const successful = document.execCommand('copy')
         if (successful) {
           showToastNotification(
-            tv('components.tableExport.copiedRows', 'Copied {count} rows to clipboard', {
+            tv('components.tableExport.copiedRows', {
               count: props.data.length,
             }),
             'success'
@@ -152,7 +152,7 @@ async function handleCopy() {
   } catch (error) {
     logger.error('TableExport', 'Copy failed', error)
     showToastNotification(
-      tv('components.tableExport.copyFailed', 'Failed to copy data to clipboard'),
+      tv('components.tableExport.copyFailed'),
       'error',
       5000
     )
@@ -205,7 +205,7 @@ async function handleExportCSV() {
     URL.revokeObjectURL(url)
 
     showToastNotification(
-      tv('components.tableExport.exportedRows', 'Exported {count} rows to {filename}.csv', {
+      tv('components.tableExport.exportedRows', {
         count: props.data.length,
         filename,
       }),
@@ -215,7 +215,7 @@ async function handleExportCSV() {
   } catch (error) {
     logger.error('TableExport', 'CSV export failed', error)
     showToastNotification(
-      tv('components.tableExport.exportFailed', 'Failed to export CSV file'),
+      tv('components.tableExport.exportFailed'),
       'error',
       5000
     )

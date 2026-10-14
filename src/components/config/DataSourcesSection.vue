@@ -109,7 +109,7 @@
                   <DisabledReasonTooltip :reason="denied(canManageAll())">
                     <AtlasIconButton
                       icon="mdi-pencil"
-                      v-bind="{ ariaLabel: tv('configuration.tagManagement.edit') }"
+                      v-bind="{ ariaLabel: tv('common.edit') }"
                       size="sm"
                       :disabled="!canManageAll()"
                       @click="openEditDialog(source)"
@@ -117,7 +117,7 @@
                   </DisabledReasonTooltip>
                   <DisabledReasonTooltip :reason="denied(canManageAccess())">
                     <EntityAccessLockButton
-                      v-bind="{ ariaLabel: tv('components.access.configureAccess', 'Configure access') }"
+                      v-bind="{ ariaLabel: tv('components.access.configureAccess') }"
                       size="sm"
                       :disabled="!canManageAccess()"
                       @click="openAccessDialog(source)"
@@ -218,7 +218,7 @@
       v-model="showAccessDialog"
       entity-type="SOURCE"
       :entity-id="accessSourceId"
-      :title="tv('components.access.configureAccess', 'Configure access')"
+      :title="tv('components.access.configureAccess')"
       :subtitle="accessSourceLabel"
       @close="showAccessDialog = false"
     />
@@ -278,7 +278,7 @@ const {
 } = useSourceAccessFor()
 
 function denied(allowed: boolean): string {
-  return allowed ? '' : tv('common.noPermission', 'You do not have permission for this action')
+  return allowed ? '' : tv('common.noPermission')
 }
 
 function writeDisabledReason(source: DataSourceDisplay): string {
@@ -437,7 +437,7 @@ async function loadDataSources() {
     errorMessage.value =
       error instanceof Error
         ? error.message
-        : tv('components.config.dataSources.loadError', 'Failed to load data sources')
+        : tv('components.config.dataSources.loadError')
     showErrorToast.value = true
   }
 }

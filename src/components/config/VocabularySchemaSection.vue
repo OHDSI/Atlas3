@@ -1,22 +1,19 @@
 <template>
   <div class="vocabulary-schema-section">
     <v-card>
-      <v-card-title>{{ t('config.vocabulary.title', 'Vocabulary Schema').value }}</v-card-title>
+      <v-card-title>{{ t('config.vocabulary.title').value }}</v-card-title>
       <v-card-text>
         <p class="text-body-1 mb-4">
           {{
-            t(
-              'components.config.vocabulary.help',
-              'Configure the database schema name for vocabulary lookups. This setting controls which PostgreSQL schema is used when querying the OMOP vocabulary tables.'
-            ).value
+            t('components.config.vocabulary.help').value
           }}
         </p>
 
         <!-- Schema Input Field -->
         <AtlasTextField
           v-model="localSchema"
-          :label="t('config.vocabulary.title', 'Vocabulary Schema').value"
-          :hint="t('components.config.vocabulary.schemaHint', `PostgreSQL schema name (e.g., 'public', 'vocab_v5')`).value"
+          :label="t('config.vocabulary.title').value"
+          :hint="t('components.config.vocabulary.schemaHint').value"
           persistent-hint
           :rules="validationRules"
           :disabled="isSaving"
@@ -51,13 +48,13 @@
           variant="ghost"
           @click="handleUndo"
         >
-          {{ t('config.vocabulary.undo', 'Undo').value }}
+          {{ t('config.vocabulary.undo').value }}
         </AtlasButton>
         <AtlasButton
           variant="ghost"
           @click="showToast = false"
         >
-          {{ t('common.close', 'Close').value }}
+          {{ t('common.close').value }}
         </AtlasButton>
       </template>
     </AtlasSnackbar>
@@ -170,11 +167,7 @@ watchDebounced(
       previousSchema.value = newValue
 
       // Show success toast
-      toastMessage.value = tv(
-        'components.config.vocabulary.updated',
-        'Vocabulary schema updated to "{value}"',
-        { value: newValue }
-      )
+      toastMessage.value = tv('components.config.vocabulary.updated', { value: newValue })
       showToast.value = true
     } catch (error: unknown) {
       // Rollback on error
@@ -184,10 +177,7 @@ watchDebounced(
       errorMessage.value =
         error instanceof Error
           ? error.message
-          : tv(
-              'components.config.vocabulary.updateError',
-              'Failed to update schema. Please try again.'
-            )
+          : tv('components.config.vocabulary.updateError')
       showErrorToast.value = true
     } finally {
       isSaving.value = false
@@ -215,18 +205,14 @@ async function handleUndo() {
       await configStore.updateVocabularySchema(previousValue)
 
       // Show feedback
-      toastMessage.value = tv(
-        'components.config.vocabulary.reverted',
-        'Reverted to "{value}"',
-        { value: previousValue }
-      )
+      toastMessage.value = tv('components.config.vocabulary.reverted', { value: previousValue })
       showToast.value = true
     })
   } catch (error: unknown) {
     errorMessage.value =
       error instanceof Error
         ? error.message
-        : tv('components.config.vocabulary.undoError', 'Failed to undo. Please try again.')
+        : tv('components.config.vocabulary.undoError')
     showErrorToast.value = true
   }
 }

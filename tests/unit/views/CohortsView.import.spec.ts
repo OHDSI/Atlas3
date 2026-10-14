@@ -111,6 +111,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
 import { saveCohortDefinition } from '@/services/cohort-definition.service'
+import { createI18nMock, tr } from '../../helpers/i18n-mock'
 
 // Create mock implementations
 const mockPush = vi.fn()
@@ -147,10 +148,7 @@ vi.mocked(useRoute).mockReturnValue({
   query: {}
 } as any)
 
-vi.mocked(useI18n).mockReturnValue({
-  t: (key: string, fallback?: string) => ref(fallback || key),
-  locale: ref('en-US')
-} as any)
+vi.mocked(useI18n).mockReturnValue(createI18nMock())
 
 vi.mocked(useCohorts).mockReturnValue({
   cohorts: mockCohorts,
@@ -194,7 +192,7 @@ describe('CohortsView cohort import', () => {
 
     await wrapper.vm.confirmImport()
 
-    expect(wrapper.vm.importError).toBe('Expression JSON is not valid JSON.')
+    expect(wrapper.vm.importError).toBe(tr('cohortDefinitions.importInvalidJson'))
     expect(saveCohortDefinition).not.toHaveBeenCalled()
   })
 
@@ -205,7 +203,7 @@ describe('CohortsView cohort import', () => {
 
     await wrapper.vm.confirmImport()
 
-    expect(wrapper.vm.importError).toBe('Expression must be a JSON object.')
+    expect(wrapper.vm.importError).toBe(tr('cohortDefinitions.importInvalidShape'))
     expect(saveCohortDefinition).not.toHaveBeenCalled()
   })
 
@@ -216,7 +214,7 @@ describe('CohortsView cohort import', () => {
 
     await wrapper.vm.confirmImport()
 
-    expect(wrapper.vm.importError).toBe('Expression must be a JSON object.')
+    expect(wrapper.vm.importError).toBe(tr('cohortDefinitions.importInvalidShape'))
     expect(saveCohortDefinition).not.toHaveBeenCalled()
   })
 
@@ -269,7 +267,7 @@ describe('CohortsView cohort import', () => {
 
     await wrapper.vm.confirmImport()
 
-    expect(wrapper.vm.importError).toBe('Import failed. Check the JSON and try again.')
+    expect(wrapper.vm.importError).toBe(tr('cohortDefinitions.importFailed'))
     expect(wrapper.vm.showImportDialog).toBe(true)
     expect(mockPush).not.toHaveBeenCalled()
   })
@@ -285,7 +283,7 @@ describe('CohortsView cohort import', () => {
 
     await wrapper.vm.confirmImport()
 
-    expect(wrapper.vm.importError).toBe('Import failed. Check the JSON and try again.')
+    expect(wrapper.vm.importError).toBe(tr('cohortDefinitions.importFailed'))
     expect(mockPush).not.toHaveBeenCalled()
   })
 
@@ -297,7 +295,7 @@ describe('CohortsView cohort import', () => {
 
     await wrapper.vm.confirmImport()
 
-    expect(wrapper.vm.importError).toBe('Import failed. Check the JSON and try again.')
+    expect(wrapper.vm.importError).toBe(tr('cohortDefinitions.importFailed'))
     expect(wrapper.vm.importing).toBe(false)
   })
 

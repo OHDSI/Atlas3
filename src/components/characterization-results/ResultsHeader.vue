@@ -15,7 +15,7 @@
       <div class="results-header__meta">
         <div class="results-header__field">
           <div class="results-header__label">
-            {{ tv('const.newEntityNames.source', 'Source') }}
+            {{ tv('columns.source') }}
           </div>
           <div class="results-header__value">
             {{ execution?.sourceKey ?? '—' }}
@@ -23,7 +23,7 @@
         </div>
         <div class="results-header__field">
           <div class="results-header__label">
-            {{ tv('columns.started', 'Started') }}
+            {{ tv('columns.started') }}
           </div>
           <div class="results-header__value">
             {{ formatTime(execution?.startTime) }}
@@ -31,7 +31,7 @@
         </div>
         <div class="results-header__field">
           <div class="results-header__label">
-            {{ tv('columns.finished', 'Completed') }}
+            {{ tv('columns.finished') }}
           </div>
           <div class="results-header__value">
             {{ formatTime(execution?.endTime) }}
@@ -39,7 +39,7 @@
         </div>
         <div class="results-header__field">
           <div class="results-header__label">
-            {{ tv('columns.duration', 'Duration') }}
+            {{ tv('columns.duration') }}
           </div>
           <div class="results-header__value">
             {{ durationLabel }}
@@ -47,7 +47,7 @@
         </div>
         <div class="results-header__field">
           <div class="results-header__label">
-            {{ tv('cc.viewEdit.results.detail.design', 'Design Hash') }}
+            {{ tv('cc.viewEdit.results.detail.designHash') }}
           </div>
           <div
             class="results-header__value results-header__value--mono"
@@ -58,7 +58,7 @@
         </div>
         <div class="results-header__field">
           <div class="results-header__label">
-            {{ tv('columns.results', 'Total rows') }}
+            {{ tv('columns.totalRows') }}
           </div>
           <div class="results-header__value">
             {{ resultCount }}
@@ -81,11 +81,7 @@
           <template #prepend>
             <span class="results-header__threshold-label">
               {{
-                tv(
-                  'cc.viewEdit.results.threshold.label',
-                  'Show covariates with prevalence ≥ {n}%',
-                  { n: threshold }
-                )
+                tv('cc.viewEdit.results.threshold.showAtLeast', { n: threshold })
               }}
             </span>
           </template>

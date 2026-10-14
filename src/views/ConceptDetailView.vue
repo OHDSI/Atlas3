@@ -40,10 +40,10 @@ function onAddToConceptSet(c: Concept) {
   conceptSetsStore.addConceptToSet(c)
   const setName =
     conceptSetsStore.currentSet?.name ||
-    t('components.conceptSetBuilder.newConceptSet', 'New concept set').value
+    t('components.conceptSetBuilder.newConceptSet').value
   feedback.value = {
     open: true,
-    text: t('search.addedToSet', 'Added "{concept}" → {set}', {
+    text: t('search.addedToSet', {
       concept: c.conceptName,
       set: setName,
     }).value,

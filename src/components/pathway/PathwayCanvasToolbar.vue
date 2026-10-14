@@ -19,7 +19,7 @@
       variant="outlined"
       class="canvas-toolbar__chip canvas-toolbar__chip--muted"
     >
-      {{ t('pathway.workbench.noRunsYet', 'No runs yet').value }}
+      {{ t('pathway.workbench.noRunsYet').value }}
     </AtlasChip>
 
     <AtlasChip
@@ -29,7 +29,7 @@
     >
       <strong>{{ coverage.totalPathwaysCount.toLocaleString() }}</strong>
       <span class="canvas-toolbar__age">
-        {{ t('common.of', 'of').value }} {{ coverage.targetCohortCount.toLocaleString() }} ({{
+        {{ t('common.of').value }} {{ coverage.targetCohortCount.toLocaleString() }} ({{
           coveragePct.toFixed(1)
         }}%)
       </span>
@@ -51,7 +51,7 @@
         size="sm"
         data-testid="toolbar-mode-visual"
       >
-        {{ t('cohortDefinitions.costUtilization.visualization', 'Visualization') }}
+        {{ t('cohortDefinitions.costUtilization.visualization') }}
       </AtlasButton>
       <AtlasButton
         toggle
@@ -59,7 +59,7 @@
         size="sm"
         data-testid="toolbar-mode-tabular"
       >
-        {{ t('pathway.results.tabular', 'Tabular') }}
+        {{ t('pathway.results.tabular') }}
       </AtlasButton>
     </v-btn-toggle>
   </div>

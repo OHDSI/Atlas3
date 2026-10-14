@@ -1,16 +1,28 @@
-import { getByPath } from './i18n-lib.mjs'
+import { getByPath, translatableSource } from './i18n-lib.mjs'
 
-const KEY_RE = /\b(?:t|tv)\(\s*'([A-Za-z0-9_.-]+)'(?:\s*,\s*'((?:[^'\\]|\\.)*)')?/g
+const KEY_RE = /\b(?:t|tv)\(\s*(['"])([A-Za-z0-9_.-]+)\1(?:\s*,\s*'((?:[^'\\]|\\.)*)')?/g
 
 export function extractKeys(source) {
   const out = []
   KEY_RE.lastIndex = 0
   let match
   while ((match = KEY_RE.exec(source))) {
-    const [, key, fallback] = match
+    const [, , key, fallback] = match
     if (!key.includes('.')) continue
     out.push({ key, fallback: fallback === undefined ? null : fallback })
   }
+  return out
+}
+
+// "nameKey": "attributes.age.name" — i18n keys held in JSON config.
+const CONFIG_KEY_RE = /"(\w*Key)"\s*:\s*"([A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+)"/g
+
+/** i18n keys referenced from JSON config (`*Key` fields), as fallback-less usages. */
+export function extractConfigKeys(json) {
+  const out = []
+  CONFIG_KEY_RE.lastIndex = 0
+  let match
+  while ((match = CONFIG_KEY_RE.exec(json))) out.push({ key: match[2], fallback: null })
   return out
 }
 
@@ -86,4 +98,82 @@ export function findFallbackConflicts(usages) {
     })
   }
   return conflicts
+}
+/**
+ * Atlas 2.x numbered keys (`cohortErasText_2`, `textfield_17`) say nothing
+ * about what the string is for. Name keys after their role instead.
+ */
+const NUMBERED_KEY_RE = /(_\d+|Text\d+)$|textfield/i
+
+/**
+ * Rules for en.json itself. Placeholders are `{name}` only — the Atlas 2.x
+ * `<%= name %>` style is not interpolated by useI18n.
+ */
+export function lintEnglish(en) {
+  const errors = []
+  for (const [key, value] of translatableSource(en)) {
+    if (value.includes('<%')) errors.push(`"${key}" uses a <%= %> placeholder; write {name} instead`)
+    if (NUMBERED_KEY_RE.test(key.split('.').pop())) {
+      errors.push(`"${key}" is a numbered key; name it after what the string is for`)
+    }
+  }
+  return errors
+}
+
+// t('key', <string literal> — the literal is '…' or "…" with escapes, or a
+// `…` template without interpolation. Group 1 is the call head up to the key,
+// group 2 the key, group 3 the literal (with its leading comma).
+const FALLBACK_RE =
+  /(\b(?:t|tv)\(\s*(['"])([A-Za-z0-9_.-]+)\2)(\s*,\s*(?:'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`[^`$\\]*`))(?=\s*[,)])/g
+
+/** The fallback literal's value, without its quotes and leading comma. */
+function literalValue(withComma) {
+  const literal = withComma.replace(/^\s*,\s*/, '')
+  return literal[0] === '`' ? literal.slice(1, -1) : unescapeLiteral(literal.slice(1, -1))
+}
+
+/**
+ * Inline English fallbacks on keys en.json already has. They are dead text at
+ * runtime (en.json is loaded before the first render), so en.json stays the
+ * single source of English. `divergent` marks a fallback whose wording differs
+ * from en.json — the call site probably wants its own key, so it is reported
+ * for a person to decide instead of being stripped.
+ * @returns {{ key: string, line: number, divergent: boolean, fallback: string, english: string }[]}
+ */
+export function findRedundantFallbacks(source, en) {
+  const out = []
+  FALLBACK_RE.lastIndex = 0
+  let match
+  while ((match = FALLBACK_RE.exec(source))) {
+    const english = getByPath(en, match[3])
+    if (typeof english !== 'string') continue
+    const fallback = literalValue(match[4])
+    out.push({
+      key: match[3],
+      line: source.slice(0, match.index).split('\n').length,
+      divergent: fallback !== english,
+      fallback,
+      english,
+    })
+  }
+  return out
+}
+
+/**
+ * Drop inline fallbacks that repeat en.json exactly, keeping any params
+ * argument that follows. Divergent fallbacks are left in place.
+ */
+export function stripFallbacks(source, en) {
+  return source.replace(FALLBACK_RE, (match, head, _quote, key, literal) =>
+    getByPath(en, key) === literalValue(literal) ? head : match
+  )
+}
+
+/** The value of a single-quoted JS string literal body (`It\'s` → `It's`). */
+export function unescapeLiteral(body) {
+  return body.replace(/\\(u\{[0-9a-fA-F]+\}|u[0-9a-fA-F]{4}|x[0-9a-fA-F]{2}|.)/g, (_, esc) => {
+    if (esc[0] === 'u') return String.fromCodePoint(parseInt(esc.replace(/[u{}]/g, ''), 16))
+    if (esc[0] === 'x') return String.fromCharCode(parseInt(esc.slice(1), 16))
+    return { n: '\n', t: '\t', r: '\r' }[esc] ?? esc
+  })
 }

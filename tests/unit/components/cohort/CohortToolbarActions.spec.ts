@@ -6,15 +6,14 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref } from 'vue'
 import CohortToolbarActions from '@/components/cohort/CohortToolbarActions.vue'
+import { tr } from '../../../helpers/i18n-mock'
 
 // Mock dependencies
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, fallback?: string) => ref(fallback || key)
-  })
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 const vuetify = createVuetify({ components, directives })
 
@@ -52,7 +51,7 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const cancelBtn = buttons.find(btn => btn.text().includes('Cancel') || btn.html().includes('mdi-close'))
+      const cancelBtn = buttons.find(btn => btn.text().includes(tr('common.cancel')) || btn.html().includes('mdi-close'))
       expect(cancelBtn).toBeDefined()
     })
 
@@ -60,7 +59,7 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes('Save'))
+      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes(tr('common.save')))
       expect(saveBtn).toBeDefined()
     })
 
@@ -74,7 +73,7 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const cancelBtn = buttons.find(btn => btn.text().includes('Cancel') || btn.html().includes('mdi-close'))
+      const cancelBtn = buttons.find(btn => btn.text().includes(tr('common.cancel')) || btn.html().includes('mdi-close'))
       expect(cancelBtn?.props('variant')).toBe('text')
     })
 
@@ -82,7 +81,7 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const cancelBtn = buttons.find(btn => btn.text().includes('Cancel') || btn.html().includes('mdi-close'))
+      const cancelBtn = buttons.find(btn => btn.text().includes(tr('common.cancel')) || btn.html().includes('mdi-close'))
       await cancelBtn?.trigger('click')
 
       expect(wrapper.emitted('cancel')).toBeTruthy()
@@ -93,19 +92,19 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent({ canSave: false })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const cancelBtn = buttons.find(btn => btn.text().includes('Cancel') || btn.html().includes('mdi-close'))
+      const cancelBtn = buttons.find(btn => btn.text().includes(tr('common.cancel')) || btn.html().includes('mdi-close'))
       expect(cancelBtn?.props('disabled')).toBeFalsy()
     })
 
     it('reads "Close" when there are no unsaved changes, not "Cancel" (#220)', () => {
       const wrapper = mountComponent({ isDirty: false })
-      expect(wrapper.text()).toContain('Close')
-      expect(wrapper.text()).not.toContain('Cancel')
+      expect(wrapper.text()).toContain(tr('common.close'))
+      expect(wrapper.text()).not.toContain(tr('common.cancel'))
     })
 
     it('reads "Cancel" when there are unsaved changes to discard (#220)', () => {
       const wrapper = mountComponent({ isDirty: true })
-      expect(wrapper.text()).toContain('Cancel')
+      expect(wrapper.text()).toContain(tr('common.cancel'))
     })
   })
 
@@ -114,7 +113,7 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes('Save'))
+      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes(tr('common.save')))
       expect(saveBtn?.props('color')).toBe('primary')
     })
 
@@ -122,7 +121,7 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes('Save'))
+      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes(tr('common.save')))
       expect(saveBtn?.props('variant')).toBe('flat')
     })
 
@@ -130,7 +129,7 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent({ canSave: true })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes('Save'))
+      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes(tr('common.save')))
       expect(saveBtn?.props('disabled')).toBe(false)
     })
 
@@ -138,7 +137,7 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent({ canSave: false })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes('Save'))
+      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes(tr('common.save')))
       expect(saveBtn?.props('disabled')).toBe(true)
     })
 
@@ -146,7 +145,7 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent({ canSave: true })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes('Save'))
+      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes(tr('common.save')))
       await saveBtn?.trigger('click')
 
       expect(wrapper.emitted('save')).toBeTruthy()
@@ -157,7 +156,7 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent({ hasUnsavedChanges: true })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes('Save'))
+      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes(tr('common.save')))
       // Just verify the button exists when unsaved changes are present
       expect(saveBtn).toBeDefined()
     })
@@ -166,7 +165,7 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent({ hasUnsavedChanges: false })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes('Save'))
+      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes(tr('common.save')))
       expect(saveBtn).toBeDefined()
     })
   })
@@ -192,7 +191,7 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent({ canSave: false })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes('Save'))
+      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes(tr('common.save')))
 
       expect(saveBtn?.props('disabled')).toBe(true)
     })
@@ -201,8 +200,8 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent({ canSave: true })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const cancelBtn = buttons.find(btn => btn.text().includes('Cancel') || btn.html().includes('mdi-close'))
-      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes('Save'))
+      const cancelBtn = buttons.find(btn => btn.text().includes(tr('common.cancel')) || btn.html().includes('mdi-close'))
+      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes(tr('common.save')))
 
       expect(cancelBtn?.props('disabled')).toBeFalsy()
       expect(saveBtn?.props('disabled')).toBe(false)
@@ -214,8 +213,8 @@ describe('CohortToolbarActions', () => {
       const wrapper = mountComponent({ canSave: true })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const cancelBtn = buttons.find(btn => btn.text().includes('Cancel') || btn.html().includes('mdi-close'))
-      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes('Save'))
+      const cancelBtn = buttons.find(btn => btn.text().includes(tr('common.cancel')) || btn.html().includes('mdi-close'))
+      const saveBtn = buttons.find(btn => btn.html().includes('save-cohort-btn') || btn.text().includes(tr('common.save')))
 
       await cancelBtn?.trigger('click')
       expect(wrapper.emitted('cancel')).toBeTruthy()

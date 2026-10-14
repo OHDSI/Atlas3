@@ -112,7 +112,7 @@ describe('cohort-editor interactions', () => {
     expect(rule.name).toBe('Updated Rule')
     expect(rule.description).toBeUndefined()
 
-    await wrapper.get('button[title="i18n:common.delete"]').trigger('click')
+    await wrapper.get('button[title="i18n:cohortDefinitions.inclusionRules.deleteRule"]').trigger('click')
     expect(wrapper.emitted('remove')).toEqual([[]])
   })
 

@@ -10,7 +10,7 @@
     v-else
     class="state"
   >
-    {{ t('common.loading', 'Loading incidence rate…') }}
+    {{ t('ir.editor.loading') }}
   </div>
 </template>
 
@@ -54,15 +54,12 @@ async function load() {
       return
     }
     if (!(await store.loadVersionPreview(id, Number(version)))) {
-      loadingError.value = t(
-        'incidenceRate.editor.loadError',
-        'Failed to load incidence rate'
-      ).value
+      loadingError.value = t('incidenceRate.editor.loadError').value
     }
     return
   }
   if (!(await store.loadIR(id)))
-    loadingError.value = t('incidenceRate.editor.loadError', 'Failed to load incidence rate').value
+    loadingError.value = t('incidenceRate.editor.loadError').value
 }
 
 onMounted(async () => {

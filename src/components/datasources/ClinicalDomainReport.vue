@@ -18,14 +18,14 @@
             start
             icon="mdi-chart-tree"
           />
-          {{ t('dataSources.treemap.treemapTab', 'Treemap') }}
+          {{ t('dataSources.treemap.treemapTab') }}
         </AtlasTab>
         <AtlasTab value="table">
           <AtlasIcon
             start
             icon="mdi-table"
           />
-          {{ t('dataSources.table.tableTab', 'Table') }}
+          {{ t('dataSources.table.tableTab') }}
         </AtlasTab>
       </AtlasTabs>
     </nav>

@@ -26,7 +26,7 @@
         v-if="expanded"
         class="prevalence-table__title"
       >
-        {{ tv('characterizations.results.table.prevalence', 'Prevalence') }}
+        {{ tv('characterizations.results.table.prevalence') }}
         <span class="prevalence-table__count">({{ rows.length }})</span>
       </h3>
     </div>
@@ -83,7 +83,7 @@
                 icon="mdi-magnify"
                 size="sm"
                 variant="text"
-                v-bind="{ ariaLabel: tv('columns.explore', 'Explore') }"
+                v-bind="{ ariaLabel: tv('columns.explore') }"
                 class="prevalence-table__explore-button"
                 :data-testid="`char-results-explore-${item.covariateId}`"
                 @click="emit('explore', item)"
@@ -155,7 +155,7 @@ const partitions = computed<Partition[]>(() => {
   for (const row of props.rows) {
     for (const key of new Set([...Object.keys(row.count), ...Object.keys(row.pct)])) {
       names.set(key, isOverall(key)
-        ? tv('components.characterizationTable1.overall', 'Overall')
+        ? tv('components.characterizationTable1.overall')
         : (row.strataNames?.[key] ?? key))
     }
   }
@@ -170,8 +170,8 @@ const partitions = computed<Partition[]>(() => {
  */
 function metricCells(partitionKey: string, cohortId: number) {
   const metrics = [
-    { field: 'count', title: tv('columns.count', 'Count'), format: formatCount },
-    { field: 'pct', title: tv('columns.pct', 'Pct'), format: formatPercent },
+    { field: 'count', title: tv('columns.count'), format: formatCount },
+    { field: 'pct', title: tv('columns.pct'), format: formatPercent },
   ] as const
   return metrics.map(metric => ({
     key: `${metric.field}.${partitionKey}.${cohortId}`,
@@ -193,10 +193,10 @@ function buildTable(key: string, label: string, partitionKey: string, groups: { 
     label,
     partitionKey,
     headers: [
-      { key: 'covariateName', title: tv('columns.covariate', 'Covariate'), sortable: false },
+      { key: 'covariateName', title: tv('columns.covariate'), sortable: false },
       {
         key: 'conceptId',
-        title: tv('columns.conceptId', 'Concept ID'),
+        title: tv('columns.conceptId'),
         sortable: false,
         width: 112,
         headerProps: { class: 'prevalence-table__concept' },
@@ -204,7 +204,7 @@ function buildTable(key: string, label: string, partitionKey: string, groups: { 
       },
       ...groups.map((group, index) => ({ key: `group-${index}`, title: group.title, align: 'center', children: group.cells })),
       ...(comparisonMode.value
-        ? [{ key: 'stdDiff', title: tv('characterizations.results.table.stdDiff', 'Std Diff'), sortable: false, width: 72 }]
+        ? [{ key: 'stdDiff', title: tv('characterizations.results.table.stdDiff'), sortable: false, width: 72 }]
         : []),
       {
         key: 'actions',

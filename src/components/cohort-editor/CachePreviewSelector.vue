@@ -68,11 +68,11 @@ const {
 
 function statusLabel(status: CacheStatusType | undefined): string {
   switch (status) {
-    case 'ready':     return t('trexsql.cacheReady', 'Ready').value
-    case 'stale':     return t('trexsql.cacheStale', 'Stale').value
-    case 'building':  return t('trexsql.cacheBuilding', 'Building').value
-    case 'error':     return t('trexsql.cacheError', 'Error').value
-    case 'not_built': return t('trexsql.cacheNotBuilt', 'Not Built').value
+    case 'ready':     return t('trexsql.cacheReady').value
+    case 'stale':     return t('trexsql.cacheStale').value
+    case 'building':  return t('trexsql.cacheBuilding').value
+    case 'error':     return t('trexsql.cacheError').value
+    case 'not_built': return t('trexsql.cacheNotBuilt').value
     default:          return ''
   }
 }

@@ -18,7 +18,7 @@ export interface SaveGate {
   /** Present only where the module gates Save on having changes at all. */
   isDirty?: boolean
   isSaving?: boolean
-  translate: (key: string, fallback: string, params?: Record<string, string>) => string
+  translate: (key: string, params?: Record<string, string>) => string
 }
 
 /**
@@ -32,30 +32,23 @@ export function resolveSaveDisabledReason(gate: SaveGate): string {
   const { translate: t, entity } = gate
 
   if (gate.isPreviewing) {
-    return t(
-      'const.disabledReason.previewingVersion',
-      'You are previewing an earlier version. Return to the current version to save.'
-    )
+    return t('const.disabledReason.previewingVersion')
   }
 
   if (!gate.hasPermission) {
     return gate.isNew
-      ? t('const.disabledReason.noCreatePermission', 'You do not have permission to create a {entity}.', {
+      ? t('const.disabledReason.noCreatePermission', {
           entity,
         })
-      : t(
-          'const.disabledReason.noWriteAccess',
-          'You do not own this {entity} and have not been granted write access to it.',
-          { entity }
-        )
+      : t('const.disabledReason.noWriteAccess', { entity })
   }
 
   if (!gate.hasName) {
-    return t('const.disabledReason.needsName', 'Give the {entity} a name before saving.', { entity })
+    return t('const.disabledReason.needsName', { entity })
   }
 
   if (gate.hasValidationErrors) {
-    return t('const.disabledReason.hasErrors', 'Resolve the validation errors before saving.')
+    return t('const.disabledReason.hasErrors')
   }
 
   // Everything below here is either self-evident or momentary: nothing has

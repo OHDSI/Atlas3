@@ -181,22 +181,22 @@ interface TableHeader {
 
 const headers = computed<TableHeader[]>(() => {
   const h: TableHeader[] = [
-    { key: 'source', title: t('columns.sourceName', 'Data source').value, sortable: false },
-    { key: 'status', title: t('columns.status', 'Status').value, sortable: false },
+    { key: 'source', title: t('columns.sourceName').value, sortable: false },
+    { key: 'status', title: t('columns.status').value, sortable: false },
   ]
   if (props.showPatientCount) {
-    h.push({ key: 'patients', title: t('columns.patients', 'Patients').value, sortable: false, align: 'end' })
+    h.push({ key: 'patients', title: t('columns.patients').value, sortable: false, align: 'end' })
   }
   h.push(
-    { key: 'lastRun', title: t('columns.lastRun', 'Last run').value, sortable: false },
-    { key: 'duration', title: t('columns.duration', 'Duration').value, sortable: false },
+    { key: 'lastRun', title: t('columns.lastRun').value, sortable: false },
+    { key: 'duration', title: t('columns.duration').value, sortable: false },
     { key: 'actions', title: '', sortable: false, align: 'end', width: 280 }
   )
   return h
 })
 
-const noRunText = computed(() => t('components.analysisExecution.notRun', 'Not run').value)
-const defaultNoSourcesText = tv('components.analysisExecution.noSources', 'No data sources available')
+const noRunText = computed(() => t('components.analysisExecution.notRun').value)
+const defaultNoSourcesText = tv('components.analysisExecution.noSources')
 
 type StatusKind = 'none' | 'success' | 'error' | 'warning' | 'running'
 

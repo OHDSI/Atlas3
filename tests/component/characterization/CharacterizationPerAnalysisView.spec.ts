@@ -6,6 +6,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import CharacterizationPerAnalysisView from '@/components/characterization/CharacterizationPerAnalysisView.vue'
 import type { LinkedCohort } from '@/models/characterization.types'
+import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 const COHORTS: LinkedCohort[] = [{ id: 1, name: 'A' }, { id: 2, name: 'B' }]
@@ -161,6 +162,6 @@ describe('CharacterizationPerAnalysisView', () => {
     })
 
     expect(w.findAllComponents({ name: 'PrevalenceTable' })).toHaveLength(0)
-    expect(w.text()).toContain('No rows match the current filter.')
+    expect(w.text()).toContain(tr('cc.viewEdit.workbench.empty.noDataTitle'))
   })
 })

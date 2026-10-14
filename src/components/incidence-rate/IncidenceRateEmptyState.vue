@@ -52,30 +52,30 @@ const icon = computed(() => {
 
 const title = computed(() => {
   switch (props.variant) {
-    case 'no-id':       return t('ir.workbench.saveFirstTitle', 'Save the analysis first').value
-    case 'no-runs':     return t('ir.workbench.noRunsTitle', 'No runs yet').value
-    case 'run-pending': return t('ir.workbench.runPendingTitle', 'Generation in progress').value
-    case 'run-failed':  return t('ir.workbench.runFailedTitle', 'Generation failed').value
-    case 'select-to':   return t('ir.workbench.selectToTitle', 'Pick a target and outcome').value
+    case 'no-id':       return t('ir.workbench.saveFirstTitle').value
+    case 'no-runs':     return t('ir.workbench.noRunsTitle').value
+    case 'run-pending': return t('ir.workbench.runPendingTitle').value
+    case 'run-failed':  return t('ir.workbench.runFailedTitle').value
+    case 'select-to':   return t('ir.workbench.selectToTitle').value
     default:            return ''
   }
 })
 
 const hint = computed(() => {
   switch (props.variant) {
-    case 'no-id':       return t('ir.workbench.saveFirstHint',  'Saving enables generation against a data source.').value
-    case 'no-runs':     return t('ir.workbench.noRunsHint',     'Generate against a data source to see the rate.').value
-    case 'run-pending': return t('ir.workbench.runPendingHint', 'This may take several minutes — feel free to leave the page.').value
-    case 'run-failed':  return t('ir.workbench.runFailedHint',  'See the error below or try again.').value
-    case 'select-to':   return t('ir.workbench.selectToHint',   'Use the target/outcome chips in the toolbar to view a rate.').value
+    case 'no-id':       return t('ir.workbench.saveFirstHint').value
+    case 'no-runs':     return t('ir.workbench.noRunsHint').value
+    case 'run-pending': return t('ir.workbench.runPendingHint').value
+    case 'run-failed':  return t('ir.workbench.runFailedHint').value
+    case 'select-to':   return t('ir.workbench.selectToHint').value
     default:            return ''
   }
 })
 
 const ctaLabel = computed(() => {
   switch (props.variant) {
-    case 'no-runs':    return t('components.generation.generate', 'Generate').value
-    case 'run-failed': return t('common.retry', 'Try again').value
+    case 'no-runs':    return t('components.generation.generate').value
+    case 'run-failed': return t('common.retry').value
     default:           return ''
   }
 })

@@ -17,6 +17,7 @@ import type {
   Translations,
 } from '@/types/i18n'
 import { logger } from '@/utils/logger'
+import enBundle from '@/locales/en.json'
 
 const CACHE_MAX_AGE = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -32,10 +33,14 @@ const BUNDLED_LOCALES: Locale[] = [
   { code: 'ja', name: '日本語' },
 ]
 
-// Lazy loaders for the bundled translation files. `en` also doubles as the
-// fallback layer (see loadFallbackTranslations).
+// English ships in the main chunk and is in the store from the very first
+// render, so a t() call never shows a raw key while the app boots — en.json is
+// the only source of English text (no inline fallbacks at call sites).
+const EN_TRANSLATIONS = enBundle as unknown as Translations
+
+// Lazy loaders for the other bundled translation files.
 const bundledTranslationLoaders: Record<LocaleCode, () => Promise<Translations>> = {
-  en: () => import('@/locales/en.json').then(unwrapTranslations),
+  en: async () => EN_TRANSLATIONS,
   ja: () => import('@/locales/ja.json').then(unwrapTranslations),
   ko: () => import('@/locales/ko.json').then(unwrapTranslations),
   ru: () => import('@/locales/ru.json').then(unwrapTranslations),
@@ -43,10 +48,8 @@ const bundledTranslationLoaders: Record<LocaleCode, () => Promise<Translations>>
 }
 
 // Atlas3-only keys (e.g. `route.*`) that don't exist in the imported ko/ru/zh
-// bundles. We keep the bundled en.json as a fallback layer and deep-merge the
-// selected locale's bundle on top so missing keys still resolve.
-let bundledFallback: Translations | null = null
-
+// bundles. English is the fallback layer: the selected locale's bundle is
+// deep-merged on top so missing keys still resolve.
 // Dynamic JSON import returns a module namespace; the actual content is under
 // `.default`. Spread to flatten in case future Vite versions change the shape.
 function unwrapTranslations(mod: unknown): Translations {
@@ -73,13 +76,13 @@ function deepMergeTranslations(base: Translations, override: Translations): Tran
 }
 
 function withFallback(bundle: Translations): Translations {
-  return bundledFallback ? deepMergeTranslations(bundledFallback, bundle) : bundle
+  return bundle === EN_TRANSLATIONS ? bundle : deepMergeTranslations(EN_TRANSLATIONS, bundle)
 }
 
 export const useLocaleStore = defineStore('locale', {
   state: (): LocaleState => ({
     locale: 'en',
-    translations: {},
+    translations: EN_TRANSLATIONS,
     availableLocales: [],
     loading: false,
     error: null,
@@ -107,7 +110,7 @@ export const useLocaleStore = defineStore('locale', {
     async initialize(): Promise<void> {
       try {
         // Load English translations immediately (bundled)
-        await this.loadFallbackTranslations()
+        this.loadFallbackTranslations()
 
         this.availableLocales = [...BUNDLED_LOCALES]
 
@@ -141,7 +144,7 @@ export const useLocaleStore = defineStore('locale', {
       const bundledLoader = bundledTranslationLoaders[locale]
       if (!bundledLoader) {
         logger.warn('LocaleStore', `No bundled translations for ${locale}, keeping English`)
-        await this.loadFallbackTranslations()
+        this.loadFallbackTranslations()
         return
       }
 
@@ -163,7 +166,7 @@ export const useLocaleStore = defineStore('locale', {
       } catch (error) {
         logger.error('LocaleStore', `Failed to load bundled translations for ${locale}`, error)
         this.error = `Failed to load ${locale} translations. Falling back to English.`
-        await this.loadFallbackTranslations()
+        this.loadFallbackTranslations()
       } finally {
         this.loading = false
       }
@@ -219,25 +222,10 @@ export const useLocaleStore = defineStore('locale', {
     },
 
     /**
-     * Load fallback English translations
+     * Reset to the bundled English translations
      */
-    async loadFallbackTranslations(): Promise<void> {
-      try {
-        const flat = unwrapTranslations(await import('@/locales/en.json'))
-        bundledFallback = flat
-        this.translations = flat
-      } catch (error) {
-        logger.error('LocaleStore', 'Failed to load fallback translations', error)
-        // Provide minimal fallback translations
-        this.translations = {
-          common: {
-            error: 'Error',
-            loading: 'Loading...',
-            save: 'Save',
-            cancel: 'Cancel',
-          },
-        }
-      }
+    loadFallbackTranslations(): void {
+      this.translations = EN_TRANSLATIONS
     },
 
     /**

@@ -11,6 +11,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import ErrorBoundary from '@/components/shared/ErrorBoundary.vue'
 import { defineComponent, h } from 'vue'
+import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({
   components,
@@ -133,8 +134,8 @@ describe('ErrorBoundary', () => {
 
       // Should show error UI
       expect(wrapper.find('.error-boundary').exists()).toBe(true)
-      expect(wrapper.text()).toContain('Something Went Wrong')
-      expect(wrapper.text()).toContain('An unexpected error occurred')
+      expect(wrapper.text()).toContain(tr('commonErrors.somethingWentWrong'))
+      expect(wrapper.text()).toContain(tr('commonErrors.unexpectedError'))
     })
 
     it('should display error details in expansion panel', async () => {
@@ -154,7 +155,7 @@ describe('ErrorBoundary', () => {
       expect(expansionPanel.exists()).toBe(true)
 
       // Error message should be in the details
-      expect(wrapper.text()).toContain('Error Details')
+      expect(wrapper.text()).toContain(tr('commonErrors.errorDetails'))
     })
 
     it('should log error to console', async () => {
@@ -236,7 +237,7 @@ describe('ErrorBoundary', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const reloadButton = buttons.find(btn => btn.text().includes('Reload Page'))
+      const reloadButton = buttons.find(btn => btn.text().includes(tr('common.reloadPage')))
 
       expect(reloadButton).toBeDefined()
       expect(reloadButton?.props('prependIcon')).toBe('mdi-refresh')
@@ -255,7 +256,7 @@ describe('ErrorBoundary', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const backButton = buttons.find(btn => btn.text().includes('Go Back'))
+      const backButton = buttons.find(btn => btn.text().includes(tr('common.goBack')))
 
       expect(backButton).toBeDefined()
       expect(backButton?.props('prependIcon')).toBe('mdi-arrow-left')
@@ -305,7 +306,7 @@ describe('ErrorBoundary', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const reloadButton = buttons.find(btn => btn.text().includes('Reload Page'))
+      const reloadButton = buttons.find(btn => btn.text().includes(tr('common.reloadPage')))
 
       await reloadButton?.trigger('click')
 
@@ -329,7 +330,7 @@ describe('ErrorBoundary', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const backButton = buttons.find(btn => btn.text().includes('Go Back'))
+      const backButton = buttons.find(btn => btn.text().includes(tr('common.goBack')))
 
       await backButton?.trigger('click')
 
@@ -431,8 +432,8 @@ describe('ErrorBoundary', () => {
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
       const buttonTexts = buttons.map(btn => btn.text())
 
-      expect(buttonTexts).toContain('Reload Page')
-      expect(buttonTexts).toContain('Go Back')
+      expect(buttonTexts).toContain(tr('common.reloadPage'))
+      expect(buttonTexts).toContain(tr('common.goBack'))
     })
   })
 

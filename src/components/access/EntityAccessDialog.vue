@@ -11,11 +11,11 @@
       <header class="entity-access-dialog__header">
         <div class="entity-access-dialog__title-block">
           <div class="entity-access-dialog__eyebrow-row">
-            <span class="text-eyebrow">{{ t('components.access.configureAccess', 'Configure access').value }}</span>
+            <span class="text-eyebrow">{{ t('components.access.configureAccess').value }}</span>
             <span class="entity-access-dialog__accent-rule" />
           </div>
           <h2 class="entity-access-dialog__title">
-            {{ title || t('common.configureAccess', 'Configure access').value }}
+            {{ title || t('common.configureAccess').value }}
           </h2>
           <p
             v-if="subtitle"
@@ -26,7 +26,7 @@
         </div>
         <AtlasIconButton
           icon="mdi-close"
-          v-bind="{ ariaLabel: t('common.close', 'Close').value }"
+          v-bind="{ ariaLabel: t('common.close').value }"
           variant="text"
           size="sm"
           @click="emit('update:modelValue', false)"
@@ -43,10 +43,7 @@
             class="mb-4"
           >
             {{
-              t(
-                'components.access.entityMissing',
-                'Save the asset before assigning permissions.'
-              ).value
+              t('components.access.entityMissing').value
             }}
           </AtlasAlert>
 
@@ -70,17 +67,14 @@
           <template v-else>
             <div class="entity-access-dialog__intro text-body-2 text-medium-emphasis mb-4">
               {{
-                t(
-                  'components.access.intro',
-                  'Grant READ or WRITE access to this asset by assigning roles. WRITE implies READ.'
-                ).value
+                t('components.access.intro').value
               }}
             </div>
 
             <section class="entity-access-dialog__section">
               <div class="entity-access-dialog__section-header">
                 <h3 class="text-h6">
-                  {{ t('common.read', 'Read').value }}
+                  {{ t('common.read').value }}
                 </h3>
                 <AtlasChip
                   tone="primary"
@@ -96,8 +90,8 @@
                   :items="readSuggestions"
                   item-title="name"
                   item-value="id"
-                  :label="t('components.access.addReadAccess', 'Add READ access to role').value"
-                  :placeholder="t('components.access.searchRoles', 'Search roles...').value"
+                  :label="t('components.access.addReadAccess').value"
+                  :placeholder="t('components.access.searchRoles').value"
                   clearable
                   no-filter
                   class="entity-access-dialog__search"
@@ -110,7 +104,7 @@
                   :loading="isLoadingRead"
                   @click="grantReadAccess"
                 >
-                  {{ t('common.add', 'Add').value }}
+                  {{ t('common.add').value }}
                 </AtlasButton>
               </div>
 
@@ -129,7 +123,7 @@
                   <AtlasIconButton
                     v-if="canRevokeRoleForItem(item)"
                     icon="mdi-delete-outline"
-                    v-bind="{ ariaLabel: t('common.configureAccessModal.revoke', 'Revoke').value }"
+                    v-bind="{ ariaLabel: t('common.configureAccessModal.revoke').value }"
                     variant="text"
                     size="sm"
                     tone="danger"
@@ -144,7 +138,7 @@
             <section class="entity-access-dialog__section">
               <div class="entity-access-dialog__section-header">
                 <h3 class="text-h6">
-                  {{ t('common.write', 'Write').value }}
+                  {{ t('common.write').value }}
                 </h3>
                 <AtlasChip
                   tone="primary"
@@ -160,8 +154,8 @@
                   :items="writeSuggestions"
                   item-title="name"
                   item-value="id"
-                  :label="t('components.access.addWriteAccess', 'Add WRITE access to role').value"
-                  :placeholder="t('components.access.searchRoles', 'Search roles...').value"
+                  :label="t('components.access.addWriteAccess').value"
+                  :placeholder="t('components.access.searchRoles').value"
                   clearable
                   no-filter
                   class="entity-access-dialog__search"
@@ -174,7 +168,7 @@
                   :loading="isLoadingWrite"
                   @click="grantWriteAccess"
                 >
-                  {{ t('common.add', 'Add').value }}
+                  {{ t('common.add').value }}
                 </AtlasButton>
               </div>
 
@@ -193,7 +187,7 @@
                   <AtlasIconButton
                     v-if="canRevokeRoleForItem(item)"
                     icon="mdi-delete-outline"
-                    v-bind="{ ariaLabel: t('common.configureAccessModal.revoke', 'Revoke').value }"
+                    v-bind="{ ariaLabel: t('common.configureAccessModal.revoke').value }"
                     variant="text"
                     size="sm"
                     tone="danger"
@@ -267,10 +261,10 @@ const readSuggestions = ref<Role[]>([])
 const writeSuggestions = ref<Role[]>([])
 
 const accessHeaders = [
-  { title: t('columns.id', 'ID').value, key: 'id', width: '100px' },
-  { title: t('columns.permission', 'Role').value, key: 'name' },
-  { title: t('columns.description', 'Description').value, key: 'description' },
-  { title: t('columns.action', 'Action').value, key: 'actions', sortable: false, width: '110px' },
+  { title: t('columns.id').value, key: 'id', width: '100px' },
+  { title: t('columns.role').value, key: 'name' },
+  { title: t('columns.description').value, key: 'description' },
+  { title: t('columns.action').value, key: 'actions', sortable: false, width: '110px' },
 ]
 
 let readSearchDebounce: ReturnType<typeof setTimeout> | null = null
