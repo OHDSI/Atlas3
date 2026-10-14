@@ -12,6 +12,16 @@
       rounded="lg"
       class="login-card"
     >
+      <AtlasIconButton
+        icon="mdi-close"
+        size="sm"
+        variant="text"
+        tone="neutral"
+        class="login-card__close"
+        data-testid="login-cancel"
+        v-bind="{ ariaLabel: t('common.cancel', 'Cancel').value }"
+        @click="cancel"
+      />
       <div class="login-card__header">
         <div class="login-card__brand">
           Atlas
@@ -114,7 +124,8 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton } from '@/components/ui'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
 import { getAuthConfig } from '@/config/auth.config'
@@ -125,12 +136,13 @@ import CredentialsForm from './CredentialsForm.vue'
 
 const auth = useAuth()
 const { t } = useI18n()
+const router = useRouter()
 
 const isOpen = computed({
   get: () => auth.loginModalOpen.value,
   set: value => {
     if (!value) {
-      close()
+      cancel()
     }
   },
 })
@@ -219,6 +231,18 @@ async function handleLogin(credentials: LoginCredentials) {
   }
 }
 
+// Listen on window: when the modal opens on its own (route guard, 401) focus
+// stays on the page, so a keydown handler on the dialog would never fire.
+function onKeydown(event: KeyboardEvent) {
+  if (event.key !== 'Escape' || !auth.loginModalOpen.value) return
+  const overlay = (document.activeElement as HTMLElement | null)?.closest('.v-overlay')
+  if (overlay && !overlay.classList.contains('login-modal')) return
+  cancel()
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+
 function clearError() {
   auth.setError(null)
 }
@@ -226,6 +250,16 @@ function clearError() {
 function close() {
   auth.closeLoginModal()
   selectedProvider.value = null
+}
+
+// Dismissing the prompt must not strand the user on a page they cannot load,
+// so leave protected routes unless an anonymous subject can still view them.
+function cancel() {
+  close()
+  const route = router.currentRoute.value
+  if (route.meta.requiresAuth === true && !auth.isAuthenticated.value && !auth.user.value) {
+    void router.push({ name: 'home' })
+  }
 }
 </script>
 
@@ -235,8 +269,15 @@ function close() {
  * matches. The global rule in assets/styles/vuetify-overrides.css paints the
  * same blur and 45% --atlas-color-scrim tint, per theme. */
 .login-card {
+  position: relative;
   background: var(--atlas-color-surface);
   overflow: hidden;
+}
+
+.login-card__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
 }
 
 .login-card__header {
