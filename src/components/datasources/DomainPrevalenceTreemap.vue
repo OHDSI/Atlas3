@@ -114,6 +114,7 @@ function buildHierarchy(flatData: TreemapNode[]): TreemapNode[] {
   }
 
   const root: Map<string, MapNode> = new Map()
+  const unclassifiedLabel = t('components.domainPrevalenceTreemap.unclassified', 'Unclassified').value
 
   flatData.forEach(item => {
     // Skip items with "NA" or invalid conceptPath
@@ -153,6 +154,13 @@ function buildHierarchy(flatData: TreemapNode[]): TreemapNode[] {
 
     if (levels.length === 0) {
       return
+    }
+
+    // Concepts outside the classification arrive as `NA||NA||NA||name`.
+    // Collect them under one group instead of giving each its own top-level
+    // tile, which buried the real groups among thousands of tiny ones.
+    if (levels.length === 1) {
+      levels.unshift(unclassifiedLabel)
     }
 
     let currentLevel = root

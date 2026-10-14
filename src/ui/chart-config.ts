@@ -526,6 +526,10 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
       : undefined,
     tooltip: {
       trigger: 'item',
+      // Concept paths run to 150+ characters. Keep the box inside the chart
+      // and wrap, or the card's overflow clips it at the edges.
+      confine: true,
+      extraCssText: 'max-width: 480px; white-space: normal; overflow-wrap: anywhere;',
       formatter: (params: unknown) => {
         const p = params as { name: string; value: number; data?: { conceptPath?: string } }
         const value = formatSINumber(p.value)
@@ -533,7 +537,8 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
         // Format the concept path with newlines and tabs
         let displayName = p.name
         if (p.data?.conceptPath) {
-          const parts = p.data.conceptPath.split('||')
+          // Unclassified concepts carry `NA` placeholders for every level.
+          const parts = p.data.conceptPath.split('||').filter(part => part.trim() !== 'NA')
           displayName = parts
             .map((part, index) => {
               const tabs = '\u00A0\u00A0\u00A0\u00A0'.repeat(index) // 4 non-breaking spaces per level
@@ -598,29 +603,39 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
           // Dark-only so light — which never set a colour here — is untouched.
           ...(chartMode === 'dark' ? { color: CHART_LABEL_ON_MARK } : {}),
         },
+        // Tiles are separated by borders only, and only top-level groups get
+        // a label band. Hierarchies run 4-6 levels deep and can put hundreds
+        // of concepts under one group (SynPUF procedures: ~700); 2px borders
+        // + gaps + a 30px band per level left most of those tiles 0px wide,
+        // so groups rendered as empty white boxes. The defaults below apply
+        // to every level `levels` doesn't override, however deep.
         upperLabel: {
-          show: true,
+          show: false,
           height: 30,
           color: CHART_LABEL_ON_MARK,
         },
         itemStyle: {
           borderColor: CHART_SURFACE,
-          borderWidth: 2,
-          gapWidth: 2,
+          borderWidth: 0.5,
+          gapWidth: 0,
+          // Derive borders from the tile's own colour: a white border on a
+          // sub-pixel tile (or on a group whose children fall below
+          // visibleMin) otherwise reads as a white patch.
+          borderColorSaturation: 0.35,
         },
+        // levels[0] is the root, levels[1] the top-level groups.
         levels: [
           {
             itemStyle: {
-              borderWidth: 3,
-              gapWidth: 3,
+              borderWidth: 0,
             },
           },
           {
             itemStyle: {
-              borderWidth: 2,
-              gapWidth: 2,
+              borderWidth: 1,
               borderColorSaturation: 0.6,
             },
+            upperLabel: { show: true },
           },
         ],
         // Each node gets its own itemStyle.color computed from the
@@ -702,7 +717,31 @@ function sampleGradient(stops: readonly string[], t: number): string {
 function paintTreemapNodesByValue(nodes: TreemapNode[]): TreemapNode[] {
   // Pick the colour magnitude per node: prefer colorValue, else fall
   // back to value.
-  const colorMagnitude = (node: TreemapNode): number => node.colorValue ?? node.value ?? 0
+  const leafMagnitude = (node: TreemapNode): number => node.colorValue ?? node.value ?? 0
+
+  // A group is visible on its own when its children are too small to draw.
+  // Its summed `value` sits far above the leaf range and always painted the
+  // darkest stop, so use the size-weighted mean of its leaves instead.
+  const groupMagnitude = new Map<TreemapNode, number>()
+  function weighLeaves(node: TreemapNode): { weight: number; total: number } {
+    if (!node.children || node.children.length === 0) {
+      const weight = node.value || 0
+      return { weight, total: weight * leafMagnitude(node) }
+    }
+    let weight = 0
+    let total = 0
+    for (const child of node.children) {
+      const part = weighLeaves(child)
+      weight += part.weight
+      total += part.total
+    }
+    if (weight > 0) groupMagnitude.set(node, total / weight)
+    return { weight, total }
+  }
+  nodes.forEach(weighLeaves)
+
+  const colorMagnitude = (node: TreemapNode): number =>
+    groupMagnitude.get(node) ?? leafMagnitude(node)
 
   // Compute global min/max of colour magnitudes (recurse).
   const allColorValues: number[] = []
