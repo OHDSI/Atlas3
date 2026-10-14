@@ -107,13 +107,13 @@ watch(
       data-testid="concept-stat-cards-source-error"
       severity="warning"
     >
-      {{ t('components.conceptDetail.sourcesLoadFailed', 'Unable to load data sources.').value }}
+      {{ t('components.conceptDetail.sourcesLoadFailed').value }}
       <AtlasButton
         variant="link"
         size="sm"
         @click="loadSourcesAndCounts"
       >
-        {{ t('common.retry', 'Retry').value }}
+        {{ t('common.retry').value }}
       </AtlasButton>
     </AtlasAlert>
 
@@ -122,7 +122,7 @@ watch(
       data-testid="concept-stat-cards-empty"
       severity="info"
     >
-      {{ t('components.conceptDetail.noResultsSources', 'No data sources with a Results schema are available.').value }}
+      {{ t('components.conceptDetail.noResultsSources').value }}
     </AtlasAlert>
 
     <template v-else-if="dataSources.sourcesLoaded">
@@ -141,8 +141,12 @@ watch(
             {{ formatCount(countsBySource.get(source.sourceKey)?.recordCount) }}
           </div>
           <div class="stat-sub">
-            {{ formatPercent(countsBySource.get(source.sourceKey)?.personCount) }} {{ t('components.conceptDetail.persons', 'persons').value }} ·
-            {{ formatCount(countsBySource.get(source.sourceKey)?.descendantRecordCount) }} {{ t('components.conceptDetail.descAbbr', 'desc.').value }}
+            {{
+              t('components.conceptDetail.statSummary', {
+                persons: formatPercent(countsBySource.get(source.sourceKey)?.personCount),
+                descendants: formatCount(countsBySource.get(source.sourceKey)?.descendantRecordCount),
+              }).value
+            }}
           </div>
         </AtlasCard>
       </div>
@@ -156,8 +160,8 @@ watch(
         @click="isExpanded = !isExpanded"
       >
         {{ isExpanded
-          ? t('components.conceptDetail.showFewerSources', 'Show fewer sources').value
-          : t('components.conceptDetail.showAllSources', 'Show all {count} sources', { count: rankedSources.length }).value }}
+          ? t('components.conceptDetail.showFewerSources').value
+          : t('components.conceptDetail.showAllSources', { count: rankedSources.length }).value }}
       </AtlasButton>
     </template>
   </section>

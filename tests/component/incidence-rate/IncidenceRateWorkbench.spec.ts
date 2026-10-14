@@ -2,10 +2,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { setActivePinia, createPinia } from 'pinia'
-import { vuetify, pristinePinia } from './_test-helpers'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { generateIncidenceRate, cancelIncidenceRateGeneration, getIncidenceRateReport } from '@/services/incidence-rate.service'
+import { tr } from '../../helpers/i18n-mock'
+import { vuetify, pristinePinia } from './_test-helpers'
+
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 const { mockBuildCsvExport } = vi.hoisted(() => ({
   mockBuildCsvExport: vi.fn(),
@@ -31,7 +37,6 @@ vi.mock('@/components/incidence-rate/incidence-rate-workbench-state', async impo
     buildCsvExport: mockBuildCsvExport,
   }
 })
-
 
 vi.mock('@/stores/datasources', () => ({
   useDataSourcesStore: () => ({ sources: [], isLoading: false, fetchDataSources: vi.fn() }),
@@ -110,7 +115,7 @@ describe('IncidenceRateWorkbench', () => {
     await flushPromises()
 
     expect(runTable.props('runDisabled')).toBe(true)
-    expect(runTable.props('runDisabledReason')).toMatch(/validation/i)
+    expect(runTable.props('runDisabledReason')).toBe(tr('components.generation.fixErrors'))
   })
 
   it('shows validation messages from the warning indicator', async () => {

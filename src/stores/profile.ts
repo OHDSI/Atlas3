@@ -13,6 +13,7 @@ import {
   type CohortConceptSet,
 } from '@/models/profile.types'
 import { getPerson, getCohortConceptSets } from '@/services/profile.service'
+import { useI18n } from '@/composables/useI18n'
 
 interface RouteParams {
   sourceKey: string | null
@@ -21,6 +22,7 @@ interface RouteParams {
 }
 
 export const useProfileStore = defineStore('profile', () => {
+  const { tv } = useI18n()
   // route mirror
   const sourceKey = ref<string | null>(null)
   const personId = ref<number | null>(null)
@@ -117,7 +119,8 @@ export const useProfileStore = defineStore('profile', () => {
       }
     } catch (err) {
       person.value = null
-      error.value = err instanceof Error ? err.message : 'Failed to load profile'
+      error.value =
+        err instanceof Error ? err.message : tv('profiles.loadFailed')
       logger.error('ProfileStore', 'loadPerson failed', err)
     } finally {
       loading.value = false

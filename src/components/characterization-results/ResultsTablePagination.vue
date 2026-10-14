@@ -4,14 +4,14 @@
     data-testid="char-results-pagination"
   >
     <div class="results-table-pagination__per-page">
-      <span class="results-table-pagination__label">Rows per page</span>
+      <span class="results-table-pagination__label">{{ tv('characterizations.results.pagination.rowsPerPage') }}</span>
       <AtlasSelect
         :model-value="pageSize"
         :items="pageSizeOptions"
         variant="outlined"
         hide-details
         class="results-table-pagination__select"
-        aria-label="Rows per page"
+        :aria-label="tv('characterizations.results.pagination.rowsPerPage')"
         @update:model-value="$emit('update:page-size', Number($event))"
       />
     </div>
@@ -20,7 +20,7 @@
       role="status"
       aria-live="polite"
     >
-      {{ start }}-{{ end }} of {{ totalItems }}
+      {{ tv('characterizations.results.pagination.range', { start, end, total: totalItems }) }}
     </span>
     <AtlasPagination
       :model-value="page"
@@ -34,6 +34,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { AtlasPagination, AtlasSelect } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
+
+const { tv } = useI18n()
 
 const props = defineProps<{
   page: number

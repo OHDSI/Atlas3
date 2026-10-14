@@ -1,11 +1,11 @@
 <template>
   <div class="censoring-criteria-editor">
     <div class="censoring-criteria-editor__heading">
-      <span class="censoring-criteria-editor__eyebrow">Censoring Events</span>
+      <span class="censoring-criteria-editor__eyebrow">{{ tv('components.endStrategy.censoring.title') }}</span>
       <span class="censoring-criteria-editor__heading-rule" />
     </div>
     <p class="censoring-criteria-editor__lede">
-      Cohort members exit early when any of these events occur.
+      {{ tv('components.endStrategy.censoring.lede') }}
     </p>
 
     <div class="mt-3">
@@ -17,7 +17,7 @@
             size="sm"
             prepend-icon="mdi-plus"
           >
-            Add Censoring Event
+            {{ tv('components.endStrategy.censoring.add') }}
           </AtlasButton>
         </template>
 
@@ -25,7 +25,7 @@
           <AtlasListItem
             v-for="type in criteriaTypes"
             :key="type"
-            :title="type"
+            :title="tv(CRITERIA_TYPE_BY_KEY[type].i18nKey)"
             @click="addCriteria(type)"
           />
         </AtlasList>
@@ -62,7 +62,7 @@
       >
         mdi-information-outline
       </AtlasIcon>
-      <span>No censoring events defined. Cohort exit is determined only by the end strategy above.</span>
+      <span>{{ tv('components.endStrategy.censoring.empty') }}</span>
     </div>
   </div>
 </template>
@@ -75,9 +75,13 @@ import {
   AtlasListItem,
   AtlasMenu,
 } from '@/components/ui'
-import type { Criteria } from '@/models/circe-types'
+import type { Criteria, CriteriaWrapperKey } from '@/models/circe-types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 import CriteriaRenderer from '@/components/circe/criteria/CriteriaRenderer.vue'
+import { useI18n } from '@/composables/useI18n'
+import { CRITERIA_TYPE_BY_KEY } from '@/components/circe/criteria/criteria-registry'
+
+const { tv } = useI18n()
 
 const props = defineProps<{
   modelValue: Criteria[]
@@ -91,7 +95,7 @@ const emit = defineEmits<{
   'clear-concept-set': []
 }>()
 
-const criteriaTypes = [
+const criteriaTypes: CriteriaWrapperKey[] = [
   'ConditionOccurrence',
   'ConditionEra',
   'DrugExposure',

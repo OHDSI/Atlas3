@@ -21,15 +21,12 @@
                 icon="mdi-alert-circle"
                 class="mr-2"
               />
-              {{ t('configuration.viewEdit.source.alerts.save.error', 'Something Went Wrong') }}
+              {{ t('commonErrors.somethingWentWrong') }}
             </v-card-title>
             <v-card-text>
               <p class="mb-4">
                 {{
-                  t(
-                    'commonErrors.unexpectedError',
-                    'An unexpected error occurred. This has been logged for investigation.'
-                  ).value
+                  t('commonErrors.unexpectedError').value
                 }}
               </p>
 
@@ -43,7 +40,7 @@
                       icon="mdi-information-outline"
                       class="mr-2"
                     />
-                    {{ t('commonErrors.errorDetails', 'Error Details') }}
+                    {{ t('commonErrors.errorDetails') }}
                   </v-expansion-panel-title>
                   <v-expansion-panel-text>
                     <pre class="error-details">{{ errorDetails }}</pre>
@@ -58,14 +55,14 @@
                 icon="mdi-refresh"
                 @click="handleReset"
               >
-                {{ t('common.refresh', 'Reload Page') }}
+                {{ t('common.reloadPage') }}
               </AtlasButton>
               <AtlasButton
                 variant="ghost"
                 icon="mdi-arrow-left"
                 @click="handleGoBack"
               >
-                {{ t('common.goBack', 'Go Back') }}
+                {{ t('common.goBack') }}
               </AtlasButton>
             </v-card-actions>
           </v-card>

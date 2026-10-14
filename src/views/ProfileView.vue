@@ -2,14 +2,14 @@
   <AtlasPageShell
     hero
     compact
-    :eyebrow="tv('views.profile.eyebrow', 'PROFILE')"
+    :eyebrow="tv('views.profile.eyebrow')"
   >
     <template #title>
       <AtlasTextField
         v-model="personIdInput"
         class="hero-person-id"
-        :placeholder="tv('profiles.findAPerson', 'Find a person')"
-        :aria-label="tv('profiles.personId', 'Person Id')"
+        :placeholder="tv('profiles.findAPerson')"
+        :aria-label="tv('profiles.personId')"
         hide-details
         variant="plain"
         single-line
@@ -34,7 +34,7 @@
             data-test="profile-cohort-badge"
             @close="clearCohort"
           >
-            {{ tv('common.cohort', 'Cohort') }} #{{ store.cohortDefinitionId }}
+            {{ tv('common.cohort') }} #{{ store.cohortDefinitionId }}
           </AtlasChip>
         </template>
       </div>
@@ -42,7 +42,7 @@
         v-else
         class="profile-subtitle-row"
       >
-        {{ tv('profiles.chooseSourceAndPerson', 'Choose a data source and enter a person ID') }}
+        {{ tv('profiles.chooseSourceAndPerson') }}
       </div>
     </template>
 
@@ -52,7 +52,7 @@
         :items="sourceItems"
         item-title="title"
         item-value="value"
-        :label="tv('profiles.dataSource', 'Data source')"
+        :label="tv('profiles.dataSource')"
         hide-details
         variant="outlined"
         style="min-width: 220px; max-width: 260px"
@@ -61,7 +61,7 @@
       />
       <AtlasIconButton
         icon="mdi-refresh"
-        v-bind="{ ariaLabel: tv('cohortDefinitions.cohortDefinitionManager.panels.reload', 'Reload') }"
+        v-bind="{ ariaLabel: tv('cohortDefinitions.cohortDefinitionManager.panels.reload') }"
         variant="text"
         size="sm"
         data-test="profile-refresh"
@@ -117,7 +117,7 @@
         />
         <div class="profile-empty__text">
           {{
-            tv('profiles.emptyHint', 'Use the source picker and person ID above to load a profile.')
+            tv('profiles.emptyHint')
           }}
         </div>
       </div>

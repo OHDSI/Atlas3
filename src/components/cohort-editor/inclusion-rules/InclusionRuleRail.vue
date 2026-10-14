@@ -8,7 +8,7 @@
   >
     <div class="inclusion-rail__header">
       <span class="inclusion-rail__heading">
-        {{ t('inclusionRail.title', 'Inclusion rules').value }}
+        {{ t('inclusionRail.title').value }}
         <span class="inclusion-rail__count">({{ rules.length }})</span>
       </span>
       <AtlasButton
@@ -18,7 +18,7 @@
         data-testid="inclusion-rail-add"
         @click="$emit('add-rule')"
       >
-        {{ t('inclusionRail.add', 'Add rule').value }}
+        {{ t('inclusionRail.add').value }}
       </AtlasButton>
     </div>
 
@@ -35,13 +35,13 @@
       data-testid="inclusion-rail-entry"
     >
       <div class="inclusion-rail__entry-label">
-        {{ t('inclusionRail.entryEvents', 'Entry events').value }}
+        {{ t('inclusionRail.entryEvents').value }}
       </div>
       <div class="inclusion-rail__entry-meta">
         <strong>{{ formatCount(entryEventCount) }}</strong>
-        {{ t('inclusionRail.of', 'of').value }}
+        {{ t('inclusionRail.of').value }}
         <strong>{{ formatCount(totalDatasetCount) }}</strong>
-        {{ t('inclusionRail.datasetPatients', 'dataset patients').value }}
+        {{ t('inclusionRail.datasetPatients').value }}
         <span
           v-if="datasetPercentage !== null"
           class="inclusion-rail__entry-pct"
@@ -86,7 +86,7 @@
         <span class="inclusion-rail__rule-top">
           <span class="inclusion-rail__rule-name">
             <span class="inclusion-rail__rule-num">{{ index + 1 }}.</span>
-            {{ rule.name || t('inclusionRail.unnamedRule', 'Unnamed Rule').value }}
+            {{ rule.name || t('inclusionRail.unnamedRule').value }}
           </span>
           <span
             v-if="hasFunnel"
@@ -112,14 +112,14 @@
       data-testid="inclusion-rail-final"
     >
       <div class="inclusion-rail__final-label">
-        {{ t('inclusionRail.qualifyingCohort', 'Qualifying cohort').value }}
+        {{ t('inclusionRail.qualifyingCohort').value }}
       </div>
       <div class="inclusion-rail__final-row">
         <span class="inclusion-rail__final-count">{{ formatCount(finalCount) }}</span>
         <span
           v-if="finalPct !== null"
           class="inclusion-rail__final-pct"
-        >{{ finalPct }}% {{ t('inclusionRail.ofEntry', 'of entry').value }}</span>
+        >{{ finalPct }}% {{ t('inclusionRail.ofEntry').value }}</span>
       </div>
     </div>
   </div>

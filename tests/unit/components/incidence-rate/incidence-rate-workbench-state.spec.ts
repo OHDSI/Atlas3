@@ -14,6 +14,7 @@ import {
   resolveSelectedExecutionId,
 } from '@/components/incidence-rate/incidence-rate-workbench-state'
 import { arrayToCsv, downloadCsv } from '@/utils/csv'
+import { tr } from '../../../helpers/i18n-mock'
 
 describe('incidence-rate workbench state', () => {
   it('normalizes query, source, status, and execution table values', () => {
@@ -29,10 +30,10 @@ describe('incidence-rate workbench state', () => {
   })
 
   it('resolves run restrictions, history, active runs, and empty states', () => {
-    const translate = (_key: string, fallback: string) => fallback
-    expect(resolveRunDisabledReason({ isPreviewMode: true, isDirty: true, hasErrors: true, translate })).toBe('Preview mode')
-    expect(resolveRunDisabledReason({ isPreviewMode: false, isDirty: true, hasErrors: true, translate })).toBe('Save changes before running')
-    expect(resolveRunDisabledReason({ isPreviewMode: false, isDirty: false, hasErrors: true, translate })).toBe('Resolve validation errors before running')
+    const translate = (key: string) => tr(key)
+    expect(resolveRunDisabledReason({ isPreviewMode: true, isDirty: true, hasErrors: true, translate })).toBe(tr('common.previewMode'))
+    expect(resolveRunDisabledReason({ isPreviewMode: false, isDirty: true, hasErrors: true, translate })).toBe(tr('components.generation.unsavedChanges'))
+    expect(resolveRunDisabledReason({ isPreviewMode: false, isDirty: false, hasErrors: true, translate })).toBe(tr('components.generation.fixErrors'))
     expect(resolveRunDisabledReason({ isPreviewMode: false, isDirty: false, hasErrors: false, translate })).toBe('')
     expect(resolveHistorySourceName({ historySourceKey: null, sources: [] })).toBe('')
     expect(resolveHistorySourceName({ historySourceKey: 'A', sources: [{ sourceKey: 'A', sourceName: 'Alpha' }] })).toBe('Alpha')

@@ -18,20 +18,23 @@
             start
             icon="mdi-chart-tree"
           />
-          {{ t('dataSources.treemap.treemapTab', 'Treemap') }}
+          {{ t('dataSources.treemap.treemapTab') }}
         </AtlasTab>
         <AtlasTab value="table">
           <AtlasIcon
             start
             icon="mdi-table"
           />
-          {{ t('dataSources.table.tableTab', 'Table') }}
+          {{ t('dataSources.table.tableTab') }}
         </AtlasTab>
       </AtlasTabs>
     </nav>
 
     <div class="clinical-domain-report__body">
-      <v-window v-model="activeTab">
+      <v-window
+        v-model="activeTab"
+        class="clinical-domain-report__window"
+      >
         <v-window-item value="treemap">
           <DomainPrevalenceTreemap
             :data="data.prevalenceData.treemapNodes"
@@ -191,6 +194,12 @@ function clearDrilldown() {
 }
 
 .clinical-domain-report__body {
-  padding: 24px;
+  padding: 12px 24px 24px;
+}
+
+/* v-window clips its overflow for the slide transition, which cut off the
+ * floating label of the table's outlined search field. Leave room for it. */
+.clinical-domain-report__window :deep(.v-window-item) {
+  padding-top: 12px;
 }
 </style>

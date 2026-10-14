@@ -3,7 +3,7 @@
     <iframe
       :src="pdfUrl"
       class="docs-view__pdf"
-      :title="t('navigation.docs', 'User manual').value"
+      :title="t('navigation.docs').value"
       data-testid="docs-pdf-frame"
     />
   </div>

@@ -166,12 +166,12 @@ router.beforeEach(async (to, _from, next) => {
 
       // No token found - OAuth failed
       logger.error('Router', 'No token received from OAuth provider')
-      authStore.setError('Authentication failed - no token received')
+      authStore.setError(useI18n().tv('auth.oauthNoToken'))
       next('/')
       return
     } catch (error) {
       logger.error('Router', 'OAuth callback error', error)
-      authStore.setError(error instanceof Error ? error.message : 'Authentication failed')
+      authStore.setError(error instanceof Error ? error.message : useI18n().tv('auth.authenticationFailed'))
       next('/')
       return
     }

@@ -72,8 +72,8 @@ const emit = defineEmits<{
 
 const { modelValue, conceptSets, label, selectLabel, compact, pickerTestId, chipTestId } = toRefs(props)
 
-const anyOfLabel = computed(() => t('components.conceptAddBox.anyOf', 'any of').value)
-const notAnyOfLabel = computed(() => t('components.conceptAddBox.notAnyOf', 'not any of').value)
+const anyOfLabel = computed(() => t('components.conceptAddBox.anyOf').value)
+const notAnyOfLabel = computed(() => t('components.conceptAddBox.notAnyOf').value)
 
 // An unset IsExclusion means the selection is not excluded, the same as false.
 const isExcluded = computed(() => modelValue.value.IsExclusion === true)

@@ -6,16 +6,15 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref } from 'vue'
 import CohortMetadata from '@/components/cohort/CohortMetadata.vue'
 import type { Tag } from '@/models/cohort.types'
+import { tr } from '../../../helpers/i18n-mock'
 
 // Mock dependencies
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, fallback?: string) => ref(fallback || key)
-  })
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 const vuetify = createVuetify({ components, directives })
 
@@ -55,7 +54,7 @@ describe('CohortMetadata', () => {
 
       const cardTitle = wrapper.findComponent({ name: 'VCardTitle' })
       expect(cardTitle.exists()).toBe(true)
-      expect(cardTitle.text()).toContain('Cohort Definition')
+      expect(cardTitle.text()).toContain(tr('cohortDefinitions.cohort.modals.cohortDefinition.title'))
     })
 
     it('should render name field', () => {
@@ -79,7 +78,7 @@ describe('CohortMetadata', () => {
 
       const tagsLabel = wrapper.find('.metadata-tags__label')
       expect(tagsLabel.exists()).toBe(true)
-      expect(tagsLabel.text()).toBe('Tags')
+      expect(tagsLabel.text()).toBe(tr('common.tags'))
     })
   })
 
@@ -95,14 +94,14 @@ describe('CohortMetadata', () => {
       const wrapper = mountComponent()
 
       const textField = wrapper.findComponent({ name: 'VTextField' })
-      expect(textField.props('label')).toBe('Name')
+      expect(textField.props('label')).toBe(tr('columns.name'))
     })
 
     it('should have name placeholder', () => {
       const wrapper = mountComponent()
 
       const textField = wrapper.findComponent({ name: 'VTextField' })
-      expect(textField.props('placeholder')).toBe('Enter cohort name')
+      expect(textField.props('placeholder')).toBe(tr('components.atlasCohortEditor.enterCohortNamePlaceholder'))
     })
 
     it('should emit update:name when name changes', async () => {
@@ -153,14 +152,14 @@ describe('CohortMetadata', () => {
       const wrapper = mountComponent()
 
       const textarea = wrapper.findComponent({ name: 'VTextarea' })
-      expect(textarea.props('label')).toBe('Description')
+      expect(textarea.props('label')).toBe(tr('columns.description'))
     })
 
     it('should have description placeholder', () => {
       const wrapper = mountComponent()
 
       const textarea = wrapper.findComponent({ name: 'VTextarea' })
-      expect(textarea.props('placeholder')).toBe('Enter cohort description (optional)')
+      expect(textarea.props('placeholder')).toBe(tr('common.enterCohortDescription'))
     })
 
     it('should emit update:description when description changes', async () => {
@@ -237,7 +236,7 @@ describe('CohortMetadata', () => {
       const wrapper = mountComponent()
 
       const inputs = wrapper.findAllComponents({ name: 'VTextField' })
-      const tagInput = inputs.find(input => input.props('label') === 'Add tag')
+      const tagInput = inputs.find(input => input.props('label') === tr('common.addTag'))
       expect(tagInput).toBeDefined()
     })
 

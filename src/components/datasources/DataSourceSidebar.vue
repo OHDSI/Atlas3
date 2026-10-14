@@ -70,81 +70,81 @@ interface SidebarGroup {
 
 const coreGroups = computed<SidebarGroup[]>(() => [
   {
-    label: t('dataSources.sidebar.overview', 'Overview').value,
+    label: t('dataSources.sidebar.overview').value,
     items: [
       {
         value: 'dashboard',
-        label: t('dataSources.reportTypes.dashboard', 'Dashboard').value,
+        label: t('dataSources.reportTypes.dashboard').value,
         icon: 'mdi-view-dashboard-outline',
       },
       {
         value: 'datadensity',
-        label: t('dataSources.reportTypes.datadensity', 'Data Density').value,
+        label: t('dataSources.reportTypes.datadensity').value,
         icon: 'mdi-chart-bell-curve-cumulative',
       },
     ],
   },
   {
-    label: t('dataSources.sidebar.demographics', 'Demographics').value,
+    label: t('dataSources.sidebar.demographics').value,
     items: [
       {
         value: 'person',
-        label: t('dataSources.reportTypes.person', 'Person').value,
+        label: t('dataSources.reportTypes.person').value,
         icon: 'mdi-account-outline',
       },
       {
         value: 'observationPeriod',
-        label: t('dataSources.reportTypes.observationPeriod', 'Observation Period').value,
+        label: t('dataSources.reportTypes.observationPeriod').value,
         icon: 'mdi-calendar-range-outline',
       },
       {
         value: 'death',
-        label: t('dataSources.reportTypes.death', 'Death').value,
+        label: t('dataSources.reportTypes.death').value,
         icon: 'mdi-grave-stone',
       },
     ],
   },
   {
-    label: t('dataSources.sidebar.clinicalDomains', 'Clinical Domains').value,
+    label: t('dataSources.sidebar.clinicalDomains').value,
     items: [
       {
         value: 'visit',
-        label: t('dataSources.reportTypes.visit', 'Visit').value,
+        label: t('dataSources.reportTypes.visit').value,
         icon: 'mdi-hospital-building',
       },
       {
         value: 'conditionOccurrence',
-        label: t('dataSources.reportTypes.conditionOccurrence', 'Condition Occurrence').value,
+        label: t('dataSources.reportTypes.conditionOccurrence').value,
         icon: 'mdi-stethoscope',
       },
       {
         value: 'conditionEra',
-        label: t('dataSources.reportTypes.conditionEra', 'Condition Era').value,
+        label: t('dataSources.reportTypes.conditionEra').value,
         icon: 'mdi-clock-outline',
       },
       {
         value: 'procedure',
-        label: t('dataSources.reportTypes.procedure', 'Procedure').value,
+        label: t('dataSources.reportTypes.procedure').value,
         icon: 'mdi-medical-bag',
       },
       {
         value: 'drugExposure',
-        label: t('dataSources.reportTypes.drugExposure', 'Drug Exposure').value,
+        label: t('dataSources.reportTypes.drugExposure').value,
         icon: 'mdi-pill',
       },
       {
         value: 'drugEra',
-        label: t('dataSources.reportTypes.drugEra', 'Drug Era').value,
+        label: t('dataSources.reportTypes.drugEra').value,
         icon: 'mdi-pill-multiple',
       },
       {
         value: 'measurement',
-        label: t('dataSources.reportTypes.measurement', 'Measurement').value,
+        label: t('dataSources.reportTypes.measurement').value,
         icon: 'mdi-test-tube',
       },
       {
         value: 'observation',
-        label: t('dataSources.reportTypes.observation', 'Observation').value,
+        label: t('dataSources.reportTypes.observation').value,
         icon: 'mdi-eye-outline',
       },
     ],

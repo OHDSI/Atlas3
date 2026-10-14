@@ -33,48 +33,53 @@ export function formatWindowExpression(window?: Window): string {
   const { t } = useI18n()
 
   if (!window) {
-    return t('common.noWindow', 'No window').value
+    return t('common.noWindow').value
   }
 
-  return `${formatAnchor(window)} ${t('common.between', 'between').value} ${formatEndpoint(window.Start)} ${t('common.and', 'and').value} ${formatEndpoint(window.End)} ${formatIndexAnchor(window)}`
+  return t('components.windowExpression.summary', {
+    anchor: formatAnchor(window),
+    start: formatEndpoint(window.Start),
+    end: formatEndpoint(window.End),
+    indexAnchor: formatIndexAnchor(window),
+  }).value
 }
 
 export function getWindowPresetOptions(): WindowPresetOption[] {
   const { t } = useI18n()
 
   return [
-    buildPreset(t('components.temporalWindowEditor.shortTermBaseline', 'Short-term baseline (−30 to 0 days)').value,
+    buildPreset(t('components.temporalWindowEditor.shortTermBaseline').value,
       createWindow(30, 'before', 0, 'after'),
       undefined
     ),
-    buildPreset(t('components.temporalWindowEditor.mediumTermBaseline', 'Medium-term baseline (−180 to 0 days)').value,
+    buildPreset(t('components.temporalWindowEditor.mediumTermBaseline').value,
       createWindow(180, 'before', 0, 'after'),
       undefined
     ),
-    buildPreset(t('components.temporalWindowEditor.longTermBaseline', 'Long-term baseline (−365 to 0 days)').value,
+    buildPreset(t('components.temporalWindowEditor.longTermBaseline').value,
       createWindow(365, 'before', 0, 'after'),
       undefined
     ),
-    buildPreset(t('components.temporalWindowEditor.allTimePriorToIndex', 'All time prior to index').value,
+    buildPreset(t('components.temporalWindowEditor.allTimePriorToIndex').value,
       createWindow(null, 'before', 0, 'after'),
       undefined
     ),
-    buildPreset(t('components.temporalWindowEditor.onIndexDate', 'On index date').value,
+    buildPreset(t('components.temporalWindowEditor.onIndexDate').value,
       createWindow(0, 'before', 0, 'after')
     ),
-    buildPreset(t('components.temporalWindowEditor.acuteFollowUp', 'Acute follow-up (0 to 30 days after)').value,
+    buildPreset(t('components.temporalWindowEditor.acuteFollowUp').value,
       createWindow(0, 'after', 30, 'after')
     ),
-    buildPreset(t('components.temporalWindowEditor.ninetyDayFollowUp', '90-day follow-up (0 to 90 days after)').value,
+    buildPreset(t('components.temporalWindowEditor.ninetyDayFollowUp').value,
       createWindow(0, 'after', 90, 'after')
     ),
-    buildPreset(t('components.temporalWindowEditor.oneYearFollowUp', '1-year follow-up (0 to 365 days after)').value,
+    buildPreset(t('components.temporalWindowEditor.oneYearFollowUp').value,
       createWindow(0, 'after', 365, 'after')
     ),
-    buildPreset(t('components.temporalWindowEditor.allTimeAfterIndex', 'All time after index').value,
+    buildPreset(t('components.temporalWindowEditor.allTimeAfterIndex').value,
       createWindow(0, 'after', null, 'after')
     ),
-    buildPreset(t('components.temporalWindowEditor.eventOverlapsWithIndex', 'Event overlaps with index').value,
+    buildPreset(t('components.temporalWindowEditor.eventOverlapsWithIndex').value,
       createWindow(0, 'after', null, 'after',false, true),
       createWindow(null, 'before', 0, 'after',true, false)
     ),
@@ -131,16 +136,26 @@ function formatEndpoint(endpoint: Offset | null | undefined): string {
   const { t } = useI18n()
 
   if (!endpoint) {
-    return t('common.unset', 'unset').value
+    return t('common.unset').value
   }
 
-  const direction = endpoint.Coeff === -1 ? t('options.before', 'before').value : t('options.after', 'after').value
-  const days = endpoint.Days === null || endpoint.Days === undefined ? t('common.allDays', 'all days').value : `${endpoint.Days} ${endpoint.Days === 1 ? t('common.day', 'day').value : t('common.days', 'days').value}`
-
-  return `${days} ${direction}`
+  const days = formatDayCount(endpoint.Days)
+  return endpoint.Coeff === -1
+    ? t('components.windowExpression.endpointBefore', { days }).value
+    : t('components.windowExpression.endpointAfter', { days }).value
 }
 
-// These read as fragments inside the sentence built by formatWindowExpression
+/** "30 days", "1 day", or "all days" when the endpoint is unbounded. */
+export function formatDayCount(days: number | null | undefined): string {
+  const { t } = useI18n()
+
+  if (days === null || days === undefined) {
+    return t('common.allDays').value
+  }
+  return days === 1 ? t('common.dayCountOne').value : t('common.dayCount', { count: days }).value
+}
+
+// These fill the {anchor}/{indexAnchor} slots of components.windowExpression.summary
 // ("event starts between 30 days before and 0 days after index start"), so they
 // are lowercase and keyed separately from the capitalised chip labels that
 // Window.vue renders for the same concepts.
@@ -148,14 +163,14 @@ function formatAnchor(window: Pick<Window, 'UseIndexEnd' | 'UseEventEnd'>): stri
   const { t } = useI18n()
 
   return window.UseEventEnd
-    ? t('components.windowExpression.eventEnds', 'event ends').value
-    : t('components.windowExpression.eventStarts', 'event starts').value
+    ? t('components.windowExpression.eventEnds').value
+    : t('components.windowExpression.eventStarts').value
 }
 
 function formatIndexAnchor(window: Pick<Window, 'UseIndexEnd' | 'UseEventEnd'>): string {
   const { t } = useI18n()
 
   return window.UseIndexEnd
-    ? t('components.windowExpression.indexEnd', 'index end').value
-    : t('components.windowExpression.indexStart', 'index start').value
+    ? t('components.windowExpression.indexEnd').value
+    : t('components.windowExpression.indexStart').value
 }

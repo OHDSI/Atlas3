@@ -16,6 +16,7 @@ import * as directives from 'vuetify/directives'
 import DateAdjustment from '@/components/circe/input/DateAdjustment.vue'
 import type { DateAdjustment as DateAdjustmentModel } from '@/models/circe-types'
 import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
+import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -28,6 +29,15 @@ function mountAdjustment(modelValue: DateAdjustmentModel) {
 
 function summary(wrapper: ReturnType<typeof mountAdjustment>) {
   return wrapper.find('[data-testid="attribute-date-adjustment-chip"]').text()
+}
+
+/** The chip text for an adjustment, e.g. "Start: Start +0d, End: End +60d". */
+function expectedSummary(startWith: 'start' | 'end', startOffset: string, endWith: 'start' | 'end', endOffset: string) {
+  const start = tr('common.start')
+  const end = tr('common.end')
+  const d = tr('common.daysAbbr')
+  const ref = (which: 'start' | 'end') => (which === 'end' ? end : start)
+  return `${start}: ${ref(startWith)} ${startOffset}${d}, ${end}: ${ref(endWith)} ${endOffset}${d}`
 }
 
 function offsetInputs(wrapper: ReturnType<typeof mountAdjustment>) {
@@ -44,19 +54,19 @@ describe('DateAdjustment summary', () => {
   it('reads an unset adjustment as both dates unshifted', () => {
     const wrapper = mountAdjustment({})
 
-    expect(summary(wrapper)).toBe('Start: Start +0d, End: Start +0d')
+    expect(summary(wrapper)).toBe(expectedSummary('start', '+0', 'start', '+0'))
   })
 
   it('names each end by the date it is anchored to', () => {
     const wrapper = mountAdjustment({ StartWith: 'END_DATE', StartOffset: 0, EndWith: 'START_DATE', EndOffset: 0 })
 
-    expect(summary(wrapper)).toBe('Start: End +0d, End: Start +0d')
+    expect(summary(wrapper)).toBe(expectedSummary('end', '+0', 'start', '+0'))
   })
 
   it.each([
-    [30, 60, 'Start: Start +30d, End: End +60d'],
-    [-30, -60, 'Start: Start -30d, End: End -60d'],
-    [0, 0, 'Start: Start +0d, End: End +0d'],
+    [30, 60, expectedSummary('start', '+30', 'end', '+60')],
+    [-30, -60, expectedSummary('start', '-30', 'end', '-60')],
+    [0, 0, expectedSummary('start', '+0', 'end', '+0')],
   ] as const)('signs the offsets %i and %i', (startOffset, endOffset, expected) => {
     const wrapper = mountAdjustment({ StartWith: 'START_DATE', StartOffset: startOffset, EndWith: 'END_DATE', EndOffset: endOffset })
 
@@ -74,8 +84,8 @@ describe('DateAdjustment editing', () => {
     expect(selects).toHaveLength(2)
     for (const select of selects) {
       expect(select.props('items')).toEqual([
-        { label: 'Start Date', value: 'START_DATE' },
-        { label: 'End Date', value: 'END_DATE' },
+        { label: tr('options.startDate'), value: 'START_DATE' },
+        { label: tr('options.endDate'), value: 'END_DATE' },
       ])
     }
   })
@@ -119,7 +129,7 @@ describe('DateAdjustment editing', () => {
     await offsetInputs(wrapper)[1]!.setValue('-7')
 
     expect(model.EndOffset).toBe(-7)
-    expect(summary(wrapper)).toBe('Start: Start +0d, End: End -7d')
+    expect(summary(wrapper)).toBe(expectedSummary('start', '+0', 'end', '-7'))
   })
 
   it('falls back to no shift rather than to null when an offset is emptied', async () => {

@@ -5,6 +5,7 @@ import { getAuthConfig } from '@/config/auth.config'
 import { storageManager } from './storageManager'
 import { permissionChecker } from './permissionChecker'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
 
 export interface IAuthService {
   login(provider: AuthProvider, credentials?: LoginCredentials): Promise<void>
@@ -122,7 +123,7 @@ class AuthService implements IAuthService {
 
     await this.finalizeLoginFromResponse(response, {
       allowBearerHeader: false,
-      noTokenMessage: 'No token received from server',
+      noTokenMessage: useI18n().tv('auth.noTokenReceived'),
     })
   }
 
@@ -139,7 +140,7 @@ class AuthService implements IAuthService {
 
     await this.finalizeLoginFromResponse(response, {
       allowBearerHeader: true,
-      noTokenMessage: 'No token received from server',
+      noTokenMessage: useI18n().tv('auth.noTokenReceived'),
     })
   }
 
@@ -167,7 +168,9 @@ class AuthService implements IAuthService {
     }
 
     if (typeof body.jwt !== 'string') {
-      const message = typeof body.message === 'string' ? body.message : 'No token received from server'
+      const message = typeof body.message === 'string'
+          ? body.message
+          : useI18n().tv('auth.noTokenReceived')
       throw new Error(message)
     }
 
@@ -182,7 +185,9 @@ class AuthService implements IAuthService {
       errorHeader,
       errorBody,
     })
-    throw new Error(errorHeader || errorBody || 'Authentication failed')
+    throw new Error(
+      errorHeader || errorBody || useI18n().tv('auth.authenticationFailed')
+    )
   }
 
   private async completeLogin(token: string): Promise<void> {
@@ -247,7 +252,9 @@ class AuthService implements IAuthService {
         await this.redirectToProvider(provider)
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Authentication failed'
+      const message = error instanceof Error
+          ? error.message
+          : useI18n().tv('auth.authenticationFailed')
       authStore.setError(message)
       throw error
     } finally {

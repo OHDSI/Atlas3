@@ -2,7 +2,7 @@
   <AtlasPageShell
     hero
     compact
-    :eyebrow="t('views.cohorts.eyebrowMain', 'OHDSI · Cohorts').value"
+    :eyebrow="t('views.cohorts.eyebrowMain').value"
     :title="pageTitle"
     :subtitle="pageSubtitle"
   >
@@ -20,7 +20,7 @@
           toggle
           value="tile"
           size="sm"
-          :aria-label="t('common.tileView', 'Tile view').value"
+          :aria-label="t('common.tileView').value"
           data-testid="cohorts-view-toggle-tile"
         >
           <AtlasIcon>mdi-view-grid-outline</AtlasIcon>
@@ -29,7 +29,7 @@
           toggle
           value="table"
           size="sm"
-          :aria-label="t('dataSources.table.tableTab', 'Table view').value"
+          :aria-label="t('dataSources.table.tableTab').value"
           data-testid="cohorts-view-toggle-table"
         >
           <AtlasIcon>mdi-view-list-outline</AtlasIcon>
@@ -64,21 +64,21 @@
             <AtlasButton
               variant="secondary"
               icon="mdi-upload-outline"
-              :aria-label="t('common.import', 'Import cohort from JSON').value"
+              :aria-label="t('cohortDefinitions.importFromJson').value"
               :disabled="!canCreateCohort"
               data-testid="import-cohort-btn"
               @click="handleImportCohort"
             >
-              {{ t('common.import', 'Import') }}
+              {{ t('common.import') }}
             </AtlasButton>
 
             <AtlasButton
               icon="mdi-plus"
-              :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
+              :aria-label="t('cohortDefinitions.newDefinitionTitle').value"
               :disabled="!canCreateCohort"
               @click="handleCreateCohort"
             >
-              {{ t('cohortDefinitions.newDefinition', 'New cohort') }}
+              {{ t('cohortDefinitions.newDefinition') }}
             </AtlasButton>
           </template>
         </cohort-filters>
@@ -96,8 +96,8 @@
           rounded
         />
         <div class="cohorts-view__filtering-text">
-          {{ t('common.filtering', 'Filtering').value }} {{ cohorts.length.toLocaleString() }}
-          {{ t('cohortDefinitions.cohortsLower', 'cohorts').value }}…
+          {{ t('common.filtering').value }} {{ cohorts.length.toLocaleString() }}
+          {{ t('cohortDefinitions.cohortsLower').value }}…
         </div>
       </div>
 
@@ -157,23 +157,20 @@
       <!-- Import Dialog -->
       <AtlasDialog
         v-model="showImportDialog"
-        :eyebrow="t('views.cohorts.eyebrowImport', 'IMPORT').value"
-        :title="t('common.importCohort', 'Import cohort definition').value"
+        :eyebrow="t('views.cohorts.eyebrowImport').value"
+        :title="t('common.importCohort').value"
         max-width="640"
         @close="closeImportDialog"
       >
         <p class="cohorts-view__import-hint">
           {{
-            t(
-              'cohortDefinitions.importHint',
-              'Paste an Atlas cohort JSON or upload a .json file. The expression is validated before saving.'
-            ).value
+            t('cohortDefinitions.importHint').value
           }}
         </p>
 
         <AtlasTextField
           v-model="importName"
-          :label="t('columns.name', 'Cohort name').value"
+          :label="t('cohortDefinitions.cohortName').value"
           variant="outlined"
           :disabled="importing"
           class="mb-3"
@@ -182,7 +179,7 @@
 
         <v-file-input
           v-model="importFile"
-          :label="t('cohortDefinitions.uploadJsonLabel', 'Upload JSON file').value"
+          :label="t('cohortDefinitions.uploadJsonLabel').value"
           accept="application/json,.json"
           prepend-icon=""
           prepend-inner-icon="mdi-paperclip"
@@ -197,7 +194,7 @@
 
         <AtlasTextField
           v-model="importJson"
-          :label="t('cohortDefinitions.expressionJsonLabel', 'Expression JSON').value"
+          :label="t('cohortDefinitions.expressionJsonLabel').value"
           :placeholder="'{ &quot;ConceptSets&quot;: [], &quot;PrimaryCriteria&quot;: { … } }'"
           :rows="8"
           multiline
@@ -222,7 +219,7 @@
             :disabled="importing"
             @click="closeImportDialog"
           >
-            {{ t('common.cancel', 'Cancel').value }}
+            {{ t('common.cancel').value }}
           </AtlasButton>
           <AtlasButton
             :loading="importing"
@@ -230,7 +227,7 @@
             data-testid="import-confirm-btn"
             @click="confirmImport"
           >
-            {{ t('common.import', 'Import').value }}
+            {{ t('common.import').value }}
           </AtlasButton>
         </template>
       </AtlasDialog>
@@ -238,38 +235,35 @@
       <!-- Delete Confirmation Dialog -->
       <AtlasDialog
         v-model="showDeleteDialog"
-        :eyebrow="t('views.cohorts.eyebrowConfirm', 'CONFIRM').value"
-        :title="t('common.deleteCohortTitle', 'Delete cohort?').value"
+        :eyebrow="t('views.cohorts.eyebrowConfirm').value"
+        :title="t('common.deleteCohortTitle').value"
         max-width="500"
         @close="showDeleteDialog = false"
       >
         <p class="mb-2">
           {{
-            t(
-              'cohortDefinitions.cohortDefinitionManager.confirms.delete',
-              'Delete cohort definition? Warning: deletion can not be undone!'
-            )
+            t('cohortDefinitions.cohortDefinitionManager.confirms.delete')
           }}
         </p>
         <p class="mb-2">
           <strong>{{ selectedCohort?.name }}</strong>
         </p>
         <p class="text-body-2 text-error">
-          {{ t('common.cannotUndo', 'This action cannot be undone.') }}
+          {{ t('common.cannotUndo') }}
         </p>
         <template #actions>
           <AtlasButton
             variant="ghost"
             @click="showDeleteDialog = false"
           >
-            {{ t('common.cancel', 'Cancel') }}
+            {{ t('common.cancel') }}
           </AtlasButton>
           <AtlasButton
             variant="danger"
             :loading="deleting"
             @click="confirmDelete"
           >
-            {{ t('common.delete', 'Delete') }}
+            {{ t('common.delete') }}
           </AtlasButton>
         </template>
       </AtlasDialog>
@@ -277,14 +271,14 @@
       <!-- New Cohort Dialog -->
       <AtlasDialog
         v-model="showNewCohortDialog"
-        :eyebrow="t('views.cohorts.eyebrowNew', 'NEW').value"
-        :title="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
+        :eyebrow="t('views.cohorts.eyebrowNew').value"
+        :title="t('cohortDefinitions.newDefinitionTitle').value"
         max-width="500"
         @close="showNewCohortDialog = false"
       >
         <AtlasTextField
           v-model="newCohortName"
-          :label="t('columns.name', 'Cohort name').value"
+          :label="t('cohortDefinitions.cohortName').value"
           variant="outlined"
           @keyup.enter="confirmCreateCohort"
         />
@@ -293,21 +287,21 @@
             variant="ghost"
             @click="showNewCohortDialog = false"
           >
-            {{ t('common.cancel', 'Cancel') }}
+            {{ t('common.cancel') }}
           </AtlasButton>
           <AtlasButton
             :disabled="!newCohortName.trim()"
             @click="confirmCreateCohort"
           >
-            {{ t('common.create', 'Create') }}
+            {{ t('common.create') }}
           </AtlasButton>
         </template>
       </AtlasDialog>
 
       <AtlasDialog
         v-model="showCohortInfoDialog"
-        :eyebrow="t('views.cohorts.eyebrowCohort', 'COHORT').value"
-        :title="selectedCohort?.name || t('common.cohortInformation', 'Cohort information').value"
+        :eyebrow="t('views.cohorts.eyebrowCohort').value"
+        :title="selectedCohort?.name || t('common.cohortInformation').value"
         max-width="900"
         @close="showCohortInfoDialog = false"
       >
@@ -328,7 +322,7 @@
             color="primary"
           />
           <div class="mt-4">
-            {{ t('common.loading', 'Loading') }}…
+            {{ t('common.loading') }}…
           </div>
         </div>
         <div
@@ -336,10 +330,7 @@
           class="text-center pa-6 text-error"
         >
           {{
-            t(
-              'cs.manager.concept.tabs.recordCounts.failedToLoadData',
-              'Failed to load cohort information'
-            )
+            t('cs.manager.concept.tabs.recordCounts.failedToLoadData')
           }}
         </div>
       </AtlasDialog>
@@ -385,10 +376,10 @@ const { hasPermission } = usePermissions()
 const canCreateCohort = computed(() => hasPermission('create:cohort-definition'))
 
 const pageTitle = computed(
-  () => t('cohortDefinitions.cohortDefinitions', 'Cohort Definitions').value
+  () => t('cohortDefinitions.cohortDefinitions').value
 )
 const pageSubtitle = computed(
-  () => t('cohortDefinitions.pageSubtitle', 'Browse, filter, and manage cohort definitions.').value
+  () => t('cohortDefinitions.pageSubtitle').value
 )
 
 // View mode (tile vs table) — persisted to localStorage so the choice
@@ -483,8 +474,8 @@ const paginatedCohorts = computed(() => {
 const countLabel = computed(() => {
   const n = sortedCohorts.value.length
   return n === 1
-    ? t('views.cohorts.countSingular', '1 cohort').value
-    : t('views.cohorts.countPlural', '{count} cohorts', { count: n.toLocaleString() }).value
+    ? t('views.cohorts.countSingular').value
+    : t('views.cohorts.countPlural', { count: n.toLocaleString() }).value
 })
 
 /**
@@ -544,10 +535,7 @@ async function onImportFileSelected(value: File | File[] | null) {
     }
   } catch (err) {
     logger.error('CohortsView', 'Failed to read import file', err)
-    importError.value = t(
-      'cohortDefinitions.importFileReadError',
-      'Failed to read the selected file.'
-    ).value
+    importError.value = t('cohortDefinitions.importFileReadError').value
   }
 }
 
@@ -563,18 +551,12 @@ async function confirmImport() {
   try {
     parsed = JSON.parse(importJson.value)
   } catch {
-    importError.value = t(
-      'cohortDefinitions.importInvalidJson',
-      'Expression JSON is not valid JSON.'
-    ).value
+    importError.value = t('cohortDefinitions.importInvalidJson').value
     return
   }
 
   if (!parsed || typeof parsed !== 'object') {
-    importError.value = t(
-      'cohortDefinitions.importInvalidShape',
-      'Expression must be a JSON object.'
-    ).value
+    importError.value = t('cohortDefinitions.importInvalidShape').value
     return
   }
 
@@ -583,11 +565,7 @@ async function confirmImport() {
   // editor opened it, leaving the user with a silently incomplete cohort (#328).
   const validation = validateCohortExpression(parsed)
   if (!validation.ok) {
-    importError.value = t(
-      'cohortDefinitions.importInvalidExpression',
-      'Expression JSON is not a valid cohort expression: {errors}',
-      { errors: describeImportProblems(validation.problems).join('; ') }
-    ).value
+    importError.value = t('cohortDefinitions.importInvalidExpression', { errors: describeImportProblems(validation.problems).join('; ') }).value
     return
   }
 
@@ -600,10 +578,7 @@ async function confirmImport() {
     })
 
     if (!result.success || !result.data.id) {
-      importError.value = t(
-        'cohortDefinitions.importFailed',
-        'Import failed. Check the JSON and try again.'
-      ).value
+      importError.value = t('cohortDefinitions.importFailed').value
       return
     }
 
@@ -612,10 +587,7 @@ async function confirmImport() {
     router.push(`/cohorts/${result.data.id}`)
   } catch (err) {
     logger.error('CohortsView', 'Failed to import cohort', err)
-    importError.value = t(
-      'cohortDefinitions.importFailed',
-      'Import failed. Check the JSON and try again.'
-    ).value
+    importError.value = t('cohortDefinitions.importFailed').value
   } finally {
     importing.value = false
   }
@@ -653,11 +625,8 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
     if (!loaded.success) {
       const message =
         loaded.error.status === 403
-          ? t(
-              'cohortDefinitions.copyLoadForbidden',
-              'You do not have permission to read this cohort.'
-            ).value
-          : t('cohortDefinitions.copyLoadError', 'Failed to load the cohort to copy.').value
+          ? t('cohortDefinitions.copyLoadForbidden').value
+          : t('cohortDefinitions.copyLoadError').value
       showSnackbar(message, 'danger')
       return
     }
@@ -672,7 +641,7 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
 
     if (!created.success || !created.data.id) {
       showSnackbar(
-        t('cohortDefinitions.copyError', 'Failed to copy the cohort.').value,
+        t('cohortDefinitions.copyError').value,
         'danger'
       )
       return
@@ -682,7 +651,7 @@ async function handleCopyClick(cohort: CohortDefinitionSummary) {
     router.push(`/cohorts/${created.data.id}`)
   } catch (err) {
     logger.error('CohortsView', 'Failed to copy cohort', err)
-    showSnackbar(t('cohortDefinitions.copyError', 'Failed to copy the cohort.').value, 'danger')
+    showSnackbar(t('cohortDefinitions.copyError').value, 'danger')
   } finally {
     copyingId.value = null
   }
@@ -723,7 +692,7 @@ async function confirmDelete() {
 
     if (!result.success) {
       logger.error('CohortsView', 'Failed to delete cohort', result.error)
-      showSnackbar(t('cohortDefinitions.deleteError', 'Failed to delete the cohort.').value, 'danger')
+      showSnackbar(t('cohortDefinitions.deleteError').value, 'danger')
       return
     }
 
@@ -735,7 +704,7 @@ async function confirmDelete() {
     selectedCohort.value = null
   } catch (err) {
     logger.error('CohortsView', 'Failed to delete cohort', err)
-    showSnackbar(t('cohortDefinitions.deleteError', 'Failed to delete the cohort.').value, 'danger')
+    showSnackbar(t('cohortDefinitions.deleteError').value, 'danger')
   } finally {
     deleting.value = false
   }

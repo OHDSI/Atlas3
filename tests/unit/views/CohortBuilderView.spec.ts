@@ -10,6 +10,7 @@ import { mount, VueWrapper } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import { setActivePinia, createPinia } from 'pinia'
 import CohortBuilderView from '@/views/CohortBuilderView.vue'
+import { tr } from '../../helpers/i18n-mock'
 
 // Mock vue-router
 const mockPush = vi.fn()
@@ -100,8 +101,8 @@ describe('CohortBuilderView.vue', () => {
         }
       })
 
-      expect(wrapper.find('.cohort-builder-view__title-input').attributes('placeholder')).toBe('New cohort')
-      expect(wrapper.find('.cohort-builder-view__subtitle-input').attributes('placeholder')).toContain('Add a description')
+      expect(wrapper.find('.cohort-builder-view__title-input').attributes('placeholder')).toBe(tr('cohortDefinitions.newDefinition'))
+      expect(wrapper.find('.cohort-builder-view__subtitle-input').attributes('placeholder')).toBe(tr('cohortDefinitions.descriptionPlaceholder'))
     })
   })
 

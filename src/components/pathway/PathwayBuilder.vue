@@ -1,6 +1,6 @@
 <template>
   <AnalysisBuilderShell
-    :eyebrow="t('navigation.pathways', 'Pathway analysis').value"
+    :eyebrow="t('navigation.pathways').value"
     :title="title"
     :subtitle="subtitle"
     :authorship="store.currentPathway"
@@ -11,8 +11,8 @@
     <template #title>
       <textarea
         :value="currentPathway?.name ?? ''"
-        :placeholder="t('home.newEntityNames.pathway', 'New pathway').value"
-        :aria-label="t('columns.name', 'Name').value"
+        :placeholder="t('home.newEntityNames.pathway').value"
+        :aria-label="t('columns.name').value"
         :readonly="!currentPathway || !canEdit"
         rows="1"
         class="pathway-builder__title-input"
@@ -26,8 +26,8 @@
     >
       <textarea
         :value="currentPathway.description ?? ''"
-        :placeholder="t('cc.viewEdit.descriptionPlaceholder', 'Add a short description').value"
-        :aria-label="t('columns.description', 'Description').value"
+        :placeholder="t('cc.viewEdit.descriptionPlaceholder').value"
+        :aria-label="t('columns.description').value"
         :readonly="!canEdit"
         rows="1"
         class="pathway-builder__subtitle-input"
@@ -39,12 +39,12 @@
       <AtlasActionToolbar>
         <template #status>
           <AtlasTooltip
-            :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
+            :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('cohortDefinitions.cohortDefinitionManager.tabs.versions').value }"
                 icon="mdi-history"
                 variant="text"
                 size="sm"
@@ -55,7 +55,7 @@
             </template>
           </AtlasTooltip>
           <AtlasTooltip
-            :text="t('common.tags', 'Tags').value"
+            :text="t('common.tags').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
@@ -68,7 +68,7 @@
                 offset-y="6"
               >
                 <AtlasIconButton
-                  v-bind="{ ariaLabel: t('common.tags', 'Tags').value }"
+                  v-bind="{ ariaLabel: t('common.tags').value }"
                   icon="mdi-tag-outline"
                   variant="text"
                   size="sm"
@@ -81,12 +81,12 @@
           </AtlasTooltip>
           <AtlasTooltip
             v-if="currentPathway?.id"
-            :text="t('components.access.configureAccess', 'Configure access').value"
+            :text="t('components.access.configureAccess').value"
             location="bottom"
           >
             <template #activator="{ props }">
               <EntityAccessLockButton
-                v-bind="{ ...props, ariaLabel: t('components.access.configureAccess', 'Configure access').value }"
+                v-bind="{ ...props, ariaLabel: t('components.access.configureAccess').value }"
                 variant="text"
                 size="sm"
                 :disabled="!currentPathway?.id || isPreviewMode"
@@ -106,16 +106,16 @@
             <AtlasIcon class="d-md-none">
               mdi-close
             </AtlasIcon>
-            <span class="d-none d-md-inline">{{ t('common.cancel', 'Cancel').value }}</span>
+            <span class="d-none d-md-inline">{{ t('common.cancel').value }}</span>
           </AtlasButton>
           <AtlasTooltip
             v-if="previewVersion"
-            :text="t('common.backToCurrent', 'Back to current version').value"
+            :text="t('common.backToCurrent').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.backToCurrent', 'Back to current version').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.backToCurrent').value }"
                 icon="mdi-undo"
                 variant="text"
                 size="sm"
@@ -125,12 +125,12 @@
             </template>
           </AtlasTooltip>
           <AtlasTooltip
-            :text="t('common.import', 'Import design').value"
+            :text="t('common.importDesign').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.import', 'Import design').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.importDesign').value }"
                 icon="mdi-upload"
                 variant="text"
                 size="sm"
@@ -141,12 +141,12 @@
             </template>
           </AtlasTooltip>
           <AtlasTooltip
-            :text="t('common.export', 'Export design').value"
+            :text="t('common.exportDesign').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.export', 'Export design').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.exportDesign').value }"
                 icon="mdi-download"
                 variant="text"
                 size="sm"
@@ -161,7 +161,7 @@
             ref="importFileInput"
             type="file"
             accept="application/json,.json"
-            :aria-label="t('components.pathwayBuilder.importPathwayDesign', 'Import pathway design').value"
+            :aria-label="t('components.pathwayBuilder.importPathwayDesign').value"
             style="display: none"
             data-testid="pathway-builder-import-input"
             @change="handleImportFileChange"
@@ -173,7 +173,7 @@
               data-testid="pathway-builder-save"
               @click="onSave"
             >
-              {{ t('common.save', 'Save') }}
+              {{ t('common.save') }}
             </AtlasButton>
           </DisabledReasonTooltip>
         </template>
@@ -184,14 +184,14 @@
       v-if="previewVersion"
       #banner
     >
-      {{ t('common.savePreviewWarning', 'Previewing version — saving will create a new pathway') }}
+      {{ t('pathways.editor.previewBanner') }}
     </template>
 
     <div
       v-if="!currentPathway"
       class="pathway-builder__empty"
     >
-      {{ t('common.noData', 'No pathway loaded').value }}
+      {{ t('pathways.editor.noPathwayLoaded').value }}
     </div>
 
     <PathwayWorkbench
@@ -203,8 +203,8 @@
 
     <AtlasDialog
       v-model="showVersions"
-      :eyebrow="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
-      :title="t('components.pathwayBuilder.versionHistory', 'Version history').value"
+      :eyebrow="t('cohortDefinitions.cohortDefinitionManager.tabs.versions').value"
+      :title="t('components.pathwayBuilder.versionHistory').value"
       max-width="900"
       @close="showVersions = false"
     >
@@ -226,7 +226,7 @@
       v-model="showAccess"
       entity-type="PATHWAY_ANALYSIS"
       :entity-id="currentPathway.id"
-      :title="t('components.access.configureAccess', 'Configure access').value"
+      :title="t('components.access.configureAccess').value"
       :subtitle="currentPathway.name || undefined"
       @close="showAccess = false"
     />
@@ -273,7 +273,7 @@ const { save, feedback } = usePathwayBuilder()
 // not actually enforce would be a lie; the gap is raised in OHDSI/Atlas3#300.
 const saveDisabledReason = computed<string>(() =>
   resolveSaveDisabledReason({
-    entity: tv('const.entityName.pathway', 'pathway analysis'),
+    entity: tv('const.entityName.pathway'),
     isNew: !currentPathway.value?.id,
     hasName: true,
     hasPermission: true,
@@ -303,8 +303,8 @@ const pathwayTags = computed(() => currentPathway.value?.tags ?? [])
 
 const title = computed(() => {
   const p = currentPathway.value
-  if (!p) return t('navigation.pathways', 'Pathway analysis').value
-  return p.name?.trim() || t('home.newEntityNames.pathway', 'New pathway').value
+  if (!p) return t('navigation.pathways').value
+  return p.name?.trim() || t('home.newEntityNames.pathway').value
 })
 
 const subtitle = computed(() => {
@@ -312,7 +312,7 @@ const subtitle = computed(() => {
   if (!p) return undefined
   return p.id
     ? `#${p.id}${p.description ? ` · ${p.description}` : ''}`
-    : t('home.newEntityNames.pathway', 'New pathway').value
+    : t('home.newEntityNames.pathway').value
 })
 
 function handleBack() {
@@ -365,7 +365,7 @@ async function handleExport() {
   } catch (err) {
     logger.error('PathwayBuilder', 'Export failed', err)
     feedback.value = {
-      message: t('characterizations.editor.utilities.import.importError', 'Export failed').value,
+      message: t('commonErrors.exportFailed').value,
       color: 'error',
     }
   } finally {
@@ -390,10 +390,7 @@ async function handleImportFileChange(event: Event) {
   } catch (err) {
     logger.error('PathwayBuilder', 'Import parse failed', err)
     feedback.value = {
-      message: t(
-        'characterizations.editor.utilities.import.parseError',
-        'Could not parse design JSON'
-      ).value,
+      message: t('characterizations.editor.utilities.import.parseError').value,
       color: 'error',
     }
     importing.value = false
@@ -403,7 +400,7 @@ async function handleImportFileChange(event: Event) {
   try {
     const created = await importPathway(parsed)
     feedback.value = {
-      message: t('characterizations.editor.utilities.import.importSuccess', 'Imported successfully')
+      message: t('characterizations.editor.utilities.import.importSuccess')
         .value,
       color: 'success',
     }
@@ -413,7 +410,7 @@ async function handleImportFileChange(event: Event) {
   } catch (err) {
     logger.error('PathwayBuilder', 'Import failed', err)
     feedback.value = {
-      message: t('characterizations.editor.utilities.import.importError', 'Import failed').value,
+      message: t('characterizations.editor.utilities.import.importError').value,
       color: 'error',
     }
   } finally {

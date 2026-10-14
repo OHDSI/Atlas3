@@ -8,7 +8,7 @@
     <div class="char-run-meta__grid">
       <div class="char-run-meta__field">
         <div class="char-run-meta__label">
-          {{ tv('const.newEntityNames.source', 'Source') }}
+          {{ tv('columns.source') }}
         </div>
         <div class="char-run-meta__value">
           {{ execution.sourceKey }}
@@ -16,7 +16,7 @@
       </div>
       <div class="char-run-meta__field">
         <div class="char-run-meta__label">
-          {{ tv('columns.started', 'Started') }}
+          {{ tv('columns.started') }}
         </div>
         <div class="char-run-meta__value">
           {{ formatTime(execution.startTime) }}
@@ -24,7 +24,7 @@
       </div>
       <div class="char-run-meta__field">
         <div class="char-run-meta__label">
-          {{ tv('columns.finished', 'Completed') }}
+          {{ tv('columns.finished') }}
         </div>
         <div class="char-run-meta__value">
           {{ formatTime(execution.endTime) }}
@@ -32,7 +32,7 @@
       </div>
       <div class="char-run-meta__field">
         <div class="char-run-meta__label">
-          {{ tv('columns.duration', 'Duration') }}
+          {{ tv('columns.duration') }}
         </div>
         <div class="char-run-meta__value">
           {{ durationLabel }}
@@ -40,7 +40,7 @@
       </div>
       <div class="char-run-meta__field">
         <div class="char-run-meta__label">
-          {{ tv('columns.results', 'Total rows') }}
+          {{ tv('columns.totalRows') }}
         </div>
         <div class="char-run-meta__value">
           {{ resultCount.toLocaleString() }}

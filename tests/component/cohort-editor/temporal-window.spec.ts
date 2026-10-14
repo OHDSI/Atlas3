@@ -27,6 +27,7 @@ import type {
   Window as WindowModel,
 } from '@/models/circe-types'
 import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
+import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -92,7 +93,7 @@ describe('window summaries', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it('says so when there is no window at all', () => {
-    expect(formatWindowExpression(undefined)).toBe('No window')
+    expect(formatWindowExpression(undefined)).toBe(tr('common.noWindow'))
   })
 
   it('reads a bounded window back in the order the user set it', () => {
@@ -128,9 +129,9 @@ describe('window presets', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it.each([
-    ['Short-term baseline', 30, -1, 0, 1],
-    ['Medium-term baseline', 180, -1, 0, 1],
-    ['Long-term baseline', 365, -1, 0, 1],
+    [tr('components.temporalWindowEditor.shortTermBaseline'), 30, -1, 0, 1],
+    [tr('components.temporalWindowEditor.mediumTermBaseline'), 180, -1, 0, 1],
+    [tr('components.temporalWindowEditor.longTermBaseline'), 365, -1, 0, 1],
   ] as const)('%s looks back the number of days its label promises', (label, startDays, startCoeff, endDays, endCoeff) => {
     const { startWindow, endWindow } = presetNamed(label)
 
@@ -140,7 +141,7 @@ describe('window presets', () => {
   })
 
   it('leaves the look-back unbounded for all time prior to index', () => {
-    const { startWindow } = presetNamed('All time prior to index')
+    const { startWindow } = presetNamed(tr('components.temporalWindowEditor.allTimePriorToIndex'))
 
     expect(startWindow.Start).toEqual({ Days: null, Coeff: -1 })
     expect(startWindow.End).toEqual({ Days: 0, Coeff: 1 })
@@ -151,7 +152,7 @@ describe('window presets', () => {
   // same sign. At Days: 0 the two are equivalent for generation, so the
   // convention is what is asserted here.
   it('pins both ends to the index date for the on-index-date preset', () => {
-    const { startWindow, endWindow } = presetNamed('On index date')
+    const { startWindow, endWindow } = presetNamed(tr('components.temporalWindowEditor.onIndexDate'))
 
     expect(startWindow.Start).toEqual({ Days: 0, Coeff: -1 })
     expect(startWindow.End).toEqual({ Days: 0, Coeff: 1 })
@@ -159,14 +160,14 @@ describe('window presets', () => {
   })
 
   it('acute follow-up reaches the 30 days its label promises', () => {
-    const { startWindow } = presetNamed('Acute follow-up')
+    const { startWindow } = presetNamed(tr('components.temporalWindowEditor.acuteFollowUp'))
 
     expect(startWindow.Start).toEqual({ Days: 0, Coeff: 1 })
     expect(startWindow.End).toEqual({ Days: 30, Coeff: 1 })
   })
 
   it('all time after index is unbounded going forward', () => {
-    const { startWindow } = presetNamed('All time after index')
+    const { startWindow } = presetNamed(tr('components.temporalWindowEditor.allTimeAfterIndex'))
 
     expect(startWindow.Start).toEqual({ Days: 0, Coeff: 1 })
     expect(startWindow.End).toEqual({ Days: null, Coeff: 1 })
@@ -176,9 +177,9 @@ describe('window presets', () => {
   // createWindow(0, 'after', 0, 'after'), so the choice the user made was not
   // recoverable from the saved cohort.
   it('differently-labelled presets produce different windows', () => {
-    const onIndex = JSON.stringify(presetNamed('On index date').startWindow)
-    const acute = JSON.stringify(presetNamed('Acute follow-up').startWindow)
-    const allAfter = JSON.stringify(presetNamed('All time after index').startWindow)
+    const onIndex = JSON.stringify(presetNamed(tr('components.temporalWindowEditor.onIndexDate')).startWindow)
+    const acute = JSON.stringify(presetNamed(tr('components.temporalWindowEditor.acuteFollowUp')).startWindow)
+    const allAfter = JSON.stringify(presetNamed(tr('components.temporalWindowEditor.allTimeAfterIndex')).startWindow)
 
     expect(new Set([onIndex, acute, allAfter]).size).toBe(3)
   })
@@ -198,20 +199,20 @@ describe('Window editor', () => {
   it('shows an unset day count as all days', () => {
     const wrapper = mountWindow(createDefaultWindow())
 
-    expect(chips(wrapper)[CHIP.startDays]!.text()).toBe('all days')
-    expect(chips(wrapper)[CHIP.endDays]!.text()).toBe('all days')
+    expect(chips(wrapper)[CHIP.startDays]!.text()).toBe(tr('common.allDays'))
+    expect(chips(wrapper)[CHIP.endDays]!.text()).toBe(tr('common.allDays'))
   })
 
   it('singularises a one-day bound', () => {
     const wrapper = mountWindow({ Start: { Days: 1, Coeff: -1 }, End: { Days: 30, Coeff: 1 } })
 
-    expect(chips(wrapper)[CHIP.startDays]!.text()).toBe('1 day')
-    expect(chips(wrapper)[CHIP.endDays]!.text()).toBe('30 days')
+    expect(chips(wrapper)[CHIP.startDays]!.text()).toBe(`1 ${tr('common.day')}`)
+    expect(chips(wrapper)[CHIP.endDays]!.text()).toBe(`30 ${tr('common.days')}`)
   })
 
   it.each([
-    [CHIP.startDirection, -1, 'Before'],
-    [CHIP.endDirection, 1, 'After'],
+    [CHIP.startDirection, -1, tr('options.before')],
+    [CHIP.endDirection, 1, tr('options.after')],
   ] as const)('labels the direction from the coefficient', (index, coeff, expected) => {
     const wrapper = mountWindow({ Start: { Days: 0, Coeff: coeff }, End: { Days: 0, Coeff: coeff } })
 
@@ -245,11 +246,11 @@ describe('Window editor', () => {
 
     await chips(wrapper)[CHIP.eventAnchor]!.trigger('click')
     expect(window.UseEventEnd).toBe(true)
-    expect(chips(wrapper)[CHIP.eventAnchor]!.text()).toBe('Event ends')
+    expect(chips(wrapper)[CHIP.eventAnchor]!.text()).toBe(tr('common.eventEnds'))
 
     await chips(wrapper)[CHIP.indexAnchor]!.trigger('click')
     expect(window.UseIndexEnd).toBe(true)
-    expect(chips(wrapper)[CHIP.indexAnchor]!.text()).toBe('Index ends')
+    expect(chips(wrapper)[CHIP.indexAnchor]!.text()).toBe(tr('common.indexEnds'))
   })
 
   it('writes a typed day count into the window as a number', async () => {
@@ -271,7 +272,7 @@ describe('Window editor', () => {
     await wrapper.findAll('input[type="number"]')[0]!.setValue('')
 
     expect(window.Start!.Days).toBeNull()
-    expect(chips(wrapper)[CHIP.startDays]!.text()).toBe('all days')
+    expect(chips(wrapper)[CHIP.startDays]!.text()).toBe(tr('common.allDays'))
   })
 
   it('clears a day count by clicking the chip\'s clear icon', async () => {
@@ -298,7 +299,7 @@ describe('Window editor', () => {
     const window: WindowModel = {}
     const wrapper = mountWindow(window)
 
-    expect(chips(wrapper)[CHIP.startDirection]!.text()).toBe('After')
+    expect(chips(wrapper)[CHIP.startDirection]!.text()).toBe(tr('options.after'))
 
     await wrapper.findAll('input[type="number"]')[0]!.setValue('45')
 
@@ -359,7 +360,7 @@ describe('CorelatedCriteria window menu', () => {
     const criteria: CorelatedCriteriaModel = { Criteria: { ConditionOccurrence: {} }, StartWindow: startWindow }
     const wrapper = mountCriteria(criteria)
 
-    const addWindow = wrapper.findAll('button').find(button => button.text() === 'Add Temporal Window')
+    const addWindow = wrapper.findAll('button').find(button => button.text() === tr('components.eventCard.addTemporalWindow'))
     expect(addWindow).toBeDefined()
     await addWindow!.trigger('click')
 
@@ -380,7 +381,7 @@ describe('CorelatedCriteria window menu', () => {
     }
     const wrapper = mountCriteria(criteria)
 
-    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset('Long-term baseline').value)
+    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset(tr('components.temporalWindowEditor.longTermBaseline')).value)
     await wrapper.vm.$nextTick()
 
     expect(criteria.StartWindow).toEqual({
@@ -399,7 +400,7 @@ describe('CorelatedCriteria window menu', () => {
     }
     const wrapper = mountCriteria(criteria)
 
-    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset('Short-term baseline').value)
+    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset(tr('components.temporalWindowEditor.shortTermBaseline')).value)
     await wrapper.vm.$nextTick()
 
     expect(criteria.EndWindow).toBeUndefined()
@@ -414,7 +415,7 @@ describe('CorelatedCriteria window menu', () => {
 
     // "Event overlaps with index" is the one preset that carries a second
     // window: the event must start before index ends and end after index starts.
-    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset('Event overlaps with index').value)
+    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset(tr('components.temporalWindowEditor.eventOverlapsWithIndex')).value)
     await wrapper.vm.$nextTick()
 
     expect(criteria.EndWindow).toEqual({

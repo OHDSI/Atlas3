@@ -32,7 +32,7 @@
         <aside
           v-if="highlightsOpen"
           class="psp__highlights"
-          :aria-label="tv('components.profileSidePanel.highlights', 'Highlights')"
+          :aria-label="tv('components.profileSidePanel.highlights')"
         >
           <button
             type="button"
@@ -60,7 +60,7 @@
             icon="mdi-chevron-left"
             size="18"
           />
-          <span class="psp__highlights-toggle-label">{{ tv('components.profileSidePanel.highlights', 'Highlights') }}</span>
+          <span class="psp__highlights-toggle-label">{{ tv('components.profileSidePanel.highlights') }}</span>
         </button>
       </div>
       <ProfileEventsTable />
@@ -96,18 +96,15 @@ const params = computed(() => ({
 const { person, loading, error } = usePersonProfile(params)
 
 const highlightsOpen = ref(false)
-const expandLabel = tv('components.profileSidePanel.showHighlights', 'Show highlights')
-const collapseLabel = tv('components.profileSidePanel.hideHighlights', 'Hide highlights')
+const expandLabel = tv('components.profileSidePanel.showHighlights')
+const collapseLabel = tv('components.profileSidePanel.hideHighlights')
 
 const friendlyError = computed(() => {
   const msg = error.value ?? ''
   if (msg.includes('403')) {
-    return tv(
-      'components.profileSidePanel.accessDenied403',
-      "You don't have access to this person's profile on this data source. Ask your admin to grant READ access to the source."
-    )
+    return tv('components.profileSidePanel.accessDenied403')
   }
-  return msg || tv('components.profileSidePanel.failedToLoadProfile', 'Failed to load profile.')
+  return msg || tv('components.profileSidePanel.failedToLoadProfile')
 })
 </script>
 

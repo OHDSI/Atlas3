@@ -30,7 +30,7 @@
         icon="mdi-arrow-left"
         @click="handleBackToCurrent"
       >
-        {{ t('common.backToCurrent', 'Back to current') }}
+        {{ t('common.backToCurrent') }}
       </AtlasButton>
     </div>
 
@@ -104,7 +104,7 @@
       v-model="showAccessDialog"
       entity-type="COHORT_DEFINITION"
       :entity-id="cohortId"
-      :title="t('components.access.configureAccess', 'Configure access').value"
+      :title="t('components.access.configureAccess').value"
       :subtitle="cohortName || undefined"
       @close="showAccessDialog = false"
     />
@@ -140,7 +140,7 @@
           variant="ghost"
           @click="retryLoad"
         >
-          {{ t('common.retry', 'Retry') }}
+          {{ t('common.retry') }}
         </AtlasButton>
       </template>
     </AtlasAlert>
@@ -223,14 +223,14 @@
         color="primary"
       />
       <div class="text-h6 mt-4">
-        {{ t('common.loadingWithDots', 'Loading...') }}
+        {{ t('common.loadingWithDots') }}
       </div>
     </v-overlay>
 
     <AtlasDialog
       v-model="showVersionsDialog"
       eyebrow="VERSIONS"
-      :title="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
+      :title="t('cohortDefinitions.cohortDefinitionManager.tabs.versions').value"
       max-width="1200"
       @close="showVersionsDialog = false"
     >
@@ -244,28 +244,25 @@
     <AtlasDialog
       v-model="showUnsavedDialog"
       eyebrow="COHORT"
-      :title="t('common.unsavedChanges', 'Unsaved changes').value"
+      :title="t('common.unsavedChanges').value"
       max-width="440"
       @close="cancelLeaveUnsaved"
     >
       {{
-        t(
-          'common.unsavedWarning',
-          'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.'
-        ).value
+        t('common.unsavedWarning').value
       }}
       <template #actions>
         <AtlasButton
           variant="ghost"
           @click="cancelLeaveUnsaved"
         >
-          {{ t('common.cancel', 'Cancel').value }}
+          {{ t('common.cancel').value }}
         </AtlasButton>
         <AtlasButton
           variant="danger"
           @click="confirmLeaveUnsaved"
         >
-          {{ t('common.discard', 'Discard changes').value }}
+          {{ t('common.discard').value }}
         </AtlasButton>
       </template>
     </AtlasDialog>
@@ -274,7 +271,7 @@
     <AtlasDialog
       v-model="showDeleteConceptSetDialog"
       eyebrow="CONCEPT SET"
-      :title="t('components.cohortBuilder.deleteConceptSetTitle', 'Delete concept set?').value"
+      :title="t('components.conceptSetDelete.title').value"
       max-width="480"
       @close="cancelDeleteConceptSet"
     >
@@ -284,14 +281,14 @@
           variant="ghost"
           @click="cancelDeleteConceptSet"
         >
-          {{ t('common.cancel', 'Cancel').value }}
+          {{ t('common.cancel').value }}
         </AtlasButton>
         <AtlasButton
           variant="danger"
           data-testid="confirm-delete-concept-set"
           @click="confirmDeleteConceptSet"
         >
-          {{ t('common.delete', 'Delete').value }}
+          {{ t('common.delete').value }}
         </AtlasButton>
       </template>
     </AtlasDialog>
@@ -624,7 +621,7 @@ const canSave = computed(() => {
 
 const saveDisabledReason = computed<string>(() =>
   resolveSaveDisabledReason({
-    entity: tv('const.entityName.cohort', 'cohort'),
+    entity: tv('const.entityName.cohort'),
     isNew: cohortId.value === null,
     hasName: cohortName.value.trim().length > 0,
     hasPermission: canSavePermission.value,
@@ -987,8 +984,8 @@ async function loadCohort(id: string) {
       logger.error('CohortBuilder', `Failed to load cohort ${id}`, atlasCohortResult.error)
       failLoad(
         atlasCohortResult.error.status === 422
-          ? tv('components.cohortBuilder.parseError', 'Failed to parse cohort definition')
-          : tv('components.cohortBuilder.loadError', 'Failed to load cohort')
+          ? tv('components.cohortBuilder.parseError')
+          : tv('components.cohortBuilder.loadError')
       )
       return
     }
@@ -996,7 +993,7 @@ async function loadCohort(id: string) {
     const atlasCohort = atlasCohortResult.data
     if (atlasCohort.expressionType && atlasCohort.expressionType !== 'SIMPLE_EXPRESSION') {
       logger.error('CohortBuilder', `Unsupported expression type: ${atlasCohort.expressionType}`)
-      failLoad(tv('components.cohortBuilder.loadError', 'Failed to load cohort'))
+      failLoad(tv('components.cohortBuilder.loadError'))
       return
     }
 
@@ -1021,7 +1018,7 @@ async function loadCohort(id: string) {
   } catch (error) {
     logger.error('CohortBuilder', `Error loading cohort ${id}`, error)
     if (loadToken !== latestLoadToken) return
-    failLoad(tv('components.cohortBuilder.loadError', 'Failed to load cohort'))
+    failLoad(tv('components.cohortBuilder.loadError'))
   }
 }
 
@@ -1195,16 +1192,12 @@ const deleteConceptSetWarning = computed(() => {
   const count = conceptSetPendingDeleteUsage.value
   const usage =
     count === 1
-      ? t('components.cohortBuilder.deleteConceptSetUsageOne', '1 criterion still uses it').value
-      : t('components.cohortBuilder.deleteConceptSetUsageMany', '{count} criteria still use it', {
+      ? t('components.conceptSetDelete.usageOne').value
+      : t('components.conceptSetDelete.usageMany', {
           count,
         }).value
 
-  return t(
-    'components.cohortBuilder.deleteConceptSetWarning',
-    'Deleting "{name}" will clear it from those criteria, and a criterion with no concept set matches its entire domain. {usage}.',
-    { name, usage }
-  ).value
+  return t('components.conceptSetDelete.warning', { name, usage }).value
 })
 
 /**
@@ -1303,7 +1296,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     const savedCohortResult = await saveCohortDefinition(atlasDefinition)
 
     if (!savedCohortResult.success) {
-      errorMessage.value = tv('components.cohortBuilder.saveToServerError', 'Failed to save cohort to server')
+      errorMessage.value = tv('components.cohortBuilder.saveToServerError')
       showError.value = true
       return {}
     }
@@ -1312,7 +1305,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     const savedId = savedCohort.id
 
     if (savedId === undefined) {
-      errorMessage.value = tv('components.cohortBuilder.saveToServerError', 'Failed to save cohort to server')
+      errorMessage.value = tv('components.cohortBuilder.saveToServerError')
       showError.value = true
       return {}
     }
@@ -1373,7 +1366,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     loadedSnapshot.value = createStateSnapshot()
     markExpressionRevision()
 
-    successMessage.value = tv('components.cohortBuilder.saveSuccess', 'Cohort saved successfully')
+    successMessage.value = tv('components.cohortBuilder.saveSuccess')
     showSuccess.value = true
 
     // Adopt the new id in the route. `cohortId` is derived from props.id, so a
@@ -1396,7 +1389,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     errorMessage.value =
       error instanceof Error
         ? error.message
-        : tv('components.cohortBuilder.saveError', 'Failed to save cohort')
+        : tv('components.cohortBuilder.saveError')
     showError.value = true
     return {}
   }
@@ -1417,7 +1410,7 @@ async function handleApplyJson(json: string) {
   try {
     parsed = JSON.parse(json)
   } catch {
-    errorMessage.value = tv('components.cohortBuilder.jsonInvalidExpression', 'Not a valid Atlas cohort expression')
+    errorMessage.value = tv('components.cohortBuilder.jsonInvalidExpression')
     showError.value = true
     return
   }
@@ -1427,7 +1420,7 @@ async function handleApplyJson(json: string) {
   // than dropped on the way in (#328).
   const result = validateCohortExpression(parsed)
   if (!result.ok) {
-    errorMessage.value = tv('components.cohortBuilder.jsonImportFailed', 'Import failed: {error}', {
+    errorMessage.value = tv('components.cohortBuilder.jsonImportFailed', {
       error: describeImportProblems(result.problems).join('; '),
     })
     showError.value = true
@@ -1438,10 +1431,7 @@ async function handleApplyJson(json: string) {
   replaceExpression(result.expression)
 
   showJsonDialog.value = false
-  successMessage.value = tv(
-    'components.cohortBuilder.jsonApplied',
-    'Cohort JSON applied — review the builder, then save'
-  )
+  successMessage.value = tv('components.cohortBuilder.jsonApplied')
   showSuccess.value = true
 }
 
@@ -1497,7 +1487,7 @@ function handleExportDownload() {
   a.download = exportFilename()
   a.click()
   URL.revokeObjectURL(url)
-  successMessage.value = tv('components.cohortBuilder.exportDownloaded', 'Cohort JSON downloaded')
+  successMessage.value = tv('components.cohortBuilder.exportDownloaded')
   showSuccess.value = true
 }
 
@@ -1505,14 +1495,11 @@ async function handleExportCopy() {
   const json = exportableExpression()
   try {
     await navigator.clipboard.writeText(json)
-    successMessage.value = tv(
-      'components.cohortBuilder.copiedToClipboard',
-      'Cohort JSON copied to clipboard'
-    )
+    successMessage.value = tv('components.cohortBuilder.copiedToClipboard')
     showSuccess.value = true
   } catch (err) {
     logger.error('CohortBuilder', 'Clipboard copy failed', err)
-    errorMessage.value = tv('components.cohortBuilder.copyFailed', 'Could not copy to clipboard')
+    errorMessage.value = tv('components.cohortBuilder.copyFailed')
     showError.value = true
   }
 }

@@ -46,14 +46,14 @@ const props = defineProps<{
 const modelValue = toRef(props, 'modelValue')
 
 const operators = computed(() => [
-  { title: t('options.lessThan', 'less than').value, value: 'lt' },
-  { title: t('options.lessThanOrEqual', 'less than or equal').value, value: 'lte' },
-  { title: t('options.equal', 'equal').value, value: 'eq' },
-  { title: t('options.notEqual', 'not equal').value, value: '!eq' },
-  { title: t('options.greaterThan', 'greater than').value, value: 'gt' },
-  { title: t('options.greaterThanOrEqual', 'greater than or equal').value, value: 'gte' },
-  { title: t('options.between', 'between').value, value: 'bt' },
-  { title: t('options.notBetween', 'not between').value, value: '!bt' },
+  { title: t('options.lessThan').value, value: 'lt' },
+  { title: t('options.lessThanOrEqual').value, value: 'lte' },
+  { title: t('options.equal').value, value: 'eq' },
+  { title: t('options.notEqual').value, value: '!eq' },
+  { title: t('options.greaterThan').value, value: 'gt' },
+  { title: t('options.greaterThanOrEqual').value, value: 'gte' },
+  { title: t('options.between').value, value: 'bt' },
+  { title: t('options.notBetween').value, value: '!bt' },
 ])
 const defaultOperator = 'gte'
 

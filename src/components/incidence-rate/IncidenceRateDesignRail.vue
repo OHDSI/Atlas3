@@ -8,7 +8,7 @@
       data-testid="ir-rail-panel-targets"
     >
       <header class="rail-section__header">
-        <span class="text-eyebrow">{{ t('facets.caption.targetCohorts', 'Target cohorts').value }}</span>
+        <span class="text-eyebrow">{{ t('facets.caption.targetCohorts').value }}</span>
         <AtlasButton
           variant="ghost"
           size="sm"
@@ -16,7 +16,7 @@
           :disabled="readonly"
           @click="openTarget = true"
         >
-          {{ t('common.add', 'Add').value }}
+          {{ t('common.add').value }}
         </AtlasButton>
       </header>
       <IncidenceRateCohortList
@@ -35,7 +35,7 @@
       data-testid="ir-rail-panel-outcomes"
     >
       <header class="rail-section__header">
-        <span class="text-eyebrow">{{ t('columns.outcomes', 'Outcome cohorts').value }}</span>
+        <span class="text-eyebrow">{{ t('ir.editor.outcomeCohorts').value }}</span>
         <AtlasButton
           variant="ghost"
           size="sm"
@@ -43,7 +43,7 @@
           :disabled="readonly"
           @click="openOutcome = true"
         >
-          {{ t('common.add', 'Add').value }}
+          {{ t('common.add').value }}
         </AtlasButton>
       </header>
       <IncidenceRateCohortList
@@ -62,7 +62,7 @@
       data-testid="ir-rail-panel-tar"
     >
       <header class="rail-section__header">
-        <span class="text-eyebrow">{{ t('cohortDefinitions.appearance.timeAtRisk', 'Time at risk').value }}</span>
+        <span class="text-eyebrow">{{ t('cohortDefinitions.appearance.timeAtRisk').value }}</span>
       </header>
       <IncidenceRateTimeAtRiskEditor />
     </section>
@@ -72,7 +72,7 @@
       data-testid="ir-rail-panel-window"
     >
       <header class="rail-section__header">
-        <span class="text-eyebrow">{{ t('incidenceRate.studyWindow', 'Study window').value }}</span>
+        <span class="text-eyebrow">{{ t('incidenceRate.studyWindow').value }}</span>
       </header>
       <IncidenceRateStudyWindowEditor />
     </section>
@@ -82,7 +82,7 @@
       data-testid="ir-rail-panel-strata"
     >
       <header class="rail-section__header">
-        <span class="text-eyebrow">{{ t('ir.editor.stratifyCriteria', 'Stratify rules').value }}</span>
+        <span class="text-eyebrow">{{ t('ir.editor.stratifyCriteria').value }}</span>
         <span class="ir-rail__count">{{ strataCount }}</span>
       </header>
       <IncidenceRateStratifyRulesList

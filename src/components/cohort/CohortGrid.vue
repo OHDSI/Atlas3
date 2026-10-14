@@ -22,7 +22,7 @@
     >
       <div class="cohort-grid__error">
         <div class="cohort-grid__error-message">
-          {{ error.message || t('common.errorLoadingCohorts', 'Failed to load cohorts').value }}
+          {{ error.message || t('common.errorLoadingCohorts').value }}
         </div>
         <AtlasButton
           variant="danger"
@@ -32,7 +32,7 @@
           <AtlasIcon start>
             mdi-refresh
           </AtlasIcon>
-          {{ t('common.refresh', 'Retry') }}
+          {{ t('common.refresh') }}
         </AtlasButton>
       </div>
     </AtlasAlert>
@@ -58,14 +58,14 @@
         icon="mdi-close"
         @click="$emit('clear-filters')"
       >
-        {{ t('search.clearAllSelections', 'Clear filters').value }}
+        {{ t('search.clearAllSelections').value }}
       </AtlasButton>
       <AtlasButton
         v-else
         icon="mdi-plus"
         @click="$emit('create-cohort')"
       >
-        {{ t('cohortDefinitions.newDefinition', 'New cohort').value }}
+        {{ t('cohortDefinitions.newDefinition').value }}
       </AtlasButton>
     </div>
 
@@ -143,22 +143,15 @@ const isFiltered = computed(
  */
 const emptyMessage = computed(() => {
   if (props.searchQuery && (props.selectedTags?.length ?? 0) > 0) {
-    return tv(
-      'components.cohortList.emptyMatchQueryAndTags',
-      'No cohorts match "{query}" with the selected tags.',
-      { query: props.searchQuery }
-    )
+    return tv('components.cohortList.emptyMatchQueryAndTags', { query: props.searchQuery })
   }
   if (props.searchQuery)
-    return tv('components.cohortList.emptyMatchQuery', 'No cohorts match "{query}".', {
+    return tv('components.cohortList.emptyMatchQuery', {
       query: props.searchQuery,
     })
   if ((props.selectedTags?.length ?? 0) > 0)
-    return tv('components.cohortList.emptyMatchTags', 'No cohorts match the selected tags.')
-  return tv(
-    'components.cohortList.emptyNoCohorts',
-    'No cohorts yet — create one to start defining a study population.'
-  )
+    return tv('components.cohortList.emptyMatchTags')
+  return tv('components.cohortList.emptyNoCohorts')
 })
 </script>
 

@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useI18n } from '@/composables/useI18n'
 import { ref, computed } from 'vue'
 import { logger } from '@/utils/logger'
 import { getConceptById, getConceptRecordCounts } from '@/services/concept-search.service'
@@ -25,6 +26,7 @@ interface CacheEntry {
 }
 
 export const useConceptDetailStore = defineStore('concept-detail', () => {
+  const { tv } = useI18n()
   const concept = ref<Concept | null>(null)
   const related = ref<RelatedConcept[]>([])
   const hierarchy = ref<RelatedConcept[]>([])
@@ -123,13 +125,13 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
 
       if (conceptResult.status === 'rejected') {
         logger.error('ConceptDetail', `loadConcept failed for ${key}`, conceptResult.reason)
-        error.value = 'Failed to load concept'
+        error.value = tv('conceptDetail.errors.loadFailed')
         return
       }
 
       const c = conceptResult.value
       if (!c) {
-        error.value = 'Concept not found'
+        error.value = tv('conceptDetail.errors.notFound')
         concept.value = null
         related.value = []
         hierarchy.value = []
@@ -171,7 +173,7 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
       // must never reject: anything unexpected degrades to the fatal error.
       if (loadGeneration === conceptLoadGeneration) {
         logger.error('ConceptDetail', `loadConcept failed for ${key}`, e)
-        error.value = 'Failed to load concept'
+        error.value = tv('conceptDetail.errors.loadFailed')
       }
     } finally {
       if (loadGeneration === conceptLoadGeneration) isLoading.value = false

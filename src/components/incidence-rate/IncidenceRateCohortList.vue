@@ -2,8 +2,8 @@
   <v-table density="compact">
     <thead>
       <tr>
-        <th>{{ t('columns.id', 'ID') }}</th>
-        <th>{{ t('columns.name', 'Name') }}</th>
+        <th>{{ t('columns.id') }}</th>
+        <th>{{ t('columns.name') }}</th>
         <th />
       </tr>
     </thead>
@@ -19,7 +19,7 @@
             icon="mdi-close"
             size="sm"
             variant="text"
-            v-bind="{ ariaLabel: t('components.incidenceRate.removeCohort', 'Remove cohort').value }"
+            v-bind="{ ariaLabel: t('components.incidenceRate.removeCohort').value }"
             @click="emit('remove', c.id)"
           />
         </td>

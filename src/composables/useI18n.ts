@@ -32,18 +32,12 @@ function getNestedValue(obj: Record<string, unknown>, path: string): string | un
 }
 
 /**
- * Interpolate parameters into translation string. Handles both Atlas 3
- * `{name}` style and the legacy Atlas 2.x `<%= name %>` / `<%=name%>` style
- * inherited from the WebAPI translation bundles.
+ * Interpolate `{name}` parameters into a translation string.
  */
 function interpolate(template: string, params: TranslationParams): string {
-  return template
-    .replace(/\{(\w+)\}/g, (match, key) =>
-      params[key] !== undefined ? String(params[key]) : match
-    )
-    .replace(/<%=\s*(\w+)\s*%>/g, (match, key) =>
-      params[key] !== undefined ? String(params[key]) : match
-    )
+  return template.replace(/\{(\w+)\}/g, (match, key) =>
+    params[key] !== undefined ? String(params[key]) : match
+  )
 }
 
 /**
@@ -68,20 +62,12 @@ function getTranslation(
     translationParams = params
   }
 
+  // Every locale bundle is deep-merged over English in the store, so a miss
+  // here is a key en.json lacks too.
   let translation = getNestedValue(localeStore.translations, key)
 
-  // Fallback to English
-  if (!translation) {
-    const englishBundle = localeStore.translationCache.get('en')
-    if (englishBundle) {
-      translation = getNestedValue(englishBundle.bundle.translations, key)
-    }
-
-    // Log missing translation in dev mode
-    // Only warn if translations have been initialized to avoid noise during app startup
-    if (!translation && localeStore.initialized) {
-      logger.warn('i18n', `Missing translation for key: "${key}" in locale: ${localeStore.locale}`)
-    }
+  if (!translation && localeStore.initialized) {
+    logger.warn('i18n', `Missing translation for key: "${key}" in locale: ${localeStore.locale}`)
   }
 
   // Fallback to default value or key itself

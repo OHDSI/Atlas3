@@ -1,8 +1,8 @@
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    :eyebrow="tv('components.cohortSampleCreate.eyebrow', 'COHORT')"
-    :title="tv('components.cohortSampleCreate.title', 'New cohort sample')"
+    :eyebrow="tv('components.cohortSampleCreate.eyebrow')"
+    :title="tv('components.cohortSampleCreate.title')"
     max-width="560"
     @update:model-value="$emit('update:modelValue', $event)"
     @close="cancel"
@@ -10,7 +10,7 @@
     <div>
       <AtlasTextField
         v-model="form.name"
-        :label="tv('columns.sampleName', 'Sample name')"
+        :label="tv('columns.sampleName')"
         variant="outlined"
         data-testid="sample-name"
         required
@@ -18,41 +18,41 @@
       <AtlasTextField
         v-model.number="form.size"
         type="number"
-        :label="tv('components.cohortSampleCreate.numberOfPersons', 'Number of persons')"
+        :label="tv('components.cohortSampleCreate.numberOfPersons')"
         :min="1"
         :max="SAMPLE_SIZE_MAX"
-        :hint="tv('components.cohortSampleCreate.maximum', 'Maximum {max}', { max: SAMPLE_SIZE_MAX })"
+        :hint="tv('components.cohortSampleCreate.maximum', { max: SAMPLE_SIZE_MAX })"
         persistent-hint
         variant="outlined"
         data-testid="sample-size"
       />
 
       <div class="text-subtitle-2 mt-4 mb-1">
-        {{ tv('components.cohortSampleCreate.genderOptional', 'Gender (optional)') }}
+        {{ tv('components.cohortSampleCreate.genderOptional') }}
       </div>
       <div class="d-flex flex-wrap ga-3">
         <AtlasCheckbox
           v-model="genderMale"
-          :label="tv('components.cohortSamples.male', 'Male')"
+          :label="tv('components.cohortSamples.male')"
           hide-details
           data-testid="sample-gender-male"
         />
         <AtlasCheckbox
           v-model="genderFemale"
-          :label="tv('components.cohortSamples.female', 'Female')"
+          :label="tv('components.cohortSamples.female')"
           hide-details
           data-testid="sample-gender-female"
         />
         <AtlasCheckbox
           v-model="genderOther"
-          :label="tv('components.cohortSamples.otherNonBinary', 'Other / non-binary')"
+          :label="tv('components.cohortSamples.otherNonBinary')"
           hide-details
           data-testid="sample-gender-other"
         />
       </div>
 
       <div class="text-subtitle-2 mt-4 mb-1">
-        {{ tv('components.cohortSampleCreate.ageOptional', 'Age (optional)') }}
+        {{ tv('components.cohortSampleCreate.ageOptional') }}
       </div>
       <div class="d-flex ga-2 align-start">
         <AtlasSelect
@@ -60,7 +60,7 @@
           :items="ageModeOptions"
           item-title="label"
           item-value="value"
-          :label="tv('columns.comparator', 'Comparator')"
+          :label="tv('columns.comparator')"
           variant="outlined"
           clearable
           data-testid="sample-age-mode"
@@ -72,7 +72,7 @@
             type="number"
             :min="0"
             :max="SAMPLE_AGE_MAX - 1"
-            :label="tv('columns.age', 'Age')"
+            :label="tv('columns.age')"
             variant="outlined"
             data-testid="sample-age-value"
             style="max-width: 120px"
@@ -85,7 +85,7 @@
             type="number"
             :min="0"
             :max="SAMPLE_AGE_MAX - 1"
-            :label="tv('components.cohortSampleCreate.minAge', 'Min age')"
+            :label="tv('components.cohortSampleCreate.minAge')"
             variant="outlined"
             data-testid="sample-age-min"
             style="max-width: 120px"
@@ -96,7 +96,7 @@
             type="number"
             :min="0"
             :max="SAMPLE_AGE_MAX - 1"
-            :label="tv('components.cohortSampleCreate.maxAge', 'Max age')"
+            :label="tv('components.cohortSampleCreate.maxAge')"
             variant="outlined"
             data-testid="sample-age-max"
             style="max-width: 120px"
@@ -130,7 +130,7 @@
         variant="ghost"
         @click="cancel"
       >
-        {{ t('common.cancel', 'Cancel').value }}
+        {{ t('common.cancel').value }}
       </AtlasButton>
       <AtlasButton
         :disabled="errors.length > 0 || submitting"
@@ -138,7 +138,7 @@
         data-testid="sample-submit"
         @click="submit"
       >
-        {{ t('components.cohortSampleCreate.createSample', 'Create sample').value }}
+        {{ t('components.cohortSampleCreate.createSample').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -184,13 +184,13 @@ const ageMin = ref<number | null>(null)
 const ageMax = ref<number | null>(null)
 
 const ageModeOptions: Array<{ value: SampleAgeMode; label: string }> = [
-  { value: 'lessThan', label: tv('components.cohortSampleCreate.ageModeLessThan', '< less than') },
-  { value: 'lessThanOrEqual', label: tv('components.cohortSampleCreate.ageModeAtMost', '≤ at most') },
-  { value: 'equalTo', label: tv('components.cohortSampleCreate.ageModeEqualTo', '= equal to') },
-  { value: 'greaterThanOrEqual', label: tv('components.cohortSampleCreate.ageModeAtLeast', '≥ at least') },
-  { value: 'greaterThan', label: tv('components.cohortSampleCreate.ageModeGreaterThan', '> greater than') },
-  { value: 'between', label: tv('components.cohortSampleCreate.ageModeBetween', 'between') },
-  { value: 'notBetween', label: tv('components.cohortSampleCreate.ageModeNotBetween', 'not between') },
+  { value: 'lessThan', label: tv('components.cohortSampleCreate.ageModeLessThan') },
+  { value: 'lessThanOrEqual', label: tv('components.cohortSampleCreate.ageModeAtMost') },
+  { value: 'equalTo', label: tv('components.cohortSampleCreate.ageModeEqualTo') },
+  { value: 'greaterThanOrEqual', label: tv('components.cohortSampleCreate.ageModeAtLeast') },
+  { value: 'greaterThan', label: tv('components.cohortSampleCreate.ageModeGreaterThan') },
+  { value: 'between', label: tv('components.cohortSampleCreate.ageModeBetween') },
+  { value: 'notBetween', label: tv('components.cohortSampleCreate.ageModeNotBetween') },
 ]
 
 const isRangeMode = computed(() => ageMode.value === 'between' || ageMode.value === 'notBetween')

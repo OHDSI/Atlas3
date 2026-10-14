@@ -19,19 +19,19 @@
       <div class="ir-workbench__canvas-controls">
         <button
           class="rail-toggle"
-          :title="railOpen ? tv('components.incidenceRate.hideDesignPanel', 'Hide design panel') : tv('components.incidenceRate.showDesignPanel', 'Show design panel')"
+          :title="railOpen ? tv('components.workbench.hideDesignPanel') : tv('components.workbench.showDesignPanel')"
           @click="railOpen = !railOpen"
         >
-          {{ railOpen ? `◂ ${tv('components.incidenceRate.hideAnalysisDesign', 'Hide Analysis Design')}` : `▸ ${tv('components.incidenceRate.showAnalysisDesign', 'Show Analysis Design')}` }}
+          {{ railOpen ? `◂ ${tv('components.workbench.hideAnalysisDesign')}` : `▸ ${tv('components.workbench.showAnalysisDesign')}` }}
         </button>
         <AtlasTooltip
           v-if="validationMessages.length"
-          :text="t('components.incidenceRate.viewValidationMessages', 'View validation messages').value"
+          :text="t('components.incidenceRate.viewValidationMessages').value"
           location="bottom"
         >
           <template #activator="{ props }">
             <AtlasIconButton
-              v-bind="{ ...props, ariaLabel: t('components.incidenceRate.viewValidationMessages', 'View validation messages').value }"
+              v-bind="{ ...props, ariaLabel: t('components.incidenceRate.viewValidationMessages').value }"
               icon="mdi-alert"
               variant="text"
               size="sm"
@@ -103,7 +103,7 @@
             severity="info"
             class="mb-2"
           >
-            {{ t('components.incidenceRate.noCasesFound', 'No cases found for this target/outcome combination. Try selecting a different outcome.').value }}
+            {{ t('components.incidenceRate.noCasesFound').value }}
           </AtlasAlert>
           <template v-else>
             <IncidenceRateTreemap
@@ -131,9 +131,9 @@
       <AtlasDialog
         v-if="validationMessages.length"
         v-model="showValidationDialog"
-        :eyebrow="t('components.incidenceRate.analysisDesign', 'Analysis design').value"
-        :title="t('components.incidenceRate.validationMessages', 'Validation messages').value"
-        :close-label="t('common.close', 'Close').value"
+        :eyebrow="t('components.incidenceRate.analysisDesign').value"
+        :title="t('components.incidenceRate.validationMessages').value"
+        :close-label="t('common.close').value"
         max-width="560"
       >
         <ul class="ir-workbench__validation-list">
@@ -151,7 +151,7 @@
             variant="secondary"
             @click="showValidationDialog = false"
           >
-            {{ t('common.close', 'Close') }}
+            {{ t('common.close') }}
           </AtlasButton>
         </template>
       </AtlasDialog>

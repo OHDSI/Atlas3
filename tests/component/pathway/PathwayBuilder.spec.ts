@@ -7,6 +7,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import PathwayBuilder from '@/components/pathway/PathwayBuilder.vue'
 import { usePathwayStore } from '@/stores/pathway'
+import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -88,7 +89,7 @@ describe('PathwayBuilder', () => {
         stubs,
       },
     })
-    expect(w.text()).toMatch(/No pathway loaded/i)
+    expect(w.text()).toContain(tr('pathways.editor.noPathwayLoaded'))
   })
 
   it('renders the workbench when a pathway is loaded', async () => {
@@ -208,11 +209,11 @@ describe('PathwayBuilder', () => {
     await flushPromises()
 
     await (w.vm as any).$.setupState.handleExport()
-    expect(builderMocks.feedback.value).toMatchObject({ message: 'Export failed', color: 'error' })
+    expect(builderMocks.feedback.value).toMatchObject({ message: tr('commonErrors.exportFailed'), color: 'error' })
 
     const file = { text: async () => JSON.stringify({ name: 'Imported' }) }
     await (w.vm as any).$.setupState.handleImportFileChange({ target: { files: [file], value: '' } })
-    expect(builderMocks.feedback.value).toMatchObject({ message: 'Import failed', color: 'error' })
+    expect(builderMocks.feedback.value).toMatchObject({ message: tr('characterizations.editor.utilities.import.importError'), color: 'error' })
 
     ;(w.vm as any).$.setupState.onSnackbarUpdate(false)
     expect(builderMocks.feedback.value).toBeNull()

@@ -43,6 +43,7 @@ import { useWebAPIStore } from '@/stores/webapi'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
 import { getSourceKey } from '@/config/webapi'
+import { useI18n } from '@/composables/useI18n'
 
 export interface ConceptSetFilterState {
   searchQuery: string
@@ -56,6 +57,7 @@ export interface ConceptSetFilterState {
 export type ComparisonMode = 'expression' | 'included' | 'source'
 
 export const useConceptSetsStore = defineStore('concept-sets', () => {
+  const { tv } = useI18n()
   // ============================================================================
   // State
   // ============================================================================
@@ -208,7 +210,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       try {
         conceptSets.value = await getAllConceptSets()
       } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Failed to fetch concept sets'
+        error.value =
+          err instanceof Error
+            ? err.message
+            : tv('conceptSets.loadListFailed')
         logger.error('ConceptSetsStore', 'Fetch concept sets error', err)
         conceptSets.value = []
       } finally {
@@ -235,12 +240,15 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       if (set) {
         currentSet.value = set
       } else {
-        error.value = 'Concept set not found'
+        error.value = tv('conceptSets.notFound')
         currentSet.value = null
       }
     } catch (err) {
       if (requestId !== fetchOneRequestId) return
-      error.value = err instanceof Error ? err.message : 'Failed to fetch concept set'
+      error.value =
+        err instanceof Error
+          ? err.message
+          : tv('conceptSets.loadFailed')
       logger.error('ConceptSetsStore', 'Fetch concept set error', err)
       currentSet.value = null
     } finally {
@@ -266,7 +274,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       currentSet.value = created
       return created
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to create concept set'
+      error.value =
+        err instanceof Error
+          ? err.message
+          : tv('conceptSets.createFailed')
       logger.error('ConceptSetsStore', 'Create concept set error', err)
       return null
     } finally {
@@ -288,7 +299,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       currentSet.value = updated
       return updated
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to update concept set'
+      error.value =
+        err instanceof Error
+          ? err.message
+          : tv('conceptSets.updateFailed')
       logger.error('ConceptSetsStore', 'Update concept set error', err)
       return null
     } finally {
@@ -306,7 +320,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     try {
       const source = await getConceptSetById(id, { rethrow: true })
       if (!source) {
-        error.value = 'Concept set not found'
+        error.value = tv('conceptSets.notFound')
         return null
       }
 
@@ -328,7 +342,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       editorOpen.value = true
       return created
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to copy concept set'
+      error.value =
+        err instanceof Error
+          ? err.message
+          : tv('conceptSets.copyFailed')
       logger.error('ConceptSetsStore', 'Copy concept set error', err)
       return null
     } finally {
@@ -350,13 +367,13 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     for (const tag of toAdd) {
       if (tag.id) {
         const result = await assignTagToConceptSet(id, tag.id)
-        if (!result.success) failures.push(result.error ?? `Failed to assign tag "${tag.name}"`)
+        if (!result.success) failures.push(result.error ?? tv('conceptSets.tagAssignFailed', { name: tag.name }))
       }
     }
     for (const tag of toRemove) {
       if (tag.id) {
         const result = await unassignTagFromConceptSet(id, tag.id)
-        if (!result.success) failures.push(result.error ?? `Failed to unassign tag "${tag.name}"`)
+        if (!result.success) failures.push(result.error ?? tv('conceptSets.tagUnassignFailed', { name: tag.name }))
       }
     }
     if (currentSet.value?.id === id) {
@@ -386,11 +403,14 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
         }
         return true
       } else {
-        error.value = 'Failed to delete concept set'
+        error.value = tv('conceptSets.deleteFailed')
         return false
       }
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to delete concept set'
+      error.value =
+        err instanceof Error
+          ? err.message
+          : tv('conceptSets.deleteFailed')
       logger.error('ConceptSetsStore', 'Delete concept set error', err)
       return false
     } finally {
@@ -479,7 +499,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    */
   function addConceptToSet(concept: Concept, flags?: ConceptAddFlags) {
     if (!currentSet.value) {
-      error.value = 'No concept set selected'
+      error.value = tv('conceptSets.noneSelected')
       return
     }
 
@@ -492,7 +512,9 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     // includes minus the excludes). Only an exact repeat of the same flag
     // combination is a no-op worth refusing (#226).
     if (currentSet.value.items.some(existing => hasSameFlags(existing, item))) {
-      error.value = 'Concept already exists in this set with the same options'
+      error.value = tv(
+        'conceptSets.duplicateItem'
+      )
       return
     }
 
@@ -517,7 +539,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    */
   function removeConceptFromSet(conceptId: number) {
     if (!currentSet.value) {
-      error.value = 'No concept set selected'
+      error.value = tv('conceptSets.noneSelected')
       return
     }
 
@@ -536,7 +558,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     flag: 'includeDescendants' | 'includeMapped' | 'isExcluded'
   ) {
     if (!currentSet.value) {
-      error.value = 'No concept set selected'
+      error.value = tv('conceptSets.noneSelected')
       return
     }
 
@@ -554,7 +576,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    */
   function removeConceptItem(target: ConceptSetItem) {
     if (!currentSet.value) {
-      error.value = 'No concept set selected'
+      error.value = tv('conceptSets.noneSelected')
       return
     }
 
@@ -574,7 +596,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     flag: 'includeDescendants' | 'includeMapped' | 'isExcluded'
   ) {
     if (!currentSet.value) {
-      error.value = 'No concept set selected'
+      error.value = tv('conceptSets.noneSelected')
       return
     }
 
@@ -586,7 +608,9 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
     const updated: ConceptSetItem = { ...item, [flag]: !item[flag] }
     if (currentSet.value.items.some((other, i) => i !== index && hasSameFlags(other, updated))) {
-      error.value = 'Another entry for this concept already uses those options'
+      error.value = tv(
+        'conceptSets.duplicateItemOptions'
+      )
       return
     }
 
@@ -599,7 +623,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    */
   function setConceptItemFlags(target: ConceptSetItem, flags: ConceptAddFlags) {
     if (!currentSet.value) {
-      error.value = 'No concept set selected'
+      error.value = tv('conceptSets.noneSelected')
       return
     }
 
@@ -671,7 +695,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
       logger.debug('ConceptSetsStore', `Loaded version ${versionNumber} for preview`)
     } catch (err) {
-      error.value = err instanceof Error ? err.message : `Failed to load version ${versionNumber}`
+      error.value = err instanceof Error ? err.message
+          : tv('conceptSets.versionLoadFailed', {
+              version: versionNumber,
+            })
       logger.error('ConceptSetsStore', `Failed to load version ${versionNumber}`, err)
       throw err
     } finally {
@@ -726,7 +753,8 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
       return false
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to save preview as current'
+      error.value = err instanceof Error ? err.message
+          : tv('conceptSets.saveVersionFailed')
       logger.error('ConceptSetsStore', 'Failed to save preview as current', err)
       return false
     }
@@ -804,13 +832,15 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     if (!currentSet.value || (currentSet.value.items?.length ?? 0) === 0) {
       comparison.value = []
       comparisonOtherSet.value = null
-      comparisonError.value = 'No concept set loaded'
+      comparisonError.value = tv('conceptSets.compare.noneLoaded')
       return
     }
     if (otherSetId === currentSet.value.id) {
       comparison.value = []
       comparisonOtherSet.value = null
-      comparisonError.value = 'Cannot compare a concept set with itself'
+      comparisonError.value = tv(
+        'conceptSets.compare.sameSet'
+      )
       return
     }
 
@@ -830,7 +860,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
           ? comparisonOtherSet.value
           : await getConceptSetById(otherSetId)
       if (!cs2) {
-        comparisonError.value = 'Other concept set not found'
+        comparisonError.value = tv('conceptSets.compare.otherNotFound')
         comparison.value = []
         comparisonOtherSet.value = null
         return
@@ -917,7 +947,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
     const key = sourceKey || useWebAPIStore().getValidVocabularySource() || getSourceKey()
     if (!key) {
-      includedError.value = 'No vocabulary source available'
+      includedError.value = tv('conceptSets.noVocabularySource')
       return
     }
 
@@ -940,7 +970,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return
       if (ctrl !== includedAbortCtrl) return
-      includedError.value = err instanceof Error ? err.message : 'Failed to resolve concept set'
+      includedError.value =
+        err instanceof Error
+          ? err.message
+          : tv('conceptSets.resolveFailed')
       logger.error('ConceptSetsStore', 'resolveIncluded error', err)
     } finally {
       if (ctrl === includedAbortCtrl) {
@@ -972,7 +1005,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
     const key = sourceKey || useWebAPIStore().getValidVocabularySource()
     if (!key) {
-      sourceCodeError.value = 'No vocabulary source available'
+      sourceCodeError.value = tv('conceptSets.noVocabularySource')
       return
     }
 
@@ -991,7 +1024,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return
       if (ctrl !== sourceCodeAbortCtrl) return
-      sourceCodeError.value = err instanceof Error ? err.message : 'Failed to resolve source codes'
+      sourceCodeError.value =
+        err instanceof Error
+          ? err.message
+          : tv('conceptSets.resolveSourceCodesFailed')
       logger.error('ConceptSetsStore', 'resolveSourceCodes error', err)
     } finally {
       if (ctrl === sourceCodeAbortCtrl) {

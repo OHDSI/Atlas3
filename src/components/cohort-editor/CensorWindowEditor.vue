@@ -105,24 +105,24 @@ const emit = defineEmits<{
 
 const eraGapLabel = computed(
   () =>
-    t('components.cohortExpressionEditor.cohortErasText_1', 'Specify era collapse gap size:').value
+    t('components.cohortExpressionEditor.eraCollapseGap').value
 )
-const daysLabel = computed(() => t('components.cohortExpressionEditor.days', 'days').value)
+const daysLabel = computed(() => t('components.cohortExpressionEditor.days').value)
 const addTrimmingLabel = computed(
-  () => t('components.cohortExpressionEditor.addTrimmingOptions', 'add trimming options...').value
+  () => t('components.cohortExpressionEditor.addTrimmingOptions').value
 )
 const leftCensorLabel = computed(
   () =>
-    t('components.cohortExpressionEditor.cohortErasText_2', 'Left censor cohort start dates to')
+    t('components.cohortExpressionEditor.leftCensorStartDates')
       .value
 )
 const rightCensorLabel = computed(
   () =>
-    t('components.cohortExpressionEditor.cohortErasText_3', 'Right censor cohort end dates to')
+    t('components.cohortExpressionEditor.rightCensorEndDates')
       .value
 )
 const noCensoringLabel = computed(
-  () => t('components.cohortExpressionEditor.noCensoring', 'No Censoring').value
+  () => t('components.cohortExpressionEditor.noCensoring').value
 )
 
 const eraPadModel = ref<number>(props.collapseSettings?.EraPad ?? 0)
@@ -154,10 +154,7 @@ watch(
 
 const dateOrderWarning = computed(() => {
   if (startDateModel.value && endDateModel.value && startDateModel.value > endDateModel.value) {
-    return t(
-      'exitCriteria.validation.startGreaterThanEnd',
-      'Start date must be on or before end date'
-    ).value
+    return t('censorWindow.validation.startAfterEnd').value
   }
   return ''
 })

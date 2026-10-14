@@ -10,11 +10,11 @@
           class="text-caption text-grey-darken-1"
           data-testid="cohort-sample-detail-source"
         >
-          {{ t('components.cohortSampleDetail.source', 'Source: {name}', { name: sourceName }).value }}
+          {{ t('components.cohortSampleDetail.source', { name: sourceName }).value }}
         </div>
         <div class="text-caption text-grey-darken-1">
           {{
-            t('components.cohortSampleDetail.personsCreated', '{count} persons · created {date}', {
+            t('components.cohortSampleDetail.personsCreated', {
               count: formatCount(sample.size),
               date: formatDate(sample.createdDate),
             }).value
@@ -36,16 +36,16 @@
     >
       <thead>
         <tr>
-          <th>{{ tv('columns.personId', 'Person ID') }}</th>
-          <th>{{ tv('columns.gender', 'Gender') }}</th>
+          <th>{{ tv('columns.personId') }}</th>
+          <th>{{ tv('columns.gender') }}</th>
           <th class="text-right">
-            {{ tv('columns.ageAtIndex', 'Age at index') }}
+            {{ tv('columns.ageAtIndex') }}
           </th>
           <th
             v-if="anyRecordCount"
             class="text-right"
           >
-            {{ tv('components.cohortSampleDetail.records', 'Records') }}
+            {{ tv('components.cohortSampleDetail.records') }}
           </th>
         </tr>
       </thead>
@@ -85,7 +85,7 @@
       class="text-center py-6 text-grey-darken-1"
       data-testid="cohort-sample-detail-empty"
     >
-      {{ tv('components.cohortSampleDetail.noRecords', 'This sample has no person records.') }}
+      {{ tv('components.cohortSampleDetail.noRecords') }}
     </div>
   </div>
 </template>
@@ -136,9 +136,9 @@ function formatDate(value: string | number | undefined | null): string {
 }
 
 function formatGender(conceptId: number): string {
-  if (conceptId === GENDER_MALE_CONCEPT_ID) return tv('components.cohortSamples.male', 'Male')
-  if (conceptId === GENDER_FEMALE_CONCEPT_ID) return tv('components.cohortSamples.female', 'Female')
-  return tv('components.cohortSamples.other', 'Other')
+  if (conceptId === GENDER_MALE_CONCEPT_ID) return tv('components.cohortSamples.male')
+  if (conceptId === GENDER_FEMALE_CONCEPT_ID) return tv('components.cohortSamples.female')
+  return tv('components.cohortSamples.other')
 }
 
 const anyRecordCount = computed(() =>

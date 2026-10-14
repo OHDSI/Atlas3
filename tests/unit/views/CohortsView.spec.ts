@@ -19,9 +19,10 @@ vi.mock('vue-router', () => ({
 }))
 
 // Mock useI18n
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: vi.fn()
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 // Mock useCohorts composable
 vi.mock('@/composables/useCohorts', () => ({
@@ -105,7 +106,7 @@ import CohortsView from '@/views/CohortsView.vue'
 
 // Now we can import the mocked modules to access their mocks
 import { useRouter, useRoute } from 'vue-router'
-import { useI18n } from '@/composables/useI18n'
+import { tr } from '../../helpers/i18n-mock'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
 import { deleteCohort, getCohortDefinition, getCohortPrintFriendly, saveCohortDefinition } from '@/services/cohort-definition.service'
@@ -143,11 +144,6 @@ vi.mocked(useRouter).mockReturnValue({
 
 vi.mocked(useRoute).mockReturnValue({
   query: {}
-} as any)
-
-vi.mocked(useI18n).mockReturnValue({
-  t: (key: string, fallback?: string) => ref(fallback || key),
-  locale: ref('en-US')
 } as any)
 
 vi.mocked(useCohorts).mockReturnValue({
@@ -308,21 +304,21 @@ describe('CohortsView.vue', () => {
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
       // Refresh: button label switched to sentence case ("New cohort")
       // to match the rest of the modernised UI.
-      const newCohortButton = buttons.find(btn => btn.text().toLowerCase().includes('new cohort'))
+      const newCohortButton = buttons.find(btn => btn.text().includes(tr('cohortDefinitions.newDefinition')))
 
       expect(newCohortButton).toBeDefined()
     })
 
     it('should render "Import" button', () => {
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const importButton = buttons.find(btn => btn.text().includes('Import'))
+      const importButton = buttons.find(btn => btn.text().includes(tr('common.import')))
 
       expect(importButton).toBeDefined()
     })
 
     it('should open new cohort dialog when "New cohort" clicked', async () => {
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const newCohortButton = buttons.find(btn => btn.text().toLowerCase().includes('new cohort'))
+      const newCohortButton = buttons.find(btn => btn.text().includes(tr('cohortDefinitions.newDefinition')))
 
       await newCohortButton?.trigger('click')
       await wrapper.vm.$nextTick()
@@ -339,7 +335,7 @@ describe('CohortsView.vue', () => {
 
     it('should open import dialog when "Import" clicked', async () => {
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const importButton = buttons.find(btn => btn.text().includes('Import'))
+      const importButton = buttons.find(btn => btn.text().includes(tr('common.import')))
 
       await importButton?.trigger('click')
       await wrapper.vm.$nextTick()
@@ -486,7 +482,7 @@ describe('CohortsView.vue', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const cancelButton = buttons.find(btn => btn.text().includes('Cancel'))
+      const cancelButton = buttons.find(btn => btn.text().includes(tr('common.cancel')))
 
       await cancelButton?.trigger('click')
       await wrapper.vm.$nextTick()
@@ -520,7 +516,7 @@ describe('CohortsView.vue', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const cancelButton = buttons.find(btn => btn.text().includes('Cancel'))
+      const cancelButton = buttons.find(btn => btn.text().includes(tr('common.cancel')))
 
       await cancelButton?.trigger('click')
       await wrapper.vm.$nextTick()

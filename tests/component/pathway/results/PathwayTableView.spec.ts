@@ -5,6 +5,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { createPinia, setActivePinia } from 'pinia'
 import PathwayTableView from '@/components/pathway/results/PathwayTableView.vue'
+import { tr } from '../../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -37,9 +38,9 @@ describe('PathwayTableView', () => {
       global: { plugins: [vuetify] },
     })
     expect(w.findAll('table').length).toBe(4)
-    expect(w.text()).toContain('All Pathways')
-    expect(w.text()).toContain('Counts by Rank')
-    expect(w.text()).toContain('Event Cohort Counts')
-    expect(w.text()).toContain('Distinct Event Cohort Counts')
+    expect(w.text()).toContain(tr('pathway.results.allPathways'))
+    expect(w.text()).toContain(tr('pathway.results.countsByRank'))
+    expect(w.text()).toContain(tr('pathway.results.eventCohortCounts'))
+    expect(w.text()).toContain(tr('pathway.results.distinctEventCohortCounts'))
   })
 })

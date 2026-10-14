@@ -22,7 +22,7 @@
           <AtlasIconButton
             v-if="reportType === 'profile'"
             icon="mdi-arrow-left"
-            v-bind="{ ariaLabel: t('components.cohortReportDrawer.backToSamples', 'Back to samples').value }"
+            v-bind="{ ariaLabel: t('components.cohortReportDrawer.backToSamples').value }"
             variant="text"
             size="sm"
             data-testid="report-drawer-back"
@@ -107,17 +107,17 @@ const headerIcon = computed(() => {
 
 const headerTitle = computed(() => {
   if (props.reportType === 'samples') {
-    return t('cohortDefinitions.generation.drawer.samplesTitle', 'Cohort samples').value
+    return t('cohortDefinitions.generation.drawer.samplesTitle').value
   }
   if (props.reportType === 'profile') {
     return props.personId
-      ? tv('components.cohortReportDrawer.personTitle', 'Person {id}', { id: props.personId })
-      : tv('components.cohortReportDrawer.profileTitle', 'Profile')
+      ? tv('components.cohortReportDrawer.personTitle', { id: props.personId })
+      : tv('components.cohortReportDrawer.profileTitle')
   }
-  return t('cohortDefinitions.generation.drawer.inclusionTitle', 'Inclusion rule report').value
+  return t('cohortDefinitions.generation.drawer.inclusionTitle').value
 })
 
-const closeLabel = computed(() => t('common.close', 'Close').value)
+const closeLabel = computed(() => t('common.close').value)
 
 function close() {
   emit('update:modelValue', false)

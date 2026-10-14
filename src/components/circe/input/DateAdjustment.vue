@@ -120,19 +120,19 @@ const startOffset = numberBinding(modelValue, 'StartOffset')
 const endOffset = numberBinding(modelValue, 'EndOffset')
 
 const dateReferenceOptions = computed(() => [
-  { label: t('options.startDate', 'Start Date').value, value: 'START_DATE' },
-  { label: t('options.endDate', 'End Date').value, value: 'END_DATE' },
+  { label: t('options.startDate').value, value: 'START_DATE' },
+  { label: t('options.endDate').value, value: 'END_DATE' },
 ])
 
-const dateAdjustmentLabel = computed(() => t('components.dateAdjust.criteriaLabel', 'Date Adjustment').value)
-const startDateAdjustmentLabel = computed(() => t('common.startDateAdjustment', 'Start Date Adjustment').value)
-const endDateAdjustmentLabel = computed(() => t('common.endDateAdjustment', 'End Date Adjustment').value)
-const startWithLabel = computed(() => t('common.startWith', 'Start With').value)
-const endWithLabel = computed(() => t('common.endWith', 'End With').value)
-const offsetDaysLabel = computed(() => t('common.offsetDays', 'Offset (Days)').value)
-const daysSuffix = computed(() => t('common.days', 'days').value)
-const summaryStartLabel = computed(() => t('common.start', 'Start').value)
-const summaryEndLabel = computed(() => t('common.end', 'End').value)
+const dateAdjustmentLabel = computed(() => t('components.dateAdjust.criteriaLabel').value)
+const startDateAdjustmentLabel = computed(() => t('common.startDateAdjustment').value)
+const endDateAdjustmentLabel = computed(() => t('common.endDateAdjustment').value)
+const startWithLabel = computed(() => t('common.startWith').value)
+const endWithLabel = computed(() => t('common.endWith').value)
+const offsetDaysLabel = computed(() => t('common.offsetDays').value)
+const daysSuffix = computed(() => t('common.days').value)
+const summaryStartLabel = computed(() => t('common.start').value)
+const summaryEndLabel = computed(() => t('common.end').value)
 
 const summaryLabel = computed(() => {
   return `${summaryStartLabel.value}: ${formatDateReference(modelValue.value.StartWith)} ${formatOffset(modelValue.value.StartOffset)}, ${summaryEndLabel.value}: ${formatDateReference(modelValue.value.EndWith)} ${formatOffset(modelValue.value.EndOffset)}`
@@ -145,7 +145,7 @@ function formatDateReference(value: 'START_DATE' | 'END_DATE' | null | undefined
 function formatOffset(value: number | null | undefined) {
   const offset = value ?? 0
   const sign = offset < 0 ? '-' : '+'
-  return `${sign}${Math.abs(offset)}${t('common.daysAbbr', 'd').value}`
+  return `${sign}${Math.abs(offset)}${t('common.daysAbbr').value}`
 }
 </script>
 

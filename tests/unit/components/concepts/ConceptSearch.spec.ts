@@ -6,19 +6,19 @@ import { mount, VueWrapper, flushPromises } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { reactive, ref } from 'vue'
+import { reactive } from 'vue'
 import { routeLocationKey } from 'vue-router'
 import { setActivePinia, createPinia } from 'pinia'
 import ConceptSearch from '@/components/concepts/ConceptSearch.vue'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import { createMockConcept } from '@/../tests/helpers/mock-factories'
+import { tr } from '../../../helpers/i18n-mock'
 
 // Mock useI18n composable
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, fallback: string) => ref(fallback),
-  }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 // Mock concept search service
 const mockSearchConcepts = vi.fn()
@@ -121,7 +121,7 @@ describe('ConceptSearch', () => {
       wrapper = mountComponent()
       const hint = wrapper.find('.concept-search__hint')
       expect(hint.exists()).toBe(true)
-      expect(hint.text()).toMatch(/SNOMED|3 characters/)
+      expect(hint.text()).toBe(tr('search.vocabulariesInfo'))
     })
   })
 
@@ -132,7 +132,7 @@ describe('ConceptSearch', () => {
       // Refresh dropped the floating label in favour of an inline
       // placeholder + hint line below the input.
       expect(textField.props('placeholder')).toBeTruthy()
-      expect(textField.props('placeholder')).toMatch(/Search|Enter/)
+      expect(textField.props('placeholder')).toBe(tr('search.placeholder'))
     })
 
     it('should have search icon', () => {

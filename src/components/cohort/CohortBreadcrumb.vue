@@ -18,7 +18,7 @@
       {{ modelValue || t('cohortDefinitions.newDefinition') }}
     </span>
     <AtlasTooltip
-      :text="t('columns.name', 'Name').value"
+      :text="t('columns.name').value"
       location="bottom"
     >
       <template #activator="{ props: tooltipProps }">
@@ -37,13 +37,13 @@
     <AtlasDialog
       v-model="showEditDialog"
       eyebrow="COHORT"
-      :title="t('columns.name', 'Edit Cohort Name').value"
+      :title="t('cohortDefinitions.editName').value"
       max-width="600"
       @close="showEditDialog = false"
     >
       <AtlasTextField
         v-model="editingName"
-        :label="t('columns.name', 'Name').value"
+        :label="t('columns.name').value"
         :placeholder="tv('cohortDefinitions.newDefinitionTitle')"
         variant="outlined"
         @keyup.enter="saveEditedName"
@@ -53,12 +53,12 @@
           variant="ghost"
           @click="showEditDialog = false"
         >
-          {{ t('common.cancel', 'Cancel') }}
+          {{ t('common.cancel') }}
         </AtlasButton>
         <AtlasButton
           @click="saveEditedName"
         >
-          {{ t('common.save', 'Save') }}
+          {{ t('common.save') }}
         </AtlasButton>
       </template>
     </AtlasDialog>

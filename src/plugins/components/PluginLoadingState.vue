@@ -5,12 +5,15 @@
       color="primary"
       size="64"
     />
-    <p>Loading plugin...</p>
+    <p>{{ tv('plugins.loading') }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { AtlasProgressCircular } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
+
+const { tv } = useI18n()
 </script>
 
 <style scoped>

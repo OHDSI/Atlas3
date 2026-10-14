@@ -8,6 +8,7 @@ import * as directives from 'vuetify/directives'
 
 import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/IncidenceRateConceptSetsPanel.vue'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
+import { tr } from '../../helpers/i18n-mock'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../helpers/i18n-mock')
@@ -36,7 +37,7 @@ describe('IncidenceRateConceptSetsPanel', () => {
   it('shows the empty message when no incidence rate is loaded', () => {
     const wrapper = mountPanel()
 
-    expect(wrapper.text()).toContain('No concept sets to export')
+    expect(wrapper.text()).toContain(tr('ir.editor.noConceptSets'))
     expect(wrapper.find('table').exists()).toBe(false)
   })
 
@@ -53,7 +54,7 @@ describe('IncidenceRateConceptSetsPanel', () => {
     expect(wrapper.findAll('tbody tr')).toHaveLength(2)
     expect(wrapper.text()).toContain('Numeric concept set')
     expect(wrapper.text()).toContain('Unsaved concept set')
-    expect(wrapper.find('a[href="/conceptset/12"]').text()).toContain('View')
+    expect(wrapper.find('a[href="/conceptset/12"]').text()).toContain(tr('cs.manager.concept.tabs.hierarchy.view'))
     expect(wrapper.findAll('a')).toHaveLength(1)
   })
 })

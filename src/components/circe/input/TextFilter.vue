@@ -35,12 +35,12 @@ const props = defineProps<{
 const modelValue = toRef(props, 'modelValue')
 
 const operators = computed(() => [
-  { title: t('options.endsWith', 'ends with').value, value: 'endsWith' },
-  { title: t('options.startsWith', 'starts with').value, value: 'startsWith' },
-  { title: t('options.contains', 'contains').value, value: 'contains' },
-  { title: t('options.notEndsWith', 'not ends with').value, value: '!endsWith' },
-  { title: t('options.notStartsWith', 'not starts with').value, value: '!startsWith' },
-  { title: t('options.notContains', 'not contains').value, value: '!contains' },
+  { title: t('options.endsWith').value, value: 'endsWith' },
+  { title: t('options.startsWith').value, value: 'startsWith' },
+  { title: t('options.contains').value, value: 'contains' },
+  { title: t('options.notEndsWith').value, value: '!endsWith' },
+  { title: t('options.notStartsWith').value, value: '!startsWith' },
+  { title: t('options.notContains').value, value: '!contains' },
 ])
 
 const operator = computed<TextFilterOp | undefined>({

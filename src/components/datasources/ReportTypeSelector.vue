@@ -3,7 +3,7 @@
     :model-value="modelValue"
     :items="reportTypeItems"
     :disabled="disabled"
-    :label="t('common.reportType', 'Report Type').value"
+    :label="t('common.reportType').value"
     item-title="label"
     item-value="value"
     variant="outlined"

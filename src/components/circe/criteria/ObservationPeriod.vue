@@ -67,6 +67,7 @@
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import {
   AtlasButton,
   AtlasDivider,
@@ -92,14 +93,15 @@ const emit = defineEmits<{
   'clear-concept-set': []
 }>()
 
-const observationPeriodTitle = computed(() => 'observation period')
-const addAttributeLabel = computed(() => 'Add attribute...')
+const { t } = useI18n()
+const observationPeriodTitle = computed(() => t('components.observationPeriod.title').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {
     key: 'First',
-    label: 'First Observation Period',
-    description: 'Limit to first observation period in history',
+    label: t('components.observationPeriod.attributes.first.label').value,
+    description: t('components.observationPeriod.attributes.first.description').value,
     init: () => {
       observationPeriodData.value.First = true
     },
@@ -110,8 +112,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PeriodStartDate',
-    label: 'Period Start Date',
-    description: 'Filter by period start date',
+    label: t('criteriaAttributes.periodStartDate.label').value,
+    description: t('criteriaAttributes.periodStartDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(observationPeriodData.value, 'PeriodStartDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -126,8 +128,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PeriodEndDate',
-    label: 'Period End Date',
-    description: 'Filter by period end date',
+    label: t('criteriaAttributes.periodEndDate.label').value,
+    description: t('criteriaAttributes.periodEndDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(observationPeriodData.value, 'PeriodEndDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -142,8 +144,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'UserDefinedPeriod',
-    label: 'User Defined Period',
-    description: 'Set the user-defined period range',
+    label: t('criteriaAttributes.userDefinedPeriod.label').value,
+    description: t('criteriaAttributes.userDefinedPeriod.description').value,
     kind: 'period',
     componentProps: () => ({
       modelValue: ensureObjectField(observationPeriodData.value, 'UserDefinedPeriod', () => ({ StartDate: '', EndDate: '' })) as Period,
@@ -158,8 +160,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PeriodType',
-    label: 'Period Type',
-    description: 'Filter by period type',
+    label: t('criteriaAttributes.periodType.label').value,
+    description: t('criteriaAttributes.periodType.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -176,8 +178,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PeriodTypeCS',
-    label: 'Period Type Concept Set',
-    description: 'Filter period type by a concept set',
+    label: t('criteriaAttributes.periodTypeCS.label').value,
+    description: t('criteriaAttributes.periodTypeCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(observationPeriodData.value, 'PeriodTypeCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -196,8 +198,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PeriodLength',
-    label: 'Period Length',
-    description: 'Filter by period length',
+    label: t('criteriaAttributes.periodLength.label').value,
+    description: t('criteriaAttributes.periodLength.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(observationPeriodData.value, 'PeriodLength', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -212,8 +214,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'DateAdjustment',
-    label: 'Date Adjustment',
-    description: 'Adjust event dates',
+    label: t('criteriaAttributes.dateAdjustment.label').value,
+    description: t('criteriaAttributes.dateAdjustment.description').value,
     kind: 'dateAdjustment',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(observationPeriodData.value, 'DateAdjustment', createDefaultDateAdjustment) as DateAdjustment
@@ -228,8 +230,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'AgeAtStart',
-    label: 'Age at Start',
-    description: 'Filter by age at start of period',
+    label: t('criteriaAttributes.ageAtStart.label').value,
+    description: t('components.observationPeriod.attributes.ageAtStart.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(observationPeriodData.value, 'AgeAtStart', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -244,8 +246,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'AgeAtEnd',
-    label: 'Age at End',
-    description: 'Filter by age at end of period',
+    label: t('criteriaAttributes.ageAtEnd.label').value,
+    description: t('components.observationPeriod.attributes.ageAtEnd.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(observationPeriodData.value, 'AgeAtEnd', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -260,8 +262,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'CorrelatedCriteria',
-    label: 'Nested Criteria',
-    description: 'Add nested criteria group',
+    label: t('criteriaAttributes.correlatedCriteria.label').value,
+    description: t('criteriaAttributes.correlatedCriteria.description').value,
     kind: 'criteriaGroup',
     componentProps: () => ({
       group: ensureObjectField(observationPeriodData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup) as CriteriaGroup,

@@ -7,13 +7,13 @@
       >
         mdi-information-outline
       </AtlasIcon>
-      <span>Cohort exit is a fixed number of days from a date derived from the qualifying event.</span>
+      <span>{{ tv('components.endStrategy.dateOffset.hint') }}</span>
     </div>
 
     <div class="date-offset-end-strategy__fields mt-4">
       <div class="date-offset-end-strategy__date-field">
         <div class="date-offset-end-strategy__field-label">
-          Date Field
+          {{ tv('components.endStrategy.dateOffset.dateField') }}
         </div>
         <v-btn-toggle
           class="date-offset-end-strategy__toggle"
@@ -29,14 +29,14 @@
             value="StartDate"
             size="sm"
           >
-            Start Date
+            {{ tv('options.startDate') }}
           </AtlasButton>
           <AtlasButton
             toggle
             value="EndDate"
             size="sm"
           >
-            End Date
+            {{ tv('options.endDate') }}
           </AtlasButton>
         </v-btn-toggle>
       </div>
@@ -44,7 +44,7 @@
       <AtlasTextField
         v-model.number="offset"
         type="number"
-        label="Offset (days)"
+        :label="tv('common.offsetDays')"
         variant="outlined"
         density="compact"
         hide-details
@@ -59,6 +59,9 @@
 import { computed } from 'vue'
 import { AtlasButton, AtlasIcon, AtlasTextField } from '@/components/ui'
 import type { DateOffsetStrategy } from '@/models/circe-types'
+import { useI18n } from '@/composables/useI18n'
+
+const { tv } = useI18n()
 
 const props = defineProps<{
   strategy: DateOffsetStrategy

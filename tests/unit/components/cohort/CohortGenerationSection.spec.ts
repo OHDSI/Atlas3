@@ -9,6 +9,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 
 import CohortGenerationSection from '@/components/cohort/CohortGenerationSection.vue'
 import { useWebAPIStore } from '@/stores/webapi'
+import { tr } from '../../../helpers/i18n-mock'
 
 const mockSourceAccessFor = {
   canRead: vi.fn<(sourceId: number) => boolean>(),
@@ -198,7 +199,7 @@ describe('CohortGenerationSection', () => {
     await flushPromises()
     const section = wrapper.findComponent({ name: 'AtlasCollapsibleSection' })
     expect(section.props('stateChip')).toMatchObject({
-      label: '0 / 1 generated',
+      label: tr('cohortDefinitions.generation.section.statusCount', { done: 0, total: 1 }),
       tone: 'danger',
     })
   })
@@ -206,7 +207,7 @@ describe('CohortGenerationSection', () => {
   it('shows the no-sources alert when a saved cohort has no data sources', async () => {
     const wrapper = mountSection({ cohortId: 1 }, [], [])
     await flushPromises()
-    expect(wrapper.text()).toContain('Pick at least one source to generate')
+    expect(wrapper.text()).toContain(tr('components.generation.noSourcesConfigured'))
   })
 
   it('starts collapsed when no jobs exist', async () => {
@@ -258,7 +259,7 @@ describe('CohortGenerationSection', () => {
     expect(eye.disabled).toBe(false)
     // The icon carried only an aria-label before, so a sighted mouse user had
     // no way to tell what it did.
-    expect(eye.getAttribute('aria-label')).toBe('View results')
+    expect(eye.getAttribute('aria-label')).toBe(tr('components.analysisExecution.viewResults'))
 
     eye.click()
     await flushPromises()
@@ -341,7 +342,7 @@ describe('CohortGenerationSection — CRITICAL design findings block generation'
     const wrapper = mountSection({ cohortId: 1, criticalCount: 1 }, [], [ccae], tooltipStub)
     await flushPromises()
     expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.text()).toContain('Design is not valid')
+    expect(wrapper.text()).toContain(tr('const.disabledReason.invalidDesign'))
   })
 
   it('disables Generate all when a CRITICAL finding exists', async () => {
@@ -366,7 +367,7 @@ describe('CohortGenerationSection — CRITICAL design findings block generation'
     await flushPromises()
     expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeUndefined()
     expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeUndefined()
-    expect(wrapper.text()).not.toContain('Design is not valid')
+    expect(wrapper.text()).not.toContain(tr('const.disabledReason.invalidDesign'))
     const store = useWebAPIStore()
     const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
     await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
@@ -391,7 +392,7 @@ describe('CohortGenerationSection — unsaved changes block generation', () => {
     const wrapper = mountSection({ cohortId: 1, isDirty: true }, [], [ccae], tooltipStub)
     await flushPromises()
     expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.text()).toContain('Save changes before generate')
+    expect(wrapper.text()).toContain(tr('const.disabledReason.dirty'))
   })
 
   it('disables Generate all when the design is dirty', async () => {
@@ -416,7 +417,7 @@ describe('CohortGenerationSection — unsaved changes block generation', () => {
     await flushPromises()
     expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeUndefined()
     expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeUndefined()
-    expect(wrapper.text()).not.toContain('Save changes before generate')
+    expect(wrapper.text()).not.toContain(tr('const.disabledReason.dirty'))
     const store = useWebAPIStore()
     const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
     await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
@@ -517,8 +518,8 @@ describe('CohortGenerationSection — unsaved changes block generation', () => {
       tooltipStub
     )
     await flushPromises()
-    expect(wrapper.text()).toContain('Design is not valid')
-    expect(wrapper.text()).not.toContain('Save changes before generate')
+    expect(wrapper.text()).toContain(tr('const.disabledReason.invalidDesign'))
+    expect(wrapper.text()).not.toContain(tr('const.disabledReason.dirty'))
   })
 })
 
@@ -608,7 +609,7 @@ describe('CohortGenerationSection — unvalidated designs block generation', () 
     )
     await flushPromises()
     expect(wrapper.findComponent({ name: 'DataSourceRunTable' }).props('runDisabledReason')).toBe(
-      'Save changes before generate'
+      tr('const.disabledReason.dirty')
     )
   })
 })

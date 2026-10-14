@@ -3,6 +3,9 @@ import { ref, watch, onUnmounted, useTemplateRef } from 'vue'
 import { usePluginOverlay } from '@/plugins/host/pluginOverlayState'
 import { mountPluginParcel } from '@/plugins/host/parcelLoader'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
+
+const { tv } = useI18n()
 
 const overlay = usePluginOverlay()
 const containerRef = useTemplateRef<HTMLDivElement>('containerRef')
@@ -69,7 +72,7 @@ onUnmounted(unmount)
       type="button"
       class="plugin-overlay-backdrop"
       data-testid="plugin-overlay-backdrop"
-      aria-label="Close plugin"
+      :aria-label="tv('plugins.overlay.close')"
       @click="overlay.close()"
     />
     <div
@@ -84,7 +87,7 @@ onUnmounted(unmount)
         v-if="loading"
         class="plugin-overlay-status"
       >
-        Loading…
+        {{ tv('common.loadingWithDots') }}
       </div>
       <div
         v-if="error"

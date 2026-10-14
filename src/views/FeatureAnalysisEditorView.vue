@@ -26,7 +26,7 @@
         <template #status>
           <AtlasTooltip
             v-if="isCriteriaSet"
-            :text="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
+            :text="t('cc.fa.tabs.conceptSets').value"
             location="bottom"
           >
             <template #activator="{ props: tooltipProps }">
@@ -39,7 +39,7 @@
                 offset-y="6"
               >
                 <AtlasIconButton
-                  v-bind="{ ariaLabel: t('cc.fa.tabs.conceptSets', 'Concept Sets').value }"
+                  v-bind="{ ariaLabel: t('cc.fa.tabs.conceptSets').value }"
                   icon="mdi-shape"
                   variant="text"
                   size="sm"
@@ -51,12 +51,12 @@
           </AtlasTooltip>
 
           <AtlasTooltip
-            :text="t('components.access.configureAccess', 'Configure access').value"
+            :text="t('components.access.configureAccess').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <EntityAccessLockButton
-                v-bind="{ ...tipProps, ariaLabel: t('components.access.configureAccess', 'Configure access').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('components.access.configureAccess').value }"
                 :disabled="!isEditing || !canWrite"
                 :loading="loading"
                 data-testid="feature-analysis-editor-access-icon"
@@ -75,15 +75,15 @@
             <AtlasIcon class="d-md-none">
               mdi-close
             </AtlasIcon>
-            <span class="d-none d-md-inline">{{ t('common.cancel', 'Cancel').value }}</span>
+            <span class="d-none d-md-inline">{{ t('common.cancel').value }}</span>
           </AtlasButton>
           <AtlasTooltip
-            :text="t('common.duplicate', 'Duplicate').value"
+            :text="t('common.duplicate').value"
             location="bottom"
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.duplicate', 'Duplicate').value }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.duplicate').value }"
                 icon="mdi-content-copy"
                 variant="text"
                 size="sm"
@@ -101,7 +101,7 @@
             data-testid="feature-analysis-editor-delete"
             @click="handleDeleteClick"
           >
-            {{ t('common.delete', 'Delete') }}
+            {{ t('common.delete') }}
           </AtlasButton>
           <DisabledReasonTooltip :reason="saveDisabledReason">
             <AtlasButton
@@ -111,7 +111,7 @@
               data-testid="feature-analysis-editor-save"
               @click="handleSave"
             >
-              {{ t('common.save', 'Save') }}
+              {{ t('common.save') }}
             </AtlasButton>
           </DisabledReasonTooltip>
         </template>
@@ -133,11 +133,11 @@
         <!-- Common section -->
         <div class="feature-analysis-editor__section">
           <h2 class="feature-analysis-editor__section-title">
-            {{ t('columns.name', 'Name') }}
+            {{ t('columns.name') }}
           </h2>
           <AtlasTextField
             v-model="draft.name"
-            :label="t('columns.name', 'Name').value"
+            :label="t('columns.name').value"
             :error="nameError ?? undefined"
             variant="outlined"
             required
@@ -146,7 +146,7 @@
 
           <AtlasTextField
             v-model="draft.description"
-            :label="t('columns.description', 'Description').value"
+            :label="t('columns.description').value"
             variant="outlined"
             :rows="2"
             multiline
@@ -161,7 +161,7 @@
             >
               <AtlasSelect
                 v-model="draft.domain"
-                :label="t('cc.fa.domain', 'Domain').value"
+                :label="t('cc.fa.domain').value"
                 :items="domainOptions"
                 clearable
                 variant="outlined"
@@ -178,11 +178,11 @@
           data-testid="feature-analysis-editor-design-preset"
         >
           <h2 class="feature-analysis-editor__section-title">
-            {{ t('cc.fa.featureExtractionPresetName', 'FeatureExtraction preset name') }}
+            {{ t('cc.fa.featureExtractionPresetName') }}
           </h2>
           <AtlasTextField
             v-model="presetDesign"
-            :label="t('cc.fa.featureExtractionPresetName', 'FeatureExtraction preset name').value"
+            :label="t('cc.fa.featureExtractionPresetName').value"
             variant="outlined"
             data-testid="feature-analysis-editor-preset-name"
           />
@@ -229,7 +229,7 @@
         >
           <div class="feature-analysis-editor__sql-header">
             <h2 class="feature-analysis-editor__section-title feature-analysis-editor__sql-title">
-              {{ t('cc.fa.analysisSql', 'Custom SQL') }}
+              {{ t('cc.fa.customSqlTitle') }}
             </h2>
 
             <AtlasButton
@@ -238,7 +238,7 @@
               data-testid="feature-analysis-editor-custom-sql-sample"
               @click="fillCustomSqlSample"
             >
-              {{ t('cc.fa.populateSampleSql', 'Populate Sample SQL').value }}
+              {{ t('cc.fa.populateSampleSql').value }}
             </AtlasButton>
 
             <AtlasButton
@@ -247,7 +247,7 @@
               data-testid="feature-analysis-editor-custom-sql-copy"
               @click="copyCustomSqlTemplate"
             >
-              {{ t('cc.fa.copySqlToClipboard', 'Copy Analysis SQL Template To Clipboard').value }}
+              {{ t('cc.fa.copySqlToClipboard').value }}
             </AtlasButton>
           </div>
           <div class="feature-analysis-editor__sql-wrapper-start">
@@ -255,7 +255,7 @@
           </div>
           <AtlasTextField
             v-model="customFeSql"
-            :label="t('cc.fa.analysisSql', 'Custom SQL').value"
+            :label="t('cc.fa.customSqlTitle').value"
             variant="outlined"
             :rows="14"
             multiline
@@ -272,14 +272,14 @@
 
             <div class="feature-analysis-editor__sql-variables">
               <div class="feature-analysis-editor__sql-variables-title">
-                {{ t('cc.fa.availableVariables', 'Available variables:').value }}
+                {{ t('cc.fa.availableVariables').value }}
               </div>
               <ul>
                 <li>@cdm_database_schema</li>
                 <li>@cohort_table</li>
                 <li>@cohort_id</li>
                 <li>@analysis_id</li>
-                <li>{{ t('cc.fa.availableVariablesNote', 'all variables specified in Cohort Characterization parameters').value }}</li>
+                <li>{{ t('cc.fa.availableVariablesNote').value }}</li>
               </ul>
             </div>
           </div>
@@ -289,8 +289,8 @@
 
     <AtlasDialog
       v-model="showDeleteDialog"
-      :eyebrow="t('views.featureAnalysisEditor.deleteEyebrow', 'CONFIRM').value"
-      :title="t('common.delete', 'Delete').value"
+      :eyebrow="t('views.featureAnalysisEditor.deleteEyebrow').value"
+      :title="t('common.delete').value"
       max-width="500"
       @close="showDeleteDialog = false"
     >
@@ -300,7 +300,7 @@
           variant="ghost"
           @click="showDeleteDialog = false"
         >
-          {{ t('common.cancel', 'Cancel') }}
+          {{ t('common.cancel') }}
         </AtlasButton>
         <AtlasButton
           variant="danger"
@@ -308,7 +308,7 @@
           data-testid="feature-analysis-editor-delete-confirm"
           @click="confirmDelete"
         >
-          {{ t('common.delete', 'Delete') }}
+          {{ t('common.delete') }}
         </AtlasButton>
       </template>
     </AtlasDialog>
@@ -327,7 +327,7 @@
           data-testid="feature-analysis-editor-conceptset-create"
           @click="createConceptSet()"
         >
-          {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
+          {{ t('components.conceptSetBuilder.newConceptSet').value }}
         </AtlasButton>
       </template>
     </ConceptSetsListDialog>
@@ -335,7 +335,7 @@
     <AtlasDialog
       v-model="showDeleteConceptSetDialog"
       eyebrow="CONCEPT SET"
-      :title="t('components.featureAnalysisEditor.deleteConceptSetTitle', 'Delete concept set?').value"
+      :title="t('components.conceptSetDelete.title').value"
       max-width="480"
       @close="cancelDeleteConceptSet"
     >
@@ -345,14 +345,14 @@
           variant="ghost"
           @click="cancelDeleteConceptSet"
         >
-          {{ t('common.cancel', 'Cancel').value }}
+          {{ t('common.cancel').value }}
         </AtlasButton>
         <AtlasButton
           variant="danger"
           data-testid="feature-analysis-editor-delete-concept-set-confirm"
           @click="confirmDeleteConceptSet"
         >
-          {{ t('common.delete', 'Delete').value }}
+          {{ t('common.delete').value }}
         </AtlasButton>
       </template>
     </AtlasDialog>
@@ -361,7 +361,7 @@
       v-model="showAccessDialog"
       entity-type="FE_ANALYSIS"
       :entity-id="draftId"
-      :title="t('components.access.configureAccess', 'Configure access').value"
+      :title="t('components.access.configureAccess').value"
       :subtitle="draft.name || undefined"
       :can-revoke-role="role => !role.name.toLowerCase().includes('admin')"
       @close="showAccessDialog = false"
@@ -371,29 +371,26 @@
     <AtlasDialog
       v-model="showUnsavedDialog"
       eyebrow="ANALYSIS"
-      :title="t('common.unsavedChanges', 'Unsaved changes').value"
+      :title="t('common.unsavedChanges').value"
       max-width="440"
       @close="cancelLeaveUnsaved"
     >
       {{
-        t(
-          'common.unsavedWarning',
-          'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.'
-        ).value
+        t('common.unsavedWarning').value
       }}
       <template #actions>
         <AtlasButton
           variant="ghost"
           @click="cancelLeaveUnsaved"
         >
-          {{ t('common.cancel', 'Cancel').value }}
+          {{ t('common.cancel').value }}
         </AtlasButton>
         <AtlasButton
           variant="danger"
           data-testid="feature-analysis-editor-discard-changes"
           @click="confirmLeaveUnsaved"
         >
-          {{ t('common.discard', 'Discard changes').value }}
+          {{ t('common.discard').value }}
         </AtlasButton>
       </template>
     </AtlasDialog>
@@ -689,16 +686,12 @@ const deleteConceptSetWarning = computed(() => {
   const count = conceptSetPendingDeleteUsage.value
   const usage =
     count === 1
-      ? t('components.featureAnalysisEditor.deleteConceptSetUsageOne', '1 criterion still uses it').value
-      : t('components.featureAnalysisEditor.deleteConceptSetUsageMany', '{count} criteria still use it', {
+      ? t('components.conceptSetDelete.usageOne').value
+      : t('components.conceptSetDelete.usageMany', {
         count,
       }).value
 
-  return t(
-    'components.featureAnalysisEditor.deleteConceptSetWarning',
-    'Deleting "{name}" will clear it from those criteria. {usage}.',
-    { name, usage }
-  ).value
+  return t('components.conceptSetDelete.warning', { name, usage }).value
 })
 
 function deleteConceptSet(conceptSet: ConceptSetReference) {
@@ -750,8 +743,8 @@ const isEditing = computed<boolean>(() => Boolean(props.id))
 
 const titleText = computed(() => {
   return isEditing.value
-    ? t('featureAnalyses.editor.title.edit', 'Edit Feature Analysis').value
-    : t('cc.new', 'New Feature Analysis').value
+    ? t('featureAnalyses.editor.title.edit').value
+    : t('cc.tabs.featureAnalyses.createLabel').value
 })
 
 // ---------------------------------------------------------------------------
@@ -762,12 +755,12 @@ const typeLabel = computed<string>(() => {
   const current = draft.value
   if (current.type !== 'CRITERIA_SET') {
     return current.type === 'PRESET'
-      ? t('cc.fa.preset', 'Preset').value
-      : t('cc.fa.custom', 'Custom SQL').value
+      ? t('cc.fa.preset').value
+      : t('cc.fa.custom').value
   }
   return current.statType === 'DISTRIBUTION'
-    ? t('featureAnalyses.create.distribution', 'Distribution Criteria').value
-    : t('featureAnalyses.create.prevalence', 'Prevalence Criteria').value
+    ? t('featureAnalyses.create.distribution').value
+    : t('featureAnalyses.create.prevalence').value
 })
 
 const domainOptions = computed<string[]>(() => store.domains)
@@ -855,7 +848,7 @@ const canSave = computed<boolean>(() => {
 
 const saveDisabledReason = computed<string>(() =>
   resolveSaveDisabledReason({
-    entity: tv('const.entityName.featureAnalysis', 'feature analysis'),
+    entity: tv('const.entityName.featureAnalysis'),
     isNew: !isEditing.value,
     hasName: draft.value.name.trim().length > 0,
     hasPermission: isEditing.value ? canWrite.value : hasPermission('create:feature-analysis'),
@@ -1026,7 +1019,7 @@ function buildPayload(): FeatureAnalysis | null {
     const aggregate = defaultAggregate.value
     if (!aggregate) {
       showSnackbar(
-        t('featureAnalyses.editor.aggregatesUnavailable', 'Unable to load the default aggregate').value,
+        t('featureAnalyses.editor.aggregatesUnavailable').value,
         'error'
       )
       return null
@@ -1067,11 +1060,11 @@ async function handleSave() {
       dirty.value = false
       await router.push(`/feature-analyses/${saved.id}`)
     } else if (!store.error) {
-      showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
+      showSnackbar(t('cc.fa.saveError').value, 'error')
     }
   } catch (err) {
     logger.error('FeatureAnalysisEditor', 'Save failed', err)
-    showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
+    showSnackbar(t('cc.fa.saveError').value, 'error')
   } finally {
     saving.value = false
   }
@@ -1089,11 +1082,11 @@ async function handleSaveCopy() {
       dirty.value = false
       await router.push(`/feature-analyses/${copied.id}`)
     } else {
-      showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
+      showSnackbar(t('cc.fa.saveError').value, 'error')
     }
   } catch (err) {
     logger.error('FeatureAnalysisEditor', 'Save Copy failed', err)
-    showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
+    showSnackbar(t('cc.fa.saveError').value, 'error')
   } finally {
     saving.value = false
   }
@@ -1115,7 +1108,7 @@ async function confirmDelete() {
     showDeleteDialog.value = false
     await router.push('/feature-analyses')
   } else {
-    showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
+    showSnackbar(t('cc.fa.saveError').value, 'error')
   }
 }
 
@@ -1132,10 +1125,10 @@ function fillCustomSqlSample() {
 async function copyCustomSqlTemplate() {
   try {
     await navigator.clipboard.writeText(customSqlTemplate)
-    showSnackbar(t('cc.fa.copiedToClipboard', 'Copied To Clipboard!').value, 'success')
+    showSnackbar(t('cc.fa.copiedToClipboard').value, 'success')
   } catch (error) {
     logger.error('FeatureAnalysisEditor', 'Failed to copy custom SQL template', error)
-    showSnackbar('Failed to copy SQL template', 'error')
+    showSnackbar(t('cc.fa.copySqlTemplateFailed').value, 'error')
   }
 }
 

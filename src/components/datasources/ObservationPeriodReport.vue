@@ -3,14 +3,11 @@
     <EmptyReportState
       v-if="!hasData"
       :title="
-        t('dataSources.observationPeriodReport.noDataTitle', 'No observation period data available')
+        t('dataSources.observationPeriodReport.noDataTitle')
           .value
       "
       :subtitle="
-        t(
-          'dataSources.observationPeriodReport.noDataSubtitle',
-          'This data source has no observation period records to report on.'
-        ).value
+        t('dataSources.observationPeriodReport.noDataSubtitle').value
       "
     />
 
@@ -18,7 +15,7 @@
     <ChartSection
       v-if="data.ageAtFirst"
       :title="
-        t('dataSources.observationPeriodReport.ageAtFirstObservation', 'Age at First Observation')
+        t('dataSources.observationPeriodReport.ageAtFirstObservation')
           .value
       "
     >
@@ -33,7 +30,7 @@
     <ChartSection
       v-if="data.observationLength"
       :title="
-        t('dataSources.observationPeriodReport.observationLength', 'Observation Length').value
+        t('dataSources.observationPeriodReport.observationLength').value
       "
     >
       <DashboardAgeChart
@@ -47,15 +44,15 @@
     <ChartSection
       v-if="data.cumulativeObservation"
       :title="
-        t('dataSources.observationPeriodReport.cumulativeObservation', 'Cumulative Observation')
+        t('dataSources.observationPeriodReport.cumulativeObservation')
           .value
       "
     >
       <MultiLineChart
         :data="data.cumulativeObservation"
-        :x-axis-label="t('dataSources.observationPeriodReport.days', 'Days').value"
+        :x-axis-label="t('dataSources.observationPeriodReport.days').value"
         :y-axis-label="
-          t('dataSources.observationPeriodReport.percentOfPopulation', 'Percent of Population')
+          t('dataSources.observationPeriodReport.percentOfPopulation')
             .value
         "
         data-testid="cumulative-observation-chart"
@@ -66,16 +63,13 @@
     <ChartSection
       v-if="data.observedByMonth"
       :title="
-        t(
-          'dataSources.observationPeriodReport.personsWithContinuousObservationByMonth',
-          'Persons With Continuous Observation By Month'
-        ).value
+        t('dataSources.observationPeriodReport.personsWithContinuousObservationByMonth').value
       "
     >
       <MultiLineChart
         :data="data.observedByMonth"
-        :x-axis-label="t('dataSources.observationPeriodReport.date', 'Date').value"
-        :y-axis-label="t('dataSources.observationPeriodReport.people', 'People').value"
+        :x-axis-label="t('dataSources.observationPeriodReport.date').value"
+        :y-axis-label="t('dataSources.observationPeriodReport.people').value"
         data-testid="observed-by-month-chart"
       />
     </ChartSection>
@@ -83,7 +77,7 @@
     <!-- Age by Gender (Boxplot) -->
     <ChartSection
       v-if="data.ageByGender && data.ageByGender.length > 0"
-      :title="t('dataSources.observationPeriodReport.ageByGender', 'Age by Gender').value"
+      :title="t('dataSources.observationPeriodReport.ageByGender').value"
     >
       <BoxPlotChart
         :data="data.ageByGender"
@@ -95,7 +89,7 @@
     <!-- Duration by Gender (Boxplot) -->
     <ChartSection
       v-if="data.durationByGender && data.durationByGender.length > 0"
-      :title="t('dataSources.observationPeriodReport.durationByGender', 'Duration By Gender').value"
+      :title="t('dataSources.observationPeriodReport.durationByGender').value"
     >
       <BoxPlotChart
         :data="data.durationByGender"
@@ -108,7 +102,7 @@
     <ChartSection
       v-if="data.durationByAgeDecile && data.durationByAgeDecile.length > 0"
       :title="
-        t('dataSources.observationPeriodReport.durationByAgeDecile', 'Duration By Age Decile').value
+        t('dataSources.observationPeriodReport.durationByAgeDecile').value
       "
     >
       <BoxPlotChart
@@ -122,16 +116,13 @@
     <ChartSection
       v-if="data.personsWithContinuousObsByYear"
       :title="
-        t(
-          'dataSources.observationPeriodReport.personsWithContinuousObservationByYear',
-          'Persons With Continuous Observation By Year'
-        ).value
+        t('dataSources.observationPeriodReport.personsWithContinuousObservationByYear').value
       "
     >
       <BarChart
         :data="data.personsWithContinuousObsByYear"
-        :x-axis-label="t('dataSources.observationPeriodReport.years', 'Years').value"
-        :y-axis-label="t('dataSources.observationPeriodReport.people', 'People').value"
+        :x-axis-label="t('dataSources.observationPeriodReport.years').value"
+        :y-axis-label="t('dataSources.observationPeriodReport.people').value"
         data-testid="persons-continuous-by-year-chart"
       />
     </ChartSection>
@@ -140,10 +131,7 @@
     <ChartSection
       v-if="data.observationPeriodsPerPerson && data.observationPeriodsPerPerson.length > 0"
       :title="
-        t(
-          'dataSources.observationPeriodReport.observationPeriodsPerPerson',
-          'Observation Periods per Person'
-        ).value
+        t('dataSources.observationPeriodReport.observationPeriodsPerPerson').value
       "
     >
       <PieChart

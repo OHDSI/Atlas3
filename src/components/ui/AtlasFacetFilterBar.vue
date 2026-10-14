@@ -156,9 +156,9 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 const { t } = useI18n()
 
-const filtersLabel = t('common.filters', 'Filters')
-const clearAllLabel = t('search.clearAllSelections', 'Clear all')
-const filterResultsLabel = t('search.filterResults', 'Filter results')
+const filtersLabel = t('common.filters')
+const clearAllLabel = t('search.clearAllSelections')
+const filterResultsLabel = t('search.filterResults')
 const menuOpen = ref(false)
 
 function resolveFacetLabel(key: FacetKey): string {

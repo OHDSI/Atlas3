@@ -23,13 +23,9 @@ const rightLabelDisplay = computed(() => truncate(props.rightLabel))
 
 const total = computed(() => props.leftOnly + props.rightOnly + props.both)
 
-const totalLabel = computed(() => {
-  const template = tv(
-    'cs.browser.compare.vennDiagramTotalAmountConcepts',
-    'The total amount of concepts: <count>'
-  )
-  return template.replace('<%=count%>', String(total.value)).replace('<count>', String(total.value))
-})
+const totalLabel = computed(() =>
+  tv('cs.browser.compare.vennDiagramTotalAmountConcepts', { count: total.value })
+)
 </script>
 
 <template>

@@ -1,4 +1,6 @@
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
+import type { TranslationParams } from '@/types/i18n'
 import {
   TrexSQLCacheStatusSchema,
   PatientCountResultSchema,
@@ -16,6 +18,15 @@ function getBaseUrl(): string {
 }
 
 const activeCountRequests = new Map<string, AbortController>()
+
+/**
+ * Translate a user-facing error message. Resolved per call so the service only
+ * touches the locale store when it actually reports an error.
+ */
+function tv(key: string, params?: TranslationParams): string {
+  const { tv: translate } = useI18n()
+  return params ? translate(key, params) : translate(key)
+}
 
 export function cancelCountRequest(sourceKey: string): void {
   const controller = activeCountRequests.get(sourceKey)
@@ -68,17 +79,25 @@ export async function buildCache(
       const status = response.status
 
       if (status === 404) {
-        throw new Error(`Data source '${sourceKey}' not found`)
+        throw new Error(
+          tv('trexsql.errors.sourceNotFound', { sourceKey })
+        )
       }
       if (status === 409) {
-        throw new Error('Cache build already in progress')
+        throw new Error(tv('trexsql.errors.buildInProgress'))
       }
       if (status === 503) {
-        throw new Error('TrexSQL extension not available')
+        throw new Error(
+          tv('trexsql.errors.extensionUnavailable')
+        )
       }
 
-      const errorText = await response.text().catch(() => 'Unknown error')
-      throw new Error(`Build failed: ${errorText}`)
+      const errorText = await response
+        .text()
+        .catch(() => tv('commonErrors.unknown'))
+      throw new Error(
+        tv('trexsql.errors.buildFailed', { detail: errorText })
+      )
     }
 
     const data = await response.json()
@@ -86,7 +105,7 @@ export async function buildCache(
 
     if (!result.success) {
       logger.warn('TrexSQL', 'Build response validation failed, using raw response')
-      return { message: data.message || 'Cache build started' }
+      return { message: data.message || tv('components.config.trexsql.buildStarted') }
     }
 
     logger.info('TrexSQL', `Cache build started for ${sourceKey}`)
@@ -168,8 +187,14 @@ export async function getCacheStatus(
         }
       }
 
-      const errorText = await response.text().catch(() => 'Unknown error')
-      throw new Error(`Failed to get cache status: ${errorText}`)
+      const errorText = await response
+        .text()
+        .catch(() => tv('commonErrors.unknown'))
+      throw new Error(
+        tv('trexsql.errors.statusFailed', {
+          detail: errorText,
+        })
+      )
     }
 
     const data = await response.json()
@@ -223,13 +248,19 @@ export async function getPatientCount(
       const status = response.status
 
       if (status === 400) {
-        throw new Error('Invalid cohort expression')
+        throw new Error(tv('trexsql.errors.invalidExpression'))
       }
       if (status === 404) {
-        throw new Error(`Data source '${sourceKey}' not found`)
+        throw new Error(
+          tv('trexsql.errors.sourceNotFound', { sourceKey })
+        )
       }
       if (status === 503) {
-        throw new Error('Cache not available. Please build the cache first.')
+        throw new Error(
+          tv(
+            'trexsql.errors.cacheUnavailable'
+          )
+        )
       }
       // 422 — circe rejected the expression (incomplete inclusion rule,
       // missing StartWindow, codeset id pointing at empty placeholder).
@@ -238,14 +269,20 @@ export async function getPatientCount(
       if (status === 422) {
         const body = await response.json().catch(() => null)
         const msg = (body && typeof body.message === 'string' && body.message)
-          || 'The cohort expression is incomplete or invalid.'
+          || tv(
+            'trexsql.errors.incompleteExpression'
+          )
         const err = new Error(msg)
         err.name = 'InvalidExpressionError'
         throw err
       }
 
-      const errorText = await response.text().catch(() => 'Unknown error')
-      throw new Error(`Count failed: ${errorText}`)
+      const errorText = await response
+        .text()
+        .catch(() => tv('commonErrors.unknown'))
+      throw new Error(
+        tv('trexsql.errors.countFailed', { detail: errorText })
+      )
     }
 
     const data = await response.json()
@@ -299,7 +336,12 @@ export async function listCacheFiles(): Promise<CacheFile[]> {
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '')
-    throw new Error(`Failed to list cache files: ${response.status} ${detail}`.trim())
+    throw new Error(
+      tv('trexsql.errors.listFilesFailed', {
+        status: response.status,
+        detail,
+      }).trim()
+    )
   }
 
   const data = (await response.json()) as { files?: unknown }
@@ -317,7 +359,12 @@ export async function deleteCacheFile(databaseCode: string): Promise<void> {
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '')
-    throw new Error(`Failed to delete cache: ${response.status} ${detail}`.trim())
+    throw new Error(
+      tv('trexsql.errors.deleteFailed', {
+        status: response.status,
+        detail,
+      }).trim()
+    )
   }
 }
 
@@ -335,7 +382,8 @@ export async function getAllCacheStatuses(): Promise<TrexSQLCacheStatus[]> {
           totalPatientCount: null,
           lastBuiltAt: null,
           sizeBytes: null,
-          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          errorMessage:
+            error instanceof Error ? error.message : tv('commonErrors.unknown'),
         }
       })
     )
@@ -382,19 +430,39 @@ export async function getInclusionStats(
 
     if (!response.ok) {
       const status = response.status
-      if (status === 400) throw new Error('Invalid cohort expression')
-      if (status === 404) throw new Error(`Data source '${sourceKey}' not found`)
-      if (status === 503) throw new Error('Cache not available. Please build the cache first.')
+      if (status === 400) {
+        throw new Error(tv('trexsql.errors.invalidExpression'))
+      }
+      if (status === 404) {
+        throw new Error(
+          tv('trexsql.errors.sourceNotFound', { sourceKey })
+        )
+      }
+      if (status === 503) {
+        throw new Error(
+          tv(
+            'trexsql.errors.cacheUnavailable'
+          )
+        )
+      }
       if (status === 422) {
         const body = await response.json().catch(() => null)
         const msg = (body && typeof body.message === 'string' && body.message)
-          || 'The cohort expression is incomplete or invalid.'
+          || tv(
+            'trexsql.errors.incompleteExpression'
+          )
         const err = new Error(msg)
         err.name = 'InvalidExpressionError'
         throw err
       }
-      const errorText = await response.text().catch(() => 'Unknown error')
-      throw new Error(`Inclusion stats failed: ${errorText}`)
+      const errorText = await response
+        .text()
+        .catch(() => tv('commonErrors.unknown'))
+      throw new Error(
+        tv('trexsql.errors.inclusionStatsFailed', {
+          detail: errorText,
+        })
+      )
     }
 
     const data = await response.json()

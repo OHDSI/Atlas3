@@ -5,7 +5,7 @@
          pair so we get keyboard nav, page numbers, and ellipses. -->
     <div class="cohort-pagination__per-page">
       <span class="cohort-pagination__label">{{
-        t('datatable.itemsPerPage', 'Rows per page:').value
+        t('datatable.itemsPerPage').value
       }}</span>
       <AtlasSelect
         :model-value="itemsPerPage"
@@ -13,7 +13,7 @@
         variant="outlined"
         hide-details
         class="cohort-pagination__select"
-        :aria-label="t('common.selectItemsPerPage', 'Select number of items per page').value"
+        :aria-label="t('common.selectItemsPerPage').value"
         @update:model-value="(v) => $emit('update:items-per-page', v as number)"
       />
     </div>

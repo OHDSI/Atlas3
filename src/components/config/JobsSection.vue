@@ -134,7 +134,7 @@
               size="sm"
               @click="refresh"
             >
-              {{ t('configuration.jobs.actions.retry') }}
+              {{ t('common.retry') }}
             </AtlasButton>
           </div>
         </AtlasAlert>

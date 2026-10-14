@@ -6,6 +6,7 @@ import { createVuetify } from 'vuetify'
 import { mount, flushPromises } from '@vue/test-utils'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { tr } from '../../helpers/i18n-mock'
 
 const routerPush = vi.fn()
 const pathwayResultsMocks = {
@@ -114,7 +115,7 @@ describe('PathwayResultsView', () => {
     await flushPromises()
 
     expect(pathwayResultsMocks.load).toHaveBeenCalledWith(123)
-    expect(wrapper.find('.pathway-results__state').text()).toBe('Loading')
+    expect(wrapper.find('.pathway-results__state').text()).toBe(tr('pathway.results.loading'))
   })
 
   it('renders the visual mode and path details after selecting a pathway', async () => {

@@ -272,8 +272,8 @@ function onAdd() {
     open: true,
     text:
       skipped > 0
-        ? t('components.conceptHierarchyDialog.addedSkipped', 'Added {count} concepts, skipped {skipped} already in the set', { count: added, skipped }).value
-        : t('components.conceptHierarchyDialog.added', 'Added {count} concepts', { count: added }).value,
+        ? t('components.conceptHierarchyDialog.addedSkipped', { count: added, skipped }).value
+        : t('components.conceptHierarchyDialog.added', { count: added }).value,
   }
 }
 
@@ -414,7 +414,7 @@ const anchorCounts = computed(() =>
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    :title="t('components.conceptHierarchyDialog.title', 'Hierarchy · {concept}', { concept: focusedConcept.conceptName }).value"
+    :title="t('components.conceptHierarchyDialog.title', { concept: focusedConcept.conceptName }).value"
     :subtitle="`${focusedConcept.conceptId} · ${focusedConcept.vocabularyId} · ${focusedConcept.conceptCode} · ${focusedConcept.domainId}`"
     max-width="1100"
     data-testid="concept-hierarchy-dialog"
@@ -430,33 +430,33 @@ const anchorCounts = computed(() =>
         indeterminate
         size="32"
       />
-      <p>{{ t('components.conceptHierarchyDialog.loading', 'Loading hierarchy…').value }}</p>
+      <p>{{ t('components.conceptHierarchyDialog.loading').value }}</p>
     </div>
 
     <p
       v-else-if="isNonStandard"
       data-testid="hierarchy-non-standard"
     >
-      {{ t('cs.manager.concept.tabs.hierarchy.noHierarchyFoundMessage', 'No hierarchy found for non-standard concepts.').value }}
+      {{ t('cs.manager.concept.tabs.hierarchy.noHierarchyFoundMessage').value }}
     </p>
 
     <p
       v-else-if="focusedHierarchyError"
       data-testid="hierarchy-load-failed"
     >
-      {{ t('components.conceptDetail.hierarchyLoadFailed', 'Could not load the hierarchy for this concept.').value }}
+      {{ t('components.conceptDetail.hierarchyLoadFailed').value }}
     </p>
 
     <p
       v-else-if="isEmpty"
       data-testid="hierarchy-empty"
     >
-      {{ t('components.conceptDetail.noHierarchyForConcept', 'No hierarchy found for this concept.').value }}
+      {{ t('components.conceptDetail.noHierarchyForConcept').value }}
     </p>
 
     <template v-else>
       <p class="counts">
-        {{ t('components.conceptHierarchyDialog.counts', '{ancestors} ancestors · {descendants} descendants', { ancestors: allAncestorCount, descendants: allDescendantCount }).value }}
+        {{ t('components.conceptHierarchyDialog.counts', { ancestors: allAncestorCount, descendants: allDescendantCount }).value }}
       </p>
 
       <AtlasTabs
@@ -468,13 +468,13 @@ const anchorCounts = computed(() =>
           value="tabular"
           data-testid="hierarchy-view-tabular"
         >
-          {{ t('components.conceptHierarchyDialog.tabularView', 'Tabular').value }}
+          {{ t('components.conceptHierarchyDialog.tabularView').value }}
         </AtlasTab>
         <AtlasTab
           value="tree"
           data-testid="hierarchy-view-tree"
         >
-          {{ t('components.conceptHierarchyDialog.treeView', 'Tree').value }}
+          {{ t('components.conceptHierarchyDialog.treeView').value }}
         </AtlasTab>
       </AtlasTabs>
 
@@ -484,31 +484,31 @@ const anchorCounts = computed(() =>
       >
         <AtlasTextField
           v-model="filterText"
-          :placeholder="t('components.conceptHierarchyDialog.filterPlaceholder', 'Filter by name or code…').value"
+          :placeholder="t('components.conceptHierarchyDialog.filterPlaceholder').value"
           data-testid="hierarchy-filter"
         />
         <AtlasSelect
           v-model="classFilter"
           clearable
           :items="optionsFor('conceptClassId')"
-          :placeholder="t('columns.class', 'Class').value"
-          :aria-label="t('components.conceptHierarchyDialog.filterByClass', 'Filter by class').value"
+          :placeholder="t('columns.class').value"
+          :aria-label="t('components.conceptHierarchyDialog.filterByClass').value"
           data-testid="hierarchy-filter-class"
         />
         <AtlasSelect
           v-model="domainFilter"
           clearable
           :items="optionsFor('domainId')"
-          :placeholder="t('columns.domain', 'Domain').value"
-          :aria-label="t('components.conceptHierarchyDialog.filterByDomain', 'Filter by domain').value"
+          :placeholder="t('columns.domain').value"
+          :aria-label="t('components.conceptHierarchyDialog.filterByDomain').value"
           data-testid="hierarchy-filter-domain"
         />
         <AtlasSelect
           v-model="vocabularyFilter"
           clearable
           :items="optionsFor('vocabularyId')"
-          :placeholder="t('columns.vocabulary', 'Vocabulary').value"
-          :aria-label="t('components.conceptHierarchyDialog.filterByVocabulary', 'Filter by vocabulary').value"
+          :placeholder="t('columns.vocabulary').value"
+          :aria-label="t('components.conceptHierarchyDialog.filterByVocabulary').value"
           data-testid="hierarchy-filter-vocabulary"
         />
       </div>
@@ -520,11 +520,11 @@ const anchorCounts = computed(() =>
         <thead>
           <tr>
             <th />
-            <th>{{ t('columns.conceptName', 'Concept Name').value }}</th>
-            <th>{{ t('columns.code', 'Code').value }}</th>
-            <th>{{ t('columns.class', 'Class').value }}</th>
-            <th>{{ t('columns.domain', 'Domain').value }}</th>
-            <th>{{ t('columns.vocabulary', 'Vocabulary').value }}</th>
+            <th>{{ t('columns.conceptName').value }}</th>
+            <th>{{ t('columns.code').value }}</th>
+            <th>{{ t('columns.class').value }}</th>
+            <th>{{ t('columns.domain').value }}</th>
+            <th>{{ t('columns.vocabulary').value }}</th>
             <th
               class="num"
               :aria-sort="ariaSort('recordCount')"
@@ -533,10 +533,10 @@ const anchorCounts = computed(() =>
                 type="button"
                 class="count-sort"
                 data-testid="hierarchy-sort-rc"
-                :aria-label="t('components.conceptHierarchyDialog.sortRecordCount', 'Sort by record count').value"
+                :aria-label="t('components.conceptHierarchyDialog.sortRecordCount').value"
                 @click="toggleCountSort('recordCount')"
               >
-                {{ t('columns.rc', 'RC').value }}{{ sortIndicator('recordCount') }}
+                {{ t('columns.rc').value }}{{ sortIndicator('recordCount') }}
               </button>
             </th>
             <th
@@ -547,10 +547,10 @@ const anchorCounts = computed(() =>
                 type="button"
                 class="count-sort"
                 data-testid="hierarchy-sort-drc"
-                :aria-label="t('components.conceptHierarchyDialog.sortDescendantRecordCount', 'Sort by descendant record count').value"
+                :aria-label="t('components.conceptHierarchyDialog.sortDescendantRecordCount').value"
                 @click="toggleCountSort('descendantRecordCount')"
               >
-                {{ t('columns.drc', 'DRC').value }}{{ sortIndicator('descendantRecordCount') }}
+                {{ t('columns.drc').value }}{{ sortIndicator('descendantRecordCount') }}
               </button>
             </th>
           </tr>
@@ -561,7 +561,7 @@ const anchorCounts = computed(() =>
             data-testid="hierarchy-ancestors-section"
           >
             <td colspan="8">
-              {{ t('components.conceptHierarchyDialog.ancestors', 'Ancestors').value }}
+              {{ t('components.conceptHierarchyDialog.ancestors').value }}
               <button
                 v-if="hiddenAncestorCount > 0"
                 type="button"
@@ -571,8 +571,8 @@ const anchorCounts = computed(() =>
                 @click="ancestorsExpanded = !ancestorsExpanded"
               >
                 {{ ancestorsExpanded
-                  ? t('components.conceptHierarchyDialog.collapseAncestors', 'Show direct parents only').value
-                  : t('components.conceptHierarchyDialog.showMoreAncestors', 'Show {count} more ancestors', { count: hiddenAncestorCount }).value }}
+                  ? t('components.conceptHierarchyDialog.collapseAncestors').value
+                  : t('components.conceptHierarchyDialog.showMoreAncestors', { count: hiddenAncestorCount }).value }}
               </button>
             </td>
           </tr>
@@ -602,7 +602,7 @@ const anchorCounts = computed(() =>
               <span
                 v-if="ancestorsExpanded"
                 class="dist"
-              >{{ t('components.conceptHierarchyDialog.ancestorDistance', 'distance {distance}', { distance }).value }}</span>
+              >{{ t('components.conceptHierarchyDialog.ancestorDistance', { distance }).value }}</span>
             </td>
             <td>{{ a.conceptCode }}</td>
             <td>{{ a.conceptClassId }}</td>
@@ -621,7 +621,7 @@ const anchorCounts = computed(() =>
             data-testid="hierarchy-current-section"
           >
             <td colspan="8">
-              {{ t('components.conceptHierarchyDialog.currentConcept', 'Current concept').value }}
+              {{ t('components.conceptHierarchyDialog.currentConcept').value }}
             </td>
           </tr>
           <tr
@@ -647,7 +647,7 @@ const anchorCounts = computed(() =>
             data-testid="hierarchy-descendants-section"
           >
             <td colspan="8">
-              {{ t('components.conceptHierarchyDialog.descendants', 'Descendants').value }}
+              {{ t('components.conceptHierarchyDialog.descendants').value }}
               <button
                 v-if="hiddenDescendantCount > 0"
                 type="button"
@@ -657,8 +657,8 @@ const anchorCounts = computed(() =>
                 @click="descendantsExpanded = !descendantsExpanded"
               >
                 {{ descendantsExpanded
-                  ? t('components.conceptHierarchyDialog.collapseDescendants', 'Show direct children only').value
-                  : t('components.conceptHierarchyDialog.showMoreDescendants', 'Show {count} more children', { count: hiddenDescendantCount }).value }}
+                  ? t('components.conceptHierarchyDialog.collapseDescendants').value
+                  : t('components.conceptHierarchyDialog.showMoreDescendants', { count: hiddenDescendantCount }).value }}
               </button>
             </td>
           </tr>
@@ -693,16 +693,16 @@ const anchorCounts = computed(() =>
         <thead>
           <tr>
             <th />
-            <th>{{ t('columns.conceptName', 'Concept Name').value }}</th>
-            <th>{{ t('columns.code', 'Code').value }}</th>
-            <th>{{ t('columns.class', 'Class').value }}</th>
-            <th>{{ t('columns.domain', 'Domain').value }}</th>
-            <th>{{ t('columns.vocabulary', 'Vocabulary').value }}</th>
+            <th>{{ t('columns.conceptName').value }}</th>
+            <th>{{ t('columns.code').value }}</th>
+            <th>{{ t('columns.class').value }}</th>
+            <th>{{ t('columns.domain').value }}</th>
+            <th>{{ t('columns.vocabulary').value }}</th>
             <th class="num">
-              {{ t('columns.rc', 'RC').value }}
+              {{ t('columns.rc').value }}
             </th>
             <th class="num">
-              {{ t('columns.drc', 'DRC').value }}
+              {{ t('columns.drc').value }}
             </th>
           </tr>
         </thead>
@@ -712,7 +712,7 @@ const anchorCounts = computed(() =>
             data-testid="hierarchy-tree-ancestors-section"
           >
             <td colspan="8">
-              {{ t('components.conceptHierarchyDialog.ancestors', 'Ancestors').value }}
+              {{ t('components.conceptHierarchyDialog.ancestors').value }}
             </td>
           </tr>
           <tr
@@ -747,7 +747,7 @@ const anchorCounts = computed(() =>
             data-testid="hierarchy-tree-current-section"
           >
             <td colspan="8">
-              {{ t('components.conceptHierarchyDialog.currentConcept', 'Current concept').value }}
+              {{ t('components.conceptHierarchyDialog.currentConcept').value }}
             </td>
           </tr>
           <tr
@@ -772,7 +772,7 @@ const anchorCounts = computed(() =>
             data-testid="hierarchy-tree-descendants-section"
           >
             <td colspan="8">
-              {{ t('components.conceptHierarchyDialog.descendants', 'Descendants').value }}
+              {{ t('components.conceptHierarchyDialog.descendants').value }}
             </td>
           </tr>
           <ConceptHierarchyRow

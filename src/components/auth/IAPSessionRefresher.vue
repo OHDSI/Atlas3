@@ -4,7 +4,7 @@
     v-if="isIAPEnabled"
     ref="iapFrame"
     src="/_gcp_iap/session_refresher"
-    title="Identity-aware proxy session refresh"
+    :title="tv('auth.iap.sessionRefreshFrame')"
     style="display: none"
     @load="handleIframeLoad"
   />
@@ -14,6 +14,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { getAppConfig } from '@/config/app-config.loader'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
+
+const { tv } = useI18n()
 
 const iapFrame = ref<HTMLIFrameElement | null>(null)
 const refreshInterval = ref<number | null>(null)

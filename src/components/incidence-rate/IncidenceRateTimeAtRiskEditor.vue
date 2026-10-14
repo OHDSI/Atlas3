@@ -1,7 +1,7 @@
 <template>
   <div class="tar-editor">
     <div class="row">
-      <span class="row__label">{{ t('common.from', 'From').value }}</span>
+      <span class="row__label">{{ t('common.from').value }}</span>
       <AtlasSelect
         :model-value="tar.start.DateField"
         :items="dateFieldItems"
@@ -23,7 +23,7 @@
         @update:model-value="(v) => updateStart('Offset', Number(v))"
       />
       <span class="d">d</span>
-      <span class="row__label">{{ t('common.to', 'to').value }}</span>
+      <span class="row__label">{{ t('common.to').value }}</span>
       <AtlasSelect
         :model-value="tar.end.DateField"
         :items="dateFieldItems"
@@ -67,8 +67,8 @@ const { t, tv } = useI18n()
 const store = useIncidenceRateStore()
 
 const dateFieldItems = computed(() => [
-  { title: tv('ir.editor.timeAtRiskCohortStart', 'Cohort start'), value: 'StartDate' as const },
-  { title: tv('ir.editor.timeAtRiskCohortEnd', 'Cohort end'), value: 'EndDate' as const },
+  { title: tv('ir.editor.timeAtRiskCohortStart'), value: 'StartDate' as const },
+  { title: tv('ir.editor.timeAtRiskCohortEnd'), value: 'EndDate' as const },
 ])
 
 const tar = computed<TimeAtRisk>(
@@ -82,10 +82,7 @@ const tar = computed<TimeAtRisk>(
 const errorText = computed<string | null>(() => {
   const v = tar.value
   if (v.start.DateField === v.end.DateField && v.end.Offset <= v.start.Offset) {
-    return t(
-      'ir.editor.timeAtRiskWarningMessage',
-      'Time-at-risk end must be after start when both reference the same date'
-    ).value
+    return t('ir.editor.timeAtRiskEndBeforeStart').value
   }
   return null
 })

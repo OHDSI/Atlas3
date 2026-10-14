@@ -12,7 +12,7 @@
         md="6"
       >
         <ChartSection
-          :title="t('dataSources.dashboardReport.populationByGender', 'Population by Gender').value"
+          :title="t('dataSources.dashboardReport.populationByGender').value"
         >
           <DashboardGenderChart
             :data="data.genderDistribution"
@@ -27,7 +27,7 @@
       >
         <ChartSection
           :title="
-            t('dataSources.dashboardReport.ageAtFirstObservation', 'Age at First Observation').value
+            t('dataSources.dashboardReport.ageAtFirstObservation').value
           "
         >
           <DashboardAgeChart
@@ -45,7 +45,7 @@
       >
         <ChartSection
           :title="
-            t('dataSources.dashboardReport.cumulativeObservation', 'Cumulative Observation').value
+            t('dataSources.dashboardReport.cumulativeObservation').value
           "
         >
           <DashboardCumulativeChart
@@ -61,10 +61,7 @@
       >
         <ChartSection
           :title="
-            t(
-              'dataSources.dashboardReport.personsWithContinuousObservationByMonth',
-              'Persons With Continuous Observation By Month'
-            ).value
+            t('dataSources.dashboardReport.personsWithContinuousObservationByMonth').value
           "
         >
           <DashboardObservationMonthChart

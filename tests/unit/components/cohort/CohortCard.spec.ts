@@ -6,11 +6,11 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import CohortCard from '@/components/cohort/CohortCard.vue'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
+import { tr } from '../../../helpers/i18n-mock'
 
 // Mock dependencies
 const mockPush = vi.fn()
@@ -21,12 +21,10 @@ vi.mock('vue-router', () => ({
   })
 }))
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, fallback?: string) => ref(fallback || key),
-    locale: ref('en-US')
-  })
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 const vuetify = createVuetify({ components, directives })
 
@@ -133,7 +131,7 @@ describe('CohortCard', () => {
 
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const deleteBtn = buttons.find(btn =>
-      btn.attributes('aria-label') === 'Delete'
+      btn.attributes('aria-label') === tr('common.delete')
     )
 
     expect(deleteBtn).toBeDefined()
@@ -147,7 +145,7 @@ describe('CohortCard', () => {
 
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const printFriendlyBtn = buttons.find(btn =>
-      (btn.attributes('aria-label') ?? '').toLowerCase().includes('preview')
+      btn.attributes('aria-label') === tr('common.preview')
     )
 
     expect(printFriendlyBtn).toBeDefined()

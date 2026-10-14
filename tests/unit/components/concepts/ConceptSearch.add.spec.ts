@@ -14,22 +14,10 @@ import { useConceptSetsStore } from '@/stores/concept-sets'
 import { AtlasSnackbar } from '@/components/ui'
 import type { Concept } from '@/models/concept-set.types'
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    // Mirror the real composable: interpolate {param} placeholders from the
-    // params object so tests exercise the actual formatted output.
-    t: (key: string, fallback: string, params?: Record<string, unknown>) => {
-      let text = fallback ?? key
-      if (params) {
-        for (const [k, v] of Object.entries(params)) {
-          text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
-        }
-      }
-      return { value: text }
-    },
-    tv: (key: string) => key,
-  }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 vi.mock('@/services/concept-search.service', () => ({
   searchConcepts: vi.fn().mockResolvedValue({ success: true, data: [] }),

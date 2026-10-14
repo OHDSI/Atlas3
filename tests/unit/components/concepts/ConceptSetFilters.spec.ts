@@ -3,16 +3,14 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { ref } from 'vue'
 import ConceptSetFilters from '@/components/concepts/ConceptSetFilters.vue'
 import type { ConceptSetFilterState } from '@/stores/concept-sets'
+import { tr } from '../../../helpers/i18n-mock'
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, fallback?: string) => ref(fallback || key),
-    locale: ref('en-US'),
-  }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 const vuetify = createVuetify({ components, directives })
 
@@ -62,7 +60,7 @@ describe('ConceptSetFilters', () => {
   it('emits clear from the active-chip row Clear all button', async () => {
     const filters = { ...defaultFilters, author: 'bob' }
     const wrapper = mountComponent({ filters, activeFilterCount: 1 })
-    const clearBtn = wrapper.findAll('button').find(b => b.text().includes('Clear all'))
+    const clearBtn = wrapper.findAll('button').find(b => b.text().includes(tr('search.clearAllSelections')))
     await clearBtn!.trigger('click')
     expect(wrapper.emitted('clear')).toBeTruthy()
   })

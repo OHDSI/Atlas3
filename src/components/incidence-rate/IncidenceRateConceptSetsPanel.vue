@@ -1,12 +1,12 @@
 <template>
   <v-card variant="outlined">
-    <v-card-title>{{ t('ir.tabs.conceptSets', 'Concept Sets') }}</v-card-title>
+    <v-card-title>{{ t('ir.tabs.conceptSets') }}</v-card-title>
     <v-card-text
       v-if="conceptSets.length === 0"
       class="muted"
     >
       {{
-        t('cohortDefinitions.noConceptSets', 'This incidence rate has no concept sets attached.')
+        t('ir.editor.noConceptSets')
       }}
     </v-card-text>
     <v-table
@@ -15,8 +15,8 @@
     >
       <thead>
         <tr>
-          <th>{{ t('columns.name', 'Name') }}</th>
-          <th>{{ t('columns.actions', 'Actions') }}</th>
+          <th>{{ t('columns.name') }}</th>
+          <th>{{ t('columns.actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -32,7 +32,7 @@
               variant="ghost"
               :to="`/conceptset/${cs.id}`"
             >
-              {{ t('cs.manager.concept.tabs.hierarchy.view', 'View') }}
+              {{ t('cs.manager.concept.tabs.hierarchy.view') }}
             </AtlasButton>
           </td>
         </tr>

@@ -198,7 +198,7 @@ function getLabel(tab: Tab): string {
   return t(tab.titleKey, tab.defaultLabel).value
 }
 
-const eyebrow = computed(() => `OHDSI · ${t('navigation.analysis', 'Analysis').value}`)
+const eyebrow = computed(() => `OHDSI · ${t('navigation.analysis').value}`)
 const activeTab = computed(
   () => tabs.value.find(tab => tab.name === activeTabName.value) ?? coreTabs[0]!
 )
@@ -207,13 +207,10 @@ const activeTab = computed(
 // not the active tab. Per-tab context lives in the small hint line
 // below the tab strip (see template) so the hero doesn't shake when
 // users switch tabs.
-const title = computed(() => t('navigation.analysis', 'Analysis').value)
+const title = computed(() => t('navigation.analysis').value)
 const subtitle = computed(
   () =>
-    t(
-      'analysis.subtitle',
-      'Characterize cohorts, build features, trace pathways, and compute incidence rates.'
-    ).value
+    t('analysis.subtitle').value
 )
 const activeTabHint = computed(() => {
   const tab = activeTab.value

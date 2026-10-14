@@ -106,17 +106,17 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const eraTitle = computed(() => t('components.conditionEra.criteriaText_1', 'a condition era of').value)
-const addAttributeLabel = computed(() => t('components.conditionEra.addAttribute', 'Add attribute...').value)
+const eraTitle = computed(() => t('components.conditionEra.title').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
 const selectConceptSetLabel = computed(() =>
-  t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value
+  t('components.conceptAddBox.selectConceptSet').value
 )
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {
     key: 'First',
-    label: 'First Diagnosis',
-    description: 'Limit to first diagnosis in history',
+    label: t('criteriaAttributes.first.label').value,
+    description: t('criteriaAttributes.first.description').value,
     init: () => {
       conditionEraData.value.First = true
     },
@@ -127,8 +127,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'AgeAtStart',
-    label: 'Age at Start',
-    description: 'Filter by age at era start',
+    label: t('criteriaAttributes.ageAtStart.label').value,
+    description: t('criteriaAttributes.ageAtStart.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(conditionEraData.value, 'AgeAtStart', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -143,8 +143,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'AgeAtEnd',
-    label: 'Age at End',
-    description: 'Filter by age at era end',
+    label: t('criteriaAttributes.ageAtEnd.label').value,
+    description: t('criteriaAttributes.ageAtEnd.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(conditionEraData.value, 'AgeAtEnd', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -159,8 +159,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Gender',
-    label: 'Gender',
-    description: 'Filter by patient gender',
+    label: t('criteriaAttributes.gender.label').value,
+    description: t('criteriaAttributes.gender.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -177,13 +177,13 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'GenderCS',
-    label: 'Gender Concept Set',
-    description: 'Filter gender by a concept set',
+    label: t('criteriaAttributes.genderCS.label').value,
+    description: t('criteriaAttributes.genderCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(conditionEraData.value, 'GenderCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
       props.conceptSets,
-      t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value,
+      t('components.conceptAddBox.selectConceptSet').value,
       target => emit('select-concept-set', target),
       target => emit('edit-concept-set', target),
     ),
@@ -197,8 +197,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'EraStartDate',
-    label: 'Start Date',
-    description: 'Filter by start date',
+    label: t('criteriaAttributes.eraStartDate.label').value,
+    description: t('criteriaAttributes.eraStartDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(conditionEraData.value, 'EraStartDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -213,8 +213,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'EraEndDate',
-    label: 'End Date',
-    description: 'Filter by end date',
+    label: t('criteriaAttributes.eraEndDate.label').value,
+    description: t('criteriaAttributes.eraEndDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(conditionEraData.value, 'EraEndDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -229,8 +229,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'DateAdjustment',
-    label: 'Date Adjustment',
-    description: 'Adjust event dates',
+    label: t('criteriaAttributes.dateAdjustment.label').value,
+    description: t('criteriaAttributes.dateAdjustment.description').value,
     kind: 'dateAdjustment',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(conditionEraData.value, 'DateAdjustment', createDefaultDateAdjustment) as DateAdjustment
@@ -245,8 +245,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'OccurrenceCount',
-    label: 'Condition Count',
-    description: 'Filter by condition count',
+    label: t('criteriaAttributes.occurrenceCount.label').value,
+    description: t('criteriaAttributes.occurrenceCount.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(conditionEraData.value, 'OccurrenceCount', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -261,8 +261,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'EraLength',
-    label: 'Era Length',
-    description: 'Filter by era duration',
+    label: t('criteriaAttributes.eraLength.label').value,
+    description: t('criteriaAttributes.eraLength.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(conditionEraData.value, 'EraLength', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -277,8 +277,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'CorrelatedCriteria',
-    label: 'Nested Criteria',
-    description: 'Add nested criteria group',
+    label: t('criteriaAttributes.correlatedCriteria.label').value,
+    description: t('criteriaAttributes.correlatedCriteria.description').value,
     kind: 'criteriaGroup',
     componentProps: () => ({
       group: ensureObjectField(conditionEraData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup) as CriteriaGroup,

@@ -5,12 +5,14 @@
  * where circe expects `name`: it imported without complaint, silently dropping
  * the title, and the user only found out by opening the editor.
  */
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import {
   describeImportProblems,
   validateCohortExpression,
 } from '@/components/cohort-editor/import-validation'
+
+vi.mock('@/composables/useI18n', async () => (await import('../../../helpers/i18n-mock')).mockUseI18n)
 
 const femaleGender = [
   {

@@ -8,15 +8,15 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import CredentialsForm from '@/components/auth/CredentialsForm.vue'
 import type { AuthProvider } from '@/models/auth.types'
+import { tr } from '../../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 
 // Mock useI18n composable
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, defaultValue: string) => ({ value: defaultValue }),
-  }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 const mockProvider: AuthProvider = {
   name: 'Database',
@@ -210,8 +210,7 @@ describe('CredentialsForm', () => {
       wrapper = mountComponent()
 
       const result = wrapper.vm.required('')
-      expect(typeof result).toBe('string')
-      expect(result).toBeTruthy()
+      expect(result).toBe(tr('common.requiredField'))
     })
 
     it('should pass validation with non-empty username', () => {

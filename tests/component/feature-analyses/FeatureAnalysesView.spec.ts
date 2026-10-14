@@ -48,6 +48,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
 import { emptyEntityAccess } from '@/models/auth.types'
 import { InlineAtlasMenuStub } from '../../helpers/component-wrapper'
+import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -147,7 +148,7 @@ describe('FeatureAnalysesView', () => {
     const headers = mounted.wrapper
       .findAll('[data-testid="feature-analyses-table"] thead th')
       .map(h => h.text())
-    expect(headers).toContain('Id')
+    expect(headers).toContain(tr('columns.id'))
     expect(headers).toContain('Created')
     expect(headers).toContain('Updated')
     expect(headers).not.toContain('Modified')
@@ -229,7 +230,7 @@ describe('FeatureAnalysesView', () => {
     mounted = await mountView()
 
     // After i18n migration the empty-state label uses generic "No data" (common.noData)
-    expect(mounted.wrapper.text()).toContain('No data')
+    expect(mounted.wrapper.text()).toContain(tr('featureAnalyses.list.empty'))
   })
 
   it('search box narrows the visible rows', async () => {

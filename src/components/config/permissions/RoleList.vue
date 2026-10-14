@@ -4,11 +4,11 @@
     <div class="role-list__header">
       <div class="role-list__header-left">
         <h2 class="text-h5">
-          {{ t('configuration.roles.title', 'Roles').value }}
+          {{ t('configuration.roles.title').value }}
         </h2>
         <AtlasTextField
           v-model="searchQuery"
-          :placeholder="tv('components.config.permissions.searchRoles', 'Search roles...')"
+          :placeholder="tv('components.access.searchRoles')"
           prepend-icon="mdi-magnify"
           variant="outlined"
           hide-details
@@ -21,7 +21,7 @@
         icon="mdi-plus"
         @click="handleCreate"
       >
-        {{ t('components.config.permissions.newRole', 'New Role').value }}
+        {{ t('components.config.permissions.newRole').value }}
       </AtlasButton>
     </div>
 
@@ -56,14 +56,11 @@
         mdi-shield-account-outline
       </AtlasIcon>
       <h3 class="text-h6 mt-4">
-        {{ t('components.config.permissions.noRolesFoundTitle', 'No roles found').value }}
+        {{ t('components.config.permissions.noRolesFoundTitle').value }}
       </h3>
       <p class="text-body-2 text-medium-emphasis mt-2">
         {{
-          t(
-            'components.config.permissions.createFirstRoleHint',
-            'Create your first role to get started with role-based access control.'
-          ).value
+          t('components.config.permissions.createFirstRoleHint').value
         }}
       </p>
       <AtlasButton
@@ -72,7 +69,7 @@
         icon="mdi-plus"
         @click="handleCreate"
       >
-        {{ t('components.config.permissions.createFirstRole', 'Create First Role').value }}
+        {{ t('components.config.permissions.createFirstRole').value }}
       </AtlasButton>
     </div>
 
@@ -127,20 +124,20 @@
         <div class="role-list__actions">
           <AtlasIconButton
             icon="mdi-pencil"
-            v-bind="{ ariaLabel: tv('components.config.permissions.editRole', 'Edit Role') }"
+            v-bind="{ ariaLabel: tv('components.config.permissions.editRole') }"
             size="sm"
             variant="text"
-            :title="tv('components.config.permissions.editRole', 'Edit Role')"
+            :title="tv('components.config.permissions.editRole')"
             @click.stop="handleEdit(item)"
           />
 
           <AtlasIconButton
             icon="mdi-delete"
-            v-bind="{ ariaLabel: tv('components.config.permissions.deleteRoleButton', 'Delete Role') }"
+            v-bind="{ ariaLabel: tv('components.config.permissions.deleteRoleButton') }"
             size="sm"
             variant="text"
             tone="danger"
-            :title="tv('components.config.permissions.deleteRoleButton', 'Delete Role')"
+            :title="tv('components.config.permissions.deleteRoleButton')"
             @click.stop="handleDelete(item)"
           />
         </div>
@@ -157,20 +154,16 @@
           <div class="text-caption text-medium-emphasis pa-4">
             <span v-if="debouncedSearchQuery">
               {{
-                t(
-                  'components.config.permissions.rolesFilteredCount',
-                  '{count} of {total} roles',
-                  { count: filteredRoles.length, total: roles.length }
-                ).value
+                t('components.config.permissions.rolesFilteredCount', { count: filteredRoles.length, total: roles.length }).value
               }}
             </span>
             <span v-else>
               {{
                 roles.length !== 1
-                  ? t('components.config.permissions.rolesTotal', '{count} roles total', {
+                  ? t('components.config.permissions.rolesTotal', {
                     count: roles.length,
                   }).value
-                  : t('components.config.permissions.roleTotal', '{count} role total', {
+                  : t('components.config.permissions.roleTotal', {
                     count: roles.length,
                   }).value
               }}
@@ -245,11 +238,11 @@ const filteredRoles = computed(() => {
 
 // Table configuration
 const headers = [
-  { title: tv('components.config.permissions.roleName', 'Role Name'), key: 'name', sortable: true },
-  { title: tv('common.description', 'Description'), key: 'description', sortable: false },
-  { title: tv('columns.created', 'Created'), key: 'createdDate', sortable: true },
-  { title: tv('columns.modified', 'Modified'), key: 'modifiedDate', sortable: true },
-  { title: tv('columns.actions', 'Actions'), key: 'actions', sortable: false, align: 'end' as const },
+  { title: tv('components.config.permissions.roleName'), key: 'name', sortable: true },
+  { title: tv('common.description'), key: 'description', sortable: false },
+  { title: tv('columns.created'), key: 'createdDate', sortable: true },
+  { title: tv('columns.modified'), key: 'modifiedDate', sortable: true },
+  { title: tv('columns.actions'), key: 'actions', sortable: false, align: 'end' as const },
 ]
 
 // Load roles on mount

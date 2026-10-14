@@ -2,7 +2,7 @@
   <div class="person-report">
     <AtlasRow>
       <AtlasCol cols="12">
-        <ChartSection :title="t('dataSources.personReport.yearOfBirth', 'Year of Birth').value">
+        <ChartSection :title="t('dataSources.personReport.yearOfBirth').value">
           <DashboardAgeChart
             :data="data.yearOfBirth"
             :height="350"
@@ -16,7 +16,7 @@
         cols="12"
         md="4"
       >
-        <ChartSection :title="t('dataSources.personReport.gender', 'Gender').value">
+        <ChartSection :title="t('dataSources.personReport.gender').value">
           <PieChart
             :data="data.gender"
             :height="300"
@@ -28,7 +28,7 @@
         cols="12"
         md="4"
       >
-        <ChartSection :title="t('dataSources.personReport.race', 'Race').value">
+        <ChartSection :title="t('dataSources.personReport.race').value">
           <PieChart
             :data="data.race"
             :height="300"
@@ -40,7 +40,7 @@
         cols="12"
         md="4"
       >
-        <ChartSection :title="t('dataSources.personReport.ethnicity', 'Ethnicity').value">
+        <ChartSection :title="t('dataSources.personReport.ethnicity').value">
           <PieChart
             :data="data.ethnicity"
             :height="300"

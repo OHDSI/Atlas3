@@ -6,7 +6,7 @@
     <template #actions>
       <AtlasTextField
         :model-value="searchInput"
-        :label="t('datatable.language.searchPlaceholder', 'Search incidence rates…').value"
+        :label="t('datatable.language.searchPlaceholder').value"
         prepend-icon="mdi-magnify"
         variant="outlined"
         hide-details
@@ -24,10 +24,10 @@
         :disabled="!canCreate"
         @click="handleNew"
       >
-        {{ t('home.newEntityNames.incidenceRate', 'New incidence rate') }}
+        {{ t('home.newEntityNames.incidenceRate') }}
       </AtlasButton>
       <EntityImportButton
-        :label="t('common.import', 'Import').value"
+        :label="t('common.import').value"
         testid="incidence-rates-import"
         :disabled="!canCreate"
         :import-design="importDesign"
@@ -42,7 +42,7 @@
       :items="paginatedIncidenceRates"
       :loading="loading"
       :items-per-page="itemsPerPage"
-      :empty-text="t('common.noData', 'No incidence rates yet.').value"
+      :empty-text="t('ir.list.empty').value"
       testid="incidence-rates-table"
       :can-copy-item="item => canCopy && !!item.id"
       :can-delete-item="item => entityAccess.canDelete(item.id)"
@@ -67,7 +67,7 @@
         :disabled="page === 0"
         @click="updatePage(page - 1)"
       >
-        {{ t('datatable.language.paginate.previous', 'Previous') }}
+        {{ t('datatable.language.paginate.previous') }}
       </AtlasButton>
       <span class="incidence-rates-view__range">{{ page + 1 }} / {{ totalPages }}</span>
       <AtlasButton
@@ -75,7 +75,7 @@
         :disabled="page + 1 >= totalPages"
         @click="updatePage(page + 1)"
       >
-        {{ t('configuration.userImport.wizard.buttons.next', 'Next') }}
+        {{ t('configuration.userImport.wizard.buttons.next') }}
       </AtlasButton>
     </template>
   </AnalysisListLayout>
@@ -83,28 +83,25 @@
   <AtlasDialog
     v-model="showDelete"
     eyebrow="CONFIRM"
-    :title="t('common.delete', 'Delete').value"
+    :title="t('common.delete').value"
     max-width="400"
     @close="showDelete = false"
   >
     {{
-      t(
-        'ir.deleteConfirmation',
-        'Delete incidence rate analysis? Warning: deletion can not be undone!'
-      )
+      t('ir.deleteConfirmation')
     }}
     <template #actions>
       <AtlasButton
         variant="ghost"
         @click="showDelete = false"
       >
-        {{ t('common.cancel', 'Cancel') }}
+        {{ t('common.cancel') }}
       </AtlasButton>
       <AtlasButton
         variant="danger"
         @click="confirmDelete"
       >
-        {{ t('common.delete', 'Delete') }}
+        {{ t('common.delete') }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -182,19 +179,19 @@ const paginatedIncidenceRates = computed(() => {
 })
 
 const headers = computed(() => [
-  { title: t('columns.id', 'ID').value, key: 'id' },
-  { title: t('columns.name', 'Name').value, key: 'name' },
-  { title: t('columns.description', 'Description').value, key: 'description' },
+  { title: t('columns.id').value, key: 'id' },
+  { title: t('columns.name').value, key: 'name' },
+  { title: t('columns.description').value, key: 'description' },
   {
-    title: t('facets.caption.targetCohorts', 'Targets').value,
+    title: t('facets.caption.targetCohorts').value,
     key: 'targetCount',
     sortable: false,
   },
-  { title: t('ir.editor.outcomes', 'Outcomes').value, key: 'outcomeCount', sortable: false },
-  { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
-  { title: t('columns.created', 'Created').value, key: 'createdDate' },
-  { title: t('columns.updated', 'Updated').value, key: 'modifiedDate' },
-  { title: t('columns.actions', 'Actions').value, key: 'actions', sortable: false },
+  { title: t('ir.editor.outcomes').value, key: 'outcomeCount', sortable: false },
+  { title: t('columns.createdBy').value, key: 'createdBy' },
+  { title: t('columns.created').value, key: 'createdDate' },
+  { title: t('columns.updated').value, key: 'modifiedDate' },
+  { title: t('columns.actions').value, key: 'actions', sortable: false },
 ])
 
 onMounted(fetchIncidenceRates)
@@ -223,10 +220,10 @@ async function handleCopy(ir: IncidenceRate) {
   if (!ir.id) return
   const result = await copyIncidenceRate(ir.id)
   if (result.success && result.data.id) {
-    notify.success(tv('views.incidenceRates.copied', 'Incidence rate copied'))
+    notify.success(tv('views.incidenceRates.copied'))
     router.push(`/incidence-rates/${result.data.id}`)
   } else {
-    notify.danger(tv('views.incidenceRates.copyFailed', 'Copy failed'))
+    notify.danger(tv('commonErrors.copyFailed'))
     logger.error(
       'IncidenceRatesView',
       'copyIncidenceRate failed',
@@ -245,11 +242,11 @@ async function confirmDelete() {
   if (!deleteTarget.value) return
   const result = await deleteIncidenceRate(deleteTarget.value)
   if (result.success) {
-    notify.success(tv('views.incidenceRates.deleted', 'Incidence rate deleted'))
+    notify.success(tv('views.incidenceRates.deleted'))
     await fetchIncidenceRates()
   } else {
     notify.danger(
-      result.error.message || tv('views.incidenceRates.deleteFailed', 'Delete failed')
+      result.error.message || tv('commonErrors.deleteFailed')
     )
     logger.error('IncidenceRatesView', 'deleteIncidenceRate failed', result.error)
   }

@@ -106,15 +106,15 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const procedureOccurrenceTitle = computed(() => 'a procedure occurrence of')
-const addAttributeLabel = computed(() => 'Add attribute...')
-const selectConceptSetLabel = computed(() => t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value)
+const procedureOccurrenceTitle = computed(() => t('components.procedureOccurrence.title').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
+const selectConceptSetLabel = computed(() => t('components.conceptAddBox.selectConceptSet').value)
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {
     key: 'First',
-    label: 'First Procedure',
-    description: 'Limit to first procedure in history',
+    label: t('components.procedureOccurrence.attributes.first.label').value,
+    description: t('components.procedureOccurrence.attributes.first.description').value,
     init: () => {
       procedureOccurrenceData.value.First = true
     },
@@ -125,8 +125,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'OccurrenceStartDate',
-    label: 'Procedure Date',
-    description: 'Filter by procedure date',
+    label: t('components.procedureOccurrence.attributes.occurrenceStartDate.label').value,
+    description: t('components.procedureOccurrence.attributes.occurrenceStartDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(procedureOccurrenceData.value, 'OccurrenceStartDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -141,8 +141,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'ProcedureType',
-    label: 'Procedure Type',
-    description: 'Filter by procedure type',
+    label: t('criteriaAttributes.procedureType.label').value,
+    description: t('criteriaAttributes.procedureType.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -162,8 +162,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'ProcedureTypeCS',
-    label: 'Procedure Type Concept Set',
-    description: 'Filter procedure type by a concept set',
+    label: t('criteriaAttributes.procedureTypeCS.label').value,
+    description: t('criteriaAttributes.procedureTypeCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(procedureOccurrenceData.value, 'ProcedureTypeCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -182,8 +182,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Modifier',
-    label: 'Modifier',
-    description: 'Filter by modifier',
+    label: t('criteriaAttributes.modifier.label').value,
+    description: t('criteriaAttributes.modifier.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -200,8 +200,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'ModifierCS',
-    label: 'Modifier Concept Set',
-    description: 'Filter modifier by a concept set',
+    label: t('criteriaAttributes.modifierCS.label').value,
+    description: t('criteriaAttributes.modifierCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(procedureOccurrenceData.value, 'ModifierCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -220,8 +220,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Quantity',
-    label: 'Quantity',
-    description: 'Filter by quantity',
+    label: t('criteriaAttributes.quantity.label').value,
+    description: t('criteriaAttributes.quantity.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(procedureOccurrenceData.value, 'Quantity', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -236,8 +236,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'ProcedureSourceConcept',
-    label: 'Procedure Source Concept',
-    description: 'Filter by procedure source concept',
+    label: t('criteriaAttributes.procedureSourceConcept.label').value,
+    description: t('criteriaAttributes.procedureSourceConcept.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       procedureSourceConceptModel as ConceptSetSelection,
@@ -256,8 +256,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Age',
-    label: 'Age',
-    description: 'Filter by age at time of event',
+    label: t('criteriaAttributes.age.label').value,
+    description: t('criteriaAttributes.age.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(procedureOccurrenceData.value, 'Age', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -272,8 +272,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Gender',
-    label: 'Gender',
-    description: 'Filter by patient gender',
+    label: t('criteriaAttributes.gender.label').value,
+    description: t('criteriaAttributes.gender.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -290,8 +290,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'GenderCS',
-    label: 'Gender Concept Set',
-    description: 'Filter gender by a concept set',
+    label: t('criteriaAttributes.genderCS.label').value,
+    description: t('criteriaAttributes.genderCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(procedureOccurrenceData.value, 'GenderCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -310,8 +310,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'ProviderSpecialty',
-    label: 'Provider Specialty',
-    description: 'Filter by provider specialty',
+    label: t('criteriaAttributes.providerSpecialty.label').value,
+    description: t('criteriaAttributes.providerSpecialty.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -328,8 +328,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'ProviderSpecialtyCS',
-    label: 'Provider Specialty Concept Set',
-    description: 'Filter provider specialty by a concept set',
+    label: t('criteriaAttributes.providerSpecialtyCS.label').value,
+    description: t('criteriaAttributes.providerSpecialtyCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(procedureOccurrenceData.value, 'ProviderSpecialtyCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -348,8 +348,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'VisitType',
-    label: 'Visit Type',
-    description: 'Filter by visit type',
+    label: t('criteriaAttributes.visitType.label').value,
+    description: t('criteriaAttributes.visitType.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -366,8 +366,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'VisitTypeCS',
-    label: 'Visit Type Concept Set',
-    description: 'Filter visit type by a concept set',
+    label: t('criteriaAttributes.visitTypeCS.label').value,
+    description: t('criteriaAttributes.visitTypeCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(procedureOccurrenceData.value, 'VisitTypeCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -386,8 +386,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'DateAdjustment',
-    label: 'Date Adjustment',
-    description: 'Adjust event dates',
+    label: t('criteriaAttributes.dateAdjustment.label').value,
+    description: t('criteriaAttributes.dateAdjustment.description').value,
     kind: 'dateAdjustment',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(procedureOccurrenceData.value, 'DateAdjustment', createDefaultDateAdjustment) as DateAdjustment
@@ -402,8 +402,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'CorrelatedCriteria',
-    label: 'Nested Criteria',
-    description: 'Add nested criteria group',
+    label: t('criteriaAttributes.correlatedCriteria.label').value,
+    description: t('criteriaAttributes.correlatedCriteria.description').value,
     kind: 'criteriaGroup',
     componentProps: () => ({
       group: ensureObjectField(procedureOccurrenceData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup) as CriteriaGroup,

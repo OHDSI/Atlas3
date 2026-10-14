@@ -2,16 +2,16 @@
   <AtlasCard padding="md">
     <div class="section-header">
       <div class="section-header__title-row">
-        <span class="text-eyebrow">{{ tv('components.profileEventsTable.eyebrow', 'EVENTS') }}</span>
+        <span class="text-eyebrow">{{ tv('components.profileEventsTable.eyebrow') }}</span>
         <span class="section-header__rule" />
         <h2 class="section-title">
-          {{ tv('profiles.events', 'Events') }}
+          {{ tv('profiles.events') }}
         </h2>
       </div>
       <div class="section-header__actions">
         <AtlasTextField
           :model-value="store.textFilter"
-          :label="tv('profiles.searchEvents', 'Search events')"
+          :label="tv('profiles.searchEvents')"
           hide-details
           clearable
           data-test="profile-search"
@@ -47,11 +47,11 @@ const store = useProfileStore()
 const { tv } = useI18n()
 
 const headers = [
-  { title: tv('columns.conceptId', 'Concept Id'), key: 'conceptId' },
-  { title: tv('columns.conceptName', 'Concept Name'), key: 'conceptName' },
-  { title: tv('columns.domain', 'Domain'), key: 'domain' },
-  { title: tv('columns.startDay', 'Start Day'), key: 'startDay' },
-  { title: tv('columns.endDay', 'End Day'), key: 'endDay' },
+  { title: tv('columns.conceptId'), key: 'conceptId' },
+  { title: tv('columns.conceptName'), key: 'conceptName' },
+  { title: tv('columns.domain'), key: 'domain' },
+  { title: tv('columns.startDay'), key: 'startDay' },
+  { title: tv('columns.endDay'), key: 'endDay' },
 ]
 </script>
 

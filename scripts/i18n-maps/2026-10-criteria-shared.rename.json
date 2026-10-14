@@ -1,0 +1,7 @@
+{
+  "components.conditionOccurrence.addAttribute": "components.criteria.addAttribute",
+  "components.conditionEra.addAttribute": "components.criteria.addAttribute",
+  "components.drugExposure.addAttribute": "components.criteria.addAttribute",
+  "components.episode.addAttribute": "components.criteria.addAttribute",
+  "components.customEra.addAttribute": "components.criteria.addAttribute"
+}

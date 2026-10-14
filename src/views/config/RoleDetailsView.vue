@@ -31,7 +31,7 @@
           severity="warning"
           class="mb-4"
         >
-          {{ t('views.roleDetails.roleNotFound', 'Role not found').value }}
+          {{ t('views.roleDetails.roleNotFound').value }}
         </AtlasAlert>
 
         <!-- Role Details -->
@@ -46,7 +46,7 @@
                   class="mb-4"
                   @click="handleBack"
                 >
-                  {{ t('views.roleDetails.backToRoles', 'Back to Roles').value }}
+                  {{ t('components.config.permissions.backToRoles').value }}
                 </AtlasButton>
 
                 <div class="role-details-view__title-section">
@@ -83,13 +83,13 @@
                 class="mb-4"
               >
                 <AtlasTab value="users">
-                  {{ t('configuration.roles.tabs.users', 'Users').value }}
+                  {{ t('configuration.roles.tabs.users').value }}
                 </AtlasTab>
                 <AtlasTab value="permissions">
-                  {{ t('configuration.roles.tabs.permissions', 'Permissions').value }}
+                  {{ t('configuration.roles.tabs.permissions').value }}
                 </AtlasTab>
                 <AtlasTab value="utilities">
-                  {{ t('configuration.roles.tabs.utilities', 'Utilities').value }}
+                  {{ t('configuration.roles.tabs.utilities').value }}
                 </AtlasTab>
               </AtlasTabs>
 

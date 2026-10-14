@@ -2,23 +2,20 @@
   <div class="death-report">
     <EmptyReportState
       v-if="!hasData"
-      :title="t('dataSources.deathReport.noDataTitle', 'No death data available').value"
+      :title="t('dataSources.deathReport.noDataTitle').value"
       :subtitle="
-        t(
-          'dataSources.deathReport.noDataSubtitle',
-          'This data source has no death records to report on.'
-        ).value
+        t('dataSources.deathReport.noDataSubtitle').value
       "
     />
 
     <!-- Age at Death by Gender -->
     <AtlasRow v-if="data.ageAtDeath && data.ageAtDeath.length > 0">
       <AtlasCol cols="12">
-        <ChartSection :title="t('dataSources.deathReport.ageAtDeath', 'Age at Death').value">
+        <ChartSection :title="t('dataSources.deathReport.ageAtDeath').value">
           <BoxPlotChart
             :data="data.ageAtDeath"
             :title="
-              t('dataSources.deathReport.ageAtDeath', 'Age at Death Distribution by Gender').value
+              t('dataSources.deathReport.ageAtDeath').value
             "
             :height="400"
             data-testid="age-at-death-chart"
@@ -30,7 +27,7 @@
     <!-- Death by Type -->
     <AtlasRow v-if="data.deathByType && data.deathByType.length > 0">
       <AtlasCol cols="12">
-        <ChartSection :title="t('dataSources.deathReport.deathByType', 'Death by Type').value">
+        <ChartSection :title="t('dataSources.deathReport.deathByType').value">
           <PieChart
             :data="data.deathByType"
             data-testid="death-by-type-chart"
@@ -44,14 +41,14 @@
       <AtlasCol cols="12">
         <ChartSection
           :title="
-            t('dataSources.deathReport.deathPrevalenceByMonth', 'Death Prevalence by Month').value
+            t('dataSources.deathReport.deathPrevalenceByMonth').value
           "
         >
           <MultiLineChart
             :data="data.prevalenceByMonth"
-            :x-axis-label="t('dataSources.deathReport.date', 'Date').value"
+            :x-axis-label="t('dataSources.deathReport.date').value"
             :y-axis-label="
-              t('dataSources.deathReport.prevalencePer1000People', 'Prevalence Per 1000 People')
+              t('dataSources.deathReport.prevalencePer1000People')
                 .value
             "
             data-testid="prevalence-by-month-chart"
@@ -67,10 +64,7 @@
       <AtlasCol cols="12">
         <ChartSection
           :title="
-            t(
-              'dataSources.deathReport.deathPrevalenceByAgeGenderYear',
-              'Death Prevalence by Age, Gender, Year'
-            ).value
+            t('dataSources.deathReport.deathPrevalenceByAgeGenderYear').value
           "
         >
           <TrellisChart

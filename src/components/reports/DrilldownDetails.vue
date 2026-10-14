@@ -34,7 +34,7 @@
         </div>
         <AtlasIconButton
           icon="mdi-close"
-          v-bind="{ ariaLabel: t('common.close', 'Close').value }"
+          v-bind="{ ariaLabel: t('common.close').value }"
           variant="text"
           size="sm"
           @click="$emit('close')"
@@ -56,7 +56,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              {{ t('components.drilldownDetails.prevalenceByGenderAgeYear', 'Prevalence by Gender, Age, and Year').value }}
+              {{ t('components.drilldownDetails.prevalenceByGenderAgeYear').value }}
             </v-card-title>
             <v-card-text>
               <TrellisChart
@@ -79,7 +79,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              {{ t('dataSources.drilldown.prevalenceByMonth', 'Prevalence by Month').value }}
+              {{ t('dataSources.drilldown.prevalenceByMonth').value }}
             </v-card-title>
             <v-card-text>
               <AtlasLineChart
@@ -103,7 +103,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              {{ t('dataSources.drilldown.ageAtFirstOccurrence', 'Age at First Occurrence').value }}
+              {{ t('dataSources.drilldown.ageAtFirstOccurrence').value }}
             </v-card-title>
             <v-card-text>
               <BoxPlotChart
@@ -122,7 +122,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              {{ t('components.drilldownDetails.lengthOfEra', 'Length of Era').value }}
+              {{ t('components.drilldownDetails.lengthOfEra').value }}
             </v-card-title>
             <v-card-text>
               <BoxPlotChart
@@ -141,7 +141,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              {{ t('components.drilldownDetails.distributionByType', 'Distribution by Type').value }}
+              {{ t('components.drilldownDetails.distributionByType').value }}
             </v-card-title>
             <v-card-text>
               <PieChart
@@ -160,7 +160,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              {{ t('components.drilldownDetails.distributionByUnit', 'Distribution by Unit').value }}
+              {{ t('components.drilldownDetails.distributionByUnit').value }}
             </v-card-title>
             <v-card-text>
               <PieChart
@@ -183,7 +183,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              {{ t('components.drilldownDetails.distributionByValue', 'Distribution by Value').value }}
+              {{ t('components.drilldownDetails.distributionByValue').value }}
             </v-card-title>
             <v-card-text>
               <PieChart
@@ -202,7 +202,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              {{ t('components.drilldownDetails.distributionByOperator', 'Distribution by Operator').value }}
+              {{ t('components.drilldownDetails.distributionByOperator').value }}
             </v-card-title>
             <v-card-text>
               <PieChart
@@ -221,7 +221,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              {{ t('components.drilldownDetails.distributionByQualifier', 'Distribution by Qualifier').value }}
+              {{ t('components.drilldownDetails.distributionByQualifier').value }}
             </v-card-title>
             <v-card-text>
               <PieChart
@@ -240,7 +240,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              {{ t('dataSources.drilldown.frequencyDistribution', 'Frequency Distribution').value }}
+              {{ t('dataSources.drilldown.frequencyDistribution').value }}
             </v-card-title>
             <v-card-text>
               <BarChart
@@ -258,7 +258,7 @@
         cols="12"
       >
         <AtlasAlert severity="info">
-          {{ t('components.drilldownDetails.noDetailedData', 'No detailed data available for this concept.').value }}
+          {{ t('components.drilldownDetails.noDetailedData').value }}
         </AtlasAlert>
       </AtlasCol>
     </AtlasRow>
@@ -330,11 +330,11 @@ function formatTimeSeriesData(timeSeriesData: TimeSeriesData[]): UILineChartData
     }),
     series: [
       {
-        name: tv('dataSources.drilldown.chartFormat.prevalencePer1000People', 'Prevalence per 1000 people'),
+        name: tv('dataSources.drilldown.chartFormat.prevalencePer1000People'),
         data: timeSeriesData.map(d => d.value),
       },
     ],
-    yAxisLabel: tv('dataSources.drilldown.chartFormat.prevalencePer1000People', 'Prevalence per 1000 people'),
+    yAxisLabel: tv('dataSources.drilldown.chartFormat.prevalencePer1000People'),
   }
 }
 </script>

@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { vuetify, pristinePinia } from './_test-helpers'
 import IncidenceRateRatesTable from '@/components/incidence-rate/IncidenceRateRatesTable.vue'
+import { tr } from '../../helpers/i18n-mock'
+import { vuetify, pristinePinia } from './_test-helpers'
 
 const report = {
   summary: { targetId: 1, outcomeId: 2, totalPersons: 100, cases: 5, timeAtRisk: 36500, proportion: 0.05, rate: 0.0005 },
@@ -34,7 +35,7 @@ describe('IncidenceRateRatesTable', () => {
     })
 
     const headers = w.findAll('thead th').map(header => header.text())
-    expect(headers).toContain('Person-years')
-    expect(headers).toContain('Rate / 1,000 PY')
+    expect(headers).toContain(tr('ir.results.timeAtRiskYears'))
+    expect(headers).toContain(`${tr('ir.results.rate')} / 1,000 PY`)
   })
 })

@@ -95,15 +95,15 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const payerPlanPeriodTitle = computed(() => 'a payer plan period of')
-const addAttributeLabel = computed(() => 'Add attribute...')
-const selectConceptSetLabel = computed(() => t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value)
+const payerPlanPeriodTitle = computed(() => t('components.payerPlanPeriod.title').value)
+const addAttributeLabel = computed(() => t('components.criteria.addAttribute').value)
+const selectConceptSetLabel = computed(() => t('components.conceptAddBox.selectConceptSet').value)
 
 const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   {
     key: 'First',
-    label: 'First Payer Plan Period',
-    description: 'Limit to first payer plan period in history',
+    label: t('components.payerPlanPeriod.attributes.first.label').value,
+    description: t('components.payerPlanPeriod.attributes.first.description').value,
     init: () => {
       payerPlanPeriodData.value.First = true
     },
@@ -114,8 +114,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PeriodStartDate',
-    label: 'Period Start Date',
-    description: 'Filter by period start date',
+    label: t('criteriaAttributes.periodStartDate.label').value,
+    description: t('criteriaAttributes.periodStartDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(payerPlanPeriodData.value, 'PeriodStartDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -130,8 +130,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PeriodEndDate',
-    label: 'Period End Date',
-    description: 'Filter by period end date',
+    label: t('criteriaAttributes.periodEndDate.label').value,
+    description: t('criteriaAttributes.periodEndDate.description').value,
     kind: 'dateRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(payerPlanPeriodData.value, 'PeriodEndDate', () => ({ Value: '', Op: 'gte', Extent: undefined })) as DateRange
@@ -146,8 +146,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'UserDefinedPeriod',
-    label: 'User Defined Period',
-    description: 'Set the user-defined period range',
+    label: t('criteriaAttributes.userDefinedPeriod.label').value,
+    description: t('criteriaAttributes.userDefinedPeriod.description').value,
     kind: 'period',
     componentProps: () => ({
       modelValue: ensureObjectField(payerPlanPeriodData.value, 'UserDefinedPeriod', () => ({ StartDate: '', EndDate: '' })) as Period,
@@ -162,8 +162,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PeriodLength',
-    label: 'Period Length',
-    description: 'Filter by period length',
+    label: t('criteriaAttributes.periodLength.label').value,
+    description: t('criteriaAttributes.periodLength.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(payerPlanPeriodData.value, 'PeriodLength', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -178,8 +178,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'AgeAtStart',
-    label: 'Age at Start',
-    description: 'Filter by age at start of period',
+    label: t('criteriaAttributes.ageAtStart.label').value,
+    description: t('components.payerPlanPeriod.attributes.ageAtStart.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(payerPlanPeriodData.value, 'AgeAtStart', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -194,8 +194,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'AgeAtEnd',
-    label: 'Age at End',
-    description: 'Filter by age at end of period',
+    label: t('criteriaAttributes.ageAtEnd.label').value,
+    description: t('components.payerPlanPeriod.attributes.ageAtEnd.description').value,
     kind: 'numericRange',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(payerPlanPeriodData.value, 'AgeAtEnd', () => ({ Value: undefined, Op: 'gte', Extent: undefined })) as NumericRange
@@ -210,8 +210,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'Gender',
-    label: 'Gender',
-    description: 'Filter by patient gender',
+    label: t('criteriaAttributes.gender.label').value,
+    description: t('criteriaAttributes.gender.description').value,
     kind: 'conceptArray',
     componentProps: () => ({
       binding: {
@@ -228,8 +228,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'GenderCS',
-    label: 'Gender Concept Set',
-    description: 'Filter gender by a concept set',
+    label: t('criteriaAttributes.genderCS.label').value,
+    description: t('criteriaAttributes.genderCS.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       ensureObjectField(payerPlanPeriodData.value, 'GenderCS', () => ({ CodesetId: undefined, IsExclusion: false })) as ConceptSetSelection,
@@ -248,8 +248,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PayerConcept',
-    label: 'Payer Concept',
-    description: 'Filter by payer concept set',
+    label: t('criteriaAttributes.payerConcept.label').value,
+    description: t('criteriaAttributes.payerConcept.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       payerConceptModel as ConceptSetSelection,
@@ -268,8 +268,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PlanConcept',
-    label: 'Plan Concept',
-    description: 'Filter by plan concept set',
+    label: t('criteriaAttributes.planConcept.label').value,
+    description: t('criteriaAttributes.planConcept.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       planConceptModel as ConceptSetSelection,
@@ -288,8 +288,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'SponsorConcept',
-    label: 'Sponsor Concept',
-    description: 'Filter by sponsor concept set',
+    label: t('criteriaAttributes.sponsorConcept.label').value,
+    description: t('criteriaAttributes.sponsorConcept.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       sponsorConceptModel as ConceptSetSelection,
@@ -308,8 +308,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'StopReasonConcept',
-    label: 'Stop Reason Concept',
-    description: 'Filter by stop reason concept set',
+    label: t('criteriaAttributes.stopReasonConcept.label').value,
+    description: t('criteriaAttributes.stopReasonConcept.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       stopReasonConceptModel as ConceptSetSelection,
@@ -328,8 +328,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PayerSourceConcept',
-    label: 'Payer Source Concept',
-    description: 'Filter by payer source concept set',
+    label: t('criteriaAttributes.payerSourceConcept.label').value,
+    description: t('criteriaAttributes.payerSourceConcept.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       payerSourceConceptModel as ConceptSetSelection,
@@ -348,8 +348,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'PlanSourceConcept',
-    label: 'Plan Source Concept',
-    description: 'Filter by plan source concept set',
+    label: t('criteriaAttributes.planSourceConcept.label').value,
+    description: t('criteriaAttributes.planSourceConcept.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       planSourceConceptModel as ConceptSetSelection,
@@ -368,8 +368,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'SponsorSourceConcept',
-    label: 'Sponsor Source Concept',
-    description: 'Filter by sponsor source concept set',
+    label: t('criteriaAttributes.sponsorSourceConcept.label').value,
+    description: t('criteriaAttributes.sponsorSourceConcept.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       sponsorSourceConceptModel as ConceptSetSelection,
@@ -388,8 +388,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'StopReasonSourceConcept',
-    label: 'Stop Reason Source Concept',
-    description: 'Filter by stop reason source concept set',
+    label: t('criteriaAttributes.stopReasonSourceConcept.label').value,
+    description: t('criteriaAttributes.stopReasonSourceConcept.description').value,
     kind: 'conceptSet',
     componentProps: () => createConceptSetComponentProps(
       stopReasonSourceConceptModel as ConceptSetSelection,
@@ -408,8 +408,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'DateAdjustment',
-    label: 'Date Adjustment',
-    description: 'Adjust event dates',
+    label: t('criteriaAttributes.dateAdjustment.label').value,
+    description: t('criteriaAttributes.dateAdjustment.description').value,
     kind: 'dateAdjustment',
     componentProps: () => createSchemaFieldProps(
       ensureObjectField(payerPlanPeriodData.value, 'DateAdjustment', createDefaultDateAdjustment) as DateAdjustment
@@ -424,8 +424,8 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
   },
   {
     key: 'CorrelatedCriteria',
-    label: 'Nested Criteria',
-    description: 'Add nested criteria group',
+    label: t('criteriaAttributes.correlatedCriteria.label').value,
+    description: t('criteriaAttributes.correlatedCriteria.description').value,
     kind: 'criteriaGroup',
     componentProps: () => ({
       group: ensureObjectField(payerPlanPeriodData.value, 'CorrelatedCriteria', createDefaultCriteriaGroup) as CriteriaGroup,

@@ -15,7 +15,7 @@
         aria-hidden="true"
       >
         <div class="ir-stratify-inspector__rail-text">
-          {{ t('ir.editor.stratifyCriteria', 'Stratify criteria').value }}
+          {{ t('ir.editor.stratifyCriteria').value }}
         </div>
       </aside>
 
@@ -23,10 +23,10 @@
         <header class="ir-stratify-inspector__header">
           <div>
             <p class="ir-stratify-inspector__eyebrow">
-              {{ t('navigation.incidenceRates', 'Incidence rate').value }}
+              {{ t('navigation.incidenceRates').value }}
             </p>
             <h3 class="ir-stratify-inspector__title">
-              {{ draftRule.name || t('incidenceRate.untitled', 'Untitled rule').value }}
+              {{ draftRule.name || t('incidenceRate.untitled').value }}
             </h3>
           </div>
 
@@ -37,7 +37,7 @@
               data-testid="ir-strata-cancel"
               @click="requestCancel"
             >
-              {{ t('common.cancel', 'Cancel').value }}
+              {{ t('common.cancel').value }}
             </AtlasButton>
             <AtlasButton
               variant="primary"
@@ -45,7 +45,7 @@
               data-testid="ir-strata-apply"
               @click="apply"
             >
-              {{ t('common.apply', 'Apply').value }}
+              {{ t('common.apply').value }}
             </AtlasButton>
           </div>
         </header>
@@ -62,18 +62,18 @@
 
     <AtlasDialog
       v-model="discardConfirmationOpen"
-      :title="t('common.discardChanges', 'Discard changes?').value"
-      :close-label="t('common.cancel', 'Cancel').value"
+      :title="t('common.discardChanges').value"
+      :close-label="t('common.cancel').value"
       max-width="420"
     >
-      <p>{{ t('incidenceRate.discardStratifyChanges', 'Your changes to this stratify rule will be lost.').value }}</p>
+      <p>{{ t('incidenceRate.discardStratifyChanges').value }}</p>
       <template #actions>
         <AtlasButton
           variant="secondary"
           data-testid="ir-strata-keep-editing"
           @click="discardConfirmationOpen = false"
         >
-          {{ t('common.keepEditing', 'Keep editing').value }}
+          {{ t('common.keepEditing').value }}
         </AtlasButton>
         <AtlasButton
           variant="primary"
@@ -81,7 +81,7 @@
           data-testid="ir-strata-discard"
           @click="discard"
         >
-          {{ t('common.discard', 'Discard').value }}
+          {{ t('common.discard').value }}
         </AtlasButton>
       </template>
     </AtlasDialog>

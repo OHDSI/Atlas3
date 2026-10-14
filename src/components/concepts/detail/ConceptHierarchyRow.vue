@@ -60,8 +60,8 @@ const { t } = useI18n()
             class="expand-toggle"
             :data-testid="`hierarchy-expand-${row.conceptId}`"
             :aria-label="expanded
-              ? t('components.conceptHierarchyDialog.collapseConcept', 'Collapse {name}', { name: row.conceptName }).value
-              : t('components.conceptHierarchyDialog.expandConcept', 'Expand {name}', { name: row.conceptName }).value"
+              ? t('components.conceptHierarchyDialog.collapseConcept', { name: row.conceptName }).value
+              : t('components.conceptHierarchyDialog.expandConcept', { name: row.conceptName }).value"
             :aria-expanded="expanded"
             @click="emit('toggle-expand')"
           >
@@ -95,24 +95,24 @@ const { t } = useI18n()
           <span
             v-if="showDistance && distance !== undefined"
             class="dist"
-          >{{ t('components.conceptHierarchyDialog.descendantDistance', 'distance {distance}', { distance }).value }}</span>
+          >{{ t('components.conceptHierarchyDialog.descendantDistance', { distance }).value }}</span>
           <AtlasChip
             v-if="inSet"
             size="sm"
           >
-            {{ t('components.conceptHierarchyDialog.inSet', 'in set').value }}
+            {{ t('components.conceptHierarchyDialog.inSet').value }}
           </AtlasChip>
           <AtlasChip
             v-if="isExcluded"
             size="sm"
           >
-            {{ t('components.conceptHierarchyDialog.excluded', 'excluded').value }}
+            {{ t('components.conceptHierarchyDialog.excluded').value }}
           </AtlasChip>
           <AtlasChip
             v-if="includeDescendants"
             size="sm"
           >
-            {{ t('components.conceptHierarchyDialog.withDescendants', '+desc').value }}
+            {{ t('components.conceptHierarchyDialog.withDescendants').value }}
           </AtlasChip>
           <button
             v-if="failed"
@@ -121,7 +121,7 @@ const { t } = useI18n()
             :data-testid="`hierarchy-retry-${row.conceptId}`"
             @click="emit('toggle-expand')"
           >
-            {{ t('components.conceptHierarchyDialog.expandFailed', 'Could not load children').value }}
+            {{ t('components.conceptHierarchyDialog.expandFailed').value }}
           </button>
         </span>
       </div>

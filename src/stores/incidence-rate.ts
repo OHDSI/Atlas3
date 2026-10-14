@@ -24,6 +24,7 @@ import {
 import type { Tag } from '@/models/webapi.types'
 import { getIncidenceRateVersion } from '@/services/incidence-rate-versions.service'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
 
 export interface IncidenceRateValidationError {
   field: string
@@ -60,6 +61,7 @@ function emptyIR(): IncidenceRate {
 }
 
 export const useIncidenceRateStore = defineStore('incidence-rate', () => {
+  const { tv } = useI18n()
   const currentIR = ref<IncidenceRate | null>(null)
   const isDirty = ref(false)
   const lastAutoSave = ref<Date | null>(null)
@@ -355,24 +357,24 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
       return
     }
     if (!ir.name || ir.name.trim() === '') {
-      errors.push({ field: 'name', message: 'Name is required', severity: 'error' })
+      errors.push({ field: 'name', message: tv('commonErrors.nameRequired'), severity: 'error' })
     }
     if (!ir.expression?.timeAtRisk) {
-      errors.push({ field: 'expression', message: 'Analysis design is incomplete', severity: 'error' })
+      errors.push({ field: 'expression', message: tv('incidenceRate.validation.designIncomplete'), severity: 'error' })
       validationErrors.value = errors
       return
     }
     if (ir.expression.targetIds.length === 0) {
       errors.push({
         field: 'targetIds',
-        message: 'At least one target cohort is required',
+        message: tv('incidenceRate.validation.targetRequired'),
         severity: 'error',
       })
     }
     if (ir.expression.outcomeIds.length === 0) {
       errors.push({
         field: 'outcomeIds',
-        message: 'At least one outcome cohort is required',
+        message: tv('incidenceRate.validation.outcomeRequired'),
         severity: 'error',
       })
     }
@@ -380,7 +382,9 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     if (tar.start.DateField === tar.end.DateField && tar.end.Offset <= tar.start.Offset) {
       errors.push({
         field: 'timeAtRisk',
-        message: 'Time-at-risk end must be after start when both reference the same date',
+        message: tv(
+          'incidenceRate.validation.timeAtRiskOrder'
+        ),
         severity: 'error',
       })
     }
@@ -388,7 +392,7 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
       if (ir.expression.studyWindow.startDate && ir.expression.studyWindow.endDate && ir.expression.studyWindow.startDate >= ir.expression.studyWindow.endDate) {
         errors.push({
           field: 'studyWindow',
-          message: 'Study window start must be before end',
+          message: tv('incidenceRate.validation.studyWindowOrder'),
           severity: 'error',
         })
       }

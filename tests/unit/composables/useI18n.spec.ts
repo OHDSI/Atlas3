@@ -24,6 +24,14 @@ describe('useI18n', () => {
     vi.clearAllMocks()
   })
 
+  it('resolves bundled English before the locale store is initialized', () => {
+    const { t, tv } = useI18n()
+
+    expect(useLocaleStore().initialized).toBe(false)
+    expect(tv('common.save')).toBe('Save')
+    expect(t('common.cancel').value).toBe('Cancel')
+  })
+
   describe('t (reactive translation)', () => {
     it('should return translation for key', () => {
       const localeStore = useLocaleStore()

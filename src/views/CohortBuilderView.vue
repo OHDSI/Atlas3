@@ -10,7 +10,7 @@
         type="text"
         class="cohort-builder-view__title-input"
         :placeholder="placeholder"
-        :aria-label="t('columns.name', 'Cohort name').value"
+        :aria-label="t('cohortDefinitions.cohortName').value"
         @input="onTitleInput"
       >
     </template>
@@ -21,7 +21,7 @@
         type="text"
         class="cohort-builder-view__subtitle-input"
         :placeholder="subtitlePlaceholder"
-        :aria-label="t('columns.description', 'Description').value"
+        :aria-label="t('columns.description').value"
         @input="onSubtitleInput"
       >
     </template>
@@ -119,19 +119,16 @@ const builderRef = ref<InstanceType<typeof CohortBuilder> | null>(null)
 
 const eyebrow = computed(() => {
   if (props.id) {
-    return `${t('common.cohortDefinition', 'Cohort definition').value} · #${props.id}`
+    return `${t('common.cohortDefinition').value} · #${props.id}`
   }
-  return t('common.cohortDefinition', 'Cohort definition').value
+  return t('common.cohortDefinition').value
 })
 
-const placeholder = computed(() => t('cohortDefinitions.newDefinition', 'New cohort').value)
+const placeholder = computed(() => t('cohortDefinitions.newDefinition').value)
 
 const subtitlePlaceholder = computed(
   () =>
-    t(
-      'cohortDefinitions.descriptionPlaceholder',
-      'Add a description (optional) — purpose, scope, references…'
-    ).value
+    t('cohortDefinitions.descriptionPlaceholder').value
 )
 
 function onTitleInput(event: Event) {

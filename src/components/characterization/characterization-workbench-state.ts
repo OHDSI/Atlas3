@@ -91,13 +91,13 @@ export function resolveHistorySourceName(input: {
 export function resolveRunDisabledReason(input: {
   characterizationId: number | null
   isDirty: boolean
-  translate: (key: string, fallback: string) => string
+  translate: (key: string) => string
 }): string {
   if (input.characterizationId == null) {
-    return input.translate('characterizations.editor.executions.runDisabledNoId', 'Save the characterization before running.')
+    return input.translate('characterizations.editor.executions.runDisabledNoId')
   }
   if (input.isDirty) {
-    return input.translate('const.disabledReason.dirty', 'Save your changes before running.')
+    return input.translate('components.generation.unsavedChanges')
   }
   return ''
 }

@@ -2,7 +2,7 @@
   <AtlasDialog
     v-model="showDialog"
     eyebrow="INFO"
-    :title="t('licenseAgreement.title', 'License Agreement').value"
+    :title="t('licenseAgreement.title').value"
     max-width="900"
     :persistent="true"
     @close="showDialog = false"
@@ -10,10 +10,7 @@
     <div class="pt-4">
       <p class="text-body-1 mb-4">
         {{
-          t(
-            'licenseAgreement.description',
-            'In order to use the SNOMED International SNOMED CT Browser and HemOnc, please accept the following license agreement:'
-          )
+          t('licenseAgreement.description')
         }}
       </p>
 
@@ -235,12 +232,12 @@
         variant="ghost"
         @click="handleReject"
       >
-        {{ t('licenseAgreement.reject', 'Reject') }}
+        {{ t('licenseAgreement.reject') }}
       </AtlasButton>
       <AtlasButton
         @click="handleAccept"
       >
-        {{ t('licenseAgreement.accept', 'Accept') }}
+        {{ t('licenseAgreement.accept') }}
       </AtlasButton>
     </template>
   </AtlasDialog>

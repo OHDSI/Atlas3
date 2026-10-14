@@ -5,16 +5,13 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        {{ t('trexsql.cacheTitle', 'Patient Cache') }}
+        {{ t('trexsql.cacheTitle') }}
       </v-card-title>
 
       <v-card-text>
         <p class="text-body-1 mb-4">
           {{
-            t(
-              'trexsql.cacheDescription',
-              'Build and manage patient caches for fast cohort counting. Each data source can have its own cache.'
-            )
+            t('trexsql.cacheDescription')
           }}
         </p>
 
@@ -26,7 +23,7 @@
             indeterminate
             color="primary"
           />
-          <span class="ml-3">{{ t('common.loading', 'Loading...') }}</span>
+          <span class="ml-3">{{ t('common.loading') }}</span>
         </div>
 
         <AtlasList
@@ -72,7 +69,7 @@
                   variant="tonal"
                   data-testid="cache-row-orphan"
                 >
-                  {{ t('trexsql.cacheFileOrphaned', 'No dataset') }}
+                  {{ t('trexsql.cacheFileOrphaned') }}
                 </AtlasChip>
 
                 <template v-if="row.cacheStatus?.status === 'ready' || row.cacheStatus?.status === 'stale'">
@@ -95,14 +92,14 @@
                   v-if="row.cacheStatus?.lastBuiltAt"
                   class="text-caption text-grey"
                 >
-                  {{ t('trexsql.built', 'Built') }}:
+                  {{ t('trexsql.built') }}:
                   {{ formatDate(row.cacheStatus.lastBuiltAt) }}
                 </span>
                 <span
                   v-else-if="row.file?.lastModified"
                   class="text-caption text-grey"
                 >
-                  {{ t('trexsql.built', 'Built') }}:
+                  {{ t('trexsql.built') }}:
                   {{ formatDate(new Date(row.file.lastModified).toISOString()) }}
                 </span>
 
@@ -128,7 +125,7 @@
                     color="info"
                   />
                   <span class="ml-2 text-body-2 text-info">
-                    {{ t('trexsql.building', 'Building...') }}
+                    {{ t('trexsql.building') }}
                   </span>
                 </div>
 
@@ -157,7 +154,7 @@
                     :data-testid="`cache-delete-${row.databaseCode}`"
                     @click="confirming = row"
                   >
-                    {{ t('common.delete', 'Delete') }}
+                    {{ t('common.delete') }}
                   </AtlasButton>
                 </template>
               </div>
@@ -166,7 +163,7 @@
 
           <AtlasListItem v-if="cacheRows.length === 0">
             <v-list-item-title class="text-grey">
-              {{ t('trexsql.noDataSources', 'No data sources available') }}
+              {{ t('trexsql.noDataSources') }}
             </v-list-item-title>
           </AtlasListItem>
         </AtlasList>
@@ -175,21 +172,15 @@
 
     <AtlasDialog
       :model-value="confirming !== null"
-      :title="t('trexsql.cacheFileDeleteTitle', 'Delete cache?').value"
+      :title="t('trexsql.cacheFileDeleteTitle').value"
       max-width="520"
       @update:model-value="v => { if (!v) confirming = null }"
     >
       <p v-if="confirming">
         {{
           confirming.hasSource
-            ? t(
-              'trexsql.cacheFileDeleteActive',
-              'This cache is in use by a data source. Cohort counts will be slow until it is rebuilt.'
-            )
-            : t(
-              'trexsql.cacheFileDeleteOrphan',
-              'This cache has no data source. Deleting it reclaims the disk space.'
-            )
+            ? t('trexsql.cacheFileDeleteActive')
+            : t('trexsql.cacheFileDeleteOrphan')
         }}
       </p>
 
@@ -199,7 +190,7 @@
           data-testid="cache-delete-cancel"
           @click="confirming = null"
         >
-          {{ t('common.cancel', 'Cancel') }}
+          {{ t('common.cancel') }}
         </AtlasButton>
         <AtlasButton
           variant="primary"
@@ -207,7 +198,7 @@
           data-testid="cache-delete-confirm"
           @click="handleDelete"
         >
-          {{ t('common.delete', 'Delete') }}
+          {{ t('common.delete') }}
         </AtlasButton>
       </template>
     </AtlasDialog>
@@ -349,7 +340,7 @@ async function loadCaches(): Promise<void> {
     rows.value = [...sourceRows, ...orphanRows]
   } catch (error) {
     logger.error('TrexSQLCacheSection', 'Failed to load caches', error)
-    showNotification(tv('components.config.trexsql.loadError', 'Failed to load data sources'), 'error')
+    showNotification(tv('components.config.trexsql.loadError'), 'error')
   } finally {
     isLoading.value = false
   }
@@ -362,8 +353,8 @@ function rowSizeBytes(row: CacheRow): number | null {
 function updateLabel(row: CacheRow): string {
   const status = row.cacheStatus?.status
   return status === 'ready' || status === 'stale'
-    ? t('trexsql.update', 'Update').value
-    : t('trexsql.build', 'Build Cache').value
+    ? t('trexsql.update').value
+    : t('trexsql.build').value
 }
 
 function getCdmSchemaName(sourceKey: string): string | undefined {
@@ -393,7 +384,7 @@ async function handleBuildCache(sourceKey: string): Promise<void> {
     }
 
     showNotification(
-      response.message || tv('components.config.trexsql.buildStarted', 'Cache build started'),
+      response.message || tv('components.config.trexsql.buildStarted'),
       'success'
     )
 
@@ -402,7 +393,7 @@ async function handleBuildCache(sourceKey: string): Promise<void> {
     const errorMessage =
       error instanceof Error
         ? error.message
-        : tv('components.config.trexsql.buildStartError', 'Failed to start cache build')
+        : tv('components.config.trexsql.buildStartError')
     showNotification(errorMessage, 'error')
     buildingSource.value = null
   }
@@ -418,12 +409,12 @@ async function handleDelete(): Promise<void> {
   try {
     await deleteCacheFile(row.databaseCode)
     await loadCaches()
-    showNotification(tv('components.config.trexsql.deleteComplete', 'Cache deleted'), 'success')
+    showNotification(tv('components.config.trexsql.deleteComplete'), 'success')
   } catch (error) {
     const errorMessage =
       error instanceof Error
         ? error.message
-        : tv('components.config.trexsql.deleteFailed', 'Failed to delete cache')
+        : tv('components.config.trexsql.deleteFailed')
     showNotification(errorMessage, 'error')
   } finally {
     deleting.value = null
@@ -451,12 +442,12 @@ async function pollCacheStatus(sourceKey: string): Promise<void> {
 
         if (status.status === 'ready') {
           showNotification(
-            tv('components.config.trexsql.buildComplete', 'Cache build completed successfully'),
+            tv('components.config.trexsql.buildComplete'),
             'success'
           )
         } else if (status.status === 'error') {
           showNotification(
-            status.errorMessage || tv('components.config.trexsql.buildFailed', 'Cache build failed'),
+            status.errorMessage || tv('components.config.trexsql.buildFailed'),
             'error'
           )
         }
@@ -516,16 +507,16 @@ function getStatusIcon(row: CacheRow): string {
 function getStatusLabel(row: CacheRow): string {
   switch (effectiveStatus(row)) {
     case 'ready':
-      return t('trexsql.statusReady', 'Ready').value
+      return t('trexsql.statusReady').value
     case 'building':
-      return t('trexsql.statusBuilding', 'Building').value
+      return t('trexsql.statusBuilding').value
     case 'stale':
-      return t('trexsql.statusStale', 'Stale').value
+      return t('trexsql.statusStale').value
     case 'error':
-      return t('trexsql.statusError', 'Error').value
+      return t('trexsql.statusError').value
     case 'not_built':
     default:
-      return t('trexsql.statusNotBuilt', 'Not Built').value
+      return t('trexsql.statusNotBuilt').value
   }
 }
 

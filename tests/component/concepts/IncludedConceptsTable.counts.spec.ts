@@ -8,10 +8,12 @@ import IncludedConceptsTable from '@/components/concepts/IncludedConceptsTable.v
 import { useWebAPIStore } from '@/stores/webapi'
 import { getConceptRecordCounts } from '@/services/concept-search.service'
 import type { Concept } from '@/models/concept-set.types'
+import { tr } from '../../helpers/i18n-mock'
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({ t: (_k: string, fallback?: string) => ({ value: fallback ?? _k }) }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 vi.mock('@/services/concept-search.service', () => ({
   getConceptRecordCounts: vi.fn(),
@@ -110,9 +112,9 @@ describe('IncludedConceptsTable type chips and selection', () => {
       concept(3, { standardConcept: null }),
     ]).text()
 
-    expect(text).toContain('Standard')
-    expect(text).toContain('Classification')
-    expect(text).toContain('Non-Std')
+    expect(text).toContain(tr('search.standard'))
+    expect(text).toContain(tr('search.classification'))
+    expect(text).toContain(tr('search.nonStandard'))
   })
 
   it('unchecks a row and clears select-all', async () => {

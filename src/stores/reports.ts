@@ -68,8 +68,10 @@ import {
   mapEntropyReport,
   mapTornadoReport,
 } from '@/services/report-mapper'
+import { useI18n } from '@/composables/useI18n'
 
 export const useReportsStore = defineStore('reports', () => {
+  const { tv } = useI18n()
   // Current report selection
   const currentReportType = ref<ReportType | null>(null)
   const currentSourceKey = ref<string | null>(null)
@@ -359,8 +361,12 @@ export const useReportsStore = defineStore('reports', () => {
         return
       }
 
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-      error.value = `Failed to fetch ${reportType} report: ${errorMessage}`
+      const errorMessage =
+        err instanceof Error ? err.message : tv('commonErrors.unknown')
+      error.value = tv(
+        'dataSources.reportFetchFailed',
+        { reportType, detail: errorMessage }
+      )
       logger.error('ReportsStore', 'Error fetching report', err)
     } finally {
       // Only clear loading if this was the current request

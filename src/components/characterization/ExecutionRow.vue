@@ -49,7 +49,7 @@
         :data-testid="`execution-row-cancel-${execution.id}`"
         @click="onCancel"
       >
-        {{ t('common.cancel', 'Cancel') }}
+        {{ t('common.cancel') }}
       </AtlasButton>
       <AtlasButton
         v-if="isCompleted"
@@ -59,7 +59,7 @@
         :data-testid="`execution-row-results-${execution.id}`"
         @click="onViewResults"
       >
-        {{ t('cohortDefinitions.cohortDefinitionManager.panels.viewReports', 'View results') }}
+        {{ t('cohortDefinitions.cohortDefinitionManager.panels.viewReports') }}
       </AtlasButton>
     </div>
   </div>

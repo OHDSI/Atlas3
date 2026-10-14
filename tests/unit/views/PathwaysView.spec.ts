@@ -12,18 +12,17 @@ import PathwaysView from '@/views/PathwaysView.vue'
 import { usePathwayStore } from '@/stores/pathway'
 import type { Pathway } from '@/models/pathway.types'
 import { ApiError } from '@/services/api-error'
+import { tr } from '../../helpers/i18n-mock'
 
 const mockPush = vi.fn()
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: mockPush }),
 }))
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (_key: string, fallback: string) => ref(fallback),
-    tv: (_key: string, fallback: string) => fallback,
-  }),
-}))
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../helpers/i18n-mock')
+  return mockUseI18n
+})
 
 vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
@@ -134,10 +133,10 @@ describe('PathwaysView', () => {
       await flushPromises()
 
       const headers = wrapper.findAll('[data-testid="pathways-table"] thead th').map(h => h.text())
-      expect(headers).toContain('ID')
-      expect(headers).toContain('Created')
-      expect(headers).toContain('Updated')
-      expect(headers).not.toContain('Modified')
+      expect(headers).toContain(tr('columns.id'))
+      expect(headers).toContain(tr('columns.created'))
+      expect(headers).toContain(tr('columns.updated'))
+      expect(headers).not.toContain(tr('columns.modified'))
 
       const row = wrapper.find('[data-testid="pathways-table-row-name"]').element.closest('tr')
       expect(row?.textContent).toContain('42')
@@ -262,13 +261,13 @@ describe('PathwaysView', () => {
       wrapper = mountView()
       await flushPromises()
 
-      const copyButton = wrapper.find('button[aria-label="Copy"]')
+      const copyButton = wrapper.find(`button[aria-label="${tr('common.copy')}"]`)
       await copyButton.trigger('click')
       await flushPromises()
 
       expect(copyPathway).toHaveBeenCalledWith(1)
       expect(mockPush).toHaveBeenCalledWith('/pathways/99')
-      expect(wrapper.vm.feedback).toEqual({ message: 'Pathway copied', color: 'success' })
+      expect(wrapper.vm.feedback).toEqual({ message: tr('views.pathways.copied'), color: 'success' })
     })
 
     it('shows an error and logs when the copy fails', async () => {
@@ -282,7 +281,7 @@ describe('PathwaysView', () => {
 
       await wrapper.vm.handleCopy(mkPathway(1))
 
-      expect(wrapper.vm.feedback).toEqual({ message: 'Copy failed', color: 'error' })
+      expect(wrapper.vm.feedback).toEqual({ message: tr('commonErrors.copyFailed'), color: 'error' })
       expect(mockPush).not.toHaveBeenCalled()
     })
 
@@ -330,7 +329,7 @@ describe('PathwaysView', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
-      const cancelButton = buttons.find(b => b.text().includes('Cancel'))
+      const cancelButton = buttons.find(b => b.text().includes(tr('common.cancel')))
       await cancelButton?.trigger('click')
 
       expect(wrapper.vm.showDelete).toBe(false)
@@ -348,7 +347,7 @@ describe('PathwaysView', () => {
 
       expect(deletePathway).toHaveBeenCalledWith(5)
       expect(listPathways).toHaveBeenCalledTimes(2)
-      expect(wrapper.vm.feedback).toEqual({ message: 'Pathway deleted', color: 'success' })
+      expect(wrapper.vm.feedback).toEqual({ message: tr('views.pathways.deleted'), color: 'success' })
       expect(wrapper.vm.showDelete).toBe(false)
       expect(wrapper.vm.deleteTarget).toBeNull()
     })
@@ -380,7 +379,7 @@ describe('PathwaysView', () => {
   describe('Feedback Snackbar', () => {
     it('clears feedback when the snackbar closes', async () => {
       wrapper = mountView()
-      wrapper.vm.feedback = { message: 'Pathway deleted', color: 'success' }
+      wrapper.vm.feedback = { message: tr('views.pathways.deleted'), color: 'success' }
       await wrapper.vm.$nextTick()
 
       const snackbar = wrapper.findComponent({ name: 'AtlasSnackbar' })
@@ -391,7 +390,7 @@ describe('PathwaysView', () => {
 
     it('clears feedback when the snackbar emits an update event', async () => {
       wrapper = mountView()
-      wrapper.vm.feedback = { message: 'Pathway deleted', color: 'success' }
+      wrapper.vm.feedback = { message: tr('views.pathways.deleted'), color: 'success' }
       await wrapper.vm.$nextTick()
 
       const snackbar = wrapper.findComponent({ name: 'AtlasSnackbar' })
@@ -414,7 +413,7 @@ describe('PathwaysView', () => {
 
     it('maps snackbar error severity to danger', () => {
       wrapper = mountView()
-      wrapper.vm.feedback = { message: 'Copy failed', color: 'error' }
+      wrapper.vm.feedback = { message: tr('commonErrors.copyFailed'), color: 'error' }
 
       expect(wrapper.vm.feedbackSeverity).toBe('danger')
     })
@@ -446,14 +445,14 @@ describe('PathwaysView', () => {
       expect(wrapper.text()).toContain('1 / 2')
 
       const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
-      const nextButton = buttons.find(b => b.text().includes('Next'))
+      const nextButton = buttons.find(b => b.text().includes(tr('configuration.userImport.wizard.buttons.next')))
       await nextButton?.trigger('click')
       await wrapper.vm.$nextTick()
 
       expect(wrapper.vm.page).toBe(1)
       expect(wrapper.text()).toContain('2 / 2')
 
-      const prevButton = wrapper.findAllComponents({ name: 'AtlasButton' }).find(b => b.text().includes('Previous'))
+      const prevButton = wrapper.findAllComponents({ name: 'AtlasButton' }).find(b => b.text().includes(tr('datatable.language.paginate.previous')))
       await prevButton?.trigger('click')
       expect(wrapper.vm.page).toBe(0)
     })

@@ -7,7 +7,7 @@
       <AtlasTextField
         v-model="searchInput"
         :placeholder="
-          t('search.placeholder', 'Search SNOMED, ICD, RxNorm, LOINC… (Enter to search)').value
+          t('search.placeholder').value
         "
         prepend-icon="mdi-magnify"
         clearable
@@ -24,10 +24,7 @@
       <p class="concept-search__hint">
         <span v-if="validationError">{{ validationError }}</span>
         <span v-else>{{
-          t(
-            'search.vocabulariesInfo',
-            'Type at least 3 characters; press Enter to search across SNOMED, ICD, RxNorm, LOINC, and other vocabularies.'
-          )
+          t('search.vocabulariesInfo')
         }}</span>
       </p>
     </div>
@@ -146,7 +143,7 @@ const selectedSourceKey = computed(
   () => webapiStore.getValidVocabularySource() || getSourceKey() || '',
 )
 
-const viewCountsForLabel = t('search.viewCountMessage', 'View record count for:')
+const viewCountsForLabel = t('search.viewCountMessage')
 
 // Only sources that can actually report counts. Offering a vocabulary-only
 // source here would just blank the count columns.
@@ -193,7 +190,7 @@ const isSearchValid = computed(() => {
 const validationError = computed(() => {
   const trimmed = searchInput.value.trim()
   if (trimmed.length > 0 && trimmed.length < 3) {
-    return 'Please enter at least 3 characters'
+    return t('search.minLengthHint', { min: 3 }).value
   }
   return undefined
 })
@@ -258,7 +255,7 @@ function onAddConcept(concept: Concept) {
 
   feedback.value = {
     open: true,
-    text: t('search.addedToSet', 'Added “{concept}” → {set}', {
+    text: t('search.addedToSet', {
       concept: concept.conceptName,
       set: currentSetName(),
     }).value,
@@ -284,7 +281,7 @@ function onAddSelected() {
 
   feedback.value = {
     open: true,
-    text: t('search.addedCountToSet', 'Added {count} concepts → {set}', {
+    text: t('search.addedCountToSet', {
       count: added,
       set: currentSetName(),
     }).value,
@@ -294,7 +291,7 @@ function onAddSelected() {
 function currentSetName(): string {
   return (
     conceptSetsStore.currentSet?.name ||
-    t('components.conceptSetBuilder.newConceptSet', 'New concept set').value
+    t('components.conceptSetBuilder.newConceptSet').value
   )
 }
 

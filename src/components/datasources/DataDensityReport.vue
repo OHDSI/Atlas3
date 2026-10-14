@@ -2,7 +2,7 @@
   <div class="data-density-report">
     <AtlasRow>
       <AtlasCol cols="12">
-        <ChartSection :title="t('dataSources.datadensityReport.totalRows', 'Total Rows').value">
+        <ChartSection :title="t('dataSources.datadensityReport.totalRows').value">
           <MultiLineChart
             :data="data.totalRecords"
             :height="350"
@@ -14,7 +14,7 @@
     <AtlasRow>
       <AtlasCol cols="12">
         <ChartSection
-          :title="t('dataSources.datadensityReport.recordsPerPerson', 'Records Per Person').value"
+          :title="t('dataSources.datadensityReport.recordsPerPerson').value"
         >
           <MultiLineChart
             :data="data.recordsPerPerson"
@@ -27,7 +27,7 @@
     <AtlasRow v-if="data.conceptsPerPerson && data.conceptsPerPerson.length > 0">
       <AtlasCol cols="12">
         <ChartSection
-          :title="t('dataSources.datadensityReport.conceptsPerPerson', 'Concepts per Person').value"
+          :title="t('dataSources.datadensityReport.conceptsPerPerson').value"
         >
           <BoxPlotChart
             :data="data.conceptsPerPerson"

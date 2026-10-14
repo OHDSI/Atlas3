@@ -17,17 +17,14 @@
       data-testid="recommend-not-available"
     >
       {{
-        t(
-          'cs.conceptSet.recommend.notAvailable',
-          'Recommendations are not available. The PHOEBE 2.0 vocabulary tables are required to generate recommendations.'
-        )
+        t('cs.conceptSet.recommend.notAvailable')
       }}
       <a
         :href="PHOEBE_SETUP_URL"
         target="_blank"
         rel="noopener noreferrer"
         data-testid="recommend-setup-link"
-      >{{ t('cs.conceptSet.recommend.setupLink', 'How to install the PHOEBE 2.0 tables') }}</a>
+      >{{ t('cs.conceptSet.recommend.setupLink') }}</a>
     </AtlasAlert>
 
     <AtlasAlert
@@ -37,10 +34,7 @@
       data-testid="recommend-no-seed"
     >
       {{
-        t(
-          'cs.conceptSet.recommend.noSeed',
-          'Add concepts to the set first — recommendations are based on what is already included.'
-        )
+        t('cs.conceptSet.recommend.noSeed')
       }}
     </AtlasAlert>
 
@@ -56,7 +50,7 @@
           :disabled="store.loadingRecommended"
           @click="onRefresh"
         >
-          {{ t('common.refresh', 'Refresh') }}
+          {{ t('common.refresh') }}
         </AtlasButton>
 
         <span
@@ -64,7 +58,7 @@
           class="text-body-2 text-medium-emphasis"
         >
           {{ store.recommendedConcepts.length }}
-          {{ t('cs.conceptSet.recommend.recommendations', 'recommendations') }}
+          {{ t('cs.conceptSet.recommend.recommendations') }}
         </span>
       </div>
 
@@ -90,7 +84,7 @@
         class="mr-3"
       />
       <span>{{
-        t('cs.conceptSet.loadingRecommendedConcepts', 'Loading Recommended Concepts')
+        t('cs.conceptSet.loadingRecommendedConcepts')
       }}</span>
     </div>
 

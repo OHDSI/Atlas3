@@ -5,12 +5,12 @@
     data-testid="configure-inspector"
   >
     <header class="configure-inspector__header">
-      <span class="text-eyebrow">{{ t('cc.viewEdit.workbench.configurator.title', 'Configure Baseline').value }}</span>
+      <span class="text-eyebrow">{{ t('cc.viewEdit.workbench.configurator.title').value }}</span>
       <AtlasIconButton
         icon="mdi-close"
         size="sm"
         variant="text"
-        v-bind="{ ariaLabel: tv('common.close', 'Close') }"
+        v-bind="{ ariaLabel: tv('common.close') }"
         data-testid="configure-close"
         @click="$emit('close')"
       />
@@ -18,18 +18,18 @@
 
     <section class="configure-inspector__section">
       <div class="configure-inspector__sec-label">
-        {{ t('cc.viewEdit.workbench.configurator.rows', 'Rows').value }}
+        {{ t('cc.viewEdit.workbench.configurator.rows').value }}
       </div>
       <AtlasSwitch
         :model-value="config.groupByAnalysis"
-        :label="t('cc.viewEdit.workbench.configurator.groupByAnalysis', 'Group by analysis').value"
+        :label="t('cc.viewEdit.workbench.configurator.groupByAnalysis').value"
         hide-details
         data-testid="configure-group-by-analysis"
         @update:model-value="(v: boolean | null) => patch({ groupByAnalysis: !!v })"
       />
       <AtlasSwitch
         :model-value="config.pinTopK.enabled"
-        :label="t('cc.viewEdit.workbench.configurator.pinTopK', 'Pin top-K by Std Diff').value"
+        :label="t('cc.viewEdit.workbench.configurator.pinTopK').value"
         :disabled="cohortCount !== 2"
         hide-details
         data-testid="configure-pin-topk"
@@ -39,7 +39,7 @@
         v-if="config.pinTopK.enabled"
         :model-value="config.pinTopK.k"
         type="number"
-        :label="t('cc.viewEdit.workbench.configurator.pinTopKCount', 'K').value"
+        :label="t('cc.viewEdit.workbench.configurator.pinTopKCount').value"
         variant="outlined"
         hide-details
         :min="1"
@@ -50,12 +50,12 @@
 
     <section class="configure-inspector__section">
       <div class="configure-inspector__sec-label">
-        {{ t('cc.viewEdit.workbench.configurator.cells', 'Cells').value }}
+        {{ t('cc.viewEdit.workbench.configurator.cells').value }}
       </div>
       <AtlasSelect
         :model-value="config.binaryFormat"
         :items="binaryFormatItems"
-        :label="t('cc.viewEdit.workbench.configurator.binaryFormat', 'Binary format').value"
+        :label="t('cc.viewEdit.workbench.configurator.binaryFormat').value"
         variant="outlined"
         hide-details
         data-testid="configure-binary-format"
@@ -64,7 +64,7 @@
       <AtlasSelect
         :model-value="config.continuousFormat"
         :items="continuousFormatItems"
-        :label="t('cc.viewEdit.workbench.configurator.continuousFormat', 'Continuous format').value"
+        :label="t('cc.viewEdit.workbench.configurator.continuousFormat').value"
         variant="outlined"
         hide-details
         data-testid="configure-continuous-format"
@@ -74,25 +74,25 @@
 
     <section class="configure-inspector__section">
       <div class="configure-inspector__sec-label">
-        {{ t('cc.viewEdit.workbench.configurator.columns', 'Columns').value }}
+        {{ t('cc.viewEdit.workbench.configurator.columns').value }}
       </div>
       <AtlasSwitch
         :model-value="config.showCounts"
-        :label="t('cc.viewEdit.workbench.configurator.showCounts', 'Show counts').value"
+        :label="t('cc.viewEdit.workbench.configurator.showCounts').value"
         hide-details
         data-testid="configure-show-counts"
         @update:model-value="(v: boolean | null) => patch({ showCounts: !!v })"
       />
       <AtlasSwitch
         :model-value="config.showPercent"
-        :label="t('cc.viewEdit.workbench.configurator.showPercent', 'Show percent').value"
+        :label="t('cc.viewEdit.workbench.configurator.showPercent').value"
         hide-details
         data-testid="configure-show-percent"
         @update:model-value="(v: boolean | null) => patch({ showPercent: !!v })"
       />
       <AtlasSwitch
         :model-value="config.showStdDiff"
-        :label="t('cc.viewEdit.workbench.configurator.showStdDiff', 'Std Diff').value"
+        :label="t('cc.viewEdit.workbench.configurator.showStdDiff').value"
         :disabled="cohortCount !== 2"
         hide-details
         data-testid="configure-stddiff"
@@ -100,7 +100,7 @@
       />
       <AtlasSwitch
         :model-value="config.showStdDiffCI"
-        :label="t('cc.viewEdit.workbench.configurator.showStdDiffCI', '95% CI on Std Diff').value"
+        :label="t('cc.viewEdit.workbench.configurator.showStdDiffCI').value"
         :disabled="cohortCount !== 2 || !config.showStdDiff"
         hide-details
         data-testid="configure-stddiff-ci"
@@ -108,7 +108,7 @@
       />
       <AtlasSwitch
         :model-value="config.strataAsCols"
-        :label="t('cc.viewEdit.workbench.configurator.strataAsCols', 'Strata as columns').value"
+        :label="t('cc.viewEdit.workbench.configurator.strataAsCols').value"
         :disabled="!hasStrata"
         hide-details
         data-testid="configure-strata-as-cols"
@@ -139,15 +139,15 @@ const emit = defineEmits<{
 const { t, tv } = useI18n()
 
 const binaryFormatItems = computed(() => [
-  { title: tv('cc.viewEdit.workbench.binaryFormat.countPct', 'N (%)'), value: 'count-pct' },
-  { title: tv('cc.viewEdit.workbench.binaryFormat.pct', '%'), value: 'pct' },
-  { title: tv('cc.viewEdit.workbench.binaryFormat.count', 'N'), value: 'count' },
-  { title: tv('cc.viewEdit.workbench.binaryFormat.countOfTotal', 'N / total'), value: 'count-of-total' },
+  { title: tv('cc.viewEdit.workbench.binaryFormat.countPct'), value: 'count-pct' },
+  { title: tv('cc.viewEdit.workbench.binaryFormat.pct'), value: 'pct' },
+  { title: tv('cc.viewEdit.workbench.binaryFormat.count'), value: 'count' },
+  { title: tv('cc.viewEdit.workbench.binaryFormat.countOfTotal'), value: 'count-of-total' },
 ])
 
 const continuousFormatItems = computed(() => [
-  { title: tv('cc.viewEdit.workbench.continuousFormat.meanSd', 'mean (SD)'), value: 'mean-sd' },
-  { title: tv('cc.viewEdit.workbench.continuousFormat.medianIqr', 'median [IQR]'), value: 'median-iqr' },
+  { title: tv('cc.viewEdit.workbench.continuousFormat.meanSd'), value: 'mean-sd' },
+  { title: tv('cc.viewEdit.workbench.continuousFormat.medianIqr'), value: 'median-iqr' },
 ])
 
 function patch(partial: Partial<Table1Config>): void {

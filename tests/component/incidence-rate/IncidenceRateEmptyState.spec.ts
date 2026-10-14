@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { vuetify, pristinePinia } from './_test-helpers'
 import IncidenceRateEmptyState from '@/components/incidence-rate/IncidenceRateEmptyState.vue'
+import { tr } from '../../helpers/i18n-mock'
+import { vuetify, pristinePinia } from './_test-helpers'
 
 function mountWith(props: Record<string, unknown>) {
   return mount(IncidenceRateEmptyState, {
@@ -20,7 +21,10 @@ describe('IncidenceRateEmptyState', () => {
   it('renders the no-runs variant with a Generate CTA emitting run', async () => {
     const w = mountWith({ variant: 'no-runs' })
     expect(w.find('[data-testid="ir-empty-no-runs"]').exists()).toBe(true)
-    await w.find('[data-testid="ir-empty-cta"]').trigger('click')
+    expect(w.text()).toContain(tr('ir.workbench.noRunsTitle'))
+    const cta = w.find('[data-testid="ir-empty-cta"]')
+    expect(cta.text()).toBe(tr('components.generation.generate'))
+    await cta.trigger('click')
     expect(w.emitted('run')).toBeTruthy()
   })
 

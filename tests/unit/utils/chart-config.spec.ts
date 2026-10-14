@@ -445,6 +445,28 @@ describe('chart-config', () => {
       expect(withPath).toContain('A')
       expect(withPath).toContain('B')
     })
+
+    it('shows the tree position in the tooltip for groups and unclassified concepts', () => {
+      const formatter = (defaultTreemapOptions([{ name: 'Root', value: 1 }]).tooltip as any).formatter
+
+      const group = formatter({
+        name: 'Procedure on joint',
+        value: 50,
+        data: {},
+        treePathInfo: [{ name: '' }, { name: 'Procedure on musculoskeletal system' }, { name: 'Procedure on joint' }],
+      })
+      expect(group).toContain('Procedure on musculoskeletal system<br/>')
+      expect(group).toContain('\u00A0\u00A0\u00A0\u00A0Procedure on joint')
+
+      const unclassified = formatter({
+        name: 'CPT 99213',
+        value: 5,
+        data: { conceptPath: 'NA||NA||NA||CPT 99213' },
+        treePathInfo: [{ name: '' }, { name: 'Unclassified' }, { name: 'CPT 99213' }],
+      })
+      expect(unclassified).toContain('Unclassified<br/>')
+      expect(unclassified).not.toContain('NA')
+    })
   })
 
   describe('createResizeHandler', () => {

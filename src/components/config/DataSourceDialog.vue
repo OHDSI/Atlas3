@@ -2,7 +2,7 @@
   <AtlasDialog
     :model-value="modelValue"
     eyebrow="SETTINGS"
-    :title="isEditing ? t('configuration.tagManagement.edit').value : t('configuration.newSource').value"
+    :title="isEditing ? t('common.edit').value : t('configuration.newSource').value"
     max-width="800"
     :persistent="true"
     @close="handleClose"
