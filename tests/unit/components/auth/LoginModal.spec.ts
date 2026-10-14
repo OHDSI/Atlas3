@@ -80,6 +80,15 @@ vi.mock('@/components/ui', () => ({
   }),
 }))
 
+const routerMock = vi.hoisted(() => ({
+  currentRoute: { value: { meta: {} as Record<string, unknown> } },
+  push: vi.fn(),
+}))
+
+vi.mock('vue-router', () => ({
+  useRouter: () => routerMock,
+}))
+
 vi.mock('@/utils/logger', () => ({
   logger: {
     debug: vi.fn(),
@@ -138,6 +147,7 @@ describe('LoginModal', () => {
     setActivePinia(pinia)
     authStore = useAuthStore()
     vi.clearAllMocks()
+    routerMock.currentRoute.value = { meta: {} }
     vi.mocked(authService.fetchOAuthProviders).mockResolvedValue([credentialsProvider])
   })
 
@@ -313,6 +323,67 @@ describe('LoginModal', () => {
 
       expect(authStore.loginModalOpen).toBe(false)
       expect(wrapper.find('.login-card').exists()).toBe(false)
+    })
+  })
+
+  describe('cancelling sign-in', () => {
+    it('closes the modal from the cancel button', async () => {
+      await openModal([credentialsProvider, ajaxProvider])
+      await providerButtonAt(0).trigger('click')
+
+      await wrapper.get('[data-testid="login-cancel"]').trigger('click')
+
+      expect(authStore.loginModalOpen).toBe(false)
+      expect(wrapper.find('.login-card').exists()).toBe(false)
+      expect(routerMock.push).not.toHaveBeenCalled()
+    })
+
+    it('closes the modal on Escape', async () => {
+      await openModal([credentialsProvider])
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+      await flushPromises()
+
+      expect(authStore.loginModalOpen).toBe(false)
+    })
+
+    it('ignores Escape while the modal is closed', async () => {
+      routerMock.currentRoute.value = { meta: { requiresAuth: true } }
+      wrapper = mountComponent()
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+      await flushPromises()
+
+      expect(routerMock.push).not.toHaveBeenCalled()
+    })
+
+    it('clears a pending error when cancelled', async () => {
+      await openModal([credentialsProvider])
+      authStore.errorMessage = 'Invalid credentials'
+
+      await wrapper.get('[data-testid="login-cancel"]').trigger('click')
+
+      expect(authStore.errorMessage).toBeNull()
+    })
+
+    it('navigates home when cancelled on a protected route without a subject', async () => {
+      routerMock.currentRoute.value = { meta: { requiresAuth: true } }
+      await openModal([credentialsProvider])
+
+      await wrapper.get('[data-testid="login-cancel"]').trigger('click')
+
+      expect(routerMock.push).toHaveBeenCalledWith({ name: 'home' })
+    })
+
+    it('stays on a protected route when an anonymous subject is resolved', async () => {
+      routerMock.currentRoute.value = { meta: { requiresAuth: true } }
+      authStore.user = { login: 'anonymous' } as typeof authStore.user
+      await openModal([credentialsProvider])
+
+      await wrapper.get('[data-testid="login-cancel"]').trigger('click')
+
+      expect(authStore.loginModalOpen).toBe(false)
+      expect(routerMock.push).not.toHaveBeenCalled()
     })
   })
 })
