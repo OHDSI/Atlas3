@@ -449,6 +449,19 @@ describe('services/characterization.service', () => {
       }
     })
 
+    it('normalizes a stopped execution to canceled', async () => {
+      ok([{ id: 337, status: 'STOPPED', sourceKey: 'sample', exitMessage: 'Canceled by user request' }])
+
+      const result = await listCharacterizationExecutions(1)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toMatchObject([{ id: 337, status: 'CANCELED', sourceKey: 'sample' }])
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
+    })
+
     it('reports a parse failure as ApiResult', async () => {
       ok([{ id: 1, status: 'BOGUS_STATUS', sourceKey: 'CDM_A' }])
 

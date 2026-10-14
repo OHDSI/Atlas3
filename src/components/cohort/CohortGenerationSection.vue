@@ -65,11 +65,11 @@
       :executions="runTableExecutions"
       :loading="false"
       :show-patient-count="true"
-      :hide-cancel="true"
       :run-disabled="generateBlocked"
       :run-disabled-reason="generateDisabledReason"
       :extra-actions="extraActions"
       @run="onRun"
+      @cancel="onCancel"
       @show-history="onShowHistory"
       @extra-action="onExtraAction"
     />
@@ -114,7 +114,11 @@ import DataSourceRunTable, {
   type ExtraAction,
 } from '@/components/generation/DataSourceRunTable.vue'
 import PreviousRunsDialog from '@/components/generation/PreviousRunsDialog.vue'
-import type { GenerationStatus as CohortStatus, GenerationJob } from '@/models/webapi.types'
+import {
+  isGenerationActive,
+  type GenerationStatus as CohortStatus,
+  type GenerationJob,
+} from '@/models/webapi.types'
 import type { GenerationStatus as TableStatus } from '@/models/characterization.types'
 import { logger } from '@/utils/logger'
 
@@ -209,7 +213,7 @@ const stateChip = computed<{ label: string; tone: AtlasChipTone } | undefined>((
   }).value
   let tone: AtlasChipTone = 'success'
   if (jobs.value.some(j => j.status === 'FAILED')) tone = 'danger'
-  else if (jobs.value.some(j => j.status === 'RUNNING' || j.status === 'PENDING')) tone = 'warning'
+  else if (jobs.value.some(j => isGenerationActive(j.status))) tone = 'warning'
   else if (completeCount.value === 0) tone = 'neutral'
   return { label, tone }
 })
@@ -268,7 +272,7 @@ const canGenerateAll = computed(() => {
   return sources.value.some(s => {
     if (!sourceAccess.canWrite(s.sourceId)) return false
     const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
-    return !j || (j.status !== 'RUNNING' && j.status !== 'PENDING')
+    return !j || !isGenerationActive(j.status)
   })
 })
 
@@ -277,7 +281,7 @@ async function generateAll() {
   for (const s of sources.value) {
     if (!sourceAccess.canWrite(s.sourceId)) continue
     const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
-    if (j && (j.status === 'RUNNING' || j.status === 'PENDING')) continue
+    if (j && isGenerationActive(j.status)) continue
     try {
       await webapiStore.generateCohort(props.cohortId, s.sourceKey)
     } catch (error) {
@@ -292,6 +296,15 @@ async function onRun(sourceKey: string) {
     await webapiStore.generateCohort(props.cohortId, sourceKey)
   } catch (error) {
     logger.error('CohortGenerationSection', 'generate failed for ' + sourceKey, error)
+  }
+}
+
+async function onCancel(sourceKey: string) {
+  if (props.cohortId === null) return
+  try {
+    await webapiStore.cancelCohortGeneration(props.cohortId, sourceKey)
+  } catch (error) {
+    logger.error('CohortGenerationSection', 'cancel failed for ' + sourceKey, error)
   }
 }
 

@@ -312,6 +312,21 @@ describe('CohortGenerationSection', () => {
     expect(wrapper.find('[data-testid="row-extra-inclusion-CCAE"]').attributes('disabled')).toBeDefined()
     expect(wrapper.find('[data-testid="row-extra-samples-CCAE"]').attributes('disabled')).toBeDefined()
   })
+
+  it('cancels an active cohort generation from the source row', async () => {
+    const wrapper = mountSection(
+      { cohortId: 1 },
+      [{ id: 1, cohortDefinitionId: 1, sourceKey: 'CCAE', status: 'RUNNING' }],
+      [ccae]
+    )
+    await flushPromises()
+    const store = useWebAPIStore()
+    const spy = vi.spyOn(store, 'cancelCohortGeneration').mockResolvedValue(undefined)
+
+    await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
+
+    expect(spy).toHaveBeenCalledWith(1, 'CCAE')
+  })
 })
 
 describe('CohortGenerationSection — CRITICAL design findings block generation', () => {

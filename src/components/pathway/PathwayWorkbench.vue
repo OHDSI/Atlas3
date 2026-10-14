@@ -514,6 +514,9 @@ defineExpose({ onPathSelect })
   .workbench {
     grid-template-columns: 50% minmax(0, 1fr);
   }
+  .workbench--rail-collapsed {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .workbench__insights {
     display: none;
   }

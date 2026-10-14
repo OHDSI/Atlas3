@@ -56,7 +56,9 @@ export function usePathwayGeneration(pathwayId: number) {
       logger.error('PathwayGeneration', 'cancel failed', result.error)
       return false
     }
-    stopPolling()
+    if (execution.value && !TERMINAL.has(execution.value.status)) {
+      void poller.start()
+    }
     return true
   }
 

@@ -9,6 +9,7 @@ import * as sourceService from '@/services/source.service'
 import { logger } from '@/utils/logger'
 
 vi.mock('@/services/cohort-definition.service', () => ({
+  cancelCohortGeneration: vi.fn(),
   generateCohort: vi.fn(),
   getCohortGenerationInfo: vi.fn(),
 }))
@@ -158,6 +159,55 @@ describe('WebAPI store generation and source-list failure paths', () => {
     })
   })
 
+  describe('cancelCohortGeneration', () => {
+    it('requests cancellation and continues polling for the terminal state', async () => {
+      const store = useWebAPIStore()
+      vi.mocked(cohortDefService.cancelCohortGeneration).mockResolvedValue(success(undefined))
+      vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue(success([]))
+
+      await store.cancelCohortGeneration(123, 'SRC')
+
+      expect(cohortDefService.cancelCohortGeneration).toHaveBeenCalledWith(123, 'SRC')
+    })
+
+    it('surfaces a cancellation failure', async () => {
+      const store = useWebAPIStore()
+      vi.mocked(cohortDefService.cancelCohortGeneration).mockResolvedValue(
+        failure(new ApiError('Rejected', 500, null))
+      )
+
+      await expect(store.cancelCohortGeneration(123, 'SRC')).rejects.toThrow('Rejected')
+    })
+
+    it('keeps the active job visible until polling confirms cancellation', async () => {
+      vi.useFakeTimers()
+      try {
+        const store = useWebAPIStore()
+        store.addGenerationJob(job({ status: 'RUNNING' }))
+        vi.mocked(cohortDefService.cancelCohortGeneration).mockResolvedValue(success(undefined))
+        vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue(
+          success([
+            {
+              id: { cohortDefinitionId: 123, sourceId: 5 },
+              status: 'COMPLETE',
+              isValid: false,
+              isCanceled: false,
+              failMessage: 'Invalidated by system',
+            },
+          ])
+        )
+
+        await store.cancelCohortGeneration(123, 'SRC')
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(store.getJobById(5)?.status).toBe('RUNNING')
+        store.stopAllPolling()
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+  })
+
   describe('generation status polling', () => {
     beforeEach(() => {
       vi.useFakeTimers()
@@ -181,6 +231,22 @@ describe('WebAPI store generation and source-list failure paths', () => {
 
       expect(store.getJobById(5)?.status).toBe('COMPLETE')
       expect(store.getJobById(5)?.endTime).toBeDefined()
+    })
+
+    it('records a canceled generation as terminal rather than complete', async () => {
+      const store = useWebAPIStore()
+      store.addGenerationJob(job({ status: 'RUNNING' }))
+      const info: CohortGenerationInfo[] = [
+        { id: { cohortDefinitionId: 123, sourceId: 5 }, status: 'COMPLETE', isCanceled: true },
+      ]
+      vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue(success(info))
+
+      const polling = store.pollGenerationStatus(123)
+      await vi.runOnlyPendingTimersAsync()
+      await polling
+
+      expect(store.getJobById(5)).toMatchObject({ status: 'CANCELED' })
+      expect(store.activeJobs).toEqual([])
     })
 
     it('stamps an end time when a finished job has a start time but no duration', async () => {
@@ -242,6 +308,40 @@ describe('WebAPI store generation and source-list failure paths', () => {
       await store.fetchCohortGenerationInfo(123)
 
       expect(store.getJobById(5)).toMatchObject({ status: 'RUNNING', endTime: undefined })
+    })
+
+    it('keeps polling an active rerun carrying stale cancellation metadata', async () => {
+      const store = useWebAPIStore()
+      store.setSources([SOURCE])
+      const info: CohortGenerationInfo[] = [
+        { id: { cohortDefinitionId: 123, sourceId: 5 }, status: 'PENDING', isCanceled: true },
+      ]
+      vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue(success(info))
+
+      await store.fetchCohortGenerationInfo(123)
+
+      expect(store.getJobById(5)?.status).toBe('PENDING')
+      store.stopAllPolling()
+    })
+
+    it('resumes polling when the server reports an active generation', async () => {
+      vi.useFakeTimers()
+      try {
+        const store = useWebAPIStore()
+        store.setSources([SOURCE])
+        const info: CohortGenerationInfo[] = [
+          { id: { cohortDefinitionId: 123, sourceId: 5 }, status: 'RUNNING' },
+        ]
+        vi.mocked(cohortDefService.getCohortGenerationInfo).mockResolvedValue(success(info))
+
+        await store.fetchCohortGenerationInfo(123)
+        await vi.advanceTimersByTimeAsync(store.POLL_INTERVAL_MS)
+
+        expect(cohortDefService.getCohortGenerationInfo.mock.calls.length).toBeGreaterThan(1)
+        store.stopAllPolling()
+      } finally {
+        vi.useRealTimers()
+      }
     })
   })
 })

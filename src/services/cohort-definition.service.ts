@@ -143,6 +143,19 @@ export async function generateCohort(
 }
 
 /**
+ * Cancel an in-progress cohort generation.
+ * Endpoint: GET /cohortdefinition/{id}/cancel/{sourceKey}
+ */
+export async function cancelCohortGeneration(
+  cohortId: number,
+  sourceKey: string
+): Promise<ApiResult<void>> {
+  return unwrap(async () => {
+    await httpGet<void>(`/cohortdefinition/${cohortId}/cancel/${encodeURIComponent(sourceKey)}`)
+  }, CONTEXT)
+}
+
+/**
  * Get cohort generation info/status
  * Endpoint: GET /cohortdefinition/{id}/info
  * Returns array of generation info for all sources

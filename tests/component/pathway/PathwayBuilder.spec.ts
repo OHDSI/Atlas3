@@ -113,8 +113,10 @@ describe('PathwayBuilder', () => {
     })
     await flushPromises()
 
-    expect((w.find('[data-testid="pathway-builder-name"]').element as HTMLInputElement).value).toBe('Pathway 1')
-    expect((w.find('[data-testid="pathway-builder-description"]').element as HTMLInputElement).value).toBe('Short note')
+    expect(w.find('[data-testid="pathway-builder-name"]').element.tagName).toBe('TEXTAREA')
+    expect(w.find('[data-testid="pathway-builder-description"]').element.tagName).toBe('TEXTAREA')
+    expect((w.find('[data-testid="pathway-builder-name"]').element as HTMLTextAreaElement).value).toBe('Pathway 1')
+    expect((w.find('[data-testid="pathway-builder-description"]').element as HTMLTextAreaElement).value).toBe('Short note')
     expect(w.findComponent({ name: 'AnalysisBuilderShell' }).props('subtitle')).toBe('#42 · Short note')
   })
 

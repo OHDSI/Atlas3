@@ -137,4 +137,34 @@ describe('useIncidenceRateGeneration', () => {
     expect(ok).toBe(false)
     expect(gen.error.value).toBe('cannot cancel')
   })
+
+  it('keeps polling after cancel until WebAPI confirms cancellation', async () => {
+    const store = useIncidenceRateStore()
+    const ds = useDataSourcesStore()
+    ds.sources = [{ sourceId: 2, sourceKey: 'CCAE' }] as never
+    store.setExecutionInfo('CCAE', {
+      executionInfo: { id: { analysisId: 1, sourceId: 2 }, status: 'RUNNING' },
+      summaryList: [],
+    })
+    mockCancel.mockResolvedValue({ success: true, data: undefined })
+    mockListInfo.mockResolvedValue({
+      success: true,
+      data: [{
+        executionInfo: {
+          id: { analysisId: 1, sourceId: 2 },
+          status: 'CANCELED',
+        },
+        summaryList: [],
+      }],
+    })
+
+    const gen = useIncidenceRateGeneration(1)
+    gen.startPolling()
+    expect(await gen.cancel('CCAE')).toBe(true)
+
+    await vi.advanceTimersByTimeAsync(5000)
+
+    expect(store.executionInfoBySourceKey.CCAE.executionInfo.status).toBe('CANCELED')
+    expect(gen.polling.value).toBe(false)
+  })
 })

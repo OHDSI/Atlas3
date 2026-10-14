@@ -7,8 +7,13 @@ import { ref, computed, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSourceAccessFor } from '@/composables/useEntityAccess'
 import type { CDMSource, GenerationJob, CohortGenerationInfoList } from '@/models/webapi.types'
+import { isGenerationActive } from '@/models/webapi.types'
 import { fetchCDMSources } from '@/services/source.service'
-import { generateCohort as generateCohortRequest, getCohortGenerationInfo } from '@/services/cohort-definition.service'
+import {
+  cancelCohortGeneration as cancelCohortGenerationRequest,
+  generateCohort as generateCohortRequest,
+  getCohortGenerationInfo,
+} from '@/services/cohort-definition.service'
 import { useExecutionPolling } from '@/composables/useExecutionPolling'
 import { logger } from '@/utils/logger'
 
@@ -35,9 +40,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
   })
 
   const activeJobs = computed(() => {
-    return Array.from(generationJobs.value.values()).filter(
-      job => job.status === 'PENDING' || job.status === 'RUNNING'
-    )
+    return Array.from(generationJobs.value.values()).filter(job => isGenerationActive(job.status))
   })
 
   function getJobById(id: number): GenerationJob | undefined {
@@ -289,12 +292,27 @@ export const useWebAPIStore = defineStore('webapi', () => {
     }
   }
 
+  async function cancelCohortGeneration(cohortId: number, sourceKey: string): Promise<void> {
+    const result = await cancelCohortGenerationRequest(cohortId, sourceKey)
+    if (!result.success) {
+      logger.error('WebAPIStore', 'Failed to cancel cohort generation', result.error)
+      throw new Error(result.error.message)
+    }
+
+    const job = getJobsByCohortId(cohortId).find(candidate => candidate.sourceKey === sourceKey)
+    if (job) cancellationRequests.add(job.id)
+
+    // Cancellation is cooperative; wait for /info to confirm isCanceled.
+    void pollGenerationStatus(cohortId)
+  }
+
   /**
    * Poll generation status every 2 seconds until complete or failed
    */
   const POLL_INTERVAL_MS = 2000 // 2 seconds
   const POLL_TIMEOUT_MS = 300000 // 5 minutes max
   const pollingStops = new Map<number, () => void>()
+  const cancellationRequests = new Set<number>()
 
   function applyGenerationInfo(cohortId: number, infoList: CohortGenerationInfoList): void {
     for (const info of infoList) {
@@ -306,23 +324,37 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
       const source = sources.value.find(s => s.sourceId === info.id.sourceId)
       const sourceKey = source?.sourceKey ?? existing.sourceKey
+      const isCanceled = info.isCanceled && !isGenerationActive(info.status)
+      const isProvisionalCancellation =
+        cancellationRequests.has(info.id.sourceId) &&
+        info.status === 'COMPLETE' &&
+        info.isValid === false &&
+        !info.isCanceled
+
+      // The legacy endpoint persists this intermediate state before the
+      // cancellation finishes. Preserve the active row until confirmation.
+      if (isProvisionalCancellation) continue
 
       updateGenerationJob(info.id.sourceId, {
         id: info.id.sourceId,
         cohortDefinitionId: cohortId,
         sourceKey,
-        status: info.status,
+        status: isCanceled ? 'CANCELED' : info.status,
         personCount: info.personCount ?? undefined,
         recordCount: info.recordCount ?? undefined,
         startTime: info.startTime ? new Date(info.startTime).toISOString() : existing.startTime,
         endTime:
-          info.status === 'COMPLETE' || info.status === 'FAILED'
+          info.status === 'COMPLETE' || info.status === 'FAILED' || isCanceled
             ? info.startTime != null && info.executionDuration != null
               ? new Date(info.startTime + info.executionDuration).toISOString()
               : new Date().toISOString()
             : undefined,
         failMessage: info.failMessage ?? undefined,
       })
+
+      if (!isGenerationActive(isCanceled ? 'CANCELED' : info.status)) {
+        cancellationRequests.delete(info.id.sourceId)
+      }
     }
   }
 
@@ -343,9 +375,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
           applyGenerationInfo(cohortId, result.data)
         }
 
-        const stillActive = getJobsByCohortId(cohortId).some(
-          j => j.status === 'PENDING' || j.status === 'RUNNING'
-        )
+        const stillActive = getJobsByCohortId(cohortId).some(j => isGenerationActive(j.status))
 
         if (stillActive && Date.now() - startTime > POLL_TIMEOUT_MS) {
           logger.warn('WebAPIStore', `Generation polling timeout for cohort ${cohortId}`)
@@ -411,11 +441,12 @@ export const useWebAPIStore = defineStore('webapi', () => {
         }
 
         // Create a GenerationJob from the info
+        const isCanceled = info.isCanceled && !isGenerationActive(info.status)
         const job: GenerationJob = {
           id: info.id.sourceId, // Use sourceId as job ID (since we don't have a separate job ID)
           cohortDefinitionId: info.id.cohortDefinitionId,
           sourceKey: source.sourceKey,
-          status: info.status,
+          status: isCanceled ? 'CANCELED' : info.status,
           startTime: info.startTime ? new Date(info.startTime).toISOString() : undefined,
           endTime:
             info.executionDuration && info.startTime
@@ -427,6 +458,10 @@ export const useWebAPIStore = defineStore('webapi', () => {
         }
 
         addGenerationJob(job)
+      }
+
+      if (getJobsByCohortId(cohortId).some(job => isGenerationActive(job.status))) {
+        void pollGenerationStatus(cohortId)
       }
     } catch (error) {
       logger.error('WebAPIStore', 'Failed to fetch cohort generation info', error)
@@ -465,6 +500,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
     fetchSources,
     fetchCohortGenerationInfo,
     generateCohort,
+    cancelCohortGeneration,
     pollGenerationStatus,
     stopPolling,
     stopAllPolling,
