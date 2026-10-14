@@ -17,6 +17,7 @@ vi.mock('@/composables/usePermissions', () => ({
 }))
 vi.mock('@/composables/useEntityAccess', () => ({
   useEntityAccess: () => ({ canWrite: { value: true }, canDelete: { value: true } }),
+  useSourceAccessFor: () => ({ canRead: () => true, canWrite: () => true }),
 }))
 vi.mock('@/services/concept-set-versions.service', () => ({
   getVersions: () => Promise.resolve([]),

@@ -299,6 +299,7 @@ import {
 const props = defineProps<{
   modelValue: boolean
   sourceKey?: string | null
+  sourceId?: number | null
 }>()
 
 const emit = defineEmits<{
@@ -393,8 +394,8 @@ watch(
   async isOpen => {
     if (isOpen) {
       resetForm()
-      if (props.sourceKey) {
-        await loadSourceDetails(props.sourceKey)
+      if (props.sourceKey && props.sourceId != null) {
+        await loadSourceDetails(props.sourceId)
       }
     }
   }
@@ -423,9 +424,9 @@ function resetForm() {
 }
 
 // Load existing source details for editing
-async function loadSourceDetails(sourceKey: string) {
+async function loadSourceDetails(sourceId: number) {
   try {
-    const details: SourceDetails = await getSourceDetails(sourceKey)
+    const details: SourceDetails = await getSourceDetails(sourceId)
 
     loadedSourceId.value = details.sourceId
     form.name = details.sourceName

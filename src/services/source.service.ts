@@ -26,16 +26,17 @@ export async function fetchCDMSources(): Promise<ApiResult<CDMSource[]>> {
 }
 
 /**
- * Get detailed information about a source
+ * Get connection-level details (JDBC URL, credentials) for a source.
+ * WebAPI serves these only from the id-keyed admin endpoint; `/source/{key}` returns just the public metadata.
  */
-export async function getSourceDetails(sourceKey: string): Promise<SourceDetails> {
+export async function getSourceDetails(sourceId: number): Promise<SourceDetails> {
   try {
-    logger.debug('SourceService', `Fetching source details for key ${sourceKey}`)
-    const response = await httpGet<SourceDetails>(`/source/${sourceKey}`)
-    logger.debug('SourceService', `Successfully fetched source details for key ${sourceKey}`)
+    logger.debug('SourceService', `Fetching source details for id ${sourceId}`)
+    const response = await httpGet<SourceDetails>(`/source/details/${sourceId}`)
+    logger.debug('SourceService', `Successfully fetched source details for id ${sourceId}`)
     return response
   } catch (error) {
-    logger.error('SourceService', 'Failed to fetch source details', { sourceKey, error })
+    logger.error('SourceService', 'Failed to fetch source details', { sourceId, error })
     throw new Error('Unable to load source details. Please try again.')
   }
 }

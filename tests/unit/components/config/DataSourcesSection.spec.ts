@@ -11,7 +11,10 @@ import { createPinia, setActivePinia } from 'pinia'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import DataSourcesSection from '@/components/config/DataSourcesSection.vue'
+import DataSourceDialog from '@/components/config/DataSourceDialog.vue'
+import { deleteSource } from '@/services/source.service'
 import { useAuthStore } from '@/stores/auth'
+import { emptyEntityAccess } from '@/models/auth.types'
 import { getAuthConfig, setAuthConfig } from '@/config/auth.config'
 
 const vuetify = createVuetify({ components, directives })
@@ -609,14 +612,354 @@ describe('DataSourcesSection.vue', () => {
       expect(wrap.attributes('title')).toBe('You do not have permission for this action')
     })
 
-    it('enables the mutating actions for a user with write:source', async () => {
+    it('enables only the data actions for a user with write:source', async () => {
       await mountAs({ write: ['write:source'] })
+
+      expect(buttonFor('.mdi-refresh')).toHaveProperty('disabled', false)
+      expect(buttonFor('.mdi-pencil')).toHaveProperty('disabled', true)
+      expect(buttonFor('.mdi-delete')).toHaveProperty('disabled', true)
+      expect(buttonFor('.mdi-plus')).toHaveProperty('disabled', true)
+      expect(buttonFor('.mdi-server')).toHaveProperty('disabled', true)
+    })
+
+    it('enables source and cache administration for the matching admin permissions', async () => {
+      await mountAs({ admin: ['admin:source', 'admin:cache'] })
 
       expect(buttonFor('.mdi-pencil')).toHaveProperty('disabled', false)
       expect(buttonFor('.mdi-delete')).toHaveProperty('disabled', false)
       expect(buttonFor('.mdi-plus')).toHaveProperty('disabled', false)
       expect(buttonFor('.mdi-server')).toHaveProperty('disabled', false)
-      expect(wrapper.find('[data-testid="disabled-reason-wrap"]').exists()).toBe(false)
+      expect(buttonFor('.mdi-refresh')).toHaveProperty('disabled', true)
+    })
+
+    describe('source selection', () => {
+      // Radios are ordered per row: row 1 has vocabulary, evidence, results; row 2 has no evidence.
+      const radios = () => wrapper.findAll('input[type="radio"]').map(r => r.element as HTMLInputElement)
+      const ROW2_VOCAB = 3
+
+      beforeEach(() => {
+        localStorage.clear()
+      })
+
+      afterEach(() => {
+        localStorage.clear()
+      })
+
+      async function mountReadingOnly(sourceId: number) {
+        useAuthStore().setUser({
+          login: 'u',
+          displayName: 'u',
+          permissionIdx: {},
+          entityAccess: { ...emptyEntityAccess(), source: { [String(sourceId)]: ['READ'] } },
+        })
+        wrapper = mount(DataSourcesSection, { global: { plugins: [vuetify] } })
+        await flushPromises()
+      }
+
+      it('disables the radios of sources the user cannot read', async () => {
+        await mountReadingOnly(2)
+
+        expect(radios().slice(0, 3).every(r => r.disabled)).toBe(true)
+        expect(radios()[ROW2_VOCAB]!.disabled).toBe(false)
+      })
+
+      it('defaults to a readable source rather than the first listed', async () => {
+        await mountReadingOnly(2)
+
+        expect(radios()[ROW2_VOCAB]!.checked).toBe(true)
+        expect(radios()[0]!.checked).toBe(false)
+      })
+
+      it('ignores a saved selection the user cannot read', async () => {
+        localStorage.setItem('selectedVocabulary', 'OHDSI-CDMV5')
+
+        await mountReadingOnly(2)
+
+        expect(radios()[ROW2_VOCAB]!.checked).toBe(true)
+      })
+
+      it('ignores a saved selection that is not in the source list', async () => {
+        localStorage.setItem('selectedVocabulary', 'NOT-LISTED')
+
+        await mountAs({ read: ['read:source'] })
+
+        expect(radios()[0]!.checked).toBe(true)
+      })
+
+      it('keeps a saved selection the user can read', async () => {
+        localStorage.setItem('selectedVocabulary', 'SYNPUF-5PCT')
+
+        await mountAs({ read: ['read:source'] })
+
+        expect(radios()[ROW2_VOCAB]!.checked).toBe(true)
+      })
+
+      it('defaults to the source with the highest daimon priority', async () => {
+        mockListDataSources.mockResolvedValue(
+          mockDataSources.map(s => ({
+            ...s,
+            daimons: s.daimons.map(d => ({ ...d, priority: s.sourceId === 2 ? 1 : 0 })),
+          }))
+        )
+
+        await mountAs({ read: ['read:source'] })
+
+        expect(radios()[ROW2_VOCAB]!.checked).toBe(true)
+      })
+
+      it('restores the system defaults when the configuration cache is cleared', async () => {
+        localStorage.setItem('selectedVocabulary', 'SYNPUF-5PCT')
+        await mountAs({ read: ['read:source'] })
+        expect(radios()[ROW2_VOCAB]!.checked).toBe(true)
+
+        const clear = wrapper.findAll('button').find(b => b.find('.mdi-delete-sweep').exists())
+        await clear!.trigger('click')
+        await flushPromises()
+
+        expect(radios()[0]!.checked).toBe(true)
+        expect(radios()[ROW2_VOCAB]!.checked).toBe(false)
+      })
+    })
+  })
+
+  describe('Dialogs, deletion and failure paths', () => {
+    const snackbar = (severity: string) =>
+      wrapper.findAllComponents({ name: 'AtlasSnackbar' }).find(s => s.props('severity') === severity)!
+
+    const clickIcon = async (icon: string, index = 0) => {
+      await wrapper.findAll(icon)[index]!.element.closest('button')!.click()
+      await flushPromises()
+    }
+
+    // DataSourceDialog renders its own CONFIRM dialog; the section's is the last one.
+    const deleteDialog = () =>
+      wrapper.findAllComponents({ name: 'AtlasDialog' }).filter(d => d.props('eyebrow') === 'CONFIRM').at(-1)!
+
+    const confirmDelete = async () => {
+      const danger = deleteDialog().findAllComponents({ name: 'AtlasButton' }).find(b => b.props('variant') === 'danger')!
+      await danger.trigger('click')
+      await flushPromises()
+    }
+
+    beforeEach(async () => {
+      localStorage.clear()
+      // The delete button's loading spinner reads matchMedia, which jsdom lacks.
+      window.matchMedia = vi.fn().mockReturnValue({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })
+      wrapper = mount(DataSourcesSection, { global: { plugins: [vuetify] } })
+      await flushPromises()
+    })
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+      localStorage.clear()
+    })
+
+    it('opens the source dialog empty for a new source', async () => {
+      await clickIcon('.mdi-plus')
+
+      const dialog = wrapper.findComponent(DataSourceDialog)
+      expect(dialog.props('modelValue')).toBe(true)
+      expect(dialog.props('sourceKey')).toBeNull()
+      expect(dialog.props('sourceId')).toBeNull()
+    })
+
+    it('opens the source dialog for the source being edited', async () => {
+      await clickIcon('.mdi-pencil', 1)
+
+      const dialog = wrapper.findComponent(DataSourceDialog)
+      expect(dialog.props('sourceKey')).toBe('SYNPUF-5PCT')
+      expect(dialog.props('sourceId')).toBe(2)
+    })
+
+    it('reloads the list and reports success when the dialog saves', async () => {
+      mockListDataSources.mockClear()
+
+      wrapper.findComponent(DataSourceDialog).vm.$emit('saved')
+      await flushPromises()
+
+      expect(mockListDataSources).toHaveBeenCalledTimes(1)
+      expect(snackbar('success').props('modelValue')).toBe(true)
+    })
+
+    it('reloads the list and reports success when the dialog deletes', async () => {
+      mockListDataSources.mockClear()
+
+      wrapper.findComponent(DataSourceDialog).vm.$emit('deleted')
+      await flushPromises()
+
+      expect(mockListDataSources).toHaveBeenCalledTimes(1)
+      expect(snackbar('success').props('modelValue')).toBe(true)
+    })
+
+    it('shows the dialog error message', async () => {
+      wrapper.findComponent(DataSourceDialog).vm.$emit('error', 'Save exploded')
+      await flushPromises()
+
+      expect(snackbar('danger').props('modelValue')).toBe(true)
+      expect(snackbar('danger').props('text')).toBe('Save exploded')
+    })
+
+    it('deletes the source after confirmation and reloads the list', async () => {
+      vi.mocked(deleteSource).mockResolvedValue(undefined as never)
+      mockListDataSources.mockClear()
+
+      await clickIcon('.mdi-delete', 0)
+      expect(deleteDialog().props('modelValue')).toBe(true)
+      await confirmDelete()
+
+      expect(deleteSource).toHaveBeenCalledWith(1)
+      expect(deleteDialog().props('modelValue')).toBe(false)
+      expect(mockListDataSources).toHaveBeenCalledTimes(1)
+    })
+
+    it('closes the delete confirmation without deleting when cancelled', async () => {
+      await clickIcon('.mdi-delete', 0)
+
+      deleteDialog().vm.$emit('close')
+      await flushPromises()
+
+      expect(deleteDialog().props('modelValue')).toBe(false)
+      expect(deleteSource).not.toHaveBeenCalled()
+    })
+
+    it('reports the error message when deleting fails', async () => {
+      vi.mocked(deleteSource).mockRejectedValue(new Error('In use'))
+
+      await clickIcon('.mdi-delete', 0)
+      await confirmDelete()
+
+      expect(snackbar('danger').props('text')).toBe('In use')
+      expect(deleteDialog().props('modelValue')).toBe(true)
+    })
+
+    it('falls back to a generic message when deleting fails without an Error', async () => {
+      vi.mocked(deleteSource).mockRejectedValue('nope')
+
+      await clickIcon('.mdi-delete', 0)
+      await confirmDelete()
+
+      expect(snackbar('danger').props('modelValue')).toBe(true)
+    })
+
+    it('reports a failed cache refresh', async () => {
+      mockHttpPost.mockRejectedValue(new Error('boom'))
+
+      await clickIcon('.mdi-refresh', 0)
+
+      expect(snackbar('danger').props('modelValue')).toBe(true)
+    })
+
+    it('clears the server cache once the user confirms', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+      await clickIcon('.mdi-server')
+
+      expect(mockHttpPost).toHaveBeenCalledWith('/cache/clear', undefined)
+      expect(snackbar('success').props('modelValue')).toBe(true)
+    })
+
+    it('reports the error when clearing the server cache fails', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(true)
+      mockHttpPost.mockRejectedValue(new Error('cache down'))
+
+      await clickIcon('.mdi-server')
+
+      expect(snackbar('danger').props('text')).toBe('cache down')
+    })
+
+    it('falls back to a generic message when clearing the server cache fails without an Error', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(true)
+      mockHttpPost.mockRejectedValue('nope')
+
+      await clickIcon('.mdi-server')
+
+      expect(snackbar('danger').props('modelValue')).toBe(true)
+    })
+
+    it('still lists a source whose vocabulary info cannot be fetched', async () => {
+      wrapper.unmount()
+      mockHttpGet.mockRejectedValue(new Error('no info'))
+      wrapper = mount(DataSourcesSection, { global: { plugins: [vuetify] } })
+      await flushPromises()
+
+      expect(wrapper.text()).toContain('OHDSI CDM V5 Database')
+    })
+
+    it('uses a generic message when loading fails without an Error', async () => {
+      wrapper.unmount()
+      mockListDataSources.mockRejectedValue('nope')
+      wrapper = mount(DataSourcesSection, { global: { plugins: [vuetify] } })
+      await flushPromises()
+
+      expect(snackbar('danger').props('modelValue')).toBe(true)
+    })
+
+    it('switches the priority scope', async () => {
+      const toggle = wrapper.findComponent({ name: 'VBtnToggle' })
+
+      toggle.vm.$emit('update:modelValue', 'application')
+      await flushPromises()
+
+      expect(toggle.props('modelValue')).toBe('application')
+    })
+
+    it('dismisses the success and error toasts', async () => {
+      wrapper.findComponent(DataSourceDialog).vm.$emit('saved')
+      wrapper.findComponent(DataSourceDialog).vm.$emit('error', 'bad')
+      await flushPromises()
+
+      snackbar('success').vm.$emit('update:modelValue', false)
+      snackbar('danger').vm.$emit('update:modelValue', false)
+      await flushPromises()
+
+      expect(snackbar('success').props('modelValue')).toBe(false)
+      expect(snackbar('danger').props('modelValue')).toBe(false)
+    })
+
+    it('closes the source dialog when it asks to close', async () => {
+      await clickIcon('.mdi-plus')
+      const dialog = wrapper.findComponent(DataSourceDialog)
+
+      dialog.vm.$emit('update:modelValue', false)
+      await flushPromises()
+
+      expect(dialog.props('modelValue')).toBe(false)
+    })
+
+    it('closes the access dialog', async () => {
+      wrapper.findComponent({ name: 'EntityAccessLockButton' }).vm.$emit('click', new MouseEvent('click'))
+      await flushPromises()
+      const access = wrapper.findComponent({ name: 'EntityAccessDialog' })
+      expect(access.props('modelValue')).toBe(true)
+
+      access.vm.$emit('close')
+      await flushPromises()
+
+      expect(access.props('modelValue')).toBe(false)
+    })
+
+    it('closes the delete confirmation from its own dismiss and cancel controls', async () => {
+      await clickIcon('.mdi-delete', 0)
+      deleteDialog().vm.$emit('update:modelValue', false)
+      await flushPromises()
+      expect(deleteDialog().props('modelValue')).toBe(false)
+
+      await clickIcon('.mdi-delete', 0)
+      const cancel = deleteDialog().findAllComponents({ name: 'AtlasButton' }).find(b => b.props('variant') === 'ghost')!
+      await cancel.trigger('click')
+      await flushPromises()
+
+      expect(deleteDialog().props('modelValue')).toBe(false)
+      expect(deleteSource).not.toHaveBeenCalled()
+    })
+
+    it('persists evidence and results selections', async () => {
+      const radios = wrapper.findAll('input[type="radio"]')
+      await radios[1]!.setValue(true)
+      await radios[2]!.setValue(true)
+
+      expect(localStorage.getItem('selectedEvidence')).toBe('OHDSI-CDMV5')
+      expect(localStorage.getItem('selectedResults')).toBe('OHDSI-CDMV5')
     })
   })
 })

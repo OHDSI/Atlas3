@@ -137,9 +137,7 @@ export function useSourceAccess(sourceId: MaybeRefOrGetter<number>): {
     if (!getAuthConfig().userAuthenticationEnabled) return true
     if (
       permissionChecker.hasPermission('read:source', authStore.permissions).granted ||
-      permissionChecker.hasPermission('write:source', authStore.permissions).granted ||
-      permissionChecker.hasPermission('admin:source', authStore.permissions).granted ||
-      permissionChecker.hasPermission('source:*:access', authStore.permissions).granted
+      permissionChecker.hasPermission('write:source', authStore.permissions).granted
     ) {
       return true
     }
@@ -149,10 +147,7 @@ export function useSourceAccess(sourceId: MaybeRefOrGetter<number>): {
 
   const canWrite = computed(() => {
     if (!getAuthConfig().userAuthenticationEnabled) return true
-    if (
-      permissionChecker.hasPermission('write:source', authStore.permissions).granted ||
-      permissionChecker.hasPermission('admin:source', authStore.permissions).granted
-    ) {
+    if (permissionChecker.hasPermission('write:source', authStore.permissions).granted) {
       return true
     }
     const g = grant.value
@@ -175,7 +170,7 @@ export function useSourceAccessFor() {
    */
   function canReadAny(): boolean {
     if (!getAuthConfig().userAuthenticationEnabled) return true
-    if (has('read:source') || has('write:source') || has('admin:source') || has('source:*:access')) {
+    if (has('read:source') || has('write:source')) {
       return true
     }
     return Object.values(authStore.entityAccess.source).some(
@@ -184,22 +179,31 @@ export function useSourceAccessFor() {
   }
 
   /**
-   * Whether the user may administer sources as a whole, rather than one source:
-   * registering a new one, or clearing the server-side cache. Neither action
-   * has a source id to check, so neither can go through `canWrite`.
+   * Whether the user may administer source definitions (create, edit, delete,
+   * daimon priority). WebAPI gates these on admin:source, not on write:source,
+   * which only covers running work against a source's data.
    */
   function canManageAll(): boolean {
     if (!getAuthConfig().userAuthenticationEnabled) return true
-    return has('write:source') || has('admin:source')
+    return has('admin:source')
+  }
+
+  function canClearServerCache(): boolean {
+    if (!getAuthConfig().userAuthenticationEnabled) return true
+    return has('admin:cache')
+  }
+
+  /** Sources have no owner, so granting access to a source requires admin:security. */
+  function canManageAccess(): boolean {
+    if (!getAuthConfig().userAuthenticationEnabled) return true
+    return has('admin:security')
   }
 
   function canRead(sourceId: number): boolean {
     if (!getAuthConfig().userAuthenticationEnabled) return true
     if (
       has('read:source') ||
-      has('write:source') ||
-      has('admin:source') ||
-      has('source:*:access')
+      has('write:source')
     ) {
       return true
     }
@@ -209,10 +213,10 @@ export function useSourceAccessFor() {
 
   function canWrite(sourceId: number): boolean {
     if (!getAuthConfig().userAuthenticationEnabled) return true
-    if (has('write:source') || has('admin:source')) return true
+    if (has('write:source')) return true
     const g = authStore.entityAccess.source[String(sourceId)]
     return Array.isArray(g) && g.includes('WRITE')
   }
 
-  return { canRead, canWrite, canReadAny, canManageAll }
+  return { canRead, canWrite, canReadAny, canManageAll, canClearServerCache, canManageAccess }
 }
