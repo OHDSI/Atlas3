@@ -108,7 +108,7 @@ function buildHierarchy(flatData: TreemapNode[]): TreemapNode[] {
   }
 
   const root: Map<string, MapNode> = new Map()
-  const unclassifiedLabel = t('components.domainPrevalenceTreemap.unclassified', 'Unclassified').value
+  const unclassifiedLabel = t('components.domainPrevalenceTreemap.unclassified').value
 
   flatData.forEach(item => {
     // Skip items with "NA" or invalid conceptPath

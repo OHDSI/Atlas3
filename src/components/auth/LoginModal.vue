@@ -19,7 +19,7 @@
         tone="neutral"
         class="login-card__close"
         data-testid="login-cancel"
-        v-bind="{ ariaLabel: t('common.cancel', 'Cancel').value }"
+        v-bind="{ ariaLabel: t('common.cancel').value }"
         @click="cancel"
       />
       <div class="login-card__header">
