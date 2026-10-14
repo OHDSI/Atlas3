@@ -73,6 +73,7 @@ The repository ships a `docker-compose.yml` that brings up Postgres, WebAPI, a d
 git clone https://github.com/OHDSI/Atlas3.git
 git clone --branch webapi-3.0 https://github.com/OHDSI/WebAPI.git
 cd Atlas3
+cp .env.example .env   # optional; see "Using other host ports" below
 docker compose up
 ```
 
@@ -83,6 +84,18 @@ When the stack is healthy:
 - ATLAS v3.0 — https://localhost (accept the self-signed certificate)
 - WebAPI — http://localhost:8080/WebAPI/info
 - PostgreSQL — `localhost:5433` (in-container port 5432)
+
+#### Using other host ports
+
+If ports 80 or 443 are already in use on your machine, set the host ports in `.env` and add the matching origins to WebAPI's CORS allow-list. Without the CORS change, sign-in and other POST requests fail:
+
+```bash
+ATLAS3_HTTP_PORT=8081
+ATLAS3_HTTPS_PORT=4431
+SECURITY_CORS_ALLOWED_ORIGINS=http://localhost:8081,https://localhost:4431
+```
+
+Then open https://localhost:4431. Caddy's automatic HTTP→HTTPS redirect assumes port 443, so use the HTTPS URL directly.
 
 > The default `POSTGRES_PASSWORD` in the compose file is `mypass` — a placeholder for local development. Set `POSTGRES_PASSWORD` in a `.env` file (or your secrets manager) before running anywhere a hostile network can reach. The default user credentials are seeded by `atlasdb/`; change them before any non-local use.
 
