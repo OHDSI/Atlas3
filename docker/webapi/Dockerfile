@@ -32,7 +32,7 @@ LABEL org.atlas3.webapi.base="ghcr.io/ohdsi/webapi:3.0-dev@${WEBAPI_DIGEST}"
 #
 # No WebAPI source or config is touched — Spring Boot, Logback, HikariCP and
 # the JDBC driver are all instrumented by bytecode injection at JVM startup.
-ARG OTEL_AGENT_VERSION=2.11.0
+ARG OTEL_AGENT_VERSION=2.32.0
 ARG OTEL_AGENT_URL=https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OTEL_AGENT_VERSION}/opentelemetry-javaagent.jar
 # Optional supply-chain pin. Leave empty to skip, or pass the sha256 published
 # on the release page to fail the build on any mismatch.
