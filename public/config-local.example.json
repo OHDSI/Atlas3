@@ -34,7 +34,8 @@
   "analytics": {
     "$comment": [
       "Browser telemetry via OpenTelemetry. Omit the whole block to send nothing.",
-      "Spans go to the same collector as the WebAPI Java agent, so nothing leaves the deployment. endpoint is same-origin by default (Caddy proxies /otlp to the gateway), which avoids CORS and keeps the collector off any public port.",
+      "Usage events (OTLP logs, never sampled) and performance traces (spans, sampled by sampleRatio) go to the same collector as the WebAPI Java agent, so nothing leaves the deployment. endpoint is same-origin by default (Caddy proxies /otlp/v1/traces and /otlp/v1/logs to the gateway), which avoids CORS and keeps the collector off any public port.",
+      "identifyUsers is OFF unless literally true. When on, only a SHA-256 hash of the login is sent, as enduser.pseudo.id.",
       "scrubUrlQueryStrings is ON whenever omitted and is only disabled by a literal false. Atlas puts free-text concept searches and filter values in query strings, so switching it off is a deliberate act with a privacy review behind it.",
       "Unlike DOM-autocapture analytics, OTel never reads element text, so cohort and concept names cannot leak through page content."
     ],
@@ -43,7 +44,7 @@
     "sampleRatio": 1,
     "traceApiCalls": true,
     "traceDocumentLoad": true,
-    "identifyUsers": true,
+    "identifyUsers": false,
     "scrubUrlQueryStrings": true
   }
 }

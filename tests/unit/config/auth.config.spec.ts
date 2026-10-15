@@ -19,6 +19,15 @@ const mockAppConfig: AppConfig = {
   enableTaggingSection: false,
   defaultLocale: 'en',
   pollInterval: 60000,
+  analytics: {
+    provider: 'none',
+    endpoint: '/otlp',
+    sampleRatio: 1,
+    traceApiCalls: true,
+    traceDocumentLoad: true,
+    identifyUsers: false,
+    scrubUrlQueryStrings: true,
+  },
 }
 
 vi.mock('@/config/app-config.loader', () => ({
