@@ -4,8 +4,8 @@ import type { AuthProvider } from '@/models/auth.types'
  * Browser telemetry settings. Runtime-configured so a single Atlas image can
  * ship to a site that wants usage telemetry and a site that forbids it.
  *
- * Exports OpenTelemetry spans to the same collector as the WebAPI agent, so
- * nothing leaves the deployment.
+ * Exports OpenTelemetry usage events (logs) and performance traces (spans) to
+ * the same collector as the WebAPI agent, so nothing leaves the deployment.
  */
 export interface AnalyticsConfig {
   /** `none` disables all browser telemetry and skips loading the SDK entirely. */
@@ -13,16 +13,19 @@ export interface AnalyticsConfig {
   /**
    * Base path or URL of the OTLP/HTTP collector. `/otlp` keeps it same-origin
    * via Caddy, which avoids CORS and means the collector needs no public port.
-   * `/v1/traces` is appended.
+   * `/v1/traces` and `/v1/logs` are appended.
    */
   endpoint: string
-  /** Head sampling, 0..1. */
+  /** Head sampling for performance traces, 0..1. Usage events are never sampled. */
   sampleRatio: number
-  /** Trace fetch/XHR calls, giving browser-to-SQL traces via `traceparent`. */
+  /** Trace fetch/XHR calls, continuing into WebAPI and its SQL via `traceparent`. */
   traceApiCalls: boolean
   /** Trace initial page load timing. */
   traceDocumentLoad: boolean
-  /** Attach the Atlas login as `enduser.id` (pseudonymous). */
+  /**
+   * Attach a SHA-256 hash of the Atlas login as `enduser.pseudo.id`. Off unless
+   * literally `true`; the login itself is never sent.
+   */
   identifyUsers: boolean
   /**
    * Remove query strings from every URL attribute before export. On whenever
