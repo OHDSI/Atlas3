@@ -362,6 +362,15 @@ const daimonSchemas = reactive<Record<DaimonType, string>>({
   Temp: '',
 })
 
+const daimonPriorities = reactive<Record<DaimonType, number>>({
+  CDM: 0,
+  Vocabulary: 0,
+  Results: 0,
+  CEM: 0,
+  CEMResults: 0,
+  Temp: 0,
+})
+
 // Computed properties
 const isEditing = computed(() => props.sourceKey != null)
 
@@ -373,13 +382,13 @@ const dialectItems = computed(() =>
 )
 
 const showCredentials = computed(() => {
-  const noCredentialDialects = ['BIGQUERY']
+  const noCredentialDialects = ['bigquery']
   return !noCredentialDialects.includes(form.dialect)
 })
 
-const showKerberos = computed(() => form.dialect === 'IMPALA')
+const showKerberos = computed(() => form.dialect === 'impala')
 
-const showBigQuery = computed(() => form.dialect === 'BIGQUERY')
+const showBigQuery = computed(() => form.dialect === 'bigquery')
 
 // Validation rules (use tv for non-reactive string values)
 const rules = {
@@ -420,6 +429,7 @@ function resetForm() {
   for (const type of DAIMON_TYPES) {
     daimonEnabled[type] = false
     daimonSchemas[type] = ''
+    daimonPriorities[type] = 0
   }
 }
 
@@ -442,6 +452,7 @@ async function loadSourceDetails(sourceId: number) {
     for (const daimon of details.daimons) {
       daimonEnabled[daimon.daimonType] = true
       daimonSchemas[daimon.daimonType] = daimon.tableQualifier
+      daimonPriorities[daimon.daimonType] = daimon.priority
     }
   } catch (error) {
     emit('error', tv('executionStatus.values.FAILED'))
@@ -452,14 +463,13 @@ async function loadSourceDetails(sourceId: number) {
 // Build daimons array from form state
 function buildDaimons(): DaimonRequest[] {
   const daimons: DaimonRequest[] = []
-  let priority = 0
 
   for (const type of DAIMON_TYPES) {
     if (daimonEnabled[type] && daimonSchemas[type]) {
       daimons.push({
         daimonType: type,
         tableQualifier: daimonSchemas[type],
-        priority: priority++,
+        priority: daimonPriorities[type],
       })
     }
   }

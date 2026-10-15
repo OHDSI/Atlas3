@@ -1,5 +1,29 @@
 import { describe, it, expect } from 'vitest'
-import { isPluginReportType, parsePluginReportType } from '@/models/datasource.types'
+import {
+  SUPPORTED_DIALECTS,
+  TreemapNodeSchema,
+  isPluginReportType,
+  parsePluginReportType,
+} from '@/models/datasource.types'
+
+describe('SUPPORTED_DIALECTS', () => {
+  it('matches WebAPI DBMSType OHDSI dialect identifiers', () => {
+    expect(SUPPORTED_DIALECTS.map(dialect => dialect.value)).toEqual([
+      'postgresql',
+      'sql server',
+      'oracle',
+      'redshift',
+      'bigquery',
+      'impala',
+      'pdw',
+      'netezza',
+      'hive',
+      'spark',
+      'snowflake',
+      'synapse',
+    ])
+  })
+})
 
 describe('plugin report type helpers', () => {
   it('recognises a plugin report type', () => {
@@ -19,5 +43,15 @@ describe('plugin report type helpers', () => {
       pluginId: 'p1',
       itemId: 'my-report',
     })
+  })
+})
+
+describe('TreemapNodeSchema', () => {
+  it('parses nested nodes', () => {
+    expect(TreemapNodeSchema.parse({
+      name: 'All people',
+      value: 10,
+      children: [{ name: 'Female', value: 6 }],
+    })).toMatchObject({ name: 'All people', children: [{ name: 'Female' }] })
   })
 })

@@ -65,18 +65,18 @@ export interface SourceDetails extends DataSource {
 
 // Supported Database Dialects
 export const SUPPORTED_DIALECTS = [
-  { value: 'POSTGRESQL', label: 'PostgreSQL' },
-  { value: 'SQL_SERVER', label: 'SQL Server' },
-  { value: 'ORACLE', label: 'Oracle' },
-  { value: 'REDSHIFT', label: 'Amazon Redshift' },
-  { value: 'BIGQUERY', label: 'Google BigQuery' },
-  { value: 'IMPALA', label: 'Impala' },
-  { value: 'PDW', label: 'Microsoft PDW' },
-  { value: 'NETEZZA', label: 'IBM Netezza' },
-  { value: 'HIVE', label: 'Hive LLAP' },
-  { value: 'SPARK', label: 'Spark' },
-  { value: 'SNOWFLAKE', label: 'Snowflake' },
-  { value: 'SYNAPSE', label: 'Azure Synapse' },
+  { value: 'postgresql', label: 'PostgreSQL' },
+  { value: 'sql server', label: 'SQL Server' },
+  { value: 'oracle', label: 'Oracle' },
+  { value: 'redshift', label: 'Amazon Redshift' },
+  { value: 'bigquery', label: 'Google BigQuery' },
+  { value: 'impala', label: 'Impala' },
+  { value: 'pdw', label: 'Microsoft PDW' },
+  { value: 'netezza', label: 'IBM Netezza' },
+  { value: 'hive', label: 'Hive LLAP' },
+  { value: 'spark', label: 'Spark' },
+  { value: 'snowflake', label: 'Snowflake' },
+  { value: 'synapse', label: 'Azure Synapse' },
 ] as const
 
 export type DialectValue = (typeof SUPPORTED_DIALECTS)[number]['value']
