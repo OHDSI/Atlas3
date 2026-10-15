@@ -62,9 +62,9 @@ const details = {
   sourceId: 42,
   sourceKey: 'CDM',
   sourceName: 'CDM Source',
-  sourceDialect: 'POSTGRESQL',
+  sourceDialect: 'postgresql',
   connectionString: 'jdbc:postgresql://localhost:5432/cdm',
-  daimons: [{ daimonType: 'CDM', tableQualifier: 'demo_cdm', priority: 0 }],
+  daimons: [{ daimonType: 'CDM', tableQualifier: 'demo_cdm', priority: 1 }],
 }
 
 async function mountDialog(sourceKey: string | null, sourceId: number | null = null) {
@@ -80,7 +80,7 @@ async function mountDialog(sourceKey: string | null, sourceId: number | null = n
   return wrapper
 }
 
-async function fillRequiredFields(wrapper: VueWrapper, dialect = 'POSTGRESQL') {
+async function fillRequiredFields(wrapper: VueWrapper, dialect = 'postgresql') {
   const byLabel = (name: string, label: string) =>
     wrapper.findAllComponents({ name }).find(c => c.props('label') === label)!
 
@@ -126,15 +126,34 @@ describe('DataSourceDialog save', () => {
     expect(createSource.mock.calls[0][0]).toMatchObject({
       name: 'New Source',
       key: 'NEW_SOURCE',
-      dialect: 'POSTGRESQL',
+      dialect: 'postgresql',
     })
     expect(wrapper.emitted('saved')).toHaveLength(1)
     wrapper.unmount()
   })
 
+  it('creates all daimons with zero priority', async () => {
+    const wrapper = await mountDialog(null)
+    await fillRequiredFields(wrapper)
+
+    const daimonRows = wrapper.findAll('tbody tr')
+    for (const [index, schema] of ['cdm', 'vocabulary'].entries()) {
+      await daimonRows[index].findComponent({ name: 'AtlasCheckbox' }).setValue(true)
+      await daimonRows[index].findComponent({ name: 'AtlasTextField' }).setValue(schema)
+    }
+
+    await clickSave(wrapper)
+
+    expect(createSource.mock.calls[0][0].daimons).toEqual([
+      { daimonType: 'CDM', tableQualifier: 'cdm', priority: 0 },
+      { daimonType: 'Vocabulary', tableQualifier: 'vocabulary', priority: 0 },
+    ])
+    wrapper.unmount()
+  })
+
   it('sends the BigQuery keyfile through', async () => {
     const wrapper = await mountDialog(null)
-    await fillRequiredFields(wrapper, 'BIGQUERY')
+    await fillRequiredFields(wrapper, 'bigquery')
 
     const keyfile = new File(['{"type":"service_account"}'], 'key.json', {
       type: 'application/json',
@@ -160,7 +179,11 @@ describe('DataSourceDialog save', () => {
     expect(updateSource).toHaveBeenCalledTimes(1)
     const [sourceId, request] = updateSource.mock.calls[0]
     expect(sourceId).toBe(42)
-    expect(request).toMatchObject({ name: 'CDM Source', key: 'CDM' })
+    expect(request).toMatchObject({
+      name: 'CDM Source',
+      key: 'CDM',
+      daimons: [{ daimonType: 'CDM', tableQualifier: 'demo_cdm', priority: 1 }],
+    })
     expect(wrapper.emitted('saved')).toHaveLength(1)
     wrapper.unmount()
   })

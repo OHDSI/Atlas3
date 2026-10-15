@@ -200,9 +200,10 @@ describe('SourceService', () => {
       // a boundary.
       expect((init.headers as Record<string, string>)['Content-Type']).toBeUndefined()
       expect(await sourcePartOf(init)).toMatchObject({
-        sourceName: 'New Source',
-        sourceDialect: 'postgresql',
-        sourceKey: 'NEW_SOURCE'
+        name: 'New Source',
+        dialect: 'postgresql',
+        key: 'NEW_SOURCE',
+        connectionString: 'jdbc:postgresql://localhost:5432/newdb',
       })
       expect((init.body as FormData).get('keyfile')).toBeNull()
       expect(result.sourceId).toBe(2)
@@ -393,9 +394,7 @@ describe('SourceService', () => {
       // Keyed on the numeric sourceId, not the string sourceKey.
       expect(url).toBe('/WebAPI/source/1')
       expect(init.method).toBe('PUT')
-      expect(await sourcePartOf(init)).toMatchObject({
-        sourceName: 'Updated Source'
-      })
+      expect(await sourcePartOf(init)).toMatchObject({ name: 'Updated Source' })
       expect(result.sourceName).toBe('Updated Source')
     })
 

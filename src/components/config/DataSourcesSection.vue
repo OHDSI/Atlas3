@@ -20,6 +20,7 @@
             <AtlasButton
               toggle
               value="application"
+              :disabled="!canManageAll()"
             >
               {{ t('configuration.priorityOptions.application') }}
             </AtlasButton>
@@ -76,32 +77,35 @@
               <td>
                 <div class="d-flex align-center">
                   <input
-                    v-model="selectedVocabulary"
                     type="radio"
                     :value="source.sourceKey"
-                    :disabled="!source.hasVocabulary || !canReadSource(source.sourceId)"
+                    :checked="isDaimonSelected(source.sourceKey, 'Vocabulary')"
+                    :disabled="!canSelectDaimon(source, 'hasVocabulary')"
                     :aria-label="`${tv('columns.vocabulary')}: ${source.sourceName}`"
                     class="mr-2"
+                    @change="selectDaimon(source, 'Vocabulary')"
                   >
                   <span>{{ source.vocabularyVersion || source.version || '-' }}</span>
                 </div>
               </td>
               <td>
                 <input
-                  v-model="selectedEvidence"
                   type="radio"
                   :value="source.sourceKey"
-                  :disabled="!source.hasEvidence || !canReadSource(source.sourceId)"
+                  :checked="isDaimonSelected(source.sourceKey, 'CEM')"
+                  :disabled="!canSelectDaimon(source, 'hasEvidence')"
                   :aria-label="`${tv('columns.evidence')}: ${source.sourceName}`"
+                  @change="selectDaimon(source, 'CEM')"
                 >
               </td>
               <td>
                 <input
-                  v-model="selectedResults"
                   type="radio"
                   :value="source.sourceKey"
-                  :disabled="!source.hasResults || !canReadSource(source.sourceId)"
+                  :checked="isDaimonSelected(source.sourceKey, 'Results')"
+                  :disabled="!canSelectDaimon(source, 'hasResults')"
                   :aria-label="`${tv('columns.results')}: ${source.sourceName}`"
+                  @change="selectDaimon(source, 'Results')"
                 >
               </td>
               <td>
@@ -129,12 +133,12 @@
                     size="sm"
                     @click="checkConnection(source)"
                   />
-                  <DisabledReasonTooltip :reason="writeDisabledReason(source)">
+                  <DisabledReasonTooltip :reason="cacheDisabledReason()">
                     <AtlasIconButton
                       icon="mdi-refresh"
                       v-bind="{ ariaLabel: tv('columns.refreshCache') }"
                       size="sm"
-                      :disabled="!source.hasResults || !canWriteSource(source.sourceId)"
+                      :disabled="!source.hasResults || !canClearServerCache()"
                       @click="refreshCache(source)"
                     />
                   </DisabledReasonTooltip>
@@ -270,7 +274,6 @@ const { t, tv } = useI18n()
 // reason rather than hidden, so a user can see that the action exists and why
 // it is unavailable to them.
 const {
-  canWrite: canWriteSource,
   canRead: canReadSource,
   canManageAll,
   canClearServerCache,
@@ -281,8 +284,15 @@ function denied(allowed: boolean): string {
   return allowed ? '' : tv('common.noPermission')
 }
 
-function writeDisabledReason(source: DataSourceDisplay): string {
-  return denied(canWriteSource(source.sourceId))
+function cacheDisabledReason(): string {
+  return denied(canClearServerCache())
+}
+
+function canSelectDaimon(source: DataSourceDisplay, flag: DaimonFlag): boolean {
+  if (!source[flag]) return false
+  return priorityScope.value === 'application'
+    ? canManageAll()
+    : canReadSource(source.sourceId)
 }
 
 interface DataSourceDisplay {
@@ -310,6 +320,9 @@ const dataSources = ref<DataSourceDisplay[]>([])
 const selectedVocabulary = ref<string>('')
 const selectedEvidence = ref<string>('')
 const selectedResults = ref<string>('')
+const applicationVocabulary = ref<string>('')
+const applicationEvidence = ref<string>('')
+const applicationResults = ref<string>('')
 const showToast = ref(false)
 const showErrorToast = ref(false)
 const toastMessage = ref('')
@@ -357,6 +370,14 @@ function defaultKey(daimonType: DaimonKind, flag: DaimonFlag): string {
   return best?.sourceKey ?? ''
 }
 
+function applicationDefaultKey(daimonType: DaimonKind, flag: DaimonFlag): string {
+  let best: DataSourceDisplay | undefined
+  for (const source of dataSources.value.filter(candidate => candidate[flag])) {
+    if (!best || source.priority[daimonType] > best.priority[daimonType]) best = source
+  }
+  return best?.sourceKey ?? ''
+}
+
 function usableKey(saved: string | null, flag: DaimonFlag): string {
   const match = dataSources.value.find(s => s.sourceKey === saved && s[flag])
   return match && canReadSource(match.sourceId) ? match.sourceKey : ''
@@ -370,6 +391,51 @@ function applyDefaultSelections() {
   selectedVocabulary.value = defaultKey('Vocabulary', 'hasVocabulary')
   selectedEvidence.value = defaultKey('CEM', 'hasEvidence')
   selectedResults.value = defaultKey('Results', 'hasResults')
+}
+
+function applyApplicationSelections() {
+  applicationVocabulary.value = applicationDefaultKey('Vocabulary', 'hasVocabulary')
+  applicationEvidence.value = applicationDefaultKey('CEM', 'hasEvidence')
+  applicationResults.value = applicationDefaultKey('Results', 'hasResults')
+}
+
+function selectionFor(daimonType: DaimonKind) {
+  if (priorityScope.value === 'application') {
+    return daimonType === 'Vocabulary'
+      ? applicationVocabulary
+      : daimonType === 'CEM'
+        ? applicationEvidence
+        : applicationResults
+  }
+  return daimonType === 'Vocabulary'
+    ? selectedVocabulary
+    : daimonType === 'CEM'
+      ? selectedEvidence
+      : selectedResults
+}
+
+function isDaimonSelected(sourceKey: string, daimonType: DaimonKind): boolean {
+  return selectionFor(daimonType).value === sourceKey
+}
+
+async function selectDaimon(source: DataSourceDisplay, daimonType: DaimonKind) {
+  const selection = selectionFor(daimonType)
+  selection.value = source.sourceKey
+  if (priorityScope.value === 'application') {
+    await updateSourceDaimonPriority(source, daimonType)
+  }
+}
+
+async function updateSourceDaimonPriority(source: DataSourceDisplay, daimonType: DaimonKind) {
+  if (priorityScope.value !== 'application') return
+
+  try {
+    await httpPost(`/source/${source.sourceKey}/daimons/${daimonType}/set-priority`)
+    await loadDataSources()
+  } catch {
+    errorMessage.value = tv('configuration.alerts.failUpdatePrioritySourceDaimon')
+    showErrorToast.value = true
+  }
 }
 
 /**
@@ -433,6 +499,7 @@ async function loadDataSources() {
     selectedVocabulary.value = usableKey(savedVocab, 'hasVocabulary') || defaultKey('Vocabulary', 'hasVocabulary')
     selectedEvidence.value = usableKey(savedEvidence, 'hasEvidence') || defaultKey('CEM', 'hasEvidence')
     selectedResults.value = usableKey(savedResults, 'hasResults') || defaultKey('Results', 'hasResults')
+    applyApplicationSelections()
   } catch (error: unknown) {
     errorMessage.value =
       error instanceof Error

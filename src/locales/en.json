@@ -2009,7 +2009,8 @@
   "configuration": {
     "alerts": {
       "clearLocalCache": "Local Storage has been cleared. Please refresh the page to reload configuration information.",
-      "clearServerCache": "Server cache has been cleared."
+      "clearServerCache": "Server cache has been cleared.",
+      "failUpdatePrioritySourceDaimon": "Failed to update source priority. Please try again."
     },
     "buttons": {
       "clearConfigurationCache": "Clear Configuration Cache",
