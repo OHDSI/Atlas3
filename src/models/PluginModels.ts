@@ -102,6 +102,7 @@ export interface PluginManifest {
     loadTimeout?: number
     pluginsPath?: string
     showLoadingIndicators?: boolean
+    showLicenseAgreement?: boolean // Show the vocabulary (SNOMED) license agreement on first visit (default: true)
     navigation?: {
       enabledCoreItems?: string[] // List of core navigation items to show (e.g., ['datasources', 'concepts', 'cohorts'])
       disabledCoreItems?: string[] // List of core navigation items to hide (takes precedence over enabledCoreItems)
@@ -317,6 +318,7 @@ export const PluginManifestSchema = z.object({
       loadTimeout: z.number().optional(),
       pluginsPath: z.string().optional(),
       showLoadingIndicators: z.boolean().optional(),
+      showLicenseAgreement: z.boolean().optional(),
       navigation: z
         .object({
           enabledCoreItems: z.array(z.string()).optional(),

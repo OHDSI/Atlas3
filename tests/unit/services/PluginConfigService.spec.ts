@@ -747,6 +747,25 @@ describe('PluginConfigService', () => {
     })
   })
 
+  describe('showLicenseAgreement', () => {
+    it('is enabled by default', () => {
+      expect(service.showLicenseAgreement()).toBe(true)
+    })
+
+    it('can be disabled in plugins.json', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({ version: '1.0', plugins: [], settings: { showLicenseAgreement: false } }),
+      })
+
+      await service.loadConfig()
+
+      expect(service.showLicenseAgreement()).toBe(false)
+    })
+  })
+
   describe('Header Settings', () => {
     it('showNavBar should return true by default', () => {
       expect(service.showNavBar()).toBe(true)

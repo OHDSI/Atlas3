@@ -18,6 +18,10 @@ vi.mock('@/composables/useI18n', async () => {
   return mockUseI18n
 })
 
+vi.mock('@/plugins/index', () => ({
+  whenPluginFrameworkReady: () => Promise.resolve(),
+}))
+
 vi.mock('@/composables/usePluginMounts', () => ({
   usePluginMounts: vi.fn(() => ({ items: computed(() => []) })),
 }))
@@ -55,6 +59,7 @@ function makeRouter(): Router {
         path: '/analysis',
         component: AnalysisHubView,
         children: [
+          { path: '', name: 'analysis-home', component: childStub('home') },
           { path: 'characterizations', name: 'characterizations', component: childStub('chr') },
           { path: 'feature-analyses', name: 'feature-analyses', component: childStub('fa') },
           { path: 'pathways', name: 'pathways', component: childStub('pw') },
@@ -206,5 +211,103 @@ describe('AnalysisHubView', () => {
     expect(active.exists()).toBe(true)
     expect(active.text()).toContain('Feature Analyses')
     expect(wrapper.find('.child-fa').exists()).toBe(true)
+  })
+
+  describe('plugin tab placement and default tab (#426)', () => {
+    const pluginTab = (extra: Record<string, unknown> = {}) => ({
+      key: 'plugin:hello-tab:hello-analysis',
+      pluginId: 'hello-tab',
+      itemId: 'hello-analysis',
+      surface: 'analysis-tabs' as const,
+      name: 'Plugin Tab',
+      icon: 'mdi-puzzle',
+      order: 1,
+      visible: true,
+      ...extra,
+    })
+
+    function withPluginTab(extra: Record<string, unknown> = {}) {
+      vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => [pluginTab(extra)]) })
+    }
+
+    async function openBareAnalysis() {
+      const router = makeRouter()
+      await router.push('/analysis')
+      await router.isReady()
+      const wrapper = factory(router)
+      await flushPromises()
+      return { router, wrapper }
+    }
+
+    it('places a plugin tab with insertBefore before that core tab', async () => {
+      withPluginTab({ insertBefore: 'feature-analyses' })
+      const { wrapper } = await openBareAnalysis()
+
+      const labels = wrapper.findAll('.v-tab').map(t => t.text())
+      expect(labels[0]).toContain('Plugin Tab')
+      expect(labels[1]).toContain('Feature Analyses')
+    })
+
+    it('places a plugin tab with insertAfter after that core tab', async () => {
+      withPluginTab({ insertAfter: 'characterizations' })
+      const { wrapper } = await openBareAnalysis()
+
+      const labels = wrapper.findAll('.v-tab').map(t => t.text())
+      expect(labels[1]).toContain('Characterizations')
+      expect(labels[2]).toContain('Plugin Tab')
+    })
+
+    it('opens the first tab on a first visit, also when it is a plugin tab', async () => {
+      withPluginTab({ insertBefore: 'feature-analyses' })
+      const { router, wrapper } = await openBareAnalysis()
+
+      expect(router.currentRoute.value.fullPath).toBe('/analysis/x/hello-tab/hello-analysis')
+      expect(wrapper.find('.v-tab--selected').text()).toContain('Plugin Tab')
+      expect(localStorage.getItem('atlas3.analysis.lastTab')).toBe('plugin:hello-tab:hello-analysis')
+    })
+
+    it('restores the last-used plugin tab', async () => {
+      withPluginTab()
+      localStorage.setItem('atlas3.analysis.lastTab', 'plugin:hello-tab:hello-analysis')
+      const { router } = await openBareAnalysis()
+
+      expect(router.currentRoute.value.fullPath).toBe('/analysis/x/hello-tab/hello-analysis')
+    })
+
+    it('restores the last-used core tab', async () => {
+      withPluginTab({ insertBefore: 'feature-analyses' })
+      localStorage.setItem('atlas3.analysis.lastTab', 'pathways')
+      const { router } = await openBareAnalysis()
+
+      expect(router.currentRoute.value.name).toBe('pathways')
+    })
+
+    it('falls back to the first tab when the stored plugin tab is no longer registered', async () => {
+      vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
+      localStorage.setItem('atlas3.analysis.lastTab', 'plugin:gone:tab')
+      const { router } = await openBareAnalysis()
+
+      expect(router.currentRoute.value.name).toBe('feature-analyses')
+    })
+
+    it('keeps Feature Analyses as the default without plugin tabs', async () => {
+      vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
+      const { router } = await openBareAnalysis()
+
+      expect(router.currentRoute.value.name).toBe('feature-analyses')
+    })
+
+    it('does not overwrite the saved tab while a plugin tab is not registered yet', async () => {
+      vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
+      localStorage.setItem('atlas3.analysis.lastTab', 'plugin:hello-tab:hello-analysis')
+
+      const router = makeRouter()
+      await router.push({ name: 'analysis-plugin', params: { pluginId: 'hello-tab', itemId: 'hello-analysis' } })
+      await router.isReady()
+      factory(router)
+      await flushPromises()
+
+      expect(localStorage.getItem('atlas3.analysis.lastTab')).toBe('plugin:hello-tab:hello-analysis')
+    })
   })
 })

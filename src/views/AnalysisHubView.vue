@@ -72,6 +72,8 @@ import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { usePluginMounts } from '@/composables/usePluginMounts'
+import { whenPluginFrameworkReady } from '@/plugins/index'
+import { interleaveMenuItems } from '@/plugins/navigation/PluginMenuIntegration'
 import { AtlasIcon, AtlasPageShell, AtlasTab, AtlasTabs } from '@/components/ui'
 import PluginParcelOutlet from '@/plugins/components/PluginParcelOutlet.vue'
 import CharacterizationsView from '@/views/CharacterizationsView.vue'
@@ -80,6 +82,8 @@ import PathwaysView from '@/views/PathwaysView.vue'
 import IncidenceRatesView from '@/views/IncidenceRatesView.vue'
 
 interface Tab {
+  /** Anchor for plugin insertBefore/insertAfter; equals `name`. */
+  id: string
   name: string
   titleKey: string
   defaultLabel: string
@@ -98,6 +102,7 @@ const { items: pluginTabItems } = usePluginMounts('analysis-tabs')
 
 const coreTabs: Tab[] = [
   {
+    id: 'feature-analyses',
     name: 'feature-analyses',
     titleKey: 'navigation.featureAnalyses',
     defaultLabel: 'Feature Analyses',
@@ -106,6 +111,7 @@ const coreTabs: Tab[] = [
     defaultHint: 'Reusable feature definitions for cohort characterization.',
   },
   {
+    id: 'characterizations',
     name: 'characterizations',
     titleKey: 'navigation.characterizations',
     defaultLabel: 'Characterizations',
@@ -114,6 +120,7 @@ const coreTabs: Tab[] = [
     defaultHint: 'Compare cohorts on shared feature analyses.',
   },
   {
+    id: 'pathways',
     name: 'pathways',
     titleKey: 'navigation.pathways',
     defaultLabel: 'Pathways',
@@ -122,6 +129,7 @@ const coreTabs: Tab[] = [
     defaultHint: 'Trace event sequences across cohorts.',
   },
   {
+    id: 'incidence-rates',
     name: 'incidence-rates',
     titleKey: 'navigation.incidenceRates',
     defaultLabel: 'Incidence Rates',
@@ -131,33 +139,58 @@ const coreTabs: Tab[] = [
   },
 ]
 
-const tabs = computed<Tab[]>(() => [
-  ...coreTabs,
-  ...pluginTabItems.value.map(item => ({
-    name: item.key,
-    titleKey: item.name,
-    defaultLabel: item.name,
-    icon: item.icon ?? 'mdi-puzzle-outline',
-    hintKey: item.hint ?? '',
-    defaultHint: item.hint ?? '',
-    plugin: { pluginId: item.pluginId, itemId: item.itemId },
-  })),
-])
+// Plugin tabs are placed among the core tabs by insertBefore/insertAfter, the
+// same way the navbar and the Data Sources sidebar place plugin items.
+const tabs = computed<Tab[]>(() =>
+  interleaveMenuItems(
+    coreTabs,
+    pluginTabItems.value.map(item => ({
+      id: item.key,
+      pluginId: item.pluginId,
+      name: item.name,
+      route: '',
+      icon: item.icon,
+      order: item.order,
+      insertBefore: item.insertBefore,
+      insertAfter: item.insertAfter,
+      visible: true,
+    })),
+    menuItem => {
+      const item = pluginTabItems.value.find(i => i.key === menuItem.id)!
+      return {
+        id: item.key,
+        name: item.key,
+        titleKey: item.name,
+        defaultLabel: item.name,
+        icon: item.icon ?? 'mdi-puzzle-outline',
+        hintKey: item.hint ?? '',
+        defaultHint: item.hint ?? '',
+        plugin: { pluginId: item.pluginId, itemId: item.itemId },
+      }
+    }
+  )
+)
 
 const tabNames = computed(() => new Set(tabs.value.map(tab => tab.name)))
 
 const pluginTabs = computed(() => tabs.value.filter(tab => tab.plugin))
 
+const firstTabName = computed(() => tabs.value[0]?.name ?? 'feature-analyses')
+
+// The tab the URL names, or null while it names none (a bare /analysis, or a
+// plugin tab whose plugin is not registered yet).
+const routeTabName = computed<string | null>(() => {
+  if (route.name === 'analysis-plugin') {
+    const name = `plugin:${route.params.pluginId as string}:${route.params.itemId as string}`
+    return tabNames.value.has(name) ? name : null
+  }
+  const name = route.name as string | undefined
+  return name && tabNames.value.has(name) ? name : null
+})
+
 // Bidirectional binding between active tab and the URL.
 const activeTabName = computed<string>({
-  get: () => {
-    if (route.name === 'analysis-plugin') {
-      const name = `plugin:${route.params.pluginId as string}:${route.params.itemId as string}`
-      return tabNames.value.has(name) ? name : 'feature-analyses'
-    }
-    const name = route.name as string | undefined
-    return name && tabNames.value.has(name) ? name : 'feature-analyses'
-  },
+  get: () => routeTabName.value ?? firstTabName.value,
   set: name => {
     if (!name || !tabNames.value.has(name)) return
     const tab = tabs.value.find(t => t.name === name)
@@ -178,8 +211,19 @@ const activeTabName = computed<string>({
 
 const STORAGE_KEY = 'atlas3.analysis.lastTab'
 
+function readStoredTab(): string | null {
+  try {
+    return typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
+  } catch {
+    // localStorage may be unavailable (private mode); ignore.
+    return null
+  }
+}
+
+// Only a tab the URL actually names is remembered, so a fallback shown while
+// plugin tabs are still loading never overwrites the saved choice.
 watch(
-  activeTabName,
+  routeTabName,
   name => {
     if (!name) return
     try {
@@ -193,6 +237,35 @@ watch(
   { immediate: true }
 )
 
+function openTab(name: string) {
+  const tab = tabs.value.find(t => t.name === name)
+  if (!tab) return
+  if (tab.plugin) router.replace({ name: 'analysis-plugin', params: tab.plugin })
+  else router.replace({ name: tab.name })
+}
+
+// A bare /analysis opens the last-used tab, or else the first tab. The hub
+// decides rather than a route redirect: plugin tabs, and where they sit, are
+// only known once the plugin framework has registered them.
+async function openDefaultTab() {
+  const stored = readStoredTab()
+  if (stored && coreTabs.some(tab => tab.name === stored)) {
+    openTab(stored)
+    return
+  }
+  await whenPluginFrameworkReady()
+  if (route.name !== 'analysis-home') return
+  openTab(stored && tabNames.value.has(stored) ? stored : firstTabName.value)
+}
+
+watch(
+  () => route.name,
+  name => {
+    if (name === 'analysis-home') void openDefaultTab()
+  },
+  { immediate: true }
+)
+
 function getLabel(tab: Tab): string {
   if (tab.plugin) return tab.defaultLabel
   return t(tab.titleKey, tab.defaultLabel).value
@@ -200,7 +273,7 @@ function getLabel(tab: Tab): string {
 
 const eyebrow = computed(() => `OHDSI · ${t('navigation.analysis').value}`)
 const activeTab = computed(
-  () => tabs.value.find(tab => tab.name === activeTabName.value) ?? coreTabs[0]!
+  () => tabs.value.find(tab => tab.name === activeTabName.value) ?? tabs.value[0]!
 )
 
 // Hero title and subtitle are stable — they describe the hub itself,

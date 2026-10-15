@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { RouteLocationNormalized, RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
 vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
@@ -34,54 +34,12 @@ describe('route table loaders', () => {
     }
   })
 
-  it('analysis hub redirect resolves to a tab name', () => {
+  it('a bare /analysis lands on the hub instead of a static redirect', () => {
     const analysis = flatten(routes).find((r) => r.path === '/analysis')
     expect(analysis).toBeDefined()
-    expect(typeof analysis!.redirect).toBe('function')
-
-    const fakeRoute = {
-      params: {},
-      path: '/analysis',
-      query: {},
-      hash: '',
-      name: undefined,
-      fullPath: '/analysis',
-      matched: [],
-      meta: {},
-      redirectedFrom: undefined,
-    } as unknown as RouteLocationNormalized
-
-    // Default (nothing in localStorage) should redirect to feature-analyses.
-    try {
-      localStorage.removeItem('atlas3.analysis.lastTab')
-    } catch {
-      // localStorage may be unavailable in some envs.
-    }
-    const fn = analysis!.redirect as (to: RouteLocationNormalized) => { name: string }
-    expect(fn(fakeRoute)).toEqual({ name: 'feature-analyses' })
-
-    // A remembered tab name should win.
-    try {
-      localStorage.setItem('atlas3.analysis.lastTab', 'pathways')
-      expect(fn(fakeRoute)).toEqual({ name: 'pathways' })
-    } finally {
-      try {
-        localStorage.removeItem('atlas3.analysis.lastTab')
-      } catch {
-        // ignore
-      }
-    }
-
-    // An unrecognized stored value falls back to the default.
-    try {
-      localStorage.setItem('atlas3.analysis.lastTab', 'nope')
-      expect(fn(fakeRoute)).toEqual({ name: 'feature-analyses' })
-    } finally {
-      try {
-        localStorage.removeItem('atlas3.analysis.lastTab')
-      } catch {
-        // ignore
-      }
-    }
+    // The hub picks the tab, because plugin tabs are unknown when a redirect runs.
+    expect(analysis!.redirect).toBeUndefined()
+    const home = analysis!.children?.find((c) => c.path === '')
+    expect(home?.name).toBe('analysis-home')
   })
 })
