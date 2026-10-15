@@ -1,13 +1,21 @@
 /**
- * Browser telemetry via OpenTelemetry.
+ * Browser telemetry via OpenTelemetry, sent to the same gateway as the WebAPI
+ * Java agent so nothing leaves the deployment. Two signals, for two questions,
+ * following the OTel Browser SIG's split:
  *
- * Spans go to the same `atlas3-otel-gateway` the WebAPI Java agent uses, so
- * frontend and backend telemetry land in one SigNoz instance and nothing
- * leaves the deployment.
+ * - **Usage events** (OTLP logs): page views with dwell time, deliberate
+ *   actions, frontend errors. Never sampled, and each carries `session.id`,
+ *   so counts stay right whatever the trace sampling ratio is.
+ * - **Performance traces** (spans): fetch/XHR calls and document load,
+ *   head-sampled by `sampleRatio`. Fetches carry W3C `traceparent`, so a
+ *   browser request continues into WebAPI and down to the SQL it issued.
  *
- * The practical win over a product-analytics SDK: fetch calls are traced with
- * W3C `traceparent` propagation, so one trace in SigNoz runs from the click in
- * the browser through the WebAPI request down to the SQL it issued.
+ * A trace starts at the request, not at the click. The default
+ * StackContextManager does not carry context across `await`, and Atlas's
+ * http-client awaits the auth token before every fetch, so an action cannot
+ * parent the requests it causes. ZoneContextManager would, but needs
+ * async/await transpiled to ES2015. Actions and requests are correlated by
+ * `session.id` and time instead.
  *
  * Privacy posture for an OMOP/clinical tool. OTel instrumentation never reads
  * DOM text, so cohort names, condition concepts and filter values cannot leak
@@ -17,32 +25,49 @@
  * absent and comes off only for a literal `false` (see `optedOut()`), and it is
  * enforced twice: here before export, and again in the gateway.
  */
-import type { Attributes, Context, Span as ApiSpan } from '@opentelemetry/api'
+import type { Attributes, Context } from '@opentelemetry/api'
+import type { AnyValueMap, Logger } from '@opentelemetry/api-logs'
 import type { ReadableSpan, Span, SpanExporter, SpanProcessor } from '@opentelemetry/sdk-trace-web'
 import type { RouteLocationNormalized, Router } from 'vue-router'
 import type { AnalyticsConfig } from '@/config/app-config.types'
 import { getAppConfig } from '@/config/app-config.loader'
 import { logger } from '@/utils/logger'
+import { loadBrowserInstrumentations } from './instrumentations'
 
-type Tracer = import('@opentelemetry/api').Tracer
-type OtelApi = typeof import('@opentelemetry/api')
-
-let tracer: Tracer | null = null
-/**
- * The `@opentelemetry/api` namespace, kept from the dynamic import so the
- * synchronous track* helpers can reach `SpanStatusCode` / `ROOT_CONTEXT`
- * without a static import pulling the package into the main bundle.
- */
-let otel: OtelApi | null = null
-/** Read by the enrichment processor; updated as the Atlas session changes. */
-let currentUserId: string | null = null
+/** Usage events go here; null while telemetry is off. */
+let eventLogger: Logger | null = null
+/** Identifies one browser tab's visit; attached to every event and span. */
+let sessionId: string | null = null
+/** SHA-256 of the login, only when `identifyUsers` is literally `true`. */
+let pseudoUserId: string | null = null
+/** Bumped on every login change so a slow hash cannot land on the next user. */
+let identityGeneration = 0
 /** The page the user is on, for correlating actions and errors to a screen. */
 let currentPageName: string | null = null
-/** Open `page_view` span. Its duration is the dwell time on that screen. */
-let openPageView: ApiSpan | null = null
+/** Whether URL query strings are stripped; mirrors the config flag. */
+let scrubQueries = true
 
-/** Longest exception message forwarded; see the note in `trackError`. */
+interface OpenView {
+  name: string
+  path: string
+  routeName?: string
+  startedAt: number
+}
+/** The screen being viewed. Its event is emitted when it ends, with dwell. */
+let openView: OpenView | null = null
+
+/** Longest exception message / stack trace forwarded; see `trackError`. */
 const MAX_EXCEPTION_MESSAGE = 500
+const MAX_EXCEPTION_STACK = 4000
+/**
+ * Records per export request. Keeps each POST well under the 1 MB body cap
+ * that Caddy and the gateway put on the public browser path.
+ */
+const MAX_EXPORT_BATCH = 128
+/** `SeverityNumber` values from api-logs, inlined to keep it out of the main bundle. */
+const SEVERITY_INFO = 9
+const SEVERITY_ERROR = 17
+const SESSION_STORAGE_KEY = 'atlas3.telemetry.session'
 
 /**
  * Fail-safe reading of a privacy flag: the protection stays on unless the
@@ -52,6 +77,11 @@ const MAX_EXCEPTION_MESSAGE = 500
  */
 function optedOut(value: unknown): boolean {
   return value === false
+}
+
+/** The mirror image, for features that send more: on only for a literal `true`. */
+function optedIn(value: unknown): boolean {
+  return value === true
 }
 
 /** Span attributes that carry a URL and therefore need query-string scrubbing. */
@@ -75,6 +105,14 @@ export function scrubUrl(value: string): string | undefined {
     // Unparseable: drop it rather than forward something we cannot inspect.
     return undefined
   }
+}
+
+/**
+ * Strips query strings embedded in free text, such as a `Failed to fetch
+ * https://host/WebAPI/vocabulary/search?q=diabetes` error message.
+ */
+function scrubText(value: string): string {
+  return scrubQueries ? value.replace(/\?[^\s'"]+/g, '') : value
 }
 
 function scrubAttributes(attributes: Attributes): void {
@@ -114,10 +152,18 @@ class ScrubbingSpanExporter implements SpanExporter {
   }
 }
 
-/** Stamps the Atlas login onto every span, so SigNoz can group by operator. */
-class UserEnrichmentProcessor implements SpanProcessor {
+/** Session and (opt-in) pseudonymous user, shared by events and spans. */
+function sessionAttributes(): Attributes {
+  return {
+    ...(sessionId ? { 'session.id': sessionId } : {}),
+    ...(pseudoUserId ? { 'enduser.pseudo.id': pseudoUserId } : {}),
+  }
+}
+
+/** Stamps session and user onto every span, so traces join up with events. */
+class SessionEnrichmentProcessor implements SpanProcessor {
   onStart(span: Span, _parentContext: Context): void {
-    if (currentUserId) span.setAttribute('enduser.id', currentUserId)
+    span.setAttributes(sessionAttributes())
   }
   onEnd(_span: ReadableSpan): void {}
   forceFlush(): Promise<void> {
@@ -128,13 +174,52 @@ class UserEnrichmentProcessor implements SpanProcessor {
   }
 }
 
+function randomId(): string {
+  const bytes = new Uint8Array(16)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('')
+}
+
+/**
+ * One id per tab, surviving reloads. sessionStorage can be unavailable
+ * (privacy modes, blocked storage); a per-load id is the fallback.
+ */
+function resolveSessionId(): string {
+  try {
+    const existing = sessionStorage.getItem(SESSION_STORAGE_KEY)
+    if (existing) return existing
+  } catch {
+    // fall through to a fresh id
+  }
+  const id = randomId()
+  try {
+    sessionStorage.setItem(SESSION_STORAGE_KEY, id)
+  } catch {
+    // not persisted; still valid for this page load
+  }
+  return id
+}
+
+/**
+ * SHA-256 of the login, hex-encoded, for `enduser.pseudo.id`. Pseudonymous,
+ * not anonymous: anyone holding the list of logins can recompute it. Returns
+ * null where WebCrypto is unavailable (non-secure contexts), so the login is
+ * never sent in the clear as a fallback.
+ */
+export async function pseudonymize(login: string): Promise<string | null> {
+  const subtle = globalThis.crypto?.subtle
+  if (!subtle) return null
+  const digest = await subtle.digest('SHA-256', new TextEncoder().encode(login))
+  return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('')
+}
+
 /**
  * Starts browser telemetry when configured. Safe to call unconditionally and
  * safe to call twice; never rejects, because telemetry must not be able to
  * break application bootstrap.
  */
 export async function initTelemetry(router: Router): Promise<void> {
-  if (tracer) return
+  if (eventLogger) return
 
   let config: AnalyticsConfig
   try {
@@ -148,9 +233,7 @@ export async function initTelemetry(router: Router): Promise<void> {
     logger.debug('Telemetry', 'Browser telemetry disabled by configuration')
     return
   }
-  // An unrendered `${...}` reaches here when the container entrypoint did not
-  // substitute it, or when `npm run dev` runs against the production template.
-  if (config.endpoint === '' || config.endpoint.includes('${')) {
+  if (config.endpoint.trim() === '') {
     logger.debug('Telemetry', 'No OTLP endpoint configured, telemetry inactive')
     return
   }
@@ -159,86 +242,103 @@ export async function initTelemetry(router: Router): Promise<void> {
     const [
       { WebTracerProvider, BatchSpanProcessor, ParentBasedSampler, TraceIdRatioBasedSampler },
       { OTLPTraceExporter },
+      { LoggerProvider, BatchLogRecordProcessor },
+      { OTLPLogExporter },
       { resourceFromAttributes },
       { registerInstrumentations },
-      api,
     ] = await Promise.all([
       import('@opentelemetry/sdk-trace-web'),
       import('@opentelemetry/exporter-trace-otlp-http'),
+      import('@opentelemetry/sdk-logs'),
+      import('@opentelemetry/exporter-logs-otlp-http'),
       import('@opentelemetry/resources'),
       import('@opentelemetry/instrumentation'),
-      import('@opentelemetry/api'),
     ])
-    otel = api
 
-    const tracesUrl = `${config.endpoint.replace(/\/$/, '')}/v1/traces`
+    scrubQueries = !optedOut(config.scrubUrlQueryStrings)
+    sessionId = resolveSessionId()
+    const base = config.endpoint.replace(/\/$/, '')
+    const tracesUrl = `${base}/v1/traces`
+    const logsUrl = `${base}/v1/logs`
+    const resource = resourceFromAttributes({
+      'service.name': 'atlas3-frontend',
+      'service.namespace': 'atlas3',
+      'browser.language': navigator.language,
+    })
 
-    let exporter: SpanExporter = new OTLPTraceExporter({ url: tracesUrl })
-    if (!optedOut(config.scrubUrlQueryStrings)) {
-      exporter = new ScrubbingSpanExporter(exporter)
-    }
-
+    // Performance traces.
+    let spanExporter: SpanExporter = new OTLPTraceExporter({ url: tracesUrl })
+    if (scrubQueries) spanExporter = new ScrubbingSpanExporter(spanExporter)
     const ratio = Number.isFinite(config.sampleRatio) ? config.sampleRatio : 1
-    const provider = new WebTracerProvider({
-      resource: resourceFromAttributes({
-        'service.name': 'atlas3-frontend',
-        'service.namespace': 'atlas3',
-        'browser.language': navigator.language,
-      }),
+    const tracerProvider = new WebTracerProvider({
+      resource,
       sampler: new ParentBasedSampler({ root: new TraceIdRatioBasedSampler(ratio) }),
-      spanProcessors: [new UserEnrichmentProcessor(), new BatchSpanProcessor(exporter)],
+      spanProcessors: [
+        new SessionEnrichmentProcessor(),
+        new BatchSpanProcessor(spanExporter, { maxExportBatchSize: MAX_EXPORT_BATCH }),
+      ],
     })
     // Registers the W3C traceparent propagator, which is what makes fetch calls
     // to /WebAPI continue the browser's trace instead of starting a new one.
-    provider.register()
+    tracerProvider.register()
 
-    await registerBrowserInstrumentations(config, tracesUrl, registerInstrumentations)
+    const instrumentations = await loadBrowserInstrumentations({
+      traceApiCalls: !optedOut(config.traceApiCalls),
+      traceDocumentLoad: !optedOut(config.traceDocumentLoad),
+      ignoreUrls: [tracesUrl, logsUrl],
+    })
+    if (instrumentations.length > 0) registerInstrumentations({ instrumentations })
 
-    tracer = provider.getTracer('atlas3-frontend')
+    // Usage events. Not sampled: every page view, action and error counts.
+    const loggerProvider = new LoggerProvider({
+      resource,
+      processors: [
+        new BatchLogRecordProcessor({
+          exporter: new OTLPLogExporter({ url: logsUrl }),
+          maxExportBatchSize: MAX_EXPORT_BATCH,
+        }),
+      ],
+    })
+    eventLogger = loggerProvider.getLogger('atlas3-frontend')
 
-    trackRouteChanges(router)
     captureUnhandledErrors()
-    if (!optedOut(config.identifyUsers)) await bindUserIdentity()
+    if (optedIn(config.identifyUsers)) await bindUserIdentity()
+    trackRouteChanges(router)
 
-    logger.info('Telemetry', 'OpenTelemetry browser tracing initialized', { url: tracesUrl })
+    logger.info('Telemetry', 'OpenTelemetry browser telemetry initialized', { base })
   } catch (error) {
     logger.warn('Telemetry', 'Telemetry initialization failed, continuing without it', error)
   }
 }
 
-async function registerBrowserInstrumentations(
-  config: AnalyticsConfig,
-  tracesUrl: string,
-  registerInstrumentations: typeof import('@opentelemetry/instrumentation').registerInstrumentations
-): Promise<void> {
-  const instrumentations = []
-
-  if (!optedOut(config.traceApiCalls)) {
-    const [{ FetchInstrumentation }, { XMLHttpRequestInstrumentation }] = await Promise.all([
-      import('@opentelemetry/instrumentation-fetch'),
-      import('@opentelemetry/instrumentation-xml-http-request'),
-    ])
-    // Ignoring the exporter's own endpoint is not optional: without it every
-    // export POST creates a span, which creates another export, forever.
-    const ignoreUrls = [tracesUrl]
-    instrumentations.push(
-      new FetchInstrumentation({ ignoreUrls }),
-      new XMLHttpRequestInstrumentation({ ignoreUrls })
-    )
+/** Drops undefined values, which OTLP has no encoding for. */
+function definedOnly(attributes: Attributes): AnyValueMap {
+  const out: AnyValueMap = {}
+  for (const [key, value] of Object.entries(attributes)) {
+    if (value !== undefined) out[key] = value
   }
+  return out
+}
 
-  if (!optedOut(config.traceDocumentLoad)) {
-    const { DocumentLoadInstrumentation } = await import(
-      '@opentelemetry/instrumentation-document-load'
-    )
-    instrumentations.push(new DocumentLoadInstrumentation())
-  }
-
-  if (instrumentations.length > 0) registerInstrumentations({ instrumentations })
+function emitEvent(name: string, attributes: Attributes, severityNumber = SEVERITY_INFO): void {
+  if (!eventLogger) return
+  eventLogger.emit({
+    eventName: name,
+    // Also the body, so backends that do not surface EventName yet still
+    // show what the record is.
+    body: name,
+    severityNumber,
+    severityText: severityNumber >= SEVERITY_ERROR ? 'ERROR' : 'INFO',
+    attributes: definedOnly({
+      ...sessionAttributes(),
+      ...(currentPageName ? { 'page.name': currentPageName } : {}),
+      ...attributes,
+    }),
+  })
 }
 
 /**
- * Names a screen by its route *pattern*, never its resolved path, so a span
+ * Names a screen by its route *pattern*, never its resolved path, so an event
  * reads `/cohortdefinition/:id` rather than embedding the id a user opened.
  *
  * Vue Router already hands us the pattern in `matched`, which is better than
@@ -254,50 +354,71 @@ function routePattern(to: RouteLocationNormalized): string {
 }
 
 /**
- * Opens a `page_view` span per screen and closes it on the way out, so the
- * span's duration is the dwell time. Deliberately a root span: if it were the
- * parent of everything that happens on the page, every request for the whole
- * visit would collapse into one enormous trace and the browser-to-SQL traces
- * would stop being readable.
+ * Opens a view of `route` unless it is already the open one. Comparing the
+ * resolved path means a query-only `router.replace` (tabs, drawers, `run=`)
+ * stays in the same view, while moving to another cohort starts a new one.
  */
-export function trackPageView(pageName: string, attributes?: Attributes): void {
-  endPageView()
-  currentPageName = pageName
-  if (!tracer || !otel) return
-  openPageView = tracer.startSpan(
-    'page_view',
-    { attributes: { 'page.name': pageName, ...attributes } },
-    otel.ROOT_CONTEXT
-  )
+function startView(route: RouteLocationNormalized): void {
+  if (openView?.path === route.path) return
+  endView()
+  const name = routePattern(route)
+  currentPageName = name
+  openView = {
+    name,
+    path: route.path,
+    routeName: typeof route.name === 'string' ? route.name : undefined,
+    startedAt: performance.now(),
+  }
 }
 
-/** Closes the open page_view span, which is what records the dwell time. */
-export function endPageView(): void {
-  openPageView?.end()
-  openPageView = null
+/** Emits the open view's `atlas.page_view` event with its dwell time. */
+function endView(): void {
+  if (!openView) return
+  const view = openView
+  openView = null
+  emitEvent('atlas.page_view', {
+    'page.name': view.name,
+    'page.route_name': view.routeName,
+    'page.duration_ms': Math.round(performance.now() - view.startedAt),
+  })
 }
 
 function trackRouteChanges(router: Router): void {
-  router.afterEach(to => {
-    trackPageView(routePattern(to), {
-      'page.route_name': typeof to.name === 'string' ? to.name : undefined,
-    })
+  router.afterEach((to, _from, failure) => {
+    if (failure) return
+    if (document.visibilityState === 'hidden') {
+      endView()
+      return
+    }
+    startView(to)
   })
 
-  // Without this the last screen of a session is never recorded: its span is
-  // still open when the tab goes away, and the batch processor can only flush
-  // spans that have ended. `pagehide` fires where `beforeunload` is unreliable
-  // (mobile, tab discard).
-  window.addEventListener('pagehide', endPageView)
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') endPageView()
+  // The landing page: its navigation finished before this module loaded, so
+  // afterEach never saw it.
+  void router.isReady().then(() => {
+    if (document.visibilityState !== 'hidden') startView(router.currentRoute.value)
   })
+
+  // Dwell is visible time. Hiding the tab ends the view; showing it again
+  // starts a new one. Both listeners are capture-phase on window so they run
+  // before the batch processors' own visibilitychange/pagehide flush, which
+  // listens on document: the view's event is queued in time to go out with
+  // that flush instead of being lost with the tab.
+  window.addEventListener(
+    'visibilitychange',
+    () => {
+      if (document.visibilityState === 'hidden') endView()
+      else startView(router.currentRoute.value)
+    },
+    { capture: true }
+  )
+  window.addEventListener('pagehide', endView, { capture: true })
 }
 
 /**
- * Keeps `enduser.id` in step with the Atlas session: set on login, cleared on
- * logout so the next operator on a shared workstation is not attributed to the
- * previous one.
+ * Keeps `enduser.pseudo.id` in step with the Atlas session: set on login,
+ * cleared on logout so the next operator on a shared workstation is not
+ * attributed to the previous one. Only the hash is sent, never the login.
  */
 async function bindUserIdentity(): Promise<void> {
   const [{ watch }, { useAuthStore }] = await Promise.all([import('vue'), import('@/stores/auth')])
@@ -306,77 +427,57 @@ async function bindUserIdentity(): Promise<void> {
   watch(
     () => authStore.user?.login ?? null,
     login => {
-      // Login only. Display name and email are deliberately not sent.
-      currentUserId = login
+      pseudoUserId = null
+      const generation = ++identityGeneration
+      if (!login) return
+      void pseudonymize(login).then(id => {
+        if (generation === identityGeneration) pseudoUserId = id
+      })
     },
     { immediate: true }
   )
 }
 
 /**
- * Records a product event as a zero-duration span, queryable in SigNoz by
- * name. The low-level helper behind `trackAction`; prefer that one so events
- * share a name prefix and are easy to group.
- *
- * A no-op when telemetry is disabled, so call sites need no feature check.
- */
-export function trackEvent(name: string, attributes?: Attributes): void {
-  if (!tracer) return
-  const span = tracer.startSpan(name, {
-    attributes: { ...(currentPageName ? { 'page.name': currentPageName } : {}), ...attributes },
-  })
-  span.end()
-}
-
-/**
  * Records a deliberate user action — "cohort generation was triggered",
- * "export ran". Spans are named `action:<name>` so one SigNoz query
- * (`name LIKE 'action:%'`, grouped by `action.name`) gives a feature-adoption
- * ranking across everything instrumented.
+ * "export ran" — as an `atlas.action` event. Grouping those by `action.name`
+ * gives a feature-adoption ranking across everything instrumented.
  *
  * Attribute values must be counts, enums or flags, never user-entered text:
  * `criteria.count: 7` is useful and safe, a cohort name is neither.
+ *
+ * A no-op when telemetry is disabled, so call sites need no feature check.
  */
 export function trackAction(actionName: string, metadata?: Attributes): void {
-  trackEvent(`action:${actionName}`, { 'action.name': actionName, ...metadata })
+  emitEvent('atlas.action', { 'action.name': actionName, ...metadata })
 }
 
 /**
- * Records a frontend exception as a failed span, so friction shows up next to
- * the API errors and slow queries that often caused it.
+ * Records a frontend exception as an `atlas.error` event, so friction shows up
+ * next to the API errors and slow queries that often caused it.
  *
  * Note on content: `exception.message` is whatever threw, and an API error
- * echoing a user's search term would land here. That is why the message is
- * truncated and why this is worth a look during a privacy review — it is the
- * one attribute in this module not derived from a route pattern or a count.
- * It stays inside the deployment either way; nothing is sent off-site.
+ * echoing a user's search term would land here. That is why it is truncated
+ * and query-scrubbed here, has values redacted again in the gateway, and is
+ * worth a look during a privacy review — it is the one attribute in this
+ * module not derived from a route pattern or a count.
  */
 export function trackError(error: unknown, metadata?: Attributes): void {
-  if (!tracer || !otel) return
+  if (!eventLogger) return
   const message = error instanceof Error ? error.message : String(error)
-  const span = tracer.startSpan(
-    'frontend.error',
+  emitEvent(
+    'atlas.error',
     {
-      attributes: {
-        ...(currentPageName ? { 'page.name': currentPageName } : {}),
-        'error.type': error instanceof Error ? error.name : typeof error,
-        ...metadata,
-      },
+      'exception.type': error instanceof Error ? error.name : typeof error,
+      'exception.message': scrubText(message.slice(0, MAX_EXCEPTION_MESSAGE)),
+      'exception.stacktrace':
+        error instanceof Error && error.stack
+          ? scrubText(error.stack.slice(0, MAX_EXCEPTION_STACK))
+          : undefined,
+      ...metadata,
     },
-    otel.ROOT_CONTEXT
+    SEVERITY_ERROR
   )
-  if (error instanceof Error) {
-    span.recordException({
-      name: error.name,
-      message: message.slice(0, MAX_EXCEPTION_MESSAGE),
-      stack: error.stack,
-    })
-  }
-  span.setStatus({
-    code: otel.SpanStatusCode.ERROR,
-    message: message.slice(0, MAX_EXCEPTION_MESSAGE),
-  })
-  span.end()
 }
 
 /**

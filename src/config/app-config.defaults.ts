@@ -24,7 +24,8 @@ export const defaultAppConfig: AppConfig = {
     sampleRatio: 1,
     traceApiCalls: true,
     traceDocumentLoad: true,
-    identifyUsers: true,
+    // Opt-in: logins are often email addresses. Only a hash is ever sent.
+    identifyUsers: false,
     // Safe side of the switch. Flipping it requires a literal `false`.
     scrubUrlQueryStrings: true,
   },
