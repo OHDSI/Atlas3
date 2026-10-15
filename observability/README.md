@@ -182,6 +182,22 @@ reach Atlas. It is kept as narrow as the SDK needs:
 
 Put a rate limit in front of it if Atlas is internet-facing.
 
+### Verified behaviour
+
+Measured with the LGTM profile (agent 2.32.0, collector 0.162.0), driving Atlas
+in headless Chromium and reading Loki and Tempo directly:
+
+| Sent | Result |
+|---|---|
+| Land on `#/?query=<marker>`, log in, visit `/cohorts`, replace `?tab=a` → `?tab=b`, open concept search with a typed term, close the tab | `atlas.page_view` for `/` (landing), one for `/cohorts` (3.5 s, not split by the query replaces), one for `/concepts` emitted on tab close; every event carries `session.id` |
+| Search markers in the URL, the search box and an error message's query string | **0 occurrences** in Loki or Tempo; error message reads `boom https://localhost/WebAPI/x` |
+| Concept search that fails in WebAPI (HTTP 500) | One trace: browser `POST` (`session.id`, status ERROR) → `POST /WebAPI/vocabulary/{sourceKey}/search` → repositories → `SELECT ...` with literals as `?` |
+| The login (`admin`) with `identifyUsers` at its default | **0 occurrences** |
+| WebAPI logs | WARN/ERROR only (INFO dropped); healthcheck spans dropped |
+| WebAPI metrics | `jvm.*`, `db.client.connections.*` (HikariCP), `http.server.request.duration` |
+| Through Caddy: `POST /otlp/v1/metrics`, `GET /otlp/v1/traces`, 1.1 MB body | 404, 404, 413 |
+| Through Caddy: a log claiming `service.name=atlas3-webapi` with `Key (person_id)=(98765)` | Stored as `atlas3-frontend`, body `Key (person_id)=(?)` |
+
 ## Adding actions
 
 ```ts
