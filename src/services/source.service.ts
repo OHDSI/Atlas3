@@ -134,13 +134,13 @@ export async function refreshSourceCache(sourceKey: string): Promise<void> {
 }
 
 /**
- * Map SourceRequest to API payload format
+ * Map SourceRequest to WebAPI's SourceRequest JSON contract.
  */
 function mapRequestToApiPayload(request: SourceRequest): Record<string, unknown> {
   const payload: Record<string, unknown> = {
-    sourceName: request.name,
-    sourceDialect: request.dialect,
-    sourceKey: request.key,
+    name: request.name,
+    dialect: request.dialect,
+    key: request.key,
     connectionString: request.connectionString,
   }
 

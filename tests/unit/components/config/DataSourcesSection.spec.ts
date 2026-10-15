@@ -555,7 +555,7 @@ describe('DataSourcesSection.vue', () => {
    * are disabled rather than hidden, per the issue: a user should see that the
    * action exists and that it is not theirs to use.
    */
-  describe('Write-gated actions', () => {
+  describe('Permission-gated actions', () => {
     let previousAuthEnabled: boolean
 
     beforeEach(() => {
@@ -612,10 +612,10 @@ describe('DataSourcesSection.vue', () => {
       expect(wrap.attributes('title')).toBe('You do not have permission for this action')
     })
 
-    it('enables only the data actions for a user with write:source', async () => {
+    it('does not enable cache refresh for a user with write:source', async () => {
       await mountAs({ write: ['write:source'] })
 
-      expect(buttonFor('.mdi-refresh')).toHaveProperty('disabled', false)
+      expect(buttonFor('.mdi-refresh')).toHaveProperty('disabled', true)
       expect(buttonFor('.mdi-pencil')).toHaveProperty('disabled', true)
       expect(buttonFor('.mdi-delete')).toHaveProperty('disabled', true)
       expect(buttonFor('.mdi-plus')).toHaveProperty('disabled', true)
@@ -629,7 +629,89 @@ describe('DataSourcesSection.vue', () => {
       expect(buttonFor('.mdi-delete')).toHaveProperty('disabled', false)
       expect(buttonFor('.mdi-plus')).toHaveProperty('disabled', false)
       expect(buttonFor('.mdi-server')).toHaveProperty('disabled', false)
-      expect(buttonFor('.mdi-refresh')).toHaveProperty('disabled', true)
+      expect(buttonFor('.mdi-refresh')).toHaveProperty('disabled', false)
+    })
+
+    it('enables whole-application priority selection only for source administrators', async () => {
+      await mountAs({ read: ['read:source'] })
+
+      let applicationButton = wrapper.findAllComponents({ name: 'AtlasButton' })
+        .find(button => button.text() === 'Whole Application')!
+      expect(applicationButton.props('disabled')).toBe(true)
+
+      await mountAs({ admin: ['admin:source'] })
+      await wrapper.findComponent({ name: 'VBtnToggle' }).vm.$emit('update:modelValue', 'application')
+      await flushPromises()
+
+      applicationButton = wrapper.findAllComponents({ name: 'AtlasButton' })
+        .find(button => button.text() === 'Whole Application')!
+      expect(applicationButton.props('disabled')).toBe(false)
+      const radios = wrapper.findAll('input[type="radio"]').map(radio => radio.element as HTMLInputElement)
+      expect(radios[0]!.disabled).toBe(false)
+      expect(radios[1]!.disabled).toBe(false)
+      expect(radios[2]!.disabled).toBe(false)
+      expect(radios[3]!.disabled).toBe(false)
+      expect(radios[4]!.disabled).toBe(true)
+      expect(radios[5]!.disabled).toBe(false)
+    })
+
+    it('updates the selected daimon priority through WebAPI in whole-application mode', async () => {
+      localStorage.clear()
+      await mountAs({ admin: ['admin:source'] })
+      await wrapper.findComponent({ name: 'VBtnToggle' }).vm.$emit('update:modelValue', 'application')
+      await flushPromises()
+
+      const sessionVocabulary = localStorage.getItem('selectedVocabulary')
+      const radios = wrapper.findAll('input[type="radio"]')
+      await radios[3].setValue(true)
+      await flushPromises()
+
+      expect(mockHttpPost).toHaveBeenCalledWith(
+        '/source/SYNPUF-5PCT/daimons/Vocabulary/set-priority',
+        undefined
+      )
+      expect(localStorage.getItem('selectedVocabulary')).toBe(sessionVocabulary)
+    })
+
+    it('renders server priorities separately from session selections', async () => {
+      localStorage.clear()
+      localStorage.setItem('selectedVocabulary', 'OHDSI-CDMV5')
+      mockListDataSources.mockResolvedValue(
+        mockDataSources.map(source => ({
+          ...source,
+          daimons: source.daimons.map(daimon => ({
+            ...daimon,
+            priority: source.sourceId === 2 ? 1 : 0,
+          })),
+        }))
+      )
+      await mountAs({ admin: ['admin:source'], read: ['read:source'] })
+
+      let radios = wrapper.findAll('input[type="radio"]').map(radio => radio.element as HTMLInputElement)
+      expect(radios[0]!.checked).toBe(true)
+      expect(radios[3]!.checked).toBe(false)
+
+      await wrapper.findComponent({ name: 'VBtnToggle' }).vm.$emit('update:modelValue', 'application')
+      await flushPromises()
+
+      radios = wrapper.findAll('input[type="radio"]').map(radio => radio.element as HTMLInputElement)
+      expect(radios[0]!.checked).toBe(false)
+      expect(radios[3]!.checked).toBe(true)
+      expect(localStorage.getItem('selectedVocabulary')).toBe('OHDSI-CDMV5')
+    })
+
+    it('keeps this-session priority selection local', async () => {
+      await mountAs({ read: ['read:source'] })
+
+      const radios = wrapper.findAll('input[type="radio"]')
+      await radios[3].setValue(true)
+      await flushPromises()
+
+      expect(mockHttpPost).not.toHaveBeenCalledWith(
+        '/source/SYNPUF-5PCT/daimons/Vocabulary/set-priority',
+        undefined
+      )
+      expect(localStorage.getItem('selectedVocabulary')).toBe('SYNPUF-5PCT')
     })
 
     describe('source selection', () => {
