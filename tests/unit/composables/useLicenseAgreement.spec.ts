@@ -4,6 +4,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { useLicenseAgreement } from '@/composables/useLicenseAgreement'
+import { pluginConfigService } from '@/services/PluginConfigService'
 
 describe('useLicenseAgreement', () => {
   let localStorageMock: { [key: string]: string }
@@ -117,6 +118,15 @@ describe('useLicenseAgreement', () => {
       checkLicenseStatus()
 
       expect(showLicenseDialog.value).toBe(true)
+    })
+
+    it('should not show dialog when plugins.json disables the license agreement', () => {
+      vi.spyOn(pluginConfigService, 'showLicenseAgreement').mockReturnValue(false)
+      const { checkLicenseStatus, showLicenseDialog } = useLicenseAgreement()
+
+      checkLicenseStatus()
+
+      expect(showLicenseDialog.value).toBe(false)
     })
 
     it('should not show dialog when license is accepted', () => {

@@ -184,6 +184,10 @@ export class PluginConfigService {
     return this.manifest?.settings?.header || {}
   }
 
+  showLicenseAgreement(): boolean {
+    return this.manifest?.settings?.showLicenseAgreement ?? true
+  }
+
   showNavBar(): boolean {
     return this.manifest?.settings?.header?.showNavBar ?? true
   }

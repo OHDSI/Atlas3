@@ -9,13 +9,6 @@ import { generatePluginRoutes } from '@/plugins/navigation/PluginRoutes.ts'
 import { getSourceKey } from '@/config/webapi'
 import { logger } from '@/utils/logger'
 
-const ANALYSIS_TAB_NAMES = [
-  'feature-analyses',
-  'characterizations',
-  'pathways',
-  'incidence-rates',
-] as const
-const ANALYSIS_LAST_TAB_KEY = 'atlas3.analysis.lastTab'
 
 function singleParam(value: unknown): string {
   if (Array.isArray(value)) {
@@ -84,27 +77,22 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/views/ApiKeysView.vue'),
     meta: { requiresAuth: true, titleKey: 'route.apiKeys.title', agentVisible: true, agentLabel: 'API keys' },
   },
-  // Analysis hub: shared parent for the four list views, each rendered inside
-  // a tab strip. Default redirect respects the user's last-visited tab via
-  // localStorage when available.
+  // Analysis hub: shared parent for the four list views and any plugin
+  // analysis-tabs, each rendered inside a tab strip. A bare /analysis lands on
+  // the 'analysis-home' child, where the hub picks the last-used or first tab.
   {
     path: '/analysis',
     component: () => import('@/views/AnalysisHubView.vue'),
     meta: { requiresAuth: true, titleKey: 'route.analysis.title' },
-    redirect: () => {
-      const allowed = new Set<string>(ANALYSIS_TAB_NAMES)
-      let last: string | null = null
-      try {
-        if (typeof localStorage !== 'undefined') {
-          last = localStorage.getItem(ANALYSIS_LAST_TAB_KEY)
-        }
-      } catch {
-        // localStorage may be unavailable (private mode, SSR); fall through.
-      }
-      const target = last && allowed.has(last) ? last : 'feature-analyses'
-      return { name: target }
-    },
     children: [
+      {
+        // A bare /analysis. AnalysisHubView opens the last-used tab or the
+        // first tab once plugin tabs are known, so this is not a static redirect.
+        path: '',
+        name: 'analysis-home',
+        component: () => import('@/views/AnalysisHubView.vue'),
+        meta: { requiresAuth: true, titleKey: 'route.analysis.title', agentVisible: false },
+      },
       {
         path: 'feature-analyses',
         name: 'feature-analyses',

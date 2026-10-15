@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { pluginConfigService } from '@/services/PluginConfigService'
 
 const LICENSE_ACCEPTANCE_KEY = 'atlas3-license-acceptance-date'
 const LICENSE_EXPIRY_DAYS = 365 // License acceptance expires after 1 year
@@ -51,6 +52,10 @@ export function useLicenseAgreement() {
    * Check if license dialog should be shown and show it if needed
    */
   function checkLicenseStatus() {
+    // Deployments can turn the dialog off with settings.showLicenseAgreement in plugins.json.
+    if (!pluginConfigService.showLicenseAgreement()) {
+      return
+    }
     if (!isLicenseAccepted()) {
       showLicenseDialog.value = true
     }
