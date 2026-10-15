@@ -1,21 +1,34 @@
-# Telemetry gateway in front of SigNoz, fed by two producers: the WebAPI Java
-# agent (OTLP/gRPC, direct) and Atlas's browser SDK (OTLP/HTTP, proxied by
-# Caddy at /otlp so the collector needs no public port).
+# Telemetry gateway between Atlas and whatever OTLP backend the deployment
+# uses (Grafana LGTM, SigNoz, Jaeger, a vendor...). Two producers, kept on
+# separate receivers because they are trusted differently:
 #
-# Two things belong here rather than in WebAPI:
-#   1. severity filtering — the Java agent has no level threshold, and adding
-#      one would mean editing WebAPI's logback.xml
-#   2. a scrub pass — defence in depth behind the agent's SQL sanitizer, so a
-#      future agent upgrade or instrumentation change cannot start forwarding
-#      values on its own
+#   otlp/backend  WebAPI's Java agent. gRPC 4317 / HTTP 4318, reachable only
+#                 on the compose network.
+#   otlp/browser  Atlas's browser SDK, proxied by Caddy. HTTP 4319, and Caddy
+#                 forwards only /v1/traces and /v1/logs to it. Anyone who can
+#                 reach Atlas can post here, so this path has no metrics
+#                 pipeline, a body-size cap, and a forced service.name.
+#
+# Jobs that belong here rather than in WebAPI or the browser:
+#   1. severity filtering for WebAPI logs (the Java agent has no threshold)
+#   2. a scrub pass behind the agent's SQL sanitizer and the browser's own
+#      URL scrub, so an upgrade on either side cannot widen what is stored
+#   3. redacting values that database errors echo into exception messages
 
 receivers:
-  otlp:
+  otlp/backend:
     protocols:
       grpc:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
+  otlp/browser:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4319
+        # Second line of defence behind Caddy's request_body limit. The browser
+        # SDK exports at most 128 records per request, well under this.
+        max_request_body_size: 1048576
 
 processors:
   memory_limiter:
@@ -23,8 +36,8 @@ processors:
     limit_percentage: 75
     spike_limit_percentage: 20
 
-  # WARN and above only. UNSPECIFIED (0) is kept rather than dropped: an
-  # unlabelled record is more likely a mapping gap than something to discard.
+  # WARN and above only, for WebAPI logs. UNSPECIFIED (0) is kept rather than
+  # dropped: an unlabelled record is more likely a mapping gap than noise.
   filter/warn_and_above:
     error_mode: ignore
     logs:
@@ -39,6 +52,22 @@ processors:
       span:
         - attributes["url.path"] == "/WebAPI/info"
         - attributes["http.target"] == "/WebAPI/info"
+
+  # Whatever the browser claims, its data is atlas3-frontend. Without this a
+  # sender could post spans or logs as atlas3-webapi and pollute the backend's
+  # service view.
+  transform/browser_identity:
+    error_mode: ignore
+    trace_statements:
+      - context: resource
+        statements:
+          - set(attributes["service.name"], "atlas3-frontend")
+          - set(attributes["service.namespace"], "atlas3")
+    log_statements:
+      - context: resource
+        statements:
+          - set(attributes["service.name"], "atlas3-frontend")
+          - set(attributes["service.namespace"], "atlas3")
 
   # PHI scrub. Atlas puts concept searches and filter values in query strings,
   # so query strings never leave this hop, on spans or logs.
@@ -63,23 +92,71 @@ processors:
         statements:
           - delete_key(attributes, "url.query")
 
+  # Database errors echo row values, and those reach exception messages
+  # without passing the agent's statement sanitizer, e.g. Postgres
+  #   Key (person_id)=(123) already exists
+  #   Failing row contains (123, 2020-01-01, ...)
+  #   invalid input syntax for type integer: "abc"
+  # and any SQL quoted in the message carries its literals. Values are replaced,
+  # the column names and error shape are kept, which is what debugging needs.
+  # Applied to the message, the stack trace (whose first line repeats the
+  # message), span status and log bodies. `$$` is the collector's escape for a
+  # literal `$`, so `$$1` reaches OTTL as the capture group `$1`.
+  transform/redact_exceptions:
+    error_mode: ignore
+    trace_statements:
+      - context: spanevent
+        statements:
+          - replace_pattern(attributes["exception.message"], "\\(([^()]*)\\)=\\([^()]*\\)", "($$1)=(?)")
+          - replace_pattern(attributes["exception.message"], "Failing row contains \\(.*\\)", "Failing row contains (?)")
+          - replace_pattern(attributes["exception.message"], "'(?:[^']|'')*'", "'?'")
+          - 'replace_pattern(attributes["exception.message"], ":\\s*\"[^\"]*\"", ": \"?\"")'
+          - replace_pattern(attributes["exception.stacktrace"], "\\(([^()]*)\\)=\\([^()]*\\)", "($$1)=(?)")
+          - replace_pattern(attributes["exception.stacktrace"], "Failing row contains \\(.*\\)", "Failing row contains (?)")
+          - replace_pattern(attributes["exception.stacktrace"], "'(?:[^']|'')*'", "'?'")
+          - 'replace_pattern(attributes["exception.stacktrace"], ":\\s*\"[^\"]*\"", ": \"?\"")'
+      - context: span
+        statements:
+          - replace_pattern(status.message, "\\(([^()]*)\\)=\\([^()]*\\)", "($$1)=(?)")
+          - replace_pattern(status.message, "Failing row contains \\(.*\\)", "Failing row contains (?)")
+          - replace_pattern(status.message, "'(?:[^']|'')*'", "'?'")
+          - 'replace_pattern(status.message, ":\\s*\"[^\"]*\"", ": \"?\"")'
+    log_statements:
+      - context: log
+        statements:
+          - replace_pattern(attributes["exception.message"], "\\(([^()]*)\\)=\\([^()]*\\)", "($$1)=(?)")
+          - replace_pattern(attributes["exception.message"], "Failing row contains \\(.*\\)", "Failing row contains (?)")
+          - replace_pattern(attributes["exception.message"], "'(?:[^']|'')*'", "'?'")
+          - 'replace_pattern(attributes["exception.message"], ":\\s*\"[^\"]*\"", ": \"?\"")'
+          - replace_pattern(attributes["exception.stacktrace"], "\\(([^()]*)\\)=\\([^()]*\\)", "($$1)=(?)")
+          - replace_pattern(attributes["exception.stacktrace"], "Failing row contains \\(.*\\)", "Failing row contains (?)")
+          - replace_pattern(attributes["exception.stacktrace"], "'(?:[^']|'')*'", "'?'")
+          - 'replace_pattern(attributes["exception.stacktrace"], ":\\s*\"[^\"]*\"", ": \"?\"")'
+          - replace_pattern(body, "\\(([^()]*)\\)=\\([^()]*\\)", "($$1)=(?)") where IsString(body)
+          - replace_pattern(body, "Failing row contains \\(.*\\)", "Failing row contains (?)") where IsString(body)
+          - replace_pattern(body, "'(?:[^']|'')*'", "'?'") where IsString(body)
+          - 'replace_pattern(body, ":\\s*\"[^\"]*\"", ": \"?\"") where IsString(body)'
+
   batch:
     send_batch_size: 1024
     send_batch_max_size: 2048
     timeout: 5s
 
 exporters:
-  otlp/signoz:
-    endpoint: ${env:SIGNOZ_OTLP_ENDPOINT}
+  # Any OTLP/gRPC backend. The endpoint is the only required setting; see
+  # observability/README.md for LGTM, SigNoz and others. For a backend that
+  # takes OTLP/HTTP only, swap this for an `otlp_http` exporter.
+  otlp_grpc/backend:
+    endpoint: ${env:OTEL_GATEWAY_EXPORT_ENDPOINT}
     tls:
-      # Plaintext on the shared docker network. Use real TLS if SigNoz is
-      # reached over anything wider than that.
-      insecure: true
+      # Plaintext suits a backend on the same docker network. Set to false and
+      # configure certificates for anything reached over a wider network.
+      insecure: ${env:OTEL_GATEWAY_EXPORT_INSECURE:-true}
     retry_on_failure:
       enabled: true
     sending_queue:
       enabled: true
-      # Buffers a SigNoz restart instead of dropping telemetry.
+      # Buffers a backend restart instead of dropping telemetry.
       queue_size: 2000
 
 extensions:
@@ -92,15 +169,26 @@ service:
     logs:
       level: info
   pipelines:
-    traces:
-      receivers: [otlp]
-      processors: [memory_limiter, filter/drop_health_probes, transform/scrub, batch]
-      exporters: [otlp/signoz]
-    metrics:
-      receivers: [otlp]
+    traces/backend:
+      receivers: [otlp/backend]
+      processors: [memory_limiter, filter/drop_health_probes, transform/scrub, transform/redact_exceptions, batch]
+      exporters: [otlp_grpc/backend]
+    metrics/backend:
+      receivers: [otlp/backend]
       processors: [memory_limiter, batch]
-      exporters: [otlp/signoz]
-    logs:
-      receivers: [otlp]
-      processors: [memory_limiter, filter/warn_and_above, transform/scrub, batch]
-      exporters: [otlp/signoz]
+      exporters: [otlp_grpc/backend]
+    logs/backend:
+      receivers: [otlp/backend]
+      processors: [memory_limiter, filter/warn_and_above, transform/scrub, transform/redact_exceptions, batch]
+      exporters: [otlp_grpc/backend]
+    # Browser traces are performance traces (fetch, document load, actions).
+    traces/browser:
+      receivers: [otlp/browser]
+      processors: [memory_limiter, transform/browser_identity, transform/scrub, transform/redact_exceptions, batch]
+      exporters: [otlp_grpc/backend]
+    # Browser logs are the usage events (page views, actions, errors). No
+    # severity filter: they are INFO by design, and unsampled.
+    logs/browser:
+      receivers: [otlp/browser]
+      processors: [memory_limiter, transform/browser_identity, transform/scrub, transform/redact_exceptions, batch]
+      exporters: [otlp_grpc/backend]
