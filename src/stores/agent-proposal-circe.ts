@@ -100,14 +100,18 @@ export function translateAgentEventToCorelated(
 
   const criteria: CorelatedCriteria = { Criteria: translated.criteria }
 
+  // Without a cardinality the event still needs an Occurrence: circe-be
+  // dereferences it unconditionally, so a criterion saved without one makes
+  // every SQL render (generation, preview, /cohortdefinition/sql) fail with a
+  // NullPointerException. "At least 1" is ATLAS's own default for a new criterion.
   const cardinality = event.cardinality
-  if (cardinality) {
-    criteria.Occurrence = {
-      Type: cardinalityToAtlas(cardinality.type),
-      Count: cardinality.count,
-      ...(cardinality.isDistinct === undefined ? {} : { IsDistinct: cardinality.isDistinct }),
-    }
-  }
+  criteria.Occurrence = cardinality
+    ? {
+        Type: cardinalityToAtlas(cardinality.type),
+        Count: cardinality.count,
+        ...(cardinality.isDistinct === undefined ? {} : { IsDistinct: cardinality.isDistinct }),
+      }
+    : { Type: 2, Count: 1, IsDistinct: false }
 
   return { criteria, conceptSet: translated.conceptSet }
 }
