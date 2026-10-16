@@ -143,13 +143,13 @@ describe('ConceptSearchService', () => {
         text: () => Promise.resolve(JSON.stringify([])),
       })
 
-      await searchConcepts('TEST', 'diabetes', { domain: 'Condition' })
+      await searchConcepts('TEST', 'diabetes', { domain: ['Condition', 'Drug'] })
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/vocabulary/TEST/search'),
         expect.objectContaining({
           method: 'POST',
-          body: expect.stringContaining('"DOMAIN_ID":["Condition"]'),
+          body: expect.stringContaining('"DOMAIN_ID":["Condition","Drug"]'),
         })
       )
     })

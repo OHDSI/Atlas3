@@ -9,7 +9,7 @@ import * as directives from 'vuetify/directives'
 import { setActivePinia, createPinia } from 'pinia'
 import ConceptSearchInline from '@/components/concepts/ConceptSearchInline.vue'
 import ConceptAddOptions from '@/components/concepts/ConceptAddOptions.vue'
-import { useConceptSearchStore } from '@/stores/concept-search'
+import { useConceptSetSearchStore } from '@/stores/concept-search'
 import { createMockConcept } from '@/../tests/helpers/mock-factories'
 
 vi.mock('@/composables/useI18n', async () => {
@@ -23,7 +23,6 @@ vi.mock('@/services/concept-search.service', () => ({
 }))
 
 vi.mock('@/config/webapi', () => ({ getSourceKey: () => 'SYNPUF1K' }))
-
 vi.mock('@/stores/webapi', () => ({
   useWebAPIStore: () => ({
     getValidVocabularySource: () => 'SYNPUF1K',
@@ -60,7 +59,7 @@ describe('ConceptSearchInline — add options', () => {
   })
 
   function setResults(list = [A, B]) {
-    useConceptSearchStore().allConcepts = list
+    useConceptSetSearchStore().allConcepts = list
     return wrapper.vm.$nextTick()
   }
 

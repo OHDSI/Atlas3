@@ -100,6 +100,7 @@ describe('DemographicCriteria', () => {
     expect(criteria.Gender).toStrictEqual([])
 
     const conceptArray = wrapper.findComponent({ name: 'ConceptArray' })
+    expect(conceptArray.props('domainFilter')).toBe('Gender')
     const binding = conceptArray.props('binding') as any
     binding.concepts.value = [{ CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE' }]
     await nextTick()
