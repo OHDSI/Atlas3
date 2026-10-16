@@ -123,6 +123,20 @@ describe('Concept Search Store', () => {
       expect(conceptSearchService.searchConcepts).toHaveBeenCalledTimes(1)
     })
 
+    it('should forward selected domains to the vocabulary search', async () => {
+      const store = useConceptSearchStore()
+      vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
+        success: true,
+        data: mockConcepts,
+      })
+
+      await store.search('diabetes', { domains: ['Gender', 'Race'] })
+
+      expect(conceptSearchService.searchConcepts).toHaveBeenCalledWith('SYNPUF1K', 'diabetes', {
+        domain: ['Gender', 'Race'],
+      })
+    })
+
     it('should not call service when term has fewer than 3 characters', async () => {
       const store = useConceptSearchStore()
 

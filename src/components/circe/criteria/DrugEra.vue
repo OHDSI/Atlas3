@@ -163,6 +163,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       binding: {
         concepts: toRef(drugEraData.value, 'Gender'),
       } satisfies ConceptArrayBinding,
+      domainFilter: 'Gender',
     }),
     init: () => {
       drugEraData.value.Gender = [] as ConceptArray

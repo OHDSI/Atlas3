@@ -166,6 +166,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       binding: {
         concepts: toRef(conditionEraData.value, 'Gender') as ConceptArrayBinding['concepts'],
       } satisfies ConceptArrayBinding,
+      domainFilter: 'Gender',
     }),
     init: () => {
       conditionEraData.value.Gender = [] as ConceptArray

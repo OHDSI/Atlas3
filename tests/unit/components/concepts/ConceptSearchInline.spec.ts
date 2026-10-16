@@ -9,7 +9,7 @@ import * as directives from 'vuetify/directives'
 import { setActivePinia, createPinia } from 'pinia'
 import ConceptSearchInline from '@/components/concepts/ConceptSearchInline.vue'
 import ConceptFacetFilters from '@/components/concepts/ConceptFacetFilters.vue'
-import { useConceptSearchStore } from '@/stores/concept-search'
+import { useConceptPickerSearchStore, useConceptSearchStore, useConceptSetSearchStore } from '@/stores/concept-search'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { createMockConcept } from '@/../tests/helpers/mock-factories'
 
@@ -22,7 +22,8 @@ const mockSearchConcepts = vi.fn()
 const mockGetConceptRecordCounts = vi.fn()
 
 vi.mock('@/services/concept-search.service', () => ({
-  searchConcepts: (sourceKey: string, term: string) => mockSearchConcepts(sourceKey, term),
+  searchConcepts: (sourceKey: string, term: string, options?: unknown) =>
+    mockSearchConcepts(sourceKey, term, options),
   getConceptRecordCounts: (sourceKey: string, conceptIds: number[]) =>
     mockGetConceptRecordCounts(sourceKey, conceptIds),
 }))
@@ -48,8 +49,8 @@ vi.mock('@/components/concepts/ConceptTable.vue', () => ({
   default: {
     name: 'ConceptTable',
     template: '<div class="concept-table-mock"></div>',
-    props: ['concepts', 'loading', 'totalItems', 'page', 'itemsPerPage', 'showAddButton', 'conceptsInSet'],
-    emits: ['update:page', 'update:itemsPerPage', 'add-concept', 'remove-concept', 'view-concept'],
+    props: ['concepts', 'loading', 'totalItems', 'page', 'itemsPerPage', 'showAddButton', 'conceptsInSet', 'selected'],
+    emits: ['update:selected', 'update:page', 'update:itemsPerPage', 'add-concept', 'remove-concept', 'view-concept'],
   },
 }))
 
@@ -62,11 +63,11 @@ const RESULTS = [
 
 describe('ConceptSearchInline facet filters', () => {
   let wrapper: VueWrapper
-  let store: ReturnType<typeof useConceptSearchStore>
+  let store: ReturnType<typeof useConceptSetSearchStore>
 
   beforeEach(() => {
     setActivePinia(createPinia())
-    store = useConceptSearchStore()
+    store = useConceptSetSearchStore()
     mockSearchConcepts.mockResolvedValue({ success: true, data: RESULTS })
     mockGetConceptRecordCounts.mockResolvedValue(new Map())
     wrapper = mount(ConceptSearchInline, { global: { plugins: [vuetify] } })
@@ -147,11 +148,11 @@ describe('ConceptSearchInline facet filters', () => {
 
 describe('ConceptSearchInline search box and table wiring', () => {
   let wrapper: VueWrapper
-  let store: ReturnType<typeof useConceptSearchStore>
+  let store: ReturnType<typeof useConceptSetSearchStore>
 
   beforeEach(() => {
     setActivePinia(createPinia())
-    store = useConceptSearchStore()
+    store = useConceptSetSearchStore()
     mockSearchConcepts.mockResolvedValue({ success: true, data: RESULTS })
     mockGetConceptRecordCounts.mockResolvedValue(new Map())
     wrapper = mount(ConceptSearchInline, { global: { plugins: [vuetify] } })
@@ -256,5 +257,88 @@ describe('ConceptSearchInline search box and table wiring', () => {
 
   it('passes an empty in-set marker when no set is open', () => {
     expect((table().props('conceptsInSet') as Set<number>).size).toBe(0)
+  })
+})
+
+describe('ConceptSearchInline selection mode', () => {
+  let wrapper: VueWrapper
+  let store: ReturnType<typeof useConceptPickerSearchStore>
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    store = useConceptPickerSearchStore()
+    mockSearchConcepts.mockResolvedValue({ success: true, data: RESULTS })
+    mockGetConceptRecordCounts.mockResolvedValue(new Map())
+    wrapper = mount(ConceptSearchInline, {
+      props: { selectionMode: true, domainFilter: 'Condition', preselectedConceptIds: [1] },
+      global: { plugins: [vuetify] },
+    })
+  })
+
+  afterEach(() => {
+    wrapper?.unmount()
+    vi.clearAllMocks()
+  })
+
+  it('does not share results with the global vocabulary search', async () => {
+    useConceptSearchStore().allConcepts = RESULTS
+    await wrapper.vm.$nextTick()
+
+    expect(store.allConcepts).toEqual([])
+    expect(wrapper.findComponent({ name: 'ConceptTable' }).props('concepts')).toEqual([])
+  })
+
+  it('enforces the requested domain and hides concept-set add options', async () => {
+    await wrapper.find('input').setValue('diabetes')
+    await wrapper.find('input').trigger('keyup.enter')
+    await flushPromises()
+
+    expect(store.selectedFacets.domainId).toEqual(['Condition'])
+    expect(store.concepts.map(concept => concept.conceptId)).toEqual([1])
+    expect(mockSearchConcepts).toHaveBeenCalledWith('SYNPUF1K', 'diabetes', {
+      domain: ['Condition'],
+    })
+    expect(wrapper.findComponent({ name: 'ConceptAddOptions' }).exists()).toBe(false)
+  })
+
+  it('applies a user-selected domain when the caller did not constrain one', async () => {
+    await wrapper.setProps({ domainFilter: undefined })
+    await wrapper.find('input').setValue('diabetes')
+    await wrapper.find('input').trigger('keyup.enter')
+    await flushPromises()
+
+    wrapper.findComponent(ConceptFacetFilters).vm.$emit('update:facet', {
+      key: 'domainId',
+      values: ['Drug'],
+    })
+    await wrapper.vm.$nextTick()
+
+    expect(store.selectedFacets.domainId).toEqual(['Drug'])
+    expect(store.concepts.map(concept => concept.conceptId)).toEqual([2])
+
+    mockSearchConcepts.mockClear()
+    await wrapper.vm.onSearch()
+
+    expect(mockSearchConcepts).toHaveBeenCalledWith('SYNPUF1K', 'diabetes', {
+      domain: ['Drug'],
+    })
+  })
+
+  it('emits the selected raw concepts only when selection is completed', async () => {
+    await store.search('diabetes')
+    await flushPromises()
+
+    wrapper.findComponent({ name: 'ConceptTable' }).vm.$emit('update:selected', [1, 2])
+    await wrapper.get('[data-testid="concept-selection-complete"]').trigger('click')
+
+    expect(wrapper.emitted('selection-complete')?.[0]).toEqual([RESULTS])
+    expect(wrapper.emitted('add-concepts')).toBeUndefined()
+  })
+
+  it('emits cancellation without returning concepts', async () => {
+    await wrapper.get('[data-testid="concept-selection-cancel"]').trigger('click')
+
+    expect(wrapper.emitted('selection-cancelled')).toHaveLength(1)
+    expect(wrapper.emitted('selection-complete')).toBeUndefined()
   })
 })

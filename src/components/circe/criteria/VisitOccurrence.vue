@@ -273,6 +273,7 @@ const attributeSpecs = computed<CriteriaAttributeSpec[]>(() => [
       binding: {
         concepts: toRef(visitOccurrenceData.value, 'Gender'),
       } satisfies ConceptArrayBinding,
+      domainFilter: 'Gender',
     }),
     init: () => {
       visitOccurrenceData.value.Gender = [] as ConceptArray

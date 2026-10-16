@@ -34,7 +34,7 @@ export async function searchConcepts(
   options?: {
     page?: number
     pageSize?: number
-    domain?: string
+    domain?: string | string[]
   }
 ): Promise<ApiResult<Concept[]>> {
   return unwrap(async () => {
@@ -52,8 +52,11 @@ export async function searchConcepts(
 
     const endpoint = `/vocabulary/${sourceKey}/search`
     const body: Record<string, unknown> = { QUERY: query.trim() }
-    if (options?.domain) {
-      body.DOMAIN_ID = [options.domain]
+    const domains = options?.domain
+      ? (Array.isArray(options.domain) ? options.domain : [options.domain])
+      : []
+    if (domains.length > 0) {
+      body.DOMAIN_ID = domains
     }
     const data = await httpPostRead<unknown>(endpoint, body)
     const parsed = parseOrThrow(ConceptSearchResponseSchema, data, 'Invalid concept search response format')
