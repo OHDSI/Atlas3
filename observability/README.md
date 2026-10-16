@@ -297,8 +297,10 @@ it, or should not be trusted to the browser:
   support Batch 5
   ([opentelemetry-java-instrumentation#7306](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7306)).
   The fix is a small WebAPI change — a new root span per job, linked to the
-  request — tracked separately. It will also make tail sampling in the gateway
-  practical (keep errors and slow traces).
+  request — planned for WebAPI 3.1
+  ([OHDSI/WebAPI#2557](https://github.com/OHDSI/WebAPI/pull/2557)). It will
+  also make tail sampling in the gateway practical (keep errors and slow
+  traces).
 - `JAVA_TOOL_OPTIONS` applies to every JVM in the WebAPI container. A plugin
   that forks its own `java` process (trexsql ships a `Main-Class`) is
   instrumented too, under the same service name.
