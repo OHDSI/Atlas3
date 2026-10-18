@@ -19,7 +19,7 @@ describe('AssetAuthorship', () => {
   it('names the creator and the date', () => {
     const w = mountIt({
       createdBy: { name: 'Jane Doe' },
-      createdDate: '2026-03-01T00:00:00Z',
+      createdDate: '2026-03-01T12:00:00',
     })
     expect(w.get('[data-testid="asset-authorship-created"]').text()).toContain('Jane Doe')
     expect(w.get('[data-testid="asset-authorship-created"]').text()).toContain('03/01/2026')
@@ -28,9 +28,9 @@ describe('AssetAuthorship', () => {
   it('adds the modifier once the asset has actually been modified', () => {
     const w = mountIt({
       createdBy: { name: 'Jane Doe' },
-      createdDate: '2026-03-01T00:00:00Z',
+      createdDate: '2026-03-01T12:00:00',
       modifiedBy: { name: 'John Roe' },
-      modifiedDate: '2026-06-02T00:00:00Z',
+      modifiedDate: '2026-06-02T12:00:00',
     })
     expect(w.get('[data-testid="asset-authorship-updated"]').text()).toContain('John Roe')
     expect(w.get('[data-testid="asset-authorship-updated"]').text()).toContain('06/02/2026')
@@ -39,7 +39,7 @@ describe('AssetAuthorship', () => {
   it('says nothing about updates for an asset only ever created', () => {
     const w = mountIt({
       createdBy: { name: 'Jane Doe' },
-      createdDate: '2026-03-01T00:00:00Z',
+      createdDate: '2026-03-01T12:00:00',
       modifiedBy: { name: 'Jane Doe' },
       modifiedDate: null,
     })
@@ -47,7 +47,7 @@ describe('AssetAuthorship', () => {
   })
 
   it('still reports the date when the user is missing', () => {
-    const w = mountIt({ createdDate: '2026-03-01T00:00:00Z' })
+    const w = mountIt({ createdDate: '2026-03-01T12:00:00' })
     expect(w.get('[data-testid="asset-authorship-created"]').text()).toContain('03/01/2026')
   })
 

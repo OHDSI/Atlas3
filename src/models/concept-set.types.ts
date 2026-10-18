@@ -4,6 +4,7 @@
  */
 import { z } from 'zod'
 import type { Tag } from '@/models/cohort.types'
+import { TagSchema } from '@/models/webapi.types'
 import { ConceptSchema as CirceConceptSchema } from '@/models/circe-types'
 
 // ============================================================================
@@ -188,15 +189,7 @@ export const ConceptSetListItemSchema = z.object({
       }),
     ])
     .optional(),
-  tags: z
-    .array(
-      z.object({
-        id: z.number().optional(),
-        name: z.string(),
-        color: z.string().nullable().optional(),
-      })
-    )
-    .optional(),
+  tags: z.array(TagSchema).optional(),
 })
 
 export type ConceptSetListItem = z.infer<typeof ConceptSetListItemSchema>

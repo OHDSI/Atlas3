@@ -61,11 +61,12 @@
             <template #activator="{ props: tipProps }">
               <AtlasBadge
                 v-bind="tipProps"
-                :content="pathwayTags.length || 0"
-                :model-value="pathwayTags.length > 0"
+                :content="pathwayTagCount || 0"
+                :model-value="pathwayTagCount > 0"
                 color="primary"
                 offset-x="6"
                 offset-y="6"
+                data-testid="pathway-builder-tags-badge"
               >
                 <AtlasIconButton
                   v-bind="{ ariaLabel: t('common.tags').value }"
@@ -218,7 +219,7 @@
       v-if="currentPathway?.id"
       v-model="showTags"
       :selected-tags="pathwayTags"
-      @update:selected-tags="handleTagsUpdate"
+      :on-apply="handleTagsApply"
     />
 
     <EntityAccessDialog
@@ -258,6 +259,7 @@ import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import { exportPathway, importPathway } from '@/services/pathway.service'
 import { logger } from '@/utils/logger'
+import { assignedTags } from '@/utils/asset-tags'
 import type { VersionsConfig, VersionsTableItem } from '@/components/versions/types'
 import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
 import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
@@ -300,6 +302,7 @@ const canEdit = computed(() => !isPreviewMode.value)
 const isDirtyRef = computed(() => isDirty.value)
 
 const pathwayTags = computed(() => currentPathway.value?.tags ?? [])
+const pathwayTagCount = computed(() => assignedTags(pathwayTags.value).length)
 
 const title = computed(() => {
   const p = currentPathway.value
@@ -319,8 +322,8 @@ function handleBack() {
   router.push('/analysis/pathways')
 }
 
-async function handleTagsUpdate(newTags: Tag[]) {
-  await store.syncTags(newTags)
+async function handleTagsApply(newTags: Tag[]): Promise<boolean> {
+  return store.syncTags(newTags)
 }
 
 async function onSave() {

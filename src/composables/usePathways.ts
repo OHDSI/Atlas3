@@ -2,7 +2,8 @@ import { ref, computed } from 'vue'
 import { listPathways } from '@/services/pathway.service'
 import type { Pathway } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
-import { matchesTerms } from '@/utils/list-filters'
+import { getUserString, matchesTerms } from '@/utils/list-filters'
+import { toggleTagFilter } from '@/utils/asset-tags'
 
 export interface PathwayFilters {
   searchQuery: string
@@ -56,7 +57,7 @@ export function usePathways() {
         const have = new Set((p.tags || []).map(t => t.name))
         if (!tags.every(t => have.has(t))) return false
       }
-      if (author && p.createdBy?.name !== author) return false
+      if (author && getUserString(p.createdBy) !== author.toLowerCase()) return false
       if (cr.from && new Date(p.createdDate ?? 0) < cr.from) return false
       if (cr.to && new Date(p.createdDate ?? 0) > cr.to) return false
       if (mr.from && new Date(p.modifiedDate ?? 0) < mr.from) return false
@@ -66,6 +67,30 @@ export function usePathways() {
   })
 
   const totalItems = computed(() => filteredPathways.value.length)
+  const availableAuthors = computed(() => {
+    const authors = new Set<string>()
+    pathways.value.forEach(pathway => {
+      const author = getUserString(pathway.createdBy)
+      if (author) authors.add(author)
+    })
+    return [...authors].sort()
+  })
+  const availableTags = computed(() => {
+    const tags = new Set<string>()
+    pathways.value.forEach(pathway => {
+      pathway.tags?.forEach(tag => tags.add(tag.name))
+    })
+    return [...tags].sort()
+  })
+  const activeFilterCount = computed(() => {
+    let count = 0
+    if (filters.value.searchQuery) count++
+    if (filters.value.author) count++
+    if (filters.value.selectedTags.length > 0) count++
+    if (filters.value.createdDateRange.from || filters.value.createdDateRange.to) count++
+    if (filters.value.modifiedDateRange.from || filters.value.modifiedDateRange.to) count++
+    return count
+  })
   const totalPages = computed(() => Math.max(1, Math.ceil(totalItems.value / itemsPerPage.value)))
   const paginatedPathways = computed(() => {
     const start = page.value * itemsPerPage.value
@@ -83,6 +108,19 @@ export function usePathways() {
     page.value = 0
   }
 
+  function setFilters(next: PathwayFilters) {
+    filters.value = { ...next, selectedTags: next.selectedTags ?? [] }
+    page.value = 0
+  }
+
+  function toggleTagFilterSelection(tagName: string) {
+    filters.value = {
+      ...filters.value,
+      selectedTags: toggleTagFilter(filters.value.selectedTags, tagName),
+    }
+    page.value = 0
+  }
+
   return {
     pathways,
     loading,
@@ -92,9 +130,14 @@ export function usePathways() {
     itemsPerPage,
     fetchPathways,
     clearFilters,
+    setFilters,
+    toggleTagFilterSelection,
     filteredPathways,
     paginatedPathways,
     totalItems,
     totalPages,
+    availableAuthors,
+    availableTags,
+    activeFilterCount,
   }
 }

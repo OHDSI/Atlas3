@@ -104,6 +104,20 @@ describe('PathwayBuilder', () => {
     expect(w.findComponent({ name: 'PathwayWorkbench' }).exists()).toBe(true)
   })
 
+  it('counts only directly assigned tags in the manage-tags badge', async () => {
+    const store = loadPathway()
+    store.currentPathway!.tags = [
+      { id: 17, name: 'test', groups: [] },
+      { id: 18, name: 'Some Tag', groups: [{ id: 17, name: 'test' }] },
+    ]
+    const w = mount(PathwayBuilder, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+
+    expect(w.find('[data-testid="pathway-builder-tags-badge"] .v-badge__badge').text()).toBe('1')
+  })
+
   it('renders inline title and subtitle inputs from the current pathway metadata', async () => {
     loadPathway(42, 'Pathway 1', 'Short note')
     const w = mount(PathwayBuilder, {
@@ -145,9 +159,9 @@ describe('PathwayBuilder', () => {
     expect(w.find('[data-testid="pathway-builder-delete"]').exists()).toBe(false)
   })
 
-  it('opens the tags dialog and syncs updates back to the store', async () => {
+  it('persists tag changes when the dialog applies them', async () => {
     const store = loadPathway()
-    const syncSpy = vi.spyOn(store, 'syncTags').mockResolvedValue(undefined)
+    const syncSpy = vi.spyOn(store, 'syncTags').mockResolvedValue(true)
 
     const w = mount(PathwayBuilder, {
       global: {
@@ -160,7 +174,8 @@ describe('PathwayBuilder', () => {
     await w.get('[data-testid="pathway-builder-tags"]').trigger('click')
     const dialog = w.findComponent({ name: 'TagSelectionDialog' })
     expect(dialog.exists()).toBe(true)
-    await dialog.vm.$emit('update:selected-tags', [{ id: 1, name: 'trial' }])
+    const onApply = dialog.props('onApply') as (tags: Array<{ id: number; name: string }>) => Promise<boolean>
+    await expect(onApply([{ id: 1, name: 'trial' }])).resolves.toBe(true)
     expect(syncSpy).toHaveBeenCalledWith([{ id: 1, name: 'trial' }])
   })
 

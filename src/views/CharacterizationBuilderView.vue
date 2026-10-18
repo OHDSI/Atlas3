@@ -103,6 +103,32 @@
             </template>
           </AtlasTooltip>
           <AtlasTooltip
+            :text="t('common.tags').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasBadge
+                v-bind="tipProps"
+                :content="characterizationTagCount || 0"
+                :model-value="characterizationTagCount > 0"
+                color="primary"
+                offset-x="6"
+                offset-y="6"
+                data-testid="char-builder-tags-badge"
+              >
+                <AtlasIconButton
+                  v-bind="{ ariaLabel: t('common.tags').value }"
+                  icon="mdi-tag-outline"
+                  variant="text"
+                  size="sm"
+                  :disabled="!draftId"
+                  data-testid="char-builder-tags-icon"
+                  @click="showTagsDialog = true"
+                />
+              </AtlasBadge>
+            </template>
+          </AtlasTooltip>
+          <AtlasTooltip
             v-if="isEditing && draftId"
             :text="t('components.access.configureAccess').value"
             location="bottom"
@@ -301,6 +327,13 @@
       @close="showAccessDialog = false"
     />
 
+    <TagSelectionDialog
+      v-if="draftId"
+      v-model="showTagsDialog"
+      :selected-tags="characterizationTags"
+      :on-apply="handleTagsApply"
+    />
+
     <!-- Unsaved-changes confirmation dialog (same pattern as CohortBuilder.vue) -->
     <AtlasDialog
       v-model="showUnsavedDialog"
@@ -350,13 +383,15 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import { getCohorts } from '@/services/cohort-definition.service'
 import { listFeatureAnalyses } from '@/services/feature-analysis.service'
-import { exportCharacterization, importCharacterization } from '@/services/characterization.service'
+import { assignCharacterizationTag, exportCharacterization, importCharacterization, unassignCharacterizationTag } from '@/services/characterization.service'
 import { logger } from '@/utils/logger'
+import { assignedTags, syncAssetTags } from '@/utils/asset-tags'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 import ConceptSetsListDialog from '@/components/cohort/ConceptSetsListDialog.vue'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
+import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
@@ -366,7 +401,7 @@ import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { validateCharacterization, countByLevel } from '@/utils/characterization-validators'
 import type { CharacterizationDefinition, PrevalenceStat } from '@/models/characterization.types'
-import type { CohortDefinitionSummary } from '@/models/webapi.types'
+import type { CohortDefinitionSummary, Tag } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
 import type { ConceptSetReference } from '@/models/cohort.types'
 import type { ConceptSet as CirceConceptSet, ConceptSetItem as CirceConceptSetItem, CriteriaGroup as CirceCriteriaGroup } from '@/models/circe-types'
@@ -402,6 +437,7 @@ const saving = ref<boolean>(false)
 const showConceptSetsDialog = ref<boolean>(false)
 const showVersionsDialog = ref<boolean>(false)
 const showAccessDialog = ref<boolean>(false)
+const showTagsDialog = ref<boolean>(false)
 const showValidationDialog = ref<boolean>(false)
 const showUnsavedDialog = ref<boolean>(false)
 const importing = ref<boolean>(false)
@@ -474,6 +510,8 @@ const validationBadge = computed<{ color: string; count: number } | null>(() => 
 })
 
 const draftId = computed<number | null>(() => draft.value.id ?? null)
+const characterizationTags = computed<Tag[]>(() => draft.value.tags ?? [])
+const characterizationTagCount = computed(() => assignedTags(characterizationTags.value).length)
 
 const characterizationConceptSets = computed<ConceptSetReference[]>(() =>
   (draft.value.strataConceptSets ?? []).map((set, index) => ({
@@ -541,6 +579,20 @@ function hydrateFrom(cc: CharacterizationDefinition | null) {
 function onDraftChange(next: CharacterizationDefinition) {
   draft.value = next
   store.markDirty()
+}
+
+async function handleTagsApply(newTags: Tag[]): Promise<boolean> {
+  const characterizationId = draftId.value
+  if (!characterizationId) return false
+
+  const result = await syncAssetTags(characterizationTags.value, newTags, {
+    assign: tagId => assignCharacterizationTag(characterizationId, tagId),
+    unassign: tagId => unassignCharacterizationTag(characterizationId, tagId),
+  })
+
+  draft.value.tags = result.tags
+  if (!result.success) showSnackbar(t('cc.viewEdit.saveError').value, 'error')
+  return result.success
 }
 
 function createConceptSet() {

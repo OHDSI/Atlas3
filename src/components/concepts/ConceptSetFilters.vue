@@ -4,6 +4,7 @@
       <AtlasTextField
         v-model="localFilters.searchQuery"
         :placeholder="searchLabel"
+        :data-testid="searchTestId"
         prepend-icon="mdi-magnify"
         clearable
         variant="outlined"
@@ -269,6 +270,8 @@ interface Props {
   availableAuthors: string[]
   availableTags: string[]
   activeFilterCount: number
+  searchPlaceholder?: string
+  searchTestId?: string
 }
 
 interface Emits {
@@ -281,7 +284,8 @@ const emit = defineEmits<Emits>()
 const { t, locale } = useI18n()
 
 const filtersLabel = t('common.filters')
-const searchLabel = t('cs.searchPlaceholder')
+const searchLabel = computed(() => props.searchPlaceholder ?? t('cs.searchPlaceholder').value)
+const searchTestId = computed(() => props.searchTestId)
 const authorLabel = t('columns.author')
 const createdLabel = t('columns.created')
 const modifiedLabel = t('columns.modified')

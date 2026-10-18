@@ -4,16 +4,15 @@
     testid="incidence-rates"
   >
     <template #actions>
-      <AtlasTextField
-        :model-value="searchInput"
-        :label="t('datatable.language.searchPlaceholder').value"
-        prepend-icon="mdi-magnify"
-        variant="outlined"
-        hide-details
-        clearable
-        class="incidence-rates-view__search"
-        data-testid="incidence-rates-search"
-        @update:model-value="(v: string | number) => handleSearchInput(v != null ? String(v) : null)"
+      <ConceptSetFilters
+        :filters="filters"
+        :available-authors="availableAuthors"
+        :available-tags="availableTags"
+        :active-filter-count="activeFilterCount"
+        :search-placeholder="t('datatable.language.searchPlaceholder').value"
+        search-test-id="incidence-rates-search"
+        @update:filters="setFilters"
+        @clear="clearFilters"
       />
     </template>
 
@@ -46,17 +45,12 @@
       testid="incidence-rates-table"
       :can-copy-item="item => canCopy && !!item.id"
       :can-delete-item="item => entityAccess.canDelete(item.id)"
+      :selected-tags="filters.selectedTags"
       @open="handleOpen"
       @copy="handleCopy"
       @delete="handleRemove"
-    >
-      <template #[`item.targetCount`]="{ item }">
-        {{ item.expression?.targetIds?.length ?? 0 }}
-      </template>
-      <template #[`item.outcomeCount`]="{ item }">
-        {{ item.expression?.outcomeIds?.length ?? 0 }}
-      </template>
-    </AnalysisDataTable>
+      @tag-click="toggleTagFilterSelection"
+    />
 
     <template
       v-if="!loading && totalPages > 1"
@@ -108,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDialog, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDialog } from '@/components/ui'
 import { useNotifications } from '@/stores/notifications'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -122,6 +116,7 @@ import { logger } from '@/utils/logger'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
 import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
 import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
+import ConceptSetFilters from '@/components/concepts/ConceptSetFilters.vue'
 import EntityImportButton from '@/components/shared/EntityImportButton.vue'
 
 type SortItem = { key: string; order: 'asc' | 'desc' }
@@ -135,6 +130,12 @@ const {
   fetchIncidenceRates,
   filteredIncidenceRates,
   totalPages,
+  availableAuthors,
+  availableTags,
+  activeFilterCount,
+  clearFilters,
+  setFilters,
+  toggleTagFilterSelection,
 } = useIncidenceRates()
 
 const router = useRouter()
@@ -147,7 +148,6 @@ const notify = useNotifications()
 const { t, tv } = useI18n()
 const showDelete = ref(false)
 const deleteTarget = ref<number | null>(null)
-const searchInput = ref('')
 const sortBy = ref<SortItem[]>([{ key: 'modifiedDate', order: 'desc' }])
 
 function sortValue(item: IncidenceRate, key: string): string | number {
@@ -182,12 +182,7 @@ const headers = computed(() => [
   { title: t('columns.id').value, key: 'id' },
   { title: t('columns.name').value, key: 'name' },
   { title: t('columns.description').value, key: 'description' },
-  {
-    title: t('facets.caption.targetCohorts').value,
-    key: 'targetCount',
-    sortable: false,
-  },
-  { title: t('ir.editor.outcomes').value, key: 'outcomeCount', sortable: false },
+  { title: t('common.tags').value, key: 'tags', sortable: false },
   { title: t('columns.createdBy').value, key: 'createdBy' },
   { title: t('columns.created').value, key: 'createdDate' },
   { title: t('columns.updated').value, key: 'modifiedDate' },
@@ -195,13 +190,6 @@ const headers = computed(() => [
 ])
 
 onMounted(fetchIncidenceRates)
-
-function handleSearchInput(v: string | null) {
-  const next = v ?? ''
-  searchInput.value = next
-  filters.value = { ...filters.value, searchQuery: next }
-  page.value = 0
-}
 
 function updatePage(n: number) {
   page.value = Math.max(0, Math.min(n, totalPages.value - 1))

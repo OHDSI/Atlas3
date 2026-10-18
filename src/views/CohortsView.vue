@@ -350,6 +350,7 @@
 import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
+import { toggleTagFilter } from '@/utils/asset-tags'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
 import { usePermissions } from '@/composables/usePermissions'
@@ -669,14 +670,7 @@ function handleDeleteClick(cohort: CohortDefinitionSummary) {
  * Handle tag click - toggle tag filter on/off
  */
 function handleTagClick(tagName: string) {
-  const index = filters.value.selectedTags.indexOf(tagName)
-  if (index === -1) {
-    // Tag not selected - add it
-    filters.value.selectedTags.push(tagName)
-  } else {
-    // Tag already selected - remove it
-    filters.value.selectedTags.splice(index, 1)
-  }
+  filters.value.selectedTags = toggleTagFilter(filters.value.selectedTags, tagName)
 }
 
 /**

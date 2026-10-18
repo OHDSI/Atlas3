@@ -58,7 +58,7 @@
       </template>
     </AtlasTooltip>
 
-    <!-- Tags Icon — always shown; disabled in version-preview mode. -->
+    <!-- Tags Icon — always shown; disabled until the cohort is saved or in version-preview mode. -->
     <AtlasTooltip
       :text="t('configuration.buttons.tagManagement').value"
       location="bottom"
@@ -71,12 +71,12 @@
           class="cohort-toolbar-status__badge"
         >
           <AtlasIcon
-            :color="!isPreviewingVersion ? 'primary' : 'grey'"
+            :color="cohortId && !isPreviewingVersion ? 'primary' : 'grey'"
             icon="mdi-tag-multiple"
             size="small"
             data-testid="tags-icon"
-            :style="!isPreviewingVersion ? 'cursor: pointer' : 'cursor: default; opacity: 0.5'"
-            @click="!isPreviewingVersion && $emit('show-tags')"
+            :style="cohortId && !isPreviewingVersion ? 'cursor: pointer' : 'cursor: default; opacity: 0.5'"
+            @click="cohortId && !isPreviewingVersion && $emit('show-tags')"
           />
         </AtlasBadge>
       </template>

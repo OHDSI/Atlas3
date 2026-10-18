@@ -234,6 +234,24 @@ describe('CohortToolbarStatus', () => {
     })
   })
 
+  describe('Tags Action', () => {
+    it('does not emit show-tags until the cohort has been saved', async () => {
+      const wrapper = mountComponent({ cohortId: null })
+
+      await wrapper.find('[data-testid="tags-icon"]').trigger('click')
+
+      expect(wrapper.emitted('show-tags')).toBeFalsy()
+    })
+
+    it('emits show-tags for a saved cohort outside version preview', async () => {
+      const wrapper = mountComponent({ cohortId: 99 })
+
+      await wrapper.find('[data-testid="tags-icon"]').trigger('click')
+
+      expect(wrapper.emitted('show-tags')).toBeTruthy()
+    })
+  })
+
   describe('Combined State', () => {
     it('should show both concept sets and validation badges', () => {
       const wrapper = mountComponent({

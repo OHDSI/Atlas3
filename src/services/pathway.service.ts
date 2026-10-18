@@ -145,11 +145,11 @@ export async function importPathway(design: unknown): Promise<Pathway> {
 
 /**
  * Assign a tag to a pathway analysis.
- * POST /pathway-analysis/:id/tag/:tagId
+ * POST /pathway-analysis/:id/tag with the tag ID as the request body.
  */
 export async function assignPathwayTag(id: number, tagId: number): Promise<ApiResult<void>> {
   return unwrap(async () => {
-    await httpPost(`/pathway-analysis/${id}/tag/${tagId}`, undefined)
+    await httpPost(`/pathway-analysis/${id}/tag`, tagId)
   }, CONTEXT)
 }
 

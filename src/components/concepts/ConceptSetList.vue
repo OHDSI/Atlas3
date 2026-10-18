@@ -77,15 +77,22 @@
         <!-- Tags -->
         <template #item.tags="{ item }">
           <div
-            v-if="item.tags && item.tags.length > 0"
+            v-if="displayTags(item.tags).length > 0"
             class="concept-set-list__tags"
           >
             <AtlasChip
-              v-for="tag in item.tags"
+              v-for="tag in displayTags(item.tags)"
               :key="tag.id || tag.name"
               size="sm"
               variant="flat"
-              :style="{ backgroundColor: tagColor(tag.color), color: tagContrastColor(tag.color) }"
+              :style="{
+                backgroundColor: tagColor(tag.color),
+                color: tagContrastColor(tag.color),
+                boxShadow: store.filters.selectedTags.includes(tag.name)
+                  ? '0 0 0 2px rgb(var(--v-theme-primary))'
+                  : undefined,
+              }"
+              @click.stop="store.toggleTagFilterSelection(tag.name)"
             >
               {{ tag.name }}
             </AtlasChip>
@@ -207,6 +214,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate, lastTouchedDate } from '@/utils/date-format'
 import { tagColor, tagContrastColor } from '@/utils/tag-color'
+import { displayTags } from '@/utils/asset-tags'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetFilters from './ConceptSetFilters.vue'
 import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'

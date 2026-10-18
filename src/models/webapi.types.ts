@@ -4,12 +4,21 @@
  */
 import { z } from 'zod'
 
-// Tag schema for cohort organization
+// Tag schema for asset organization. `groups` identifies a child tag's
+// organizational parent(s); WebAPI also expands those parents into asset tag
+// lists for display and filtering.
+export const TagGroupReferenceSchema = z.object({
+  id: z.number().optional(),
+  name: z.string(),
+  color: z.string().nullable().optional(),
+}).passthrough()
+
 export const TagSchema = z.object({
   id: z.number().optional(),
   name: z.string(),
-  color: z.string().optional(),
-})
+  color: z.string().nullable().optional(),
+  groups: z.array(TagGroupReferenceSchema).optional(),
+}).passthrough()
 
 export type Tag = z.infer<typeof TagSchema>
 

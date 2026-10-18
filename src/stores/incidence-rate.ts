@@ -24,6 +24,7 @@ import {
 import type { Tag } from '@/models/webapi.types'
 import { getIncidenceRateVersion } from '@/services/incidence-rate-versions.service'
 import { logger } from '@/utils/logger'
+import { assignedTags, syncAssetTags } from '@/utils/asset-tags'
 import { useI18n } from '@/composables/useI18n'
 
 export interface IncidenceRateValidationError {
@@ -428,38 +429,24 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
 
   async function addTag(tag: Tag): Promise<boolean> {
     if (!currentIR.value?.id) return false
-    const result = await assignIncidenceRateTag(currentIR.value.id, tag.id!)
-    if (!result.success) {
-      logger.error('IncidenceRate', 'addTag failed', result.error)
-      return false
-    }
-    if (!currentIR.value.tags.some(t => t.id === tag.id)) {
-      currentIR.value.tags.push(tag)
-      // tag mutations are metadata — do not mark dirty
-    }
-    return true
+    return syncTags([...assignedTags(currentIR.value.tags), tag])
   }
 
   async function removeTag(tagId: number): Promise<boolean> {
     if (!currentIR.value?.id) return false
-    const result = await unassignIncidenceRateTag(currentIR.value.id, tagId)
-    if (!result.success) {
-      logger.error('IncidenceRate', 'removeTag failed', result.error)
-      return false
-    }
-    if (currentIR.value) {
-      currentIR.value.tags = currentIR.value.tags.filter(t => t.id !== tagId)
-    }
-    return true
+    return syncTags(assignedTags(currentIR.value.tags).filter(tag => tag.id !== tagId))
   }
 
-  async function syncTags(newTags: Tag[]): Promise<void> {
-    if (!currentIR.value?.id) return
-    const current = currentIR.value.tags
-    const toAdd = newTags.filter(n => !current.some(c => c.id === n.id))
-    const toRemove = current.filter(c => !newTags.some(n => n.id === c.id))
-    for (const t of toAdd) await addTag(t)
-    for (const t of toRemove) await removeTag(t.id!)
+  async function syncTags(newTags: Tag[]): Promise<boolean> {
+    if (!currentIR.value?.id) return false
+    const id = currentIR.value.id
+    const result = await syncAssetTags(currentIR.value.tags, newTags, {
+      assign: tagId => assignIncidenceRateTag(id, tagId),
+      unassign: tagId => unassignIncidenceRateTag(id, tagId),
+    })
+    currentIR.value.tags = result.tags
+    if (!result.success) logger.error('IncidenceRate', 'Tag synchronization failed', result.failures)
+    return result.success
   }
 
   function setExecutionInfo(sourceKey: string, info: IncidenceRateInfoBySource) {

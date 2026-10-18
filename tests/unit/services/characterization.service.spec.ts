@@ -25,6 +25,8 @@ import {
   getCharacterization,
   createCharacterization,
   updateCharacterization,
+  assignCharacterizationTag,
+  unassignCharacterizationTag,
   deleteCharacterization,
   copyCharacterization,
   characterizationNameExists,
@@ -237,6 +239,30 @@ describe('services/characterization.service', () => {
       expect(sent.stratas[0].id).toBe(42)
       expect(sent.stratas[1]).not.toHaveProperty('id')
       expect(sent.stratas[1].name).toBe('New strata')
+    })
+
+    it('omits tags so assignment is handled only by tag endpoints', async () => {
+      ok(validDesign)
+
+      await createCharacterization({ ...validDesign, tags: [{ id: 7, name: 'Clinical' }] })
+
+      const [, init] = mockFetch.mock.calls[0]
+      expect(JSON.parse(init.body as string)).not.toHaveProperty('tags')
+    })
+  })
+
+  describe('tag assignment', () => {
+    it('assigns and unassigns tags through dedicated endpoints', async () => {
+      ok(undefined)
+      await expect(assignCharacterizationTag(42, 7)).resolves.toMatchObject({ success: true })
+      expect(mockFetch.mock.calls[0][0]).toContain('/cohort-characterization/42/tag')
+      expect(mockFetch.mock.calls[0][1].method).toBe('POST')
+      expect(mockFetch.mock.calls[0][1].body).toBe('7')
+
+      ok(undefined)
+      await expect(unassignCharacterizationTag(42, 7)).resolves.toMatchObject({ success: true })
+      expect(mockFetch.mock.calls[1][0]).toContain('/cohort-characterization/42/tag/7')
+      expect(mockFetch.mock.calls[1][1].method).toBe('DELETE')
     })
   })
 

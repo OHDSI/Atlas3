@@ -87,9 +87,9 @@ describe('AnalysisDataTable Updated column (#292)', () => {
           name: 'Restricted analysis',
           description: 'A description longer than the configured display limit',
           tags: [
-            { name: 'First', color: '#ffffff' },
+            { id: 1, name: 'Group', color: '#ffffff', groups: [] },
+            { id: 2, name: 'First', color: '#ffffff', groups: [{ id: 1, name: 'Group', color: '#ffffff' }] },
             { name: 'Second', color: '#000000' },
-            { name: 'Third', color: '#888888' },
           ],
         }],
         descriptionLimit: 12,
@@ -103,8 +103,8 @@ describe('AnalysisDataTable Updated column (#292)', () => {
     expect(wrapper.get('[data-testid="analysis-table-row-name"]').text()).toBe('Restricted analysis')
     expect(wrapper.find('a[data-testid="analysis-table-row-name"]').exists()).toBe(false)
     expect(wrapper.text()).toContain('A descriptio…')
+    expect(wrapper.text()).toContain('Group')
     expect(wrapper.text()).toContain('First')
-    expect(wrapper.text()).toContain('Second')
     expect(wrapper.get('.analysis-data-table__tag-overflow').text()).toBe('+1')
     expect(wrapper.findAll('.analysis-data-table__row-actions button')).toHaveLength(2)
   })

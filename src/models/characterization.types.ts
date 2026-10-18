@@ -11,6 +11,7 @@
 import { z } from 'zod'
 
 import type { Tag } from './cohort.types'
+import { TagSchema } from './webapi.types'
 import type { FeatureAnalysisDomain, FeatureAnalysisType } from './feature-analysis.types'
 import { FeatureAnalysisDomainSchema, FeatureAnalysisTypeSchema } from './feature-analysis.types'
 import { StoredCriteriaGroupSchema } from '@/models/stored-criteria-group'
@@ -107,14 +108,6 @@ const UserRefSchema = z.union([
     })
     .passthrough(),
 ])
-
-const TagSchema = z
-  .object({
-    id: z.number().optional(),
-    name: z.string(),
-    color: z.string().optional(),
-  })
-  .passthrough()
 
 // ============================================================================
 // CharacterizationDefinition

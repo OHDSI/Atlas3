@@ -4,16 +4,15 @@
     testid="pathways"
   >
     <template #actions>
-      <AtlasTextField
-        :model-value="searchInput"
-        :label="t('datatable.language.searchPlaceholder').value"
-        prepend-icon="mdi-magnify"
-        variant="outlined"
-        hide-details
-        clearable
-        class="pathways-view__search"
-        data-testid="pathways-search"
-        @update:model-value="(v: string | number) => handleSearchInput(v != null ? String(v) : null)"
+      <ConceptSetFilters
+        :filters="filters"
+        :available-authors="availableAuthors"
+        :available-tags="availableTags"
+        :active-filter-count="activeFilterCount"
+        :search-placeholder="t('datatable.language.searchPlaceholder').value"
+        search-test-id="pathways-search"
+        @update:filters="setFilters"
+        @clear="clearFilters"
       />
     </template>
 
@@ -46,17 +45,12 @@
       testid="pathways-table"
       :can-copy-item="item => canCopy && !!item.id"
       :can-delete-item="item => entityAccess.canDelete(item.id)"
+      :selected-tags="filters.selectedTags"
       @open="handleOpen"
       @copy="handleCopy"
       @delete="handleRemove"
-    >
-      <template #[`item.targetCount`]="{ item }">
-        {{ item.targetCohorts?.length ?? 0 }}
-      </template>
-      <template #[`item.eventCount`]="{ item }">
-        {{ item.eventCohorts?.length ?? 0 }}
-      </template>
-    </AnalysisDataTable>
+      @tag-click="toggleTagFilterSelection"
+    />
 
     <template
       v-if="!loading && totalPages > 1"
@@ -116,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDialog, AtlasSnackbar, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasSnackbar } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -130,6 +124,7 @@ import { logger } from '@/utils/logger'
 import type { Pathway } from '@/models/pathway.types'
 import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
 import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
+import ConceptSetFilters from '@/components/concepts/ConceptSetFilters.vue'
 import EntityImportButton from '@/components/shared/EntityImportButton.vue'
 
 type SortItem = { key: string; order: 'asc' | 'desc' }
@@ -143,6 +138,12 @@ const {
   fetchPathways,
   filteredPathways,
   totalPages,
+  availableAuthors,
+  availableTags,
+  activeFilterCount,
+  clearFilters,
+  setFilters,
+  toggleTagFilterSelection,
 } = usePathways()
 
 const router = useRouter()
@@ -158,7 +159,6 @@ const feedback = ref<{ message: string; color: 'success' | 'error' | 'info' } | 
 const feedbackSeverity = computed<AtlasSnackbarSeverity>(() =>
   feedback.value?.color === 'error' ? 'danger' : (feedback.value?.color ?? 'info')
 )
-const searchInput = ref('')
 const sortBy = ref<SortItem[]>([{ key: 'modifiedDate', order: 'desc' }])
 
 function sortValue(item: Pathway, key: string): string | number {
@@ -193,12 +193,7 @@ const headers = computed(() => [
   { title: t('columns.id').value, key: 'id' },
   { title: t('columns.name').value, key: 'name' },
   { title: t('columns.description').value, key: 'description' },
-  {
-    title: t('facets.caption.targetCohorts').value,
-    key: 'targetCount',
-    sortable: false,
-  },
-  { title: t('columns.eventCohort').value, key: 'eventCount', sortable: false },
+  { title: t('common.tags').value, key: 'tags', sortable: false },
   { title: t('columns.createdBy').value, key: 'createdBy' },
   { title: t('columns.created').value, key: 'createdDate' },
   { title: t('columns.updated').value, key: 'modifiedDate' },
@@ -206,13 +201,6 @@ const headers = computed(() => [
 ])
 
 onMounted(fetchPathways)
-
-function handleSearchInput(v: string | null) {
-  const next = v ?? ''
-  searchInput.value = next
-  filters.value = { ...filters.value, searchQuery: next }
-  page.value = 0
-}
 
 function updatePage(n: number) {
   page.value = Math.max(0, Math.min(n, totalPages.value - 1))

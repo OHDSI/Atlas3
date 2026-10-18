@@ -222,7 +222,7 @@ describe('services/cohort-definition.service', () => {
 
       expect(result.success).toBe(true)
       const [url, options] = mockFetch.mock.calls[0]
-      expect(url).toContain('/cohortdefinition/1/tag/')
+      expect(url).toContain('/cohortdefinition/1/tag')
       expect(options.method).toBe('POST')
       expect(options.body).toBe('10')
     })

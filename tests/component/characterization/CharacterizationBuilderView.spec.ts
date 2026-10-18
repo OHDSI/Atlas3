@@ -28,6 +28,8 @@ vi.mock('@/services/characterization.service', () => ({
   getCharacterization: vi.fn(),
   createCharacterization: vi.fn(),
   updateCharacterization: vi.fn(),
+  assignCharacterizationTag: vi.fn(),
+  unassignCharacterizationTag: vi.fn(),
   deleteCharacterization: vi.fn(),
   copyCharacterization: vi.fn(),
   characterizationNameExists: vi.fn(),
@@ -74,6 +76,8 @@ import {
   getCharacterization,
   createCharacterization,
   updateCharacterization,
+  assignCharacterizationTag,
+  unassignCharacterizationTag,
   listCharacterizations,
   listCharacterizationExecutions,
   exportCharacterization,
@@ -180,6 +184,8 @@ describe('CharacterizationBuilderView', () => {
     // is set (edit-mode tests), so this must resolve instead of returning
     // undefined — an unresolved ApiResult crashes `result.success` in the store.
     vi.mocked(listCharacterizationExecutions).mockResolvedValue(success([]))
+    vi.mocked(assignCharacterizationTag).mockResolvedValue(success(undefined))
+    vi.mocked(unassignCharacterizationTag).mockResolvedValue(success(undefined))
   })
 
   afterEach(() => {
@@ -219,6 +225,19 @@ describe('CharacterizationBuilderView', () => {
     expect(mounted.wrapper.find('[data-testid="char-builder-copy"]').exists()).toBe(false)
     expect(mounted.wrapper.find('[data-testid="char-builder-delete"]').exists()).toBe(false)
     expect(mounted.wrapper.find('[data-testid="char-builder-access-icon"]').exists()).toBe(true)
+  })
+
+  it('counts only directly assigned tags in the manage-tags badge', async () => {
+    vi.mocked(getCharacterization).mockResolvedValue(success({
+      ...sampleCharacterization,
+      tags: [
+        { id: 17, name: 'test', groups: [] },
+        { id: 18, name: 'Some Tag', groups: [{ id: 17, name: 'test' }] },
+      ],
+    }))
+    mounted = await mountBuilder('/characterizations/42', { id: '42' })
+
+    expect(mounted.wrapper.find('[data-testid="char-builder-tags-badge"] .v-badge__badge').text()).toBe('1')
   })
 
   it('opens access configuration from the versions-side action bar icon', async () => {
@@ -275,6 +294,24 @@ describe('CharacterizationBuilderView', () => {
     const dialogs = mounted.wrapper.findAllComponents({ name: 'AtlasDialog' })
     const versionsDialog = dialogs.find(dialog => dialog.props('title') === 'Versions')
     expect(versionsDialog?.props('modelValue')).toBe(true)
+  })
+
+  it('persists characterization tags when the dialog applies them', async () => {
+    vi.mocked(getCharacterization).mockResolvedValue(success({
+      ...sampleCharacterization,
+      tags: [{ id: 1, name: 'Old' }],
+    }))
+    mounted = await mountBuilder('/characterizations/42', { id: '42' })
+    await flushPromises()
+
+    await mounted.wrapper.get('[data-testid="char-builder-tags-icon"]').trigger('click')
+    const dialog = mounted.wrapper.findComponent({ name: 'TagSelectionDialog' })
+    const onApply = dialog.props('onApply') as (tags: Array<{ id: number; name: string }>) => Promise<boolean>
+
+    await expect(onApply([{ id: 2, name: 'New' }])).resolves.toBe(true)
+
+    expect(unassignCharacterizationTag).toHaveBeenCalledWith(42, 1)
+    expect(assignCharacterizationTag).toHaveBeenCalledWith(42, 2)
   })
 
   it('covers save failure branches and empty-name validation', async () => {

@@ -584,7 +584,7 @@ describe('CohortBuilder', () => {
     expect(wrapper.findComponent({ name: 'ValidationMessagesDialog' }).props('modelValue')).toBe(
       true
     )
-    expect(wrapper.findComponent({ name: 'TagSelectionDialog' }).props('modelValue')).toBe(true)
+    expect(wrapper.findComponent({ name: 'TagSelectionDialog' }).props('modelValue')).toBe(false)
     expect(wrapper.findComponent({ name: 'EntityAccessDialog' }).props('modelValue')).toBe(true)
   })
 
@@ -759,7 +759,7 @@ describe('CohortBuilder', () => {
   // createStateSnapshot
   // ---------------------------------------------------------------------------
 
-  it('createStateSnapshot returns a stable JSON string capturing all fields', async () => {
+  it('createStateSnapshot returns a stable JSON string capturing cohort design fields', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
     const vm = wrapper.vm as any
@@ -770,6 +770,7 @@ describe('CohortBuilder', () => {
     const parsed = JSON.parse(snap)
     expect(parsed.name).toBe('Snap')
     expect(parsed.description).toBe('snap-desc')
+    expect(parsed).not.toHaveProperty('tags')
     expect(parsed).toHaveProperty('expression')
   })
 
@@ -817,6 +818,23 @@ describe('CohortBuilder', () => {
     tagSelectionDialog(wrapper).vm.$emit('update:selected-tags', tags)
     await wrapper.vm.$nextTick()
     expect(store.currentCohort?.tags).toEqual(tags)
+  })
+
+  it('counts only directly assigned tags in the manage-tags badge', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const store = useCohortStore()
+    if (!store.currentCohort) {
+      store.createNewCohort()
+    }
+
+    store.currentCohort!.tags = [
+      { id: 17, name: 'Group', groups: [] },
+      { id: 18, name: 'Child', groups: [{ id: 17, name: 'Group' }] },
+    ]
+    await wrapper.vm.$nextTick()
+
+    expect((wrapper.vm as { tagCount: number }).tagCount).toBe(1)
   })
 
   // ---------------------------------------------------------------------------
@@ -2120,87 +2138,53 @@ describe('CohortBuilder', () => {
     expect(setup.showError).toBe(true)
   })
 
-  it('handleSave surfaces the server message when a tag assignment fails', async () => {
-    const wrapper = createWrapper()
-    await wrapper.vm.$nextTick()
+  it('persists tag changes when the tag dialog applies them', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await flushPromises()
     const setup = getSetup(wrapper)
-    setup.cohortName = 'Savable'
-    Object.assign(setup.expression, { PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] } })
-    tagSelectionDialog(wrapper).vm.$emit('update:selected-tags', [{ id: 7, name: 'protected' }])
-    await wrapper.vm.$nextTick()
+    setup.loadedSnapshot = setup.createStateSnapshot()
+    setup.loadedTags = [{ id: 9, name: 'old-tag' }]
+    const webapi = await import('@/services/cohort-definition.service')
+    const onApply = tagSelectionDialog(wrapper).props('onApply') as (tags: Tag[]) => Promise<boolean>
 
+    await expect(onApply([{ id: 7, name: 'new-tag' }])).resolves.toBe(true)
+
+    expect(webapi.unassignTagFromCohort).toHaveBeenCalledWith(42, 9)
+    expect(webapi.assignTagToCohort).toHaveBeenCalledWith(42, 7)
+    expect(setup.loadedTags).toEqual([{ id: 7, name: 'new-tag' }])
+    expect(setup.hasUnsavedChanges).toBe(false)
+  })
+
+  it('keeps failed tag changes out of the persisted cohort state', async () => {
+    const wrapper = createWrapper({ id: '42' })
+    await flushPromises()
+    const setup = getSetup(wrapper)
     const webapi = await import('@/services/cohort-definition.service')
     vi.mocked(webapi.assignTagToCohort).mockResolvedValueOnce({
       success: false,
       error: new ApiError('Tag group "Status" allows only one assignment', 400, null),
     })
+    const onApply = tagSelectionDialog(wrapper).props('onApply') as (tags: Tag[]) => Promise<boolean>
 
-    await setup.handleSave()
+    await expect(onApply([{ id: 7, name: 'protected' }])).resolves.toBe(false)
+    expect(setup.loadedTags).toEqual([])
+    expect(setup.cohortTags).toEqual([])
     expect(setup.errorMessage).toBe('Tag group "Status" allows only one assignment')
     expect(setup.showError).toBe(true)
   })
 
-  // Tag syncs are independent of each other, so N tag changes must cost one
-  // round-trip, not N.
-  it('handleSave issues every tag call in one round-trip', async () => {
+  it('handleSave does not call tag assignment endpoints', async () => {
     const wrapper = createWrapper({ id: '42' })
     await flushPromises()
     const setup = getSetup(wrapper)
-    setup.loadedTags = [{ id: 9, name: 'old-tag' }]
-    tagSelectionDialog(wrapper).vm.$emit('update:selected-tags', [
-      { id: 7, name: 'a' },
-      { id: 8, name: 'b' },
-    ])
-    await wrapper.vm.$nextTick()
-
-    const inFlight: string[] = []
-    let release!: () => void
-    const gate = new Promise<void>(resolve => {
-      release = resolve
-    })
-    const webapi = await import('@/services/cohort-definition.service')
-    const hold = (label: string) => async (_cohortId: number, tagId: number) => {
-      inFlight.push(`${label}:${tagId}`)
-      await gate
-      return { success: true as const, data: undefined }
-    }
-    vi.mocked(webapi.assignTagToCohort)
-      .mockImplementationOnce(hold('assign'))
-      .mockImplementationOnce(hold('assign'))
-    vi.mocked(webapi.unassignTagFromCohort).mockImplementationOnce(hold('unassign'))
-
-    const saving = setup.handleSave()
-    try {
-      await flushPromises()
-      expect(inFlight).toEqual(['assign:7', 'assign:8', 'unassign:9'])
-    } finally {
-      // Drain the gate and the queued one-shot implementations, or a failure
-      // here leaks a permanently pending tag call into the next test.
-      release()
-      await saving
-      const succeed = { success: true as const, data: undefined }
-      vi.mocked(webapi.assignTagToCohort).mockReset().mockResolvedValue(succeed)
-      vi.mocked(webapi.unassignTagFromCohort).mockReset().mockResolvedValue(succeed)
-    }
-  })
-
-  it('handleSave falls back to a per-tag message when unassignment fails without detail', async () => {
-    const wrapper = createWrapper()
-    await wrapper.vm.$nextTick()
-    const setup = getSetup(wrapper)
     setup.cohortName = 'Savable'
     Object.assign(setup.expression, { PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: {} }] } })
-    setup.loadedTags = [{ id: 9, name: 'old-tag' }]
-
     const webapi = await import('@/services/cohort-definition.service')
-    vi.mocked(webapi.unassignTagFromCohort).mockResolvedValueOnce({
-      success: false,
-      error: new ApiError('', 0, null),
-    })
 
     await setup.handleSave()
-    expect(setup.errorMessage).toBe('Failed to unassign tag "old-tag"')
-    expect(setup.showError).toBe(true)
+
+    expect(webapi.assignTagToCohort).not.toHaveBeenCalled()
+    expect(webapi.unassignTagFromCohort).not.toHaveBeenCalled()
   })
 
   // ---------------------------------------------------------------------------

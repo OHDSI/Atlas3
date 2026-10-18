@@ -29,7 +29,7 @@
           {{ getName(item) }}
         </span>
         <div
-          v-if="hasTags(item)"
+          v-if="hasTags(item) && !hasTagColumn"
           class="analysis-data-table__tag-rail"
         >
           <AtlasChip
@@ -37,8 +37,12 @@
             :key="tag.name"
             size="sm"
             variant="flat"
-            class="analysis-data-table__tag"
+            :class="{
+              'analysis-data-table__tag': true,
+              'analysis-data-table__tag--selected': selectedTags.includes(tag.name),
+            }"
             :style="{ backgroundColor: tagColor(tag.color), color: tagContrastColor(tag.color) }"
+            @click.stop="handleTagClick(tag.name)"
           >
             {{ tag.name }}
           </AtlasChip>
@@ -50,6 +54,35 @@
             +{{ overflowTagCount(item) }}
           </span>
         </div>
+      </div>
+    </template>
+
+    <template #[`item.tags`]="{ item }">
+      <div
+        v-if="hasTags(item)"
+        class="analysis-data-table__tag-rail"
+      >
+        <AtlasChip
+          v-for="tag in visibleTags(item)"
+          :key="tag.name"
+          size="sm"
+          variant="flat"
+          :class="{
+            'analysis-data-table__tag': true,
+            'analysis-data-table__tag--selected': selectedTags.includes(tag.name),
+          }"
+          :style="{ backgroundColor: tagColor(tag.color), color: tagContrastColor(tag.color) }"
+          @click.stop="handleTagClick(tag.name)"
+        >
+          {{ tag.name }}
+        </AtlasChip>
+        <span
+          v-if="overflowTagCount(item) > 0"
+          class="analysis-data-table__tag-overflow"
+          :title="overflowTagsTitle(item)"
+        >
+          +{{ overflowTagCount(item) }}
+        </span>
       </div>
     </template>
 
@@ -144,6 +177,7 @@
 import { AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
 import { computed, ref, useSlots, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { displayTags } from '@/utils/asset-tags'
 import { formatDate, formatRelativeTime, lastTouchedDate } from '@/utils/date-format'
 import { tagColor, tagContrastColor } from '@/utils/tag-color'
 
@@ -161,6 +195,7 @@ interface Props {
   testid?: string
   maxVisibleTags?: number
   descriptionLimit?: number
+  selectedTags?: string[]
   /**
    * Optional permission callbacks. Each receives the row item and returns
    * whether the action button should be enabled. Defaulting to `true` keeps
@@ -186,6 +221,7 @@ const props = withDefaults(defineProps<Props>(), {
   testid: undefined,
   maxVisibleTags: 2,
   descriptionLimit: 80,
+  selectedTags: () => [],
   canCopyItem: () => () => true,
   canDeleteItem: () => () => true,
   canOpenItem: () => () => true,
@@ -195,6 +231,7 @@ const emit = defineEmits<{
   (e: 'open', item: T): void
   (e: 'copy', item: T): void
   (e: 'delete', item: T): void
+  (e: 'tag-click', tagName: string): void
   (e: 'update:sortBy', sortBy: { key: string; order: 'asc' | 'desc' }[]): void
 }>()
 
@@ -222,6 +259,10 @@ function handleSortByUpdate(value: { key: string; order?: 'asc' | 'desc' }[]) {
   emit('update:sortBy', normalized)
 }
 
+function handleTagClick(tagName: string) {
+  emit('tag-click', tagName)
+}
+
 // Forward any item.<key> or other custom slots that the consumer passed
 // in but that we don't render ourselves.
 const RESERVED_SLOTS = new Set<string>([
@@ -247,7 +288,7 @@ function getName(item: T): string {
 
 function tagsOf(item: T): Tag[] {
   const v = (item as Record<string, unknown>).tags
-  return Array.isArray(v) ? (v as Tag[]) : []
+  return Array.isArray(v) ? displayTags(v as Tag[]) : []
 }
 
 function hasTags(item: T): boolean {
@@ -292,6 +333,8 @@ const tableHeaders = computed(() =>
     header.key === 'modifiedDate' ? { ...header, value: (item: unknown) => updatedField(item as T) } : header
   )
 )
+
+const hasTagColumn = computed(() => props.headers.some(header => header.key === 'tags'))
 
 function dateField(item: T, key: string): string | number | undefined {
   const v = (item as Record<string, unknown>)[key]
@@ -370,6 +413,14 @@ function formatUser(user: unknown): string {
 .analysis-data-table__tag {
   font-size: 0.7rem;
   height: 20px;
+}
+
+.analysis-data-table__tag {
+  cursor: pointer;
+}
+
+.analysis-data-table__tag--selected {
+  box-shadow: 0 0 0 2px rgb(var(--v-theme-primary));
 }
 
 .analysis-data-table__tag-overflow {

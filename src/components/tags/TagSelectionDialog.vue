@@ -220,10 +220,12 @@ import CreateTagForm from '@/components/tags/CreateTagForm.vue'
 import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'
 import { matchesTerms } from '@/utils/list-filters'
+import { assignedTags } from '@/utils/asset-tags'
 
 interface Props {
   modelValue: boolean
   selectedTags: Tag[]
+  onApply?: (tags: Tag[]) => Promise<boolean>
 }
 
 const props = defineProps<Props>()
@@ -246,7 +248,7 @@ watch(
   async isOpen => {
     if (isOpen) {
       await loadTags()
-      localSelectedTags.value = [...props.selectedTags]
+      localSelectedTags.value = assignedTags(props.selectedTags)
       expandPanelsWithSelections()
     }
   }
@@ -255,7 +257,7 @@ watch(
 onMounted(async () => {
   if (props.modelValue) {
     await loadTags()
-    localSelectedTags.value = [...props.selectedTags]
+    localSelectedTags.value = assignedTags(props.selectedTags)
     expandPanelsWithSelections()
   }
 })
@@ -274,7 +276,7 @@ async function loadTags() {
 }
 
 const tagGroups = computed(() => {
-  return configStore.allTags.filter(tag => tag.groups?.length === 0)
+  return (configStore.allTags ?? []).filter(tag => tag.groups?.length === 0)
 })
 
 const filteredTagGroups = computed(() => {
@@ -328,6 +330,11 @@ function toggleTag(tag: ConfigTag) {
       id: tag.id,
       name: tag.name,
       color: tag.color,
+      groups: tag.groups.map(group => ({
+        id: group.id,
+        name: group.name,
+        color: group.color,
+      })),
     })
   }
 }
@@ -361,13 +368,18 @@ function expandPanelsWithSelections() {
   expandedPanels.value = groupsWithSelections
 }
 
-function apply() {
-  emit('update:selected-tags', localSelectedTags.value)
+async function apply() {
+  const selectedTags = [...localSelectedTags.value]
+  if (props.onApply && !(await props.onApply(selectedTags))) {
+    return
+  }
+
+  emit('update:selected-tags', selectedTags)
   emit('update:modelValue', false)
 }
 
 function cancel() {
-  localSelectedTags.value = [...props.selectedTags]
+  localSelectedTags.value = assignedTags(props.selectedTags)
   emit('update:modelValue', false)
 }
 

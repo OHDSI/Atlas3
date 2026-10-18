@@ -5,16 +5,15 @@
     @clear-error="store.clearError()"
   >
     <template #actions>
-      <AtlasTextField
-        :model-value="searchInput"
-        :label="t('datatable.language.searchPlaceholder').value"
-        prepend-icon="mdi-magnify"
-        variant="outlined"
-        hide-details
-        clearable
-        class="characterizations-view__search"
-        data-testid="characterizations-search"
-        @update:model-value="(v: string | number) => handleSearchInput(v != null ? String(v) : null)"
+      <ConceptSetFilters
+        :filters="store.filters"
+        :available-authors="store.availableAuthors"
+        :available-tags="store.availableTags"
+        :active-filter-count="store.activeFilterCount"
+        :search-placeholder="t('datatable.language.searchPlaceholder').value"
+        search-test-id="characterizations-search"
+        @update:filters="store.setFilters"
+        @clear="store.clearFilters"
       />
     </template>
 
@@ -48,17 +47,12 @@
       testid="characterizations-table"
       :can-copy-item="item => canCopy && !!item.id"
       :can-delete-item="item => entityAccess.canDelete(item.id)"
+      :selected-tags="store.filters.selectedTags"
       @open="handleOpen"
       @copy="handleCopy"
       @delete="handleDeleteClick"
-    >
-      <template #[`item.cohorts`]="{ item }">
-        {{ item.cohorts?.length ?? 0 }}
-      </template>
-      <template #[`item.featureAnalyses`]="{ item }">
-        {{ item.featureAnalyses?.length ?? 0 }}
-      </template>
-    </AnalysisDataTable>
+      @tag-click="store.toggleTagFilterSelection"
+    />
 
     <template
       v-if="!loading && totalItems > itemsPerPage"
@@ -109,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDialog, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDialog } from '@/components/ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -122,6 +116,7 @@ import { logger } from '@/utils/logger'
 import type { CharacterizationListItem } from '@/models/characterization.types'
 import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
 import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
+import ConceptSetFilters from '@/components/concepts/ConceptSetFilters.vue'
 import EntityImportButton from '@/components/shared/EntityImportButton.vue'
 import { importCharacterization } from '@/services/characterization.service'
 import { useNotifications } from '@/stores/notifications'
@@ -150,11 +145,9 @@ const {
   rangeDisplay,
   nextPage,
   previousPage,
-  setFilter,
   refresh,
 } = useCharacterizations()
 
-const searchInput = ref<string>('')
 const sortBy = ref<SortItem[]>([{ key: 'modifiedDate', order: 'desc' }])
 
 function sortValue(item: CharacterizationListItem, key: string): string | number {
@@ -189,16 +182,7 @@ const headers = computed(() => [
   { title: t('columns.id').value, key: 'id' },
   { title: t('columns.name').value, key: 'name' },
   { title: t('columns.description').value, key: 'description' },
-  {
-    title: t('cc.viewEdit.results.filters.cohorts').value,
-    key: 'cohorts',
-    sortable: false,
-  },
-  {
-    title: t('cc.tabs.featureAnalyses.title').value,
-    key: 'featureAnalyses',
-    sortable: false,
-  },
+  { title: t('common.tags').value, key: 'tags', sortable: false },
   { title: t('columns.createdBy').value, key: 'createdBy' },
   { title: t('columns.created').value, key: 'createdDate' },
   { title: t('columns.updated').value, key: 'modifiedDate' },
@@ -217,12 +201,6 @@ const deleteMessage = computed(() => {
     { name: selectedCC.value.name }
   ).value
 })
-
-function handleSearchInput(value: string | null) {
-  const next = value ?? ''
-  searchInput.value = next
-  setFilter(next)
-}
 
 function handleCreate() {
   router.push('/characterizations/new')
