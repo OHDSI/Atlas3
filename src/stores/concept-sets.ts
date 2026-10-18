@@ -375,9 +375,12 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     }
     if (!result.success) {
       error.value = result.failures
-        .map(({ action, tag }) => action === 'assign'
-          ? tv('conceptSets.tagAssignFailed', { name: tag.name })
-          : tv('conceptSets.tagUnassignFailed', { name: tag.name }))
+        .map(({ action, tag, error: failureError }) => {
+          const message = action === 'assign'
+            ? tv('conceptSets.tagAssignFailed', { name: tag.name })
+            : tv('conceptSets.tagUnassignFailed', { name: tag.name })
+          return failureError ? `${message}: ${failureError}` : message
+        })
         .join('; ')
       return { success: false, error: error.value }
     }

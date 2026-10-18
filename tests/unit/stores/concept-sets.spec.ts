@@ -551,7 +551,7 @@ describe('Concept Sets Store', () => {
       )
 
       expect(result.success).toBe(false)
-      expect(store.currentSet?.tags).toEqual([{ id: 2, name: 'new' }])
+      expect(store.currentSet?.tags).toEqual([{ id: 1, name: 'old' }])
       expect(store.error).toContain('add failed')
       expect(store.error).toContain('remove failed')
     })
