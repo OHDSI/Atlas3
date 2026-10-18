@@ -64,7 +64,7 @@
             @show-concept-sets="showConceptSetsDialog = true"
             @show-validation="showValidationDialog = true"
             @show-versions="showVersionsDialog = true"
-            @show-tags="showTagsDialog = true"
+            @show-tags="openTagsDialog"
             @show-access="showAccessDialog = true"
           />
         </template>
@@ -297,6 +297,7 @@
     <tag-selection-dialog
       v-model="showTagsDialog"
       :selected-tags="cohortTags"
+      :on-apply="handleTagsApply"
       @update:selected-tags="handleTagsUpdate"
     />
   </div>
@@ -307,6 +308,7 @@ import { AtlasAlert, AtlasButton, AtlasDialog, AtlasIcon, AtlasProgressCircular,
 import { ref, computed, onMounted, onBeforeUnmount, watch, toRef, toRaw } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
+import { assignedTags, syncAssetTags } from '@/utils/asset-tags'
 import { useCohortStore, type CohortDocument } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
@@ -667,7 +669,6 @@ function createStateSnapshot(): string {
   return JSON.stringify({
     name: cohortName.value,
     description: cohortDescription.value,
-    tags: cohortTags.value,
     expression: expression.value,
   })
 }
@@ -796,14 +797,46 @@ watch(
 
 // Tags
 const cohortTags = computed(() => cohortStore.currentCohort?.tags || [])
-const tagCount = computed(() => cohortTags.value.length)
+const tagCount = computed(() => assignedTags(cohortTags.value).length)
 const loadedTags = ref<Tag[]>([])
 
 function handleTagsUpdate(newTags: Tag[]) {
   if (cohortStore.currentCohort) {
     cohortStore.currentCohort.tags = newTags
-    cohortStore.markDirty()
   }
+}
+
+function openTagsDialog() {
+  if (cohortId.value && !isPreviewingVersion.value) {
+    showTagsDialog.value = true
+  }
+}
+
+async function handleTagsApply(newTags: Tag[]): Promise<boolean> {
+  const savedId = cohortId.value
+  if (!savedId) return false
+
+  const { assignTagToCohort, unassignTagFromCohort } = await import(
+    '@/services/cohort-definition.service'
+  )
+
+  const result = await syncAssetTags(loadedTags.value, newTags, {
+    assign: tagId => assignTagToCohort(savedId, tagId),
+    unassign: tagId => unassignTagFromCohort(savedId, tagId),
+  })
+
+  loadedTags.value = assignedTags(result.tags)
+  handleTagsUpdate(result.tags)
+
+  if (!result.success) {
+    errorMessage.value = result.failures
+      .map(({ action, tag, error }) => error ?? `Failed to ${action} tag "${tag.name}"`)
+      .join('; ')
+    showError.value = true
+    return false
+  }
+
+  return true
 }
 
 onMounted(async () => {
@@ -1030,7 +1063,7 @@ function applyDefinition(def: CohortDocument) {
   replaceExpression(def.expression ?? defaultExpression())
   cohortName.value = def.name ?? ''
   cohortDescription.value = def.description || ''
-  loadedTags.value = [...(def.tags || [])]
+  loadedTags.value = assignedTags(def.tags)
   loadedSnapshot.value = createStateSnapshot()
   markExpressionRevision()
   isLoadingCohort.value = false
@@ -1259,7 +1292,7 @@ function handleConceptSetApplied(set: { id?: number | string; name: string; item
 async function handleSave(): Promise<{ id?: number; name?: string }> {
   if (!canSave.value) return {}
 
-  const { saveCohortDefinition, assignTagToCohort, unassignTagFromCohort } = await import(
+  const { saveCohortDefinition } = await import(
     '@/services/cohort-definition.service'
   )
 
@@ -1309,48 +1342,6 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
       showError.value = true
       return {}
     }
-
-    // Sync tags via separate API calls
-    const currentTags = cohortTags.value
-    const previousTags = loadedTags.value
-    const tagsToAdd = currentTags.filter(cur => !previousTags.some(p => p.id === cur.id))
-    const tagsToRemove = previousTags.filter(p => !currentTags.some(cur => cur.id === p.id))
-    const tagFailures: string[] = []
-
-    // The tag calls are independent of each other, so they go out together:
-    // awaiting them one at a time cost a round-trip per changed tag.
-    const tagSyncs = [
-      ...tagsToAdd.map(tag => ({ tag, action: 'assign' as const })),
-      ...tagsToRemove.map(tag => ({ tag, action: 'unassign' as const })),
-    ].filter(sync => sync.tag.id !== undefined)
-
-    const outcomes = await Promise.allSettled(
-      tagSyncs.map(async ({ tag, action }) => ({
-        tag,
-        action,
-        result:
-          action === 'assign'
-            ? await assignTagToCohort(savedId, tag.id!)
-            : await unassignTagFromCohort(savedId, tag.id!),
-      }))
-    )
-
-    for (const outcome of outcomes) {
-      // A rejection is a transport failure, not a per-tag one: rethrow so the
-      // save's own catch reports it, as it did when these were awaited inline.
-      if (outcome.status === 'rejected') throw outcome.reason
-      const { tag, action, result } = outcome.value
-      if (result.success) continue
-      logger.warn('CohortBuilder', `Failed to ${action} tag ${tag.id}`, result.error)
-      tagFailures.push(result.error.message || `Failed to ${action} tag "${tag.name}"`)
-    }
-
-    if (tagFailures.length > 0) {
-      errorMessage.value = tagFailures.join('; ')
-      showError.value = true
-    }
-
-    loadedTags.value = [...currentTags]
 
     // No expression: the store already references the live document, and
     // handing it the save-time clone would replace what the user sees with a
@@ -1597,9 +1588,7 @@ defineExpose({
   openVersionsDialog: () => {
     showVersionsDialog.value = true
   },
-  openTagsDialog: () => {
-    showTagsDialog.value = true
-  },
+  openTagsDialog,
   openAccessDialog: () => {
     showAccessDialog.value = true
   },

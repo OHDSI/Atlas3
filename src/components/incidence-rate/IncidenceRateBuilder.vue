@@ -77,11 +77,12 @@
             <template #activator="{ props: tipProps }">
               <AtlasBadge
                 v-bind="tipProps"
-                :content="irTags.length || 0"
-                :model-value="irTags.length > 0"
+                :content="irTagCount || 0"
+                :model-value="irTagCount > 0"
                 color="primary"
                 offset-x="6"
                 offset-y="6"
+                data-testid="ir-builder-tags-badge"
               >
                 <AtlasIconButton
                   v-bind="{ ariaLabel: t('common.tags').value }"
@@ -261,7 +262,7 @@
       v-if="store.currentIR?.id"
       v-model="showTagsDialog"
       :selected-tags="irTags"
-      @update:selected-tags="handleTagsUpdate"
+      :on-apply="handleTagsApply"
     />
 
     <EntityAccessDialog
@@ -322,6 +323,7 @@ import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue
 import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
 import { exportIncidenceRate, importIncidenceRate } from '@/services/incidence-rate.service'
 import { logger } from '@/utils/logger'
+import { assignedTags } from '@/utils/asset-tags'
 import type { ConceptSetReference } from '@/models/cohort.types'
 import type { ConceptSet as CirceConceptSet, ConceptSetItem as CirceConceptSetItem, CriteriaGroup as CirceCriteriaGroup } from '@/models/circe-types'
 import { circeConceptSetFromAtlas, convertCirceItemToAtlas } from '@/components/cohort-editor/atlas-concept-set'
@@ -348,6 +350,7 @@ const importFileInput = ref<HTMLInputElement | null>(null)
 const canEdit = computed(() => !store.isPreviewMode && !store.isReadOnly)
 
 const irTags = computed<Tag[]>(() => store.currentIR?.tags ?? [])
+const irTagCount = computed(() => assignedTags(irTags.value).length)
 const incidenceRateConceptSets = computed<ConceptSetReference[]>(() => {
   const sets = store.currentIR?.expression.ConceptSets ?? []
   return (sets as Array<{ id?: number | string; name?: string; expression?: { items?: CirceConceptSetItem[] } }>).map((set, index) => ({
@@ -367,8 +370,8 @@ const conceptSetPendingDelete = ref<ConceptSetReference | null>(null)
 const conceptSetPendingDeleteUsage = ref(0)
 const showDeleteConceptSetDialog = ref(false)
 
-async function handleTagsUpdate(newTags: Tag[]) {
-  await store.syncTags(newTags)
+async function handleTagsApply(newTags: Tag[]): Promise<boolean> {
+  return store.syncTags(newTags)
 }
 
 function createConceptSet() {

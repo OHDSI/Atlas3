@@ -116,6 +116,15 @@ const EntityAccessDialogStub = defineComponent({
   template: '<div data-testid="concept-set-access-dialog" />',
 })
 
+const TagSelectionDialogStub = defineComponent({
+  name: 'TagSelectionDialog',
+  props: {
+    modelValue: { type: Boolean, default: false },
+    selectedTags: { type: Array, default: () => [] },
+  },
+  template: '<div data-testid="concept-set-tags-dialog" />',
+})
+
 function mountComponent(props = {}) {
   return mount(ConceptSetEditor, {
     props: {
@@ -128,6 +137,7 @@ function mountComponent(props = {}) {
       stubs: {
         EntityAccessDialog: EntityAccessDialogStub,
         EntityAccessLockButton: EntityAccessLockButtonStub,
+        TagSelectionDialog: TagSelectionDialogStub,
         ConceptSearchInline: true,
         ConceptSetTable: true,
         VNavigationDrawer: {
@@ -175,6 +185,15 @@ describe('ConceptSetEditor', () => {
     // assert against the stub's class.
     const drawer = wrapper.find('.v-navigation-drawer')
     expect(drawer.exists()).toBe(true)
+  })
+
+  it('opens the tag dialog from the drawer action', async () => {
+    const wrapper = mountComponent({ conceptSet: mockConceptSet })
+
+    await wrapper.get('[data-testid="cs-editor-tags-btn"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.findComponent({ name: 'TagSelectionDialog' }).props('modelValue')).toBe(true)
   })
 
   it('should display create mode title when no concept set ID', () => {

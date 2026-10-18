@@ -57,6 +57,8 @@ export async function getCharacterization(
 // placeholders for keying, which must be stripped before send so the backend
 // assigns real IDs.
 function serializeCharacterization(def: CharacterizationDefinition): unknown {
+  const { tags: _tags, ...definition } = def
+  void _tags
   const stratas = def.stratas.map((s) => {
     const criteria = s.criteria ? normalizeCriteriaGroupForCirce(s.criteria) : s.criteria
     const numeric = Number(s.id)
@@ -67,7 +69,21 @@ function serializeCharacterization(def: CharacterizationDefinition): unknown {
     void _id
     return { ...rest, criteria }
   })
-  return { ...def, stratas }
+  return { ...definition, stratas }
+}
+
+/** POST /cohort-characterization/{id}/tag with the raw tag id. */
+export async function assignCharacterizationTag(id: number, tagId: number): Promise<ApiResult<void>> {
+  return unwrap(async () => {
+    await httpPost(`/cohort-characterization/${id}/tag`, tagId)
+  }, CONTEXT)
+}
+
+/** DELETE /cohort-characterization/{id}/tag/{tagId}. */
+export async function unassignCharacterizationTag(id: number, tagId: number): Promise<ApiResult<void>> {
+  return unwrap(async () => {
+    await httpDelete(`/cohort-characterization/${id}/tag/${tagId}`)
+  }, CONTEXT)
 }
 
 /**

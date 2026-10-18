@@ -172,6 +172,19 @@ describe('TagSelectionDialog interactions', () => {
     expect(updates![updates!.length - 1]![0]).toBe(false)
   })
 
+  it('keeps the dialog open when its asynchronous Apply callback fails', async () => {
+    const onApply = vi.fn().mockResolvedValue(false)
+    const wrapper = mountIt({ onApply })
+    await wrapper.vm.$nextTick()
+    const applyBtn = wrapper.findAll('.stub-button').find(b => b.text() === 'Apply')
+    expect(applyBtn).toBeTruthy()
+    await applyBtn!.trigger('click')
+
+    expect(onApply).toHaveBeenCalledWith([])
+    expect(wrapper.emitted('update:selected-tags')).toBeFalsy()
+    expect(wrapper.emitted('update:modelValue')).toBeFalsy()
+  })
+
   it('emits update:modelValue=false on Cancel', async () => {
     const wrapper = mountIt()
     await wrapper.vm.$nextTick()

@@ -33,6 +33,8 @@ vi.mock('@/composables/useEntityAccess', () => ({
 }))
 
 import ConceptSetList from '@/components/concepts/ConceptSetList.vue'
+import { AtlasChip } from '@/components/ui'
+import { useConceptSetsStore } from '@/stores/concept-sets'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -73,5 +75,13 @@ describe('ConceptSetList tags column', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Active')
+
+    const tagChip = wrapper.findAllComponents(AtlasChip)
+      .find(chip => chip.text().trim() === 'Active')
+    expect(tagChip).toBeDefined()
+
+    await tagChip!.trigger('click')
+
+    expect(useConceptSetsStore().filters.selectedTags).toEqual(['Active'])
   })
 })

@@ -41,6 +41,8 @@ import {
 } from '@/services/concept-search.service'
 import { useWebAPIStore } from '@/stores/webapi'
 import { logger } from '@/utils/logger'
+import { syncAssetTags } from '@/utils/asset-tags'
+import { toggleTagFilter } from '@/utils/asset-tags'
 import { debounce } from '@/utils/debounce'
 import { getSourceKey } from '@/config/webapi'
 import { useI18n } from '@/composables/useI18n'
@@ -361,26 +363,22 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     oldTags: Tag[],
     newTags: Tag[]
   ): Promise<{ success: boolean; error?: string }> {
-    const toAdd = newTags.filter(n => n.id && !oldTags.some(o => o.id === n.id))
-    const toRemove = oldTags.filter(o => o.id && !newTags.some(n => n.id === o.id))
-    const failures: string[] = []
-    for (const tag of toAdd) {
-      if (tag.id) {
-        const result = await assignTagToConceptSet(id, tag.id)
-        if (!result.success) failures.push(result.error ?? tv('conceptSets.tagAssignFailed', { name: tag.name }))
-      }
-    }
-    for (const tag of toRemove) {
-      if (tag.id) {
-        const result = await unassignTagFromConceptSet(id, tag.id)
-        if (!result.success) failures.push(result.error ?? tv('conceptSets.tagUnassignFailed', { name: tag.name }))
-      }
-    }
+    const result = await syncAssetTags(oldTags, newTags, {
+      assign: tagId => assignTagToConceptSet(id, tagId),
+      unassign: tagId => unassignTagFromConceptSet(id, tagId),
+    })
     if (currentSet.value?.id === id) {
-      currentSet.value = { ...currentSet.value, tags: [...newTags] } as typeof currentSet.value
+      currentSet.value = {
+        ...currentSet.value,
+        tags: result.tags,
+      } as typeof currentSet.value
     }
-    if (failures.length > 0) {
-      error.value = failures.join('; ')
+    if (!result.success) {
+      error.value = result.failures
+        .map(({ action, tag }) => action === 'assign'
+          ? tv('conceptSets.tagAssignFailed', { name: tag.name })
+          : tv('conceptSets.tagUnassignFailed', { name: tag.name }))
+        .join('; ')
       return { success: false, error: error.value }
     }
     return { success: true }
@@ -427,6 +425,13 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
   function setFilters(next: ConceptSetFilterState) {
     filters.value = { ...next, selectedTags: next.selectedTags ?? [] }
+  }
+
+  function toggleTagFilterSelection(tagName: string) {
+    filters.value = {
+      ...filters.value,
+      selectedTags: toggleTagFilter(filters.value.selectedTags, tagName),
+    }
   }
 
   function clearFilters() {
@@ -1168,6 +1173,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     syncTags,
     setFilter,
     setFilters,
+    toggleTagFilterSelection,
     clearFilters,
     openCreateEditor,
     openEditEditor,

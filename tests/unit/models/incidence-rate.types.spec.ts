@@ -23,6 +23,21 @@ describe('Incidence Rate schemas', () => {
     expect(parsed.expression.strata).toHaveLength(1)
   })
 
+  it('retains expanded display groups and assigned child metadata in tags', () => {
+    const parsed = IncidenceRateSchema.parse({
+      ...sampleIR,
+      tags: [
+        { id: 17, name: 'Group', color: null, groups: [] },
+        { id: 18, name: 'Child', groups: [{ id: 17, name: 'Group', color: null }] },
+      ],
+    })
+
+    expect(parsed.tags).toEqual([
+      { id: 17, name: 'Group', color: null, groups: [] },
+      { id: 18, name: 'Child', groups: [{ id: 17, name: 'Group', color: null }] },
+    ])
+  })
+
   it('rejects an expression missing required fields', () => {
     const r = IncidenceRateExpressionSchema.safeParse({})
     expect(r.success).toBe(false)

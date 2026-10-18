@@ -2,7 +2,8 @@ import { ref, computed } from 'vue'
 import { listIncidenceRates } from '@/services/incidence-rate.service'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
 import { logger } from '@/utils/logger'
-import { matchesTerms } from '@/utils/list-filters'
+import { getUserString, matchesTerms } from '@/utils/list-filters'
+import { toggleTagFilter } from '@/utils/asset-tags'
 
 export interface IncidenceRateListFilters {
   searchQuery: string
@@ -53,7 +54,7 @@ export function useIncidenceRates() {
         const have = new Set((ir.tags || []).map(t => t.name))
         if (!tags.every(t => have.has(t))) return false
       }
-      if (author && ir.createdBy?.name !== author) return false
+      if (author && getUserString(ir.createdBy) !== author.toLowerCase()) return false
       if (cr.from && new Date(ir.createdDate ?? 0) < cr.from) return false
       if (cr.to && new Date(ir.createdDate ?? 0) > cr.to) return false
       if (mr.from && new Date(ir.modifiedDate ?? 0) < mr.from) return false
@@ -63,6 +64,30 @@ export function useIncidenceRates() {
   })
 
   const totalItems = computed(() => filteredIncidenceRates.value.length)
+  const availableAuthors = computed(() => {
+    const authors = new Set<string>()
+    incidenceRates.value.forEach(incidenceRate => {
+      const author = getUserString(incidenceRate.createdBy)
+      if (author) authors.add(author)
+    })
+    return [...authors].sort()
+  })
+  const availableTags = computed(() => {
+    const tags = new Set<string>()
+    incidenceRates.value.forEach(incidenceRate => {
+      incidenceRate.tags?.forEach(tag => tags.add(tag.name))
+    })
+    return [...tags].sort()
+  })
+  const activeFilterCount = computed(() => {
+    let count = 0
+    if (filters.value.searchQuery) count++
+    if (filters.value.author) count++
+    if (filters.value.selectedTags.length > 0) count++
+    if (filters.value.createdDateRange.from || filters.value.createdDateRange.to) count++
+    if (filters.value.modifiedDateRange.from || filters.value.modifiedDateRange.to) count++
+    return count
+  })
   const totalPages = computed(() => Math.max(1, Math.ceil(totalItems.value / itemsPerPage.value)))
   const paginatedIncidenceRates = computed(() => {
     const start = page.value * itemsPerPage.value
@@ -80,6 +105,19 @@ export function useIncidenceRates() {
     page.value = 0
   }
 
+  function setFilters(next: IncidenceRateListFilters) {
+    filters.value = { ...next, selectedTags: next.selectedTags ?? [] }
+    page.value = 0
+  }
+
+  function toggleTagFilterSelection(tagName: string) {
+    filters.value = {
+      ...filters.value,
+      selectedTags: toggleTagFilter(filters.value.selectedTags, tagName),
+    }
+    page.value = 0
+  }
+
   return {
     incidenceRates,
     loading,
@@ -89,9 +127,14 @@ export function useIncidenceRates() {
     itemsPerPage,
     fetchIncidenceRates,
     clearFilters,
+    setFilters,
+    toggleTagFilterSelection,
     filteredIncidenceRates,
     paginatedIncidenceRates,
     totalItems,
     totalPages,
+    availableAuthors,
+    availableTags,
+    activeFilterCount,
   }
 }

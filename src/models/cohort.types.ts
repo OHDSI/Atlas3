@@ -5,15 +5,12 @@
 
 import type { Cardinality, TemporalWindow, EventAttribute, DateAdjustment } from './event.types'
 import type { CohortExpression } from '@/models/circe-types'
+import type { Tag as WebApiTag } from '@/models/webapi.types'
 
 /**
  * Tag for cohort organization and filtering
  */
-export interface Tag {
-  id?: number
-  name: string
-  color?: string
-}
+export type Tag = WebApiTag
 
 /**
  * User shape matching Java's `org.ohdsi.webapi.security.authz.User` record.

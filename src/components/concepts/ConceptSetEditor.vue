@@ -402,10 +402,10 @@
   </Teleport>
 
   <!-- Tag selection dialog. -->
-  :style="drawerStyle"
-  v-model="showTagsDialog"
-  :selected-tags="selectedTags"
-  @update:selected-tags="selectedTags = $event"
+  <TagSelectionDialog
+    v-model="showTagsDialog"
+    :selected-tags="selectedTags"
+    @update:selected-tags="selectedTags = $event"
   />
 
   <EntityAccessDialog
@@ -695,6 +695,8 @@
 
 <script setup lang="ts">
 import { logger } from '@/utils/logger'
+import { assignedTags } from '@/utils/asset-tags'
+import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import AssetAuthorship from '@/components/shared/AssetAuthorship.vue'
 import { ref, computed, inject, watch, toRef, onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
@@ -1096,8 +1098,8 @@ watch(
 watch(
   () => props.conceptSet,
   cs => {
-    selectedTags.value = cs?.tags ? [...cs.tags] : []
-    loadedTags.value = cs?.tags ? [...cs.tags] : []
+    selectedTags.value = assignedTags(cs?.tags)
+    loadedTags.value = assignedTags(cs?.tags)
   },
   { immediate: true }
 )

@@ -61,8 +61,13 @@ const sampleList: CharacterizationListItem[] = [
     id: 1,
     name: 'Diabetes Cohort Profile',
     description: 'Demographics + comorbidities',
-    cohorts: [{ id: 11, name: 'Diabetes' }],
-    featureAnalyses: [{ id: 21 }, { id: 22 }],
+    tags: [
+      {
+        id: 18,
+        name: 'Some Tag',
+        groups: [{ id: 17, name: 'test' }],
+      },
+    ],
     createdBy: { login: 'admin', name: 'Admin' },
     createdDate: 1737000000000,
     modifiedDate: 1737500000000,
@@ -70,8 +75,7 @@ const sampleList: CharacterizationListItem[] = [
   {
     id: 2,
     name: 'Hypertension Profile',
-    cohorts: [{ id: 12, name: 'HTN' }],
-    featureAnalyses: [{ id: 21 }],
+    tags: [{ id: 19, name: 'Cardiovascular' }],
     createdBy: 'ohdsi',
     createdDate: 1737100000000,
     modifiedDate: 1737200000000,
@@ -153,9 +157,12 @@ describe('CharacterizationsView', () => {
       .findAll('[data-testid="characterizations-table"] thead th')
       .map(h => h.text())
     expect(headers).toContain(tr('columns.id'))
+    expect(headers).toContain(tr('common.tags'))
     expect(headers).toContain('Created')
     expect(headers).toContain('Updated')
     expect(headers).not.toContain('Modified')
+    expect(headers).not.toContain(tr('cc.viewEdit.results.filters.cohorts'))
+    expect(headers).not.toContain(tr('cc.tabs.featureAnalyses.title'))
 
     const row = mounted.wrapper
       .find('[data-testid="characterizations-table-row-name"]')
@@ -169,6 +176,8 @@ describe('CharacterizationsView', () => {
 
     expect(mounted.wrapper.text()).toContain('Diabetes Cohort Profile')
     expect(mounted.wrapper.text()).toContain('Hypertension Profile')
+    expect(mounted.wrapper.text()).toContain('test')
+    expect(mounted.wrapper.text()).toContain('Some Tag')
   })
 
   it('sorts all characterizations before selecting the current page', async () => {
@@ -264,6 +273,56 @@ describe('CharacterizationsView', () => {
     expect(store.filterTerm).toBe('Diabetes')
 
     vi.useRealTimers()
+  })
+
+  it('filters by author and selected tags', async () => {
+    vi.mocked(listCharacterizations).mockResolvedValue(success(sampleList))
+    mounted = await mountView()
+    const store = useCharacterizationStore()
+
+    store.setFilters({
+      searchQuery: '',
+      author: 'admin',
+      selectedTags: [],
+      createdDateRange: {},
+      modifiedDateRange: {},
+    })
+    await flushPromises()
+
+    expect(mounted.wrapper.text()).toContain('Diabetes Cohort Profile')
+    expect(mounted.wrapper.text()).not.toContain('Hypertension Profile')
+
+    store.setFilters({
+      searchQuery: '',
+      author: '',
+      selectedTags: ['Cardiovascular'],
+      createdDateRange: {},
+      modifiedDateRange: {},
+    })
+    await flushPromises()
+
+    expect(mounted.wrapper.text()).not.toContain('Diabetes Cohort Profile')
+    expect(mounted.wrapper.text()).toContain('Hypertension Profile')
+  })
+
+  it('clicking a tag chip toggles that tag filter', async () => {
+    vi.mocked(listCharacterizations).mockResolvedValue(success(sampleList))
+    mounted = await mountView()
+    const store = useCharacterizationStore()
+    const tag = mounted.wrapper
+      .findAll('.analysis-data-table__tag')
+      .find(chip => chip.text() === 'Some Tag')
+
+    expect(tag).toBeDefined()
+    await tag!.trigger('click')
+    await flushPromises()
+    expect(store.filters.selectedTags).toEqual(['Some Tag'])
+    expect(mounted.wrapper.text()).not.toContain('Hypertension Profile')
+
+    await tag!.trigger('click')
+    await flushPromises()
+    expect(store.filters.selectedTags).toEqual([])
+    expect(mounted.wrapper.text()).toContain('Hypertension Profile')
   })
 
   it('clicking Create navigates to /characterizations/new', async () => {

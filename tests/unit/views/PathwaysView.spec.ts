@@ -102,6 +102,7 @@ describe('PathwaysView', () => {
     it('should render the search field and create button', () => {
       wrapper = mountView()
       expect(wrapper.find('[data-testid="pathways-search"]').exists()).toBe(true)
+      expect(wrapper.findComponent({ name: 'ConceptSetFilters' }).exists()).toBe(true)
       expect(wrapper.find('[data-testid="pathways-create"]').exists()).toBe(true)
     })
 
@@ -142,21 +143,20 @@ describe('PathwaysView', () => {
       expect(row?.textContent).toContain('42')
     })
 
-    it('renders target and event counts from the pathway data', async () => {
+    it('renders tags in the tags column', async () => {
       vi.mocked(listPathways).mockResolvedValue({
         success: true,
-        data: [mkPathway(1)],
+        data: [mkPathway(1, { tags: [{ id: 1, name: 'Clinical' }] })],
       })
       wrapper = mountView()
       await flushPromises()
 
       const text = wrapper.find('[data-testid="pathways-table"]').text()
       expect(text).toContain('Pathway 1')
-      expect(text).toContain('1') // targetCohorts.length
-      expect(text).toContain('2') // eventCohorts.length
+      expect(text).toContain('Clinical')
     })
 
-    it('falls back to 0 when targetCohorts/eventCohorts are missing', async () => {
+    it('renders rows without tags when cohort data is missing', async () => {
       vi.mocked(listPathways).mockResolvedValue({
         success: true,
         data: [mkPathway(1, { targetCohorts: undefined, eventCohorts: undefined })],
@@ -166,8 +166,7 @@ describe('PathwaysView', () => {
 
       const nameLink = wrapper.find('[data-testid="pathways-table-row-name"]')
       expect(nameLink.exists()).toBe(true)
-      const row = nameLink.element.closest('tr')
-      expect(row?.textContent).toContain('0')
+      expect(wrapper.findAll('.analysis-data-table__tag')).toHaveLength(0)
     })
 
     it('shows the error banner when the fetch fails', async () => {
@@ -191,21 +190,42 @@ describe('PathwaysView', () => {
       const input = wrapper.find('[data-testid="pathways-search"] input')
       await input.setValue('diabetes')
 
-      expect(wrapper.vm.searchInput).toBe('diabetes')
       expect(wrapper.vm.filters.searchQuery).toBe('diabetes')
       expect(wrapper.vm.page).toBe(0)
     })
 
-    it('clears the query when the field emits a null value', async () => {
+    it('clears the query from the shared search field', async () => {
       wrapper = mountView()
-      wrapper.vm.searchInput = 'diabetes'
-      wrapper.vm.filters.searchQuery = 'diabetes'
+      const input = wrapper.find('[data-testid="pathways-search"] input')
+      await input.setValue('diabetes')
+      await input.setValue('')
 
-      const field = wrapper.findComponent({ name: 'AtlasTextField' })
-      await field.vm.$emit('update:modelValue', null)
-
-      expect(wrapper.vm.searchInput).toBe('')
       expect(wrapper.vm.filters.searchQuery).toBe('')
+    })
+
+    it('filters by a clicked tag chip', async () => {
+      vi.mocked(listPathways).mockResolvedValue({
+        success: true,
+        data: [
+          mkPathway(1, { tags: [{ id: 1, name: 'Clinical' }] }),
+          mkPathway(2, { tags: [{ id: 2, name: 'Claims' }] }),
+        ],
+      })
+      wrapper = mountView()
+      await flushPromises()
+      wrapper.vm.page = 2
+
+      const tag = wrapper
+        .findAll('.analysis-data-table__tag')
+        .find(chip => chip.text() === 'Clinical')
+      expect(tag).toBeDefined()
+      await tag!.trigger('click')
+      await flushPromises()
+
+      expect(wrapper.vm.filters.selectedTags).toEqual(['Clinical'])
+      expect(wrapper.vm.page).toBe(0)
+      expect(wrapper.text()).toContain('Pathway 1')
+      expect(wrapper.text()).not.toContain('Pathway 2')
     })
   })
 

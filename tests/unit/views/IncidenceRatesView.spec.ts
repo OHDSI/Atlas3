@@ -107,6 +107,7 @@ describe('IncidenceRatesView', () => {
     it('should render the search field and create button', () => {
       wrapper = mountView()
       expect(wrapper.find('[data-testid="incidence-rates-search"]').exists()).toBe(true)
+      expect(wrapper.findComponent({ name: 'ConceptSetFilters' }).exists()).toBe(true)
       expect(wrapper.find('[data-testid="incidence-rates-create"]').exists()).toBe(true)
     })
 
@@ -151,18 +152,20 @@ describe('IncidenceRatesView', () => {
       expect(row?.textContent).toContain('42')
     })
 
-    it('renders target and outcome counts from the expression', async () => {
-      vi.mocked(listIncidenceRates).mockResolvedValue({ success: true, data: [mkIR(1)] })
+    it('renders tags in the tags column', async () => {
+      vi.mocked(listIncidenceRates).mockResolvedValue({
+        success: true,
+        data: [mkIR(1, { tags: [{ id: 1, name: 'Clinical' }] })],
+      })
       wrapper = mountView()
       await flushPromises()
 
       const text = wrapper.find('[data-testid="incidence-rates-table"]').text()
       expect(text).toContain('IR 1')
-      expect(text).toContain('1') // targetIds.length
-      expect(text).toContain('2') // outcomeIds.length
+      expect(text).toContain('Clinical')
     })
 
-    it('falls back to 0 when the expression is missing', async () => {
+    it('renders rows without tags when the expression is missing', async () => {
       vi.mocked(listIncidenceRates).mockResolvedValue({
         success: true,
         data: [mkIR(1, { expression: undefined })],
@@ -172,8 +175,7 @@ describe('IncidenceRatesView', () => {
 
       const nameLink = wrapper.find('[data-testid="incidence-rates-table-row-name"]')
       expect(nameLink.exists()).toBe(true)
-      const row = nameLink.element.closest('tr')
-      expect(row?.textContent).toContain('0')
+      expect(wrapper.findAll('.analysis-data-table__tag')).toHaveLength(0)
     })
 
     it('shows the error banner when the fetch fails', async () => {
@@ -197,21 +199,42 @@ describe('IncidenceRatesView', () => {
       const input = wrapper.find('[data-testid="incidence-rates-search"] input')
       await input.setValue('mortality')
 
-      expect(wrapper.vm.searchInput).toBe('mortality')
       expect(wrapper.vm.filters.searchQuery).toBe('mortality')
       expect(wrapper.vm.page).toBe(0)
     })
 
-    it('clears the query when the field emits a null value', async () => {
+    it('clears the query from the shared search field', async () => {
       wrapper = mountView()
-      wrapper.vm.searchInput = 'mortality'
-      wrapper.vm.filters.searchQuery = 'mortality'
+      const input = wrapper.find('[data-testid="incidence-rates-search"] input')
+      await input.setValue('mortality')
+      await input.setValue('')
 
-      const field = wrapper.findComponent({ name: 'AtlasTextField' })
-      await field.vm.$emit('update:modelValue', null)
-
-      expect(wrapper.vm.searchInput).toBe('')
       expect(wrapper.vm.filters.searchQuery).toBe('')
+    })
+
+    it('filters by a clicked tag chip', async () => {
+      vi.mocked(listIncidenceRates).mockResolvedValue({
+        success: true,
+        data: [
+          mkIR(1, { tags: [{ id: 1, name: 'Clinical' }] }),
+          mkIR(2, { tags: [{ id: 2, name: 'Claims' }] }),
+        ],
+      })
+      wrapper = mountView()
+      await flushPromises()
+      wrapper.vm.page = 2
+
+      const tag = wrapper
+        .findAll('.analysis-data-table__tag')
+        .find(chip => chip.text() === 'Clinical')
+      expect(tag).toBeDefined()
+      await tag!.trigger('click')
+      await flushPromises()
+
+      expect(wrapper.vm.filters.selectedTags).toEqual(['Clinical'])
+      expect(wrapper.vm.page).toBe(0)
+      expect(wrapper.text()).toContain('IR 1')
+      expect(wrapper.text()).not.toContain('IR 2')
     })
   })
 

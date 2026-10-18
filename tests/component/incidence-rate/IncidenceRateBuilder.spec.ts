@@ -106,6 +106,20 @@ describe('IncidenceRateBuilder', () => {
     expect(w.findComponent({ name: 'IncidenceRateWorkbench' }).exists()).toBe(true)
   })
 
+  it('counts only directly assigned tags in the manage-tags badge', async () => {
+    const store = loadIR()
+    store.currentIR!.tags = [
+      { id: 17, name: 'test', groups: [] },
+      { id: 18, name: 'Some Tag', groups: [{ id: 17, name: 'test' }] },
+    ]
+    const w = mount(IncidenceRateBuilder, {
+      global: { plugins: [vuetify, router], stubs },
+    })
+    await flushPromises()
+
+    expect(w.find('[data-testid="ir-builder-tags-badge"] .v-badge__badge').text()).toBe('1')
+  })
+
   it('renders the shell fallback when no IR is loaded', async () => {
     const w = mount(IncidenceRateBuilder, {
       global: { plugins: [vuetify, router], stubs },
@@ -300,9 +314,9 @@ describe('IncidenceRateBuilder', () => {
     expect(store.currentIR!.expression.ConceptSets.find(set => set.id === 22)).toBeUndefined()
   })
 
-  it('opens the tags dialog and syncs updates back to the store', async () => {
+  it('persists tag changes when the dialog applies them', async () => {
     const store = loadIR()
-    const syncSpy = vi.spyOn(store, 'syncTags').mockResolvedValue(undefined)
+    const syncSpy = vi.spyOn(store, 'syncTags').mockResolvedValue(true)
 
     const w = mount(IncidenceRateBuilder, {
       global: { plugins: [vuetify, router], stubs },
@@ -313,7 +327,8 @@ describe('IncidenceRateBuilder', () => {
     const dialog = w.findComponent({ name: 'TagSelectionDialog' })
     expect(dialog.exists()).toBe(true)
 
-    await dialog.vm.$emit('update:selected-tags', [{ id: 1, name: 'trial' }])
+    const onApply = dialog.props('onApply') as (tags: Array<{ id: number; name: string }>) => Promise<boolean>
+    await expect(onApply([{ id: 1, name: 'trial' }])).resolves.toBe(true)
     expect(syncSpy).toHaveBeenCalledWith([{ id: 1, name: 'trial' }])
   })
 

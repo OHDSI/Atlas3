@@ -238,14 +238,16 @@ describe('services/pathway.service', () => {
   })
 
   describe('pathway tags + diagnostics', () => {
-    it('assignPathwayTag POSTs /pathway-analysis/:id/tag/:tagId', async () => {
+    it('assignPathwayTag POSTs the tag ID to /pathway-analysis/:id/tag', async () => {
       mockFetch.mockResolvedValueOnce({ ok: true, text: async () => '' })
 
       const result = await assignPathwayTag(1, 7)
 
       expect(result.success).toBe(true)
-      const [url] = mockFetch.mock.calls[0]
-      expect(url).toContain('/pathway-analysis/1/tag/7')
+      const [url, options] = mockFetch.mock.calls[0]
+      expect(url).toContain('/pathway-analysis/1/tag')
+      expect(url).not.toContain('/tag/7')
+      expect((options as RequestInit).body).toBe('7')
     })
 
     it('assignPathwayTag surfaces a constraint failure instead of a bare false', async () => {

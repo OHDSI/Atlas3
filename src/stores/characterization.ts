@@ -8,7 +8,7 @@
  * without further store churn.
  */
 import { defineStore } from 'pinia'
-import { matchesTerms } from '@/utils/list-filters'
+import { getUserString, isDateInRange, matchesTerms, type DateRange } from '@/utils/list-filters'
 import { ref, computed } from 'vue'
 
 import {
@@ -31,8 +31,17 @@ import type {
 import type { Version } from '@/components/versions/types'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
+import { toggleTagFilter } from '@/utils/asset-tags'
 import { useExecutionPolling, isTerminalStatus } from '@/composables/useExecutionPolling'
 import { effectScope } from 'vue'
+
+export interface CharacterizationFilterState {
+  searchQuery: string
+  author: string
+  selectedTags: string[]
+  createdDateRange: DateRange
+  modifiedDateRange: DateRange
+}
 
 export const useCharacterizationStore = defineStore('characterization', () => {
   // ============================================================================
@@ -44,7 +53,19 @@ export const useCharacterizationStore = defineStore('characterization', () => {
   const loading = ref<boolean>(false)
   let fetchAllInFlight: Promise<void> | null = null
   const error = ref<string | null>(null)
-  const filterTerm = ref<string>('')
+  const filters = ref<CharacterizationFilterState>({
+    searchQuery: '',
+    author: '',
+    selectedTags: [],
+    createdDateRange: {},
+    modifiedDateRange: {},
+  })
+  const filterTerm = computed<string>({
+    get: () => filters.value.searchQuery,
+    set: value => {
+      filters.value.searchQuery = value
+    },
+  })
 
   // Future-proofing for Phase 3B (versions tab, auto-save).
   const previewVersion = ref<Version | null>(null)
@@ -65,12 +86,60 @@ export const useCharacterizationStore = defineStore('characterization', () => {
   // ============================================================================
 
   const filteredCharacterizations = computed(() => {
-    if (!filterTerm.value) {
+    const query = filters.value.searchQuery
+    const hasSearch = query.trim().length > 0
+    const hasAuthor = filters.value.author.length > 0
+    const hasTags = filters.value.selectedTags.length > 0
+    const hasCreatedRange = !!(
+      filters.value.createdDateRange.from || filters.value.createdDateRange.to
+    )
+    const hasModifiedRange = !!(
+      filters.value.modifiedDateRange.from || filters.value.modifiedDateRange.to
+    )
+
+    if (!hasSearch && !hasAuthor && !hasTags && !hasCreatedRange && !hasModifiedRange) {
       return characterizations.value
     }
 
-    const term = filterTerm.value
-    return characterizations.value.filter(cc => matchesTerms([cc.name], term))
+    const authorQuery = filters.value.author.toLowerCase()
+    return characterizations.value.filter(cc => {
+      if (hasSearch && !matchesTerms([cc.name, cc.description], query)) return false
+      if (hasAuthor && !getUserString(cc.createdBy).includes(authorQuery)) return false
+      if (hasTags) {
+        const tagNames = new Set((cc.tags ?? []).map(tag => tag.name))
+        if (!filters.value.selectedTags.some(name => tagNames.has(name))) return false
+      }
+      if (hasCreatedRange && !isDateInRange(cc.createdDate, filters.value.createdDateRange)) return false
+      if (hasModifiedRange && !isDateInRange(cc.modifiedDate, filters.value.modifiedDateRange)) return false
+      return true
+    })
+  })
+
+  const availableAuthors = computed(() => {
+    const authors = new Set<string>()
+    characterizations.value.forEach(characterization => {
+      const author = getUserString(characterization.createdBy)
+      if (author) authors.add(author)
+    })
+    return [...authors].sort()
+  })
+
+  const availableTags = computed(() => {
+    const tags = new Set<string>()
+    characterizations.value.forEach(characterization => {
+      characterization.tags?.forEach(tag => tags.add(tag.name))
+    })
+    return [...tags].sort()
+  })
+
+  const activeFilterCount = computed(() => {
+    let count = 0
+    if (filters.value.searchQuery) count++
+    if (filters.value.author) count++
+    if (filters.value.selectedTags.length > 0) count++
+    if (filters.value.createdDateRange.from || filters.value.createdDateRange.to) count++
+    if (filters.value.modifiedDateRange.from || filters.value.modifiedDateRange.to) count++
+    return count
   })
 
   const isEmpty = computed(() => characterizations.value.length === 0)
@@ -219,8 +288,29 @@ export const useCharacterizationStore = defineStore('characterization', () => {
    * Set filter term (debounced).
    */
   const setFilter = debounce((term: string) => {
-    filterTerm.value = term
+    filters.value.searchQuery = term
   }, 300)
+
+  function setFilters(next: CharacterizationFilterState) {
+    filters.value = { ...next, selectedTags: next.selectedTags ?? [] }
+  }
+
+  function toggleTagFilterSelection(tagName: string) {
+    filters.value = {
+      ...filters.value,
+      selectedTags: toggleTagFilter(filters.value.selectedTags, tagName),
+    }
+  }
+
+  function clearFilters() {
+    filters.value = {
+      searchQuery: '',
+      author: '',
+      selectedTags: [],
+      createdDateRange: {},
+      modifiedDateRange: {},
+    }
+  }
 
   /**
    * Clear error state.
@@ -499,6 +589,7 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     currentCharacterization,
     loading,
     error,
+    filters,
     filterTerm,
     previewVersion,
     isDirty,
@@ -509,6 +600,9 @@ export const useCharacterizationStore = defineStore('characterization', () => {
 
     // Getters
     filteredCharacterizations,
+    availableAuthors,
+    availableTags,
+    activeFilterCount,
     isEmpty,
 
     // Actions
@@ -519,6 +613,9 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     remove,
     copy,
     setFilter,
+    setFilters,
+    toggleTagFilterSelection,
+    clearFilters,
     clearError,
     clearCurrent,
     markDirty,

@@ -94,7 +94,7 @@ export async function deleteCohortDefinition(id: number): Promise<ApiResult<void
  */
 export async function assignTagToCohort(cohortId: number, tagId: number): Promise<ApiResult<void>> {
   return unwrap(async () => {
-    await httpPost(`/cohortdefinition/${cohortId}/tag/`, tagId)
+    await httpPost(`/cohortdefinition/${cohortId}/tag`, tagId)
   }, CONTEXT)
 }
 
