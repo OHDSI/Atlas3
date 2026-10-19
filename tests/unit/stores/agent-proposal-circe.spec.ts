@@ -115,10 +115,12 @@ describe('translateAgentEventToCorelated', () => {
     expect(translated?.criteria.Occurrence).toMatchObject({ Type: 2, Count: 2 })
   })
 
-  it('leaves the occurrence out when the event has no cardinality', () => {
+  // circe-be has no default for a missing Occurrence: rendering the cohort
+  // throws a NullPointerException, so preview and generation both fail.
+  it('defaults to at least one occurrence when the event has no cardinality', () => {
     const translated = translateAgentEventToCorelated(drugEvent('Amoxicillin', 1713671, 4), [])
 
-    expect(translated?.criteria.Occurrence).toBeUndefined()
+    expect(translated?.criteria.Occurrence).toEqual({ Type: 2, Count: 1, IsDistinct: false })
   })
 })
 
