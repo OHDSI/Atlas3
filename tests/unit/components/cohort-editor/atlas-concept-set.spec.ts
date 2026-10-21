@@ -69,6 +69,38 @@ describe('atlas-concept-set', () => {
     expect(convertAtlasItemToCirce(circeItem)).toBe(circeItem)
   })
 
+  it('derives missing captions for Atlas items the way circe Concept does', () => {
+    // Shape the concept-set editor produces: no caption fields at all.
+    const editorItem = {
+      ...atlasItem,
+      standardConceptCaption: undefined,
+      invalidReasonCaption: undefined,
+    } as unknown as AtlasConceptSetItem
+
+    const concept = convertAtlasItemToCirce(editorItem).concept
+    expect(concept.STANDARD_CONCEPT_CAPTION).toBe('Standard')
+    expect(concept.INVALID_REASON_CAPTION).toBe('Unknown')
+    expect(JSON.parse(JSON.stringify(concept))).toHaveProperty('STANDARD_CONCEPT_CAPTION', 'Standard')
+  })
+
+  it.each([
+    ['N', 'Non-Standard'],
+    ['C', 'Classification'],
+    [null, 'Unknown'],
+  ])('maps STANDARD_CONCEPT %s to caption %s', (standardConcept, caption) => {
+    const item = { ...atlasItem, standardConcept, standardConceptCaption: '' }
+    expect(convertAtlasItemToCirce(item).concept.STANDARD_CONCEPT_CAPTION).toBe(caption)
+  })
+
+  it.each([
+    ['V', 'Valid'],
+    ['D', 'Invalid'],
+    ['U', 'Invalid'],
+  ])('maps INVALID_REASON %s to caption %s', (invalidReason, caption) => {
+    const item = { ...atlasItem, invalidReason, invalidReasonCaption: '' }
+    expect(convertAtlasItemToCirce(item).concept.INVALID_REASON_CAPTION).toBe(caption)
+  })
+
   it('converts circe items back into Atlas items with safe defaults', () => {
     expect(convertCirceItemToAtlas({
       concept: undefined,

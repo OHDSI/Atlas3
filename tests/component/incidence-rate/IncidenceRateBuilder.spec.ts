@@ -279,6 +279,7 @@ describe('IncidenceRateBuilder', () => {
     setupState.$.setupState.handleViewConceptSet({ id: undefined, name: 'New set', items: [] })
     expect(openEmbeddedEditorSpy).toHaveBeenCalledWith({ id: undefined, name: 'New set', items: [] })
 
+    store.markClean()
     setupState.$.setupState.handleConceptSetApplied({
       name: 'Applied set',
       items: [
@@ -299,19 +300,24 @@ describe('IncidenceRateBuilder', () => {
         },
       ],
     })
+    expect(store.isDirty).toBe(true)
 
     setupState.$.setupState.handleDeleteConceptSet({ id: 'bad' as any, name: 'Ignored set', items: [] })
 
+    store.markClean()
     setupState.$.setupState.handleDeleteConceptSet({ id: 11, name: 'Used set', items: [] })
     await flushPromises()
     setupState.$.setupState.confirmDeleteConceptSet()
     expect(store.currentIR!.expression.ConceptSets.find(set => set.id === 11)).toBeUndefined()
+    expect(store.isDirty).toBe(true)
 
     setupState.$.setupState.cancelDeleteConceptSet()
 
     store.currentIR!.expression.ConceptSets.push({ id: 22, name: 'Unused set', expression: { items: [] } } as never)
+    store.markClean()
     setupState.$.setupState.handleDeleteConceptSet({ id: 22, name: 'Unused set', items: [] })
     expect(store.currentIR!.expression.ConceptSets.find(set => set.id === 22)).toBeUndefined()
+    expect(store.isDirty).toBe(true)
   })
 
   it('persists tag changes when the dialog applies them', async () => {

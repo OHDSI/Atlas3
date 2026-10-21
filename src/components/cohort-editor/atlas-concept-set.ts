@@ -48,14 +48,14 @@ export interface AtlasConceptSetItem {
 export function convertAtlasItemToCirce(
   item: AtlasConceptSetItem | CirceConceptSetItem
 ): CirceConceptSetItem {
-  if (isCirceItem(item)) return item
+  if (isCirceItem(item)) return withCirceCaptions(item)
 
   return {
     concept: {
       CONCEPT_ID: item.conceptId,
       CONCEPT_NAME: item.conceptName ?? '',
-      STANDARD_CONCEPT_CAPTION: item.standardConceptCaption,
-      INVALID_REASON_CAPTION: item.invalidReasonCaption,
+      STANDARD_CONCEPT_CAPTION: item.standardConceptCaption || standardConceptCaption(item.standardConcept),
+      INVALID_REASON_CAPTION: item.invalidReasonCaption || invalidReasonCaption(item.invalidReason),
       CONCEPT_CODE: item.conceptCode ?? '',
       STANDARD_CONCEPT: item.standardConcept ?? null,
       INVALID_REASON: item.invalidReason ?? null,
@@ -140,6 +140,65 @@ function resolveCodesetId(
   if (!collision || collision.name === name) return id
 
   return nextConceptSetId(existing)
+}
+
+/**
+ * STANDARD_CONCEPT_CAPTION / INVALID_REASON_CAPTION are computed getters on
+ * circe's Java Concept, so they only appear when WebAPI re-serializes an
+ * expression through circe (cohort definitions do; IR analyses store the
+ * client's string verbatim). Atlas-side items usually lack them, so derive them
+ * here the same way circe does to keep every expression schema-valid.
+ */
+function standardConceptCaption(standardConcept: string | null | undefined): string {
+  switch (standardConcept) {
+    case 'N': return 'Non-Standard'
+    case 'S': return 'Standard'
+    case 'C': return 'Classification'
+    default: return 'Unknown'
+  }
+}
+
+function invalidReasonCaption(invalidReason: string | null | undefined): string {
+  switch (invalidReason) {
+    case 'V': return 'Valid'
+    case 'D':
+    case 'U': return 'Invalid'
+    default: return 'Unknown'
+  }
+}
+
+function withCirceCaptions(item: CirceConceptSetItem): CirceConceptSetItem {
+  const concept = item.concept
+  if (!concept || (concept.STANDARD_CONCEPT_CAPTION && concept.INVALID_REASON_CAPTION)) return item
+  return {
+    ...item,
+    concept: {
+      ...concept,
+      STANDARD_CONCEPT_CAPTION: concept.STANDARD_CONCEPT_CAPTION || standardConceptCaption(concept.STANDARD_CONCEPT),
+      INVALID_REASON_CAPTION: concept.INVALID_REASON_CAPTION || invalidReasonCaption(concept.INVALID_REASON),
+    },
+  }
+}
+
+/**
+ * Fills missing concept captions across a raw (not yet validated) ConceptSets
+ * array, e.g. one read back from a stored expression saved before captions
+ * were derived on conversion. Anything that is not a nested circe item is left
+ * untouched for the schema to judge.
+ */
+export function fillConceptSetCaptions(conceptSets: unknown): unknown {
+  if (!Array.isArray(conceptSets)) return conceptSets
+  return conceptSets.map(set => {
+    const items = set?.expression?.items
+    if (!Array.isArray(items)) return set
+    return {
+      ...set,
+      expression: {
+        ...set.expression,
+        items: items.map(item => (item && isCirceItem(item) ? withCirceCaptions(item) : item)),
+      },
+    }
+  })
 }
 
 function isCirceItem(item: AtlasConceptSetItem | CirceConceptSetItem): item is CirceConceptSetItem {
