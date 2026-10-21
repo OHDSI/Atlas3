@@ -323,4 +323,37 @@ describe('PrevalenceTable sorting and paging', () => {
     expect(wrapper.find('tbody .prevalence-table__covariate').text()).toBe('covariate 60')
     wrapper.unmount()
   })
+
+  it('sorts Std Diff by magnitude, ignoring sign, in cohort compare mode', async () => {
+    const cohorts = [{ id: 1, name: 'Target' }, { id: 2, name: 'Comparator' }]
+    const rows = [0.05, -0.9, 0.3, -0.2, 0.6].map((stdDiff, i) => makeRow({
+      covariateId: i + 1,
+      covariateName: `covariate ${i + 1}`,
+      cohorts,
+      count: { [DEFAULT_STRATA_KEY]: { '1': 10, '2': 10 } },
+      pct: { [DEFAULT_STRATA_KEY]: { '1': 10, '2': 10 } },
+      stdDiff,
+    }))
+    const wrapper = mount(PrevalenceTable, {
+      props: { analysisId: 100, analysisName: 'Race', rows, cohorts },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+    const header = () => wrapper.get(`[data-testid="char-results-sort-stddiff-100-${DEFAULT_STRATA_KEY}"]`)
+    const diffs = () => wrapper
+      .findAll(`[data-testid^="char-results-stddiff-"]`)
+      .map(cell => Number(cell.text()))
+
+    await header().trigger('click')
+    expect(header().attributes('aria-sort')).toBe('descending')
+    expect(diffs()).toEqual([-0.9, 0.6, 0.3, -0.2, 0.05])
+
+    await header().trigger('click')
+    expect(header().attributes('aria-sort')).toBe('ascending')
+    expect(diffs()).toEqual([0.05, -0.2, 0.3, 0.6, -0.9])
+
+    await wrapper.get('[data-testid="char-results-explore-2"]').trigger('click')
+    expect(wrapper.emitted('explore')?.[0]).toEqual([rows[1]])
+    wrapper.unmount()
+  })
 })

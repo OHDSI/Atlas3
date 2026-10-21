@@ -52,7 +52,7 @@
             v-model:page-size="pageSize"
             v-model:sort-by="sortBy"
             :headers="table.headers"
-            :items="rows"
+            :items="tableRows"
             item-value="covariateId"
             class="prevalence-table__table"
           >
@@ -73,7 +73,7 @@
             >
               {{ cell.format(item) }}
             </template>
-            <template #item.stdDiff="{ item }">
+            <template #[`item.${stdDiffSortKey(table.partitionKey)}`]="{ item }">
               <span :data-testid="`char-results-stddiff-${item.covariateId}-${table.partitionKey}`">
                 {{ formatStdDiff(item, table.partitionKey) }}
               </span>
@@ -86,7 +86,7 @@
                 v-bind="{ ariaLabel: tv('columns.explore') }"
                 class="prevalence-table__explore-button"
                 :data-testid="`char-results-explore-${item.covariateId}`"
-                @click="emit('explore', item)"
+                @click="emit('explore', sourceRow(item))"
               />
             </template>
           </ResultsDataTable>
@@ -204,7 +204,14 @@ function buildTable(key: string, label: string, partitionKey: string, groups: { 
       },
       ...groups.map((group, index) => ({ key: `group-${index}`, title: group.title, align: 'center', children: group.cells })),
       ...(comparisonMode.value
-        ? [{ key: 'stdDiff', title: tv('characterizations.results.table.stdDiff'), sortable: false, width: 72 }]
+        ? [{
+            key: stdDiffSortKey(partitionKey),
+            title: tv('characterizations.results.table.stdDiff'),
+            width: 72,
+            headerProps: {
+              'data-testid': `char-results-sort-stddiff-${props.analysisId}-${partitionKey}`,
+            },
+          }]
         : []),
       {
         key: 'actions',
@@ -252,16 +259,49 @@ function formatPercent(value: number | undefined): string {
   return typeof value === 'number' && Number.isFinite(value) ? `${value.toFixed(2)}%` : '—'
 }
 
-function formatStdDiff(row: PrevalenceStat, partitionKey: string): string {
+function stdDiffValue(row: PrevalenceStat, partitionKey: string): number | undefined {
   const [first, second] = effectiveCohorts.value
-  if (!first || !second) return '—'
+  if (!first || !second) return undefined
   const diff = row.stdDiffByStrata?.[partitionKey]
     ?? (isOverall(partitionKey) ? row.stdDiff : undefined)
     ?? computeBinaryStdDiff(
       value(row.pct, partitionKey, first.id),
       value(row.pct, partitionKey, second.id)
     )
-  return typeof diff === 'number' && Number.isFinite(diff) ? diff.toFixed(4) : '—'
+  return typeof diff === 'number' && Number.isFinite(diff) ? diff : undefined
+}
+
+function formatStdDiff(row: PrevalenceStat, partitionKey: string): string {
+  return stdDiffValue(row, partitionKey)?.toFixed(4) ?? '—'
+}
+
+/**
+ * Std Diff sorts by magnitude, so large imbalances group together whichever
+ * cohort they favour. The magnitude for every partition is stored on the row
+ * (like Count/Pct) so each partition's table can sort by any partition's key
+ * and the tables sharing `sortBy` stay row-aligned.
+ */
+type PrevalenceTableRow = PrevalenceStat & { stdDiffMagnitude?: Record<string, number | undefined> }
+
+function stdDiffSortKey(partitionKey: string): string {
+  return `stdDiffMagnitude.${partitionKey}`
+}
+
+const tableRows = computed<PrevalenceTableRow[]>(() => {
+  if (!comparisonMode.value) return props.rows
+  return props.rows.map(row => ({
+    ...row,
+    stdDiffMagnitude: Object.fromEntries(partitions.value.map(partition => {
+      const diff = stdDiffValue(row, partition.key)
+      return [partition.key, diff === undefined ? undefined : Math.abs(diff)]
+    })),
+  }))
+})
+
+const sourceRows = computed(() => new Map(props.rows.map(row => [row.covariateId, row])))
+
+function sourceRow(row: PrevalenceTableRow): PrevalenceStat {
+  return sourceRows.value.get(row.covariateId) ?? row
 }
 </script>
 
