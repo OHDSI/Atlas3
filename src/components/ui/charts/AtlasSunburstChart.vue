@@ -178,10 +178,10 @@ const chartOption = computed(() => ({
         // Drop near-zero slices to keep the canvas readable.
         if (d.x1 - d.x0 < 0.005) return null
 
-        // ECharts angle convention: 0 at 3 o'clock, counter-clockwise positive.
-        // d3 partition gives 0 at 12 o'clock running clockwise. Convert.
-        const startAngle = Math.PI / 2 - d.x1
-        const endAngle = Math.PI / 2 - d.x0
+        // ECharts sectors use 0 at 3 o'clock and increase clockwise.
+        // d3 partition angles increase in sibling order, so rotate the origin to 12 o'clock.
+        const startAngle = d.x0 - Math.PI / 2
+        const endAngle = d.x1 - Math.PI / 2
 
         const bands = bandsForNode(d, props.colors)
         const children = bands.map(b => ({
