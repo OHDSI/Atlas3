@@ -1487,7 +1487,6 @@
     "status": "Status",
     "standard": "Standard",
     "target": "Target",
-    "temporal": "Temporal",
     "type": "Type",
     "updated": "Updated",
     "validity": "Validity",
@@ -1505,7 +1504,6 @@
     "drcTooltip": "Descendant Record Count",
     "pcTooltip": "Person Count",
     "dpcTooltip": "Descendant Person Count",
-    "supportsAnnual": "Annual",
     "age": "Age",
     "lastRun": "Last run",
     "outcome": "Outcome",
@@ -1767,6 +1765,8 @@
       "deleteConfirmation": "Delete cohort characterization? Warning: deletion can not be undone!",
       "design": {
         "fa": {
+          "includeAnnual": "Include Prevalence Annual Distribution",
+          "includeTemporal": "Include Temporal Distribution",
           "title": "Feature analyses"
         },
         "subgroups": {
