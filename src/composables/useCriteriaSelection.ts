@@ -1,6 +1,5 @@
 import { inject, provide, type InjectionKey } from 'vue'
 import type { Concept } from '@/models/circe-types'
-import type { ConceptSetReference } from '@/models/cohort.types'
 
 /**
  * Criteria selection service (issue #112).
@@ -18,24 +17,21 @@ import type { ConceptSetReference } from '@/models/cohort.types'
  * and any criteria component — at any nesting depth — requests a selection
  * and applies the result itself through its ordinary `update` emit, which
  * already propagates correctly at every depth. No index bookkeeping.
+ *
+ * Scope: this service only covers concept *search* (vocabulary lookup used by
+ * ConceptArray attributes such as Gender/Race). Concept *set* selection and
+ * editing are separate: they flow through the criteria components'
+ * `select-concept-set` / `edit-concept-set` emits and useCirceConceptSetPicker.
  */
 export interface CriteriaSelectionService {
   /**
-   * Open the concept-set picker. The service owner performs its central
-   * bookkeeping (fetching the full set, unique-id assignment) before
-   * invoking `onSelect` with the final reference to embed.
-   */
-  requestConceptSet(onSelect: (conceptSet: ConceptSetReference) => void): void
-  /**
-   * Open the concept search picker (e.g. gender/race attributes).
+   * Open the concept search dialog (e.g. gender/race attributes).
    * `onSelect` receives Circe-format (UPPERCASE) concepts.
    */
   requestConcepts(
     domainFilter: string | undefined,
     onSelect: (concepts: Concept[]) => void
   ): void
-  /** Open the concept-set editor for an embedded set. */
-  editConceptSet(conceptSet: { id: number | string; name: string; items?: unknown[] }): void
 }
 
 export const CriteriaSelectionKey: InjectionKey<CriteriaSelectionService> = Symbol(
@@ -48,8 +44,9 @@ export function provideCriteriaSelection(service: CriteriaSelectionService): voi
 
 /**
  * Returns the selection service, or null when no ancestor provides one.
- * Callers fall back to the legacy emit chain in that case (hosts outside
- * the cohort builder that still wire selection by hand).
+ * Every host that renders a criteria editor must call
+ * useCriteriaConceptSearch() (which provides this service) or concept
+ * search for attributes such as gender/race will do nothing.
  */
 export function useCriteriaSelection(): CriteriaSelectionService | null {
   return inject(CriteriaSelectionKey, null)
