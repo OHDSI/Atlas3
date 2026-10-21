@@ -263,6 +263,64 @@ describe('mapCharacterizationResults', () => {
     expect(male?.pct['2']?.['1']).toBe(0)
     expect(male?.strataNames['2']).toBe('Female')
   })
+
+  it('keeps temporal and annual series per cohort, sorted, once across strata', () => {
+    const base = {
+      analysisId: 1,
+      covariateId: 100,
+      covariateName: 'Condition X',
+      conceptId: 100,
+      resultType: 'PREVALENCE',
+    }
+    const out = mapCharacterizationResults([
+      {
+        ...base,
+        cohortId: 1,
+        strataId: 0,
+        count: 5,
+        pct: 50,
+        temporal: [
+          { startDay: 10, endDay: 10, count: 2, avg: 0.2 },
+          { startDay: -5, endDay: -5, count: 1, avg: 0.1 },
+          { count: 9, avg: 0.9 },
+        ],
+        temporalAnnual: [
+          { year: 2021, count: 3, avg: 0.3 },
+          { year: 2019, count: 4, avg: 0.4 },
+        ],
+      },
+      {
+        ...base,
+        cohortId: 1,
+        strataId: 2,
+        count: 1,
+        pct: 10,
+        temporal: [{ startDay: 99, endDay: 99, count: 9, avg: 0.9 }],
+      },
+      { ...base, cohortId: 2, strataId: 0, count: 0, pct: 0, temporal: [], temporalAnnual: null },
+    ])
+
+    const stat = out.prevalence[0]
+    expect(stat?.temporalByCohort).toEqual({
+      '1': {
+        temporal: [
+          { startDay: -5, endDay: -5, count: 1, avg: 0.1 },
+          { startDay: 10, endDay: 10, count: 2, avg: 0.2 },
+        ],
+        temporalAnnual: [
+          { year: 2019, count: 4, avg: 0.4 },
+          { year: 2021, count: 3, avg: 0.3 },
+        ],
+      },
+    })
+  })
+
+  it('leaves temporalByCohort unset when no item carries temporal data', () => {
+    const out = mapCharacterizationResults([
+      { analysisId: 1, covariateId: 1, cohortId: 1, count: 1, pct: 1, resultType: 'PREVALENCE' },
+    ])
+    expect(out.prevalence[0]?.temporalByCohort).toBeUndefined()
+  })
 })
 
 describe('computeBinaryStdDiff', () => {

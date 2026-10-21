@@ -20,6 +20,25 @@
           :class="{ 'prevalence-table__chevron--collapsed': !expanded }"
         />
         <span class="text-eyebrow">{{ analysisName }}</span>
+        <span
+          v-for="kind in timeSeriesKinds"
+          :key="kind"
+          class="prevalence-table__time-series"
+          role="img"
+          :aria-label="tv(TIME_SERIES[kind].labelKey)"
+          :data-testid="`char-results-${kind}-available-${analysisId}`"
+        >
+          <AtlasIcon
+            :icon="TIME_SERIES[kind].icon"
+            size="16"
+            aria-hidden="true"
+          />
+          <AtlasTooltip
+            activator="parent"
+            location="top"
+            :text="tv(TIME_SERIES[kind].labelKey)"
+          />
+        </span>
         <span class="prevalence-table__accent-rule" />
       </button>
       <h3
@@ -102,7 +121,8 @@ import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { computeBinaryStdDiff, DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { LinkedCohort, PrevalenceStat } from '@/models/characterization.types'
-import { AtlasCard, AtlasIcon, AtlasIconButton } from '@/components/ui'
+import { AtlasCard, AtlasIcon, AtlasIconButton, AtlasTooltip } from '@/components/ui'
+import { TIME_SERIES_ICONS } from '@/constants/characterization-time-series'
 import ResultsDataTable, { type ResultsHeader, type ResultsSortItem } from './ResultsDataTable.vue'
 
 interface Props {
@@ -303,6 +323,29 @@ const sourceRows = computed(() => new Map(props.rows.map(row => [row.covariateId
 function sourceRow(row: PrevalenceTableRow): PrevalenceStat {
   return sourceRows.value.get(row.covariateId) ?? row
 }
+
+type TimeSeriesKind = 'annual' | 'temporal'
+
+const TIME_SERIES = {
+  annual: { icon: TIME_SERIES_ICONS.annual, labelKey: 'components.characterizationResults.annualAvailable' },
+  temporal: { icon: TIME_SERIES_ICONS.temporal, labelKey: 'components.characterizationResults.temporalAvailable' },
+} as const satisfies Record<TimeSeriesKind, { icon: string; labelKey: string }>
+
+// Annual / temporal output is enabled per analysis, so it is flagged once on
+// the analysis heading rather than on every covariate row.
+const timeSeriesKinds = computed<TimeSeriesKind[]>(() => {
+  let annual = false
+  let temporal = false
+  for (const row of props.rows) {
+    for (const cohort of effectiveCohorts.value) {
+      const data = row.temporalByCohort?.[String(cohort.id)]
+      if (data?.temporalAnnual.length) annual = true
+      if (data?.temporal.length) temporal = true
+    }
+    if (annual && temporal) break
+  }
+  return [...(annual ? ['annual' as const] : []), ...(temporal ? ['temporal' as const] : [])]
+})
 </script>
 
 <style scoped>
@@ -323,4 +366,5 @@ function sourceRow(row: PrevalenceTableRow): PrevalenceStat {
 .prevalence-table :deep(.prevalence-table__explore-button) { height: 24px; min-width: 24px; padding: 0; width: 24px; }
 .prevalence-table :deep(.prevalence-table__explore-button .v-icon) { font-size: 16px; }
 .prevalence-table__covariate { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prevalence-table__time-series { color: rgb(var(--v-theme-primary)); display: inline-flex; }
 </style>

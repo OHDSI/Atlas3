@@ -182,6 +182,111 @@ describe('CharacterizationWorkbench', () => {
     expect(filtersPanel.props('availableDomains')).toEqual(['CONDITION', 'DRUG'])
   })
 
+  describe('annual/temporal comparative note', () => {
+    const twoCohortReport = {
+      analysisId: 10,
+      analysisName: 'Conditions',
+      cohorts: [{ cohortId: 1, cohortName: 'Cohort A' }, { cohortId: 2, cohortName: 'Cohort B' }],
+      domainIds: ['CONDITION'],
+      items: [1, 2].map(cohortId => ({
+        analysisId: 10, analysisName: 'Conditions', covariateId: 1, covariateName: 'Covariate',
+        conceptId: 0, cohortId, cohortName: cohortId === 1 ? 'Cohort A' : 'Cohort B',
+        count: 5, pct: 1, resultType: 'PREVALENCE',
+      })),
+    }
+
+    async function mountWithDesign(featureAnalyses: Record<string, unknown>[]) {
+      const router = makeRouter()
+      await router.push('/characterizations/5?run=7')
+      mockGenerationDesign.mockResolvedValue({
+        success: true,
+        data: {
+          name: 'Snapshot',
+          cohorts: [{ id: 1, name: 'Cohort A' }, { id: 2, name: 'Cohort B' }],
+          featureAnalyses,
+          stratas: [],
+        },
+      })
+      mockResults.mockResolvedValue({ success: true, data: { reports: [twoCohortReport] } })
+      const w = mount(CharacterizationWorkbench, {
+        global: { plugins: [router, vuetify], stubs },
+        props: { modelValue: baseDraft(), characterizationId: 5, availableCohorts: [], availableFeatureAnalyses: [] },
+      })
+      await flushPromises()
+      return w
+    }
+
+    it('explains how to see annual/temporal data when two cohorts are compared', async () => {
+      const w = await mountWithDesign([{ id: 10, name: 'Conditions', includeAnnual: true }])
+
+      const note = w.find('[data-testid="char-results-time-series-note"]')
+      expect(note.exists()).toBe(true)
+
+      await w.findComponent({ name: 'ResultsFilterPanel' }).vm.$emit('update:selected-cohort-ids', [1])
+      await flushPromises()
+      expect(w.find('[data-testid="char-results-time-series-note"]').exists()).toBe(false)
+    })
+
+    it('stays hidden when the design does not request annual or temporal data', async () => {
+      const w = await mountWithDesign([{ id: 10, name: 'Conditions', includeAnnual: false }])
+
+      expect(w.find('[data-testid="char-results-time-series-note"]').exists()).toBe(false)
+    })
+  })
+
+  it('shows a loading indicator instead of empty result views while results load', async () => {
+    const router = makeRouter()
+    await router.push('/characterizations/5?run=7')
+    let resolveResults: (value: Awaited<ReturnType<typeof getCharacterizationResults>>) => void = () => {}
+    mockResults.mockReturnValue(new Promise(resolve => { resolveResults = resolve }))
+
+    const w = mount(CharacterizationWorkbench, {
+      global: { plugins: [router, vuetify], stubs },
+      props: { modelValue: baseDraft(), characterizationId: 5, availableCohorts: [], availableFeatureAnalyses: [] },
+    })
+    await flushPromises()
+
+    expect(w.find('[data-testid="char-results-loading"]').exists()).toBe(true)
+    expect(w.findComponent({ name: 'CharacterizationPerAnalysisView' }).exists()).toBe(false)
+    expect(w.findComponent({ name: 'CharacterizationEmptyState' }).exists()).toBe(false)
+
+    resolveResults({ success: true, data: { reports: [] } })
+    await flushPromises()
+
+    expect(w.find('[data-testid="char-results-loading"]').exists()).toBe(false)
+    expect(w.findComponent({ name: 'CharacterizationPerAnalysisView' }).exists()).toBe(true)
+  })
+
+  it('reloads results when polling reports the selected run has completed', async () => {
+    const router = makeRouter()
+    await router.push('/characterizations/5?run=7')
+    const running = { id: 7, sourceKey: 'CCAE', status: 'STARTED', startTime: 0, executionDuration: 0 }
+    vi.mocked(getCharacterizationExecution).mockResolvedValue({ success: true, data: running } as never)
+    const store = useCharacterizationStore()
+    vi.spyOn(store, 'loadExecutions').mockImplementation(async () => {
+      store.executions = [{ ...running }] as never
+    })
+    vi.spyOn(store, 'pollExecution').mockImplementation(() => {})
+
+    const w = mount(CharacterizationWorkbench, {
+      global: { plugins: [router, vuetify], stubs },
+      props: { modelValue: baseDraft(), characterizationId: 5, availableCohorts: [], availableFeatureAnalyses: [] },
+    })
+    await flushPromises()
+    expect(w.findComponent({ name: 'CharacterizationEmptyState' }).props('variant')).toBe('run-pending')
+    const callsBefore = mockResults.mock.calls.length
+
+    vi.mocked(getCharacterizationExecution).mockResolvedValue({
+      success: true, data: { ...running, status: 'COMPLETED' },
+    } as never)
+    store.executions = [{ ...running, status: 'COMPLETED' }] as never
+    await flushPromises()
+
+    expect(mockResults.mock.calls.length).toBe(callsBefore + 1)
+    expect(w.findComponent({ name: 'CharacterizationEmptyState' }).exists()).toBe(false)
+    expect(w.findComponent({ name: 'CharacterizationPerAnalysisView' }).exists()).toBe(true)
+  })
+
   it('parses invalid run ids as null when no executions are loaded', async () => {
     const router = makeRouter()
     await router.push('/characterizations/5?run=abc')
@@ -206,6 +311,14 @@ describe('CharacterizationWorkbench', () => {
       success: true,
       data: { id: 7, sourceKey: 'CCAE', status: 'PENDING', startTime: 0, executionDuration: 0 },
     })
+    // The polled executions list must agree with the execution snapshot, or the
+    // workbench treats the list as newer and reloads.
+    let listStatus = 'PENDING'
+    const store = useCharacterizationStore()
+    vi.spyOn(store, 'loadExecutions').mockImplementation(async () => {
+      store.executions = [{ id: 7, sourceKey: 'CCAE', status: listStatus, startTime: 0, executionDuration: 0 }] as never
+    })
+    vi.spyOn(store, 'pollExecution').mockImplementation(() => {})
     const pending = mount(CharacterizationWorkbench, {
       global: { plugins: [router, vuetify], stubs },
       props: { modelValue: baseDraft(), characterizationId: 5, availableCohorts: [], availableFeatureAnalyses: [] },
@@ -213,6 +326,7 @@ describe('CharacterizationWorkbench', () => {
     await flushPromises()
     expect(pending.findComponent({ name: 'CharacterizationEmptyState' }).props('variant')).toBe('run-pending')
 
+    listStatus = 'FAILED'
     vi.mocked(getCharacterizationExecution).mockResolvedValueOnce({
       success: true,
       data: { id: 7, sourceKey: 'CCAE', status: 'FAILED', startTime: 0, executionDuration: 0 },

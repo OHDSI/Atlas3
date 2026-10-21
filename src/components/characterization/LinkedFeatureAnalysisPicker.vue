@@ -60,6 +60,26 @@
         </v-list-item-subtitle>
 
         <template #append>
+          <span
+            v-for="flag in supportedFlags(fa)"
+            :key="flag"
+            class="linked-fa-picker__capability"
+            role="img"
+            :aria-label="tv(CAPABILITY[flag].supportsKey)"
+            :data-testid="`linked-fa-picker-${CAPABILITY[flag].testId}-${fa.id}`"
+          >
+            <AtlasIcon
+              size="small"
+              aria-hidden="true"
+            >
+              {{ CAPABILITY[flag].icon }}
+            </AtlasIcon>
+            <AtlasTooltip
+              activator="parent"
+              location="top"
+              :text="tv(CAPABILITY[flag].supportsKey)"
+            />
+          </span>
           <AtlasIconButton
             icon="mdi-close"
             v-bind="{ ariaLabel: tv('columns.remove') }"
@@ -83,7 +103,18 @@
         hide-details
         data-testid="linked-fa-picker-include-annual"
         @update:model-value="(value) => setDesignFlag('includeAnnual', !!value)"
-      />
+      >
+        <template #label>
+          <AtlasIcon
+            size="small"
+            class="linked-fa-picker__label-icon"
+            aria-hidden="true"
+          >
+            {{ CAPABILITY.includeAnnual.icon }}
+          </AtlasIcon>
+          {{ tv('cc.viewEdit.design.fa.includeAnnual') }}
+        </template>
+      </AtlasCheckbox>
       <AtlasCheckbox
         :model-value="includeTemporal"
         :label="tv('cc.viewEdit.design.fa.includeTemporal')"
@@ -91,7 +122,18 @@
         hide-details
         data-testid="linked-fa-picker-include-temporal"
         @update:model-value="(value) => setDesignFlag('includeTemporal', !!value)"
-      />
+      >
+        <template #label>
+          <AtlasIcon
+            size="small"
+            class="linked-fa-picker__label-icon"
+            aria-hidden="true"
+          >
+            {{ CAPABILITY.includeTemporal.icon }}
+          </AtlasIcon>
+          {{ tv('cc.viewEdit.design.fa.includeTemporal') }}
+        </template>
+      </AtlasCheckbox>
     </div>
 
     <AtlasDialog
@@ -124,7 +166,33 @@
           item-value="id"
           show-select
           data-testid="linked-fa-picker-table"
-        />
+        >
+          <template #[`item.name`]="{ item }">
+            <span class="linked-fa-picker__name-cell">
+              <span>{{ item.name }}</span>
+              <span
+                v-for="flag in supportedFlags(item)"
+                :key="flag"
+                class="linked-fa-picker__capability"
+                role="img"
+                :aria-label="tv(CAPABILITY[flag].supportsKey)"
+                :data-testid="`linked-fa-picker-dialog-${CAPABILITY[flag].testId}-${item.id}`"
+              >
+                <AtlasIcon
+                  size="small"
+                  aria-hidden="true"
+                >
+                  {{ CAPABILITY[flag].icon }}
+                </AtlasIcon>
+                <AtlasTooltip
+                  activator="parent"
+                  location="top"
+                  :text="tv(CAPABILITY[flag].supportsKey)"
+                />
+              </span>
+            </span>
+          </template>
+        </AtlasDataTable>
       </div>
       <template #actions>
         <AtlasButton
@@ -147,10 +215,11 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasCheckbox, AtlasDataTable, AtlasDialog, AtlasFacetFilterBar, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasDataTable, AtlasDialog, AtlasFacetFilterBar, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasTooltip } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
+import { TIME_SERIES_ICONS } from '@/constants/characterization-time-series'
 import { useConceptFacets } from '@/composables/useConceptFacets'
 import {
   featureAnalysisFacets,
@@ -220,6 +289,8 @@ const selectableItems = computed(() =>
     name: fa.name,
     type: fa.type,
     description: fa.description ?? '',
+    supportsAnnual: fa.supportsAnnual,
+    supportsTemporal: fa.supportsTemporal,
   }))
 )
 
@@ -276,6 +347,38 @@ function removeFa(id: number) {
 
 type DesignFlag = 'includeAnnual' | 'includeTemporal'
 
+// The same icon marks the rows that support an option and that option's
+// checkbox, so users can see which analyses a checkbox will affect.
+const CAPABILITY = {
+  includeAnnual: {
+    icon: TIME_SERIES_ICONS.annual,
+    supports: 'supportsAnnual',
+    supportsKey: 'cc.viewEdit.design.fa.supportsAnnual',
+    testId: 'supports-annual',
+  },
+  includeTemporal: {
+    icon: TIME_SERIES_ICONS.temporal,
+    supports: 'supportsTemporal',
+    supportsKey: 'cc.viewEdit.design.fa.supportsTemporal',
+    testId: 'supports-temporal',
+  },
+} as const satisfies Record<DesignFlag, {
+  icon: string
+  supports: 'supportsAnnual' | 'supportsTemporal'
+  supportsKey: string
+  testId: string
+}>
+
+// Rows added before the supports flags were copied over may lack them, so
+// fall back to the library entry.
+function supportedFlags(fa: { id: number; supportsAnnual?: boolean; supportsTemporal?: boolean }): DesignFlag[] {
+  const match = props.availableFeatureAnalyses.find(a => a.id === fa.id)
+  return (Object.keys(CAPABILITY) as DesignFlag[]).filter(flag => {
+    const key = CAPABILITY[flag].supports
+    return (fa[key] ?? match?.[key]) === true
+  })
+}
+
 const includeAnnual = computed(() => props.modelValue.some(fa => fa.includeAnnual === true))
 const includeTemporal = computed(() => props.modelValue.some(fa => fa.includeTemporal === true))
 
@@ -316,6 +419,23 @@ function setDesignFlag(flag: DesignFlag, value: boolean) {
 .linked-fa-picker__list {
   border: 1px solid var(--atlas-color-outline-strong);
   border-radius: 8px;
+}
+
+.linked-fa-picker__capability {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 2px;
+  color: var(--atlas-color-on-surface-variant);
+}
+
+.linked-fa-picker__name-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.linked-fa-picker__label-icon {
+  margin-right: 4px;
 }
 
 .linked-fa-picker__design-options {

@@ -650,7 +650,14 @@
       "searchCovariates": "Filter results by name",
       "concept": "Concept",
       "smdLabel": "Standardised mean difference",
-      "noCovariateSelected": "No covariate selected."
+      "noCovariateSelected": "No covariate selected.",
+      "temporalTitle": "Distribution over time",
+      "annualAvailable": "Annual distribution available in Explore",
+      "temporalAvailable": "Temporal distribution available in Explore",
+      "timeSeriesComparativeNote": "Annual and temporal distributions are only reported for a single cohort. Select one cohort in the filters to see them.",
+      "annual": "Annual",
+      "daily": "Daily",
+      "year": "Year"
     },
     "characterizationDesign": {
       "detailsEyebrow": "DETAILS"
@@ -1767,6 +1774,8 @@
         "fa": {
           "includeAnnual": "Include Prevalence Annual Distribution",
           "includeTemporal": "Include Temporal Distribution",
+          "supportsAnnual": "Supports annual distribution",
+          "supportsTemporal": "Supports temporal distribution",
           "title": "Feature analyses"
         },
         "subgroups": {

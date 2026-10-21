@@ -85,13 +85,35 @@
           @update:selected-cohort-ids="(v) => (filters.selectedCohortIds = v)"
         />
 
+        <div
+          v-if="resultsLoading"
+          class="char-workbench__results-loading"
+          role="status"
+          aria-live="polite"
+          data-testid="char-results-loading"
+        >
+          <AtlasProgressCircular
+            indeterminate
+            size="40"
+          />
+          <span>{{ tv('common.loadingWithDots') }}</span>
+        </div>
+
         <CharacterizationEmptyState
-          v-if="emptyVariant"
+          v-else-if="emptyVariant"
           :variant="emptyVariant"
           :error-message="emptyVariant === 'run-failed' || emptyVariant === 'results-error' ? errorMessage : undefined"
         />
 
         <template v-else>
+          <AtlasAlert
+            v-if="showTimeSeriesComparativeNote"
+            severity="info"
+            class="mb-4"
+            data-testid="char-results-time-series-note"
+          >
+            {{ tv('components.characterizationResults.timeSeriesComparativeNote') }}
+          </AtlasAlert>
           <CharacterizationTable1View
             v-if="viewMode === 'table1'"
             :prevalence="prevalence"
@@ -144,6 +166,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import { AtlasAlert, AtlasProgressCircular } from '@/components/ui'
 import CharacterizationDesignRail from './CharacterizationDesignRail.vue'
 import CharacterizationCanvasToolbar from './CharacterizationCanvasToolbar.vue'
 import CharacterizationRunMeta from './CharacterizationRunMeta.vue'
@@ -211,7 +234,7 @@ const { tv } = useI18n()
 const store = useCharacterizationStore()
 const sourcesStore = useDataSourcesStore()
 const cohortSizes = ref<Record<string, number>>({})
-const { execution, prevalence, distribution, resultCount, error, load, reset } = useCharacterizationResults()
+const { execution, prevalence, distribution, resultCount, error, loading: resultsLoading, load, reset } = useCharacterizationResults()
 
 const railOpen = ref(!route.params.id)
 const viewMode = ref<ViewMode>('perAnalysis')
@@ -294,6 +317,18 @@ const availableCohortsForFilter = computed<LinkedCohort[]>(() =>
   generationDesign.value?.cohorts ?? props.modelValue.cohorts
 )
 
+// WebAPI only returns annual/temporal data with single-cohort reports, so with
+// two cohorts compared side by side the user has to narrow to one to see it.
+const showTimeSeriesComparativeNote = computed<boolean>(() => {
+  const selected = filters.value.selectedCohortIds
+  const shown = selected.length
+    ? cohorts.value.filter(cohort => selected.includes(cohort.id))
+    : cohorts.value
+  if (shown.length !== 2) return false
+  const design = generationDesign.value ?? props.modelValue
+  return design.featureAnalyses.some(fa => fa.includeAnnual || fa.includeTemporal)
+})
+
 const selectedExecutionId = computed<number | null>(() => resolveSelectedExecutionId(route.query?.run))
 
 const activeRunSummary = computed(() => resolveActiveRunSummary({
@@ -368,16 +403,37 @@ watch(
   ],
   async ([id]) => {
     if (id === null) { reset(); cohortSizes.value = {}; return }
-    const ok = await load(id, {
-      analysisIds: filters.value.selectedAnalysisIds,
-      domainIds: filters.value.selectedDomains,
-      cohortIds: filters.value.selectedCohortIds,
-      thresholdValuePct: filters.value.threshold / 100,
-    })
-    errorMessage.value = ok ? '' : (error.value ?? '')
+    await loadSelectedResults(id)
   },
   { immediate: true, deep: true },
 )
+
+async function loadSelectedResults(id: number): Promise<void> {
+  const ok = await load(id, {
+    analysisIds: filters.value.selectedAnalysisIds,
+    domainIds: filters.value.selectedDomains,
+    cohortIds: filters.value.selectedCohortIds,
+    thresholdValuePct: filters.value.threshold / 100,
+  })
+  errorMessage.value = ok ? '' : (error.value ?? '')
+}
+
+// `execution` is a snapshot taken when the results were loaded, while polling
+// updates `store.executions`. Reload once the selected run reaches a terminal
+// status so the pending state gives way to the results.
+const selectedPolledStatus = computed(() =>
+  store.executions.find(e => e.id === selectedExecutionId.value)?.status,
+)
+
+let terminalReloadFor: number | null = null
+
+watch([selectedPolledStatus, () => execution.value?.status], ([polledStatus, loadedStatus]) => {
+  const id = selectedExecutionId.value
+  if (id === null || !polledStatus || !isTerminalStatus(polledStatus)) return
+  if (!loadedStatus || isTerminalStatus(loadedStatus) || terminalReloadFor === id) return
+  terminalReloadFor = id
+  void loadSelectedResults(id)
+})
 
 watch(
   selectedExecutionId,
@@ -518,6 +574,16 @@ function onExport(): void {
 }
 .char-workbench--rail-collapsed {
   grid-template-columns: minmax(0, 1fr);
+}
+.char-workbench__results-loading {
+  align-items: center;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  gap: 12px;
+  justify-content: center;
+  padding: 64px 24px;
 }
 .rail-toggle {
   background: rgb(var(--v-theme-primary));

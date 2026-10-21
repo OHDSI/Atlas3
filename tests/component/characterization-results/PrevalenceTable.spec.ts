@@ -94,6 +94,60 @@ describe('PrevalenceTable', () => {
     wrapper.unmount()
   })
 
+  it('flags annual data on the analysis heading, not on covariate rows', () => {
+    const annual = makeRow({
+      temporalByCohort: { '1': { temporal: [], temporalAnnual: [{ year: 2020, count: 1, avg: 0.1 }] } },
+    })
+    const otherCohortOnly = makeRow({
+      covariateId: 9000,
+      covariateName: 'other',
+      temporalByCohort: { '99': { temporal: [{ startDay: 0, endDay: 0, count: 1, avg: 0.1 }], temporalAnnual: [] } },
+    })
+    const plain = makeRow({ covariateId: 9001, covariateName: 'plain' })
+    const wrapper = mount(PrevalenceTable, {
+      props: { analysisId: 100, analysisName: 'Race', rows: [annual, otherCohortOnly, plain], cohorts: annual.cohorts },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    const toggle = wrapper.find('[data-testid="char-results-prevalence-toggle-100"]')
+    const annualIcon = toggle.find('[data-testid="char-results-annual-available-100"]')
+    expect(annualIcon.exists()).toBe(true)
+    expect(annualIcon.attributes('aria-label')).toBe('Annual distribution available in Explore')
+    // Temporal data exists only for a cohort that is not displayed.
+    expect(wrapper.find('[data-testid="char-results-temporal-available-100"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid^="char-results-temporal-8527"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('flags temporal data on the analysis heading', () => {
+    const row = makeRow({
+      temporalByCohort: { '1': { temporal: [{ startDay: 0, endDay: 0, count: 1, avg: 0.1 }], temporalAnnual: [] } },
+    })
+    const wrapper = mount(PrevalenceTable, {
+      props: { analysisId: 100, analysisName: 'Race', rows: [row], cohorts: row.cohorts },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    expect(wrapper.find('[data-testid="char-results-temporal-available-100"]').attributes('aria-label'))
+      .toBe('Temporal distribution available in Explore')
+    expect(wrapper.find('[data-testid="char-results-annual-available-100"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('shows no time-series indicator without annual or temporal data', () => {
+    const row = makeRow()
+    const wrapper = mount(PrevalenceTable, {
+      props: { analysisId: 100, analysisName: 'Race', rows: [row], cohorts: row.cohorts },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    expect(wrapper.find('.prevalence-table__time-series').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
   it('marks Count and Pct headers as right-aligned numeric columns', () => {
     const row = makeRow()
     const wrapper = mount(PrevalenceTable, {

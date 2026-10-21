@@ -12,7 +12,14 @@
     density="compact"
     v-bind="forwardAttrs"
     @update:model-value="(v: boolean | null) => $emit('update:modelValue', !!v)"
-  />
+  >
+    <template
+      v-if="$slots.label"
+      #label
+    >
+      <slot name="label" />
+    </template>
+  </v-checkbox>
 </template>
 
 <script setup lang="ts">

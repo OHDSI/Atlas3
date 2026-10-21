@@ -77,6 +77,52 @@ describe('LinkedFeatureAnalysisPicker', () => {
     wrapper.unmount()
   })
 
+  it('marks rows that support annual / temporal with the matching option icon', () => {
+    const wrapper = mountPicker([
+      { id: 10, name: 'Demographics', supportsTemporal: true, supportsAnnual: false },
+      { id: 11, name: 'Comorbidities', supportsAnnual: true, supportsTemporal: true },
+      { id: 12, name: 'Custom' },
+    ])
+    const at = (id: string) => wrapper.find(`[data-testid="linked-fa-picker-${id}"]`)
+
+    expect(at('supports-temporal-10').exists()).toBe(true)
+    expect(at('supports-annual-10').exists()).toBe(false)
+    expect(at('supports-annual-11').exists()).toBe(true)
+    expect(at('supports-temporal-11').exists()).toBe(true)
+    expect(at('supports-annual-12').exists()).toBe(false)
+    expect(at('supports-temporal-12').exists()).toBe(false)
+
+    expect(at('supports-annual-11').attributes('aria-label')).toBe('Supports annual distribution')
+    expect(at('supports-annual-11').html()).toContain('mdi-alpha-a-box-outline')
+    expect(at('supports-temporal-11').html()).toContain('mdi-alpha-t-box-outline')
+    wrapper.unmount()
+  })
+
+  it('falls back to the library entry when a linked row lacks supports flags', () => {
+    const wrapper = mount(LinkedFeatureAnalysisPicker, {
+      props: {
+        modelValue: [{ id: 20, name: 'Condition era' }],
+        availableFeatureAnalyses: [{ id: 20, name: 'Condition era', type: 'PRESET', supportsAnnual: true }],
+      },
+      global: { plugins: [vuetify] },
+    })
+    expect(wrapper.find('[data-testid="linked-fa-picker-supports-annual-20"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="linked-fa-picker-supports-temporal-20"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('shows each option icon before its checkbox label', () => {
+    const wrapper = mountPicker([{ id: 10, name: 'Demographics' }])
+    const annualLabel = wrapper.get('[data-testid="linked-fa-picker-include-annual"] label')
+    const temporalLabel = wrapper.get('[data-testid="linked-fa-picker-include-temporal"] label')
+
+    expect(annualLabel.html()).toContain('mdi-alpha-a-box-outline')
+    expect(annualLabel.text()).toContain('Include Prevalence Annual Distribution')
+    expect(temporalLabel.html()).toContain('mdi-alpha-t-box-outline')
+    expect(temporalLabel.text()).toContain('Include Temporal Distribution')
+    wrapper.unmount()
+  })
+
   describe('design-level include annual / temporal options', () => {
     const annualBox = 'linked-fa-picker-include-annual'
     const temporalBox = 'linked-fa-picker-include-temporal'
@@ -177,6 +223,33 @@ describe('LinkedFeatureAnalysisPicker', () => {
       ])
       wrapper.unmount()
     })
+  })
+
+  it('marks presets in the add dialog that support annual / temporal', async () => {
+    const wrapper = mount(LinkedFeatureAnalysisPicker, {
+      props: {
+        modelValue: [],
+        availableFeatureAnalyses: [
+          { id: 20, name: 'Condition era start long term', type: 'PRESET', supportsAnnual: true },
+          { id: 21, name: 'Demographics gender', type: 'PRESET', supportsTemporal: true },
+          { id: 22, name: 'Custom', type: 'CRITERIA_SET' },
+        ],
+      },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    await wrapper.get('[data-testid="linked-fa-picker-add"]').trigger('click')
+    await flushPromises()
+    const at = (id: string) => document.querySelector(`[data-testid="linked-fa-picker-dialog-${id}"]`)
+
+    expect(at('supports-annual-20')?.innerHTML).toContain('mdi-alpha-a-box-outline')
+    expect(at('supports-temporal-20')).toBeNull()
+    expect(at('supports-temporal-21')?.innerHTML).toContain('mdi-alpha-t-box-outline')
+    expect(at('supports-annual-21')).toBeNull()
+    expect(at('supports-annual-22')).toBeNull()
+    expect(at('supports-temporal-22')).toBeNull()
+    wrapper.unmount()
   })
 
   it('removing an FA emits the filtered model', async () => {

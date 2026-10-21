@@ -78,7 +78,7 @@ export function useCharacterizationResults() {
       logger.error('CharacterizationResults', 'load failed', err)
       return false
     } finally {
-      loading.value = false
+      if (request === latestRequest) loading.value = false
     }
   }
 

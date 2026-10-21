@@ -108,6 +108,23 @@ describe('useCharacterizationResults', () => {
     void p
   })
 
+  it('stays loading when a superseded request finishes before the latest one', async () => {
+    let resolveFirst: (value: Awaited<ReturnType<typeof getCharacterizationExecution>>) => void = () => {}
+    mockExec
+      .mockImplementationOnce(() => new Promise(resolve => { resolveFirst = resolve }))
+      .mockImplementationOnce(() => new Promise(() => {}))
+    mockCount.mockResolvedValue(success(0))
+    mockResults.mockResolvedValue(success(resultEnvelope([])))
+    const r = useCharacterizationResults()
+
+    const first = r.load(7)
+    void r.load(8)
+    resolveFirst(success({ id: 7, sourceKey: 'A', status: 'COMPLETED', startTime: 0, executionDuration: 0 } as any))
+    await first
+
+    expect(r.loading.value).toBe(true)
+  })
+
   it('records error on failure', async () => {
     mockExec.mockResolvedValue(failure(new ApiError('boom', 0, null)))
     mockCount.mockResolvedValue(success(0))

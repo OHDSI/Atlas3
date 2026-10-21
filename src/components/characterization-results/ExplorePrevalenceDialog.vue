@@ -89,6 +89,101 @@
       >
         {{ tv('components.characterizationResults.smdLabel') }}: <strong>{{ stat.stdDiff.toFixed(4) }}</strong>
       </div>
+
+      <section
+        v-if="temporalCohorts.length > 0 && activeTemporal"
+        class="explore__temporal"
+        data-testid="char-results-explore-temporal"
+      >
+        <h4 class="explore__temporal-title">
+          {{ tv('components.characterizationResults.temporalTitle') }}
+        </h4>
+        <AtlasTabs
+          v-if="temporalCohorts.length > 1"
+          v-model="selectedCohortKey"
+          data-testid="char-results-explore-temporal-cohorts"
+        >
+          <AtlasTab
+            v-for="cohort in temporalCohorts"
+            :key="cohort.key"
+            :value="cohort.key"
+            :data-testid="`char-results-explore-temporal-cohort-${cohort.key}`"
+          >
+            {{ cohort.name }}
+          </AtlasTab>
+        </AtlasTabs>
+        <AtlasTabs
+          v-model="selectedView"
+          data-testid="char-results-explore-temporal-views"
+        >
+          <AtlasTab
+            v-for="view in temporalViews"
+            :key="view"
+            :value="view"
+            :data-testid="`char-results-explore-temporal-view-${view}`"
+          >
+            {{ view === 'annual' ? tv('components.characterizationResults.annual') : tv('components.characterizationResults.daily') }}
+          </AtlasTab>
+        </AtlasTabs>
+
+        <div class="explore__temporal-scroll">
+          <table
+            class="explore__table"
+            :data-testid="`char-results-explore-temporal-${selectedView}-table`"
+          >
+            <thead>
+              <tr>
+                <template v-if="selectedView === 'annual'">
+                  <th class="explore__th-label">
+                    {{ tv('components.characterizationResults.year') }}
+                  </th>
+                </template>
+                <template v-else>
+                  <th class="explore__th-label">
+                    {{ tv('columns.startDay') }}
+                  </th>
+                  <th class="explore__th-label">
+                    {{ tv('columns.endDay') }}
+                  </th>
+                </template>
+                <th class="explore__th-num">
+                  {{ tv('columns.count') }}
+                </th>
+                <th class="explore__th-num">
+                  {{ tv('columns.pct') }}
+                </th>
+                <th class="explore__th-bar" />
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in temporalRows"
+                :key="row.key"
+              >
+                <td
+                  v-for="(label, index) in row.labels"
+                  :key="index"
+                  class="explore__td-label"
+                >
+                  {{ label }}
+                </td>
+                <td class="explore__td-num">
+                  {{ row.count.toLocaleString() }}
+                </td>
+                <td class="explore__td-num">
+                  {{ row.pct.toFixed(2) }}%
+                </td>
+                <td class="explore__td-bar">
+                  <div
+                    class="explore__bar"
+                    :style="{ width: temporalBarWidth(row.pct) }"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </template>
 
     <div
@@ -110,13 +205,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { AtlasButton, AtlasDialog } from '@/components/ui'
+import { computed, ref, watch } from 'vue'
+import { AtlasButton, AtlasDialog, AtlasTab, AtlasTabs } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import { useDataSourcesStore } from '@/stores/datasources'
-import type { PrevalenceStat } from '@/models/characterization.types'
+import type { CohortTemporalData, PrevalenceStat } from '@/models/characterization.types'
 
 interface Props {
   modelValue: boolean
@@ -177,6 +272,84 @@ const maxPct = computed(() => {
 function barWidth(pct: number | null): string {
   if (pct == null || pct <= 0) return '0%'
   return `${Math.min((pct / maxPct.value) * 100, 100)}%`
+}
+
+type TemporalView = 'annual' | 'daily'
+
+interface TemporalCohort {
+  key: string
+  name: string
+  data: CohortTemporalData
+}
+
+interface TemporalRow {
+  key: string
+  labels: (string | number)[]
+  count: number
+  pct: number
+}
+
+// Cohorts in report order; the temporal map may also hold cohorts the
+// report no longer lists, so those are appended by id.
+const temporalCohorts = computed<TemporalCohort[]>(() => {
+  const byCohort = props.stat?.temporalByCohort ?? {}
+  const named = new Map((props.stat?.cohorts ?? []).map(c => [String(c.id), c.name]))
+  const keys = [
+    ...Array.from(named.keys()).filter(key => byCohort[key]),
+    ...Object.keys(byCohort).filter(key => !named.has(key)),
+  ]
+  return keys.map(key => ({ key, name: named.get(key) ?? key, data: byCohort[key]! }))
+})
+
+const selectedCohortKey = ref<string | null>(null)
+const selectedView = ref<TemporalView>('annual')
+
+const activeTemporal = computed(() =>
+  temporalCohorts.value.find(c => c.key === selectedCohortKey.value) ?? temporalCohorts.value[0]
+)
+
+const temporalViews = computed<TemporalView[]>(() => {
+  const data = activeTemporal.value?.data
+  if (!data) return []
+  return [
+    ...(data.temporalAnnual.length > 0 ? ['annual' as const] : []),
+    ...(data.temporal.length > 0 ? ['daily' as const] : []),
+  ]
+})
+
+watch(() => props.stat, () => {
+  selectedCohortKey.value = temporalCohorts.value[0]?.key ?? null
+}, { immediate: true })
+
+watch(temporalViews, views => {
+  if (!views.includes(selectedView.value)) selectedView.value = views[0] ?? 'annual'
+}, { immediate: true })
+
+// WebAPI's temporal `avg` is a proportion; show it as a percentage like `pct`.
+const temporalRows = computed<TemporalRow[]>(() => {
+  const data = activeTemporal.value?.data
+  if (!data) return []
+  if (selectedView.value === 'annual') {
+    return data.temporalAnnual.map(item => ({
+      key: String(item.year),
+      labels: [item.year],
+      count: item.count,
+      pct: item.avg * 100,
+    }))
+  }
+  return data.temporal.map(item => ({
+    key: `${item.startDay}:${item.endDay}`,
+    labels: [item.startDay, item.endDay],
+    count: item.count,
+    pct: item.avg * 100,
+  }))
+})
+
+const maxTemporalPct = computed(() => Math.max(0, ...temporalRows.value.map(row => row.pct)) || 1)
+
+function temporalBarWidth(pct: number): string {
+  if (pct <= 0) return '0%'
+  return `${Math.min((pct / maxTemporalPct.value) * 100, 100)}%`
 }
 
 function close(): void {
@@ -277,5 +450,23 @@ function onUpdateModel(value: boolean): void {
   padding: 48px 24px;
   text-align: center;
   color: rgba(var(--v-theme-on-surface), 0.5);
+}
+.explore__temporal {
+  margin-top: 24px;
+}
+.explore__temporal-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.explore__temporal-scroll {
+  max-height: 320px;
+  margin-top: 8px;
+  overflow-y: auto;
+}
+.explore__temporal-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: rgb(var(--v-theme-surface));
 }
 </style>
