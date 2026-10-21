@@ -119,8 +119,8 @@
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
-import { computeBinaryStdDiff, DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
-import type { LinkedCohort, PrevalenceStat } from '@/models/characterization.types'
+import { computeBinaryStdDiff, DEFAULT_STRATA_KEY, strataCount } from '@/utils/characterization-result-mapper'
+import type { LinkedCohort, PrevalenceStat, StrataCounts } from '@/models/characterization.types'
 import { AtlasCard, AtlasIcon, AtlasIconButton, AtlasTooltip } from '@/components/ui'
 import { TIME_SERIES_ICONS } from '@/constants/characterization-time-series'
 import ResultsDataTable, { type ResultsHeader, type ResultsSortItem } from './ResultsDataTable.vue'
@@ -131,11 +131,14 @@ interface Props {
   rows: PrevalenceStat[]
   cohorts: LinkedCohort[]
   selectedCohortIds?: number[]
+  /** Person count per cohort and subgroup, shown as "(N=…)" in the column headers. */
+  strataCounts?: StrataCounts
   expanded?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   selectedCohortIds: () => [],
+  strataCounts: () => ({}),
   expanded: true,
 })
 const emit = defineEmits<{
@@ -252,16 +255,29 @@ const tables = computed<RenderTable[]>(() => {
       `comparison-${partition.key}`,
       partition.label,
       partition.key,
-      effectiveCohorts.value.map(cohort => ({ title: cohort.name, cells: metricCells(partition.key, cohort.id) }))
+      effectiveCohorts.value.map(cohort => ({
+        title: withN(cohort.name, cohort.id, partition.key),
+        cells: metricCells(partition.key, cohort.id),
+      }))
     ))
   }
   return effectiveCohorts.value.map(cohort => buildTable(
     `cohort-${cohort.id}`,
     cohort.name,
     DEFAULT_STRATA_KEY,
-    partitions.value.map(partition => ({ title: partition.label, cells: metricCells(partition.key, cohort.id) }))
+    partitions.value.map(partition => ({
+      title: withN(partition.label, cohort.id, partition.key),
+      cells: metricCells(partition.key, cohort.id),
+    }))
   ))
 })
+
+function withN(label: string, cohortId: number, partitionKey: string): string {
+  const n = strataCount(props.strataCounts, cohortId, partitionKey)
+  return n === undefined
+    ? label
+    : tv('components.characterizationResults.columnWithN', { label, n: n.toLocaleString() })
+}
 
 function value(
   values: Record<string, Record<string, number>>,

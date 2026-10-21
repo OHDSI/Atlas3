@@ -69,6 +69,22 @@ describe('useCharacterizationResults', () => {
     expect(r.error.value).toBeNull()
   })
 
+  it('exposes the strata counts and clears them on reset', async () => {
+    mockExec.mockResolvedValue(success({ id: 7, sourceKey: 'CCAE', status: 'COMPLETED' } as any))
+    mockCount.mockResolvedValue(success(1))
+    mockResults.mockResolvedValue(success({
+      ...resultEnvelope([]),
+      strataCounts: { '1': { '0': 50, '4': 20 } },
+    }))
+    const r = useCharacterizationResults()
+
+    await r.load(7)
+    expect(r.strataCounts.value).toEqual({ '1': { '0': 50, '4': 20 } })
+
+    r.reset()
+    expect(r.strataCounts.value).toEqual({})
+  })
+
   it('excludes the all-prevalence summary report from mapped results', async () => {
     const item = {
       analysisId: 1, analysisName: 'A', covariateId: 11, covariateName: 'X',

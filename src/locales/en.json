@@ -655,6 +655,7 @@
       "annualAvailable": "Annual distribution available in Explore",
       "temporalAvailable": "Temporal distribution available in Explore",
       "timeSeriesComparativeNote": "Annual and temporal distributions are only reported for a single cohort. Select one cohort in the filters to see them.",
+      "columnWithN": "{label} (N={n})",
       "annual": "Annual",
       "daily": "Daily",
       "year": "Year"

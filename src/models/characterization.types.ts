@@ -294,12 +294,19 @@ export const CharacterizationResultReportSchema = z
   })
   .passthrough()
 
+/**
+ * Person count per cohort and subgroup: cohortId -> strataId -> N, where
+ * strataId "0" is Overall. A missing entry means the N is unknown.
+ */
+export type StrataCounts = Record<string, Record<string, number>>
+
 /** The authoritative response from POST generation/{id}/result. */
 export interface GenerationResults {
   reports: CharacterizationResultReport[]
   count?: number
   prevalenceThreshold?: number
   showEmptyResults?: boolean | null
+  strataCounts?: StrataCounts | null
 }
 
 export const GenerationResultsSchema = z
@@ -308,6 +315,7 @@ export const GenerationResultsSchema = z
     count: z.number().optional(),
     prevalenceThreshold: z.number().optional(),
     showEmptyResults: z.boolean().nullable().optional(),
+    strataCounts: z.record(z.record(z.number())).nullable().optional(),
   })
   .passthrough()
 

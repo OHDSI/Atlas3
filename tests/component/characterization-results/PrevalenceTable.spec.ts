@@ -190,6 +190,52 @@ describe('PrevalenceTable', () => {
     wrapper.unmount()
   })
 
+  it('shows the subgroup N beside each partition heading for a single cohort', () => {
+    const row = makeRow({
+      strataNames: { '0': 'All strata', '7': 'Women' },
+      count: { '0': { '1': 42 }, '7': { '1': 10 }, '8': { '1': 3 } },
+      pct: { '0': { '1': 25 }, '7': { '1': 38 }, '8': { '1': 3 } },
+    })
+    const wrapper = mount(PrevalenceTable, {
+      props: {
+        analysisId: 100, analysisName: 'Race', rows: [row], cohorts: row.cohorts,
+        strataCounts: { '1': { '0': 1700, '7': 26 } },
+      },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    const groupHeaders = wrapper.findAll('thead tr')[0]!.findAll('th').map(h => h.text()).slice(2, 5)
+    // Stratum 8 has no reported count, so it keeps its bare label.
+    expect(groupHeaders).toEqual(['Overall (N=1,700)', 'Women (N=26)', '8'])
+    wrapper.unmount()
+  })
+
+  it('shows each cohort N in its partition when comparing two cohorts', () => {
+    const cohorts = [{ id: 1, name: 'Target' }, { id: 2, name: 'Comparator' }]
+    const row = makeRow({
+      cohorts,
+      strataNames: { '0': 'All strata', '7': 'Women' },
+      count: { '0': { '1': 100, '2': 50 }, '7': { '1': 20, '2': 10 } },
+      pct: { '0': { '1': 50, '2': 30 }, '7': { '1': 40, '2': 20 } },
+    })
+    const wrapper = mount(PrevalenceTable, {
+      props: {
+        analysisId: 100, analysisName: 'Race', rows: [row], cohorts,
+        strataCounts: { '1': { '0': 200, '7': 50 }, '2': { '0': 167, '7': 50 } },
+      },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    const groupHeaders = (key: string) => wrapper
+      .find(`[data-testid="char-results-prevalence-table-100-comparison-${key}"]`)
+      .findAll('thead tr')[0]!.findAll('th').map(h => h.text()).slice(2, 4)
+    expect(groupHeaders('0')).toEqual(['Target (N=200)', 'Comparator (N=167)'])
+    expect(groupHeaders('7')).toEqual(['Target (N=50)', 'Comparator (N=50)'])
+    wrapper.unmount()
+  })
+
   it('emits explore on the explore button click', async () => {
     const row = makeRow()
     const wrapper = mount(PrevalenceTable, {

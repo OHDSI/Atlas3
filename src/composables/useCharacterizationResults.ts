@@ -9,6 +9,7 @@ import type {
   CharacterizationExecution,
   DistributionStat,
   PrevalenceStat,
+  StrataCounts,
 } from '@/models/characterization.types'
 import type { CharacterizationResultsBody } from '@/services/characterization.service'
 import { logger } from '@/utils/logger'
@@ -20,6 +21,7 @@ export function useCharacterizationResults() {
   const resultCount = ref<number>(0)
   const prevalence = shallowRef<PrevalenceStat[]>([])
   const distribution = shallowRef<DistributionStat[]>([])
+  const strataCounts = shallowRef<StrataCounts>({})
   const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
 
@@ -34,6 +36,7 @@ export function useCharacterizationResults() {
     resultCount.value = 0
     prevalence.value = []
     distribution.value = []
+    strataCounts.value = {}
     error.value = null
     loading.value = true
     try {
@@ -68,6 +71,7 @@ export function useCharacterizationResults() {
       resultCount.value = countResult.data
       prevalence.value = mapped.flatMap(report => report.prevalence)
       distribution.value = mapped.flatMap(report => report.distribution)
+      strataCounts.value = resultsResult.data.strataCounts ?? {}
       return true
     } catch (err) {
       if (request !== latestRequest) return false
@@ -88,9 +92,10 @@ export function useCharacterizationResults() {
     resultCount.value = 0
     prevalence.value = []
     distribution.value = []
+    strataCounts.value = {}
     error.value = null
     loading.value = false
   }
 
-  return { execution, resultCount, prevalence, distribution, loading, error, load, reset }
+  return { execution, resultCount, prevalence, distribution, strataCounts, loading, error, load, reset }
 }

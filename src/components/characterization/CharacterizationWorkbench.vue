@@ -121,7 +121,7 @@
             :cohorts="cohorts"
             :config="config"
             :filters="filters"
-            :cohort-sizes="cohortSizes"
+            :cohort-sizes="reportedCohortSizes"
             @explore="onExplore"
           />
           <CharacterizationDashboardView
@@ -140,6 +140,7 @@
             :selected-domains="filters.selectedDomains"
             :search="filters.search"
             :selected-cohort-ids="filters.selectedCohortIds"
+            :strata-counts="strataCounts"
             @explore="onExplore"
           />
         </template>
@@ -191,6 +192,7 @@ import { isTerminalStatus } from '@/composables/useExecutionPolling'
 import { getCohortGenerationInfo } from '@/services/cohort-definition.service'
 import { getCharacterizationDesignSnapshot } from '@/services/characterization.service'
 import { logger } from '@/utils/logger'
+import { overallCohortSizes } from '@/utils/characterization-result-mapper'
 import {
   DEFAULT_TABLE1_CONFIG, DEFAULT_TABLE1_FILTERS,
   type CharacterizationDefinition,
@@ -234,7 +236,7 @@ const { tv } = useI18n()
 const store = useCharacterizationStore()
 const sourcesStore = useDataSourcesStore()
 const cohortSizes = ref<Record<string, number>>({})
-const { execution, prevalence, distribution, resultCount, error, loading: resultsLoading, load, reset } = useCharacterizationResults()
+const { execution, prevalence, distribution, strataCounts, resultCount, error, loading: resultsLoading, load, reset } = useCharacterizationResults()
 
 const railOpen = ref(!route.params.id)
 const viewMode = ref<ViewMode>('perAnalysis')
@@ -476,6 +478,13 @@ watch(
   { immediate: true },
 )
 
+// The run's own person counts (from WebAPI's strataCounts) describe the people
+// analysed, so they win over the cohort's current generation size.
+const reportedCohortSizes = computed<Record<string, number>>(() => ({
+  ...cohortSizes.value,
+  ...overallCohortSizes(strataCounts.value),
+}))
+
 onMounted(async () => {
   errorMessage.value = error.value ?? ''
   if (sourcesStore.sources.length === 0) {
@@ -544,7 +553,7 @@ function onExport(): void {
     cohorts: cohorts.value,
     config: config.value,
     filters: filters.value,
-    cohortSizes: cohortSizes.value,
+    cohortSizes: reportedCohortSizes.value,
     selectedExecutionId: selectedExecutionId.value,
   })
 }

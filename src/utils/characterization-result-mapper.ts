@@ -15,6 +15,7 @@ import type {
   DistributionStat,
   LinkedCohort,
   PrevalenceStat,
+  StrataCounts,
   TemporalAnnualItem,
   TemporalItem,
 } from '@/models/characterization.types'
@@ -28,6 +29,33 @@ function humanizeCamelCase(s: string): string {
 
 /** Default stratum key used when a row is not stratified. */
 export const DEFAULT_STRATA_KEY = 'overall'
+
+/** WebAPI's strata id for the Overall (unstratified) results. */
+const OVERALL_STRATA_ID = '0'
+
+/**
+ * The N for one cohort in one partition, or undefined when WebAPI did not
+ * report it. Rows key Overall as `DEFAULT_STRATA_KEY` or "0"; the counts use "0".
+ */
+export function strataCount(
+  counts: StrataCounts | null | undefined,
+  cohortId: number | string,
+  partitionKey: string = DEFAULT_STRATA_KEY,
+): number | undefined {
+  const strataId = partitionKey === DEFAULT_STRATA_KEY ? OVERALL_STRATA_ID : partitionKey
+  const n = counts?.[String(cohortId)]?.[strataId]
+  return typeof n === 'number' && Number.isFinite(n) ? n : undefined
+}
+
+/** Overall N per cohort (cohortId -> N), for the cohorts WebAPI reported. */
+export function overallCohortSizes(counts: StrataCounts | null | undefined): Record<string, number> {
+  const sizes: Record<string, number> = {}
+  for (const cohortId of Object.keys(counts ?? {})) {
+    const n = strataCount(counts, cohortId)
+    if (n !== undefined) sizes[cohortId] = n
+  }
+  return sizes
+}
 
 /** Result type discriminator returned alongside the typed rows. */
 export type CharacterizationStatType = 'PREVALENCE' | 'DISTRIBUTION'

@@ -257,6 +257,25 @@ describe('CharacterizationWorkbench', () => {
     expect(w.findComponent({ name: 'CharacterizationPerAnalysisView' }).exists()).toBe(true)
   })
 
+  it('passes the run strata counts to the results views and prefers them for cohort sizes', async () => {
+    const router = makeRouter()
+    await router.push('/characterizations/5?run=7')
+    const strataCounts = { '1': { '0': 170, '7': 26 }, '2': { '7': 18 } }
+    mockResults.mockResolvedValue({ success: true, data: { reports: [], strataCounts } })
+
+    const w = mount(CharacterizationWorkbench, {
+      global: { plugins: [router, vuetify], stubs },
+      props: { modelValue: baseDraft(), characterizationId: 5, availableCohorts: [], availableFeatureAnalyses: [] },
+    })
+    await flushPromises()
+
+    expect(w.findComponent({ name: 'CharacterizationPerAnalysisView' }).props('strataCounts')).toEqual(strataCounts)
+
+    await w.findComponent({ name: 'CharacterizationCanvasToolbar' }).vm.$emit('update:mode', 'table1')
+    // Cohort 2 has no Overall count, so it is left to the existing fallbacks.
+    expect(w.findComponent({ name: 'CharacterizationTable1View' }).props('cohortSizes')).toEqual({ '1': 170 })
+  })
+
   it('reloads results when polling reports the selected run has completed', async () => {
     const router = makeRouter()
     await router.push('/characterizations/5?run=7')
