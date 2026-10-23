@@ -696,6 +696,8 @@ describe('services/characterization.service', () => {
       expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data.strataCounts).toEqual({ '10': { '0': 100, '3': 40 } })
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
       }
     })
 
