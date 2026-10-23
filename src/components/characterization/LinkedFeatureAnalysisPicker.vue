@@ -1,10 +1,15 @@
 <!--
   LinkedFeatureAnalysisPicker
 
-  Mirrors LinkedCohortPicker for feature analyses. Each linked row also
-  shows per-row Annual / Temporal toggles. Until the backing feature
-  analysis types expose `supportsAnnual` / `supportsTemporal` flags the
-  toggles render disabled with a tooltip.
+  Mirrors LinkedCohortPicker for feature analyses, plus the design-level
+  "Include Annual / Temporal Distribution" options.
+
+  WebAPI has no design-level field for those options: they are stored as
+  includeAnnual / includeTemporal on every linked analysis row, and generation
+  enables the annual / temporal pass when ANY row has the flag (for every
+  supporting preset analysis). So, as in Atlas 2.x, each checkbox reflects
+  "any row has it" and toggling writes the value to every row, supported or
+  not, so toggling off reliably clears it.
 -->
 <template>
   <div class="linked-fa-picker">
@@ -55,35 +60,81 @@
         </v-list-item-subtitle>
 
         <template #append>
-          <div class="linked-fa-picker__row-actions">
-            <AtlasCheckbox
-              v-if="fa.supportsAnnual"
-              :model-value="fa.includeAnnual ?? false"
-              :label="tv('columns.supportsAnnual')"
-              hide-details
-              :data-testid="`linked-fa-picker-annual-${fa.id}`"
-              @update:model-value="(value) => updateFlag(fa.id, 'includeAnnual', !!value)"
+          <span
+            v-for="flag in supportedFlags(fa)"
+            :key="flag"
+            class="linked-fa-picker__capability"
+            role="img"
+            :aria-label="tv(CAPABILITY[flag].supportsKey)"
+            :data-testid="`linked-fa-picker-${CAPABILITY[flag].testId}-${fa.id}`"
+          >
+            <AtlasIcon
+              size="small"
+              aria-hidden="true"
+            >
+              {{ CAPABILITY[flag].icon }}
+            </AtlasIcon>
+            <AtlasTooltip
+              activator="parent"
+              location="top"
+              :text="tv(CAPABILITY[flag].supportsKey)"
             />
-            <AtlasCheckbox
-              v-if="fa.supportsTemporal"
-              :model-value="fa.includeTemporal ?? false"
-              :label="tv('columns.temporal')"
-              hide-details
-              :data-testid="`linked-fa-picker-temporal-${fa.id}`"
-              @update:model-value="(value) => updateFlag(fa.id, 'includeTemporal', !!value)"
-            />
-            <AtlasIconButton
-              icon="mdi-close"
-              v-bind="{ ariaLabel: tv('columns.remove') }"
-              variant="text"
-              size="sm"
-              :data-testid="`linked-fa-picker-remove-${fa.id}`"
-              @click="removeFa(fa.id)"
-            />
-          </div>
+          </span>
+          <AtlasIconButton
+            icon="mdi-close"
+            v-bind="{ ariaLabel: tv('columns.remove') }"
+            variant="text"
+            size="sm"
+            :data-testid="`linked-fa-picker-remove-${fa.id}`"
+            @click="removeFa(fa.id)"
+          />
         </template>
       </AtlasListItem>
     </AtlasList>
+
+    <div
+      class="linked-fa-picker__design-options"
+      data-testid="linked-fa-picker-design-options"
+    >
+      <AtlasCheckbox
+        :model-value="includeAnnual"
+        :label="tv('cc.viewEdit.design.fa.includeAnnual')"
+        :disabled="modelValue.length === 0"
+        hide-details
+        data-testid="linked-fa-picker-include-annual"
+        @update:model-value="(value) => setDesignFlag('includeAnnual', !!value)"
+      >
+        <template #label>
+          <AtlasIcon
+            size="small"
+            class="linked-fa-picker__label-icon"
+            aria-hidden="true"
+          >
+            {{ CAPABILITY.includeAnnual.icon }}
+          </AtlasIcon>
+          {{ tv('cc.viewEdit.design.fa.includeAnnual') }}
+        </template>
+      </AtlasCheckbox>
+      <AtlasCheckbox
+        :model-value="includeTemporal"
+        :label="tv('cc.viewEdit.design.fa.includeTemporal')"
+        :disabled="modelValue.length === 0"
+        hide-details
+        data-testid="linked-fa-picker-include-temporal"
+        @update:model-value="(value) => setDesignFlag('includeTemporal', !!value)"
+      >
+        <template #label>
+          <AtlasIcon
+            size="small"
+            class="linked-fa-picker__label-icon"
+            aria-hidden="true"
+          >
+            {{ CAPABILITY.includeTemporal.icon }}
+          </AtlasIcon>
+          {{ tv('cc.viewEdit.design.fa.includeTemporal') }}
+        </template>
+      </AtlasCheckbox>
+    </div>
 
     <AtlasDialog
       v-model="dialogOpen"
@@ -115,7 +166,33 @@
           item-value="id"
           show-select
           data-testid="linked-fa-picker-table"
-        />
+        >
+          <template #[`item.name`]="{ item }">
+            <span class="linked-fa-picker__name-cell">
+              <span>{{ item.name }}</span>
+              <span
+                v-for="flag in supportedFlags(item)"
+                :key="flag"
+                class="linked-fa-picker__capability"
+                role="img"
+                :aria-label="tv(CAPABILITY[flag].supportsKey)"
+                :data-testid="`linked-fa-picker-dialog-${CAPABILITY[flag].testId}-${item.id}`"
+              >
+                <AtlasIcon
+                  size="small"
+                  aria-hidden="true"
+                >
+                  {{ CAPABILITY[flag].icon }}
+                </AtlasIcon>
+                <AtlasTooltip
+                  activator="parent"
+                  location="top"
+                  :text="tv(CAPABILITY[flag].supportsKey)"
+                />
+              </span>
+            </span>
+          </template>
+        </AtlasDataTable>
       </div>
       <template #actions>
         <AtlasButton
@@ -138,10 +215,11 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasCheckbox, AtlasDataTable, AtlasDialog, AtlasFacetFilterBar, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasDataTable, AtlasDialog, AtlasFacetFilterBar, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasTooltip } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
+import { TIME_SERIES_ICONS } from '@/constants/characterization-time-series'
 import { useConceptFacets } from '@/composables/useConceptFacets'
 import {
   featureAnalysisFacets,
@@ -211,6 +289,8 @@ const selectableItems = computed(() =>
     name: fa.name,
     type: fa.type,
     description: fa.description ?? '',
+    supportsAnnual: fa.supportsAnnual,
+    supportsTemporal: fa.supportsTemporal,
   }))
 )
 
@@ -245,12 +325,10 @@ function confirmAdd() {
       name: fa.name,
       description: fa.description,
       statType: fa.statType,
-      // `supports*` flags aren't exposed by the FA list endpoint yet — keep
-      // them undefined so the toggles render disabled (with the tooltip).
-      supportsAnnual: undefined,
-      supportsTemporal: undefined,
-      includeAnnual: false,
-      includeTemporal: false,
+      supportsAnnual: fa.supportsAnnual,
+      supportsTemporal: fa.supportsTemporal,
+      includeAnnual: includeAnnual.value,
+      includeTemporal: includeTemporal.value,
     }))
 
   const existingIds = new Set(props.modelValue.map(fa => fa.id))
@@ -267,10 +345,47 @@ function removeFa(id: number) {
   )
 }
 
-function updateFlag(id: number, flag: 'includeAnnual' | 'includeTemporal', value: boolean) {
+type DesignFlag = 'includeAnnual' | 'includeTemporal'
+
+// The same icon marks the rows that support an option and that option's
+// checkbox, so users can see which analyses a checkbox will affect.
+const CAPABILITY = {
+  includeAnnual: {
+    icon: TIME_SERIES_ICONS.annual,
+    supports: 'supportsAnnual',
+    supportsKey: 'cc.viewEdit.design.fa.supportsAnnual',
+    testId: 'supports-annual',
+  },
+  includeTemporal: {
+    icon: TIME_SERIES_ICONS.temporal,
+    supports: 'supportsTemporal',
+    supportsKey: 'cc.viewEdit.design.fa.supportsTemporal',
+    testId: 'supports-temporal',
+  },
+} as const satisfies Record<DesignFlag, {
+  icon: string
+  supports: 'supportsAnnual' | 'supportsTemporal'
+  supportsKey: string
+  testId: string
+}>
+
+// Rows added before the supports flags were copied over may lack them, so
+// fall back to the library entry.
+function supportedFlags(fa: { id: number; supportsAnnual?: boolean; supportsTemporal?: boolean }): DesignFlag[] {
+  const match = props.availableFeatureAnalyses.find(a => a.id === fa.id)
+  return (Object.keys(CAPABILITY) as DesignFlag[]).filter(flag => {
+    const key = CAPABILITY[flag].supports
+    return (fa[key] ?? match?.[key]) === true
+  })
+}
+
+const includeAnnual = computed(() => props.modelValue.some(fa => fa.includeAnnual === true))
+const includeTemporal = computed(() => props.modelValue.some(fa => fa.includeTemporal === true))
+
+function setDesignFlag(flag: DesignFlag, value: boolean) {
   emit(
     'update:modelValue',
-    props.modelValue.map(fa => (fa.id === id ? { ...fa, [flag]: value } : fa))
+    props.modelValue.map(fa => ({ ...fa, [flag]: value }))
   )
 }
 </script>
@@ -306,10 +421,27 @@ function updateFlag(id: number, flag: 'includeAnnual' | 'includeTemporal', value
   border-radius: 8px;
 }
 
-.linked-fa-picker__row-actions {
-  display: flex;
+.linked-fa-picker__capability {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  margin-right: 2px;
+  color: var(--atlas-color-on-surface-variant);
+}
+
+.linked-fa-picker__name-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.linked-fa-picker__label-icon {
+  margin-right: 4px;
+}
+
+.linked-fa-picker__design-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
 }
 
 .linked-fa-picker__dialog-body {

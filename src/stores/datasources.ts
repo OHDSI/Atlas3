@@ -13,9 +13,11 @@ import {
 import { logger } from '@/utils/logger'
 import { useI18n } from '@/composables/useI18n'
 import { useLocaleStore } from '@/stores/locale'
+import { useSourceAccessFor } from '@/composables/useEntityAccess'
 
 export const useDataSourcesStore = defineStore('datasources', () => {
   const { tv } = useI18n()
+  const sourceAccess = useSourceAccessFor()
   // State
   const sources = ref<DataSource[]>([])
   const sourcesLoaded = ref(false)
@@ -72,7 +74,8 @@ export const useDataSourcesStore = defineStore('datasources', () => {
     error.value.sources = null
 
     try {
-      sources.value = await listDataSources()
+      const listedSources = await listDataSources()
+      sources.value = listedSources.filter(source => sourceAccess.canRead(source.sourceId))
       sourcesLoaded.value = true
 
       // Auto-select first source if none selected

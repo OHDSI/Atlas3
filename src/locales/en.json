@@ -650,7 +650,15 @@
       "searchCovariates": "Filter results by name",
       "concept": "Concept",
       "smdLabel": "Standardised mean difference",
-      "noCovariateSelected": "No covariate selected."
+      "noCovariateSelected": "No covariate selected.",
+      "temporalTitle": "Distribution over time",
+      "annualAvailable": "Annual distribution available in Explore",
+      "temporalAvailable": "Temporal distribution available in Explore",
+      "timeSeriesComparativeNote": "Annual and temporal distributions are only reported for a single cohort. Select one cohort in the filters to see them.",
+      "columnWithN": "{label} (N={n})",
+      "annual": "Annual",
+      "daily": "Daily",
+      "year": "Year"
     },
     "characterizationDesign": {
       "detailsEyebrow": "DETAILS"
@@ -1487,7 +1495,6 @@
     "status": "Status",
     "standard": "Standard",
     "target": "Target",
-    "temporal": "Temporal",
     "type": "Type",
     "updated": "Updated",
     "validity": "Validity",
@@ -1505,7 +1512,6 @@
     "drcTooltip": "Descendant Record Count",
     "pcTooltip": "Person Count",
     "dpcTooltip": "Descendant Person Count",
-    "supportsAnnual": "Annual",
     "age": "Age",
     "lastRun": "Last run",
     "outcome": "Outcome",
@@ -1767,6 +1773,10 @@
       "deleteConfirmation": "Delete cohort characterization? Warning: deletion can not be undone!",
       "design": {
         "fa": {
+          "includeAnnual": "Include Prevalence Annual Distribution",
+          "includeTemporal": "Include Temporal Distribution",
+          "supportsAnnual": "Supports annual distribution",
+          "supportsTemporal": "Supports temporal distribution",
           "title": "Feature analyses"
         },
         "subgroups": {

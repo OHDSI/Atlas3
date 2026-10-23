@@ -138,6 +138,33 @@ describe('services/incidence-rate.service', () => {
       expect(url).toContain('/ir/7')
     })
 
+    it('loads stored concept sets whose concepts lack the circe caption fields', async () => {
+      const concept = {
+        CONCEPT_ID: 1,
+        CONCEPT_NAME: 'C',
+        CONCEPT_CODE: 'c',
+        STANDARD_CONCEPT: 'S',
+        INVALID_REASON: null,
+        DOMAIN_ID: 'Condition',
+        VOCABULARY_ID: 'SNOMED',
+      }
+      ok({
+        ...irWire,
+        expression: JSON.stringify({
+          ...expressionObj,
+          ConceptSets: [{ id: 0, name: 'Set', expression: { items: [{ concept }] } }],
+        }),
+      })
+
+      const result = await getIncidenceRate(7)
+
+      if (!result.success) expect.fail(`expected success, got ${result.error.message}`)
+      expect(result.data.expression.ConceptSets[0]?.expression?.items?.[0]?.concept).toMatchObject({
+        STANDARD_CONCEPT_CAPTION: 'Standard',
+        INVALID_REASON_CAPTION: 'Unknown',
+      })
+    })
+
     it('reports a status-carrying failure instead of throwing', async () => {
       mockFetch.mockResolvedValue({
         ok: false,

@@ -74,8 +74,8 @@
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
-import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
-import type { DistributionStat, LinkedCohort } from '@/models/characterization.types'
+import { DEFAULT_STRATA_KEY, strataCount } from '@/utils/characterization-result-mapper'
+import type { DistributionStat, LinkedCohort, StrataCounts } from '@/models/characterization.types'
 import { AtlasCard, AtlasIcon } from '@/components/ui'
 import ResultsDataTable, { type ResultsHeader, type ResultsSortItem } from './ResultsDataTable.vue'
 
@@ -84,6 +84,8 @@ interface Props {
   analysisName: string
   rows: DistributionStat[]
   cohorts: LinkedCohort[]
+  /** Person count per cohort and subgroup, shown as "(N=…)" in the column headers. */
+  strataCounts?: StrataCounts
   expanded?: boolean
 }
 
@@ -101,7 +103,7 @@ interface Statistic {
   format: (row: DistributionStat, partitionKey: string, cohortId: number) => string
 }
 
-const props = withDefaults(defineProps<Props>(), { expanded: true })
+const props = withDefaults(defineProps<Props>(), { strataCounts: () => ({}), expanded: true })
 const emit = defineEmits<{ 'update:expanded': [value: boolean] }>()
 const { tv } = useI18n()
 
@@ -180,10 +182,17 @@ function statisticCells(partitionKey: string, cohortId: number) {
   }))
 }
 
+function withN(label: string, cohortId: number, partitionKey: string): string {
+  const n = strataCount(props.strataCounts, cohortId, partitionKey)
+  return n === undefined
+    ? label
+    : tv('components.characterizationResults.columnWithN', { label, n: n.toLocaleString() })
+}
+
 const tables = computed(() => partitions.value.map(partition => {
   const groups = props.cohorts.map(cohort => ({
     key: `cohort-${cohort.id}`,
-    title: cohort.name,
+    title: withN(cohort.name, cohort.id, partition.key),
     align: 'center',
     children: statisticCells(partition.key, cohort.id),
   }))

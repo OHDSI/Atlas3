@@ -69,6 +69,22 @@ describe('useCharacterizationResults', () => {
     expect(r.error.value).toBeNull()
   })
 
+  it('exposes the strata counts and clears them on reset', async () => {
+    mockExec.mockResolvedValue(success({ id: 7, sourceKey: 'CCAE', status: 'COMPLETED' } as any))
+    mockCount.mockResolvedValue(success(1))
+    mockResults.mockResolvedValue(success({
+      ...resultEnvelope([]),
+      strataCounts: { '1': { '0': 50, '4': 20 } },
+    }))
+    const r = useCharacterizationResults()
+
+    await r.load(7)
+    expect(r.strataCounts.value).toEqual({ '1': { '0': 50, '4': 20 } })
+
+    r.reset()
+    expect(r.strataCounts.value).toEqual({})
+  })
+
   it('excludes the all-prevalence summary report from mapped results', async () => {
     const item = {
       analysisId: 1, analysisName: 'A', covariateId: 11, covariateName: 'X',
@@ -106,6 +122,23 @@ describe('useCharacterizationResults', () => {
     expect(r.prevalence.value).toEqual([])
     expect(r.loading.value).toBe(true)
     void p
+  })
+
+  it('stays loading when a superseded request finishes before the latest one', async () => {
+    let resolveFirst: (value: Awaited<ReturnType<typeof getCharacterizationExecution>>) => void = () => {}
+    mockExec
+      .mockImplementationOnce(() => new Promise(resolve => { resolveFirst = resolve }))
+      .mockImplementationOnce(() => new Promise(() => {}))
+    mockCount.mockResolvedValue(success(0))
+    mockResults.mockResolvedValue(success(resultEnvelope([])))
+    const r = useCharacterizationResults()
+
+    const first = r.load(7)
+    void r.load(8)
+    resolveFirst(success({ id: 7, sourceKey: 'A', status: 'COMPLETED', startTime: 0, executionDuration: 0 } as any))
+    await first
+
+    expect(r.loading.value).toBe(true)
   })
 
   it('records error on failure', async () => {

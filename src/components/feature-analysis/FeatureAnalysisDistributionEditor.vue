@@ -103,6 +103,12 @@
       @create-new="handleCreateNewConceptSet"
     />
 
+    <ConceptSearchDialog
+      v-model="conceptSearchOpen"
+      :domain-filter="conceptSearchDomainFilter"
+      @concepts-selected="onConceptsSelected"
+    />
+
     <ConceptSetEditor
       v-if="conceptSetsStore.editorOpen"
       :model-value="conceptSetsStore.editorOpen"
@@ -126,6 +132,8 @@ import { computed, ref, watch } from 'vue'
 import { AtlasAlert, AtlasButton, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasTextField } from '@/components/ui'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
+import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
+import { useCriteriaConceptSearch } from '@/composables/useCriteriaConceptSearch'
 import DemographicCriteria from '@/components/circe/criteria/DemographicCriteria.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useI18n } from '@/composables/useI18n'
@@ -154,6 +162,8 @@ const { t } = useI18n()
 const getRowKey = createObjectKeyGenerator()
 const conceptSetsStore = useConceptSetsStore()
 const showAddMenu = ref(false)
+
+const { conceptSearchOpen, conceptSearchDomainFilter, onConceptsSelected } = useCriteriaConceptSearch()
 
 const defaultAggregate = computed<FeatureAnalysisAggregate | null>(() => props.aggregates.find(aggregate => aggregate.isDefault) ?? null)
 const addCriteriaLabel = computed(() => t('featureAnalyses.editor.distribution.addCriteria').value)

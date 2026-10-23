@@ -29,6 +29,12 @@
       @create-new="handleCreateNewConceptSet"
     />
 
+    <ConceptSearchDialog
+      v-model="conceptSearchOpen"
+      :domain-filter="conceptSearchDomainFilter"
+      @concepts-selected="onConceptsSelected"
+    />
+
     <ConceptSetEditor
       v-if="conceptSetsStore.editorOpen"
       :model-value="conceptSetsStore.editorOpen"
@@ -48,6 +54,8 @@ import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
+import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
+import { useCriteriaConceptSearch } from '@/composables/useCriteriaConceptSearch'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import type { ConceptSetReference } from '@/models/cohort.types'
 import type { ConceptSet, ConceptSetItem as CirceConceptSetItem, CriteriaGroup as CriteriaGroupType } from '@/models/circe-types'
@@ -66,6 +74,8 @@ const { t } = useI18n()
 const conceptSetsStore = useConceptSetsStore()
 
 const criteriaGroup = computed(() => rule.expression as CriteriaGroupType)
+
+const { conceptSearchOpen, conceptSearchDomainFilter, onConceptsSelected } = useCriteriaConceptSearch()
 
 const localConceptSets = computed<ConceptSetReference[]>(() =>
   conceptSets

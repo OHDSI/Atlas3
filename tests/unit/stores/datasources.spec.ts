@@ -6,6 +6,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { useLocaleStore } from '@/stores/locale'
+import { useAuthStore } from '@/stores/auth'
+import { emptyEntityAccess } from '@/models/auth.types'
+import { getAuthConfig, setAuthConfig } from '@/config/auth.config'
 import { nextTick } from 'vue'
 import type { DataSource } from '@/models/datasource.types'
 
@@ -54,13 +57,31 @@ const mockDataSources: DataSource[] = [
   } as DataSource,
 ]
 
+function setUser(options: {
+  permissionIdx?: Record<string, string[]>
+  source?: Record<string, string[]>
+} = {}) {
+  useAuthStore().setUser({
+    login: 'test-user',
+    displayName: 'Test User',
+    permissionIdx: options.permissionIdx ?? {},
+    entityAccess: { ...emptyEntityAccess(), source: options.source ?? {} },
+  })
+}
+
 describe('DataSources Store', () => {
+  let previousAuthEnabled: boolean
+
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    previousAuthEnabled = getAuthConfig().userAuthenticationEnabled
+    setAuthConfig({ userAuthenticationEnabled: true })
+    setUser({ permissionIdx: { read: ['read:source'] } })
   })
 
   afterEach(() => {
+    setAuthConfig({ userAuthenticationEnabled: previousAuthEnabled })
     vi.restoreAllMocks()
   })
 
@@ -178,6 +199,39 @@ describe('DataSources Store', () => {
       expect(store.sources).toEqual(mockDataSources)
       expect(store.sourcesLoaded).toBe(true)
       expect(store.loading.sources).toBe(false)
+    })
+
+    it('only stores and selects sources the user can read', async () => {
+      setUser({ source: { '2': ['READ'] } })
+      const store = useDataSourcesStore()
+      vi.mocked(listDataSources).mockResolvedValue(mockDataSources)
+
+      await store.fetchDataSources()
+
+      expect(store.sources).toEqual([mockDataSources[1]])
+      expect(store.selectedSourceId).toBe(2)
+    })
+
+    it('treats a per-source WRITE grant as read access', async () => {
+      setUser({ source: { '1': ['WRITE'] } })
+      const store = useDataSourcesStore()
+      vi.mocked(listDataSources).mockResolvedValue(mockDataSources)
+
+      await store.fetchDataSources()
+
+      expect(store.sources).toEqual([mockDataSources[0]])
+      expect(store.selectedSourceId).toBe(1)
+    })
+
+    it('does not expose sources to an admin:source user without read access', async () => {
+      setUser({ permissionIdx: { admin: ['admin:source'] } })
+      const store = useDataSourcesStore()
+      vi.mocked(listDataSources).mockResolvedValue(mockDataSources)
+
+      await store.fetchDataSources()
+
+      expect(store.sources).toEqual([])
+      expect(store.selectedSourceId).toBeNull()
     })
 
     it('should reuse an in-flight data-source request', async () => {

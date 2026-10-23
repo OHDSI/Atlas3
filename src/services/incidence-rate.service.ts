@@ -22,6 +22,7 @@ import type {
 } from '@/models/incidence-rate.types'
 import { z } from 'zod'
 import { normalizeCriteriaGroupForCirce } from '@/components/cohort-editor/normalize'
+import { fillConceptSetCaptions } from '@/components/cohort-editor/atlas-concept-set'
 import { useAuthStore } from '@/stores/auth'
 
 const CONTEXT = 'IncidenceRateService'
@@ -51,6 +52,11 @@ function decodeIRExpression(wire: unknown): IncidenceRate {
     parsedExpr = JSON.parse(raw)
   } catch {
     throw new Error('expression is not valid JSON')
+  }
+  // WebAPI stores IR expressions verbatim, so designs saved before concept
+  // captions were derived on conversion come back without them.
+  if (parsedExpr && typeof parsedExpr === 'object' && 'ConceptSets' in parsedExpr) {
+    parsedExpr = { ...parsedExpr, ConceptSets: fillConceptSetCaptions(parsedExpr.ConceptSets) }
   }
   const expr = parseOrThrow(IncidenceRateExpressionSchema, parsedExpr, 'Invalid incidence rate expression')
   return { ...rest, expression: expr } as IncidenceRate

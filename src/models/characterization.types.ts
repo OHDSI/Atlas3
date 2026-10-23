@@ -294,12 +294,19 @@ export const CharacterizationResultReportSchema = z
   })
   .passthrough()
 
+/**
+ * Person count per cohort and subgroup: cohortId -> strataId -> N, where
+ * strataId "0" is Overall. A missing entry means the N is unknown.
+ */
+export type StrataCounts = Record<string, Record<string, number>>
+
 /** The authoritative response from POST generation/{id}/result. */
 export interface GenerationResults {
   reports: CharacterizationResultReport[]
   count?: number
   prevalenceThreshold?: number
   showEmptyResults?: boolean | null
+  strataCounts?: StrataCounts | null
 }
 
 export const GenerationResultsSchema = z
@@ -308,6 +315,7 @@ export const GenerationResultsSchema = z
     count: z.number().optional(),
     prevalenceThreshold: z.number().optional(),
     showEmptyResults: z.boolean().nullable().optional(),
+    strataCounts: z.record(z.record(z.number())).nullable().optional(),
   })
   .passthrough()
 
@@ -330,6 +338,8 @@ export interface PrevalenceStat {
   pct: Record<string, Record<string, number>>
   stdDiff?: number
   stdDiffByStrata?: Record<string, number>
+  /** Keyed by cohort id. Only present for cohorts that have temporal/annual data. */
+  temporalByCohort?: Record<string, CohortTemporalData>
 }
 
 export const PrevalenceStatSchema = z
@@ -348,6 +358,7 @@ export const PrevalenceStatSchema = z
     pct: NestedNumberMapSchema,
     stdDiff: z.number().optional(),
     stdDiffByStrata: z.record(z.number()).optional(),
+    temporalByCohort: z.record(z.lazy(() => CohortTemporalDataSchema)).optional(),
   })
   .passthrough()
 
@@ -405,21 +416,48 @@ export const ComparativeDistributionStatSchema = DistributionStatSchema.extend({
   stdDiff: z.number(),
 })
 
-export interface TemporalDataPoint {
-  timeId: number
-  year?: number
+// Temporal / annual series WebAPI attaches to each non-comparative preset
+// prevalence item in the generation `/result` report. `avg` is a proportion
+// (0-1), unlike the item's `pct` which is already a percentage.
+export interface TemporalItem {
   count: number
-  pct: number
+  avg: number
+  startDay: number
+  endDay: number
 }
 
-export const TemporalDataPointSchema = z
+export const TemporalItemSchema = z
   .object({
-    timeId: z.number(),
-    year: z.number().optional(),
     count: z.number(),
-    pct: z.number(),
+    avg: z.number(),
+    startDay: z.number(),
+    endDay: z.number(),
   })
   .passthrough()
+
+export interface TemporalAnnualItem {
+  count: number
+  avg: number
+  year: number
+}
+
+export const TemporalAnnualItemSchema = z
+  .object({
+    count: z.number(),
+    avg: z.number(),
+    year: z.number(),
+  })
+  .passthrough()
+
+export interface CohortTemporalData {
+  temporal: TemporalItem[]
+  temporalAnnual: TemporalAnnualItem[]
+}
+
+export const CohortTemporalDataSchema = z.object({
+  temporal: z.array(TemporalItemSchema),
+  temporalAnnual: z.array(TemporalAnnualItemSchema),
+})
 
 export interface Table1Config {
   groupByAnalysis: boolean

@@ -24,9 +24,7 @@ const vuetify = createVuetify({ components, directives })
 
 function makeSelectionService() {
   const service: CriteriaSelectionService = {
-    requestConceptSet: vi.fn(),
     requestConcepts: vi.fn(),
-    editConceptSet: vi.fn(),
   }
 
   return service
@@ -83,12 +81,10 @@ describe('Shared input controls', () => {
       const exclude = ref(false)
       let requestConceptsCallback: ((concepts: Concept[]) => void) | undefined
       const service: CriteriaSelectionService = {
-        requestConceptSet: vi.fn(),
         requestConcepts: vi.fn((domainFilter, onSelect) => {
           expect(domainFilter).toBe('Gender')
           requestConceptsCallback = onSelect
         }),
-        editConceptSet: vi.fn(),
       }
 
       const wrapper = mountConceptArray(

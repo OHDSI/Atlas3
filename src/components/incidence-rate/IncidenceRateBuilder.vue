@@ -410,6 +410,7 @@ function handleConceptSetApplied(set: { id?: number | string; name: string; item
 
   if (store.currentIR) {
     store.currentIR.expression.ConceptSets = next
+    store.markDirty()
   }
 
   conceptSetsStore.closeEditor()
@@ -478,6 +479,7 @@ function deleteConceptSet(conceptSet: ConceptSetReference) {
       (store.currentIR.expression.strata ?? []).map(stratum => stratum.expression as CirceCriteriaGroup | undefined),
       conceptSet.id,
     )
+    store.markDirty()
   }
 }
 

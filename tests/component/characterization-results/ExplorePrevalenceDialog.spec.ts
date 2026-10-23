@@ -110,4 +110,64 @@ describe('ExplorePrevalenceDialog', () => {
     // detail table absent when nothing is selected
     expect(document.body.querySelector('.explore__table')).toBeFalsy()
   })
+
+  describe('temporal distribution', () => {
+    const q = (id: string) => document.body.querySelector(`[data-testid="${id}"]`) as HTMLElement | null
+    const temporalByCohort = {
+      '1': {
+        temporal: [{ startDay: -30, endDay: -1, count: 12, avg: 0.125 }],
+        temporalAnnual: [
+          { year: 2019, count: 40, avg: 0.4 },
+          { year: 2020, count: 20, avg: 0.2 },
+        ],
+      },
+      '2': {
+        temporal: [{ startDay: 0, endDay: 0, count: 3, avg: 0.03 }],
+        temporalAnnual: [],
+      },
+    }
+
+    it('is hidden when the covariate has no temporal data', () => {
+      mountDialog({ stat: makeStat() })
+      expect(q('char-results-explore-temporal')).toBeNull()
+    })
+
+    it('shows the annual series for the first cohort with avg as a percentage', () => {
+      mountDialog({ stat: makeStat({ temporalByCohort }) })
+
+      expect(q('char-results-explore-temporal')).not.toBeNull()
+      expect(q('char-results-explore-temporal-cohort-1')).not.toBeNull()
+      expect(q('char-results-explore-temporal-cohort-2')).not.toBeNull()
+      const table = q('char-results-explore-temporal-annual-table')
+      const text = table?.textContent ?? ''
+      expect(text).toContain('2019')
+      expect(text).toContain('40.00%')
+      expect(text).toContain('2020')
+      expect(text).toContain('20.00%')
+    })
+
+    it('switches to the daily series', async () => {
+      mountDialog({ stat: makeStat({ temporalByCohort }) })
+
+      q('char-results-explore-temporal-view-daily')?.click()
+      await new Promise(resolve => setTimeout(resolve, 0))
+
+      const text = q('char-results-explore-temporal-daily-table')?.textContent ?? ''
+      expect(text).toContain('-30')
+      expect(text).toContain('-1')
+      expect(text).toContain('12')
+      expect(text).toContain('12.50%')
+    })
+
+    it('offers only the views a cohort has and hides the cohort tabs for a single cohort', () => {
+      mountDialog({
+        stat: makeStat({ temporalByCohort: { '2': temporalByCohort['2'] } }),
+      })
+
+      expect(q('char-results-explore-temporal-cohorts')).toBeNull()
+      expect(q('char-results-explore-temporal-view-annual')).toBeNull()
+      const text = q('char-results-explore-temporal-daily-table')?.textContent ?? ''
+      expect(text).toContain('3.00%')
+    })
+  })
 })

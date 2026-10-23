@@ -12,6 +12,7 @@
         :rows="group.prevalence.rows"
         :cohorts="group.prevalence.cohorts"
         :selected-cohort-ids="selectedCohortIds"
+        :strata-counts="strataCounts"
         :expanded="isAnalysisExpanded(group.analysisId)"
         @update:expanded="setAnalysisExpanded(group.analysisId, $event)"
         @explore="(row) => $emit('explore', row)"
@@ -22,6 +23,7 @@
         :analysis-name="group.analysisName"
         :rows="group.distribution.rows"
         :cohorts="group.distribution.cohorts"
+        :strata-counts="strataCounts"
         :expanded="isAnalysisExpanded(group.analysisId)"
         @update:expanded="setAnalysisExpanded(group.analysisId, $event)"
       />
@@ -43,7 +45,7 @@ import PrevalenceTable from '@/components/characterization-results/PrevalenceTab
 import DistributionTable from '@/components/characterization-results/DistributionTable.vue'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type {
-  DistributionStat, LinkedCohort, PrevalenceStat,
+  DistributionStat, LinkedCohort, PrevalenceStat, StrataCounts,
 } from '@/models/characterization.types'
 
 const props = defineProps<{
@@ -56,6 +58,7 @@ const props = defineProps<{
   selectedCohortIds: number[]
   /** Free text narrowing the covariate rows; empty keeps them all (#327). */
   search?: string
+  strataCounts?: StrataCounts
 }>()
 
 defineEmits<{ explore: [row: PrevalenceStat] }>()

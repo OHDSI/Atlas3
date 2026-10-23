@@ -68,6 +68,11 @@
       @concept-set-selected="onConceptSetSelected"
       @create-new="handleCreateNewConceptSet"
     />
+    <ConceptSearchDialog
+      v-model="conceptSearchOpen"
+      :domain-filter="conceptSearchDomainFilter"
+      @concepts-selected="onConceptsSelected"
+    />
     <!-- Concept Set Editor Side Panel (for editing/creating concept sets) -->
     <ConceptSetEditor
       v-if="conceptSetsStore.editorOpen"
@@ -93,6 +98,8 @@ import { AtlasAlert, AtlasButton, AtlasIconButton, AtlasTextField } from '@/comp
 import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
 import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
+import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
+import { useCriteriaConceptSearch } from '@/composables/useCriteriaConceptSearch'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useI18n } from '@/composables/useI18n'
 import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
@@ -112,6 +119,8 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
+
+const { conceptSearchOpen, conceptSearchDomainFilter, onConceptsSelected } = useCriteriaConceptSearch()
 
 const getRowKey = createObjectKeyGenerator()
 

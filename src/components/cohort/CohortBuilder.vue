@@ -176,7 +176,6 @@
     <concept-search-dialog
       v-model="isConceptSearchDialogOpen"
       :domain-filter="selectedConceptDomainFilter"
-      :pre-selected-concepts="currentlySelectedConcepts"
       @concepts-selected="handleConceptsSelected"
     />
 
@@ -312,7 +311,7 @@ import { assignedTags, syncAssetTags } from '@/utils/asset-tags'
 import { useCohortStore, type CohortDocument } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
-import { provideCriteriaSelection, type CriteriaSelectionService } from '@/composables/useCriteriaSelection'
+import { useCriteriaConceptSearch } from '@/composables/useCriteriaConceptSearch'
 import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
 import { useI18n } from '@/composables/useI18n'
 import { useCohortValidation } from '@/composables/useCohortValidation'
@@ -321,14 +320,14 @@ import { useEntityAccess } from '@/composables/useEntityAccess'
 import { getCohortDefinition } from '@/services/cohort-definition.service'
 import { getConceptSetById } from '@/services/concept-set.service'
 import type { CohortDefinition, ConceptSetReference } from '@/models/cohort.types'
-import type { Concept as SearchConcept, ConceptSetItem } from '@/models/concept-set.types'
+import type { ConceptSetItem } from '@/models/concept-set.types'
 import type { ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 import ConceptSetSelectionDialog from './ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from './ConceptSearchDialog.vue'
 import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
 import CohortExpressionEditor from '@/components/cohort-editor/CohortExpressionEditor.vue'
 import { defaultExpression as blankExpression } from '@/models/circe-types'
-import type { CohortExpression, Concept as CirceConcept, ConceptSetItem as CirceConceptSetItem } from '@/models/circe-types'
+import type { CohortExpression, ConceptSetItem as CirceConceptSetItem } from '@/models/circe-types'
 import { unassignConceptSetId, walkConceptSetReferences } from '@/components/cohort-editor/concept-set-usage'
 import { normalizeForCirce } from '@/components/cohort-editor/normalize'
 import { describeImportProblems, validateCohortExpression } from '@/components/cohort-editor/import-validation'
@@ -509,33 +508,16 @@ const loadError = ref<string | null>(null)
 // Set to the id we just saved, so the props.id watcher can tell our own route
 // adoption apart from a real navigation to another cohort.
 const adoptedSavedId = ref<string | null>(null)
-const isConceptSearchDialogOpen = ref(false)
-const selectedConceptDomainFilter = ref<string | undefined>(undefined)
-// ── Criteria selection service ────────────────────────────────────────────────
-// ConceptArray.vue components at any depth request concepts through this
-// service. Concept-set selection flows through useCirceConceptSetPicker so the
-// dialog/request lifecycle stays centralized.
-const pendingConceptsCallback = ref<((concepts: CirceConcept[]) => void) | null>(null)
-
-// Named so it can be part of the defineExpose contract below: descendant
-// components reach it via inject (useCriteriaSelection), but nothing in this
-// shallow-mounted tree does, so tests exercise it through the same named
-// object rather than reaching into Vue's private instance-provides field.
-const criteriaSelectionService: CriteriaSelectionService = {
-  requestConceptSet() {
-    // not used by CohortExpressionEditor — concept-set events flow through the
-    // centralized useCirceConceptSetPicker request lifecycle.
-  },
-  requestConcepts(domainFilter: string | undefined, onSelect: (concepts: CirceConcept[]) => void) {
-    pendingConceptsCallback.value = onSelect
-    selectedConceptDomainFilter.value = domainFilter
-    isConceptSearchDialogOpen.value = true
-  },
-  editConceptSet(conceptSet: { id: number | string; name: string; items?: unknown[] }) {
-    handleEditConceptSet(conceptSet)
-  },
-}
-provideCriteriaSelection(criteriaSelectionService)
+// ── Concept search ───────────────────────────────────────────────────────────
+// ConceptArray.vue components at any depth (e.g. Gender/Race attributes)
+// request a vocabulary search through the shared service. `criteriaSelectionService`
+// is named so tests can drive it via the defineExpose contract below.
+const {
+  conceptSearchOpen: isConceptSearchDialogOpen,
+  conceptSearchDomainFilter: selectedConceptDomainFilter,
+  onConceptsSelected: handleConceptsSelected,
+  service: criteriaSelectionService,
+} = useCriteriaConceptSearch()
 
 const showError = ref(false)
 const errorMessage = ref('')
@@ -679,9 +661,6 @@ const hasUnsavedChanges = computed(() => {
   }
   return createStateSnapshot() !== loadedSnapshot.value
 })
-
-/** Pre-populated concept list for the concept search dialog (no-op in new flow) */
-const currentlySelectedConcepts = computed(() => [])
 
 // Versions configuration
 const versionsConfig = computed<VersionsConfig>(() => {
@@ -1093,36 +1072,6 @@ function syncToStoreDefinition() {
 
 watch(() => cohortStore.reloadRequest, syncToStoreDefinition)
 
-function handleConceptsSelected(
-  concepts: SearchConcept[]
-) {
-  if (concepts.length === 0 || !pendingConceptsCallback.value) {
-    isConceptSearchDialogOpen.value = false
-    pendingConceptsCallback.value = null
-    return
-  }
-
-  // Convert camelCase concepts to UPPERCASE Circe format
-  const convertedConcepts: CirceConcept[] = concepts.map(c => ({
-    CONCEPT_ID: c.conceptId,
-    CONCEPT_NAME: c.conceptName,
-    STANDARD_CONCEPT_CAPTION: c.standardConcept === 'S' ? 'Standard' : c.standardConcept === 'C' ? 'Classification' : '',
-    INVALID_REASON_CAPTION: c.invalidReason ?? '',
-    CONCEPT_CODE: c.conceptCode,
-    DOMAIN_ID: c.domainId,
-    VOCABULARY_ID: c.vocabularyId,
-    CONCEPT_CLASS_ID: c.conceptClassId,
-    VALID_START_DATE: '',
-    VALID_END_DATE: '',
-    STANDARD_CONCEPT: c.standardConcept,
-    INVALID_REASON: c.invalidReason,
-  }))
-
-  const callback = pendingConceptsCallback.value
-  pendingConceptsCallback.value = null
-  callback(convertedConcepts)
-  isConceptSearchDialogOpen.value = false
-}
 /**
  * Called when user clicks "Edit" on a concept set (from chip or dialog)
  */
@@ -1605,7 +1554,6 @@ defineExpose({
   // up as a compile error in this file rather than a silent test break.
   cohortName,
   cohortDescription,
-  pendingConceptsCallback,
   loadedTags,
   loadedSnapshot,
   isConfirmingNavigation,

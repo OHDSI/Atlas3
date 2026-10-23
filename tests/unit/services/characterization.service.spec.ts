@@ -685,6 +685,22 @@ describe('services/characterization.service', () => {
       }
     })
 
+    it('parses the per-cohort strata counts', async () => {
+      ok({
+        reports: [],
+        strataCounts: { '10': { '0': 100, '3': 40 } },
+      })
+
+      const result = await getCharacterizationResults(1, {})
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.strataCounts).toEqual({ '10': { '0': 100, '3': 40 } })
+      } else {
+        expect.fail(`expected success, got ${result.error.message}`)
+      }
+    })
+
     it('rejects a flat result array', async () => {
       ok([{ row: 1 }, { row: 2 }])
 

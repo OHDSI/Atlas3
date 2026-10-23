@@ -6,14 +6,11 @@ import {
   useCriteriaSelection,
   type CriteriaSelectionService,
 } from '@/composables/useCriteriaSelection'
-import type { ConceptSetReference } from '@/models/cohort.types'
 import type { Concept } from '@/models/event.types'
 
 function makeService(): CriteriaSelectionService {
   return {
-    requestConceptSet: vi.fn(),
     requestConcepts: vi.fn(),
-    editConceptSet: vi.fn(),
   }
 }
 
@@ -62,23 +59,15 @@ describe('useCriteriaSelection', () => {
     expect(injected).toBeNull()
   })
 
-  it('passes selection callbacks through to the service owner', () => {
+  it('passes concept search callbacks through to the service owner', () => {
     const received: {
-      conceptSetCb?: (cs: ConceptSetReference) => void
       domainFilter?: string | undefined
       conceptsCb?: (concepts: Concept[]) => void
-      edited?: { id: number | string; name: string }
     } = {}
     const service: CriteriaSelectionService = {
-      requestConceptSet: cb => {
-        received.conceptSetCb = cb
-      },
       requestConcepts: (domainFilter, cb) => {
         received.domainFilter = domainFilter
         received.conceptsCb = cb
-      },
-      editConceptSet: cs => {
-        received.edited = cs
       },
     }
 
@@ -86,9 +75,7 @@ describe('useCriteriaSelection', () => {
     const Consumer = defineComponent({
       setup() {
         const selection = useCriteriaSelection()
-        selection?.requestConceptSet(cs => applied.push(cs))
         selection?.requestConcepts('Gender', concepts => applied.push(concepts))
-        selection?.editConceptSet({ id: 3, name: 'Diabetes' })
         return () => h('span')
       },
     })
@@ -101,14 +88,11 @@ describe('useCriteriaSelection', () => {
 
     mount(Root)
 
-    // The owner received the requests and can deliver results back through
-    // the callbacks, which apply at the requesting component.
+    // The owner received the request and can deliver results back through
+    // the callback, which applies at the requesting component.
     expect(received.domainFilter).toBe('Gender')
-    expect(received.edited).toEqual({ id: 3, name: 'Diabetes' })
-    const conceptSet: ConceptSetReference = { id: 7, name: 'Hypertension', items: [] }
-    received.conceptSetCb?.(conceptSet)
     const concepts = [{ CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE' } as unknown as Concept]
     received.conceptsCb?.(concepts)
-    expect(applied).toEqual([conceptSet, concepts])
+    expect(applied).toEqual([concepts])
   })
 })

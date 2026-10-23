@@ -208,10 +208,10 @@ function onPageSizeChange(value: number): void {
   page.value = 1
 }
 
-const sizes = computed(() => {
-  if (props.cohortSizes && Object.keys(props.cohortSizes).length > 0) return props.cohortSizes
-  return deriveCohortSizes({ prevalence: props.prevalence, cohorts: props.cohorts })
-})
+const sizes = computed(() => ({
+  ...deriveCohortSizes({ prevalence: props.prevalence, cohorts: props.cohorts }),
+  ...props.cohortSizes,
+}))
 
 const overallN = computed(() =>
   Object.values(sizes.value).reduce((s, n) => s + n, 0)

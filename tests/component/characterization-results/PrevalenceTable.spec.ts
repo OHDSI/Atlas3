@@ -94,6 +94,60 @@ describe('PrevalenceTable', () => {
     wrapper.unmount()
   })
 
+  it('flags annual data on the analysis heading, not on covariate rows', () => {
+    const annual = makeRow({
+      temporalByCohort: { '1': { temporal: [], temporalAnnual: [{ year: 2020, count: 1, avg: 0.1 }] } },
+    })
+    const otherCohortOnly = makeRow({
+      covariateId: 9000,
+      covariateName: 'other',
+      temporalByCohort: { '99': { temporal: [{ startDay: 0, endDay: 0, count: 1, avg: 0.1 }], temporalAnnual: [] } },
+    })
+    const plain = makeRow({ covariateId: 9001, covariateName: 'plain' })
+    const wrapper = mount(PrevalenceTable, {
+      props: { analysisId: 100, analysisName: 'Race', rows: [annual, otherCohortOnly, plain], cohorts: annual.cohorts },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    const toggle = wrapper.find('[data-testid="char-results-prevalence-toggle-100"]')
+    const annualIcon = toggle.find('[data-testid="char-results-annual-available-100"]')
+    expect(annualIcon.exists()).toBe(true)
+    expect(annualIcon.attributes('aria-label')).toBe('Annual distribution available in Explore')
+    // Temporal data exists only for a cohort that is not displayed.
+    expect(wrapper.find('[data-testid="char-results-temporal-available-100"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid^="char-results-temporal-8527"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('flags temporal data on the analysis heading', () => {
+    const row = makeRow({
+      temporalByCohort: { '1': { temporal: [{ startDay: 0, endDay: 0, count: 1, avg: 0.1 }], temporalAnnual: [] } },
+    })
+    const wrapper = mount(PrevalenceTable, {
+      props: { analysisId: 100, analysisName: 'Race', rows: [row], cohorts: row.cohorts },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    expect(wrapper.find('[data-testid="char-results-temporal-available-100"]').attributes('aria-label'))
+      .toBe('Temporal distribution available in Explore')
+    expect(wrapper.find('[data-testid="char-results-annual-available-100"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('shows no time-series indicator without annual or temporal data', () => {
+    const row = makeRow()
+    const wrapper = mount(PrevalenceTable, {
+      props: { analysisId: 100, analysisName: 'Race', rows: [row], cohorts: row.cohorts },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    expect(wrapper.find('.prevalence-table__time-series').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
   it('marks Count and Pct headers as right-aligned numeric columns', () => {
     const row = makeRow()
     const wrapper = mount(PrevalenceTable, {
@@ -133,6 +187,52 @@ describe('PrevalenceTable', () => {
     expect(headers.some((h) => /Std Diff/i.test(h))).toBe(true)
     expect(wrapper.findAll('th.prevalence-table__metric')).toHaveLength(4)
     expect(headers).toEqual(expect.arrayContaining(['Target', 'Comparator']))
+    wrapper.unmount()
+  })
+
+  it('shows the subgroup N beside each partition heading for a single cohort', () => {
+    const row = makeRow({
+      strataNames: { '0': 'All strata', '7': 'Women' },
+      count: { '0': { '1': 42 }, '7': { '1': 10 }, '8': { '1': 3 } },
+      pct: { '0': { '1': 25 }, '7': { '1': 38 }, '8': { '1': 3 } },
+    })
+    const wrapper = mount(PrevalenceTable, {
+      props: {
+        analysisId: 100, analysisName: 'Race', rows: [row], cohorts: row.cohorts,
+        strataCounts: { '1': { '0': 1700, '7': 26 } },
+      },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    const groupHeaders = wrapper.findAll('thead tr')[0]!.findAll('th').map(h => h.text()).slice(2, 5)
+    // Stratum 8 has no reported count, so it keeps its bare label.
+    expect(groupHeaders).toEqual(['Overall (N=1,700)', 'Women (N=26)', '8'])
+    wrapper.unmount()
+  })
+
+  it('shows each cohort N in its partition when comparing two cohorts', () => {
+    const cohorts = [{ id: 1, name: 'Target' }, { id: 2, name: 'Comparator' }]
+    const row = makeRow({
+      cohorts,
+      strataNames: { '0': 'All strata', '7': 'Women' },
+      count: { '0': { '1': 100, '2': 50 }, '7': { '1': 20, '2': 10 } },
+      pct: { '0': { '1': 50, '2': 30 }, '7': { '1': 40, '2': 20 } },
+    })
+    const wrapper = mount(PrevalenceTable, {
+      props: {
+        analysisId: 100, analysisName: 'Race', rows: [row], cohorts,
+        strataCounts: { '1': { '0': 200, '7': 50 }, '2': { '0': 167, '7': 50 } },
+      },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    const groupHeaders = (key: string) => wrapper
+      .find(`[data-testid="char-results-prevalence-table-100-comparison-${key}"]`)
+      .findAll('thead tr')[0]!.findAll('th').map(h => h.text()).slice(2, 4)
+    expect(groupHeaders('0')).toEqual(['Target (N=200)', 'Comparator (N=167)'])
+    expect(groupHeaders('7')).toEqual(['Target (N=50)', 'Comparator (N=50)'])
     wrapper.unmount()
   })
 
@@ -321,6 +421,39 @@ describe('PrevalenceTable sorting and paging', () => {
     const countHeader = wrapper.findAll('th.prevalence-table__numeric')[0]!
     await countHeader.trigger('click')
     expect(wrapper.find('tbody .prevalence-table__covariate').text()).toBe('covariate 60')
+    wrapper.unmount()
+  })
+
+  it('sorts Std Diff by magnitude, ignoring sign, in cohort compare mode', async () => {
+    const cohorts = [{ id: 1, name: 'Target' }, { id: 2, name: 'Comparator' }]
+    const rows = [0.05, -0.9, 0.3, -0.2, 0.6].map((stdDiff, i) => makeRow({
+      covariateId: i + 1,
+      covariateName: `covariate ${i + 1}`,
+      cohorts,
+      count: { [DEFAULT_STRATA_KEY]: { '1': 10, '2': 10 } },
+      pct: { [DEFAULT_STRATA_KEY]: { '1': 10, '2': 10 } },
+      stdDiff,
+    }))
+    const wrapper = mount(PrevalenceTable, {
+      props: { analysisId: 100, analysisName: 'Race', rows, cohorts },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+    const header = () => wrapper.get(`[data-testid="char-results-sort-stddiff-100-${DEFAULT_STRATA_KEY}"]`)
+    const diffs = () => wrapper
+      .findAll(`[data-testid^="char-results-stddiff-"]`)
+      .map(cell => Number(cell.text()))
+
+    await header().trigger('click')
+    expect(header().attributes('aria-sort')).toBe('descending')
+    expect(diffs()).toEqual([-0.9, 0.6, 0.3, -0.2, 0.05])
+
+    await header().trigger('click')
+    expect(header().attributes('aria-sort')).toBe('ascending')
+    expect(diffs()).toEqual([0.05, -0.2, 0.3, 0.6, -0.9])
+
+    await wrapper.get('[data-testid="char-results-explore-2"]').trigger('click')
+    expect(wrapper.emitted('explore')?.[0]).toEqual([rows[1]])
     wrapper.unmount()
   })
 })

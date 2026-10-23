@@ -17,7 +17,8 @@ import {
   PrevalenceStatSchema,
   DistributionStatSchema,
   ComparativeDistributionStatSchema,
-  TemporalDataPointSchema,
+  TemporalItemSchema,
+  TemporalAnnualItemSchema,
 } from '@/models/characterization.types'
 
 describe('LinkedCohortSchema', () => {
@@ -472,33 +473,34 @@ describe('ComparativeDistributionStatSchema', () => {
   })
 })
 
-describe('TemporalDataPointSchema', () => {
-  it('parses a temporal data point', () => {
-    const result = TemporalDataPointSchema.safeParse({
-      timeId: 0,
-      year: 2020,
-      count: 100,
-      pct: 0.5,
-    })
-    expect(result.success).toBe(true)
+describe('TemporalItemSchema / TemporalAnnualItemSchema', () => {
+  it('parses daily and annual items in the WebAPI report shape', () => {
+    expect(TemporalItemSchema.safeParse({ startDay: -30, endDay: -1, count: 10, avg: 0.25 }).success).toBe(true)
+    expect(TemporalAnnualItemSchema.safeParse({ year: 2020, count: 10, avg: 0.25 }).success).toBe(true)
   })
 
-  it('preserves unknown fields via passthrough', () => {
-    const result = TemporalDataPointSchema.safeParse({
-      timeId: 0,
-      count: 1,
-      pct: 0.1,
-      futureField: 'x',
-    })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data).toHaveProperty('futureField')
-    } else {
-      expect.fail('expected safeParse to succeed')
-    }
+  it('rejects items missing their time key', () => {
+    expect(TemporalItemSchema.safeParse({ endDay: 1, count: 1, avg: 0.1 }).success).toBe(false)
+    expect(TemporalAnnualItemSchema.safeParse({ count: 1, avg: 0.1 }).success).toBe(false)
   })
 
-  it('rejects when count is missing', () => {
-    expect(TemporalDataPointSchema.safeParse({ timeId: 0, pct: 0.1 }).success).toBe(false)
+  it('accepts temporalByCohort on a prevalence stat', () => {
+    const result = PrevalenceStatSchema.safeParse({
+      analysisId: 1,
+      analysisName: 'A',
+      covariateId: 1,
+      covariateName: 'C',
+      conceptId: 1,
+      cohorts: [{ id: 1, name: 'Cohort' }],
+      count: {},
+      pct: {},
+      temporalByCohort: {
+        '1': {
+          temporal: [{ startDay: 0, endDay: 0, count: 1, avg: 0.1 }],
+          temporalAnnual: [{ year: 2020, count: 1, avg: 0.1 }],
+        },
+      },
+    })
+    expect(result.success).toBe(true)
   })
 })

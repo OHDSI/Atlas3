@@ -5,6 +5,7 @@
  * forwards CriteriaGroup updates back to the model.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { defineComponent, h } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
@@ -12,6 +13,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
 import StrataEditor from '@/components/characterization/StrataEditor.vue'
+import { useCriteriaSelection } from '@/composables/useCriteriaSelection'
 import type { Stratum } from '@/models/characterization.types'
 import type { CriteriaGroup } from '@/models/circe-types'
 import type { ConceptSet } from '@/models/circe-types'
@@ -29,7 +31,11 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }))
 
-function mountEditor(initial: Stratum[] = [], strataConceptSets: ConceptSet[] = []) {
+function mountEditor(
+  initial: Stratum[] = [],
+  strataConceptSets: ConceptSet[] = [],
+  stubOverrides: Record<string, unknown> = {},
+) {
   return mount(StrataEditor, {
     props: {
       modelValue: initial,
@@ -58,6 +64,7 @@ function mountEditor(initial: Stratum[] = [], strataConceptSets: ConceptSet[] = 
           template: '<div><slot /><slot v-if="modelValue" name="actions" /></div>',
         },
         ConceptSetSelectionDialog: true,
+        ...stubOverrides,
       },
     },
   })
@@ -263,5 +270,39 @@ describe('StrataEditor', () => {
     await wrapper.get('[data-testid="strata-editor-discard-criteria"]').trigger('click')
     expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     expect(initial[0]!.criteria).toMatchObject({ Type: 'ALL', CriteriaList: [] })
+  })
+
+  it('opens the concept search dialog when a criteria attribute requests concepts', async () => {
+    const onSelect = vi.fn()
+    const CriteriaGroupStub = defineComponent({
+      name: 'CriteriaGroup',
+      props: { group: { type: Object, required: true } },
+      setup() {
+        const selection = useCriteriaSelection()
+        return () =>
+          h('button', {
+            'data-testid': 'criteria-group-request-concepts',
+            onClick: () => selection?.requestConcepts('Gender', onSelect),
+          })
+      },
+    })
+    wrapper = mountEditor(
+      [{ id: 'a', name: 'A', criteria: { Type: 'ALL', CriteriaList: [] } }],
+      [],
+      { CriteriaGroup: CriteriaGroupStub, ConceptSearchDialog: true },
+    )
+
+    await wrapper.get('[data-testid="strata-editor-edit-criteria-0"]').trigger('click')
+    await wrapper.get('[data-testid="criteria-group-request-concepts"]').trigger('click')
+
+    const dialog = wrapper.findComponent({ name: 'ConceptSearchDialog' })
+    expect(dialog.props('modelValue')).toBe(true)
+    expect(dialog.props('domainFilter')).toBe('Gender')
+
+    dialog.vm.$emit('concepts-selected', [{ conceptId: 8507, conceptName: 'MALE' }])
+    await flushPromises()
+
+    expect(onSelect).toHaveBeenCalledWith([expect.objectContaining({ CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE' })])
+    expect(dialog.props('modelValue')).toBe(false)
   })
 })

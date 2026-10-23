@@ -191,6 +191,12 @@
       @create-new="handleCreateNewConceptSet"
     />
 
+    <ConceptSearchDialog
+      v-model="conceptSearchOpen"
+      :domain-filter="conceptSearchDomainFilter"
+      @concepts-selected="onConceptsSelected"
+    />
+
     <ConceptSetEditor
       v-if="conceptSetsStore.editorOpen"
       :model-value="conceptSetsStore.editorOpen"
@@ -211,6 +217,8 @@ import { AtlasButton, AtlasChip, AtlasDialog, AtlasIconButton, AtlasSwitch, Atla
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
+import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
+import { useCriteriaConceptSearch } from '@/composables/useCriteriaConceptSearch'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { Stratum, CriteriaGroup as CriteriaGroupType } from '@/models/characterization.types'
 import type { ConceptSet } from '@/models/circe-types'
@@ -298,6 +306,10 @@ const localConceptSets = computed<ConceptSetReference[]>(() =>
     .filter((cs): cs is ConceptSet & { id: number } => typeof cs.id === 'number')
     .map(cs => ({ id: cs.id, name: cs.name ?? '', items: cs.expression?.items ?? [] }))
 )
+
+// ── Concept search (gender/race/etc. attributes) ──────────────────────────
+
+const { conceptSearchOpen, conceptSearchDomainFilter, onConceptsSelected } = useCriteriaConceptSearch()
 
 // ── Dialog helpers ────────────────────────────────────────────────────────
 

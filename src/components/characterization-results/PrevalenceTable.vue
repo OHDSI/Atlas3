@@ -20,6 +20,25 @@
           :class="{ 'prevalence-table__chevron--collapsed': !expanded }"
         />
         <span class="text-eyebrow">{{ analysisName }}</span>
+        <span
+          v-for="kind in timeSeriesKinds"
+          :key="kind"
+          class="prevalence-table__time-series"
+          role="img"
+          :aria-label="tv(TIME_SERIES[kind].labelKey)"
+          :data-testid="`char-results-${kind}-available-${analysisId}`"
+        >
+          <AtlasIcon
+            :icon="TIME_SERIES[kind].icon"
+            size="16"
+            aria-hidden="true"
+          />
+          <AtlasTooltip
+            activator="parent"
+            location="top"
+            :text="tv(TIME_SERIES[kind].labelKey)"
+          />
+        </span>
         <span class="prevalence-table__accent-rule" />
       </button>
       <h3
@@ -52,7 +71,7 @@
             v-model:page-size="pageSize"
             v-model:sort-by="sortBy"
             :headers="table.headers"
-            :items="rows"
+            :items="tableRows"
             item-value="covariateId"
             class="prevalence-table__table"
           >
@@ -73,7 +92,7 @@
             >
               {{ cell.format(item) }}
             </template>
-            <template #item.stdDiff="{ item }">
+            <template #[`item.${stdDiffSortKey(table.partitionKey)}`]="{ item }">
               <span :data-testid="`char-results-stddiff-${item.covariateId}-${table.partitionKey}`">
                 {{ formatStdDiff(item, table.partitionKey) }}
               </span>
@@ -86,7 +105,7 @@
                 v-bind="{ ariaLabel: tv('columns.explore') }"
                 class="prevalence-table__explore-button"
                 :data-testid="`char-results-explore-${item.covariateId}`"
-                @click="emit('explore', item)"
+                @click="emit('explore', sourceRow(item))"
               />
             </template>
           </ResultsDataTable>
@@ -100,9 +119,10 @@
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
-import { computeBinaryStdDiff, DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
-import type { LinkedCohort, PrevalenceStat } from '@/models/characterization.types'
-import { AtlasCard, AtlasIcon, AtlasIconButton } from '@/components/ui'
+import { computeBinaryStdDiff, DEFAULT_STRATA_KEY, strataCount } from '@/utils/characterization-result-mapper'
+import type { LinkedCohort, PrevalenceStat, StrataCounts } from '@/models/characterization.types'
+import { AtlasCard, AtlasIcon, AtlasIconButton, AtlasTooltip } from '@/components/ui'
+import { TIME_SERIES_ICONS } from '@/constants/characterization-time-series'
 import ResultsDataTable, { type ResultsHeader, type ResultsSortItem } from './ResultsDataTable.vue'
 
 interface Props {
@@ -111,11 +131,14 @@ interface Props {
   rows: PrevalenceStat[]
   cohorts: LinkedCohort[]
   selectedCohortIds?: number[]
+  /** Person count per cohort and subgroup, shown as "(N=…)" in the column headers. */
+  strataCounts?: StrataCounts
   expanded?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   selectedCohortIds: () => [],
+  strataCounts: () => ({}),
   expanded: true,
 })
 const emit = defineEmits<{
@@ -204,7 +227,14 @@ function buildTable(key: string, label: string, partitionKey: string, groups: { 
       },
       ...groups.map((group, index) => ({ key: `group-${index}`, title: group.title, align: 'center', children: group.cells })),
       ...(comparisonMode.value
-        ? [{ key: 'stdDiff', title: tv('characterizations.results.table.stdDiff'), sortable: false, width: 72 }]
+        ? [{
+            key: stdDiffSortKey(partitionKey),
+            title: tv('characterizations.results.table.stdDiff'),
+            width: 72,
+            headerProps: {
+              'data-testid': `char-results-sort-stddiff-${props.analysisId}-${partitionKey}`,
+            },
+          }]
         : []),
       {
         key: 'actions',
@@ -225,16 +255,29 @@ const tables = computed<RenderTable[]>(() => {
       `comparison-${partition.key}`,
       partition.label,
       partition.key,
-      effectiveCohorts.value.map(cohort => ({ title: cohort.name, cells: metricCells(partition.key, cohort.id) }))
+      effectiveCohorts.value.map(cohort => ({
+        title: withN(cohort.name, cohort.id, partition.key),
+        cells: metricCells(partition.key, cohort.id),
+      }))
     ))
   }
   return effectiveCohorts.value.map(cohort => buildTable(
     `cohort-${cohort.id}`,
     cohort.name,
     DEFAULT_STRATA_KEY,
-    partitions.value.map(partition => ({ title: partition.label, cells: metricCells(partition.key, cohort.id) }))
+    partitions.value.map(partition => ({
+      title: withN(partition.label, cohort.id, partition.key),
+      cells: metricCells(partition.key, cohort.id),
+    }))
   ))
 })
+
+function withN(label: string, cohortId: number, partitionKey: string): string {
+  const n = strataCount(props.strataCounts, cohortId, partitionKey)
+  return n === undefined
+    ? label
+    : tv('components.characterizationResults.columnWithN', { label, n: n.toLocaleString() })
+}
 
 function value(
   values: Record<string, Record<string, number>>,
@@ -252,17 +295,73 @@ function formatPercent(value: number | undefined): string {
   return typeof value === 'number' && Number.isFinite(value) ? `${value.toFixed(2)}%` : '—'
 }
 
-function formatStdDiff(row: PrevalenceStat, partitionKey: string): string {
+function stdDiffValue(row: PrevalenceStat, partitionKey: string): number | undefined {
   const [first, second] = effectiveCohorts.value
-  if (!first || !second) return '—'
+  if (!first || !second) return undefined
   const diff = row.stdDiffByStrata?.[partitionKey]
     ?? (isOverall(partitionKey) ? row.stdDiff : undefined)
     ?? computeBinaryStdDiff(
       value(row.pct, partitionKey, first.id),
       value(row.pct, partitionKey, second.id)
     )
-  return typeof diff === 'number' && Number.isFinite(diff) ? diff.toFixed(4) : '—'
+  return typeof diff === 'number' && Number.isFinite(diff) ? diff : undefined
 }
+
+function formatStdDiff(row: PrevalenceStat, partitionKey: string): string {
+  return stdDiffValue(row, partitionKey)?.toFixed(4) ?? '—'
+}
+
+/**
+ * Std Diff sorts by magnitude, so large imbalances group together whichever
+ * cohort they favour. The magnitude for every partition is stored on the row
+ * (like Count/Pct) so each partition's table can sort by any partition's key
+ * and the tables sharing `sortBy` stay row-aligned.
+ */
+type PrevalenceTableRow = PrevalenceStat & { stdDiffMagnitude?: Record<string, number | undefined> }
+
+function stdDiffSortKey(partitionKey: string): string {
+  return `stdDiffMagnitude.${partitionKey}`
+}
+
+const tableRows = computed<PrevalenceTableRow[]>(() => {
+  if (!comparisonMode.value) return props.rows
+  return props.rows.map(row => ({
+    ...row,
+    stdDiffMagnitude: Object.fromEntries(partitions.value.map(partition => {
+      const diff = stdDiffValue(row, partition.key)
+      return [partition.key, diff === undefined ? undefined : Math.abs(diff)]
+    })),
+  }))
+})
+
+const sourceRows = computed(() => new Map(props.rows.map(row => [row.covariateId, row])))
+
+function sourceRow(row: PrevalenceTableRow): PrevalenceStat {
+  return sourceRows.value.get(row.covariateId) ?? row
+}
+
+type TimeSeriesKind = 'annual' | 'temporal'
+
+const TIME_SERIES = {
+  annual: { icon: TIME_SERIES_ICONS.annual, labelKey: 'components.characterizationResults.annualAvailable' },
+  temporal: { icon: TIME_SERIES_ICONS.temporal, labelKey: 'components.characterizationResults.temporalAvailable' },
+} as const satisfies Record<TimeSeriesKind, { icon: string; labelKey: string }>
+
+// Annual / temporal output is enabled per analysis, so it is flagged once on
+// the analysis heading rather than on every covariate row.
+const timeSeriesKinds = computed<TimeSeriesKind[]>(() => {
+  let annual = false
+  let temporal = false
+  for (const row of props.rows) {
+    for (const cohort of effectiveCohorts.value) {
+      const data = row.temporalByCohort?.[String(cohort.id)]
+      if (data?.temporalAnnual.length) annual = true
+      if (data?.temporal.length) temporal = true
+    }
+    if (annual && temporal) break
+  }
+  return [...(annual ? ['annual' as const] : []), ...(temporal ? ['temporal' as const] : [])]
+})
 </script>
 
 <style scoped>
@@ -283,4 +382,5 @@ function formatStdDiff(row: PrevalenceStat, partitionKey: string): string {
 .prevalence-table :deep(.prevalence-table__explore-button) { height: 24px; min-width: 24px; padding: 0; width: 24px; }
 .prevalence-table :deep(.prevalence-table__explore-button .v-icon) { font-size: 16px; }
 .prevalence-table__covariate { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prevalence-table__time-series { color: rgb(var(--v-theme-primary)); display: inline-flex; }
 </style>

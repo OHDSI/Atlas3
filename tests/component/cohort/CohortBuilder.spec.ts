@@ -718,23 +718,6 @@ describe('CohortBuilder', () => {
     expect(conceptSearchDialog(wrapper).props('modelValue')).toBe(false)
   })
 
-  it('criteriaSelectionService.editConceptSet opens the concept-set editor', async () => {
-    const wrapper = createWrapper()
-    await wrapper.vm.$nextTick()
-
-    ;(wrapper.vm as any).criteriaSelectionService.editConceptSet({
-      id: 9,
-      name: 'Hypertension',
-      items: [],
-    })
-    await wrapper.vm.$nextTick()
-
-    const { useConceptSetsStore } = await import('@/stores/concept-sets')
-    const store = useConceptSetsStore()
-    expect(store.editorOpen).toBe(true)
-    expect(store.currentSet).toMatchObject({ id: 9, name: 'Hypertension' })
-  })
-
   // ---------------------------------------------------------------------------
   // exportFilename
   // ---------------------------------------------------------------------------
@@ -880,7 +863,6 @@ describe('CohortBuilder', () => {
     setup.onSelectConceptSet({ targetRef })
     await wrapper.vm.$nextTick()
 
-    expect(() => setup.criteriaSelectionService.requestConceptSet()).not.toThrow()
     expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(true)
 
     conceptSetSelectionDialog(wrapper).vm.$emit('concept-set-selected', {

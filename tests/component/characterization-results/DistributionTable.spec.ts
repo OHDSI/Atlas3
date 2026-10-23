@@ -47,6 +47,27 @@ describe('DistributionTable', () => {
     expect(wrapper.text()).not.toContain('Std Diff')
   })
 
+  it('shows each cohort N for the partition when the counts are reported, and omits unknown ones', () => {
+    const stratified = {
+      ...row,
+      strataNames: { '0': 'All strata', '7': 'Age 65+' },
+      avg: { '0': { '1': 70, '2': 75 }, '7': { '1': 71, '2': 76 } },
+    }
+    const wrapper = mount(DistributionTable, {
+      props: {
+        analysisId: 1, analysisName: 'Measurement', rows: [stratified], cohorts,
+        strataCounts: { '1': { '0': 1200, '7': 26 }, '2': { '0': 126 } },
+      },
+      global: { plugins: [vuetify] },
+    })
+
+    const groupHeaders = (key: string) => wrapper
+      .find(`[data-testid="char-results-distribution-table-1-${key}"]`)
+      .findAll('thead tr')[0]!.findAll('th').map(header => header.text()).slice(2)
+    expect(groupHeaders('0')).toEqual(['Target (N=1,200)', 'Comparator (N=126)'])
+    expect(groupHeaders('7')).toEqual(['Target (N=26)', 'Comparator'])
+  })
+
   it('sorts rows by the clicked statistic for that cohort', async () => {
     const light = { ...row, covariateId: 2, covariateName: 'Light', median: { [DEFAULT_STRATA_KEY]: { '1': 50, '2': 99 } } }
     const heavy = { ...row, covariateId: 3, covariateName: 'Heavy', median: { [DEFAULT_STRATA_KEY]: { '1': 90, '2': 10 } } }

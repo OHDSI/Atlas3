@@ -1,9 +1,8 @@
 /**
  * LinkedFeatureAnalysisPicker component tests
  *
- * Smoke-level: empty state, list rendering, and remove emits the filtered
- * model. Annual/Temporal toggles are present but disabled until the
- * backing FA list endpoint exposes the supports* flags.
+ * Empty state, list rendering, remove, the add dialog, and the design-level
+ * Include Annual / Temporal Distribution options (stored on every row).
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
@@ -66,16 +65,190 @@ describe('LinkedFeatureAnalysisPicker', () => {
     wrapper.unmount()
   })
 
-  it('renders linked rows; annual/temporal toggles only when supported', () => {
+  it('renders linked rows without per-row annual/temporal toggles', () => {
     const wrapper = mountPicker([
       { id: 10, name: 'Demographics', description: 'Age + Sex' },
       { id: 11, name: 'Comorbidities', supportsAnnual: true, supportsTemporal: true },
     ])
     expect(wrapper.find('[data-testid="linked-fa-picker-row-10"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="linked-fa-picker-annual-10"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="linked-fa-picker-temporal-10"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="linked-fa-picker-annual-11"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="linked-fa-picker-temporal-11"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="linked-fa-picker-row-11"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="linked-fa-picker-annual-11"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="linked-fa-picker-temporal-11"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('marks rows that support annual / temporal with the matching option icon', () => {
+    const wrapper = mountPicker([
+      { id: 10, name: 'Demographics', supportsTemporal: true, supportsAnnual: false },
+      { id: 11, name: 'Comorbidities', supportsAnnual: true, supportsTemporal: true },
+      { id: 12, name: 'Custom' },
+    ])
+    const at = (id: string) => wrapper.find(`[data-testid="linked-fa-picker-${id}"]`)
+
+    expect(at('supports-temporal-10').exists()).toBe(true)
+    expect(at('supports-annual-10').exists()).toBe(false)
+    expect(at('supports-annual-11').exists()).toBe(true)
+    expect(at('supports-temporal-11').exists()).toBe(true)
+    expect(at('supports-annual-12').exists()).toBe(false)
+    expect(at('supports-temporal-12').exists()).toBe(false)
+
+    expect(at('supports-annual-11').attributes('aria-label')).toBe('Supports annual distribution')
+    expect(at('supports-annual-11').html()).toContain('mdi-alpha-a-box-outline')
+    expect(at('supports-temporal-11').html()).toContain('mdi-alpha-t-box-outline')
+    wrapper.unmount()
+  })
+
+  it('falls back to the library entry when a linked row lacks supports flags', () => {
+    const wrapper = mount(LinkedFeatureAnalysisPicker, {
+      props: {
+        modelValue: [{ id: 20, name: 'Condition era' }],
+        availableFeatureAnalyses: [{ id: 20, name: 'Condition era', type: 'PRESET', supportsAnnual: true }],
+      },
+      global: { plugins: [vuetify] },
+    })
+    expect(wrapper.find('[data-testid="linked-fa-picker-supports-annual-20"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="linked-fa-picker-supports-temporal-20"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('shows each option icon before its checkbox label', () => {
+    const wrapper = mountPicker([{ id: 10, name: 'Demographics' }])
+    const annualLabel = wrapper.get('[data-testid="linked-fa-picker-include-annual"] label')
+    const temporalLabel = wrapper.get('[data-testid="linked-fa-picker-include-temporal"] label')
+
+    expect(annualLabel.html()).toContain('mdi-alpha-a-box-outline')
+    expect(annualLabel.text()).toContain('Include Prevalence Annual Distribution')
+    expect(temporalLabel.html()).toContain('mdi-alpha-t-box-outline')
+    expect(temporalLabel.text()).toContain('Include Temporal Distribution')
+    wrapper.unmount()
+  })
+
+  describe('design-level include annual / temporal options', () => {
+    const annualBox = 'linked-fa-picker-include-annual'
+    const temporalBox = 'linked-fa-picker-include-temporal'
+
+    function checkbox(wrapper: ReturnType<typeof mountPicker>, testId: string) {
+      return wrapper.get(`[data-testid="${testId}"] input[type="checkbox"]`)
+    }
+
+    function lastEmitted(wrapper: ReturnType<typeof mountPicker>): LinkedFeatureAnalysis[] {
+      const emitted = wrapper.emitted('update:modelValue')
+      expect(emitted).toBeTruthy()
+      return emitted![emitted!.length - 1]![0] as LinkedFeatureAnalysis[]
+    }
+
+    it('disables both options until an analysis is linked', () => {
+      const wrapper = mountPicker([])
+      expect(checkbox(wrapper, annualBox).attributes('disabled')).toBeDefined()
+      expect(checkbox(wrapper, temporalBox).attributes('disabled')).toBeDefined()
+      wrapper.unmount()
+    })
+
+    it('shows an option as checked when any loaded row has the flag', () => {
+      const wrapper = mountPicker([
+        { id: 10, name: 'Demographics', includeTemporal: false, includeAnnual: false },
+        { id: 11, name: 'Comorbidities', includeTemporal: true, includeAnnual: false },
+      ])
+      expect((checkbox(wrapper, temporalBox).element as HTMLInputElement).checked).toBe(true)
+      expect((checkbox(wrapper, annualBox).element as HTMLInputElement).checked).toBe(false)
+      expect(checkbox(wrapper, temporalBox).attributes('disabled')).toBeUndefined()
+      wrapper.unmount()
+    })
+
+    it('re-derives the checked state when a different design is loaded', async () => {
+      const wrapper = mountPicker([{ id: 10, name: 'Demographics', includeTemporal: true }])
+      expect((checkbox(wrapper, temporalBox).element as HTMLInputElement).checked).toBe(true)
+
+      await wrapper.setProps({ modelValue: [{ id: 11, name: 'Comorbidities', includeTemporal: false }] })
+      expect((checkbox(wrapper, temporalBox).element as HTMLInputElement).checked).toBe(false)
+      wrapper.unmount()
+    })
+
+    it('toggling on writes the flag to every row, supported or not', async () => {
+      const wrapper = mountPicker([
+        { id: 10, name: 'Demographics', supportsTemporal: true },
+        { id: 11, name: 'Comorbidities' },
+      ])
+
+      await checkbox(wrapper, temporalBox).setValue(true)
+
+      const next = lastEmitted(wrapper)
+      expect(next.map(fa => fa.includeTemporal)).toEqual([true, true])
+      expect(next.map(fa => fa.includeAnnual)).toEqual([undefined, undefined])
+      wrapper.unmount()
+    })
+
+    it('toggling off clears the flag from every row', async () => {
+      const wrapper = mountPicker([
+        { id: 10, name: 'Demographics', includeAnnual: true },
+        { id: 11, name: 'Comorbidities', includeAnnual: true },
+      ])
+
+      await checkbox(wrapper, annualBox).setValue(false)
+
+      expect(lastEmitted(wrapper).map(fa => fa.includeAnnual)).toEqual([false, false])
+      wrapper.unmount()
+    })
+
+    it('newly added analyses take the current option values and keep their supports flags', async () => {
+      const wrapper = mount(LinkedFeatureAnalysisPicker, {
+        props: {
+          modelValue: [{ id: 10, name: 'Demographics', includeTemporal: true, includeAnnual: false }],
+          availableFeatureAnalyses: [
+            ...availableFeatureAnalyses,
+            { id: 12, name: 'Drug era', type: 'PRESET', supportsAnnual: true, supportsTemporal: true },
+          ],
+        },
+        global: { plugins: [vuetify] },
+        attachTo: document.body,
+      })
+
+      await wrapper.get('[data-testid="linked-fa-picker-add"]').trigger('click')
+      await flushPromises()
+      ;(wrapper.vm as unknown as { $: { setupState: { selectedIds: number[] } } }).$.setupState.selectedIds = [11, 12]
+      await flushPromises()
+      ;(document.querySelector('[data-testid="linked-fa-picker-confirm"]') as HTMLButtonElement).click()
+      await flushPromises()
+
+      const added = lastEmitted(wrapper).filter(fa => fa.id !== 10)
+      expect(added).toEqual([
+        expect.objectContaining({ id: 11, includeTemporal: true, includeAnnual: false }),
+        expect.objectContaining({
+          id: 12,
+          includeTemporal: true,
+          includeAnnual: false,
+          supportsAnnual: true,
+          supportsTemporal: true,
+        }),
+      ])
+      wrapper.unmount()
+    })
+  })
+
+  it('marks presets in the add dialog that support annual / temporal', async () => {
+    const wrapper = mount(LinkedFeatureAnalysisPicker, {
+      props: {
+        modelValue: [],
+        availableFeatureAnalyses: [
+          { id: 20, name: 'Condition era start long term', type: 'PRESET', supportsAnnual: true },
+          { id: 21, name: 'Demographics gender', type: 'PRESET', supportsTemporal: true },
+          { id: 22, name: 'Custom', type: 'CRITERIA_SET' },
+        ],
+      },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+
+    await wrapper.get('[data-testid="linked-fa-picker-add"]').trigger('click')
+    await flushPromises()
+    const at = (id: string) => document.querySelector(`[data-testid="linked-fa-picker-dialog-${id}"]`)
+
+    expect(at('supports-annual-20')?.innerHTML).toContain('mdi-alpha-a-box-outline')
+    expect(at('supports-temporal-20')).toBeNull()
+    expect(at('supports-temporal-21')?.innerHTML).toContain('mdi-alpha-t-box-outline')
+    expect(at('supports-annual-21')).toBeNull()
+    expect(at('supports-annual-22')).toBeNull()
+    expect(at('supports-temporal-22')).toBeNull()
     wrapper.unmount()
   })
 
