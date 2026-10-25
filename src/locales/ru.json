@@ -216,15 +216,15 @@
       "noInclusionRules": "Нет правил включения"
     },
     "conceptSet": {
-      "addConcepts": "Добавить концепции"
+      "addConcepts": "Добавить концепты"
     },
     "conceptAddBox": {
-      "selectConceptSet": "Выбрать набор концепций",
-      "addConcepts": "Добавить концепции"
+      "selectConceptSet": "Выбрать набор концептов",
+      "addConcepts": "Добавить концепты"
     },
     "conceptSetBuilder": {
-      "newConceptSet": "Новый набор концепций",
-      "selectConceptSet": "Выберите набор концепций..."
+      "newConceptSet": "Новый набор концептов",
+      "selectConceptSet": "Выберите набор концептов..."
     },
     "generation": {
       "generate": "Генерировать"
@@ -743,7 +743,7 @@
     },
     "conceptHierarchyDialog": {
       "ancestors": "Предки",
-      "descendants": "Наследники"
+      "descendants": "Потомки"
     },
     "windowExpression": {
       "eventEnds": "событие заканчивается",
@@ -954,32 +954,32 @@
   },
   "cs": {
     "manager": {
-      "conceptsRemovedMessage": "Следующие концепции были удалены, поскольку оптимизированная версия уже их содержит.",
-      "optimizedConceptSetHeading": "Оптимизированный набор концепций",
+      "conceptsRemovedMessage": "Следующие концепты удалены, поскольку оптимизированная версия уже включает их.",
+      "optimizedConceptSetHeading": "Оптимизированный набор концептов",
       "optimize": "Оптимизировать",
-      "conceptsRemovedHeading": "Наборы концепций удалены",
-      "pleaseReviewMessage": "Пожалуйста пересмотрите параметры оптимизации и сохранения",
-      "pleaseProvideNameMessage": "Пожалуйста, назовите ваш новый набор концепций:",
-      "overwriteOption": "Перезаписать текущий набор концепций",
-      "fullyOptimizedMessage": "Текущее определение набора концепций полностью оптимизировано.",
-      "createOption": "Создать новый набор концепций",
-      "attemptingToFindMessage": "Попытка найти оптимальное определение для текущего набора концепций...",
+      "conceptsRemovedHeading": "Удалённые концепты",
+      "pleaseReviewMessage": "Проверьте оптимизированное определение и выберите способ сохранения.",
+      "pleaseProvideNameMessage": "Укажите название нового набора концептов:",
+      "overwriteOption": "Перезаписать текущий набор концептов",
+      "fullyOptimizedMessage": "Текущее определение набора концептов полностью оптимизировано.",
+      "createOption": "Создать новый набор концептов",
+      "attemptingToFindMessage": "Поиск оптимального определения для этого набора концептов...",
       "concept": {
-        "standard": "Стандартная",
-        "nonStandard": "Нестандартная",
+        "standard": "Стандартный",
+        "nonStandard": "Нестандартный",
         "classification": "Классификация",
         "tabs": {
           "details": {
-            "conceptCode": "Код концепции",
-            "invalidReason": "Причина невалидности",
-            "standardConcept": "Стандартная концепция"
+            "conceptCode": "Код концепта",
+            "invalidReason": "Причина недействительности",
+            "standardConcept": "Стандартный концепт"
           },
           "relatedConcepts": {
-            "caption": "Связанные концепции"
+            "caption": "Связанные концепты"
           },
           "hierarchy": {
             "caption": "Иерархия",
-            "noHierarchyFoundMessage": "Не найдена иерархия для нестандартных концепций.",
+            "noHierarchyFoundMessage": "Иерархия для нестандартных концептов не найдена.",
             "view": "Отображать:"
           },
           "recordCounts": {
@@ -987,7 +987,7 @@
           }
         }
       },
-      "conceptSetOptimization": "Concept Set Optimization",
+      "conceptSetOptimization": "Оптимизация набора концептов",
       "pasteIdsAddBtn": "Добавить",
       "tabs": {
         "included": "Включено",
@@ -996,26 +996,26 @@
       }
     },
     "browser": {
-      "caption": "Наборы концепций",
+      "caption": "Наборы концептов",
       "compare": {
-        "headingMessage": "Сравнение двух наборов концепций на предмет содержания общих концепций",
-        "modalTitle": "Выберите набор концепций",
+        "headingMessage": "Сравните содержимое двух наборов концептов, чтобы найти общие концепты.",
+        "modalTitle": "Выберите набор концептов",
         "vennDiagram": "Диаграмма Венна",
         "vennDiagramTotalAmountConcepts": "Общее количество концептов: {count}",
-        "conceptSet1": "Набор концепций 1:",
-        "compareConceptSets": "Сравнение наборов концепций",
-        "conceptSet2": "Набор концепций 2:",
-        "compare": "Сравнение"
+        "conceptSet1": "Набор концептов 1:",
+        "compareConceptSets": "Сравнение наборов концептов",
+        "conceptSet2": "Набор концептов 2:",
+        "compare": "Сравнить"
       }
     },
     "conceptAddBox": {
-      "addToConceptSet": "Добавить в набор концепций",
-      "descendants": "Наследники",
-      "exclude": "Исключенные",
-      "mapped": "Сопоставленные"
+      "addToConceptSet": "Добавить в набор концептов",
+      "descendants": "Дочерние концепты",
+      "exclude": "Исключить",
+      "mapped": "Смапленные концепты"
     },
     "conceptSet": {
-      "loadingRecommendedConcepts": "Loading Recommended Concepts"
+      "loadingRecommendedConcepts": "Загрузка рекомендуемых концептов"
     }
   },
   "cc": {
