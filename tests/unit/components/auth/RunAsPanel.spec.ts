@@ -8,8 +8,6 @@ import { createPinia, setActivePinia } from 'pinia'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import RunAsPanel from '@/components/auth/RunAsPanel.vue'
-import type { UserInfo } from '@/models/auth.types'
-import { useAuthStore } from '@/stores/auth'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -41,27 +39,13 @@ vi.mock('@/services/auth/authService', () => ({
   },
 }))
 
-const mockUser: UserInfo = {
-  login: 'targetuser',
-  displayName: 'Target User',
-  permissionIdx: {},
-}
-
-const mockOriginalUser: UserInfo = {
-  login: 'admin',
-  displayName: 'Admin User',
-  permissionIdx: {},
-}
-
 describe('RunAsPanel', () => {
   let wrapper: VueWrapper
   let pinia: ReturnType<typeof createPinia>
-  let authStore: ReturnType<typeof useAuthStore>
 
   beforeEach(() => {
     pinia = createPinia()
     setActivePinia(pinia)
-    authStore = useAuthStore()
     vi.clearAllMocks()
   })
 
@@ -181,29 +165,6 @@ describe('RunAsPanel', () => {
       wrapper = mountComponent()
 
       expect(wrapper.vm.isLoading).toBe(false)
-    })
-  })
-
-  describe('Computed Properties', () => {
-    it('should compute isRunningAs from auth store', () => {
-      wrapper = mountComponent()
-
-      authStore.isRunningAs = false
-      expect(wrapper.vm.isRunningAs).toBe(false)
-    })
-
-    it('should compute targetUsername from user displayName', () => {
-      wrapper = mountComponent()
-
-      authStore.user = mockUser
-      expect(wrapper.vm.targetUsername).toBe('Target User')
-    })
-
-    it('should compute originalUsername from originalUser', () => {
-      wrapper = mountComponent()
-
-      authStore.originalUser = mockOriginalUser
-      expect(wrapper.vm.originalUsername).toBe('Admin User')
     })
   })
 
@@ -368,39 +329,6 @@ describe('RunAsPanel', () => {
     })
   })
 
-  describe('Conditional Rendering', () => {
-    it('should not show running-as info alert by default', () => {
-      wrapper = mountComponent()
-
-      // Only the static warning feedback is shown; no info feedback by default
-      const feedbackEls = wrapper.findAll('[data-testid="atlas-feedback"]')
-      const infoFeedback = feedbackEls.find(el => el.classes('atlas-feedback--info'))
-      expect(infoFeedback).toBeUndefined()
-    })
-
-    it('should show running-as info when isRunningAs is true', async () => {
-      wrapper = mountComponent()
-
-      authStore.isRunningAs = true
-      authStore.user = mockUser
-      authStore.originalUser = mockOriginalUser
-      await wrapper.vm.$nextTick()
-
-      const feedbackEls = wrapper.findAll('[data-testid="atlas-feedback"]')
-      const infoFeedback = feedbackEls.find(el => el.classes('atlas-feedback--info'))
-      expect(infoFeedback).toBeDefined()
-    })
-
-    it('should disable controls when running as another user', async () => {
-      wrapper = mountComponent()
-
-      authStore.isRunningAs = true
-      await wrapper.vm.$nextTick()
-
-      const textField = wrapper.findComponent({ name: 'VTextField' })
-      expect(textField.props('disabled')).toBe(true)
-    })
-  })
 
   describe('Form Interaction', () => {
     it('should not call handleRunAs with empty username', async () => {

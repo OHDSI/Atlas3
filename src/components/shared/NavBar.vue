@@ -240,6 +240,31 @@
                   {{ apiKeysLabel }}
                 </v-list-item-title>
               </AtlasListItem>
+              <AtlasListItem
+                v-if="canRunAs"
+                data-testid="account-menu-run-as"
+                @click="runAsDialogOpen = true"
+              >
+                <template #prepend>
+                  <AtlasIcon>mdi-account-switch</AtlasIcon>
+                </template>
+                <v-list-item-title>
+                  {{ runAsLabel }}
+                </v-list-item-title>
+              </AtlasListItem>
+              <AtlasListItem
+                v-if="auth.isRunningAs.value"
+                data-testid="account-menu-end-run-as"
+                :disabled="isEndingRunAs"
+                @click="handleEndRunAs"
+              >
+                <template #prepend>
+                  <AtlasIcon>mdi-account-arrow-left</AtlasIcon>
+                </template>
+                <v-list-item-title>
+                  {{ endRunAsLabel }}
+                </v-list-item-title>
+              </AtlasListItem>
               <AtlasListItem @click="handleLogout">
                 <template #prepend>
                   <AtlasIcon>mdi-logout</AtlasIcon>
@@ -256,11 +281,17 @@
 
     <!-- Login Modal -->
     <LoginModal />
+    <AtlasDialog
+      v-model="runAsDialogOpen"
+      :max-width="440"
+    >
+      <RunAsPanel @completed="runAsDialogOpen = false" />
+    </AtlasDialog>
   </header>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
@@ -277,6 +308,7 @@ import { pluginRegistry } from '@/plugins/core/PluginRegistry'
 import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
 import LoginModal from '@/components/auth/LoginModal.vue'
+import RunAsPanel from '@/components/auth/RunAsPanel.vue'
 import LanguageSelector from '@/components/LanguageSelector.vue'
 import NotificationInbox from '@/components/shared/NotificationInbox.vue'
 import ThemeToggle from './ThemeToggle.vue'
@@ -296,7 +328,7 @@ interface NavigationItem {
 const router = useRouter()
 const auth = useAuth()
 const { t } = useI18n()
-const { hasAnyPermission } = usePermissions()
+const { hasPermission, hasAnyPermission } = usePermissions()
 const uiStore = useUIStore()
 
 const { items: adminTabMounts } = usePluginMounts('admin-tabs')
@@ -330,7 +362,12 @@ const logoNavigateTo = ref('/')
 const signInLabel = t('components.userBar.signin')
 const signOutLabel = t('components.userBar.signout')
 const apiKeysLabel = t('components.userBar.apiKeys')
+const runAsLabel = t('components.welcome.runas')
+const endRunAsLabel = t('auth.endRunAs')
 const logoAriaLabel = computed(() => t('a11y.logoHome').value)
+const runAsDialogOpen = ref(false)
+const isEndingRunAs = ref(false)
+const canRunAs = computed(() => auth.isAuthenticated.value && hasPermission('admin:run-as'))
 
 // Core navigation items (will be filtered based on plugin configuration)
 const coreNavigationItems: NavigationItem[] = [
@@ -437,6 +474,17 @@ async function handleLogout() {
     await auth.logout()
   } catch (error) {
     logger.error('NavBar', 'Logout failed', error)
+  }
+}
+
+async function handleEndRunAs() {
+  isEndingRunAs.value = true
+  try {
+    await auth.endRunAs()
+  } catch (error) {
+    logger.error('NavBar', 'Failed to end Run-As session', error)
+  } finally {
+    isEndingRunAs.value = false
   }
 }
 

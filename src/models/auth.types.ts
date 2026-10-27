@@ -128,8 +128,7 @@ export interface RunAsRequest {
 
 export interface RunAsState {
   isRunningAs: boolean
-  originalUser: UserInfo | null
-  targetUser: UserInfo | null
+  depth: number
 }
 
 export interface TokenRefreshState {

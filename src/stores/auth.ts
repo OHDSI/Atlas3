@@ -27,7 +27,7 @@ export const useAuthStore = defineStore('auth', {
     refreshTimeoutId: number | null
     isRefreshingUser: boolean
     isRunningAs: boolean
-    originalUser: UserInfo | null
+    runAsDepth: number
     sessionExpiryModalOpen: boolean
     sessionExpiresAt: Date | null
   } => ({
@@ -48,7 +48,7 @@ export const useAuthStore = defineStore('auth', {
     refreshTimeoutId: null,
     isRefreshingUser: false,
     isRunningAs: false,
-    originalUser: null,
+    runAsDepth: 0,
     sessionExpiryModalOpen: false,
     sessionExpiresAt: null,
   }),
@@ -66,7 +66,7 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
-    setToken(token: string | null) {
+    setToken(token: string | null, persistence: 'persistent' | 'run-as' | 'memory' = 'persistent') {
       if (!token) {
         this.clearAuth()
         return
@@ -84,7 +84,12 @@ export const useAuthStore = defineStore('auth', {
       this.tokenExpired = parsedToken.isExpired
       this.isAuthenticated = !parsedToken.isExpired && getAuthConfig().userAuthenticationEnabled
 
-      storageManager.saveToken(token)
+      if (persistence === 'persistent') {
+        storageManager.clearRunAsTokenStack()
+        storageManager.saveToken(token)
+      }
+
+      this.syncRunAsState()
 
       this.scheduleTokenRefresh()
     },
@@ -182,7 +187,7 @@ export const useAuthStore = defineStore('auth', {
       this.tokenExpired = false
       this.errorMessage = null
       this.isRunningAs = false
-      this.originalUser = null
+      this.runAsDepth = 0
       this.isRefreshingUser = false
       // The expiry warning is tied to the active session — once auth is
       // cleared (logout, cross-tab sync, refresh failure) the modal must
@@ -194,19 +199,10 @@ export const useAuthStore = defineStore('auth', {
       this.cancelRefreshTimer()
     },
 
-    setRunAsState(targetUser: UserInfo) {
-      // Save original user if not already running as someone
-      if (!this.isRunningAs && this.user) {
-        this.originalUser = this.user
-      }
-      this.isRunningAs = true
-      this.setUser(targetUser)
-    },
-
-    exitRunAsState(originalUser: UserInfo) {
-      this.isRunningAs = false
-      this.setUser(originalUser)
-      this.originalUser = null
+    syncRunAsState() {
+      const stack = storageManager.getRunAsTokenStack()
+      this.isRunningAs = stack.length > 1
+      this.runAsDepth = Math.max(0, stack.length - 1)
     },
 
     setError(message: string | null) {
@@ -309,7 +305,7 @@ export const useAuthStore = defineStore('auth', {
       const authClient = storageManager.getAuthClient()
 
       if (token) {
-        this.setToken(token)
+        this.setToken(token, storageManager.hasRunAsSession() ? 'run-as' : 'memory')
       }
       if (authClient) {
         this.setAuthClient(authClient)
@@ -370,6 +366,11 @@ export const useAuthStore = defineStore('auth', {
 
           syncDebounceTimer = setTimeout(async () => {
             syncDebounceTimer = null
+
+            if (this.isRunningAs) {
+              logger.debug('Auth', 'Ignoring cross-tab token update during an isolated Run-As session')
+              return
+            }
 
             if (newValue) {
               if (newValue !== this.token) {

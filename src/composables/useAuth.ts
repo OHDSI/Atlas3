@@ -20,7 +20,7 @@ export function useAuth() {
     loginModalOpen: computed(() => authStore.loginModalOpen),
     permissions: computed(() => authStore.permissions),
     isRunningAs: computed(() => authStore.isRunningAs),
-    originalUser: computed(() => authStore.originalUser),
+    runAsDepth: computed(() => authStore.runAsDepth),
 
     async login(provider: AuthProvider, credentials?: LoginCredentials): Promise<void> {
       return authService.login(provider, credentials)
@@ -40,6 +40,10 @@ export function useAuth() {
 
     async runAs(targetUsername: string): Promise<void> {
       return authService.runAs(targetUsername)
+    },
+
+    async endRunAs(): Promise<void> {
+      return authService.endRunAs()
     },
 
     hasPermission(permission: string): boolean {

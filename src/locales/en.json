@@ -2435,6 +2435,7 @@
     "sessionActiveMinutes": "Session active for {minutes} minutes",
     "currentlyRunningAs": "Currently running as:",
     "originalUser": "Original user: {username}",
+    "endRunAs": "End Run As",
     "targetUsername": "Target Username",
     "enterUsernameToImpersonate": "Enter username to impersonate",
     "runAsWarning": "Running as another user will assume their permissions and identity. All actions will be performed as the target user.",
