@@ -156,13 +156,13 @@
       "intersectHaving": "Имеющий",
       "intersectAll": "Все",
       "intersectAny": "Любые",
-      "unitPersons": "Люди"
+      "unitPersons": "Пациенты"
     },
     "analysisExecution": {
       "buttons": {
-        "generate": "Выполнить",
+        "generate": "Генерировать",
         "cancel": "Отмена",
-        "rerun": "Перезапуск"
+        "rerun": "Запустить повторно"
       }
     },
     "windowedCriteria": {
@@ -181,26 +181,26 @@
       "signout": "Выйти"
     },
     "welcome": {
-      "runas": "Войти как",
+      "runas": "Работать от имени пользователя",
       "username": "Имя пользователя",
       "password": "Пароль"
     },
     "cohortExpressionEditor": {
       "inclusionCriteria": "Критерии включения",
-      "addTrimmingOptions": "добавить параметры обрезки ...",
-      "noCensoring": "Нет цензуры",
+      "addTrimmingOptions": "добавить параметры цензурирования...",
+      "noCensoring": "Без цензурирования",
       "days": "дней",
-      "eraCollapseGap": "Укажите размер разрыва коллапса эпохи:",
-      "leftCensorStartDates": "Даты начала когорты левого цензора в",
-      "rightCensorEndDates": "Дата окончания когорты правого цензора",
-      "entryEvents": "События входа",
-      "cohortEras": "Когорт Эра"
+      "eraCollapseGap": "Допустимый перерыв при объединении эр:",
+      "leftCensorStartDates": "Левое цензурирование: дата начала когорты не ранее",
+      "rightCensorEndDates": "Правое цензурирование: дата окончания когорты не позднее",
+      "entryEvents": "События входа в когорту",
+      "cohortEras": "Эры когорты"
     },
     "conditionEra": {
-      "title": "состояние эпохи"
+      "title": "эра состояния из"
     },
     "conditionOccurrence": {
-      "title": "возникновение условия",
+      "title": "событие состояния из",
       "attributes": {
         "visitType": {
           "label": "Посещение"
@@ -208,7 +208,7 @@
       }
     },
     "criteriaGroup": {
-      "addCriteria": "Добавить критерии в группу ...",
+      "addCriteria": "Добавить критерии в группу...",
       "clickToChangeMatchType": "Нажмите, чтобы изменить тип соответствия",
       "noEventsInGroup": "В группе нет событий. Добавьте события для построения логики критериев."
     },
@@ -233,7 +233,7 @@
       "empty": "Имя не может быть пустым."
     },
     "tags": {
-      "tagNamePlaceholder": "Имя тега",
+      "tagNamePlaceholder": "Название тега",
       "tagGroupLabel": "Группа тегов *",
       "tagNameLabel": "Имя тега *",
       "colorOptional": "Цвет (необязательно)",
@@ -682,18 +682,18 @@
       "mainNavigation": "Основная"
     },
     "drugExposure": {
-      "title": "наркотическое воздействие"
+      "title": "приём препарата из"
     },
     "correlatedCriteria": {
-      "restrictToSameVisit": "ограничить одно и то же посещение",
+      "restrictToSameVisit": "ограничить событиями в рамках того же посещения",
       "allowEventsOutsideObservation": "разрешить события за пределами периода наблюдения",
       "distinctColumn": {
-        "standardConcept": "Стандартная концепция",
+        "standardConcept": "Стандартный концепт",
         "visit": "Посещение"
       }
     },
     "deviceExposure": {
-      "title": "устройство воздействия",
+      "title": "воздействие устройства из",
       "attributes": {
         "visitType": {
           "label": "Посещение"
@@ -701,22 +701,22 @@
       }
     },
     "doseEra": {
-      "title": "эра дозы"
+      "title": "эра дозирования из"
     },
     "drugEra": {
-      "title": "и другая эра"
+      "title": "эра применения препарата из"
     },
     "measurement": {
       "title": "измерение"
     },
     "procedureOccurrence": {
-      "title": "процедура возникновения"
+      "title": "событие процедуры из"
     },
     "observation": {
       "title": "наблюдение"
     },
     "visitDetail": {
-      "title": "деталь посещения"
+      "title": "Детализация Посещения из"
     },
     "specimen": {
       "title": "образец"
@@ -729,7 +729,7 @@
     },
     "criteria": {
       "addAttribute": "Добавить атрибут...",
-      "selectConceptSet": "Выбрать набор концепций"
+      "selectConceptSet": "Выбрать набор концептов"
     },
     "workbench": {
       "hideAnalysisDesign": "Скрыть дизайн анализа",
@@ -751,13 +751,13 @@
     },
     "endStrategy": {
       "censoring": {
-        "title": "Цензура События"
+        "title": "Цензурирующие события"
       },
       "customEra": {
-        "selectConceptSet": "Выберите набор концепций лекарств"
+        "selectConceptSet": "Выберите набор концептов препаратов"
       },
       "selector": {
-        "customEra": "Воздействие лекарств"
+        "customEra": "Приём препаратов"
       }
     },
     "charts": {
@@ -1019,32 +1019,32 @@
     }
   },
   "cc": {
-    "title": "Характеризация Когорт",
+    "title": "Характеризации когорт",
     "tabs": {
       "featureAnalyses": {
-        "title": "Функциональные анализы",
-        "createLabel": "Новый функциональный анализ"
+        "title": "Анализы признаков",
+        "createLabel": "Новый анализ признаков"
       }
     },
     "viewEdit": {
-      "deleteConfirmation": "Удаление Характеризации нельзя будет отменить! Вы уверены?",
+      "deleteConfirmation": "Удалить характеризацию когорты? Это действие нельзя отменить!",
       "tabs": {
         "versions": "История версий",
         "messages": "Сообщения"
       },
       "design": {
         "fa": {
-          "title": "Функциональные анализы"
+          "title": "Анализы признаков"
         },
         "subgroups": {
           "title": "Анализы подгрупп",
           "newSubgroup": "Новая подгруппа",
-          "noSubgroups": "Подгруппы не назначены",
+          "noSubgroups": "Подгруппы не заданы",
           "subgroupOnly": "Вычислять только анализы подгрупп",
-          "namePlaceholder": "Наименование подгруппы",
+          "namePlaceholder": "Название страты",
           "messages": {
-            "nameIsEmpty": "Наименование подгруппы не заполнено.",
-            "nameIsNotUnique": "Наименование подгруппы не уникально."
+            "nameIsEmpty": "Название подгруппы не указано.",
+            "nameIsNotUnique": "Название подгруппы повторяется."
           }
         }
       },
@@ -1057,20 +1057,20 @@
     },
     "fa": {
       "tabs": {
-        "conceptSets": "Наборы концепций"
+        "conceptSets": "Наборы концептов"
       },
-      "saveError": "Ошибка сохранения анализа.",
+      "saveError": "Не удалось сохранить анализ признаков.",
       "domain": "Домен:",
-      "preset": "Пресет",
+      "preset": "Шаблон",
       "custom": "Пользовательский",
-      "featureExtractionPresetName": "Имя пресета",
-      "criteriaName": "Имя критерия",
-      "copySqlToClipboard": "Скопировать SQL шаблона в бфер обмена",
-      "copiedToClipboard": "Скопировано!",
-      "availableVariables": "Доступные переменные",
-      "availableVariablesNote": "переменные, определенные в параметрах Характеризации"
+      "featureExtractionPresetName": "Название шаблона FeatureExtraction:",
+      "criteriaName": "Название критерия",
+      "copySqlToClipboard": "Скопировать шаблон SQL анализа в буфер обмена",
+      "copiedToClipboard": "Скопировано в буфер обмена!",
+      "availableVariables": "Доступные переменные:",
+      "availableVariablesNote": "все переменные, заданные в параметрах характеризации когорт"
     },
-    "newCharacterization": "Новая характеристика"
+    "newCharacterization": "Новая характеризация"
   },
   "home": {
     "description": "АТЛАС это продукт с открытым исходным кодом, разработанный в рамках <a href=\"http://www.ohdsi.org\" target=\"_new\">OHDSI</a>, предоставляющий доступ к данным пациентов и аналитике.",
@@ -1087,29 +1087,29 @@
     }
   },
   "ir": {
-    "deleteConfirmation": "Удаление Анализа инцидентности нельзя будет отменить! Вы уверены?",
+    "deleteConfirmation": "Удалить анализ уровня заболеваемости? Это действие нельзя отменить!",
     "tabs": {
-      "conceptSets": "Наборы концепций",
+      "conceptSets": "Наборы концептов",
       "versions": "История версий"
     },
     "editor": {
       "chooseACohort": "Выберите когорту",
       "stratifyCriteria": "Критерий стратификации:",
-      "outcomes": "Результаты"
+      "outcomes": "Исходы"
     },
     "results": {
-      "persons": "Люди",
+      "persons": "Пациенты",
       "cases": "Случаи",
-      "proportion": "Пропорция",
+      "proportion": "Доля",
       "timeAtRiskYears": "(годы)",
-      "rate": "Отношение",
+      "rate": "Уровень заболеваемости",
       "started": "Запущено",
-      "running": "Запущено",
+      "running": "Выполняется",
       "failed": "ОШИБКА",
       "stratifyRule": "Правило стратификации"
     },
     "workbench": {
-      "treemap": "TreeMap",
+      "treemap": "Древовидная диаграмма",
       "table": "Таблица"
     }
   },
@@ -1134,8 +1134,8 @@
     "title": "Задания"
   },
   "configuration": {
-    "title": "Конфигурация",
-    "changeSourcePriorities": "Менять приоритеты источника:",
+    "title": "Настройки",
+    "changeSourcePriorities": "Изменять приоритеты источников в:",
     "newSource": "Новый источник",
     "buttons": {
       "clearConfigurationCache": "Очистить кэш конфигурации",
@@ -1143,12 +1143,12 @@
       "tagManagement": "Управление тегами"
     },
     "priorityOptions": {
-      "session": "В текущей сессии",
-      "application": "Во всем приложении"
+      "session": "В текущем сеансе",
+      "application": "Во всём приложении"
     },
     "alerts": {
-      "clearLocalCache": "Локальное хранилище очищено. Пожалуйста, перезагрузите страницу, чтобы обновитьинформацию о конфигурации.",
-      "clearServerCache": "Серверный кэш очищен"
+      "clearLocalCache": "Локальное хранилище очищено. Перезагрузите страницу, чтобы обновить сведения о конфигурации.",
+      "clearServerCache": "Серверный кэш очищен."
     },
     "confirms": {
       "clearServerCache": "Вы действительно хотите очистить серверный кэш?"
@@ -1156,7 +1156,7 @@
     "viewEdit": {
       "source": {
         "validation": {
-          "empty": "Имя источника не может быть пустым"
+          "empty": "Название источника не указано"
         },
         "label": "Ключ источника:",
         "confirms": {
@@ -1171,7 +1171,7 @@
         "title": "Строка подключения"
       },
       "username": {
-        "label": "Пользователь:"
+        "label": "Имя пользователя:"
       },
       "password": {
         "label": "Пароль:"
@@ -1190,7 +1190,7 @@
           "label": "Имя пользователя и пароль"
         },
         "sourceDaimons": {
-          "label": "Даймоны источника"
+          "label": "Схемы БД источника"
         }
       },
       "bigQuery": {
@@ -1206,7 +1206,7 @@
         },
         "provider": {
           "connection": {
-            "failed": "Ошибка проверки соединения. Пожалуйста, смотрите подробности в логах сервера."
+            "failed": "Не удалось установить соединение. Подробности см. в журналах сервера."
           }
         }
       }
@@ -1215,14 +1215,14 @@
       "title": "Роли",
       "tabs": {
         "users": "Пользователи",
-        "permissions": "Разрешения",
+        "permissions": "Права доступа",
         "utilities": "Утилиты"
       }
     },
     "tagManagement": {
       "createTag": "Создать тег",
       "editTag": "Редактировать тег",
-      "protected": "Защищенный"
+      "protected": "Защищённый"
     }
   },
   "licenseAgreement": {
@@ -1246,42 +1246,42 @@
     },
     "cohortDefinitionManager": {
       "confirms": {
-        "delete": "Удаление Когорты нельзя будет отменить! Вы уверены?"
+        "delete": "Удалить определение когорты? Это действие нельзя отменить!"
       },
       "panels": {
         "json": "JSON",
         "reload": "Перезагрузить",
-        "viewReports": "Просмотр отчетов"
+        "viewReports": "Просмотр отчётов"
       },
       "tabs": {
-        "conceptSets": "Наборы концепций",
+        "conceptSets": "Наборы концептов",
         "versions": "История версий"
       }
     },
     "cohortreports": {
       "tabs": {
         "byEvent": "По событию",
-        "byPerson": "По человеку"
+        "byPerson": "По пациентам"
       }
     },
     "costUtilization": {
       "visualization": "Визуализация"
     },
     "newDefinition": "Новая когорта",
-    "newDefinitionTitle": "Создать новую когорту",
-    "noConceptSets": "Нет концепций для экспорта",
+    "newDefinitionTitle": "Создать новое определение когорты",
+    "noConceptSets": "Нет наборов концептов для экспорта",
     "generation": {
       "section": {
         "title": "Генерация"
       },
       "row": {
-        "samples": "Образцы"
+        "samples": "Выборки пациентов"
       }
     },
-    "cohortDefinitions": "Когорты",
+    "cohortDefinitions": "Определения когорт",
     "ruleDescription": "Описание",
     "conceptSetsDialog": {
-      "title": "Наборы концепций"
+      "title": "Наборы концептов"
     }
   },
   "const": {
@@ -1516,26 +1516,26 @@
     "results": {
       "table": {
         "min": "Минимум",
-        "prevalence": "Распространенность"
+        "prevalence": "Распространённость"
       }
     }
   },
   "featureAnalyses": {
     "editor": {
       "prevalence": {
-        "addCriteria": "Добавить критерий"
+        "addCriteria": "Добавить признак по критериям"
       },
       "distribution": {
-        "addCriteria": "Добавить критерий"
+        "addCriteria": "Добавить признак по критериям"
       }
     },
     "aggregateDomain": {
-      "condition": "Условие",
-      "conditionEra": "Эра состояния",
+      "condition": "Состояние",
+      "conditionEra": "Эра Состояния",
       "demographics": "Демография",
       "device": "Устройство",
-      "drug": "Лекарство",
-      "drugEra": "Эра лекарств",
+      "drug": "Препарат",
+      "drugEra": "Эра Препарата",
       "measurement": "Измерение",
       "observation": "Наблюдение",
       "procedure": "Процедура",
@@ -1548,22 +1548,22 @@
   },
   "criteria": {
     "conditionEra": {
-      "name": "Эра состояния"
+      "name": "Эра Состояния"
     },
     "conditionOccurrence": {
-      "name": "Встречаемость состояния",
+      "name": "Событие Состояния",
       "description": {
         "initial": "Найти пациентов с конкретными диагнозами."
       }
     },
     "death": {
-      "name": "Смерти"
+      "name": "Смерть"
     },
     "drugEra": {
-      "name": "Эра лекарств"
+      "name": "Эра Препарата"
     },
     "drugExposure": {
-      "name": "Воздействие лекарств"
+      "name": "Приём Препарата"
     },
     "measurement": {
       "name": "Измерение"
@@ -1572,7 +1572,7 @@
       "name": "Наблюдение"
     },
     "observationPeriod": {
-      "name": "Период наблюдений"
+      "name": "Период Наблюдения"
     }
   },
   "attributes": {
@@ -1581,7 +1581,7 @@
     }
   },
   "config": {
-    "title": "Конфигурация",
+    "title": "Настройки",
     "cache": {
       "clearButton": "Очистить кэш конфигурации"
     },
@@ -1590,28 +1590,28 @@
       "table": {
         "headers": {
           "color": "Цвет",
-          "icon": "Иконка",
-          "mandatory": "Обязательный",
-          "multiple": "Несколько"
+          "icon": "Значок",
+          "mandatory": "Обязательные теги",
+          "multiple": "Несколько тегов"
         }
       },
       "dialog": {
         "editTitle": "Редактировать группу тегов",
         "fields": {
           "name": {
-            "label": "Имя"
+            "label": "Название"
           },
           "color": {
             "label": "Цвет"
           },
           "icon": {
-            "label": "Иконка"
+            "label": "Значок"
           },
           "description": {
             "label": "Описание"
           },
           "mandatory": {
-            "label": "Обязательный"
+            "label": "Обязательные теги"
           }
         }
       }
@@ -1629,10 +1629,10 @@
       "revoke": "Отозвать"
     },
     "create": {
-      "name": "Имя",
+      "name": "Название",
       "description": "Описание",
-      "generate": "генерировать",
-      "done": "Выполнено"
+      "generate": "Сгенерировать",
+      "done": "Готово"
     }
   },
   "criteriaAttributes": {
@@ -1649,7 +1649,7 @@
       "label": "Дата окончания"
     },
     "conditionType": {
-      "label": "Тип условия"
+      "label": "Тип состояния"
     },
     "endDate": {
       "label": "Дата окончания"
@@ -1664,13 +1664,13 @@
       "label": "Раса"
     },
     "ethnicity": {
-      "label": "Национальность"
+      "label": "Этнос"
     },
     "deviceType": {
       "label": "Тип устройства"
     },
     "drugType": {
-      "label": "Тип лекарства"
+      "label": "Тип препарата"
     },
     "episodeEndDate": {
       "label": "Дата окончания"
@@ -1688,12 +1688,12 @@
       "label": "Тип процедуры"
     },
     "specimenType": {
-      "label": "v"
+      "label": "Тип образца"
     }
   },
   "auth": {
     "credentials": {
-      "username": "Пользователь"
+      "username": "Имя пользователя"
     }
   }
 }
