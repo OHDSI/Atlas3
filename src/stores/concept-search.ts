@@ -12,6 +12,7 @@ import { useWebAPIStore } from '@/stores/webapi'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
 import { useConceptFacets } from '@/composables/useConceptFacets'
+import { trackAction } from '@/services/analytics/telemetry'
 
 function createConceptSearchStore(id: string) {
   return defineStore(id, () => {
@@ -143,6 +144,15 @@ function createConceptSearchStore(id: string) {
       }
 
       allConcepts.value = result.data
+      // The single point every search entry path funnels through, and the only
+      // place the result count is known. `term.length` is recorded but never
+      // `term` itself — the search string is exactly what the scrubbing in
+      // telemetry.ts exists to keep out.
+      trackAction('concept.search', {
+        'search.result_count': result.data.length,
+        'search.term_length': term.length,
+        'search.source_key': sourceKey,
+      })
       loading.value = false
       page.value = 1
       // A new query changes the available value space — drop stale facets.
