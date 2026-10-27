@@ -1,5 +1,9 @@
 {
   "locale": "ru",
+  "a11y": {
+    "skipToMain": "Перейти к основному содержимому",
+    "logoHome": "Главная страница OHDSI ATLAS"
+  },
   "datatable": {
     "language": {
       "search": "Фильтр:",
@@ -12,17 +16,19 @@
         "copy": "Копировать",
         "changeColumns": "Изменить столбцы"
       }
-    }
+    },
+    "itemsPerPage": "Строк на странице:"
   },
   "format": {
-    "number": "# ###,##",
+    "number": "# ###.##",
     "date": {
-      "shortdate": "DD.MM",
-      "mediumdate": "DD.MM.YYYY",
-      "datetime": "DD.MM.YYYY HH:mm",
-      "datetimeWithSeconds": "DD.MM.YYYY HH:mm:ss",
-      "minutes": "мин",
-      "seconds": "сек"
+      "shortdate": "MM/dd",
+      "mediumdate": "MM/dd/YYYY",
+      "datetime": "MM/DD/YYYY h:mm A",
+      "datetimeWithSeconds": "MM/DD/YYYY h:mm:ss A",
+      "minutes": "min",
+      "seconds": "sec",
+      "invalid": "Invalid Date"
     }
   },
   "executionStatus": {
@@ -33,30 +39,43 @@
     }
   },
   "common": {
-    "loading": "Загрузка",
-    "loadingWithDots": "Загрузка...",
-    "save": "Сохранить",
-    "close": "Закрыть",
-    "copy": "Копировать",
-    "create": "Создать",
-    "configureAccess": "Настроить доступ",
-    "delete": "Удалить",
-    "download": "Скачать",
-    "import": "Импорт",
-    "export": "Экспорт",
-    "daysAbbr": "д",
-    "and": "и",
-    "cancel": "Отмена",
-    "search": "Поиск",
-    "preview": "Предпросмотр",
-    "refresh": "Обновить",
-    "days": "дней",
+    "authorship": {
+      "created": "Создано",
+      "createdBy": "Автор",
+      "updated": "Обновлено",
+      "updatedBy": "Автор изменений"
+    },
     "add": "Добавить",
-    "select": "Выбрать",
-    "copyToClipboard": "Скопировать в буфер обмена",
+    "and": "и",
+    "anonymous": "аноним",
+    "apply": "Применить",
+    "cancel": "Отмена",
+    "close": "Закрыть",
+    "configureAccess": "Настроить доступ",
     "configureAccessModal": {
       "revoke": "Отозвать"
     },
+    "copy": "Копировать",
+    "copyToClipboard": "Скопировать в буфер обмена",
+    "create": "Создать",
+    "days": "дней",
+    "daysAbbr": "д",
+    "delete": "Удалить",
+    "discardChanges": "Отменить изменения?",
+    "download": "Скачать",
+    "export": "Экспорт",
+    "import": "Импорт",
+    "keepEditing": "Продолжить редактирование",
+    "loading": "Загрузка",
+    "loadingWithDots": "Загрузка...",
+    "preview": "Предпросмотр",
+    "read": "Чтение",
+    "refresh": "Обновить",
+    "retry": "Повторить",
+    "save": "Сохранить",
+    "search": "Поиск",
+    "searchTable": "Поиск по таблице…",
+    "select": "Выбрать",
     "menu": "Меню",
     "noData": "Нет данных",
     "tags": "Теги",
@@ -64,109 +83,402 @@
     "saveAsCurrentVersion": "Сохранить как текущую версию",
     "unsavedWarning": "Несохранённые изменения будут потеряны. Продолжить?",
     "savePreviewWarning": "Сохранить как текущую версию?",
-    "anonymous": "аноним",
     "conceptSet": "Набор концептов",
     "cohort": "Когорта",
-    "apply": "Применять",
-    "confirm": "Подтвердить",
-    "edit": "Редактировать",
-    "cannotUndo": "Это действие нельзя отменить.",
-    "authorship": {
-      "created": "Создано",
-      "updated": "Обновлено"
-    },
+    "write": "Запись",
+    "allDomains": "Все домены",
+    "columns": "Столбцы",
     "description": "Описание",
+    "confirm": "Подтвердить",
+    "back": "Назад",
+    "tileView": "Плиточное представление",
+    "requiredField": "Это поле обязательно для заполнения",
+    "edit": "Редактировать",
+    "editCriteria": "Редактировать критерии",
+    "unsavedChanges": "Несохранённые изменения",
+    "discard": "Отменить изменения",
+    "cohortInformation": "Информация о когорте",
+    "duplicate": "Создать копию",
+    "noPermission": "У вас нет прав для этого действия",
+    "filters": "Фильтры",
+    "from": "С",
+    "to": "По",
+    "createdFrom": "Создано с",
+    "createdTo": "Создано по",
+    "modifiedFrom": "Изменено с",
+    "modifiedTo": "Изменено по",
+    "errorLoadingCohorts": "Не удалось загрузить когорты",
+    "enterCohortDescription": "Введите описание когорты (необязательно)",
+    "addTag": "Добавить тег",
+    "pickColor": "Выбрать цвет",
+    "selectItemsPerPage": "Выберите количество строк на странице",
+    "downloadFile": "Скачать в виде файла",
+    "reset": "Сбросить",
+    "clearSearch": "Очистить поиск",
+    "concepts": "Концепты",
+    "startDateAdjustment": "Корректировка даты начала",
+    "startWith": "Отсчитывать начало от",
+    "offsetDays": "Смещение (дней)",
+    "endDateAdjustment": "Корректировка даты окончания",
+    "endWith": "Отсчитывать окончание от",
+    "presets": "Быстрые шаблоны",
+    "untitled": "Без названия",
+    "choose": "Выбрать",
     "both": "Оба",
     "match": "Совпадение",
+    "history": "История",
+    "unsavedChangesMessage": "У вас есть несохранённые изменения. Вы уверены, что хотите закрыть?",
+    "reportType": "Тип отчёта",
+    "start": "Начало",
+    "end": "Окончание",
+    "previewMode": "Предпросмотр",
     "of": "из",
+    "goBack": "Назад",
     "cohortDefinition": "Определение когорты",
+    "filtering": "Фильтрация",
+    "importCohort": "Импорт определения когорты",
+    "deleteCohortTitle": "Удалить когорту?",
+    "cannotUndo": "Это действие нельзя отменить.",
+    "eventEnds": "Окончание события",
+    "eventStarts": "Начало события",
+    "indexEnds": "Окончание индексного события",
+    "indexStarts": "Начало индексного события",
     "between": "между",
+    "allDays": "все дни",
+    "day": "день",
+    "noWindow": "Окно не задано",
+    "unset": "не задано",
     "startDate": "Дата начала",
-    "endDate": "Дата окончания"
+    "endDate": "Дата окончания",
+    "dayCountOne": "1 день",
+    "dayCount": "{count} дн.",
+    "notAvailable": "Нет данных",
+    "exportCsv": "Экспорт CSV",
+    "addCohort": "Добавить когорту",
+    "addFeatureAnalysis": "Добавить анализ признаков",
+    "exportDesign": "Экспорт дизайна",
+    "importDesign": "Импорт дизайна",
+    "reloadPage": "Перезагрузить страницу"
   },
   "commonErrors": {
     "noSources": "В текущем WebAPI не определено ни одного источника.<br/>Пожалуйста, добавьте источники на странице <a href=\"#/configure\">конфигурации</a>.",
+    "nameRequired": "Укажите название",
+    "lengthValidation": "Название должно содержать от 1 до 255 символов",
+    "invalid": "Недействителен",
+    "valid": "Действителен",
+    "unexpectedError": "Произошла непредвиденная ошибка. Сведения о ней записаны в журнал для дальнейшего анализа.",
+    "errorDetails": "Подробности ошибки",
+    "somethingWentWrong": "Что-то пошло не так",
+    "exportFailed": "Не удалось выполнить экспорт",
     "copyFailed": "Не удалось скопировать",
-    "deleteFailed": "Не удалось удалить"
+    "deleteFailed": "Не удалось удалить",
+    "unknown": "Неизвестная ошибка"
   },
   "navigation": {
-    "datasources": "Источники данных",
-    "conceptsets": "Концепты",
-    "cohortdefinitions": "Определения когорт",
     "characterizations": "Характеризации",
-    "pathways": "Траектории когорт",
-    "jobs": "Задания",
+    "cohortdefinitions": "Определения когорт",
+    "conceptsets": "Концепты",
+    "datasources": "Источники данных",
+    "featureAnalyses": "Анализы признаков",
     "feedback": "Обратная связь",
     "incidenceRates": "Уровень заболеваемости",
+    "jobs": "Задания",
+    "pathways": "Траектории когорт",
+    "docs": "Руководство пользователя",
     "analysis": "Анализ"
   },
+  "route": {
+    "home": {
+      "title": "Начало"
+    },
+    "cohorts": {
+      "title": "Когорты"
+    },
+    "cohortBuilder": {
+      "title": "Конструктор когорт"
+    },
+    "conceptSets": {
+      "title": "Наборы концептов"
+    },
+    "profiles": {
+      "title": "Профили"
+    },
+    "analysis": {
+      "title": "Анализ"
+    },
+    "characterizations": {
+      "title": "Характеризации"
+    },
+    "featureAnalyses": {
+      "title": "Анализы признаков"
+    },
+    "pathways": {
+      "title": "Траектории когорт"
+    },
+    "incidenceRates": {
+      "title": "Уровень заболеваемости"
+    },
+    "apiKeys": {
+      "title": "Ключи API"
+    },
+    "dataSources": {
+      "title": "Источники данных"
+    },
+    "roleManagement": {
+      "title": "Управление ролями"
+    }
+  },
   "options": {
-    "atMost": "В большинстве",
-    "exactly": "Точно",
-    "atLeast": "Как минимум",
-    "all": "Все",
-    "before": "До",
     "after": "После",
+    "all": "Все",
     "any": "любой",
-    "startDate": "Дата начала",
-    "endDate": "Дата окончания",
+    "atLeast": "Как минимум",
+    "atMost": "Как максимум",
+    "before": "До",
     "between": "между",
-    "notBetween": "не между",
-    "startsWith": "начинается с",
     "contains": "содержит",
+    "endDate": "Дата окончания",
     "endsWith": "заканчивается на",
-    "notStartsWith": "не начинается с",
+    "exactly": "Ровно",
+    "notBetween": "не между",
     "notContains": "не содержит",
     "notEndsWith": "не заканчивается на",
+    "notStartsWith": "не начинается с",
+    "startDate": "Дата начала",
+    "startsWith": "начинается с",
+    "earliest": "Самое раннее",
+    "latest": "Самое позднее",
     "onOrBefore": "Не позднее",
     "on": "В указанную дату",
-    "onOrAfter": "Не ранее"
+    "notOn": "Не в указанную дату",
+    "onOrAfter": "Не ранее",
+    "lessThan": "меньше",
+    "lessThanOrEqual": "меньше или равно",
+    "equal": "равно",
+    "notEqual": "не равно",
+    "greaterThan": "больше",
+    "greaterThanOrEqual": "больше или равно"
   },
   "components": {
     "inclusionRuleReport": {
-      "matchRate": "Доля совпадений",
+      "matchRate": "Доля сопоставленных",
       "matches": "Совпадения",
-      "lost": "Потеряно",
+      "lost": "Исключено",
       "totalEvents": "Всего событий",
       "attritionFunnel": "Воронка отсева",
-      "perRuleSatisfaction": "Выполнение по правилам",
+      "perRuleSatisfaction": "Выполнение отдельных правил",
       "populationBreakdown": "Разбивка популяции",
-      "noReportData": "Для этой когорты и источника нет данных отчёта по правилам включения. Возможно, у когорты нет правил включения или отчёт ещё не сформирован. Если он уже сформирован, попробуйте выполнить его повторно.",
+      "noReportData": "Для этой когорты и источника нет данных отчёта по правилам включения. Возможно, у когорты нет правил включения или генерация ещё не выполнялась. Если генерация уже выполнена, попробуйте запустить её повторно.",
+      "noStatsRecorded": "При этой генерации не была записана статистика включения для данного режима, поэтому данных об отсеве нет. В самой когорте могут быть записи; их количество указано в панели генерации.",
       "loadError": "Не удалось загрузить отчёт по правилам включения",
       "attrition": "Отсев",
       "noAttritionData": "Нет данных об отсеве",
-      "initial": "Начально",
+      "initial": "Исходное количество",
       "final": "Итог",
       "saveAsPng": "Сохранить как PNG",
-      "colCumulativeRemaining": "Накопленный остаток",
-      "colPercentOfInitial": "% от начального",
-      "colPersonsSatisfying": "Удовлетворяющих лиц",
-      "colPercentSatisfying": "% удовлетворяющих",
+      "colCumulativeRemaining": "Осталось после применения правил",
+      "colPercentOfInitial": "% от исходного количества",
+      "colPersonsSatisfying": "Пациенты, соответствующие правилу",
+      "colPercentSatisfying": "% соответствующих",
       "colPercentExcluded": "% исключённых",
-      "hintCumulativeRemaining": "Пациенты, оставшиеся после применения этого правила и всех предыдущих правил по порядку",
-      "hintPercentOfInitial": "Накопленный остаток в процентах от исходного числа событий входа — та же метрика, что и в воронке",
-      "hintPersonsSatisfying": "Пациенты, удовлетворяющие ЭТОМУ правилу отдельно, независимо от других правил",
-      "hintPercentSatisfying": "Доля популяции событий входа, удовлетворяющая этому правилу самостоятельно (независимо от порядка)",
-      "hintPercentExcluded": "Предельная «стоимость» этого правила: доля пациентов, удовлетворяющих всем ДРУГИМ правилам, но не этому. Высокое значение — удаление правила вернёт эту долю.",
+      "hintCumulativeRemaining": "Пациенты, оставшиеся после последовательного применения этого правила и всех предыдущих правил",
+      "hintPercentOfInitial": "Количество оставшихся после применения правил в процентах от исходного количества событий входа — тот же показатель, что и в воронке",
+      "hintPersonsSatisfying": "Пациенты, соответствующие ЭТОМУ правилу отдельно, независимо от остальных правил",
+      "hintPercentSatisfying": "Доля популяции событий входа, соответствующая этому правилу отдельно (независимо от порядка правил)",
+      "hintPercentExcluded": "Предельная «стоимость» правила: доля пациентов, соответствующих всем ДРУГИМ правилам, но не этому. Чем выше значение, тем больше пациентов вернётся при удалении правила.",
       "downloadCsv": "Скачать CSV",
-      "noAttritionHint": "Сформируйте когорту с правилами включения, чтобы увидеть отсев",
-      "retained": "сохранено",
+      "noAttritionHint": "Сгенерируйте когорту с правилами включения, чтобы увидеть отсев",
+      "retained": "осталось",
       "tooltipRemaining": "Осталось",
       "tooltipExcludedAtStep": "Исключено на этом шаге",
-      "intersectHaving": "Имеющий",
-      "intersectAll": "Все",
-      "intersectAny": "Любые",
-      "unitPersons": "Пациенты"
+      "attritionView": "Отсев",
+      "intersectView": "Пересечение",
+      "initialPopulation": "Исходная популяция",
+      "initialPopulationLabel": "Подпись исходной популяции",
+      "initialPopulationLabelHint": "Отображается в воронке, таблице и CSV. Сохраняется только в этом браузере.",
+      "intersectHaving": "Условие:",
+      "intersectOfSelected": "из выбранных правил",
+      "intersectModeLabel": "Все выбранные правила или хотя бы одно из них",
+      "intersectAll": "все",
+      "intersectAny": "хотя бы одно",
+      "intersectOutcome": "Результат правила",
+      "intersectPassed": "Выполнено",
+      "intersectFailed": "Не выполнено",
+      "intersectResultPersons": "чел. ({percent} от исходной популяции)",
+      "intersectResultEvents": "событ. ({percent} от всех событий входа)",
+      "intersectNoneSelected": "Выберите хотя бы одно правило, чтобы увидеть соответствующих ему пациентов.",
+      "intersectUnavailable": "Нет разбивки популяции для построения пересечения.",
+      "unnamedRule": "Правило включения {n}",
+      "selectAllRules": "Выбрать все правила",
+      "colPercentToGain": "% возможного прироста",
+      "hintPercentToGain": "Доля исходной популяции, соответствующая всем остальным правилам, но не этому; эти пациенты добавятся при его удалении",
+      "notInSelection": "Не входит в выбор",
+      "noBreakdown": "Нет разбивки популяции.",
+      "bandAllPassed": "Все правила выполнены",
+      "bandOneFailed": "Не выполнено 1 правило",
+      "bandTwoFailed": "Не выполнено 2 правила",
+      "bandFewFailed": "Не выполнено 3–4 правила",
+      "bandManyFailed": "Не выполнено 5 или более правил / все правила",
+      "leafCounts": "Выполнено: {passed}, не выполнено: {failed}",
+      "hoverHint": "Наведите указатель на блок, чтобы увидеть, какие правила выполнены, а какие нет.",
+      "hoverSummaryPersons": "Пациентов: {size} ({percent}); выполнено правил: {passed}, не выполнено: {failed}",
+      "hoverSummaryEvents": "Событий: {size} ({percent}); выполнено правил: {passed}, не выполнено: {failed}",
+      "unitPersons": "Пациенты",
+      "unitEvents": "События",
+      "patientCount": "Пациентов: {count}"
+    },
+    "access": {
+      "configureAccess": "Настроить доступ",
+      "entityMissing": "Сохраните объект перед назначением прав доступа.",
+      "intro": "Предоставьте права на чтение (READ) или запись (WRITE) этого объекта, назначив роли. Право WRITE включает READ.",
+      "addReadAccess": "Предоставить роли право на чтение (READ)",
+      "searchRoles": "Поиск ролей...",
+      "addWriteAccess": "Предоставить роли право на запись (WRITE)"
     },
     "analysisExecution": {
       "buttons": {
         "generate": "Генерировать",
+        "stopping": "Остановка…",
         "cancel": "Отмена",
         "rerun": "Запустить повторно"
+      },
+      "noWritePermission": "У вас нет прав на запуск заданий для этого источника",
+      "previousRuns": "Предыдущие запуски",
+      "notRun": "Не запускалось",
+      "noSources": "Нет доступных источников данных",
+      "history": "История",
+      "viewResults": "Посмотреть результаты",
+      "viewResultsNotCompleted": "Результаты доступны только для завершённых запусков",
+      "viewResultsSuperseded": "Запуск заменён более новым: результаты сохраняются только для последнего запуска",
+      "noPreviousRuns": "Предыдущих запусков нет."
+    },
+    "atlasCohortEditor": {
+      "enterCohortNamePlaceholder": "Введите название когорты"
+    },
+    "customEra": {
+      "criteriaPrefix": "пользовательская эра: допустимый перерыв",
+      "criteriaSuffix": "между событиями",
+      "criteriaList": "Список критериев",
+      "addCriteria": "Добавить критерии...",
+      "additionalAttributes": "Дополнительные атрибуты",
+      "noCriteria": "Критериев пока нет.",
+      "noOptionalAttributes": "Дополнительных атрибутов пока нет.",
+      "attributes": {
+        "first": {
+          "label": "Первая эра",
+          "description": "Ограничить первой квалифицирующей эрой"
+        },
+        "correlatedCriteria": {
+          "description": "Фильтр с помощью вложенных критериев"
+        }
       }
     },
-    "windowedCriteria": {
-      "ignoreObservationPeriod": "игнорировать период наблюдения"
+    "episode": {
+      "title": "эпизод по набору концептов",
+      "attributes": {
+        "first": {
+          "label": "Первый эпизод",
+          "description": "Ограничить первым эпизодом в истории пациента"
+        },
+        "age": {
+          "description": "Фильтр по возрасту на момент начала эпизода"
+        }
+      }
+    },
+    "expressionCartoonBindings": {
+      "noInclusionRules": "Нет правил включения"
+    },
+    "cohortExpressionEditor": {
+      "addTrimmingOptions": "добавить параметры цензурирования...",
+      "entryEventsAnyHint": "События входа объединяются логическим ИЛИ: достаточно любого из них",
+      "days": "дней",
+      "inclusionCriteria": "Критерии включения",
+      "noCensoring": "Без цензурирования",
+      "inclusionCriteriaTextShort": "Правил включения нет — добавление правила сузит круг пациентов, подходящих по событиям входа.",
+      "entryEvents": "События входа в когорту",
+      "entryOn": "События для включения в когорту",
+      "addCriteriaToGroup": "Добавить критерии в группу",
+      "continuousObservation": "Непрерывное наблюдение",
+      "daysBefore": "Дней до события",
+      "daysAfter": "Дней после события",
+      "noPrimaryCriteria": "Исходных критериев пока нет. Нажмите «Добавить критерии в группу», чтобы начать.",
+      "restrictInitialEvents": "Ограничить исходные события",
+      "exitCriteria": "Выход и эры",
+      "cohortEras": "Эры когорты",
+      "eraCollapseGap": "Допустимый перерыв при объединении эр:",
+      "leftCensorStartDates": "Левое цензурирование: дата начала когорты не ранее",
+      "rightCensorEndDates": "Правое цензурирование: дата окончания когорты не позднее",
+      "limitRestrictedEventsTo": "Выбор из отобранных событий",
+      "observationSummary": "Непрерывное наблюдение: {prior} дн. до · {post} дн. после"
+    },
+    "conceptSet": {
+      "addConcepts": "Добавить концепты"
+    },
+    "conceptAddBox": {
+      "selectConceptSet": "Выбрать набор концептов",
+      "anyOf": "любой из",
+      "notAnyOf": "ни один из",
+      "addConcepts": "Добавить концепты",
+      "noConceptsSelected": "Концепты не выбраны"
+    },
+    "conceptSetBuilder": {
+      "newConceptSet": "Новый набор концептов",
+      "selectConceptSet": "Выберите набор концептов...",
+      "inThisDefinition": "В этом определении",
+      "importFromRepository": "Импорт из репозитория"
+    },
+    "conditionEra": {
+      "title": "эра состояния из"
+    },
+    "conditionOccurrence": {
+      "title": "событие состояния из",
+      "attributes": {
+        "occurrenceStartDate": {
+          "label": "Дата начала состояния"
+        },
+        "occurrenceEndDate": {
+          "label": "Дата окончания состояния"
+        },
+        "visitType": {
+          "label": "Посещение",
+          "description": "Фильтр по посещению"
+        }
+      }
+    },
+    "criteriaGroup": {
+      "addCriteria": "Добавить критерии в группу...",
+      "addNestedGroup": "Добавить вложенную группу",
+      "nestedCriteria": {
+        "selectLogicType": "Выберите тип логики",
+        "depthWarning": "Глубина вложенности: {depth}/10"
+      },
+      "clickToChangeMatchType": "Нажмите, чтобы изменить тип совпадения",
+      "noEventsInGroup": "В группе нет событий. Добавьте события, чтобы задать логику критериев.",
+      "matchAtLeast": "Как минимум {count}",
+      "matchAtMost": "Как максимум {count}"
+    },
+    "demographicCriteria": {
+      "name": "Демографические критерии",
+      "attributes": {
+        "age": {
+          "description": "Фильтр по возрасту"
+        },
+        "gender": {
+          "description": "Фильтр по полу"
+        },
+        "occurrenceStartDate": {
+          "label": "Дата начала события",
+          "description": "Фильтр по дате начала события"
+        },
+        "occurrenceEndDate": {
+          "label": "Дата окончания события",
+          "description": "Фильтр по дате окончания события"
+        }
+      }
+    },
+    "entityImport": {
+      "failed": "Не удалось выполнить импорт.",
+      "invalidJson": "Файл {file} содержит некорректный JSON."
     },
     "feasibilityAttritionReport": {
       "inclusionRule": "Правило включения"
@@ -178,56 +490,22 @@
     },
     "userBar": {
       "signin": "Войти",
-      "signout": "Выйти"
+      "signout": "Выйти",
+      "apiKeys": "Ключи API"
     },
     "welcome": {
+      "password": "Пароль",
       "runas": "Работать от имени пользователя",
-      "username": "Имя пользователя",
-      "password": "Пароль"
+      "username": "Имя пользователя"
     },
-    "cohortExpressionEditor": {
-      "inclusionCriteria": "Критерии включения",
-      "addTrimmingOptions": "добавить параметры цензурирования...",
-      "noCensoring": "Без цензурирования",
-      "days": "дней",
-      "eraCollapseGap": "Допустимый перерыв при объединении эр:",
-      "leftCensorStartDates": "Левое цензурирование: дата начала когорты не ранее",
-      "rightCensorEndDates": "Правое цензурирование: дата окончания когорты не позднее",
-      "entryEvents": "События входа в когорту",
-      "cohortEras": "Эры когорты"
-    },
-    "conditionEra": {
-      "title": "эра состояния из"
-    },
-    "conditionOccurrence": {
-      "title": "событие состояния из",
-      "attributes": {
-        "visitType": {
-          "label": "Посещение"
-        }
-      }
-    },
-    "criteriaGroup": {
-      "addCriteria": "Добавить критерии в группу...",
-      "clickToChangeMatchType": "Нажмите, чтобы изменить тип соответствия",
-      "noEventsInGroup": "В группе нет событий. Добавьте события для построения логики критериев."
-    },
-    "expressionCartoonBindings": {
-      "noInclusionRules": "Нет правил включения"
-    },
-    "conceptSet": {
-      "addConcepts": "Добавить концепты"
-    },
-    "conceptAddBox": {
-      "selectConceptSet": "Выбрать набор концептов",
-      "addConcepts": "Добавить концепты"
-    },
-    "conceptSetBuilder": {
-      "newConceptSet": "Новый набор концептов",
-      "selectConceptSet": "Выберите набор концептов..."
+    "windowedCriteria": {
+      "ignoreObservationPeriod": "игнорировать период наблюдения"
     },
     "generation": {
-      "generate": "Генерировать"
+      "generate": "Генерировать",
+      "unsavedChanges": "Сохраните изменения перед запуском",
+      "fixErrors": "Исправьте ошибки проверки перед запуском",
+      "noSourcesConfigured": "Источники данных не настроены."
     },
     "nameValidation": {
       "empty": "Имя не может быть пустым."
@@ -235,26 +513,26 @@
     "tags": {
       "tagNamePlaceholder": "Название тега",
       "tagGroupLabel": "Группа тегов *",
-      "tagNameLabel": "Имя тега *",
+      "tagNameLabel": "Название тега *",
       "colorOptional": "Цвет (необязательно)",
       "colorDefaultsHint": "По умолчанию используется цвет группы ({color})",
       "selectGroupFirst": "Сначала выберите группу тегов",
       "showAdvancedOptions": "Показать дополнительные параметры",
       "iconOptional": "Значок (необязательно)",
       "iconHint": "Имя значка Material Design (например, mdi-star)",
-      "permissionProtected": "Защищено правами доступа",
-      "permissionProtectedHint": "Для назначения/снятия этого тега требуются особые права",
-      "tagNameRequired": "Имя тега обязательно",
-      "tagNameMaxLength": "Имя тега должно содержать менее 255 символов",
-      "tagGroupRequired": "Группа тегов обязательна",
-      "tagCreatedSuccess": "Тег «{name}» успешно создан!",
-      "createTagError": "Не удалось создать тег. Пожалуйста, повторите попытку.",
+      "permissionProtected": "Защита правами доступа",
+      "permissionProtectedHint": "Для назначения и снятия этого тега требуются особые права доступа",
+      "tagNameRequired": "Укажите название тега",
+      "tagNameMaxLength": "Название тега должно содержать меньше 255 символов",
+      "tagGroupRequired": "Укажите группу тегов",
+      "tagCreatedSuccess": "Тег «{name}» создан!",
+      "createTagError": "Не удалось создать тег. Повторите попытку.",
       "manageTags": "Управление тегами",
       "searchTagsPlaceholder": "Поиск тегов...",
-      "clearAll": "Очистить все",
+      "clearAll": "Очистить всё",
       "loadingTags": "Загрузка тегов...",
-      "noTagGroups": "Группы тегов не найдены. Сначала создайте группы тегов на панели настроек.",
-      "noTagsMatching": "Не найдено тегов, соответствующих «{query}»",
+      "noTagGroups": "Группы тегов не найдены. Сначала создайте группы в панели настроек.",
+      "noTagsMatching": "Нет тегов, соответствующих запросу «{query}»",
       "noTagsInGroup": "В этой группе пока нет тегов.",
       "createNewTag": "Создать новый тег"
     },
@@ -264,34 +542,36 @@
       "preview": "Предпросмотр",
       "createACopy": "Создать копию",
       "current": "Текущая",
-      "commentMaxLength": "Комментарий должен содержать менее 500 символов",
+      "commentMaxLength": "Комментарий должен содержать меньше 500 символов",
       "saveCommentError": "Не удалось сохранить комментарий"
     },
     "auth": {
-      "sessionEyebrow": "СЕССИЯ",
-      "sessionWillExpireIn": "Ваша сессия истекает через",
-      "extendSessionPrompt": "Продлить сессию?",
+      "sessionEyebrow": "Сеанс",
+      "sessionWillExpireIn": "Срок действия сеанса истечёт через",
+      "extendSessionPrompt": "Продлить сеанс?",
       "logout": "Выйти",
-      "unknownUser": "Неизвестно"
+      "unknownUser": "Неизвестный пользователь",
+      "welcomeBack": "С возвращением",
+      "signInToAtlas": "Войдите, чтобы продолжить"
     },
     "profileTimeline": {
-      "eyebrow": "ХРОНОЛОГИЯ",
-      "title": "Хронология событий",
-      "dayRange": "День {start} → {end}",
-      "axisDay": "День (0 = вход в когорту)",
-      "cohortEntry": "Вход в когорту"
+      "eyebrow": "Временная шкала",
+      "title": "Временная шкала событий",
+      "dayRange": "Дни: {start} → {end}",
+      "axisDay": "День (0 = включение в когорту)",
+      "cohortEntry": "Включение в когорту"
     },
     "profileEventsTable": {
-      "eyebrow": "СОБЫТИЯ"
+      "eyebrow": "События"
     },
     "profileObservationBand": {
-      "eyebrow": "НАБЛЮДЕНИЕ",
+      "eyebrow": "Наблюдение",
       "title": "Периоды наблюдения",
       "empty": "Периоды наблюдения не зарегистрированы"
     },
     "highlightsConceptList": {
       "colorCoral": "Коралловый",
-      "colorSky": "Небесный",
+      "colorSky": "Небесно-голубой",
       "colorMint": "Мятный",
       "colorAmber": "Янтарный",
       "colorLavender": "Лавандовый",
@@ -302,48 +582,49 @@
       "female": "Женский",
       "other": "Другой",
       "otherNonBinary": "Другой / небинарный",
-      "allPersons": "Все лица",
+      "allPersons": "Все пациенты",
       "title": "Выборки",
-      "description": "Случайная выборка лиц из сгенерированной когорты с возможностью фильтрации по возрасту и полу.",
+      "description": "Случайные выборки пациентов из сгенерированной когорты с необязательной фильтрацией по возрасту и полу.",
       "newSample": "Новая выборка",
       "failedToLoadSamples": "Не удалось загрузить выборки",
       "failedToLoadSampleDetail": "Не удалось загрузить сведения о выборке",
       "failedToCreateSample": "Не удалось создать выборку"
     },
     "cohortSampleDetail": {
-      "personsCreated": "{count} лиц · создано {date}",
+      "source": "Источник: {name}",
+      "personsCreated": "Пациентов: {count} · создано {date}",
       "records": "Записи",
-      "noRecords": "В этой выборке нет записей о лицах."
+      "noRecords": "В этой выборке нет записей о пациентах."
     },
     "cohortSampleCreate": {
-      "eyebrow": "КОГОРТА",
-      "title": "Новая выборка когорты",
-      "numberOfPersons": "Количество лиц",
+      "eyebrow": "Когорта",
+      "title": "Новая выборка пациентов когорты",
+      "numberOfPersons": "Количество пациентов",
       "maximum": "Максимум {max}",
       "genderOptional": "Пол (необязательно)",
       "ageOptional": "Возраст (необязательно)",
-      "minAge": "Мин. возраст",
-      "maxAge": "Макс. возраст",
+      "minAge": "Минимальный возраст",
+      "maxAge": "Максимальный возраст",
       "createSample": "Создать выборку",
       "ageModeLessThan": "< меньше",
-      "ageModeAtMost": "≤ не более",
+      "ageModeAtMost": "≤ не больше",
       "ageModeEqualTo": "= равно",
-      "ageModeAtLeast": "≥ не менее",
+      "ageModeAtLeast": "≥ не меньше",
       "ageModeGreaterThan": "> больше",
       "ageModeBetween": "между",
-      "ageModeNotBetween": "вне диапазона"
+      "ageModeNotBetween": "не между"
     },
     "cohortSamplesList": {
       "empty": "Для этой когорты и источника выборки ещё не созданы.",
-      "persons": "Лица",
+      "persons": "Пациенты",
       "refreshSample": "Обновить выборку",
       "deleteSample": "Удалить выборку"
     },
     "profileSidePanel": {
-      "highlights": "Выделения",
-      "showHighlights": "Показать выделения",
-      "hideHighlights": "Скрыть выделения",
-      "accessDenied403": "У вас нет доступа к профилю этого лица в данном источнике данных. Обратитесь к администратору для предоставления доступа READ к источнику.",
+      "highlights": "Подсветка",
+      "showHighlights": "Показать подсветку",
+      "hideHighlights": "Скрыть подсветку",
+      "accessDenied403": "У вас нет доступа к профилю этого пациента в данном источнике данных. Попросите администратора предоставить право на чтение (READ) источника.",
       "failedToLoadProfile": "Не удалось загрузить профиль."
     },
     "characterizationDashboard": {
@@ -351,27 +632,48 @@
       "demographicProfile": "Демографический профиль",
       "ageDistribution": "Распределение по возрасту",
       "prevalenceComparison": "Сравнение распространённости",
-      "covariateBalance": "Баланс ковариат (станд. разность средних)",
-      "imbalanceNote": "Ковариаты с |SMD| > 0,1 (пунктирные линии) считаются несбалансированными",
-      "topCovariates": "Основные ковариаты по распространённости",
+      "covariateBalance": "Баланс ковариат — стандартизированная разность средних (SMD)",
+      "imbalanceNote": "Ковариаты с |SMD| > 0.1 (пунктирные линии) считаются несбалансированными",
+      "topCovariates": "Ковариаты с наибольшей распространённостью",
       "noVisualizationData": "Нет данных для визуализации.",
-      "smdAxis": "Стандартизованная разность средних",
+      "smdAxis": "SMD",
       "smdShort": "SMD",
       "cohortIndexed": "Когорта {n}"
     },
     "characterizationTable1": {
       "overall": "Всего",
-      "colHint": "N (%) / Среднее (SD)",
+      "colHint": "N (%) / среднее (SD)",
       "n": "N"
     },
     "characterizationResults": {
       "covariateDetail": "Сведения о ковариате",
+      "searchCovariates": "Фильтр результатов по названию",
       "concept": "Концепт",
-      "smdLabel": "Стандартизованная разность средних",
-      "noCovariateSelected": "Ковариата не выбрана."
+      "smdLabel": "Стандартизированная разность средних (SMD)",
+      "noCovariateSelected": "Ковариата не выбрана.",
+      "temporalTitle": "Распределение во времени",
+      "annualAvailable": "Годовое распределение доступно в подробном просмотре",
+      "temporalAvailable": "Временное распределение доступно в подробном просмотре",
+      "timeSeriesComparativeNote": "Годовое и временное распределения доступны только для одной когорты. Выберите одну когорту в фильтрах, чтобы увидеть их.",
+      "columnWithN": "{label} (N={n})",
+      "annual": "По годам",
+      "daily": "По дням",
+      "year": "Год"
     },
     "characterizationDesign": {
       "detailsEyebrow": "Сведения"
+    },
+    "temporalWindowEditor": {
+      "shortTermBaseline": "Короткий базовый период (от −30 до 0 дней)",
+      "mediumTermBaseline": "Средний базовый период (от −180 до 0 дней)",
+      "longTermBaseline": "Длительный базовый период (от −365 до 0 дней)",
+      "allTimePriorToIndex": "Всё время до индексной даты",
+      "onIndexDate": "В индексную дату",
+      "acuteFollowUp": "Краткосрочное последующее наблюдение (от 0 до 30 дней после события)",
+      "ninetyDayFollowUp": "90-дневный период последующего наблюдения (от 0 до 90 дней после события)",
+      "oneYearFollowUp": "Годовой период последующего наблюдения (от 0 до 365 дней после события)",
+      "allTimeAfterIndex": "Всё время после индексной даты",
+      "eventOverlapsWithIndex": "событие пересекается с индексным событием"
     },
     "conceptSetPicker": {
       "setCountOne": "1 набор",
@@ -383,15 +685,15 @@
     },
     "configurationWarningBanner": {
       "title": "Предупреждения проверки конфигурации",
-      "description": "Некоторые типы фильтров в конфигурации недействительны или неправильно настроены. Эти фильтры будут недоступны в интерфейсе:",
-      "invalidFilterTypes": "Недопустимые типы фильтров",
+      "description": "Некоторые типы фильтров в конфигурации некорректны или настроены неправильно. Эти фильтры будут недоступны в интерфейсе:",
+      "invalidFilterTypes": "Некорректные типы фильтров",
       "contactAdmin": "Обратитесь к администратору для обновления файла конфигурации (atlas-config.json)."
     },
     "cohortList": {
-      "emptyMatchQueryAndTags": "Нет когорт, соответствующих «{query}» с выбранными тегами.",
-      "emptyMatchQuery": "Нет когорт, соответствующих «{query}».",
+      "emptyMatchQueryAndTags": "Нет когорт, соответствующих запросу «{query}» и выбранным тегам.",
+      "emptyMatchQuery": "Нет когорт, соответствующих запросу «{query}».",
       "emptyMatchTags": "Нет когорт, соответствующих выбранным тегам.",
-      "emptyNoCohorts": "Когорт пока нет — создайте одну, чтобы начать определять исследуемую популяцию."
+      "emptyNoCohorts": "Когорт пока нет — создайте когорту, чтобы начать определение популяции исследования."
     },
     "cohortReportDrawer": {
       "backToSamples": "Назад к выборкам",
@@ -405,209 +707,277 @@
     },
     "cohortBuilder": {
       "saveToServerError": "Не удалось сохранить когорту на сервере",
-      "saveSuccess": "Когорта успешно сохранена",
+      "conceptSetLoadFailed": "Не удалось добавить набор концептов «{name}»",
+      "conceptSetMissingConcepts": "В наборе концептов «{name}» есть концепты, которых нет в выбранном словаре",
+      "conceptSetMissingConceptsDetail": "ID концептов {ids} сохранены в определении когорты, но их нельзя отобразить с текущим источником словаря.",
+      "saveSuccess": "Когорта сохранена",
       "saveError": "Не удалось сохранить когорту",
       "loadError": "Не удалось загрузить когорту",
-      "exportDownloaded": "JSON когорты загружен",
+      "parseError": "Не удалось разобрать определение когорты",
+      "exportDownloaded": "JSON когорты скачан",
       "copiedToClipboard": "JSON когорты скопирован в буфер обмена",
       "copyFailed": "Не удалось скопировать в буфер обмена",
       "sqlMenuTitle": "SQL",
-      "sqlDialect": "Диалект"
+      "sqlMenuSubtitle": "Посмотреть и скачать сгенерированный SQL",
+      "sqlDialogTitle": "SQL когорты",
+      "sqlDialogSubtitle": "Запрос, создаваемый для этой когорты. Шаблон SQL сохраняет @parameters для выполнения в разных СУБД; выберите диалект, чтобы получить запрос для конкретной базы данных.",
+      "sqlDialect": "Диалект",
+      "sqlDialectTemplate": "Шаблон (без диалекта)",
+      "printFriendlyMenuTitle": "Версия для печати",
+      "printFriendlyMenuSubtitle": "Посмотреть определение когорты в удобном для чтения виде",
+      "printFriendlyDialogTitle": "Версия для печати",
+      "printFriendlyDialogSubtitle": "Определение этой когорты в удобном для чтения виде.",
+      "jsonViewEdit": "Просмотр / редактирование",
+      "jsonViewEditSubtitle": "Перезаписать когорту из JSON",
+      "jsonDialogTitle": "JSON когорты",
+      "jsonDialogSubtitle": "Редактируйте выражение ATLAS напрямую. Применение заменит логику когорты, сохранив название и описание.",
+      "jsonPlaceholder": "Вставьте выражение когорты ATLAS или загрузите его из файла…",
+      "jsonLoadFile": "Загрузить файл",
+      "jsonCopied": "Скопировано",
+      "jsonApply": "Применить к конструктору",
+      "jsonApplied": "JSON когорты применён — проверьте результат в конструкторе и сохраните",
+      "jsonInvalid": "Некорректный JSON: {error}",
+      "jsonInvalidExpression": "Некорректное выражение когорты ATLAS",
+      "jsonImportFailed": "Импорт не выполнен: {error}",
+      "jsonReadFailed": "Не удалось прочитать файл"
     },
     "conceptDetail": {
       "closeDetails": "Закрыть сведения о концепте",
       "goBack": "Назад",
       "addToConceptSet": "Добавить в набор концептов",
-      "copyId": "Копировать ID",
+      "copyId": "Скопировать ID",
+      "sourcesLoadFailed": "Не удалось загрузить источники данных.",
+      "noResultsSources": "Нет доступных источников данных со схемой Results.",
+      "showFewerSources": "Показать меньше источников",
+      "showAllSources": "Показать все источники ({count})",
       "conceptDetailsTitle": "Сведения о концепте",
       "conceptId": "ID концепта",
       "conceptClass": "Класс концепта",
       "noHierarchyForConcept": "Иерархия для этого концепта не найдена.",
-      "moreDescendants": "ещё потомков: {count}",
+      "hierarchyLoadFailed": "Не удалось загрузить иерархию этого концепта.",
+      "moreDescendants": "Ещё дочерних концептов: {count}",
       "noRelatedConcepts": "Связанные концепты не найдены.",
-      "relationshipsCount": "связей: {count}"
+      "relationshipsCount": "Связей: {count}",
+      "statSummary": "PC: {persons} · DRC: {descendants}"
+    },
+    "conceptHierarchyDialog": {
+      "title": "Иерархия · {concept}",
+      "viewFullHierarchy": "Показать полную иерархию",
+      "treeView": "Дерево",
+      "tabularView": "Таблица",
+      "loading": "Загрузка иерархии…",
+      "filterPlaceholder": "Фильтр по названию или коду…",
+      "filterByClass": "Фильтр по классу",
+      "filterByDomain": "Фильтр по домену",
+      "filterByVocabulary": "Фильтр по словарю",
+      "sortRecordCount": "Сортировать по количеству записей (RC)",
+      "sortDescendantRecordCount": "Сортировать по количеству записей с учётом дочерних концептов (DRC)",
+      "counts": "Предков: {ancestors} · потомков: {descendants}",
+      "ancestors": "Предки",
+      "ancestorDistance": "расстояние {distance}",
+      "showMoreAncestors": "Показать ещё предков: {count}",
+      "collapseAncestors": "Показать только непосредственных предков",
+      "currentConcept": "Текущий концепт",
+      "descendants": "Потомки",
+      "collapseDescendants": "Показать только непосредственных потомков",
+      "showMoreDescendants": "Показать ещё дочерних концептов: {count}",
+      "descendantDistance": "расстояние {distance}",
+      "expandConcept": "Развернуть {name}",
+      "collapseConcept": "Свернуть {name}",
+      "inSet": "в наборе",
+      "excluded": "исключён",
+      "withDescendants": "+дочерние",
+      "expandFailed": "Не удалось загрузить дочерние концепты",
+      "added": "Добавлено концептов: {count}",
+      "addedSkipped": "Добавлено концептов: {count}; уже есть в наборе и пропущено: {skipped}"
     },
     "conceptTable": {
       "selectAllConcepts": "Выбрать все концепты",
       "selectConcept": "Выбрать {name}",
       "noRecords": "Нет записей для отображения",
-      "itemsPerPage": "Строк на странице:"
+      "itemsPerPage": "Записей на странице:"
     },
     "config": {
       "cache": {
-        "clearHelp": "Очистить кэшированные данные конфигурации, чтобы принудительно обновить их с сервера. Это может помочь устранить проблемы с устаревшими или поврежденными данными.",
+        "clearHelp": "Очистите кэш конфигурации, чтобы принудительно обновить данные с сервера. Это может помочь при устаревших или повреждённых данных.",
         "statusLabel": "Состояние кэша:",
         "clearDialogTitle": "Очистить кэш",
-        "clearConfirm": "Вы уверены, что хотите очистить кэш конфигурации? Это действие нельзя отменить.",
-        "clearError": "Не удалось очистить кэш. Пожалуйста, попробуйте снова."
+        "clearConfirm": "Очистить кэш конфигурации? Это действие нельзя отменить.",
+        "clearError": "Не удалось очистить кэш. Повторите попытку."
       },
       "panel": {
-        "closeAria": "Закрыть панель конфигурации",
+        "closeAria": "Закрыть панель настроек",
         "tabCache": "Кэш",
-        "noAdminAccess": "У вас нет доступа к каким-либо административным настройкам."
+        "noAdminAccess": "У вас нет доступа к административным настройкам."
       },
       "dataSources": {
         "loadError": "Не удалось загрузить источники данных"
       },
       "vocabulary": {
-        "help": "Настройте имя схемы базы данных для поиска в словаре. Этот параметр определяет, какая схема PostgreSQL используется при запросе таблиц словаря OMOP.",
+        "help": "Укажите имя схемы базы данных для поиска по словарю. Эта настройка определяет, какая схема PostgreSQL используется при запросах к таблицам словаря OMOP.",
         "schemaHint": "Имя схемы PostgreSQL (например, 'public', 'vocab_v5')",
-        "updated": "Схема словаря обновлена до \"{value}\"",
-        "updateError": "Не удалось обновить схему. Пожалуйста, попробуйте снова.",
-        "reverted": "Возвращено к \"{value}\"",
-        "undoError": "Не удалось отменить. Пожалуйста, попробуйте снова."
+        "updated": "Схема словаря изменена на «{value}»",
+        "updateError": "Не удалось обновить схему. Повторите попытку.",
+        "reverted": "Восстановлено значение «{value}»",
+        "undoError": "Не удалось отменить изменение. Повторите попытку.",
+        "schemaRequired": "Укажите имя схемы",
+        "schemaTooLong": "Слишком длинное имя схемы (не более {max} символов)",
+        "schemaInvalidStart": "Имя схемы должно начинаться с буквы или символа подчёркивания",
+        "schemaInvalidChars": "Имя схемы может содержать только буквы, цифры и символы подчёркивания"
       },
       "trexsql": {
         "loadError": "Не удалось загрузить источники данных",
-        "buildStarted": "Начато построение кэша",
-        "buildStartError": "Не удалось начать построение кэша",
-        "buildComplete": "Построение кэша успешно завершено",
-        "buildFailed": "Не удалось построить кэш"
+        "buildStarted": "Создание кэша начато",
+        "buildStartError": "Не удалось запустить создание кэша",
+        "buildComplete": "Создание кэша завершено",
+        "buildFailed": "Создание кэша завершилось ошибкой",
+        "deleteComplete": "Кэш удалён",
+        "deleteFailed": "Не удалось удалить кэш"
       },
       "tags": {
-        "colorHexHint": "Шестнадцатеричный код цвета для визуальной идентификации",
+        "colorHexHint": "Шестнадцатеричный код цвета для визуального различения",
         "iconMdiFolderHint": "Имя значка Material Design (например, mdi-tag, mdi-folder)",
-        "nameTooLong": "Имя должно содержать менее 255 символов",
-        "inheritColorHint": "Оставьте пустым для наследования от группы",
-        "iconInheritHint": "Имя значка Material Design или оставьте пустым для наследования от группы",
+        "nameTooLong": "Название должно содержать меньше 255 символов",
+        "inheritColorHint": "Оставьте пустым, чтобы наследовать цвет группы",
+        "iconInheritHint": "Имя значка Material Design; оставьте пустым, чтобы наследовать значок группы",
         "tagColumn": "Тег",
         "usageColumn": "Использование",
-        "editTagAria": "Изменить тег",
+        "editTagAria": "Редактировать тег",
         "deleteTagAria": "Удалить тег",
         "noTagsInGroup": "В этой группе нет тегов",
-        "createFirstTag": "Создайте свой первый тег, чтобы начать",
+        "createFirstTag": "Создайте первый тег, чтобы начать",
         "requiredChip": "Обязательно",
         "columnChip": "Столбец",
         "showTagsButton": "Показать теги",
-        "editGroupAria": "Изменить группу тегов",
+        "editGroupAria": "Редактировать группу тегов",
         "deleteGroupAria": "Удалить группу тегов",
-        "createFirstGroup": "Создайте свою первую группу тегов, чтобы начать",
-        "sectionHelp": "Управление группами тегов для организации и категоризации когорт и наборов понятий. Группы тегов позволяют применять структурированные метаданные к вашим ресурсам.",
-        "tagsInGroupTitle": "Теги в \"{name}\"",
+        "createFirstGroup": "Создайте первую группу тегов, чтобы начать",
+        "sectionHelp": "Управляйте группами тегов для организации и классификации когорт и наборов концептов. Группы позволяют добавлять к объектам структурированные метаданные.",
+        "tagsInGroupTitle": "Теги в группе «{name}»",
         "backToGroups": "Назад к группам тегов",
-        "enableFreeFormTooltip": "Включите «Свободная форма» для этой группы тегов, чтобы разрешить пользовательские теги.",
-        "noCustomTagsPrefix": "Эта группа тегов не допускает пользовательские теги. Отредактируйте группу и включите",
-        "noCustomTagsSuffix": "чтобы добавлять теги здесь.",
-        "deleteGroupConfirm": "Вы уверены, что хотите удалить \"{name}\"?",
+        "enableFreeFormTooltip": "Включите параметр «Произвольные теги» для этой группы, чтобы разрешить создание собственных тегов.",
+        "noCustomTagsPrefix": "В этой группе нельзя создавать произвольные теги. Отредактируйте группу и включите параметр",
+        "noCustomTagsSuffix": "для добавления тегов.",
+        "deleteGroupConfirm": "Удалить «{name}»?",
         "deleteTagTitle": "Удалить тег",
-        "deleteTagConfirm": "Вы уверены, что хотите удалить \"{name}\"? Это отменит назначение тега для всех ресурсов.",
+        "deleteTagConfirm": "Удалить «{name}»? Тег будет снят со всех объектов.",
         "loadGroupsError": "Не удалось загрузить группы тегов",
-        "groupUpdated": "Группа тегов \"{name}\" обновлена",
-        "groupCreated": "Группа тегов \"{name}\" создана",
+        "groupUpdated": "Группа тегов «{name}» обновлена",
+        "groupCreated": "Группа тегов «{name}» создана",
         "saveGroupError": "Не удалось сохранить группу тегов",
-        "groupNotEmpty": "Невозможно удалить группу тегов: группа содержит теги",
-        "groupDeleted": "Группа тегов \"{name}\" удалена",
-        "tagUpdated": "Тег \"{name}\" обновлен",
-        "tagCreated": "Тег \"{name}\" создан",
+        "groupNotEmpty": "Нельзя удалить группу: в ней есть теги",
+        "groupDeleted": "Группа тегов «{name}» удалена",
+        "tagUpdated": "Тег «{name}» обновлён",
+        "tagCreated": "Тег «{name}» создан",
         "saveTagError": "Не удалось сохранить тег",
-        "tagDeleted": "Тег \"{name}\" удален",
+        "tagDeleted": "Тег «{name}» удалён",
         "deleteTagError": "Не удалось удалить тег"
       },
       "permissions": {
-        "editRole": "Изменить роль",
+        "editRole": "Редактировать роль",
         "createNewRole": "Создать новую роль",
-        "roleNameRequiredLabel": "Имя роли *",
-        "roleNameRequired": "Имя роли обязательно",
-        "roleNameEmpty": "Имя роли не может быть пустым",
-        "roleNameTooLong": "Имя роли должно содержать менее 255 символов",
-        "roleNameExists": "Роль с таким именем уже существует",
-        "updateRoleError": "Не удалось обновить роль. Пожалуйста, попробуйте снова.",
-        "createRoleError": "Не удалось создать роль. Пожалуйста, попробуйте снова.",
+        "roleNameRequiredLabel": "Название роли *",
+        "roleNameRequired": "Укажите название роли",
+        "roleNameEmpty": "Название роли не может быть пустым",
+        "roleNameTooLong": "Название роли должно содержать меньше 255 символов",
+        "roleNameExists": "Роль с таким названием уже существует",
+        "updateRoleError": "Не удалось обновить роль. Повторите попытку.",
+        "createRoleError": "Не удалось создать роль. Повторите попытку.",
         "unexpectedError": "Произошла непредвиденная ошибка",
         "deleteRoleTitle": "Удалить роль?",
-        "roleAssignedTo": "Эта роль назначена",
-        "usersWord": "пользователей",
-        "userWord": "пользователь",
-        "deleteRemovesFromUsers": "Удаление этой роли удалит её у всех назначенных пользователей.",
+        "roleAssignedTo": "Число пользователей с этой ролью:",
+        "usersWord": "польз.",
+        "userWord": "польз.",
+        "deleteRemovesFromUsers": "При удалении роли она будет снята со всех пользователей, которым назначена.",
         "confirmDeleteRolePrefix": "Вы уверены, что хотите удалить роль",
         "deleteRoleButton": "Удалить роль",
-        "deleteRoleError": "Не удалось удалить роль. Пожалуйста, попробуйте снова.",
+        "deleteRoleError": "Не удалось удалить роль. Повторите попытку.",
         "newRole": "Новая роль",
-        "noRolesFound": "Роли не найдены. Создайте свою первую роль, чтобы начать.",
+        "noRolesFound": "Роли не найдены. Создайте первую роль, чтобы начать.",
         "noDescription": "Нет описания",
         "backToRoles": "Назад к ролям",
-        "editRoleAria": "Изменить роль",
+        "editRoleAria": "Редактировать роль",
         "deleteRoleAria": "Удалить роль",
-        "roleName": "Имя роли",
-        "editRoleNameAria": "Изменить имя роли",
-        "noDescriptionProvided": "Описание не предоставлено",
-        "editDescriptionAria": "Изменить описание",
-        "updateRoleNameError": "Не удалось обновить имя роли. Пожалуйста, попробуйте снова.",
-        "updateDescriptionError": "Не удалось обновить описание. Пожалуйста, попробуйте снова.",
+        "roleName": "Название роли",
+        "editRoleNameAria": "Редактировать название роли",
+        "noDescriptionProvided": "Описание не указано",
+        "editDescriptionAria": "Редактировать описание",
+        "updateRoleNameError": "Не удалось обновить название роли. Повторите попытку.",
+        "updateDescriptionError": "Не удалось обновить описание. Повторите попытку.",
         "noRolesFoundTitle": "Роли не найдены",
-        "createFirstRoleHint": "Создайте свою первую роль, чтобы начать работу с управлением доступом на основе ролей.",
+        "createFirstRoleHint": "Создайте первую роль, чтобы настроить управление доступом на основе ролей.",
         "createFirstRole": "Создать первую роль",
-        "rolesFilteredCount": "{count} из {total} ролей",
-        "rolesTotal": "всего {count} ролей",
-        "roleTotal": "всего {count} роль",
-        "searchPermissions": "Поиск разрешений...",
-        "changesCount": "{count} изменений",
-        "changeCount": "{count} изменение",
+        "rolesFilteredCount": "Ролей: {count} из {total}",
+        "rolesTotal": "Всего ролей: {count}",
+        "roleTotal": "Всего ролей: {count}",
+        "searchPermissions": "Поиск прав доступа...",
+        "changesCount": "Изменений: {count}",
+        "changeCount": "Изменений: {count}",
         "saveChanges": "Сохранить изменения",
-        "loadingPermissions": "Загрузка разрешений...",
+        "loadingPermissions": "Загрузка прав доступа...",
         "ofWord": "из",
-        "permissionsAssigned": "разрешений назначено",
-        "filteredFromTotal": "(отфильтровано из {total})",
+        "permissionsAssigned": "(назначенные права доступа)",
+        "filteredFromTotal": "(после фильтрации; всего: {total})",
         "allCategories": "Все категории",
-        "permissionColumn": "Разрешение",
+        "permissionColumn": "Право доступа",
         "categoryColumn": "Категория",
-        "permissionsUpdated": "Успешно обновлено {count} разрешений",
-        "permissionUpdated": "Успешно обновлено {count} разрешение",
-        "savePermissionsError": "Не удалось сохранить изменения разрешений",
-        "searchUsers": "Поиск пользователей по логину или эл. почте...",
+        "permissionsUpdated": "Обновлено прав доступа: {count}",
+        "permissionUpdated": "Обновлено прав доступа: {count}",
+        "savePermissionsError": "Не удалось сохранить изменения прав доступа",
+        "searchUsers": "Поиск пользователей по логину или электронной почте...",
         "loadingUsers": "Загрузка пользователей...",
-        "usersAssigned": "пользователей назначено",
-        "emailColumn": "Эл. почта",
-        "userAssignmentsUpdated": "Успешно обновлено {count} назначений пользователей",
-        "userAssignmentUpdated": "Успешно обновлено {count} назначение пользователя",
+        "usersAssigned": "(пользователи с назначенной ролью)",
+        "emailColumn": "Электронная почта",
+        "userAssignmentsUpdated": "Обновлено назначений пользователей: {count}",
+        "userAssignmentUpdated": "Обновлено назначений пользователей: {count}",
         "saveUsersError": "Не удалось сохранить назначения пользователей",
-        "utilitiesIntro": "Импорт и экспорт конфигураций ролей для резервного копирования, развёртывания или совместного использования между средами.",
+        "utilitiesIntro": "Импортируйте и экспортируйте настройки ролей для резервного копирования, развёртывания и переноса между средами.",
         "exportRole": "Экспорт роли",
-        "exportRoleDescription": "Загрузите конфигурацию этой роли в виде файла JSON, включая все разрешения и назначения пользователей.",
-        "exportCompatNote": "Экспортированный файл будет совместим с Atlas 2.x и может быть импортирован в любой экземпляр Atlas.",
-        "exportRoleAsJson": "Экспортировать роль в JSON",
+        "exportRoleDescription": "Скачайте настройки роли в виде файла JSON, включая все права доступа и назначения пользователей.",
+        "exportCompatNote": "Экспортированный файл будет совместим с ATLAS 2.x. Его можно импортировать в любой экземпляр ATLAS.",
+        "exportRoleAsJson": "Экспорт роли в JSON",
         "importRole": "Импорт роли",
-        "importRoleDescription": "Импорт конфигурации роли из файла JSON. Это создаст новую роль с указанными разрешениями и пользователями.",
+        "importRoleDescription": "Импортируйте настройки роли из файла JSON. Будет создана новая роль с указанными правами доступа и пользователями.",
         "noteLabel": "Примечание:",
-        "importRoleNote": "Импорт роли создаст новую роль. Если роль с таким именем существует, вам будет предложено переименовать её.",
-        "importRoleFromJson": "Импортировать роль из JSON",
+        "importRoleNote": "При импорте будет создана новая роль. Если роль с таким названием уже существует, вам предложат переименовать её.",
+        "importRoleFromJson": "Импорт роли из JSON",
         "exportRoleError": "Не удалось экспортировать роль",
-        "roleExported": "Роль \"{name}\" успешно экспортирована",
-        "roleImported": "Роль \"{name}\" успешно импортирована",
-        "importSelectFileHelp": "Выберите файл JSON для импорта конфигурации роли. Файл должен быть в формате, совместимом с Atlas 2.x.",
-        "selectJsonFile": "Выберите файл JSON",
-        "roleNameConflict": "Конфликт имён ролей",
-        "roleWithNamePrefix": "Роль с именем",
+        "roleExported": "Роль «{name}» экспортирована",
+        "roleImported": "Роль «{name}» импортирована",
+        "importSelectFileHelp": "Выберите файл JSON с настройками роли для импорта. Формат файла должен быть совместим с ATLAS 2.x.",
+        "selectJsonFile": "Выбрать файл JSON",
+        "roleNameConflict": "Конфликт названий ролей",
+        "roleWithNamePrefix": "Роль с названием",
         "alreadyExistsSuffix": "уже существует.",
         "howToProceed": "Как вы хотите продолжить?",
         "conflictSkip": "Пропустить — отменить импорт",
-        "conflictRename": "Переименовать — импортировать с новым именем",
-        "newRoleName": "Новое имя роли",
-        "newRoleNameHint": "Введите уникальное имя для импортируемой роли",
+        "conflictRename": "Переименовать — импортировать с новым названием",
+        "newRoleName": "Новое название роли",
+        "newRoleNameHint": "Введите уникальное название импортируемой роли",
         "validatingImport": "Проверка данных импорта...",
-        "readyToImport": "Готово к импорту",
-        "importPreviewIntro": "Будет импортирована следующая конфигурация роли:",
-        "roleNameLabel": "Имя роли:",
+        "readyToImport": "Всё готово к импорту",
+        "importPreviewIntro": "Будут импортированы следующие настройки роли:",
+        "roleNameLabel": "Название роли:",
         "descriptionLabel": "Описание:",
-        "permissionsLabel": "Разрешения:",
+        "permissionsLabel": "Права доступа:",
         "usersLabel": "Пользователи:",
         "warningsLabel": "Предупреждения:",
         "next": "Далее",
         "continue": "Продолжить",
-        "selectJsonFileError": "Пожалуйста, выберите файл JSON",
+        "selectJsonFileError": "Выберите файл JSON",
         "readFileError": "Не удалось прочитать файл",
-        "invalidImportFormat": "Неверный формат импорта роли: отсутствует имя роли",
-        "warnNoPermissions": "Роли не назначены разрешения",
-        "warnNoUsers": "Роли не назначены пользователи",
-        "invalidJsonFormat": "Неверный формат JSON. Проверьте файл и попробуйте снова.",
+        "invalidImportFormat": "Некорректный формат импорта роли: отсутствует название роли",
+        "warnNoPermissions": "Роли не назначены права доступа",
+        "warnNoUsers": "У роли нет назначенных пользователей",
+        "invalidJsonFormat": "Некорректный формат JSON. Проверьте файл и повторите попытку.",
         "validateImportError": "Не удалось проверить данные импорта",
-        "updateRoleNameFailed": "Не удалось обновить имя роли",
-        "importRoleRetry": "Не удалось импортировать роль. Пожалуйста, попробуйте снова.",
+        "updateRoleNameFailed": "Не удалось обновить название роли",
+        "importRoleRetry": "Не удалось импортировать роль. Повторите попытку.",
         "importRoleError": "Не удалось импортировать роль"
       }
     },
     "domainPrevalenceTable": {
-      "largeDatasetHint": "Обнаружен большой набор данных ({count} записей). Для производительности отображаются 1000 записей с наибольшей распространённостью — используйте поиск или экспорт в CSV для полного набора.",
+      "largeDatasetHint": "Обнаружен большой датасет (записей: {count}). Для быстродействия показаны первые 1 000 записей по распространённости. Используйте поиск или экспорт CSV для доступа ко всему датасету.",
       "prevalencePercent": "Распространённость (%)",
       "noEntriesFound": "Записи не найдены",
       "showingAllEntries": "Показаны все записи: {count}",
@@ -615,40 +985,46 @@
     },
     "domainPrevalenceTreemap": {
       "clickAction": "Нажмите",
-      "clickHint": "на любую область, чтобы просмотреть подробную аналитику",
+      "clickHint": "на любую область для просмотра подробной аналитики",
       "noHierarchyNote": "Иерархическая группировка недоступна для этого источника данных",
-      "groupByHierarchy": "Группировать по иерархии"
+      "groupByHierarchy": "Группировать по иерархии",
+      "unclassified": "Без классификации"
     },
     "incidenceRate": {
-      "importInputAria": "Импорт дизайна частоты новых случаев",
+      "importInputAria": "Импорт дизайна анализа уровня заболеваемости",
       "removeCohort": "Удалить когорту",
       "selectCohorts": "Выбрать когорты",
       "outcomeOverview": "Обзор исходов",
-      "outcomeOverviewNote": "Щёлкните строку для просмотра. Для каждого исхода исключаются лица, у которых событие уже было на дату индекса.",
-      "personsAtRisk": "Лица под риском",
-      "personsAtRiskTooltip": "Лица под риском в целевой когорте в течение периода риска",
+      "outcomeOverviewNote": "Нажмите строку для подробного просмотра. Для каждого исхода исключаются пациенты, у которых событие уже произошло к индексной дате.",
+      "personsAtRisk": "Пациенты под риском",
+      "personsAtRiskTooltip": "Пациенты под риском в целевой когорте в течение окна времени под риском",
       "outcomeCases": "Случаи исхода",
-      "outcomeCasesTooltip": "Лица, у которых наступил исход в период наблюдения ({proportion})",
-      "personYearsTooltip": "Общее наблюдаемое время по всем лицам, измеренное в человеко-годах",
+      "outcomeCasesTooltip": "Пациенты, у которых наступил исход за период последующего наблюдения ({proportion})",
+      "personYearsTooltip": "Суммарное человеко-время наблюдения всех пациентов, выраженное в человеко-годах",
       "personYearsAtRisk": "Человеко-годы под риском",
-      "incidenceRateTooltip": "Частота новых случаев: {cases} случаев на {years} человеко-лет, масштаб {multiplier}",
-      "incidenceRatePerPy": "Частота новых случаев на {multiplier} чел.-лет",
+      "incidenceRateTooltip": "Уровень заболеваемости: случаев — {cases}, человеко-лет наблюдения — {years}; множитель — {multiplier}",
+      "incidenceRatePerPy": "Уровень заболеваемости на {multiplier} чел.-лет",
       "notComparable": "Несопоставимо между исходами",
-      "percentProportion": "доля {value}%",
+      "percentProportion": "Доля: {value}%",
       "moveUp": "Переместить вверх",
       "moveDown": "Переместить вниз",
       "removeRule": "Удалить правило",
-      "stratifiedIncidence": "Стратифицированная частота",
-      "lowerRate": "Ниже частота",
-      "higherRate": "Выше частота",
-      "treemapLegendHint": "(цвет = частота новых случаев на человеко-год; площадь = лица под риском)",
-      "noCasesFound": "Для этой комбинации цель/исход случаи не найдены. Попробуйте выбрать другой исход."
+      "stratifiedIncidence": "Стратифицированная заболеваемость",
+      "lowerRate": "Более низкий уровень",
+      "higherRate": "Более высокий уровень",
+      "treemapLegendHint": "(цвет — уровень заболеваемости на человеко-год; площадь — количество пациентов под риском)",
+      "viewValidationMessages": "Посмотреть сообщения проверки",
+      "analysisDesign": "Дизайн анализа",
+      "validationMessages": "Сообщения проверки",
+      "noCasesFound": "Для этой пары целевой когорты и исхода случаев не найдено. Попробуйте выбрать другой исход.",
+      "noneMatched": "Совпадений нет",
+      "treemapNodeSummary": "Пациентов: {persons} || случаев: {cases} || Уровень: {rate} на 1 000 человеко-лет"
     },
     "pathwayCohortList": {
       "removeCohort": "Удалить когорту"
     },
     "pathwayBuilder": {
-      "importPathwayDesign": "Импортировать дизайн пути",
+      "importPathwayDesign": "Импорт дизайна анализа траекторий",
       "versionHistory": "История версий"
     },
     "pathwayPathDetails": {
@@ -661,17 +1037,17 @@
       "distributionByUnit": "Распределение по единице измерения",
       "distributionByValue": "Распределение по значению",
       "distributionByOperator": "Распределение по оператору",
-      "distributionByQualifier": "Распределение по квалификатору",
+      "distributionByQualifier": "Распределение по уточняющему признаку",
       "noDetailedData": "Для этого концепта нет подробных данных."
     },
     "tableExport": {
       "copiedRows": "Скопировано строк в буфер обмена: {count}",
       "copyFailed": "Не удалось скопировать данные в буфер обмена",
-      "exportedRows": "Экспортировано строк в {filename}.csv: {count}",
-      "exportFailed": "Не удалось экспортировать CSV-файл"
+      "exportedRows": "Экспортировано строк: {count}; файл: {filename}.csv",
+      "exportFailed": "Не удалось экспортировать файл CSV"
     },
     "notifications": {
-      "bellAriaLabel": "Уведомления ({count} непрочитанных)",
+      "bellAriaLabel": "Уведомления (непрочитанных: {count})",
       "heading": "Уведомления",
       "markAllRead": "Отметить все как прочитанные",
       "clear": "Очистить",
@@ -679,57 +1055,212 @@
       "remove": "Удалить"
     },
     "navBar": {
-      "mainNavigation": "Основная"
+      "mainNavigation": "Основная навигация"
+    },
+    "authProviderSelect": {
+      "info": "Продолжить с помощью",
+      "skipLogin": "Продолжить без входа"
+    },
+    "dateAdjust": {
+      "criteriaLabel": "Корректировка дат"
+    },
+    "windowExpression": {
+      "eventEnds": "событие заканчивается",
+      "eventStarts": "событие начинается",
+      "indexEnd": "окончание индексного события",
+      "indexStart": "начало индексного события",
+      "summary": "{anchor}; границы интервала: {start} — {end}; точка отсчёта: {indexAnchor}",
+      "endpointBefore": "{days} ранее",
+      "endpointAfter": "{days} позднее",
+      "startAndEnd": "{start} и {end}"
     },
     "drugExposure": {
-      "title": "приём препарата из"
+      "title": "приём препарата из",
+      "attributes": {
+        "first": {
+          "label": "Первый приём препарата",
+          "description": "Ограничить первым приёмом препарата в истории пациента"
+        }
+      }
     },
     "correlatedCriteria": {
       "restrictToSameVisit": "ограничить событиями в рамках того же посещения",
       "allowEventsOutsideObservation": "разрешить события за пределами периода наблюдения",
+      "distinctBy": "Определять уникальность по",
+      "usingDistinctEvents": "Использовать уникальные события",
+      "usingAllEvents": "Использовать все события",
       "distinctColumn": {
+        "startDate": "Дата начала",
         "standardConcept": "Стандартный концепт",
         "visit": "Посещение"
-      }
+      },
+      "occurrence": {
+        "exactly": "Ровно {count}",
+        "atLeast": "Как минимум {count}",
+        "atMost": "Как максимум {count}"
+      },
+      "occurrenceDistinct": "Количество уникальных значений «{column}»: {occurrence}"
     },
     "deviceExposure": {
       "title": "воздействие устройства из",
       "attributes": {
+        "first": {
+          "label": "Первое воздействие устройства",
+          "description": "Ограничить первым воздействием устройства в истории пациента"
+        },
         "visitType": {
-          "label": "Посещение"
+          "label": "Посещение",
+          "description": "Фильтр по посещению"
         }
       }
     },
     "doseEra": {
-      "title": "эра дозирования из"
+      "title": "эра дозирования из",
+      "attributes": {
+        "first": {
+          "label": "Первая эра дозирования",
+          "description": "Ограничить первой эрой дозирования в истории пациента"
+        },
+        "unit": {
+          "description": "Фильтр по единице дозирования"
+        }
+      }
     },
     "drugEra": {
-      "title": "эра применения препарата из"
+      "title": "эра применения препарата из",
+      "attributes": {
+        "first": {
+          "label": "Первая эра препарата",
+          "description": "Ограничить первой эрой применения препарата в истории пациента"
+        },
+        "occurrenceCount": {
+          "label": "Количество событий",
+          "description": "Фильтр по количеству событий"
+        }
+      }
     },
     "measurement": {
-      "title": "измерение"
+      "title": "измерение",
+      "attributes": {
+        "first": {
+          "label": "Первое измерение",
+          "description": "Ограничить первым измерением в истории пациента"
+        },
+        "occurrenceStartDate": {
+          "label": "Дата измерения",
+          "description": "Фильтр по дате измерения"
+        },
+        "unit": {
+          "description": "Фильтр по единице измерения"
+        }
+      }
     },
     "procedureOccurrence": {
-      "title": "событие процедуры из"
+      "title": "событие процедуры из",
+      "attributes": {
+        "first": {
+          "label": "Первая процедура",
+          "description": "Ограничить первой процедурой в истории пациента"
+        },
+        "occurrenceStartDate": {
+          "label": "Дата процедуры",
+          "description": "Фильтр по дате процедуры"
+        }
+      }
     },
     "observation": {
-      "title": "наблюдение"
+      "title": "наблюдение",
+      "attributes": {
+        "first": {
+          "label": "Первое наблюдение",
+          "description": "Ограничить первым наблюдением в истории пациента"
+        },
+        "occurrenceStartDate": {
+          "label": "Дата наблюдения",
+          "description": "Фильтр по дате наблюдения"
+        }
+      }
     },
     "visitDetail": {
-      "title": "Детализация Посещения из"
+      "title": "Детализация Посещения из",
+      "attributes": {
+        "first": {
+          "label": "Первая Детализация Посещения",
+          "description": "Ограничить первой Детализацией Посещения в истории пациента"
+        }
+      }
     },
     "specimen": {
-      "title": "образец"
+      "title": "образец",
+      "attributes": {
+        "first": {
+          "label": "Первый образец",
+          "description": "Ограничить первым образцом в истории пациента"
+        },
+        "occurrenceStartDate": {
+          "label": "Дата образца",
+          "description": "Фильтр по дате образца"
+        }
+      }
     },
     "visitOccurrence": {
-      "title": "посещение"
+      "title": "посещение",
+      "attributes": {
+        "first": {
+          "label": "Первое посещение",
+          "description": "Ограничить первым посещением в истории пациента"
+        },
+        "occurrenceStartDate": {
+          "label": "Дата начала посещения"
+        },
+        "occurrenceEndDate": {
+          "label": "Дата окончания посещения"
+        }
+      }
     },
     "observationPeriod": {
-      "title": "период наблюдения"
+      "title": "период наблюдения",
+      "attributes": {
+        "first": {
+          "label": "Первый период наблюдения",
+          "description": "Ограничить первым периодом наблюдения в истории пациента"
+        },
+        "ageAtStart": {
+          "description": "Фильтр по возрасту на момент начала периода"
+        },
+        "ageAtEnd": {
+          "description": "Фильтр по возрасту на момент окончания периода"
+        }
+      }
+    },
+    "death": {
+      "title": "смерть по набору концептов",
+      "attributes": {
+        "occurrenceStartDate": {
+          "label": "Дата смерти",
+          "description": "Фильтр по дате"
+        }
+      }
+    },
+    "payerPlanPeriod": {
+      "title": "период страхования",
+      "attributes": {
+        "first": {
+          "label": "Первый период страхования",
+          "description": "Ограничить первым периодом страхования в истории пациента"
+        },
+        "ageAtStart": {
+          "description": "Фильтр по возрасту на момент начала периода"
+        },
+        "ageAtEnd": {
+          "description": "Фильтр по возрасту на момент окончания периода"
+        }
+      }
     },
     "criteria": {
       "addAttribute": "Добавить атрибут...",
-      "selectConceptSet": "Выбрать набор концептов"
+      "selectConceptSet": "Выбрать набор концептов",
+      "editorNotImplemented": "Редактор пока не реализован."
     },
     "workbench": {
       "hideAnalysisDesign": "Скрыть дизайн анализа",
@@ -737,42 +1268,169 @@
       "hideDesignPanel": "Скрыть панель дизайна",
       "showDesignPanel": "Показать панель дизайна"
     },
-    "access": {
-      "searchRoles": "Поиск ролей...",
-      "configureAccess": "Настроить доступ"
+    "conceptSetDelete": {
+      "title": "Удалить набор концептов?",
+      "usageOne": "Этот набор всё ещё используется в одном критерии",
+      "usageMany": "Число критериев, которые всё ещё используют этот набор: {count}",
+      "warning": "При удалении набора «{name}» он будет убран из использующих его критериев. Критерий без набора концептов охватывает весь свой домен. {usage}."
     },
-    "conceptHierarchyDialog": {
-      "ancestors": "Предки",
-      "descendants": "Потомки"
+    "characterizationWorkbench": {
+      "personCount": "Пациентов: {count}"
     },
-    "windowExpression": {
-      "eventEnds": "событие заканчивается",
-      "eventStarts": "событие начинается"
+    "languageSelector": {
+      "selectLanguage": "Выбрать язык"
     },
     "endStrategy": {
       "censoring": {
-        "title": "Цензурирующие события"
+        "title": "Цензурирующие события",
+        "lede": "Пациенты досрочно выходят из когорты при наступлении любого из этих событий.",
+        "add": "Добавить цензурирующее событие",
+        "empty": "Цензурирующие события не заданы. Выход из когорты определяется только выбранной выше стратегией завершения."
       },
       "customEra": {
-        "selectConceptSet": "Выберите набор концептов препаратов"
+        "hint": "Выход из когорты определяется непрерывным приёмом препарата с настраиваемыми допустимыми перерывами между приёмами.",
+        "selectConceptSet": "Выберите набор концептов препаратов",
+        "daysSupplyOverride": "Переопределение запаса препарата в днях",
+        "daysSupplyHint": "Если запас препарата в днях не указан в записях, система считает, что каждый приём обеспечивает запас на 1 день."
+      },
+      "dateOffset": {
+        "hint": "Выход из когорты происходит через фиксированное количество дней от даты, определяемой по квалифицирующему событию.",
+        "dateField": "Поле даты"
       },
       "selector": {
+        "label": "Стратегия",
+        "observation": "Непрерывное наблюдение",
+        "dateOffset": "Фиксированная длительность",
         "customEra": "Приём препаратов"
+      },
+      "observation": {
+        "hint": "Пациенты выходят из когорты по окончании периода непрерывного наблюдения. Дополнительная настройка не требуется."
       }
     },
+    "chartExport": {
+      "pngFailed": "Не удалось экспортировать PNG",
+      "svgFailed": "Не удалось экспортировать SVG",
+      "csvFailed": "Не удалось экспортировать CSV",
+      "clipboardFailed": "Не удалось скопировать в буфер обмена"
+    },
     "charts": {
+      "distribution": "Распределение",
       "value": "Значение",
+      "percentage": "Процент",
+      "genderDistribution": "Распределение по полу",
       "years": "Годы",
+      "observations": "Наблюдения",
+      "metric": "Показатель",
+      "ageGroupGender": "Возрастная группа / пол",
       "year": "Год",
       "prevalencePer1000": "Распространенность на 1000 человек"
+    },
+    "analysisDataTable": {
+      "empty": "Записей пока нет."
+    }
+  },
+  "characterizations": {
+    "editor": {
+      "strata": {
+        "eventCount": "1 событие",
+        "eventsCount": "Событий: {n}",
+        "noCriteria": "Нет критериев",
+        "discardChanges": "Изменения критериев этой подгруппы будут потеряны."
+      },
+      "conceptSetsTab": {
+        "placeholder": "Наборы концептов, полученные из страт, появятся здесь после реализации конструктора критериев."
+      },
+      "saveSuccess": "Характеризация сохранена",
+      "versionsTodo": "Интеграция версий ещё не реализована — подключение к characterization-versions.service запланировано на будущее.",
+      "executions": {
+        "runDisabledNoId": "Сохраните характеризацию перед запуском."
+      },
+      "validation": {
+        "headers": {
+          "errors": "Ошибки"
+        },
+        "rules": {
+          "nameRequired": "Укажите название.",
+          "cohortsRequired": "Необходимо связать хотя бы одну когорту.",
+          "featureAnalysesRequired": "Необходимо связать хотя бы один анализ признаков.",
+          "strataNameMissing": "У страты {n} нет названия.",
+          "strataNameDuplicate": "Несколько страт имеют одно и то же название «{name}».",
+          "strataCriteriaInvalid": "JSON критериев страты «{name}» некорректен.",
+          "strataOnlyButNoStrata": "Включён режим только для страт, но страты не заданы.",
+          "tooManyFeatureAnalyses": "Такое количество анализов признаков ({count}) может замедлить генерацию."
+        }
+      },
+      "utilities": {
+        "export": {
+          "exportError": "Не удалось выполнить экспорт."
+        },
+        "import": {
+          "parseError": "Не удалось разобрать JSON дизайна.",
+          "importError": "Не удалось выполнить импорт.",
+          "importSuccess": "Импорт выполнен."
+        }
+      }
+    },
+    "results": {
+      "table": {
+        "stdDiff": "Std Diff",
+        "min": "Минимум",
+        "distribution": "Распределение",
+        "prevalence": "Распространённость",
+        "avgSd": "Среднее (SD)"
+      },
+      "pagination": {
+        "rowsPerPage": "Строк на странице",
+        "range": "{start}-{end} из {total}"
+      },
+      "loadFailed": "Не удалось загрузить результаты"
+    }
+  },
+  "featureAnalyses": {
+    "list": {
+      "deleteConfirm": "Удалить анализ признаков «{name}»?",
+      "empty": "Анализов признаков пока нет."
+    },
+    "create": {
+      "prevalence": "Критерии распространённости",
+      "distribution": "Критерии распределения",
+      "custom": "Пользовательский SQL"
+    },
+    "editor": {
+      "title": {
+        "edit": "Редактировать анализ признаков"
+      },
+      "prevalence": {
+        "addCriteria": "Добавить признак по критериям",
+        "empty": "Признаков по критериям пока нет."
+      },
+      "distribution": {
+        "addCriteria": "Добавить признак по критериям",
+        "empty": "Признаков по критериям пока нет.",
+        "demographicSubtitle": "Демографические критерии не ограничены временным окном"
+      },
+      "deleteConfirm": "Удалить анализ признаков «{name}»?",
+      "aggregatesUnavailable": "Не удалось загрузить агрегат по умолчанию"
+    },
+    "aggregateDomain": {
+      "condition": "Состояние",
+      "conditionEra": "Эра Состояния",
+      "demographics": "Демография",
+      "device": "Устройство",
+      "drug": "Препарат",
+      "drugEra": "Эра Препарата",
+      "measurement": "Измерение",
+      "observation": "Наблюдение",
+      "procedure": "Процедура",
+      "visit": "Посещение"
     }
   },
   "facets": {
     "caption": {
-      "created": "Создано",
       "author": "Автор",
-      "vocabulary": "Словарь",
+      "created": "Создано",
       "targetCohorts": "Целевые когорты",
+      "vocabulary": "Словарь",
       "relationship": "Отношения"
     },
     "values": {
@@ -781,62 +1439,66 @@
     }
   },
   "columns": {
-    "id": "ID",
-    "name": "Наименование",
-    "type": "Тип",
-    "code": "Код",
-    "remove": "Удалить",
-    "created": "Создано",
-    "updated": "Обновлено",
-    "modified": "Изменено",
-    "author": "Автор",
-    "conceptId": "ID концепта",
-    "conceptCode": "Код концепта",
-    "conceptName": "Название концепта",
-    "class": "Класс",
-    "rc": "RC",
-    "drc": "DRC",
-    "domain": "Домен",
-    "vocabulary": "Словарь",
-    "exclude": "Исключить",
-    "descendants": "Дочерние концепты",
-    "mapped": "Смаплено",
-    "severity": "Важность",
-    "date": "Дата",
-    "status": "Статус",
-    "duration": "Продолжительность",
-    "results": "Результаты",
-    "target": "Целевая когорта",
-    "comparator": "Оператор сравнения",
-    "description": "Описание",
-    "executionId": "ID запуска",
-    "startDate": "Дата начала",
-    "startDay": "День начала",
-    "endDay": "День окончания",
-    "enabled": "Включено",
-    "login": "Логин",
-    "started": "Запущено",
-    "finished": "Завершено",
-    "message": "Сообщение",
-    "analysis": "Анализ",
     "action": "Действие",
     "actions": "Действия",
+    "analysis": "Анализ",
+    "author": "Автор",
+    "checkConnection": "Проверить соединение",
+    "class": "Класс",
+    "code": "Код",
+    "comparator": "Оператор сравнения",
+    "conceptCode": "Код концепта",
+    "conceptId": "ID концепта",
+    "conceptName": "Название концепта",
     "count": "Количество",
-    "median": "Медиана",
-    "pct": "Процент",
     "covariate": "Ковариата",
+    "created": "Создано",
+    "date": "Дата",
+    "descendants": "Дочерние концепты",
+    "description": "Описание",
+    "dialect": "Диалект",
+    "domain": "Домен",
+    "drc": "DRC",
+    "duration": "Продолжительность",
+    "enabled": "Включено",
+    "endDay": "День окончания",
+    "evidence": "Доказательства",
+    "exclude": "Исключить",
+    "executionId": "ID запуска",
     "explore": "Подробнее",
+    "finished": "Завершено",
+    "id": "ID",
+    "login": "Логин",
+    "mapped": "Смаплено",
+    "max": "Максимум",
+    "median": "Медиана",
+    "message": "Сообщение",
+    "modified": "Изменено",
+    "name": "Наименование",
     "p25": "p25",
     "p75": "p75",
-    "max": "Максимум",
-    "remain": "Остаток",
+    "patients": "Пациенты",
+    "pct": "Процент",
     "diff": "Разница",
-    "sourceName": "Название источника",
-    "dialect": "Диалект",
-    "evidence": "Доказательства",
-    "checkConnection": "Проверить соединение",
-    "refreshCache": "Обновить кэш",
+    "remain": "Остаток",
     "personCount": "Количество пациентов",
+    "rc": "RC",
+    "refreshCache": "Обновить кэш",
+    "remove": "Удалить",
+    "results": "Результаты",
+    "schema": "Схема",
+    "severity": "Важность",
+    "sourceName": "Название источника",
+    "startDate": "Дата начала",
+    "startDay": "День начала",
+    "started": "Запущено",
+    "status": "Статус",
+    "standard": "Стандартный",
+    "target": "Целевая когорта",
+    "type": "Тип",
+    "updated": "Обновлено",
+    "validity": "Действителен",
+    "vocabulary": "Словарь",
     "eventCohort": "Когорта событий",
     "distinctEventCohorts": "Число переходов между когортами",
     "sampleName": "Название выборки",
@@ -850,120 +1512,208 @@
     "drcTooltip": "Количество записей с учётом дочерних концептов (DRC)",
     "pcTooltip": "Количество пациентов (PC)",
     "dpcTooltip": "Количество пациентов с учётом дочерних концептов (DPC)",
-    "createdBy": "Автор",
-    "standard": "Стандартный",
     "age": "Возраст",
+    "lastRun": "Последний запуск",
+    "outcome": "Исход",
+    "createdBy": "Автор",
     "role": "Роль",
-    "source": "Источник"
+    "source": "Источник",
+    "totalRows": "Всего строк"
   },
   "dataSources": {
-    "headingTitle": "Источники данных",
     "dashboardReport": {
-      "cumulativeObservation": "Сводные данные по обследованиям",
-      "personsWithContinuousObservationByMonth": "Люди с продолжительным обследованием по месяцам",
-      "populationByGender": "Население по полу",
+      "ageAtFirstObservation": "Возраст при первом наблюдении",
       "cdmSummary": "Сводные данные CDM",
-      "ageAtFirstObservation": "Возраст при первом обследовании"
+      "cumulativeObservation": "Накопленная длительность наблюдения",
+      "personsWithContinuousObservationByMonth": "Пациенты с непрерывным наблюдением по месяцам",
+      "populationByGender": "Популяция по полу"
     },
     "datadensityReport": {
-      "recordsPerPerson": "Записей на человека",
-      "conceptsPerPerson": "Концепций на человека",
+      "conceptsPerPerson": "Концептов на пациента",
+      "recordsPerPerson": "Записей на пациента",
       "totalRows": "Всего записей"
     },
-    "personReport": {
-      "yearOfBirth": "Год рождения",
-      "gender": "Пол",
-      "ethnicity": "Национальность",
-      "race": "Раса"
-    },
     "deathReport": {
-      "date": "Дата",
-      "deathPrevalenceByAgeGenderYear": "Распространенность по возрасту",
-      "prevalencePer1000People": "Распространенность на 1000 человек",
-      "deathPrevalenceByMonth": "Распространенность по месяцам",
       "ageAtDeath": "Возраст на момент смерти",
-      "deathByType": "Смерть по типу"
-    },
-    "numberOfPeople": "Количество человек",
-    "treemap": {
-      "treemapTab": "Карта"
-    },
-    "table": {
-      "tableTab": "Таблица"
+      "date": "Дата",
+      "deathByType": "Смерть по типу",
+      "deathPrevalenceByAgeGenderYear": "Распространённость смерти по возрасту, полу и году",
+      "deathPrevalenceByMonth": "Распространённость смерти по месяцам",
+      "prevalencePer1000People": "Распространённость на 1 000 пациентов",
+      "noDataTitle": "Нет данных о смерти",
+      "noDataSubtitle": "В этом источнике данных нет записей о смерти для построения отчёта."
     },
     "drilldown": {
-      "prevalenceByMonth": "Распространенность по месяцам",
-      "frequencyDistribution": "Распределение по частоте",
-      "ageAtFirstOccurrence": "Возраст при первом вхождении",
+      "ageAtFirstOccurrence": "Возраст на момент первого события",
       "chartFormat": {
-        "prevalencePer1000People": "Распространенность на 100 человек"
-      }
+        "prevalencePer1000People": "Распространённость на 1 000 пациентов"
+      },
+      "frequencyDistribution": "Частотное распределение",
+      "prevalenceByMonth": "Распространённость по месяцам"
     },
+    "headingTitle": "Источники данных",
+    "numberOfPeople": "Количество пациентов",
     "observationPeriodReport": {
       "ageAtFirstObservation": "Возраст при первом наблюдении",
       "ageByGender": "Возраст по полу",
       "observationLength": "Длительность наблюдения",
       "durationByGender": "Длительность по полу",
-      "cumulativeObservation": "Кумулятивное наблюдение",
-      "durationByAgeDecile": "Децильная длительность по возрасту",
-      "personsWithContinuousObservationByYear": "Пациенты с продолжительным наблюдением по годам",
-      "observationPeriodsPerPerson": "Периоды наблюдений на человека",
-      "personsWithContinuousObservationByMonth": "Пациенты с продолжительным наблюдением по месяцам",
+      "cumulativeObservation": "Накопленная длительность наблюдения",
+      "durationByAgeDecile": "Длительность по децилям возраста",
+      "personsWithContinuousObservationByYear": "Пациенты с непрерывным наблюдением по годам",
+      "observationPeriodsPerPerson": "Периоды Наблюдения на пациента",
+      "personsWithContinuousObservationByMonth": "Пациенты с непрерывным наблюдением по месяцам",
       "people": "Пациенты",
       "days": "Дни",
-      "percentOfPopulation": "Процент населения",
+      "percentOfPopulation": "Процент популяции",
       "years": "Годы",
-      "date": "Дата"
+      "date": "Дата",
+      "noDataTitle": "Нет данных о периодах наблюдения",
+      "noDataSubtitle": "В этом источнике данных нет записей о периодах наблюдения для построения отчёта."
+    },
+    "personReport": {
+      "ethnicity": "Этнос",
+      "gender": "Пол",
+      "race": "Раса",
+      "yearOfBirth": "Год рождения"
+    },
+    "table": {
+      "tableTab": "Таблица"
+    },
+    "treemap": {
+      "treemapTab": "Древовидная диаграмма"
     },
     "sidebar": {
-      "demographics": "Демография"
+      "overview": "Обзор",
+      "demographics": "Демография",
+      "clinicalDomains": "Клинические домены"
     },
     "reportTypes": {
       "dashboard": "Дашборд",
       "datadensity": "Плотность данных",
-      "person": "Люди",
-      "observationPeriod": "Период наблюдений",
-      "death": "Смерти",
+      "person": "Пациенты",
+      "observationPeriod": "Период Наблюдения",
+      "death": "Смерть",
       "visit": "Посещение",
-      "conditionOccurrence": "Встречаемость состояния",
-      "conditionEra": "Эра состояния",
+      "conditionOccurrence": "Событие Состояния",
+      "conditionEra": "Эра Состояния",
       "procedure": "Процедура",
-      "drugExposure": "Воздействие лекарств",
-      "drugEra": "Эра лекарств",
+      "drugExposure": "Приём Препарата",
+      "drugEra": "Эра Препарата",
       "measurement": "Измерение",
       "observation": "Наблюдение"
     },
+    "pageSubtitle": "Просматривайте источники данных CDM и выполняйте готовые отчёты по ним.",
+    "loadFailed": "Не удалось загрузить источники данных",
+    "reportLoadFailed": "Не удалось загрузить отчёт",
+    "reportFetchFailed": "Не удалось загрузить отчёт «{reportType}»: {detail}",
     "charts": {
-      "records": "Записей",
-      "persons": "Люди"
+      "percentOfPersons": "Процент пациентов",
+      "month": "Месяц",
+      "observationCount": "Количество наблюдений",
+      "total": "Всего",
+      "records": "Записи",
+      "unknown": "Неизвестно",
+      "cumulativePercent": "Накопленный %",
+      "persons": "Пациенты",
+      "prevalencePer1000": "Распространённость на 1 000"
     }
   },
   "search": {
+    "addedCountToSet": "Добавлено концептов: {count} → {set}",
+    "addedToSet": "Добавлено: «{concept}» → {set}",
+    "classification": "Классификация",
+    "filterResults": "Фильтр результатов",
+    "clearAllSelections": "Очистить выделение",
+    "domains": "Домены",
     "headingTitle": "Поиск",
+    "noResultsFoundFor": "Ничего не найдено для «{query}»",
+    "nonStandard": "Нестандартный",
+    "placeholder": "Введите здесь ключевые слова для поиска",
+    "standard": "Стандартный",
     "tabs": {
       "search": "Поиск"
     },
-    "placeholder": "Введите здесь ключевые слова для поиска",
-    "clearAllSelections": "Очистить выделение",
-    "domains": "Домены",
-    "standard": "Стандартный",
-    "nonStandard": "Нестандартный",
-    "classification": "Классификация",
-    "noResultsFoundFor": "Ничего не найдено для «{query}»",
-    "viewCountMessage": "Отображать количество записей (RC, DRC) для:"
+    "viewCountMessage": "Отображать количество записей (RC, DRC) для:",
+    "vocabulariesInfo": "Введите не менее 3 символов и нажмите Enter для поиска в SNOMED, ICD, RxNorm, LOINC и других словарях.",
+    "minLengthHint": "Введите не менее {min} символов",
+    "errors": {
+      "recordCountsFailed": "Не удалось загрузить количество записей для выбранного источника."
+    }
   },
   "cs": {
+    "browser": {
+      "caption": "Наборы концептов",
+      "compare": {
+        "compareConceptSets": "Сравнение наборов концептов",
+        "conceptSet1": "Набор концептов 1:",
+        "conceptSet2": "Набор концептов 2:",
+        "modeGroupLabel": "Уровень сравнения",
+        "modeExpression": "Концепты выражения",
+        "modeIncluded": "Включённые концепты",
+        "modeSource": "Исходные концепты",
+        "sourceCode": "Исходный код",
+        "sourceVocabulary": "Исходный словарь",
+        "headingMessage": "Сравните содержимое двух наборов концептов, чтобы найти общие концепты.",
+        "modalTitle": "Выберите набор концептов",
+        "vennDiagram": "Диаграмма Венна",
+        "vennDiagramTotalAmountConcepts": "Общее количество концептов: {count}",
+        "compare": "Сравнить",
+        "noMatches": "Нет подходящих наборов концептов"
+      },
+      "subtitle": "Просматривайте словарь OMOP и формируйте наборы концептов для повторного использования.",
+      "pageTitle": "Концепты"
+    },
+    "conceptAddBox": {
+      "addToConceptSet": "Добавить в набор концептов",
+      "descendants": "Дочерние концепты",
+      "exclude": "Исключить",
+      "mapped": "Смапленные концепты",
+      "addWith": "Добавить с параметрами"
+    },
     "manager": {
-      "conceptsRemovedMessage": "Следующие концепты удалены, поскольку оптимизированная версия уже включает их.",
-      "optimizedConceptSetHeading": "Оптимизированный набор концептов",
-      "optimize": "Оптимизировать",
-      "conceptsRemovedHeading": "Удалённые концепты",
-      "pleaseReviewMessage": "Проверьте оптимизированное определение и выберите способ сохранения.",
-      "pleaseProvideNameMessage": "Укажите название нового набора концептов:",
-      "overwriteOption": "Перезаписать текущий набор концептов",
-      "fullyOptimizedMessage": "Текущее определение набора концептов полностью оптимизировано.",
-      "createOption": "Создать новый набор концептов",
       "attemptingToFindMessage": "Поиск оптимального определения для этого набора концептов...",
+      "conceptsRemovedHeading": "Удалённые концепты",
+      "conceptsRemovedMessage": "Следующие концепты удалены, поскольку оптимизированная версия уже включает их.",
+      "createOption": "Создать новый набор концептов",
+      "fullyOptimizedMessage": "Текущее определение набора концептов полностью оптимизировано.",
+      "includedEmptyNoManual": "Добавьте концепты на вкладке «Выбрано», чтобы увидеть их здесь.",
+      "includedEmptyNoResolve": "По этому выражению концепты не найдены.",
+      "sourceCodesEmpty": "Нет исходных кодов с маппингом на включённые концепты.",
+      "sourceCodesEmptyNoIncluded": "Добавьте концепты, чтобы увидеть здесь их исходные коды с маппингом.",
+      "pasteIds": "Вставить ID",
+      "pasteIdsTitle": "Вставить ID концептов",
+      "pasteIdsHint": "Разделяйте ID пробелами, запятыми, точками с запятой или переводами строк. Перед добавлением мы ищем каждый ID в словаре.",
+      "pasteIdsResolved": "Найдено",
+      "pasteIdsUnresolved": "Не найдено",
+      "pasteIdsResolveBtn": "Найти",
+      "pasteIdsAddBtn": "Добавить",
+      "importSourceCodes": "Импорт кодов",
+      "importSourceCodesButton": "Импорт по исходному коду",
+      "importSourceCodesTitle": "Импорт по исходному коду",
+      "importSourceCodesHint": "Разделяйте исходные коды запятыми, точками с запятой или переводами строк. Перед добавлением мы ищем каждый код в словаре.",
+      "importJson": "Импорт JSON",
+      "conceptMissingFromVocabulary": "Нет в выбранном словаре",
+      "missingConceptsTitle": "Некоторых концептов нет в выбранном словаре",
+      "missingConceptsMessage": "В словаре источника {sourceKey} отсутствуют концепты из этого набора: {ids}. Количество отсутствующих концептов: {count}. Они останутся в наборе, но сведения о них нельзя отобразить. Чтобы увидеть их, выберите другой источник словаря в настройках.",
+      "importJsonTitle": "Импорт набора концептов из JSON",
+      "importJsonHint": "Вставьте выражение набора концептов в формате JSON ({ \"items\": [ ... ] }). Концепт и его флаги из каждого элемента будут добавлены в набор.",
+      "importJsonParseBtn": "Разобрать",
+      "optimize": "Оптимизировать",
+      "optimizeNeedsTwoItems": "Добавьте хотя бы два концепта, чтобы оптимизировать набор.",
+      "optimizeMissingConcepts": "Некоторых концептов нет в выбранном словаре, поэтому набор концептов нельзя оптимизировать.",
+      "optimizeCreateFailed": "Не удалось создать оптимизированный набор концептов",
+      "optimizeCreated": "Создан набор концептов «{name}»",
+      "optimizedConceptSetHeading": "Оптимизированный набор концептов",
+      "overwriteOption": "Перезаписать текущий набор концептов",
+      "pleaseProvideNameMessage": "Укажите название нового набора концептов:",
+      "pleaseReviewMessage": "Проверьте оптимизированное определение и выберите способ сохранения.",
+      "tabs": {
+        "included": "Включено",
+        "sourceCodes": "Исходные коды",
+        "selected": "Выбрано",
+        "recommend": "Рекомендации"
+      },
       "concept": {
         "standard": "Стандартный",
         "nonStandard": "Нестандартный",
@@ -988,38 +1738,31 @@
         }
       },
       "conceptSetOptimization": "Оптимизация набора концептов",
-      "pasteIdsAddBtn": "Добавить",
-      "tabs": {
-        "included": "Включено",
-        "sourceCodes": "Исходные коды",
-        "selected": "Выбрано"
-      }
-    },
-    "browser": {
-      "caption": "Наборы концептов",
-      "compare": {
-        "headingMessage": "Сравните содержимое двух наборов концептов, чтобы найти общие концепты.",
-        "modalTitle": "Выберите набор концептов",
-        "vennDiagram": "Диаграмма Венна",
-        "vennDiagramTotalAmountConcepts": "Общее количество концептов: {count}",
-        "conceptSet1": "Набор концептов 1:",
-        "compareConceptSets": "Сравнение наборов концептов",
-        "conceptSet2": "Набор концептов 2:",
-        "compare": "Сравнить"
-      }
-    },
-    "conceptAddBox": {
-      "addToConceptSet": "Добавить в набор концептов",
-      "descendants": "Дочерние концепты",
-      "exclude": "Исключить",
-      "mapped": "Смапленные концепты"
+      "emptyFilterMessage": "Нет наборов концептов, соответствующих поисковому запросу.",
+      "emptyStateMessage": "Наборов концептов пока нет — создайте набор, чтобы начать отбор концептов.",
+      "filters": "Фильтр",
+      "emptyFilteredMessage": "Нет концептов, соответствующих активным фильтрам.",
+      "emptyConceptsMessage": "В этом наборе пока нет концептов — найдите концепты или вставьте их ID, чтобы добавить их.",
+      "editorRailLabel": "Редактор набора концептов",
+      "untitledPlaceholder": "Набор концептов без названия",
+      "deleteConfirmation": "Вы уверены, что хотите удалить"
     },
     "conceptSet": {
+      "recommend": {
+        "notAvailable": "Рекомендации недоступны. Для их формирования необходимы таблицы словаря PHOEBE 2.0.",
+        "setupLink": "Как установить таблицы PHOEBE 2.0",
+        "noSeed": "Сначала добавьте концепты в набор — рекомендации основаны на уже включённых концептах.",
+        "recommendations": "рекоменд."
+      },
       "loadingRecommendedConcepts": "Загрузка рекомендуемых концептов"
-    }
+    },
+    "searchPlaceholder": "Поиск наборов концептов…"
   },
   "cc": {
     "title": "Характеризации когорт",
+    "modals": {
+      "selectFeatureAnalyses": "Выберите анализы признаков для связывания"
+    },
     "tabs": {
       "featureAnalyses": {
         "title": "Анализы признаков",
@@ -1028,96 +1771,233 @@
     },
     "viewEdit": {
       "deleteConfirmation": "Удалить характеризацию когорты? Это действие нельзя отменить!",
+      "design": {
+        "fa": {
+          "includeAnnual": "Включить годовое распределение распространённости",
+          "includeTemporal": "Включить временное распределение",
+          "supportsAnnual": "Поддерживает годовое распределение",
+          "supportsTemporal": "Поддерживает временное распределение",
+          "title": "Анализы признаков"
+        },
+        "subgroups": {
+          "messages": {
+            "nameIsEmpty": "Название подгруппы не указано.",
+            "nameIsNotUnique": "Название подгруппы повторяется."
+          },
+          "namePlaceholder": "Название страты",
+          "newSubgroup": "Новая подгруппа",
+          "noSubgroups": "Подгруппы не заданы",
+          "subgroupOnly": "Вычислять только анализы подгрупп",
+          "title": "Анализы подгрупп"
+        }
+      },
+      "results": {
+        "detail": {
+          "designHash": "Хэш дизайна"
+        },
+        "exportAll": "Экспортировать все",
+        "filters": {
+          "cohorts": "Когорты"
+        },
+        "threshold": {
+          "showAtLeast": "Показать ковариаты с распространённостью ≥ {n}%"
+        },
+        "thresholdLabel": "Порог ≥"
+      },
       "tabs": {
         "versions": "История версий",
         "messages": "Сообщения"
       },
-      "design": {
-        "fa": {
-          "title": "Анализы признаков"
+      "workbench": {
+        "modePerAnalysis": "По анализам",
+        "modeTable1": "Исходные характеристики",
+        "modeDashboard": "Обзор",
+        "configure": "Настроить",
+        "empty": {
+          "noIdTitle": "Сохраните дизайн, чтобы разрешить запуски",
+          "noRunsTitle": "Запусков пока нет",
+          "runPendingTitle": "Выполняется запуск",
+          "runFailedTitle": "Запуск завершился ошибкой",
+          "resultsErrorTitle": "Запуск завершён, но его результаты не удалось загрузить",
+          "noDataTitle": "Нет строк, соответствующих текущему фильтру",
+          "runPendingHint": "Ожидание завершения с периодической проверкой…",
+          "noRunsHint": "Выполните генерацию по источнику данных, чтобы увидеть исходные характеристики."
         },
-        "subgroups": {
-          "title": "Анализы подгрупп",
-          "newSubgroup": "Новая подгруппа",
-          "noSubgroups": "Подгруппы не заданы",
-          "subgroupOnly": "Вычислять только анализы подгрупп",
-          "namePlaceholder": "Название страты",
-          "messages": {
-            "nameIsEmpty": "Название подгруппы не указано.",
-            "nameIsNotUnique": "Название подгруппы повторяется."
-          }
+        "table1": {
+          "eyebrow": "Сводка запуска",
+          "title": "Исходные характеристики"
+        },
+        "configurator": {
+          "title": "Настроить исходные характеристики",
+          "rows": "Строки",
+          "groupByAnalysis": "Группировать по анализу",
+          "pinTopK": "Закрепить первые K по Std Diff",
+          "pinTopKCount": "K",
+          "cells": "Ячейки",
+          "binaryFormat": "Формат бинарных признаков",
+          "continuousFormat": "Формат непрерывных признаков",
+          "columns": "Столбцы",
+          "showCounts": "Показать количества",
+          "showPercent": "Показать проценты",
+          "showStdDiff": "Std Diff",
+          "showStdDiffCI": "95% ДИ для Std Diff",
+          "strataAsCols": "Страты в столбцах"
+        },
+        "binaryFormat": {
+          "countPct": "N (%)",
+          "pct": "%",
+          "count": "N",
+          "countOfTotal": "N / всего"
+        },
+        "continuousFormat": {
+          "meanSd": "среднее (SD)",
+          "medianIqr": "медиана [IQR]"
         }
       },
-      "results": {
-        "filters": {
-          "cohorts": "Когорты"
-        },
-        "exportAll": "Экспортировать все"
+      "descriptionPlaceholder": "Добавьте краткое описание",
+      "namePlaceholder": "Назовите характеризацию",
+      "messages": {
+        "noIssues": "Проблем нет. Дизайн корректен."
+      },
+      "saveError": "Не удалось сохранить характеризацию",
+      "conceptSets": {
+        "empty": "Наборов концептов нет."
+      },
+      "cohorts": {
+        "emptyLinked": "Связанных когорт нет."
+      },
+      "featureAnalyses": {
+        "emptyLinked": "Связанных анализов признаков нет."
       }
     },
     "fa": {
       "tabs": {
         "conceptSets": "Наборы концептов"
       },
-      "saveError": "Не удалось сохранить анализ признаков.",
-      "domain": "Домен:",
-      "preset": "Шаблон",
-      "custom": "Пользовательский",
-      "featureExtractionPresetName": "Название шаблона FeatureExtraction:",
-      "criteriaName": "Название критерия",
-      "copySqlToClipboard": "Скопировать шаблон SQL анализа в буфер обмена",
-      "copiedToClipboard": "Скопировано в буфер обмена!",
       "availableVariables": "Доступные переменные:",
-      "availableVariablesNote": "все переменные, заданные в параметрах характеризации когорт"
+      "availableVariablesNote": "все переменные, заданные в параметрах характеризации когорт",
+      "aggregate": "Агрегат",
+      "populateSampleSql": "Вставить пример SQL",
+      "copiedToClipboard": "Скопировано в буфер обмена!",
+      "copySqlToClipboard": "Скопировать шаблон SQL анализа в буфер обмена",
+      "criteriaName": "Название критерия",
+      "custom": "Пользовательский",
+      "domain": "Домен:",
+      "featureExtractionPresetName": "Название шаблона FeatureExtraction:",
+      "preset": "Шаблон",
+      "saveError": "Не удалось сохранить анализ признаков.",
+      "runError": "Не удалось запустить генерацию",
+      "cancelError": "Не удалось отменить генерацию",
+      "statType": "Тип статистики",
+      "customSqlTitle": "Пользовательский SQL",
+      "copySqlTemplateFailed": "Не удалось скопировать шаблон SQL"
     },
-    "newCharacterization": "Новая характеризация"
+    "newCharacterization": "Новая характеризация",
+    "list": {
+      "empty": "Характеризаций пока нет."
+    }
   },
   "home": {
-    "description": "АТЛАС это продукт с открытым исходным кодом, разработанный в рамках <a href=\"http://www.ohdsi.org\" target=\"_new\">OHDSI</a>, предоставляющий доступ к данным пациентов и аналитике.",
+    "description": "ATLAS — приложение с открытым исходным кодом, разработанное в рамках <a href='http://www.ohdsi.org' target='_new'>OHDSI</a> и предоставляющее единый интерфейс для работы с данными и аналитикой на уровне пациента.",
     "documentation": {
       "title": "Документация"
     },
+    "features": {
+      "characterization": "Опишите исходные признаки и исходы популяции.",
+      "docs": "Читайте руководство пользователя ATLAS v3.0, не покидая приложение.",
+      "pathway": "Визуализируйте последовательности лекарственной терапии во времени.",
+      "incidenceRate": "Оцените частоту событий во времени в разных популяциях."
+    },
     "gettingStarted": {
       "newCohort": {
-        "button": "Создать Новую Когорту"
+        "button": "Создать новую когорту"
       },
       "vocabulary": {
-        "button": "Поиск по Словарю"
+        "button": "Поиск по словарю"
       }
-    }
+    },
+    "newEntityNames": {
+      "incidenceRate": "Новый анализ уровня заболеваемости",
+      "pathway": "Новая траектория",
+      "characterization": "Новая характеризация",
+      "featureAnalysis": "Новый анализ признаков"
+    },
+    "heroTitle": "Единая аналитика на уровне пациента."
   },
   "ir": {
     "deleteConfirmation": "Удалить анализ уровня заболеваемости? Это действие нельзя отменить!",
+    "editor": {
+      "chooseACohort": "Выберите когорту",
+      "stratifyCriteria": "Критерии стратификации",
+      "timeAtRiskCohortStart": "Начало когорты",
+      "timeAtRiskCohortEnd": "Окончание когорты",
+      "outcomes": "Исходы",
+      "noConceptSets": "К этому анализу уровня заболеваемости не прикреплены наборы концептов.",
+      "timeAtRiskEndBeforeStart": "Окончание времени под риском должно быть позже начала, если обе границы отсчитываются от одной даты",
+      "analysisTitle": "Анализ уровня заболеваемости",
+      "outcomeCohorts": "Когорты исхода",
+      "loading": "Загрузка анализа уровня заболеваемости…"
+    },
+    "results": {
+      "cases": "Случаи",
+      "failed": "ОШИБКА",
+      "persons": "Пациенты",
+      "proportion": "Доля",
+      "rate": "Уровень заболеваемости",
+      "running": "Выполняется",
+      "started": "Запущено",
+      "stratifyRule": "Правило стратификации",
+      "timeAtRiskYears": "Человеко-годы",
+      "summaryRow": "Сводка",
+      "reportLoadFailed": "Не удалось загрузить отчёт"
+    },
     "tabs": {
       "conceptSets": "Наборы концептов",
       "versions": "История версий"
     },
-    "editor": {
-      "chooseACohort": "Выберите когорту",
-      "stratifyCriteria": "Критерий стратификации:",
-      "outcomes": "Исходы"
-    },
-    "results": {
-      "persons": "Пациенты",
-      "cases": "Случаи",
-      "proportion": "Доля",
-      "timeAtRiskYears": "(годы)",
-      "rate": "Уровень заболеваемости",
-      "started": "Запущено",
-      "running": "Выполняется",
-      "failed": "ОШИБКА",
-      "stratifyRule": "Правило стратификации"
-    },
     "workbench": {
+      "noRunsHint": "Выполните генерацию по источнику данных, чтобы увидеть уровень заболеваемости.",
+      "noRunsTitle": "Запусков пока нет",
+      "noRunsYet": "Запусков пока нет",
+      "rateSummary": "Сводка уровня заболеваемости",
+      "runFailedHint": "Посмотрите ошибку ниже или повторите попытку.",
+      "runFailedTitle": "Генерация завершилась ошибкой",
+      "runPendingHint": "Это может занять несколько минут — вы можете покинуть страницу.",
+      "runPendingTitle": "Выполняется генерация",
+      "saveFirstHint": "Сохранение позволит выполнять генерацию по источнику данных.",
+      "saveFirstTitle": "Сначала сохраните анализ",
+      "selectToHint": "Выберите целевую когорту и исход с помощью элементов на панели инструментов, чтобы увидеть уровень заболеваемости.",
+      "selectToTitle": "Выберите целевую когорту и исход",
       "treemap": "Древовидная диаграмма",
       "table": "Таблица"
+    },
+    "list": {
+      "empty": "Анализов уровня заболеваемости пока нет."
     }
   },
   "profiles": {
-    "personId": "ID профиля",
+    "personId": "ID пациента",
+    "searchConceptsToHighlight": "Поиск концептов для подсветки",
     "highlightNone": "Нет",
+    "setHighlightColor": "Задать цвет подсветки",
+    "conceptSetHighlightingComingSoon": "Подсветка наборов концептов скоро появится",
+    "highlightEyebrow": "Подсветка",
+    "highlightTabConcepts": "концепты",
+    "highlightTabSets": "наборы",
+    "clearAllHighlights": "Убрать всю подсветку",
     "gender": "Пол",
-    "age": "Возраст"
+    "birthYear": "Год рождения",
+    "age": "Возраст",
+    "events": "События",
+    "ageAtIndexTooltip": "Возраст на индексную дату когорты",
+    "ageAtObservationStartTooltip": "Возраст на момент начала наблюдения",
+    "searchEvents": "Поиск событий",
+    "findAPerson": "Найти пациента",
+    "chooseSourceAndPerson": "Выберите источник данных и введите ID пациента",
+    "dataSource": "Источник данных",
+    "emptyHint": "Чтобы загрузить профиль, выберите источник и укажите ID пациента выше.",
+    "noCohortSelected": "Когорта не выбрана",
+    "loadFailed": "Не удалось загрузить профиль"
   },
   "ple": {
     "spec": {
@@ -1131,74 +2011,62 @@
   },
   "jobs": {
     "refreshJobs": "Обновить список",
-    "title": "Задания"
+    "title": "Задания",
+    "close": "Закрыть панель заданий",
+    "openPanel": "Открыть панель заданий",
+    "loadFailed": "Не удалось загрузить задания"
   },
   "configuration": {
-    "title": "Настройки",
-    "changeSourcePriorities": "Изменять приоритеты источников в:",
-    "newSource": "Новый источник",
+    "alerts": {
+      "clearLocalCache": "Локальное хранилище очищено. Перезагрузите страницу, чтобы обновить сведения о конфигурации.",
+      "clearServerCache": "Серверный кэш очищен.",
+      "failUpdatePrioritySourceDaimon": "Не удалось обновить приоритет источника. Повторите попытку."
+    },
     "buttons": {
       "clearConfigurationCache": "Очистить кэш конфигурации",
       "clearServerCache": "Очистить серверный кэш",
       "tagManagement": "Управление тегами"
     },
-    "priorityOptions": {
-      "session": "В текущем сеансе",
-      "application": "Во всём приложении"
-    },
-    "alerts": {
-      "clearLocalCache": "Локальное хранилище очищено. Перезагрузите страницу, чтобы обновить сведения о конфигурации.",
-      "clearServerCache": "Серверный кэш очищен."
-    },
+    "changeSourcePriorities": "Изменять приоритеты источников в:",
     "confirms": {
       "clearServerCache": "Вы действительно хотите очистить серверный кэш?"
     },
-    "viewEdit": {
-      "source": {
-        "validation": {
-          "empty": "Название источника не указано"
-        },
-        "label": "Ключ источника:",
-        "confirms": {
-          "delete": "Удалить источник? Это действие необратимо!"
-        }
+    "jobs": {
+      "actions": {
+        "startPolling": "Включить автообновление",
+        "stopPolling": "Отключить автообновление"
       },
-      "dialect": {
-        "label": "Диалект источника:"
+      "empty": {
+        "title": "Задания не найдены"
       },
-      "connectionString": {
-        "label": "Строка подключения:",
-        "title": "Строка подключения"
+      "lastUpdated": "Последнее обновление",
+      "autoRefreshOn": "Автообновление включено"
+    },
+    "newSource": "Новый источник",
+    "priorityOptions": {
+      "application": "Во всём приложении",
+      "session": "В текущем сеансе"
+    },
+    "roles": {
+      "tabs": {
+        "permissions": "Права доступа",
+        "users": "Пользователи",
+        "utilities": "Утилиты"
       },
-      "username": {
-        "label": "Имя пользователя:"
-      },
-      "password": {
-        "label": "Пароль:"
-      },
-      "krb": {
-        "adminServer": {
-          "label": "KrbAdminServer:"
-        },
-        "authenticationMethod": {
-          "label": "Метод аутентификации Kerberos:"
-        },
-        "keytab": {
-          "label": "Keytab"
-        },
-        "userPassword": {
-          "label": "Имя пользователя и пароль"
-        },
-        "sourceDaimons": {
-          "label": "Схемы БД источника"
-        }
-      },
-      "bigQuery": {
-        "password": {
-          "label": "Файл-ключ сервисного аккаунта (OAuthPvtKeyPath)"
-        }
+      "title": "Роли",
+      "errors": {
+        "loadListFailed": "Не удалось загрузить роли",
+        "loadFailed": "Не удалось загрузить роль",
+        "createFailed": "Не удалось создать роль",
+        "updateFailed": "Не удалось обновить роль",
+        "deleteFailed": "Не удалось удалить роль",
+        "loadPermissionsFailed": "Не удалось загрузить права доступа",
+        "loadRolePermissionsFailed": "Не удалось загрузить права доступа роли",
+        "loadUsersFailed": "Не удалось загрузить пользователей",
+        "loadRoleUsersFailed": "Не удалось загрузить пользователей роли"
       }
     },
+    "title": "Настройки",
     "userImport": {
       "wizard": {
         "buttons": {
@@ -1211,12 +2079,50 @@
         }
       }
     },
-    "roles": {
-      "title": "Роли",
-      "tabs": {
-        "users": "Пользователи",
-        "permissions": "Права доступа",
-        "utilities": "Утилиты"
+    "viewEdit": {
+      "bigQuery": {
+        "password": {
+          "label": "Файл-ключ сервисного аккаунта (OAuthPvtKeyPath)"
+        }
+      },
+      "connectionString": {
+        "label": "Строка подключения:",
+        "title": "Строка подключения"
+      },
+      "dialect": {
+        "label": "Диалект источника:"
+      },
+      "krb": {
+        "adminServer": {
+          "label": "KrbAdminServer:"
+        },
+        "authenticationMethod": {
+          "label": "Метод аутентификации Kerberos:"
+        },
+        "keytab": {
+          "label": "Keytab"
+        },
+        "sourceDaimons": {
+          "label": "Схемы БД источника"
+        },
+        "userPassword": {
+          "label": "Имя пользователя и пароль"
+        }
+      },
+      "password": {
+        "label": "Пароль:"
+      },
+      "source": {
+        "confirms": {
+          "delete": "Удалить источник? Это действие необратимо!"
+        },
+        "label": "Ключ источника:",
+        "validation": {
+          "empty": "Название источника не указано"
+        }
+      },
+      "username": {
+        "label": "Имя пользователя:"
       }
     },
     "tagManagement": {
@@ -1226,14 +2132,25 @@
     }
   },
   "licenseAgreement": {
-    "title": "Лицензионное соглашение",
+    "accept": "Принять",
     "description": "Чтобы использовать SNOMED International SNOMED CT Browser и HemOnc, примите следующее лицензионное соглашение:",
     "reject": "Отказаться",
-    "accept": "Принять"
+    "title": "Лицензионное соглашение"
+  },
+  "inclusionRail": {
+    "add": "Добавить правило",
+    "selectRule": "Выберите правило слева, чтобы отредактировать его.",
+    "addCriteriaGroup": "Добавить группу критериев",
+    "title": "Правила включения",
+    "entryEvents": "События входа",
+    "of": "из",
+    "datasetPatients": "чел. в датасете",
+    "qualifyingCohort": "Квалифицирующая когорта",
+    "ofEntry": "от событий входа",
+    "unnamedRule": "Правило без названия",
+    "statsLoadFailed": "Не удалось загрузить статистику включения"
   },
   "cohortDefinitions": {
-    "copyLoadForbidden": "У вас нет прав для чтения этой когорты.",
-    "deleteError": "Не удалось удалить когорту.",
     "cohort": {
       "modals": {
         "cohortDefinition": {
@@ -1258,9 +2175,29 @@
         "versions": "История версий"
       }
     },
+    "generation": {
+      "section": {
+        "title": "Генерация",
+        "statusSaveFirst": "Сохраните когорту для генерации",
+        "statusNoRuns": "Генераций пока нет",
+        "statusCount": "Сгенерировано: {done} / {total}",
+        "lastRunMeta": "Последний запуск · {time}, источник: {source}",
+        "generateAll": "Сгенерировать все",
+        "onlyGenerated": "Только сгенерированные"
+      },
+      "row": {
+        "inclusionReport": "Отчёт по включению",
+        "samples": "Выборки пациентов"
+      },
+      "drawer": {
+        "inclusionTitle": "Отчёт по правилам включения",
+        "samplesTitle": "Выборки пациентов когорты"
+      },
+      "failed": "Генерация завершилась ошибкой"
+    },
     "cohortreports": {
       "tabs": {
-        "byEvent": "По событию",
+        "byEvent": "По событиям",
         "byPerson": "По пациентам"
       }
     },
@@ -1270,281 +2207,281 @@
     "newDefinition": "Новая когорта",
     "newDefinitionTitle": "Создать новое определение когорты",
     "noConceptSets": "Нет наборов концептов для экспорта",
-    "generation": {
-      "section": {
-        "title": "Генерация"
-      },
-      "row": {
-        "samples": "Выборки пациентов"
+    "designTab": {
+      "countingOptions": {
+        "distinctConcept": "Уникальный концепт",
+        "distinctDate": "Уникальная дата",
+        "distinctVisit": "Уникальное посещение"
       }
     },
+    "unused": "Не используется",
+    "ruleName": "Название правила",
+    "appearance": {
+      "timeAtRisk": "Время под риском"
+    },
+    "descriptionPlaceholder": "Добавьте описание (необязательно) — назначение, охват, ссылки…",
+    "cohortsLower": "ког.",
+    "importHint": "Вставьте JSON когорты ATLAS или загрузите файл .json. Перед сохранением выражение проверяется.",
+    "uploadJsonLabel": "Загрузить файл JSON",
+    "expressionJsonLabel": "JSON выражения",
     "cohortDefinitions": "Определения когорт",
+    "pageSubtitle": "Просматривайте, фильтруйте и управляйте определениями когорт.",
+    "importFileReadError": "Не удалось прочитать выбранный файл.",
+    "importInvalidJson": "JSON выражения содержит синтаксические ошибки.",
+    "importInvalidShape": "Выражение должно быть объектом JSON.",
+    "importInvalidExpression": "JSON выражения не является корректным выражением когорты: {errors}",
+    "importFailed": "Импорт не выполнен. Проверьте JSON и повторите попытку.",
+    "copyLoadError": "Не удалось загрузить когорту для копирования.",
+    "copyLoadForbidden": "У вас нет прав на чтение этой когорты.",
+    "copyError": "Не удалось скопировать когорту.",
+    "deleteError": "Не удалось удалить когорту.",
+    "noRuleDescription": "Нет описания",
     "ruleDescription": "Описание",
+    "saveBeforeGenerate": "Сохраните когорту перед генерацией.",
+    "conceptSetPicker": {
+      "empty": "Наборов концептов пока нет — создайте набор, чтобы начать."
+    },
     "conceptSetsDialog": {
-      "title": "Наборы концептов"
-    }
+      "title": "Наборы концептов",
+      "empty": "В этой когорте нет наборов концептов"
+    },
+    "importValidation": {
+      "notAnObject": "Выражение должно быть объектом JSON.",
+      "unrecognizedField": "неизвестное поле",
+      "didYouMean": "(возможно, вы имели в виду «{suggestion}»?)"
+    },
+    "nameRequired": "Укажите название когорты",
+    "editName": "Редактировать название когорты",
+    "searchPlaceholder": "Поиск когорт…",
+    "inclusionRules": {
+      "deleteRule": "Удалить правило",
+      "editRule": "Редактировать название и описание правила"
+    },
+    "cohortName": "Название когорты",
+    "importFromJson": "Импорт когорты из JSON"
   },
   "const": {
+    "entityName": {
+      "characterization": "характеризация",
+      "cohort": "когорта",
+      "conceptSet": "набор концептов",
+      "featureAnalysis": "анализ признаков",
+      "incidenceRate": "анализ уровня заболеваемости",
+      "pathway": "анализ траекторий"
+    },
     "disabledReason": {
-      "dirty": "Сохраните изменения перед выполнением исследования",
-      "invalidDesign": "Неправильный дизайн"
+      "previewingVersion": "Вы просматриваете предыдущую версию. Для сохранения вернитесь к текущей версии.",
+      "noCreatePermission": "У вас нет прав на создание объекта типа «{entity}».",
+      "noWriteAccess": "Вы не являетесь владельцем объекта «{entity}», и у вас нет прав на его изменение.",
+      "needsName": "Перед сохранением укажите название объекта «{entity}».",
+      "hasErrors": "Исправьте ошибки проверки перед сохранением.",
+      "dirty": "Сохраните изменения перед генерацией",
+      "invalidDesign": "Некорректный дизайн"
     },
     "eventsList": {
       "addRace": {
-        "title_demographic": "Добавить критерии гонки",
+        "title_demographic": "Добавить критерии расы",
         "desc_demographic": "Фильтровать события по расе."
       },
       "addEthnicity": {
-        "title_demographic": "Добавить критерии этнической принадлежности",
-        "desc_demographic": "Фильтровать события по этнической принадлежности."
+        "title_demographic": "Добавить критерии этноса",
+        "desc_demographic": "Фильтр событий по этносу."
       },
       "addLength": {
-        "title_observationperiod": "Добавить критерии длины периода",
-        "desc_observationperiod": "Фильтруйте периоды наблюдения по продолжительности.",
-        "title_payerplan": "Добавить критерии длины периода",
-        "desc_payerplan": "Фильтровать периоды плана плательщика по продолжительности.",
-        "title_visit": "Добавить критерии продолжительности посещения",
-        "desc_visit": "Отфильтруйте количество посещений по продолжительности.",
-        "title_visitDetail": "Добавить критерии продолжительности деталей посещения",
-        "desc_visitDetail": "Отфильтруйте количество  деталей посещения по продолжительности."
+        "title_observationperiod": "Добавить критерии длительности периода",
+        "desc_observationperiod": "Фильтр Периодов Наблюдения по длительности.",
+        "title_payerplan": "Добавить критерии длительности периода",
+        "desc_payerplan": "Фильтр Периодов Страхования по длительности.",
+        "title_visit": "Добавить критерии длительности Посещения",
+        "desc_visit": "Фильтр Посещений по длительности.",
+        "title_visitDetail": "Добавить критерии длительности Детализации Посещения",
+        "desc_visitDetail": "Фильтр Детализаций Посещений по длительности."
       },
       "addType": {
         "title_death": "Добавить критерии типа смерти",
         "desc_death": "Фильтр по типу смерти.",
-        "title_deviceexposure": "Добавить критерии типа устройства",
-        "desc_deviceexposure": "Фильтруйте экспозиции устройства по типу экспозиции.",
+        "title_deviceexposure": "Добавить критерии типа Устройства",
+        "desc_deviceexposure": "Фильтр Воздействий Устройств по типу воздействия.",
         "title_observationperiod": "Добавить критерии типа периода",
-        "desc_observationperiod": "Фильтруйте периоды наблюдения по типу.",
-        "title_specimen": "Добавить критерий типа образца",
-        "desc_specimen": "Фильтровать образец по типу.",
-        "title_visitDetail": "Добавить критерий типа деталей посещения",
-        "desc_visitDetail": "Фильтровать детали посещения по типу"
+        "desc_observationperiod": "Фильтр Периодов Наблюдения по типу.",
+        "title_specimen": "Добавить критерии типа Образца",
+        "desc_specimen": "Фильтр Образцов по типу.",
+        "title_visitDetail": "Добавить критерии типа Детализации Посещения",
+        "desc_visitDetail": "Фильтр Детализаций Посещений по типу."
       },
       "addPayerConcept": {
-        "title_payerplan": "Добавить критерии концепции плательщика",
-        "desc_payerplan": "Фильтруйте периоды плана плательщика концепцией плательщика."
+        "title_payerplan": "Добавить критерии концепта плательщика",
+        "desc_payerplan": "Фильтр Периодов Страхования по концепту плательщика."
       },
       "addPlanConcept": {
-        "title_payerplan": "Добавить критерии концепции плана",
-        "desc_payerplan": "Фильтруйте периоды плана плательщика по концепции плана."
+        "title_payerplan": "Добавить критерии концепта страхового плана",
+        "desc_payerplan": "Фильтр Периодов Страхования по концепту страхового плана."
       },
       "addSponsorConcept": {
-        "title_payerplan": "Добавить концепцию спонсора",
-        "desc_payerplan": "Фильтруйте периоды плана плательщика по концепции спонсора."
+        "title_payerplan": "Добавить критерии концепта спонсора страхового плана",
+        "desc_payerplan": "Фильтр Периодов Страхования по концепту спонсора страхового плана."
       },
       "addStopReasonConcept": {
-        "title_payerplan": "Добавить критерий концепции",
-        "desc_payerplan": "Фильтруйте периоды плана плательщика концепцией причины стопа."
+        "title_payerplan": "Добавить критерии концепта причины прекращения страхования",
+        "desc_payerplan": "Фильтр Периодов Страхования по концепту причины прекращения страхования."
       },
       "addPayerSourceConcept": {
-        "title_payerplan": "Добавить критерии концепции источника плательщика",
-        "desc_payerplan": "Фильтруйте периоды плана плательщика по концепции источника плательщика."
+        "title_payerplan": "Добавить критерии исходного концепта плательщика",
+        "desc_payerplan": "Фильтр Периодов Страхования по исходному концепту плательщика."
       },
       "addPlanSourceConcept": {
-        "title_payerplan": "Добавить критерии концепции источника плана",
-        "desc_payerplan": "Фильтруйте периоды плана плательщика по концепции источника плана."
+        "title_payerplan": "Добавить критерии исходного концепта страхового плана",
+        "desc_payerplan": "Фильтр Периодов Страхования по исходному концепту страхового плана."
       },
       "addSponsorSourceConcept": {
-        "title_payerplan": "Добавить спонсорские критерии концепции источника",
-        "desc_payerplan": "Фильтруйте периоды плана плательщика по концепции источника спонсора."
+        "title_payerplan": "Добавить критерии исходного концепта спонсора страхового плана",
+        "desc_payerplan": "Фильтр Периодов Страхования по исходному концепту спонсора страхового плана."
       },
       "addStopReasonSourceConcept": {
-        "title_payerplan": "Добавить Стоп-причину Критерии концепции источника",
-        "desc_payerplan": "Фильтруйте периоды плана плательщика концепцией источника причины стопа."
+        "title_payerplan": "Добавить критерии исходного концепта причины прекращения страхования",
+        "desc_payerplan": "Фильтр Периодов Страхования по исходному концепту причины прекращения страхования."
       },
       "addSourceConcept": {
-        "title_occurrence": "Добавить концепцию источника условия",
-        "desc_occurrence": "Происхождение условий фильтра по концепции источника условия.",
-        "title_death": "Добавить причину смерти Концепция источника Критерии",
-        "desc_death": "Фильтр смерти по концепции источника смерти.",
-        "title_deviceexposure": "Добавить критерий концепции источника устройства",
-        "desc_deviceexposure": "Воздействия устройства фильтра по концепции источника устройства.",
-        "title_measurement": "Добавить критерии концепции источника измерения",
-        "desc_measurement": "Фильтр измерений по концепции источника измерений.",
-        "title_observation": "Добавить критерии концепции источника наблюдения",
-        "desc_observation": "Фильтр наблюдений по концепции источника.",
-        "title_procedureoccurrence": "Добавить процедуру Исходные критерии концепции",
-        "desc_procedureoccurrence": "Фильтровать вхождения процедуры по концепции источника процедуры.",
-        "title_visit": "Добавить критерий концепции посещения источника",
-        "desc_visit": "Отфильтруйте события посещения по концепции источника посещения.",
-        "title_visitDetail": "Добавить критерий концепции детали посещения источника",
-        "desc_visitDetail": "Отфильтруйте детали посещения по концепции источника детали посещения."
+        "title_occurrence": "Добавить исходный концепт Состояния",
+        "desc_occurrence": "Фильтр Событий Состояния по исходному концепту Состояния.",
+        "title_death": "Добавить критерии исходного концепта причины смерти",
+        "desc_death": "Фильтр записей о Смерти по исходному концепту смерти.",
+        "title_deviceexposure": "Добавить критерии исходного концепта Устройства",
+        "desc_deviceexposure": "Фильтр Воздействий Устройств по исходному концепту Устройства.",
+        "title_measurement": "Добавить критерии исходного концепта Измерения",
+        "desc_measurement": "Фильтр Измерений по исходному концепту Измерения.",
+        "title_observation": "Добавить критерии исходного концепта Наблюдения",
+        "desc_observation": "Фильтр Наблюдений по исходному концепту.",
+        "title_procedureoccurrence": "Добавить критерии исходного концепта Процедуры",
+        "desc_procedureoccurrence": "Фильтр Событий Процедуры по исходному концепту Процедуры.",
+        "title_specimen": "Добавить критерии исходного концепта образца",
+        "desc_specimen": "Фильтр Образцов по исходному концепту образца.",
+        "title_visit": "Добавить критерии исходного концепта Посещения",
+        "desc_visit": "Фильтр Посещений по исходному концепту Посещения.",
+        "title_visitDetail": "Добавить критерии исходного концепта Детализации Посещения",
+        "desc_visitDetail": "Фильтр Детализаций Посещений по исходному концепту Детализации Посещения."
       },
       "addDate": {
         "title_procedureoccurrence": "Добавить критерии даты начала",
-        "desc_procedureoccurrence": "Фильтровать вхождения процедуры по дате начала процедуры."
+        "desc_procedureoccurrence": "Фильтр Событий Процедуры по дате начала Процедуры."
       },
       "addUniqueId": {
         "title_deviceexposure": "Добавить критерии уникального идентификатора",
-        "desc_deviceexposure": "Фильтрация воздействия устройства по уникальному идентификатору устройства."
+        "desc_deviceexposure": "Фильтр Воздействий Устройств по уникальному ID Устройства."
       },
       "addLotNumber": {
-        "title_drugexposure": "Добавить критерии номера лота",
-        "desc_drugexposure": "Фильтрация воздействия наркотиков по номеру лота."
+        "title_drugexposure": "Добавить критерии номера серии",
+        "desc_drugexposure": "Фильтр Приёмов Препаратов по номеру серии."
       },
       "addQualifier": {
-        "title_observation": "Добавить критерии квалификации",
-        "desc_observation": "Фильтр наблюдений по классификатору."
+        "title_observation": "Добавить критерии уточняющего признака",
+        "desc_observation": "Фильтр Наблюдений по уточняющему признаку."
       },
       "addUserDefined": {
         "title_observationperiod": "Укажите даты начала и окончания",
-        "desc_observationperiod": "Укажите начальную и конечную дату для использования в период наблюдения.",
+        "desc_observationperiod": "Укажите даты начала и окончания Периода Наблюдения.",
         "title_payerplan": "Укажите даты начала и окончания",
-        "desc_payerplan": "Укажите даты начала и окончания, которые будут использоваться в Период Плана Плательщика."
+        "desc_payerplan": "Укажите даты начала и окончания Периода Страхования."
       },
       "addModifier": {
         "title_procedureoccurrence": "Добавить критерий модификатора",
-        "desc_procedureoccurrence": "Процедура фильтра Происходит по модификатору."
+        "desc_procedureoccurrence": "Фильтр Событий Процедуры по модификатору."
       },
       "addAnatomicSite": {
-        "title_specimen": "Добавить анатомические критерии сайта",
-        "desc_specimen": "Фильтровать образцы по анатомическому сайту."
+        "title_specimen": "Добавить критерии анатомической локализации",
+        "desc_specimen": "Фильтр Образцов по анатомической локализации."
       },
       "addDiseaseStatus": {
         "title_specimen": "Добавить критерии статуса заболевания",
-        "desc_specimen": "Фильтровать образцы по состоянию болезни."
+        "desc_specimen": "Фильтр Образцов по статусу заболевания."
       },
       "addSourceId": {
         "title_specimen": "Добавить критерии идентификатора источника",
-        "desc_specimen": "Фильтровать образцы по идентификатору источника."
+        "desc_specimen": "Фильтр Образцов по ID источника."
       },
       "addPlaceService": {
-        "title_visit": "Добавить критерии обслуживания",
-        "desc_visit": "Фильтр посещений в зависимости от места обслуживания.",
-        "title_visitDetail": "Добавить критерии обслуживания",
-        "desc_visitDetail": "Фильтр деталей посещения в зависимости от места обслуживания."
+        "title_visit": "Добавить критерии места оказания медицинской помощи",
+        "desc_visit": "Фильтр Посещений по месту оказания медицинской помощи.",
+        "title_visitDetail": "Добавить критерии места оказания медицинской помощи",
+        "desc_visitDetail": "Фильтр Детализаций Посещений по месту оказания медицинской помощи."
       },
       "addPlaceServiceLocation": {
-        "title_visit": "Добавить критерий места обслуживания",
-        "desc_visit": "Фильтр посещений в зависимости от места обслуживания пациента.",
-        "title_visitDetail": "Добавить критерий места обслуживания",
-        "desc_visitDetail": "Фильтр деталей посещения в зависимости от места обслуживания пациента."
+        "title_visit": "Добавить критерии расположения места оказания медицинской помощи",
+        "desc_visit": "Фильтр Посещений по расположению места оказания медицинской помощи.",
+        "title_visitDetail": "Добавить критерии расположения места оказания медицинской помощи",
+        "desc_visitDetail": "Фильтр Детализаций Посещений по расположению места оказания медицинской помощи."
       },
       "addPlaceServiceDistance": {
-        "title_visitDetail": "Добавить критерий расстояния до места обслуживания",
-        "desc_visitDetail": "Фильтр деталей посещения в зависимости от расстояния от места обслуживания до пациента."
+        "title_visitDetail": "Добавить критерии расстояния до места оказания медицинской помощи",
+        "desc_visitDetail": "Фильтр Детализаций Посещений по расстоянию до места оказания медицинской помощи."
       }
-    },
-    "entityName": {
-      "characterization": "характеризации",
-      "conceptSet": "набора концепций",
-      "featureAnalysis": "функционального анализа"
     }
   },
   "notifications": {
-    "jobName": "Имя задачи",
     "duration": "Длительность",
     "endTime": "Время окончания",
+    "jobName": "Имя задачи",
     "status": "Состояние"
   },
-  "views": {
-    "cohorts": {
-      "eyebrowMain": "OHDSI · Когорты",
-      "eyebrowImport": "ИМПОРТ",
-      "eyebrowConfirm": "ПОДТВЕРЖДЕНИЕ",
-      "eyebrowNew": "НОВАЯ",
-      "eyebrowCohort": "КОГОРТА",
-      "countSingular": "1 когорта",
-      "countPlural": "Когорт: {count}"
+  "auth": {
+    "sessionExpiringSoon": "Срок действия сеанса скоро истечёт",
+    "sessionActive": "Сеанс активен",
+    "extendSession": "Продлить сеанс",
+    "tokenInfoNotAvailable": "Сведения о токене недоступны",
+    "sessionExpired": "Срок действия сеанса истёк. Войдите снова.",
+    "sessionExpiringMinutes": "Срок действия сеанса истечёт через {minutes} мин. Нажмите «Продлить сеанс», чтобы продолжить.",
+    "sessionExpiringInMinutes": "Срок действия сеанса истечёт через {minutes} мин.",
+    "sessionActiveHours": "Сеанс активен ещё {hours} ч",
+    "sessionActiveMinutes": "Сеанс активен ещё {minutes} мин",
+    "currentlyRunningAs": "Сейчас вы работаете от имени:",
+    "originalUser": "Исходный пользователь: {username}",
+    "targetUsername": "Имя целевого пользователя",
+    "enterUsernameToImpersonate": "Введите имя пользователя, от имени которого хотите работать",
+    "runAsWarning": "При работе от имени другого пользователя вы принимаете его права доступа и идентификационные данные. Все действия будут выполняться от его имени.",
+    "failedToRunAsUser": "Не удалось начать работу от имени пользователя",
+    "failedToExitRunAs": "Не удалось выйти из режима работы от имени другого пользователя",
+    "iap": {
+      "sessionRefreshFrame": "Обновление сеанса Identity-aware proxy"
     },
-    "characterizationBuilder": {
-      "importInputAria": "Импортировать дизайн характеризации"
-    },
-    "featureAnalysisEditor": {
-      "deleteEyebrow": "ПОДТВЕРЖДЕНИЕ"
-    },
-    "dataSources": {
-      "reportNotImplemented": "Тип отчёта «{type}» ещё не реализован.",
-      "noSources": "Нет доступных источников данных.",
-      "selectSourceHint": "Выберите источник данных, чтобы просмотреть его отчёты."
-    },
-    "profile": {
-      "eyebrow": "ПРОФИЛЬ"
-    },
-    "incidenceRates": {
-      "copied": "Частота случаев скопирована",
-      "deleted": "Частота случаев удалена"
-    },
-    "pathways": {
-      "copied": "Путь скопирован",
-      "deleted": "Путь удалён"
-    },
-    "roleDetails": {
-      "roleNotFound": "Роль не найдена"
-    },
-    "roleManagement": {
-      "title": "Управление ролями и разрешениями",
-      "subtitle": "Управляйте ролями пользователей, назначайте разрешения и контролируйте доступ к функциям системы."
+    "oauthNoToken": "Не удалось пройти аутентификацию — токен не получен",
+    "authenticationFailed": "Не удалось пройти аутентификацию",
+    "noTokenReceived": "Сервер не вернул токен",
+    "credentials": {
+      "usernamePlaceholder": "Введите имя пользователя",
+      "username": "Имя пользователя"
     }
   },
-  "theme": {
-    "label": "Тема",
-    "light": "Светлая",
-    "dark": "Тёмная",
-    "system": "Системная"
+  "conceptSets": {
+    "conceptCount": "Концептов: {count}",
+    "concepts": "Концепты:",
+    "defaultName": "Набор концептов {number}",
+    "tagUpdateFailed": "Не удалось обновить теги",
+    "pluginEditLoadFailed": "Не удалось открыть набор концептов {id}",
+    "loadListFailed": "Не удалось загрузить наборы концептов",
+    "notFound": "Набор концептов не найден",
+    "loadFailed": "Не удалось загрузить набор концептов",
+    "createFailed": "Не удалось создать набор концептов",
+    "updateFailed": "Не удалось обновить набор концептов",
+    "copyFailed": "Не удалось скопировать набор концептов",
+    "tagAssignFailed": "Не удалось назначить тег «{name}»",
+    "tagUnassignFailed": "Не удалось снять тег «{name}»",
+    "deleteFailed": "Не удалось удалить набор концептов",
+    "noneSelected": "Набор концептов не выбран",
+    "duplicateItem": "Концепт с такими параметрами уже есть в этом наборе",
+    "duplicateItemOptions": "Другая запись этого концепта уже использует эти параметры",
+    "versionLoadFailed": "Не удалось загрузить версию {version}",
+    "saveVersionFailed": "Не удалось сохранить просматриваемую версию как текущую",
+    "compare": {
+      "noneLoaded": "Набор концептов не загружен",
+      "sameSet": "Нельзя сравнить набор концептов с самим собой",
+      "otherNotFound": "Другой набор концептов не найден"
+    },
+    "noVocabularySource": "Нет доступного источника словаря",
+    "resolveFailed": "Не удалось определить состав набора концептов",
+    "resolveSourceCodesFailed": "Не удалось найти исходные коды"
   },
-  "route": {
-    "home": {
-      "title": "Начало"
-    },
-    "cohorts": {
-      "title": "Когорты"
-    },
-    "conceptSets": {
-      "title": "Наборы концепций"
-    },
-    "profiles": {
-      "title": "Профили"
-    },
-    "analysis": {
-      "title": "Анализ"
-    },
-    "characterizations": {
-      "title": "Характеризации"
-    },
-    "pathways": {
-      "title": "Исходы Когорты"
-    },
-    "incidenceRates": {
-      "title": "Инцидентность"
-    },
-    "dataSources": {
-      "title": "Источники данных"
-    }
-  },
-  "characterizations": {
-    "results": {
-      "table": {
-        "min": "Минимум",
-        "prevalence": "Распространённость"
-      }
-    }
-  },
-  "featureAnalyses": {
-    "editor": {
-      "prevalence": {
-        "addCriteria": "Добавить признак по критериям"
-      },
-      "distribution": {
-        "addCriteria": "Добавить признак по критериям"
-      }
-    },
-    "aggregateDomain": {
-      "condition": "Состояние",
-      "conditionEra": "Эра Состояния",
-      "demographics": "Демография",
-      "device": "Устройство",
-      "drug": "Препарат",
-      "drugEra": "Эра Препарата",
-      "measurement": "Измерение",
-      "observation": "Наблюдение",
-      "procedure": "Процедура",
-      "visit": "Посещение"
-    }
-  },
-  "inclusionRail": {
-    "title": "Правила включения",
-    "of": "из"
+  "conceptSearch": {
+    "instructions": "Введите поисковый запрос, чтобы найти концепты в словаре OHDSI"
   },
   "criteria": {
     "conditionEra": {
@@ -1558,6 +2495,12 @@
     },
     "death": {
       "name": "Смерть"
+    },
+    "deviceExposure": {
+      "name": "Воздействие Устройства"
+    },
+    "doseEra": {
+      "name": "Эра Дозирования"
     },
     "drugEra": {
       "name": "Эра Препарата"
@@ -1573,29 +2516,59 @@
     },
     "observationPeriod": {
       "name": "Период Наблюдения"
+    },
+    "payerPlanPeriod": {
+      "name": "Период Страхования"
+    },
+    "procedureOccurrence": {
+      "name": "Событие Процедуры"
+    },
+    "specimen": {
+      "name": "Образец"
+    },
+    "visitOccurrence": {
+      "name": "Посещение"
+    },
+    "visitDetail": {
+      "name": "Детализация Посещения"
+    },
+    "locationRegion": {
+      "name": "Географический регион"
     }
   },
   "attributes": {
     "age": {
-      "name": "Возраст"
+      "name": "Возраст",
+      "description": "Фильтр по возрасту на момент события"
     }
   },
   "config": {
     "title": "Настройки",
     "cache": {
-      "clearButton": "Очистить кэш конфигурации"
+      "title": "Управление кэшем",
+      "clearButton": "Очистить кэш конфигурации",
+      "success": "Кэш конфигурации очищен"
+    },
+    "vocabulary": {
+      "title": "Схема словаря",
+      "undo": "Отменить"
     },
     "tags": {
       "title": "Управление тегами",
+      "createButton": "Создать группу тегов",
       "table": {
         "headers": {
           "color": "Цвет",
           "icon": "Значок",
           "mandatory": "Обязательные теги",
-          "multiple": "Несколько тегов"
-        }
+          "showColumn": "Показать столбец",
+          "multiple": "Несколько тегов",
+          "freeForm": "Произвольные теги"
+        },
+        "empty": "Группы тегов не найдены"
       },
       "dialog": {
+        "createTitle": "Создать группу тегов",
         "editTitle": "Редактировать группу тегов",
         "fields": {
           "name": {
@@ -1611,89 +2584,759 @@
             "label": "Описание"
           },
           "mandatory": {
-            "label": "Обязательные теги"
+            "label": "Обязательные теги",
+            "hint": "Теги из этой группы обязательны для всех объектов"
+          },
+          "showColumn": {
+            "label": "Показать столбцом",
+            "hint": "Показывать отдельным столбцом в таблицах объектов"
+          },
+          "multiple": {
+            "label": "Разрешить несколько тегов",
+            "hint": "Разрешить несколько тегов из этой группы для одного объекта"
+          },
+          "freeForm": {
+            "label": "Произвольные теги",
+            "hint": "Разрешить пользователям создавать собственные теги в этой группе"
           }
         }
+      },
+      "delete": {
+        "confirmTitle": "Удалить группу тегов",
+        "error": "Не удалось удалить группу тегов"
+      },
+      "validation": {
+        "nameTooLong": "Название должно содержать меньше 255 символов",
+        "invalidColor": "Некорректный формат цвета (требуется шестнадцатеричный код: #RRGGBB)",
+        "iconTooLong": "Слишком длинное имя значка",
+        "descriptionTooLong": "Слишком длинное описание"
       }
+    },
+    "accessibility": {
+      "openPanel": "Открыть панель настроек"
     }
   },
   "versions": {
-    "current": "Текущая"
+    "current": "Текущая",
+    "previewingVersion": "Вы просматриваете версию {version}",
+    "copySuccess": "Копия создана",
+    "copyError": "Не удалось создать копию. Повторите попытку.",
+    "commentSaved": "Комментарий сохранён",
+    "saveSuccess": "Версия сохранена как текущая",
+    "saveError": "Не удалось сохранить версию как текущую. Повторите попытку.",
+    "filterClear": "Сбросить фильтры",
+    "loadError": "Не удалось загрузить историю версий"
   },
   "incidenceRate": {
-    "studyWindowStart": "Дата начала"
+    "editor": {
+      "loadError": "Не удалось загрузить анализ уровня заболеваемости"
+    },
+    "studyWindow": "Окно исследования",
+    "studyWindowStart": "Дата начала",
+    "studyWindowEnd": "Дата окончания",
+    "stratifyName": "Название правила",
+    "noStratifyRules": "Правил стратификации пока нет.",
+    "untitled": "Правило без названия",
+    "discardStratifyChanges": "Изменения этого правила стратификации будут потеряны.",
+    "studyWindowEmpty": "Окно исследования не задано",
+    "validation": {
+      "designIncomplete": "Дизайн анализа не завершён",
+      "targetRequired": "Необходима хотя бы одна целевая когорта",
+      "outcomeRequired": "Необходима хотя бы одна когорта исхода",
+      "timeAtRiskOrder": "Окончание времени под риском должно быть позже начала, если обе границы отсчитываются от одной даты",
+      "studyWindowOrder": "Начало окна исследования должно предшествовать окончанию"
+    }
+  },
+  "views": {
+    "cohorts": {
+      "eyebrowMain": "OHDSI · Когорты",
+      "eyebrowImport": "Импорт",
+      "eyebrowConfirm": "Подтверждение",
+      "eyebrowNew": "Создание",
+      "eyebrowCohort": "Когорта",
+      "countSingular": "1 когорта",
+      "countPlural": "Когорт: {count}"
+    },
+    "characterizationBuilder": {
+      "importInputAria": "Импорт дизайна характеризации"
+    },
+    "featureAnalysisEditor": {
+      "deleteEyebrow": "Подтверждение"
+    },
+    "dataSources": {
+      "reportNotImplemented": "Тип отчёта «{type}» пока не реализован.",
+      "noSources": "Нет доступных источников данных.",
+      "selectSourceHint": "Выберите источник данных для просмотра отчётов."
+    },
+    "profile": {
+      "eyebrow": "Профиль"
+    },
+    "incidenceRates": {
+      "copied": "Анализ уровня заболеваемости скопирован",
+      "deleted": "Анализ уровня заболеваемости удалён"
+    },
+    "pathways": {
+      "copied": "Траектория скопирована",
+      "deleted": "Траектория удалена"
+    },
+    "roleDetails": {
+      "roleNotFound": "Роль не найдена"
+    },
+    "roleManagement": {
+      "title": "Управление ролями и правами доступа",
+      "subtitle": "Управляйте ролями пользователей, назначайте права доступа и контролируйте доступ к функциям системы."
+    }
+  },
+  "trexsql": {
+    "cacheReady": "Готов",
+    "cacheStale": "Устарел",
+    "cacheBuilding": "Создаётся",
+    "cacheError": "Ошибка",
+    "cacheNotBuilt": "Не создан",
+    "built": "Создан",
+    "update": "Обновить",
+    "cacheFileOrphaned": "Нет датасета",
+    "cacheFileDeleteTitle": "Удалить кэш?",
+    "cacheFileDeleteOrphan": "Ни один датасет не ссылается на этот кэш. Удаление освободит место; отменить его будет невозможно.",
+    "cacheFileDeleteActive": "Этот кэш принадлежит зарегистрированному датасету. Прежде чем снова выполнять запросы к датасету, кэш потребуется пересоздать.",
+    "cacheTitle": "Кэш пациентов",
+    "cacheDescription": "Создавайте кэши пациентов для быстрого подсчёта когорт и управляйте ими. У каждого источника данных может быть свой кэш.",
+    "build": "Создать кэш",
+    "building": "Создание...",
+    "noDataSources": "Нет доступных источников данных",
+    "statusReady": "Готов",
+    "statusBuilding": "Создаётся",
+    "statusStale": "Устарел",
+    "statusError": "Ошибка",
+    "statusNotBuilt": "Не создан",
+    "statusMessage": {
+      "noSource": "Источник данных не выбран",
+      "ready": "Кэш готов",
+      "building": "Создаётся кэш...",
+      "notBuilt": "Кэш не создан. Создайте его для подсчёта пациентов.",
+      "stale": "Кэш устарел. Рекомендуется пересоздать его для точного подсчёта.",
+      "error": "Ошибка кэша",
+      "unknown": "Неизвестное состояние кэша"
+    },
+    "patientCountFailed": "Не удалось получить количество пациентов",
+    "errors": {
+      "sourceNotFound": "Источник данных «{sourceKey}» не найден",
+      "buildInProgress": "Создание кэша уже выполняется",
+      "extensionUnavailable": "Расширение TrexSQL недоступно",
+      "buildFailed": "Создание завершилось ошибкой: {detail}",
+      "statusFailed": "Не удалось получить состояние кэша: {detail}",
+      "invalidExpression": "Некорректное выражение когорты",
+      "cacheUnavailable": "Кэш недоступен. Сначала создайте его.",
+      "incompleteExpression": "Выражение когорты неполное или некорректное.",
+      "countFailed": "Подсчёт завершился ошибкой: {detail}",
+      "listFilesFailed": "Не удалось получить список файлов кэша: {status} {detail}",
+      "deleteFailed": "Не удалось удалить кэш: {status} {detail}",
+      "inclusionStatsFailed": "Не удалось получить статистику включения: {detail}"
+    }
+  },
+  "pathway": {
+    "results": {
+      "tabular": "Таблица",
+      "allPathways": "Все траектории",
+      "countsByRank": "Количество по позиции",
+      "eventCohortCounts": "Количество по когортам событий",
+      "title": "Результаты анализа траекторий",
+      "loadFailed": "Не удалось загрузить результаты",
+      "distinctEventCohortCounts": "Число переходов между когортами событий",
+      "loading": "Загрузка результатов…"
+    },
+    "workbench": {
+      "noRunsYet": "Запусков пока нет",
+      "emptyChartTitle": "Здесь появится Sunburst-диаграмма",
+      "emptyChartHint": "Выберите слева хотя бы одну целевую когорту и несколько когорт событий, затем выполните генерацию по источнику данных.",
+      "noRunYetTitle": "Запусков пока нет",
+      "noRunYetHint": "Выполните генерацию по источнику данных, чтобы увидеть Sunburst-диаграмму.",
+      "legend": "Легенда",
+      "selectedPath": "Выбранная траектория",
+      "selectPathHint": "Нажмите сектор, чтобы изучить траекторию лекарственной терапии",
+      "insightsEmptyHint": "Аналитическая сводка появится после первого запуска.",
+      "runDisabledReason": "Сохраните дизайн перед генерацией",
+      "coverage": "Охват когорты",
+      "persons": "чел.",
+      "ofCohort": "когорты",
+      "ofPathways": "траекторий",
+      "stepBreakdown": "Разбивка по шагам",
+      "pathStats": "Статистика траектории",
+      "coverageSummary": "С траекторией: {count} из {total} пациентов"
+    },
+    "combinationWindow": "Окно объединения (дней)",
+    "minCellCount": "Минимальное количество пациентов в ячейке",
+    "maxDepth": "Максимальная длина траектории",
+    "allowRepeats": "Разрешить повторения",
+    "validation": {
+      "targetRequired": "Необходима хотя бы одна целевая когорта",
+      "eventRequired": "Необходима хотя бы одна когорта событий",
+      "maxDepthMin": "Максимальная длина траектории должна быть не меньше {min}",
+      "minCellCountMin": "Минимальное количество пациентов в ячейке должно быть не меньше {min}"
+    }
+  },
+  "analysis": {
+    "subtitle": "Характеризуйте когорты, создавайте признаки, изучайте траектории и рассчитывайте уровни заболеваемости."
+  },
+  "pathwayDefinitions": {
+    "deleteConfirm": "Удалить эту траекторию? Это действие нельзя отменить."
+  },
+  "theme": {
+    "label": "Тема",
+    "light": "Светлая",
+    "dark": "Тёмная",
+    "system": "Системная"
+  },
+  "inclusionPanel": {
+    "limitIncludedEvents": "Выбор из включённых событий"
   },
   "apiKeys": {
     "list": {
+      "title": "Ключи API",
+      "subtitle": "Управляйте личными ключами API для программного доступа к WebAPI.",
+      "newButton": "Новый ключ",
+      "empty": "Вы ещё не создали ни одного ключа API.",
+      "columns": {
+        "identifier": "Идентификатор ключа",
+        "expires": "Истекает",
+        "lastUsed": "Последнее использование"
+      },
+      "status": {
+        "active": "Активен",
+        "disabled": "Отключён",
+        "expired": "Срок действия истёк"
+      },
       "never": "Никогда",
-      "revoke": "Отозвать"
+      "neverUsed": "Не использовался",
+      "revoke": "Отозвать",
+      "revokeConfirmTitle": "Отозвать ключ API",
+      "revokeConfirm": "Отозвать ключ «{name}»? Он немедленно перестанет работать, но останется в списке.",
+      "deleteConfirmTitle": "Удалить ключ API",
+      "deleteConfirm": "Безвозвратно удалить ключ «{name}»? Это действие нельзя отменить.",
+      "revoked": "Ключ API отозван",
+      "deleted": "Ключ API удалён",
+      "revokeError": "Не удалось отозвать ключ API",
+      "deleteError": "Не удалось удалить ключ API"
     },
     "create": {
+      "eyebrow": "Новый ключ",
+      "title": "Новый ключ API",
+      "subtitle": "Создайте личный ключ API для программного доступа.",
       "name": "Название",
+      "namePlaceholder": "Например, мой ноутбук",
       "description": "Описание",
+      "expiration": "Срок действия",
+      "expirationNever": "Без срока действия",
+      "expirationDays": "{days} дн.",
+      "expirationCustom": "Другой срок…",
+      "customDays": "Количество дней",
+      "customDaysPlaceholder": "Пустое поле — без срока действия",
       "generate": "Сгенерировать",
+      "resultTitle": "Ключ API создан",
+      "resultWarning": "Скопируйте ключ сейчас — посмотреть его повторно будет невозможно.",
+      "rawKeyLabel": "Ключ API",
+      "copied": "Скопировано в буфер обмена",
+      "copyFailed": "Не удалось скопировать в буфер обмена",
       "done": "Готово"
     }
   },
+  "censorWindow": {
+    "validation": {
+      "startAfterEnd": "Дата начала должна быть не позже даты окончания"
+    }
+  },
+  "pathways": {
+    "editor": {
+      "previewBanner": "Просмотр версии — при сохранении будет создана новая траектория",
+      "noPathwayLoaded": "Траектория не загружена"
+    },
+    "cohortList": {
+      "displayName": "Отображаемое название"
+    },
+    "list": {
+      "empty": "Траекторий пока нет."
+    }
+  },
   "criteriaAttributes": {
+    "first": {
+      "label": "Первый диагноз",
+      "description": "Ограничить первым диагнозом в истории пациента"
+    },
+    "ageAtStart": {
+      "label": "Возраст на момент начала",
+      "description": "Фильтр по возрасту на момент начала эры"
+    },
+    "ageAtEnd": {
+      "label": "Возраст на момент окончания",
+      "description": "Фильтр по возрасту на момент окончания эры"
+    },
     "gender": {
-      "label": "Пол"
+      "label": "Пол",
+      "description": "Фильтр по полу пациента"
+    },
+    "genderCS": {
+      "label": "Набор концептов пола",
+      "description": "Фильтр по полу с помощью набора концептов"
+    },
+    "eraStartDate": {
+      "label": "Дата начала",
+      "description": "Фильтр по дате начала"
     },
     "eraEndDate": {
-      "label": "Дата окончания"
+      "label": "Дата окончания",
+      "description": "Фильтр по дате окончания"
+    },
+    "dateAdjustment": {
+      "label": "Корректировка дат",
+      "description": "Скорректировать даты события"
+    },
+    "occurrenceCount": {
+      "label": "Количество событий состояния",
+      "description": "Фильтр по количеству событий состояния"
+    },
+    "eraLength": {
+      "label": "Длительность эры",
+      "description": "Фильтр по длительности эры"
+    },
+    "correlatedCriteria": {
+      "label": "Вложенные критерии",
+      "description": "Добавить вложенную группу критериев"
     },
     "age": {
-      "label": "Возраст"
+      "label": "Возраст",
+      "description": "Фильтр по возрасту на момент события"
+    },
+    "conditionStatus": {
+      "label": "Статус состояния",
+      "description": "Фильтр по статусу состояния"
+    },
+    "conditionStatusCS": {
+      "label": "Набор концептов статуса состояния",
+      "description": "Фильтр по статусу состояния с помощью набора концептов"
+    },
+    "occurrenceStartDate": {
+      "description": "Фильтр по дате начала",
+      "label": "Дата начала"
     },
     "occurrenceEndDate": {
+      "description": "Фильтр по дате окончания",
       "label": "Дата окончания"
     },
     "conditionType": {
-      "label": "Тип состояния"
+      "label": "Тип состояния",
+      "description": "Фильтр по типу состояния"
+    },
+    "conditionTypeCS": {
+      "label": "Набор концептов типа состояния",
+      "description": "Фильтр по типу состояния с помощью набора концептов"
+    },
+    "visitTypeCS": {
+      "label": "Набор концептов типа посещения",
+      "description": "Фильтр по типу посещения с помощью набора концептов"
+    },
+    "stopReason": {
+      "label": "Причина прекращения",
+      "description": "Фильтр по тексту причины прекращения"
+    },
+    "providerSpecialty": {
+      "label": "Специальность врача",
+      "description": "Фильтр по специальности врача"
+    },
+    "providerSpecialtyCS": {
+      "label": "Набор концептов специальности врача",
+      "description": "Фильтр по специальности врача с помощью набора концептов"
+    },
+    "conditionSourceConcept": {
+      "label": "Исходный концепт состояния",
+      "description": "Фильтр по исходному концепту состояния"
+    },
+    "startDate": {
+      "label": "Дата начала",
+      "description": "Фильтр по дате начала пользовательской эры"
     },
     "endDate": {
-      "label": "Дата окончания"
+      "label": "Дата окончания",
+      "description": "Фильтр по дате окончания пользовательской эры"
     },
     "duration": {
-      "label": "Длительность"
+      "label": "Длительность",
+      "description": "Фильтр по длительности эры"
     },
     "deathType": {
-      "label": "Тип смерти"
+      "label": "Тип смерти",
+      "description": "Фильтр по типу смерти"
+    },
+    "deathTypeCS": {
+      "label": "Набор концептов типа смерти",
+      "description": "Фильтр по типу смерти с помощью набора концептов"
+    },
+    "deathSourceConcept": {
+      "label": "Исходный концепт смерти",
+      "description": "Фильтр по исходному концепту смерти"
     },
     "race": {
-      "label": "Раса"
+      "label": "Раса",
+      "description": "Фильтр по расе"
+    },
+    "raceCS": {
+      "label": "Набор концептов расы",
+      "description": "Фильтр по расе с помощью набора концептов"
     },
     "ethnicity": {
-      "label": "Этнос"
+      "label": "Этнос",
+      "description": "Фильтр по этносу"
+    },
+    "ethnicityCS": {
+      "label": "Набор концептов этноса",
+      "description": "Фильтр по этносу с помощью набора концептов"
     },
     "deviceType": {
-      "label": "Тип устройства"
+      "label": "Тип устройства",
+      "description": "Фильтр по типу устройства"
+    },
+    "deviceTypeCS": {
+      "label": "Набор концептов типа устройства",
+      "description": "Фильтр по типу устройства с помощью набора концептов"
+    },
+    "uniqueDeviceId": {
+      "label": "Уникальный ID устройства",
+      "description": "Фильтр по уникальному идентификатору устройства"
+    },
+    "quantity": {
+      "label": "Количество",
+      "description": "Фильтр по количеству"
+    },
+    "deviceSourceConcept": {
+      "label": "Исходный концепт устройства",
+      "description": "Фильтр по исходному концепту устройства"
+    },
+    "doseValue": {
+      "label": "Величина дозы",
+      "description": "Фильтр по величине дозы"
+    },
+    "unit": {
+      "label": "Единица измерения",
+      "description": "Фильтр по единице измерения"
+    },
+    "unitCS": {
+      "label": "Набор концептов единицы измерения",
+      "description": "Фильтр по единице измерения с помощью набора концептов"
+    },
+    "gapDays": {
+      "label": "Длительность перерыва в днях",
+      "description": "Фильтр по перерыву между эрами"
     },
     "drugType": {
-      "label": "Тип препарата"
+      "label": "Тип препарата",
+      "description": "Фильтр по типу препарата"
+    },
+    "drugTypeCS": {
+      "label": "Набор концептов типа препарата",
+      "description": "Фильтр по типу препарата с помощью набора концептов"
+    },
+    "refills": {
+      "label": "Повторные отпуски препарата",
+      "description": "Фильтр по количеству повторных отпусков препарата"
+    },
+    "daysSupply": {
+      "label": "Запас препарата в днях",
+      "description": "Фильтр по запасу препарата в днях"
+    },
+    "routeConcept": {
+      "label": "Путь введения",
+      "description": "Фильтр по пути введения препарата"
+    },
+    "routeConceptCS": {
+      "label": "Набор концептов пути введения",
+      "description": "Фильтр по пути введения с помощью набора концептов"
+    },
+    "effectiveDrugDose": {
+      "label": "Эффективная доза препарата",
+      "description": "Фильтр по эффективной дозе препарата"
+    },
+    "doseUnit": {
+      "label": "Единица дозирования",
+      "description": "Фильтр по единице дозирования"
+    },
+    "doseUnitCS": {
+      "label": "Набор концептов единицы дозирования",
+      "description": "Фильтр по единице дозирования с помощью набора концептов"
+    },
+    "lotNumber": {
+      "label": "Номер серии",
+      "description": "Фильтр по номеру серии"
+    },
+    "drugSourceConcept": {
+      "label": "Исходный концепт препарата",
+      "description": "Фильтр по исходному концепту препарата"
+    },
+    "episodeStartDate": {
+      "label": "Дата начала",
+      "description": "Фильтр по дате начала эпизода"
     },
     "episodeEndDate": {
-      "label": "Дата окончания"
+      "label": "Дата окончания",
+      "description": "Фильтр по дате окончания эпизода"
+    },
+    "episodeNumber": {
+      "label": "Номер эпизода",
+      "description": "Фильтр по номеру эпизода"
+    },
+    "episodeObjectConceptCS": {
+      "label": "Набор концептов объекта эпизода",
+      "description": "Фильтр по концепту объекта эпизода с помощью набора концептов"
+    },
+    "episodeTypeCS": {
+      "label": "Набор концептов типа эпизода",
+      "description": "Фильтр по типу эпизода с помощью набора концептов"
     },
     "measurementType": {
-      "label": "Тип измерения"
+      "label": "Тип измерения",
+      "description": "Фильтр по типу измерения"
+    },
+    "measurementTypeCS": {
+      "label": "Набор концептов типа измерения",
+      "description": "Фильтр по типу измерения с помощью набора концептов"
+    },
+    "operator": {
+      "label": "Оператор",
+      "description": "Фильтр по оператору измерения"
+    },
+    "operatorCS": {
+      "label": "Набор концептов оператора",
+      "description": "Фильтр по оператору с помощью набора концептов"
+    },
+    "valueAsNumber": {
+      "label": "Числовое значение",
+      "description": "Фильтр по числовому значению"
+    },
+    "valueAsConcept": {
+      "label": "Значение-концепт",
+      "description": "Фильтр по значению-концепту"
+    },
+    "valueAsConceptCS": {
+      "label": "Набор концептов значения",
+      "description": "Фильтр по значению-концепту с помощью набора концептов"
+    },
+    "rangeLow": {
+      "label": "Нижняя граница диапазона",
+      "description": "Фильтр по нижней границе диапазона"
+    },
+    "rangeHigh": {
+      "label": "Верхняя граница диапазона",
+      "description": "Фильтр по верхней границе диапазона"
+    },
+    "rangeLowRatio": {
+      "label": "Отношение к нижней границе диапазона",
+      "description": "Фильтр по отношению к нижней границе диапазона"
+    },
+    "rangeHighRatio": {
+      "label": "Отношение к верхней границе диапазона",
+      "description": "Фильтр по отношению к верхней границе диапазона"
+    },
+    "abnormal": {
+      "label": "Отклонение от нормы",
+      "description": "Ограничить измерениями с отклонением от нормы"
+    },
+    "measurementSourceConcept": {
+      "label": "Исходный концепт измерения",
+      "description": "Фильтр по исходному концепту измерения"
     },
     "visitType": {
-      "label": "Тип посещения"
+      "label": "Тип посещения",
+      "description": "Фильтр по типу посещения"
     },
     "observationType": {
-      "label": "Тип наблюдения"
+      "label": "Тип наблюдения",
+      "description": "Фильтр по типу наблюдения"
+    },
+    "observationTypeCS": {
+      "label": "Набор концептов типа наблюдения",
+      "description": "Фильтр по типу наблюдения с помощью набора концептов"
+    },
+    "valueAsString": {
+      "label": "Текстовое значение",
+      "description": "Фильтр по текстовому значению"
+    },
+    "qualifier": {
+      "label": "Уточняющий признак",
+      "description": "Фильтр по уточняющему признаку"
+    },
+    "qualifierCS": {
+      "label": "Набор концептов уточняющего признака",
+      "description": "Фильтр по уточняющему признаку с помощью набора концептов"
+    },
+    "observationSourceConcept": {
+      "label": "Исходный концепт наблюдения",
+      "description": "Фильтр по исходному концепту наблюдения"
+    },
+    "periodStartDate": {
+      "label": "Дата начала периода",
+      "description": "Фильтр по дате начала периода"
+    },
+    "periodEndDate": {
+      "label": "Дата окончания периода",
+      "description": "Фильтр по дате окончания периода"
+    },
+    "userDefinedPeriod": {
+      "label": "Пользовательский период",
+      "description": "Задать границы пользовательского периода"
+    },
+    "periodType": {
+      "label": "Тип периода",
+      "description": "Фильтр по типу периода"
+    },
+    "periodTypeCS": {
+      "label": "Набор концептов типа периода",
+      "description": "Фильтр по типу периода с помощью набора концептов"
+    },
+    "periodLength": {
+      "label": "Длительность периода",
+      "description": "Фильтр по длительности периода"
+    },
+    "payerConcept": {
+      "label": "Концепт плательщика",
+      "description": "Фильтр по набору концептов плательщика"
+    },
+    "planConcept": {
+      "label": "Концепт страхового плана",
+      "description": "Фильтр по набору концептов страхового плана"
+    },
+    "sponsorConcept": {
+      "label": "Концепт спонсора страхового плана",
+      "description": "Фильтр по набору концептов спонсора страхового плана"
+    },
+    "stopReasonConcept": {
+      "label": "Концепт причины прекращения",
+      "description": "Фильтр по набору концептов причины прекращения"
+    },
+    "payerSourceConcept": {
+      "label": "Исходный концепт плательщика",
+      "description": "Фильтр по набору исходных концептов плательщика"
+    },
+    "planSourceConcept": {
+      "label": "Исходный концепт страхового плана",
+      "description": "Фильтр по набору исходных концептов страхового плана"
+    },
+    "sponsorSourceConcept": {
+      "label": "Исходный концепт спонсора страхового плана",
+      "description": "Фильтр по набору исходных концептов спонсора страхового плана"
+    },
+    "stopReasonSourceConcept": {
+      "label": "Исходный концепт причины прекращения",
+      "description": "Фильтр по набору исходных концептов причины прекращения"
     },
     "procedureType": {
-      "label": "Тип процедуры"
+      "label": "Тип процедуры",
+      "description": "Фильтр по типу процедуры"
+    },
+    "procedureTypeCS": {
+      "label": "Набор концептов типа процедуры",
+      "description": "Фильтр по типу процедуры с помощью набора концептов"
+    },
+    "modifier": {
+      "label": "Модификатор",
+      "description": "Фильтр по модификатору"
+    },
+    "modifierCS": {
+      "label": "Набор концептов модификатора",
+      "description": "Фильтр по модификатору с помощью набора концептов"
+    },
+    "procedureSourceConcept": {
+      "label": "Исходный концепт процедуры",
+      "description": "Фильтр по исходному концепту процедуры"
     },
     "specimenType": {
-      "label": "Тип образца"
+      "label": "Тип образца",
+      "description": "Фильтр по типу образца"
+    },
+    "specimenTypeCS": {
+      "label": "Набор концептов типа образца",
+      "description": "Фильтр по типу образца с помощью набора концептов"
+    },
+    "anatomicSite": {
+      "label": "Анатомическая локализация",
+      "description": "Фильтр по анатомической локализации"
+    },
+    "anatomicSiteCS": {
+      "label": "Набор концептов анатомической локализации",
+      "description": "Фильтр по анатомической локализации с помощью набора концептов"
+    },
+    "diseaseStatus": {
+      "label": "Статус заболевания",
+      "description": "Фильтр по статусу заболевания"
+    },
+    "diseaseStatusCS": {
+      "label": "Набор концептов статуса заболевания",
+      "description": "Фильтр по статусу заболевания с помощью набора концептов"
+    },
+    "sourceId": {
+      "label": "Исходный ID",
+      "description": "Фильтр по исходному ID образца"
+    },
+    "specimenSourceConcept": {
+      "label": "Исходный концепт образца",
+      "description": "Фильтр по исходному концепту образца"
+    },
+    "visitDetailStartDate": {
+      "label": "Дата начала Детализации Посещения",
+      "description": "Фильтр по дате начала"
+    },
+    "visitDetailEndDate": {
+      "label": "Дата окончания Детализации Посещения",
+      "description": "Фильтр по дате окончания"
+    },
+    "visitDetailTypeCS": {
+      "label": "Набор концептов типа Детализации Посещения",
+      "description": "Фильтр по типу Детализации Посещения с помощью набора концептов"
+    },
+    "visitDetailSourceConcept": {
+      "label": "Исходный концепт Детализации Посещения",
+      "description": "Фильтр по исходному концепту Детализации Посещения"
+    },
+    "visitDetailLength": {
+      "label": "Длительность Детализации Посещения",
+      "description": "Фильтр по длительности Детализации Посещения"
+    },
+    "placeOfServiceCS": {
+      "label": "Набор концептов места оказания медицинской помощи",
+      "description": "Фильтр по месту оказания медицинской помощи с помощью набора концептов"
+    },
+    "placeOfServiceLocation": {
+      "label": "Расположение места оказания медицинской помощи",
+      "description": "Фильтр по расположению места оказания медицинской помощи"
+    },
+    "visitSourceConcept": {
+      "label": "Исходный концепт посещения",
+      "description": "Фильтр по исходному концепту посещения"
+    },
+    "visitLength": {
+      "label": "Длительность посещения",
+      "description": "Фильтр по длительности посещения"
+    },
+    "placeOfService": {
+      "label": "Место оказания медицинской помощи",
+      "description": "Фильтр по месту оказания медицинской помощи"
     }
   },
-  "auth": {
-    "credentials": {
-      "username": "Имя пользователя"
+  "plugins": {
+    "overlay": {
+      "close": "Закрыть плагин"
+    },
+    "error": {
+      "title": "Не удалось загрузить плагин",
+      "unknown": "Произошла неизвестная ошибка",
+      "pluginId": "ID плагина:",
+      "timestamp": "Время:",
+      "hideDetails": "Скрыть подробности",
+      "showDetails": "Показать подробности"
+    },
+    "loading": "Загрузка плагина..."
+  },
+  "conceptDetail": {
+    "errors": {
+      "loadFailed": "Не удалось загрузить концепт",
+      "notFound": "Концепт не найден"
     }
   }
 }
