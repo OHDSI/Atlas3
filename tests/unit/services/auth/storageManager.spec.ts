@@ -22,6 +22,7 @@ describe('StorageManager', () => {
   let manager: StorageManager
 
   beforeEach(() => {
+    sessionStorage.clear()
     // Mock localStorage
     localStorageMock = {}
     Object.defineProperty(global, 'localStorage', {
@@ -304,6 +305,29 @@ describe('StorageManager', () => {
 
       expect(localStorage.removeItem).toHaveBeenCalledWith('bearerToken')
       expect(localStorage.removeItem).toHaveBeenCalledWith('auth-client')
+    })
+
+    describe('Run-As token stack', () => {
+      it('keeps nested Run-As tokens in session storage without replacing the normal token', () => {
+        localStorageMock['bearerToken'] = 'admin-token'
+
+        manager.pushRunAsToken('admin-token', 'user-a-token')
+        manager.pushRunAsToken('user-a-token', 'user-b-token')
+
+        expect(manager.getToken()).toBe('user-b-token')
+        expect(manager.getStoredToken()).toBe('admin-token')
+        expect(manager.getPreviousRunAsToken()).toBe('user-a-token')
+        expect(manager.getRunAsTokenStack()).toEqual(['admin-token', 'user-a-token', 'user-b-token'])
+      })
+
+      it('restores the prior token and clears the stack after the outer Run-As session ends', () => {
+        manager.pushRunAsToken('admin-token', 'user-a-token')
+        manager.pushRunAsToken('user-a-token', 'user-b-token')
+
+        expect(manager.popRunAsToken()).toBe('user-a-token')
+        expect(manager.popRunAsToken()).toBe('admin-token')
+        expect(manager.hasRunAsSession()).toBe(false)
+      })
     })
   })
 

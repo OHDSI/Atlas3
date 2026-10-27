@@ -18,33 +18,13 @@
         {{ errorMessage }}
       </AtlasAlert>
 
-      <AtlasAlert
-        v-if="isRunningAs"
-        severity="info"
-        class="mb-4"
-      >
-        <div class="d-flex align-center justify-space-between">
-          <div>
-            <div class="text-subtitle-2">
-              {{ t('auth.currentlyRunningAs') }}
-            </div>
-            <div class="text-h6">
-              {{ targetUsername }}
-            </div>
-            <div class="text-caption mt-1">
-              {{ t('auth.originalUser', { username: originalUsername }) }}
-            </div>
-          </div>
-        </div>
-      </AtlasAlert>
-
       <AtlasTextField
         v-model="targetUser"
         :label="tv('components.welcome.username')"
         :placeholder="tv('components.welcome.username')"
         variant="outlined"
         prepend-icon="mdi-account"
-        :disabled="isRunningAs || isLoading"
+        :disabled="isLoading"
         class="mb-3"
         @keyup.enter="handleRunAs"
       />
@@ -54,7 +34,7 @@
         block
         icon="mdi-account-switch"
         :loading="isLoading"
-        :disabled="!targetUser.trim() || isRunningAs"
+        :disabled="!targetUser.trim() || isLoading"
         @click="handleRunAs"
       >
         {{ t('components.welcome.runas') }}
@@ -74,28 +54,17 @@
 
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasIcon, AtlasTextField } from '@/components/ui'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
 
 const { t, tv } = useI18n()
+const emit = defineEmits<{ completed: [] }>()
 
 const auth = useAuth()
 const targetUser = ref('')
 const errorMessage = ref<string | null>(null)
 const isLoading = ref(false)
-
-const isRunningAs = computed(() => {
-  return auth.isRunningAs?.value || false
-})
-
-const targetUsername = computed(() => {
-  return auth.user.value?.displayName || tv('components.auth.unknownUser')
-})
-
-const originalUsername = computed(() => {
-  return auth.originalUser?.value?.displayName || auth.userDisplayName.value
-})
 
 async function handleRunAs() {
   if (!targetUser.value.trim()) return
@@ -106,6 +75,7 @@ async function handleRunAs() {
   try {
     await auth.runAs(targetUser.value.trim())
     targetUser.value = ''
+    emit('completed')
   } catch (error) {
     const message = error instanceof Error ? error.message : tv('auth.failedToRunAsUser')
     errorMessage.value = message

@@ -13,6 +13,7 @@ export interface IAuthService {
   refreshToken(): Promise<boolean>
   fetchUserInfo(): Promise<UserInfo>
   runAs(targetUsername: string): Promise<void>
+  endRunAs(): Promise<void>
   redeemOTC(code: string): Promise<string>
 }
 
@@ -354,7 +355,12 @@ class AuthService implements IAuthService {
         return false
       }
 
-      authStore.setToken(newToken)
+      if (authStore.isRunningAs) {
+        storageManager.replaceActiveRunAsToken(newToken)
+        authStore.setToken(newToken, 'run-as')
+      } else {
+        authStore.setToken(newToken)
+      }
       return true
     } catch (error) {
       logger.error('Auth', 'Token refresh failed', error)
@@ -390,19 +396,25 @@ class AuthService implements IAuthService {
 
   async runAs(targetUsername: string): Promise<void> {
     const authStore = useAuthStore()
+    const currentToken = authStore.token
+    if (!currentToken) {
+      throw new Error('You must be signed in to run as another user')
+    }
 
     const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
+    const formData = new URLSearchParams()
+    formData.set('login', targetUsername)
     const response = await fetch(`${baseUrl}user/runas`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authStore.token}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Bearer ${currentToken}`,
       },
-      body: JSON.stringify({ username: targetUsername }),
+      body: formData.toString(),
     })
 
     if (!response.ok) {
-      throw new Error('Failed to run as user')
+      await this.throwAuthError(response)
     }
 
     const body = await response.json()
@@ -411,9 +423,37 @@ class AuthService implements IAuthService {
       throw new Error(body?.message || 'No token received from run-as')
     }
 
-    authStore.setToken(newToken)
-    const userInfo = await this.fetchUserInfo()
-    authStore.setRunAsState(userInfo)
+    storageManager.pushRunAsToken(currentToken, newToken)
+    authStore.setToken(newToken, 'run-as')
+    try {
+      const userInfo = await this.fetchUserInfo()
+      authStore.setUser(userInfo)
+    } catch (error) {
+      storageManager.popRunAsToken()
+      authStore.setToken(currentToken, storageManager.hasRunAsSession() ? 'run-as' : 'memory')
+      throw error
+    }
+  }
+
+  async endRunAs(): Promise<void> {
+    const authStore = useAuthStore()
+    const currentToken = authStore.token
+    const previousToken = storageManager.getPreviousRunAsToken()
+
+    if (!currentToken || !previousToken) {
+      throw new Error('No Run-As session is active')
+    }
+
+    authStore.setToken(previousToken, 'run-as')
+    try {
+      const userInfo = await this.fetchUserInfo()
+      storageManager.popRunAsToken()
+      authStore.syncRunAsState()
+      authStore.setUser(userInfo)
+    } catch (error) {
+      authStore.setToken(currentToken, 'run-as')
+      throw error
+    }
   }
 
   async fetchOAuthProviders(): Promise<AuthProvider[]> {

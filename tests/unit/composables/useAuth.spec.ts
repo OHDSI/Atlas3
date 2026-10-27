@@ -143,13 +143,13 @@ describe('useAuth', () => {
       expect(isRunningAs.value).toBe(true)
     })
 
-    it('should return originalUser from store', () => {
+    it('should return Run-As stack depth from store', () => {
       const authStore = useAuthStore()
-      authStore.$patch({ originalUser: { login: 'admin', name: 'Admin User' } })
+      authStore.$patch({ runAsDepth: 2 })
 
-      const { originalUser } = useAuth()
+      const { runAsDepth } = useAuth()
 
-      expect(originalUser.value?.login).toBe('admin')
+      expect(runAsDepth.value).toBe(2)
     })
   })
 
