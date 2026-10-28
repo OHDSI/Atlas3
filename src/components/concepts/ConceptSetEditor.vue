@@ -131,6 +131,15 @@
                 </template>
               </AtlasTooltip>
 
+              <AtlasIconButton
+                v-if="isPreviewing"
+                icon="mdi-undo"
+                v-bind="{ ariaLabel: t('common.backToCurrent').value }"
+                variant="text"
+                size="sm"
+                @click="emit('back-to-current')"
+              />
+
               <AtlasMenu>
                 <template #activator="{ props: menuProps }">
                   <AtlasIconButton
@@ -200,12 +209,11 @@
               </AtlasMenu>
 
               <AtlasButton
-                v-if="embedded"
                 variant="ghost"
-                data-testid="cs-editor-cancel-btn"
+                data-testid="cs-editor-close-btn"
                 @click="onClose"
               >
-                {{ t('common.cancel') }}
+                {{ t('common.close') }}
               </AtlasButton>
 
               <DisabledReasonTooltip :reason="isPreviewing ? '' : saveDisabledReason">
@@ -226,23 +234,6 @@
                   }}
                 </AtlasButton>
               </DisabledReasonTooltip>
-
-              <AtlasIconButton
-                v-if="isPreviewing"
-                icon="mdi-undo"
-                v-bind="{ ariaLabel: t('common.backToCurrent').value }"
-                variant="text"
-                size="sm"
-                @click="emit('back-to-current')"
-              />
-
-              <AtlasIconButton
-                icon="mdi-close"
-                v-bind="{ ariaLabel: t('common.close').value }"
-                variant="text"
-                size="sm"
-                @click="onClose"
-              />
             </div>
           </header>
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import type { VueWrapper } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
@@ -76,6 +77,14 @@ function loadPathway(id = 42, name = 'Foo', description = 'Bar') {
   return store
 }
 
+async function clickToolsMenuItem(wrapper: VueWrapper, testId: string) {
+  await wrapper.get('[data-testid="pathway-builder-tools-menu"]').trigger('click')
+  await flushPromises()
+  const item = document.body.querySelector<HTMLElement>(`[data-testid="${testId}"]`)
+  expect(item).not.toBeNull()
+  item!.click()
+}
+
 describe('PathwayBuilder', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -149,7 +158,7 @@ describe('PathwayBuilder', () => {
     await flushPromises()
 
     expect(w.get('[data-testid="pathway-builder-save"]').attributes('disabled')).toBeUndefined()
-    await w.get('[data-testid="pathway-builder-cancel"]').trigger('click')
+    await w.get('[data-testid="pathway-builder-close"]').trigger('click')
     await w.get('[data-testid="pathway-builder-save"]').trigger('click')
     await flushPromises()
 
@@ -296,7 +305,7 @@ describe('PathwayBuilder', () => {
     })
     await flushPromises()
 
-    await w.get('[data-testid="pathway-builder-export"]').trigger('click')
+    await clickToolsMenuItem(w, 'pathway-builder-export')
     expect(serviceMocks.exportPathway).toHaveBeenCalledWith(42)
     expect(createObjectURLMock).toHaveBeenCalled()
     expect(revokeObjectURLMock).toHaveBeenCalledWith('blob:mock')

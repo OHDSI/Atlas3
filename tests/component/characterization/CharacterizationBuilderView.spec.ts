@@ -169,6 +169,14 @@ async function mountBuilder(path: string, props?: Record<string, unknown>) {
   return { wrapper, router }
 }
 
+async function clickToolsMenuItem(wrapper: VueWrapper, testId: string) {
+  await wrapper.get('[data-testid="char-builder-tools-menu"]').trigger('click')
+  await flushPromises()
+  const item = document.body.querySelector<HTMLElement>(`[data-testid="${testId}"]`)
+  expect(item).not.toBeNull()
+  item!.click()
+}
+
 describe('CharacterizationBuilderView', () => {
   let mounted: { wrapper: VueWrapper; router: Router } | null = null
 
@@ -476,7 +484,7 @@ describe('CharacterizationBuilderView', () => {
     const fileInput = mounted.wrapper.get('[data-testid="char-builder-import-input"]')
     const clickSpy = vi.spyOn(fileInput.element as HTMLInputElement, 'click')
 
-    await mounted.wrapper.get('[data-testid="char-builder-import-icon"]').trigger('click')
+    await clickToolsMenuItem(mounted.wrapper, 'char-builder-import-icon')
 
     expect(clickSpy).toHaveBeenCalledTimes(1)
   })
@@ -574,7 +582,7 @@ describe('CharacterizationBuilderView', () => {
     mounted = await mountBuilder('/characterizations/42', { id: '42' })
     await flushPromises()
 
-    await mounted.wrapper.get('[data-testid="char-builder-export-icon"]').trigger('click')
+    await clickToolsMenuItem(mounted.wrapper, 'char-builder-export-icon')
     await flushPromises()
 
     expect(exportCharacterization).toHaveBeenCalledWith(42)
@@ -603,7 +611,7 @@ describe('CharacterizationBuilderView', () => {
     }) as typeof document.createElement)
 
     mounted = await mountBuilder('/characterizations/42', { id: '42' })
-    await mounted.wrapper.get('[data-testid="char-builder-export-icon"]').trigger('click')
+    await clickToolsMenuItem(mounted.wrapper, 'char-builder-export-icon')
     await flushPromises()
 
     expect(createObjectUrl).toHaveBeenCalled()
@@ -695,7 +703,7 @@ describe('CharacterizationBuilderView', () => {
     )
   })
 
-  it('Cancel defers the unsaved-changes prompt to the route guard, not itself', async () => {
+  it('Close defers the unsaved-changes prompt to the route guard, not itself', async () => {
     // onBeforeRouteLeave doesn't register outside a real <router-view> (see
     // the "No active route record" warning logged by every test in this
     // file), so it can't be exercised here - but this still locks in the
@@ -709,7 +717,7 @@ describe('CharacterizationBuilderView', () => {
     await nameInput.setValue('Dirty me up')
 
     const cancelBtn = mounted.wrapper.get(
-      '[data-testid="char-builder-cancel"]'
+      '[data-testid="char-builder-close"]'
     ).element as HTMLButtonElement
     cancelBtn.click()
     await flushPromises()

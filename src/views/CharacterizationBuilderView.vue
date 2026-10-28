@@ -142,52 +142,50 @@
               />
             </template>
           </AtlasTooltip>
+          <AtlasMenu>
+            <template #activator="{ props: menuProps }">
+              <AtlasIconButton
+                v-bind="{ ...menuProps, ariaLabel: t('common.export').value }"
+                icon="mdi-tools"
+                variant="text"
+                size="sm"
+                :loading="importing || exporting"
+                data-testid="char-builder-tools-menu"
+              />
+            </template>
+            <AtlasList
+              density="compact"
+              min-width="220"
+            >
+              <AtlasListItem
+                data-testid="char-builder-import-icon"
+                prepend-icon="mdi-upload"
+                :title="t('common.importDesign').value"
+                :disabled="importing"
+                @click="handleImportClick"
+              />
+              <AtlasListItem
+                data-testid="char-builder-export-icon"
+                prepend-icon="mdi-download"
+                :title="t('common.exportDesign').value"
+                :disabled="!isEditing || !canExport || exporting"
+                @click="handleExport"
+              />
+            </AtlasList>
+          </AtlasMenu>
         </template>
         <template #actions>
           <AtlasButton
             variant="ghost"
             size="sm"
-            data-testid="char-builder-cancel"
+            data-testid="char-builder-close"
             @click="handleBack"
           >
             <AtlasIcon class="d-md-none">
               mdi-close
             </AtlasIcon>
-            <span class="d-none d-md-inline">{{ t('common.cancel').value }}</span>
+            <span class="d-none d-md-inline">{{ t('common.close').value }}</span>
           </AtlasButton>
-          <AtlasTooltip
-            :text="t('common.importDesign').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tipProps }">
-              <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.importDesign').value }"
-                icon="mdi-upload"
-                variant="text"
-                size="sm"
-                :loading="importing"
-                data-testid="char-builder-import-icon"
-                @click="handleImportClick"
-              />
-            </template>
-          </AtlasTooltip>
-          <AtlasTooltip
-            :text="t('common.exportDesign').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tipProps }">
-              <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
-                icon="mdi-download"
-                variant="text"
-                size="sm"
-                :loading="exporting"
-                :disabled="!isEditing || !canExport"
-                data-testid="char-builder-export-icon"
-                @click="handleExport"
-              />
-            </template>
-          </AtlasTooltip>
           <input
             ref="importFileInput"
             type="file"
@@ -392,7 +390,7 @@ import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 import ConceptSetsListDialog from '@/components/cohort/ConceptSetsListDialog.vue'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
-import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'

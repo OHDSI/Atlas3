@@ -41,8 +41,6 @@ vi.mock('@/services/feature-analysis.service', () => ({
   getFeatureAnalysis: vi.fn(),
   createFeatureAnalysis: vi.fn(),
   updateFeatureAnalysis: vi.fn(),
-  deleteFeatureAnalysis: vi.fn(),
-  copyFeatureAnalysis: vi.fn(),
   listFeatureAnalysisDomains: vi.fn(),
   listFeatureAnalysisAggregates: vi.fn(),
   featureAnalysisNameExists: vi.fn(),
@@ -61,8 +59,6 @@ import {
   getFeatureAnalysis,
   createFeatureAnalysis,
   updateFeatureAnalysis,
-  deleteFeatureAnalysis,
-  copyFeatureAnalysis,
   listFeatureAnalysisDomains,
   listFeatureAnalysisAggregates,
 } from '@/services/feature-analysis.service'
@@ -355,9 +351,9 @@ describe('FeatureAnalysisEditorView', () => {
     ).element as HTMLInputElement
     expect(presetInput.value).toBe('DemographicsAge')
 
-    // Save Copy / Delete are visible in edit mode.
-    expect(mounted.wrapper.find('[data-testid="feature-analysis-editor-copy"]').exists()).toBe(true)
-    expect(mounted.wrapper.find('[data-testid="feature-analysis-editor-delete"]').exists()).toBe(true)
+    expect(mounted.wrapper.find('[data-testid="feature-analysis-editor-close"]').exists()).toBe(true)
+    expect(mounted.wrapper.find('[data-testid="feature-analysis-editor-copy"]').exists()).toBe(false)
+    expect(mounted.wrapper.find('[data-testid="feature-analysis-editor-delete"]').exists()).toBe(false)
   })
 
   it('Save in new mode calls createFeatureAnalysis', async () => {
@@ -608,38 +604,7 @@ describe('FeatureAnalysisEditorView', () => {
     expect(conceptSetsDialog.props('conceptSets')).toHaveLength(0)
   })
 
-  it('shows a snackbar when copy or delete fails through the store helpers', async () => {
-    vi.mocked(getFeatureAnalysis).mockResolvedValue(
-      success({
-        id: 42,
-        name: 'Criteria edit',
-        description: 'With concept sets',
-        type: 'CRITERIA_SET',
-        statType: 'DISTRIBUTION',
-        domain: 'CONDITION',
-        design: [],
-        conceptSets: [],
-      } as never)
-    )
-
-    mounted = await mountEditor('/feature-analyses/42', { id: '42' })
-    await flushPromises()
-
-    const store = useFeatureAnalysesStore()
-    vi.spyOn(store, 'copy').mockResolvedValue(null)
-    vi.spyOn(store, 'remove').mockResolvedValue(false)
-
-    await (mounted.wrapper.vm as any).$.setupState.handleSaveCopy()
-    await flushPromises()
-    await (mounted.wrapper.vm as any).$.setupState.confirmDelete()
-    await flushPromises()
-
-    expect(mounted.wrapper.findComponent({ name: 'AtlasSnackbar' }).props('text')).toBe(
-      'An error occurred while attempting to save a feature analysis.'
-    )
-  })
-
-  it('opens the edit-mode dialogs and routes copy/delete actions through the store', async () => {
+  it('opens the edit-mode concept-set and access dialogs', async () => {
     vi.mocked(getFeatureAnalysis).mockResolvedValue(
       success({
         id: 42,
@@ -654,19 +619,6 @@ describe('FeatureAnalysisEditorView', () => {
         ],
       } as never)
     )
-    vi.mocked(copyFeatureAnalysis).mockResolvedValue(
-      success({
-        id: 99,
-        name: 'Criteria edit (copy)',
-        type: 'CRITERIA_SET',
-        statType: 'DISTRIBUTION',
-        domain: 'CONDITION',
-        design: [],
-        conceptSets: [],
-      } as never)
-    )
-    vi.mocked(deleteFeatureAnalysis).mockResolvedValue(success(undefined as never))
-
     mounted = await mountEditor('/feature-analyses/42', { id: '42' })
     await flushPromises()
 
@@ -679,17 +631,6 @@ describe('FeatureAnalysisEditorView', () => {
     expect(accessDialog.props('entityType')).toBe('FE_ANALYSIS')
     expect(accessDialog.props('entityId')).toBe(42)
 
-    await mounted.wrapper.get('[data-testid="feature-analysis-editor-copy"]').trigger('click')
-    await flushPromises()
-    expect(copyFeatureAnalysis).toHaveBeenCalledWith(42)
-
-    await mounted.wrapper.get('[data-testid="feature-analysis-editor-delete"]').trigger('click')
-    await flushPromises()
-    expect(mounted.wrapper.findComponent({ name: 'AtlasDialog' }).exists()).toBe(true)
-
-    await mounted.wrapper.get('[data-testid="feature-analysis-editor-delete-confirm"]').trigger('click')
-    await flushPromises()
-    expect(deleteFeatureAnalysis).toHaveBeenCalledWith(42)
   })
 
   it('opens the embedded concept-set editor and applies or deletes a concept set', async () => {
@@ -738,7 +679,7 @@ describe('FeatureAnalysisEditorView', () => {
     expect(mounted.wrapper.findComponent({ name: 'AtlasDialog' }).exists()).toBe(true)
   })
 
-  it('Cancel defers the unsaved-changes prompt to the route guard, not itself', async () => {
+  it('Close defers the unsaved-changes prompt to the route guard, not itself', async () => {
     // onBeforeRouteLeave doesn't register outside a real <router-view> (see
     // the "No active route record" warning logged by every test in this
     // file), so it can't be exercised here - but this still locks in the
@@ -752,10 +693,10 @@ describe('FeatureAnalysisEditorView', () => {
     const nameInput = mounted.wrapper.find('[data-testid="feature-analysis-editor-name"] input')
     await nameInput.setValue('Dirty me up')
 
-    const cancelBtn = mounted.wrapper.get(
-      '[data-testid="feature-analysis-editor-cancel"]'
+    const closeBtn = mounted.wrapper.get(
+      '[data-testid="feature-analysis-editor-close"]'
     ).element as HTMLButtonElement
-    cancelBtn.click()
+    closeBtn.click()
     await flushPromises()
     await new Promise<void>(resolve => setTimeout(resolve, 0))
     await flushPromises()
@@ -766,14 +707,14 @@ describe('FeatureAnalysisEditorView', () => {
     confirmSpy.mockRestore()
   })
 
-  it('Cancel with no unsaved changes navigates without prompting', async () => {
+  it('Close with no unsaved changes navigates without prompting', async () => {
     mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE')
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
 
-    const cancelBtn = mounted.wrapper.get(
-      '[data-testid="feature-analysis-editor-cancel"]'
+    const closeBtn = mounted.wrapper.get(
+      '[data-testid="feature-analysis-editor-close"]'
     ).element as HTMLButtonElement
-    cancelBtn.click()
+    closeBtn.click()
     await flushPromises()
     await new Promise<void>(resolve => setTimeout(resolve, 0))
     await flushPromises()

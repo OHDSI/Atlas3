@@ -59,8 +59,6 @@
           @show-access="builderRef.openAccessDialog()"
         />
 
-        <span class="cohort-builder-view__divider" />
-
         <cohort-toolbar-actions
           :can-save="builderRef.canSave"
           :save-disabled-reason="builderRef.saveDisabledReason"
@@ -214,10 +212,4 @@ function onUpdateDescription(description: string) {
   flex-wrap: wrap;
 }
 
-.cohort-builder-view__divider {
-  display: inline-block;
-  width: 1px;
-  height: 22px;
-  background: rgb(var(--v-theme-outline-variant, 224, 224, 224));
-}
 </style>

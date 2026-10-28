@@ -111,18 +111,49 @@
               />
             </template>
           </AtlasTooltip>
+          <AtlasMenu>
+            <template #activator="{ props: menuProps }">
+              <AtlasIconButton
+                v-bind="{ ...menuProps, ariaLabel: t('common.export').value }"
+                icon="mdi-tools"
+                variant="text"
+                size="sm"
+                :loading="importing || exporting"
+                data-testid="ir-builder-tools-menu"
+              />
+            </template>
+            <AtlasList
+              density="compact"
+              min-width="220"
+            >
+              <AtlasListItem
+                data-testid="ir-builder-import-icon"
+                prepend-icon="mdi-upload"
+                :title="t('common.importDesign').value"
+                :disabled="importing"
+                @click="handleImportClick"
+              />
+              <AtlasListItem
+                data-testid="ir-builder-export-icon"
+                prepend-icon="mdi-download"
+                :title="t('common.exportDesign').value"
+                :disabled="!store.currentIR?.id || exporting"
+                @click="handleExport"
+              />
+            </AtlasList>
+          </AtlasMenu>
         </template>
         <template #actions>
           <AtlasButton
             variant="ghost"
             size="sm"
-            data-testid="ir-builder-cancel"
+            data-testid="ir-builder-close"
             @click="handleBack"
           >
             <AtlasIcon class="d-md-none">
               mdi-close
             </AtlasIcon>
-            <span class="d-none d-md-inline">{{ t('common.cancel').value }}</span>
+            <span class="d-none d-md-inline">{{ t('common.close').value }}</span>
           </AtlasButton>
           <AtlasTooltip
             v-if="store.isPreviewMode"
@@ -137,39 +168,6 @@
                 size="sm"
                 data-testid="ir-builder-back-to-current"
                 @click="store.clearPreviewVersion()"
-              />
-            </template>
-          </AtlasTooltip>
-          <AtlasTooltip
-            :text="t('common.importDesign').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tipProps }">
-              <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.importDesign').value }"
-                icon="mdi-upload"
-                variant="text"
-                size="sm"
-                :loading="importing"
-                data-testid="ir-builder-import-icon"
-                @click="handleImportClick"
-              />
-            </template>
-          </AtlasTooltip>
-          <AtlasTooltip
-            :text="t('common.exportDesign').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tipProps }">
-              <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.exportDesign').value }"
-                icon="mdi-download"
-                variant="text"
-                size="sm"
-                :loading="exporting"
-                :disabled="!store.currentIR?.id"
-                data-testid="ir-builder-export-icon"
-                @click="handleExport"
               />
             </template>
           </AtlasTooltip>
@@ -312,7 +310,7 @@ import { useEntityAccess } from '@/composables/useEntityAccess'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
-import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
 import IncidenceRateVersionsPanel from '@/components/incidence-rate/IncidenceRateVersionsPanel.vue'
