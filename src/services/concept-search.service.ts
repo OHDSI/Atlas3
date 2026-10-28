@@ -35,6 +35,7 @@ export async function searchConcepts(
     page?: number
     pageSize?: number
     domain?: string | string[]
+    lexical?: boolean
   }
 ): Promise<ApiResult<Concept[]>> {
   return unwrap(async () => {
@@ -57,6 +58,9 @@ export async function searchConcepts(
       : []
     if (domains.length > 0) {
       body.DOMAIN_ID = domains
+    }
+    if (options?.lexical) {
+      body.IS_LEXICAL = true
     }
     const data = await httpPostRead<unknown>(endpoint, body)
     const parsed = parseOrThrow(ConceptSearchResponseSchema, data, 'Invalid concept search response format')
@@ -268,6 +272,49 @@ export async function getRecommendedConcepts(
 
   const concepts = parsed.data.map(mapConceptFromAPI)
   return { available: true, concepts }
+}
+
+export class NoMatchingConceptError extends Error {
+  constructor(public readonly searchTerms: string) {
+    super(`No standard concept matches "${searchTerms}"`)
+    this.name = 'NoMatchingConceptError'
+  }
+}
+
+// Domains the Atlas 2.x "recommend" flow searched; the lexical search further
+// limits Measurement to lab tests and procedures.
+const SEED_CONCEPT_DOMAINS = ['Condition', 'Procedure', 'Drug', 'Measurement']
+
+/**
+ * Picks the concept to seed a new concept set from free-text search terms,
+ * mirroring Atlas 2.x: a lexical search over standard concepts (the backend
+ * returns up to 100, best text match first), then the candidate with the most
+ * descendant records in the results source. Ties, including a source with no
+ * counts, keep the backend's text-match order. Throws NoMatchingConceptError
+ * when nothing matches.
+ */
+export async function findSeedConceptForSearchTerms(
+  vocabularySourceKey: string,
+  resultsSourceKey: string,
+  searchTerms: string
+): Promise<Concept> {
+  const search = await searchConcepts(vocabularySourceKey, searchTerms, {
+    domain: SEED_CONCEPT_DOMAINS,
+    lexical: true,
+  })
+  if (!search.success) throw search.error
+
+  const candidates = search.data
+  if (candidates.length === 0) throw new NoMatchingConceptError(searchTerms)
+
+  const counts = await getConceptRecordCounts(
+    resultsSourceKey,
+    candidates.map(c => c.conceptId)
+  )
+  const densityOf = (c: Concept) => counts.get(c.conceptId)?.descendantRecordCount ?? 0
+
+  // Strict ">" keeps the earlier (better text match) candidate on ties.
+  return candidates.reduce((best, c) => (densityOf(c) > densityOf(best) ? c : best))
 }
 
 export async function compareConceptSets(

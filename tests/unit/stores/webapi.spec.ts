@@ -883,6 +883,56 @@ describe('WebAPI Store', () => {
     })
   })
 
+  describe('getValidResultsSource', () => {
+    const resultsSource = (
+      key: string,
+      id: number,
+      priority: number
+    ): import('@/models/webapi.types').CDMSource => ({
+      sourceId: id,
+      sourceName: key,
+      sourceKey: key,
+      sourceDialect: 'postgresql',
+      daimons: [{ daimonType: 'Results', tableQualifier: 'results', priority }],
+    })
+
+    afterEach(() => localStorage.removeItem('selectedResults'))
+
+    it('returns the results source chosen in Configuration', () => {
+      const store = useWebAPIStore()
+      store.setSources([resultsSource('LOW', 1, 1), resultsSource('HIGH', 2, 5)])
+      localStorage.setItem('selectedResults', 'LOW')
+      expect(store.getValidResultsSource()).toBe('LOW')
+    })
+
+    it('falls back to the highest-priority results source when the stored key is unknown', () => {
+      const store = useWebAPIStore()
+      store.setSources([resultsSource('LOW', 1, 1), resultsSource('HIGH', 2, 5)])
+      localStorage.setItem('selectedResults', 'MISSING')
+      expect(store.getValidResultsSource()).toBe('HIGH')
+    })
+
+    it('uses the priority default when nothing is stored', () => {
+      const store = useWebAPIStore()
+      store.setSources([resultsSource('LOW', 1, 1), resultsSource('HIGH', 2, 5)])
+      expect(store.getValidResultsSource()).toBe('HIGH')
+    })
+
+    it('returns null when no source has a results daimon', () => {
+      const store = useWebAPIStore()
+      store.setSources([
+        {
+          sourceId: 9,
+          sourceName: 'Vocab',
+          sourceKey: 'VOCAB',
+          sourceDialect: 'postgresql',
+          daimons: [{ daimonType: 'Vocabulary', tableQualifier: 'vocab', priority: 1 }],
+        },
+      ])
+      expect(store.getValidResultsSource()).toBeNull()
+    })
+  })
+
   describe('dispose', () => {
     it('does not throw and clears polling timers', () => {
       const store = useWebAPIStore()

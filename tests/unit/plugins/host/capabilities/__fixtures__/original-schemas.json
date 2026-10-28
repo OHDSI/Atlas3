@@ -402,6 +402,8 @@
           "characterization-version-preview",
           "cohort-version-preview",
           "conceptset-version-preview",
+          "conceptset-new",
+          "conceptset-edit",
           "concepts",
           "concept-detail",
           "pathway-new",
