@@ -78,7 +78,7 @@ export function matchesTerms(
  *
  * Splitting a query into terms would otherwise make a lone digit toxic: "type
  * 1" would match "Type 2 diabetes" through concept id 201826, and the row would
- * give the reader no clue why it was there. This is the rule `matchesNameOrId`
+ * give the reader no clue why it was there. This is the rule `matchesFieldsOrId`
  * already applies to list ids, for the same reason.
  *
  * The rule is not restricted to digits, because a concept code need not be
@@ -89,23 +89,24 @@ function matchesIdentifier(identifiers: string[], term: string): boolean {
 }
 
 /**
- * Match a list row against a search box that has to serve both names and ids.
+ * Match a list row against a search box that searches its text fields and ID.
  *
- * Names match on terms, as they do everywhere else. Ids match only when the
- * whole query is digits, and then only exactly or as a prefix. Substring
- * matching on the id is what makes such a box unusable: "3" would return 13 and
- * 130, and any digit typed as part of a name query would drag in rows whose
- * visible name gives no hint why they are there. The id test deliberately reads
- * the query whole rather than per term, so "13 7" stays a name query.
+ * Text fields match on terms, as they do everywhere else. IDs match only when
+ * the whole query is digits, and then only exactly or as a prefix. Substring
+ * matching on an ID is what makes such a box unusable: "3" would return 13 and
+ * 130, and any digit typed as part of a text query would drag in rows whose
+ * visible fields give no hint why they are there. The ID test deliberately
+ * reads the query whole rather than per term, so "13 7" stays a text query.
  */
-export function matchesNameOrId(
-  item: { id: number | string; name?: string | null },
+export function matchesFieldsOrId(
+  id: number | string | null | undefined,
+  fields: (string | null | undefined)[],
   query: string | null | undefined
 ): boolean {
   const whole = (query ?? '').trim().toLowerCase()
   if (!whole) return true
-  if (matchesTerms([item.name], query)) return true
-  return /^\d+$/.test(whole) && String(item.id).startsWith(whole)
+  if (matchesTerms(fields, query)) return true
+  return id !== null && id !== undefined && /^\d+$/.test(whole) && String(id).startsWith(whole)
 }
 
 /**

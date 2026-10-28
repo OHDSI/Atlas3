@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getUserString, isDateInRange, matchesNameOrId, matchesTerms, searchTerms } from '@/utils/list-filters'
+import { getUserString, isDateInRange, matchesFieldsOrId, matchesTerms, searchTerms } from '@/utils/list-filters'
 
 describe('list-filters', () => {
   describe('isDateInRange', () => {
@@ -82,7 +82,7 @@ describe('list-filters', () => {
     // Splitting a query into terms would otherwise let a lone digit match the
     // middle of an id: "type 1" would pull in "Type 2 diabetes" via concept id
     // 201826. Identifiers are matched whole or by prefix, the same rule
-    // matchesNameOrId already uses and for the same reason.
+    // matchesFieldsOrId already uses and for the same reason.
     it('matches an identifier by prefix, never by substring', () => {
       const opts = { identifiers: [201826, '44054006'] }
       expect(matchesTerms(['Type 2 diabetes mellitus'], '201826', opts)).toBe(true)
@@ -109,37 +109,37 @@ describe('list-filters', () => {
     })
   })
 
-  describe('matchesNameOrId', () => {
+  describe('matchesFieldsOrId', () => {
     const asthma = { id: 3, name: 'Asthma' }
     const copd = { id: 13, name: 'COPD' }
     const kidney = { id: 42, name: 'Chronic kidney disease' }
     const diabetes = { id: 7, name: 'Type 2 diabetes' }
 
     it('keeps every row when the query is empty', () => {
-      expect(matchesNameOrId(asthma, '')).toBe(true)
-      expect(matchesNameOrId(asthma, '   ')).toBe(true)
-      expect(matchesNameOrId(asthma, null)).toBe(true)
-      expect(matchesNameOrId(asthma, undefined)).toBe(true)
+      expect(matchesFieldsOrId(asthma.id, [asthma.name], '')).toBe(true)
+      expect(matchesFieldsOrId(asthma.id, [asthma.name], '   ')).toBe(true)
+      expect(matchesFieldsOrId(asthma.id, [asthma.name], null)).toBe(true)
+      expect(matchesFieldsOrId(asthma.id, [asthma.name], undefined)).toBe(true)
     })
 
     it('matches a name on a case-insensitive substring', () => {
-      expect(matchesNameOrId(kidney, 'KIDNEY')).toBe(true)
-      expect(matchesNameOrId(kidney, 'asthma')).toBe(false)
+      expect(matchesFieldsOrId(kidney.id, [kidney.name], 'KIDNEY')).toBe(true)
+      expect(matchesFieldsOrId(kidney.id, [kidney.name], 'asthma')).toBe(false)
     })
 
     it('matches an id exactly or by prefix, never by substring', () => {
-      expect(matchesNameOrId(asthma, '3')).toBe(true)
-      expect(matchesNameOrId(copd, '13')).toBe(true)
-      expect(matchesNameOrId(copd, '1')).toBe(true)
+      expect(matchesFieldsOrId(asthma.id, [asthma.name], '3')).toBe(true)
+      expect(matchesFieldsOrId(copd.id, [copd.name], '13')).toBe(true)
+      expect(matchesFieldsOrId(copd.id, [copd.name], '1')).toBe(true)
       // 13 contains a 3 but does not start with one.
-      expect(matchesNameOrId(copd, '3')).toBe(false)
+      expect(matchesFieldsOrId(copd.id, [copd.name], '3')).toBe(false)
     })
 
     it('leaves ids out of a query that is not purely digits', () => {
-      expect(matchesNameOrId(diabetes, 'type 2')).toBe(true)
+      expect(matchesFieldsOrId(diabetes.id, [diabetes.name], 'type 2')).toBe(true)
       // Nothing in "Chronic kidney disease" says "7", and "7 diabetes" is a
       // name query, not an id.
-      expect(matchesNameOrId(kidney, '7 diabetes')).toBe(false)
+      expect(matchesFieldsOrId(kidney.id, [kidney.name], '7 diabetes')).toBe(false)
     })
 
     // #326: Atlas 2 let you type the distinctive fragments of a name and skip
@@ -147,27 +147,29 @@ describe('list-filters', () => {
     // phenotype-library prefix had to be typed in full before the disease.
     it('matches when every term appears, even non-consecutively', () => {
       const pl = { id: 91, name: '[PL] earliest event of schizophrenia' }
-      expect(matchesNameOrId(pl, 'pl schiz')).toBe(true)
+      expect(matchesFieldsOrId(pl.id, [pl.name], 'pl schiz')).toBe(true)
     })
 
     it('ignores the order the terms are typed in', () => {
       const pl = { id: 91, name: '[PL] earliest event of schizophrenia' }
-      expect(matchesNameOrId(pl, 'schiz pl')).toBe(true)
+      expect(matchesFieldsOrId(pl.id, [pl.name], 'schiz pl')).toBe(true)
     })
 
     it('still requires every term to appear', () => {
       const pl = { id: 91, name: '[PL] earliest event of schizophrenia' }
-      expect(matchesNameOrId(pl, 'pl depression')).toBe(false)
+      expect(matchesFieldsOrId(pl.id, [pl.name], 'pl depression')).toBe(false)
     })
 
-    it('tolerates a missing name', () => {
-      expect(matchesNameOrId({ id: 5 }, '5')).toBe(true)
-      expect(matchesNameOrId({ id: 5, name: null }, 'asthma')).toBe(false)
+    it('searches all supplied text fields and tolerates missing values', () => {
+      expect(matchesFieldsOrId(5, [undefined, null], '5')).toBe(true)
+      expect(matchesFieldsOrId(5, ['Cohort', 'asthma definition'], 'asthma')).toBe(true)
+      expect(matchesFieldsOrId(5, [undefined, null], 'asthma')).toBe(false)
+      expect(matchesFieldsOrId(undefined, ['Asthma'], '5')).toBe(false)
     })
 
     it('handles string ids', () => {
-      expect(matchesNameOrId({ id: '108', name: 'Sepsis' }, '10')).toBe(true)
-      expect(matchesNameOrId({ id: '108', name: 'Sepsis' }, '8')).toBe(false)
+      expect(matchesFieldsOrId('108', ['Sepsis'], '10')).toBe(true)
+      expect(matchesFieldsOrId('108', ['Sepsis'], '8')).toBe(false)
     })
   })
 })
