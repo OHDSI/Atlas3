@@ -311,7 +311,7 @@ export const routes: RouteRecordRaw[] = [
   {
     path: '/conceptset/:id/version/:version',
     name: 'conceptset-version-preview',
-    component: () => import('@/views/ConceptsView.vue'),
+    component: () => import('@/views/ConceptSetEditorView.vue'),
     props: true,
     meta: { requiresAuth: true, agentVisible: true, agentLabel: 'Concept set version preview' },
     beforeEnter: async (to, _from, next) => {
@@ -321,21 +321,58 @@ export const routes: RouteRecordRaw[] = [
 
       if (versionParam === 'current') {
         // Clear preview mode (T037)
-        await conceptSetsStore.clearPreviewVersion()
+        await conceptSetsStore.clearPreviewVersion(Number(to.params.id))
       } else {
         // Load version for preview (T037)
         const versionNumber = parseInt(versionParam)
         if (!isNaN(versionNumber)) {
           try {
-            await conceptSetsStore.loadVersionPreview(versionNumber)
+            await conceptSetsStore.loadVersionPreview(versionNumber, Number(to.params.id))
           } catch (error) {
             logger.error('Router', 'Failed to load version preview', error)
-            // Continue navigation anyway - let the view handle the error
+            next({
+              name: 'conceptset-edit',
+              params: { id: to.params.id },
+              query: to.query,
+              hash: to.hash,
+              replace: true,
+            })
+            return
           }
         }
       }
       next()
     },
+  },
+  {
+    path: '/conceptset/new',
+    name: 'conceptset-new',
+    component: () => import('@/views/ConceptSetEditorView.vue'),
+    meta: { requiresAuth: true, titleKey: 'route.conceptSets.title', agentVisible: true, agentLabel: 'New concept set' },
+  },
+  {
+    path: '/conceptset/0',
+    redirect: { name: 'conceptset-new' },
+  },
+  {
+    path: '/conceptset/:id(\\d+)',
+    name: 'conceptset-edit',
+    component: () => import('@/views/ConceptSetEditorView.vue'),
+    props: true,
+    meta: { requiresAuth: true, titleKey: 'route.conceptSets.title', agentVisible: true, agentLabel: 'Concept set editor' },
+  },
+  {
+    path: '/conceptset/:id(\\d+)/:mode',
+    redirect: to => ({
+      name: 'conceptset-edit',
+      params: { id: singleParam(to.params.id) },
+      query: to.query,
+      hash: to.hash,
+    }),
+  },
+  {
+    path: '/conceptsets',
+    redirect: { name: 'concepts', query: { tab: 'sets' } },
   },
   {
     path: '/concepts',

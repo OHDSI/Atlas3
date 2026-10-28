@@ -14,6 +14,12 @@ import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import type { Concept } from '@/models/concept-set.types'
 
+const { routerPush } = vi.hoisted(() => ({ routerPush: vi.fn() }))
+vi.mock('vue-router', async importOriginal => {
+  const actual = await importOriginal<typeof import('vue-router')>()
+  return { ...actual, useRouter: () => ({ push: routerPush }) }
+})
+
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../helpers/i18n-mock')
   return mockUseI18n

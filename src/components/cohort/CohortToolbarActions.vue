@@ -15,7 +15,7 @@
       <template #activator="{ props: menuProps }">
         <AtlasIconButton
           v-bind="{ ...menuProps, ariaLabel: t('common.export').value }"
-          icon="mdi-download"
+          icon="mdi-tools"
           variant="text"
           size="sm"
           data-testid="export-btn"

@@ -208,6 +208,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { usePermissions } from '@/composables/usePermissions'
@@ -222,6 +223,7 @@ import EntityImportButton from '@/components/shared/EntityImportButton.vue'
 import { importConceptSet } from '@/services/concept-set.service'
 
 const { t } = useI18n()
+const router = useRouter()
 const { hasPermission } = usePermissions()
 const canCreate = computed(() => hasPermission('create:conceptset'))
 const access = useEntityAccessFor('conceptSet')
@@ -295,12 +297,18 @@ function getAuthorName(
 }
 
 function onAddClick() {
-  store.openCreateEditor()
+  void router.push({ name: 'conceptset-new' })
 }
 
 async function onCopyClick(id: number | string | undefined) {
   if (id !== undefined) {
-    await store.copy(id)
+    const copied = await store.copy(id)
+    if (copied?.id !== undefined && copied.id !== null) {
+      await router.push({
+        name: 'conceptset-edit',
+        params: { id: String(copied.id) },
+      })
+    }
   }
 }
 
@@ -321,7 +329,10 @@ async function confirmDelete() {
 // Vuetify 3 v-data-table emits (event, { item }) for click:row.
 function onRowClick(_event: Event, payload: { item: ConceptSetListItem }) {
   if (payload?.item?.id !== undefined) {
-    store.openEditEditor(payload.item.id)
+    void router.push({
+      name: 'conceptset-edit',
+      params: { id: String(payload.item.id) },
+    })
   }
 }
 
@@ -333,14 +344,13 @@ async function importDesign(
   return { id: created.id }
 }
 
-// The editor overlays this list rather than replacing it via router.push, so
-// it opens through the store like onEditClick does; nothing else refetches
-// this list, so we must do it explicitly before opening or the imported set
-// is missing on close, inviting a duplicate re-import (#267).
 async function onImported(entity: { id?: number | string }) {
   if (entity.id == null) return
   await store.fetchAll()
-  await store.openEditEditor(entity.id)
+  await router.push({
+    name: 'conceptset-edit',
+    params: { id: String(entity.id) },
+  })
 }
 
 defineExpose({ importDesign, onImported })

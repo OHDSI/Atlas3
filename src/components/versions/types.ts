@@ -103,13 +103,11 @@ export const ASSET_ROUTE_SEGMENT: Record<VersionsConfig['assetType'], string> = 
  * pathway-analysis (e.g. cohorts live at /cohorts/:id, not
  * /cohortdefinition/:id - that path is version-preview-only).
  *
- * Concept sets have no id-addressable route at all: ConceptSetEditor opens
- * via conceptSetsStore state (editorOpen/currentSet), not a URL param, so
- * there is intentionally no 'conceptset' entry here - pushing to any URL
- * for it would be a dead link regardless of which segment was chosen.
+ * Concept sets use the legacy `/conceptset/:id` route family.
  */
 export const ASSET_DETAIL_ROUTE_SEGMENT: Partial<Record<VersionsConfig['assetType'], string>> = {
   cohortdefinition: 'cohorts',
+  conceptset: 'conceptset',
   'pathway-analysis': 'pathways',
   ir: 'incidence-rates',
 }

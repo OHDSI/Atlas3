@@ -14,6 +14,11 @@ import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 
+const routerPush = vi.fn()
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: routerPush }),
+}))
+
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../helpers/i18n-mock')
   return mockUseI18n
@@ -164,17 +169,15 @@ describe('ConceptSetList', () => {
     })
   })
 
-  it('should open create editor when add button is clicked', async () => {
+  it('navigates to the new repository concept-set route when add is clicked', async () => {
     const wrapper = mountComponent()
-    const store = useConceptSetsStore()
-    const openCreateEditorSpy = vi.spyOn(store, 'openCreateEditor')
 
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const addBtn = buttons.find(btn => btn.text().includes('New Concept Set'))
 
     expect(addBtn).toBeDefined()
     await addBtn!.trigger('click')
-    expect(openCreateEditorSpy).toHaveBeenCalled()
+    expect(routerPush).toHaveBeenCalledWith({ name: 'conceptset-new' })
   })
 
   it('should display error alert when store has error', async () => {
@@ -208,7 +211,7 @@ describe('ConceptSetList', () => {
   it('should duplicate a concept set when the duplicate button is clicked', async () => {
     const store = useConceptSetsStore()
     vi.spyOn(store, 'fetchAll').mockResolvedValue()
-    const copySpy = vi.spyOn(store, 'copy').mockResolvedValue(null)
+    const copySpy = vi.spyOn(store, 'copy').mockResolvedValue({ id: 789 } as never)
     const wrapper = mountComponent()
     store.conceptSets = mockConceptSets
     await wrapper.vm.$nextTick()
@@ -220,6 +223,10 @@ describe('ConceptSetList', () => {
     expect(copyButtons).toHaveLength(2)
     await copyButtons[0].trigger('click')
     expect(copySpy).toHaveBeenCalledWith(123)
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'conceptset-edit',
+      params: { id: '789' },
+    })
   })
 
   it('should delete a concept set after list confirmation', async () => {

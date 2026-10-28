@@ -50,19 +50,6 @@
             <ConceptSearch />
           </v-window-item>
         </v-window>
-
-        <!-- Page-level concept set editor (overlays both tabs) -->
-        <ConceptSetEditor
-          v-if="conceptSetsStore.editorOpen"
-          :model-value="conceptSetsStore.editorOpen"
-          :concept-set="conceptSetsStore.currentSet"
-          @update:model-value="
-            value => {
-              if (!value) conceptSetsStore.closeEditor()
-            }
-          "
-          @save="onEditorSave"
-        />
       </div>
     </div>
   </AtlasPageShell>
@@ -75,14 +62,11 @@ import { useI18n } from '@/composables/useI18n'
 import { AtlasIcon, AtlasPageShell, AtlasTab, AtlasTabs } from '@/components/ui'
 import ConceptSearch from '@/components/concepts/ConceptSearch.vue'
 import ConceptSetList from '@/components/concepts/ConceptSetList.vue'
-import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
-import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
 import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
 
 const route = useRoute()
 const router = useRouter()
-const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
 const { t } = useI18n()
 
@@ -105,10 +89,6 @@ const sourceKey = computed(
 // Provide sourceKey to child components (as a ref-like object with `.value`
 // to keep the existing inject contract — `inject<{ value: string }>('sourceKey')`).
 provide('sourceKey', sourceKey)
-
-async function onEditorSave() {
-  await conceptSetsStore.fetchAll()
-}
 
 // Watch for tab changes and update URL. `immediate: true` syncs the URL to
 // the default tab on mount so deep-links / query params stay accurate.

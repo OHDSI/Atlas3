@@ -178,6 +178,32 @@ describe('ConceptSetEditor', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
+  it('uses a single header actions menu instead of import controls in the tab rail', () => {
+    const wrapper = mountComponent({ conceptSet: mockConceptSet })
+
+    expect(wrapper.find('[data-testid="cs-editor-actions-menu"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="cs-editor-optimize-btn"]').exists()).toBe(false)
+  })
+
+  it('replaces the full expression when JSON view/edit applies validated items', () => {
+    const wrapper = mountComponent({ conceptSet: mockConceptSet })
+    const store = useConceptSetsStore()
+    store.currentSet = { ...mockConceptSet, items: [...mockConceptSet.items] }
+    const replacement = {
+      ...mockConceptSet.items[0],
+      conceptId: 999,
+      conceptName: 'Replacement concept',
+    }
+
+    const vm = wrapper.vm as unknown as {
+      applyExpressionJson: (items: typeof mockConceptSet.items) => void
+    }
+    vm.applyExpressionJson([replacement])
+
+    expect(store.currentSet.items).toEqual([replacement])
+    expect((wrapper.vm as unknown as { hasUnsavedChanges: boolean }).hasUnsavedChanges).toBe(true)
+  })
+
   it('should render as navigation drawer', () => {
     const wrapper = mountComponent()
     // Drawer is teleported to body for the overlay scrim, but the
@@ -798,6 +824,65 @@ describe('ConceptSetEditor', () => {
       expect(vm.sourceCodeUnresolved).toEqual([])
     })
 
+    it('filters resolved concepts and adds only the user-selected concepts', async () => {
+      const webapi = useWebAPIStore()
+      vi.spyOn(webapi, 'getValidVocabularySource').mockReturnValue('MY_VOCAB')
+      const conditionConcept: Concept = {
+        ...mockConcept,
+        conceptId: 1,
+        conceptName: 'Type 2 diabetes mellitus',
+        conceptCode: 'E11.9',
+        domainId: 'Condition',
+        vocabularyId: 'SNOMED',
+      }
+      const drugConcept: Concept = {
+        ...mockConcept,
+        conceptId: 2,
+        conceptName: 'Metformin',
+        conceptCode: 'A10BA02',
+        domainId: 'Drug',
+        vocabularyId: 'RxNorm',
+      }
+      vi.mocked(conceptSearchService.getConceptsBySourceCodes).mockResolvedValue([
+        conditionConcept,
+        drugConcept,
+      ])
+
+      const wrapper = mountComponent({ conceptSet: { name: 'Set', items: [] } })
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Set', items: [] }
+      const addSpy = vi.spyOn(store, 'addConceptToSet')
+      const vm = wrapper.vm as unknown as {
+        sourceCodeInput: string
+        resolvePastedSourceCodes: () => Promise<void>
+        applySourceCodeConcepts: () => void
+        sourceCodeSelectedIds: number[]
+        filteredSourceCodeConcepts: Concept[]
+        setSourceCodeTextFilter: (value: string) => void
+        setSourceCodeFacet: (key: string, values: string[]) => void
+      }
+
+      vm.sourceCodeInput = 'E11.9, A10BA02'
+      await vm.resolvePastedSourceCodes()
+
+      expect(vm.sourceCodeSelectedIds).toEqual([])
+      expect(vm.filteredSourceCodeConcepts).toHaveLength(2)
+
+      vm.setSourceCodeTextFilter('metformin')
+      expect(vm.filteredSourceCodeConcepts).toEqual([drugConcept])
+
+      vm.setSourceCodeTextFilter('')
+      vm.setSourceCodeFacet('domainId', ['Condition'])
+      expect(vm.filteredSourceCodeConcepts).toEqual([conditionConcept])
+
+      vm.sourceCodeSelectedIds = [drugConcept.conceptId]
+      vm.applySourceCodeConcepts()
+      expect(addSpy).toHaveBeenCalledTimes(1)
+      expect(addSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ conceptId: drugConcept.conceptId })
+      )
+    })
+
     it('resets resolved/unresolved state when the input is edited after a failed resolve (issue #159)', async () => {
       const webapi = useWebAPIStore()
       vi.spyOn(webapi, 'getValidVocabularySource').mockReturnValue('MY_VOCAB')
@@ -822,6 +907,38 @@ describe('ConceptSetEditor', () => {
 
       expect(vm.sourceCodeResolved).toEqual([])
       expect(vm.sourceCodeUnresolved).toEqual([])
+    })
+
+    it('clears source-code selection and filters when input changes', async () => {
+      const webapi = useWebAPIStore()
+      vi.spyOn(webapi, 'getValidVocabularySource').mockReturnValue('MY_VOCAB')
+      vi.mocked(conceptSearchService.getConceptsBySourceCodes).mockResolvedValue([
+        { ...mockConcept, conceptId: 1, conceptCode: 'E11.9' },
+      ])
+
+      const wrapper = mountComponent()
+      const vm = wrapper.vm as unknown as {
+        sourceCodeInput: string
+        resolvePastedSourceCodes: () => Promise<void>
+        sourceCodeSelectedIds: number[]
+        sourceCodeTextFilter: string
+        sourceCodeFacetSelection: Record<string, string[]>
+        setSourceCodeTextFilter: (value: string) => void
+        setSourceCodeFacet: (key: string, values: string[]) => void
+      }
+
+      vm.sourceCodeInput = 'E11.9'
+      await vm.resolvePastedSourceCodes()
+      vm.sourceCodeSelectedIds = [1]
+      vm.setSourceCodeTextFilter('diabetes')
+      vm.setSourceCodeFacet('domainId', ['Condition'])
+
+      vm.sourceCodeInput = 'A10BA02'
+      await wrapper.vm.$nextTick()
+
+      expect(vm.sourceCodeSelectedIds).toEqual([])
+      expect(vm.sourceCodeTextFilter).toBe('')
+      expect(vm.sourceCodeFacetSelection).toEqual({})
     })
   })
 
