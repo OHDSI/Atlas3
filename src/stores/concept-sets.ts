@@ -3,7 +3,7 @@
  * State management for concept set CRUD operations
  */
 import { defineStore } from 'pinia'
-import { matchesTerms } from '@/utils/list-filters'
+import { matchesFieldsOrId } from '@/utils/list-filters'
 import { ref, computed, watch } from 'vue'
 import {
   getAllConceptSets,
@@ -177,7 +177,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     }
 
     return conceptSets.value.filter(set => {
-      if (hasSearch && !matchesTerms([set.name], query)) return false
+      if (hasSearch && !matchesFieldsOrId(set.id, [set.name], query)) return false
       if (hasAuthor && !getUserString(set.createdBy).includes(authorQuery)) return false
       if (hasCreated && !isDateInRange(set.createdDate, filters.value.createdDateRange)) return false
       if (hasModified && !isDateInRange(set.modifiedDate, filters.value.modifiedDateRange)) return false
