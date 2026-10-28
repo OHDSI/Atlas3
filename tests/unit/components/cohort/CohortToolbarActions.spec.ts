@@ -63,6 +63,18 @@ describe('CohortToolbarActions', () => {
       expect(saveBtn).toBeDefined()
     })
 
+    it('places tools before the separator and close/save actions', () => {
+      const wrapper = mountComponent()
+      const tools = wrapper.get('[data-testid="export-btn"]').element
+      const divider = wrapper.get('[data-testid="cohort-actions-divider"]').element
+      const close = wrapper.get('[data-testid="cohort-close-btn"]').element
+      const save = wrapper.get('[data-testid="save-cohort-btn"]').element
+
+      expect(tools.compareDocumentPosition(divider) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(divider.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(close.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
   })
 
   describe('Cancel Button', () => {
@@ -236,11 +248,10 @@ describe('CohortToolbarActions', () => {
       expect(wrapper.find('[data-testid="export-btn"]').exists()).toBe(true)
     })
 
-    it('uses a download icon, not a share icon, since the menu only offers download/copy/view-JSON actions (#219)', () => {
+    it('uses the tools icon for the actions menu', () => {
       const wrapper = mountComponent()
       const exportBtn = wrapper.find('[data-testid="export-btn"]')
-      expect(exportBtn.html()).toContain('mdi-download')
-      expect(exportBtn.html()).not.toContain('mdi-export-variant')
+      expect(exportBtn.html()).toContain('mdi-tools')
     })
 
     it('emits export-download when the JSON download item is clicked', async () => {

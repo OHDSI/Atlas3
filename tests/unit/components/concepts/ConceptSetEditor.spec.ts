@@ -314,9 +314,17 @@ describe('ConceptSetEditor', () => {
 
   it('should render close button', () => {
     const wrapper = mountComponent()
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const closeBtn = buttons.find(btn => btn.props('icon') === 'mdi-close')
-    expect(closeBtn).toBeTruthy()
+    expect(wrapper.find('[data-testid="cs-editor-close-btn"]').exists()).toBe(true)
+  })
+
+  it('places tools, close, and save in that order', () => {
+    const wrapper = mountComponent()
+    const tools = wrapper.get('[data-testid="cs-editor-actions-menu"]').element
+    const close = wrapper.get('[data-testid="cs-editor-close-btn"]').element
+    const save = wrapper.get('[data-testid="cs-editor-primary-btn"]').element
+
+    expect(tools.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(close.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('should render the access lock button next to tags in edit mode', () => {
@@ -363,11 +371,7 @@ describe('ConceptSetEditor', () => {
   it('should emit update:modelValue when close button is clicked', async () => {
     const wrapper = mountComponent()
 
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const closeBtn = buttons.find(btn => btn.props('icon') === 'mdi-close')
-
-    expect(closeBtn).toBeDefined()
-    await closeBtn!.trigger('click')
+    await wrapper.get('[data-testid="cs-editor-close-btn"]').trigger('click')
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
   })
@@ -422,11 +426,7 @@ describe('ConceptSetEditor', () => {
     await titleInput.trigger('input')
     await wrapper.vm.$nextTick()
 
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const closeBtn = buttons.find(btn => btn.props('icon') === 'mdi-close')
-
-    expect(closeBtn).toBeDefined()
-    await closeBtn!.trigger('click')
+    await wrapper.get('[data-testid="cs-editor-close-btn"]').trigger('click')
     expect((wrapper.vm as unknown as { showCloseConfirm: boolean }).showCloseConfirm).toBe(true)
   })
 
@@ -437,11 +437,11 @@ describe('ConceptSetEditor', () => {
       return mountComponent({ conceptSet: embeddedSet, embedded: true, ...props })
     }
 
-    it('renders Apply and Cancel instead of Save/Delete/Tags/Versions', () => {
+    it('renders Apply and Close instead of Save/Delete/Tags/Versions', () => {
       const wrapper = mountEmbedded()
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
       expect(buttons.find(btn => btn.text().includes('Apply'))).toBeTruthy()
-      expect(buttons.find(btn => btn.text().includes('Cancel'))).toBeTruthy()
+      expect(buttons.find(btn => btn.text().includes('Close'))).toBeTruthy()
       expect(buttons.find(btn => btn.text().includes('Save'))).toBeFalsy()
       expect(buttons.find(btn => btn.text().includes('Delete'))).toBeFalsy()
       expect(wrapper.find('[data-testid="cs-editor-tags-btn"]').exists()).toBe(false)
@@ -477,15 +477,13 @@ describe('ConceptSetEditor', () => {
       expect(createSpy).not.toHaveBeenCalled()
     })
 
-    it('Cancel with unsaved edits opens the confirm dialog; discarding closes without apply', async () => {
+    it('Close with unsaved edits opens the confirm dialog; discarding closes without apply', async () => {
       const wrapper = mountEmbedded()
       const titleInput = wrapper.find('input.cs-editor__title-input')
       ;(titleInput.element as HTMLInputElement).value = 'Modified'
       await titleInput.trigger('input')
 
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const cancelBtn = buttons.find(btn => btn.text().includes('Cancel'))!
-      await cancelBtn.trigger('click')
+      await wrapper.get('[data-testid="cs-editor-close-btn"]').trigger('click')
       expect((wrapper.vm as unknown as { showCloseConfirm: boolean }).showCloseConfirm).toBe(true)
       expect(wrapper.emitted('update:modelValue')).toBeFalsy()
       ;(wrapper.vm as unknown as { confirmClose: () => void }).confirmClose()
@@ -495,11 +493,9 @@ describe('ConceptSetEditor', () => {
       expect(wrapper.emitted('apply')).toBeFalsy()
     })
 
-    it('Cancel with no edits closes immediately', async () => {
+    it('Close with no edits closes immediately', async () => {
       const wrapper = mountEmbedded()
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const cancelBtn = buttons.find(btn => btn.text().includes('Cancel'))!
-      await cancelBtn.trigger('click')
+      await wrapper.get('[data-testid="cs-editor-close-btn"]').trigger('click')
 
       expect((wrapper.vm as unknown as { showCloseConfirm: boolean }).showCloseConfirm).toBe(false)
       expect(wrapper.emitted('update:modelValue')).toEqual([[false]])
