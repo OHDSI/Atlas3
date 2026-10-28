@@ -110,7 +110,7 @@
 
 <script setup lang="ts">
 import { ref, computed, inject, watch } from 'vue'
-import { routeLocationKey } from 'vue-router'
+import { routeLocationKey, useRouter } from 'vue-router'
 import { AtlasAlert, AtlasSelect, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
@@ -124,6 +124,7 @@ import type { Concept, ConceptAddFlags } from '@/models/concept-set.types'
 
 const { t } = useI18n()
 const route = inject(routeLocationKey, null)
+const router = useRouter()
 
 function routeQueryValue(value: unknown): string {
   if (Array.isArray(value)) {
@@ -247,10 +248,7 @@ function onItemsPerPageChange(itemsPerPage: number) {
 }
 
 function onAddConcept(concept: Concept) {
-  // First add with no set open: create an untitled set and open the editor.
-  if (!conceptSetsStore.currentSet) {
-    conceptSetsStore.openCreateEditor()
-  }
+  ensureConceptSetDraft()
   conceptSetsStore.addConceptToSet(concept, addFlags.value)
 
   feedback.value = {
@@ -266,9 +264,7 @@ function onAddSelected() {
   const ids = new Set(selected.value)
   if (ids.size === 0) return
 
-  if (!conceptSetsStore.currentSet) {
-    conceptSetsStore.openCreateEditor()
-  }
+  ensureConceptSetDraft()
 
   // Concepts already in the set are skipped by the store, so count what
   // actually landed rather than what was ticked.
@@ -286,6 +282,13 @@ function onAddSelected() {
       set: currentSetName(),
     }).value,
   }
+}
+
+function ensureConceptSetDraft() {
+  if (conceptSetsStore.currentSet) return
+
+  conceptSetsStore.openCreateEditor()
+  void router.push({ name: 'conceptset-new' })
 }
 
 function currentSetName(): string {

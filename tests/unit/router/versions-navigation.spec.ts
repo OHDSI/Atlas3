@@ -65,6 +65,7 @@ describe('version-preview navigation targets resolve to real routes', () => {
 
 const expectedDetailRoute: Partial<Record<VersionsConfig['assetType'], string>> = {
   cohortdefinition: 'cohort-edit',
+  conceptset: 'conceptset-edit',
   'pathway-analysis': 'pathway-edit',
   ir: 'incidence-rate-edit',
 }
@@ -82,8 +83,8 @@ describe('post-copy navigation targets resolve to real routes', () => {
     })
   }
 
-  it('has no conceptset entry - concept sets have no id-addressable route to navigate to', () => {
-    expect('conceptset' in ASSET_DETAIL_ROUTE_SEGMENT).toBe(false)
+  it('routes copied concept sets to the canonical legacy editor URL', () => {
+    expect(ASSET_DETAIL_ROUTE_SEGMENT.conceptset).toBe('conceptset')
   })
 
   it('the pre-fix "/pathway-analysis/:id" copy target would have been a dead link', () => {

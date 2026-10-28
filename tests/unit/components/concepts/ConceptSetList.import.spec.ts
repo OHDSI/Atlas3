@@ -18,6 +18,11 @@ vi.mock('@/services/concept-set.service', () => ({ importConceptSet: vi.fn() }))
 const hasPermission = vi.fn().mockReturnValue(true)
 vi.mock('@/composables/usePermissions', () => ({ usePermissions: () => ({ hasPermission }) }))
 
+const routerPush = vi.fn()
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: routerPush }),
+}))
+
 import ConceptSetList from '@/components/concepts/ConceptSetList.vue'
 import { importConceptSet } from '@/services/concept-set.service'
 import { useConceptSetsStore } from '@/stores/concept-sets'
@@ -62,45 +67,46 @@ describe('ConceptSetList import (#267)', () => {
     expect(entity).toEqual({ id: 9 })
   })
 
-  it('opens the editor on the imported set', async () => {
+  it('navigates to the imported repository concept set', async () => {
     const wrapper = mountList()
     const store = useConceptSetsStore()
     vi.spyOn(store, 'fetchAll').mockResolvedValue()
-    const open = vi.spyOn(store, 'openEditEditor').mockResolvedValue()
 
     await (wrapper.vm as unknown as { onImported: (e: { id?: number | string }) => Promise<void> })
       .onImported({ id: 9 })
 
-    expect(open).toHaveBeenCalledWith(9)
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'conceptset-edit',
+      params: { id: '9' },
+    })
   })
 
-  it('refetches the list before opening the editor, so the imported set is not re-imported as a duplicate', async () => {
+  it('refetches the list before navigating to the imported set', async () => {
     const wrapper = mountList()
     const store = useConceptSetsStore()
     const calls: string[] = []
     vi.spyOn(store, 'fetchAll').mockImplementation(async () => {
       calls.push('fetchAll')
     })
-    vi.spyOn(store, 'openEditEditor').mockImplementation(async () => {
-      calls.push('openEditEditor')
+    routerPush.mockImplementation(() => {
+      calls.push('navigate')
     })
 
     await (wrapper.vm as unknown as { onImported: (e: { id?: number | string }) => Promise<void> })
       .onImported({ id: 9 })
 
-    expect(calls).toEqual(['fetchAll', 'openEditEditor'])
+    expect(calls).toEqual(['fetchAll', 'navigate'])
   })
 
-  it('does not refetch or open the editor when the imported entity has no id', async () => {
+  it('does not refetch or navigate when the imported entity has no id', async () => {
     const wrapper = mountList()
     const store = useConceptSetsStore()
     const fetchAll = vi.spyOn(store, 'fetchAll').mockResolvedValue()
-    const open = vi.spyOn(store, 'openEditEditor').mockResolvedValue()
 
     await (wrapper.vm as unknown as { onImported: (e: { id?: number | string }) => Promise<void> })
       .onImported({ id: undefined })
 
     expect(fetchAll).not.toHaveBeenCalled()
-    expect(open).not.toHaveBeenCalled()
+    expect(routerPush).not.toHaveBeenCalled()
   })
 })

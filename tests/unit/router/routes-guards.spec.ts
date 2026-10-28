@@ -133,7 +133,7 @@ describe('version-preview beforeEnter guards', () => {
       conceptSetsStore.loadVersionPreview.mockResolvedValue(undefined)
       const r = makeRouter()
       await r.push('/conceptset/9/version/3')
-      expect(conceptSetsStore.loadVersionPreview).toHaveBeenCalledWith(3)
+      expect(conceptSetsStore.loadVersionPreview).toHaveBeenCalledWith(3, 9)
     })
 
     it('clears the preview when :version is "current"', async () => {
@@ -143,11 +143,11 @@ describe('version-preview beforeEnter guards', () => {
       expect(conceptSetsStore.clearPreviewVersion).toHaveBeenCalled()
     })
 
-    it('continues navigation when loadVersionPreview rejects', async () => {
+    it('redirects to the current editor when loadVersionPreview rejects', async () => {
       conceptSetsStore.loadVersionPreview.mockRejectedValue(new Error('load failed'))
       const r = makeRouter()
       await r.push('/conceptset/9/version/3')
-      expect(r.currentRoute.value.name).toBe('conceptset-version-preview')
+      expect(r.currentRoute.value.name).toBe('conceptset-edit')
     })
   })
 

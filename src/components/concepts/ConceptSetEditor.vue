@@ -3,13 +3,14 @@
        page-shell layout. Inline rendering causes the scrim to be
        constrained to the table region instead of covering the
        whole viewport. -->
-  <Teleport to="body">
-    <v-navigation-drawer
-      :model-value="modelValue"
-      location="right"
-      temporary
-      :width="drawerWidth"
-      :style="embedded ? { zIndex: 2100 } : undefined"
+  <Teleport
+    to="body"
+    :disabled="isPagePresentation"
+  >
+    <component
+      :is="isPagePresentation ? 'div' : VNavigationDrawer"
+      v-bind="drawerProps"
+      :class="{ 'cs-editor__page': isPagePresentation }"
       @update:model-value="onDrawerModelValueChange"
     >
       <div class="cs-editor__shell">
@@ -44,7 +45,7 @@
                   :placeholder="
                     t('cs.manager.untitledPlaceholder').value
                   "
-                  :disabled="loading"
+                  :disabled="loading || isPreviewing"
                   :aria-label="t('columns.name').value"
                   @input="onTitleInput"
                 >
@@ -130,6 +131,74 @@
                 </template>
               </AtlasTooltip>
 
+              <AtlasMenu>
+                <template #activator="{ props: menuProps }">
+                  <AtlasIconButton
+                    v-bind="{ ...menuProps, ariaLabel: t('common.export').value }"
+                    icon="mdi-tools"
+                    variant="text"
+                    size="sm"
+                    data-testid="cs-editor-actions-menu"
+                  />
+                </template>
+                <AtlasList
+                  density="compact"
+                  min-width="250"
+                >
+                  <AtlasListItem
+                    data-testid="cs-editor-download-json"
+                    prepend-icon="mdi-download"
+                    :title="t('cohortDefinitions.cohortDefinitionManager.panels.json').value"
+                    :subtitle="t('common.downloadFile').value"
+                    @click="downloadExpressionJson"
+                  />
+                  <AtlasListItem
+                    data-testid="cs-editor-copy-json"
+                    prepend-icon="mdi-clipboard-text-outline"
+                    :title="t('common.copyToClipboard').value"
+                    :subtitle="t('cohortDefinitions.cohortDefinitionManager.panels.json').value"
+                    @click="copyExpressionJson"
+                  />
+                  <AtlasListItem
+                    data-testid="cs-editor-view-json"
+                    prepend-icon="mdi-code-json"
+                    :title="t('components.cohortBuilder.jsonViewEdit').value"
+                    :subtitle="t('cs.manager.importJson').value"
+                    @click="showExpressionJsonDialog = true"
+                  />
+                  <template v-if="!isPreviewing">
+                    <AtlasListItem
+                      data-testid="cs-editor-paste-ids"
+                      prepend-icon="mdi-clipboard-text-outline"
+                      :title="t('cs.manager.pasteIds').value"
+                      :subtitle="t('cs.manager.pasteIdsMenuSubtitle').value"
+                      @click="showPasteDialog = true"
+                    />
+                    <AtlasListItem
+                      data-testid="cs-editor-import-source-codes"
+                      prepend-icon="mdi-barcode-scan"
+                      :title="t('cs.manager.importSourceCodesButton').value"
+                      :subtitle="t('cs.manager.importSourceCodesMenuSubtitle').value"
+                      @click="showSourceCodeDialog = true"
+                    />
+                    <AtlasListItem
+                      data-testid="cs-editor-import-json"
+                      prepend-icon="mdi-code-json"
+                      :title="t('cs.manager.importJson').value"
+                      :subtitle="t('cs.manager.importJsonMenuSubtitle').value"
+                      @click="showJsonDialog = true"
+                    />
+                    <AtlasListItem
+                      data-testid="cs-editor-optimize-menu-item"
+                      prepend-icon="mdi-auto-fix"
+                      :title="t('cs.manager.optimize').value"
+                      :disabled="optimizeDisabled"
+                      @click="showOptimizeDialog = true"
+                    />
+                  </template>
+                </AtlasList>
+              </AtlasMenu>
+
               <AtlasButton
                 v-if="embedded"
                 variant="ghost"
@@ -139,22 +208,33 @@
                 {{ t('common.cancel') }}
               </AtlasButton>
 
-              <DisabledReasonTooltip :reason="saveDisabledReason">
+              <DisabledReasonTooltip :reason="isPreviewing ? '' : saveDisabledReason">
                 <AtlasButton
-                  :disabled="!formValid || loading || !canSubmit"
+                  :disabled="isPreviewing ? loading : !formValid || loading || !canSubmit"
                   :loading="loading"
                   data-testid="cs-editor-primary-btn"
-                  @click="embedded ? onApply() : onSave()"
+                  @click="embedded ? onApply() : isPreviewing ? requestSavePreviewAsCurrent() : onSave()"
                 >
                   {{
                     embedded
                       ? t('common.apply')
-                      : isEditMode
-                        ? t('common.save')
-                        : t('common.create')
+                      : isPreviewing
+                        ? t('common.saveAsCurrentVersion')
+                        : isEditMode
+                          ? t('common.save')
+                          : t('common.create')
                   }}
                 </AtlasButton>
               </DisabledReasonTooltip>
+
+              <AtlasIconButton
+                v-if="isPreviewing"
+                icon="mdi-undo"
+                v-bind="{ ariaLabel: t('common.backToCurrent').value }"
+                variant="text"
+                size="sm"
+                @click="emit('back-to-current')"
+              />
 
               <AtlasIconButton
                 icon="mdi-close"
@@ -242,52 +322,6 @@
                   {{ t('cs.browser.compare.compare') }}
                 </AtlasTab>
               </AtlasTabs>
-
-              <AtlasSpacer />
-
-              <AtlasButton
-                variant="ghost"
-                size="sm"
-                icon="mdi-clipboard-text-outline"
-                class="cs-editor__paste-btn"
-                @click="showPasteDialog = true"
-              >
-                {{ t('cs.manager.pasteIds') }}
-              </AtlasButton>
-
-              <AtlasButton
-                variant="ghost"
-                size="sm"
-                icon="mdi-barcode-scan"
-                class="cs-editor__paste-btn"
-                @click="showSourceCodeDialog = true"
-              >
-                {{ t('cs.manager.importSourceCodesButton') }}
-              </AtlasButton>
-
-              <AtlasButton
-                variant="ghost"
-                size="sm"
-                icon="mdi-code-json"
-                class="cs-editor__paste-btn"
-                @click="showJsonDialog = true"
-              >
-                {{ t('cs.manager.importJson') }}
-              </AtlasButton>
-
-              <DisabledReasonTooltip :reason="optimizeDisabledReason">
-                <AtlasButton
-                  variant="ghost"
-                  size="sm"
-                  icon="mdi-auto-fix"
-                  class="cs-editor__paste-btn"
-                  :disabled="optimizeDisabled"
-                  data-testid="cs-editor-optimize-btn"
-                  @click="showOptimizeDialog = true"
-                >
-                  {{ t('cs.manager.optimize') }}
-                </AtlasButton>
-              </DisabledReasonTooltip>
             </nav>
 
             <div class="cs-editor__body">
@@ -398,7 +432,7 @@
           :config="versionsConfig"
         />
       </AtlasDialog>
-    </v-navigation-drawer>
+    </component>
   </Teleport>
 
   <!-- Tag selection dialog. -->
@@ -415,6 +449,14 @@
     :title="t('components.access.configureAccess').value"
     :subtitle="props.conceptSet?.name || undefined"
     @close="showAccessDialog = false"
+  />
+
+  <ConceptSetJsonDialog
+    v-model="showExpressionJsonDialog"
+    :json="expressionJson"
+    :filename="expressionFilename"
+    :can-apply="!isPreviewing"
+    @apply="applyExpressionJson"
   />
 
   <!-- Confirmation dialogs — kept outside the drawer Teleport so they
@@ -442,6 +484,30 @@
         @click="confirmClose"
       >
         {{ t('common.discard').value }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
+
+  <AtlasDialog
+    v-model="showSavePreviewConfirm"
+    :eyebrow="t('common.confirm').value"
+    :title="t('common.saveAsCurrentVersion').value"
+    max-width="440"
+    @close="showSavePreviewConfirm = false"
+  >
+    {{ t('common.savePreviewWarning').value }}
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        @click="showSavePreviewConfirm = false"
+      >
+        {{ t('common.cancel').value }}
+      </AtlasButton>
+      <AtlasButton
+        :loading="loading"
+        @click="onSavePreviewAsCurrent"
+      >
+        {{ t('common.save').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -533,7 +599,7 @@
     v-model="showSourceCodeDialog"
     :eyebrow="t('cs.manager.importSourceCodes').value"
     :title="t('cs.manager.importSourceCodesTitle').value"
-    max-width="640"
+    max-width="1200"
     @close="closeSourceCodeDialog"
   >
     <p class="cs-paste__hint">
@@ -580,6 +646,30 @@
       </div>
     </div>
 
+    <template v-if="sourceCodeResolved.length">
+      <ConceptFacetFilters
+        :facet-options="sourceCodeFacetOptions"
+        :selected="sourceCodeFacetSelection"
+        :active-filter-count="sourceCodeActiveFilterCount"
+        :result-filter="sourceCodeTextFilter"
+        :facets="sourceCodeFilterFacets"
+        class="mt-4"
+        @update:facet="({ key, values }) => setSourceCodeFacet(key, values)"
+        @update:result-filter="setSourceCodeTextFilter"
+        @clear="clearSourceCodeFilters"
+      />
+
+      <ConceptTable
+        v-model:selected="sourceCodeSelectedIds"
+        :concepts="filteredSourceCodeConcepts"
+        :loading="sourceCodeResolving"
+        :total-items="filteredSourceCodeConcepts.length"
+        :items-per-page="25"
+        selectable
+        class="mt-4"
+      />
+    </template>
+
     <template #actions>
       <AtlasButton
         variant="ghost"
@@ -598,10 +688,10 @@
       </AtlasButton>
       <AtlasButton
         v-else
-        :disabled="!sourceCodeResolved.length"
+        :disabled="!sourceCodeSelectedIds.length"
         @click="applySourceCodeConcepts"
       >
-        {{ t('cs.manager.pasteIdsAddBtn').value }} {{ sourceCodeResolved.length || '' }}
+        {{ t('cs.manager.pasteIdsAddBtn').value }} {{ sourceCodeSelectedIds.length || '' }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -699,6 +789,7 @@ import { assignedTags } from '@/utils/asset-tags'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import AssetAuthorship from '@/components/shared/AssetAuthorship.vue'
 import { ref, computed, inject, watch, toRef, onBeforeUnmount, onMounted } from 'vue'
+import { VNavigationDrawer } from 'vuetify/components'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useNotifications } from '@/stores/notifications'
@@ -711,14 +802,16 @@ import type { VersionsConfig, VersionsTableItem, User } from '@/components/versi
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 import type { Tag } from '@/models/cohort.types'
 import ConceptSearchInline from './ConceptSearchInline.vue'
+import ConceptFacetFilters from './ConceptFacetFilters.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
+import ConceptTable from './ConceptTable.vue'
 import IncludedConceptsTable from './IncludedConceptsTable.vue'
 import IncludedSourceCodesTable from './IncludedSourceCodesTable.vue'
 import RecommendTab from './RecommendTab.vue'
 import CompareTab from './CompareTab.vue'
 import ConceptSetOptimizeDialog from './ConceptSetOptimizeDialog.vue'
 import ConceptDetailContent from './detail/ConceptDetailContent.vue'
-import { AtlasAlert, AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
 import { getConceptsByIds, getConceptsBySourceCodes } from '@/services/concept-search.service'
@@ -729,6 +822,9 @@ import {
   parsePastedSourceCodes,
   parseConceptSetJson,
 } from './concept-set-import'
+import { conceptSetItemToExpressionItem } from '@/utils/api-mappers'
+import { useConceptFacets, type FacetDefinition } from '@/composables/useConceptFacets'
+import ConceptSetJsonDialog from './ConceptSetJsonDialog.vue'
 
 const { t, tv } = useI18n()
 const webapiStore = useWebAPIStore()
@@ -741,15 +837,17 @@ interface Props {
   modelValue: boolean
   conceptSet: ConceptSet | null
   embedded?: boolean
+  presentation?: 'drawer' | 'page'
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  save: []
+  save: [conceptSet: ConceptSet]
   apply: [conceptSet: ConceptSet]
   delete: [id: number | string]
+  'back-to-current': []
 }>()
 
 // ============================================================================
@@ -757,6 +855,19 @@ const emit = defineEmits<{
 // ============================================================================
 
 const store = useConceptSetsStore()
+const isPagePresentation = computed(() => props.presentation === 'page')
+const isPreviewing = computed(() => !!store.previewVersion)
+const drawerProps = computed(() =>
+  isPagePresentation.value
+    ? {}
+    : {
+        modelValue: props.modelValue,
+        location: 'right',
+        temporary: true,
+        width: drawerWidth.value,
+        style: props.embedded ? { zIndex: 2100 } : undefined,
+      }
+)
 
 // Ownership drives what the current user may do with a set, so the editor says
 // who owns it rather than leaving that to be inferred (#269).
@@ -817,7 +928,9 @@ watch(
       // immediate watcher runs during setup, before that binding exists).
       const isExisting = props.conceptSet?.id !== undefined && props.conceptSet?.id !== null
       activeTab.value = isExisting ? 'selected' : 'search'
-      document.body.style.overflow = 'hidden'
+      if (!isPagePresentation.value) {
+        document.body.style.overflow = 'hidden'
+      }
     }
   },
   { immediate: true },
@@ -844,6 +957,7 @@ const versionCount = ref(0)
 // Confirmation dialog state — replaces native window.confirm calls
 // so close + delete confirmations match the rest of the app.
 const showCloseConfirm = ref(false)
+const showSavePreviewConfirm = ref(false)
 
 // Tag selection dialog state.
 const showTagsDialog = ref(false)
@@ -863,13 +977,40 @@ const sourceCodeInput = ref('')
 const sourceCodeResolving = ref(false)
 const sourceCodeResolved = ref<Concept[]>([])
 const sourceCodeUnresolved = ref<string[]>([])
+const sourceCodeSelectedIds = ref<number[]>([])
+const sourceCodeFilterFacets: FacetDefinition[] = [
+  { key: 'vocabularyId', label: 'Vocabulary', display: concept => concept.vocabularyId || '' },
+  { key: 'domainId', label: 'Domain', display: concept => concept.domainId || '' },
+]
+const {
+  selected: sourceCodeFacetSelection,
+  textFilter: sourceCodeTextFilter,
+  facetOptions: sourceCodeFacetOptions,
+  filteredConcepts: filteredSourceCodeConcepts,
+  activeFilterCount: sourceCodeActiveFilterCount,
+  setFacet: setSourceCodeFacet,
+  setTextFilter: setSourceCodeTextFilter,
+  clearFilters: clearSourceCodeFilters,
+} = useConceptFacets(sourceCodeResolved, sourceCodeFilterFacets)
 
 // Import by JSON dialog state.
 const showJsonDialog = ref(false)
+const showExpressionJsonDialog = ref(false)
 const jsonInput = ref('')
 const jsonItems = ref<ConceptSetItem[]>([])
 const jsonError = ref('')
 const jsonParsed = ref(false)
+const expressionJson = computed(() =>
+  JSON.stringify(
+    { items: (store.currentSet?.items ?? []).map(conceptSetItemToExpressionItem) },
+    null,
+    2
+  )
+)
+const expressionFilename = computed(() => {
+  const name = form.value.name.trim() || 'concept-set'
+  return `${name.replace(/[<>:"/\\|?*]+/g, '-')}.json`
+})
 
 // Source key for vocabulary lookups.
 //
@@ -930,6 +1071,7 @@ const conceptSetAccessId = computed<number | null>(() =>
 const { hasPermission } = usePermissions()
 const { canWrite } = useEntityAccess('conceptSet', conceptSetId)
 const canSubmit = computed<boolean>(() => {
+  if (isPreviewing.value) return false
   // Embedded sets carry cohort-local codeset ids; entity access on that id
   // would check an unrelated repository concept set. The cohort's own save
   // flow gates persistence instead.
@@ -1178,8 +1320,27 @@ async function onSave() {
         loadedTags.value = [...tagsToPersist]
       }
       hasUnsavedChanges.value = false
-      emit('save')
-      emit('update:modelValue', false)
+      emit('save', result)
+      if (!isPagePresentation.value) {
+        emit('update:modelValue', false)
+      }
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+function requestSavePreviewAsCurrent() {
+  showSavePreviewConfirm.value = true
+}
+
+async function onSavePreviewAsCurrent() {
+  loading.value = true
+  try {
+    const saved = await store.savePreviewAsCurrent()
+    if (saved && store.currentSet) {
+      showSavePreviewConfirm.value = false
+      emit('save', store.currentSet)
     }
   } finally {
     loading.value = false
@@ -1245,6 +1406,7 @@ function showResultAfterFirstAdd(wasEmpty: boolean) {
 }
 
 function onAddConcept(concept: Concept, flags?: ConceptAddFlags) {
+  if (isPreviewing.value) return
   const wasEmpty = (store.currentSet?.items.length ?? 0) === 0
   store.addConceptToSet(concept, flags)
   hasUnsavedChanges.value = true
@@ -1252,6 +1414,7 @@ function onAddConcept(concept: Concept, flags?: ConceptAddFlags) {
 }
 
 function onAddConcepts(concepts: Concept[], flags?: ConceptAddFlags) {
+  if (isPreviewing.value) return
   const wasEmpty = (store.currentSet?.items.length ?? 0) === 0
   for (const concept of concepts) {
     store.addConceptToSet(concept, flags)
@@ -1275,6 +1438,7 @@ function onAddFromResolved(concepts: Concept[], flags?: ConceptAddFlags) {
 }
 
 function onRemoveConcept(concept: Concept) {
+  if (isPreviewing.value) return
   store.removeConceptFromSet(concept.conceptId)
   hasUnsavedChanges.value = true
 }
@@ -1283,21 +1447,25 @@ function onRemoveConcept(concept: Concept) {
 // several rows with different flags, and removing or toggling by id would take
 // its siblings with it (#226).
 function onRemoveFromSet(item: ConceptSetItem) {
+  if (isPreviewing.value) return
   store.removeConceptItem(item)
   hasUnsavedChanges.value = true
 }
 
 function onToggleDescendants(item: ConceptSetItem) {
+  if (isPreviewing.value) return
   store.toggleConceptItemFlag(item, 'includeDescendants')
   hasUnsavedChanges.value = true
 }
 
 function onToggleMapped(item: ConceptSetItem) {
+  if (isPreviewing.value) return
   store.toggleConceptItemFlag(item, 'includeMapped')
   hasUnsavedChanges.value = true
 }
 
 function onToggleExclude(item: ConceptSetItem) {
+  if (isPreviewing.value) return
   store.toggleConceptItemFlag(item, 'isExcluded')
   hasUnsavedChanges.value = true
 }
@@ -1309,6 +1477,35 @@ function onRecommendedConceptsAdded(count: number) {
   if (count > 0 && store.currentSet?.items.length === count) {
     activeTab.value = 'selected'
   }
+}
+
+function downloadExpressionJson() {
+  const blob = new Blob([expressionJson.value], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = expressionFilename.value
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+async function copyExpressionJson() {
+  try {
+    await navigator.clipboard.writeText(expressionJson.value)
+    notify.success(t('components.cohortBuilder.jsonCopied').value)
+  } catch (error) {
+    logger.error('ConceptSetEditor', 'Clipboard copy failed', error)
+    notify.danger(t('commonErrors.copyFailed').value)
+  }
+}
+
+function applyExpressionJson(items: ConceptSetItem[]) {
+  if (isPreviewing.value || !store.currentSet) return
+
+  store.currentSet.items = items.map(item => ({ ...item }))
+  hasUnsavedChanges.value = true
+  activeTab.value = 'selected'
+  showExpressionJsonDialog.value = false
 }
 
 // ============================================================================
@@ -1388,6 +1585,8 @@ watch(sourceCodeInput, () => {
   if (sourceCodeResolved.value.length || sourceCodeUnresolved.value.length) {
     sourceCodeResolved.value = []
     sourceCodeUnresolved.value = []
+    sourceCodeSelectedIds.value = []
+    clearSourceCodeFilters()
   }
 })
 
@@ -1410,17 +1609,22 @@ async function resolvePastedSourceCodes() {
     const found = new Set(concepts.map(c => normalize(c.conceptCode ?? '')))
     sourceCodeResolved.value = concepts
     sourceCodeUnresolved.value = codes.filter(code => !found.has(normalize(code)))
+    sourceCodeSelectedIds.value = []
+    clearSourceCodeFilters()
   } catch (err) {
     logger.error('ConceptSetEditor', 'Failed to resolve pasted source codes', err)
     sourceCodeResolved.value = []
     sourceCodeUnresolved.value = codes
+    sourceCodeSelectedIds.value = []
+    clearSourceCodeFilters()
   } finally {
     sourceCodeResolving.value = false
   }
 }
 
 function applySourceCodeConcepts() {
-  applyConceptsToSet(sourceCodeResolved.value)
+  const selectedIds = new Set(sourceCodeSelectedIds.value)
+  applyConceptsToSet(sourceCodeResolved.value.filter(concept => selectedIds.has(concept.conceptId)))
   closeSourceCodeDialog()
 }
 
@@ -1429,6 +1633,8 @@ function closeSourceCodeDialog() {
   sourceCodeInput.value = ''
   sourceCodeResolved.value = []
   sourceCodeUnresolved.value = []
+  sourceCodeSelectedIds.value = []
+  clearSourceCodeFilters()
   sourceCodeResolving.value = false
 }
 
@@ -1517,6 +1723,19 @@ function closeJsonDialog() {
 <style scoped>
 .cs-editor {
   background: rgb(var(--v-theme-surface));
+}
+
+.cs-editor__page {
+  min-height: calc(100vh - 180px);
+  background: rgb(var(--v-theme-surface));
+}
+
+.cs-editor__page .cs-editor__shell {
+  min-height: calc(100vh - 180px);
+}
+
+.cs-editor__page .cs-editor__rail {
+  display: none;
 }
 
 .cs-editor__shell {
@@ -1646,10 +1865,6 @@ function closeJsonDialog() {
   height: 18px !important;
   font-size: 11px !important;
   letter-spacing: 0.02em;
-}
-
-.cs-editor__paste-btn {
-  margin-right: 4px;
 }
 
 .cs-editor__main {

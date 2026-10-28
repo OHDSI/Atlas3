@@ -144,6 +144,21 @@ describe('Atlas 2.x compatibility routes', () => {
     expect(router.currentRoute.value.query).toEqual({ tab: 'search', query: 'diabetes' })
   })
 
+  it('keeps Atlas 2 repository concept-set URLs in the canonical route family', async () => {
+    const router = makeRouter()
+    await router.push('/conceptsets')
+    expect(router.currentRoute.value.name).toBe('concepts')
+    expect(router.currentRoute.value.query).toEqual({ tab: 'sets' })
+
+    await router.push('/conceptset/85/expression')
+    expect(router.currentRoute.value.name).toBe('conceptset-edit')
+    expect(router.currentRoute.value.path).toBe('/conceptset/85')
+
+    await router.push('/conceptset/0')
+    expect(router.currentRoute.value.name).toBe('conceptset-new')
+    expect(router.currentRoute.value.path).toBe('/conceptset/new')
+  })
+
   it('redirects Atlas 2 concept detail URLs to the Atlas 3 source-qualified concept detail route', async () => {
     localStorage.setItem('selectedVocabulary', 'eunomia')
     const router = makeRouter()

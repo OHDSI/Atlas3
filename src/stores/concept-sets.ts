@@ -341,7 +341,6 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       })
       await fetchAll()
       currentSet.value = created
-      editorOpen.value = true
       return created
     } catch (err) {
       error.value =
@@ -672,7 +671,14 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    * Fetches the historical version data and sets it as current with preview flag
    * @param versionNumber - The version number to load
    */
-  async function loadVersionPreview(versionNumber: number): Promise<void> {
+  async function loadVersionPreview(
+    versionNumber: number,
+    requestedConceptSetId?: number
+  ): Promise<void> {
+    if (requestedConceptSetId !== undefined && currentSet.value?.id !== requestedConceptSetId) {
+      await fetchOne(requestedConceptSetId)
+    }
+
     if (!currentSet.value?.id) {
       logger.error('ConceptSetsStore', 'Cannot load version preview: no current concept set ID')
       throw new Error('No current concept set ID')
@@ -718,8 +724,8 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    * Clear preview state and reload current version
    * Returns to normal editing mode
    */
-  async function clearPreviewVersion(): Promise<void> {
-    const wasPreviewingId = currentSet.value?.id
+  async function clearPreviewVersion(conceptSetId?: number): Promise<void> {
+    const wasPreviewingId = conceptSetId ?? currentSet.value?.id
 
     // Clear preview state
     previewVersion.value = null
