@@ -22,13 +22,15 @@
             {{ countLabel }}
           </AtlasChip>
 
-          <AtlasButton
-            icon="mdi-plus"
-            :disabled="!canCreate"
-            @click="onAddClick"
-          >
-            {{ t('components.conceptSetBuilder.newConceptSet') }}
-          </AtlasButton>
+          <DisabledReasonTooltip :reason="createDisabledReason">
+            <AtlasButton
+              icon="mdi-plus"
+              :disabled="!canCreate"
+              @click="onAddClick"
+            >
+              {{ t('components.conceptSetBuilder.newConceptSet') }}
+            </AtlasButton>
+          </DisabledReasonTooltip>
 
           <EntityImportButton
             :label="t('common.import').value"
@@ -169,14 +171,71 @@
             : t('cs.manager.emptyStateMessage')
         }}
       </p>
-      <AtlasButton
-        v-if="store.activeFilterCount === 0"
-        icon="mdi-plus"
-        @click="onAddClick"
-      >
-        {{ t('components.conceptSetBuilder.newConceptSet') }}
-      </AtlasButton>
+      <DisabledReasonTooltip :reason="createDisabledReason">
+        <AtlasButton
+          v-if="store.activeFilterCount === 0"
+          icon="mdi-plus"
+          :disabled="!canCreate"
+          @click="onAddClick"
+        >
+          {{ t('components.conceptSetBuilder.newConceptSet') }}
+        </AtlasButton>
+      </DisabledReasonTooltip>
     </div>
+
+    <AtlasDialog
+      v-model="showNewDialog"
+      :eyebrow="t('common.conceptSet').value"
+      :title="t('components.conceptSetBuilder.newDialogTitle').value"
+      max-width="500"
+      @close="closeNewDialog"
+    >
+      <AtlasTextField
+        v-model="newName"
+        :label="t('components.conceptSetBuilder.conceptSetName').value"
+        variant="outlined"
+        :disabled="creating"
+        data-testid="new-concept-set-name"
+        @keyup.enter="confirmCreate"
+      />
+      <AtlasTextField
+        v-model="newSearchTerms"
+        :label="t('components.conceptSetBuilder.usingSearchTerms').value"
+        :hint="t('components.conceptSetBuilder.usingSearchTermsHint').value"
+        persistent-hint
+        variant="outlined"
+        class="mt-4"
+        :disabled="creating"
+        data-testid="new-concept-set-search-terms"
+        @update:model-value="createError = ''"
+        @keyup.enter="confirmCreate"
+      />
+      <AtlasAlert
+        v-if="createError"
+        severity="danger"
+        class="mt-4"
+        data-testid="new-concept-set-error"
+      >
+        {{ createError }}
+      </AtlasAlert>
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          :disabled="creating"
+          @click="closeNewDialog"
+        >
+          {{ t('common.cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          :disabled="!newName.trim()"
+          :loading="creating"
+          data-testid="new-concept-set-create"
+          @click="confirmCreate"
+        >
+          {{ t('common.create') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
     <AtlasDialog
       v-model="showDeleteDialog"
@@ -218,15 +277,22 @@ import { tagColor, tagContrastColor } from '@/utils/tag-color'
 import { displayTags } from '@/utils/asset-tags'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetFilters from './ConceptSetFilters.vue'
-import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasTextField } from '@/components/ui'
 import EntityImportButton from '@/components/shared/EntityImportButton.vue'
+import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
 import { importConceptSet } from '@/services/concept-set.service'
+import { findSeedConceptForSearchTerms, NoMatchingConceptError } from '@/services/concept-search.service'
+import { useWebAPIStore } from '@/stores/webapi'
+import { logger } from '@/utils/logger'
 
 const { t } = useI18n()
 const router = useRouter()
 const { hasPermission } = usePermissions()
 const canCreate = computed(() => hasPermission('create:conceptset'))
 const access = useEntityAccessFor('conceptSet')
+const createDisabledReason = computed(() =>
+  canCreate.value ? '' : t('common.noPermission').value
+)
 
 // ============================================================================
 // Store
@@ -242,6 +308,11 @@ const itemsPerPage = ref(25)
 const sortBy = ref([{ key: 'modifiedDate', order: 'desc' as const }])
 const showDeleteDialog = ref(false)
 const selectedSet = ref<ConceptSetListItem | null>(null)
+const showNewDialog = ref(false)
+const newName = ref('')
+const newSearchTerms = ref('')
+const createError = ref('')
+const creating = ref(false)
 
 const countLabel = computed(() => {
   const n = store.filteredSets.length
@@ -297,7 +368,65 @@ function getAuthorName(
 }
 
 function onAddClick() {
-  void router.push({ name: 'conceptset-new' })
+  if (!canCreate.value) return
+  newName.value = ''
+  newSearchTerms.value = ''
+  createError.value = ''
+  showNewDialog.value = true
+}
+
+function closeNewDialog() {
+  if (creating.value) return
+  showNewDialog.value = false
+}
+
+// Same bar as Atlas 2.x: one term of 4+ characters, or at least two terms.
+function isSearchTermsValid(terms: string): boolean {
+  return terms.length >= 4 || terms.split(/\s+/).length >= 2
+}
+
+async function confirmCreate() {
+  const name = newName.value.trim()
+  const terms = newSearchTerms.value.trim()
+  if (!name || creating.value || !canCreate.value) return
+
+  if (!terms) {
+    store.openCreateEditor(undefined, name)
+    showNewDialog.value = false
+    void router.push({ name: 'conceptset-new' })
+    return
+  }
+
+  if (!isSearchTermsValid(terms)) {
+    createError.value = t('components.conceptSetBuilder.searchTermsTooShort').value
+    return
+  }
+
+  const webapiStore = useWebAPIStore()
+  const vocabularySourceKey = webapiStore.getValidVocabularySource()
+  const resultsSourceKey = webapiStore.getValidResultsSource()
+  if (!vocabularySourceKey || !resultsSourceKey) {
+    createError.value = t('components.conceptSetBuilder.searchTermsNoSource').value
+    return
+  }
+
+  creating.value = true
+  createError.value = ''
+  try {
+    const seed = await findSeedConceptForSearchTerms(vocabularySourceKey, resultsSourceKey, terms)
+    store.openCreateEditor(undefined, name)
+    store.addConceptToSet(seed, { includeDescendants: true })
+    showNewDialog.value = false
+    void router.push({ name: 'conceptset-new' })
+  } catch (err) {
+    createError.value =
+      err instanceof NoMatchingConceptError
+        ? t('components.conceptSetBuilder.searchTermsNoMatch', { terms }).value
+        : t('components.conceptSetBuilder.searchTermsFailed').value
+    logger.error('ConceptSetList', 'Failed to create concept set from search terms', err)
+  } finally {
+    creating.value = false
+  }
 }
 
 async function onCopyClick(id: number | string | undefined) {

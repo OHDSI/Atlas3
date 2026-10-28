@@ -238,6 +238,17 @@ describe('ConceptSetEditor', () => {
     expect(wrapper.vm.activeTab).toBe('search')
   })
 
+  it('opens new concept sets already seeded with concepts on the Selected tab', async () => {
+    const wrapper = mountComponent({
+      conceptSet: {
+        name: 'Seeded',
+        items: [{ conceptId: 201826, conceptName: 'Type 2 diabetes mellitus', includeDescendants: true }],
+      },
+    })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.vm.activeTab).toBe('selected')
+  })
+
   it('opens existing concept sets on the Selected tab', async () => {
     const wrapper = mountComponent({ conceptSet: mockConceptSet })
     await wrapper.vm.$nextTick()

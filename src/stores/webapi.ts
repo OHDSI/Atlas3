@@ -97,6 +97,15 @@ export const useWebAPIStore = defineStore('webapi', () => {
     return null
   }
 
+  /** Results source chosen in Configuration, else the highest-priority readable one. */
+  function getValidResultsSource(): string | null {
+    const stored = localStorage.getItem('selectedResults')
+    if (stored && resultsSources.value.some(s => s.sourceKey === stored)) {
+      return stored
+    }
+    return priorityDefault('Results')?.sourceKey ?? null
+  }
+
   /** Highest daimon priority of the given type wins; list order breaks ties. */
   function priorityDefault(daimonType: string): CDMSource | undefined {
     const priorityOf = (s: CDMSource) =>
@@ -490,6 +499,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
     getJobById,
     getJobsByCohortId,
     getValidVocabularySource,
+    getValidResultsSource,
     // Actions
     setSources,
     setSelectedSource,

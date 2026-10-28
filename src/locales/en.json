@@ -423,6 +423,14 @@
     },
     "conceptSetBuilder": {
       "newConceptSet": "New Concept Set",
+      "newDialogTitle": "Create a new concept set",
+      "conceptSetName": "Concept set name",
+      "usingSearchTerms": "Using search terms (optional)",
+      "usingSearchTermsHint": "Start the set with the best-matching standard concept for these terms",
+      "searchTermsTooShort": "Search terms must have at least 4 letters or 2 separate terms",
+      "searchTermsNoSource": "A vocabulary source and a results source must be configured to use search terms",
+      "searchTermsNoMatch": "No standard concept matches \"{terms}\". Try different search terms.",
+      "searchTermsFailed": "The concept search failed. Please try again.",
       "selectConceptSet": "Select Concept Set...",
       "inThisDefinition": "In this definition",
       "importFromRepository": "Import from repository"
