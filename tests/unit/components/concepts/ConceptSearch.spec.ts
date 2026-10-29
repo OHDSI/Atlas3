@@ -69,6 +69,7 @@ const vuetify = createVuetify({ components, directives })
 
 function mountComponent(options = {}) {
   return mount(ConceptSearch, {
+    props: { store: useConceptSearchStore() },
     global: {
       plugins: [vuetify],
     },
@@ -115,6 +116,20 @@ describe('ConceptSearch', () => {
     it('should render ConceptTable component', () => {
       wrapper = mountComponent()
       expect(wrapper.findComponent({ name: 'ConceptTable' }).exists()).toBe(true)
+    })
+
+    it('defaults to the compact set of concept result columns', () => {
+      wrapper = mountComponent()
+
+      expect(wrapper.vm.visibleColumnKeys).toEqual([
+        'conceptCode',
+        'vocabularyId',
+        'standardConcept',
+        'domainId',
+        'conceptClassId',
+        'recordCount',
+        'descendantRecordCount',
+      ])
     })
 
     it('should render search hint text', () => {
@@ -212,6 +227,7 @@ describe('ConceptSearch', () => {
       const route = reactive({ query: { query: 'diabetes' } })
 
       wrapper = mount(ConceptSearch, {
+        props: { store, initialSearchTerm: 'diabetes' },
         global: {
           plugins: [vuetify],
           provide: {

@@ -1,5 +1,5 @@
 /**
- * ConceptSearchInline Component Tests
+ * ConceptSearchEmbed Component Tests
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, VueWrapper, flushPromises } from '@vue/test-utils'
@@ -7,7 +7,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { setActivePinia, createPinia } from 'pinia'
-import ConceptSearchInline from '@/components/concepts/ConceptSearchInline.vue'
+import ConceptSearchEmbed from '@/components/concepts/ConceptSearchEmbed.vue'
 import ConceptFacetFilters from '@/components/concepts/ConceptFacetFilters.vue'
 import { useConceptPickerSearchStore, useConceptSearchStore, useConceptSetSearchStore } from '@/stores/concept-search'
 import { useConceptSetsStore } from '@/stores/concept-sets'
@@ -49,7 +49,7 @@ vi.mock('@/components/concepts/ConceptTable.vue', () => ({
   default: {
     name: 'ConceptTable',
     template: '<div class="concept-table-mock"></div>',
-    props: ['concepts', 'loading', 'totalItems', 'page', 'itemsPerPage', 'showAddButton', 'conceptsInSet', 'selected'],
+    props: ['concepts', 'loading', 'totalItems', 'page', 'itemsPerPage', 'showAddButton', 'conceptsInSet', 'selected', 'selectable'],
     emits: ['update:selected', 'update:page', 'update:itemsPerPage', 'add-concept', 'remove-concept', 'view-concept'],
   },
 }))
@@ -61,7 +61,7 @@ const RESULTS = [
   createMockConcept({ conceptId: 2, conceptName: 'Metformin', vocabularyId: 'RxNorm', domainId: 'Drug' }),
 ]
 
-describe('ConceptSearchInline facet filters', () => {
+describe('ConceptSearchEmbed facet filters', () => {
   let wrapper: VueWrapper
   let store: ReturnType<typeof useConceptSetSearchStore>
 
@@ -70,7 +70,7 @@ describe('ConceptSearchInline facet filters', () => {
     store = useConceptSetSearchStore()
     mockSearchConcepts.mockResolvedValue({ success: true, data: RESULTS })
     mockGetConceptRecordCounts.mockResolvedValue(new Map())
-    wrapper = mount(ConceptSearchInline, { global: { plugins: [vuetify] } })
+    wrapper = mount(ConceptSearchEmbed, { global: { plugins: [vuetify] } })
   })
 
   afterEach(() => {
@@ -146,7 +146,7 @@ describe('ConceptSearchInline facet filters', () => {
   })
 })
 
-describe('ConceptSearchInline search box and table wiring', () => {
+describe('ConceptSearchEmbed search box and table wiring', () => {
   let wrapper: VueWrapper
   let store: ReturnType<typeof useConceptSetSearchStore>
 
@@ -155,7 +155,7 @@ describe('ConceptSearchInline search box and table wiring', () => {
     store = useConceptSetSearchStore()
     mockSearchConcepts.mockResolvedValue({ success: true, data: RESULTS })
     mockGetConceptRecordCounts.mockResolvedValue(new Map())
-    wrapper = mount(ConceptSearchInline, { global: { plugins: [vuetify] } })
+    wrapper = mount(ConceptSearchEmbed, { global: { plugins: [vuetify] } })
   })
 
   afterEach(() => {
@@ -260,7 +260,7 @@ describe('ConceptSearchInline search box and table wiring', () => {
   })
 })
 
-describe('ConceptSearchInline selection mode', () => {
+describe('ConceptSearchEmbed selection mode', () => {
   let wrapper: VueWrapper
   let store: ReturnType<typeof useConceptPickerSearchStore>
 
@@ -269,7 +269,7 @@ describe('ConceptSearchInline selection mode', () => {
     store = useConceptPickerSearchStore()
     mockSearchConcepts.mockResolvedValue({ success: true, data: RESULTS })
     mockGetConceptRecordCounts.mockResolvedValue(new Map())
-    wrapper = mount(ConceptSearchInline, {
+    wrapper = mount(ConceptSearchEmbed, {
       props: { selectionMode: true, domainFilter: 'Condition', preselectedConceptIds: [1] },
       global: { plugins: [vuetify] },
     })

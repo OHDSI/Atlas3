@@ -8,7 +8,7 @@
     @update:model-value="emit('update:modelValue', $event)"
     @close="close"
   >
-    <ConceptSearchInline
+    <ConceptSearchEmbed
       v-if="modelValue"
       selection-mode
       :domain-filter="domainFilter"
@@ -23,7 +23,7 @@
 import { AtlasDialog } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'
-import ConceptSearchInline from '@/components/concepts/ConceptSearchInline.vue'
+import ConceptSearchEmbed from '@/components/concepts/ConceptSearchEmbed.vue'
 
 interface Props {
   modelValue: boolean

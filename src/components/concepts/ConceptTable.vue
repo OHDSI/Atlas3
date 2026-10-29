@@ -48,8 +48,10 @@
           :color="getConceptTypeColor(item)"
           size="sm"
           label
+          :title="getConceptTypeLabel(item)"
+          :aria-label="getConceptTypeLabel(item)"
         >
-          {{ getConceptTypeLabel(item) }}
+          {{ getConceptTypeCode(item) }}
         </AtlasChip>
       </template>
 
@@ -265,6 +267,7 @@ interface Props {
   selected?: number[] // v-model:selected — list of selected conceptIds
   linkable?: boolean
   sourceKey?: string
+  visibleColumnKeys?: string[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -278,6 +281,7 @@ const props = withDefaults(defineProps<Props>(), {
   selected: () => [],
   linkable: true,
   sourceKey: undefined,
+  visibleColumnKeys: undefined,
 })
 
 // Resolve a usable source key for detail-view links: explicit prop wins,
@@ -360,7 +364,8 @@ const headers = computed(() => {
       title: t('columns.type').value,
       key: 'standardConcept',
       sortable: true,
-      width: '140px',
+      width: '72px',
+      align: 'center' as const,
     },
     { title: t('columns.domain').value, key: 'domainId', sortable: true, width: '120px' },
     {
@@ -405,7 +410,12 @@ const headers = computed(() => {
     },
   ]
 
-  let result = baseHeaders
+  const requiredColumnKeys = new Set(['conceptId', 'conceptName'])
+  let result = props.visibleColumnKeys === undefined
+    ? baseHeaders
+    : baseHeaders.filter(header =>
+      requiredColumnKeys.has(header.key) || props.visibleColumnKeys!.includes(header.key)
+    )
 
   if (props.showAddButton) {
     result = [{ title: '', key: 'actions', sortable: false, width: '100px' }, ...result]
@@ -494,6 +504,12 @@ function getConceptTypeLabel(concept: Concept): string {
   if (concept.standardConcept === 'S') return t('search.standard').value
   if (concept.standardConcept === 'C') return t('search.classification').value
   return t('search.nonStandard').value
+}
+
+function getConceptTypeCode(concept: Concept): string {
+  if (concept.standardConcept === 'S') return 'S'
+  if (concept.standardConcept === 'C') return 'C'
+  return 'NS'
 }
 
 function onPageChange(newPage: number) {

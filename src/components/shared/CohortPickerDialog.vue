@@ -4,6 +4,7 @@
     :eyebrow="t('common.cohort').value"
     :title="title"
     max-width="1000"
+    card-class="cohort-picker-dialog__card"
     @update:model-value="emit('update:modelValue', $event)"
     @close="close"
   >
@@ -17,18 +18,24 @@
         @clear="clearFilters"
       />
 
-      <AtlasDataTable
-        v-model="selectedIds"
-        :headers="headers"
-        :items="paginatedCohorts"
-        :loading="loading || filtering"
-        item-value="id"
-        show-select
-        hide-default-footer
-        data-testid="cohort-picker-dialog-table"
-      >
-        <template #[`header.data-table-select`] />
-      </AtlasDataTable>
+      <div class="cohort-picker-dialog__table-wrapper">
+        <AtlasDataTable
+          v-model="selectedIds"
+          :headers="headers"
+          :items="paginatedCohorts"
+          :loading="loading || filtering"
+          :items-per-page="-1"
+          class="cohort-picker-dialog__table"
+          height="100%"
+          fixed-header
+          item-value="id"
+          show-select
+          hide-default-footer
+          data-testid="cohort-picker-dialog-table"
+        >
+          <template #[`header.data-table-select`] />
+        </AtlasDataTable>
+      </div>
 
       <CohortPagination
         v-if="selectableCohorts.length"
@@ -185,11 +192,37 @@ function confirm() {
 }
 </script>
 
-<style scoped>
+<style>
+.cohort-picker-dialog__card {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  height: calc(100vh - 48px);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+}
+
+.cohort-picker-dialog__card .atlas-dialog__body {
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .cohort-picker-dialog__body {
   display: grid;
+  flex: 1 1 auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 16px;
   min-height: 0;
 }
+
+.cohort-picker-dialog__table-wrapper {
+  height: 100%;
+  min-height: 0;
+}
+
+.cohort-picker-dialog__table {
+  height: 100%;
+}
+
 .cohort-picker-dialog__pagination { margin-top: 2px; }
 </style>

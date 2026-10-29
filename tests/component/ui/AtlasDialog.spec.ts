@@ -74,6 +74,11 @@ describe('AtlasDialog', () => {
     expect(document.body.querySelector('.atlas-dialog__actions')).toBeNull()
   })
 
+  it('applies cardClass to the dialog card', async () => {
+    await mountOpen({ cardClass: 'bounded-dialog-card' })
+    expect(document.body.querySelector('.atlas-dialog__card')?.classList.contains('bounded-dialog-card')).toBe(true)
+  })
+
   it('shows close button by default', async () => {
     await mountOpen({})
     expect(document.body.querySelector('button[aria-label="Close dialog"]')).not.toBeNull()

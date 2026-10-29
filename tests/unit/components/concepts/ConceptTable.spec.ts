@@ -111,6 +111,14 @@ describe('ConceptTable', () => {
     expect(dataTable.props('items')).toEqual(mockConcepts)
   })
 
+  it('only renders the selected optional columns', () => {
+    const wrapper = mountComponent({ visibleColumnKeys: ['vocabularyId'] })
+    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
+    const keys = (dataTable.props('headers') as { key: string }[]).map(header => header.key)
+
+    expect(keys).toEqual(['conceptId', 'conceptName', 'vocabularyId'])
+  })
+
   it('should display loading state', () => {
     const wrapper = mountComponent({ loading: true })
     const dataTable = wrapper.findComponent({ name: 'VDataTable' })
@@ -187,31 +195,31 @@ describe('ConceptTable', () => {
     expect(chips.length).toBeGreaterThan(0)
   })
 
-  it('should display Standard badge for standardConcept=S', async () => {
+  it('displays the compact Standard type badge with its full label', async () => {
     const wrapper = mountComponent({ concepts: [mockConcepts[0]] })
     await wrapper.vm.$nextTick()
 
     const chips = wrapper.findAllComponents({ name: 'VChip' })
-    const standardChip = chips.find(chip => chip.text().includes('Standard'))
-    expect(standardChip).toBeTruthy()
+    const standardChip = chips.find(chip => chip.text() === 'S')
+    expect(standardChip?.attributes('title')).toBe('Standard')
   })
 
-  it('should display Classification badge for standardConcept=C', async () => {
+  it('displays the compact Classification type badge with its full label', async () => {
     const wrapper = mountComponent({ concepts: [mockConcepts[1]] })
     await wrapper.vm.$nextTick()
 
     const chips = wrapper.findAllComponents({ name: 'VChip' })
-    const classificationChip = chips.find(chip => chip.text().includes('Classification'))
-    expect(classificationChip).toBeTruthy()
+    const classificationChip = chips.find(chip => chip.text() === 'C')
+    expect(classificationChip?.attributes('title')).toBe('Classification')
   })
 
-  it('should display Non-Standard badge for standardConcept=null', async () => {
+  it('displays the compact Non-Standard type badge with its full label', async () => {
     const wrapper = mountComponent({ concepts: [mockConcepts[2]] })
     await wrapper.vm.$nextTick()
 
     const chips = wrapper.findAllComponents({ name: 'VChip' })
-    const nonStandardChip = chips.find(chip => chip.text().includes('Non-Standard'))
-    expect(nonStandardChip).toBeTruthy()
+    const nonStandardChip = chips.find(chip => chip.text() === 'NS')
+    expect(nonStandardChip?.attributes('title')).toBe('Non-Standard')
   })
 
   it('should display Valid badge when invalidReason is null', async () => {
@@ -423,11 +431,7 @@ describe('ConceptTable', () => {
     await wrapper.vm.$nextTick()
 
     const chips = wrapper.findAllComponents({ name: 'VChip' })
-    const typeChips = chips.filter(chip =>
-      chip.text().includes('Standard') ||
-      chip.text().includes('Classification') ||
-      chip.text().includes('Non-Standard')
-    )
+    const typeChips = chips.filter(chip => chip.text() === 'S')
 
     expect(typeChips.length).toBeGreaterThan(0)
     expect(typeChips[0].props('color')).toBe('primary')
@@ -438,7 +442,7 @@ describe('ConceptTable', () => {
     await wrapper.vm.$nextTick()
 
     const chips = wrapper.findAllComponents({ name: 'VChip' })
-    const typeChips = chips.filter(chip => chip.text().includes('Classification'))
+    const typeChips = chips.filter(chip => chip.text() === 'C')
 
     expect(typeChips.length).toBeGreaterThan(0)
     expect(typeChips[0].props('color')).toBe('info')
