@@ -45,43 +45,27 @@
     >
       {{ t('pathway.results.loading').value }}
     </div>
-    <template v-else-if="design && results && targetGroup">
+    <template v-else-if="design && results">
       <div
         v-if="mode === 'visual'"
         class="pathway-results__visual"
       >
-        <div class="pathway-results__legend-col">
-          <PathwayLegend
-            :design="design"
-            :colors="colors"
-            :event-codes="results.eventCodes"
-            :target-cohort-name="targetCohortName"
-            :target-cohort-count="targetGroup.targetCohortCount"
-            :total-pathways-count="targetGroup.totalPathwaysCount"
-          />
-          <PathwayPathDetails
-            v-if="selectedPath"
-            :steps="[]"
-            :event-codes="results.eventCodes"
-            :colors="colors"
-          />
-        </div>
-        <div class="pathway-results__chart-col">
-          <PathwaySunburst
-            :design="design"
-            :results="results"
-            :target-cohort-id="targetGroup.targetCohortId"
-            :colors="colors"
-            @pathway:select="info => (selectedPath = info)"
-          />
-        </div>
+        <PathwayCohortResults
+          v-for="row in resultRows"
+          :key="row.targetCohortId"
+          :design="design"
+          :results="results"
+          :target-cohort-id="row.targetCohortId"
+          :group="row.group"
+          :cohort-name="row.cohortName"
+          :colors="colors"
+        />
       </div>
 
       <PathwayTableView
         v-else
         :design="design"
         :results="results"
-        :target-cohort-id="targetGroup.targetCohortId"
       />
     </template>
   </AnalysisBuilderShell>
@@ -94,9 +78,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { usePathwayResults } from '@/composables/usePathwayResults'
 import { useI18n } from '@/composables/useI18n'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import PathwaySunburst from '@/components/pathway/results/PathwaySunburst.vue'
-import PathwayLegend from '@/components/pathway/results/PathwayLegend.vue'
-import PathwayPathDetails from '@/components/pathway/results/PathwayPathDetails.vue'
+import PathwayCohortResults from '@/components/pathway/results/PathwayCohortResults.vue'
+import { buildCohortResultRows } from '@/components/pathway/pathway-workbench-state'
 import PathwayTableView from '@/components/pathway/results/PathwayTableView.vue'
 
 const PALETTE_20 = [
@@ -127,12 +110,7 @@ const router = useRouter()
 const { execution, design, results, loading, error, load } = usePathwayResults()
 const { t } = useI18n()
 const mode = ref<'visual' | 'tabular'>('visual')
-const selectedPath = ref<{ code: number; nodeName: string; value: number } | null>(null)
-
-const targetGroup = computed(() => {
-  if (!results.value) return null
-  return results.value.pathwayGroups[0] ?? null
-})
+const resultRows = computed(() => buildCohortResultRows(design.value, results.value))
 
 const title = computed(() => {
   const name = design.value?.name?.trim()
@@ -143,13 +121,6 @@ const subtitle = computed(() => {
   const exec = execution.value
   if (!exec) return undefined
   return `${t('columns.executionId').value} #${exec.id} · ${exec.sourceKey}`
-})
-
-const targetCohortName = computed(() => {
-  if (!design.value || !targetGroup.value) return ''
-  return (
-    design.value.targetCohorts.find(c => c.id === targetGroup.value!.targetCohortId)?.name ?? ''
-  )
 })
 
 const colorMap = computed(() => {
@@ -193,14 +164,7 @@ onMounted(() => {
 }
 
 .pathway-results__visual {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 24px;
-}
-
-@media (max-width: 1100px) {
-  .pathway-results__visual {
-    grid-template-columns: 1fr;
-  }
+  display: flex;
+  flex-direction: column;
 }
 </style>

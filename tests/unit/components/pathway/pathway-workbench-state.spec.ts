@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildColorMap,
+  buildCohortResultRows,
   buildCoverageProps,
   buildRunTableExecutions,
   resolveActiveRunSummary,
@@ -31,6 +32,17 @@ describe('pathway workbench state', () => {
       results: null,
       design: { eventCohorts: [{ code: 1 }, { code: null }] } as never,
     })).toEqual(new Map([['2', '#1f77b4'], ['2', '#ff7f0e']]))
+  })
+
+  it('includes configured cohorts without results alongside result groups', () => {
+    const group = { targetCohortId: 1, totalPathwaysCount: 3, targetCohortCount: 4 }
+    expect(buildCohortResultRows(
+      { targetCohorts: [{ id: 1, name: 'Present' }, { id: 2, name: 'Missing' }] } as never,
+      { pathwayGroups: [group] } as never
+    )).toEqual([
+      { targetCohortId: 1, cohortName: 'Present', group },
+      { targetCohortId: 2, cohortName: 'Missing', group: undefined },
+    ])
   })
 
   it('builds run rows, overlays a live run, and resolves run metadata', () => {

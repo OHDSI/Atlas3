@@ -72,12 +72,9 @@ vi.mock('@/utils/pathway-path-stats', () => ({
 
 const stubChildren = [
   'PathwayDesignForm',
-  'PathwaySunburst',
+  'PathwayCohortResults',
   'PathwayTableView',
   'PathwayCanvasToolbar',
-  'PathwayCoverageStat',
-  'PathwayLegend',
-  'PathwayPathStats',
   'DataSourceRunTable',
   'PreviousRunsDialog',
 ]
@@ -106,7 +103,7 @@ describe('PathwayWorkbench', () => {
     expect(w.find('[data-testid="canvas-empty"]').exists()).toBe(true)
   })
 
-  it('renders the three panes with a loaded pathway and no execution', () => {
+  it('renders the design and canvas panes with a loaded pathway and no execution', () => {
     const store = usePathwayStore()
     store.createNewPathway()
     if (store.currentPathway) store.currentPathway.id = 1
@@ -116,7 +113,7 @@ describe('PathwayWorkbench', () => {
     })
     expect(w.find('[data-testid="workbench-design-rail"]').exists()).toBe(true)
     expect(w.find('[data-testid="workbench-canvas"]').exists()).toBe(true)
-    expect(w.find('[data-testid="workbench-insights-rail"]').exists()).toBe(true)
+    expect(w.find('[data-testid="workbench-insights-rail"]').exists()).toBe(false)
   })
 
   // A run the agent starts belongs to no composable on this page, so nothing
@@ -161,19 +158,31 @@ describe('PathwayWorkbench', () => {
     vi.useRealTimers()
   })
 
-  it('shows the insights empty hint when no path is selected', async () => {
+  it('renders one results row per target cohort group, labelled by cohort name', async () => {
     const store = usePathwayStore()
     store.createNewPathway()
-    if (store.currentPathway) store.currentPathway.id = 1
+    if (store.currentPathway) {
+      store.currentPathway.id = 1
+      store.currentPathway.targetCohorts = [{ id: 5, name: 'Target A' }, { id: 7, name: 'Target B' }]
+    }
+    composableMocks.design.value = store.currentPathway
+    composableMocks.results.value = {
+      pathwayGroups: [
+        { targetCohortId: 5, totalPathwaysCount: 10, targetCohortCount: 4 },
+        { targetCohortId: 7, totalPathwaysCount: 6, targetCohortCount: 3 },
+      ],
+      eventCodes: [{ code: 1, isCombo: false }],
+    }
     const w = mount(PathwayWorkbench, {
-      props: { pathwayId: 1 },
+      props: { pathwayId: 1, selectedExecutionId: 2 },
       global: { plugins: [vuetify], stubs: stubChildren },
     })
     await flushPromises()
-    expect(w.find('[data-testid="insights-empty-hint"]').exists()).toBe(true)
+    const rows = w.findAllComponents({ name: 'PathwayCohortResults' })
+    expect(rows.map(r => r.props('cohortName'))).toEqual(['Target A', 'Target B'])
   })
 
-  it('toggles the rail, switches table mode, and reacts to a selected path', async () => {
+  it('toggles the rail and switches table mode', async () => {
     const store = usePathwayStore()
     store.createNewPathway()
     if (store.currentPathway) {
@@ -199,15 +208,6 @@ describe('PathwayWorkbench', () => {
     await w.findComponent({ name: 'PathwayCanvasToolbar' }).vm.$emit('update:mode', 'tabular')
     await nextTick()
     expect(w.findComponent({ name: 'PathwayTableView' }).exists()).toBe(true)
-
-    w.vm.onPathSelect({ code: 1, nodeName: 'Path A', value: 3 })
-    await flushPromises()
-    expect(w.findComponent({ name: 'PathwayPathStats' }).exists()).toBe(true)
-    expect(pathwayStatsMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        selectedPath: { path: 'Path A' },
-      })
-    )
   })
 
   it('starts, cancels, and opens history from the run table', async () => {
