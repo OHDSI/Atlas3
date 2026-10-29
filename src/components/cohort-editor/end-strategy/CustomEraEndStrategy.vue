@@ -39,35 +39,30 @@
         <AtlasTextField
           v-model.number="gapDays"
           type="number"
-          :label="tv('criteriaAttributes.gapDays.label')"
+          :label="tv('components.endStrategy.customEra.persistenceWindow')"
+          :hint="tv('components.endStrategy.customEra.persistenceWindowHint')"
+          persistent-hint
           variant="outlined"
           density="compact"
-          hide-details
           min="0"
         />
 
         <AtlasTextField
           v-model.number="offset"
           type="number"
-          :label="tv('common.offsetDays')"
+          :label="tv('components.endStrategy.customEra.surveillanceWindow')"
+          :hint="tv('components.endStrategy.customEra.surveillanceWindowHint')"
+          persistent-hint
           variant="outlined"
           density="compact"
-          hide-details
-          min="0"
-        />
-
-        <AtlasTextField
-          v-model.number="daysSupplyOverride"
-          type="number"
-          :label="tv('components.endStrategy.customEra.daysSupplyOverride')"
-          variant="outlined"
-          density="compact"
-          hide-details
           min="0"
         />
       </div>
 
-      <div class="strategy-hint strategy-hint--secondary mt-3">
+      <div
+        v-if="!overrideEnabled"
+        class="strategy-hint strategy-hint--secondary mt-3"
+      >
         <AtlasIcon
           size="16"
           class="strategy-hint__icon"
@@ -75,6 +70,37 @@
           mdi-information-outline
         </AtlasIcon>
         <span>{{ tv('components.endStrategy.customEra.daysSupplyHint') }}</span>
+      </div>
+
+      <div class="custom-era-end-strategy__override mt-4">
+        <template v-if="overrideEnabled">
+          <AtlasTextField
+            v-model.number="daysSupplyOverride"
+            type="number"
+            :label="tv('components.endStrategy.customEra.daysSupplyOverride')"
+            variant="outlined"
+            density="compact"
+            hide-details
+            min="0"
+          />
+          <AtlasIconButton
+            icon="mdi-close"
+            tone="danger"
+            variant="text"
+            size="sm"
+            :aria-label="tv('components.endStrategy.customEra.removeDaysSupplyOverride')"
+            @click="overrideEnabled = false"
+          />
+        </template>
+        <AtlasChip
+          v-else
+          color="primary"
+          variant="outlined"
+          style="cursor: pointer"
+          @click="overrideEnabled = true"
+        >
+          {{ tv('components.endStrategy.customEra.overrideDaysSupply') }}
+        </AtlasChip>
       </div>
     </template>
   </div>
@@ -85,6 +111,7 @@ import { computed, toRef } from 'vue'
 import {
   AtlasButton,
   AtlasChip,
+  AtlasIconButton,
   AtlasIcon,
   AtlasTextField,
 } from '@/components/ui'
@@ -130,8 +157,15 @@ const offset = computed<number>({
   },
 })
 
+const overrideEnabled = computed<boolean>({
+  get: () => props.strategy.DaysSupplyOverride != null,
+  set: enabled => {
+    props.strategy.DaysSupplyOverride = enabled ? 1 : undefined
+  },
+})
+
 const daysSupplyOverride = computed<number>({
-  get: () => props.strategy.DaysSupplyOverride ?? 0,
+  get: () => props.strategy.DaysSupplyOverride ?? 1,
   set: value => {
     props.strategy.DaysSupplyOverride = Number(value) || 0
   },
@@ -175,6 +209,17 @@ function clearConceptSet() {
 }
 
 .custom-era-end-strategy__fields .v-text-field {
-  max-width: 180px;
+  max-width: 260px;
+}
+
+.custom-era-end-strategy__override {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.custom-era-end-strategy__override .v-text-field {
+  max-width: 220px;
 }
 </style>
