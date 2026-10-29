@@ -31,6 +31,8 @@
       :executions="runTableExecutions"
       :loading="false"
       :show-patient-count="true"
+      :show-record-count="true"
+      :hide-latest-result-button="true"
       :run-disabled="generateBlocked"
       :run-disabled-reason="generateDisabledReason"
       :extra-actions="extraActions"
@@ -126,6 +128,7 @@ function jobToExecution(j: GenerationJob): RunTableExecution {
     endTime: end,
     duration: start && end ? end - start : undefined,
     personCount: j.personCount,
+    recordCount: j.recordCount,
   }
 }
 

@@ -33,7 +33,7 @@
     </AtlasButton>
 
     <AtlasTooltip
-      v-if="canViewLatestResult"
+      v-if="canViewLatestResult && !hideLatestResultButton"
       location="top"
     >
       <template #activator="{ props: tipProps }">
@@ -89,6 +89,7 @@ interface Props {
   runDisabledReason?: string
   hideCancel?: boolean
   hideHistoryButton?: boolean
+  hideLatestResultButton?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -99,6 +100,7 @@ const props = withDefaults(defineProps<Props>(), {
   runDisabledReason: '',
   hideCancel: false,
   hideHistoryButton: false,
+  hideLatestResultButton: false,
 })
 
 const emit = defineEmits<{

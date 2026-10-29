@@ -51,6 +51,12 @@
       </span>
     </template>
 
+    <template #[`item.records`]="{ item }">
+      <span :class="(item as Row).recordCount === undefined ? 'dsrt-muted' : 'dsrt-pcount'">
+        {{ (item as Row).recordCount !== undefined ? (item as Row).recordCount!.toLocaleString() : em }}
+      </span>
+    </template>
+
     <template #[`item.lastRun`]="{ item }">
       <span :class="(item as Row).lastRun ? '' : 'dsrt-muted'">
         {{ (item as Row).lastRun || em }}
@@ -76,6 +82,7 @@
           :run-disabled-reason="runDisabledReason"
           :hide-cancel="hideCancel"
           :hide-history-button="hideHistoryButton"
+          :hide-latest-result-button="hideLatestResultButton"
           @run="$emit('run', (item as Row).sourceKey)"
           @cancel="$emit('cancel', (item as Row).sourceKey)"
           @select-result="$emit('select-result', (item as Row).latestExecutionId)"
@@ -120,6 +127,7 @@ export interface RunTableExecution {
   endTime?: number
   duration?: number
   personCount?: number
+  recordCount?: number
 }
 
 export interface ExtraAction {
@@ -137,9 +145,11 @@ interface Props {
   runDisabledReason?: string
   noSourcesText?: string
   showPatientCount?: boolean
+  showRecordCount?: boolean
   extraActions?: ExtraAction[]
   hideCancel?: boolean
   hideHistoryButton?: boolean
+  hideLatestResultButton?: boolean
   selectedExecutionId?: number | string | null
 }
 
@@ -149,9 +159,11 @@ const props = withDefaults(defineProps<Props>(), {
   runDisabledReason: '',
   noSourcesText: undefined,
   showPatientCount: false,
+  showRecordCount: false,
   extraActions: () => [],
   hideCancel: false,
   hideHistoryButton: false,
+  hideLatestResultButton: false,
   selectedExecutionId: null,
 })
 
@@ -184,6 +196,9 @@ const headers = computed<TableHeader[]>(() => {
     { key: 'source', title: t('columns.sourceName').value, sortable: false },
     { key: 'status', title: t('columns.status').value, sortable: false },
   ]
+  if (props.showRecordCount) {
+    h.push({ key: 'records', title: t('columns.records').value, sortable: false, align: 'end' })
+  }
   if (props.showPatientCount) {
     h.push({ key: 'patients', title: t('columns.patients').value, sortable: false, align: 'end' })
   }
@@ -266,6 +281,7 @@ interface Row {
   duration: string
   count: number
   personCount?: number
+  recordCount?: number
 }
 
 function executionId(e: RunTableExecution): number {
@@ -325,6 +341,7 @@ const rows = computed<Row[]>(() =>
       duration: latest ? formatDuration(effectiveDuration(latest)) : '',
       count: countBySource.value.get(s.sourceKey) ?? 0,
       personCount: latest?.personCount,
+      recordCount: latest?.recordCount,
     }
   })
 )

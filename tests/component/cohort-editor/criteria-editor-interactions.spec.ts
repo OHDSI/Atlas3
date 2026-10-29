@@ -265,7 +265,9 @@ describe('cohort-editor interactions', () => {
     await all!.trigger('click')
     await latest!.trigger('click')
 
-    expect(wrapper.emitted('update:expressionLimitType')).toEqual([['First'], ['All'], ['Last']])
+    // The initial limit is already All, so selecting it does not emit a
+    // redundant model update.
+    expect(wrapper.emitted('update:expressionLimitType')).toEqual([['First'], ['Last']])
     expect(expressionLimit.Type).toBe('All')
   })
 
