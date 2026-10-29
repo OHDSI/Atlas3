@@ -22,6 +22,7 @@ const mockReplace = vi.fn((opts?: { query?: Record<string, string | string[]> })
 const mockQuery = ref<Record<string, string | string[]>>({})
 
 vi.mock('vue-router', () => ({
+  routeLocationKey: Symbol('route location'),
   useRouter: () => ({
     replace: mockReplace,
   }),
