@@ -2800,7 +2800,7 @@
     "system": "System"
   },
   "inclusionPanel": {
-    "limitIncludedEvents": "Limit Included Events to"
+    "limitRemainingEvents": "Limit Remaining Events to"
   },
   "apiKeys": {
     "list": {
