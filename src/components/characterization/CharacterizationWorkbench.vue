@@ -27,19 +27,30 @@
           ? '◂ ' + tv('components.workbench.hideAnalysisDesign')
           : '▸ ' + tv('components.workbench.showAnalysisDesign') }}
       </button>
-      <DataSourceRunTable
-        :sources="runTableSources"
-        :executions="runTableExecutions"
-        :selected-execution-id="selectedExecutionId"
-        :loading="store.executionsLoading"
-        :run-disabled="runDisabled"
-        :run-disabled-reason="runDisabledReason"
-        data-testid="char-workbench-run-table"
-        @run="handleRun"
-        @cancel="handleCancel"
-        @select-result="onSelectHistoryExecution"
-        @show-history="handleShowHistory"
-      />
+      <AtlasCollapsibleSection
+        :title="t('cohortDefinitions.generation.section.title').value"
+        :default-expanded="true"
+      >
+        <template #controls>
+          <AtlasSwitch
+            v-model="onlyGenerated"
+            :label="t('cohortDefinitions.generation.section.onlyGenerated').value"
+          />
+        </template>
+        <DataSourceRunTable
+          :sources="visibleRunTableSources"
+          :executions="runTableExecutions"
+          :selected-execution-id="selectedExecutionId"
+          :loading="store.executionsLoading"
+          :run-disabled="runDisabled"
+          :run-disabled-reason="runDisabledReason"
+          data-testid="char-workbench-run-table"
+          @run="handleRun"
+          @cancel="handleCancel"
+          @select-result="onSelectHistoryExecution"
+          @show-history="handleShowHistory"
+        />
+      </AtlasCollapsibleSection>
 
       <template v-if="characterizationId">
         <CharacterizationCanvasToolbar
@@ -168,6 +179,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { AtlasAlert, AtlasProgressCircular } from '@/components/ui'
+import AtlasCollapsibleSection from '@/components/ui/AtlasCollapsibleSection.vue'
+import AtlasSwitch from '@/components/ui/AtlasSwitch.vue'
 import CharacterizationDesignRail from './CharacterizationDesignRail.vue'
 import CharacterizationCanvasToolbar from './CharacterizationCanvasToolbar.vue'
 import CharacterizationRunMeta from './CharacterizationRunMeta.vue'
@@ -193,6 +206,7 @@ import { getCohortGenerationInfo } from '@/services/cohort-definition.service'
 import { getCharacterizationDesignSnapshot } from '@/services/characterization.service'
 import { logger } from '@/utils/logger'
 import { overallCohortSizes } from '@/utils/characterization-result-mapper'
+import { filterGeneratedSources } from '@/utils/generation-source-filter'
 import {
   DEFAULT_TABLE1_CONFIG, DEFAULT_TABLE1_FILTERS,
   type CharacterizationDefinition,
@@ -232,7 +246,7 @@ const emit = defineEmits<{
 
 const route = useRoute()
 const router = useRouter()
-const { tv } = useI18n()
+const { t, tv } = useI18n()
 const store = useCharacterizationStore()
 const sourcesStore = useDataSourcesStore()
 const cohortSizes = ref<Record<string, number>>({})
@@ -363,6 +377,13 @@ const runTableExecutions = computed<RunTableExecution[]>(() =>
     endTime: e.endTime ?? undefined,
     duration: e.duration,
   }))
+)
+
+const onlyGenerated = ref(false)
+const visibleRunTableSources = computed(() =>
+  onlyGenerated.value
+    ? filterGeneratedSources(runTableSources.value, runTableExecutions.value)
+    : runTableSources.value
 )
 
 const runDisabled = computed<boolean>(() => props.characterizationId == null || store.isDirty)

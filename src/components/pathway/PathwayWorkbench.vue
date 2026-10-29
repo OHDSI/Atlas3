@@ -30,19 +30,30 @@
             : '▸ ' + t('components.workbench.showAnalysisDesign').value
         }}
       </button>
-      <DataSourceRunTable
+      <AtlasCollapsibleSection
         v-if="pathwayId"
-        :sources="runTableSources"
-        :executions="runTableExecutions"
-        :selected-execution-id="selectedExecutionId ?? null"
-        :loading="executionsLoading"
-        :run-disabled="!canGenerate"
-        :run-disabled-reason="runDisabledReason"
-        @run="onRun"
-        @cancel="onCancel"
-        @select-result="onHistorySelect"
-        @show-history="onShowHistory"
-      />
+        :title="t('cohortDefinitions.generation.section.title').value"
+        :default-expanded="true"
+      >
+        <template #controls>
+          <AtlasSwitch
+            v-model="onlyGenerated"
+            :label="t('cohortDefinitions.generation.section.onlyGenerated').value"
+          />
+        </template>
+        <DataSourceRunTable
+          :sources="visibleRunTableSources"
+          :executions="runTableExecutions"
+          :selected-execution-id="selectedExecutionId ?? null"
+          :loading="executionsLoading"
+          :run-disabled="!canGenerate"
+          :run-disabled-reason="runDisabledReason"
+          @run="onRun"
+          @cancel="onCancel"
+          @select-result="onHistorySelect"
+          @show-history="onShowHistory"
+        />
+      </AtlasCollapsibleSection>
 
       <PathwayCanvasToolbar
         :mode="mode"
@@ -121,12 +132,15 @@
 import { computed, ref, shallowRef, watch, onMounted, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from '@/composables/useI18n'
+import AtlasCollapsibleSection from '@/components/ui/AtlasCollapsibleSection.vue'
+import AtlasSwitch from '@/components/ui/AtlasSwitch.vue'
 import { usePathwayResults } from '@/composables/usePathwayResults'
 import { usePathwayGeneration } from '@/composables/usePathwayGeneration'
 import { usePathwayStore } from '@/stores/pathway'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { listPathwayExecutions } from '@/services/pathway.service'
 import { logger } from '@/utils/logger'
+import { filterGeneratedSources } from '@/utils/generation-source-filter'
 import PathwayDesignForm from './PathwayDesignForm.vue'
 import PathwayCohortResults from './results/PathwayCohortResults.vue'
 import PathwayTableView from './results/PathwayTableView.vue'
@@ -182,6 +196,7 @@ watch(
 
 const railOpen = ref(props.pathwayId === null)
 const mode = ref<'visual' | 'tabular'>('visual')
+const onlyGenerated = ref(false)
 const executions = ref<PathwayExecution[]>([])
 const executionsLoading = ref(false)
 const historyOpen = ref(false)
@@ -209,6 +224,11 @@ const runTableExecutions = computed<RunTableExecution[]>(() => buildRunTableExec
   executions: executions.value,
   liveExecution: generation.value?.execution.value ?? null,
 }))
+const visibleRunTableSources = computed(() =>
+  onlyGenerated.value
+    ? filterGeneratedSources(runTableSources.value, runTableExecutions.value)
+    : runTableSources.value
+)
 
 const historySourceName = computed(() => resolveHistorySourceName({
   sourceKey: historySourceKey.value,
