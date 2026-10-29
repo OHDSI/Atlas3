@@ -21,7 +21,9 @@ import type {
 export async function fetchCDMSources(): Promise<ApiResult<CDMSource[]>> {
   return unwrap(async () => {
     const data = await httpGet<unknown>('/source/sources')
-    return parseOrThrow(CDMSourceListSchema, data, 'Invalid source list response')
+    return parseOrThrow(CDMSourceListSchema, data, 'Invalid source list response').sort((left, right) =>
+      left.sourceName.localeCompare(right.sourceName)
+    )
   }, 'SourceService')
 }
 
