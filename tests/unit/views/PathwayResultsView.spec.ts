@@ -9,6 +9,7 @@ import * as directives from 'vuetify/directives'
 import { tr } from '../../helpers/i18n-mock'
 
 const routerPush = vi.fn()
+const routeParams = { executionId: '123' }
 const pathwayResultsMocks = {
   execution: ref<{ id: number; sourceKey: string } | null>(null),
   design: ref<any>(null),
@@ -19,7 +20,7 @@ const pathwayResultsMocks = {
 }
 
 vi.mock('vue-router', () => ({
-  useRoute: () => ({ params: { executionId: '123' } }),
+  useRoute: () => ({ params: routeParams }),
   useRouter: () => ({ push: routerPush }),
 }))
 
@@ -38,35 +39,18 @@ const AnalysisBuilderShellStub = defineComponent({
   template: '<div><button data-testid="pathway-results-back" @click="$emit(\'back\')">back</button><slot name="actions" /><slot /></div>',
 })
 
-const PathwaySunburstStub = defineComponent({
-  name: 'PathwaySunburst',
-  emits: ['pathway:select'],
-  template: '<button data-testid="pathway-sunburst-select" @click="$emit(\'pathway:select\', { code: 9, nodeName: \'Node\', value: 2 })">select</button>',
-})
-
-const PathwayLegendStub = defineComponent({
-  name: 'PathwayLegend',
+const PathwayCohortResultsStub = defineComponent({
+  name: 'PathwayCohortResults',
   props: {
     design: { type: Object, required: false },
-    colors: { type: Array, required: false },
-    eventCodes: { type: Array, required: false },
-    targetCohortName: { type: String, required: false },
-    targetCohortCount: { type: Number, required: false },
-    totalPathwaysCount: { type: Number, required: false },
+    results: { type: Object, required: false },
+    group: { type: Object, required: false },
+    targetCohortId: { type: Number, required: false },
+    cohortName: { type: String, required: false },
+    colors: { type: Function, required: false },
   },
-  template: '<div data-testid="pathway-legend" />',
+  template: '<div data-testid="pathway-cohort-results" :data-cohort-name="cohortName" />',
 })
-
-const PathwayPathDetailsStub = defineComponent({
-  name: 'PathwayPathDetails',
-  props: {
-    steps: { type: Array, required: false },
-    eventCodes: { type: Array, required: false },
-    colors: { type: Array, required: false },
-  },
-  template: '<div data-testid="pathway-path-details" />',
-})
-
 const PathwayTableViewStub = defineComponent({
   name: 'PathwayTableView',
   props: {
@@ -86,9 +70,7 @@ async function mountView() {
       plugins: [vuetify, createPinia()],
       stubs: {
         AnalysisBuilderShell: AnalysisBuilderShellStub,
-        PathwaySunburst: PathwaySunburstStub,
-        PathwayLegend: PathwayLegendStub,
-        PathwayPathDetails: PathwayPathDetailsStub,
+        PathwayCohortResults: PathwayCohortResultsStub,
         PathwayTableView: PathwayTableViewStub,
       },
     },
@@ -100,6 +82,7 @@ describe('PathwayResultsView', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     routerPush.mockReset()
+    routeParams.executionId = '123'
     pathwayResultsMocks.execution.value = null
     pathwayResultsMocks.design.value = null
     pathwayResultsMocks.results.value = null
@@ -118,17 +101,24 @@ describe('PathwayResultsView', () => {
     expect(wrapper.find('.pathway-results__state').text()).toBe(tr('pathway.results.loading'))
   })
 
-  it('renders the visual mode and path details after selecting a pathway', async () => {
+  it('renders one labelled results row per target cohort in visual mode', async () => {
     pathwayResultsMocks.execution.value = { id: 99, sourceKey: 'source-a' }
     pathwayResultsMocks.design.value = {
       id: 42,
       name: 'My pathway',
-      targetCohorts: [{ id: 1, name: 'Target cohort' }],
+      targetCohorts: [
+        { id: 1, name: 'Target A' },
+        { id: 2, name: 'Target B' },
+        { id: 3, name: 'Target with no data' },
+      ],
       eventCohorts: [{ code: 0 }, { code: 1 }],
     }
     pathwayResultsMocks.results.value = {
       eventCodes: [{ code: 1, isCombo: false }, { code: 2, isCombo: false }],
-      pathwayGroups: [{ targetCohortId: 1, targetCohortCount: 10, totalPathwaysCount: 20 }],
+      pathwayGroups: [
+        { targetCohortId: 1, targetCohortCount: 10, totalPathwaysCount: 20 },
+        { targetCohortId: 2, targetCohortCount: 5, totalPathwaysCount: 8 },
+      ],
     }
 
     const wrapper = await mountView()
@@ -138,11 +128,78 @@ describe('PathwayResultsView', () => {
     expect(wrapper.attributes('title')).toBe('My pathway')
     expect(wrapper.attributes('subtitle')).toBe('Execution Id #99 · source-a')
 
-    expect(wrapper.find('[data-testid="pathway-legend"]').exists()).toBe(true)
+    const rows = wrapper.findAll('[data-testid="pathway-cohort-results"]')
+    expect(rows.map(r => r.attributes('data-cohort-name'))).toEqual([
+      'Target A',
+      'Target B',
+      'Target with no data',
+    ])
+  })
 
-    expect(wrapper.find('[data-testid="pathway-path-details"]').exists()).toBe(false)
-    await wrapper.get('[data-testid="pathway-sunburst-select"]').trigger('click')
-    expect(wrapper.find('[data-testid="pathway-path-details"]').exists()).toBe(true)
+  it('switches to tabular results and assigns colors from result event codes', async () => {
+    pathwayResultsMocks.design.value = {
+      id: 42,
+      name: 'My pathway',
+      targetCohorts: [{ id: 1, name: 'Target A' }],
+      eventCohorts: [],
+    }
+    pathwayResultsMocks.results.value = {
+      eventCodes: [
+        { code: 2, isCombo: false },
+        { code: 1, isCombo: false },
+        { code: 3, isCombo: true },
+      ],
+      pathwayGroups: [{ targetCohortId: 1, targetCohortCount: 10, totalPathwaysCount: 8 }],
+    }
+
+    const wrapper = await mountView()
+    const colors = wrapper.getComponent(PathwayCohortResultsStub).props('colors') as (key: string) => string
+    expect(colors('1')).toBe('#1f77b4')
+    expect(colors('2')).toBe('#ff7f0e')
+    expect(colors('3')).toBe('#ccc')
+
+    await wrapper.get('button[value="tabular"]').trigger('click')
+    expect(wrapper.find('[data-testid="pathway-table-view"]').exists()).toBe(true)
+  })
+
+  it('uses configured event cohorts for colors when event codes are absent', async () => {
+    pathwayResultsMocks.design.value = {
+      name: '  ',
+      targetCohorts: [{ id: 1, name: 'Target A' }],
+      eventCohorts: [{ code: 1 }, { code: 2 }],
+    }
+    pathwayResultsMocks.results.value = {
+      eventCodes: [],
+      pathwayGroups: [{ targetCohortId: 1, targetCohortCount: 10, totalPathwaysCount: 8 }],
+    }
+
+    const wrapper = await mountView()
+
+    expect(wrapper.attributes('title')).toBe(tr('pathway.results.title'))
+    expect(wrapper.attributes('subtitle')).toBeUndefined()
+    const colors = wrapper.getComponent(PathwayCohortResultsStub).props('colors') as (key: string) => string
+    expect(colors('2')).toBe('#1f77b4')
+    expect(colors('4')).toBe('#ff7f0e')
+    expect(colors('missing')).toBe('#ccc')
+  })
+
+  it('does not load an invalid route execution id', async () => {
+    routeParams.executionId = 'not-a-number'
+
+    await mountView()
+    await flushPromises()
+
+    expect(pathwayResultsMocks.load).not.toHaveBeenCalled()
+  })
+
+  it('navigates back to the pathway design when a design id exists', async () => {
+    pathwayResultsMocks.design.value = { id: 42 }
+
+    const wrapper = await mountView()
+    await flushPromises()
+
+    await wrapper.get('[data-testid="pathway-results-back"]').trigger('click')
+    expect(routerPush).toHaveBeenCalledWith('/pathways/42')
   })
 
   it('navigates back to the pathway list when no design id exists', async () => {

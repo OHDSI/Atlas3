@@ -34,7 +34,7 @@ describe('PathwayTableView', () => {
 
   it('renders four tables with section headings', () => {
     const w = mount(PathwayTableView, {
-      props: { design, results, targetCohortId: 1 },
+      props: { design, results },
       global: { plugins: [vuetify] },
     })
     expect(w.findAll('table').length).toBe(4)
@@ -42,5 +42,27 @@ describe('PathwayTableView', () => {
     expect(w.text()).toContain(tr('pathway.results.countsByRank'))
     expect(w.text()).toContain(tr('pathway.results.eventCohortCounts'))
     expect(w.text()).toContain(tr('pathway.results.distinctEventCohortCounts'))
+  })
+
+  it('groups the four tables under a collapsible header per cohort', async () => {
+    const twoCohorts = {
+      ...results,
+      pathwayGroups: [
+        results.pathwayGroups[0]!,
+        { ...results.pathwayGroups[0]!, targetCohortId: 2 },
+      ],
+    }
+    const w = mount(PathwayTableView, {
+      props: {
+        design: { ...design, targetCohorts: [{ id: 1, name: 'T' }, { id: 2, name: 'U' }] },
+        results: twoCohorts,
+      },
+      global: { plugins: [vuetify] },
+    })
+    expect(w.findAll('table').length).toBe(8)
+    const toggles = w.findAll('.pathway-cohort-section__toggle')
+    expect(toggles.map(t => t.text())).toEqual(['T', 'U'])
+    await toggles[0]!.trigger('click')
+    expect(w.findAll('table').length).toBe(4)
   })
 })

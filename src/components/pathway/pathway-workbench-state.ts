@@ -1,4 +1,4 @@
-import type { Pathway, PathwayExecution, PathwayResults } from '@/models/pathway.types'
+import type { Pathway, PathwayExecution, PathwayGroup, PathwayResults } from '@/models/pathway.types'
 import type { RunTableExecution } from '@/components/generation/DataSourceRunTable.vue'
 
 const PALETTE_20 = [
@@ -19,6 +19,40 @@ export function resolveTargetCohortName(input: {
   const targetGroup = input.targetGroup
   if (!input.design || !targetGroup) return ''
   return input.design.targetCohorts.find(cohort => cohort.id === targetGroup.targetCohortId)?.name ?? ''
+}
+
+export function resolveCohortName(design: Pathway | null | undefined, cohortId: number): string {
+  return design?.targetCohorts.find(cohort => cohort.id === cohortId)?.name ?? `#${cohortId}`
+}
+
+export interface PathwayCohortResultRow {
+  targetCohortId: number
+  cohortName: string
+  group?: PathwayGroup
+}
+
+export function buildCohortResultRows(
+  design: Pathway | null | undefined,
+  results: PathwayResults | null | undefined
+): PathwayCohortResultRow[] {
+  const groups = results?.pathwayGroups ?? []
+  const resultRows = design?.targetCohorts.map(cohort => ({
+    targetCohortId: cohort.id,
+    cohortName: cohort.name,
+    group: groups.find(group => group.targetCohortId === cohort.id),
+  })) ?? []
+  const configuredIds = new Set(resultRows.map(row => row.targetCohortId))
+
+  return [
+    ...resultRows,
+    ...groups
+      .filter(group => !configuredIds.has(group.targetCohortId))
+      .map(group => ({
+        targetCohortId: group.targetCohortId,
+        cohortName: resolveCohortName(design, group.targetCohortId),
+        group,
+      })),
+  ]
 }
 
 export function buildColorMap(input: {
