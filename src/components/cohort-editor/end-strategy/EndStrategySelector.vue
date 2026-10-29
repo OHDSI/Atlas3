@@ -110,7 +110,7 @@ function changeStrategy(type: EndStrategyType | null) {
       emit('update:endStrategy', { DateOffset: { DateField: 'StartDate', Offset: 0 } })
       break
     case 'customEra':
-      emit('update:endStrategy', { CustomEra: { GapDays: 30, Offset: 0, DaysSupplyOverride: 0 } })
+      emit('update:endStrategy', { CustomEra: { GapDays: 0, Offset: 0 } })
       break
   }
 }

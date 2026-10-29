@@ -14,71 +14,82 @@
         @blur="emitCollapseSettings"
       />
       <span class="era-pad-row__suffix">{{ daysLabel }}</span>
-      <button
-        v-if="!showTrimOptions"
-        type="button"
-        class="trim-toggle"
-        :disabled="disabled"
-        @click="showTrimOptions = true"
-      >
-        {{ addTrimmingLabel }}
-      </button>
     </div>
+
+    <AtlasChip
+      v-if="!showTrimOptions"
+      class="trim-toggle mt-3"
+      color="primary"
+      variant="outlined"
+      :disabled="disabled"
+      style="cursor: pointer"
+      @click="!disabled && (showTrimOptions = true)"
+    >
+      {{ addTrimmingLabel }}
+    </AtlasChip>
 
     <div
       v-if="showTrimOptions"
       class="trim-options mt-2"
     >
-      <div class="trim-rows">
-        <div class="trim-row">
-          <span class="trim-row__label">{{ leftCensorLabel }}</span>
-          <AtlasTextField
-            :model-value="startDateModel ?? undefined"
-            type="date"
-            variant="outlined"
-            hide-details
-            class="trim-row__input"
-            :placeholder="noCensoringLabel"
-            :disabled="disabled"
-            :aria-label="leftCensorLabel"
-            clearable
-            @update:model-value="(v) => { startDateModel = (v as string) || null; emitCensorWindow() }"
-            @click:clear="clearStartDate"
-          />
+      <div class="trim-body">
+        <div class="trim-rows">
+          <div class="trim-row">
+            <span class="trim-row__label">{{ leftCensorLabel }}</span>
+            <AtlasTextField
+              :model-value="startDateModel ?? undefined"
+              type="date"
+              variant="outlined"
+              hide-details
+              class="trim-row__input"
+              :placeholder="noCensoringLabel"
+              :disabled="disabled"
+              :aria-label="leftCensorLabel"
+              @update:model-value="(v) => { startDateModel = (v as string) || null; emitCensorWindow() }"
+            />
+          </div>
+          <div class="trim-row">
+            <span class="trim-row__label">{{ rightCensorLabel }}</span>
+            <AtlasTextField
+              :model-value="endDateModel ?? undefined"
+              type="date"
+              variant="outlined"
+              hide-details
+              class="trim-row__input"
+              :placeholder="noCensoringLabel"
+              :disabled="disabled"
+              :aria-label="rightCensorLabel"
+              @update:model-value="(v) => { endDateModel = (v as string) || null; emitCensorWindow() }"
+            />
+          </div>
         </div>
-        <div class="trim-row">
-          <span class="trim-row__label">{{ rightCensorLabel }}</span>
-          <AtlasTextField
-            :model-value="endDateModel ?? undefined"
-            type="date"
-            variant="outlined"
-            hide-details
-            class="trim-row__input"
-            :placeholder="noCensoringLabel"
-            :disabled="disabled"
-            :aria-label="rightCensorLabel"
-            clearable
-            @update:model-value="(v) => { endDateModel = (v as string) || null; emitCensorWindow() }"
-            @click:clear="clearEndDate"
-          />
-        </div>
-
-        <AtlasAlert
-          v-if="dateOrderWarning"
-          severity="warning"
-          density="compact"
-          class="mt-2"
-        >
-          {{ dateOrderWarning }}
-        </AtlasAlert>
+        <AtlasIconButton
+          icon="mdi-close"
+          tone="danger"
+          variant="text"
+          size="sm"
+          class="trim-clear"
+          :disabled="disabled"
+          :aria-label="clearTrimmingLabel"
+          @click="clearTrimming"
+        />
       </div>
+
+      <AtlasAlert
+        v-if="dateOrderWarning"
+        severity="warning"
+        density="compact"
+        class="mt-2"
+      >
+        {{ dateOrderWarning }}
+      </AtlasAlert>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { AtlasAlert, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasChip, AtlasIconButton, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { Period, CollapseSettings } from '@/models/circe-types'
 import type { ValidationError } from '@/models/validation.types'
@@ -123,6 +134,9 @@ const rightCensorLabel = computed(
 )
 const noCensoringLabel = computed(
   () => t('components.cohortExpressionEditor.noCensoring').value
+)
+const clearTrimmingLabel = computed(
+  () => t('components.cohortExpressionEditor.clearTrimmingDate').value
 )
 
 const eraPadModel = ref<number>(props.collapseSettings?.EraPad ?? 0)
@@ -191,14 +205,11 @@ function emitCensorWindow() {
   }
 }
 
-function clearStartDate() {
+function clearTrimming() {
   startDateModel.value = null
-  emitCensorWindow()
-}
-
-function clearEndDate() {
   endDateModel.value = null
   emitCensorWindow()
+  showTrimOptions.value = false
 }
 </script>
 
@@ -229,23 +240,10 @@ function clearEndDate() {
   color: rgb(var(--v-theme-on-surface-variant));
 }
 
-.trim-toggle {
-  background: none;
-  border: 0;
-  padding: 0;
-  font-size: 13px;
-  color: rgb(var(--v-theme-primary));
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.trim-toggle:hover:not(:disabled) {
-  color: rgb(var(--v-theme-primary-darken-1));
-}
-
-.trim-toggle:disabled {
-  opacity: 0.5;
-  cursor: default;
+.trim-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .trim-rows {

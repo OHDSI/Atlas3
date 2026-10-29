@@ -311,7 +311,7 @@ describe('End strategy components', () => {
 
     await wrapper.findComponent({ name: 'VBtnToggle' }).vm.$emit('update:modelValue', 'customEra')
     expect(wrapper.emitted('update:endStrategy')?.at(-1)?.[0]).toEqual({
-      CustomEra: { GapDays: 30, Offset: 0, DaysSupplyOverride: 0 },
+      CustomEra: { GapDays: 0, Offset: 0 },
     })
 
     await wrapper.setProps({
@@ -373,6 +373,47 @@ describe('End strategy components', () => {
     expect(strategy.DaysSupplyOverride).toBe(5)
     expect(strategy.DrugCodesetId).toBeUndefined()
     expect(wrapper.emitted('clear-concept-set')).toEqual([[]])
+  })
+
+  it('shows the override pill and hint only while days supply is not overridden', async () => {
+    const strategy: { GapDays: number; Offset: number; DaysSupplyOverride?: number; DrugCodesetId: number } = {
+      GapDays: 0,
+      Offset: 0,
+      DrugCodesetId: 11,
+    }
+    const wrapper = mount(CustomEraEndStrategy, {
+      global: { plugins: [vuetify] },
+      props: { strategy, conceptSets: [{ id: 11, name: 'Drug Set' }] },
+    })
+
+    expect(wrapper.findAllComponents({ name: 'AtlasTextField' })).toHaveLength(2)
+    expect(wrapper.text()).toContain('If no exposure end date is provided')
+    expect(wrapper.text()).toContain('Override days supply')
+
+    const pill = wrapper.findAllComponents(AtlasChip).find(c => c.text() === 'Override days supply')!
+    await pill.trigger('click')
+    expect(strategy.DaysSupplyOverride).toBe(1)
+    expect(wrapper.findAllComponents({ name: 'AtlasTextField' })).toHaveLength(3)
+    expect(wrapper.text()).not.toContain('If no exposure end date is provided')
+    expect(wrapper.text()).not.toContain('Override days supply')
+
+    await wrapper.findComponent({ name: 'AtlasIconButton' }).trigger('click')
+    expect(strategy.DaysSupplyOverride).toBeUndefined()
+    expect(wrapper.findAllComponents({ name: 'AtlasTextField' })).toHaveLength(2)
+    expect(wrapper.text()).toContain('Override days supply')
+  })
+
+  it('treats a saved override of 0 as set', () => {
+    const wrapper = mount(CustomEraEndStrategy, {
+      global: { plugins: [vuetify] },
+      props: {
+        strategy: { GapDays: 0, Offset: 0, DaysSupplyOverride: 0, DrugCodesetId: 11 },
+        conceptSets: [{ id: 11, name: 'Drug Set' }],
+      },
+    })
+
+    expect(wrapper.text()).not.toContain('Override days supply')
+    expect(wrapper.findAllComponents({ name: 'AtlasTextField' })).toHaveLength(3)
   })
 
   it('edits the fixed-duration offset fields', async () => {
@@ -650,14 +691,15 @@ describe('CensorWindowEditor', () => {
     const dateFields = wrapper.findAllComponents({ name: 'AtlasTextField' })
     await dateFields[1]!.vm.$emit('update:modelValue', '2020-01-02')
     await dateFields[2]!.vm.$emit('update:modelValue', '2020-01-03')
-    await dateFields[1]!.vm.$emit('click:clear')
-    await dateFields[2]!.vm.$emit('click:clear')
+    await wrapper.get('.trim-clear').trigger('click')
 
     expect(wrapper.emitted('validation-error')?.at(-1)?.[0]).toEqual([])
     expect(wrapper.emitted('update:censorWindow')?.at(-1)?.[0]).toBeUndefined()
+    expect(wrapper.find('.trim-options').exists()).toBe(false)
+    expect(wrapper.find('.trim-toggle').exists()).toBe(true)
   })
 
-  it('starts with trim options visible from the prop and clears one date at a time', async () => {
+  it('starts with trim options visible from the prop and a single X clears both dates', async () => {
     const wrapper = mount(CensorWindowEditor, {
       global: { plugins: [vuetify] },
       props: {
@@ -668,16 +710,11 @@ describe('CensorWindowEditor', () => {
 
     expect(wrapper.text()).toContain('Left censor cohort start dates to')
     expect(wrapper.text()).toContain('Right censor cohort end dates to')
+    expect(wrapper.findAll('.trim-clear')).toHaveLength(1)
 
-    const dateFields = wrapper.findAllComponents({ name: 'AtlasTextField' })
-    await dateFields[1]!.vm.$emit('click:clear')
-    expect(wrapper.emitted('update:censorWindow')?.at(-1)?.[0]).toEqual({
-      StartDate: undefined,
-      EndDate: '2020-03-10',
-    })
-
-    await dateFields[2]!.vm.$emit('click:clear')
+    await wrapper.get('.trim-clear').trigger('click')
     expect(wrapper.emitted('update:censorWindow')?.at(-1)?.[0]).toBeUndefined()
+    expect(wrapper.find('.trim-options').exists()).toBe(false)
   })
 
   it('emits no warning when the censor dates are in order', async () => {
@@ -716,7 +753,7 @@ describe('CensorWindowEditor', () => {
       CollapseType: 'ERA',
       EraPad: 0,
     })
-    expect(wrapper.get('.trim-toggle').attributes('disabled')).toBeDefined()
+    expect(wrapper.getComponent('.trim-toggle').props('disabled')).toBe(true)
     await wrapper.get('.trim-toggle').trigger('click')
     expect(wrapper.find('.trim-options').exists()).toBe(false)
   })
