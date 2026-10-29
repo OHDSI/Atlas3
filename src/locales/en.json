@@ -2193,7 +2193,6 @@
         "statusNoRuns": "No generations yet",
         "statusCount": "{done} / {total} generated",
         "lastRunMeta": "Last run · {time} on {source}",
-        "generateAll": "Generate all",
         "onlyGenerated": "Only generated"
       },
       "row": {

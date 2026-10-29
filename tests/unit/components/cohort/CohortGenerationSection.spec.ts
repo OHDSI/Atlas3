@@ -345,19 +345,12 @@ describe('CohortGenerationSection — CRITICAL design findings block generation'
     expect(wrapper.text()).toContain(tr('const.disabledReason.invalidDesign'))
   })
 
-  it('disables Generate all when a CRITICAL finding exists', async () => {
-    const wrapper = mountSection({ cohortId: 1, criticalCount: 2 }, [], [ccae, mdcr], tooltipStub)
-    await flushPromises()
-    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeDefined()
-  })
-
   it('does not call generateCohort for a design with a CRITICAL finding', async () => {
     const wrapper = mountSection({ cohortId: 1, criticalCount: 1 }, [], [ccae], tooltipStub)
     await flushPromises()
     const store = useWebAPIStore()
     const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
     await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
-    await wrapper.find('[data-testid="generate-all-btn"]').trigger('click')
     await flushPromises()
     expect(spy).not.toHaveBeenCalled()
   })
@@ -366,7 +359,6 @@ describe('CohortGenerationSection — CRITICAL design findings block generation'
     const wrapper = mountSection({ cohortId: 1, criticalCount: 0 }, [], [ccae], tooltipStub)
     await flushPromises()
     expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeUndefined()
-    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeUndefined()
     expect(wrapper.text()).not.toContain(tr('const.disabledReason.invalidDesign'))
     const store = useWebAPIStore()
     const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
@@ -395,19 +387,12 @@ describe('CohortGenerationSection — unsaved changes block generation', () => {
     expect(wrapper.text()).toContain(tr('const.disabledReason.dirty'))
   })
 
-  it('disables Generate all when the design is dirty', async () => {
-    const wrapper = mountSection({ cohortId: 1, isDirty: true }, [], [ccae, mdcr], tooltipStub)
-    await flushPromises()
-    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeDefined()
-  })
-
   it('does not call generateCohort for a dirty design', async () => {
     const wrapper = mountSection({ cohortId: 1, isDirty: true }, [], [ccae], tooltipStub)
     await flushPromises()
     const store = useWebAPIStore()
     const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
     await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
-    await wrapper.find('[data-testid="generate-all-btn"]').trigger('click')
     await flushPromises()
     expect(spy).not.toHaveBeenCalled()
   })
@@ -416,36 +401,12 @@ describe('CohortGenerationSection — unsaved changes block generation', () => {
     const wrapper = mountSection({ cohortId: 1, isDirty: false }, [], [ccae], tooltipStub)
     await flushPromises()
     expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeUndefined()
-    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeUndefined()
     expect(wrapper.text()).not.toContain(tr('const.disabledReason.dirty'))
     const store = useWebAPIStore()
     const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
     await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
     await flushPromises()
     expect(spy).toHaveBeenCalledWith(1, 'CCAE')
-  })
-
-  it('generates only writable sources that are not pending or running', async () => {
-    mockSourceAccessFor.canWrite.mockImplementation((sourceId: number) => sourceId !== 3)
-    const wrapper = mountSection(
-      { cohortId: 1, isDirty: false },
-      [{ id: 1, cohortDefinitionId: 1, sourceKey: 'S2', status: 'PENDING' }],
-      [
-        { ...ccae, sourceKey: 'S1', sourceId: 1 },
-        { ...mdcr, sourceKey: 'S2', sourceId: 2 },
-        { sourceId: 3, sourceKey: 'S3', sourceName: 'S3', sourceDialect: 'postgresql', daimons: [] },
-      ],
-      tooltipStub
-    )
-    await flushPromises()
-    const store = useWebAPIStore()
-    const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
-
-    await wrapper.find('[data-testid="generate-all-btn"]').trigger('click')
-    await flushPromises()
-
-    expect(spy).toHaveBeenCalledTimes(1)
-    expect(spy).toHaveBeenCalledWith(1, 'S1')
   })
 
   it('opens and closes the report drawer from a row extra action', async () => {
@@ -544,7 +505,6 @@ describe('CohortGenerationSection — unvalidated designs block generation', () 
     )
     await flushPromises()
     expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeDefined()
     expect(wrapper.findComponent({ name: 'DataSourceRunTable' }).props('runDisabledReason')).toBe(
       'Loading...'
     )
@@ -559,7 +519,6 @@ describe('CohortGenerationSection — unvalidated designs block generation', () 
     )
     await flushPromises()
     expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeDefined()
   })
 
   it('does not call generateCohort before the design has been validated', async () => {
@@ -573,7 +532,6 @@ describe('CohortGenerationSection — unvalidated designs block generation', () 
     const store = useWebAPIStore()
     const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
     await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')
-    await wrapper.find('[data-testid="generate-all-btn"]').trigger('click')
     await flushPromises()
     expect(spy).not.toHaveBeenCalled()
   })
@@ -589,7 +547,6 @@ describe('CohortGenerationSection — unvalidated designs block generation', () 
     await wrapper.setProps({ validationStatus: 'validated' })
     await flushPromises()
     expect(wrapper.find('[data-testid="run-btn-CCAE"]').attributes('disabled')).toBeUndefined()
-    expect(wrapper.find('[data-testid="generate-all-btn"]').attributes('disabled')).toBeUndefined()
     const store = useWebAPIStore()
     const spy = vi.spyOn(store, 'generateCohort').mockResolvedValue(undefined as never)
     await wrapper.find('[data-testid="run-btn-CCAE"]').trigger('click')

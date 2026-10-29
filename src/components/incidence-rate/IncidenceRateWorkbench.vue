@@ -48,19 +48,30 @@
       </template>
 
       <template v-else>
-        <DataSourceRunTable
-          :sources="runTableSources"
-          :executions="runTableExecutions"
-          :selected-execution-id="selectedExecutionId"
-          :loading="ds.isLoading"
-          :run-disabled="!store.canGenerate"
-          :run-disabled-reason="runDisabledReason"
-          :hide-history-button="true"
-          @run="onRunSource"
-          @cancel="onCancelSource"
-          @select-result="onSelectRun"
-          @show-history="onShowHistory"
-        />
+        <AtlasCollapsibleSection
+          :title="t('cohortDefinitions.generation.section.title').value"
+          :default-expanded="true"
+        >
+          <template #controls>
+            <AtlasSwitch
+              v-model="onlyGenerated"
+              :label="t('cohortDefinitions.generation.section.onlyGenerated').value"
+            />
+          </template>
+          <DataSourceRunTable
+            :sources="visibleRunTableSources"
+            :executions="runTableExecutions"
+            :selected-execution-id="selectedExecutionId"
+            :loading="ds.isLoading"
+            :run-disabled="!store.canGenerate"
+            :run-disabled-reason="runDisabledReason"
+            :hide-history-button="true"
+            @run="onRunSource"
+            @cancel="onCancelSource"
+            @select-result="onSelectRun"
+            @show-history="onShowHistory"
+          />
+        </AtlasCollapsibleSection>
 
         <IncidenceRateCanvasToolbar
           :mode="mode"
@@ -195,6 +206,8 @@ import IncidenceRateComparisonChart from './IncidenceRateComparisonChart.vue'
 import IncidenceRateRatesTable from './IncidenceRateRatesTable.vue'
 import IncidenceRateInsightsRail from './IncidenceRateInsightsRail.vue'
 import { AtlasAlert, AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasTooltip } from '@/components/ui'
+import AtlasCollapsibleSection from '@/components/ui/AtlasCollapsibleSection.vue'
+import AtlasSwitch from '@/components/ui/AtlasSwitch.vue'
 import IncidenceRateEmptyState from './IncidenceRateEmptyState.vue'
 import IncidenceRateStratifyInspector from './IncidenceRateStratifyInspector.vue'
 import DataSourceRunTable, {
@@ -202,6 +215,7 @@ import DataSourceRunTable, {
   type RunTableExecution,
 } from '@/components/generation/DataSourceRunTable.vue'
 import PreviousRunsDialog from '@/components/generation/PreviousRunsDialog.vue'
+import { filterGeneratedSources } from '@/utils/generation-source-filter'
 import { IR_TERMINAL_STATUSES } from '@/models/incidence-rate.types'
 import type { ConceptSet } from '@/models/circe-types'
 import type { StratifyRule } from '@/models/incidence-rate.types'
@@ -353,6 +367,13 @@ const runTableSources = computed<RunTableSource[]>(() =>
 
 const runTableExecutions = computed<RunTableExecution[]>(() =>
   buildRunTableExecutions(store.executions)
+)
+
+const onlyGenerated = ref(false)
+const visibleRunTableSources = computed(() =>
+  onlyGenerated.value
+    ? filterGeneratedSources(runTableSources.value, runTableExecutions.value)
+    : runTableSources.value
 )
 
 const runDisabledReason = computed(() => resolveRunDisabledReason({
