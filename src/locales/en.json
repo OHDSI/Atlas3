@@ -394,6 +394,7 @@
       "days": "days",
       "inclusionCriteria": "Inclusion Criteria",
       "noCensoring": "No Censoring",
+      "clearTrimmingDate": "Clear date",
       "inclusionCriteriaTextShort": "No inclusion rules — adding one narrows which patients qualify beyond the entry events.",
       "entryEvents": "Cohort Entry Events",
       "entryOn": "Cohort Entry On",
@@ -1296,10 +1297,16 @@
         "empty": "No censoring events defined. Cohort exit is determined only by the end strategy above."
       },
       "customEra": {
-        "hint": "Cohort exit is based on continuous drug exposure, allowing configurable gaps between exposures.",
+        "hint": "Specify a concept set that contains one or more drugs. A drug era is derived from all exposure events for any of those drugs, using the persistence window as the maximum allowed gap between successive exposures and adding the surveillance window to the final exposure. The cohort end date will be no greater than the drug era end date.",
         "selectConceptSet": "Select Drug Concept Set",
-        "daysSupplyOverride": "Days Supply Override",
-        "daysSupplyHint": "If days supply is missing from the records, the system assumes 1 day per exposure."
+        "persistenceWindow": "Persistence window (days)",
+        "persistenceWindowHint": "Maximum gap in days allowed between exposure records.",
+        "surveillanceWindow": "Surveillance window (days)",
+        "surveillanceWindowHint": "Days added to the end of the era of persistence exposure before cohort exit.",
+        "overrideDaysSupply": "Override days supply",
+        "removeDaysSupplyOverride": "Remove days supply override",
+        "daysSupplyOverride": "Force days supply to (days)",
+        "daysSupplyHint": "If no exposure end date is provided, the end is inferred as start date + days supply, or start date + 1 day when days supply is unavailable."
       },
       "dateOffset": {
         "hint": "Cohort exit is a fixed number of days from a date derived from the qualifying event.",
@@ -1309,7 +1316,7 @@
         "label": "Strategy",
         "observation": "Continuous Observation",
         "dateOffset": "Fixed Duration",
-        "customEra": "Drug Exposure"
+        "customEra": "Continuous Drug Exposure"
       },
       "observation": {
         "hint": "Cohort members exit when their continuous observation period ends. No additional configuration is needed."
