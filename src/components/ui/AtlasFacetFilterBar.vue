@@ -83,6 +83,11 @@
         </AtlasCard>
       </AtlasMenu>
 
+      <slot
+        v-if="$slots['after-filter']"
+        name="after-filter"
+      />
+
       <div
         v-if="$slots.append"
         class="facet-filter-bar__append"

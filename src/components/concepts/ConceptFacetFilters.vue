@@ -21,6 +21,13 @@
     @clear="emit('clear')"
   >
     <template
+      v-if="$slots['after-filter']"
+      #after-filter
+    >
+      <slot name="after-filter" />
+    </template>
+
+    <template
       v-if="$slots.append"
       #append
     >

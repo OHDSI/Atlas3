@@ -7,7 +7,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { setActivePinia, createPinia } from 'pinia'
-import ConceptSearch from '@/components/concepts/ConceptSearch.vue'
+import ConceptSearch from '@/components/concepts/ConceptSearchPage.vue'
 import ConceptTable from '@/components/concepts/ConceptTable.vue'
 import ConceptAddOptions from '@/components/concepts/ConceptAddOptions.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
@@ -187,6 +187,19 @@ describe('ConceptSearch — add options', () => {
 
     expect(sets.editorOpen).toBe(true)
     expect(sets.currentSet?.items).toHaveLength(1)
+  })
+
+  it('does nothing when the shared core emits an empty bulk selection', async () => {
+    const wrapper = mountSearch()
+    const sets = useConceptSetsStore()
+
+    await wrapper.findComponent({ name: 'ConceptSearch' }).vm.$emit('add-concepts', [], {
+      isExcluded: false,
+      includeDescendants: false,
+      includeMapped: false,
+    })
+
+    expect(sets.currentSet).toBeNull()
   })
 
   it('keeps the chosen flags across successive searches', async () => {

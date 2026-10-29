@@ -368,7 +368,7 @@
 
                 <!-- Search Tab -->
                 <v-window-item value="search">
-                  <ConceptSearchInline
+                  <ConceptSearchEmbed
                     @add-concept="onAddConcept"
                     @add-concepts="onAddConcepts"
                     @remove-concept="onRemoveConcept"
@@ -656,6 +656,7 @@
         :loading="sourceCodeResolving"
         :total-items="filteredSourceCodeConcepts.length"
         :items-per-page="25"
+        :visible-column-keys="conceptTablePreferencesStore.visibleColumnKeys"
         selectable
         class="mt-4"
       />
@@ -783,6 +784,7 @@ import { ref, computed, inject, watch, toRef, onBeforeUnmount, onMounted } from 
 import { VNavigationDrawer } from 'vuetify/components'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useConceptTablePreferencesStore } from '@/stores/concept-table-preferences'
 import { useNotifications } from '@/stores/notifications'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
@@ -792,7 +794,7 @@ import { isConceptMissing, type ConceptSet, type Concept, type ConceptSetItem, t
 import type { VersionsConfig, VersionsTableItem, User } from '@/components/versions/types'
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 import type { Tag } from '@/models/cohort.types'
-import ConceptSearchInline from './ConceptSearchInline.vue'
+import ConceptSearchEmbed from './ConceptSearchEmbed.vue'
 import ConceptFacetFilters from './ConceptFacetFilters.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
 import ConceptTable from './ConceptTable.vue'
@@ -818,6 +820,7 @@ import { useConceptFacets, type FacetDefinition } from '@/composables/useConcept
 import ConceptSetJsonDialog from './ConceptSetJsonDialog.vue'
 
 const { t, tv } = useI18n()
+const conceptTablePreferencesStore = useConceptTablePreferencesStore()
 const webapiStore = useWebAPIStore()
 
 // ============================================================================

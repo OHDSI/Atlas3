@@ -47,7 +47,7 @@
             value="search"
             class="concepts-view__search"
           >
-            <ConceptSearch />
+            <ConceptSearchPage />
           </v-window-item>
         </v-window>
       </div>
@@ -60,7 +60,7 @@ import { ref, computed, provide, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { AtlasIcon, AtlasPageShell, AtlasTab, AtlasTabs } from '@/components/ui'
-import ConceptSearch from '@/components/concepts/ConceptSearch.vue'
+import ConceptSearchPage from '@/components/concepts/ConceptSearchPage.vue'
 import ConceptSetList from '@/components/concepts/ConceptSetList.vue'
 import { useWebAPIStore } from '@/stores/webapi'
 import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
