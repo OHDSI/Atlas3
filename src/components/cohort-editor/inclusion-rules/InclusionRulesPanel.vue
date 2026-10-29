@@ -25,7 +25,7 @@
       </AtlasButton>
     </div>
 
-    <template v-else>
+    <div v-if="modelValue.length > 0">
       <div class="inclusion-rules-panel__layout">
         <div class="inclusion-rules-panel__rail">
           <InclusionRuleRail
@@ -62,36 +62,38 @@
           />
         </div>
       </div>
+    </div>
 
-      <div class="inclusion-rules-panel__limit">
-        <div class="inclusion-rules-panel__limit-label">
-          {{ limitIncludedEventsLabel }}
-        </div>
-        <div class="inclusion-rules-panel__limit-toggle">
-          <AtlasButton
-            :variant="expressionLimitType === 'First' ? 'tonal' : 'secondary'"
-            size="sm"
-            @click="emit('update:expressionLimitType', 'First')"
-          >
-            {{ earliestLabel }}
-          </AtlasButton>
-          <AtlasButton
-            :variant="expressionLimitType === 'All' ? 'tonal' : 'secondary'"
-            size="sm"
-            @click="emit('update:expressionLimitType', 'All')"
-          >
-            {{ allLabel }}
-          </AtlasButton>
-          <AtlasButton
-            :variant="expressionLimitType === 'Last' ? 'tonal' : 'secondary'"
-            size="sm"
-            @click="emit('update:expressionLimitType', 'Last')"
-          >
-            {{ latestLabel }}
-          </AtlasButton>
-        </div>
+    <div class="inclusion-rules-panel__limit">
+      <div class="inclusion-rules-panel__limit-label">
+        {{ limitRemainingEventsLabel }}
       </div>
-    </template>
+      <v-btn-toggle
+        class="inclusion-rules-panel__limit-toggle"
+        :model-value="expressionLimitType"
+        mandatory
+        variant="outlined"
+        density="compact"
+        divided
+        @update:model-value="emit('update:expressionLimitType', $event)"
+      >
+        <AtlasButton
+          value="First"
+        >
+          {{ earliestLabel }}
+        </AtlasButton>
+        <AtlasButton
+          value="All"
+        >
+          {{ allLabel }}
+        </AtlasButton>
+        <AtlasButton
+          value="Last"
+        >
+          {{ latestLabel }}
+        </AtlasButton>
+      </v-btn-toggle>
+    </div>
   </div>
 </template>
 
@@ -151,7 +153,7 @@ const emit = defineEmits<{
 
 const expressionLimitType = computed(() => props.expressionLimit?.Type ?? 'First')
 
-const limitIncludedEventsLabel = computed(() => t('inclusionPanel.limitIncludedEvents').value)
+const limitRemainingEventsLabel = computed(() => t('inclusionPanel.limitRemainingEvents').value)
 const earliestLabel = computed(() => t('options.earliest').value)
 const allLabel = computed(() => t('options.all').value)
 const latestLabel = computed(() => t('options.latest').value)
