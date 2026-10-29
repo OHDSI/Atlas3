@@ -306,13 +306,14 @@ function createEmptyRuleExpression(): CriteriaGroup {
 
 .inclusion-rules-panel__layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  /* min-content floor so nested groups widen the column rather than being clipped */
+  grid-template-columns: 280px minmax(min-content, 1fr);
   gap: 12px;
 }
 
 @media (max-width: 1023px) {
   .inclusion-rules-panel__layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(min-content, 1fr);
   }
 }
 
