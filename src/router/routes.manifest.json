@@ -183,6 +183,22 @@
     "label": "Concept set version preview"
   },
   {
+    "name": "conceptset-new",
+    "path": "/conceptset/new",
+    "params": [],
+    "agentVisible": true,
+    "label": "New concept set"
+  },
+  {
+    "name": "conceptset-edit",
+    "path": "/conceptset/:id(\\\\d+)",
+    "params": [
+      "id"
+    ],
+    "agentVisible": true,
+    "label": "Concept set editor"
+  },
+  {
     "name": "concepts",
     "path": "/concepts",
     "params": [],

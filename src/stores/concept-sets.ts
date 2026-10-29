@@ -3,7 +3,7 @@
  * State management for concept set CRUD operations
  */
 import { defineStore } from 'pinia'
-import { matchesTerms } from '@/utils/list-filters'
+import { matchesFieldsOrId } from '@/utils/list-filters'
 import { ref, computed, watch } from 'vue'
 import {
   getAllConceptSets,
@@ -177,7 +177,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     }
 
     return conceptSets.value.filter(set => {
-      if (hasSearch && !matchesTerms([set.name], query)) return false
+      if (hasSearch && !matchesFieldsOrId(set.id, [set.name], query)) return false
       if (hasAuthor && !getUserString(set.createdBy).includes(authorQuery)) return false
       if (hasCreated && !isDateInRange(set.createdDate, filters.value.createdDateRange)) return false
       if (hasModified && !isDateInRange(set.modifiedDate, filters.value.modifiedDateRange)) return false
@@ -341,7 +341,6 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       })
       await fetchAll()
       currentSet.value = created
-      editorOpen.value = true
       return created
     } catch (err) {
       error.value =
@@ -450,10 +449,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   /**
    * Open editor for creating new concept set
    */
-  function openCreateEditor(id?: number) {
+  function openCreateEditor(id?: number, name = '') {
     currentSet.value = {
       id,
-      name: '',
+      name,
       items: [] as ConceptSetItem[],
     } as ConceptSet
     editorOpen.value = true
@@ -672,7 +671,14 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    * Fetches the historical version data and sets it as current with preview flag
    * @param versionNumber - The version number to load
    */
-  async function loadVersionPreview(versionNumber: number): Promise<void> {
+  async function loadVersionPreview(
+    versionNumber: number,
+    requestedConceptSetId?: number
+  ): Promise<void> {
+    if (requestedConceptSetId !== undefined && currentSet.value?.id !== requestedConceptSetId) {
+      await fetchOne(requestedConceptSetId)
+    }
+
     if (!currentSet.value?.id) {
       logger.error('ConceptSetsStore', 'Cannot load version preview: no current concept set ID')
       throw new Error('No current concept set ID')
@@ -718,8 +724,8 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    * Clear preview state and reload current version
    * Returns to normal editing mode
    */
-  async function clearPreviewVersion(): Promise<void> {
-    const wasPreviewingId = currentSet.value?.id
+  async function clearPreviewVersion(conceptSetId?: number): Promise<void> {
+    const wasPreviewingId = conceptSetId ?? currentSet.value?.id
 
     // Clear preview state
     previewVersion.value = null

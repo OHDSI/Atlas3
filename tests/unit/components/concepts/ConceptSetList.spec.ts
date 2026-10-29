@@ -11,8 +11,15 @@ import ConceptSetList from '@/components/concepts/ConceptSetList.vue'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useAuthStore } from '@/stores/auth'
+import { useWebAPIStore } from '@/stores/webapi'
+import { findSeedConceptForSearchTerms, NoMatchingConceptError } from '@/services/concept-search.service'
 import { emptyEntityAccess } from '@/models/auth.types'
-import type { ConceptSetListItem } from '@/models/concept-set.types'
+import type { Concept, ConceptSetListItem } from '@/models/concept-set.types'
+
+const routerPush = vi.fn()
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: routerPush }),
+}))
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../helpers/i18n-mock')
@@ -20,6 +27,32 @@ vi.mock('@/composables/useI18n', async () => {
 })
 
 const vuetify = createVuetify({ components, directives })
+
+vi.mock('@/services/concept-search.service', async importOriginal => ({
+  ...(await importOriginal<typeof import('@/services/concept-search.service')>()),
+  findSeedConceptForSearchTerms: vi.fn(),
+}))
+
+const seedConcept: Concept = {
+  conceptId: 201826,
+  conceptName: 'Type 2 diabetes mellitus',
+  domainId: 'Condition',
+  vocabularyId: 'SNOMED',
+  conceptClassId: 'Clinical Finding',
+  standardConcept: 'S',
+  conceptCode: '44054006',
+} as Concept
+
+interface ListVm {
+  showNewDialog: boolean
+  newName: string
+  newSearchTerms: string
+  createError: string
+  creating: boolean
+  confirmCreate: () => Promise<void>
+  closeNewDialog: () => void
+}
+const vm = (wrapper: ReturnType<typeof mountComponent>) => wrapper.vm as unknown as ListVm
 
 const mockConceptSets: ConceptSetListItem[] = [
   {
@@ -164,17 +197,175 @@ describe('ConceptSetList', () => {
     })
   })
 
-  it('should open create editor when add button is clicked', async () => {
+  it('opens the new concept set dialog when add is clicked', async () => {
     const wrapper = mountComponent()
-    const store = useConceptSetsStore()
-    const openCreateEditorSpy = vi.spyOn(store, 'openCreateEditor')
 
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const addBtn = buttons.find(btn => btn.text().includes('New Concept Set'))
 
     expect(addBtn).toBeDefined()
     await addBtn!.trigger('click')
-    expect(openCreateEditorSpy).toHaveBeenCalled()
+    expect(vm(wrapper).showNewDialog).toBe(true)
+    expect(routerPush).not.toHaveBeenCalled()
+  })
+
+  it('disables the add button with a reason when the user cannot create', async () => {
+    useAuthStore().setUser({
+      login: 'tester',
+      displayName: 'tester',
+      permissionIdx: { create: [], write: [] },
+      entityAccess: emptyEntityAccess(),
+    })
+    const wrapper = mountComponent()
+
+    const addBtn = wrapper
+      .findAllComponents({ name: 'VBtn' })
+      .find(btn => btn.text().includes('New Concept Set'))
+    expect(addBtn!.props('disabled')).toBe(true)
+    expect(wrapper.find('[data-testid="disabled-reason-wrap"]').exists()).toBe(true)
+  })
+
+  describe('new concept set dialog', () => {
+    it('creates a named empty draft and opens the editor without search terms', async () => {
+      const store = useConceptSetsStore()
+      const openSpy = vi.spyOn(store, 'openCreateEditor')
+      const wrapper = mountComponent()
+      vm(wrapper).newName = '  My set  '
+
+      await vm(wrapper).confirmCreate()
+
+      expect(findSeedConceptForSearchTerms).not.toHaveBeenCalled()
+      expect(openSpy).toHaveBeenCalledWith(undefined, 'My set')
+      expect(store.currentSet?.items).toEqual([])
+      expect(routerPush).toHaveBeenCalledWith({ name: 'conceptset-new' })
+    })
+
+    it('seeds the draft with the best concept, including descendants', async () => {
+      const store = useConceptSetsStore()
+      const webapiStore = useWebAPIStore()
+      vi.spyOn(webapiStore, 'getValidVocabularySource').mockReturnValue('VOCAB')
+      vi.spyOn(webapiStore, 'getValidResultsSource').mockReturnValue('RESULTS')
+      vi.mocked(findSeedConceptForSearchTerms).mockResolvedValue(seedConcept)
+      const wrapper = mountComponent()
+      vm(wrapper).newName = 'Diabetes'
+      vm(wrapper).newSearchTerms = 'type 2 diabetes'
+
+      await vm(wrapper).confirmCreate()
+
+      expect(findSeedConceptForSearchTerms).toHaveBeenCalledWith('VOCAB', 'RESULTS', 'type 2 diabetes')
+      expect(store.currentSet?.name).toBe('Diabetes')
+      expect(store.currentSet?.items).toHaveLength(1)
+      expect(store.currentSet?.items[0]).toMatchObject({
+        conceptId: 201826,
+        includeDescendants: true,
+      })
+      expect(routerPush).toHaveBeenCalledWith({ name: 'conceptset-new' })
+    })
+
+    it('rejects search terms that are too short without searching', async () => {
+      const wrapper = mountComponent()
+      vm(wrapper).newName = 'Short'
+      vm(wrapper).newSearchTerms = 'abc'
+
+      await vm(wrapper).confirmCreate()
+
+      expect(findSeedConceptForSearchTerms).not.toHaveBeenCalled()
+      expect(vm(wrapper).createError).toContain('at least 4 letters')
+      expect(routerPush).not.toHaveBeenCalled()
+    })
+
+    it('accepts two short terms', async () => {
+      const webapiStore = useWebAPIStore()
+      vi.spyOn(webapiStore, 'getValidVocabularySource').mockReturnValue('VOCAB')
+      vi.spyOn(webapiStore, 'getValidResultsSource').mockReturnValue('RESULTS')
+      vi.mocked(findSeedConceptForSearchTerms).mockResolvedValue(seedConcept)
+      const wrapper = mountComponent()
+      vm(wrapper).newName = 'Two'
+      vm(wrapper).newSearchTerms = 'a b'
+
+      await vm(wrapper).confirmCreate()
+
+      expect(findSeedConceptForSearchTerms).toHaveBeenCalled()
+    })
+
+    it('shows an error and stays in the dialog when nothing matches', async () => {
+      const webapiStore = useWebAPIStore()
+      vi.spyOn(webapiStore, 'getValidVocabularySource').mockReturnValue('VOCAB')
+      vi.spyOn(webapiStore, 'getValidResultsSource').mockReturnValue('RESULTS')
+      vi.mocked(findSeedConceptForSearchTerms).mockRejectedValue(
+        new NoMatchingConceptError('zzzzzz')
+      )
+      const wrapper = mountComponent()
+      vm(wrapper).showNewDialog = true
+      vm(wrapper).newName = 'Nothing'
+      vm(wrapper).newSearchTerms = 'zzzzzz'
+
+      await vm(wrapper).confirmCreate()
+
+      expect(vm(wrapper).createError).toContain('zzzzzz')
+      expect(vm(wrapper).showNewDialog).toBe(true)
+      expect(vm(wrapper).creating).toBe(false)
+      expect(routerPush).not.toHaveBeenCalled()
+    })
+
+    it('shows a generic error when the search itself fails', async () => {
+      const webapiStore = useWebAPIStore()
+      vi.spyOn(webapiStore, 'getValidVocabularySource').mockReturnValue('VOCAB')
+      vi.spyOn(webapiStore, 'getValidResultsSource').mockReturnValue('RESULTS')
+      vi.mocked(findSeedConceptForSearchTerms).mockRejectedValue(new Error('boom'))
+      const wrapper = mountComponent()
+      vm(wrapper).newName = 'Broken'
+      vm(wrapper).newSearchTerms = 'diabetes'
+
+      await vm(wrapper).confirmCreate()
+
+      expect(vm(wrapper).createError).toBe('The concept search failed. Please try again.')
+      expect(vm(wrapper).creating).toBe(false)
+      expect(routerPush).not.toHaveBeenCalled()
+    })
+
+    it('closes the dialog on cancel but not while a search is running', () => {
+      const wrapper = mountComponent()
+      vm(wrapper).showNewDialog = true
+
+      vm(wrapper).creating = true
+      vm(wrapper).closeNewDialog()
+      expect(vm(wrapper).showNewDialog).toBe(true)
+
+      vm(wrapper).creating = false
+      vm(wrapper).closeNewDialog()
+      expect(vm(wrapper).showNewDialog).toBe(false)
+    })
+
+    it('clears a previous error when the search terms change', async () => {
+      const wrapper = mountComponent()
+      vm(wrapper).showNewDialog = true
+      vm(wrapper).createError = 'old error'
+      await wrapper.vm.$nextTick()
+
+      const field = wrapper.findAllComponents({ name: 'AtlasTextField' })
+        .find(f => f.attributes('data-testid') === 'new-concept-set-search-terms')
+      expect(field).toBeDefined()
+      field!.vm.$emit('update:model-value', 'new terms')
+      await wrapper.vm.$nextTick()
+
+      expect(vm(wrapper).createError).toBe('')
+    })
+
+    it('shows an error when no results source is configured', async () => {
+      const webapiStore = useWebAPIStore()
+      vi.spyOn(webapiStore, 'getValidVocabularySource').mockReturnValue('VOCAB')
+      vi.spyOn(webapiStore, 'getValidResultsSource').mockReturnValue(null)
+      const wrapper = mountComponent()
+      vm(wrapper).newName = 'No source'
+      vm(wrapper).newSearchTerms = 'diabetes'
+
+      await vm(wrapper).confirmCreate()
+
+      expect(findSeedConceptForSearchTerms).not.toHaveBeenCalled()
+      expect(vm(wrapper).createError).not.toBe('')
+      expect(routerPush).not.toHaveBeenCalled()
+    })
   })
 
   it('should display error alert when store has error', async () => {
@@ -208,7 +399,7 @@ describe('ConceptSetList', () => {
   it('should duplicate a concept set when the duplicate button is clicked', async () => {
     const store = useConceptSetsStore()
     vi.spyOn(store, 'fetchAll').mockResolvedValue()
-    const copySpy = vi.spyOn(store, 'copy').mockResolvedValue(null)
+    const copySpy = vi.spyOn(store, 'copy').mockResolvedValue({ id: 789 } as never)
     const wrapper = mountComponent()
     store.conceptSets = mockConceptSets
     await wrapper.vm.$nextTick()
@@ -220,6 +411,10 @@ describe('ConceptSetList', () => {
     expect(copyButtons).toHaveLength(2)
     await copyButtons[0].trigger('click')
     expect(copySpy).toHaveBeenCalledWith(123)
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'conceptset-edit',
+      params: { id: '789' },
+    })
   })
 
   it('should delete a concept set after list confirmation', async () => {

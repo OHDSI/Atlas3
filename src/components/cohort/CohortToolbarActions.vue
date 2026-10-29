@@ -1,21 +1,10 @@
 <template>
   <div class="cohort-toolbar-actions">
-    <AtlasButton
-      variant="ghost"
-      data-testid="cohort-close-btn"
-      @click="$emit('cancel')"
-    >
-      <AtlasIcon class="d-md-none">
-        mdi-close
-      </AtlasIcon>
-      <span class="d-none d-md-inline">{{ isDirty ? t('common.cancel') : t('common.close') }}</span>
-    </AtlasButton>
-
     <AtlasMenu>
       <template #activator="{ props: menuProps }">
         <AtlasIconButton
           v-bind="{ ...menuProps, ariaLabel: t('common.export').value }"
-          icon="mdi-download"
+          icon="mdi-tools"
           variant="text"
           size="sm"
           data-testid="export-btn"
@@ -62,6 +51,22 @@
         />
       </AtlasList>
     </AtlasMenu>
+
+    <span
+      class="cohort-toolbar-actions__divider"
+      data-testid="cohort-actions-divider"
+    />
+
+    <AtlasButton
+      variant="ghost"
+      data-testid="cohort-close-btn"
+      @click="$emit('cancel')"
+    >
+      <AtlasIcon class="d-md-none">
+        mdi-close
+      </AtlasIcon>
+      <span class="d-none d-md-inline">{{ isDirty ? t('common.cancel') : t('common.close') }}</span>
+    </AtlasButton>
 
     <span class="cohort-toolbar-actions__save">
       <span
@@ -125,6 +130,13 @@ const { t } = useI18n()
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+.cohort-toolbar-actions__divider {
+  display: inline-block;
+  width: 1px;
+  height: 22px;
+  background: rgb(var(--v-theme-outline-variant, 224, 224, 224));
 }
 
 .cohort-toolbar-actions__dirty-dot {

@@ -101,6 +101,7 @@
       :page="page"
       :items-per-page="itemsPerPage"
       :selectable="true"
+      :visible-column-keys="conceptTablePreferencesStore.visibleColumnKeys"
       @update:page="page = $event"
       @update:items-per-page="
         (n: number) => {
@@ -117,6 +118,7 @@ import { AtlasAlert, AtlasButton, AtlasProgressCircular } from '@/components/ui'
 import { ref, computed, inject, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useConceptTablePreferencesStore } from '@/stores/concept-table-preferences'
 import { useWebAPIStore } from '@/stores/webapi'
 import ConceptTable from './ConceptTable.vue'
 import ConceptAddOptions from './ConceptAddOptions.vue'
@@ -139,6 +141,7 @@ const emit = defineEmits<{
 }>()
 
 const store = useConceptSetsStore()
+const conceptTablePreferencesStore = useConceptTablePreferencesStore()
 const webapiStore = useWebAPIStore()
 
 // ConceptsView injects a hardcoded 'SYNPUF1K' that doesn't exist on real

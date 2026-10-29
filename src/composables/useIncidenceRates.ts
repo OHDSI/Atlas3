@@ -2,7 +2,7 @@ import { ref, computed } from 'vue'
 import { listIncidenceRates } from '@/services/incidence-rate.service'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
 import { logger } from '@/utils/logger'
-import { getUserString, matchesTerms } from '@/utils/list-filters'
+import { getUserString, matchesFieldsOrId } from '@/utils/list-filters'
 import { toggleTagFilter } from '@/utils/asset-tags'
 
 export interface IncidenceRateListFilters {
@@ -49,7 +49,7 @@ export function useIncidenceRates() {
     const cr = filters.value.createdDateRange
     const mr = filters.value.modifiedDateRange
     return incidenceRates.value.filter(ir => {
-      if (!matchesTerms([ir.name, ir.description], q)) return false
+      if (!matchesFieldsOrId(ir.id, [ir.name, ir.description], q)) return false
       if (tags.length > 0) {
         const have = new Set((ir.tags || []).map(t => t.name))
         if (!tags.every(t => have.has(t))) return false

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import type { VueWrapper } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import IncidenceRateBuilder from '@/components/incidence-rate/IncidenceRateBuilder.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
@@ -76,6 +77,14 @@ const router = createRouter({
   history: createMemoryHistory(),
   routes: [{ path: '/', component: { template: '<div/>' } }],
 })
+
+async function clickToolsMenuItem(wrapper: VueWrapper, testId: string) {
+  await wrapper.get('[data-testid="ir-builder-tools-menu"]').trigger('click')
+  await flushPromises()
+  const item = document.body.querySelector<HTMLElement>(`[data-testid="${testId}"]`)
+  expect(item).not.toBeNull()
+  item!.click()
+}
 
 describe('IncidenceRateBuilder', () => {
   beforeEach(() => pristinePinia())
@@ -185,7 +194,7 @@ describe('IncidenceRateBuilder', () => {
 
     expect(w.get('[data-testid="ir-builder-save"]').attributes('disabled')).toBeUndefined()
 
-    await w.get('[data-testid="ir-builder-cancel"]').trigger('click')
+    await w.get('[data-testid="ir-builder-close"]').trigger('click')
     await w.get('[data-testid="ir-builder-save"]').trigger('click')
     await flushPromises()
 
@@ -393,7 +402,7 @@ describe('IncidenceRateBuilder', () => {
     })
     await flushPromises()
 
-    await w.get('[data-testid="ir-builder-export-icon"]').trigger('click')
+    await clickToolsMenuItem(w, 'ir-builder-export-icon')
     expect(serviceMocks.exportIncidenceRate).toHaveBeenCalledWith(42)
     expect(createObjectURLMock).toHaveBeenCalled()
     expect(revokeObjectURLMock).toHaveBeenCalledWith('blob:mock')

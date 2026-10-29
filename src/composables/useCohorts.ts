@@ -8,7 +8,7 @@ import type { Ref } from 'vue'
 import { getCohorts } from '@/services/cohort-definition.service'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import { logger } from '@/utils/logger'
-import { matchesNameOrId } from '@/utils/list-filters'
+import { matchesFieldsOrId } from '@/utils/list-filters'
 import { debounce } from '@/utils/debounce'
 import { getUserString, isDateInRange } from '@/utils/list-filters'
 import type { DateRange } from '@/utils/list-filters'
@@ -235,7 +235,7 @@ export function useCohorts() {
 
           // Search filter (most common, check first)
           if (hasSearch) {
-            if (!matchesNameOrId(cohort, query) && !cohort.description?.toLowerCase().includes(query)) continue
+            if (!matchesFieldsOrId(cohort.id, [cohort.name, cohort.description], query)) continue
           }
 
           // Tags filter (use Set for O(1) lookup)

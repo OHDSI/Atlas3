@@ -1,9 +1,9 @@
 {
-  "name": "atlas-cohort-builder",
-  "version": "0.1.0",
+  "name": "atlas-v3",
+  "version": "3.0.1",
   "private": true,
   "type": "module",
-  "description": "OHDSI Atlas Cohort Builder",
+  "description": "OHDSI Atlas v3",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -p tsconfig.app.json && vite build",

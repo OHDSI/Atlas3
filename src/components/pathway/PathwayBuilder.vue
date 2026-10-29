@@ -96,18 +96,49 @@
               />
             </template>
           </AtlasTooltip>
+          <AtlasMenu>
+            <template #activator="{ props: menuProps }">
+              <AtlasIconButton
+                v-bind="{ ...menuProps, ariaLabel: t('common.export').value }"
+                icon="mdi-tools"
+                variant="text"
+                size="sm"
+                :loading="importing || exporting"
+                data-testid="pathway-builder-tools-menu"
+              />
+            </template>
+            <AtlasList
+              density="compact"
+              min-width="220"
+            >
+              <AtlasListItem
+                data-testid="pathway-builder-import"
+                prepend-icon="mdi-upload"
+                :title="t('common.importDesign').value"
+                :disabled="importing"
+                @click="handleImportClick"
+              />
+              <AtlasListItem
+                data-testid="pathway-builder-export"
+                prepend-icon="mdi-download"
+                :title="t('common.exportDesign').value"
+                :disabled="!currentPathway?.id || exporting"
+                @click="handleExport"
+              />
+            </AtlasList>
+          </AtlasMenu>
         </template>
         <template #actions>
           <AtlasButton
             variant="ghost"
             size="sm"
-            data-testid="pathway-builder-cancel"
+            data-testid="pathway-builder-close"
             @click="handleBack"
           >
             <AtlasIcon class="d-md-none">
               mdi-close
             </AtlasIcon>
-            <span class="d-none d-md-inline">{{ t('common.cancel').value }}</span>
+            <span class="d-none d-md-inline">{{ t('common.close').value }}</span>
           </AtlasButton>
           <AtlasTooltip
             v-if="previewVersion"
@@ -122,39 +153,6 @@
                 size="sm"
                 data-testid="pathway-builder-back-to-current"
                 @click="store.clearPreviewVersion()"
-              />
-            </template>
-          </AtlasTooltip>
-          <AtlasTooltip
-            :text="t('common.importDesign').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tipProps }">
-              <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.importDesign').value }"
-                icon="mdi-upload"
-                variant="text"
-                size="sm"
-                :loading="importing"
-                data-testid="pathway-builder-import"
-                @click="handleImportClick"
-              />
-            </template>
-          </AtlasTooltip>
-          <AtlasTooltip
-            :text="t('common.exportDesign').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tipProps }">
-              <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.exportDesign').value }"
-                icon="mdi-download"
-                variant="text"
-                size="sm"
-                :loading="exporting"
-                :disabled="!currentPathway?.id"
-                data-testid="pathway-builder-export"
-                @click="handleExport"
               />
             </template>
           </AtlasTooltip>
@@ -244,7 +242,7 @@
 
 <script setup lang="ts">
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
-import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'

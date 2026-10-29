@@ -8,7 +8,7 @@
  * without further store churn.
  */
 import { defineStore } from 'pinia'
-import { getUserString, isDateInRange, matchesTerms, type DateRange } from '@/utils/list-filters'
+import { getUserString, isDateInRange, matchesFieldsOrId, type DateRange } from '@/utils/list-filters'
 import { ref, computed } from 'vue'
 
 import {
@@ -103,7 +103,7 @@ export const useCharacterizationStore = defineStore('characterization', () => {
 
     const authorQuery = filters.value.author.toLowerCase()
     return characterizations.value.filter(cc => {
-      if (hasSearch && !matchesTerms([cc.name, cc.description], query)) return false
+      if (hasSearch && !matchesFieldsOrId(cc.id, [cc.name, cc.description], query)) return false
       if (hasAuthor && !getUserString(cc.createdBy).includes(authorQuery)) return false
       if (hasTags) {
         const tagNames = new Set((cc.tags ?? []).map(tag => tag.name))

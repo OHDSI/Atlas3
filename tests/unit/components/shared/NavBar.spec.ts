@@ -32,12 +32,16 @@ vi.mock('vue-router', () => ({
 const mockLogout = vi.fn()
 const mockOpenLoginModal = vi.fn()
 const mockIsAuthenticated = ref(false)
+const mockIsRunningAs = ref(false)
+const mockEndRunAs = vi.fn()
 
 vi.mock('@/composables/useAuth', () => ({
   useAuth: () => ({
     isAuthenticated: mockIsAuthenticated,
     userDisplayName: ref('Test User'),
+    isRunningAs: mockIsRunningAs,
     logout: mockLogout,
+    endRunAs: mockEndRunAs,
     openLoginModal: mockOpenLoginModal
   })
 }))
@@ -179,6 +183,7 @@ describe('NavBar', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockIsAuthenticated.value = false
+    mockIsRunningAs.value = false
     mockThemeResolved.value = 'light'
     vi.mocked(generatePluginMenuItems).mockReturnValue([])
     vi.mocked(usePermissions).mockReturnValue(mockPermissions)

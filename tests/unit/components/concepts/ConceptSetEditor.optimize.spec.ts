@@ -69,6 +69,9 @@ function mountEditor(set: ConceptSet, props: Record<string, unknown> = {}) {
         EntityAccessLockButton: true,
         ConceptSearchInline: true,
         ConceptSetTable: true,
+        AtlasMenu: {
+          template: '<div><slot name="activator" :props="{}" /><slot /></div>',
+        },
         VNavigationDrawer: { template: '<div class="v-navigation-drawer"><slot /></div>' },
         Teleport: { template: '<div><slot /></div>' },
       },
@@ -77,7 +80,7 @@ function mountEditor(set: ConceptSet, props: Record<string, unknown> = {}) {
 }
 
 const optimizeButton = (w: ReturnType<typeof mountEditor>) =>
-  w.find('[data-testid="cs-editor-optimize-btn"]')
+  w.find('[data-testid="cs-editor-optimize-menu-item"]')
 
 describe('ConceptSetEditor optimize', () => {
   beforeEach(() => {
@@ -97,7 +100,7 @@ describe('ConceptSetEditor optimize', () => {
 
   it('needs at least two concepts', () => {
     const w = mountEditor({ id: 7, name: 'Diabetes', items: [parent] })
-    expect(optimizeButton(w).attributes('disabled')).toBeDefined()
+    expect(optimizeButton(w).getComponent({ name: 'VListItem' }).props('disabled')).toBe(true)
   })
 
   it('is disabled while concepts are missing from the vocabulary', () => {
@@ -106,12 +109,12 @@ describe('ConceptSetEditor optimize', () => {
       name: 'Diabetes',
       items: [parent, { ...child, conceptName: '', missingFromVocabulary: true }],
     })
-    expect(optimizeButton(w).attributes('disabled')).toBeDefined()
+    expect(optimizeButton(w).getComponent({ name: 'VListItem' }).props('disabled')).toBe(true)
   })
 
   it('opens the dialog with the current items and allows a new set in the standalone editor', async () => {
     const w = mountEditor({ id: 7, name: 'Diabetes', items: [parent, child] })
-    expect(optimizeButton(w).attributes('disabled')).toBeUndefined()
+    expect(optimizeButton(w).getComponent({ name: 'VListItem' }).props('disabled')).toBe(false)
 
     await optimizeButton(w).trigger('click')
 

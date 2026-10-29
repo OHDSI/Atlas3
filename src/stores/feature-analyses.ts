@@ -5,7 +5,7 @@
  * (domains and aggregates) used by the Characterization workflow.
  */
 import { defineStore } from 'pinia'
-import { matchesTerms } from '@/utils/list-filters'
+import { matchesFieldsOrId } from '@/utils/list-filters'
 import { ref, computed } from 'vue'
 
 import {
@@ -50,7 +50,7 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     }
 
     const term = filterTerm.value
-    return featureAnalyses.value.filter(fa => matchesTerms([fa.name], term))
+    return featureAnalyses.value.filter(fa => matchesFieldsOrId(fa.id, [fa.name], term))
   })
 
   const isEmpty = computed(() => featureAnalyses.value.length === 0)

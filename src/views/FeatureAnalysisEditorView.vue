@@ -7,9 +7,9 @@
                     builder integration ships in Phase 3)
     - CUSTOM_FE     (raw SQL template)
 
-  Save / Save Copy / Delete are wired to the existing feature-analyses
-  Pinia store. JSON design payloads are parsed on save with user-visible
-  error reporting via the local v-snackbar.
+  Save is wired to the existing feature-analyses Pinia store. JSON design
+  payloads are parsed on save with user-visible error reporting via the
+  local v-snackbar.
 -->
 <template>
   <AnalysisBuilderShell
@@ -69,39 +69,13 @@
           <AtlasButton
             variant="ghost"
             size="sm"
-            data-testid="feature-analysis-editor-cancel"
+            data-testid="feature-analysis-editor-close"
             @click="handleBack"
           >
             <AtlasIcon class="d-md-none">
               mdi-close
             </AtlasIcon>
-            <span class="d-none d-md-inline">{{ t('common.cancel').value }}</span>
-          </AtlasButton>
-          <AtlasTooltip
-            :text="t('common.duplicate').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tipProps }">
-              <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: t('common.duplicate').value }"
-                icon="mdi-content-copy"
-                variant="text"
-                size="sm"
-                :disabled="!isEditing || loading || !canCopy"
-                data-testid="feature-analysis-editor-copy"
-                @click="handleSaveCopy"
-              />
-            </template>
-          </AtlasTooltip>
-          <AtlasButton
-            variant="ghost"
-            tone="danger"
-            icon="mdi-delete-outline"
-            :disabled="!isEditing || loading || !canDelete"
-            data-testid="feature-analysis-editor-delete"
-            @click="handleDeleteClick"
-          >
-            {{ t('common.delete') }}
+            <span class="d-none d-md-inline">{{ t('common.close').value }}</span>
           </AtlasButton>
           <DisabledReasonTooltip :reason="saveDisabledReason">
             <AtlasButton
@@ -286,32 +260,6 @@
         </div>
       </v-card-text>
     </v-card>
-
-    <AtlasDialog
-      v-model="showDeleteDialog"
-      :eyebrow="t('views.featureAnalysisEditor.deleteEyebrow').value"
-      :title="t('common.delete').value"
-      max-width="500"
-      @close="showDeleteDialog = false"
-    >
-      {{ deleteMessage }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="showDeleteDialog = false"
-        >
-          {{ t('common.cancel') }}
-        </AtlasButton>
-        <AtlasButton
-          variant="danger"
-          :loading="loading"
-          data-testid="feature-analysis-editor-delete-confirm"
-          @click="confirmDelete"
-        >
-          {{ t('common.delete') }}
-        </AtlasButton>
-      </template>
-    </AtlasDialog>
 
     <ConceptSetsListDialog
       v-model="showConceptSetsDialog"
@@ -578,7 +526,6 @@ FROM (
 GROUP BY drug_concept_id, c.concept_name, stat.total_cnt`
 
 const saving = ref<boolean>(false)
-const showDeleteDialog = ref<boolean>(false)
 const showConceptSetsDialog = ref<boolean>(false)
 const showDeleteConceptSetDialog = ref<boolean>(false)
 const showAccessDialog = ref<boolean>(false)
@@ -837,8 +784,7 @@ const draftId = computed<number | null>(() => {
   return typeof current.id === 'number' ? current.id : null
 })
 const { hasPermission } = usePermissions()
-const { canWrite, canDelete } = useEntityAccess('feAnalysis', draftId)
-const canCopy = computed<boolean>(() => hasPermission('create:feature-analysis'))
+const { canWrite } = useEntityAccess('feAnalysis', draftId)
 
 const canSave = computed<boolean>(() => {
   if (saving.value || loading.value) return false
@@ -856,14 +802,6 @@ const saveDisabledReason = computed<string>(() =>
     translate: tv,
   })
 )
-
-const deleteMessage = computed<string>(() => {
-  return t(
-    'featureAnalyses.editor.deleteConfirm',
-    `Delete feature analysis '${draft.value.name}'?`,
-    { name: draft.value.name }
-  ).value
-})
 
 type FeatureAnalysisDraftBase = {
   id?: number
@@ -1067,48 +1005,6 @@ async function handleSave() {
     showSnackbar(t('cc.fa.saveError').value, 'error')
   } finally {
     saving.value = false
-  }
-}
-
-async function handleSaveCopy() {
-  if (!props.id) return
-  const numericId = Number(props.id)
-  if (Number.isNaN(numericId)) return
-
-  saving.value = true
-  try {
-    const copied = await store.copy(numericId)
-    if (copied?.id) {
-      dirty.value = false
-      await router.push(`/feature-analyses/${copied.id}`)
-    } else {
-      showSnackbar(t('cc.fa.saveError').value, 'error')
-    }
-  } catch (err) {
-    logger.error('FeatureAnalysisEditor', 'Save Copy failed', err)
-    showSnackbar(t('cc.fa.saveError').value, 'error')
-  } finally {
-    saving.value = false
-  }
-}
-
-function handleDeleteClick() {
-  if (!props.id) return
-  showDeleteDialog.value = true
-}
-
-async function confirmDelete() {
-  if (!props.id) return
-  const numericId = Number(props.id)
-  if (Number.isNaN(numericId)) return
-
-  const ok = await store.remove(numericId)
-  if (ok) {
-    dirty.value = false
-    showDeleteDialog.value = false
-    await router.push('/feature-analyses')
-  } else {
-    showSnackbar(t('cc.fa.saveError').value, 'error')
   }
 }
 

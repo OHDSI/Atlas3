@@ -14,7 +14,7 @@ vi.mock('@/composables/useI18n', async () => {
   return mockUseI18n
 })
 
-vi.mock('@/components/concepts/ConceptSearchInline.vue', () => ({
+vi.mock('@/components/concepts/ConceptSearchEmbed.vue', () => ({
   default: {
     name: 'ConceptSearchInline',
     template: '<div class="concept-search-inline-mock"></div>',

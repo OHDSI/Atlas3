@@ -583,6 +583,8 @@ describe('InclusionRulesPanel', () => {
     })
 
     expect(wrapper.text()).toContain('No inclusion rules')
+    expect(wrapper.text()).toContain('Limit Remaining Events to')
+    expect(wrapper.find('.inclusion-rules-panel__limit-toggle').exists()).toBe(true)
     await wrapper.get('[data-testid="inclusion-empty-add"]').trigger('click')
     expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toHaveLength(1)
   })

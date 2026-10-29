@@ -64,6 +64,7 @@
     <CohortSampleCreateDialog
       v-model="dialogOpen"
       :submitting="creating"
+      :source-key="sourceKey"
       @submit="onCreate"
     />
   </div>

@@ -8,11 +8,17 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { setActivePinia, createPinia } from 'pinia'
 import { routeLocationKey } from 'vue-router'
-import ConceptSearch from '@/components/concepts/ConceptSearch.vue'
+import ConceptSearch from '@/components/concepts/ConceptSearchPage.vue'
 import ConceptTable from '@/components/concepts/ConceptTable.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { AtlasSnackbar } from '@/components/ui'
 import type { Concept } from '@/models/concept-set.types'
+
+const { routerPush } = vi.hoisted(() => ({ routerPush: vi.fn() }))
+vi.mock('vue-router', async importOriginal => {
+  const actual = await importOriginal<typeof import('vue-router')>()
+  return { ...actual, useRouter: () => ({ push: routerPush }) }
+})
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../helpers/i18n-mock')
@@ -83,6 +89,7 @@ describe('ConceptSearch — add to concept set', () => {
     expect(sets.currentSet).not.toBeNull()
     expect(sets.currentSet?.items).toHaveLength(1)
     expect(sets.currentSet?.items[0].conceptId).toBe(313217)
+    expect(routerPush).toHaveBeenCalledWith({ name: 'conceptset-new' })
   })
 
   it('reflects added concepts in conceptsInSet', async () => {

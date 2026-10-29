@@ -58,6 +58,8 @@ import {
   getConceptsBySourceCodes,
   getConceptRecordCounts,
   getRecommendedConcepts,
+  findSeedConceptForSearchTerms,
+  NoMatchingConceptError,
   compareConceptSets,
   resolveConceptSetExpression,
 } from '@/services/concept-search.service'
@@ -625,6 +627,76 @@ describe('ConceptSearchService', () => {
       expect(result.size).toBe(2)
       expect(result.has(123)).toBe(true)
       expect(result.has(456)).toBe(true)
+    })
+  })
+
+  describe('findSeedConceptForSearchTerms', () => {
+    const row = (id: number, name: string) => ({
+      CONCEPT_ID: id,
+      CONCEPT_NAME: name,
+      DOMAIN_ID: 'Condition',
+      VOCABULARY_ID: 'SNOMED',
+      CONCEPT_CLASS_ID: 'Clinical Finding',
+      STANDARD_CONCEPT: 'S',
+      CONCEPT_CODE: String(id),
+      INVALID_REASON: null,
+      INVALID_REASON_CAPTION: 'Unknown',
+      STANDARD_CONCEPT_CAPTION: 'Standard',
+      VALID_START_DATE: Date.UTC(1970, 0, 1),
+      VALID_END_DATE: Date.UTC(2090, 0, 1),
+    })
+    const respond = (body: unknown) => ({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(JSON.stringify(body)),
+    })
+
+    it('runs a lexical search over the recommend domains', async () => {
+      mockFetch
+        .mockResolvedValueOnce(respond([row(1, 'a')]))
+        .mockResolvedValueOnce(respond([{ '1': [1, 1, 1, 1] }]))
+
+      await findSeedConceptForSearchTerms('VOCAB', 'RESULTS', 'type 2 diabetes')
+
+      const [url, init] = mockFetch.mock.calls[0]
+      expect(url).toContain('/vocabulary/VOCAB/search')
+      expect(JSON.parse(init.body)).toEqual({
+        QUERY: 'type 2 diabetes',
+        DOMAIN_ID: ['Condition', 'Procedure', 'Drug', 'Measurement'],
+        IS_LEXICAL: true,
+      })
+      expect(mockFetch.mock.calls[1][0]).toContain('/cdmresults/RESULTS/conceptRecordCount')
+    })
+
+    it('picks the candidate with the most descendant records, not the best text match', async () => {
+      mockFetch
+        .mockResolvedValueOnce(respond([row(1, 'best text'), row(2, 'common'), row(3, 'rare')]))
+        .mockResolvedValueOnce(
+          respond([{ '1': [5, 10, 1, 1], '2': [50, 900, 1, 1], '3': [1, 2, 1, 1] }])
+        )
+
+      const seed = await findSeedConceptForSearchTerms('VOCAB', 'RESULTS', 'diabetes')
+
+      expect(seed.conceptId).toBe(2)
+    })
+
+    it('keeps the backend order when counts tie or are missing', async () => {
+      mockFetch
+        .mockResolvedValueOnce(respond([row(7, 'first'), row(8, 'second'), row(9, 'third')]))
+        .mockResolvedValueOnce(respond([{ '8': [0, 0, 0, 0], '9': [0, 0, 0, 0] }]))
+
+      const seed = await findSeedConceptForSearchTerms('VOCAB', 'RESULTS', 'diabetes')
+
+      expect(seed.conceptId).toBe(7)
+    })
+
+    it('throws NoMatchingConceptError and skips the count lookup when nothing matches', async () => {
+      mockFetch.mockResolvedValueOnce(respond([]))
+
+      await expect(
+        findSeedConceptForSearchTerms('VOCAB', 'RESULTS', 'zzzzzz')
+      ).rejects.toBeInstanceOf(NoMatchingConceptError)
+      expect(mockFetch).toHaveBeenCalledTimes(1)
     })
   })
 

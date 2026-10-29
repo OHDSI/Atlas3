@@ -17,6 +17,7 @@
     <v-card
       v-else
       class="atlas-dialog__card"
+      :class="cardClass"
     >
       <header class="atlas-dialog__header">
         <div class="atlas-dialog__title-block">
@@ -81,6 +82,7 @@ interface Props {
   showClose?: boolean
   closeLabel?: string
   chromeless?: boolean
+  cardClass?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -93,6 +95,7 @@ const props = withDefaults(defineProps<Props>(), {
   showClose: true,
   closeLabel: undefined,
   chromeless: false,
+  cardClass: undefined,
 })
 
 const emit = defineEmits<{

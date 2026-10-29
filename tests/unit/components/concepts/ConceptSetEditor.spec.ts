@@ -178,6 +178,32 @@ describe('ConceptSetEditor', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
+  it('uses a single header actions menu instead of import controls in the tab rail', () => {
+    const wrapper = mountComponent({ conceptSet: mockConceptSet })
+
+    expect(wrapper.find('[data-testid="cs-editor-actions-menu"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="cs-editor-optimize-btn"]').exists()).toBe(false)
+  })
+
+  it('replaces the full expression when JSON view/edit applies validated items', () => {
+    const wrapper = mountComponent({ conceptSet: mockConceptSet })
+    const store = useConceptSetsStore()
+    store.currentSet = { ...mockConceptSet, items: [...mockConceptSet.items] }
+    const replacement = {
+      ...mockConceptSet.items[0],
+      conceptId: 999,
+      conceptName: 'Replacement concept',
+    }
+
+    const vm = wrapper.vm as unknown as {
+      applyExpressionJson: (items: typeof mockConceptSet.items) => void
+    }
+    vm.applyExpressionJson([replacement])
+
+    expect(store.currentSet.items).toEqual([replacement])
+    expect((wrapper.vm as unknown as { hasUnsavedChanges: boolean }).hasUnsavedChanges).toBe(true)
+  })
+
   it('should render as navigation drawer', () => {
     const wrapper = mountComponent()
     // Drawer is teleported to body for the overlay scrim, but the
@@ -210,6 +236,17 @@ describe('ConceptSetEditor', () => {
     const wrapper = mountComponent({ conceptSet: null })
     await wrapper.vm.$nextTick()
     expect(wrapper.vm.activeTab).toBe('search')
+  })
+
+  it('opens new concept sets already seeded with concepts on the Selected tab', async () => {
+    const wrapper = mountComponent({
+      conceptSet: {
+        name: 'Seeded',
+        items: [{ conceptId: 201826, conceptName: 'Type 2 diabetes mellitus', includeDescendants: true }],
+      },
+    })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.vm.activeTab).toBe('selected')
   })
 
   it('opens existing concept sets on the Selected tab', async () => {
@@ -288,9 +325,17 @@ describe('ConceptSetEditor', () => {
 
   it('should render close button', () => {
     const wrapper = mountComponent()
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const closeBtn = buttons.find(btn => btn.props('icon') === 'mdi-close')
-    expect(closeBtn).toBeTruthy()
+    expect(wrapper.find('[data-testid="cs-editor-close-btn"]').exists()).toBe(true)
+  })
+
+  it('places tools, close, and save in that order', () => {
+    const wrapper = mountComponent()
+    const tools = wrapper.get('[data-testid="cs-editor-actions-menu"]').element
+    const close = wrapper.get('[data-testid="cs-editor-close-btn"]').element
+    const save = wrapper.get('[data-testid="cs-editor-primary-btn"]').element
+
+    expect(tools.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(close.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('should render the access lock button next to tags in edit mode', () => {
@@ -337,11 +382,7 @@ describe('ConceptSetEditor', () => {
   it('should emit update:modelValue when close button is clicked', async () => {
     const wrapper = mountComponent()
 
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const closeBtn = buttons.find(btn => btn.props('icon') === 'mdi-close')
-
-    expect(closeBtn).toBeDefined()
-    await closeBtn!.trigger('click')
+    await wrapper.get('[data-testid="cs-editor-close-btn"]').trigger('click')
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
   })
@@ -396,11 +437,7 @@ describe('ConceptSetEditor', () => {
     await titleInput.trigger('input')
     await wrapper.vm.$nextTick()
 
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const closeBtn = buttons.find(btn => btn.props('icon') === 'mdi-close')
-
-    expect(closeBtn).toBeDefined()
-    await closeBtn!.trigger('click')
+    await wrapper.get('[data-testid="cs-editor-close-btn"]').trigger('click')
     expect((wrapper.vm as unknown as { showCloseConfirm: boolean }).showCloseConfirm).toBe(true)
   })
 
@@ -411,11 +448,11 @@ describe('ConceptSetEditor', () => {
       return mountComponent({ conceptSet: embeddedSet, embedded: true, ...props })
     }
 
-    it('renders Apply and Cancel instead of Save/Delete/Tags/Versions', () => {
+    it('renders Apply and Close instead of Save/Delete/Tags/Versions', () => {
       const wrapper = mountEmbedded()
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
       expect(buttons.find(btn => btn.text().includes('Apply'))).toBeTruthy()
-      expect(buttons.find(btn => btn.text().includes('Cancel'))).toBeTruthy()
+      expect(buttons.find(btn => btn.text().includes('Close'))).toBeTruthy()
       expect(buttons.find(btn => btn.text().includes('Save'))).toBeFalsy()
       expect(buttons.find(btn => btn.text().includes('Delete'))).toBeFalsy()
       expect(wrapper.find('[data-testid="cs-editor-tags-btn"]').exists()).toBe(false)
@@ -451,15 +488,13 @@ describe('ConceptSetEditor', () => {
       expect(createSpy).not.toHaveBeenCalled()
     })
 
-    it('Cancel with unsaved edits opens the confirm dialog; discarding closes without apply', async () => {
+    it('Close with unsaved edits opens the confirm dialog; discarding closes without apply', async () => {
       const wrapper = mountEmbedded()
       const titleInput = wrapper.find('input.cs-editor__title-input')
       ;(titleInput.element as HTMLInputElement).value = 'Modified'
       await titleInput.trigger('input')
 
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const cancelBtn = buttons.find(btn => btn.text().includes('Cancel'))!
-      await cancelBtn.trigger('click')
+      await wrapper.get('[data-testid="cs-editor-close-btn"]').trigger('click')
       expect((wrapper.vm as unknown as { showCloseConfirm: boolean }).showCloseConfirm).toBe(true)
       expect(wrapper.emitted('update:modelValue')).toBeFalsy()
       ;(wrapper.vm as unknown as { confirmClose: () => void }).confirmClose()
@@ -469,11 +504,9 @@ describe('ConceptSetEditor', () => {
       expect(wrapper.emitted('apply')).toBeFalsy()
     })
 
-    it('Cancel with no edits closes immediately', async () => {
+    it('Close with no edits closes immediately', async () => {
       const wrapper = mountEmbedded()
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const cancelBtn = buttons.find(btn => btn.text().includes('Cancel'))!
-      await cancelBtn.trigger('click')
+      await wrapper.get('[data-testid="cs-editor-close-btn"]').trigger('click')
 
       expect((wrapper.vm as unknown as { showCloseConfirm: boolean }).showCloseConfirm).toBe(false)
       expect(wrapper.emitted('update:modelValue')).toEqual([[false]])
@@ -798,6 +831,65 @@ describe('ConceptSetEditor', () => {
       expect(vm.sourceCodeUnresolved).toEqual([])
     })
 
+    it('filters resolved concepts and adds only the user-selected concepts', async () => {
+      const webapi = useWebAPIStore()
+      vi.spyOn(webapi, 'getValidVocabularySource').mockReturnValue('MY_VOCAB')
+      const conditionConcept: Concept = {
+        ...mockConcept,
+        conceptId: 1,
+        conceptName: 'Type 2 diabetes mellitus',
+        conceptCode: 'E11.9',
+        domainId: 'Condition',
+        vocabularyId: 'SNOMED',
+      }
+      const drugConcept: Concept = {
+        ...mockConcept,
+        conceptId: 2,
+        conceptName: 'Metformin',
+        conceptCode: 'A10BA02',
+        domainId: 'Drug',
+        vocabularyId: 'RxNorm',
+      }
+      vi.mocked(conceptSearchService.getConceptsBySourceCodes).mockResolvedValue([
+        conditionConcept,
+        drugConcept,
+      ])
+
+      const wrapper = mountComponent({ conceptSet: { name: 'Set', items: [] } })
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Set', items: [] }
+      const addSpy = vi.spyOn(store, 'addConceptToSet')
+      const vm = wrapper.vm as unknown as {
+        sourceCodeInput: string
+        resolvePastedSourceCodes: () => Promise<void>
+        applySourceCodeConcepts: () => void
+        sourceCodeSelectedIds: number[]
+        filteredSourceCodeConcepts: Concept[]
+        setSourceCodeTextFilter: (value: string) => void
+        setSourceCodeFacet: (key: string, values: string[]) => void
+      }
+
+      vm.sourceCodeInput = 'E11.9, A10BA02'
+      await vm.resolvePastedSourceCodes()
+
+      expect(vm.sourceCodeSelectedIds).toEqual([])
+      expect(vm.filteredSourceCodeConcepts).toHaveLength(2)
+
+      vm.setSourceCodeTextFilter('metformin')
+      expect(vm.filteredSourceCodeConcepts).toEqual([drugConcept])
+
+      vm.setSourceCodeTextFilter('')
+      vm.setSourceCodeFacet('domainId', ['Condition'])
+      expect(vm.filteredSourceCodeConcepts).toEqual([conditionConcept])
+
+      vm.sourceCodeSelectedIds = [drugConcept.conceptId]
+      vm.applySourceCodeConcepts()
+      expect(addSpy).toHaveBeenCalledTimes(1)
+      expect(addSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ conceptId: drugConcept.conceptId })
+      )
+    })
+
     it('resets resolved/unresolved state when the input is edited after a failed resolve (issue #159)', async () => {
       const webapi = useWebAPIStore()
       vi.spyOn(webapi, 'getValidVocabularySource').mockReturnValue('MY_VOCAB')
@@ -822,6 +914,38 @@ describe('ConceptSetEditor', () => {
 
       expect(vm.sourceCodeResolved).toEqual([])
       expect(vm.sourceCodeUnresolved).toEqual([])
+    })
+
+    it('clears source-code selection and filters when input changes', async () => {
+      const webapi = useWebAPIStore()
+      vi.spyOn(webapi, 'getValidVocabularySource').mockReturnValue('MY_VOCAB')
+      vi.mocked(conceptSearchService.getConceptsBySourceCodes).mockResolvedValue([
+        { ...mockConcept, conceptId: 1, conceptCode: 'E11.9' },
+      ])
+
+      const wrapper = mountComponent()
+      const vm = wrapper.vm as unknown as {
+        sourceCodeInput: string
+        resolvePastedSourceCodes: () => Promise<void>
+        sourceCodeSelectedIds: number[]
+        sourceCodeTextFilter: string
+        sourceCodeFacetSelection: Record<string, string[]>
+        setSourceCodeTextFilter: (value: string) => void
+        setSourceCodeFacet: (key: string, values: string[]) => void
+      }
+
+      vm.sourceCodeInput = 'E11.9'
+      await vm.resolvePastedSourceCodes()
+      vm.sourceCodeSelectedIds = [1]
+      vm.setSourceCodeTextFilter('diabetes')
+      vm.setSourceCodeFacet('domainId', ['Condition'])
+
+      vm.sourceCodeInput = 'A10BA02'
+      await wrapper.vm.$nextTick()
+
+      expect(vm.sourceCodeSelectedIds).toEqual([])
+      expect(vm.sourceCodeTextFilter).toBe('')
+      expect(vm.sourceCodeFacetSelection).toEqual({})
     })
   })
 

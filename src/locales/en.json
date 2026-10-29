@@ -423,6 +423,14 @@
     },
     "conceptSetBuilder": {
       "newConceptSet": "New Concept Set",
+      "newDialogTitle": "Create a new concept set",
+      "conceptSetName": "Concept set name",
+      "usingSearchTerms": "Using search terms (optional)",
+      "usingSearchTermsHint": "Start the set with the best-matching standard concept for these terms",
+      "searchTermsTooShort": "Search terms must have at least 4 letters or 2 separate terms",
+      "searchTermsNoSource": "A vocabulary source and a results source must be configured to use search terms",
+      "searchTermsNoMatch": "No standard concept matches \"{terms}\". Try different search terms.",
+      "searchTermsFailed": "The concept search failed. Please try again.",
       "selectConceptSet": "Select Concept Set...",
       "inThisDefinition": "In this definition",
       "importFromRepository": "Import from repository"
@@ -1478,6 +1486,7 @@
     "p25": "P25",
     "p75": "P75",
     "patients": "Patients",
+    "records": "Records",
     "pct": "Pct",
     "diff": "Diff",
     "remain": "Remain",
@@ -1682,6 +1691,7 @@
       "sourceCodesEmpty": "No source codes map to the included concepts.",
       "sourceCodesEmptyNoIncluded": "Add concepts to see their mapped source codes here.",
       "pasteIds": "Paste IDs",
+      "pasteIdsMenuSubtitle": "Import a list of concept IDs",
       "pasteIdsTitle": "Paste concept IDs",
       "pasteIdsHint": "Separate IDs with spaces, commas, semicolons, or newlines. We resolve each ID against the vocabulary before adding.",
       "pasteIdsResolved": "Resolved",
@@ -1690,9 +1700,11 @@
       "pasteIdsAddBtn": "Add",
       "importSourceCodes": "Import codes",
       "importSourceCodesButton": "Import by source code",
+      "importSourceCodesMenuSubtitle": "Import codes from the specified vocabularies",
       "importSourceCodesTitle": "Import by source code",
       "importSourceCodesHint": "Separate source codes with commas, semicolons, or newlines. We resolve each code against the vocabulary before adding.",
       "importJson": "Import JSON",
+      "importJsonMenuSubtitle": "Overwrite this concept set from JSON",
       "conceptMissingFromVocabulary": "Not in the selected vocabulary",
       "missingConceptsTitle": "Some concepts are not in the selected vocabulary",
       "missingConceptsMessage": "The vocabulary of source {sourceKey} does not contain {count} of the concepts in this concept set: {ids}. They stay in the concept set, but their details cannot be shown. Choose a different vocabulary source in Configuration to see them.",
@@ -2182,7 +2194,6 @@
         "statusNoRuns": "No generations yet",
         "statusCount": "{done} / {total} generated",
         "lastRunMeta": "Last run · {time} on {source}",
-        "generateAll": "Generate all",
         "onlyGenerated": "Only generated"
       },
       "row": {
@@ -2435,6 +2446,7 @@
     "sessionActiveMinutes": "Session active for {minutes} minutes",
     "currentlyRunningAs": "Currently running as:",
     "originalUser": "Original user: {username}",
+    "endRunAs": "End Run As",
     "targetUsername": "Target Username",
     "enterUsernameToImpersonate": "Enter username to impersonate",
     "runAsWarning": "Running as another user will assume their permissions and identity. All actions will be performed as the target user.",
@@ -2788,7 +2800,7 @@
     "system": "System"
   },
   "inclusionPanel": {
-    "limitIncludedEvents": "Limit Included Events to"
+    "limitRemainingEvents": "Limit Remaining Events to"
   },
   "apiKeys": {
     "list": {

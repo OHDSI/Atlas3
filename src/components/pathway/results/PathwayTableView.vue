@@ -1,144 +1,49 @@
 <template>
   <div class="pathway-tables">
-    <section>
-      <h3>{{ t('pathway.results.allPathways') }}</h3>
-      <button
-        class="export-btn"
-        @click="exportCsv(allRows, 'all')"
+    <PathwayCohortSection
+      v-for="g in groups"
+      :key="g.group.targetCohortId"
+      :cohort-name="g.cohortName"
+      :testid="`pathway-cohort-tables-${g.group.targetCohortId}`"
+    >
+      <section
+        v-for="s in g.sections"
+        :key="s.key"
       >
-        {{ t('common.exportCsv') }}
-      </button>
-      <table>
-        <thead>
-          <tr>
-            <th
-              v-for="h in headerOf(allRows)"
-              :key="h"
+        <h3>{{ s.title }}</h3>
+        <button
+          class="export-btn"
+          @click="exportCsv(g.group.targetCohortId, s.rows, s.key)"
+        >
+          {{ t('common.exportCsv') }}
+        </button>
+        <table>
+          <thead>
+            <tr>
+              <th
+                v-for="h in headerOf(s.rows)"
+                :key="h"
+              >
+                {{ h }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(r, i) in s.rows"
+              :key="i"
             >
-              {{ h }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(r, i) in allRows"
-            :key="i"
-          >
-            <td
-              v-for="h in headerOf(allRows)"
-              :key="h"
-            >
-              {{ r[h] }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section>
-      <h3>{{ t('pathway.results.countsByRank') }}</h3>
-      <button
-        class="export-btn"
-        @click="exportCsv(rankRows, 'rank')"
-      >
-        {{ t('common.exportCsv') }}
-      </button>
-      <table>
-        <thead>
-          <tr>
-            <th
-              v-for="h in headerOf(rankRows)"
-              :key="h"
-            >
-              {{ h }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(r, i) in rankRows"
-            :key="i"
-          >
-            <td
-              v-for="h in headerOf(rankRows)"
-              :key="h"
-            >
-              {{ r[h] }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section>
-      <h3>{{ t('pathway.results.eventCohortCounts') }}</h3>
-      <button
-        class="export-btn"
-        @click="exportCsv(cohortCountRows, 'cohort-counts')"
-      >
-        {{ t('common.exportCsv') }}
-      </button>
-      <table>
-        <thead>
-          <tr>
-            <th
-              v-for="h in headerOf(cohortCountRows)"
-              :key="h"
-            >
-              {{ h }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(r, i) in cohortCountRows"
-            :key="i"
-          >
-            <td
-              v-for="h in headerOf(cohortCountRows)"
-              :key="h"
-            >
-              {{ r[h] }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section>
-      <h3>{{ t('pathway.results.distinctEventCohortCounts') }}</h3>
-      <button
-        class="export-btn"
-        @click="exportCsv(distinctRows, 'distinct')"
-      >
-        {{ t('common.exportCsv') }}
-      </button>
-      <table>
-        <thead>
-          <tr>
-            <th
-              v-for="h in headerOf(distinctRows)"
-              :key="h"
-            >
-              {{ h }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(r, i) in distinctRows"
-            :key="i"
-          >
-            <td
-              v-for="h in headerOf(distinctRows)"
-              :key="h"
-            >
-              {{ r[h] }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+              <td
+                v-for="h in headerOf(s.rows)"
+                :key="h"
+              >
+                {{ r[h] }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </PathwayCohortSection>
   </div>
 </template>
 
@@ -146,6 +51,8 @@
 import { computed } from 'vue'
 import type { Pathway, PathwayResults } from '@/models/pathway.types'
 import { useI18n } from '@/composables/useI18n'
+import { resolveCohortName } from '@/components/pathway/pathway-workbench-state'
+import PathwayCohortSection from './PathwayCohortSection.vue'
 import {
   toAllPathwaysRows,
   toCountsByRankRows,
@@ -155,40 +62,52 @@ import {
   downloadCsv,
 } from '@/utils/pathway-csv'
 
+type Row = Record<string, string | number>
+
 const props = defineProps<{
   design: Pathway
   results: PathwayResults
-  targetCohortId: number
 }>()
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
-const group = computed(() =>
-  props.results.pathwayGroups.find(g => g.targetCohortId === props.targetCohortId)
+const groups = computed(() =>
+  props.results.pathwayGroups.map(group => ({
+    group,
+    cohortName: resolveCohortName(props.design, group.targetCohortId),
+    sections: [
+      {
+        key: 'all',
+        title: tv('pathway.results.allPathways'),
+        rows: toAllPathwaysRows(group, props.results.eventCodes, props.design.maxDepth) as Row[],
+      },
+      {
+        key: 'rank',
+        title: tv('pathway.results.countsByRank'),
+        rows: toCountsByRankRows(group, props.results.eventCodes) as Row[],
+      },
+      {
+        key: 'cohort-counts',
+        title: tv('pathway.results.eventCohortCounts'),
+        rows: toEventCohortCountRows(group, props.results.eventCodes) as Row[],
+      },
+      {
+        key: 'distinct',
+        title: tv('pathway.results.distinctEventCohortCounts'),
+        rows: toDistinctEventCountRows(group, props.results.eventCodes) as Row[],
+      },
+    ],
+  }))
 )
 
-const allRows = computed(() =>
-  group.value ? toAllPathwaysRows(group.value, props.results.eventCodes, props.design.maxDepth) : []
-)
-const rankRows = computed(() =>
-  group.value ? toCountsByRankRows(group.value, props.results.eventCodes) : []
-)
-const cohortCountRows = computed(() =>
-  group.value ? toEventCohortCountRows(group.value, props.results.eventCodes) : []
-)
-const distinctRows = computed(() =>
-  group.value ? toDistinctEventCountRows(group.value, props.results.eventCodes) : []
-)
-
-function headerOf(rows: ReadonlyArray<Record<string, string | number>>): string[] {
+function headerOf(rows: ReadonlyArray<Row>): string[] {
   return rows[0] ? Object.keys(rows[0]) : []
 }
 
-function exportCsv(rows: Array<Record<string, string | number>>, name: string): void {
-  downloadCsv(`pathways-${props.targetCohortId}-${name}.csv`, toCsv(rows))
+function exportCsv(targetCohortId: number, rows: Row[], name: string): void {
+  downloadCsv(`pathways-${targetCohortId}-${name}.csv`, toCsv(rows))
 }
 </script>
-
 <style scoped>
 .pathway-tables section {
   margin-bottom: 24px;

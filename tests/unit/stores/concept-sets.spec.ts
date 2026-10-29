@@ -385,7 +385,7 @@ describe('Concept Sets Store', () => {
   })
 
   describe('copy Action', () => {
-    it('should create a renamed copy and open it in the editor', async () => {
+    it('should create a renamed copy for the caller to navigate to', async () => {
       const store = useConceptSetsStore()
       store.conceptSets = [
         ...mockConceptSetList,
@@ -405,7 +405,7 @@ describe('Concept Sets Store', () => {
       })
       expect(result).toEqual(copiedSet)
       expect(store.currentSet).toEqual(copiedSet)
-      expect(store.editorOpen).toBe(true)
+      expect(store.editorOpen).toBe(false)
     })
 
     it('should handle a missing source concept set', async () => {

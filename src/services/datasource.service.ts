@@ -181,6 +181,8 @@ export async function listDataSources(): Promise<DataSource[]> {
         throw new Error('All data sources failed validation')
       }
 
+      validated.sort((left, right) => left.sourceName.localeCompare(right.sourceName))
+
       logger.debug('DataSource', `Successfully fetched ${validated.length} sources`)
       return validated
     } catch (error) {

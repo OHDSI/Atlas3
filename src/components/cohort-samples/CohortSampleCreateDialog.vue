@@ -2,7 +2,7 @@
   <AtlasDialog
     :model-value="modelValue"
     :eyebrow="tv('components.cohortSampleCreate.eyebrow')"
-    :title="tv('components.cohortSampleCreate.title')"
+    :title="dialogTitle"
     max-width="560"
     @update:model-value="$emit('update:modelValue', $event)"
     @close="cancel"
@@ -148,6 +148,7 @@
 import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasDialog, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { useWebAPIStore } from '@/stores/webapi'
 import {
   GENDER_FEMALE_CONCEPT_ID,
   GENDER_MALE_CONCEPT_ID,
@@ -164,6 +165,7 @@ import {
 const props = defineProps<{
   modelValue: boolean
   submitting?: boolean
+  sourceKey?: string
 }>()
 
 const emit = defineEmits<{
@@ -172,6 +174,14 @@ const emit = defineEmits<{
 }>()
 
 const { t, tv } = useI18n()
+const webapiStore = useWebAPIStore()
+
+const dialogTitle = computed(() => {
+  const base = tv('components.cohortSampleCreate.title')
+  if (!props.sourceKey) return base
+  const name = webapiStore.sources.find(s => s.sourceKey === props.sourceKey)?.sourceName
+  return `${base} - ${name ?? props.sourceKey} [${props.sourceKey}]`
+})
 
 const form = reactive({ name: '', size: 100 })
 const genderMale = ref(true)

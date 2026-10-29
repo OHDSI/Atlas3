@@ -22,6 +22,13 @@ vi.mock('@/services/auth/storageManager', () => ({
     clearAll: vi.fn(),
     saveToken: vi.fn(),
     getToken: vi.fn(),
+    getRunAsTokenStack: vi.fn(() => []),
+    hasRunAsSession: vi.fn(() => false),
+    getPreviousRunAsToken: vi.fn(),
+    pushRunAsToken: vi.fn(),
+    popRunAsToken: vi.fn(),
+    replaceActiveRunAsToken: vi.fn(),
+    clearRunAsTokenStack: vi.fn(),
     getLogoutUrl: vi.fn(),
   },
 }))
@@ -465,6 +472,7 @@ describe('AuthService', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         headers: createHeadersMock({}),
+        text: () => Promise.resolve(''),
       })
 
       const result = await authService.refreshToken()
@@ -514,6 +522,22 @@ describe('AuthService', () => {
       )
       const init = mockFetch.mock.calls[0][1] as RequestInit
       expect(init.body).toBeUndefined()
+    })
+
+    it('should replace only the active Run-As stack token', async () => {
+      const authStore = useAuthStore()
+      authStore.setToken('run-as-token', 'run-as')
+      authStore.isRunningAs = true
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ jwt: 'refreshed-run-as-token' }),
+      })
+
+      await expect(authService.refreshToken()).resolves.toBe(true)
+
+      expect(storageManager.replaceActiveRunAsToken).toHaveBeenCalledWith('refreshed-run-as-token')
+      expect(storageManager.saveToken).not.toHaveBeenCalledWith('refreshed-run-as-token')
+      expect(authStore.token).toBe('refreshed-run-as-token')
     })
   })
 
@@ -638,6 +662,13 @@ describe('AuthService', () => {
   })
 
   describe('runAs', () => {
+    it('should require an authenticated user', async () => {
+      await expect(authService.runAs('targetuser')).rejects.toThrow(
+        'You must be signed in to run as another user'
+      )
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
     it('should run as another user successfully', async () => {
       const authStore = useAuthStore()
       authStore.setToken('admin-token')
@@ -666,6 +697,19 @@ describe('AuthService', () => {
       await authService.runAs('targetuser')
 
       expect(authStore.token).toBe('impersonated-token')
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        'http://test-api.com/user/runas',
+        expect.objectContaining({
+          method: 'POST',
+          body: 'login=targetuser',
+          headers: expect.objectContaining({
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Authorization: 'Bearer admin-token',
+          }),
+        })
+      )
+      expect(storageManager.pushRunAsToken).toHaveBeenCalledWith('admin-token', 'impersonated-token')
     })
 
     it('should throw error on run-as failure', async () => {
@@ -675,9 +719,10 @@ describe('AuthService', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         headers: createHeadersMock({}),
+        text: () => Promise.resolve(''),
       })
 
-      await expect(authService.runAs('targetuser')).rejects.toThrow('Failed to run as user')
+      await expect(authService.runAs('targetuser')).rejects.toThrow('Authentication failed')
     })
 
     it('should throw error when no token received from run-as', async () => {
@@ -690,6 +735,67 @@ describe('AuthService', () => {
       })
 
       await expect(authService.runAs('targetuser')).rejects.toThrow('User not found')
+    })
+
+    it('should restore the prior token when loading the target user fails', async () => {
+      const authStore = useAuthStore()
+      authStore.setToken('admin-token')
+      vi.mocked(storageManager.hasRunAsSession).mockReturnValue(false)
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ jwt: 'target-token' }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+        })
+
+      await expect(authService.runAs('targetuser')).rejects.toThrow('Failed to fetch user info (401)')
+
+      expect(storageManager.popRunAsToken).toHaveBeenCalledOnce()
+      expect(authStore.token).toBe('admin-token')
+    })
+
+    it('should restore the prior token when ending Run-As', async () => {
+      const authStore = useAuthStore()
+      authStore.setToken('target-token', 'run-as')
+      vi.mocked(storageManager.getPreviousRunAsToken).mockReturnValue('admin-token')
+      vi.mocked(storageManager.popRunAsToken).mockReturnValue('admin-token')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ login: 'admin', name: 'Admin User' }),
+      })
+
+      await authService.endRunAs()
+
+      expect(authStore.token).toBe('admin-token')
+      expect(storageManager.popRunAsToken).toHaveBeenCalledOnce()
+      expect(authStore.user?.login).toBe('admin')
+    })
+
+    it('should reject ending Run-As when no prior token exists', async () => {
+      const authStore = useAuthStore()
+      authStore.setToken('target-token', 'run-as')
+
+      await expect(authService.endRunAs()).rejects.toThrow('No Run-As session is active')
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('should keep the target token when restoring the prior identity fails', async () => {
+      const authStore = useAuthStore()
+      authStore.setToken('target-token', 'run-as')
+      vi.mocked(storageManager.getPreviousRunAsToken).mockReturnValue('admin-token')
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+      })
+
+      await expect(authService.endRunAs()).rejects.toThrow('Failed to fetch user info (401)')
+
+      expect(authStore.token).toBe('target-token')
+      expect(storageManager.popRunAsToken).not.toHaveBeenCalled()
     })
   })
 

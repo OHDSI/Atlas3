@@ -13,40 +13,6 @@
       />
     </template>
 
-    <template
-      v-if="cohortId !== null && sources.length > 0"
-      #actions
-    >
-      <AtlasTooltip
-        v-if="generateBlocked"
-        location="top"
-      >
-        <template #activator="{ props: tipProps }">
-          <span v-bind="tipProps">
-            <AtlasButton
-              size="sm"
-              variant="primary"
-              :disabled="true"
-              data-testid="generate-all-btn"
-            >
-              {{ t('cohortDefinitions.generation.section.generateAll').value }}
-            </AtlasButton>
-          </span>
-        </template>
-        <span>{{ generateDisabledReason }}</span>
-      </AtlasTooltip>
-      <AtlasButton
-        v-else
-        size="sm"
-        variant="primary"
-        :disabled="!canGenerateAll"
-        data-testid="generate-all-btn"
-        @click="generateAll"
-      >
-        {{ t('cohortDefinitions.generation.section.generateAll').value }}
-      </AtlasButton>
-    </template>
-
     <AtlasAlert
       v-if="cohortId === null"
       severity="warning"
@@ -65,6 +31,8 @@
       :executions="runTableExecutions"
       :loading="false"
       :show-patient-count="true"
+      :show-record-count="true"
+      :hide-latest-result-button="true"
       :run-disabled="generateBlocked"
       :run-disabled-reason="generateDisabledReason"
       :extra-actions="extraActions"
@@ -99,12 +67,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { AtlasAlert, AtlasButton, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert } from '@/components/ui'
 import AtlasSwitch from '@/components/ui/AtlasSwitch.vue'
 import type { AtlasChipTone } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { ValidationStatus } from '@/composables/useCohortValidation'
-import { useSourceAccessFor } from '@/composables/useEntityAccess'
 import { useWebAPIStore } from '@/stores/webapi'
 import AtlasCollapsibleSection from '@/components/ui/AtlasCollapsibleSection.vue'
 import CohortReportDrawer from './CohortReportDrawer.vue'
@@ -142,7 +109,6 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const webapiStore = useWebAPIStore()
-const sourceAccess = useSourceAccessFor()
 
 const sources = computed(() => webapiStore.sourcesList)
 
@@ -162,6 +128,7 @@ function jobToExecution(j: GenerationJob): RunTableExecution {
     endTime: end,
     duration: start && end ? end - start : undefined,
     personCount: j.personCount,
+    recordCount: j.recordCount,
   }
 }
 
@@ -265,30 +232,6 @@ const generateDisabledReason = computed(() => {
   if (props.validationStatus !== 'validated') return t('common.loadingWithDots').value
   return undefined
 })
-
-const canGenerateAll = computed(() => {
-  if (props.cohortId === null) return false
-  if (generateBlocked.value) return false
-  return sources.value.some(s => {
-    if (!sourceAccess.canWrite(s.sourceId)) return false
-    const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
-    return !j || !isGenerationActive(j.status)
-  })
-})
-
-async function generateAll() {
-  if (props.cohortId === null || generateBlocked.value) return
-  for (const s of sources.value) {
-    if (!sourceAccess.canWrite(s.sourceId)) continue
-    const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
-    if (j && isGenerationActive(j.status)) continue
-    try {
-      await webapiStore.generateCohort(props.cohortId, s.sourceKey)
-    } catch (error) {
-      logger.error('CohortGenerationSection', 'generate-all failed for ' + s.sourceKey, error)
-    }
-  }
-}
 
 async function onRun(sourceKey: string) {
   if (props.cohortId === null || generateBlocked.value) return

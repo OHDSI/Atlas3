@@ -2,7 +2,7 @@ import { ref, computed } from 'vue'
 import { listPathways } from '@/services/pathway.service'
 import type { Pathway } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
-import { getUserString, matchesTerms } from '@/utils/list-filters'
+import { getUserString, matchesFieldsOrId } from '@/utils/list-filters'
 import { toggleTagFilter } from '@/utils/asset-tags'
 
 export interface PathwayFilters {
@@ -52,7 +52,7 @@ export function usePathways() {
     const cr = filters.value.createdDateRange
     const mr = filters.value.modifiedDateRange
     return pathways.value.filter(p => {
-      if (!matchesTerms([p.name, p.description], q)) return false
+      if (!matchesFieldsOrId(p.id, [p.name, p.description], q)) return false
       if (tags.length > 0) {
         const have = new Set((p.tags || []).map(t => t.name))
         if (!tags.every(t => have.has(t))) return false

@@ -5,6 +5,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { createPinia, setActivePinia } from 'pinia'
 import CohortSampleCreateDialog from '@/components/cohort-samples/CohortSampleCreateDialog.vue'
+import { useWebAPIStore } from '@/stores/webapi'
 import {
   GENDER_FEMALE_CONCEPT_ID,
   GENDER_MALE_CONCEPT_ID,
@@ -37,6 +38,80 @@ describe('CohortSampleCreateDialog', () => {
     expect(submitBtn).not.toBeNull()
     expect(submitBtn!.disabled).toBe(true)
     expect(wrapper.emitted('submit')).toBeUndefined()
+  })
+
+  it('displays the source name and key in the dialog title', async () => {
+    const webapiStore = useWebAPIStore()
+    webapiStore.setSources([{
+      sourceId: 1,
+      sourceKey: 'SYNPUF',
+      sourceName: 'Synthetic Public Use File',
+      sourceDialect: 'postgresql',
+      daimons: [],
+    }])
+
+    const wrapper = mount(CohortSampleCreateDialog, {
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+      props: { modelValue: true, sourceKey: 'SYNPUF' },
+    })
+    await flushPromises()
+
+    expect(document.body.textContent).toContain(
+      'New cohort sample - Synthetic Public Use File [SYNPUF]'
+    )
+    wrapper.unmount()
+  })
+
+  it('uses the source key as the name fallback when the source is unavailable', async () => {
+    const wrapper = mount(CohortSampleCreateDialog, {
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+      props: { modelValue: true, sourceKey: 'UNKNOWN_SOURCE' },
+    })
+    await flushPromises()
+
+    expect(document.body.textContent).toContain(
+      'New cohort sample - UNKNOWN_SOURCE [UNKNOWN_SOURCE]'
+    )
+    wrapper.unmount()
+  })
+
+  it('resets the form when reopened', async () => {
+    const wrapper = makeWrapper()
+    await flushPromises()
+
+    const vm = wrapper.vm as unknown as Record<string, unknown> & {
+      form: { name: string; size: number }
+      genderMale: boolean
+      genderFemale: boolean
+      genderOther: boolean
+      ageMode: string | null
+      ageValue: number | null
+      ageMin: number | null
+      ageMax: number | null
+    }
+    vm.form.name = 'stale'
+    vm.form.size = 10
+    vm.genderMale = false
+    vm.genderFemale = false
+    vm.genderOther = true
+    vm.ageMode = 'between'
+    vm.ageValue = 30
+    vm.ageMin = 20
+    vm.ageMax = 40
+
+    await wrapper.setProps({ modelValue: false })
+    await wrapper.setProps({ modelValue: true })
+
+    expect(vm.form).toEqual({ name: '', size: 100 })
+    expect(vm.genderMale).toBe(true)
+    expect(vm.genderFemale).toBe(true)
+    expect(vm.genderOther).toBe(false)
+    expect(vm.ageMode).toBeNull()
+    expect(vm.ageValue).toBeNull()
+    expect(vm.ageMin).toBeNull()
+    expect(vm.ageMax).toBeNull()
   })
 
   it('emits submit with both genders selected (no gender filter is sent)', async () => {
@@ -131,6 +206,31 @@ describe('CohortSampleCreateDialog', () => {
 
     const params = wrapper.emitted('submit')?.[0]?.[0] as { age?: { mode: string; min?: number; max?: number; value?: number } }
     expect(params.age).toEqual({ mode: 'between', min: 40, max: 65 })
+  })
+
+  it('builds a single-value age payload', async () => {
+    const wrapper = makeWrapper()
+    await flushPromises()
+
+    const nameInput = document.body.querySelector('[data-testid=sample-name] input') as HTMLInputElement
+    nameInput.value = 'single-age'
+    nameInput.dispatchEvent(new Event('input'))
+
+    const vm = wrapper.vm as unknown as { ageMode: string | null }
+    vm.ageMode = 'greaterThan'
+    await flushPromises()
+
+    const ageInput = document.body.querySelector('[data-testid=sample-age-value] input') as HTMLInputElement
+    ageInput.value = '50'
+    ageInput.dispatchEvent(new Event('input'))
+    await flushPromises()
+
+    const submitBtn = document.body.querySelector('[data-testid=sample-submit]') as HTMLButtonElement
+    submitBtn.click()
+    await flushPromises()
+
+    const params = wrapper.emitted('submit')?.[0]?.[0] as { age?: { mode: string; value?: number } }
+    expect(params.age).toEqual({ mode: 'greaterThan', value: 50 })
   })
 
   it('emits update:modelValue=false when Cancel is clicked', async () => {
