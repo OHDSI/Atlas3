@@ -304,6 +304,7 @@ function newDistributionStat(row: RawRow): DistributionStat {
     faType: row.faType,
     cohorts: [],
     strataNames: {},
+    count: {},
     avg: {},
     stdDev: {},
     min: {},
@@ -395,6 +396,7 @@ export function mapCharacterizationResults(raw: unknown[]): MappedCharacterizati
         }
         ensureCohort(stat.cohorts, row)
         stat.strataNames[sKey] = row.strataName ?? sKey
+        setNested(stat.count ??= {}, sKey, cKey, row.count)
         setNested(stat.avg, sKey, cKey, row.avg)
         setNested(stat.stdDev, sKey, cKey, row.stdDev)
         setNested(stat.min, sKey, cKey, row.min)

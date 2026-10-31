@@ -373,6 +373,8 @@ export interface DistributionStat {
   faType?: FeatureAnalysisType
   cohorts: LinkedCohort[]
   strataNames: Record<string, string>
+  /** Persons with a value for the covariate. */
+  count?: Record<string, Record<string, number>>
   avg: Record<string, Record<string, number>>
   stdDev: Record<string, Record<string, number>>
   min: Record<string, Record<string, number>>
@@ -396,6 +398,7 @@ export const DistributionStatSchema = z
     faType: FeatureAnalysisTypeSchema.optional(),
     cohorts: z.array(LinkedCohortSchema),
     strataNames: z.record(z.string()).default({}),
+    count: NestedNumberMapSchema.optional(),
     avg: NestedNumberMapSchema,
     stdDev: NestedNumberMapSchema,
     min: NestedNumberMapSchema,
