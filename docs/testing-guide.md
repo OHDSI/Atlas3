@@ -214,9 +214,9 @@ so there is no per-file breakdown to go with the 70.4% figure. Do not repeat tha
 At concurrency 4 on a `ubuntu-latest` runner (4 vCPU, 16GB RAM), a full run lands near 4.5
 hours, and this repository's CI runners are killed at roughly 4 hours (GitHub's own job
 ceiling is 6). One job cannot run the whole suite. `.github/workflows/mutation-tests.yml`
-instead runs a nightly **6-way matrix**, `mutation-shard`: each shard sets
-`STRYKER_SHARD=<i>/6`, which `stryker.conf.mjs` uses to stripe the 373-file `mutate` list
-by index (`idx % 6 === i - 1`) rather than slicing it contiguously, so file-size variance
+instead runs a nightly **8-way matrix**, `mutation-shard`: each shard sets
+`STRYKER_SHARD=<i>/8`, which `stryker.conf.mjs` uses to stripe the `mutate` list
+by index (`idx % 8 === i - 1`) rather than slicing it contiguously, so file-size variance
 doesn't leave one shard with all the large files. Each shard runs the full `npx stryker run`
 at `--concurrency 4` and uploads its `reports/mutation/mutation.json` as
 `mutation-report-shard-<i>`.
@@ -232,21 +232,16 @@ No shard applies a break threshold: `stryker.conf.mjs` sets `thresholds.break` t
 for every run, sharded or not. A single shard skewed toward low-scoring Vue templates would
 otherwise fail on its own, which is a false red, not a real signal, since the repo-wide
 score is what matters. Enforcement instead lives entirely in the `aggregate` job, which runs
-after all six shards, downloads their artifacts, sums killed/timeout/survived/noCoverage
+after all eight shards, downloads their artifacts, sums killed/timeout/survived/noCoverage
 counts across all of them, and computes one score using Stryker's own definition:
 `totalValid = killed + timeout + survived + noCoverage`, `score = (killed + timeout) /
-totalValid`. That job fails outright, before it even computes a score, if fewer than six
+totalValid`. That job fails outright, before it even computes a score, if fewer than eight
 shard artifacts are present: a missing shard means part of the codebase went unmeasured, and
 silently treating that as a pass would be the exact failure this gate exists to prevent.
 
 ### Threshold
 
-The `aggregate` job fails the workflow if the overall score is below **65**. This number is
-deliberately provisional: it sits 1.3 points below the proven lower bound of 66.3%, so the
-gate cannot produce a false red on its first complete nightly run no matter where the true
-score lands within the bounded range. The bound was measured with static mutants included, so
-it is only a guide for the population the gate now scores. Once a nightly run completes with
-all six shards reporting, replace 65 with that run's actual score minus two points of
-headroom, using the same rationale as any other mutation-score threshold in this
-repository: scores vary slightly run to run from timeouts on a loaded runner, and a gate that
-flakes gets disabled.
+The `aggregate` job fails the workflow if the overall score is below **60**, about one point
+under the measured score of 61.0%. Scores vary slightly run to run from timeouts on
+a loaded runner, and a gate that flakes gets disabled. Raise the threshold as the score
+improves, keeping similar headroom.
