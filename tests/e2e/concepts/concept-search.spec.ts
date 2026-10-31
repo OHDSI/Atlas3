@@ -10,6 +10,7 @@ import { waitForOverlaysToClose, waitForPageReady } from '../helpers/wait-utils'
 const i18n = createI18nMock()
 const standardLabel = i18n.tv('search.standard', 'Standard')
 const validLabel = i18n.tv('commonErrors.valid', 'Valid')
+const validityColumnLabel = i18n.tv('columns.validity', 'Validity')
 
 test.describe('Concept Search', () => {
   test.beforeEach(async ({ page }) => {
@@ -314,11 +315,11 @@ test.describe('Concept Search', () => {
     // Search is triggered by pressing Enter on the input (no Search button)
     await searchInput.press('Enter')
 
-    // The mocked vocabulary search always returns diabetes concepts, each
-    // rendered with a translated concept-type chip in the results table.
+    // The mocked vocabulary search always returns diabetes concepts. The type
+    // chip shows the one-letter code and carries the translated label.
     const firstRow = page.locator('table tbody tr').first()
     await expect(firstRow).toBeVisible({ timeout: 10000 })
-    await expect(firstRow.locator('.v-chip').filter({ hasText: standardLabel }).first()).toBeVisible()
+    await expect(firstRow.getByLabel(standardLabel, { exact: true })).toHaveText('S')
   })
 
   /**
@@ -330,7 +331,12 @@ test.describe('Concept Search', () => {
     // Search only fires on Enter / button click — there is no auto-search.
     await searchInput.press('Enter')
     await page.waitForSelector('table tbody tr', { timeout: 5000 })
-    
+
+    // Validity is hidden by default; turn the column on.
+    await page.getByTestId('concept-search-columns').click()
+    await page.getByRole('checkbox', { name: validityColumnLabel }).check()
+    await page.keyboard.press('Escape')
+
     // Look for the translated validity badge within the result rows.
     const validBadge = page.locator('table tbody .v-chip').filter({ hasText: validLabel }).first()
     

@@ -132,16 +132,21 @@ describe('Plugin Performance Tests', () => {
         registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as unknown);
       }
 
-      // Measure lookup time
+      // Averaged over many lookups: a single sub-millisecond sample fails on
+      // any GC pause or busy CI runner.
+      const iterations = 1000;
+      let plugin;
       const startTime = performance.now();
-      const plugin = registry.getPlugin('plugin-25');
+      for (let i = 0; i < iterations; i++) {
+        plugin = registry.getPlugin('plugin-25');
+      }
       const endTime = performance.now();
 
-      const lookupTime = endTime - startTime;
+      const lookupTime = (endTime - startTime) / iterations;
 
       expect(plugin).toBeDefined();
       expect(lookupTime).toBeLessThan(1); // Should be nearly instant with Map lookup
-      
+
       console.log(`Plugin lookup time: ${lookupTime.toFixed(4)}ms`);
     });
   });
