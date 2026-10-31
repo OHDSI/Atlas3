@@ -241,7 +241,7 @@ silently treating that as a pass would be the exact failure this gate exists to 
 
 ### Threshold
 
-The `aggregate` job fails the workflow if the overall score is below **60**, about one and a
-half points under the measured score of 61.6%. Scores vary slightly run to run from timeouts on
+The `aggregate` job fails the workflow if the overall score is below **60**, about one point
+under the measured score of 61.0%. Scores vary slightly run to run from timeouts on
 a loaded runner, and a gate that flakes gets disabled. Raise the threshold as the score
 improves, keeping similar headroom.
