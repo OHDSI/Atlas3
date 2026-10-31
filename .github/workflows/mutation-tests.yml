@@ -59,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -81,7 +81,7 @@ jobs:
       # that enforces it, lives in the aggregate job below.
       - name: Run mutation tests for this shard
         env:
-          STRYKER_SHARD: ${{ matrix.shard }}/6
+          STRYKER_SHARD: ${{ matrix.shard }}/8
         run: npx stryker run --concurrency 4
 
       - name: Upload shard mutation report
@@ -102,20 +102,20 @@ jobs:
           pattern: mutation-report-shard-*
           path: shard-reports
 
-      - name: Verify all six shards reported
+      - name: Verify all eight shards reported
         run: |
           COUNT=$(find shard-reports -mindepth 1 -maxdepth 1 -type d | wc -l)
           echo "Found ${COUNT} shard report directories."
-          if [ "$COUNT" -ne 6 ]; then
+          if [ "$COUNT" -ne 8 ]; then
             echo "## Mutation gate: FAILED (incomplete)" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Expected 6 shard reports, found ${COUNT}. Part of the codebase went unmeasured; a missing shard cannot be treated as a pass." >> $GITHUB_STEP_SUMMARY
+            echo "Expected 8 shard reports, found ${COUNT}. Part of the codebase went unmeasured; a missing shard cannot be treated as a pass." >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
       - name: Aggregate scores and enforce the threshold
         run: |
-          THRESHOLD=59
+          THRESHOLD=60
           echo "| Shard | Killed | Timeout | Survived | NoCoverage | Total valid | Score |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---:|---:|---:|---:|---:|---:|" >> $GITHUB_STEP_SUMMARY
 
