@@ -5,11 +5,21 @@
  * endpoint always returns exactly three concept sets, so every assertion
  * here is strict — no feature-detection fallbacks.
  */
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { setupBasicMocks } from '../helpers/api-mocks'
 import { waitForPageReady } from '../helpers/wait-utils'
 
 const MOCKED_SETS = ['Test Concept Set 1', 'Diabetes Medications', 'Type 2 Diabetes']
+
+async function createNewConceptSet(page: Page) {
+  const newButton = page.getByRole('button', { name: /new concept set/i }).first()
+  // Permissions from /user/me load asynchronously; the retrying assertion
+  // also serves as the wait for the button to enable.
+  await expect(newButton).toBeEnabled()
+  await newButton.click()
+  await page.getByTestId('new-concept-set-name').locator('input').fill('New test set')
+  await page.getByTestId('new-concept-set-create').click()
+}
 
 test.describe('Concept Set list', () => {
   test.beforeEach(async ({ page }) => {
@@ -73,11 +83,7 @@ test.describe('Concept Set list', () => {
   })
 
   test('opens the editor for a new concept set', async ({ page }) => {
-    const newButton = page.getByRole('button', { name: /new concept set/i }).first()
-    // Permissions from /user/me load asynchronously; the retrying assertion
-    // also serves as the wait for the button to enable.
-    await expect(newButton).toBeEnabled()
-    await newButton.click()
+    await createNewConceptSet(page)
 
     await expect(page.getByTestId('cs-editor-primary-btn')).toBeVisible()
     await expect(
@@ -128,13 +134,11 @@ test.describe('Concept set editor — inline panel layout', () => {
   test('search tab field has clearance so its floating label is not clipped by the tab window', async ({
     page
   }) => {
-    const newButton = page.getByRole('button', { name: /new concept set/i }).first()
-    await expect(newButton).toBeEnabled()
-    await newButton.click()
+    await createNewConceptSet(page)
     await expect(page.getByTestId('cs-editor-primary-btn')).toBeVisible()
 
     // New sets open on the Search tab.
-    const wrap = page.locator('.concept-search-inline')
+    const wrap = page.locator('.concept-search-embed')
     await expect(wrap).toBeVisible()
 
     const paddingTop = await wrap.evaluate(el => parseFloat(getComputedStyle(el).paddingTop))
@@ -149,12 +153,10 @@ test.describe('Concept set editor — inline panel layout', () => {
   test('inline concept detail header sticks flush with no gap above it on scroll', async ({
     page
   }) => {
-    const newButton = page.getByRole('button', { name: /new concept set/i }).first()
-    await expect(newButton).toBeEnabled()
-    await newButton.click()
+    await createNewConceptSet(page)
     await expect(page.getByTestId('cs-editor-primary-btn')).toBeVisible()
 
-    const searchInput = page.locator('.concept-search-inline input').first()
+    const searchInput = page.locator('.concept-search-embed input').first()
     await searchInput.fill('diabetes')
     await searchInput.press('Enter')
 
