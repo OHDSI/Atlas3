@@ -115,7 +115,7 @@ jobs:
 
       - name: Aggregate scores and enforce the threshold
         run: |
-          THRESHOLD=65
+          THRESHOLD=59
           echo "| Shard | Killed | Timeout | Survived | NoCoverage | Total valid | Score |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---:|---:|---:|---:|---:|---:|" >> $GITHUB_STEP_SUMMARY
 

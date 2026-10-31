@@ -241,12 +241,7 @@ silently treating that as a pass would be the exact failure this gate exists to 
 
 ### Threshold
 
-The `aggregate` job fails the workflow if the overall score is below **65**. This number is
-deliberately provisional: it sits 1.3 points below the proven lower bound of 66.3%, so the
-gate cannot produce a false red on its first complete nightly run no matter where the true
-score lands within the bounded range. The bound was measured with static mutants included, so
-it is only a guide for the population the gate now scores. Once a nightly run completes with
-all six shards reporting, replace 65 with that run's actual score minus two points of
-headroom, using the same rationale as any other mutation-score threshold in this
-repository: scores vary slightly run to run from timeouts on a loaded runner, and a gate that
-flakes gets disabled.
+The `aggregate` job fails the workflow if the overall score is below **59**: the measured
+score of about 61.6% minus two points of headroom.
+Scores vary slightly run to run from timeouts on a loaded runner, and a gate that flakes gets
+disabled. Raise the threshold as the score improves, keeping the same two points of headroom.
