@@ -221,6 +221,13 @@ doesn't leave one shard with all the large files. Each shard runs the full `npx 
 at `--concurrency 4` and uploads its `reports/mutation/mutation.json` as
 `mutation-report-shard-<i>`.
 
+Keep `ignoreStatic: true` in `stryker.conf.mjs`. A static mutant sits in module-level code
+that runs once on import, such as a top-level constant, so Stryker can't tie it to the tests
+that cover it and re-runs the whole suite for each one. A few percent of mutants would
+otherwise take most of a shard's runtime and push it past the job timeout. Static mutants are
+reported as `Ignored` and don't enter the score, so module-level code is not measured by this
+gate.
+
 No shard applies a break threshold: `stryker.conf.mjs` sets `thresholds.break` to `null`
 for every run, sharded or not. A single shard skewed toward low-scoring Vue templates would
 otherwise fail on its own, which is a false red, not a real signal, since the repo-wide
@@ -237,7 +244,9 @@ silently treating that as a pass would be the exact failure this gate exists to 
 The `aggregate` job fails the workflow if the overall score is below **65**. This number is
 deliberately provisional: it sits 1.3 points below the proven lower bound of 66.3%, so the
 gate cannot produce a false red on its first complete nightly run no matter where the true
-score lands within the bounded range. Once a nightly run completes with all six shards
-reporting, replace 65 with that run's actual score minus two points of headroom, using the
-same rationale as any other mutation-score threshold in this repository: scores vary slightly
-run to run from timeouts on a loaded runner, and a gate that flakes gets disabled.
+score lands within the bounded range. The bound was measured with static mutants included, so
+it is only a guide for the population the gate now scores. Once a nightly run completes with
+all six shards reporting, replace 65 with that run's actual score minus two points of
+headroom, using the same rationale as any other mutation-score threshold in this
+repository: scores vary slightly run to run from timeouts on a loaded runner, and a gate that
+flakes gets disabled.
