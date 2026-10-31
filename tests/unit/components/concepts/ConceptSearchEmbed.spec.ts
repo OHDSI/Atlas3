@@ -49,7 +49,7 @@ vi.mock('@/components/concepts/ConceptTable.vue', () => ({
   default: {
     name: 'ConceptTable',
     template: '<div class="concept-table-mock"></div>',
-    props: ['concepts', 'loading', 'totalItems', 'page', 'itemsPerPage', 'showAddButton', 'conceptsInSet', 'selected', 'selectable'],
+    props: ['concepts', 'loading', 'totalItems', 'page', 'itemsPerPage', 'showAddButton', 'conceptsInSet', 'selected', 'selectable', 'linkable'],
     emits: ['update:selected', 'update:page', 'update:itemsPerPage', 'add-concept', 'remove-concept', 'view-concept'],
   },
 }))
@@ -215,6 +215,11 @@ describe('ConceptSearchEmbed search box and table wiring', () => {
     store.error = 'boom'
     await wrapper.vm.$nextTick()
     expect(wrapper.text()).toContain('boom')
+  })
+
+  // The concept set editor opens its inline concept detail from these links.
+  it('renders concept names as links that open the concept detail', () => {
+    expect(table().props('linkable')).toBe(true)
   })
 
   it('forwards pagination changes to the store', async () => {
