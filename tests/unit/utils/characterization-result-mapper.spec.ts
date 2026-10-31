@@ -191,6 +191,20 @@ describe('mapCharacterizationResults', () => {
     expect(distribution.count?.overall).toEqual({ '10': 40, '20': 35 })
   })
 
+  it('keeps the full name of criteria-set and custom covariates instead of the colon-split short name', () => {
+    const out = mapCharacterizationResults([
+      { analysisId: 1, covariateId: 1, cohortId: 3, faType: 'CRITERIA_SET', count: 1, pct: 1,
+        covariateName: 'Diabetes: type 1', covariateShortName: ' type 1' },
+      { analysisId: 1, covariateId: 2, cohortId: 3, faType: 'CUSTOM_FE', count: 1, pct: 1,
+        covariateName: 'Lab: HbA1c', covariateShortName: ' HbA1c' },
+      { analysisId: 2, covariateId: 3, cohortId: 3, faType: 'PRESET', count: 1, pct: 1,
+        covariateName: 'condition_era group during day -365 through 0 days relative to index: Diabetes',
+        covariateShortName: ' Diabetes' },
+    ])
+
+    expect(out.prevalence.map(row => row.covariateName)).toEqual(['Diabetes: type 1', 'Lab: HbA1c', 'Diabetes'])
+  })
+
   it('infers distribution rows and skips unclassifiable or cohortless rows', () => {
     const out = mapCharacterizationResults([
       { analysisId: 1, covariateId: 2, cohortId: 3, covariateShortName: ' Short name ', avg: 5, stdDev: 1 },
