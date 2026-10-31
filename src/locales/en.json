@@ -2839,6 +2839,16 @@
       "revokeError": "Failed to revoke API key",
       "deleteError": "Failed to delete API key"
     },
+    "admin": {
+      "title": "API Keys",
+      "help": "Every user's API keys. Revoke a key to stop it working immediately, or delete it to remove it entirely. Key values are never shown.",
+      "empty": "No user has created an API key.",
+      "filter": "Filter by owner or key name",
+      "showDisabled": "Show revoked keys",
+      "owner": "Owner",
+      "revokeConfirm": "Revoke the key '{name}' of {owner}? It will stop working immediately.",
+      "deleteConfirm": "Permanently delete the key '{name}' of {owner}? This cannot be undone."
+    },
     "create": {
       "eyebrow": "NEW KEY",
       "title": "New API Key",

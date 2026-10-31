@@ -620,6 +620,32 @@ describe('ConfigPanel plugin admin tabs', () => {
     expect(wrapper.text()).toContain("You don't have access to any administrative settings.")
   })
 
+  it('shows the API Keys tab only to users with admin:apikeys', () => {
+    const stubs = {
+      PluginParcelOutlet: true,
+      CacheManagementSection: true,
+      DataSourcesSection: true,
+      TagManagementSection: true,
+      PermissionsSection: true,
+      ApiKeysAdminSection: true,
+    }
+    const hidden = mountConfigPanel({ global: { stubs } })
+    expect(hidden.find('[data-testid="config-tab-apikeys"]').exists()).toBe(false)
+    hidden.unmount()
+
+    useAuthStore().setUser({
+      login: 'keyadmin',
+      displayName: 'keyadmin',
+      permissionIdx: { admin: ['admin:apikeys'] },
+    })
+    useUIStore().setConfigPanelSection('apikeys')
+    const shown = mountConfigPanel({ global: { stubs } })
+
+    expect(shown.find('[data-testid="config-tab-apikeys"]').exists()).toBe(true)
+    expect(shown.findComponent({ name: 'ApiKeysAdminSection' }).exists()).toBe(true)
+    expect(shown.text()).not.toContain("You don't have access to any administrative settings.")
+  })
+
   it('falls back to a visible section when the stored section belongs to a since-removed plugin tab', () => {
     withPluginTab()
     useAuthStore().setUser({
