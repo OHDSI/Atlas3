@@ -79,6 +79,10 @@ export default {
   // The instrumented dry run covers the whole existing suite across 373 mutated
   // targets; the 5-minute default is too short for that, so it's raised here.
   dryRunTimeoutMinutes: 20,
+  // Static mutants (module-level code) can't be tied to individual tests, so each one
+  // re-runs the whole suite; they dominate shard runtime and push shards past the job
+  // timeout. They are reported as Ignored and excluded from the score.
+  ignoreStatic: true,
   concurrency: 4,
   mutate,
   thresholds: { high: 80, low: 60, break: null },
