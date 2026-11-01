@@ -1068,4 +1068,217 @@ describe('useRolesStore', () => {
       expect(store.hasPermissions).toBe(true)
     })
   })
+
+  describe('state transitions and list bookkeeping', () => {
+    const roleA: Role = { id: 1, name: 'A', description: null, createdDate: null, modifiedDate: null }
+    const roleB: Role = { id: 2, name: 'B', description: null, createdDate: null, modifiedDate: null }
+    const permA: Permission = { id: 10, permission: 'a:get' }
+    const permB: Permission = { id: 11, permission: 'b:get' }
+    const userA: User = { id: 100, login: 'alice' }
+    const userB: User = { id: 101, login: 'bob' }
+    const ok = <T>(data: T): ApiResult<T> => ({ success: true, data })
+
+    function deferred<T>() {
+      let resolve!: (v: T) => void
+      const promise = new Promise<T>((r) => {
+        resolve = r
+      })
+      return { promise, resolve }
+    }
+
+    it('registers under the "roles" store id with empty initial state', () => {
+      const store = useRolesStore()
+      expect(store.$id).toBe('roles')
+      expect(store.rolePermissions).toEqual([])
+      expect(store.roleUsers).toEqual([])
+      expect(store.isSaving).toBe(false)
+      expect(store.isDeleting).toBe(false)
+      expect(store.isLoading).toBe(false)
+      expect(store.hasError).toBe(false)
+    })
+
+    type FlagCase = {
+      name: string
+      flag: 'isLoadingRoles' | 'isLoadingPermissions' | 'isLoadingUsers' | 'isSaving' | 'isDeleting'
+      service: () => { mockImplementation: (fn: () => Promise<unknown>) => unknown }
+      run: (store: ReturnType<typeof useRolesStore>) => Promise<unknown>
+      value: unknown
+    }
+
+    const flagCases: FlagCase[] = [
+      { name: 'fetchRoleById', flag: 'isLoadingRoles', service: () => vi.spyOn(roleService, 'fetchRoleById') as never, run: s => s.fetchRoleById(1), value: roleA },
+      { name: 'updateRole', flag: 'isSaving', service: () => vi.spyOn(roleService, 'updateRole') as never, run: s => s.updateRole(1, { name: 'A' } as RoleUpdate), value: roleA },
+      { name: 'deleteRole', flag: 'isDeleting', service: () => vi.spyOn(roleService, 'deleteRole') as never, run: s => s.deleteRole(1), value: undefined },
+      { name: 'fetchPermissions', flag: 'isLoadingPermissions', service: () => vi.spyOn(_permissionService, 'fetchAllPermissions') as never, run: s => s.fetchPermissions(), value: [] },
+      { name: 'fetchRolePermissions', flag: 'isLoadingPermissions', service: () => vi.spyOn(roleService, 'getRolePermissions') as never, run: s => s.fetchRolePermissions(1), value: [] },
+      { name: 'assignPermissionToRole', flag: 'isSaving', service: () => vi.spyOn(roleService, 'assignPermissionToRole') as never, run: s => s.assignPermissionToRole(1, 10), value: undefined },
+      { name: 'removePermissionFromRole', flag: 'isSaving', service: () => vi.spyOn(roleService, 'removePermissionFromRole') as never, run: s => s.removePermissionFromRole(1, 10), value: undefined },
+      { name: 'fetchUsers', flag: 'isLoadingUsers', service: () => vi.spyOn(_userService, 'fetchAllUsers') as never, run: s => s.fetchUsers(), value: [] },
+      { name: 'fetchRoleUsers', flag: 'isLoadingUsers', service: () => vi.spyOn(roleService, 'getRoleUsers') as never, run: s => s.fetchRoleUsers(1), value: [] },
+      { name: 'assignUserToRole', flag: 'isSaving', service: () => vi.spyOn(roleService, 'assignUserToRole') as never, run: s => s.assignUserToRole(1, 100), value: undefined },
+      { name: 'removeUserFromRole', flag: 'isSaving', service: () => vi.spyOn(roleService, 'removeUserFromRole') as never, run: s => s.removeUserFromRole(1, 100), value: undefined },
+      { name: 'importRole', flag: 'isSaving', service: () => vi.spyOn(roleService, 'importRole') as never, run: s => s.importRole('{}'), value: roleA },
+    ]
+
+    it.each(flagCases)('$name raises $flag while pending and clears it after success', async (c) => {
+      const d = deferred<unknown>()
+      c.service().mockImplementation(() => d.promise)
+      const store = useRolesStore()
+
+      const pending = c.run(store)
+      expect(store[c.flag]).toBe(true)
+
+      d.resolve(ok(c.value))
+      await pending
+      expect(store[c.flag]).toBe(false)
+    })
+
+    it.each(flagCases)('$name clears $flag after the service throws', async (c) => {
+      c.service().mockImplementation(() => Promise.reject(new Error('boom')))
+      const store = useRolesStore()
+
+      await c.run(store)
+      expect(store[c.flag]).toBe(false)
+    })
+
+    it('updateRole replaces only the matching role', async () => {
+      const updated = { ...roleB, name: 'B2' }
+      vi.spyOn(roleService, 'updateRole').mockResolvedValue(ok(updated))
+      const store = useRolesStore()
+      store.roles = [roleA, roleB]
+
+      await store.updateRole(2, { name: 'B2' } as RoleUpdate)
+
+      expect(store.roles).toEqual([roleA, updated])
+    })
+
+    it('updateRole leaves the list untouched when the role is not loaded', async () => {
+      vi.spyOn(roleService, 'updateRole').mockResolvedValue(ok({ ...roleA, id: 99 }))
+      const store = useRolesStore()
+      store.roles = [roleA, roleB]
+
+      await store.updateRole(99, { name: 'X' } as RoleUpdate)
+
+      expect(Object.keys(store.roles)).toEqual(['0', '1'])
+      expect(store.roles).toEqual([roleA, roleB])
+    })
+
+    it('deleteRole removes only the matching role', async () => {
+      vi.spyOn(roleService, 'deleteRole').mockResolvedValue(ok(undefined))
+      const store = useRolesStore()
+      store.roles = [roleA, roleB]
+
+      await store.deleteRole(2)
+
+      expect(store.roles).toEqual([roleA])
+    })
+
+    it('deleteRole keeps the list when the role is not loaded', async () => {
+      vi.spyOn(roleService, 'deleteRole').mockResolvedValue(ok(undefined))
+      const store = useRolesStore()
+      store.roles = [roleA, roleB]
+
+      await store.deleteRole(99)
+
+      expect(store.roles).toEqual([roleA, roleB])
+    })
+
+    it('assignPermissionToRole pushes the permission matching the id', async () => {
+      vi.spyOn(roleService, 'assignPermissionToRole').mockResolvedValue(ok(undefined))
+      const store = useRolesStore()
+      store.permissions = [permA, permB]
+      store.rolePermissions = [permA]
+
+      await store.assignPermissionToRole(1, 11)
+
+      expect(store.rolePermissions).toEqual([permA, permB])
+    })
+
+    it('removePermissionFromRole removes only the matching permission', async () => {
+      vi.spyOn(roleService, 'removePermissionFromRole').mockResolvedValue(ok(undefined))
+      const store = useRolesStore()
+      store.rolePermissions = [permA, permB]
+
+      await store.removePermissionFromRole(1, 10)
+
+      expect(store.rolePermissions).toEqual([permB])
+    })
+
+    it('removePermissionFromRole keeps the last entry when the id is unknown', async () => {
+      vi.spyOn(roleService, 'removePermissionFromRole').mockResolvedValue(ok(undefined))
+      const store = useRolesStore()
+      store.rolePermissions = [permA, permB]
+
+      await store.removePermissionFromRole(1, 999)
+
+      expect(store.rolePermissions).toEqual([permA, permB])
+    })
+
+    it('assignUserToRole pushes the user matching the id', async () => {
+      vi.spyOn(roleService, 'assignUserToRole').mockResolvedValue(ok(undefined))
+      const store = useRolesStore()
+      store.users = [userA, userB]
+      store.roleUsers = [userA]
+
+      await store.assignUserToRole(1, 101)
+
+      expect(store.roleUsers).toEqual([userA, userB])
+    })
+
+    it('removeUserFromRole removes only the matching user', async () => {
+      vi.spyOn(roleService, 'removeUserFromRole').mockResolvedValue(ok(undefined))
+      const store = useRolesStore()
+      store.roleUsers = [userA, userB]
+
+      await store.removeUserFromRole(1, 100)
+
+      expect(store.roleUsers).toEqual([userB])
+    })
+
+    it('removeUserFromRole keeps the list when the id is unknown', async () => {
+      vi.spyOn(roleService, 'removeUserFromRole').mockResolvedValue(ok(undefined))
+      const store = useRolesStore()
+      store.roleUsers = [userA, userB]
+
+      await store.removeUserFromRole(1, 999)
+
+      expect(store.roleUsers).toEqual([userA, userB])
+    })
+
+    it('importRole does not touch the list on a failure result', async () => {
+      vi.spyOn(roleService, 'importRole').mockResolvedValue({
+        success: false,
+        error: new ApiError('invalid', 0, null),
+      })
+      const store = useRolesStore()
+      store.roles = [roleA]
+
+      await store.importRole('bad')
+
+      expect(store.roles).toEqual([roleA])
+    })
+
+    it('clearState empties every list and error', () => {
+      const store = useRolesStore()
+      store.roles = [roleA]
+      store.currentRole = roleA
+      store.permissions = [permA]
+      store.rolePermissions = [permA]
+      store.users = [userA]
+      store.roleUsers = [userA]
+      store.rolesError = 'r'
+      store.permissionsError = 'p'
+      store.usersError = 'u'
+
+      store.clearState()
+
+      expect(store.roles).toEqual([])
+      expect(store.currentRole).toBeNull()
+      expect(store.permissions).toEqual([])
+      expect(store.rolePermissions).toEqual([])
+      expect(store.users).toEqual([])
+      expect(store.roleUsers).toEqual([])
+      expect(store.hasError).toBe(false)
+    })
+  })
 })
