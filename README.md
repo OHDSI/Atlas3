@@ -1,19 +1,20 @@
-# Atlas3
+# ATLAS v3.0
 
 [![Unit Tests](https://github.com/OHDSI/Atlas3/actions/workflows/unit-tests.yml/badge.svg?branch=develop)](https://github.com/OHDSI/Atlas3/actions/workflows/unit-tests.yml)
 [![E2E Tests](https://github.com/OHDSI/Atlas3/actions/workflows/e2e-tests.yml/badge.svg?branch=develop)](https://github.com/OHDSI/Atlas3/actions/workflows/e2e-tests.yml)
 [![Lint & Type Check](https://github.com/OHDSI/Atlas3/actions/workflows/lint-typecheck.yml/badge.svg?branch=develop)](https://github.com/OHDSI/Atlas3/actions/workflows/lint-typecheck.yml)
 [![Coverage](https://codecov.io/gh/OHDSI/Atlas3/branch/develop/graph/badge.svg)](https://codecov.io/gh/OHDSI/Atlas3)
 
-> **⚠️ Development Version**: This is Atlas 3.0, a new version of OHDSI ATLAS currently under active development.
->
-> **For the stable production-ready version (2.15), please visit: [github.com/OHDSI/Atlas](https://github.com/OHDSI/Atlas)**
-
 A complete reimplementation of OHDSI ATLAS for cohort definition and analysis, built with Vue 3 and TypeScript.
+
+- **Release:** ATLAS v3.0.0 is out. See the [release notes](https://github.com/OHDSI/Atlas3/releases/tag/v3.0.0).
+- **User manual:** [ATLAS v3.0 user manual (PDF)](https://atlas-preview.ohdsi.org/atlas/docs/atlas-manual.pdf), also in this repository at [`public/docs/atlas-manual.pdf`](public/docs/atlas-manual.pdf) and in the application under **User manual** in the navigation bar.
+- **Live instance:** [atlas-preview.ohdsi.org/atlas](https://atlas-preview.ohdsi.org/atlas)
+- **ATLAS 2.15:** the previous release remains available at [github.com/OHDSI/Atlas](https://github.com/OHDSI/Atlas).
 
 ## Overview
 
-Atlas is a reimplementation of OHDSI ATLAS with a focus on:
+ATLAS v3.0 is a reimplementation of OHDSI ATLAS with a focus on:
 - Modern web technologies (Vue 3, TypeScript, Vuetify 3)
 - Improved user experience and performance
 - Comprehensive test coverage
@@ -41,7 +42,7 @@ Extensible architecture allowing custom plugins to add new features and integrat
 - **State Management**: Pinia 2.1+
 - **Routing**: Vue Router 4.2+
 
-Atlas 3.0 uses hash-based client routing. Deep links and callback UI URLs should use the `#/...` form (for example `https://localhost/atlas/#/cohorts` or `https://localhost/atlas/#/oauth/callback`).
+ATLAS v3.0 uses hash-based client routing. Deep links and callback UI URLs should use the `#/...` form (for example `https://localhost/atlas/#/cohorts` or `https://localhost/atlas/#/oauth/callback`).
 - **Charting**: ECharts 6.0+ with vue-echarts
 - **Validation**: Zod (runtime validation)
 - **Build Tool**: Vite 5.4+
@@ -126,7 +127,7 @@ After signing in, an administrator should:
 
 ## Testing
 
-Atlas has comprehensive test coverage across multiple test types:
+ATLAS v3.0 has comprehensive test coverage across multiple test types:
 
 ### Running Tests
 
@@ -177,12 +178,12 @@ npm run check-all
 
 ## Plugin Development
 
-Atlas 3.0 supports a plugin architecture based on single-spa and SystemJS. Reference plugins live in `plugins-dev/`.
+ATLAS v3.0 supports a plugin architecture based on single-spa and SystemJS. Reference plugins live in `plugins-dev/`.
 
 ## Related Projects
 
-- [OHDSI ATLAS](https://github.com/OHDSI/Atlas) — Stable ATLAS 2.15 release (production-ready)
-- [WebAPI](https://github.com/OHDSI/WebAPI) — Backend API service; ATLAS 3.0 requires the `webapi-3.0` branch
+- [OHDSI ATLAS](https://github.com/OHDSI/Atlas) — ATLAS 2.15, the previous release
+- [WebAPI](https://github.com/OHDSI/WebAPI) — Backend API service; ATLAS v3.0 requires the `webapi-3.0` branch
 - [trex](https://github.com/OHDSI/trex) — TrexSQL query cache; loaded into WebAPI as a runtime plugin
 
 ## Support
