@@ -33,7 +33,7 @@ import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
 import { toggleTagFilter } from '@/utils/asset-tags'
 import { useExecutionPolling, isTerminalStatus } from '@/composables/useExecutionPolling'
-import { effectScope } from 'vue'
+import { effectScope, watch } from 'vue'
 
 export interface CharacterizationFilterState {
   searchQuery: string
@@ -480,6 +480,19 @@ export const useCharacterizationStore = defineStore('characterization', () => {
           }
         },
       })
+
+      // useExecutionPolling stops itself when a fetch or onUpdate throws, without telling
+      // the store; without this the stale entry blocks every later pollExecution for the id.
+      watch(
+        polling.isPolling,
+        active => {
+          if (!active) {
+            scope.stop()
+            cleanup()
+          }
+        },
+        { flush: 'sync' }
+      )
 
       // Wrap stop so explicit cancellation also clears the registry.
       const stopAndCleanup = () => {
