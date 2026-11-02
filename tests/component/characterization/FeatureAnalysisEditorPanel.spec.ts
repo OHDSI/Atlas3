@@ -4,6 +4,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
 import FeatureAnalysisEditorPanel from '@/components/characterization/FeatureAnalysisEditorPanel.vue'
+import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { FeatureAnalysis } from '@/models/feature-analysis.types'
 
 vi.mock('@/composables/useI18n', async () => {
@@ -32,9 +33,6 @@ const DrawerStub = defineComponent({
   name: 'VNavigationDrawer',
   props: {
     modelValue: Boolean,
-    location: String,
-    temporary: Boolean,
-    width: Number,
     scrim: Boolean,
   },
   emits: ['update:modelValue'],
@@ -85,6 +83,14 @@ describe('FeatureAnalysisEditorPanel', () => {
     wrapper.findComponent(DrawerStub).vm.$emit('update:modelValue', false)
     expect(requestClose).toHaveBeenCalledTimes(1)
     expect(wrapper.emitted('closed')).toBeUndefined()
+  })
+
+  it('drops the scrim while the concept set editor is open', async () => {
+    const wrapper = mountPanel({ featureAnalysisId: 42 })
+    expect(wrapper.findComponent(DrawerStub).props('scrim')).toBe(true)
+    useConceptSetsStore().editorOpen = true
+    await wrapper.vm.$nextTick()
+    expect(wrapper.findComponent(DrawerStub).props('scrim')).toBe(false)
   })
 
   it('re-emits saved and closed', () => {
