@@ -556,13 +556,20 @@ describe('CharacterizationBuilderView: creating a feature analysis from the desi
     expect(panel(mounted!.wrapper).props('target')).toEqual({ featureAnalysisId: 11 })
   })
 
-  it('reports an updated analysis without changing the draft', async () => {
+  it('refreshes the list after an edit without touching the draft', async () => {
     await mountUnsavedDraft()
-    panel(mounted!.wrapper).vm.$emit('saved', { id: 3, name: 'Existing', type: 'CUSTOM_FE' }, false)
+    const store = useCharacterizationStore()
+    const callsBefore = vi.mocked(listFeatureAnalyses).mock.calls.length
+    const draftBefore = JSON.parse(JSON.stringify(builderState(mounted!.wrapper).draft.featureAnalyses))
+    const dirtyBefore = store.isDirty
+
+    panel(mounted!.wrapper).vm.$emit('saved', { id: 11, name: 'Renamed', type: 'CUSTOM_FE' }, false)
     await flushPromises()
 
-    expect(document.body.textContent).toContain(tr('cc.viewEdit.design.fa.updated', { name: 'Existing' }))
-    expect(useCharacterizationStore().isDirty).toBe(false)
+    expect(vi.mocked(listFeatureAnalyses).mock.calls.length).toBe(callsBefore + 1)
+    expect(builderState(mounted!.wrapper).draft.featureAnalyses).toEqual(draftBefore)
+    expect(store.isDirty).toBe(dirtyBefore)
+    expect(document.body.textContent).toContain('Renamed was updated.')
   })
 
   it('closes the panel when it emits closed', async () => {
