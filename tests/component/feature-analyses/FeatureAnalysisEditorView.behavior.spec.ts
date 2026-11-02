@@ -56,6 +56,7 @@ import {
 } from '@/services/feature-analysis.service'
 import { logger } from '@/utils/logger'
 import FeatureAnalysisEditorView from '@/views/FeatureAnalysisEditorView.vue'
+import FeatureAnalysisEditor from '@/components/feature-analyses/FeatureAnalysisEditor.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
 import { EntityAccessLockButton } from '@/components/access'
@@ -173,7 +174,7 @@ async function mountEditor(path: string, options: MountOptions = {}) {
 }
 
 function setupState(wrapper: VueWrapper): SetupState {
-  return (wrapper.vm as unknown as { $: { setupState: SetupState } }).$.setupState
+  return editorState<SetupState>(wrapper)
 }
 
 function leaveGuard(): LeaveGuard {
@@ -230,6 +231,10 @@ function distributionFA(overrides: Record<string, unknown> = {}): FeatureAnalysi
     conceptSets: [],
     ...overrides,
   } as never
+}
+
+function editorState<T>(wrapper: VueWrapper): T {
+  return (wrapper.findComponent(FeatureAnalysisEditor).vm as unknown as { $: { setupState: T } }).$.setupState
 }
 
 describe('FeatureAnalysisEditorView behavior', () => {

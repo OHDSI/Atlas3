@@ -1,8 +1,8 @@
 import type { LocationQueryValue, RouteLocationRaw } from 'vue-router'
 
-export type FeatureAnalysisCreateKind =
-  | { type: 'CRITERIA_SET'; statType: 'PREVALENCE' | 'DISTRIBUTION' }
-  | { type: 'CUSTOM_FE' }
+import type { FeatureAnalysisCreateKind } from './feature-analysis-create-kind'
+
+export type { FeatureAnalysisCreateKind } from './feature-analysis-create-kind'
 
 export const RETURN_TO_QUERY = 'returnTo'
 export const ADD_FEATURE_ANALYSIS_QUERY = 'addFeatureAnalysis'
