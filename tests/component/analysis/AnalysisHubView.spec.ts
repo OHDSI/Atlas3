@@ -26,15 +26,12 @@ vi.mock('@/composables/usePluginMounts', () => ({
   usePluginMounts: vi.fn(() => ({ items: computed(() => []) })),
 }))
 
-// AnalysisHubView statically imports the four sub-views, which pull in
+// AnalysisHubView statically imports the sub-views, which pull in
 // Pinia stores. The hub itself doesn't touch a store, so we stub the
 // children to keep this spec hermetic — without these stubs each test
 // file would need its own Pinia instance.
-vi.mock('@/views/CharacterizationsView.vue', () => ({
-  default: { name: 'CharacterizationsViewStub', render: () => h('div', { class: 'child-chr' }, 'chr') },
-}))
-vi.mock('@/views/FeatureAnalysesView.vue', () => ({
-  default: { name: 'FeatureAnalysesViewStub', render: () => h('div', { class: 'child-fa' }, 'fa') },
+vi.mock('@/components/analysis/CharacterizationsSection.vue', () => ({
+  default: { name: 'CharacterizationsSectionStub', render: () => h('div', { class: 'child-chr' }, 'chr') },
 }))
 vi.mock('@/views/PathwaysView.vue', () => ({
   default: { name: 'PathwaysViewStub', render: () => h('div', { class: 'child-pw' }, 'pw') },
@@ -61,7 +58,7 @@ function makeRouter(): Router {
         children: [
           { path: '', name: 'analysis-home', component: childStub('home') },
           { path: 'characterizations', name: 'characterizations', component: childStub('chr') },
-          { path: 'feature-analyses', name: 'feature-analyses', component: childStub('fa') },
+          { path: 'characterizations/feature-analyses', name: 'feature-analyses', component: childStub('fa') },
           { path: 'pathways', name: 'pathways', component: childStub('pw') },
           { path: 'incidence-rates', name: 'incidence-rates', component: childStub('ir') },
           { path: 'x/:pluginId/:itemId', name: 'analysis-plugin', component: AnalysisHubView },
@@ -90,7 +87,7 @@ describe('AnalysisHubView', () => {
     })
   }
 
-  it('renders four tabs with the expected labels', async () => {
+  it('renders three core tabs in order', async () => {
     const router = makeRouter()
     await router.push('/analysis/characterizations')
     await router.isReady()
@@ -101,13 +98,44 @@ describe('AnalysisHubView', () => {
     await flushPromises()
 
     const tabs = wrapper.findAll('.v-tab')
-    expect(tabs).toHaveLength(4)
+    expect(tabs).toHaveLength(3)
 
     const labels = tabs.map(t => t.text())
-    expect(labels.some(l => l.includes('Characterizations'))).toBe(true)
-    expect(labels.some(l => l.includes('Feature Analyses'))).toBe(true)
-    expect(labels.some(l => l.includes('Pathways'))).toBe(true)
-    expect(labels.some(l => l.includes('Incidence Rates'))).toBe(true)
+    expect(labels[0]).toContain('Characterizations')
+    expect(labels[1]).toContain('Pathways')
+    expect(labels[2]).toContain('Incidence Rates')
+    expect(labels.some(l => l.includes('Feature Analyses'))).toBe(false)
+  })
+
+  it('marks Characterizations active on /analysis/characterizations/feature-analyses', async () => {
+    const router = makeRouter()
+    await router.push('/analysis/characterizations/feature-analyses')
+    await router.isReady()
+    const wrapper = factory(router)
+    await flushPromises()
+
+    expect(wrapper.find('.v-tab--selected').text()).toContain('Characterizations')
+  })
+
+  it('stores "feature-analyses" as the last tab while the library is open', async () => {
+    const router = makeRouter()
+    await router.push('/analysis/characterizations/feature-analyses')
+    await router.isReady()
+    factory(router)
+    await flushPromises()
+
+    expect(localStorage.getItem('atlas3.analysis.lastTab')).toBe('feature-analyses')
+  })
+
+  it('restores the feature analyses sub-view from a stored "feature-analyses" last tab', async () => {
+    localStorage.setItem('atlas3.analysis.lastTab', 'feature-analyses')
+    const router = makeRouter()
+    await router.push('/analysis')
+    await router.isReady()
+    factory(router)
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('feature-analyses')
   })
 
   it('marks the tab matching the current route as active', async () => {
@@ -198,7 +226,7 @@ describe('AnalysisHubView', () => {
     expect(wrapper.text()).not.toContain('Close')
   })
 
-  it('falls back to feature-analyses when the URL names a plugin tab that is not registered', async () => {
+  it('falls back to characterizations when the URL names a plugin tab that is not registered', async () => {
     vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
 
     const router = makeRouter()
@@ -209,8 +237,8 @@ describe('AnalysisHubView', () => {
 
     const active = wrapper.find('.v-tab--selected')
     expect(active.exists()).toBe(true)
-    expect(active.text()).toContain('Feature Analyses')
-    expect(wrapper.find('.child-fa').exists()).toBe(true)
+    expect(active.text()).toContain('Characterizations')
+    expect(wrapper.find('.child-chr').exists()).toBe(true)
   })
 
   describe('plugin tab placement and default tab (#426)', () => {
@@ -239,13 +267,31 @@ describe('AnalysisHubView', () => {
       return { router, wrapper }
     }
 
-    it('places a plugin tab with insertBefore before that core tab', async () => {
+    it('places a plugin tab with insertBefore a core tab before that tab', async () => {
+      withPluginTab({ insertBefore: 'pathways' })
+      const { wrapper } = await openBareAnalysis()
+
+      const labels = wrapper.findAll('.v-tab').map(t => t.text())
+      expect(labels[1]).toContain('Plugin Tab')
+      expect(labels[2]).toContain('Pathways')
+    })
+
+    it('places a plugin tab anchored insertBefore "feature-analyses" before Characterizations', async () => {
       withPluginTab({ insertBefore: 'feature-analyses' })
       const { wrapper } = await openBareAnalysis()
 
       const labels = wrapper.findAll('.v-tab').map(t => t.text())
       expect(labels[0]).toContain('Plugin Tab')
-      expect(labels[1]).toContain('Feature Analyses')
+      expect(labels[1]).toContain('Characterizations')
+    })
+
+    it('places a plugin tab anchored insertAfter "feature-analyses" after Characterizations', async () => {
+      withPluginTab({ insertAfter: 'feature-analyses' })
+      const { wrapper } = await openBareAnalysis()
+
+      const labels = wrapper.findAll('.v-tab').map(t => t.text())
+      expect(labels[0]).toContain('Characterizations')
+      expect(labels[1]).toContain('Plugin Tab')
     })
 
     it('places a plugin tab with insertAfter after that core tab', async () => {
@@ -253,8 +299,8 @@ describe('AnalysisHubView', () => {
       const { wrapper } = await openBareAnalysis()
 
       const labels = wrapper.findAll('.v-tab').map(t => t.text())
-      expect(labels[1]).toContain('Characterizations')
-      expect(labels[2]).toContain('Plugin Tab')
+      expect(labels[0]).toContain('Characterizations')
+      expect(labels[1]).toContain('Plugin Tab')
     })
 
     it('opens the first tab on a first visit, also when it is a plugin tab', async () => {
@@ -287,14 +333,14 @@ describe('AnalysisHubView', () => {
       localStorage.setItem('atlas3.analysis.lastTab', 'plugin:gone:tab')
       const { router } = await openBareAnalysis()
 
-      expect(router.currentRoute.value.name).toBe('feature-analyses')
+      expect(router.currentRoute.value.name).toBe('characterizations')
     })
 
-    it('keeps Feature Analyses as the default without plugin tabs', async () => {
+    it('keeps Characterizations as the default without plugin tabs', async () => {
       vi.mocked(usePluginMounts).mockReturnValue({ items: computed(() => []) })
       const { router } = await openBareAnalysis()
 
-      expect(router.currentRoute.value.name).toBe('feature-analyses')
+      expect(router.currentRoute.value.name).toBe('characterizations')
     })
 
     it('does not overwrite the saved tab while a plugin tab is not registered yet', async () => {
