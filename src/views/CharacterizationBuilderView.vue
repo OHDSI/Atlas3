@@ -364,6 +364,7 @@
     </AtlasDialog>
 
     <FeatureAnalysisEditorPanel
+      ref="featureAnalysisPanel"
       :target="featureAnalysisPanelTarget"
       @saved="onFeatureAnalysisSaved"
       @closed="featureAnalysisPanelTarget = null"
@@ -430,6 +431,7 @@ const store = useCharacterizationStore()
 const conceptSetsStore = useConceptSetsStore()
 const featureAnalysisPanelTarget = ref<{ featureAnalysisId: number } | { createKind: FeatureAnalysisCreateKind } | null>(null)
 const featureAnalysisPanelOpen = computed(() => featureAnalysisPanelTarget.value !== null)
+const featureAnalysisPanel = ref<{ isDirty: () => boolean } | null>(null)
 provide(CONCEPT_SET_EDITOR_SUPPRESSED, featureAnalysisPanelOpen)
 
 // ---------------------------------------------------------------------------
@@ -995,8 +997,14 @@ onMounted(async () => {
 // Instead we remember the target route and re-push it via router.push once
 // confirmLeaveUnsaved fires (same pattern as CohortBuilder.vue).
 let navigationConfirmed = false
+// A dirty panel editor guards this same route record and its single prompt
+// covers the design too; prompting here as well would ask two or three times.
+function panelOwnsLeavePrompt(): boolean {
+  return featureAnalysisPanelOpen.value && (featureAnalysisPanel.value?.isDirty() ?? false)
+}
+
 onBeforeRouteLeave((to, _from, next) => {
-  if (!store.isDirty || navigationConfirmed) {
+  if (!store.isDirty || navigationConfirmed || panelOwnsLeavePrompt()) {
     navigationConfirmed = false
     next()
     return

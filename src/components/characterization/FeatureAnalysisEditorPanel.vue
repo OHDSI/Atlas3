@@ -7,9 +7,14 @@
     temporary
     :width="drawerWidth"
     :scrim="!conceptSetsStore.editorOpen"
+    disable-route-watcher
     @update:model-value="onDrawerModelValue"
+    @keydown.esc="onEscape"
   >
-    <div class="fa-editor-panel__body">
+    <div
+      class="fa-editor-panel__body"
+      data-testid="cc-fa-panel-body"
+    >
       <FeatureAnalysisEditor
         :key="targetKey"
         ref="editor"
@@ -47,7 +52,13 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const conceptSetsStore = useConceptSetsStore()
 
-const editor = ref<{ requestClose: () => void } | null>(null)
+interface EmbeddedEditor {
+  requestClose: () => void
+  isDirty: () => boolean
+  isPrompting: () => boolean
+}
+
+const editor = ref<EmbeddedEditor | null>(null)
 const drawerWidth = ref<number>(560)
 
 function updateDrawerWidth() {
@@ -86,11 +97,22 @@ const saveLabel = computed(() =>
 function onDrawerModelValue(value: boolean) {
   if (!value) editor.value?.requestClose()
 }
+
+function onEscape() {
+  if (conceptSetsStore.editorOpen || editor.value?.isPrompting()) return
+  editor.value?.requestClose()
+}
+
+defineExpose({
+  isDirty: () => editor.value?.isDirty() ?? false,
+})
 </script>
 
 <style scoped>
 .fa-editor-panel__body {
+  box-sizing: border-box;
   height: 100%;
   overflow-y: auto;
+  padding: 16px 18px 18px;
 }
 </style>

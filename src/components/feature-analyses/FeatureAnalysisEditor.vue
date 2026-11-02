@@ -356,7 +356,6 @@
       severity="danger"
       :closable="true"
       density="compact"
-      class="feature-analysis-editor__embedded-error"
       data-testid="feature-analysis-editor-error"
       @close="store.clearError()"
     >
@@ -1002,7 +1001,11 @@ function requestClose() {
   showUnsavedDialog.value = true
 }
 
-defineExpose({ requestClose })
+defineExpose({
+  requestClose,
+  isDirty: () => dirty.value,
+  isPrompting: () => showUnsavedDialog.value,
+})
 
 function fillCustomSqlSample() {
   customFeSql.value = customSqlTemplate
@@ -1150,22 +1153,30 @@ function cancelLeaveUnsaved() {
   white-space: pre;
 }
 
+.feature-analysis-editor--embedded {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .feature-analysis-editor__embedded-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 8px 12px;
+}
+
+.feature-analysis-editor__embedded-header > :last-child {
+  margin-left: auto;
 }
 
 .feature-analysis-editor__embedded-title {
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 1.25rem;
   font-weight: 500;
   margin: 0;
-}
-
-.feature-analysis-editor__embedded-error {
-  margin-bottom: 12px;
+  overflow-wrap: anywhere;
 }
 </style>
