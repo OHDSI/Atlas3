@@ -161,7 +161,15 @@ function makeRouter(): Router {
  * Mounts the builder behind a real <router-view/> so navigating new -> :id
  * reuses the component instance the way the app does.
  */
-async function mountAt(path: string) {
+const DEFAULT_PERMISSIONS = {
+  create: ['create:cohort-characterization', 'create:feature-analysis'],
+  write: ['write:cohort-characterization'],
+}
+
+async function mountAt(
+  path: string,
+  permissions: { create: string[]; write: string[] } = DEFAULT_PERMISSIONS
+) {
   const router = makeRouter()
   await router.push(path)
   await router.isReady()
@@ -172,10 +180,7 @@ async function mountAt(path: string) {
   authStore.setUser({
     login: 'tester',
     displayName: 'tester',
-    permissionIdx: {
-      create: ['create:cohort-characterization'],
-      write: ['write:cohort-characterization'],
-    },
+    permissionIdx: permissions,
     entityAccess: emptyEntityAccess(),
   })
 
@@ -545,6 +550,113 @@ describe('CharacterizationBuilderView: creating a feature analysis from the desi
     await flushPromises()
 
     expect(mounted.wrapper.get('[data-testid="wb-create-reason"]').text()).toBe('')
+  })
+
+  function createReason(wrapper: VueWrapper): string {
+    return wrapper.get('[data-testid="wb-create-reason"]').text()
+  }
+
+  it('disables Create new while the design has no cohorts', async () => {
+    mounted = await mountAt('/characterizations/5')
+
+    workbench(mounted.wrapper).vm.$emit('update:modelValue', { ...makeDesign(5, 'Named'), cohorts: [] })
+    await flushPromises()
+
+    expect(createReason(mounted.wrapper)).toBe(tr('cc.viewEdit.design.fa.fixDesignFirst'))
+  })
+
+  it('disables Create new while the design has no feature analyses', async () => {
+    mounted = await mountAt('/characterizations/5')
+
+    workbench(mounted.wrapper).vm.$emit('update:modelValue', { ...makeDesign(5, 'Named'), featureAnalyses: [] })
+    await flushPromises()
+
+    expect(createReason(mounted.wrapper)).toBe(tr('cc.viewEdit.design.fa.fixDesignFirst'))
+  })
+
+  it('prefers the name reason over validation errors', async () => {
+    mounted = await mountAt('/characterizations/new')
+
+    expect(createReason(mounted.wrapper)).toBe(tr('cc.viewEdit.design.fa.nameFirst'))
+  })
+
+  it('disables Create new without create:feature-analysis, ahead of the name reason', async () => {
+    mounted = await mountAt('/characterizations/new', {
+      create: ['create:cohort-characterization'],
+      write: ['write:cohort-characterization'],
+    })
+
+    expect(createReason(mounted.wrapper)).toBe(tr('cc.viewEdit.design.fa.noCreatePermission'))
+  })
+
+  it('disables Create new when the characterization cannot be saved', async () => {
+    mounted = await mountAt('/characterizations/5', { create: ['create:feature-analysis'], write: [] })
+
+    expect(createReason(mounted.wrapper)).toBe(tr('cc.viewEdit.design.fa.noSavePermission'))
+  })
+
+  it('disables Create new on a new design without create:cohort-characterization', async () => {
+    mounted = await mountAt('/characterizations/new', { create: ['create:feature-analysis'], write: [] })
+
+    expect(createReason(mounted.wrapper)).toBe(tr('cc.viewEdit.design.fa.noSavePermission'))
+  })
+
+  it('stays on the design when the design fails validation at save time', async () => {
+    mounted = await mountAt('/characterizations/5')
+    const store = useCharacterizationStore()
+    const update = vi.spyOn(store, 'update')
+    const push = vi.spyOn(mounted.router, 'push')
+
+    workbench(mounted.wrapper).vm.$emit('update:modelValue', makeDesign(5, 'Renamed'))
+    await flushPromises()
+    workbench(mounted.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
+    await flushPromises()
+    expect(saveFirstDialogOpen(mounted.wrapper)).toBe(true)
+
+    workbench(mounted.wrapper).vm.$emit('update:modelValue', { ...makeDesign(5, 'Renamed'), cohorts: [] })
+    await flushPromises()
+
+    await confirmSaveFirst()
+    await flushPromises()
+
+    expect(update).not.toHaveBeenCalled()
+    expect(push).not.toHaveBeenCalled()
+    expect(mounted.router.currentRoute.value.path).toBe('/characterizations/5')
+    expect(saveFirstDialogOpen(mounted.wrapper)).toBe(false)
+    expect(store.isDirty).toBe(true)
+  })
+
+  it('keeps the save but does not open the editor when the dialog is dismissed mid-save', async () => {
+    mounted = await mountAt('/characterizations/5')
+    const store = useCharacterizationStore()
+    let finishUpdate: (value: CharacterizationDefinition) => void = () => {}
+    const update = vi.spyOn(store, 'update').mockImplementation(
+      () => new Promise(resolve => { finishUpdate = resolve })
+    )
+    const push = vi.spyOn(mounted.router, 'push')
+
+    workbench(mounted.wrapper).vm.$emit('update:modelValue', makeDesign(5, 'Renamed'))
+    await flushPromises()
+    workbench(mounted.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
+    await flushPromises()
+
+    await confirmSaveFirst()
+    expect(update).toHaveBeenCalledTimes(1)
+
+    const cancel = document.body.querySelector<HTMLElement>('[data-testid="cc-fa-save-first-cancel"]')
+    expect(cancel).not.toBeNull()
+    cancel!.click()
+    await flushPromises()
+    expect(saveFirstDialogOpen(mounted.wrapper)).toBe(false)
+
+    finishUpdate(makeDesign(5, 'Renamed'))
+    await flushPromises()
+    await flushPromises()
+
+    expect(push).not.toHaveBeenCalled()
+    expect(mounted.router.currentRoute.value.path).toBe('/characterizations/5')
+    expect(mounted.wrapper.get('[data-testid="wb-name"]').text()).toBe('Renamed')
+    expect(store.isDirty).toBe(false)
   })
 
   it('links the analysis named by addFeatureAnalysis and marks the draft dirty', async () => {

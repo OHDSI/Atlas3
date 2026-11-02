@@ -576,10 +576,14 @@ const showDeleteConceptSetDialog = ref<boolean>(false)
 const { hasPermission } = usePermissions()
 const { canWrite } = useEntityAccess('cohortCharacterization', draftId)
 
+const hasSavePermission = computed<boolean>(() =>
+  isEditing.value ? canWrite.value : hasPermission('create:cohort-characterization')
+)
+
 const canSave = computed<boolean>(() => {
   if (saving.value || loading.value) return false
   if (draft.value.name.trim().length === 0) return false
-  return isEditing.value ? canWrite.value : hasPermission('create:cohort-characterization')
+  return hasSavePermission.value
 })
 
 const saveDisabledReason = computed<string>(() =>
@@ -587,15 +591,21 @@ const saveDisabledReason = computed<string>(() =>
     entity: tv('const.entityName.characterization'),
     isNew: !isEditing.value,
     hasName: draft.value.name.trim().length > 0,
-    hasPermission: isEditing.value ? canWrite.value : hasPermission('create:cohort-characterization'),
+    hasPermission: hasSavePermission.value,
     isSaving: saving.value || loading.value,
     translate: tv,
   })
 )
 
-const createFeatureAnalysisDisabledReason = computed<string | undefined>(() =>
-  draft.value.name.trim().length === 0 ? t('cc.viewEdit.design.fa.nameFirst').value : undefined
-)
+// Creating a feature analysis saves the design first, so anything that would
+// block that save has to block Create new too.
+const createFeatureAnalysisDisabledReason = computed<string | undefined>(() => {
+  if (!hasPermission('create:feature-analysis')) return t('cc.viewEdit.design.fa.noCreatePermission').value
+  if (!hasSavePermission.value) return t('cc.viewEdit.design.fa.noSavePermission').value
+  if (draft.value.name.trim().length === 0) return t('cc.viewEdit.design.fa.nameFirst').value
+  if (hasValidationErrors.value) return t('cc.viewEdit.design.fa.fixDesignFirst').value
+  return undefined
+})
 
 // ---------------------------------------------------------------------------
 // Hydration
@@ -811,9 +821,10 @@ async function confirmSaveFirst() {
   // push through; the new-characterization push inside handleSave has already
   // settled by the time it returns.
   const id = await handleSave()
+  const dismissed = !showSaveFirstDialog.value || pendingCreateKind.value !== kind
   showSaveFirstDialog.value = false
   pendingCreateKind.value = null
-  if (id !== null) await router.push(createFeatureAnalysisRoute(kind, id))
+  if (id !== null && !dismissed) await router.push(createFeatureAnalysisRoute(kind, id))
 }
 
 function cancelSaveFirst() {
