@@ -415,7 +415,7 @@ describe('LinkedFeatureAnalysisPicker facets (#216)', () => {
     }
 
     async function pick(kind: string) {
-      ;(document.querySelector('[data-testid="linked-fa-picker-create"]') as HTMLElement).click()
+      (document.querySelector('[data-testid="linked-fa-picker-create"]') as HTMLElement).click()
       await flushPromises()
       ;(document.querySelector(`[data-testid="linked-fa-picker-create-${kind}"]`) as HTMLElement).click()
       await flushPromises()
