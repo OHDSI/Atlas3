@@ -2797,6 +2797,9 @@
     }
   },
   "analysis": {
+    "characterizationViews": "Characterization views",
+    "characterizationsHint": "Compare cohorts on shared feature analyses.",
+    "featureAnalysesHint": "Reusable feature definitions you add to a characterization design.",
     "subtitle": "Characterize cohorts, build features, trace pathways, and compute incidence rates."
   },
   "pathwayDefinitions": {
