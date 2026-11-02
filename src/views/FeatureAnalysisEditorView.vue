@@ -75,7 +75,7 @@
             <AtlasIcon class="d-md-none">
               mdi-close
             </AtlasIcon>
-            <span class="d-none d-md-inline">{{ t('common.close').value }}</span>
+            <span class="d-none d-md-inline">{{ (returnToId ? t('featureAnalyses.editor.backToCharacterization') : t('common.close')).value }}</span>
           </AtlasButton>
           <DisabledReasonTooltip :reason="saveDisabledReason">
             <AtlasButton
@@ -85,7 +85,7 @@
               data-testid="feature-analysis-editor-save"
               @click="handleSave"
             >
-              {{ t('common.save') }}
+              {{ returnToId && !isEditing ? t('featureAnalyses.editor.saveAndAdd') : t('common.save') }}
             </AtlasButton>
           </DisabledReasonTooltip>
         </template>
@@ -380,6 +380,12 @@ import { useConceptSetsStore } from '@/stores/concept-sets'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import { logger } from '@/utils/logger'
+import {
+  RETURN_TO_QUERY,
+  parsePositiveId,
+  returnToCharacterizationRoute,
+  type FeatureAnalysisCreateKind,
+} from '@/utils/feature-analysis-return'
 import type {
   FeatureAnalysis,
   FeatureAnalysisDomain,
@@ -413,6 +419,7 @@ const props = defineProps<{
 
 const router = useRouter()
 const route = useRoute()
+const returnToId = computed(() => parsePositiveId(route.query[RETURN_TO_QUERY]))
 const { t, tv } = useI18n()
 const store = useFeatureAnalysesStore()
 const conceptSetsStore = useConceptSetsStore()
@@ -427,11 +434,7 @@ const conceptSetsStore = useConceptSetsStore()
  * as route query params - there is no in-editor type switcher. Returns null
  * when the query is missing or invalid (e.g. direct navigation to `/new`).
  */
-function parseCreateQuery():
-  | { type: 'CRITERIA_SET'; statType: 'PREVALENCE' }
-  | { type: 'CRITERIA_SET'; statType: 'DISTRIBUTION' }
-  | { type: 'CUSTOM_FE' }
-  | null {
+function parseCreateQuery(): FeatureAnalysisCreateKind | null {
   const type = route.query.type
   const statType = route.query.statType
   if (type === 'CUSTOM_FE') return { type: 'CUSTOM_FE' }
@@ -996,7 +999,11 @@ async function handleSave() {
 
     if (saved?.id !== undefined) {
       dirty.value = false
-      await router.push(`/feature-analyses/${saved.id}`)
+      if (returnToId.value !== null && !isEditing.value) {
+        await router.push(returnToCharacterizationRoute(returnToId.value, saved.id))
+      } else {
+        await router.push(`/feature-analyses/${saved.id}`)
+      }
     } else if (!store.error) {
       showSnackbar(t('cc.fa.saveError').value, 'error')
     }
@@ -1011,7 +1018,7 @@ async function handleSave() {
 function handleBack() {
   // onBeforeRouteLeave is the single gatekeeper for the unsaved-changes
   // prompt; confirming here too would show the dialog twice for one click.
-  router.push('/feature-analyses')
+  router.push(returnToId.value !== null ? returnToCharacterizationRoute(returnToId.value) : '/feature-analyses')
 }
 
 function fillCustomSqlSample() {
