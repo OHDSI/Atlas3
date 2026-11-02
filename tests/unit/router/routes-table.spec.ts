@@ -106,7 +106,7 @@ const componentRoutes: ComponentRoute[] = [
 
 const analysisChildren: ComponentRoute[] = [
   { path: '', name: 'analysis-home', view: 'AnalysisHubView', meta: { requiresAuth: true, titleKey: 'route.analysis.title', agentVisible: false } },
-  { path: 'feature-analyses', name: 'feature-analyses', view: 'FeatureAnalysesView', meta: auth('route.featureAnalyses.title', 'Feature analyses') },
+  { path: 'characterizations/feature-analyses', name: 'feature-analyses', view: 'FeatureAnalysesView', meta: auth('route.featureAnalyses.title', 'Feature analyses') },
   { path: 'characterizations', name: 'characterizations', view: 'CharacterizationsView', meta: auth('route.characterizations.title', 'Characterizations') },
   { path: 'pathways', name: 'pathways', view: 'PathwaysView', meta: auth('route.pathways.title', 'Pathways') },
   { path: 'incidence-rates', name: 'incidence-rates', view: 'IncidenceRatesView', meta: auth('route.incidenceRates.title', 'Incidence rates') },
@@ -190,7 +190,7 @@ describe('route table', () => {
     expect(hub.name).toBeUndefined()
     expect(hub.meta).toEqual({ requiresAuth: true, titleKey: 'route.analysis.title' })
     expect(await loadView(hub)).toEqual({ name: 'AnalysisHubView' })
-    expect(hub.children?.map((c) => c.path)).toEqual(analysisChildren.map((c) => c.path))
+    expect(hub.children?.map((c) => c.path).filter((p) => p !== 'feature-analyses')).toEqual(analysisChildren.map((c) => c.path))
   })
 
   it.each(analysisChildren)('analysis child "$path" is $name', async (expected) => {
@@ -198,6 +198,11 @@ describe('route table', () => {
     expect(child.name).toBe(expected.name)
     expect(child.meta).toEqual(expected.meta)
     expect(await loadView(child)).toEqual({ name: expected.view })
+  })
+
+  it('redirects the old analysis/feature-analyses child to the moved route', () => {
+    const child = byPath('feature-analyses', byPath('/analysis').children ?? [])
+    expect(child.redirect).toEqual({ name: 'feature-analyses' })
   })
 
   it.each(staticRedirects)('%s redirects statically', (path, target) => {
