@@ -13,9 +13,22 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { usePluginMounts } from '@/composables/usePluginMounts'
 
+const translatedKeys = vi.hoisted(() => [] as string[])
+
 vi.mock('@/composables/useI18n', async () => {
-  const { mockUseI18n } = await import('../../helpers/i18n-mock')
-  return mockUseI18n
+  const { createI18nMock } = await import('../../helpers/i18n-mock')
+  return {
+    useI18n: () => {
+      const i18n = createI18nMock()
+      return {
+        ...i18n,
+        t: (...args: Parameters<typeof i18n.t>) => {
+          translatedKeys.push(args[0])
+          return i18n.t(...args)
+        },
+      }
+    },
+  }
 })
 
 vi.mock('@/plugins/index', () => ({
@@ -74,6 +87,7 @@ describe('AnalysisHubView', () => {
   beforeEach(() => {
     vuetify = createVuetify({ components, directives })
     localStorage.clear()
+    translatedKeys.length = 0
   })
 
   function factory(router: Router) {
@@ -105,6 +119,17 @@ describe('AnalysisHubView', () => {
     expect(labels[1]).toContain('Pathways')
     expect(labels[2]).toContain('Incidence Rates')
     expect(labels.some(l => l.includes('Feature Analyses'))).toBe(false)
+  })
+
+  it('does not look up a translation for the hint-less Characterizations tab', async () => {
+    const router = makeRouter()
+    await router.push('/analysis/characterizations')
+    await router.isReady()
+    const wrapper = factory(router)
+    await flushPromises()
+
+    expect(wrapper.find('.v-tab--selected').text()).toContain('Characterizations')
+    expect(translatedKeys).not.toContain('')
   })
 
   it('marks Characterizations active on /analysis/characterizations/feature-analyses', async () => {

@@ -289,6 +289,7 @@ const subtitle = computed(
 const activeTabHint = computed(() => {
   const tab = activeTab.value
   if (tab.plugin) return tab.defaultHint
+  if (!tab.hintKey) return ''
   return t(tab.hintKey, tab.defaultHint).value
 })
 </script>

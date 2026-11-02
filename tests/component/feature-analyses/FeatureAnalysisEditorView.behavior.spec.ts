@@ -323,6 +323,13 @@ describe('FeatureAnalysisEditorView behavior', () => {
       expect(mounted.wrapper.get('[data-testid="feature-analysis-editor-close"]').text()).toContain(tr('featureAnalyses.editor.backToCharacterization'))
     })
 
+    it('gives the icon-only Close button the return-mode label as its accessible name', async () => {
+      mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE&returnTo=5')
+      expect(mounted.wrapper.get('[data-testid="feature-analysis-editor-close"]').attributes('aria-label')).toBe(
+        tr('featureAnalyses.editor.backToCharacterization')
+      )
+    })
+
     it('labels Save as "Save and add" when creating in return mode', async () => {
       mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE&returnTo=5')
       expect(saveButton(mounted.wrapper).textContent).toContain(tr('featureAnalyses.editor.saveAndAdd'))
@@ -361,6 +368,7 @@ describe('FeatureAnalysisEditorView behavior', () => {
       )
       mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE&returnTo=abc')
       expect(mounted.wrapper.get('[data-testid="feature-analysis-editor-close"]').text()).toContain(tr('common.close'))
+      expect(mounted.wrapper.get('[data-testid="feature-analysis-editor-close"]').attributes('aria-label')).toBe(tr('common.close'))
       const pushSpy = vi.spyOn(mounted.router, 'push')
       await mounted.wrapper.get('[data-testid="feature-analysis-editor-close"]').trigger('click')
       await settle()

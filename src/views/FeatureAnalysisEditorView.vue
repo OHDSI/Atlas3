@@ -70,12 +70,13 @@
             variant="ghost"
             size="sm"
             data-testid="feature-analysis-editor-close"
+            :aria-label="closeLabel"
             @click="handleBack"
           >
             <AtlasIcon class="d-md-none">
               mdi-close
             </AtlasIcon>
-            <span class="d-none d-md-inline">{{ (returnToId ? t('featureAnalyses.editor.backToCharacterization') : t('common.close')).value }}</span>
+            <span class="d-none d-md-inline">{{ closeLabel }}</span>
           </AtlasButton>
           <DisabledReasonTooltip :reason="saveDisabledReason">
             <AtlasButton
@@ -420,6 +421,9 @@ const props = defineProps<{
 const router = useRouter()
 const route = useRoute()
 const returnToId = computed(() => parsePositiveId(route.query[RETURN_TO_QUERY]))
+const closeLabel = computed(() =>
+  (returnToId.value !== null ? t('featureAnalyses.editor.backToCharacterization') : t('common.close')).value
+)
 const { t, tv } = useI18n()
 const store = useFeatureAnalysesStore()
 const conceptSetsStore = useConceptSetsStore()
