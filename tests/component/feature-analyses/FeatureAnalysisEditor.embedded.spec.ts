@@ -9,6 +9,7 @@ import { createRouter, createMemoryHistory, type Router } from 'vue-router'
 import { defineComponent, h } from 'vue'
 
 import { useAuthStore } from '@/stores/auth'
+import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
 import { emptyEntityAccess } from '@/models/auth.types'
 
 vi.mock('@/composables/useI18n', async () => {
@@ -103,6 +104,7 @@ async function mountEmbedded() {
       },
     }
   )
+  await vi.waitFor(() => expect(wrapper.findComponent(FeatureAnalysisEditor).exists()).toBe(true))
   await flushPromises()
   return { wrapper, router }
 }
@@ -112,7 +114,11 @@ function editor(wrapper: VueWrapper) {
 }
 
 async function typeName(wrapper: VueWrapper, value: string) {
-  await wrapper.get('[data-testid="feature-analysis-editor-name"] input').setValue(value)
+  const input = wrapper.get('[data-testid="feature-analysis-editor-name"] input')
+  await vi.waitFor(async () => {
+    await input.setValue(value)
+    expect((input.element as HTMLInputElement).value).toBe(value)
+  })
   await flushPromises()
 }
 
@@ -137,8 +143,27 @@ describe('FeatureAnalysisEditor embedded', () => {
 
     expect(wrapper.find('[data-testid="feature-analysis-editor-embedded"]').exists()).toBe(true)
     expect(wrapper.findComponent({ name: 'AnalysisBuilderShell' }).exists()).toBe(false)
-    expect(wrapper.find('h2').exists()).toBe(true)
+    expect(wrapper.find('.feature-analysis-editor__embedded-title').exists()).toBe(true)
     expect(wrapper.find('[data-testid="feature-analysis-editor-access-icon"]').exists()).toBe(false)
+  })
+
+  it('shows the store error and clears it when dismissed', async () => {
+    mounted = await mountEmbedded()
+    const { wrapper } = mounted
+    const store = useFeatureAnalysesStore()
+    const clearSpy = vi.spyOn(store, 'clearError')
+
+    store.error = 'Boom'
+    await flushPromises()
+    const alert = wrapper.get('[data-testid="feature-analysis-editor-error"]')
+    expect(alert.text()).toContain('Boom')
+
+    await alert.get('button').trigger('click')
+    await flushPromises()
+
+    expect(clearSpy).toHaveBeenCalled()
+    expect(store.error).toBeNull()
+    expect(wrapper.find('[data-testid="feature-analysis-editor-error"]').exists()).toBe(false)
   })
 
   it('emits saved with created=true after creating', async () => {
@@ -149,8 +174,11 @@ describe('FeatureAnalysisEditor embedded', () => {
     const { wrapper } = mounted
 
     await typeName(wrapper, 'Prior insulin use')
+    await vi.waitFor(() =>
+      expect(wrapper.get('[data-testid="feature-analysis-editor-save"]').attributes('disabled')).toBeUndefined()
+    )
     await wrapper.get('[data-testid="feature-analysis-editor-save"]').trigger('click')
-    await flushPromises()
+    await vi.waitFor(() => expect(editor(wrapper).emitted('saved')).toBeTruthy())
 
     expect(editor(wrapper).emitted('saved')?.[0]).toEqual([
       expect.objectContaining({ id: 501 }),

@@ -1150,7 +1150,6 @@ function cancelLeaveUnsaved() {
   white-space: pre;
 }
 
-
 .feature-analysis-editor__embedded-header {
   display: flex;
   align-items: center;
