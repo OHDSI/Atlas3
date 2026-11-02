@@ -1,19 +1,19 @@
-# Atlas3
+# ATLAS v3.0
 
 [![Unit Tests](https://github.com/OHDSI/Atlas3/actions/workflows/unit-tests.yml/badge.svg?branch=develop)](https://github.com/OHDSI/Atlas3/actions/workflows/unit-tests.yml)
 [![E2E Tests](https://github.com/OHDSI/Atlas3/actions/workflows/e2e-tests.yml/badge.svg?branch=develop)](https://github.com/OHDSI/Atlas3/actions/workflows/e2e-tests.yml)
 [![Lint & Type Check](https://github.com/OHDSI/Atlas3/actions/workflows/lint-typecheck.yml/badge.svg?branch=develop)](https://github.com/OHDSI/Atlas3/actions/workflows/lint-typecheck.yml)
 [![Coverage](https://codecov.io/gh/OHDSI/Atlas3/branch/develop/graph/badge.svg)](https://codecov.io/gh/OHDSI/Atlas3)
 
-> **⚠️ Development Version**: This is Atlas 3.0, a new version of OHDSI ATLAS currently under active development.
->
-> **For the stable production-ready version (2.15), please visit: [github.com/OHDSI/Atlas](https://github.com/OHDSI/Atlas)**
-
 A complete reimplementation of OHDSI ATLAS for cohort definition and analysis, built with Vue 3 and TypeScript.
+
+- **Release:** ATLAS v3.0.0 is out. See the [release notes](https://github.com/OHDSI/Atlas3/releases/tag/v3.0.0).
+- **User manual:** [ATLAS v3.0 user manual (PDF)](https://atlas-preview.ohdsi.org/atlas/docs/atlas-manual.pdf), also in this repository at [`public/docs/atlas-manual.pdf`](public/docs/atlas-manual.pdf) and in the application under **User manual** in the navigation bar.
+- **Live instance:** [atlas-preview.ohdsi.org/atlas](https://atlas-preview.ohdsi.org/atlas)
 
 ## Overview
 
-Atlas is a reimplementation of OHDSI ATLAS with a focus on:
+ATLAS v3.0 is a reimplementation of OHDSI ATLAS with a focus on:
 - Modern web technologies (Vue 3, TypeScript, Vuetify 3)
 - Improved user experience and performance
 - Comprehensive test coverage
@@ -35,17 +35,17 @@ Extensible architecture allowing custom plugins to add new features and integrat
 
 ## Technology Stack
 
-- **Frontend Framework**: Vue 3.4+ (Composition API)
+- **Frontend Framework**: Vue 3.5+ (Composition API)
 - **UI Components**: Vuetify 3.5+ (Material Design)
 - **Language**: TypeScript 5.9+ (strict mode)
 - **State Management**: Pinia 2.1+
 - **Routing**: Vue Router 4.2+
 
-Atlas 3.0 uses hash-based client routing. Deep links and callback UI URLs should use the `#/...` form (for example `https://localhost/atlas/#/cohorts` or `https://localhost/atlas/#/oauth/callback`).
+ATLAS v3.0 uses hash-based client routing. Deep links and callback UI URLs should use the `#/...` form (for example `https://localhost/atlas/#/cohorts` or `https://localhost/atlas/#/oauth/callback`).
 - **Charting**: ECharts 6.0+ with vue-echarts
 - **Validation**: Zod (runtime validation)
-- **Build Tool**: Vite 5.4+
-- **Backend**: WebAPI 3.0 (Java/Spring Boot 3.5, OpenJDK 17+)
+- **Build Tool**: Vite 7.3+
+- **Backend**: WebAPI 3.0 (Java 21, Spring Boot 3.5)
 - **Cache**: TrexSQL (DuckDB-backed query cache, loaded as a WebAPI plugin)
 
 ## Setup
@@ -56,11 +56,11 @@ A working ATLAS v3.0 deployment has three independent components:
 - **The WebAPI service** — a Java/Spring application that exposes the REST endpoints ATLAS talks to, executes cohort SQL against the configured CDM sources, and runs Flyway migrations against its own schema on first boot.
 - **The ATLAS v3.0 frontend** — a Vue 3 single-page application, served either by the Vite development server or as a static bundle behind a reverse proxy.
 
-> **ATLAS v3.0 requires WebAPI v3.0.** The 2.x line of WebAPI that the production ATLAS uses — and that ships with OHDSI Broadsea — is **not** compatible. When you clone WebAPI, check out the `webapi-3.0` branch explicitly. The development `docker-compose.yml` pulls the matching prebuilt image `ghcr.io/ohdsi/webapi:3.0-dev` for this reason.
+> **ATLAS v3.0 requires WebAPI v3.0.** The 2.x line of WebAPI that earlier ATLAS releases use — and that ships with OHDSI Broadsea — is **not** compatible. When you clone WebAPI, check out the `webapi-3.0` branch explicitly. The development `docker-compose.yml` builds on the matching prebuilt image `ghcr.io/ohdsi/webapi:3.0-dev` for this reason.
 
 ### Prerequisites
 
-- Docker and Docker Compose v2 (the fastest path), **or** for native installs: PostgreSQL 12+, JDK 17, Maven 3.9+, Node.js 18+ and `npm`.
+- Docker and Docker Compose v2 (the fastest path), **or** for native installs: PostgreSQL 12+, JDK 21, Maven 3.9+, Node.js 20.19+ (or 22.12+) and `npm`.
 - Git.
 - Roughly 4 GB of free disk for container images and the WebAPI Flyway baseline.
 - A WebAPI build from the v3.0 line — container image `ghcr.io/ohdsi/webapi:3.0-dev` or a local build of the `webapi-3.0` branch.
@@ -77,11 +77,13 @@ cp .env.example .env   # optional; see "Using other host ports" below
 docker compose up
 ```
 
-The compose file pulls the prebuilt `ghcr.io/ohdsi/webapi:3.0-dev` image; the sibling `WebAPI` checkout is needed only if you swap the image for a local build. The first boot takes a few minutes while WebAPI runs Flyway migrations and the `atlasdb/` scripts seed a default administrator.
+The compose file builds a local WebAPI image from the prebuilt `ghcr.io/ohdsi/webapi:3.0-dev` image, pinned by digest, and adds a pinned TrexSQL release (`docker/webapi/Dockerfile`); the sibling `WebAPI` checkout is needed only if you build WebAPI yourself. The first boot takes a few minutes while WebAPI runs Flyway migrations and the `atlasdb/` scripts seed the default users.
+
+`.env.example` also turns on the optional Pythia assistant, which needs a Bedrock key in `AWS_BEARER_TOKEN_BEDROCK`. Set `VITE_BAO_AGENT_ENABLED=false` in `.env` to leave it off.
 
 When the stack is healthy:
 
-- ATLAS v3.0 — https://localhost (accept the self-signed certificate)
+- ATLAS v3.0 — https://localhost (accept the self-signed certificate; sign in as `admin` / `admin`)
 - WebAPI — http://localhost:8080/WebAPI/info
 - PostgreSQL — `localhost:5433` (in-container port 5432)
 
@@ -112,11 +114,11 @@ npm run build        # Production bundle in dist/
 npm run preview      # Serve the production bundle locally
 ```
 
-The dev server's `/WebAPI` proxy target is hard-coded to `http://localhost:8080` in `vite.config.ts`; edit `proxy.target` to point at a different backend. `VITE_WEBAPI_URL` is read by the application bundle for production builds where the frontend is served from a different origin; it does not override the dev proxy target.
+The dev server proxies `/WebAPI` to `http://localhost:8080`. To use a different backend, set `WEBAPI_URL`, for example `WEBAPI_URL=https://example.org npm run dev`. A deployed bundle reads the WebAPI address at runtime from `config-local.json` next to `index.html` (`api.url`); see `public/config-local.example.json`.
 
 ### First-time login and creating users
 
-The default DB-auth path expects a row in the `webapi.auth_user` table whose password column is a bcrypt hash of the chosen plaintext. The compose seed scripts in `atlasdb/` create an initial administrator. To add more users, either insert rows into `webapi.auth_user` directly or, if your deployment exposes LDAP/OAuth/SAML/OIDC, configure the corresponding `SECURITY_AUTH_*` properties on the WebAPI side.
+The default DB-auth path expects a row in the `webapi.auth_user` table whose password column is a bcrypt hash of the chosen plaintext. The compose seed scripts in `atlasdb/` create two users, `admin` / `admin` and `ohdsi` / `ohdsi`. To add more users, either insert rows into `webapi.auth_user` directly or, if your deployment exposes LDAP/OAuth/SAML/OIDC, configure the corresponding `SECURITY_AUTH_*` properties on the WebAPI side.
 
 After signing in, an administrator should:
 
@@ -126,7 +128,7 @@ After signing in, an administrator should:
 
 ## Testing
 
-Atlas has comprehensive test coverage across multiple test types:
+ATLAS v3.0 has comprehensive test coverage across multiple test types:
 
 ### Running Tests
 
@@ -152,7 +154,7 @@ npm run test:e2e:report
 # Run the visual-comparison subset only
 npm run test:visual
 
-# Type-check, lint, unit tests, and production build
+# Type-check, lint, i18n key check, unit tests, and production build
 npm run check-all
 ```
 
@@ -177,12 +179,11 @@ npm run check-all
 
 ## Plugin Development
 
-Atlas 3.0 supports a plugin architecture based on single-spa and SystemJS. Reference plugins live in `plugins-dev/`.
+ATLAS v3.0 supports a plugin architecture based on single-spa and SystemJS. Reference plugins live in `plugins-dev/`.
 
 ## Related Projects
 
-- [OHDSI ATLAS](https://github.com/OHDSI/Atlas) — Stable ATLAS 2.15 release (production-ready)
-- [WebAPI](https://github.com/OHDSI/WebAPI) — Backend API service; ATLAS 3.0 requires the `webapi-3.0` branch
+- [WebAPI](https://github.com/OHDSI/WebAPI) — Backend API service; ATLAS v3.0 requires the `webapi-3.0` branch
 - [trex](https://github.com/OHDSI/trex) — TrexSQL query cache; loaded into WebAPI as a runtime plugin
 
 ## Support

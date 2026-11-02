@@ -65,7 +65,8 @@ test.describe('Concept set optimization', () => {
     await page.locator('table tbody tr', { hasText: 'Test Concept Set 1' }).click()
     await expect(page.getByText('Type 2 diabetes mellitus')).toBeVisible()
 
-    await page.getByTestId('cs-editor-optimize-btn').click()
+    await page.getByTestId('cs-editor-actions-menu').click()
+    await page.getByTestId('cs-editor-optimize-menu-item').click()
 
     await expect(page.getByTestId('cs-optimize-removed')).toContainText('Type 2 diabetes mellitus')
     await expect(page.getByTestId('cs-optimize-optimized')).toContainText('Diabetes mellitus')
@@ -122,7 +123,8 @@ test.describe('Concept set optimization', () => {
     )
 
     await page.locator('table tbody tr', { hasText: 'Test Concept Set 1' }).click()
-    await page.getByTestId('cs-editor-optimize-btn').click()
+    await page.getByTestId('cs-editor-actions-menu').click()
+    await page.getByTestId('cs-editor-optimize-menu-item').click()
     await page.getByTestId('cs-optimize-create').click()
     await expect(page.getByTestId('cs-optimize-new-name').locator('input')).toHaveValue(
       'Test Concept Set 1 - OPTIMIZED'

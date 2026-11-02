@@ -137,6 +137,7 @@ describe('mapCharacterizationResults', () => {
     expect(dist.avg[DEFAULT_STRATA_KEY]['1']).toBe(7.2)
     expect(dist.median[DEFAULT_STRATA_KEY]['1']).toBe(7)
     expect(dist.max[DEFAULT_STRATA_KEY]['1']).toBe(30)
+    expect(dist.count?.[DEFAULT_STRATA_KEY]?.['1']).toBe(1234)
     expect(dist.cohorts).toEqual([{ id: 1, name: 'Cohort A' }])
   })
 
@@ -175,7 +176,7 @@ describe('mapCharacterizationResults', () => {
     const out = mapCharacterizationResults([{
       analysisId: 1, analysisName: 'Measures', covariateId: 2, covariateName: 'Weight', conceptId: 3,
       resultType: 'DISTRIBUTION', targetCohortId: 10, targetCohortName: 'Target', targetAvg: 70,
-      targetStdDev: 8, targetMin: 45, targetP10: 50, targetP25: 60, targetMedian: 70,
+      targetCount: 40, comparatorCount: 35, targetStdDev: 8, targetMin: 45, targetP10: 50, targetP25: 60, targetMedian: 70,
       targetP75: 80, targetP90: 90, targetMax: 100, comparatorCohortId: 20,
       comparatorCohortName: 'Comparator', comparatorAvg: 75, comparatorStdDev: 9,
       comparatorMin: 50, comparatorP10: 55, comparatorP25: 65, comparatorMedian: 75,
@@ -187,6 +188,21 @@ describe('mapCharacterizationResults', () => {
     expect(distribution.cohorts).toEqual([{ id: 10, name: 'Target' }, { id: 20, name: 'Comparator' }])
     expect(distribution.avg.overall).toEqual({ '10': 70, '20': 75 })
     expect(distribution.max.overall).toEqual({ '10': 100, '20': 105 })
+    expect(distribution.count?.overall).toEqual({ '10': 40, '20': 35 })
+  })
+
+  it('keeps the full name of criteria-set and custom covariates instead of the colon-split short name', () => {
+    const out = mapCharacterizationResults([
+      { analysisId: 1, covariateId: 1, cohortId: 3, faType: 'CRITERIA_SET', count: 1, pct: 1,
+        covariateName: 'Diabetes: type 1', covariateShortName: ' type 1' },
+      { analysisId: 1, covariateId: 2, cohortId: 3, faType: 'CUSTOM_FE', count: 1, pct: 1,
+        covariateName: 'Lab: HbA1c', covariateShortName: ' HbA1c' },
+      { analysisId: 2, covariateId: 3, cohortId: 3, faType: 'PRESET', count: 1, pct: 1,
+        covariateName: 'condition_era group during day -365 through 0 days relative to index: Diabetes',
+        covariateShortName: ' Diabetes' },
+    ])
+
+    expect(out.prevalence.map(row => row.covariateName)).toEqual(['Diabetes: type 1', 'Lab: HbA1c', 'Diabetes'])
   })
 
   it('infers distribution rows and skips unclassifiable or cohortless rows', () => {

@@ -268,9 +268,14 @@ function addTemporal(stat: PrevalenceStat, cohort: string, row: RawRow): void {
   stat.temporalByCohort[cohort] = { temporal, temporalAnnual }
 }
 
+// WebAPI derives covariateShortName by splitting at ':' for every analysis
+// type, but criteria-set and custom feature names are user-authored, so the
+// part before the colon is meaningful (matches Atlas 2.15).
+const FULL_NAME_FA_TYPES: ReadonlySet<FeatureAnalysisType> = new Set(['CRITERIA_SET', 'CUSTOM_FE'])
+
 function pickCovariateName(row: RawRow): string {
   const short = row.covariateShortName?.trim()
-  if (short) return short
+  if (short && !(row.faType && FULL_NAME_FA_TYPES.has(row.faType) && row.covariateName)) return short
   return row.covariateName ?? `Covariate ${row.covariateId}`
 }
 
@@ -304,6 +309,7 @@ function newDistributionStat(row: RawRow): DistributionStat {
     faType: row.faType,
     cohorts: [],
     strataNames: {},
+    count: {},
     avg: {},
     stdDev: {},
     min: {},
@@ -395,6 +401,7 @@ export function mapCharacterizationResults(raw: unknown[]): MappedCharacterizati
         }
         ensureCohort(stat.cohorts, row)
         stat.strataNames[sKey] = row.strataName ?? sKey
+        setNested(stat.count ??= {}, sKey, cKey, row.count)
         setNested(stat.avg, sKey, cKey, row.avg)
         setNested(stat.stdDev, sKey, cKey, row.stdDev)
         setNested(stat.min, sKey, cKey, row.min)

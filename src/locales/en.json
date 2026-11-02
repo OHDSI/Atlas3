@@ -665,6 +665,7 @@
       "temporalAvailable": "Temporal distribution available in Explore",
       "timeSeriesComparativeNote": "Annual and temporal distributions are only reported for a single cohort. Select one cohort in the filters to see them.",
       "columnWithN": "{label} (N={n})",
+      "personsAnalyzed": "Persons analyzed",
       "annual": "Annual",
       "daily": "Daily",
       "year": "Year"
@@ -1498,6 +1499,7 @@
     "diff": "Diff",
     "remain": "Remain",
     "personCount": "Person Count",
+    "personsCount": "Persons",
     "rc": "RC",
     "refreshCache": "Refresh cache",
     "remove": "Remove",

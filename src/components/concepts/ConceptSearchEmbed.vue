@@ -4,6 +4,7 @@
       ref="search"
       :store="store"
       search-variant="embedded"
+      linkable
       :domain-filter="domainFilter"
       :preselected-concept-ids="preselectedConceptIds"
       :selection-mode="selectionMode"

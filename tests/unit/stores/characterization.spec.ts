@@ -573,6 +573,23 @@ describe('Characterization Store', () => {
         await vi.advanceTimersByTimeAsync(10000)
         expect(vi.mocked(getCharacterizationExecution).mock.calls.length).toBe(callsBefore)
       })
+
+      it('lets the same execution be polled again after a failed fetch', async () => {
+        const store = useCharacterizationStore()
+        store.executions = [{ ...baseExec, id: 600, status: 'RUNNING' }]
+        vi.mocked(getCharacterizationExecution)
+          .mockResolvedValueOnce(apiErr('network down'))
+          .mockResolvedValueOnce(success({ ...baseExec, id: 600, status: 'COMPLETED' }))
+
+        store.pollExecution(600)
+        await vi.advanceTimersByTimeAsync(0)
+        expect(store.pollingHandles.has(600)).toBe(false)
+
+        store.pollExecution(600)
+        await vi.advanceTimersByTimeAsync(0)
+        expect(getCharacterizationExecution).toHaveBeenCalledTimes(2)
+        expect(store.executions[0]?.status).toBe('COMPLETED')
+      })
     })
   })
 })

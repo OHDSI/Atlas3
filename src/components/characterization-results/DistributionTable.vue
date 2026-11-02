@@ -94,7 +94,7 @@ interface Partition {
   label: string
 }
 
-type StatisticField = 'avg' | 'min' | 'p25' | 'median' | 'p75' | 'max'
+type StatisticField = 'count' | 'avg' | 'min' | 'p25' | 'median' | 'p75' | 'max'
 
 interface Statistic {
   /** The row field this column sorts by. */
@@ -128,6 +128,11 @@ function formatValue(value: number | undefined): string {
   return typeof value === 'number' && Number.isFinite(value) ? value.toFixed(2) : '—'
 }
 
+function formatCount(row: DistributionStat, partitionKey: string, cohortId: number): string {
+  const persons = row.count ? value(row.count, partitionKey, cohortId) : undefined
+  return typeof persons === 'number' && Number.isFinite(persons) ? persons.toLocaleString() : '—'
+}
+
 function formatAvgSd(row: DistributionStat, partitionKey: string, cohortId: number): string {
   const average = value(row.avg, partitionKey, cohortId)
   const standardDeviation = value(row.stdDev, partitionKey, cohortId)
@@ -144,6 +149,7 @@ function formatStatistic(
 }
 
 const statistics = computed<Statistic[]>(() => [
+  { field: 'count', label: tv('columns.personsCount'), format: formatCount },
   { field: 'avg', label: tv('characterizations.results.table.avgSd'), format: formatAvgSd },
   { field: 'min', label: tv('characterizations.results.table.min'), format: (row, key, cohortId) => formatStatistic(row.min, key, cohortId) },
   { field: 'p25', label: tv('columns.p25'), format: (row, key, cohortId) => formatStatistic(row.p25, key, cohortId) },
@@ -155,7 +161,7 @@ const statistics = computed<Statistic[]>(() => [
 const partitions = computed<Partition[]>(() => {
   const names = new Map<string, string>()
   for (const row of props.rows) {
-    for (const values of [row.avg, row.stdDev, row.min, row.p25, row.median, row.p75, row.max]) {
+    for (const values of [row.count ?? {}, row.avg, row.stdDev, row.min, row.p25, row.median, row.p75, row.max]) {
       for (const key of Object.keys(values)) {
         names.set(key, isOverall(key)
           ? tv('components.characterizationTable1.overall')

@@ -81,6 +81,13 @@
           :result-count="resultCount"
         />
 
+        <CharacterizationPersonCounts
+          v-if="!resultsLoading"
+          :strata-counts="strataCounts"
+          :cohorts="cohorts"
+          :strata-names="strataNames"
+        />
+
         <ResultsFilterPanel
           v-if="prevalence.length > 0 || distribution.length > 0"
           :available-analyses="availableAnalyses"
@@ -184,6 +191,7 @@ import AtlasSwitch from '@/components/ui/AtlasSwitch.vue'
 import CharacterizationDesignRail from './CharacterizationDesignRail.vue'
 import CharacterizationCanvasToolbar from './CharacterizationCanvasToolbar.vue'
 import CharacterizationRunMeta from './CharacterizationRunMeta.vue'
+import CharacterizationPersonCounts from './CharacterizationPersonCounts.vue'
 import CharacterizationTable1View from './CharacterizationTable1View.vue'
 import CharacterizationPerAnalysisView from './CharacterizationPerAnalysisView.vue'
 import CharacterizationDashboardView from './CharacterizationDashboardView.vue'
@@ -296,6 +304,16 @@ const cohorts = computed<LinkedCohort[]>(() => resolveCohorts({
   distribution: distribution.value,
   fallbackCohorts: props.modelValue.cohorts,
 }))
+
+const strataNames = computed<Record<string, string>>(() => {
+  const names: Record<string, string> = {}
+  const stratas = generationDesign.value?.stratas ?? props.modelValue.stratas
+  for (const stratum of stratas) names[stratum.id] = stratum.name
+  for (const row of [...prevalence.value, ...distribution.value]) {
+    Object.assign(names, row.strataNames)
+  }
+  return names
+})
 
 const hasStrata = computed<boolean>(() => resolveHasStrata({
   stratasLength: props.modelValue.stratas.length,

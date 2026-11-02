@@ -215,11 +215,18 @@ At concurrency 4 on a `ubuntu-latest` runner (4 vCPU, 16GB RAM), a full run land
 hours, and this repository's CI runners are killed at roughly 4 hours (GitHub's own job
 ceiling is 6). One job cannot run the whole suite. `.github/workflows/mutation-tests.yml`
 instead runs a nightly **6-way matrix**, `mutation-shard`: each shard sets
-`STRYKER_SHARD=<i>/6`, which `stryker.conf.mjs` uses to stripe the 373-file `mutate` list
+`STRYKER_SHARD=<i>/6`, which `stryker.conf.mjs` uses to stripe the `mutate` list
 by index (`idx % 6 === i - 1`) rather than slicing it contiguously, so file-size variance
 doesn't leave one shard with all the large files. Each shard runs the full `npx stryker run`
 at `--concurrency 4` and uploads its `reports/mutation/mutation.json` as
 `mutation-report-shard-<i>`.
+
+Keep `ignoreStatic: true` in `stryker.conf.mjs`. A static mutant sits in module-level code
+that runs once on import, such as a top-level constant, so Stryker can't tie it to the tests
+that cover it and re-runs the whole suite for each one. A few percent of mutants would
+otherwise take most of a shard's runtime and push it past the job timeout. Static mutants are
+reported as `Ignored` and don't enter the score, so module-level code is not measured by this
+gate.
 
 No shard applies a break threshold: `stryker.conf.mjs` sets `thresholds.break` to `null`
 for every run, sharded or not. A single shard skewed toward low-scoring Vue templates would
@@ -234,10 +241,7 @@ silently treating that as a pass would be the exact failure this gate exists to 
 
 ### Threshold
 
-The `aggregate` job fails the workflow if the overall score is below **65**. This number is
-deliberately provisional: it sits 1.3 points below the proven lower bound of 66.3%, so the
-gate cannot produce a false red on its first complete nightly run no matter where the true
-score lands within the bounded range. Once a nightly run completes with all six shards
-reporting, replace 65 with that run's actual score minus two points of headroom, using the
-same rationale as any other mutation-score threshold in this repository: scores vary slightly
-run to run from timeouts on a loaded runner, and a gate that flakes gets disabled.
+The `aggregate` job fails the workflow if the overall score is below **70**, about two points
+under the measured score of 72.6%. Scores vary slightly run to run from timeouts on
+a loaded runner, and a gate that flakes gets disabled. Raise the threshold as the score
+improves, keeping similar headroom.

@@ -18,6 +18,7 @@ const row = {
   analysisId: 1, analysisName: 'Measurement', covariateId: 1, covariateName: 'Weight', conceptId: 3025315,
   cohorts,
   strataNames: { [DEFAULT_STRATA_KEY]: 'All strata' },
+  count: { [DEFAULT_STRATA_KEY]: { '1': 1180, '2': 120 } },
   avg: { [DEFAULT_STRATA_KEY]: { '1': 70, '2': 75 } },
   stdDev: { [DEFAULT_STRATA_KEY]: { '1': 8, '2': 9 } },
   min: { [DEFAULT_STRATA_KEY]: { '1': 45, '2': 50 } },
@@ -40,11 +41,19 @@ describe('DistributionTable', () => {
       'Covariate', 'Concept Id', 'Target', 'Comparator',
     ])
     expect(headerRows[1]?.findAll('th').map(header => header.text())).toEqual([
-      'Avg (SD)', 'Min', 'P25', 'Median', 'P75', 'Max',
-      'Avg (SD)', 'Min', 'P25', 'Median', 'P75', 'Max',
+      'Persons', 'Avg (SD)', 'Min', 'P25', 'Median', 'P75', 'Max',
+      'Persons', 'Avg (SD)', 'Min', 'P25', 'Median', 'P75', 'Max',
     ])
-    expect(wrapper.text()).toContain('70.00 (8.00)')
+    expect(wrapper.find('tbody tr').findAll('td').map(td => td.text()).slice(2, 4)).toEqual(['1,180', '70.00 (8.00)'])
     expect(wrapper.text()).not.toContain('Std Diff')
+  })
+
+  it('shows a dash for persons when the count was not reported', () => {
+    const wrapper = mount(DistributionTable, {
+      props: { analysisId: 1, analysisName: 'Measurement', rows: [{ ...row, count: undefined }], cohorts },
+      global: { plugins: [vuetify] },
+    })
+    expect(wrapper.find('tbody tr').findAll('td')[2]?.text()).toBe('—')
   })
 
   it('shows each cohort N for the partition when the counts are reported, and omits unknown ones', () => {
