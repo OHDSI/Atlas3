@@ -1796,10 +1796,15 @@
       "deleteConfirmation": "Delete cohort characterization? Warning: deletion can not be undone!",
       "design": {
         "fa": {
+          "added": "{name} was added. Save the characterization to keep it.",
           "createNew": "Create new feature analysis",
           "createNewHint": "No exact match? Build your own feature from criteria or SQL.",
           "includeAnnual": "Include Prevalence Annual Distribution",
           "includeTemporal": "Include Temporal Distribution",
+          "nameFirst": "Name the characterization before creating a feature analysis",
+          "saveAndContinue": "Save and continue",
+          "saveFirstMessage": "Your changes are saved before the feature analysis editor opens, so you can come back to this design.",
+          "saveFirstTitle": "Save the characterization first",
           "supportsAnnual": "Supports annual distribution",
           "supportsTemporal": "Supports temporal distribution",
           "title": "Feature analyses"

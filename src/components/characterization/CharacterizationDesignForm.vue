@@ -12,6 +12,7 @@
       :model-value="draft.featureAnalyses"
       :available-feature-analyses="availableFeatureAnalyses"
       :current-user-login="currentUserLogin"
+      :create-disabled-reason="createDisabledReason"
       @update:model-value="v => updateField('featureAnalyses', v)"
       @create-feature-analysis="kind => emit('create-feature-analysis', kind)"
     />
@@ -45,6 +46,7 @@ const props = defineProps<{
   modelValue: CharacterizationDefinition
   availableCohorts: CohortDefinitionSummary[]
   availableFeatureAnalyses: FeatureAnalysisListItem[]
+  createDisabledReason?: string
 }>()
 
 // Sourced here rather than in the picker so the picker stays presentational and

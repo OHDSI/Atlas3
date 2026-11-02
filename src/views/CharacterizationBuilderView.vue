@@ -215,8 +215,10 @@
       :characterization-id="draftId"
       :available-cohorts="availableCohorts"
       :available-feature-analyses="availableFeatureAnalyses"
+      :create-disabled-reason="createFeatureAnalysisDisabledReason"
       data-testid="char-builder-workbench"
       @update:model-value="onDraftChange"
+      @create-feature-analysis="onCreateFeatureAnalysis"
       @explore="onExplore"
       @snackbar="(msg, sev) => showSnackbar(msg, sev)"
     />
@@ -360,6 +362,34 @@
       </template>
     </AtlasDialog>
 
+    <AtlasDialog
+      v-model="showSaveFirstDialog"
+      :eyebrow="t('cc.title').value"
+      :title="t('cc.viewEdit.design.fa.saveFirstTitle').value"
+      max-width="480"
+      data-testid="cc-fa-save-first-dialog"
+      @close="cancelSaveFirst"
+    >
+      {{ t('cc.viewEdit.design.fa.saveFirstMessage').value }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          data-testid="cc-fa-save-first-cancel"
+          @click="cancelSaveFirst"
+        >
+          {{ t('common.cancel').value }}
+        </AtlasButton>
+        <AtlasButton
+          variant="primary"
+          :loading="saving"
+          data-testid="cc-fa-save-first-confirm"
+          @click="confirmSaveFirst"
+        >
+          {{ t('cc.viewEdit.design.fa.saveAndContinue').value }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
+
     <AtlasSnackbar
       v-model="snackbar.show"
       :severity="snackbar.severity"
@@ -372,7 +402,8 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { onBeforeRouteLeave, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+import type { LocationQuery } from 'vue-router'
 
 import { useI18n } from '@/composables/useI18n'
 import { useCharacterizationStore } from '@/stores/characterization'
@@ -396,6 +427,13 @@ import ExplorePrevalenceDialog from '@/components/characterization-results/Explo
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
 import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
+import {
+  ADD_FEATURE_ANALYSIS_QUERY,
+  createFeatureAnalysisRoute,
+  parsePositiveId,
+  type FeatureAnalysisCreateKind,
+} from '@/utils/feature-analysis-return'
+import { designFlags, toLinkedFeatureAnalysis } from '@/utils/linked-feature-analysis'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { validateCharacterization, countByLevel } from '@/utils/characterization-validators'
 import type { CharacterizationDefinition, PrevalenceStat } from '@/models/characterization.types'
@@ -412,6 +450,7 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
+const route = useRoute()
 const { t, tv } = useI18n()
 const store = useCharacterizationStore()
 const conceptSetsStore = useConceptSetsStore()
@@ -438,6 +477,8 @@ const showAccessDialog = ref<boolean>(false)
 const showTagsDialog = ref<boolean>(false)
 const showValidationDialog = ref<boolean>(false)
 const showUnsavedDialog = ref<boolean>(false)
+const showSaveFirstDialog = ref<boolean>(false)
+const pendingCreateKind = ref<FeatureAnalysisCreateKind | null>(null)
 const importing = ref<boolean>(false)
 const exporting = ref<boolean>(false)
 const importFileInput = ref<HTMLInputElement | null>(null)
@@ -550,6 +591,10 @@ const saveDisabledReason = computed<string>(() =>
     isSaving: saving.value || loading.value,
     translate: tv,
   })
+)
+
+const createFeatureAnalysisDisabledReason = computed<string | undefined>(() =>
+  draft.value.name.trim().length === 0 ? t('cc.viewEdit.design.fa.nameFirst').value : undefined
 )
 
 // ---------------------------------------------------------------------------
@@ -694,10 +739,10 @@ function deleteConceptSet(conceptSet: ConceptSetReference) {
 // Actions
 // ---------------------------------------------------------------------------
 
-async function handleSave() {
+async function handleSave(): Promise<number | null> {
   if (draft.value.name.trim().length === 0) {
     showSnackbar(t('components.nameValidation.empty').value, 'error')
-    return
+    return null
   }
 
   if (hasValidationErrors.value) {
@@ -706,7 +751,7 @@ async function handleSave() {
       'error'
     )
     showValidationDialog.value = true
-    return
+    return null
   }
 
   saving.value = true
@@ -720,9 +765,9 @@ async function handleSave() {
         )
         store.markClean()
         hydrateFrom(updated)
-      } else {
-        showSnackbar(t('cc.viewEdit.saveError').value, 'error')
+        return updated.id ?? null
       }
+      showSnackbar(t('cc.viewEdit.saveError').value, 'error')
     } else {
       const created = await store.create(draft.value)
       if (created?.id) {
@@ -736,9 +781,9 @@ async function handleSave() {
         // because its gate checks characterizationId == null (#223).
         hydrateFrom(created)
         await router.push(`/characterizations/${created.id}`)
-      } else {
-        showSnackbar(t('cc.viewEdit.saveError').value, 'error')
+        return created.id
       }
+      showSnackbar(t('cc.viewEdit.saveError').value, 'error')
     }
   } catch (err) {
     logger.error('CharacterizationBuilder', 'Save failed', err)
@@ -746,6 +791,56 @@ async function handleSave() {
   } finally {
     saving.value = false
   }
+  return null
+}
+
+function onCreateFeatureAnalysis(kind: FeatureAnalysisCreateKind) {
+  const id = draftId.value
+  if (id !== null && !store.isDirty) {
+    void router.push(createFeatureAnalysisRoute(kind, id))
+    return
+  }
+  pendingCreateKind.value = kind
+  showSaveFirstDialog.value = true
+}
+
+async function confirmSaveFirst() {
+  const kind = pendingCreateKind.value
+  if (!kind || saving.value) return
+  // Saving first leaves the store clean, so the leave guard lets the editor
+  // push through; the new-characterization push inside handleSave has already
+  // settled by the time it returns.
+  const id = await handleSave()
+  showSaveFirstDialog.value = false
+  pendingCreateKind.value = null
+  if (id !== null) await router.push(createFeatureAnalysisRoute(kind, id))
+}
+
+function cancelSaveFirst() {
+  showSaveFirstDialog.value = false
+  pendingCreateKind.value = null
+}
+
+function withoutAddFeatureAnalysis(query: LocationQuery): LocationQuery {
+  return Object.fromEntries(Object.entries(query).filter(([key]) => key !== ADD_FEATURE_ANALYSIS_QUERY))
+}
+
+function consumeAddedFeatureAnalysis() {
+  if (!(ADD_FEATURE_ANALYSIS_QUERY in route.query)) return
+  const raw = route.query[ADD_FEATURE_ANALYSIS_QUERY]
+  const id = parsePositiveId(raw)
+  const fa = id === null ? undefined : availableFeatureAnalyses.value.find(candidate => candidate.id === id)
+  const linked = draft.value.featureAnalyses ?? []
+  if (!fa) {
+    logger.warn('CharacterizationBuilder', 'Ignoring unknown feature analysis to add', raw)
+  } else if (!linked.some(existing => existing.id === fa.id)) {
+    onDraftChange({
+      ...draft.value,
+      featureAnalyses: [...linked, toLinkedFeatureAnalysis(fa, designFlags(linked))],
+    })
+    showSnackbar(t('cc.viewEdit.design.fa.added', { name: fa.name }).value, 'success')
+  }
+  void router.replace({ query: withoutAddFeatureAnalysis(route.query) })
 }
 
 const canExport = computed<boolean>(() => Boolean(draft.value.id))
@@ -863,7 +958,7 @@ async function loadAvailableCohorts() {
   }
 }
 
-async function loadAvailableFeatureAnalyses() {
+async function loadAvailableFeatureAnalyses(): Promise<void> {
   const result = await listFeatureAnalyses()
   if (result.success) {
     availableFeatureAnalyses.value = result.data
@@ -881,22 +976,22 @@ const loadedKey = ref<string | null>(null)
  * Load (or reset) the editor for a given route id. Shared by onMounted and
  * the props.id watcher so both paths hydrate identically.
  */
-async function loadForId(rawId: string | undefined): Promise<void> {
+async function loadForId(rawId: string | undefined): Promise<boolean> {
   const key = rawId ?? ''
-  if (loadedKey.value === key) return
+  if (loadedKey.value === key) return false
   loadedKey.value = key
 
   if (!rawId) {
     // :id -> new must not keep showing the previous design.
     store.clearCurrent()
     hydrateFrom(null)
-    return
+    return true
   }
 
   const numericId = Number(rawId)
   if (Number.isNaN(numericId)) {
     router.push('/characterizations')
-    return
+    return false
   }
 
   // Drop the previous entity up front so a slow fetch can never leave one
@@ -907,8 +1002,18 @@ async function loadForId(rawId: string | undefined): Promise<void> {
   await store.fetchOne(numericId)
   // A newer navigation started while this fetch was in flight — it owns the
   // draft now, so discard this (stale) result.
-  if (loadedKey.value !== key) return
+  if (loadedKey.value !== key) return false
   hydrateFrom(store.currentCharacterization)
+  return true
+}
+
+let featureAnalysesLoaded: Promise<void> = Promise.resolve()
+
+async function loadAndConsume(rawId: string | undefined): Promise<void> {
+  if (!(await loadForId(rawId))) return
+  await featureAnalysesLoaded
+  if (loadedKey.value !== (rawId ?? '')) return
+  consumeAddedFeatureAnalysis()
 }
 
 // /characterizations/new and /characterizations/:id are two route records
@@ -921,16 +1026,16 @@ async function loadForId(rawId: string | undefined): Promise<void> {
 watch(
   () => props.id,
   newId => {
-    void loadForId(newId)
+    void loadAndConsume(newId)
   }
 )
 
 onMounted(async () => {
   // Load picker data once per editor mount.
   loadAvailableCohorts()
-  loadAvailableFeatureAnalyses()
+  featureAnalysesLoaded = loadAvailableFeatureAnalyses()
 
-  await loadForId(props.id)
+  await loadAndConsume(props.id)
 })
 
 // The confirm step opens a styled AtlasDialog instead of the native

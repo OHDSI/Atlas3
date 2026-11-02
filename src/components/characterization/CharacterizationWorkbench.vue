@@ -11,6 +11,7 @@
         :model-value="modelValue"
         :available-cohorts="availableCohorts"
         :available-feature-analyses="availableFeatureAnalyses"
+        :create-disabled-reason="createDisabledReason"
         @update:model-value="(v) => $emit('update:modelValue', v)"
         @create-feature-analysis="(kind) => emit('create-feature-analysis', kind)"
       />
@@ -246,6 +247,7 @@ const props = defineProps<{
   characterizationId: number | null
   availableCohorts: CohortDefinitionSummary[]
   availableFeatureAnalyses: FeatureAnalysisListItem[]
+  createDisabledReason?: string
 }>()
 
 const emit = defineEmits<{

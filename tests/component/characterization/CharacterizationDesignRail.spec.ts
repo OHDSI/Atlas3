@@ -64,4 +64,19 @@ describe('CharacterizationDesignRail', () => {
     await w.find('[data-testid="stub-form"]').trigger('click')
     expect(w.emitted('create-feature-analysis')).toEqual([[{ type: 'CUSTOM_FE' }]])
   })
+
+  it('forwards createDisabledReason to the form', () => {
+    const w = mount(CharacterizationDesignRail, {
+      global: { plugins: [vuetify], stubs: ['CharacterizationDesignForm'] },
+      props: {
+        modelValue: emptyDraft(),
+        availableCohorts: [],
+        availableFeatureAnalyses: [],
+        createDisabledReason: 'Name it first',
+      },
+    })
+    expect(
+      w.findComponent({ name: 'CharacterizationDesignForm' }).props('createDisabledReason')
+    ).toBe('Name it first')
+  })
 })

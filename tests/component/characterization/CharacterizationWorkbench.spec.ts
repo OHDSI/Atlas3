@@ -746,4 +746,19 @@ describe('CharacterizationWorkbench', () => {
 
     expect(pushSpy).not.toHaveBeenCalled()
   })
+
+  it('forwards createDisabledReason to the rail and re-emits create-feature-analysis', async () => {
+    const router = makeRouter()
+    const w = mount(CharacterizationWorkbench, {
+      global: { plugins: [router, vuetify], stubs },
+      props: { modelValue: { name: '', description: '', cohorts: [], featureAnalyses: [], stratas: [] },
+               characterizationId: null, availableCohorts: [], availableFeatureAnalyses: [],
+               createDisabledReason: 'Name it first' },
+    })
+    const rail = w.findComponent({ name: 'CharacterizationDesignRail' })
+    expect(rail.props('createDisabledReason')).toBe('Name it first')
+
+    rail.vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
+    expect(w.emitted('create-feature-analysis')).toEqual([[{ type: 'CUSTOM_FE' }]])
+  })
 })

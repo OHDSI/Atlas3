@@ -76,4 +76,22 @@ describe('CharacterizationDesignForm', () => {
     await w.find('[data-testid="stub-fa"]').trigger('click')
     expect(w.emitted('create-feature-analysis')).toEqual([[{ type: 'CUSTOM_FE' }]])
   })
+
+  it('forwards createDisabledReason to the picker', () => {
+    const w = mount(CharacterizationDesignForm, {
+      global: {
+        plugins: [vuetify],
+        stubs: ['LinkedCohortPicker', 'LinkedFeatureAnalysisPicker', 'StrataEditor'],
+      },
+      props: {
+        modelValue: empty(),
+        availableCohorts: [],
+        availableFeatureAnalyses: [],
+        createDisabledReason: 'Name it first',
+      },
+    })
+    expect(
+      w.findComponent({ name: 'LinkedFeatureAnalysisPicker' }).props('createDisabledReason')
+    ).toBe('Name it first')
+  })
 })
