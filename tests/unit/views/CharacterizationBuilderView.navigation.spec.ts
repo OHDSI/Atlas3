@@ -548,6 +548,30 @@ describe('CharacterizationBuilderView: creating a feature analysis from the desi
     expect(panel(mounted!.wrapper).props('target')).toBeNull()
   })
 
+  it('does not link into a characterization opened while the list was refreshing', async () => {
+    await mountUnsavedDraft()
+    workbench(mounted!.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
+    await flushPromises()
+    let resolveList: (value: Awaited<ReturnType<typeof listFeatureAnalyses>>) => void = () => {}
+    vi.mocked(listFeatureAnalyses).mockReturnValue(
+      new Promise(resolve => {
+        resolveList = resolve
+      })
+    )
+
+    panel(mounted!.wrapper).vm.$emit('saved', { id: 501, name: 'Prior insulin use', type: 'CUSTOM_FE' }, true)
+    await flushPromises()
+    await mounted!.router.push('/characterizations/5')
+    await waitForPath(mounted!.router, '/characterizations/5')
+    resolveList(success([makeFeatureAnalysis(21, 'Demographics'), makeFeatureAnalysis(501, 'Prior insulin use')]))
+    await flushPromises()
+
+    const { draft } = builderState(mounted!.wrapper)
+    expect(draft.name).toBe('Characterization 5')
+    expect(draft.featureAnalyses.map((fa: { id: number }) => fa.id)).toEqual([21])
+    expect(useCharacterizationStore().isDirty).toBe(false)
+  })
+
   it('opens the panel to edit a linked analysis', async () => {
     await mountUnsavedDraft()
     workbench(mounted!.wrapper).vm.$emit('edit-feature-analysis', 11)

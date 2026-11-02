@@ -785,11 +785,13 @@ function onEditFeatureAnalysis(id: number) {
 
 async function onFeatureAnalysisSaved(fa: FeatureAnalysis, created: boolean): Promise<void> {
   featureAnalysisPanelTarget.value = null
+  const keyAtSave = loadedKey.value
   await loadAvailableFeatureAnalyses()
   if (!created) {
     showSnackbar(t('cc.viewEdit.design.fa.updated', { name: fa.name }).value, 'success')
     return
   }
+  if (loadedKey.value !== keyAtSave) return
   const linked = draft.value.featureAnalyses ?? []
   if (linked.some(existing => existing.id === fa.id)) return
   const match = availableFeatureAnalyses.value.find(candidate => candidate.id === fa.id)
