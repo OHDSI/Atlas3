@@ -292,6 +292,26 @@ describe('LinkedFeatureAnalysisPicker', () => {
       wrapper.unmount()
     })
 
+    it('shows the library name and description over the stale values stored on the link', () => {
+      const wrapper = mount(LinkedFeatureAnalysisPicker, {
+        props: {
+          modelValue: [{ id: 12, name: 'Old name', description: 'Old description' }] as LinkedFeatureAnalysis[],
+          availableFeatureAnalyses: [
+            { id: 12, name: 'Renamed', description: 'New description', type: 'CUSTOM_FE' },
+          ] as FeatureAnalysisListItem[],
+        },
+        global: { plugins: [vuetify] },
+        attachTo: document.body,
+      })
+      const row = wrapper.get('[data-testid="linked-fa-picker-row-12"]').text()
+      expect(row).toContain('Renamed')
+      expect(row).toContain('New description')
+      expect(row).not.toContain('Old name')
+      expect(row).not.toContain('Old description')
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+      wrapper.unmount()
+    })
+
     it('emits edit-feature-analysis with the id', async () => {
       const wrapper = mountWithMixedTypes()
       await wrapper.get('[data-testid="linked-fa-picker-edit-11"]').trigger('click')

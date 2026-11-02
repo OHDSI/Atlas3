@@ -366,9 +366,8 @@ const selectableItems = computed(() =>
 )
 
 function displayName(fa: LinkedFeatureAnalysis): string {
-  if (fa.name && fa.name.length > 0) return fa.name
   const match = props.availableFeatureAnalyses.find(a => a.id === fa.id)
-  return match?.name ?? `#${fa.id}`
+  return match?.name || fa.name || `#${fa.id}`
 }
 
 function isEditable(fa: LinkedFeatureAnalysis): boolean {
@@ -378,7 +377,7 @@ function isEditable(fa: LinkedFeatureAnalysis): boolean {
 
 function displaySubtitle(fa: LinkedFeatureAnalysis): string {
   const match = props.availableFeatureAnalyses.find(a => a.id === fa.id)
-  const description = fa.description ?? match?.description ?? ''
+  const description = match?.description || fa.description || ''
   const type = match?.type
   if (type && description) return `${type} — ${description}`
   if (type) return type
