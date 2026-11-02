@@ -13,6 +13,7 @@
       :available-feature-analyses="availableFeatureAnalyses"
       :current-user-login="currentUserLogin"
       @update:model-value="v => updateField('featureAnalyses', v)"
+      @create-feature-analysis="kind => emit('create-feature-analysis', kind)"
     />
 
     <AtlasDivider class="my-3" />
@@ -35,6 +36,7 @@ import { useAuthStore } from '@/stores/auth'
 import LinkedCohortPicker from './LinkedCohortPicker.vue'
 import LinkedFeatureAnalysisPicker from './LinkedFeatureAnalysisPicker.vue'
 import StrataEditor from './StrataEditor.vue'
+import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-return'
 import type { CharacterizationDefinition } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
@@ -50,7 +52,10 @@ const props = defineProps<{
 const authStore = useAuthStore()
 const currentUserLogin = computed(() => authStore.user?.login)
 
-const emit = defineEmits<{ 'update:modelValue': [value: CharacterizationDefinition] }>()
+const emit = defineEmits<{
+  'update:modelValue': [value: CharacterizationDefinition]
+  'create-feature-analysis': [kind: FeatureAnalysisCreateKind]
+}>()
 
 const draft = computed<CharacterizationDefinition>(() => props.modelValue)
 

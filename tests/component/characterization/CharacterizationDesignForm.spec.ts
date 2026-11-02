@@ -57,4 +57,23 @@ describe('CharacterizationDesignForm', () => {
     expect(evts).toBeTruthy()
     expect((evts![0]![0] as CharacterizationDefinition).strataOnly).toBe(true)
   })
+
+  it('re-emits create-feature-analysis from the picker', async () => {
+    const w = mount(CharacterizationDesignForm, {
+      global: {
+        plugins: [vuetify],
+        stubs: {
+          LinkedCohortPicker: true,
+          StrataEditor: true,
+          LinkedFeatureAnalysisPicker: {
+            template: '<div data-testid="stub-fa" @click="$emit(\'create-feature-analysis\', { type: \'CUSTOM_FE\' })"></div>',
+            emits: ['create-feature-analysis', 'update:modelValue'],
+          },
+        },
+      },
+      props: { modelValue: empty(), availableCohorts: [], availableFeatureAnalyses: [] },
+    })
+    await w.find('[data-testid="stub-fa"]').trigger('click')
+    expect(w.emitted('create-feature-analysis')).toEqual([[{ type: 'CUSTOM_FE' }]])
+  })
 })

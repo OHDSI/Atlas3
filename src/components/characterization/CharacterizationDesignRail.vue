@@ -5,12 +5,14 @@
       :available-cohorts="availableCohorts"
       :available-feature-analyses="availableFeatureAnalyses"
       @update:model-value="v => $emit('update:modelValue', v)"
+      @create-feature-analysis="kind => $emit('create-feature-analysis', kind)"
     />
   </aside>
 </template>
 
 <script setup lang="ts">
 import CharacterizationDesignForm from './CharacterizationDesignForm.vue'
+import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-return'
 import type { CharacterizationDefinition } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
@@ -23,6 +25,7 @@ defineProps<{
 
 defineEmits<{
   'update:modelValue': [value: CharacterizationDefinition]
+  'create-feature-analysis': [kind: FeatureAnalysisCreateKind]
 }>()
 </script>
 

@@ -1796,6 +1796,8 @@
       "deleteConfirmation": "Delete cohort characterization? Warning: deletion can not be undone!",
       "design": {
         "fa": {
+          "createNew": "Create new feature analysis",
+          "createNewHint": "No exact match? Build your own feature from criteria or SQL.",
           "includeAnnual": "Include Prevalence Annual Distribution",
           "includeTemporal": "Include Temporal Distribution",
           "supportsAnnual": "Supports annual distribution",

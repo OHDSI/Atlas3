@@ -12,6 +12,7 @@
         :available-cohorts="availableCohorts"
         :available-feature-analyses="availableFeatureAnalyses"
         @update:model-value="(v) => $emit('update:modelValue', v)"
+        @create-feature-analysis="(kind) => emit('create-feature-analysis', kind)"
       />
     </div>
 
@@ -188,6 +189,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { AtlasAlert, AtlasProgressCircular } from '@/components/ui'
 import AtlasCollapsibleSection from '@/components/ui/AtlasCollapsibleSection.vue'
 import AtlasSwitch from '@/components/ui/AtlasSwitch.vue'
+import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-return'
 import CharacterizationDesignRail from './CharacterizationDesignRail.vue'
 import CharacterizationCanvasToolbar from './CharacterizationCanvasToolbar.vue'
 import CharacterizationRunMeta from './CharacterizationRunMeta.vue'
@@ -248,6 +250,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: CharacterizationDefinition]
+  'create-feature-analysis': [kind: FeatureAnalysisCreateKind]
   'explore': [row: PrevalenceStat]
   'snackbar': [message: string, severity: 'success' | 'error' | 'info']
 }>()
