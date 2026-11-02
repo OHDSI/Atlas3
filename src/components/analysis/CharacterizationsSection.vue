@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
+import { AtlasButton } from '@/components/ui'
 import CharacterizationsView from '@/views/CharacterizationsView.vue'
 import FeatureAnalysesView from '@/views/FeatureAnalysesView.vue'
 
@@ -33,22 +34,26 @@ const hintKey = computed(() =>
         variant="outlined"
         :aria-label="t('analysis.characterizationViews').value"
       >
-        <v-btn
+        <AtlasButton
+          toggle
           value="characterizations"
           :aria-pressed="subView === 'characterizations'"
           data-testid="cc-subview-characterizations"
         >
           {{ t('navigation.characterizations') }}
-        </v-btn>
-        <v-btn
+        </AtlasButton>
+        <AtlasButton
+          toggle
           value="feature-analyses"
           :aria-pressed="subView === 'feature-analyses'"
           data-testid="cc-subview-feature-analyses"
         >
           {{ t('navigation.featureAnalyses') }}
-        </v-btn>
+        </AtlasButton>
       </v-btn-toggle>
-      <p class="characterizations-section__hint">{{ t(hintKey) }}</p>
+      <p class="characterizations-section__hint">
+        {{ t(hintKey) }}
+      </p>
     </div>
     <CharacterizationsView v-if="subView === 'characterizations'" />
     <FeatureAnalysesView v-else />
