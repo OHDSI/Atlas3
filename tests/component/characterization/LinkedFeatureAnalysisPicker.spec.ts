@@ -451,7 +451,9 @@ describe('LinkedFeatureAnalysisPicker facets (#216)', () => {
       const wrapper = await openDialog({ createDisabledReason: 'Save first' })
       const btn = document.querySelector('[data-testid="linked-fa-picker-create"]') as HTMLButtonElement
       expect(btn.disabled).toBe(true)
-      expect(document.body.textContent).toContain('Save first')
+      const hint = document.querySelector('[data-testid="linked-fa-picker-create-hint"]') as HTMLElement
+      expect(hint.textContent?.trim()).toBe('Save first')
+      expect(btn.getAttribute('aria-describedby')).toBe(hint.id)
       wrapper.unmount()
     })
 

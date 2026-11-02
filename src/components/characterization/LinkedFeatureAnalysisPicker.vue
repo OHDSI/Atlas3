@@ -198,8 +198,13 @@
         class="linked-fa-picker__create"
         data-testid="linked-fa-picker-create-panel"
       >
-        <span class="linked-fa-picker__create-hint">
-          {{ t('cc.viewEdit.design.fa.createNewHint') }}
+        <span
+          id="linked-fa-picker-create-hint"
+          class="linked-fa-picker__create-hint"
+          :class="{ 'linked-fa-picker__create-hint--blocked': !!createDisabledReason }"
+          data-testid="linked-fa-picker-create-hint"
+        >
+          {{ createDisabledReason || t('cc.viewEdit.design.fa.createNewHint').value }}
         </span>
         <AtlasMenu
           location="top end"
@@ -214,17 +219,12 @@
                 icon="mdi-plus"
                 append-icon="mdi-menu-up"
                 :disabled="!!createDisabledReason"
+                aria-describedby="linked-fa-picker-create-hint"
                 data-testid="linked-fa-picker-create"
                 v-bind="menuProps"
               >
                 {{ t('cc.viewEdit.design.fa.createNew') }}
               </AtlasButton>
-              <AtlasTooltip
-                v-if="createDisabledReason"
-                activator="parent"
-                location="top"
-                :text="createDisabledReason"
-              />
             </span>
           </template>
           <AtlasCard
@@ -515,6 +515,11 @@ function setDesignFlag(flag: DesignFlag, value: boolean) {
 
 .linked-fa-picker__create-hint {
   color: var(--atlas-color-on-surface-variant);
+}
+
+.linked-fa-picker__create-hint--blocked {
+  color: var(--atlas-color-on-surface);
+  font-weight: 500;
 }
 
 .linked-fa-picker__dialog-body {
