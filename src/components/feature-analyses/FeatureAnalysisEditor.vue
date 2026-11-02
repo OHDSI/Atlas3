@@ -1,99 +1,77 @@
-<!--
-  Feature Analysis Editor
-
-  Working editor for all three Feature Analysis design types:
-    - PRESET        (FeatureExtraction CovariateSetting JSON)
-    - CRITERIA_SET  (concept sets + criteria group JSON; full criteria
-                    builder integration ships in Phase 3)
-    - CUSTOM_FE     (raw SQL template)
-
-  Save is wired to the existing feature-analyses Pinia store. JSON design
-  payloads are parsed on save with user-visible error reporting via the
-  local v-snackbar.
--->
 <template>
-  <AnalysisBuilderShell
-    :title="titleText"
-    :error="storeError"
-    :authorship="store.currentFA"
-    :show-back="false"
-    testid="feature-analysis-editor"
-    @back="requestClose"
-    @clear-error="store.clearError()"
-  >
-    <template #actions>
-      <AtlasActionToolbar>
-        <template #status>
-          <AtlasTooltip
-            v-if="isCriteriaSet"
-            :text="t('cc.fa.tabs.conceptSets').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tooltipProps }">
-              <AtlasBadge
-                v-bind="tooltipProps"
-                :content="conceptSetCount"
-                :model-value="conceptSetCount > 0"
-                color="primary"
-                offset-x="6"
-                offset-y="6"
-              >
-                <AtlasIconButton
-                  v-bind="{ ariaLabel: t('cc.fa.tabs.conceptSets').value }"
-                  icon="mdi-shape"
-                  variant="text"
-                  size="sm"
-                  data-testid="feature-analysis-editor-conceptsets-icon"
-                  @click="showConceptSetsDialog = true"
-                />
-              </AtlasBadge>
-            </template>
-          </AtlasTooltip>
-
-          <AtlasTooltip
-            :text="t('components.access.configureAccess').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tipProps }">
-              <EntityAccessLockButton
-                v-bind="{ ...tipProps, ariaLabel: t('components.access.configureAccess').value }"
-                :disabled="!isEditing || !canWrite"
-                :loading="loading"
-                data-testid="feature-analysis-editor-access-icon"
-                @click="showAccessDialog = true"
-              />
-            </template>
-          </AtlasTooltip>
-        </template>
-        <template #actions>
-          <AtlasButton
-            variant="ghost"
-            size="sm"
-            data-testid="feature-analysis-editor-close"
-            :aria-label="closeLabel"
-            @click="requestClose"
-          >
-            <AtlasIcon class="d-md-none">
-              mdi-close
-            </AtlasIcon>
-            <span class="d-none d-md-inline">{{ closeLabel }}</span>
-          </AtlasButton>
-          <DisabledReasonTooltip :reason="saveDisabledReason">
-            <AtlasButton
-              variant="primary"
-              :disabled="!canSave"
-              :loading="saving"
-              data-testid="feature-analysis-editor-save"
-              @click="handleSave"
+  <DefineToolbar>
+    <AtlasActionToolbar>
+      <template #status>
+        <AtlasTooltip
+          v-if="isCriteriaSet"
+          :text="t('cc.fa.tabs.conceptSets').value"
+          location="bottom"
+        >
+          <template #activator="{ props: tooltipProps }">
+            <AtlasBadge
+              v-bind="tooltipProps"
+              :content="conceptSetCount"
+              :model-value="conceptSetCount > 0"
+              color="primary"
+              offset-x="6"
+              offset-y="6"
             >
-              {{ saveButtonLabel }}
-            </AtlasButton>
-          </DisabledReasonTooltip>
-        </template>
-      </AtlasActionToolbar>
-    </template>
+              <AtlasIconButton
+                v-bind="{ ariaLabel: t('cc.fa.tabs.conceptSets').value }"
+                icon="mdi-shape"
+                variant="text"
+                size="sm"
+                data-testid="feature-analysis-editor-conceptsets-icon"
+                @click="showConceptSetsDialog = true"
+              />
+            </AtlasBadge>
+          </template>
+        </AtlasTooltip>
 
-    <!-- Main editor card -->
+        <AtlasTooltip
+          v-if="!embedded"
+          :text="t('components.access.configureAccess').value"
+          location="bottom"
+        >
+          <template #activator="{ props: tipProps }">
+            <EntityAccessLockButton
+              v-bind="{ ...tipProps, ariaLabel: t('components.access.configureAccess').value }"
+              :disabled="!isEditing || !canWrite"
+              :loading="loading"
+              data-testid="feature-analysis-editor-access-icon"
+              @click="showAccessDialog = true"
+            />
+          </template>
+        </AtlasTooltip>
+      </template>
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          size="sm"
+          data-testid="feature-analysis-editor-close"
+          :aria-label="closeButtonLabel"
+          @click="requestClose"
+        >
+          <AtlasIcon class="d-md-none">
+            mdi-close
+          </AtlasIcon>
+          <span class="d-none d-md-inline">{{ closeButtonLabel }}</span>
+        </AtlasButton>
+        <DisabledReasonTooltip :reason="saveDisabledReason">
+          <AtlasButton
+            variant="primary"
+            :disabled="!canSave"
+            :loading="saving"
+            data-testid="feature-analysis-editor-save"
+            @click="handleSave"
+          >
+            {{ saveButtonLabel }}
+          </AtlasButton>
+        </DisabledReasonTooltip>
+      </template>
+    </AtlasActionToolbar>
+  </DefineToolbar>
+  <DefineBody>
     <v-card class="feature-analysis-editor__card">
       <v-card-text>
         <div class="feature-analysis-editor__type-banner">
@@ -105,7 +83,6 @@
           </AtlasChip>
         </div>
 
-        <!-- Common section -->
         <div class="feature-analysis-editor__section">
           <h2 class="feature-analysis-editor__section-title">
             {{ t('columns.name') }}
@@ -146,7 +123,6 @@
           </AtlasRow>
         </div>
 
-        <!-- PRESET design -->
         <div
           v-if="isPresetDraft"
           class="feature-analysis-editor__section"
@@ -163,7 +139,6 @@
           />
         </div>
 
-        <!-- CRITERIA_SET / PREVALENCE design -->
         <div
           v-else-if="isPrevalenceDraft"
           class="feature-analysis-editor__section"
@@ -176,7 +151,6 @@
           />
         </div>
 
-        <!-- CRITERIA_SET / DISTRIBUTION design -->
         <div
           v-else-if="isCriteriaSetDraft"
           class="feature-analysis-editor__section"
@@ -196,7 +170,6 @@
           />
         </div>
 
-        <!-- CUSTOM_FE design -->
         <div
           v-else-if="draft.type === 'CUSTOM_FE'"
           class="feature-analysis-editor__section"
@@ -316,7 +289,6 @@
       @close="showAccessDialog = false"
     />
 
-    <!-- Unsaved-changes confirmation dialog (same pattern as CohortBuilder.vue) -->
     <AtlasDialog
       v-model="showUnsavedDialog"
       eyebrow="ANALYSIS"
@@ -366,12 +338,53 @@
       "
       @apply="handleConceptSetApplied"
     />
+  </DefineBody>
+
+  <section
+    v-if="embedded"
+    class="feature-analysis-editor--embedded"
+    data-testid="feature-analysis-editor-embedded"
+  >
+    <header class="feature-analysis-editor__embedded-header">
+      <h2 class="feature-analysis-editor__embedded-title">
+        {{ titleText }}
+      </h2>
+      <ReuseToolbar />
+    </header>
+    <AtlasAlert
+      v-if="storeError"
+      severity="danger"
+      :closable="true"
+      density="compact"
+      class="feature-analysis-editor__embedded-error"
+      data-testid="feature-analysis-editor-error"
+      @close="store.clearError()"
+    >
+      {{ storeError }}
+    </AtlasAlert>
+    <ReuseBody />
+  </section>
+  <AnalysisBuilderShell
+    v-else
+    :title="titleText"
+    :error="storeError"
+    :authorship="store.currentFA"
+    :show-back="false"
+    testid="feature-analysis-editor"
+    @back="requestClose"
+    @clear-error="store.clearError()"
+  >
+    <template #actions>
+      <ReuseToolbar />
+    </template>
+    <ReuseBody />
   </AnalysisBuilderShell>
 </template>
 
 <script setup lang="ts">
-import { AtlasBadge, AtlasButton, AtlasChip, AtlasCol, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasRow, AtlasSelect, AtlasSnackbar, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert, AtlasBadge, AtlasButton, AtlasChip, AtlasCol, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasRow, AtlasSelect, AtlasSnackbar, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
+import { createReusableTemplate } from '@vueuse/core'
 import { computed, onMounted, reactive, ref, watch, nextTick } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 
@@ -427,15 +440,13 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const [DefineToolbar, ReuseToolbar] = createReusableTemplate()
+const [DefineBody, ReuseBody] = createReusableTemplate()
 const { t, tv } = useI18n()
-const closeLabel = computed(() => props.closeLabel ?? t('common.close').value)
+const closeButtonLabel = computed(() => props.closeLabel ?? t('common.close').value)
 const saveButtonLabel = computed(() => props.saveLabel ?? t('common.save').value)
 const store = useFeatureAnalysesStore()
 const conceptSetsStore = useConceptSetsStore()
-
-// ---------------------------------------------------------------------------
-// Local state
-// ---------------------------------------------------------------------------
 
 function getDefaultAggregate(): FeatureAnalysisAggregate | null {
   return store.aggregates.find(aggregate => aggregate.isDefault) ?? null
@@ -525,9 +536,6 @@ const showAccessDialog = ref<boolean>(false)
 const showUnsavedDialog = ref<boolean>(false)
 const nameError = ref<string | null>(null)
 const dirty = ref<boolean>(false)
-// Unsaved-changes navigation guard state (mirrors CohortBuilder.vue) - see
-// the onBeforeRouteLeave comment near the bottom of this file for why a
-// plain confirmed-flag + re-push is needed instead of holding onto `next`.
 let pendingNavigation: (() => void) | null = null
 const isConfirmingNavigation = ref(false)
 
@@ -675,10 +683,6 @@ function handleConceptSetApplied(set: AtlasConceptSet) {
   showConceptSetsDialog.value = true
 }
 
-// ---------------------------------------------------------------------------
-// Routing helpers
-// ---------------------------------------------------------------------------
-
 const isEditing = computed<boolean>(() => props.featureAnalysisId !== null)
 
 const titleText = computed(() => {
@@ -686,10 +690,6 @@ const titleText = computed(() => {
     ? t('featureAnalyses.editor.title.edit').value
     : t('cc.tabs.featureAnalyses.createLabel').value
 })
-
-// ---------------------------------------------------------------------------
-// Static select options
-// ---------------------------------------------------------------------------
 
 const typeLabel = computed<string>(() => {
   const current = draft.value
@@ -766,10 +766,6 @@ const distributionDraftConceptSets = computed<CirceConceptSet[]>(() =>
   })()
 )
 
-// ---------------------------------------------------------------------------
-// Save guard
-// ---------------------------------------------------------------------------
-
 // Permission gating: new FAs need create:feature-analysis; existing ones
 // need write access on the specific entity (ownership counts).
 const draftId = computed<number | null>(() => {
@@ -820,11 +816,6 @@ type FeatureAnalysisDraft =
       design: FeatureAnalysisDistributionItem[]
       conceptSets: CirceConceptSet[]
     })
-
-// ---------------------------------------------------------------------------
-// Hydration: when the store's currentFA changes, copy it into the local draft.
-// We always make a shallow clone so editing never mutates the store.
-// ---------------------------------------------------------------------------
 
 function hydrateDraftFrom(fa: FeatureAnalysis | null) {
   suppressDirtyTracking = true
@@ -919,10 +910,6 @@ watch(
   { deep: true }
 )
 
-// ---------------------------------------------------------------------------
-// Actions
-// ---------------------------------------------------------------------------
-
 /**
  * Build the full save payload for the current type. Constructs one of the
  * discriminated `FeatureAnalysis` variants directly (rather than merging
@@ -1003,6 +990,7 @@ async function handleSave() {
 }
 
 function requestClose() {
+  if (isConfirmingNavigation.value) return
   if (!dirty.value) {
     emit('close')
     return
@@ -1029,10 +1017,6 @@ async function copyCustomSqlTemplate() {
     showSnackbar(t('cc.fa.copySqlTemplateFailed').value, 'error')
   }
 }
-
-// ---------------------------------------------------------------------------
-// Lifecycle
-// ---------------------------------------------------------------------------
 
 onMounted(async () => {
   // Domain applies to every type (top-level selector). Criteria-set analyses
@@ -1129,14 +1113,6 @@ function cancelLeaveUnsaved() {
   margin-bottom: 12px;
 }
 
-.feature-analysis-editor__preset-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-
 .feature-analysis-editor__sql-header {
   display: flex;
   align-items: center;
@@ -1174,4 +1150,23 @@ function cancelLeaveUnsaved() {
   white-space: pre;
 }
 
+
+.feature-analysis-editor__embedded-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.feature-analysis-editor__embedded-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.feature-analysis-editor__embedded-error {
+  margin-bottom: 12px;
+}
 </style>
