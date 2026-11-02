@@ -143,27 +143,24 @@ describe('authService request contract', () => {
   })
 
   describe('parseUserInfo', () => {
-    it('reads a permission index object and derives the flat list from it', () => {
+    it('reads a permission index object as-is', () => {
       const idx = { trexsql: ['trexsql:count'], cohort: ['cohort:read'] }
 
       const info = parseUserInfo({ user: { login: 'u' }, authz: { permissions: idx } })
 
       expect(info.permissionIdx).toBe(idx)
-      expect(info.trexsqlCacheEnabled).toBe(true)
     })
 
     it('treats null permissions as none', () => {
       const info = parseUserInfo({ login: 'u', permissions: null })
 
       expect(info.permissionIdx).toEqual({})
-      expect(info.trexsqlCacheEnabled).toBe(false)
     })
 
     it('ignores a scalar permissions value', () => {
       const info = parseUserInfo({ login: 'u', permissions: 'trexsql:count' })
 
       expect(info.permissionIdx).toEqual({})
-      expect(info.trexsqlCacheEnabled).toBe(false)
     })
 
     it('copies every entity access map from authz', () => {
@@ -190,20 +187,6 @@ describe('authService request contract', () => {
         reusable: maps.reusableAccess,
         source: maps.sourceAccess,
       })
-    })
-
-    it('enables the trexsql cache for holders of the global wildcard', () => {
-      expect(parseUserInfo({ login: 'u', permissions: ['*'] }).trexsqlCacheEnabled).toBe(true)
-    })
-
-    it('does not enable the trexsql cache for unrelated permissions', () => {
-      expect(parseUserInfo({ login: 'u', permissions: ['cohort:read'] }).trexsqlCacheEnabled).toBe(false)
-    })
-
-    it('prefers an explicit trexsqlCacheEnabled flag over permissions', () => {
-      expect(
-        parseUserInfo({ login: 'u', permissions: ['*'], trexsqlCacheEnabled: false }).trexsqlCacheEnabled
-      ).toBe(false)
     })
 
     it('defaults a missing login to an empty string', () => {

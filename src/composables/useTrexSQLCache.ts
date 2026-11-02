@@ -1,7 +1,7 @@
 import { ref, computed, watch, onUnmounted } from 'vue'
 import type { Ref, ComputedRef } from 'vue'
-import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'
+import { useSourceAccessFor } from '@/composables/useEntityAccess'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
 import {
@@ -18,6 +18,7 @@ import {
   cancelAllCountRequests,
 } from '@/services/trexsql.service'
 import { listDataSources } from '@/services/datasource.service'
+import { isTrexSQLPluginEnabled } from '@/services/webapi-info.service'
 
 const COUNT_DEBOUNCE_MS = 500
 
@@ -44,25 +45,17 @@ const isCountSlow = ref(false)
 
 let slowCountTimerId: ReturnType<typeof setTimeout> | null = null
 
-const trexSQLDetected = ref<boolean | null>(null)
+const trexSQLPluginEnabled = ref<boolean | null>(null)
 
 let initializePromise: Promise<void> | null = null
 
 export function useTrexSQLCache() {
-  const authStore = useAuthStore()
   const { tv } = useI18n()
+  const sourceAccess = useSourceAccessFor()
 
-  const isTrexSQLEnabled: ComputedRef<boolean> = computed(() => {
-    // Trust an explicit `true` from the auth store; otherwise (false or
-    // undefined) fall through to runtime detection. The previous form
-    // short-circuited on any non-undefined value, which meant a stale
-    // `false` (cached from a session that pre-dates the auth fix or from
-    // a user without the trexsql:* permission set) would permanently hide
-    // the live-preview UI even after `/trexsql/*/cache/status` started
-    // succeeding.
-    if (authStore.user?.trexsqlCacheEnabled === true) return true
-    return trexSQLDetected.value === true
-  })
+  // Server-level setting from WebAPI /info (configuration.plugins.trexsqlEnabled),
+  // not a per-user permission.
+  const isTrexSQLEnabled: ComputedRef<boolean> = computed(() => trexSQLPluginEnabled.value === true)
 
   const patientCount: ComputedRef<PatientCountResult | null> = computed(() => {
     return countState.value.result
@@ -160,9 +153,8 @@ export function useTrexSQLCache() {
     try {
       logger.debug('TrexSQLCache', 'Fetching data sources with cache status')
 
-      const sources = await listDataSources()
-
-      // Fetch cache status for each source in parallel
+      const allSources = await listDataSources()
+      const sources = allSources.filter(source => sourceAccess.canRead(source.sourceId))
       const sourcesWithStatus = await Promise.all(
         sources.map(async (source): Promise<DataSourceWithCacheStatus> => {
           try {
@@ -340,15 +332,7 @@ export function useTrexSQLCache() {
     initializePromise = (async () => {
       loadSelectedSource()
 
-      // Always run detection unless the auth store says trexsql is enabled.
-      // We can't trust a stale `false` from the auth store (it may come
-      // from a session that pre-dates the trexsql backend coming online,
-      // or from a permission set that didn't surface trexsql:* to the
-      // frontend). Detection is a single GET against
-      // /trexsql/<source>/cache/status — cheap and self-correcting.
-      if (authStore.user?.trexsqlCacheEnabled !== true && trexSQLDetected.value !== true) {
-        await detectTrexSQLAvailability()
-      }
+      await loadTrexSQLEnabledFlag()
 
       if (isTrexSQLEnabled.value) {
         await fetchDataSourcesWithCacheStatus()
@@ -357,24 +341,13 @@ export function useTrexSQLCache() {
     return initializePromise
   }
 
-  async function detectTrexSQLAvailability(): Promise<void> {
+  async function loadTrexSQLEnabledFlag(): Promise<void> {
     try {
-      const sources = await listDataSources()
-      const firstSource = sources[0]
-      if (firstSource) {
-        try {
-          await getCacheStatus(firstSource.sourceKey)
-          trexSQLDetected.value = true
-        } catch {
-          trexSQLDetected.value = false
-        }
-      } else {
-        trexSQLDetected.value = false
-      }
+      trexSQLPluginEnabled.value = await isTrexSQLPluginEnabled()
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err)
-      logger.warn('useTrexSQLCache', `Failed to detect TrexSQL availability: ${errorMessage}`)
-      trexSQLDetected.value = false
+      logger.warn('useTrexSQLCache', `Failed to load WebAPI /info: ${errorMessage}`)
+      trexSQLPluginEnabled.value = false
     }
   }
 
@@ -413,6 +386,10 @@ export function useTrexSQLCache() {
 
 export type UseTrexSQLCacheReturn = ReturnType<typeof useTrexSQLCache>
 
+export function __setTrexSQLEnabledForTests(enabled: boolean | null): void {
+  trexSQLPluginEnabled.value = enabled
+}
+
 /**
  * Reset the module-level singleton state. Test-only: production never
  * needs this because the state is intentionally shared across all
@@ -437,6 +414,6 @@ export function __resetTrexSQLCacheForTests(): void {
     clearTimeout(slowCountTimerId)
     slowCountTimerId = null
   }
-  trexSQLDetected.value = null
+  trexSQLPluginEnabled.value = null
   initializePromise = null
 }

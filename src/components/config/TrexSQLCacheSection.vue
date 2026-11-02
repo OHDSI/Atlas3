@@ -232,6 +232,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
 import { logger } from '@/utils/logger'
 import { listDataSources } from '@/services/datasource.service'
+import { useSourceAccessFor } from '@/composables/useEntityAccess'
 import {
   getCacheStatus,
   buildCache,
@@ -254,6 +255,7 @@ interface CacheRow {
 
 const { t, tv } = useI18n()
 const auth = useAuth()
+const sourceAccess = useSourceAccessFor()
 const { isTrexSQLEnabled, initialize: initTrexSQL } = useTrexSQLCache()
 
 const isLoading = ref(false)
@@ -279,7 +281,7 @@ async function loadCaches(): Promise<void> {
   isLoading.value = true
 
   try {
-    const sources = await listDataSources()
+    const sources = (await listDataSources()).filter(source => sourceAccess.canRead(source.sourceId))
 
     const infoMap = new Map<string, DataSource>()
     sources.forEach(source => infoMap.set(source.sourceKey, source))

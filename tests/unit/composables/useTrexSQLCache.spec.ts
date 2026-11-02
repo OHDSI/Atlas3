@@ -17,6 +17,15 @@ vi.mock('@/services/datasource.service', () => ({
   listDataSources: vi.fn(),
 }))
 
+const canReadMock = vi.hoisted(() => vi.fn((_id: number) => true))
+vi.mock('@/composables/useEntityAccess', () => ({
+  useSourceAccessFor: () => ({ canRead: canReadMock }),
+}))
+
+vi.mock('@/services/webapi-info.service', () => ({
+  isTrexSQLPluginEnabled: vi.fn(),
+}))
+
 vi.mock('@/utils/logger', () => ({
   logger: {
     debug: vi.fn(),
@@ -29,8 +38,9 @@ vi.mock('@/utils/logger', () => ({
 import {
   useTrexSQLCache,
   __resetTrexSQLCacheForTests,
+  __setTrexSQLEnabledForTests,
 } from '@/composables/useTrexSQLCache'
-import { useAuthStore } from '@/stores/auth'
+import { isTrexSQLPluginEnabled } from '@/services/webapi-info.service'
 import {
   getPatientCount,
   getCacheStatus,
@@ -82,9 +92,10 @@ describe('useTrexSQLCache', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    canReadMock.mockImplementation(() => true)
     localStorage.clear()
     // The composable holds module-level singleton state (selectedSourceKey,
-    // dataSources, trexSQLDetected, initializePromise, …). Without this
+    // dataSources, trexSQLPluginEnabled, initializePromise, …). Without this
     // reset, every test inherits the previous one's writes — e.g. an
     // earlier test sets selectedSourceKey='ANY' and the next test sees
     // 'ANY' instead of its own setup.
@@ -97,33 +108,21 @@ describe('useTrexSQLCache', () => {
   })
 
   describe('isTrexSQLEnabled', () => {
-    it('reflects auth store user setting when explicit', () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
+    it('reflects the WebAPI /info flag when true', () => {
+      __setTrexSQLEnabledForTests(true)
       const { api, wrapper } = mountComposable()
       expect(api.isTrexSQLEnabled.value).toBe(true)
       wrapper.unmount()
     })
 
-    it('returns false by default when not detected and no user', () => {
+    it('returns false by default before /info has loaded', () => {
       const { api, wrapper } = mountComposable()
       expect(api.isTrexSQLEnabled.value).toBe(false)
       wrapper.unmount()
     })
 
-    it('returns false when user explicitly disables', () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: false,
-      } as never
+    it('returns false when /info reports it disabled', () => {
+      __setTrexSQLEnabledForTests(false)
       const { api, wrapper } = mountComposable()
       expect(api.isTrexSQLEnabled.value).toBe(false)
       wrapper.unmount()
@@ -231,14 +230,7 @@ describe('useTrexSQLCache', () => {
   describe('localStorage selection (initialize)', () => {
     it('loads previously stored source key on initialize', async () => {
       localStorage.setItem(TREXSQL_SELECTED_SOURCE_KEY, 'STORED')
-
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: false, // skip fetchDataSourcesWithCacheStatus side effects
-      } as never
+      vi.mocked(isTrexSQLPluginEnabled).mockResolvedValue(false)
 
       const { api, wrapper } = mountComposable()
       await api.initialize()
@@ -261,13 +253,7 @@ describe('useTrexSQLCache', () => {
     })
 
     it('tolerates localStorage.getItem throwing on initialize', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: false,
-      } as never
+      vi.mocked(isTrexSQLPluginEnabled).mockResolvedValue(false)
 
       const original = Storage.prototype.getItem
       Storage.prototype.getItem = vi.fn(() => {
@@ -305,9 +291,27 @@ describe('useTrexSQLCache', () => {
   })
 
   describe('fetchDataSourcesWithCacheStatus', () => {
+    it('lists only sources the user can read', async () => {
+      __setTrexSQLEnabledForTests(true)
+      vi.mocked(canReadMock).mockImplementation((id: number) => id === 1)
+      vi.mocked(listDataSources).mockResolvedValue([
+        { sourceId: 1, sourceKey: 'A', sourceName: 'A' },
+        { sourceId: 2, sourceKey: 'B', sourceName: 'B' },
+      ] as never)
+      vi.mocked(getCacheStatus).mockResolvedValue(readyStatus('A'))
+
+      const { api, wrapper } = mountComposable()
+      await api.fetchDataSourcesWithCacheStatus()
+
+      expect(api.dataSources.value.map(s => s.sourceKey)).toEqual(['A'])
+      expect(getCacheStatus).toHaveBeenCalledTimes(1)
+      expect(getCacheStatus).toHaveBeenCalledWith('A')
+      wrapper.unmount()
+    })
+
     it('does nothing when TrexSQL is disabled', async () => {
       const { api, wrapper } = mountComposable()
-      // Default: no auth user, trexSQLDetected null → disabled
+      // Default: /info not loaded → disabled
       await api.fetchDataSourcesWithCacheStatus()
       expect(listDataSources).not.toHaveBeenCalled()
       expect(api.dataSources.value).toEqual([])
@@ -315,13 +319,7 @@ describe('useTrexSQLCache', () => {
     })
 
     it('fetches sources and selects first ready source by default', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
+      __setTrexSQLEnabledForTests(true)
 
       vi.mocked(listDataSources).mockResolvedValue([
         { sourceKey: 'A', sourceName: 'A' },
@@ -340,13 +338,7 @@ describe('useTrexSQLCache', () => {
     })
 
     it('falls back to first source if no ready source', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
+      __setTrexSQLEnabledForTests(true)
 
       vi.mocked(listDataSources).mockResolvedValue([
         { sourceKey: 'A', sourceName: 'A' },
@@ -361,13 +353,7 @@ describe('useTrexSQLCache', () => {
     })
 
     it('returns null cacheStatus when getCacheStatus throws for a source', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
+      __setTrexSQLEnabledForTests(true)
 
       vi.mocked(listDataSources).mockResolvedValue([
         { sourceKey: 'A', sourceName: 'A' },
@@ -382,13 +368,7 @@ describe('useTrexSQLCache', () => {
     })
 
     it('clears data sources when listDataSources fails', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
+      __setTrexSQLEnabledForTests(true)
 
       vi.mocked(listDataSources).mockRejectedValue(new Error('boom'))
 
@@ -438,13 +418,7 @@ describe('useTrexSQLCache', () => {
     })
 
     it('errors when cache is not ready', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
+      __setTrexSQLEnabledForTests(true)
 
       const { api, wrapper } = mountComposable()
       api.dataSources.value = [
@@ -459,13 +433,7 @@ describe('useTrexSQLCache', () => {
     })
 
     it('fetches and stores result on success', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
+      __setTrexSQLEnabledForTests(true)
 
       vi.mocked(getPatientCount).mockResolvedValue({
         cohortPatientCount: 10,
@@ -487,13 +455,7 @@ describe('useTrexSQLCache', () => {
     })
 
     it('captures non-abort errors and exposes them via countError', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
+      __setTrexSQLEnabledForTests(true)
 
       vi.mocked(getPatientCount).mockRejectedValue(new Error('Server down'))
 
@@ -510,13 +472,7 @@ describe('useTrexSQLCache', () => {
     })
 
     it('falls back to generic message when error is not an Error instance', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
+      __setTrexSQLEnabledForTests(true)
 
       vi.mocked(getPatientCount).mockRejectedValue('weird')
 
@@ -532,13 +488,7 @@ describe('useTrexSQLCache', () => {
     })
 
     it('silently aborts when error is AbortError', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
+      __setTrexSQLEnabledForTests(true)
 
       const abortErr = new Error('aborted')
       abortErr.name = 'AbortError'
@@ -557,13 +507,7 @@ describe('useTrexSQLCache', () => {
     })
 
     it('debounced getPatientCount triggers after wait', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
+      __setTrexSQLEnabledForTests(true)
 
       vi.mocked(getPatientCount).mockResolvedValue({
         cohortPatientCount: 1,
@@ -586,13 +530,7 @@ describe('useTrexSQLCache', () => {
     })
 
     it('isCountSlow flips on after 5s of loading', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
+      __setTrexSQLEnabledForTests(true)
 
       let resolveCount: (value: { cohortPatientCount: number; totalPatientCount: number; executionTimeMs: number }) => void = () => {}
       vi.mocked(getPatientCount).mockImplementation(
@@ -652,13 +590,7 @@ describe('useTrexSQLCache', () => {
     })
 
     it('retryCount clears error and re-issues', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
+      __setTrexSQLEnabledForTests(true)
 
       vi.mocked(getPatientCount).mockResolvedValue({
         cohortPatientCount: 1,
@@ -681,8 +613,9 @@ describe('useTrexSQLCache', () => {
     })
   })
 
-  describe('initialize / detectTrexSQLAvailability', () => {
-    it('detects TrexSQL availability from first source', async () => {
+  describe('initialize (WebAPI /info flag)', () => {
+    it('enables TrexSQL when /info reports trexsqlEnabled and loads data sources', async () => {
+      vi.mocked(isTrexSQLPluginEnabled).mockResolvedValue(true)
       vi.mocked(listDataSources).mockResolvedValue([
         { sourceKey: 'A', sourceName: 'A' },
       ] as never)
@@ -691,79 +624,42 @@ describe('useTrexSQLCache', () => {
       const { api, wrapper } = mountComposable()
       await api.initialize()
       expect(api.isTrexSQLEnabled.value).toBe(true)
+      expect(api.dataSources.value).toHaveLength(1)
       wrapper.unmount()
     })
 
-    it('marks unavailable when getCacheStatus throws', async () => {
-      vi.mocked(listDataSources).mockResolvedValue([
-        { sourceKey: 'A', sourceName: 'A' },
-      ] as never)
-      vi.mocked(getCacheStatus).mockRejectedValue(new Error('fail'))
+    it('stays disabled and skips cache calls when /info reports it disabled', async () => {
+      vi.mocked(isTrexSQLPluginEnabled).mockResolvedValue(false)
 
       const { api, wrapper } = mountComposable()
       await api.initialize()
       expect(api.isTrexSQLEnabled.value).toBe(false)
+      expect(listDataSources).not.toHaveBeenCalled()
+      expect(getCacheStatus).not.toHaveBeenCalled()
       wrapper.unmount()
     })
 
-    it('marks unavailable when no data sources are returned', async () => {
-      vi.mocked(listDataSources).mockResolvedValue([] as never)
+    it('treats a failed /info request as disabled', async () => {
+      vi.mocked(isTrexSQLPluginEnabled).mockRejectedValue(new Error('boom'))
 
       const { api, wrapper } = mountComposable()
       await api.initialize()
       expect(api.isTrexSQLEnabled.value).toBe(false)
+      expect(listDataSources).not.toHaveBeenCalled()
       wrapper.unmount()
     })
 
-    it('marks unavailable when listDataSources throws', async () => {
-      vi.mocked(listDataSources).mockRejectedValue(new Error('boom'))
+    it('fetches /info only once across repeated initialize calls', async () => {
+      vi.mocked(isTrexSQLPluginEnabled).mockResolvedValue(false)
 
       const { api, wrapper } = mountComposable()
       await api.initialize()
-      expect(api.isTrexSQLEnabled.value).toBe(false)
-      wrapper.unmount()
-    })
-
-    it('still runs detection when user has explicit `false` (self-corrects stale auth caches)', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: false,
-      } as never
-      vi.mocked(listDataSources).mockResolvedValue([] as never)
-
-      const { api, wrapper } = mountComposable()
       await api.initialize()
-      // The production initialize() intentionally runs detection on any
-      // non-`true` value so a stale `false` from an outdated auth session
-      // can self-correct. Only explicit `true` short-circuits detection.
-      expect(listDataSources).toHaveBeenCalled()
-      wrapper.unmount()
-    })
-
-    it('skips detection when user has explicit `true`', async () => {
-      const auth = useAuthStore()
-      auth.user = {
-        login: 'a',
-        displayName: 'A',
-        permissionIdx: {},
-        trexsqlCacheEnabled: true,
-      } as never
-      vi.mocked(listDataSources).mockResolvedValue([] as never)
-
-      const { api, wrapper } = mountComposable()
-      await api.initialize()
-      // `trexsqlCacheEnabled: true` is trusted; detection short-circuits.
-      // initialize() may still call fetchDataSourcesWithCacheStatus, which
-      // would call listDataSources — so this only asserts the detection
-      // path was skipped via isTrexSQLEnabled being true without a
-      // detection round-trip having happened first.
-      expect(api.isTrexSQLEnabled.value).toBe(true)
+      expect(isTrexSQLPluginEnabled).toHaveBeenCalledTimes(1)
       wrapper.unmount()
     })
   })
+
 
   describe('cleanup on unmount', () => {
     it('cancels all count requests on unmount', () => {
