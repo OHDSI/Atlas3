@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 import CharacterizationDesignForm from './CharacterizationDesignForm.vue'
-import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-return'
+import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-create-kind'
 import type { CharacterizationDefinition } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'

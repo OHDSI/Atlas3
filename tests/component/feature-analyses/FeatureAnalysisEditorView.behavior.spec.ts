@@ -64,7 +64,6 @@ import { AtlasSelect, AtlasSnackbar } from '@/components/ui'
 import FeatureAnalysisPrevalenceEditor from '@/components/feature-analyses/FeatureAnalysisPrevalenceEditor.vue'
 import FeatureAnalysisDistributionEditor from '@/components/feature-analysis/FeatureAnalysisDistributionEditor.vue'
 import { success } from '@/types/api'
-import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -313,83 +312,6 @@ describe('FeatureAnalysisEditorView behavior', () => {
       expect(prevalence.props('conceptSets')).toEqual([])
       expect(prevalence.props('aggregates')).toEqual([{ id: 20, name: 'Fallback aggregate' }, DEFAULT_AGGREGATE])
       expect(setupState(mounted.wrapper).distributionDraftDesign).toEqual([])
-    })
-  })
-
-  describe('return mode', () => {
-    async function settle() {
-      await flushPromises()
-      await new Promise<void>(resolve => setTimeout(resolve, 0))
-      await flushPromises()
-    }
-
-    it('labels Close as "Back to characterization" in return mode', async () => {
-      mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE&returnTo=5')
-      expect(mounted.wrapper.get('[data-testid="feature-analysis-editor-close"]').text()).toContain(tr('featureAnalyses.editor.backToCharacterization'))
-    })
-
-    it('gives the icon-only Close button the return-mode label as its accessible name', async () => {
-      mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE&returnTo=5')
-      expect(mounted.wrapper.get('[data-testid="feature-analysis-editor-close"]').attributes('aria-label')).toBe(
-        tr('featureAnalyses.editor.backToCharacterization')
-      )
-    })
-
-    it('labels Save as "Save and add" when creating in return mode', async () => {
-      mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE&returnTo=5')
-      expect(saveButton(mounted.wrapper).textContent).toContain(tr('featureAnalyses.editor.saveAndAdd'))
-    })
-
-    it('after creating, goes to the characterization with addFeatureAnalysis set', async () => {
-      vi.mocked(createFeatureAnalysis).mockResolvedValue(
-        success({ id: 99, name: 'My FA', type: 'CUSTOM_FE', design: 'SELECT 1' } as never)
-      )
-      mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE&returnTo=5')
-      await mounted.wrapper.get('[data-testid="feature-analysis-editor-name"] input').setValue('My FA')
-      await mounted.wrapper.get('[data-testid="feature-analysis-editor-custom-sql"] textarea').setValue('SELECT 1')
-      const pushSpy = vi.spyOn(mounted.router, 'push')
-      saveButton(mounted.wrapper).click()
-      await settle()
-
-      expect(pushSpy).toHaveBeenCalledWith({
-        name: 'characterization-edit',
-        params: { id: '5' },
-        query: { addFeatureAnalysis: '99' },
-      })
-    })
-
-    it('Back returns to the characterization without adding anything', async () => {
-      mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE&returnTo=5')
-      const pushSpy = vi.spyOn(mounted.router, 'push')
-      await mounted.wrapper.get('[data-testid="feature-analysis-editor-close"]').trigger('click')
-      await settle()
-
-      expect(pushSpy).toHaveBeenCalledWith({ name: 'characterization-edit', params: { id: '5' } })
-    })
-
-    it('ignores an invalid returnTo and behaves as before', async () => {
-      vi.mocked(createFeatureAnalysis).mockResolvedValue(
-        success({ id: 99, name: 'My FA', type: 'CUSTOM_FE', design: 'SELECT 1' } as never)
-      )
-      mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE&returnTo=abc')
-      expect(mounted.wrapper.get('[data-testid="feature-analysis-editor-close"]').text()).toContain(tr('common.close'))
-      expect(mounted.wrapper.get('[data-testid="feature-analysis-editor-close"]').attributes('aria-label')).toBe(tr('common.close'))
-      const pushSpy = vi.spyOn(mounted.router, 'push')
-      await mounted.wrapper.get('[data-testid="feature-analysis-editor-close"]').trigger('click')
-      await settle()
-      expect(pushSpy).toHaveBeenCalledWith('/feature-analyses')
-
-      await mounted.wrapper.get('[data-testid="feature-analysis-editor-name"] input').setValue('My FA')
-      await mounted.wrapper.get('[data-testid="feature-analysis-editor-custom-sql"] textarea').setValue('SELECT 1')
-      saveButton(mounted.wrapper).click()
-      await settle()
-      expect(pushSpy).toHaveBeenCalledWith('/feature-analyses/99')
-    })
-
-    it('still redirects to the list when the create type is missing, even with returnTo', async () => {
-      mounted = await mountEditor('/feature-analyses/new?returnTo=5')
-      await settle()
-      expect(mounted.router.currentRoute.value.name).toBe('feature-analyses')
     })
   })
 

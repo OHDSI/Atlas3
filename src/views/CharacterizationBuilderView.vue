@@ -362,33 +362,11 @@
       </template>
     </AtlasDialog>
 
-    <AtlasDialog
-      v-model="showSaveFirstDialog"
-      :eyebrow="t('cc.title').value"
-      :title="t('cc.viewEdit.design.fa.saveFirstTitle').value"
-      max-width="480"
-      data-testid="cc-fa-save-first-dialog"
-      @close="cancelSaveFirst"
-    >
-      {{ t('cc.viewEdit.design.fa.saveFirstMessage').value }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          data-testid="cc-fa-save-first-cancel"
-          @click="cancelSaveFirst"
-        >
-          {{ t('common.cancel').value }}
-        </AtlasButton>
-        <AtlasButton
-          variant="primary"
-          :loading="saving"
-          data-testid="cc-fa-save-first-confirm"
-          @click="confirmSaveFirst"
-        >
-          {{ t('cc.viewEdit.design.fa.saveAndContinue').value }}
-        </AtlasButton>
-      </template>
-    </AtlasDialog>
+    <FeatureAnalysisEditorPanel
+      :target="featureAnalysisPanelTarget"
+      @saved="onFeatureAnalysisSaved"
+      @closed="featureAnalysisPanelTarget = null"
+    />
 
     <AtlasSnackbar
       v-model="snackbar.show"
@@ -402,8 +380,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, provide, reactive, ref, watch } from 'vue'
-import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import type { LocationQuery } from 'vue-router'
+import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import { useI18n } from '@/composables/useI18n'
 import { useCharacterizationStore } from '@/stores/characterization'
@@ -416,6 +393,7 @@ import { assignCharacterizationTag, exportCharacterization, importCharacterizati
 import { logger } from '@/utils/logger'
 import { assignedTags, syncAssetTags } from '@/utils/asset-tags'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
+import FeatureAnalysisEditorPanel from '@/components/characterization/FeatureAnalysisEditorPanel.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 import ConceptSetsListDialog from '@/components/cohort/ConceptSetsListDialog.vue'
@@ -428,18 +406,13 @@ import ExplorePrevalenceDialog from '@/components/characterization-results/Explo
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
 import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
-import {
-  ADD_FEATURE_ANALYSIS_QUERY,
-  createFeatureAnalysisRoute,
-  parsePositiveId,
-  type FeatureAnalysisCreateKind,
-} from '@/utils/feature-analysis-return'
+import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-create-kind'
 import { designFlags, toLinkedFeatureAnalysis } from '@/utils/linked-feature-analysis'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { validateCharacterization, countByLevel } from '@/utils/characterization-validators'
 import type { CharacterizationDefinition, PrevalenceStat } from '@/models/characterization.types'
 import type { CohortDefinitionSummary, Tag } from '@/models/webapi.types'
-import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
+import type { FeatureAnalysis, FeatureAnalysisListItem } from '@/models/feature-analysis.types'
 import type { ConceptSetReference } from '@/models/cohort.types'
 import type { ConceptSet as CirceConceptSet, ConceptSetItem as CirceConceptSetItem, CriteriaGroup as CirceCriteriaGroup } from '@/models/circe-types'
 import type { ConceptSetItem as AtlasConceptSetItem } from '@/models/concept-set.types'
@@ -451,11 +424,11 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const route = useRoute()
 const { t, tv } = useI18n()
 const store = useCharacterizationStore()
 const conceptSetsStore = useConceptSetsStore()
-const featureAnalysisPanelOpen = ref(false)
+const featureAnalysisPanelTarget = ref<{ featureAnalysisId: number } | { createKind: FeatureAnalysisCreateKind } | null>(null)
+const featureAnalysisPanelOpen = computed(() => featureAnalysisPanelTarget.value !== null)
 provide(CONCEPT_SET_EDITOR_SUPPRESSED, featureAnalysisPanelOpen)
 
 // ---------------------------------------------------------------------------
@@ -480,8 +453,6 @@ const showAccessDialog = ref<boolean>(false)
 const showTagsDialog = ref<boolean>(false)
 const showValidationDialog = ref<boolean>(false)
 const showUnsavedDialog = ref<boolean>(false)
-const showSaveFirstDialog = ref<boolean>(false)
-const pendingCreateKind = ref<FeatureAnalysisCreateKind | null>(null)
 const importing = ref<boolean>(false)
 const exporting = ref<boolean>(false)
 const importFileInput = ref<HTMLInputElement | null>(null)
@@ -600,15 +571,9 @@ const saveDisabledReason = computed<string>(() =>
   })
 )
 
-// Creating a feature analysis saves the design first, so anything that would
-// block that save has to block Create new too.
-const createFeatureAnalysisDisabledReason = computed<string | undefined>(() => {
-  if (!hasPermission('create:feature-analysis')) return t('cc.viewEdit.design.fa.noCreatePermission').value
-  if (!hasSavePermission.value) return t('cc.viewEdit.design.fa.noSavePermission').value
-  if (draft.value.name.trim().length === 0) return t('cc.viewEdit.design.fa.nameFirst').value
-  if (hasValidationErrors.value) return t('cc.viewEdit.design.fa.fixDesignFirst').value
-  return undefined
-})
+const createFeatureAnalysisDisabledReason = computed<string | undefined>(() =>
+  hasPermission('create:feature-analysis') ? undefined : t('cc.viewEdit.design.fa.noCreatePermission').value
+)
 
 // ---------------------------------------------------------------------------
 // Hydration
@@ -808,58 +773,29 @@ async function handleSave(): Promise<number | null> {
 }
 
 function onCreateFeatureAnalysis(kind: FeatureAnalysisCreateKind) {
-  const id = draftId.value
-  if (id !== null && !store.isDirty) {
-    void router.push(createFeatureAnalysisRoute(kind, id))
+  featureAnalysisPanelTarget.value = { createKind: kind }
+}
+
+async function onFeatureAnalysisSaved(fa: FeatureAnalysis, created: boolean): Promise<void> {
+  featureAnalysisPanelTarget.value = null
+  await loadAvailableFeatureAnalyses()
+  if (!created) {
+    showSnackbar(t('cc.viewEdit.design.fa.updated', { name: fa.name }).value, 'success')
     return
   }
-  pendingCreateKind.value = kind
-  showSaveFirstDialog.value = true
-}
-
-async function confirmSaveFirst() {
-  const kind = pendingCreateKind.value
-  if (!kind || saving.value) return
-  // Saving first leaves the store clean, so the leave guard lets the editor
-  // push through; the new-characterization push inside handleSave has already
-  // settled by the time it returns.
-  const id = await handleSave()
-  const dismissed = !showSaveFirstDialog.value || pendingCreateKind.value !== kind
-  showSaveFirstDialog.value = false
-  pendingCreateKind.value = null
-  if (id !== null && !dismissed) await router.push(createFeatureAnalysisRoute(kind, id))
-}
-
-function cancelSaveFirst() {
-  showSaveFirstDialog.value = false
-  pendingCreateKind.value = null
-}
-
-function withoutAddFeatureAnalysis(query: LocationQuery): LocationQuery {
-  return Object.fromEntries(Object.entries(query).filter(([key]) => key !== ADD_FEATURE_ANALYSIS_QUERY))
-}
-
-function consumeAddedFeatureAnalysis() {
-  if (!(ADD_FEATURE_ANALYSIS_QUERY in route.query)) return
-  const raw = route.query[ADD_FEATURE_ANALYSIS_QUERY]
-  const id = parsePositiveId(raw)
   const linked = draft.value.featureAnalyses ?? []
-  const fa = id === null ? undefined : availableFeatureAnalyses.value.find(candidate => candidate.id === id)
-  if (id === null) {
-    logger.warn('CharacterizationBuilder', 'Ignoring invalid feature analysis id to add', raw)
-  } else if (linked.some(existing => existing.id === id)) {
-    logger.debug('CharacterizationBuilder', 'Feature analysis to add is already linked', id)
-  } else if (!fa) {
-    logger.warn('CharacterizationBuilder', 'Ignoring unknown feature analysis to add', raw)
+  if (linked.some(existing => existing.id === fa.id)) return
+  const match = availableFeatureAnalyses.value.find(candidate => candidate.id === fa.id)
+  if (!match) {
+    logger.warn('CharacterizationBuilder', 'Created feature analysis missing from refreshed list', fa.id)
     showSnackbar(t('cc.viewEdit.design.fa.addFailed').value, 'error')
-  } else {
-    onDraftChange({
-      ...draft.value,
-      featureAnalyses: [...linked, toLinkedFeatureAnalysis(fa, designFlags(linked))],
-    })
-    showSnackbar(t('cc.viewEdit.design.fa.added', { name: fa.name }).value, 'success')
+    return
   }
-  void router.replace({ query: withoutAddFeatureAnalysis(route.query) })
+  onDraftChange({
+    ...draft.value,
+    featureAnalyses: [...linked, toLinkedFeatureAnalysis(match, designFlags(linked))],
+  })
+  showSnackbar(t('cc.viewEdit.design.fa.added', { name: match.name }).value, 'success')
 }
 
 const canExport = computed<boolean>(() => Boolean(draft.value.id))
@@ -1026,15 +962,6 @@ async function loadForId(rawId: string | undefined): Promise<boolean> {
   return true
 }
 
-let featureAnalysesLoaded: Promise<void> = Promise.resolve()
-
-async function loadAndConsume(rawId: string | undefined): Promise<void> {
-  if (!(await loadForId(rawId))) return
-  await featureAnalysesLoaded
-  if (loadedKey.value !== (rawId ?? '')) return
-  consumeAddedFeatureAnalysis()
-}
-
 // /characterizations/new and /characterizations/:id are two route records
 // pointing at this one component, and <router-view/> is unkeyed, so Vue reuses
 // the instance and onMounted does NOT re-run when import / save / duplicate
@@ -1045,16 +972,16 @@ async function loadAndConsume(rawId: string | undefined): Promise<void> {
 watch(
   () => props.id,
   newId => {
-    void loadAndConsume(newId)
+    void loadForId(newId)
   }
 )
 
 onMounted(async () => {
   // Load picker data once per editor mount.
   loadAvailableCohorts()
-  featureAnalysesLoaded = loadAvailableFeatureAnalyses()
+  loadAvailableFeatureAnalyses()
 
-  await loadAndConsume(props.id)
+  await loadForId(props.id)
 })
 
 // The confirm step opens a styled AtlasDialog instead of the native

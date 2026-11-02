@@ -283,7 +283,7 @@ import {
   featureAnalysisSearchText,
 } from '@/composables/useFeatureAnalysisFacets'
 import { designFlags, toLinkedFeatureAnalysis } from '@/utils/linked-feature-analysis'
-import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-return'
+import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-create-kind'
 import type { LinkedFeatureAnalysis } from '@/models/characterization.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
 

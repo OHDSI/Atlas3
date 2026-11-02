@@ -89,10 +89,24 @@ vi.mock('@/components/characterization/CharacterizationWorkbench.vue', () => ({
   },
 }))
 
+vi.mock('@/components/characterization/FeatureAnalysisEditorPanel.vue', async () => {
+  const { useConceptSetEditorSuppressed } = await import('@/components/characterization/concept-set-editor-suppression')
+  return {
+    default: {
+      name: 'FeatureAnalysisEditorPanel',
+      props: { target: { type: Object, default: null } },
+      emits: ['saved', 'closed'],
+      setup() {
+        return { suppressed: useConceptSetEditorSuppressed() }
+      },
+      template: '<span data-testid="panel-suppressed">{{ String(suppressed) }}</span>',
+    },
+  }
+})
+
 import {
   getCharacterization,
   createCharacterization,
-  updateCharacterization,
   importCharacterization,
   listCharacterizations,
   listCharacterizationExecutions,
@@ -100,9 +114,7 @@ import {
 import { listFeatureAnalyses } from '@/services/feature-analysis.service'
 import { getCohorts } from '@/services/cohort-definition.service'
 import CharacterizationBuilderView from '@/views/CharacterizationBuilderView.vue'
-import { success, failure } from '@/types/api'
-import { ApiError } from '@/services/api-error'
-import { logger } from '@/utils/logger'
+import { success } from '@/types/api'
 import { useCharacterizationStore } from '@/stores/characterization'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
 import { tr } from '../../helpers/i18n-mock'
@@ -395,12 +407,12 @@ describe('CharacterizationBuilderView — props.id navigation', () => {
     const builder = mounted.wrapper.findComponent(CharacterizationBuilderView)
     const state = (builder.vm as any).$.setupState
 
-    state.featureAnalysisPanelOpen = true
+    state.featureAnalysisPanelTarget = { createKind: { type: 'CUSTOM_FE' } }
     state.conceptSetsStore.editorOpen = true
     await flushPromises()
     expect(builder.findComponent({ name: 'ConceptSetEditor' }).exists()).toBe(false)
 
-    state.featureAnalysisPanelOpen = false
+    state.featureAnalysisPanelTarget = null
     await flushPromises()
     expect(builder.findComponent({ name: 'ConceptSetEditor' }).exists()).toBe(true)
   })
@@ -426,38 +438,13 @@ function workbench(wrapper: VueWrapper) {
   return wrapper.findComponent({ name: 'CharacterizationWorkbench' })
 }
 
-function saveFirstDialog(): HTMLElement | null {
-  return document.body.querySelector<HTMLElement>('[data-testid="cc-fa-save-first-dialog"]')
+function panel(wrapper: VueWrapper) {
+  return wrapper.findComponent({ name: 'FeatureAnalysisEditorPanel' })
 }
 
-function saveFirstDialogOpen(wrapper: VueWrapper): boolean {
-  const dialog = wrapper
-    .findAllComponents({ name: 'AtlasDialog' })
-    .find(candidate => candidate.props('title') === tr('cc.viewEdit.design.fa.saveFirstTitle'))
-  expect(dialog).toBeDefined()
-  return dialog!.props('modelValue') === true
+function builderState(wrapper: VueWrapper) {
+  return (wrapper.findComponent(CharacterizationBuilderView).vm as any).$.setupState
 }
-
-async function waitForQuery(router: Router, expected: Record<string, string>): Promise<void> {
-  await vi.waitFor(() => {
-    expect(router.currentRoute.value.query).toEqual(expected)
-  })
-}
-
-async function confirmSaveFirst(): Promise<void> {
-  await vi.waitFor(() => {
-    if (!saveFirstDialog()) throw new Error('save-first dialog not open')
-  })
-  const confirm = document.body.querySelector<HTMLElement>('[data-testid="cc-fa-save-first-confirm"]')
-  expect(confirm).not.toBeNull()
-  confirm!.click()
-  await flushPromises()
-}
-
-const editorRoute = (returnTo: string) => ({
-  path: '/feature-analyses/new',
-  query: { type: 'CUSTOM_FE', returnTo },
-})
 
 describe('CharacterizationBuilderView: creating a feature analysis from the design', () => {
   let mounted: { wrapper: VueWrapper; router: Router } | null = null
@@ -473,7 +460,6 @@ describe('CharacterizationBuilderView: creating a feature analysis from the desi
     vi.mocked(getCharacterization).mockImplementation(async (id: number) =>
       success(makeDesign(id, `Characterization ${id}`))
     )
-    vi.mocked(updateCharacterization).mockImplementation(async def => success(def))
   })
 
   afterEach(() => {
@@ -481,282 +467,137 @@ describe('CharacterizationBuilderView: creating a feature analysis from the desi
     mounted = null
   })
 
-  it('opens the editor directly when the saved characterization has no unsaved changes', async () => {
-    mounted = await mountAt('/characterizations/5')
-    const push = vi.spyOn(mounted.router, 'push')
-
-    workbench(mounted.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
-    await flushPromises()
-
-    expect(push).toHaveBeenCalledWith(editorRoute('5'))
-    expect(saveFirstDialog()).toBeNull()
-    await waitForPath(mounted.router, '/feature-analyses/new')
-  })
-
-  it('asks to save first when there are unsaved changes, and opens the editor after a successful save', async () => {
-    mounted = await mountAt('/characterizations/5')
-    const store = useCharacterizationStore()
-    const update = vi.spyOn(store, 'update')
-    const push = vi.spyOn(mounted.router, 'push')
-
-    workbench(mounted.wrapper).vm.$emit('update:modelValue', makeDesign(5, 'Renamed'))
-    await flushPromises()
-    expect(store.isDirty).toBe(true)
-
-    workbench(mounted.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
-    await flushPromises()
-    expect(push).not.toHaveBeenCalled()
-    expect(saveFirstDialogOpen(mounted.wrapper)).toBe(true)
-
-    await confirmSaveFirst()
-    await waitForPath(mounted.router, '/feature-analyses/new')
-
-    expect(update).toHaveBeenCalledTimes(1)
-    expect(push).toHaveBeenCalledWith(editorRoute('5'))
-    expect(update.mock.invocationCallOrder[0]).toBeLessThan(push.mock.invocationCallOrder[0])
-    expect(mounted.router.currentRoute.value.query).toEqual({ type: 'CUSTOM_FE', returnTo: '5' })
-  })
-
-  it('asks to save first for a new characterization and uses the created id', async () => {
-    vi.mocked(createCharacterization).mockResolvedValue(success(makeDesign(12, 'Brand New')))
+  async function mountUnsavedDraft() {
     mounted = await mountAt('/characterizations/new')
-    const push = vi.spyOn(mounted.router, 'push')
-
-    workbench(mounted.wrapper).vm.$emit('update:modelValue', makeDesign(undefined, 'Brand New'))
+    const state = builderState(mounted.wrapper)
+    state.draft = {
+      name: '',
+      description: '',
+      cohorts: [{ id: 7, name: 'Cohort 7' }],
+      featureAnalyses: [{ id: 3, name: 'Existing' }],
+      stratas: [],
+    }
+    useCharacterizationStore().markClean()
     await flushPromises()
-    workbench(mounted.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
-    await flushPromises()
+    return mounted
+  }
 
-    await confirmSaveFirst()
-    await waitForPath(mounted.router, '/feature-analyses/new')
-
-    expect(createCharacterization).toHaveBeenCalledTimes(1)
-    expect(push).toHaveBeenLastCalledWith(editorRoute('12'))
-    expect(mounted.router.currentRoute.value.query.returnTo).toBe('12')
-  })
-
-  it('stays on the design when the save fails', async () => {
-    mounted = await mountAt('/characterizations/5')
+  it('opens the panel on create without saving or navigating', async () => {
+    await mountUnsavedDraft()
     const store = useCharacterizationStore()
-    const update = vi.spyOn(store, 'update').mockResolvedValue(null)
-    const push = vi.spyOn(mounted.router, 'push')
+    const create = vi.spyOn(store, 'create')
+    const push = vi.spyOn(mounted!.router, 'push')
 
-    workbench(mounted.wrapper).vm.$emit('update:modelValue', makeDesign(5, 'Renamed'))
-    await flushPromises()
-    workbench(mounted.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
+    workbench(mounted!.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
     await flushPromises()
 
-    await confirmSaveFirst()
-    await flushPromises()
-
-    expect(update).toHaveBeenCalledTimes(1)
+    expect(panel(mounted!.wrapper).props('target')).toEqual({ createKind: { type: 'CUSTOM_FE' } })
+    expect(create).not.toHaveBeenCalled()
     expect(push).not.toHaveBeenCalled()
-    expect(mounted.router.currentRoute.value.path).toBe('/characterizations/5')
-    expect(saveFirstDialogOpen(mounted.wrapper)).toBe(false)
   })
 
-  it('passes createDisabledReason when the characterization has no name', async () => {
-    mounted = await mountAt('/characterizations/new')
-
-    expect(mounted.wrapper.get('[data-testid="wb-create-reason"]').text()).toBe(
-      tr('cc.viewEdit.design.fa.nameFirst')
+  it('links the new analysis and keeps the unsaved draft', async () => {
+    await mountUnsavedDraft()
+    const store = useCharacterizationStore()
+    workbench(mounted!.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
+    await flushPromises()
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(
+      success([makeFeatureAnalysis(3, 'Existing'), makeFeatureAnalysis(501, 'Prior insulin use')])
     )
 
-    workbench(mounted.wrapper).vm.$emit('update:modelValue', makeDesign(undefined, 'Named'))
+    panel(mounted!.wrapper).vm.$emit('saved', { id: 501, name: 'Prior insulin use', type: 'CUSTOM_FE' }, true)
     await flushPromises()
+
+    const { draft } = builderState(mounted!.wrapper)
+    expect(draft.featureAnalyses.map((fa: { id: number }) => fa.id)).toEqual([3, 501])
+    expect(draft.cohorts).toEqual([{ id: 7, name: 'Cohort 7' }])
+    expect(draft.name).toBe('')
+    expect(store.isDirty).toBe(true)
+    expect(document.body.textContent).toContain(tr('cc.viewEdit.design.fa.added', { name: 'Prior insulin use' }))
+    expect(panel(mounted!.wrapper).props('target')).toBeNull()
+  })
+
+  it('shows addFailed when the new analysis is missing from the refreshed list', async () => {
+    await mountUnsavedDraft()
+    workbench(mounted!.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
+    await flushPromises()
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success([makeFeatureAnalysis(3, 'Existing')]))
+
+    panel(mounted!.wrapper).vm.$emit('saved', { id: 501, name: 'Prior insulin use', type: 'CUSTOM_FE' }, true)
+    await flushPromises()
+
+    const { draft } = builderState(mounted!.wrapper)
+    expect(draft.featureAnalyses.map((fa: { id: number }) => fa.id)).toEqual([3])
+    expect(useCharacterizationStore().isDirty).toBe(false)
+    expect(document.body.textContent).toContain(tr('cc.viewEdit.design.fa.addFailed'))
+    expect(panel(mounted!.wrapper).props('target')).toBeNull()
+  })
+
+  it('leaves the draft alone when the created analysis is already linked', async () => {
+    await mountUnsavedDraft()
+    workbench(mounted!.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
+    await flushPromises()
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success([makeFeatureAnalysis(3, 'Existing')]))
+
+    panel(mounted!.wrapper).vm.$emit('saved', { id: 3, name: 'Existing', type: 'CUSTOM_FE' }, true)
+    await flushPromises()
+
+    const { draft } = builderState(mounted!.wrapper)
+    expect(draft.featureAnalyses.map((fa: { id: number }) => fa.id)).toEqual([3])
+    expect(useCharacterizationStore().isDirty).toBe(false)
+    expect(panel(mounted!.wrapper).props('target')).toBeNull()
+  })
+
+  it('reports an updated analysis without changing the draft', async () => {
+    await mountUnsavedDraft()
+    panel(mounted!.wrapper).vm.$emit('saved', { id: 3, name: 'Existing', type: 'CUSTOM_FE' }, false)
+    await flushPromises()
+
+    expect(document.body.textContent).toContain(tr('cc.viewEdit.design.fa.updated', { name: 'Existing' }))
+    expect(useCharacterizationStore().isDirty).toBe(false)
+  })
+
+  it('closes the panel when it emits closed', async () => {
+    await mountUnsavedDraft()
+    workbench(mounted!.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
+    await flushPromises()
+
+    panel(mounted!.wrapper).vm.$emit('closed')
+    await flushPromises()
+
+    expect(panel(mounted!.wrapper).props('target')).toBeNull()
+  })
+
+  it('enables create on an empty unnamed design', async () => {
+    mounted = await mountAt('/characterizations/new')
 
     expect(mounted.wrapper.get('[data-testid="wb-create-reason"]').text()).toBe('')
   })
 
-  function createReason(wrapper: VueWrapper): string {
-    return wrapper.get('[data-testid="wb-create-reason"]').text()
-  }
-
-  it('disables Create new while the design has no cohorts', async () => {
-    mounted = await mountAt('/characterizations/5')
-
-    workbench(mounted.wrapper).vm.$emit('update:modelValue', { ...makeDesign(5, 'Named'), cohorts: [] })
-    await flushPromises()
-
-    expect(createReason(mounted.wrapper)).toBe(tr('cc.viewEdit.design.fa.fixDesignFirst'))
-  })
-
-  it('disables Create new while the design has no feature analyses', async () => {
-    mounted = await mountAt('/characterizations/5')
-
-    workbench(mounted.wrapper).vm.$emit('update:modelValue', { ...makeDesign(5, 'Named'), featureAnalyses: [] })
-    await flushPromises()
-
-    expect(createReason(mounted.wrapper)).toBe(tr('cc.viewEdit.design.fa.fixDesignFirst'))
-  })
-
-  it('prefers the name reason over validation errors', async () => {
-    mounted = await mountAt('/characterizations/new')
-
-    expect(createReason(mounted.wrapper)).toBe(tr('cc.viewEdit.design.fa.nameFirst'))
-  })
-
-  it('disables Create new without create:feature-analysis, ahead of the name reason', async () => {
+  it('disables create without the create permission', async () => {
     mounted = await mountAt('/characterizations/new', {
       create: ['create:cohort-characterization'],
       write: ['write:cohort-characterization'],
     })
 
-    expect(createReason(mounted.wrapper)).toBe(tr('cc.viewEdit.design.fa.noCreatePermission'))
-  })
-
-  it('disables Create new when the characterization cannot be saved', async () => {
-    mounted = await mountAt('/characterizations/5', { create: ['create:feature-analysis'], write: [] })
-
-    expect(createReason(mounted.wrapper)).toBe(tr('cc.viewEdit.design.fa.noSavePermission'))
-  })
-
-  it('disables Create new on a new design without create:cohort-characterization', async () => {
-    mounted = await mountAt('/characterizations/new', { create: ['create:feature-analysis'], write: [] })
-
-    expect(createReason(mounted.wrapper)).toBe(tr('cc.viewEdit.design.fa.noSavePermission'))
-  })
-
-  it('stays on the design when the design fails validation at save time', async () => {
-    mounted = await mountAt('/characterizations/5')
-    const store = useCharacterizationStore()
-    const update = vi.spyOn(store, 'update')
-    const push = vi.spyOn(mounted.router, 'push')
-
-    workbench(mounted.wrapper).vm.$emit('update:modelValue', makeDesign(5, 'Renamed'))
-    await flushPromises()
-    workbench(mounted.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
-    await flushPromises()
-    expect(saveFirstDialogOpen(mounted.wrapper)).toBe(true)
-
-    workbench(mounted.wrapper).vm.$emit('update:modelValue', { ...makeDesign(5, 'Renamed'), cohorts: [] })
-    await flushPromises()
-
-    await confirmSaveFirst()
-    await flushPromises()
-
-    expect(update).not.toHaveBeenCalled()
-    expect(push).not.toHaveBeenCalled()
-    expect(mounted.router.currentRoute.value.path).toBe('/characterizations/5')
-    expect(saveFirstDialogOpen(mounted.wrapper)).toBe(false)
-    expect(store.isDirty).toBe(true)
-  })
-
-  it('keeps the save but does not open the editor when the dialog is dismissed mid-save', async () => {
-    mounted = await mountAt('/characterizations/5')
-    const store = useCharacterizationStore()
-    let finishUpdate: (value: CharacterizationDefinition) => void = () => {}
-    const update = vi.spyOn(store, 'update').mockImplementation(
-      () => new Promise(resolve => { finishUpdate = resolve })
+    expect(mounted.wrapper.get('[data-testid="wb-create-reason"]').text()).toBe(
+      tr('cc.viewEdit.design.fa.noCreatePermission')
     )
-    const push = vi.spyOn(mounted.router, 'push')
-
-    workbench(mounted.wrapper).vm.$emit('update:modelValue', makeDesign(5, 'Renamed'))
-    await flushPromises()
-    workbench(mounted.wrapper).vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
-    await flushPromises()
-
-    await confirmSaveFirst()
-    expect(update).toHaveBeenCalledTimes(1)
-
-    const cancel = document.body.querySelector<HTMLElement>('[data-testid="cc-fa-save-first-cancel"]')
-    expect(cancel).not.toBeNull()
-    cancel!.click()
-    await flushPromises()
-    expect(saveFirstDialogOpen(mounted.wrapper)).toBe(false)
-
-    finishUpdate(makeDesign(5, 'Renamed'))
-    await flushPromises()
-    await flushPromises()
-
-    expect(push).not.toHaveBeenCalled()
-    expect(mounted.router.currentRoute.value.path).toBe('/characterizations/5')
-    expect(mounted.wrapper.get('[data-testid="wb-name"]').text()).toBe('Renamed')
-    expect(store.isDirty).toBe(false)
   })
 
-  it('links the analysis named by addFeatureAnalysis and marks the draft dirty', async () => {
-    vi.mocked(listFeatureAnalyses).mockResolvedValue(
-      success([makeFeatureAnalysis(21, 'Demographics'), makeFeatureAnalysis(99, 'Fresh analysis')])
-    )
-
-    mounted = await mountAt('/characterizations/5?sourceId=2&addFeatureAnalysis=99')
-    await flushPromises()
-
-    expect(mounted.wrapper.get('[data-testid="wb-fa-ids"]').text()).toBe('21,99')
-    expect(useCharacterizationStore().isDirty).toBe(true)
-    await vi.waitFor(() => {
-      expect(document.body.textContent).toContain(
-        tr('cc.viewEdit.design.fa.added', { name: 'Fresh analysis' })
-      )
-    })
-    expect(mounted.router.currentRoute.value.path).toBe('/characterizations/5')
-    await waitForQuery(mounted.router, { sourceId: '2' })
-  })
-
-  it('does not duplicate an already linked analysis, and still strips the query', async () => {
-    vi.mocked(listFeatureAnalyses).mockResolvedValue(success([makeFeatureAnalysis(21, 'Demographics')]))
-
-    mounted = await mountAt('/characterizations/5?addFeatureAnalysis=21')
-    await flushPromises()
-
-    expect(mounted.wrapper.get('[data-testid="wb-fa-ids"]').text()).toBe('21')
-    expect(useCharacterizationStore().isDirty).toBe(false)
-    await waitForQuery(mounted.router, {})
-    expect(document.body.textContent).not.toContain(tr('cc.viewEdit.design.fa.addFailed'))
-  })
-
-  it('reports an addFeatureAnalysis id missing from the list and strips the query', async () => {
-    vi.mocked(listFeatureAnalyses).mockResolvedValue(success([makeFeatureAnalysis(99, 'Fresh analysis')]))
-
-    mounted = await mountAt('/characterizations/5?addFeatureAnalysis=404')
-    await flushPromises()
-
-    expect(mounted.wrapper.get('[data-testid="wb-fa-ids"]').text()).toBe('21')
-    expect(useCharacterizationStore().isDirty).toBe(false)
-    expect(logger.warn).toHaveBeenCalled()
-    await vi.waitFor(() => {
-      expect(document.body.textContent).toContain(tr('cc.viewEdit.design.fa.addFailed'))
-    })
-    await waitForQuery(mounted.router, {})
-  })
-
-  it('reports the new analysis as not added when the list fails to load', async () => {
-    vi.mocked(listFeatureAnalyses).mockResolvedValue(failure(new ApiError('boom', 500, null)))
-
-    mounted = await mountAt('/characterizations/5?addFeatureAnalysis=99')
-    await flushPromises()
-
-    expect(mounted.wrapper.get('[data-testid="wb-fa-ids"]').text()).toBe('21')
-    await vi.waitFor(() => {
-      expect(document.body.textContent).toContain(tr('cc.viewEdit.design.fa.addFailed'))
-    })
-    await waitForQuery(mounted.router, {})
-  })
-
-  it('silently ignores an invalid addFeatureAnalysis id and strips the query', async () => {
-    vi.mocked(listFeatureAnalyses).mockResolvedValue(success([makeFeatureAnalysis(99, 'Fresh analysis')]))
-
-    mounted = await mountAt('/characterizations/5?addFeatureAnalysis=abc')
-    await flushPromises()
-
-    expect(mounted.wrapper.get('[data-testid="wb-fa-ids"]').text()).toBe('21')
-    expect(useCharacterizationStore().isDirty).toBe(false)
-    expect(logger.warn).toHaveBeenCalled()
-    await waitForQuery(mounted.router, {})
-    expect(document.body.textContent).not.toContain(tr('cc.viewEdit.design.fa.addFailed'))
-  })
-
-  it('links the analysis after the reused instance loads a different id', async () => {
-    vi.mocked(listFeatureAnalyses).mockResolvedValue(success([makeFeatureAnalysis(99, 'Fresh analysis')]))
-
+  it('suppresses the concept set editors while the panel is open', async () => {
     mounted = await mountAt('/characterizations/new')
-    await mounted.router.push('/characterizations/7?addFeatureAnalysis=99')
-    await flushPromises()
-    await flushPromises()
+    const state = builderState(mounted.wrapper)
+    const injected = () => mounted!.wrapper.get('[data-testid="panel-suppressed"]').text()
 
-    expect(mounted.wrapper.get('[data-testid="wb-id"]').text()).toBe('7')
-    expect(mounted.wrapper.get('[data-testid="wb-fa-ids"]').text()).toBe('21,99')
-    await waitForQuery(mounted.router, {})
+    expect(injected()).toBe('false')
+
+    state.featureAnalysisPanelTarget = { createKind: { type: 'CUSTOM_FE' } }
+    await flushPromises()
+    expect(injected()).toBe('true')
+
+    state.featureAnalysisPanelTarget = null
+    await flushPromises()
+    expect(injected()).toBe('false')
   })
 })
