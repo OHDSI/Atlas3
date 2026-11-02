@@ -1797,6 +1797,7 @@
       "design": {
         "fa": {
           "added": "{name} was added. Save the characterization to keep it.",
+          "addFailed": "The new feature analysis could not be added. Add it from the picker.",
           "createNew": "Create new feature analysis",
           "createNewHint": "No exact match? Build your own feature from criteria or SQL.",
           "fixDesignFirst": "Add at least one cohort and one feature analysis (a preset is fine) and save before creating a new feature analysis.",

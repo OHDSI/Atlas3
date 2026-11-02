@@ -100,7 +100,8 @@ import {
 import { listFeatureAnalyses } from '@/services/feature-analysis.service'
 import { getCohorts } from '@/services/cohort-definition.service'
 import CharacterizationBuilderView from '@/views/CharacterizationBuilderView.vue'
-import { success } from '@/types/api'
+import { success, failure } from '@/types/api'
+import { ApiError } from '@/services/api-error'
 import { logger } from '@/utils/logger'
 import { useCharacterizationStore } from '@/stores/characterization'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
@@ -687,18 +688,48 @@ describe('CharacterizationBuilderView: creating a feature analysis from the desi
     expect(mounted.wrapper.get('[data-testid="wb-fa-ids"]').text()).toBe('21')
     expect(useCharacterizationStore().isDirty).toBe(false)
     await waitForQuery(mounted.router, {})
+    expect(document.body.textContent).not.toContain(tr('cc.viewEdit.design.fa.addFailed'))
   })
 
-  it.each(['404', 'abc'])('ignores an unknown or invalid addFeatureAnalysis id (%s) and strips the query', async raw => {
+  it('reports an addFeatureAnalysis id missing from the list and strips the query', async () => {
     vi.mocked(listFeatureAnalyses).mockResolvedValue(success([makeFeatureAnalysis(99, 'Fresh analysis')]))
 
-    mounted = await mountAt(`/characterizations/5?addFeatureAnalysis=${raw}`)
+    mounted = await mountAt('/characterizations/5?addFeatureAnalysis=404')
+    await flushPromises()
+
+    expect(mounted.wrapper.get('[data-testid="wb-fa-ids"]').text()).toBe('21')
+    expect(useCharacterizationStore().isDirty).toBe(false)
+    expect(logger.warn).toHaveBeenCalled()
+    await vi.waitFor(() => {
+      expect(document.body.textContent).toContain(tr('cc.viewEdit.design.fa.addFailed'))
+    })
+    await waitForQuery(mounted.router, {})
+  })
+
+  it('reports the new analysis as not added when the list fails to load', async () => {
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(failure(new ApiError('boom', 500, null)))
+
+    mounted = await mountAt('/characterizations/5?addFeatureAnalysis=99')
+    await flushPromises()
+
+    expect(mounted.wrapper.get('[data-testid="wb-fa-ids"]').text()).toBe('21')
+    await vi.waitFor(() => {
+      expect(document.body.textContent).toContain(tr('cc.viewEdit.design.fa.addFailed'))
+    })
+    await waitForQuery(mounted.router, {})
+  })
+
+  it('silently ignores an invalid addFeatureAnalysis id and strips the query', async () => {
+    vi.mocked(listFeatureAnalyses).mockResolvedValue(success([makeFeatureAnalysis(99, 'Fresh analysis')]))
+
+    mounted = await mountAt('/characterizations/5?addFeatureAnalysis=abc')
     await flushPromises()
 
     expect(mounted.wrapper.get('[data-testid="wb-fa-ids"]').text()).toBe('21')
     expect(useCharacterizationStore().isDirty).toBe(false)
     expect(logger.warn).toHaveBeenCalled()
     await waitForQuery(mounted.router, {})
+    expect(document.body.textContent).not.toContain(tr('cc.viewEdit.design.fa.addFailed'))
   })
 
   it('links the analysis after the reused instance loads a different id', async () => {

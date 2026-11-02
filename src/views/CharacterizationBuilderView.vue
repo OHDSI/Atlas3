@@ -840,11 +840,16 @@ function consumeAddedFeatureAnalysis() {
   if (!(ADD_FEATURE_ANALYSIS_QUERY in route.query)) return
   const raw = route.query[ADD_FEATURE_ANALYSIS_QUERY]
   const id = parsePositiveId(raw)
-  const fa = id === null ? undefined : availableFeatureAnalyses.value.find(candidate => candidate.id === id)
   const linked = draft.value.featureAnalyses ?? []
-  if (!fa) {
+  const fa = id === null ? undefined : availableFeatureAnalyses.value.find(candidate => candidate.id === id)
+  if (id === null) {
+    logger.warn('CharacterizationBuilder', 'Ignoring invalid feature analysis id to add', raw)
+  } else if (linked.some(existing => existing.id === id)) {
+    logger.debug('CharacterizationBuilder', 'Feature analysis to add is already linked', id)
+  } else if (!fa) {
     logger.warn('CharacterizationBuilder', 'Ignoring unknown feature analysis to add', raw)
-  } else if (!linked.some(existing => existing.id === fa.id)) {
+    showSnackbar(t('cc.viewEdit.design.fa.addFailed').value, 'error')
+  } else {
     onDraftChange({
       ...draft.value,
       featureAnalyses: [...linked, toLinkedFeatureAnalysis(fa, designFlags(linked))],
