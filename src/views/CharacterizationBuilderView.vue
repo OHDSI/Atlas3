@@ -219,6 +219,7 @@
       data-testid="char-builder-workbench"
       @update:model-value="onDraftChange"
       @create-feature-analysis="onCreateFeatureAnalysis"
+      @edit-feature-analysis="onEditFeatureAnalysis"
       @explore="onExplore"
       @snackbar="(msg, sev) => showSnackbar(msg, sev)"
     />
@@ -774,6 +775,10 @@ async function handleSave(): Promise<number | null> {
 
 function onCreateFeatureAnalysis(kind: FeatureAnalysisCreateKind) {
   featureAnalysisPanelTarget.value = { createKind: kind }
+}
+
+function onEditFeatureAnalysis(id: number) {
+  featureAnalysisPanelTarget.value = { featureAnalysisId: id }
 }
 
 async function onFeatureAnalysisSaved(fa: FeatureAnalysis, created: boolean): Promise<void> {

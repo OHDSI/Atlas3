@@ -15,6 +15,7 @@
       :create-disabled-reason="createDisabledReason"
       @update:model-value="v => updateField('featureAnalyses', v)"
       @create-feature-analysis="kind => emit('create-feature-analysis', kind)"
+      @edit-feature-analysis="id => emit('edit-feature-analysis', id)"
     />
 
     <AtlasDivider class="my-3" />
@@ -57,6 +58,7 @@ const currentUserLogin = computed(() => authStore.user?.login)
 const emit = defineEmits<{
   'update:modelValue': [value: CharacterizationDefinition]
   'create-feature-analysis': [kind: FeatureAnalysisCreateKind]
+  'edit-feature-analysis': [id: number]
 }>()
 
 const draft = computed<CharacterizationDefinition>(() => props.modelValue)

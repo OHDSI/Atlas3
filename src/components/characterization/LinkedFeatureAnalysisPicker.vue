@@ -81,6 +81,15 @@
             />
           </span>
           <AtlasIconButton
+            v-if="isEditable(fa)"
+            icon="mdi-pencil"
+            v-bind="{ ariaLabel: tv('cc.viewEdit.design.fa.edit') }"
+            variant="text"
+            size="sm"
+            :data-testid="`linked-fa-picker-edit-${fa.id}`"
+            @click="emit('edit-feature-analysis', fa.id)"
+          />
+          <AtlasIconButton
             icon="mdi-close"
             v-bind="{ ariaLabel: tv('columns.remove') }"
             variant="text"
@@ -303,6 +312,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: LinkedFeatureAnalysis[]]
   'create-feature-analysis': [kind: FeatureAnalysisCreateKind]
+  'edit-feature-analysis': [id: number]
 }>()
 
 const { t, tv } = useI18n()
@@ -359,6 +369,11 @@ function displayName(fa: LinkedFeatureAnalysis): string {
   if (fa.name && fa.name.length > 0) return fa.name
   const match = props.availableFeatureAnalyses.find(a => a.id === fa.id)
   return match?.name ?? `#${fa.id}`
+}
+
+function isEditable(fa: LinkedFeatureAnalysis): boolean {
+  const type = props.availableFeatureAnalyses.find(a => a.id === fa.id)?.type
+  return type !== undefined && type !== 'PRESET'
 }
 
 function displaySubtitle(fa: LinkedFeatureAnalysis): string {

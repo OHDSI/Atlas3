@@ -761,4 +761,14 @@ describe('CharacterizationWorkbench', () => {
     rail.vm.$emit('create-feature-analysis', { type: 'CUSTOM_FE' })
     expect(w.emitted('create-feature-analysis')).toEqual([[{ type: 'CUSTOM_FE' }]])
   })
+
+  it('re-emits edit-feature-analysis from the rail', () => {
+    const w = mount(CharacterizationWorkbench, {
+      global: { plugins: [makeRouter(), vuetify], stubs },
+      props: { modelValue: { name: '', description: '', cohorts: [], featureAnalyses: [], stratas: [] },
+               characterizationId: null, availableCohorts: [], availableFeatureAnalyses: [] },
+    })
+    w.findComponent({ name: 'CharacterizationDesignRail' }).vm.$emit('edit-feature-analysis', 11)
+    expect(w.emitted('edit-feature-analysis')).toEqual([[11]])
+  })
 })

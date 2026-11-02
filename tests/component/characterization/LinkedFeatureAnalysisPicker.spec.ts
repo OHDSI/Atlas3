@@ -269,6 +269,37 @@ describe('LinkedFeatureAnalysisPicker', () => {
     wrapper.unmount()
   })
 
+  describe('edit linked analysis', () => {
+    function mountWithMixedTypes() {
+      return mount(LinkedFeatureAnalysisPicker, {
+        props: {
+          modelValue: [{ id: 1 }, { id: 11 }, { id: 12 }, { id: 99 }] as LinkedFeatureAnalysis[],
+          availableFeatureAnalyses: [
+            { id: 1, name: 'Demographics', type: 'PRESET' },
+            { id: 11, name: 'Comorbidities', type: 'CRITERIA_SET' },
+            { id: 12, name: 'Custom', type: 'CUSTOM_FE' },
+          ] as FeatureAnalysisListItem[],
+        },
+        global: { plugins: [vuetify] },
+        attachTo: document.body,
+      })
+    }
+
+    it('offers edit only for linked custom analyses', () => {
+      const wrapper = mountWithMixedTypes()
+      const edit = (id: number) => wrapper.find(`[data-testid="linked-fa-picker-edit-${id}"]`).exists()
+      expect([1, 11, 12, 99].map(edit)).toEqual([false, true, true, false])
+      wrapper.unmount()
+    })
+
+    it('emits edit-feature-analysis with the id', async () => {
+      const wrapper = mountWithMixedTypes()
+      await wrapper.get('[data-testid="linked-fa-picker-edit-11"]').trigger('click')
+      expect(wrapper.emitted('edit-feature-analysis')).toEqual([[11]])
+      wrapper.unmount()
+    })
+  })
+
   it('opens the dialog when Add feature analysis is clicked', async () => {
     const wrapper = mountPicker([])
 

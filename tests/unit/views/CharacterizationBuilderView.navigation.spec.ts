@@ -73,7 +73,7 @@ vi.mock('@/components/characterization/CharacterizationWorkbench.vue', () => ({
       availableFeatureAnalyses: { type: Array, default: () => [] },
       createDisabledReason: { type: String, default: undefined },
     },
-    emits: ['update:modelValue', 'explore', 'snackbar', 'create-feature-analysis'],
+    emits: ['update:modelValue', 'explore', 'snackbar', 'create-feature-analysis', 'edit-feature-analysis'],
     template: `
       <div data-testid="wb">
         <span data-testid="wb-id">{{ characterizationId === null ? 'none' : String(characterizationId) }}</span>
@@ -546,6 +546,14 @@ describe('CharacterizationBuilderView: creating a feature analysis from the desi
     expect(draft.featureAnalyses.map((fa: { id: number }) => fa.id)).toEqual([3])
     expect(useCharacterizationStore().isDirty).toBe(false)
     expect(panel(mounted!.wrapper).props('target')).toBeNull()
+  })
+
+  it('opens the panel to edit a linked analysis', async () => {
+    await mountUnsavedDraft()
+    workbench(mounted!.wrapper).vm.$emit('edit-feature-analysis', 11)
+    await flushPromises()
+
+    expect(panel(mounted!.wrapper).props('target')).toEqual({ featureAnalysisId: 11 })
   })
 
   it('reports an updated analysis without changing the draft', async () => {

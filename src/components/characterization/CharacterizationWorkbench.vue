@@ -14,6 +14,7 @@
         :create-disabled-reason="createDisabledReason"
         @update:model-value="(v) => $emit('update:modelValue', v)"
         @create-feature-analysis="(kind) => emit('create-feature-analysis', kind)"
+        @edit-feature-analysis="(id) => emit('edit-feature-analysis', id)"
       />
     </div>
 
@@ -253,6 +254,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: CharacterizationDefinition]
   'create-feature-analysis': [kind: FeatureAnalysisCreateKind]
+  'edit-feature-analysis': [id: number]
   'explore': [row: PrevalenceStat]
   'snackbar': [message: string, severity: 'success' | 'error' | 'info']
 }>()

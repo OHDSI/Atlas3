@@ -77,6 +77,25 @@ describe('CharacterizationDesignForm', () => {
     expect(w.emitted('create-feature-analysis')).toEqual([[{ type: 'CUSTOM_FE' }]])
   })
 
+  it('re-emits edit-feature-analysis from the picker', async () => {
+    const w = mount(CharacterizationDesignForm, {
+      global: {
+        plugins: [vuetify],
+        stubs: {
+          LinkedCohortPicker: true,
+          StrataEditor: true,
+          LinkedFeatureAnalysisPicker: {
+            template: '<div data-testid="stub-fa" @click="$emit(\'edit-feature-analysis\', 11)"></div>',
+            emits: ['edit-feature-analysis', 'update:modelValue'],
+          },
+        },
+      },
+      props: { modelValue: empty(), availableCohorts: [], availableFeatureAnalyses: [] },
+    })
+    await w.find('[data-testid="stub-fa"]').trigger('click')
+    expect(w.emitted('edit-feature-analysis')).toEqual([[11]])
+  })
+
   it('forwards createDisabledReason to the picker', () => {
     const w = mount(CharacterizationDesignForm, {
       global: {

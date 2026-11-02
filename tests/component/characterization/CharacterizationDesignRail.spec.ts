@@ -65,6 +65,23 @@ describe('CharacterizationDesignRail', () => {
     expect(w.emitted('create-feature-analysis')).toEqual([[{ type: 'CUSTOM_FE' }]])
   })
 
+  it('re-emits edit-feature-analysis from the form', async () => {
+    const w = mount(CharacterizationDesignRail, {
+      global: {
+        plugins: [vuetify],
+        stubs: {
+          CharacterizationDesignForm: {
+            template: '<div data-testid="stub-form" @click="$emit(\'edit-feature-analysis\', 11)"></div>',
+            emits: ['edit-feature-analysis', 'update:modelValue'],
+          },
+        },
+      },
+      props: { modelValue: emptyDraft(), availableCohorts: [], availableFeatureAnalyses: [] },
+    })
+    await w.find('[data-testid="stub-form"]').trigger('click')
+    expect(w.emitted('edit-feature-analysis')).toEqual([[11]])
+  })
+
   it('forwards createDisabledReason to the form', () => {
     const w = mount(CharacterizationDesignRail, {
       global: { plugins: [vuetify], stubs: ['CharacterizationDesignForm'] },
