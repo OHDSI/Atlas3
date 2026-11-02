@@ -304,7 +304,7 @@
     </AtlasDialog>
 
     <ConceptSetEditor
-      v-if="conceptSetsStore.editorOpen"
+      v-if="conceptSetsStore.editorOpen && !featureAnalysisPanelOpen"
       :model-value="conceptSetsStore.editorOpen"
       :concept-set="conceptSetsStore.currentSet"
       embedded
@@ -401,7 +401,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, provide, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import type { LocationQuery } from 'vue-router'
 
@@ -420,6 +420,7 @@ import CharacterizationMessagesTab from '@/components/characterization/Character
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 import ConceptSetsListDialog from '@/components/cohort/ConceptSetsListDialog.vue'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
+import { CONCEPT_SET_EDITOR_SUPPRESSED } from '@/components/characterization/concept-set-editor-suppression'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
@@ -454,6 +455,8 @@ const route = useRoute()
 const { t, tv } = useI18n()
 const store = useCharacterizationStore()
 const conceptSetsStore = useConceptSetsStore()
+const featureAnalysisPanelOpen = ref(false)
+provide(CONCEPT_SET_EDITOR_SUPPRESSED, featureAnalysisPanelOpen)
 
 // ---------------------------------------------------------------------------
 // Local state

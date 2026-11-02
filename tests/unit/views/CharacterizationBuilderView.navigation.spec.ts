@@ -390,6 +390,21 @@ describe('CharacterizationBuilderView — props.id navigation', () => {
     expect(nameInputValue(mounted.wrapper)).toBe('Brand New')
   })
 
+  it('hides its own concept set editor while the feature analysis panel is open', async () => {
+    mounted = await mountAt('/characterizations/new')
+    const builder = mounted.wrapper.findComponent(CharacterizationBuilderView)
+    const state = (builder.vm as any).$.setupState
+
+    state.featureAnalysisPanelOpen = true
+    state.conceptSetsStore.editorOpen = true
+    await flushPromises()
+    expect(builder.findComponent({ name: 'ConceptSetEditor' }).exists()).toBe(false)
+
+    state.featureAnalysisPanelOpen = false
+    await flushPromises()
+    expect(builder.findComponent({ name: 'ConceptSetEditor' }).exists()).toBe(true)
+  })
+
   it('covers the unsaved-changes confirmation helpers', async () => {
     mounted = await mountAt('/characterizations/new')
 
