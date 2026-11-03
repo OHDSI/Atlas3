@@ -352,6 +352,75 @@ describe('useTrexSQLCache', () => {
       wrapper.unmount()
     })
 
+    it('moves off a remembered source without a ready cache to one with a ready cache', async () => {
+      __setTrexSQLEnabledForTests(true)
+      localStorage.setItem(TREXSQL_SELECTED_SOURCE_KEY, 'A')
+      vi.mocked(isTrexSQLPluginEnabled).mockResolvedValue(true)
+      vi.mocked(listDataSources).mockResolvedValue([
+        { sourceKey: 'A', sourceName: 'A' },
+        { sourceKey: 'B', sourceName: 'B' },
+      ] as never)
+      vi.mocked(getCacheStatus)
+        .mockResolvedValueOnce(notBuiltStatus('A'))
+        .mockResolvedValueOnce(readyStatus('B'))
+
+      const { api, wrapper } = mountComposable()
+      await api.initialize()
+
+      expect(api.selectedSourceKey.value).toBe('B')
+      wrapper.unmount()
+    })
+
+    it('keeps a remembered source whose cache is ready', async () => {
+      localStorage.setItem(TREXSQL_SELECTED_SOURCE_KEY, 'B')
+      vi.mocked(isTrexSQLPluginEnabled).mockResolvedValue(true)
+      vi.mocked(listDataSources).mockResolvedValue([
+        { sourceKey: 'A', sourceName: 'A' },
+        { sourceKey: 'B', sourceName: 'B' },
+      ] as never)
+      vi.mocked(getCacheStatus)
+        .mockResolvedValueOnce(readyStatus('A'))
+        .mockResolvedValueOnce(readyStatus('B'))
+
+      const { api, wrapper } = mountComposable()
+      await api.initialize()
+
+      expect(api.selectedSourceKey.value).toBe('B')
+      wrapper.unmount()
+    })
+
+    it('reports hasReadyCache and lists only ready sources', async () => {
+      __setTrexSQLEnabledForTests(true)
+      vi.mocked(listDataSources).mockResolvedValue([
+        { sourceKey: 'A', sourceName: 'A' },
+        { sourceKey: 'B', sourceName: 'B' },
+      ] as never)
+      vi.mocked(getCacheStatus)
+        .mockResolvedValueOnce(notBuiltStatus('A'))
+        .mockResolvedValueOnce(readyStatus('B'))
+
+      const { api, wrapper } = mountComposable()
+      expect(api.hasReadyCache.value).toBe(false)
+      await api.fetchDataSourcesWithCacheStatus()
+
+      expect(api.hasReadyCache.value).toBe(true)
+      expect(api.readyDataSources.value.map(s => s.sourceKey)).toEqual(['B'])
+      wrapper.unmount()
+    })
+
+    it('reports no ready cache when no source has one built', async () => {
+      __setTrexSQLEnabledForTests(true)
+      vi.mocked(listDataSources).mockResolvedValue([{ sourceKey: 'A', sourceName: 'A' }] as never)
+      vi.mocked(getCacheStatus).mockResolvedValueOnce(notBuiltStatus('A'))
+
+      const { api, wrapper } = mountComposable()
+      await api.fetchDataSourcesWithCacheStatus()
+
+      expect(api.hasReadyCache.value).toBe(false)
+      expect(api.readyDataSources.value).toEqual([])
+      wrapper.unmount()
+    })
+
     it('returns null cacheStatus when getCacheStatus throws for a source', async () => {
       __setTrexSQLEnabledForTests(true)
 

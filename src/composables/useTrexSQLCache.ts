@@ -87,6 +87,12 @@ export function useTrexSQLCache() {
     return selectedCacheStatus.value?.status === 'ready'
   })
 
+  const readyDataSources: ComputedRef<DataSourceWithCacheStatus[]> = computed(() =>
+    dataSources.value.filter(s => s.cacheStatus?.status === 'ready')
+  )
+
+  const hasReadyCache: ComputedRef<boolean> = computed(() => readyDataSources.value.length > 0)
+
   const cacheStatusMessage: ComputedRef<string> = computed(() => {
     const status = selectedCacheStatus.value?.status
     if (!status) return tv('trexsql.statusMessage.noSource')
@@ -177,11 +183,15 @@ export function useTrexSQLCache() {
 
       dataSources.value = sourcesWithStatus
 
-      if (!selectedSourceKey.value) {
+      // Live preview only runs against a ready cache, so a remembered source
+      // whose cache is missing or stale would leave the editor dead. Fall over
+      // to a ready one.
+      const current = sourcesWithStatus.find(s => s.sourceKey === selectedSourceKey.value)
+      if (current?.cacheStatus?.status !== 'ready') {
         const readySource = sourcesWithStatus.find(s => s.cacheStatus?.status === 'ready')
         if (readySource) {
           selectedSourceKey.value = readySource.sourceKey
-        } else if (sourcesWithStatus.length > 0) {
+        } else if (!selectedSourceKey.value && sourcesWithStatus.length > 0) {
           selectedSourceKey.value = sourcesWithStatus[0]?.sourceKey ?? null
         }
       }
@@ -372,6 +382,8 @@ export function useTrexSQLCache() {
     cohortPercentage,
     selectedCacheStatus,
     isCacheReady,
+    readyDataSources,
+    hasReadyCache,
     cacheStatusMessage,
     initialize,
     fetchDataSourcesWithCacheStatus,
