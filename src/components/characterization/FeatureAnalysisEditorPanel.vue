@@ -59,10 +59,10 @@ interface EmbeddedEditor {
 }
 
 const editor = ref<EmbeddedEditor | null>(null)
-const drawerWidth = ref<number>(560)
+const drawerWidth = ref<number>(0)
 
 function updateDrawerWidth() {
-  drawerWidth.value = Math.min(window.innerWidth, Math.max(560, Math.floor(window.innerWidth * 0.7)))
+  drawerWidth.value = Math.max(500, Math.floor(window.innerWidth * 0.95))
 }
 
 onMounted(() => {
