@@ -9,7 +9,8 @@
       :page="page"
       must-sort
       hide-default-footer
-      class="elevation-1"
+      :row-props="rowProps"
+      class="elevation-1 concept-table__table"
     >
       <template
         v-if="selectable"
@@ -71,18 +72,30 @@
       </template>
 
       <!-- Concept Name Link (opens the side-panel detail drawer) -->
-      <template
-        v-if="linkable && resolvedSourceKey"
-        #item.conceptName="{ item }"
-      >
-        <a
-          :href="conceptDetailHref(item)"
-          :data-testid="`concept-name-link-${item.conceptId}`"
-          class="concept-name-link"
-          @click="onConceptNameClick($event, item)"
-        >
-          {{ item.conceptName }}
-        </a>
+      <template #item.conceptName="{ item }">
+        <span class="concept-name">
+          <a
+            v-if="linkable && resolvedSourceKey"
+            :href="conceptDetailHref(item)"
+            :data-testid="`concept-name-link-${item.conceptId}`"
+            class="concept-name-link"
+            @click="onConceptNameClick($event, item)"
+          >
+            {{ item.conceptName }}
+          </a>
+          <template v-else>{{ item.conceptName }}</template>
+          <AtlasChip
+            v-if="conceptsInSet.has(item.conceptId)"
+            color="success"
+            size="sm"
+            label
+            prepend-icon="mdi-check"
+            class="concept-name__in-set"
+            :data-testid="`concept-in-set-${item.conceptId}`"
+          >
+            {{ t('components.conceptTable.inConceptSet').value }}
+          </AtlasChip>
+        </span>
       </template>
 
       <!-- Record Count Columns - Format with commas or dash if undefined, show spinner while loading -->
@@ -459,6 +472,15 @@ const someVisibleSelected = computed(() => {
   return visibleIds.value.some(id => selectedSet.value.has(id))
 })
 
+function rowProps({ item }: { item: Concept }): { class: Record<string, boolean> } {
+  return {
+    class: {
+      'concept-table__row--in-set': props.conceptsInSet.has(item.conceptId),
+      'concept-table__row--selected': selectedSet.value.has(item.conceptId),
+    },
+  }
+}
+
 function isSelected(conceptId: number): boolean {
   return selectedSet.value.has(conceptId)
 }
@@ -545,6 +567,38 @@ function formatCount(count: number | undefined): string {
 
 .gap-2 {
   gap: 8px;
+}
+
+.concept-table__table :deep(tbody > tr > td) {
+  transition: background-color 80ms ease-out;
+}
+
+/* Hover is a gradient layer so it stacks on top of the in-set/selected tint
+   instead of replacing it; all three states stay distinguishable at once. */
+.concept-table__table :deep(tbody > tr:hover > td) {
+  background-image: linear-gradient(
+    rgba(var(--v-theme-on-surface), 0.07),
+    rgba(var(--v-theme-on-surface), 0.07)
+  );
+}
+
+.concept-table__table :deep(tbody > tr.concept-table__row--in-set > td) {
+  background-color: rgba(var(--v-theme-success), 0.1);
+}
+
+.concept-table__table :deep(tbody > tr.concept-table__row--in-set > td:first-child) {
+  box-shadow: inset 3px 0 0 rgb(var(--v-theme-success));
+}
+
+.concept-table__table :deep(tbody > tr.concept-table__row--selected > td) {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.concept-name {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .concept-name-link {
