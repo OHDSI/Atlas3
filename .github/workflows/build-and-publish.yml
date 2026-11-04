@@ -71,20 +71,21 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Published unscoped on npmjs as atlas3; GitHub Packages only accepts the @ohdsi name.
-      # Skipped until an NPM_TOKEN secret exists.
-      - name: Check for npmjs token
-        id: npmjs
-        run: echo "enabled=${{ secrets.NPM_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
-
-      - name: Publish to npmjs
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && steps.npmjs.outputs.enabled == 'true'
+      - name: Pack for npmjs
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
           npm pkg delete publishConfig
           npm pkg set name=atlas3
-          echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" >> "$NPM_CONFIG_USERCONFIG"
-          npm publish --access public --registry=https://registry.npmjs.org/
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          mkdir -p "$RUNNER_TEMP/npmjs"
+          npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP/npmjs"
+
+      - name: Upload npmjs package
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: npmjs-package
+          path: ${{ runner.temp }}/npmjs/*.tgz
+          retention-days: 7
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -92,3 +93,25 @@ jobs:
           name: atlas-dist
           path: dist/
           retention-days: 30
+
+  publish-npmjs:
+    needs: build-and-publish
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: npmjs
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: npmjs-package
+
+      - name: Publish to npmjs
+        run: npm publish ./*.tgz --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
