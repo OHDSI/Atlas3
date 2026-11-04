@@ -353,4 +353,21 @@ describe('CohortToolbarStatus', () => {
       expect(wrapper.emitted('show-validation')).toBeTruthy()
     })
   })
+
+  describe('AI agent history', () => {
+    it('is hidden for a cohort no agent has worked on', () => {
+      const wrapper = mountComponent({ cohortId: 1, agentActivityCount: 0 })
+      expect(wrapper.find('[data-testid="agent-provenance-icon"]').exists()).toBe(false)
+    })
+
+    it('shows the number of agent calls and opens the history', async () => {
+      const wrapper = mountComponent({ cohortId: 1, agentActivityCount: 3 })
+      const icon = wrapper.find('[data-testid="agent-provenance-icon"]')
+      expect(icon.exists()).toBe(true)
+      expect(wrapper.text()).toContain('3')
+
+      await icon.trigger('click')
+      expect(wrapper.emitted('show-agent-provenance')).toHaveLength(1)
+    })
+  })
 })

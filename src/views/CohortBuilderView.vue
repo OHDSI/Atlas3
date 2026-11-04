@@ -53,11 +53,13 @@
           :tag-count="builderRef.tagCount"
           :cohort-id="builderRef.cohortId"
           :is-previewing-version="builderRef.isPreviewingVersion"
+          :agent-activity-count="builderRef.agentActivityCount"
           @show-concept-sets="builderRef.openConceptSetsDialog()"
           @show-validation="builderRef.openValidationDialog()"
           @show-versions="builderRef.openVersionsDialog()"
           @show-tags="builderRef.openTagsDialog()"
           @show-access="builderRef.openAccessDialog()"
+          @show-agent-provenance="builderRef.openAgentProvenanceDialog()"
         />
 
         <cohort-toolbar-actions
