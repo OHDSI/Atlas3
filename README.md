@@ -118,7 +118,15 @@ The dev server proxies `/WebAPI` to `http://localhost:8080`. To use a different 
 
 ### Prebuilt frontend from npm (without Docker)
 
-Release tags publish the built frontend to npmjs as `atlas3`, together with the Caddyfile the Docker image uses. With a WebAPI on `localhost:8080` and [Caddy](https://caddyserver.com/docs/install) installed:
+Release tags publish the built frontend to npmjs as `atlas3`. To try it against a running WebAPI with nothing but Node.js:
+
+```bash
+npx atlas3 --webapi http://localhost:8080
+```
+
+This serves ATLAS at http://localhost:4180/atlas/ and forwards `/WebAPI` to the given address, which can be a remote WebAPI (`https://example.org/WebAPI`). Because the browser only talks to this one address, WebAPI's CORS settings don't matter. `--port` and `--host` change where it listens. It is meant for local use and evaluation: it has no HTTPS or caching.
+
+For a real deployment, serve the package with the bundled Caddyfile, the same one the Docker image uses. With a WebAPI on `localhost:8080` and [Caddy](https://caddyserver.com/docs/install) installed:
 
 ```bash
 npm install atlas3

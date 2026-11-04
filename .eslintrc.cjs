@@ -119,9 +119,9 @@ module.exports = {
       },
     },
     {
-      // Allow console in tests, scripts, dev plugins, and the Stryker config (which
-      // logs its computed mutate scope on load)
-      files: ['tests/**/*', 'scripts/**/*', 'plugins-dev/**/*', 'stryker.conf.mjs'],
+      // Allow console in tests, scripts, the npx CLI, dev plugins, and the Stryker
+      // config (which logs its computed mutate scope on load)
+      files: ['tests/**/*', 'scripts/**/*', 'bin/**/*', 'plugins-dev/**/*', 'stryker.conf.mjs'],
       rules: {
         'no-console': 'off',
         // Allow any in tests for mocking purposes
