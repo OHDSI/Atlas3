@@ -5,7 +5,7 @@ import { useConceptDetailStore } from '@/stores/concept-detail'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useI18n } from '@/composables/useI18n'
 import { AtlasAlert, AtlasProgressLinear, AtlasSnackbar } from '@/components/ui'
-import type { Concept } from '@/models/concept-set.types'
+import type { Concept, ConceptAddFlags } from '@/models/concept-set.types'
 import ConceptDetailHeader from '@/components/concepts/detail/ConceptDetailHeader.vue'
 import ConceptStatCards from '@/components/concepts/detail/ConceptStatCards.vue'
 import ConceptAttributesCard from '@/components/concepts/detail/ConceptAttributesCard.vue'
@@ -41,20 +41,36 @@ const feedback = ref<{ open: boolean; text: string }>({ open: false, text: '' })
 // The header's "Add to Concept Set" button was previously unhandled here, so it
 // silently did nothing. Mirror the standalone search: add to the set being
 // edited, or create a new untitled set when none is open.
-function onAddToConceptSet(c: Concept) {
+function ensureConceptSet() {
   if (!conceptSetsStore.currentSet) {
     conceptSetsStore.openCreateEditor()
   }
+}
+
+function currentSetName(): string {
+  return conceptSetsStore.currentSet?.name || t('components.conceptSetBuilder.newConceptSet').value
+}
+
+function onAddToConceptSet(c: Concept) {
+  ensureConceptSet()
   conceptSetsStore.addConceptToSet(c)
-  const setName =
-    conceptSetsStore.currentSet?.name ||
-    t('components.conceptSetBuilder.newConceptSet').value
   feedback.value = {
     open: true,
     text: t('search.addedToSet', {
       concept: c.conceptName,
-      set: setName,
+      set: currentSetName(),
     }).value,
+  }
+}
+
+function onAddRelatedConcepts(concepts: Concept[], flags: Required<ConceptAddFlags>) {
+  ensureConceptSet()
+  const before = conceptSetsStore.currentSet?.items.length ?? 0
+  concepts.forEach(c => conceptSetsStore.addConceptToSet(c, flags))
+  const count = (conceptSetsStore.currentSet?.items.length ?? 0) - before
+  feedback.value = {
+    open: true,
+    text: t('search.addedCountToSet', { count, set: currentSetName() }).value,
   }
 }
 
@@ -128,6 +144,7 @@ watch(() => [props.sourceKey, props.conceptId], load)
         <ConceptRelatedTable
           :related="related"
           :source-key="props.sourceKey"
+          @add-concepts="onAddRelatedConcepts"
         />
 
         <DrilldownDetails
