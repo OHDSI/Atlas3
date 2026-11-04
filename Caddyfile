@@ -8,9 +8,9 @@
 		reverse_proxy {$WEBAPI_HOST:atlas3-webapi}:{$WEBAPI_PORT:8080}
 	}
 
-	handle /atlas/* {
-		root * /srv
-		try_files {path} /atlas/index.html
+	handle_path /atlas/* {
+		root * {$ATLAS_DIST:/srv/atlas}
+		try_files {path} /index.html
 		file_server
 	}
 }

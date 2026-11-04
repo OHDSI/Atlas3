@@ -71,11 +71,12 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Published unscoped on npmjs as atlas3; GitHub Packages only accepts the @ohdsi name.
+      # dist is prebuilt, so installing it must not pull the build toolchain.
       - name: Pack for npmjs
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
-          npm pkg delete publishConfig
-          npm pkg set name=atlas3
+          jq '.name = "atlas3" | .files = ["dist", "Caddyfile"] | del(.publishConfig, .scripts, .dependencies, .devDependencies)' package.json > package.json.tmp
+          mv package.json.tmp package.json
           mkdir -p "$RUNNER_TEMP/npmjs"
           npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP/npmjs"
 
