@@ -123,6 +123,33 @@
               </template>
             </AtlasTooltip>
 
+            <!-- AI agent history — shown only once an agent has worked on
+                 this concept set through WebAPI's MCP server. -->
+            <AtlasTooltip
+              v-if="!embedded && isEditMode && agentProvenance.count.value > 0"
+              :text="t('components.agentProvenance.title').value"
+              location="bottom"
+            >
+              <template #activator="{ props: tooltipProps }">
+                <AtlasBadge
+                  v-bind="tooltipProps"
+                  :content="agentProvenance.count.value"
+                  color="primary"
+                  offset-x="6"
+                  offset-y="6"
+                >
+                  <AtlasIconButton
+                    icon="mdi-robot-outline"
+                    data-testid="cs-editor-agent-provenance-btn"
+                    v-bind="{ ariaLabel: t('components.agentProvenance.title').value }"
+                    variant="text"
+                    size="sm"
+                    @click="openAgentProvenanceDialog"
+                  />
+                </AtlasBadge>
+              </template>
+            </AtlasTooltip>
+
             <AtlasIconButton
               v-if="isPreviewing"
               icon="mdi-undo"
@@ -431,6 +458,15 @@
         :config="versionsConfig"
       />
     </AtlasDialog>
+
+    <AgentProvenanceDialog
+      v-model="showAgentProvenanceDialog"
+      kind="conceptset"
+      :traces="agentProvenance.traces.value"
+      :loading="agentProvenance.loading.value"
+      :error="agentProvenance.error.value"
+      @retry="agentProvenance.reload()"
+    />
   </component>
 
   <!-- Tag selection dialog. -->
@@ -862,6 +898,8 @@ import ConceptSetOptimizeDialog from './ConceptSetOptimizeDialog.vue'
 import ConceptDetailContent from './detail/ConceptDetailContent.vue'
 import { AtlasAlert, AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSideSheet, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
+import AgentProvenanceDialog from '@/components/provenance/AgentProvenanceDialog.vue'
+import { useAgentProvenance } from '@/composables/useAgentProvenance'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
 import { getConceptsByIds, getConceptsBySourceCodes } from '@/services/concept-search.service'
 import { useWebAPIStore } from '@/stores/webapi'
@@ -990,6 +1028,21 @@ const form = ref<FormData>({
 // Version management state
 const showVersionsDialog = ref(false)
 const versionCount = ref(0)
+
+// AI-agent history (MCP provenance). An embedded editor's id is a cohort-local
+// CodesetId, not a repository concept set, so it has none.
+const agentProvenanceId = computed(() => {
+  const id = props.conceptSet?.id
+  return !props.embedded && typeof id === 'number' ? id : null
+})
+const agentProvenance = useAgentProvenance('conceptset', agentProvenanceId)
+const showAgentProvenanceDialog = ref(false)
+
+// Reloaded on open: an agent may have changed the concept set since the page loaded.
+function openAgentProvenanceDialog() {
+  showAgentProvenanceDialog.value = true
+  void agentProvenance.reload()
+}
 
 // Confirmation dialog state — replaces native window.confirm calls
 // so close + delete confirmations match the rest of the app.
