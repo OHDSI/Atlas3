@@ -180,6 +180,8 @@ export class PluginConfigService {
     showLanguageSelector?: boolean
     showConfigButton?: boolean
     feedbackUrl?: string
+    showIssueButton?: boolean
+    issueUrl?: string
   } {
     return this.manifest?.settings?.header || {}
   }
@@ -210,6 +212,14 @@ export class PluginConfigService {
 
   getFeedbackUrl(): string {
     return this.manifest?.settings?.header?.feedbackUrl || 'https://forms.office.com/r/2JzrYy1yDP'
+  }
+
+  showIssueButton(): boolean {
+    return this.manifest?.settings?.header?.showIssueButton ?? true
+  }
+
+  getIssueUrl(): string {
+    return this.manifest?.settings?.header?.issueUrl || 'https://github.com/OHDSI/Atlas3/issues'
   }
 
   onChange(callback: (manifest: PluginManifest) => void): () => void {

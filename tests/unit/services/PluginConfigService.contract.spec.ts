@@ -151,6 +151,8 @@ describe('PluginConfigService manifest contract', () => {
         language: service.showLanguageSelector(),
         config: service.showConfigButton(),
         feedbackUrl: service.getFeedbackUrl(),
+        issue: service.showIssueButton(),
+        issueUrl: service.getIssueUrl(),
       }).toEqual({
         header: {},
         license: true,
@@ -160,6 +162,8 @@ describe('PluginConfigService manifest contract', () => {
         language: true,
         config: true,
         feedbackUrl: 'https://forms.office.com/r/2JzrYy1yDP',
+        issue: true,
+        issueUrl: 'https://github.com/OHDSI/Atlas3/issues',
       })
     })
   })

@@ -35,6 +35,8 @@ const h = vi.hoisted(() => ({
   config: {
     logoUrl: null as string | null,
     feedback: true,
+    issue: true,
+    issueUrl: 'https://issues.example',
     disabledCore: [] as string[],
   },
   configChange: [] as (() => void)[],
@@ -128,6 +130,8 @@ vi.mock('@/services/PluginConfigService', () => ({
     showUserMenu: () => true,
     showThemeToggle: () => true,
     getFeedbackUrl: () => 'https://feedback.example',
+    showIssueButton: () => h.config.issue,
+    getIssueUrl: () => h.config.issueUrl,
     getLogoNavigateTo: () => '/',
   },
 }))
@@ -214,6 +218,8 @@ beforeEach(() => {
   h.stateCallbacks.length = 0
   h.config.logoUrl = null
   h.config.feedback = true
+  h.config.issue = true
+  h.config.issueUrl = 'https://issues.example'
   h.config.disabledCore = []
   h.configChange.length = 0
   vi.mocked(generatePluginMenuItems).mockReturnValue([])
@@ -390,6 +396,21 @@ describe('NavBar admin and panels', () => {
     h.configChange.forEach(cb => cb())
     await flushPromises()
     expect(feedback()).toHaveLength(0)
+  })
+
+  it('links the report-issue button to the configured issue tracker in a new tab', async () => {
+    wrapper = await mountNav()
+    const button = wrapper.find('[data-testid="nav-report-issue"]')
+    expect(button.text()).toContain(tr('navigation.reportIssue'))
+    expect(button.attributes('href')).toBe('https://issues.example')
+    expect(button.attributes('target')).toBe('_blank')
+    expect(button.attributes('rel')).toBe('noopener noreferrer')
+  })
+
+  it('hides the report-issue button when the deployment turns it off', async () => {
+    h.config.issue = false
+    wrapper = await mountNav()
+    expect(wrapper.find('[data-testid="nav-report-issue"]').exists()).toBe(false)
   })
 })
 
