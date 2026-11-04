@@ -1344,6 +1344,36 @@
     },
     "analysisDataTable": {
       "empty": "No items yet."
+    },
+    "agentProvenance": {
+      "title": "AI agent history",
+      "eyebrow": "MCP",
+      "introCohortDefinition": "Changes an AI agent made to this cohort definition through WebAPI's MCP server, with the rationale and evidence it gave for each one. Each session is one trace; refused and failed calls are listed too.",
+      "introConceptSet": "Changes an AI agent made to this concept set through WebAPI's MCP server, with the rationale and evidence it gave for each one. Each session is one trace; refused and failed calls are listed too.",
+      "session": "Agent session, {time}",
+      "byUser": "as {user}",
+      "traceId": "trace {traceId}",
+      "traceIdHint": "W3C trace id of this session. Search for it in your tracing backend or in WebAPI's mcp_audit_log table.",
+      "rationale": "Rationale",
+      "evidence": "Evidence",
+      "reason": "Reason",
+      "empty": "No AI agent activity is recorded for this item.",
+      "loadError": "The AI agent history could not be loaded: {message}",
+      "outcome": {
+        "success": "Done",
+        "rejected": "Refused",
+        "denied": "Not permitted",
+        "error": "Failed",
+        "started": "Did not finish"
+      },
+      "step": {
+        "conceptExploration": "Concept exploration",
+        "conceptSetConsolidation": "Concept set consolidation",
+        "cohortCriteria": "Cohort criteria",
+        "sqlValidation": "SQL validation",
+        "generationVerification": "Generation and verification",
+        "audit": "Audit"
+      }
     }
   },
   "characterizations": {

@@ -61,11 +61,13 @@
             :tag-count="tagCount"
             :cohort-id="cohortId"
             :is-previewing-version="isPreviewingVersion"
+            :agent-activity-count="agentProvenance.count.value"
             @show-concept-sets="showConceptSetsDialog = true"
             @show-validation="showValidationDialog = true"
             @show-versions="showVersionsDialog = true"
             @show-tags="openTagsDialog"
             @show-access="showAccessDialog = true"
+            @show-agent-provenance="openAgentProvenanceDialog"
           />
         </template>
         <template #actions>
@@ -239,6 +241,15 @@
       />
     </AtlasDialog>
 
+    <AgentProvenanceDialog
+      v-model="showAgentProvenanceDialog"
+      kind="cohortdefinition"
+      :traces="agentProvenance.traces.value"
+      :loading="agentProvenance.loading.value"
+      :error="agentProvenance.error.value"
+      @retry="agentProvenance.reload()"
+    />
+
     <!-- Unsaved-changes confirmation dialog -->
     <AtlasDialog
       v-model="showUnsavedDialog"
@@ -334,6 +345,8 @@ import { describeImportProblems, validateCohortExpression } from '@/components/c
 import { convertAtlasItemToCirce } from '@/components/cohort-editor/atlas-concept-set'
 import CohortGenerationSection from './CohortGenerationSection.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
+import AgentProvenanceDialog from '@/components/provenance/AgentProvenanceDialog.vue'
+import { useAgentProvenance } from '@/composables/useAgentProvenance'
 import type { VersionsConfig, User } from '@/components/versions/types'
 import { format, parseISO } from 'date-fns'
 import * as cohortDefinitionVersionsService from '@/services/cohort-definition-versions.service'
@@ -716,6 +729,16 @@ const versionsConfig = computed<VersionsConfig>(() => {
     clearPreview: () => cohortStore.clearPreviewVersion(),
   }
 })
+
+// AI-agent history (MCP provenance) for the toolbar badge and its dialog.
+const agentProvenance = useAgentProvenance('cohortdefinition', cohortId)
+const showAgentProvenanceDialog = ref(false)
+
+// Reloaded on open: an agent may have changed the cohort since the page loaded.
+function openAgentProvenanceDialog() {
+  showAgentProvenanceDialog.value = true
+  void agentProvenance.reload()
+}
 
 // Version count for badge display
 const versionCount = ref(0)
@@ -1524,6 +1547,7 @@ defineExpose({
   tagCount,
   cohortId,
   isPreviewingVersion,
+  agentActivityCount: agentProvenance.count,
   // Actions state
   canSave,
   hasUnsavedChanges,
@@ -1541,6 +1565,7 @@ defineExpose({
   openAccessDialog: () => {
     showAccessDialog.value = true
   },
+  openAgentProvenanceDialog,
   handleCancel,
   handleSave,
   handleExportDownload,
