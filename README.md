@@ -56,14 +56,14 @@ A working ATLAS v3.0 deployment has three independent components:
 - **The WebAPI service** — a Java/Spring application that exposes the REST endpoints ATLAS talks to, executes cohort SQL against the configured CDM sources, and runs Flyway migrations against its own schema on first boot.
 - **The ATLAS v3.0 frontend** — a Vue 3 single-page application, served either by the Vite development server or as a static bundle behind a reverse proxy.
 
-> **ATLAS v3.0 requires WebAPI v3.0.** The 2.x line of WebAPI that earlier ATLAS releases use — and that ships with OHDSI Broadsea — is **not** compatible. When you clone WebAPI, check out the `webapi-3.0` branch explicitly. The development `docker-compose.yml` builds on the matching prebuilt image `ghcr.io/ohdsi/webapi:3.0-dev` for this reason.
+> **ATLAS v3.0 requires WebAPI v3.0.** The 2.x line of WebAPI that earlier ATLAS releases use — and that ships with OHDSI Broadsea — is **not** compatible. WebAPI v3.0 is developed on the `master` branch; the older `webapi-3.0` branch is no longer updated. The development `docker-compose.yml` builds on the matching prebuilt image `ghcr.io/ohdsi/webapi:dev`.
 
 ### Prerequisites
 
 - Docker and Docker Compose v2 (the fastest path), **or** for native installs: PostgreSQL 12+, JDK 21, Maven 3.9+, Node.js 20.19+ (or 22.12+) and `npm`.
 - Git.
 - Roughly 4 GB of free disk for container images and the WebAPI Flyway baseline.
-- A WebAPI build from the v3.0 line — container image `ghcr.io/ohdsi/webapi:3.0-dev` or a local build of the `webapi-3.0` branch.
+- A WebAPI build from the v3.0 line: container image `ghcr.io/ohdsi/webapi:dev` or a local build of the `master` branch.
 
 ### Quick start (Docker Compose, recommended for evaluation)
 
@@ -71,13 +71,13 @@ The repository ships a `docker-compose.yml` that brings up Postgres, WebAPI, a d
 
 ```bash
 git clone https://github.com/OHDSI/Atlas3.git
-git clone --branch webapi-3.0 https://github.com/OHDSI/WebAPI.git
+git clone https://github.com/OHDSI/WebAPI.git
 cd Atlas3
 cp .env.example .env   # optional; see "Using other host ports" below
 docker compose up
 ```
 
-The compose file builds a local WebAPI image from the prebuilt `ghcr.io/ohdsi/webapi:3.0-dev` image, pinned by digest, and adds a pinned TrexSQL release (`docker/webapi/Dockerfile`); the sibling `WebAPI` checkout is needed only if you build WebAPI yourself. The first boot takes a few minutes while WebAPI runs Flyway migrations and the `atlasdb/` scripts seed the default users.
+The compose file builds a local WebAPI image from the prebuilt `ghcr.io/ohdsi/webapi:dev` image, pinned by digest, and adds a pinned TrexSQL release (`docker/webapi/Dockerfile`); the sibling `WebAPI` checkout is needed only if you build WebAPI yourself. The first boot takes a few minutes while WebAPI runs Flyway migrations and the `atlasdb/` scripts seed the default users.
 
 `.env.example` also turns on the optional Pythia assistant, which needs a Bedrock key in `AWS_BEARER_TOKEN_BEDROCK`. Set `VITE_BAO_AGENT_ENABLED=false` in `.env` to leave it off.
 
@@ -183,7 +183,7 @@ ATLAS v3.0 supports a plugin architecture based on single-spa and SystemJS. Refe
 
 ## Related Projects
 
-- [WebAPI](https://github.com/OHDSI/WebAPI) — Backend API service; ATLAS v3.0 requires the `webapi-3.0` branch
+- [WebAPI](https://github.com/OHDSI/WebAPI) — Backend API service; ATLAS v3.0 requires WebAPI v3.0 from the `master` branch
 - [trex](https://github.com/OHDSI/trex) — TrexSQL query cache; loaded into WebAPI as a runtime plugin
 
 ## Support

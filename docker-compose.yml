@@ -32,7 +32,7 @@ services:
       context: ./docker/webapi
       dockerfile: Dockerfile
       args:
-        WEBAPI_DIGEST: sha256:d4a2e14341c4674d94caf07f9a03726c2574be4d2d1e0f2c5ed127db59cc87c3
+        WEBAPI_DIGEST: sha256:6e58552b3b656921700e6e62982e5b9aaf9ac2f2cfbd43326d6a873c39678716
         TREXSQL_VERSION: "0.3.3"
     container_name: atlas3-webapi
     platform: linux/amd64
