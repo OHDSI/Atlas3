@@ -78,7 +78,7 @@ Consequences to design around:
 ## Manual verification (Chrome 146+ preview)
 
 1. Use Chrome 146 or newer with the WebMCP preview flag/origin trial enabled.
-   Run `docker compose up`, open `https://localhost`, and log in.
+   Run `docker compose -f docker-compose.dev.yml up --build`, open `https://localhost`, and log in.
 2. Open DevTools console. Confirm `navigator.modelContext` is defined, and
    that the console log shows
    `webmcp: registering 19 capabilities (ungated)`.

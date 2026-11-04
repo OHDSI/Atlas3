@@ -56,30 +56,39 @@ A working ATLAS v3.0 deployment has three independent components:
 - **The WebAPI service** — a Java/Spring application that exposes the REST endpoints ATLAS talks to, executes cohort SQL against the configured CDM sources, and runs Flyway migrations against its own schema on first boot.
 - **The ATLAS v3.0 frontend** — a Vue 3 single-page application, served either by the Vite development server or as a static bundle behind a reverse proxy.
 
-> **ATLAS v3.0 requires WebAPI v3.0.** The 2.x line of WebAPI that earlier ATLAS releases use — and that ships with OHDSI Broadsea — is **not** compatible. WebAPI v3.0 is developed on the `master` branch; the older `webapi-3.0` branch is no longer updated. The development `docker-compose.yml` builds on the matching prebuilt image `ghcr.io/ohdsi/webapi:dev`.
+> **ATLAS v3.0 requires WebAPI v3.0.** The 2.x line of WebAPI that earlier ATLAS releases use — and that ships with OHDSI Broadsea — is **not** compatible. WebAPI v3.0 is developed on the `master` branch; the older `webapi-3.0` branch is no longer updated. `docker-compose.yml` runs the released `ohdsi/webapi:3.0.0` image; the development `docker-compose.dev.yml` builds on `ghcr.io/ohdsi/webapi:dev`.
 
 ### Prerequisites
 
 - Docker and Docker Compose v2 (the fastest path), **or** for native installs: PostgreSQL 12+, JDK 21, Maven 3.9+, Node.js 20.19+ (or 22.12+) and `npm`, plus [Caddy](https://caddyserver.com/docs/install) to serve the prebuilt frontend.
 - Git.
 - Roughly 4 GB of free disk for container images and the WebAPI Flyway baseline.
-- A WebAPI build from the v3.0 line: container image `ghcr.io/ohdsi/webapi:dev` or a local build of the `master` branch.
+- A WebAPI build from the v3.0 line: the released image `ohdsi/webapi:3.0.0`, the development image `ghcr.io/ohdsi/webapi:dev`, or a local build of the `master` branch.
 
 ### Quick start (Docker Compose, recommended for evaluation)
 
-The repository ships a `docker-compose.yml` that brings up Postgres, WebAPI, a database initialiser, and the frontend behind Caddy with a self-signed certificate:
+The repository ships a `docker-compose.yml` that runs the released ATLAS v3.0.0 and WebAPI v3.0.0 images: Postgres with the Eunomia demo database, WebAPI, a database initialiser, and the frontend behind Caddy with a self-signed certificate. Nothing is built locally:
 
 ```bash
 git clone https://github.com/OHDSI/Atlas3.git
-git clone https://github.com/OHDSI/WebAPI.git
 cd Atlas3
-cp .env.example .env   # optional; see "Using other host ports" below
 docker compose up
 ```
 
-The compose file builds a local WebAPI image from the prebuilt `ghcr.io/ohdsi/webapi:dev` image, pinned by digest, and adds a pinned TrexSQL release (`docker/webapi/Dockerfile`); the sibling `WebAPI` checkout is needed only if you build WebAPI yourself. The first boot takes a few minutes while WebAPI runs Flyway migrations and the `atlasdb/` scripts seed the default users.
+The first boot takes a few minutes while WebAPI runs Flyway migrations and the `atlasdb/` scripts seed the default users.
+
+### Development stack (Docker Compose)
+
+`docker-compose.dev.yml` builds the frontend from your checkout and runs the WebAPI development image `ghcr.io/ohdsi/webapi:dev`, pinned by digest, with a pinned TrexSQL release (`docker/webapi/Dockerfile`):
+
+```bash
+cp .env.example .env   # optional; see "Using other host ports" below
+docker compose -f docker-compose.dev.yml up --build
+```
 
 `.env.example` also turns on the optional Pythia assistant, which needs a Bedrock key in `AWS_BEARER_TOKEN_BEDROCK`. Set `VITE_BAO_AGENT_ENABLED=false` in `.env` to leave it off.
+
+The two stacks use the same container names and ports, so run one at a time (`docker compose down` first). They keep their data in separate volumes, because a database migrated by the WebAPI development image cannot be opened by the released WebAPI.
 
 When the stack is healthy:
 
@@ -89,7 +98,7 @@ When the stack is healthy:
 
 #### Using other host ports
 
-If ports 80 or 443 are already in use on your machine, set the host ports in `.env` and add the matching origins to WebAPI's CORS allow-list. Without the CORS change, sign-in and other POST requests fail:
+If ports 80 or 443 are already in use on your machine, set the host ports in `.env` (both stacks read it) and add the matching origins to WebAPI's CORS allow-list. Without the CORS change, sign-in and other POST requests fail:
 
 ```bash
 ATLAS3_HTTP_PORT=8081
