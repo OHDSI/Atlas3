@@ -630,8 +630,6 @@ describe('AuthService', () => {
       expect(userInfo.permissionIdx.read).toContain('read:cohort-definition')
       expect(userInfo.permissionIdx.write).toContain('write:cohort-definition')
       expect(userInfo.permissionIdx.admin).toContain('admin:tags')
-      // trexsqlCacheEnabled is derived from any trexsql:* permission.
-      expect(userInfo.trexsqlCacheEnabled).toBe(true)
       expect(userInfo.entityAccess?.cohortDefinition['7']).toEqual({
         accessTypes: ['WRITE'],
         isOwner: true,
@@ -656,8 +654,6 @@ describe('AuthService', () => {
       const userInfo = await authService.fetchUserInfo()
       expect(userInfo.login).toBe('legacy')
       expect(userInfo.permissionIdx).toEqual({ admin: ['admin:security'] })
-      // No trexsql:* perms, no explicit flag → false.
-      expect(userInfo.trexsqlCacheEnabled).toBe(false)
     })
   })
 

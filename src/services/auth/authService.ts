@@ -32,16 +32,12 @@ export function parseUserInfo(data: Record<string, unknown>): UserInfo {
 
   const rawPerms = authz.permissions ?? data.permissions
   let permissionIdx: Record<string, string[]>
-  let flatPerms: string[]
   if (Array.isArray(rawPerms)) {
-    flatPerms = rawPerms as string[]
-    permissionIdx = permissionChecker.buildPermissionIndex(flatPerms)
+    permissionIdx = permissionChecker.buildPermissionIndex(rawPerms as string[])
   } else if (rawPerms && typeof rawPerms === 'object') {
     permissionIdx = rawPerms as Record<string, string[]>
-    flatPerms = Object.values(permissionIdx).flat()
   } else {
     permissionIdx = {}
-    flatPerms = []
   }
 
   const accessSource = (Object.keys(authz).length > 0 ? authz : data) as Record<string, unknown>
@@ -59,16 +55,6 @@ export function parseUserInfo(data: Record<string, unknown>): UserInfo {
     source: (accessSource.sourceAccess as EntityAccess['source']) ?? {},
   }
 
-  // Old API exposed an explicit flag; new API drops it, so derive from the
-  // user's permissions. The global `*` wildcard implicitly grants all
-  // trexsql endpoints, so admins (who hold `*`) must also be considered
-  // enabled — `'*'.startsWith('trexsql:')` is false, which previously hid
-  // the live-preview UI from admins.
-  const trexsqlCacheEnabled =
-    typeof data.trexsqlCacheEnabled === 'boolean'
-      ? (data.trexsqlCacheEnabled as boolean)
-      : flatPerms.some(p => p === '*' || p.startsWith('trexsql:'))
-
   return {
     login,
     name,
@@ -76,7 +62,6 @@ export function parseUserInfo(data: Record<string, unknown>): UserInfo {
     email,
     permissionIdx,
     entityAccess,
-    trexsqlCacheEnabled,
   }
 }
 

@@ -71,8 +71,7 @@ export async function setupBasicMocks(page: Page) {
 
     // Work around a known race on the DataSources view: the page mounts
     // both the store (which calls listDataSources) and the config panel's
-    // TrexSQLCacheSection (which also calls listDataSources via
-    // detectTrexSQLAvailability). Both invocations share a single
+    // TrexSQLCacheSection, which also calls listDataSources). Both invocations share a single
     // AbortController in datasource.service — the second cancels the
     // first, surfacing a bogus "Unable to load data sources" error even
     // though the second succeeds. We dedupe concurrent fetches for
@@ -112,8 +111,7 @@ export async function setupBasicMocks(page: Page) {
         // expose it under both keys to cover legacy and WebAPI 3.0 shapes.
         permissions: ['*'],
         authz: { permissions: ['*'] },
-        permissionsBySourceKey: {},
-        trexsqlCacheEnabled: false
+        permissionsBySourceKey: {}
       })
     })
   })
@@ -461,7 +459,8 @@ export async function setupBasicMocks(page: Page) {
       contentType: 'application/json',
       body: JSON.stringify({
         version: '2.14.0',
-        schemaVersion: '2.14.0'
+        schemaVersion: '2.14.0',
+        configuration: { plugins: { trexsqlEnabled: false } }
       })
     })
   })
@@ -756,8 +755,7 @@ export async function setupDatasourcesMocks(page: Page) {
 
   // Mock TrexSQL cache status (returns 404 to indicate TrexSQL is unavailable).
   // Without this, the /trexsql/*\/cache/status request falls through to the
-  // vite proxy and hits the real backend, which can trigger extra concurrent
-  // /source/sources fetches via useTrexSQLCache.detectTrexSQLAvailability.
+  // vite proxy and hits the real backend.
   await page.route('**/WebAPI/trexsql/*/cache/status', async (route: Route) => {
     await route.fulfill({ status: 404, contentType: 'application/json', body: '{}' })
   })

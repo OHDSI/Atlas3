@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="isTrexSQLEnabled"
+    v-if="isTrexSQLEnabled && hasReadyCache"
     class="cache-preview-selector"
     data-testid="cache-preview-selector"
   >
@@ -59,8 +59,10 @@ import type { CacheStatusType } from '@/models/trexsql.types'
 const { t } = useI18n()
 const {
   isTrexSQLEnabled,
+  hasReadyCache,
   selectedSourceKey,
   dataSources,
+  readyDataSources,
   isLoadingDataSources,
   selectDataSource,
   initialize,
@@ -90,7 +92,7 @@ function statusTone(
 }
 
 const items = computed(() =>
-  dataSources.value.map(s => ({
+  readyDataSources.value.map(s => ({
     text: s.sourceName,
     value: s.sourceKey,
     statusLabel: statusLabel(s.cacheStatus?.status),
