@@ -2,7 +2,7 @@ name: Publish @ohdsi/atlas-ui
 
 on:
   push:
-    branches: [main, develop]
+    branches: [develop]
     tags: ['atlas-ui-v*']
   workflow_dispatch:
 
