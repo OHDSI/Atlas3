@@ -1353,7 +1353,7 @@
       "session": "Agent session, {time}",
       "byUser": "as {user}",
       "traceId": "trace {traceId}",
-      "traceIdHint": "W3C trace id of this session. Search for it in your tracing backend or in WebAPI's mcp_audit_log table.",
+      "traceIdHint": "W3C trace id of this agent session, as recorded in WebAPI's mcp_audit_log table. When WebAPI runs with the OpenTelemetry Java agent, the same id finds the session's spans in your tracing backend.",
       "rationale": "Rationale",
       "evidence": "Evidence",
       "reason": "Reason",
