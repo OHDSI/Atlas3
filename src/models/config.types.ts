@@ -313,6 +313,7 @@ export type ConfigPanelSection =
   | 'vocabulary'
   | 'tags'
   | 'permissions'
+  | 'apikeys'
   | 'jobs'
   | `plugin:${string}:${string}`
 
