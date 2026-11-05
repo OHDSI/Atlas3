@@ -72,6 +72,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@histoire/plugin-vue": "^1.0.0-beta.1",
+    "@microsoft/api-extractor": "^7.60.1",
     "@playwright/test": "^1.40.0",
     "@stryker-mutator/core": "9.6.1",
     "@stryker-mutator/vitest-runner": "9.6.1",
@@ -85,6 +86,7 @@
     "@typescript-eslint/parser": "^8.72.1",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vitest/coverage-v8": "^4.1.12",
+    "@vue/language-core": "^3.3.14",
     "@vue/test-utils": "^2.4.0",
     "cross-env": "^10.1.0",
     "eslint": "^8.57.1",
@@ -100,7 +102,7 @@
     "typescript": "^5.9.3",
     "vite": "^7.3.7",
     "vite-node": "^3.2.4",
-    "vite-plugin-dts": "^4.5.4",
+    "vite-plugin-dts": "^5.1.2",
     "vitest": "^4.1.12",
     "vue-tsc": "^3.1.3"
   }
