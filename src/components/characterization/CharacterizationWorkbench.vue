@@ -420,11 +420,14 @@ const historySourceName = computed<string>(() => resolveHistorySourceName({
 watch(
   () => props.characterizationId,
   async (id, prev) => {
-    if (prev !== undefined && prev !== id) {
+    // prev is null while the parent is still loading the definition; that first
+    // assignment is not a switch, so keep the run already in the URL.
+    const switched = prev != null && prev !== id
+    if (switched) {
       store.dispose()
     }
     if (id == null) return
-    if (prev !== undefined && prev !== id && route.query.run !== undefined) {
+    if (switched && route.query.run !== undefined) {
       const { run: _run, ...rest } = route.query
       void _run
       await router.replace({ query: rest })
