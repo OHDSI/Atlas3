@@ -125,6 +125,8 @@ export interface PluginManifest {
       showConfigButton?: boolean // Show/hide the configuration panel button (default: true)
       showUserMenu?: boolean // Show/hide the user menu (default: true)
       feedbackUrl?: string // Custom feedback URL (default: Microsoft Forms URL)
+      showIssueButton?: boolean // Show/hide the report-issue button (default: true)
+      issueUrl?: string // Custom issue tracker URL (default: Atlas3 GitHub issues)
     }
   }
 }
@@ -358,6 +360,8 @@ export const PluginManifestSchema = z.object({
           showConfigButton: z.boolean().optional(),
           showUserMenu: z.boolean().optional(),
           feedbackUrl: z.string().url().optional(),
+          showIssueButton: z.boolean().optional(),
+          issueUrl: z.string().url().optional(),
         })
         .optional(),
     })
