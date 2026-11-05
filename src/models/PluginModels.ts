@@ -295,7 +295,7 @@ export const PluginRegistrationSchema = z.object({
   menuItems: z.array(MenuItemConfigurationSchema),
   fabMounts: z.array(FabMountSchema).optional(),
   mountPoints: z.array(PluginMountPointSchema).optional(),
-  activationConditions: z.record(z.unknown()).optional(),
+  activationConditions: z.record(z.string(), z.unknown()).optional(),
   metadata: z
     .object({
       author: z.string().optional(),

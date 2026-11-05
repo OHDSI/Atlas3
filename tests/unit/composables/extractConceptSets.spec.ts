@@ -326,17 +326,19 @@ describe('concept-set reference discovery over the whole schema', () => {
   })
 
   it('reports a reference field declared with a lookalike z.number()', () => {
+    // The schema walkers read the object's `shape`, so swapping it on the instance
+    // is enough to make CodesetId look like an ordinary number field.
     const patched = ConditionOccurrenceSchema as unknown as {
-      _def: { shape: () => Record<string, z.ZodTypeAny> }
+      shape: Record<string, z.ZodTypeAny>
     }
-    const declaredShape = patched._def.shape
+    const declaredShape = patched.shape
 
     let missing: string[]
     try {
-      patched._def.shape = () => ({ ...declaredShape(), CodesetId: z.number().nullish() })
+      patched.shape = { ...declaredShape, CodesetId: z.number().nullish() }
       missing = audit(buildCorpus()).missing
     } finally {
-      patched._def.shape = declaredShape
+      patched.shape = declaredShape
     }
 
     expect(missing.length).toBeGreaterThan(0)
