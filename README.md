@@ -60,7 +60,7 @@ A working ATLAS v3.0 deployment has three independent components:
 
 ### Prerequisites
 
-- Docker and Docker Compose v2 (the fastest path), **or** for native installs: PostgreSQL 12+, JDK 21, Maven 3.9+, Node.js 20.19+ (or 22.12+) and `npm`.
+- Docker and Docker Compose v2 (the fastest path), **or** for native installs: PostgreSQL 12+, JDK 21, Maven 3.9+, Node.js 20.19+ (or 22.12+) and `npm`, plus [Caddy](https://caddyserver.com/docs/install) to serve the prebuilt frontend.
 - Git.
 - Roughly 4 GB of free disk for container images and the WebAPI Flyway baseline.
 - A WebAPI build from the v3.0 line: container image `ghcr.io/ohdsi/webapi:dev` or a local build of the `master` branch.
@@ -115,6 +115,25 @@ npm run preview      # Serve the production bundle locally
 ```
 
 The dev server proxies `/WebAPI` to `http://localhost:8080`. To use a different backend, set `WEBAPI_URL`, for example `WEBAPI_URL=https://example.org npm run dev`. A deployed bundle reads the WebAPI address at runtime from `config-local.json` next to `index.html` (`api.url`); see `public/config-local.example.json`.
+
+### Prebuilt frontend from npm (without Docker)
+
+Release tags publish the built frontend to npmjs as `atlas3`. To try it against a running WebAPI with nothing but Node.js:
+
+```bash
+npx atlas3 --webapi http://localhost:8080
+```
+
+This serves ATLAS at http://localhost:4180/atlas/ and forwards `/WebAPI` to the given address, which can be a remote WebAPI (`https://example.org/WebAPI`). Because the browser only talks to this one address, WebAPI's CORS settings don't matter. `--port` and `--host` change where it listens. It is meant for local use and evaluation: it has no HTTPS or caching.
+
+For a real deployment, serve the package with the bundled Caddyfile, the same one the Docker image uses. With a WebAPI on `localhost:8080` and [Caddy](https://caddyserver.com/docs/install) installed:
+
+```bash
+npm install atlas3
+ATLAS_DIST=node_modules/atlas3/dist WEBAPI_HOST=localhost caddy run --config node_modules/atlas3/Caddyfile
+```
+
+Then open https://localhost/atlas/. Caddy serves the bundle and proxies `/WebAPI` to `WEBAPI_HOST:WEBAPI_PORT` (port 8080 by default), so the browser needs no CORS setup. The certificate comes from Caddy's local CA; run `caddy trust` once to stop the browser warning. To listen elsewhere, set `CADDY_HOSTNAME`, for example `CADDY_HOSTNAME=localhost:8443`, which also avoids needing root for port 443. The bundle works without a `config-local.json`; to change auth providers or other settings, copy `dist/config-local.example.json` to `dist/config-local.json` (reapply it after upgrading the package).
 
 ### First-time login and creating users
 
