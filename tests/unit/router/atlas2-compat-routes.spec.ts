@@ -112,7 +112,7 @@ describe('Atlas 2.x compatibility routes', () => {
   it('redirects Atlas 2 feature-analysis list and detail URLs', async () => {
     const router = makeRouter()
     await router.push('/cc/feature-analyses')
-    expect(router.currentRoute.value.path).toBe('/analysis/feature-analyses')
+    expect(router.currentRoute.value.path).toBe('/analysis/characterizations/feature-analyses')
 
     await router.push('/cc/feature-analyses/107')
     expect(router.currentRoute.value.name).toBe('feature-analysis-edit')

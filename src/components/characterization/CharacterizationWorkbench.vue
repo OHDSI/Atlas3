@@ -11,7 +11,10 @@
         :model-value="modelValue"
         :available-cohorts="availableCohorts"
         :available-feature-analyses="availableFeatureAnalyses"
+        :create-disabled-reason="createDisabledReason"
         @update:model-value="(v) => $emit('update:modelValue', v)"
+        @create-feature-analysis="(kind) => emit('create-feature-analysis', kind)"
+        @edit-feature-analysis="(id) => emit('edit-feature-analysis', id)"
       />
     </div>
 
@@ -188,6 +191,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { AtlasAlert, AtlasProgressCircular } from '@/components/ui'
 import AtlasCollapsibleSection from '@/components/ui/AtlasCollapsibleSection.vue'
 import AtlasSwitch from '@/components/ui/AtlasSwitch.vue'
+import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-create-kind'
 import CharacterizationDesignRail from './CharacterizationDesignRail.vue'
 import CharacterizationCanvasToolbar from './CharacterizationCanvasToolbar.vue'
 import CharacterizationRunMeta from './CharacterizationRunMeta.vue'
@@ -244,10 +248,13 @@ const props = defineProps<{
   characterizationId: number | null
   availableCohorts: CohortDefinitionSummary[]
   availableFeatureAnalyses: FeatureAnalysisListItem[]
+  createDisabledReason?: string
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: CharacterizationDefinition]
+  'create-feature-analysis': [kind: FeatureAnalysisCreateKind]
+  'edit-feature-analysis': [id: number]
   'explore': [row: PrevalenceStat]
   'snackbar': [message: string, severity: 'success' | 'error' | 'info']
 }>()

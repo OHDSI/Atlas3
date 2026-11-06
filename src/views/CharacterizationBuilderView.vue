@@ -215,8 +215,11 @@
       :characterization-id="draftId"
       :available-cohorts="availableCohorts"
       :available-feature-analyses="availableFeatureAnalyses"
+      :create-disabled-reason="createFeatureAnalysisDisabledReason"
       data-testid="char-builder-workbench"
       @update:model-value="onDraftChange"
+      @create-feature-analysis="onCreateFeatureAnalysis"
+      @edit-feature-analysis="onEditFeatureAnalysis"
       @explore="onExplore"
       @snackbar="(msg, sev) => showSnackbar(msg, sev)"
     />
@@ -302,7 +305,7 @@
     </AtlasDialog>
 
     <ConceptSetEditor
-      v-if="conceptSetsStore.editorOpen"
+      v-if="conceptSetsStore.editorOpen && !featureAnalysisPanelOpen"
       :model-value="conceptSetsStore.editorOpen"
       :concept-set="conceptSetsStore.currentSet"
       embedded
@@ -360,6 +363,13 @@
       </template>
     </AtlasDialog>
 
+    <FeatureAnalysisEditorPanel
+      ref="featureAnalysisPanel"
+      :target="featureAnalysisPanelTarget"
+      @saved="onFeatureAnalysisSaved"
+      @closed="featureAnalysisPanelTarget = null"
+    />
+
     <AtlasSnackbar
       v-model="snackbar.show"
       :severity="snackbar.severity"
@@ -371,7 +381,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, provide, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import { useI18n } from '@/composables/useI18n'
@@ -385,10 +395,12 @@ import { assignCharacterizationTag, exportCharacterization, importCharacterizati
 import { logger } from '@/utils/logger'
 import { assignedTags, syncAssetTags } from '@/utils/asset-tags'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
+import FeatureAnalysisEditorPanel from '@/components/characterization/FeatureAnalysisEditorPanel.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 import ConceptSetsListDialog from '@/components/cohort/ConceptSetsListDialog.vue'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
+import { CONCEPT_SET_EDITOR_SUPPRESSED } from '@/components/characterization/concept-set-editor-suppression'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
@@ -396,11 +408,13 @@ import ExplorePrevalenceDialog from '@/components/characterization-results/Explo
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
 import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
+import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-create-kind'
+import { designFlags, toLinkedFeatureAnalysis } from '@/utils/linked-feature-analysis'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { validateCharacterization, countByLevel } from '@/utils/characterization-validators'
 import type { CharacterizationDefinition, PrevalenceStat } from '@/models/characterization.types'
 import type { CohortDefinitionSummary, Tag } from '@/models/webapi.types'
-import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
+import type { FeatureAnalysis, FeatureAnalysisListItem } from '@/models/feature-analysis.types'
 import type { ConceptSetReference } from '@/models/cohort.types'
 import type { ConceptSet as CirceConceptSet, ConceptSetItem as CirceConceptSetItem, CriteriaGroup as CirceCriteriaGroup } from '@/models/circe-types'
 import type { ConceptSetItem as AtlasConceptSetItem } from '@/models/concept-set.types'
@@ -415,6 +429,10 @@ const router = useRouter()
 const { t, tv } = useI18n()
 const store = useCharacterizationStore()
 const conceptSetsStore = useConceptSetsStore()
+const featureAnalysisPanelTarget = ref<{ featureAnalysisId: number } | { createKind: FeatureAnalysisCreateKind } | null>(null)
+const featureAnalysisPanelOpen = computed(() => featureAnalysisPanelTarget.value !== null)
+const featureAnalysisPanel = ref<{ isDirty: () => boolean } | null>(null)
+provide(CONCEPT_SET_EDITOR_SUPPRESSED, featureAnalysisPanelOpen)
 
 // ---------------------------------------------------------------------------
 // Local state
@@ -535,10 +553,14 @@ const showDeleteConceptSetDialog = ref<boolean>(false)
 const { hasPermission } = usePermissions()
 const { canWrite } = useEntityAccess('cohortCharacterization', draftId)
 
+const hasSavePermission = computed<boolean>(() =>
+  isEditing.value ? canWrite.value : hasPermission('create:cohort-characterization')
+)
+
 const canSave = computed<boolean>(() => {
   if (saving.value || loading.value) return false
   if (draft.value.name.trim().length === 0) return false
-  return isEditing.value ? canWrite.value : hasPermission('create:cohort-characterization')
+  return hasSavePermission.value
 })
 
 const saveDisabledReason = computed<string>(() =>
@@ -546,10 +568,14 @@ const saveDisabledReason = computed<string>(() =>
     entity: tv('const.entityName.characterization'),
     isNew: !isEditing.value,
     hasName: draft.value.name.trim().length > 0,
-    hasPermission: isEditing.value ? canWrite.value : hasPermission('create:cohort-characterization'),
+    hasPermission: hasSavePermission.value,
     isSaving: saving.value || loading.value,
     translate: tv,
   })
+)
+
+const createFeatureAnalysisDisabledReason = computed<string | undefined>(() =>
+  hasPermission('create:feature-analysis') ? undefined : t('cc.viewEdit.design.fa.noCreatePermission').value
 )
 
 // ---------------------------------------------------------------------------
@@ -694,10 +720,10 @@ function deleteConceptSet(conceptSet: ConceptSetReference) {
 // Actions
 // ---------------------------------------------------------------------------
 
-async function handleSave() {
+async function handleSave(): Promise<number | null> {
   if (draft.value.name.trim().length === 0) {
     showSnackbar(t('components.nameValidation.empty').value, 'error')
-    return
+    return null
   }
 
   if (hasValidationErrors.value) {
@@ -706,7 +732,7 @@ async function handleSave() {
       'error'
     )
     showValidationDialog.value = true
-    return
+    return null
   }
 
   saving.value = true
@@ -720,9 +746,9 @@ async function handleSave() {
         )
         store.markClean()
         hydrateFrom(updated)
-      } else {
-        showSnackbar(t('cc.viewEdit.saveError').value, 'error')
+        return updated.id ?? null
       }
+      showSnackbar(t('cc.viewEdit.saveError').value, 'error')
     } else {
       const created = await store.create(draft.value)
       if (created?.id) {
@@ -736,9 +762,9 @@ async function handleSave() {
         // because its gate checks characterizationId == null (#223).
         hydrateFrom(created)
         await router.push(`/characterizations/${created.id}`)
-      } else {
-        showSnackbar(t('cc.viewEdit.saveError').value, 'error')
+        return created.id
       }
+      showSnackbar(t('cc.viewEdit.saveError').value, 'error')
     }
   } catch (err) {
     logger.error('CharacterizationBuilder', 'Save failed', err)
@@ -746,6 +772,39 @@ async function handleSave() {
   } finally {
     saving.value = false
   }
+  return null
+}
+
+function onCreateFeatureAnalysis(kind: FeatureAnalysisCreateKind) {
+  featureAnalysisPanelTarget.value = { createKind: kind }
+}
+
+function onEditFeatureAnalysis(id: number) {
+  featureAnalysisPanelTarget.value = { featureAnalysisId: id }
+}
+
+async function onFeatureAnalysisSaved(fa: FeatureAnalysis, created: boolean): Promise<void> {
+  featureAnalysisPanelTarget.value = null
+  const keyAtSave = loadedKey.value
+  await loadAvailableFeatureAnalyses()
+  if (!created) {
+    showSnackbar(t('cc.viewEdit.design.fa.updated', { name: fa.name }).value, 'success')
+    return
+  }
+  if (loadedKey.value !== keyAtSave) return
+  const linked = draft.value.featureAnalyses ?? []
+  if (linked.some(existing => existing.id === fa.id)) return
+  const match = availableFeatureAnalyses.value.find(candidate => candidate.id === fa.id)
+  if (!match) {
+    logger.warn('CharacterizationBuilder', 'Created feature analysis missing from refreshed list', fa.id)
+    showSnackbar(t('cc.viewEdit.design.fa.addFailed').value, 'error')
+    return
+  }
+  onDraftChange({
+    ...draft.value,
+    featureAnalyses: [...linked, toLinkedFeatureAnalysis(match, designFlags(linked))],
+  })
+  showSnackbar(t('cc.viewEdit.design.fa.added', { name: match.name }).value, 'success')
 }
 
 const canExport = computed<boolean>(() => Boolean(draft.value.id))
@@ -863,7 +922,7 @@ async function loadAvailableCohorts() {
   }
 }
 
-async function loadAvailableFeatureAnalyses() {
+async function loadAvailableFeatureAnalyses(): Promise<void> {
   const result = await listFeatureAnalyses()
   if (result.success) {
     availableFeatureAnalyses.value = result.data
@@ -881,22 +940,22 @@ const loadedKey = ref<string | null>(null)
  * Load (or reset) the editor for a given route id. Shared by onMounted and
  * the props.id watcher so both paths hydrate identically.
  */
-async function loadForId(rawId: string | undefined): Promise<void> {
+async function loadForId(rawId: string | undefined): Promise<boolean> {
   const key = rawId ?? ''
-  if (loadedKey.value === key) return
+  if (loadedKey.value === key) return false
   loadedKey.value = key
 
   if (!rawId) {
     // :id -> new must not keep showing the previous design.
     store.clearCurrent()
     hydrateFrom(null)
-    return
+    return true
   }
 
   const numericId = Number(rawId)
   if (Number.isNaN(numericId)) {
     router.push('/characterizations')
-    return
+    return false
   }
 
   // Drop the previous entity up front so a slow fetch can never leave one
@@ -907,8 +966,9 @@ async function loadForId(rawId: string | undefined): Promise<void> {
   await store.fetchOne(numericId)
   // A newer navigation started while this fetch was in flight — it owns the
   // draft now, so discard this (stale) result.
-  if (loadedKey.value !== key) return
+  if (loadedKey.value !== key) return false
   hydrateFrom(store.currentCharacterization)
+  return true
 }
 
 // /characterizations/new and /characterizations/:id are two route records
@@ -939,8 +999,14 @@ onMounted(async () => {
 // Instead we remember the target route and re-push it via router.push once
 // confirmLeaveUnsaved fires (same pattern as CohortBuilder.vue).
 let navigationConfirmed = false
+// A dirty panel editor guards this same route record and its single prompt
+// covers the design too; prompting here as well would ask two or three times.
+function panelOwnsLeavePrompt(): boolean {
+  return featureAnalysisPanelOpen.value && (featureAnalysisPanel.value?.isDirty() ?? false)
+}
+
 onBeforeRouteLeave((to, _from, next) => {
-  if (!store.isDirty || navigationConfirmed) {
+  if (!store.isDirty || navigationConfirmed || panelOwnsLeavePrompt()) {
     navigationConfirmed = false
     next()
     return

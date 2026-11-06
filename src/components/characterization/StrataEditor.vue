@@ -198,7 +198,7 @@
     />
 
     <ConceptSetEditor
-      v-if="conceptSetsStore.editorOpen"
+      v-if="conceptSetsStore.editorOpen && !suppressed"
       :model-value="conceptSetsStore.editorOpen"
       :concept-set="conceptSetsStore.currentSet"
       embedded
@@ -215,6 +215,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
 import { AtlasButton, AtlasChip, AtlasDialog, AtlasIconButton, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
+import { useConceptSetEditorSuppressed } from '@/components/characterization/concept-set-editor-suppression'
 import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
@@ -242,6 +243,7 @@ const emit = defineEmits<{
 
 const { t, tv } = useI18n()
 const conceptSetsStore = useConceptSetsStore()
+const suppressed = useConceptSetEditorSuppressed()
 
 // ── Drawer state ──────────────────────────────────────────────────────────
 

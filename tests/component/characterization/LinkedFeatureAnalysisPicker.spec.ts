@@ -269,6 +269,57 @@ describe('LinkedFeatureAnalysisPicker', () => {
     wrapper.unmount()
   })
 
+  describe('edit linked analysis', () => {
+    function mountWithMixedTypes() {
+      return mount(LinkedFeatureAnalysisPicker, {
+        props: {
+          modelValue: [{ id: 1 }, { id: 11 }, { id: 12 }, { id: 99 }] as LinkedFeatureAnalysis[],
+          availableFeatureAnalyses: [
+            { id: 1, name: 'Demographics', type: 'PRESET' },
+            { id: 11, name: 'Comorbidities', type: 'CRITERIA_SET' },
+            { id: 12, name: 'Custom', type: 'CUSTOM_FE' },
+          ] as FeatureAnalysisListItem[],
+        },
+        global: { plugins: [vuetify] },
+        attachTo: document.body,
+      })
+    }
+
+    it('offers edit only for linked custom analyses', () => {
+      const wrapper = mountWithMixedTypes()
+      const edit = (id: number) => wrapper.find(`[data-testid="linked-fa-picker-edit-${id}"]`).exists()
+      expect([1, 11, 12, 99].map(edit)).toEqual([false, true, true, false])
+      wrapper.unmount()
+    })
+
+    it('shows the library name and description over the stale values stored on the link', () => {
+      const wrapper = mount(LinkedFeatureAnalysisPicker, {
+        props: {
+          modelValue: [{ id: 12, name: 'Old name', description: 'Old description' }] as LinkedFeatureAnalysis[],
+          availableFeatureAnalyses: [
+            { id: 12, name: 'Renamed', description: 'New description', type: 'CUSTOM_FE' },
+          ] as FeatureAnalysisListItem[],
+        },
+        global: { plugins: [vuetify] },
+        attachTo: document.body,
+      })
+      const row = wrapper.get('[data-testid="linked-fa-picker-row-12"]').text()
+      expect(row).toContain('Renamed')
+      expect(row).toContain('New description')
+      expect(row).not.toContain('Old name')
+      expect(row).not.toContain('Old description')
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+      wrapper.unmount()
+    })
+
+    it('emits edit-feature-analysis with the id', async () => {
+      const wrapper = mountWithMixedTypes()
+      await wrapper.get('[data-testid="linked-fa-picker-edit-11"]').trigger('click')
+      expect(wrapper.emitted('edit-feature-analysis')).toEqual([[11]])
+      wrapper.unmount()
+    })
+  })
+
   it('opens the dialog when Add feature analysis is clicked', async () => {
     const wrapper = mountPicker([])
 
@@ -400,5 +451,83 @@ describe('LinkedFeatureAnalysisPicker facets (#216)', () => {
 
     expect(filterBar(wrapper).props('activeFilterCount')).toBe(0)
     wrapper.unmount()
+  })
+
+  describe('create new', () => {
+    async function openDialog(props: Record<string, unknown> = {}) {
+      const wrapper = mount(LinkedFeatureAnalysisPicker, {
+        props: { modelValue: [], availableFeatureAnalyses, ...props },
+        global: { plugins: [vuetify] },
+        attachTo: document.body,
+      })
+      await wrapper.get('[data-testid="linked-fa-picker-add"]').trigger('click')
+      await flushPromises()
+      return wrapper
+    }
+
+    async function pick(kind: string) {
+      (document.querySelector('[data-testid="linked-fa-picker-create"]') as HTMLElement).click()
+      await flushPromises()
+      ;(document.querySelector(`[data-testid="linked-fa-picker-create-${kind}"]`) as HTMLElement).click()
+      await flushPromises()
+    }
+
+    it('shows the create-new panel in the dialog', async () => {
+      const wrapper = await openDialog()
+      expect(document.querySelector('[data-testid="linked-fa-picker-create"]')).not.toBeNull()
+      wrapper.unmount()
+    })
+
+    it.each([
+      ['prevalence', { type: 'CRITERIA_SET', statType: 'PREVALENCE' }],
+      ['distribution', { type: 'CRITERIA_SET', statType: 'DISTRIBUTION' }],
+      ['custom', { type: 'CUSTOM_FE' }],
+    ])('emits create-feature-analysis for %s from the menu', async (kind, payload) => {
+      const wrapper = await openDialog()
+      await pick(kind)
+      expect(wrapper.emitted('create-feature-analysis')).toEqual([[payload]])
+      wrapper.unmount()
+    })
+
+    it('closes the dialog when a create kind is picked', async () => {
+      const wrapper = await openDialog()
+      await pick('custom')
+      expect(
+        (wrapper.vm as unknown as { $: { setupState: { dialogOpen: boolean } } }).$.setupState.dialogOpen
+      ).toBe(false)
+      wrapper.unmount()
+    })
+
+    it('disables create and shows the reason when createDisabledReason is set', async () => {
+      const wrapper = await openDialog({ createDisabledReason: 'Save first' })
+      const btn = document.querySelector('[data-testid="linked-fa-picker-create"]') as HTMLButtonElement
+      expect(btn.disabled).toBe(true)
+      const hint = document.querySelector('[data-testid="linked-fa-picker-create-hint"]') as HTMLElement
+      expect(hint.textContent?.trim()).toBe('Save first')
+      expect(btn.getAttribute('aria-describedby')).toBe(hint.id)
+      wrapper.unmount()
+    })
+
+    it('confirmAdd still links the selected analyses with the design flags', async () => {
+      const wrapper = await openDialog({
+        modelValue: [{ id: 99, name: 'x', includeAnnual: true, includeTemporal: false }],
+      })
+      ;(wrapper.vm as unknown as { $: { setupState: { selectedIds: number[] } } }).$.setupState.selectedIds = [11]
+      await flushPromises()
+      ;(document.querySelector('[data-testid="linked-fa-picker-confirm"]') as HTMLButtonElement).click()
+      await flushPromises()
+      const emitted = wrapper.emitted('update:modelValue')!.at(-1)![0] as LinkedFeatureAnalysis[]
+      expect(emitted.find(fa => fa.id === 11)).toEqual({
+        id: 11,
+        name: 'Comorbidities',
+        description: 'Common conditions',
+        statType: undefined,
+        supportsAnnual: undefined,
+        supportsTemporal: undefined,
+        includeAnnual: true,
+        includeTemporal: false,
+      })
+      wrapper.unmount()
+    })
   })
 })

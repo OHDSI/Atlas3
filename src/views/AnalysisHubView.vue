@@ -38,11 +38,8 @@
       </nav>
 
       <v-window v-model="activeTabName">
-        <v-window-item value="feature-analyses">
-          <FeatureAnalysesView />
-        </v-window-item>
         <v-window-item value="characterizations">
-          <CharacterizationsView />
+          <CharacterizationsSection />
         </v-window-item>
         <v-window-item value="pathways">
           <PathwaysView />
@@ -76,8 +73,7 @@ import { whenPluginFrameworkReady } from '@/plugins/index'
 import { interleaveMenuItems } from '@/plugins/navigation/PluginMenuIntegration'
 import { AtlasIcon, AtlasPageShell, AtlasTab, AtlasTabs } from '@/components/ui'
 import PluginParcelOutlet from '@/plugins/components/PluginParcelOutlet.vue'
-import CharacterizationsView from '@/views/CharacterizationsView.vue'
-import FeatureAnalysesView from '@/views/FeatureAnalysesView.vue'
+import CharacterizationsSection from '@/components/analysis/CharacterizationsSection.vue'
 import PathwaysView from '@/views/PathwaysView.vue'
 import IncidenceRatesView from '@/views/IncidenceRatesView.vue'
 
@@ -102,22 +98,13 @@ const { items: pluginTabItems } = usePluginMounts('analysis-tabs')
 
 const coreTabs: Tab[] = [
   {
-    id: 'feature-analyses',
-    name: 'feature-analyses',
-    titleKey: 'navigation.featureAnalyses',
-    defaultLabel: 'Feature Analyses',
-    icon: 'mdi-tune',
-    hintKey: 'fa.subtitle',
-    defaultHint: 'Reusable feature definitions for cohort characterization.',
-  },
-  {
     id: 'characterizations',
     name: 'characterizations',
     titleKey: 'navigation.characterizations',
     defaultLabel: 'Characterizations',
     icon: 'mdi-chart-box-outline',
-    hintKey: 'cc.subtitle',
-    defaultHint: 'Compare cohorts on shared feature analyses.',
+    hintKey: '',
+    defaultHint: '',
   },
   {
     id: 'pathways',
@@ -139,6 +126,11 @@ const coreTabs: Tab[] = [
   },
 ]
 
+// Keeps plugins written against the four-tab hub in place.
+function aliasAnchor(anchor: string | undefined): string | undefined {
+  return anchor === 'feature-analyses' ? 'characterizations' : anchor
+}
+
 // Plugin tabs are placed among the core tabs by insertBefore/insertAfter, the
 // same way the navbar and the Data Sources sidebar place plugin items.
 const tabs = computed<Tab[]>(() =>
@@ -151,8 +143,8 @@ const tabs = computed<Tab[]>(() =>
       route: '',
       icon: item.icon,
       order: item.order,
-      insertBefore: item.insertBefore,
-      insertAfter: item.insertAfter,
+      insertBefore: aliasAnchor(item.insertBefore),
+      insertAfter: aliasAnchor(item.insertAfter),
       visible: true,
     })),
     menuItem => {
@@ -175,7 +167,7 @@ const tabNames = computed(() => new Set(tabs.value.map(tab => tab.name)))
 
 const pluginTabs = computed(() => tabs.value.filter(tab => tab.plugin))
 
-const firstTabName = computed(() => tabs.value[0]?.name ?? 'feature-analyses')
+const firstTabName = computed(() => tabs.value[0]?.name ?? 'characterizations')
 
 // The tab the URL names, or null while it names none (a bare /analysis, or a
 // plugin tab whose plugin is not registered yet).
@@ -184,8 +176,13 @@ const routeTabName = computed<string | null>(() => {
     const name = `plugin:${route.params.pluginId as string}:${route.params.itemId as string}`
     return tabNames.value.has(name) ? name : null
   }
-  const name = route.name as string | undefined
+  const name = route.name === 'feature-analyses' ? 'characterizations' : (route.name as string | undefined)
   return name && tabNames.value.has(name) ? name : null
+})
+
+const storedTabName = computed<string | null>(() => {
+  if (!routeTabName.value) return null
+  return route.name === 'feature-analyses' ? 'feature-analyses' : routeTabName.value
 })
 
 // Bidirectional binding between active tab and the URL.
@@ -205,7 +202,7 @@ const activeTabName = computed<string>({
       router.push({ name: 'analysis-plugin', params: tab.plugin })
       return
     }
-    if (name !== route.name) router.push({ name })
+    if (name !== routeTabName.value) router.push({ name })
   },
 })
 
@@ -223,7 +220,7 @@ function readStoredTab(): string | null {
 // Only a tab the URL actually names is remembered, so a fallback shown while
 // plugin tabs are still loading never overwrites the saved choice.
 watch(
-  routeTabName,
+  storedTabName,
   name => {
     if (!name) return
     try {
@@ -238,6 +235,10 @@ watch(
 )
 
 function openTab(name: string) {
+  if (name === 'feature-analyses') {
+    router.replace({ name })
+    return
+  }
   const tab = tabs.value.find(t => t.name === name)
   if (!tab) return
   if (tab.plugin) router.replace({ name: 'analysis-plugin', params: tab.plugin })
@@ -249,7 +250,7 @@ function openTab(name: string) {
 // only known once the plugin framework has registered them.
 async function openDefaultTab() {
   const stored = readStoredTab()
-  if (stored && coreTabs.some(tab => tab.name === stored)) {
+  if (stored && (stored === 'feature-analyses' || coreTabs.some(tab => tab.name === stored))) {
     openTab(stored)
     return
   }
@@ -288,6 +289,7 @@ const subtitle = computed(
 const activeTabHint = computed(() => {
   const tab = activeTab.value
   if (tab.plugin) return tab.defaultHint
+  if (!tab.hintKey) return ''
   return t(tab.hintKey, tab.defaultHint).value
 })
 </script>

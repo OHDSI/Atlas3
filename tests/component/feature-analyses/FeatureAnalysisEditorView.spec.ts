@@ -63,6 +63,7 @@ import {
   listFeatureAnalysisAggregates,
 } from '@/services/feature-analysis.service'
 import FeatureAnalysisEditorView from '@/views/FeatureAnalysisEditorView.vue'
+import FeatureAnalysisEditor from '@/components/feature-analyses/FeatureAnalysisEditor.vue'
 import { success } from '@/types/api'
 
 const vuetify = createVuetify({ components, directives })
@@ -168,6 +169,10 @@ async function mountEditor(path: string, props?: Record<string, unknown>) {
   return { wrapper, router }
 }
 
+function editorState<T>(wrapper: VueWrapper): T {
+  return (wrapper.findComponent(FeatureAnalysisEditor).vm as unknown as { $: { setupState: T } }).$.setupState
+}
+
 describe('FeatureAnalysisEditorView', () => {
   let mounted: { wrapper: VueWrapper; router: Router } | null = null
 
@@ -222,10 +227,10 @@ describe('FeatureAnalysisEditorView', () => {
     expect(
       mounted.wrapper.find('[data-testid="feature-analysis-editor-design-preset"]').exists()
     ).toBe(false)
-    expect((mounted.wrapper.vm as any).$.setupState.prevalenceDraftDesign).toEqual([])
-    expect((mounted.wrapper.vm as any).$.setupState.prevalenceDraftConceptSets).toEqual([])
-    expect((mounted.wrapper.vm as any).$.setupState.distributionDraftDesign).toEqual([])
-    expect((mounted.wrapper.vm as any).$.setupState.distributionDraftConceptSets).toEqual([])
+    expect(editorState<any>(mounted.wrapper).prevalenceDraftDesign).toEqual([])
+    expect(editorState<any>(mounted.wrapper).prevalenceDraftConceptSets).toEqual([])
+    expect(editorState<any>(mounted.wrapper).distributionDraftDesign).toEqual([])
+    expect(editorState<any>(mounted.wrapper).distributionDraftConceptSets).toEqual([])
 
     const nameInput = mounted.wrapper.find(
       '[data-testid="feature-analysis-editor-name"] input'
@@ -540,7 +545,7 @@ describe('FeatureAnalysisEditorView', () => {
     const nameInput = mounted.wrapper.find('[data-testid="feature-analysis-editor-name"] input')
     await nameInput.setValue('Missing id')
 
-    await (mounted.wrapper.vm as any).$.setupState.handleSave()
+    await editorState<any>(mounted.wrapper).handleSave()
     await flushPromises()
 
     expect(mounted.wrapper.findComponent({ name: 'AtlasSnackbar' }).props('text')).toBe(
@@ -581,7 +586,7 @@ describe('FeatureAnalysisEditorView', () => {
       includeMapped: false,
     }
 
-    ;(mounted.wrapper.vm as any).$.setupState.handleConceptSetApplied({
+    ;editorState<any>(mounted.wrapper).handleConceptSetApplied({
       name: 'Concept set 1',
       items: [conceptSetItem],
     })
@@ -679,14 +684,7 @@ describe('FeatureAnalysisEditorView', () => {
     expect(mounted.wrapper.findComponent({ name: 'AtlasDialog' }).exists()).toBe(true)
   })
 
-  it('Close defers the unsaved-changes prompt to the route guard, not itself', async () => {
-    // onBeforeRouteLeave doesn't register outside a real <router-view> (see
-    // the "No active route record" warning logged by every test in this
-    // file), so it can't be exercised here - but this still locks in the
-    // regression: handleBack() must never call window.confirm itself, or a
-    // real navigation shows the "unsaved changes" dialog twice (#found via
-    // manual testing 2026-09-15 - handleBack confirmed, then pushed, and the
-    // route guard confirmed *again* for the same navigation).
+  it('Close with unsaved changes prompts once in the editor, then navigates on confirm', async () => {
     mounted = await mountEditor('/feature-analyses/new?type=CUSTOM_FE')
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
 
@@ -698,10 +696,16 @@ describe('FeatureAnalysisEditorView', () => {
     ).element as HTMLButtonElement
     closeBtn.click()
     await flushPromises()
+
+    expect(confirmSpy).not.toHaveBeenCalled()
+    expect(mounted.router.currentRoute.value.name).toBe('feature-analysis-new')
+    expect(editorState<{ showUnsavedDialog: boolean }>(mounted.wrapper).showUnsavedDialog).toBe(true)
+
+    editorState<{ confirmLeaveUnsaved: () => void }>(mounted.wrapper).confirmLeaveUnsaved()
+    await flushPromises()
     await new Promise<void>(resolve => setTimeout(resolve, 0))
     await flushPromises()
 
-    expect(confirmSpy).not.toHaveBeenCalled()
     expect(mounted.router.currentRoute.value.name).toBe('feature-analyses')
 
     confirmSpy.mockRestore()
@@ -744,11 +748,11 @@ describe('FeatureAnalysisEditorView', () => {
 
     expect(next).toHaveBeenCalledWith(false)
 
-    const vm = mounted.wrapper.vm as {
+    const vm = editorState<{
       showUnsavedDialog: boolean
       confirmLeaveUnsaved: () => void
       cancelLeaveUnsaved: () => void
-    }
+    }>(mounted.wrapper)
 
     vm.showUnsavedDialog = true
     vm.confirmLeaveUnsaved()

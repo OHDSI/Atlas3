@@ -12,7 +12,10 @@
       :model-value="draft.featureAnalyses"
       :available-feature-analyses="availableFeatureAnalyses"
       :current-user-login="currentUserLogin"
+      :create-disabled-reason="createDisabledReason"
       @update:model-value="v => updateField('featureAnalyses', v)"
+      @create-feature-analysis="kind => emit('create-feature-analysis', kind)"
+      @edit-feature-analysis="id => emit('edit-feature-analysis', id)"
     />
 
     <AtlasDivider class="my-3" />
@@ -35,6 +38,7 @@ import { useAuthStore } from '@/stores/auth'
 import LinkedCohortPicker from './LinkedCohortPicker.vue'
 import LinkedFeatureAnalysisPicker from './LinkedFeatureAnalysisPicker.vue'
 import StrataEditor from './StrataEditor.vue'
+import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-create-kind'
 import type { CharacterizationDefinition } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
@@ -43,6 +47,7 @@ const props = defineProps<{
   modelValue: CharacterizationDefinition
   availableCohorts: CohortDefinitionSummary[]
   availableFeatureAnalyses: FeatureAnalysisListItem[]
+  createDisabledReason?: string
 }>()
 
 // Sourced here rather than in the picker so the picker stays presentational and
@@ -50,7 +55,11 @@ const props = defineProps<{
 const authStore = useAuthStore()
 const currentUserLogin = computed(() => authStore.user?.login)
 
-const emit = defineEmits<{ 'update:modelValue': [value: CharacterizationDefinition] }>()
+const emit = defineEmits<{
+  'update:modelValue': [value: CharacterizationDefinition]
+  'create-feature-analysis': [kind: FeatureAnalysisCreateKind]
+  'edit-feature-analysis': [id: number]
+}>()
 
 const draft = computed<CharacterizationDefinition>(() => props.modelValue)
 
