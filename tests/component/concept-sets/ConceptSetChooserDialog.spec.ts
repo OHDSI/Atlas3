@@ -91,6 +91,20 @@ describe('ConceptSetChooserDialog', () => {
     expect(document.body.querySelector('[data-testid="chooser-row-9"]')).toBeNull()
   })
 
+  it('filters rows by concept set id', async () => {
+    makeWrapper()
+    await flushPromises()
+
+    const search = document.body.querySelector('[data-testid="chooser-search"] input') as HTMLInputElement
+    search.value = '5'
+    search.dispatchEvent(new Event('input'))
+    await flushPromises()
+
+    expect(document.body.querySelector('[data-testid="chooser-row-5"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-testid="chooser-row-1"]')).toBeNull()
+    expect(document.body.querySelector('[data-testid="chooser-row-9"]')).toBeNull()
+  })
+
   it('emits select with the row id and closes when the row Select button is clicked', async () => {
     const { wrapper } = makeWrapper()
     await flushPromises()
