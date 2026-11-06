@@ -151,10 +151,10 @@ function handleRejectLicense() {
 onMounted(() => {
   checkLicenseStatus()
   showNavBar.value = pluginConfigService.showNavBar()
-  // Kick off TrexSQL detection + dataSources cache-status fetch once, at
-  // app boot. This populates the shared module-level state so any page
-  // (cohort builder, configuration, etc.) sees `isTrexSQLEnabled = true`
-  // and `dataSources` populated without each component re-running detection.
+  // Kick off the WebAPI /info fetch (TrexSQL enabled flag) + dataSources
+  // cache-status fetch once, at app boot. This populates the shared
+  // module-level state so any page sees `isTrexSQLEnabled` and `dataSources`
+  // without each component re-running it.
   void useTrexSQLCache().initialize()
 })
 </script>

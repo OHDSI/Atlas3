@@ -1,18 +1,23 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { AtlasCard, AtlasChip, AtlasDataTable, AtlasProgressCircular, AtlasSelect } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
+import ConceptAddOptions from '@/components/concepts/ConceptAddOptions.vue'
 import ConceptFacetFilters from '@/components/concepts/ConceptFacetFilters.vue'
 import { useConceptFacets, type FacetDefinition } from '@/composables/useConceptFacets'
 import { useConceptRecordCounts } from '@/composables/useConceptRecordCounts'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import type { RelatedConcept } from '@/models/concept-detail.types'
-import type { Concept } from '@/models/concept-set.types'
+import type { Concept, ConceptAddFlags } from '@/models/concept-set.types'
 
 const { t } = useI18n()
 
 const props = defineProps<{ related: RelatedConcept[]; sourceKey?: string }>()
+
+const emit = defineEmits<{
+  'add-concepts': [concepts: Concept[], flags: Required<ConceptAddFlags>]
+}>()
 
 // Prefer the explicit sourceKey prop. The drawer renders this table over other
 // routes, so route.params.sourceKey is empty there and the link would no-op.
@@ -111,10 +116,68 @@ const {
   row => [row.conceptId, row.conceptCode]
 )
 
+const selectedConceptIds = ref<number[]>([])
+const addFlags = ref<Required<ConceptAddFlags>>({
+  isExcluded: false,
+  includeDescendants: false,
+  includeMapped: false,
+})
+
+watch(() => props.related, () => {
+  selectedConceptIds.value = []
+})
+
+// A concept appears once per relationship, so selection is keyed by conceptId
+// and scoped to the rows the filters currently show: Add must never pick up a
+// ticked concept the user has since filtered out of view.
+const visibleById = computed(() => {
+  const map = new Map<number, Row>()
+  for (const row of filteredConcepts.value) {
+    if (!map.has(row.conceptId)) map.set(row.conceptId, row)
+  }
+  return map
+})
+const selectedSet = computed(() => new Set(selectedConceptIds.value))
+const selectedVisible = computed(() => selectedConceptIds.value.filter(id => visibleById.value.has(id)))
+const allVisibleSelected = computed(
+  () => visibleById.value.size > 0 && [...visibleById.value.keys()].every(id => selectedSet.value.has(id))
+)
+const someVisibleSelected = computed(() => selectedVisible.value.length > 0)
+
+function onToggleRow(conceptId: number, value: boolean | null) {
+  const next = new Set(selectedConceptIds.value)
+  if (value) next.add(conceptId)
+  else next.delete(conceptId)
+  selectedConceptIds.value = [...next]
+}
+
+function onToggleSelectAll(value: boolean | null) {
+  const next = new Set(selectedConceptIds.value)
+  for (const id of visibleById.value.keys()) {
+    if (value) next.add(id)
+    else next.delete(id)
+  }
+  selectedConceptIds.value = [...next]
+}
+
+function onAddSelected() {
+  const concepts: Concept[] = []
+  for (const id of selectedVisible.value) {
+    const row = visibleById.value.get(id)
+    if (!row) continue
+    const { relationship: _relationship, ...concept } = row
+    concepts.push(concept)
+  }
+  if (!concepts.length) return
+  emit('add-concepts', concepts, { ...addFlags.value })
+  selectedConceptIds.value = []
+}
+
 const viewCountsForLabel = t('search.viewCountMessage')
 const sortBy = ref([{ key: 'descendantRecordCount', order: 'desc' as const }])
 
 const headers = computed(() => [
+  { title: '', key: 'select', sortable: false, width: 48 },
   { title: t('facets.caption.relationship').value, key: 'relationship', sortable: true },
   { title: t('columns.conceptName').value, key: 'conceptName', sortable: true },
   { title: t('columns.vocabulary').value, key: 'vocabularyId', sortable: true },
@@ -171,6 +234,14 @@ function formatCount(count: number | undefined): string {
         />
       </template>
     </ConceptFacetFilters>
+    <ConceptAddOptions
+      v-if="rows.length > 0"
+      v-model="addFlags"
+      :selected-count="selectedVisible.length"
+      class="related-add-options"
+      data-testid="related-add-options"
+      @add="onAddSelected"
+    />
     <p
       v-if="rows.length === 0"
       class="empty"
@@ -185,6 +256,27 @@ function formatCount(count: number | undefined): string {
       :items-per-page="25"
       must-sort
     >
+      <template #[`header.select`]>
+        <v-checkbox-btn
+          :model-value="allVisibleSelected"
+          :indeterminate="someVisibleSelected && !allVisibleSelected"
+          :aria-label="t('components.conceptTable.selectAllConcepts').value"
+          density="compact"
+          hide-details
+          data-testid="related-select-all"
+          @update:model-value="onToggleSelectAll"
+        />
+      </template>
+      <template #[`item.select`]="{ item }">
+        <v-checkbox-btn
+          :model-value="selectedSet.has(item.conceptId)"
+          :aria-label="t('components.conceptTable.selectConcept', { name: item.conceptName }).value"
+          density="compact"
+          hide-details
+          :data-testid="`related-select-${item.conceptId}`"
+          @update:model-value="(value: boolean | null) => onToggleRow(item.conceptId, value)"
+        />
+      </template>
       <template #[`item.relationship`]="{ item }">
         <AtlasChip size="sm">
           {{ item.relationship }}
@@ -267,6 +359,7 @@ function formatCount(count: number | undefined): string {
 .muted { color: var(--atlas-color-on-surface-variant); font-size: 11px; }
 .empty { padding: 24px; color: var(--atlas-color-on-surface-variant); font-size: 13px; margin: 0; text-align: center; }
 .related-filters { padding: 12px 16px; }
+.related-add-options { padding: 0 16px 12px; }
 .count { display: flex; justify-content: end; align-items: center; }
 .concept-link {
   color: rgb(var(--v-theme-primary));

@@ -1,10 +1,16 @@
+# Runs the released ATLAS v3.0 and WebAPI v3.0 images. For development
+# against the current source and the WebAPI dev build, use
+# docker-compose.dev.yml instead.
+
+# Separate from the dev stack's volumes: a database migrated by a newer
+# WebAPI dev build fails Flyway validation on a released WebAPI.
 volumes:
-  atlas3-postgres-data:
-    name: atlas3-postgres-data
-  atlas3-webapi-data:
-    name: atlas3-webapi-data
-  atlas3-caddy-data:
-    name: atlas3-caddy-data
+  atlas3-release-postgres-data:
+    name: atlas3-release-postgres-data
+  atlas3-release-webapi-data:
+    name: atlas3-release-webapi-data
+  atlas3-release-caddy-data:
+    name: atlas3-release-caddy-data
 
 
 services:
@@ -19,7 +25,7 @@ services:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mypass}
     volumes:
-      - atlas3-postgres-data:/var/lib/postgresql/data
+      - atlas3-release-postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -27,13 +33,7 @@ services:
       retries: 10
 
   atlas3-webapi:
-    image: atlas3-webapi:local
-    build:
-      context: ./docker/webapi
-      dockerfile: Dockerfile
-      args:
-        WEBAPI_DIGEST: sha256:d4a2e14341c4674d94caf07f9a03726c2574be4d2d1e0f2c5ed127db59cc87c3
-        TREXSQL_VERSION: "0.3.3"
+    image: ohdsi/webapi:3.0.0
     container_name: atlas3-webapi
     platform: linux/amd64
     restart: unless-stopped
@@ -46,31 +46,27 @@ services:
       retries: 30
       start_period: 60s
     environment:
-      # Database configuration
       DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
       DATASOURCE_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi
       DATASOURCE_USERNAME: postgres
-      DATASOURCE_PASSWORD: mypass
+      DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-mypass}
       DATASOURCE_OHDSI_SCHEMA: webapi
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: webapi
       SPRING_BATCH_REPOSITORY_TABLEPREFIX: webapi.batch_
-      # Flyway migration settings
       FLYWAY_DATASOURCE_USERNAME: postgres
-      FLYWAY_DATASOURCE_PASSWORD: mypass
+      FLYWAY_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-mypass}
       SPRING_FLYWAY_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi
       SPRING_FLYWAY_USER: postgres
-      SPRING_FLYWAY_PASSWORD: mypass
+      SPRING_FLYWAY_PASSWORD: ${POSTGRES_PASSWORD:-mypass}
       SPRING_FLYWAY_SCHEMAS: webapi
       SPRING_FLYWAY_TABLE: flyway_schema_history
       SPRING_FLYWAY_BASELINE_VERSION: "3.0.0"
       SPRING_FLYWAY_PLACEHOLDERS_OHDSISCHEMA: webapi
       FLYWAY_BASELINE_VERSION: "3.0.0"
-      # Security configuration
       SECURITY_CORS_ENABLED: "true"
       # Must list the origin(s) the browser uses to reach the frontend. Override
       # in .env when ATLAS3_HTTP_PORT / ATLAS3_HTTPS_PORT are changed.
       SECURITY_CORS_ALLOWED_ORIGINS: ${SECURITY_CORS_ALLOWED_ORIGINS:-http://localhost,https://localhost}
-      # Auth providers (disable all except DB)
       SECURITY_AUTH_DB_ENABLED: "true"
       SECURITY_AUTH_WINDOWS_ENABLED: "false"
       SECURITY_AUTH_KERBEROS_ENABLED: "false"
@@ -81,31 +77,18 @@ services:
       SECURITY_AUTH_LDAP_ENABLED: "false"
       SECURITY_AUTH_AD_ENABLED: "false"
       SECURITY_AUTH_CAS_ENABLED: "false"
-      # OAuth callbacks
       SECURITY_AUTH_OAUTH_CALLBACK_UI: "http://localhost/atlas/#/oauth/callback"
       SECURITY_AUTH_OAUTH_CALLBACK_API: "http://localhost:8080/WebAPI/user/oauth/callback"
-      # DB-auth datasource (reads webapi.auth_user)
       SECURITY_AUTH_DB_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
       SECURITY_AUTH_DB_DATASOURCE_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi
       SECURITY_AUTH_DB_DATASOURCE_USERNAME: postgres
-      SECURITY_AUTH_DB_DATASOURCE_PASSWORD: mypass
+      SECURITY_AUTH_DB_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-mypass}
       SECURITY_AUTH_DB_DATASOURCE_SCHEMA: webapi
-      # TrexSQL
       TREXSQL_ENABLED: "true"
       TREXSQL_CACHE_PATH: /data/cache
       HOME: /data
-      # Pythia AI agent (bao plugin baked into the WebAPI image). Reads
-      # AWS_BEARER_TOKEN_BEDROCK from .env via env_file below (the file is
-      # optional; copy .env.example to create it). AWS_REGION
-      # and BAO_AGENT_MODEL are safe to commit — only the bearer token
-      # is sensitive.
-      AWS_REGION: us-east-1
-      BAO_AGENT_MODEL: ${BAO_AGENT_MODEL:-minimax.minimax-m2.5}
-    env_file:
-      - path: .env
-        required: false
     volumes:
-      - atlas3-webapi-data:/data
+      - atlas3-release-webapi-data:/data
     depends_on:
       atlas3-postgres:
         condition: service_healthy
@@ -126,10 +109,7 @@ services:
     command: sh -c 'for f in /scripts/*.sql; do psql -f "$$f"; done'
 
   atlas3-frontend:
-    image: ghcr.io/ohdsi/atlas3:dev
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/ohdsi/atlas3:3.0.0
     container_name: atlas3-frontend
     platform: linux/amd64
     restart: unless-stopped
@@ -137,10 +117,8 @@ services:
       - "${ATLAS3_HTTP_PORT:-80}:80"
       - "${ATLAS3_HTTPS_PORT:-443}:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - atlas3-caddy-data:/data
+      - atlas3-release-caddy-data:/data
     environment:
-      WEBAPI_URL: ${WEBAPI_URL:-https://localhost/WebAPI}
       CADDY_HOSTNAME: ${CADDY_HOSTNAME:-localhost}
       CADDY_TLS_DIRECTIVE: ${CADDY_TLS_DIRECTIVE:-tls internal}
     depends_on:

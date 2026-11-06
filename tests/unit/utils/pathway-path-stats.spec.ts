@@ -57,10 +57,54 @@ describe('computePathStats', () => {
     expect(out.summary.pctOfCohort).toBeCloseTo(3.21, 1)
     expect(out.summary.pctOfPathways).toBeCloseTo(7.11, 1)
     expect(out.steps).toHaveLength(3)
-    expect(out.steps[0]).toMatchObject({ name: 'SABA', entered: 1210 })
-    expect(out.steps[1]).toMatchObject({ name: 'ICS', entered: 880, retentionPct: expect.closeTo(72.7, 0) })
-    expect(out.steps[2]).toMatchObject({ name: 'LABA', entered: 414, retentionPct: expect.closeTo(47.0, 0) })
+    expect(out.steps[0]).toMatchObject({ name: 'SABA', entered: 2504 })
+    expect(out.steps[1]).toMatchObject({ name: 'ICS', entered: 1294, retentionPct: expect.closeTo(51.7, 0) })
+    expect(out.steps[2]).toMatchObject({ name: 'LABA', entered: 414, retentionPct: expect.closeTo(32.0, 0) })
     expect(out).not.toHaveProperty('stats')
+  })
+
+  it('counts everyone who reached an inner step, like the sunburst slice', () => {
+    const r2: PathwayResults = {
+      ...results,
+      pathwayGroups: [
+        {
+          ...results.pathwayGroups[0]!,
+          pathways: [
+            { path: '1-2', personCount: 178 },
+            { path: '1-2-4', personCount: 16 },
+            { path: '1-2-4-1', personCount: 1 },
+            { path: '1', personCount: 1000 },
+          ],
+        },
+      ],
+    }
+    const out = computePathStats({ design, results: r2, targetCohortId: 1, selectedPath: { path: '1-2' } })!
+    expect(out.summary.persons).toBe(195)
+    expect(out.steps.map(s => s.entered)).toEqual([1195, 195])
+  })
+
+  it('counts only people whose pathway stops there for an end slice', () => {
+    const out = computePathStats({ design, results, targetCohortId: 1, selectedPath: { path: '1-2-end' } })!
+    expect(out.summary.persons).toBe(880)
+    expect(out.summary.chips.map(c => c.name)).toEqual(['SABA', 'ICS'])
+    expect(out.steps.map(s => s.entered)).toEqual([2504, 1294])
+  })
+
+  it('does not count paths that only share a code prefix', () => {
+    const r2: PathwayResults = {
+      ...results,
+      pathwayGroups: [
+        {
+          ...results.pathwayGroups[0]!,
+          pathways: [
+            { path: '1', personCount: 10 },
+            { path: '12', personCount: 99 },
+          ],
+        },
+      ],
+    }
+    const out = computePathStats({ design, results: r2, targetCohortId: 1, selectedPath: { path: '1' } })!
+    expect(out.summary.persons).toBe(10)
   })
 
   it('returns null summary when targetCohortId has no group', () => {

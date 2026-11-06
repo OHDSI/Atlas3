@@ -318,7 +318,7 @@ npm run ui:build   # Build static story files
 - `$WEBAPI_HOST` — Backend server hostname (default: atlas3-webapi)
 - `$WEBAPI_PORT` — Backend server port (default: 8080)
 
-**See**: [Caddyfile](../Caddyfile) and [docker-compose.yml](../docker-compose.yml)
+**See**: [Caddyfile](../Caddyfile), [docker-compose.yml](../docker-compose.yml) (released images) and [docker-compose.dev.yml](../docker-compose.dev.yml) (development build)
 
 ### Docker Compose
 **Services**:
@@ -328,9 +328,10 @@ npm run ui:build   # Build static story files
 
 **Commands**:
 ```bash
-docker-compose up -d      # Start services in background
-docker-compose logs -f    # Tail logs
-docker-compose down       # Stop services
+docker compose up -d                              # Released images, in background
+docker compose -f docker-compose.dev.yml up -d    # Development build
+docker compose logs -f                            # Tail logs
+docker compose down                               # Stop services
 ```
 
 ## Application Structure
@@ -427,7 +428,8 @@ npm run prepare               # Install git hooks (runs on npm install)
 | [.prettierrc](../.prettierrc) | Prettier formatter config |
 | [.husky/](../.husky/) | Git hook definitions |
 | [Caddyfile](../Caddyfile) | Web server config |
-| [docker-compose.yml](../docker-compose.yml) | Docker services |
+| [docker-compose.yml](../docker-compose.yml) | Docker services (released images) |
+| [docker-compose.dev.yml](../docker-compose.dev.yml) | Docker services (development build) |
 | [package.json](../package.json) | Dependencies and scripts |
 
 ## Getting Started Checklist

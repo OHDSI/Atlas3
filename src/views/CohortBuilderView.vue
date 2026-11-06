@@ -1,5 +1,6 @@
 <template>
   <AtlasPageShell
+    class="cohort-builder-view"
     hero
     compact
     :eyebrow="eyebrow"
@@ -205,6 +206,12 @@ function onUpdateDescription(description: string) {
   border-bottom-color: rgb(var(--v-theme-primary));
 }
 
+/* Let the page card grow with a wide (deeply nested) cohort expression so
+ * the document scrolls horizontally instead of content spilling past the card. */
+.cohort-builder-view {
+  min-width: min-content;
+}
+
 .cohort-builder-view__actions {
   display: flex;
   align-items: center;
@@ -212,4 +219,14 @@ function onUpdateDescription(description: string) {
   flex-wrap: wrap;
 }
 
+</style>
+
+<style>
+/* Vuetify's reset sets `html { overflow-x: hidden }`, which swallows the
+ * horizontal overflow of the cohort builder. Re-enable the viewport
+ * scrollbar only while the builder is mounted so other pages keep
+ * Vuetify's default. Unscoped because it targets the root element. */
+html:has(.cohort-builder-view) {
+  overflow-x: auto;
+}
 </style>

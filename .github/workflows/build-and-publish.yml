@@ -3,7 +3,6 @@ name: Build and Publish
 on:
   push:
     branches:
-      - main
       - develop
     tags:
       - 'v*'
@@ -51,7 +50,7 @@ jobs:
             # For develop branch: append timestamp and commit ID
             cat package.json | jq --arg ts "$TIMESTAMP" --arg commit "$COMMIT_ID" 'del(.private) | .name = "@ohdsi/atlas3" | .version = .version + "-" + $ts + "-" + $commit | .publishConfig = {"registry": "https://npm.pkg.github.com"} | .repository = {"type": "git", "url": "git+https://github.com/ohdsi/Atlas3.git"} | .files = ["dist"]' > package.json.tmp
           else
-            # For main branch or tags: use version as-is
+            # For release tags: use version as-is
             cat package.json | jq 'del(.private) | .name = "@ohdsi/atlas3" | .publishConfig = {"registry": "https://npm.pkg.github.com"} | .repository = {"type": "git", "url": "git+https://github.com/ohdsi/Atlas3.git"} | .files = ["dist"]' > package.json.tmp
           fi
           
@@ -59,17 +58,35 @@ jobs:
           echo "Package version: $(jq -r '.version' package.json)"
 
       - name: Publish to GitHub Packages
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
         run: |
           if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
             # For develop branch: publish with 'next' tag for prerelease versions
             npm publish --tag next
           else
-            # For main branch or tags: publish with default 'latest' tag
+            # For release tags: publish with default 'latest' tag
             npm publish
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Published unscoped on npmjs as atlas3; GitHub Packages only accepts the @ohdsi name.
+      # dist is prebuilt, so installing it must not pull the build toolchain.
+      - name: Pack for npmjs
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          jq '.name = "atlas3" | .files = ["dist", "Caddyfile", "bin"] | .bin = {"atlas3": "bin/atlas3.mjs"} | .engines = {"node": ">=18.3"} | del(.publishConfig, .scripts, .dependencies, .devDependencies)' package.json > package.json.tmp
+          mv package.json.tmp package.json
+          mkdir -p "$RUNNER_TEMP/npmjs"
+          npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP/npmjs"
+
+      - name: Upload npmjs package
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: npmjs-package
+          path: ${{ runner.temp }}/npmjs/*.tgz
+          retention-days: 7
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -77,3 +94,25 @@ jobs:
           name: atlas-dist
           path: dist/
           retention-days: 30
+
+  publish-npmjs:
+    needs: build-and-publish
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: npmjs
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: npmjs-package
+
+      - name: Publish to npmjs
+        run: npm publish ./*.tgz --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

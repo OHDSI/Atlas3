@@ -369,6 +369,18 @@ describe('CharacterizationWorkbench: characterization id changes', () => {
     expect(replace).not.toHaveBeenCalledWith({ query: {} })
   })
 
+  it('keeps the run query when the id first arrives after the definition loads', async () => {
+    const { dispose } = setupStore()
+    const router = makeRouter()
+    const { w } = await mountWorkbench('/characterizations/5?run=7', { characterizationId: null }, router)
+    const replace = vi.spyOn(router, 'replace')
+    await w.setProps({ characterizationId: 5 })
+    await flushPromises()
+    expect(dispose).not.toHaveBeenCalled()
+    expect(replace).not.toHaveBeenCalled()
+    expect(router.currentRoute.value.query.run).toBe('7')
+  })
+
   it('disposes when the id is cleared', async () => {
     const { dispose } = setupStore()
     const { w } = await mountWorkbench('/characterizations/5?run=7')

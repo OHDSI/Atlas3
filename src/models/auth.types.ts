@@ -87,8 +87,6 @@ export interface UserInfo {
    * {@link emptyEntityAccess} when storing the user.
    */
   entityAccess?: EntityAccess
-  /** Whether TrexSQL cache feature is enabled on the server (derived from perms) */
-  trexsqlCacheEnabled?: boolean
 }
 
 export interface AuthState {

@@ -484,8 +484,12 @@ function removeAdditionalCriteria() {
 </script>
 
 <style scoped>
+/* Deeply nested criteria groups can need more width than the viewport.
+ * Grow to fit them (the page then scrolls horizontally) instead of letting
+ * the v-cards (overflow: hidden) clip their contents. */
 .cohort-builder__steps {
   position: relative;
+  min-width: min-content;
 }
 
 .cohort-builder__steps::before {

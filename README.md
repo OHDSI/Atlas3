@@ -56,30 +56,39 @@ A working ATLAS v3.0 deployment has three independent components:
 - **The WebAPI service** — a Java/Spring application that exposes the REST endpoints ATLAS talks to, executes cohort SQL against the configured CDM sources, and runs Flyway migrations against its own schema on first boot.
 - **The ATLAS v3.0 frontend** — a Vue 3 single-page application, served either by the Vite development server or as a static bundle behind a reverse proxy.
 
-> **ATLAS v3.0 requires WebAPI v3.0.** The 2.x line of WebAPI that earlier ATLAS releases use — and that ships with OHDSI Broadsea — is **not** compatible. When you clone WebAPI, check out the `webapi-3.0` branch explicitly. The development `docker-compose.yml` builds on the matching prebuilt image `ghcr.io/ohdsi/webapi:3.0-dev` for this reason.
+> **ATLAS v3.0 requires WebAPI v3.0.** The 2.x line of WebAPI that earlier ATLAS releases use — and that ships with OHDSI Broadsea — is **not** compatible. WebAPI v3.0 is developed on the `master` branch; the older `webapi-3.0` branch is no longer updated. `docker-compose.yml` runs the released `ohdsi/webapi:3.0.0` image; the development `docker-compose.dev.yml` builds on `ghcr.io/ohdsi/webapi:dev`.
 
 ### Prerequisites
 
-- Docker and Docker Compose v2 (the fastest path), **or** for native installs: PostgreSQL 12+, JDK 21, Maven 3.9+, Node.js 20.19+ (or 22.12+) and `npm`.
+- Docker and Docker Compose v2 (the fastest path), **or** for native installs: PostgreSQL 12+, JDK 21, Maven 3.9+, Node.js 20.19+ (or 22.12+) and `npm`, plus [Caddy](https://caddyserver.com/docs/install) to serve the prebuilt frontend.
 - Git.
 - Roughly 4 GB of free disk for container images and the WebAPI Flyway baseline.
-- A WebAPI build from the v3.0 line — container image `ghcr.io/ohdsi/webapi:3.0-dev` or a local build of the `webapi-3.0` branch.
+- A WebAPI build from the v3.0 line: the released image `ohdsi/webapi:3.0.0`, the development image `ghcr.io/ohdsi/webapi:dev`, or a local build of the `master` branch.
 
 ### Quick start (Docker Compose, recommended for evaluation)
 
-The repository ships a `docker-compose.yml` that brings up Postgres, WebAPI, a database initialiser, and the frontend behind Caddy with a self-signed certificate:
+The repository ships a `docker-compose.yml` that runs the released ATLAS v3.0.0 and WebAPI v3.0.0 images: Postgres with the Eunomia demo database, WebAPI, a database initialiser, and the frontend behind Caddy with a self-signed certificate. Nothing is built locally:
 
 ```bash
 git clone https://github.com/OHDSI/Atlas3.git
-git clone --branch webapi-3.0 https://github.com/OHDSI/WebAPI.git
 cd Atlas3
-cp .env.example .env   # optional; see "Using other host ports" below
 docker compose up
 ```
 
-The compose file builds a local WebAPI image from the prebuilt `ghcr.io/ohdsi/webapi:3.0-dev` image, pinned by digest, and adds a pinned TrexSQL release (`docker/webapi/Dockerfile`); the sibling `WebAPI` checkout is needed only if you build WebAPI yourself. The first boot takes a few minutes while WebAPI runs Flyway migrations and the `atlasdb/` scripts seed the default users.
+The first boot takes a few minutes while WebAPI runs Flyway migrations and the `atlasdb/` scripts seed the default users.
+
+### Development stack (Docker Compose)
+
+`docker-compose.dev.yml` builds the frontend from your checkout and runs the WebAPI development image `ghcr.io/ohdsi/webapi:dev`, pinned by digest, with a pinned TrexSQL release (`docker/webapi/Dockerfile`):
+
+```bash
+cp .env.example .env   # optional; see "Using other host ports" below
+docker compose -f docker-compose.dev.yml up --build
+```
 
 `.env.example` also turns on the optional Pythia assistant, which needs a Bedrock key in `AWS_BEARER_TOKEN_BEDROCK`. Set `VITE_BAO_AGENT_ENABLED=false` in `.env` to leave it off.
+
+The two stacks use the same container names and ports, so run one at a time (`docker compose down` first). They keep their data in separate volumes, because a database migrated by the WebAPI development image cannot be opened by the released WebAPI.
 
 When the stack is healthy:
 
@@ -89,7 +98,7 @@ When the stack is healthy:
 
 #### Using other host ports
 
-If ports 80 or 443 are already in use on your machine, set the host ports in `.env` and add the matching origins to WebAPI's CORS allow-list. Without the CORS change, sign-in and other POST requests fail:
+If ports 80 or 443 are already in use on your machine, set the host ports in `.env` (both stacks read it) and add the matching origins to WebAPI's CORS allow-list. Without the CORS change, sign-in and other POST requests fail:
 
 ```bash
 ATLAS3_HTTP_PORT=8081
@@ -115,6 +124,25 @@ npm run preview      # Serve the production bundle locally
 ```
 
 The dev server proxies `/WebAPI` to `http://localhost:8080`. To use a different backend, set `WEBAPI_URL`, for example `WEBAPI_URL=https://example.org npm run dev`. A deployed bundle reads the WebAPI address at runtime from `config-local.json` next to `index.html` (`api.url`); see `public/config-local.example.json`.
+
+### Prebuilt frontend from npm (without Docker)
+
+Release tags publish the built frontend to npmjs as `atlas3`. To try it against a running WebAPI with nothing but Node.js:
+
+```bash
+npx atlas3 --webapi http://localhost:8080
+```
+
+This serves ATLAS at http://localhost:4180/atlas/ and forwards `/WebAPI` to the given address, which can be a remote WebAPI (`https://example.org/WebAPI`). Because the browser only talks to this one address, WebAPI's CORS settings don't matter. `--port` and `--host` change where it listens. It is meant for local use and evaluation: it has no HTTPS or caching.
+
+For a real deployment, serve the package with the bundled Caddyfile, the same one the Docker image uses. With a WebAPI on `localhost:8080` and [Caddy](https://caddyserver.com/docs/install) installed:
+
+```bash
+npm install atlas3
+ATLAS_DIST=node_modules/atlas3/dist WEBAPI_HOST=localhost caddy run --config node_modules/atlas3/Caddyfile
+```
+
+Then open https://localhost/atlas/. Caddy serves the bundle and proxies `/WebAPI` to `WEBAPI_HOST:WEBAPI_PORT` (port 8080 by default), so the browser needs no CORS setup. The certificate comes from Caddy's local CA; run `caddy trust` once to stop the browser warning. To listen elsewhere, set `CADDY_HOSTNAME`, for example `CADDY_HOSTNAME=localhost:8443`, which also avoids needing root for port 443. The bundle works without a `config-local.json`; to change auth providers or other settings, copy `dist/config-local.example.json` to `dist/config-local.json` (reapply it after upgrading the package).
 
 ### First-time login and creating users
 
@@ -183,7 +211,7 @@ ATLAS v3.0 supports a plugin architecture based on single-spa and SystemJS. Refe
 
 ## Related Projects
 
-- [WebAPI](https://github.com/OHDSI/WebAPI) — Backend API service; ATLAS v3.0 requires the `webapi-3.0` branch
+- [WebAPI](https://github.com/OHDSI/WebAPI) — Backend API service; ATLAS v3.0 requires WebAPI v3.0 from the `master` branch
 - [trex](https://github.com/OHDSI/trex) — TrexSQL query cache; loaded into WebAPI as a runtime plugin
 
 ## Support

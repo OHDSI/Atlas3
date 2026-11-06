@@ -805,7 +805,8 @@
       "selectAllConcepts": "Select all concepts",
       "selectConcept": "Select {name}",
       "noRecords": "No records to display",
-      "itemsPerPage": "Items per page:"
+      "itemsPerPage": "Items per page:",
+      "inConceptSet": "In set"
     },
     "config": {
       "cache": {
