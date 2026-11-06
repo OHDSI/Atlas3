@@ -82,6 +82,33 @@
       </template>
     </AtlasTooltip>
 
+    <!-- AI agent history — only shown once an agent has worked on this
+         cohort through WebAPI's MCP server, so it adds nothing to the
+         toolbar of cohorts built by hand. -->
+    <AtlasTooltip
+      v-if="agentActivityCount && agentActivityCount > 0"
+      :text="t('components.agentProvenance.title').value"
+      location="bottom"
+    >
+      <template #activator="{ props: tooltipProps }">
+        <AtlasBadge
+          v-bind="tooltipProps"
+          :content="agentActivityCount"
+          color="primary"
+          class="cohort-toolbar-status__badge"
+        >
+          <AtlasIcon
+            color="primary"
+            icon="mdi-robot-outline"
+            size="small"
+            data-testid="agent-provenance-icon"
+            style="cursor: pointer"
+            @click="$emit('show-agent-provenance')"
+          />
+        </AtlasBadge>
+      </template>
+    </AtlasTooltip>
+
     <AtlasTooltip
       :text="t('components.access.configureAccess').value"
       location="bottom"
@@ -152,6 +179,8 @@ interface Props {
   tagCount?: number
   cohortId?: string | number | null
   isPreviewingVersion?: boolean
+  /** Number of AI-agent tool calls recorded for this cohort (MCP provenance). */
+  agentActivityCount?: number
 }
 
 defineProps<Props>()
@@ -162,6 +191,7 @@ defineEmits<{
   (e: 'show-versions'): void
   (e: 'show-tags'): void
   (e: 'show-access'): void
+  (e: 'show-agent-provenance'): void
 }>()
 
 const { t } = useI18n()
