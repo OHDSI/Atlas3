@@ -1,4 +1,4 @@
-import type { ZodError, ZodType, ZodTypeDef } from 'zod'
+import type { ZodError, ZodType } from 'zod'
 import { logger } from '@/utils/logger'
 import { type ApiResult, success, failure } from '@/types/api'
 
@@ -36,7 +36,7 @@ export function toApiError(err: unknown): ApiError {
  * unwrap() already logs the thrown error - don't log again at the call site.
  */
 export function parseOrThrow<T>(
-  schema: ZodType<T, ZodTypeDef, unknown>,
+  schema: ZodType<T, unknown>,
   data: unknown,
   message: string
 ): T {

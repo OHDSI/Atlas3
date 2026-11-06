@@ -122,6 +122,9 @@ describe('AuthService', () => {
   })
 
   afterEach(() => {
+    // restoreAllMocks only restores vi.spyOn spies; reset the module mocks too
+    // so per-test return values (e.g. getPreviousRunAsToken) don't leak.
+    vi.resetAllMocks()
     vi.restoreAllMocks()
   })
 

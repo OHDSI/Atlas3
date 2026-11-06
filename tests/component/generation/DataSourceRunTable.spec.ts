@@ -14,11 +14,13 @@ import { emptyEntityAccess } from '@/models/auth.types'
 
 const vuetify = createVuetify({ components, directives })
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }
+})
 
 const SOURCES: RunTableSource[] = [
   { sourceKey: 'CCAE', sourceName: 'Truven CCAE' },

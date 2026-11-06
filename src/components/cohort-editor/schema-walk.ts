@@ -22,7 +22,7 @@ export interface SchemaWalkVisitor {
   /**
    * Fires once per declared field of an object schema, before that field's value
    * is descended into, with the field's schema already unwrapped of
-   * optional/nullable/default/effects layers.
+   * optional/nullable/default/transform-pipe layers.
    *
    * Return `true` to skip descending into the value — needed when a visitor
    * handles a subtree itself and would otherwise see its contents twice.
@@ -51,13 +51,15 @@ export function unwrapType(schema: z.ZodTypeAny): z.ZodTypeAny {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     if (current instanceof z.ZodOptional) {
-      current = current.unwrap()
+      current = current.unwrap() as z.ZodTypeAny
     } else if (current instanceof z.ZodNullable) {
-      current = current.unwrap()
+      current = current.unwrap() as z.ZodTypeAny
     } else if (current instanceof z.ZodDefault) {
-      current = current.removeDefault()
-    } else if (current instanceof z.ZodEffects) {
-      current = current.innerType()
+      current = current.removeDefault() as z.ZodTypeAny
+    } else if (current instanceof z.ZodPipe) {
+      // `.transform()` pipes the structural schema into a transform, while
+      // `z.preprocess()` pipes a transform into the structural schema.
+      current = (current.in instanceof z.ZodTransform ? current.out : current.in) as z.ZodTypeAny
     } else {
       return current
     }
@@ -85,7 +87,7 @@ function walkValue(schema: z.ZodTypeAny, data: unknown, visitor: SchemaWalkVisit
 
   if (type instanceof z.ZodArray) {
     if (!Array.isArray(data)) return
-    const elementSchema: z.ZodTypeAny = type.element
+    const elementSchema = type.element as z.ZodTypeAny
     for (const item of data) {
       walkValue(elementSchema, item, visitor)
     }
@@ -96,10 +98,10 @@ function walkValue(schema: z.ZodTypeAny, data: unknown, visitor: SchemaWalkVisit
     // Polymorphic Jackson wrapper union: data is `{ WrapperKey: innerData }`.
     if (typeof data !== 'object') return
     const record = data as Record<string, unknown>
-    const options: z.ZodTypeAny[] = type.options
+    const options = type.options as readonly z.ZodTypeAny[]
     for (const wrapperKey of Object.keys(record)) {
       const option = options.find(
-        (candidate): candidate is z.AnyZodObject => candidate instanceof z.ZodObject && wrapperKey in candidate.shape,
+        (candidate): candidate is z.ZodObject => candidate instanceof z.ZodObject && wrapperKey in candidate.shape,
       )
       if (option) {
         // Existence of `wrapperKey` on `option.shape` was confirmed by the predicate above.
@@ -110,13 +112,13 @@ function walkValue(schema: z.ZodTypeAny, data: unknown, visitor: SchemaWalkVisit
   }
 
   if (type instanceof z.ZodLazy) {
-    walkValue(type.schema, data, visitor)
+    walkValue(type.unwrap() as z.ZodTypeAny, data, visitor)
     return
   }
 
   if (type instanceof z.ZodIntersection) {
-    walkValue(type._def.left, data, visitor)
-    walkValue(type._def.right, data, visitor)
+    walkValue(type.def.left as z.ZodTypeAny, data, visitor)
+    walkValue(type.def.right as z.ZodTypeAny, data, visitor)
     return
   }
 
@@ -124,7 +126,7 @@ function walkValue(schema: z.ZodTypeAny, data: unknown, visitor: SchemaWalkVisit
 }
 
 function walkObjectShape(
-  schema: z.AnyZodObject,
+  schema: z.ZodObject,
   data: Record<string, unknown>,
   visitor: SchemaWalkVisitor,
 ): void {

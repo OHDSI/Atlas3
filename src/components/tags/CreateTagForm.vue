@@ -258,7 +258,7 @@ async function handleSubmit() {
   const result = tagSchema.safeParse(tagData)
 
   if (!result.success) {
-    result.error.errors.forEach(err => {
+    result.error.issues.forEach(err => {
       const field = err.path[0] as string
       errors.value[field] = tv(err.message)
     })
