@@ -283,6 +283,17 @@ describe('IncludedSourceCodesTable multi-select (#224)', () => {
     expect(flags.isExcluded).toBe(true)
   })
 
+  it('cannot select source-to-concept-map rows, which have no concept to add', async () => {
+    seed([code(1), code(0, { conceptName: 'LOCAL-123', vocabularyId: 'JNJ_LOCAL' })])
+    const wrapper = makeWrapper()
+
+    expect(wrapper.text()).toContain('LOCAL-123')
+    expect(wrapper.find('[data-testid="included-source-codes-row-checkbox-0"] input').exists()).toBe(false)
+
+    await wrapper.get('[data-testid="included-source-codes-select-all"] input').setValue(true)
+    expect(addOptions(wrapper).props('selectedCount')).toBe(1)
+  })
+
   it('clears the selection after adding', async () => {
     seed([code(1)])
     const wrapper = makeWrapper()
