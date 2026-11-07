@@ -124,6 +124,7 @@ import type { LinkedCohort, PrevalenceStat, StrataCounts } from '@/models/charac
 import { AtlasCard, AtlasIcon, AtlasIconButton, AtlasTooltip } from '@/components/ui'
 import { TIME_SERIES_ICONS } from '@/constants/characterization-time-series'
 import ResultsDataTable, { type ResultsHeader, type ResultsSortItem } from './ResultsDataTable.vue'
+import { compareNatural } from '@/utils/natural-sort'
 
 interface Props {
   analysisId: number
@@ -216,11 +217,10 @@ function buildTable(key: string, label: string, partitionKey: string, groups: { 
     label,
     partitionKey,
     headers: [
-      { key: 'covariateName', title: tv('columns.covariate'), sortable: false },
+      { key: 'covariateName', title: tv('columns.covariate'), sort: compareNatural },
       {
         key: 'conceptId',
         title: tv('columns.conceptId'),
-        sortable: false,
         width: 112,
         headerProps: { class: 'prevalence-table__concept' },
         cellProps: { class: 'prevalence-table__concept' },
