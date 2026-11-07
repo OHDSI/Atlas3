@@ -10,6 +10,7 @@
       @add-concept="onAddConcept"
       @add-concepts="onAddConcepts"
       @remove-concept="onRemoveConcept"
+      @view-concept="onViewConcept"
     />
 
     <AtlasSnackbar
@@ -76,6 +77,10 @@ function onAddConcepts(concepts: Concept[], flags: Required<ConceptAddFlags>) {
     text: t('search.addedCountToSet', { count, set: currentSetName() }).value,
   }
   if (createdDraft) navigateToNewConceptSet()
+}
+
+function onViewConcept({ conceptId, sourceKey }: { conceptId: number; sourceKey: string }) {
+  void router.push({ name: 'concept-detail', params: { sourceKey, conceptId: String(conceptId) } })
 }
 
 function onRemoveConcept(concept: Concept) {
