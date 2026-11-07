@@ -59,12 +59,12 @@
       <!-- Validity Badge -->
       <template #item.invalidReason="{ item }">
         <AtlasChip
-          :color="item.invalidReason ? 'error' : 'success'"
+          :color="isInvalidConcept(item.invalidReason) ? 'error' : 'success'"
           size="sm"
           label
         >
           {{
-            item.invalidReason
+            isInvalidConcept(item.invalidReason)
               ? t('commonErrors.invalid').value
               : t('commonErrors.valid').value
           }}
@@ -252,6 +252,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'
 import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
 import type { Concept } from '@/models/concept-set.types'
+import { isInvalidConcept } from '@/utils/api-mappers'
 
 const { t, tv } = useI18n()
 const webapiStore = useWebAPIStore()

@@ -9,6 +9,7 @@ import {
   mapConceptSetFromAPI,
   mapConceptSetToAPI,
   normalizeInvalidReason,
+  isInvalidConcept,
   type ConceptSetAPIResponse
 } from '@/utils/api-mappers'
 import type { Concept, ConceptSet } from '@/models/concept-set.types'
@@ -260,6 +261,13 @@ describe('API Mappers', () => {
     it('should pass through a real invalid reason unchanged', () => {
       expect(normalizeInvalidReason('D')).toBe('D')
       expect(normalizeInvalidReason('U')).toBe('U')
+    })
+  })
+
+  describe('isInvalidConcept', () => {
+    it('reads null, undefined and "V" as valid and any other reason as invalid', () => {
+      expect([null, undefined, '', 'V'].map(isInvalidConcept)).toEqual([false, false, false, false])
+      expect(['D', 'U'].map(isInvalidConcept)).toEqual([true, true])
     })
   })
 

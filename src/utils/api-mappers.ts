@@ -67,6 +67,15 @@ export function normalizeInvalidReason(invalidReason: string | null | undefined)
 }
 
 /**
+ * Concept-set items read from a cohort or analysis expression keep the raw
+ * `"V"` so the expression saves back unchanged, which is why display code asks
+ * this rather than testing `invalidReason` for truthiness.
+ */
+export function isInvalidConcept(invalidReason: string | null | undefined): boolean {
+  return normalizeInvalidReason(invalidReason) !== null
+}
+
+/**
  * Map a WebAPI concept-search response item (UPPERCASE) to Concept interface (camelCase)
  */
 export function mapConceptFromAPI(
