@@ -93,7 +93,10 @@
 
         <template #item.select="{ item }">
           <div :data-testid="`included-source-codes-row-checkbox-${(item as Concept).conceptId}`">
+            <!-- Codes from the site's source-to-concept map have no concept
+                 to add or open, and all share concept id 0. -->
             <v-checkbox-btn
+              v-if="(item as Concept).conceptId > 0"
               :model-value="selectedSet.has((item as Concept).conceptId)"
               :aria-label="(item as Concept).conceptName"
               density="compact"
@@ -107,6 +110,7 @@
           #item.conceptName="{ item }"
         >
           <a
+            v-if="item.conceptId > 0"
             href="#"
             :data-testid="`source-code-name-link-${item.conceptId}`"
             class="concept-name-link"
@@ -114,6 +118,9 @@
           >
             {{ item.conceptName }}
           </a>
+          <template v-else>
+            {{ item.conceptName }}
+          </template>
         </template>
 
         <template
@@ -255,7 +262,9 @@ const selectedSet = computed(() => new Set(selected.value))
 
 // Only the rows the facets have left on screen, so select-all cannot reach
 // rows the user has filtered away.
-const visibleIds = computed(() => visibleSourceCodes.value.map(c => c.conceptId))
+const visibleIds = computed(() =>
+  visibleSourceCodes.value.map(c => c.conceptId).filter(id => id > 0)
+)
 const allVisibleSelected = computed(
   () => visibleIds.value.length > 0 && visibleIds.value.every(id => selectedSet.value.has(id))
 )
