@@ -142,7 +142,7 @@ npm install atlas3
 ATLAS_DIST=node_modules/atlas3/dist WEBAPI_HOST=localhost caddy run --config node_modules/atlas3/Caddyfile
 ```
 
-Then open https://localhost/atlas/. Caddy serves the bundle and proxies `/WebAPI` to `WEBAPI_HOST:WEBAPI_PORT` (port 8080 by default), so the browser needs no CORS setup. The certificate comes from Caddy's local CA; run `caddy trust` once to stop the browser warning. To listen elsewhere, set `CADDY_HOSTNAME`, for example `CADDY_HOSTNAME=localhost:8443`, which also avoids needing root for port 443. The bundle works without a `config-local.json`; to change auth providers or other settings, copy `dist/config-local.example.json` to `dist/config-local.json` (reapply it after upgrading the package).
+Then open https://localhost/atlas/. Caddy serves the bundle and proxies `/WebAPI` to `WEBAPI_HOST:WEBAPI_PORT` (port 8080 by default), so the browser needs no CORS setup. The certificate comes from Caddy's local CA; run `caddy trust` once to stop the browser warning. To listen elsewhere, set `CADDY_HOSTNAME`, for example `CADDY_HOSTNAME=localhost:8443`, which also avoids needing root for port 443. The package ships the same `dist/config-local.json` as the Docker image, with database sign-in enabled. To change auth providers or other settings, edit that file, using `dist/config-local.example.json` for reference, and reapply your changes after upgrading the package.
 
 ### First-time login and creating users
 
