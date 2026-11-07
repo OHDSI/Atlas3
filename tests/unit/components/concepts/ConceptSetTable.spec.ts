@@ -255,6 +255,17 @@ describe('ConceptSetTable', () => {
     expect(chips.length).toBeGreaterThan(0)
   })
 
+  it('treats the "V" invalid reason that cohort expressions carry as valid', async () => {
+    const valid = mountComponent({ items: [{ ...mockItems[0]!, invalidReason: 'V' }] })
+    const invalid = mountComponent({ items: [mockItems[2]!] })
+    await valid.vm.$nextTick()
+
+    const invalidLabel = (wrapper: ReturnType<typeof mountComponent>) =>
+      wrapper.findAll('.concept-set-table__chip').filter(chip => /invalid/i.test(chip.text()))
+    expect(invalidLabel(valid)).toHaveLength(0)
+    expect(invalidLabel(invalid)).toHaveLength(1)
+  })
+
   it('should use primary color for Standard concepts', async () => {
     const wrapper = mountComponent({ items: [mockItems[0]] })
     await wrapper.vm.$nextTick()
