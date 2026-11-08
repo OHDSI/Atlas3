@@ -66,6 +66,17 @@ describe('ConceptSearch — add to concept set', () => {
     expect(wrapper.findComponent(ConceptTable).props('showAddButton')).toBe(false)
   })
 
+  it('opens the concept detail page when a concept name is clicked', () => {
+    routerPush.mockClear()
+    const wrapper = mountSearch()
+    wrapper.findComponent(ConceptTable).vm.$emit('view-concept', { conceptId: 313217, sourceKey: 'EUNOMIA' })
+
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'concept-detail',
+      params: { sourceKey: 'EUNOMIA', conceptId: '313217' },
+    })
+  })
+
   it('uses the first value when the route query is an array', () => {
     const wrapper = mount(ConceptSearch, {
       global: {

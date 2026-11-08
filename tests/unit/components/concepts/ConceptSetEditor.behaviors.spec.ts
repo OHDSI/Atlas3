@@ -444,6 +444,11 @@ describe('ConceptSetEditor behaviors', () => {
       expect(document.body.style.overflow).toBe('')
     })
 
+    it('lets the editor column stretch to the page height so the concept detail is not clipped', () => {
+      expect(mountEditor({ presentation: 'page' }).find('.cs-editor__content').classes()).not.toContain('h-100')
+      expect(mountEditor().find('.cs-editor__content').classes()).toContain('h-100')
+    })
+
     it('stays open after saving', async () => {
       const w = await mountReady({ presentation: 'page' })
       const store = useConceptSetsStore()

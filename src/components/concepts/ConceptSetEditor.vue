@@ -23,7 +23,12 @@
           </div>
         </aside>
 
-        <div class="cs-editor h-100 d-flex flex-column cs-editor__content">
+        <!-- On the page the shell has only a min-height, so h-100 would not
+             resolve and would stop the column stretching to fill it. -->
+        <div
+          class="cs-editor d-flex flex-column cs-editor__content"
+          :class="{ 'h-100': !isPagePresentation }"
+        >
           <!-- Modern editor header: eyebrow + accent rule + inline-edit
              title (replaces the legacy v-card-title with grey border).
              Actions are pushed to a single action row aligned with the
