@@ -238,8 +238,13 @@
           </header>
 
           <div class="cs-editor__main">
-            <!-- Tabs rail: same shared treatment as the outer page tabs. -->
-            <nav class="page-tabs-rail cs-editor__tabs-rail">
+            <!-- Tabs rail: same shared treatment as the outer page tabs.
+             Hidden (not unmounted) while a concept detail is open so the
+             active tab's state, e.g. search results, survives going back. -->
+            <nav
+              v-show="!viewingConcept"
+              class="page-tabs-rail cs-editor__tabs-rail"
+            >
               <AtlasTabs
                 v-model="activeTab"
                 align-tabs="start"
@@ -315,7 +320,10 @@
               </AtlasTabs>
             </nav>
 
-            <div class="cs-editor__body">
+            <div
+              v-show="!viewingConcept"
+              class="cs-editor__body"
+            >
               <v-window v-model="activeTab">
                 <!-- Selected Concepts Tab -->
                 <v-window-item value="selected">
@@ -390,12 +398,12 @@
               </v-window>
             </div>
 
-            <!-- Concept detail overlays the tabs menu + body (header stays
-             visible) when a concept is opened from any table. The back
-             arrow inside the detail clears it. -->
+            <!-- Concept detail replaces the tabs menu + body in normal flow
+             (header stays visible) when a concept is opened from any table.
+             The back arrow inside the detail clears it. -->
             <div
               v-if="viewingConcept"
-              class="cs-editor__detail-overlay"
+              class="cs-editor__detail"
               data-testid="concept-set-editor-inline-detail"
             >
               <ConceptDetailContent
@@ -1878,23 +1886,37 @@ function closeJsonDialog() {
   padding: 16px 28px 28px;
 }
 
-/* Concept detail overlays the tabs menu + body within cs-editor__main,
- * leaving the editor header (title / save / close) visible above it.
+/* Concept detail takes the place of the tabs menu + body within
+ * cs-editor__main, leaving the editor header (title / save / close) visible
+ * above it. It is in normal flow, not overlaid on the hidden tabs, so its
+ * height follows its own content rather than whatever the active tab happened
+ * to render (e.g. a one-row search result).
+ *
+ * In the drawer the editor has a bounded height, so this is the scroll
+ * container. On the full page it must not be: the page itself scrolls, and an
+ * inner scroller would produce a second, nested scrollbar.
  *
  * No top padding here: ConceptDetailHeader inside is position: sticky:
  * top: 0, and a sticky element's offset is measured from the padding
  * edge of its nearest scrolling ancestor. Top padding on this element
  * would leave a permanent gap above the stuck header, exposing this
  * container's own background as you scroll (#253). */
-.cs-editor__detail-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
+.cs-editor__detail {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   background: rgb(var(--v-theme-surface));
   padding: 0 28px 28px;
+}
+.cs-editor__page .cs-editor__detail {
+  overflow-y: visible;
+}
+/* On the full page the header sticks to the window, so it must sit below
+ * the sticky app nav bar rather than slide underneath it. */
+.cs-editor__page .cs-editor__detail :deep(.concept-detail-header) {
+  top: var(--atlas-nav-height, 60px);
 }
 .cs-editor__inline-detail-toolbar {
   padding: 4px 0 12px;

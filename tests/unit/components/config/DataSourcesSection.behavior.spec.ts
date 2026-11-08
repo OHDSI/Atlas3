@@ -8,6 +8,7 @@ import DataSourcesSection from '@/components/config/DataSourcesSection.vue'
 import DataSourceDialog from '@/components/config/DataSourceDialog.vue'
 import { deleteSource } from '@/services/source.service'
 import { useAuthStore } from '@/stores/auth'
+import { useWebAPIStore } from '@/stores/webapi'
 import { getAuthConfig, setAuthConfig } from '@/config/auth.config'
 
 const vuetify = createVuetify({ components, directives })
@@ -197,6 +198,20 @@ describe('DataSourcesSection loading sources', () => {
     expect(rowText(1)).toContain('-')
   })
 
+  it('treats a CDM daimon as providing a vocabulary', async () => {
+    mockListDataSources.mockResolvedValue([
+      source(1, 'CDMONLY', [{ daimonType: 'CDM' }, { daimonType: 'Results' }]),
+    ])
+    mockHttpGet.mockImplementation((url: string) =>
+      Promise.resolve(url === '/vocabulary/CDMONLY/info' ? { version: 'v5.0 18-JAN-19' } : {})
+    )
+    await mountSection()
+
+    expect(mockHttpGet).toHaveBeenCalledWith('/vocabulary/CDMONLY/info')
+    expect(rowText(0)).toContain('v5.0 18-JAN-19')
+    expect(radios()[0]!.disabled).toBe(false)
+  })
+
   it('marks every loaded source as initialized', async () => {
     await mountSection()
 
@@ -260,6 +275,23 @@ describe('DataSourcesSection loading sources', () => {
     expect(snackbar('success').props('text')).toBe(
       'Local Storage has been cleared. Please refresh the page to reload configuration information.'
     )
+  })
+
+  it('shares the Results choice with the record-count pickers on concept tables', async () => {
+    await mountSection()
+    const webapiStore = useWebAPIStore()
+
+    // Configuration radio -> shared session state
+    await wrapper.findAll('input[type="radio"]')[2]!.setValue(true)
+    await flushPromises()
+    expect(webapiStore.selectedResultsKey).toBe('S0')
+    expect(localStorage.getItem('selectedResults')).toBe('S0')
+
+    // A concept table's picker -> Configuration radio
+    webapiStore.setResultsSource('S3')
+    await flushPromises()
+    expect(radios()[11]!.checked).toBe(true)
+    expect(radios()[2]!.checked).toBe(false)
   })
 
   it('shows whole-application priorities per daimon', async () => {

@@ -9,6 +9,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import ConceptRelatedTable from '@/components/concepts/detail/ConceptRelatedTable.vue'
 import ConceptFacetFilters from '@/components/concepts/ConceptFacetFilters.vue'
 import { useWebAPIStore } from '@/stores/webapi'
+import { useConceptTablePreferencesStore } from '@/stores/concept-table-preferences'
 import { getConceptRecordCounts } from '@/services/concept-search.service'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
@@ -172,6 +173,100 @@ describe('ConceptRelatedTable', () => {
     for (const count of ['1111', '2222', '3333', '4444']) {
       expect(wrapper.text().replace(/[\s,]/g, '')).toContain(count)
     }
+  })
+
+  it('hides validity and person counts by default and shows them when chosen in Columns', async () => {
+    const vuetify = createVuetify({ components, directives })
+    const router = createRouter({ history: createMemoryHistory(), routes: [] })
+    const wrapper = mount(ConceptRelatedTable, {
+      props: { related },
+      global: { plugins: [vuetify, router] },
+    })
+    const headerKeys = () =>
+      (wrapper.findComponent({ name: 'VDataTable' }).props('headers') as Array<{ key: string }>).map(h => h.key)
+
+    expect(wrapper.find('[data-testid="concept-search-columns"]').exists()).toBe(true)
+    expect(headerKeys()).toEqual([
+      'select',
+      'relationship',
+      'conceptName',
+      'vocabularyId',
+      'conceptCode',
+      'domainId',
+      'conceptClassId',
+      'standardConcept',
+      'recordCount',
+      'descendantRecordCount',
+    ])
+
+    const prefs = useConceptTablePreferencesStore()
+    prefs.setColumnVisibility('invalidReason', true)
+    prefs.setColumnVisibility('personCount', true)
+    prefs.setColumnVisibility('descendantPersonCount', true)
+    prefs.setColumnVisibility('vocabularyId', false)
+    await nextTick()
+
+    expect(headerKeys()).toEqual(expect.arrayContaining(['invalidReason', 'personCount', 'descendantPersonCount']))
+    expect(headerKeys()).not.toContain('vocabularyId')
+    expect(headerKeys().slice(0, 3)).toEqual(['select', 'relationship', 'conceptName'])
+  })
+
+  it('renders validity and person count cells once those columns are shown', async () => {
+    useWebAPIStore().sources = [
+      { sourceKey: 'RES', sourceName: 'Results', daimons: [{ daimonType: 'Results' }] },
+    ] as never
+    useWebAPIStore().setResultsSource('RES')
+    let resolveCounts!: (m: Map<number, unknown>) => void
+    vi.mocked(getConceptRecordCounts).mockReturnValue(new Promise(r => (resolveCounts = r)) as never)
+    const prefs = useConceptTablePreferencesStore()
+    prefs.setColumnVisibility('invalidReason', true)
+    prefs.setColumnVisibility('personCount', true)
+    prefs.setColumnVisibility('descendantPersonCount', true)
+    const withInvalid: RelatedConcept[] = [related[0]!, { ...related[1]!, invalidReason: 'D' }]
+    const vuetify = createVuetify({ components, directives })
+    const router = createRouter({ history: createMemoryHistory(), routes: [] })
+    const wrapper = mount(ConceptRelatedTable, {
+      props: { related: withInvalid },
+      global: { plugins: [vuetify, router] },
+    })
+    await flushPromises()
+
+    // Counts still loading: each person-count cell shows a spinner.
+    expect(wrapper.findAll('.count .v-progress-circular').length).toBeGreaterThanOrEqual(4)
+
+    resolveCounts(
+      new Map([
+        [73211009, { recordCount: 1, descendantRecordCount: 2, personCount: 5555, descendantPersonCount: 6666 }],
+        [1234, { recordCount: 3, descendantRecordCount: 4, personCount: 7777, descendantPersonCount: 8888 }],
+      ])
+    )
+    await flushPromises()
+
+    expect(wrapper.findAll('.count .v-progress-circular')).toHaveLength(0)
+    const text = wrapper.text().replace(/[\s,]/g, '')
+    for (const count of ['5555', '6666', '7777', '8888']) expect(text).toContain(count)
+    const chips = wrapper.findAll('.v-chip').map(c => c.classes().join(' '))
+    expect(chips.some(c => c.includes('text-error'))).toBe(true)
+    expect(chips.some(c => c.includes('text-success'))).toBe(true)
+  })
+
+  it('clears the text filter and facets from the filter bar', async () => {
+    const vuetify = createVuetify({ components, directives })
+    const router = createRouter({ history: createMemoryHistory(), routes: [] })
+    const wrapper = mount(ConceptRelatedTable, {
+      props: { related },
+      global: { plugins: [vuetify, router] },
+    })
+    const filters = wrapper.findComponent(ConceptFacetFilters)
+    filters.vm.$emit('update:resultFilter', 'E11')
+    await nextTick()
+    expect(wrapper.text()).not.toContain('Diabetes mellitus')
+
+    filters.vm.$emit('clear')
+    await nextTick()
+
+    expect(wrapper.text()).toContain('Diabetes mellitus')
+    expect(wrapper.text()).toContain('Diabetes type II')
   })
 
   it('sorts by descendant record count descending by default and requires a direction', async () => {

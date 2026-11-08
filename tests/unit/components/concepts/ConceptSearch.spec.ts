@@ -35,14 +35,16 @@ vi.mock('@/config/webapi', () => ({
 }))
 
 // Mock webapi store to avoid localStorage dependency (Node 26 compat)
+const mockWebapiStore = vi.hoisted(() => ({
+  getValidVocabularySource: () => 'SYNPUF1K',
+  getValidResultsSource: () => 'SYNPUF1K',
+  sources: [],
+  selectedSource: null,
+  vocabularySources: [],
+  resultsSources: [] as Array<{ sourceKey: string; sourceName: string }>,
+}))
 vi.mock('@/stores/webapi', () => ({
-  useWebAPIStore: () => ({
-    getValidVocabularySource: () => 'SYNPUF1K',
-    sources: [],
-    selectedSource: null,
-    vocabularySources: [],
-    resultsSources: [],
-  }),
+  useWebAPIStore: () => mockWebapiStore,
 }))
 
 // Mock logger
@@ -87,12 +89,33 @@ describe('ConceptSearch', () => {
     vi.clearAllMocks()
     mockSearchConcepts.mockResolvedValue({ success: true, data: [] })
     mockGetConceptRecordCounts.mockResolvedValue(new Map())
+    mockWebapiStore.resultsSources = []
   })
 
   afterEach(() => {
     if (wrapper) {
       wrapper.unmount()
     }
+  })
+
+  describe('view-concept forwarding', () => {
+    function tableVnodeProps() {
+      return (wrapper.findComponent({ name: 'ConceptTable' }).vm.$.vnode.props ?? {}) as Record<string, unknown>
+    }
+
+    it('does not listen for view-concept when the parent does not, so the row href navigates', () => {
+      wrapper = mountComponent()
+      expect(tableVnodeProps().onViewConcept).toBeUndefined()
+    })
+
+    it('forwards view-concept from ConceptTable when the parent listens', () => {
+      const onViewConcept = vi.fn()
+      wrapper = mountComponent({ attrs: { onViewConcept } })
+      const handler = tableVnodeProps().onViewConcept as (p: unknown) => void
+      expect(typeof handler).toBe('function')
+      handler({ conceptId: 1, sourceKey: 'SYNPUF1K' })
+      expect(wrapper.emitted('view-concept')).toEqual([[{ conceptId: 1, sourceKey: 'SYNPUF1K' }]])
+    })
   })
 
   describe('Component Rendering', () => {
@@ -410,6 +433,50 @@ describe('ConceptSearch', () => {
 
       const closeButton = wrapper.find('[data-testid="atlas-feedback-close"]')
       expect(closeButton.exists()).toBe(true)
+    })
+
+    it('clears the error when the alert is closed', async () => {
+      mockSearchConcepts.mockRejectedValue(new Error('Search failed'))
+      wrapper = mountComponent()
+      wrapper.vm.searchInput = 'diabetes'
+      await wrapper.vm.onSearch()
+      await flushPromises()
+
+      await wrapper.find('[data-testid="atlas-feedback-close"]').trigger('click')
+
+      expect(store.error).toBeNull()
+      expect(wrapper.find('[data-testid="atlas-feedback"]').exists()).toBe(false)
+    })
+  })
+
+  describe('Record count source', () => {
+    it('switches the shared Results selection from the picker above the results', async () => {
+      mockWebapiStore.resultsSources = [
+        { sourceKey: 'SYNPUF1K', sourceName: 'SynPUF' },
+        { sourceKey: 'OTHER', sourceName: 'Other' },
+      ]
+      mockSearchConcepts.mockResolvedValue({ success: true, data: [createMockConcept({ conceptId: 1 })] })
+      const setSource = vi.spyOn(store, 'setRecordCountSource').mockResolvedValue()
+      wrapper = mountComponent()
+      wrapper.vm.searchInput = 'diabetes'
+      await wrapper.vm.onSearch()
+      await flushPromises()
+
+      const picker = wrapper.findComponent('[data-testid="record-count-source"]')
+      expect(picker.exists()).toBe(true)
+      picker.vm.$emit('update:modelValue', 'OTHER')
+
+      expect(setSource).toHaveBeenCalledWith('OTHER')
+    })
+
+    it('hides the picker when no source can report counts', async () => {
+      mockSearchConcepts.mockResolvedValue({ success: true, data: [createMockConcept({ conceptId: 1 })] })
+      wrapper = mountComponent()
+      wrapper.vm.searchInput = 'diabetes'
+      await wrapper.vm.onSearch()
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="record-count-source"]').exists()).toBe(false)
     })
 
     it('should not show error alert when no error', () => {

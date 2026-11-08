@@ -7,6 +7,7 @@ import { useI18n } from '@/composables/useI18n'
 import { AtlasAlert, AtlasProgressLinear, AtlasSnackbar } from '@/components/ui'
 import type { Concept, ConceptAddFlags } from '@/models/concept-set.types'
 import ConceptDetailHeader from '@/components/concepts/detail/ConceptDetailHeader.vue'
+import ConceptDetailLoadingSpinner from '@/components/concepts/detail/ConceptDetailLoadingSpinner.vue'
 import ConceptStatCards from '@/components/concepts/detail/ConceptStatCards.vue'
 import ConceptAttributesCard from '@/components/concepts/detail/ConceptAttributesCard.vue'
 import ConceptHierarchyMiniMap from '@/components/concepts/detail/ConceptHierarchyMiniMap.vue'
@@ -98,10 +99,11 @@ watch(() => [props.sourceKey, props.conceptId], load)
     data-testid="concept-detail-content"
   >
     <AtlasProgressLinear
-      v-if="isLoading"
+      v-if="isLoading && !(concept && !error)"
       indeterminate
       color="primary"
     />
+    <ConceptDetailLoadingSpinner :active="isLoading" />
 
     <AtlasAlert
       v-if="error"
@@ -113,9 +115,10 @@ watch(() => [props.sourceKey, props.conceptId], load)
 
     <template v-if="concept && !error">
       <ConceptDetailHeader
-        :class="{ 'is-stale': isStale }"
         :concept="concept"
         :on-back="onBack"
+        :loading="isLoading"
+        :stale="isStale"
         @add-to-concept-set="onAddToConceptSet"
       />
 
@@ -145,6 +148,7 @@ watch(() => [props.sourceKey, props.conceptId], load)
           :related="related"
           :source-key="props.sourceKey"
           @add-concepts="onAddRelatedConcepts"
+          @navigate="emit('navigate', $event)"
         />
 
         <DrilldownDetails

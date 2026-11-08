@@ -25,6 +25,9 @@ export const useWebAPIStore = defineStore('webapi', () => {
   // State
   const sources = ref<CDMSource[]>([])
   const selectedSource = ref<string | null>(null)
+  // The user's Results choice for this session, shared by the Configuration
+  // radios and every record-count source picker. Mirrored to localStorage.
+  const selectedResultsKey = ref<string | null>(localStorage.getItem('selectedResults'))
   const generationJobs = ref<Map<number, GenerationJob>>(new Map())
   const isLoadingSources = ref(false)
 
@@ -55,9 +58,12 @@ export const useWebAPIStore = defineStore('webapi', () => {
     )
   }
 
+  // A CDM daimon implies vocabulary tables (WebAPI falls back to the CDM schema).
   const vocabularySources = computed(() => {
     return sources.value.filter(
-      s => isReadable(s) && s.daimons?.some(d => d.daimonType === 'Vocabulary')
+      s =>
+        isReadable(s) &&
+        s.daimons?.some(d => d.daimonType === 'Vocabulary' || d.daimonType === 'CDM')
     )
   })
 
@@ -88,7 +94,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
       logger.warn('WebAPIStore', 'Stored vocabulary source not found', { stored: storedVocab })
     }
 
-    const firstVocabSource = priorityDefault('Vocabulary')
+    const firstVocabSource = priorityDefault('Vocabulary') ?? vocabularySources.value[0]
     if (firstVocabSource) {
       localStorage.setItem('selectedVocabulary', firstVocabSource.sourceKey)
       return firstVocabSource.sourceKey
@@ -99,11 +105,21 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
   /** Results source chosen in Configuration, else the highest-priority readable one. */
   function getValidResultsSource(): string | null {
-    const stored = localStorage.getItem('selectedResults')
+    const stored = selectedResultsKey.value
     if (stored && resultsSources.value.some(s => s.sourceKey === stored)) {
       return stored
     }
     return priorityDefault('Results')?.sourceKey ?? null
+  }
+
+  /**
+   * Change the session's Results selection. Used both by the Configuration
+   * radios and by the record-count source pickers on concept tables.
+   */
+  function setResultsSource(sourceKey: string | null): void {
+    selectedResultsKey.value = sourceKey || null
+    if (sourceKey) localStorage.setItem('selectedResults', sourceKey)
+    else localStorage.removeItem('selectedResults')
   }
 
   /** Highest daimon priority of the given type wins; list order breaks ties. */
@@ -140,6 +156,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
           value,
         })
         localStorage.removeItem(storageKey)
+        if (storageKey === 'selectedResults') selectedResultsKey.value = null
       }
     }
   }
@@ -500,7 +517,9 @@ export const useWebAPIStore = defineStore('webapi', () => {
     getJobsByCohortId,
     getValidVocabularySource,
     getValidResultsSource,
+    selectedResultsKey,
     // Actions
+    setResultsSource,
     setSources,
     setSelectedSource,
     setLoadingSources,

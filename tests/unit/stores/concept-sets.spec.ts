@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useWebAPIStore } from '@/stores/webapi'
 import type { ConceptSet, ConceptSetListItem, Concept, ConceptSetItem } from '@/models/concept-set.types'
 
 // Mock dependencies
@@ -937,6 +938,7 @@ describe('Concept Sets Store', () => {
         [11, { recordCount: 5, descendantRecordCount: 6, personCount: 3, descendantPersonCount: 4 }],
       ])
       vi.mocked(getConceptRecordCounts).mockResolvedValue(counts)
+      vi.spyOn(useWebAPIStore(), 'getValidResultsSource').mockReturnValue('RESULTS')
 
       await store.loadRecommendedConcepts('TEST')
 
@@ -955,10 +957,28 @@ describe('Concept Sets Store', () => {
       expect(c10.personCount).toBe(50)
       expect(c10.descendantPersonCount).toBe(75)
 
-      expect(getConceptRecordCounts).toHaveBeenCalledWith('TEST', expect.arrayContaining([10, 11]))
+      // Recommendations come from the vocabulary source; counts from the Results selection.
+      expect(getConceptRecordCounts).toHaveBeenCalledWith('RESULTS', expect.arrayContaining([10, 11]))
       expect(store.isRecommendedAvailable).toBe(true)
       expect(store.recommendedError).toBeNull()
       expect(store.loadingRecommended).toBe(false)
+    })
+
+    it('lists recommendations without counts when no Results source is selected', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Test', items: [makeItem(1)] }
+      vi.mocked(getRecommendedConcepts).mockResolvedValue({
+        available: true,
+        concepts: [makeRecommended(10)],
+      })
+      vi.mocked(getConceptRecordCounts).mockClear()
+      vi.spyOn(useWebAPIStore(), 'getValidResultsSource').mockReturnValue(null)
+
+      await store.loadRecommendedConcepts('TEST')
+
+      expect(getConceptRecordCounts).not.toHaveBeenCalled()
+      expect(store.recommendedConcepts.map(c => c.conceptId)).toEqual([10])
+      expect(store.recommendedConcepts[0]!.recordCount).toBeUndefined()
     })
 
     it('should flip isRecommendedAvailable to false when service returns available:false', async () => {
@@ -1084,6 +1104,7 @@ describe('Concept Sets Store', () => {
         personCount: 3,
         descendantPersonCount: 4,
       }]]))
+      vi.spyOn(useWebAPIStore(), 'getValidResultsSource').mockReturnValue('RESULTS')
 
       await store.loadRecommendedConcepts('TEST')
 

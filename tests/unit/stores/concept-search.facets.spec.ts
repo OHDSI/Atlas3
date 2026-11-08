@@ -12,7 +12,10 @@ vi.mock('@/services/concept-search.service', () => ({
 }))
 vi.mock('@/config/webapi', () => ({ getSourceKey: vi.fn(() => '') }))
 vi.mock('@/stores/webapi', () => ({
-  useWebAPIStore: vi.fn(() => ({ getValidVocabularySource: () => 'SYNPUF1K' })),
+  useWebAPIStore: vi.fn(() => ({
+    getValidVocabularySource: () => 'SYNPUF1K',
+    getValidResultsSource: () => 'SYNPUF1K',
+  })),
 }))
 
 import { useConceptSearchStore } from '@/stores/concept-search'
