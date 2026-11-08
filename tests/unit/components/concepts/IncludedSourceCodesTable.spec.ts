@@ -431,6 +431,7 @@ describe('IncludedSourceCodesTable record counts', () => {
   })
 
   it('shows a spinner in the count cells while the counts load', async () => {
+    vi.spyOn(useWebAPIStore(), 'getValidResultsSource').mockReturnValue('RES')
     vi.mocked(getConceptRecordCounts).mockReturnValue(new Promise(() => {}))
     const wrapper = mountRich()
     await wrapper.vm.$nextTick()

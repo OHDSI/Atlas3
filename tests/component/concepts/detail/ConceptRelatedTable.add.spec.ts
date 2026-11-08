@@ -87,4 +87,45 @@ describe('ConceptRelatedTable adding to the concept set', () => {
     expect(concepts.map(c => c.conceptId).sort()).toEqual([201826, 443238])
     expect(wrapper.find('[data-testid="add-selected"]').attributes('disabled')).toBeDefined()
   })
+
+  it('unticks rows individually and with the header checkbox', async () => {
+    const wrapper = await mountTable()
+
+    await checkbox(wrapper, 'related-select-201826').setValue(true)
+    expect(wrapper.find('[data-testid="add-selected"]').text()).toContain('(1)')
+    await checkbox(wrapper, 'related-select-201826').setValue(false)
+    expect(wrapper.find('[data-testid="add-selected"]').attributes('disabled')).toBeDefined()
+
+    await checkbox(wrapper, 'related-select-all').setValue(true)
+    await checkbox(wrapper, 'related-select-all').setValue(false)
+    expect(wrapper.find('[data-testid="add-selected"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('never adds a ticked concept that has been filtered out of view', async () => {
+    const wrapper = await mountTable()
+    await checkbox(wrapper, 'related-select-201826').setValue(true)
+
+    wrapper.findComponent({ name: 'ConceptFacetFilters' }).vm.$emit('update:resultFilter', 'Diabetic')
+    await flushPromises()
+    ;(wrapper.vm as unknown as { onAddSelected: () => void }).onAddSelected()
+
+    expect(wrapper.emitted('add-concepts')).toBeUndefined()
+  })
+
+  it('clears the selection when the related concepts change', async () => {
+    const wrapper = await mountTable()
+    await checkbox(wrapper, 'related-select-201826').setValue(true)
+
+    await wrapper.setProps({ related: [...items] })
+
+    expect(wrapper.find('[data-testid="add-selected"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('shows the filtered-empty message when nothing matches', async () => {
+    const wrapper = await mountTable()
+    wrapper.findComponent({ name: 'ConceptFacetFilters' }).vm.$emit('update:resultFilter', 'zzz-no-match')
+    await flushPromises()
+
+    expect(wrapper.find('.empty').exists()).toBe(true)
+  })
 })

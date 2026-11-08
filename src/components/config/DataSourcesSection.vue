@@ -265,6 +265,7 @@ import { deleteSource } from '@/services/source.service'
 import { listDataSources } from '@/services/datasource.service'
 import { httpGet, httpPost } from '@/services/http-client'
 import DataSourceDialog from './DataSourceDialog.vue'
+import { useWebAPIStore } from '@/stores/webapi'
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 
 const { t, tv } = useI18n()
@@ -320,6 +321,7 @@ const dataSources = ref<DataSourceDisplay[]>([])
 const selectedVocabulary = ref<string>('')
 const selectedEvidence = ref<string>('')
 const selectedResults = ref<string>('')
+const webapiStore = useWebAPIStore()
 const applicationVocabulary = ref<string>('')
 const applicationEvidence = ref<string>('')
 const applicationResults = ref<string>('')
@@ -355,11 +357,21 @@ watch(selectedEvidence, newValue => {
   }
 })
 
+// The Results choice is session state shared with the record-count pickers on
+// concept tables, so it goes through the WebAPI store rather than straight to localStorage.
 watch(selectedResults, newValue => {
   if (newValue) {
-    localStorage.setItem('selectedResults', newValue)
+    webapiStore.setResultsSource(newValue)
   }
 })
+
+// A record-count picker elsewhere can change the Results choice while this screen is mounted.
+watch(
+  () => webapiStore.selectedResultsKey,
+  key => {
+    if (key && usableKey(key, 'hasResults')) selectedResults.value = key
+  }
+)
 
 // System default: highest daimon priority for the type, list order on ties.
 function defaultKey(daimonType: DaimonKind, flag: DaimonFlag): string {
@@ -455,7 +467,8 @@ async function loadDataSources() {
     // Load each source and fetch vocabulary version if it has vocabulary
     const sourcesWithVersions = await Promise.all(
       sources.map(async s => {
-        const hasVocab = s.daimons?.some(d => d.daimonType === 'Vocabulary') ?? false
+        // A CDM daimon implies vocabulary tables (WebAPI falls back to the CDM schema).
+        const hasVocab = s.daimons?.some(d => d.daimonType === 'Vocabulary' || d.daimonType === 'CDM') ?? false
         let vocabularyVersion: string | undefined
 
         // If source has vocabulary, try to fetch the vocabulary info
@@ -494,7 +507,7 @@ async function loadDataSources() {
     // Set initial selections from localStorage or first available source
     const savedVocab = localStorage.getItem('selectedVocabulary')
     const savedEvidence = localStorage.getItem('selectedEvidence')
-    const savedResults = localStorage.getItem('selectedResults')
+    const savedResults = webapiStore.selectedResultsKey ?? localStorage.getItem('selectedResults')
 
     selectedVocabulary.value = usableKey(savedVocab, 'hasVocabulary') || defaultKey('Vocabulary', 'hasVocabulary')
     selectedEvidence.value = usableKey(savedEvidence, 'hasEvidence') || defaultKey('CEM', 'hasEvidence')
@@ -548,6 +561,7 @@ async function refreshCache(source: DataSourceDisplay) {
  */
 function clearLocalCache() {
   OWNED_CACHE_KEYS.forEach(key => localStorage.removeItem(key))
+  webapiStore.setResultsSource(null)
   applyDefaultSelections()
   toastMessage.value = tv('configuration.alerts.clearLocalCache')
   showToast.value = true

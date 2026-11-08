@@ -899,16 +899,32 @@ describe('WebAPI Store', () => {
     afterEach(() => localStorage.removeItem('selectedResults'))
 
     it('returns the results source chosen in Configuration', () => {
+      localStorage.setItem('selectedResults', 'LOW')
       const store = useWebAPIStore()
       store.setSources([resultsSource('LOW', 1, 1), resultsSource('HIGH', 2, 5)])
-      localStorage.setItem('selectedResults', 'LOW')
       expect(store.getValidResultsSource()).toBe('LOW')
     })
 
-    it('falls back to the highest-priority results source when the stored key is unknown', () => {
+    it('setResultsSource updates the shared selection and persists it', () => {
       const store = useWebAPIStore()
       store.setSources([resultsSource('LOW', 1, 1), resultsSource('HIGH', 2, 5)])
+      expect(store.getValidResultsSource()).toBe('HIGH')
+
+      store.setResultsSource('LOW')
+
+      expect(store.selectedResultsKey).toBe('LOW')
+      expect(store.getValidResultsSource()).toBe('LOW')
+      expect(localStorage.getItem('selectedResults')).toBe('LOW')
+
+      store.setResultsSource(null)
+      expect(localStorage.getItem('selectedResults')).toBeNull()
+      expect(store.getValidResultsSource()).toBe('HIGH')
+    })
+
+    it('falls back to the highest-priority results source when the stored key is unknown', () => {
       localStorage.setItem('selectedResults', 'MISSING')
+      const store = useWebAPIStore()
+      store.setSources([resultsSource('LOW', 1, 1), resultsSource('HIGH', 2, 5)])
       expect(store.getValidResultsSource()).toBe('HIGH')
     })
 

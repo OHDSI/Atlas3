@@ -4,10 +4,11 @@ import { useRoute } from 'vue-router'
 import { AtlasCard, AtlasChip, AtlasDataTable, AtlasProgressCircular, AtlasSelect } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import ConceptAddOptions from '@/components/concepts/ConceptAddOptions.vue'
+import ConceptColumnChooser from '@/components/concepts/ConceptColumnChooser.vue'
 import ConceptFacetFilters from '@/components/concepts/ConceptFacetFilters.vue'
 import { useConceptFacets, type FacetDefinition } from '@/composables/useConceptFacets'
 import { useConceptRecordCounts } from '@/composables/useConceptRecordCounts'
-import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
+import { useConceptTablePreferencesStore } from '@/stores/concept-table-preferences'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 import type { Concept, ConceptAddFlags } from '@/models/concept-set.types'
 
@@ -17,18 +18,20 @@ const props = defineProps<{ related: RelatedConcept[]; sourceKey?: string }>()
 
 const emit = defineEmits<{
   'add-concepts': [concepts: Concept[], flags: Required<ConceptAddFlags>]
+  navigate: [conceptId: number]
 }>()
 
-// Prefer the explicit sourceKey prop. The drawer renders this table over other
-// routes, so route.params.sourceKey is empty there and the link would no-op.
-// Fall back to the route param for the stand-alone /concept/:sourceKey page.
+// Prefer the explicit sourceKey prop; fall back to the route param for the
+// stand-alone /concept/:sourceKey page.
 const route = useRoute()
 const sourceKey = computed(() => props.sourceKey || ((route.params.sourceKey as string) ?? ''))
-const conceptDrawer = useConceptDetailDrawerStore()
 
+// The host decides what showing another concept means: the stand-alone page
+// changes the route, the drawer and the concept set editor swap the concept
+// in place. Opening the global drawer here stacked a second detail view on top.
 function openConceptDetail(conceptId: number) {
   if (!sourceKey.value) return
-  conceptDrawer.open(sourceKey.value, conceptId)
+  emit('navigate', conceptId)
 }
 
 interface Row extends Concept {
@@ -175,6 +178,11 @@ function onAddSelected() {
 
 const viewCountsForLabel = t('search.viewCountMessage')
 const sortBy = ref([{ key: 'descendantRecordCount', order: 'desc' as const }])
+const columnPreferences = useConceptTablePreferencesStore()
+
+// Column visibility is shared with the other concept tables through the
+// Columns chooser; selection, relationship, and name are always shown.
+const requiredColumnKeys = new Set(['select', 'relationship', 'conceptName'])
 
 const headers = computed(() => [
   { title: '', key: 'select', sortable: false, width: 48 },
@@ -183,10 +191,14 @@ const headers = computed(() => [
   { title: t('columns.vocabulary').value, key: 'vocabularyId', sortable: true },
   { title: t('columns.code').value, key: 'conceptCode', sortable: true },
   { title: t('columns.domain').value, key: 'domainId', sortable: true },
+  { title: t('columns.class').value, key: 'conceptClassId', sortable: true },
   { title: t('columns.standard').value, key: 'standardConcept', sortable: true, width: 80 },
+  { title: t('columns.validity').value, key: 'invalidReason', sortable: true, width: 100 },
   { title: t('columns.rcTooltip').value, key: 'recordCount', sortable: true, width: 100, align: 'end' as const },
   { title: t('columns.drcTooltip').value, key: 'descendantRecordCount', sortable: true, width: 100, align: 'end' as const },
-])
+  { title: t('columns.pcTooltip').value, key: 'personCount', sortable: true, width: 100, align: 'end' as const },
+  { title: t('columns.dpcTooltip').value, key: 'descendantPersonCount', sortable: true, width: 100, align: 'end' as const },
+].filter(header => requiredColumnKeys.has(header.key) || columnPreferences.visibleColumnKeys.includes(header.key)))
 
 function formatCount(count: number | undefined): string {
   return count === undefined ? '-' : count.toLocaleString()
@@ -214,6 +226,9 @@ function formatCount(count: number | undefined): string {
       @update:result-filter="setTextFilter"
       @clear="clearFilters()"
     >
+      <template #after-filter>
+        <ConceptColumnChooser />
+      </template>
       <template
         v-if="recordCountSources.length > 0"
         #append
@@ -332,6 +347,39 @@ function formatCount(count: number | undefined): string {
             color="primary"
           />
           <span v-else>{{ formatCount(item.descendantRecordCount) }}</span>
+        </div>
+      </template>
+      <template #item.invalidReason="{ item }">
+        <AtlasChip
+          :color="item.invalidReason ? 'error' : 'success'"
+          size="sm"
+          label
+        >
+          {{ item.invalidReason ? t('commonErrors.invalid').value : t('commonErrors.valid').value }}
+        </AtlasChip>
+      </template>
+      <template #item.personCount="{ item }">
+        <div class="count">
+          <AtlasProgressCircular
+            v-if="loadingRecordCounts && item.personCount === undefined"
+            indeterminate
+            size="16"
+            width="2"
+            color="primary"
+          />
+          <span v-else>{{ formatCount(item.personCount) }}</span>
+        </div>
+      </template>
+      <template #item.descendantPersonCount="{ item }">
+        <div class="count">
+          <AtlasProgressCircular
+            v-if="loadingRecordCounts && item.descendantPersonCount === undefined"
+            indeterminate
+            size="16"
+            width="2"
+            color="primary"
+          />
+          <span v-else>{{ formatCount(item.descendantPersonCount) }}</span>
         </div>
       </template>
       <template #no-data>

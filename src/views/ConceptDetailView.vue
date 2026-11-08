@@ -8,6 +8,7 @@ import { useI18n } from '@/composables/useI18n'
 import { AtlasAlert, AtlasProgressLinear, AtlasSnackbar } from '@/components/ui'
 import type { Concept } from '@/models/concept-set.types'
 import ConceptDetailHeader from '@/components/concepts/detail/ConceptDetailHeader.vue'
+import ConceptDetailLoadingSpinner from '@/components/concepts/detail/ConceptDetailLoadingSpinner.vue'
 import ConceptStatCards from '@/components/concepts/detail/ConceptStatCards.vue'
 import ConceptAttributesCard from '@/components/concepts/detail/ConceptAttributesCard.vue'
 import ConceptHierarchyMiniMap from '@/components/concepts/detail/ConceptHierarchyMiniMap.vue'
@@ -60,9 +61,12 @@ async function load() {
   await store.loadDrilldown(props.sourceKey)
 }
 
+// Replace rather than push: moving between concepts is browsing within one
+// detail view, so the back arrow still returns to where the user came from
+// (e.g. the vocabulary search results) instead of stepping through each concept.
 function navigate(conceptId: number) {
   if (conceptId === props.conceptId) return
-  void router.push({
+  void router.replace({
     name: 'concept-detail',
     params: { sourceKey: props.sourceKey, conceptId },
     query: route.query,
@@ -80,10 +84,11 @@ watch(() => [props.sourceKey, props.conceptId], load)
     data-testid="concept-detail-view"
   >
     <AtlasProgressLinear
-      v-if="isLoading"
+      v-if="isLoading && !(concept && !error)"
       indeterminate
       color="primary"
     />
+    <ConceptDetailLoadingSpinner :active="isLoading" />
 
     <AtlasAlert
       v-if="error"
@@ -95,8 +100,9 @@ watch(() => [props.sourceKey, props.conceptId], load)
 
     <template v-if="concept && !error">
       <ConceptDetailHeader
-        :class="{ 'is-stale': isStale }"
         :concept="concept"
+        :loading="isLoading"
+        :stale="isStale"
         @add-to-concept-set="onAddToConceptSet"
       />
 
@@ -125,6 +131,7 @@ watch(() => [props.sourceKey, props.conceptId], load)
         <ConceptRelatedTable
           :related="related"
           :source-key="props.sourceKey"
+          @navigate="navigate"
         />
 
         <DrilldownDetails
@@ -152,6 +159,11 @@ watch(() => [props.sourceKey, props.conceptId], load)
   background: rgb(var(--v-theme-background));
   min-height: 100vh;
 }
+/* The page scrolls the window, so the sticky header must stop below the
+ * sticky app nav bar instead of sliding underneath it. */
+.concept-detail-view :deep(.concept-detail-header) {
+  top: var(--atlas-nav-height, 60px);
+}
 /* Stale content while a different concept loads: dim and freeze interaction. */
 .is-stale {
   opacity: 0.45;
@@ -163,8 +175,6 @@ watch(() => [props.sourceKey, props.conceptId], load)
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 1440px;
-  margin: 0 auto;
 }
 .concept-detail-row {
   display: grid;
