@@ -78,6 +78,7 @@ import { DEFAULT_STRATA_KEY, strataCount } from '@/utils/characterization-result
 import type { DistributionStat, LinkedCohort, StrataCounts } from '@/models/characterization.types'
 import { AtlasCard, AtlasIcon } from '@/components/ui'
 import ResultsDataTable, { type ResultsHeader, type ResultsSortItem } from './ResultsDataTable.vue'
+import { compareNatural } from '@/utils/natural-sort'
 
 interface Props {
   analysisId: number
@@ -203,8 +204,8 @@ const tables = computed(() => partitions.value.map(partition => {
     children: statisticCells(partition.key, cohort.id),
   }))
   const headers: ResultsHeader[] = [
-    { key: 'covariateName', title: tv('columns.covariate'), sortable: false },
-    { key: 'conceptId', title: tv('columns.conceptId'), sortable: false },
+    { key: 'covariateName', title: tv('columns.covariate'), sort: compareNatural },
+    { key: 'conceptId', title: tv('columns.conceptId') },
     ...groups,
   ]
   return { ...partition, headers, cells: groups.flatMap(group => group.children) }

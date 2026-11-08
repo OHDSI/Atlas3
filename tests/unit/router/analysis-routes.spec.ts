@@ -41,10 +41,17 @@ describe('analysis routes', () => {
     expect(r.currentRoute.value.name).toBe('characterizations')
   })
 
-  it('resolves /analysis/feature-analyses to the feature-analyses route', async () => {
+  it('resolves /analysis/characterizations/feature-analyses to the feature-analyses route', async () => {
+    const r = makeRouter()
+    await r.push('/analysis/characterizations/feature-analyses')
+    expect(r.currentRoute.value.name).toBe('feature-analyses')
+  })
+
+  it('redirects the old /analysis/feature-analyses URL to the feature-analyses route', async () => {
     const r = makeRouter()
     await r.push('/analysis/feature-analyses')
     expect(r.currentRoute.value.name).toBe('feature-analyses')
+    expect(r.currentRoute.value.path).toBe('/analysis/characterizations/feature-analyses')
   })
 
   it('resolves /analysis/pathways to the pathways route', async () => {
@@ -71,10 +78,12 @@ describe('analysis routes', () => {
     expect(r.currentRoute.value.path).toBe('/analysis/pathways')
   })
 
-  it('redirects /feature-analyses to /analysis/feature-analyses', async () => {
-    const r = makeRouter()
-    await r.push('/feature-analyses')
-    expect(r.currentRoute.value.path).toBe('/analysis/feature-analyses')
+  it('keeps /feature-analyses and /cc/feature-analyses landing on the new path', async () => {
+    for (const legacy of ['/feature-analyses', '/cc/feature-analyses']) {
+      const r = makeRouter()
+      await r.push(legacy)
+      expect(r.currentRoute.value.path).toBe('/analysis/characterizations/feature-analyses')
+    }
   })
 
   it('redirects /incidence-rates to /analysis/incidence-rates', async () => {

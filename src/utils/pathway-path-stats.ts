@@ -32,16 +32,25 @@ export function computePathStats(input: PathStatsInput): PathStatsOutput | null 
   const group = results.pathwayGroups.find(g => g.targetCohortId === targetCohortId)
   if (!group) return null
 
-  const codeStrs = selectedPath.path.split('-').filter(s => s !== 'end')
+  const segments = selectedPath.path.split('-')
+  const endsHere = segments[segments.length - 1] === 'end'
+  const codeStrs = segments.filter(s => s !== 'end')
   const cleanPath = codeStrs.join('-')
   const codes = codeStrs.map(c => Number(c)).filter(n => Number.isFinite(n))
   if (codes.length === 0) return null
 
-  const pathRecord = group.pathways.find(p => p.path === cleanPath)
-    ?? group.pathways
-      .filter(p => p.path.startsWith(cleanPath + '-') || p.path === cleanPath)
-      .sort((a, b) => b.personCount - a.personCount)[0]
-  if (!pathRecord) return null
+  // Matches the sunburst: a step counts everyone who reached it, including
+  // those who went on to later steps. The "end" slice counts only those who stopped.
+  const pathways = group.pathways
+  const reachedCount = (prefix: string): number =>
+    pathways
+      .filter(p => p.path === prefix || p.path.startsWith(prefix + '-'))
+      .reduce((sum, p) => sum + p.personCount, 0)
+
+  const persons = endsHere
+    ? (pathways.find(p => p.path === cleanPath)?.personCount ?? 0)
+    : reachedCount(cleanPath)
+  if (persons === 0) return null
 
   const codeToName = new Map<number, string>()
   for (const ec of results.eventCodes) codeToName.set(ec.code, ec.name)
@@ -62,13 +71,7 @@ export function computePathStats(input: PathStatsInput): PathStatsOutput | null 
   })
 
   const steps: PathStatsStep[] = codes.map((code, i) => {
-    const prefix = codes.slice(0, i + 1).join('-')
-    const exact = group.pathways.find(p => p.path === prefix)
-    const entered = exact
-      ? exact.personCount
-      : group.pathways
-          .filter(p => p.path === prefix || p.path.startsWith(prefix + '-'))
-          .reduce((sum, p) => sum + p.personCount, 0)
+    const entered = reachedCount(codes.slice(0, i + 1).join('-'))
     const name = resolveCodeName(code)
     return {
       name,
@@ -82,7 +85,6 @@ export function computePathStats(input: PathStatsInput): PathStatsOutput | null 
     steps[i]!.retentionPct = prev === 0 ? 0 : (steps[i]!.entered / prev) * 100
   }
 
-  const persons = pathRecord.personCount
   const pctOfCohort = group.targetCohortCount === 0 ? 0 : (persons / group.targetCohortCount) * 100
   const pctOfPathways =
     group.totalPathwaysCount === 0 ? 0 : (persons / group.totalPathwaysCount) * 100

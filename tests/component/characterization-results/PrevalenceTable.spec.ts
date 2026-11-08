@@ -418,6 +418,24 @@ describe('PrevalenceTable sorting and paging', () => {
     wrapper.unmount()
   })
 
+  it('sorts by covariate name with numbers in numeric order, as age groups need', async () => {
+    const names = ['age group: 45 - 49', 'age group: 5 - 9', 'age group: 0 - 4', 'age group: 10 - 14']
+    const rows = names.map((covariateName, i) => makeRow({ covariateId: i + 1, covariateName }))
+    const wrapper = mount(PrevalenceTable, {
+      props: { analysisId: 100, analysisName: 'Demographics', rows, cohorts: rows[0]!.cohorts },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+    const covariateHeader = () => wrapper.findAll('th')[0]!
+    const shown = () => wrapper.findAll('tbody .prevalence-table__covariate').map(cell => cell.text())
+
+    await covariateHeader().trigger('click')
+    await covariateHeader().trigger('click')
+    expect(covariateHeader().attributes('aria-sort')).toBe('ascending')
+    expect(shown()).toEqual(['age group: 0 - 4', 'age group: 5 - 9', 'age group: 10 - 14', 'age group: 45 - 49'])
+    wrapper.unmount()
+  })
+
   it('sorts by Count across all pages, not just the visible one', async () => {
     const wrapper = mountMany(60)
     const countHeader = wrapper.findAll('th.prevalence-table__numeric')[0]!

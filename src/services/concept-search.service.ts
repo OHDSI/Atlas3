@@ -4,6 +4,7 @@
  */
 import {
   ConceptSearchResponseSchema,
+  MappedSourceCodeResponseSchema,
   RecommendedConceptsResponseSchema,
   ComparisonResultSchema,
   type Concept,
@@ -185,13 +186,19 @@ export async function getMappedSourceCodes(
     { signal },
   )
 
-  const parsed = ConceptSearchResponseSchema.safeParse(raw)
+  const parsed = MappedSourceCodeResponseSchema.safeParse(raw)
   if (!parsed.success) {
     logger.error('ConceptSearch', 'lookup/mapped validation error', parsed.error)
     throw new Error('Invalid mapped source code lookup response format')
   }
 
-  return parsed.data.map(mapConceptFromAPI)
+  return parsed.data.map(item =>
+    mapConceptFromAPI({
+      ...item,
+      CONCEPT_NAME: item.CONCEPT_NAME ?? item.CONCEPT_CODE,
+      DOMAIN_ID: item.DOMAIN_ID ?? '',
+    })
+  )
 }
 
 export async function getConceptRecordCounts(

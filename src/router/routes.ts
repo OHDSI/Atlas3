@@ -95,6 +95,10 @@ export const routes: RouteRecordRaw[] = [
       },
       {
         path: 'feature-analyses',
+        redirect: { name: 'feature-analyses' },
+      },
+      {
+        path: 'characterizations/feature-analyses',
         name: 'feature-analyses',
         component: () => import('@/views/FeatureAnalysesView.vue'),
         meta: { requiresAuth: true, titleKey: 'route.featureAnalyses.title', agentVisible: true, agentLabel: 'Feature analyses' },

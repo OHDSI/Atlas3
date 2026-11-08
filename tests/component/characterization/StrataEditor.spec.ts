@@ -5,13 +5,14 @@
  * forwards CriteriaGroup updates back to the model.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, ref } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
+import { CONCEPT_SET_EDITOR_SUPPRESSED } from '@/components/characterization/concept-set-editor-suppression'
 import StrataEditor from '@/components/characterization/StrataEditor.vue'
 import { useCriteriaSelection } from '@/composables/useCriteriaSelection'
 import type { Stratum } from '@/models/characterization.types'
@@ -37,6 +38,7 @@ function mountEditor(
   initial: Stratum[] = [],
   strataConceptSets: ConceptSet[] = [],
   stubOverrides: Record<string, unknown> = {},
+  provide: Record<symbol, unknown> = {},
 ) {
   return mount(StrataEditor, {
     props: {
@@ -48,6 +50,7 @@ function mountEditor(
     },
     global: {
       plugins: [vuetify],
+      provide,
       stubs: {
         CriteriaGroup: {
           name: 'CriteriaGroup',
@@ -191,6 +194,21 @@ describe('StrataEditor', () => {
 
     setupState.handleCriteriaEditConceptSet({ targetRef: { value: 9 } })
     expect(setupState.conceptSetsStore.currentSet).toMatchObject({ id: 9, name: 'Existing' })
+  })
+
+  it('does not render its concept set editor while suppressed', async () => {
+    const suppressed = ref(true)
+    wrapper = mountEditor([], [], { ConceptSetEditor: { name: 'ConceptSetEditor', template: '<div />' } }, {
+      [CONCEPT_SET_EDITOR_SUPPRESSED]: suppressed,
+    })
+    const setupState = (wrapper.vm as any).$.setupState
+    setupState.conceptSetsStore.editorOpen = true
+    await wrapper.vm.$nextTick()
+    expect(wrapper.findComponent({ name: 'ConceptSetEditor' }).exists()).toBe(false)
+
+    suppressed.value = false
+    await wrapper.vm.$nextTick()
+    expect(wrapper.findComponent({ name: 'ConceptSetEditor' }).exists()).toBe(true)
   })
 
   it('applies edited criteria when Apply is clicked', async () => {

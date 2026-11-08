@@ -81,6 +81,15 @@
             />
           </span>
           <AtlasIconButton
+            v-if="isEditable(fa)"
+            icon="mdi-pencil"
+            v-bind="{ ariaLabel: tv('cc.viewEdit.design.fa.edit') }"
+            variant="text"
+            size="sm"
+            :data-testid="`linked-fa-picker-edit-${fa.id}`"
+            @click="emit('edit-feature-analysis', fa.id)"
+          />
+          <AtlasIconButton
             icon="mdi-close"
             v-bind="{ ariaLabel: tv('columns.remove') }"
             variant="text"
@@ -194,6 +203,63 @@
           </template>
         </AtlasDataTable>
       </div>
+      <div
+        class="linked-fa-picker__create"
+        data-testid="linked-fa-picker-create-panel"
+      >
+        <span
+          id="linked-fa-picker-create-hint"
+          class="linked-fa-picker__create-hint"
+          :class="{ 'linked-fa-picker__create-hint--blocked': !!createDisabledReason }"
+          data-testid="linked-fa-picker-create-hint"
+        >
+          {{ createDisabledReason || t('cc.viewEdit.design.fa.createNewHint').value }}
+        </span>
+        <AtlasMenu
+          location="top end"
+          :close-on-content-click="true"
+          offset="8"
+          :disabled="!!createDisabledReason"
+        >
+          <template #activator="{ props: menuProps }">
+            <span class="linked-fa-picker__create-activator">
+              <AtlasButton
+                variant="secondary"
+                icon="mdi-plus"
+                append-icon="mdi-menu-up"
+                :disabled="!!createDisabledReason"
+                aria-describedby="linked-fa-picker-create-hint"
+                data-testid="linked-fa-picker-create"
+                v-bind="menuProps"
+              >
+                {{ t('cc.viewEdit.design.fa.createNew') }}
+              </AtlasButton>
+            </span>
+          </template>
+          <AtlasCard
+            padding="none"
+            class="linked-fa-picker__create-menu"
+          >
+            <AtlasList>
+              <AtlasListItem
+                data-testid="linked-fa-picker-create-prevalence"
+                :title="t('featureAnalyses.create.prevalence').value"
+                @click="requestCreate({ type: 'CRITERIA_SET', statType: 'PREVALENCE' })"
+              />
+              <AtlasListItem
+                data-testid="linked-fa-picker-create-distribution"
+                :title="t('featureAnalyses.create.distribution').value"
+                @click="requestCreate({ type: 'CRITERIA_SET', statType: 'DISTRIBUTION' })"
+              />
+              <AtlasListItem
+                data-testid="linked-fa-picker-create-custom"
+                :title="t('featureAnalyses.create.custom').value"
+                @click="requestCreate({ type: 'CUSTOM_FE' })"
+              />
+            </AtlasList>
+          </AtlasCard>
+        </AtlasMenu>
+      </div>
       <template #actions>
         <AtlasButton
           variant="ghost"
@@ -215,7 +281,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasCheckbox, AtlasDataTable, AtlasDialog, AtlasFacetFilterBar, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasDataTable, AtlasDialog, AtlasFacetFilterBar, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasTooltip } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
@@ -225,6 +291,8 @@ import {
   featureAnalysisFacets,
   featureAnalysisSearchText,
 } from '@/composables/useFeatureAnalysisFacets'
+import { designFlags, toLinkedFeatureAnalysis } from '@/utils/linked-feature-analysis'
+import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-create-kind'
 import type { LinkedFeatureAnalysis } from '@/models/characterization.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
 
@@ -238,10 +306,13 @@ const props = defineProps<{
    * render a list.
    */
   currentUserLogin?: string
+  createDisabledReason?: string
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: LinkedFeatureAnalysis[]]
+  'create-feature-analysis': [kind: FeatureAnalysisCreateKind]
+  'edit-feature-analysis': [id: number]
 }>()
 
 const { t, tv } = useI18n()
@@ -295,14 +366,18 @@ const selectableItems = computed(() =>
 )
 
 function displayName(fa: LinkedFeatureAnalysis): string {
-  if (fa.name && fa.name.length > 0) return fa.name
   const match = props.availableFeatureAnalyses.find(a => a.id === fa.id)
-  return match?.name ?? `#${fa.id}`
+  return match?.name || fa.name || `#${fa.id}`
+}
+
+function isEditable(fa: LinkedFeatureAnalysis): boolean {
+  const type = props.availableFeatureAnalyses.find(a => a.id === fa.id)?.type
+  return type !== undefined && type !== 'PRESET'
 }
 
 function displaySubtitle(fa: LinkedFeatureAnalysis): string {
   const match = props.availableFeatureAnalyses.find(a => a.id === fa.id)
-  const description = fa.description ?? match?.description ?? ''
+  const description = match?.description || fa.description || ''
   const type = match?.type
   if (type && description) return `${type} — ${description}`
   if (type) return type
@@ -317,25 +392,22 @@ function openDialog() {
 }
 
 function confirmAdd() {
+  const flags = designFlags(props.modelValue)
   const additions: LinkedFeatureAnalysis[] = selectedIds.value
     .map(id => props.availableFeatureAnalyses.find(fa => fa.id === id))
     .filter((fa): fa is FeatureAnalysisListItem => Boolean(fa))
-    .map(fa => ({
-      id: fa.id,
-      name: fa.name,
-      description: fa.description,
-      statType: fa.statType,
-      supportsAnnual: fa.supportsAnnual,
-      supportsTemporal: fa.supportsTemporal,
-      includeAnnual: includeAnnual.value,
-      includeTemporal: includeTemporal.value,
-    }))
+    .map(fa => toLinkedFeatureAnalysis(fa, flags))
 
   const existingIds = new Set(props.modelValue.map(fa => fa.id))
   const merged = [...props.modelValue, ...additions.filter(fa => !existingIds.has(fa.id))]
 
   emit('update:modelValue', merged)
   dialogOpen.value = false
+}
+
+function requestCreate(kind: FeatureAnalysisCreateKind) {
+  dialogOpen.value = false
+  emit('create-feature-analysis', kind)
 }
 
 function removeFa(id: number) {
@@ -379,8 +451,8 @@ function supportedFlags(fa: { id: number; supportsAnnual?: boolean; supportsTemp
   })
 }
 
-const includeAnnual = computed(() => props.modelValue.some(fa => fa.includeAnnual === true))
-const includeTemporal = computed(() => props.modelValue.some(fa => fa.includeTemporal === true))
+const includeAnnual = computed(() => designFlags(props.modelValue).includeAnnual)
+const includeTemporal = computed(() => designFlags(props.modelValue).includeTemporal)
 
 function setDesignFlag(flag: DesignFlag, value: boolean) {
   emit(
@@ -442,6 +514,26 @@ function setDesignFlag(flag: DesignFlag, value: boolean) {
   display: flex;
   flex-wrap: wrap;
   gap: 0 16px;
+}
+
+.linked-fa-picker__create {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px dashed var(--atlas-color-outline-strong);
+  border-radius: 8px;
+}
+
+.linked-fa-picker__create-hint {
+  color: var(--atlas-color-on-surface-variant);
+}
+
+.linked-fa-picker__create-hint--blocked {
+  color: var(--atlas-color-on-surface);
+  font-weight: 500;
 }
 
 .linked-fa-picker__dialog-body {

@@ -33,12 +33,19 @@ function openConceptDetail(conceptId: number) {
 
 interface Row extends Concept {
   relationship: string
+  rowKey: string
 }
 
+// WebAPI lists a relationship once per hierarchy distance, so "Subsumes" can
+// come back several times for the same concept; one row per pair is enough.
 const rows = computed<Row[]>(() => {
   const out: Row[] = []
+  const seen = new Set<string>()
   for (const c of props.related) {
     for (const r of c.relationships) {
+      const key = `${c.conceptId}|${r.relationshipName}`
+      if (seen.has(key)) continue
+      seen.add(key)
       out.push({
         conceptId: c.conceptId,
         conceptName: c.conceptName,
@@ -49,6 +56,7 @@ const rows = computed<Row[]>(() => {
         standardConcept: c.standardConcept,
         invalidReason: c.invalidReason,
         relationship: r.relationshipName,
+        rowKey: key,
       })
     }
   }
@@ -77,7 +85,18 @@ const rowsWithCounts = computed<Row[]>(() => {
   const countsByConceptId = new Map(
     conceptsWithCounts.value.map(concept => [concept.conceptId, concept])
   )
-  return rows.value.map(row => ({ ...row, ...countsByConceptId.get(row.conceptId) }))
+  // Copy only the counts: the counted concept is this concept's first row, so
+  // spreading it whole would stamp that row's relationship onto every other row.
+  return rows.value.map(row => {
+    const counted = countsByConceptId.get(row.conceptId)
+    return {
+      ...row,
+      recordCount: counted?.recordCount,
+      descendantRecordCount: counted?.descendantRecordCount,
+      personCount: counted?.personCount,
+      descendantPersonCount: counted?.descendantPersonCount,
+    }
+  })
 })
 
 const facets: FacetDefinition<Row>[] = [
@@ -253,6 +272,7 @@ function formatCount(count: number | undefined): string {
       v-model:sort-by="sortBy"
       :headers="headers"
       :items="filteredConcepts"
+      item-value="rowKey"
       :items-per-page="25"
       must-sort
     >

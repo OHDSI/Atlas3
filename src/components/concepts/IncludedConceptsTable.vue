@@ -156,7 +156,7 @@
 
         <template #item.invalidReason="{ item }">
           <AtlasChip
-            v-if="item.invalidReason"
+            v-if="isInvalidConcept(item.invalidReason)"
             tone="danger"
             size="xs"
             variant="tonal"
@@ -245,6 +245,7 @@ import ConceptAddOptions from './ConceptAddOptions.vue'
 import { CONCEPT_FACETS, useConceptFacets } from '@/composables/useConceptFacets'
 import { useConceptRecordCounts } from '@/composables/useConceptRecordCounts'
 import { getDomainColor } from '@/utils/domain-colors'
+import { isInvalidConcept } from '@/utils/api-mappers'
 import { useThemeStore } from '@/stores/theme'
 
 const { t } = useI18n()

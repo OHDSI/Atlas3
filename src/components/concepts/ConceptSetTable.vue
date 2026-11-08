@@ -185,7 +185,7 @@
         <!-- Validity Badge -->
         <template #item.invalidReason="{ item }">
           <AtlasChip
-            v-if="item.invalidReason"
+            v-if="isInvalidConcept(item.invalidReason)"
             tone="danger"
             size="xs"
             variant="tonal"
@@ -258,6 +258,7 @@ import { useI18n } from '@/composables/useI18n'
 import { isConceptMissing, type ConceptSetItem } from '@/models/concept-set.types'
 import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
+import { isInvalidConcept } from '@/utils/api-mappers'
 import { useWebAPIStore } from '@/stores/webapi'
 import { useThemeStore } from '@/stores/theme'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'

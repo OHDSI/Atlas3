@@ -285,7 +285,10 @@ export const CharacterizationResultReportSchema = z
     analysisId: z.number().nullable(),
     analysisName: z.string(),
     cohorts: z.array(CharacterizationResultCohortSchema),
-    domainIds: z.array(z.string()),
+    // WebAPI emits null when an analysis' domain can't be resolved; drop those.
+    domainIds: z
+      .array(z.string().nullable())
+      .transform(ids => ids.filter((d): d is string => d !== null)),
     items: z.array(z.unknown()),
     resultType: z.enum(['PREVALENCE', 'DISTRIBUTION']).optional(),
     isComparative: z.boolean().optional(),

@@ -4,13 +4,17 @@
       :model-value="modelValue"
       :available-cohorts="availableCohorts"
       :available-feature-analyses="availableFeatureAnalyses"
+      :create-disabled-reason="createDisabledReason"
       @update:model-value="v => $emit('update:modelValue', v)"
+      @create-feature-analysis="kind => $emit('create-feature-analysis', kind)"
+      @edit-feature-analysis="id => $emit('edit-feature-analysis', id)"
     />
   </aside>
 </template>
 
 <script setup lang="ts">
 import CharacterizationDesignForm from './CharacterizationDesignForm.vue'
+import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-create-kind'
 import type { CharacterizationDefinition } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
@@ -19,10 +23,13 @@ defineProps<{
   modelValue: CharacterizationDefinition
   availableCohorts: CohortDefinitionSummary[]
   availableFeatureAnalyses: FeatureAnalysisListItem[]
+  createDisabledReason?: string
 }>()
 
 defineEmits<{
   'update:modelValue': [value: CharacterizationDefinition]
+  'create-feature-analysis': [kind: FeatureAnalysisCreateKind]
+  'edit-feature-analysis': [id: number]
 }>()
 </script>
 

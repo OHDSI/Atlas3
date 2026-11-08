@@ -80,11 +80,12 @@ test.describe('Analysis hub: plugin tab placement and default tab', () => {
     await waitForPageReady(page)
   })
 
-  test('first visit: the plugin tab with insertBefore feature-analyses is first and open', async ({ page }) => {
+  test('first visit: the plugin tab anchored before feature-analyses sits before Characterizations and is open', async ({ page }) => {
     await openAnalysisFromNavbar(page)
 
     const firstTab = page.locator('.analysis-hub [role="tab"]').first()
     await expect(firstTab).toContainText('Plugin Tab')
+    await expect(page.locator('.analysis-hub [role="tab"]').nth(1)).toContainText('Characterizations')
     await expect(firstTab).toHaveAttribute('aria-selected', 'true')
     await expect(page).toHaveURL(new RegExp(`#/analysis/x/${PLUGIN_ID}/${ITEM_ID}`))
   })

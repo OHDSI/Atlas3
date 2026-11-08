@@ -19,7 +19,29 @@ import {
   ComparativeDistributionStatSchema,
   TemporalItemSchema,
   TemporalAnnualItemSchema,
+  GenerationResultsSchema,
 } from '@/models/characterization.types'
+
+describe('GenerationResultsSchema', () => {
+  const report = (domainIds: (string | null)[]) => ({
+    analysisId: 1572,
+    analysisName: 'Percent with 1+ OP visit',
+    cohorts: [{ cohortId: 1, cohortName: 'A' }],
+    domainIds,
+    items: [],
+  })
+
+  it('drops null entries from domainIds', () => {
+    const result = GenerationResultsSchema.parse({ reports: [report([null]), report(['DRUG', null])] })
+    expect(result.reports[0]!.domainIds).toEqual([])
+    expect(result.reports[1]!.domainIds).toEqual(['DRUG'])
+  })
+
+  it('keeps valid domainIds', () => {
+    const result = GenerationResultsSchema.parse({ reports: [report(['CONDITION'])] })
+    expect(result.reports[0]!.domainIds).toEqual(['CONDITION'])
+  })
+})
 
 describe('LinkedCohortSchema', () => {
   it('parses a minimal linked cohort', () => {

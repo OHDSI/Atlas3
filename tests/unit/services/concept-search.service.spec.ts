@@ -419,6 +419,33 @@ describe('ConceptSearchService', () => {
       expect(result[0]).toMatchObject({ conceptId: 45542738, vocabularyId: 'ICD10CM' })
     })
 
+    it('accepts source-to-concept-map rows, which have no domain, class, or name', async () => {
+      const stcmRow = {
+        ...sourceConcept(0, 'LOCAL-123', 'JNJ_LOCAL'),
+        CONCEPT_NAME: null,
+        DOMAIN_ID: null,
+        CONCEPT_CLASS_ID: null,
+        STANDARD_CONCEPT: 'N',
+        INVALID_REASON: 'V',
+      }
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify([sourceConcept(45542738, 'E11.9', 'ICD10CM'), stcmRow])),
+      })
+
+      const result = await getMappedSourceCodes('SYNPUF1K', [201826])
+
+      expect(result).toHaveLength(2)
+      expect(result[1]).toMatchObject({
+        conceptId: 0,
+        conceptName: 'LOCAL-123',
+        conceptCode: 'LOCAL-123',
+        domainId: '',
+        vocabularyId: 'JNJ_LOCAL',
+      })
+    })
+
     it('returns [] without calling fetch for an empty id list', async () => {
       const result = await getMappedSourceCodes('SYNPUF1K', [])
       expect(result).toEqual([])

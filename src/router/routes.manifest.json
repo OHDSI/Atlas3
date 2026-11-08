@@ -75,7 +75,7 @@
   },
   {
     "name": "feature-analyses",
-    "path": "feature-analyses",
+    "path": "characterizations/feature-analyses",
     "params": [],
     "agentVisible": true,
     "label": "Feature analyses"

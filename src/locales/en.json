@@ -1414,6 +1414,7 @@
       "custom": "Custom SQL"
     },
     "editor": {
+      "saveAndAdd": "Save and add",
       "title": {
         "edit": "Edit Feature Analysis"
       },
@@ -1795,11 +1796,18 @@
       "deleteConfirmation": "Delete cohort characterization? Warning: deletion can not be undone!",
       "design": {
         "fa": {
+          "added": "{name} was added. Save the characterization to keep it.",
+          "addFailed": "The new feature analysis could not be added. Add it from the picker.",
+          "createNew": "Create new feature analysis",
+          "createNewHint": "No exact match? Build your own feature from criteria or SQL.",
+          "edit": "Edit feature analysis",
           "includeAnnual": "Include Prevalence Annual Distribution",
           "includeTemporal": "Include Temporal Distribution",
+          "noCreatePermission": "You do not have permission to create feature analyses.",
           "supportsAnnual": "Supports annual distribution",
           "supportsTemporal": "Supports temporal distribution",
-          "title": "Feature analyses"
+          "title": "Feature analyses",
+          "updated": "{name} was updated."
         },
         "subgroups": {
           "messages": {
@@ -2798,7 +2806,10 @@
     }
   },
   "analysis": {
-    "subtitle": "Characterize cohorts, build features, trace pathways, and compute incidence rates."
+    "characterizationViews": "Characterization views",
+    "characterizationsHint": "Compare cohorts on shared feature analyses.",
+    "featureAnalysesHint": "Reusable feature definitions you add to a characterization design.",
+    "subtitle": "Characterize cohorts, trace pathways, and compute incidence rates."
   },
   "pathwayDefinitions": {
     "deleteConfirm": "Delete this pathway? This cannot be undone."
