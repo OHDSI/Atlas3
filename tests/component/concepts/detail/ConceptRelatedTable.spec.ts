@@ -66,6 +66,29 @@ describe('ConceptRelatedTable', () => {
     expect(text).toContain('ICD10CM')
   })
 
+  it('shows a concept once per relationship even when WebAPI repeats it per distance', () => {
+    const vuetify = createVuetify({ components, directives })
+    const router = createRouter({ history: createMemoryHistory(), routes: [] })
+    const sting: RelatedConcept = {
+      ...related[0]!,
+      conceptId: 871926004,
+      conceptName: 'Anaphylaxis caused by insect bite and/or insect sting',
+      relationships: [
+        { relationshipName: 'Subsumes', relationshipDistance: 1 },
+        { relationshipName: 'Subsumes', relationshipDistance: 2 },
+        { relationshipName: 'Subsumes', relationshipDistance: 3 },
+        { relationshipName: 'Is a', relationshipDistance: 1 },
+      ],
+    }
+    const wrapper = mount(ConceptRelatedTable, {
+      props: { related: [sting, { ...sting, relationships: [{ relationshipName: 'Subsumes', relationshipDistance: 1 }] }] },
+      global: { plugins: [vuetify, router] },
+    })
+
+    const rows = wrapper.findAll('tbody tr').filter(row => row.text().includes(sting.conceptName))
+    expect(rows.map(row => (row.text().includes('Subsumes') ? 'Subsumes' : 'Is a'))).toEqual(['Subsumes', 'Is a'])
+  })
+
   it('shows empty state when no related concepts', () => {
     const vuetify = createVuetify({ components, directives })
     const router = createRouter({ history: createMemoryHistory(), routes: [] })

@@ -50,6 +50,17 @@ export type ConceptSearchResponseItem = z.infer<typeof ConceptSearchResponseItem
 
 export const ConceptSearchResponseSchema = z.array(ConceptSearchResponseItemSchema)
 
+// lookup/mapped also returns SOURCE_TO_CONCEPT_MAP rows: CONCEPT_ID 0, no
+// domain or class, and a name only when the site filled in a description.
+export const MappedSourceCodeResponseSchema = z.array(
+  ConceptSearchResponseItemSchema.extend({
+    CONCEPT_NAME: z.string().nullish(),
+    DOMAIN_ID: z.string().nullish(),
+    VALID_START_DATE: z.number().nullish(),
+    VALID_END_DATE: z.number().nullish(),
+  })
+)
+
 export type ConceptSearchResponse = z.infer<typeof ConceptSearchResponseSchema>
 
 // WebAPI RecommendedConcept extends the circe Concept, which has no validity dates.

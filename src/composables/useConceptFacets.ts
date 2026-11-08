@@ -10,6 +10,7 @@ import { ref, computed, toValue } from 'vue'
 import type { MaybeRefOrGetter, Ref } from 'vue'
 import type { Concept } from '@/models/concept-set.types'
 import { matchesTerms } from '@/utils/list-filters'
+import { isInvalidConcept } from '@/utils/api-mappers'
 
 export type FacetKey = string
 
@@ -41,7 +42,7 @@ export const CONCEPT_FACETS: FacetDefinition<Concept>[] = [
           : 'Non-Standard',
   },
   { key: 'conceptClassId', label: 'Class', display: c => c.conceptClassId || '' },
-  { key: 'invalidReason', label: 'Validity', display: c => (c.invalidReason ? 'Invalid' : 'Valid') },
+  { key: 'invalidReason', label: 'Validity', display: c => (isInvalidConcept(c.invalidReason) ? 'Invalid' : 'Valid') },
 ]
 
 /**

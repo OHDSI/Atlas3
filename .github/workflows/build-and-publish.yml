@@ -77,6 +77,8 @@ jobs:
         run: |
           jq '.name = "atlas3" | .files = ["dist", "Caddyfile", "bin"] | .bin = {"atlas3": "bin/atlas3.mjs"} | .engines = {"node": ">=18.3"} | del(.publishConfig, .scripts, .dependencies, .devDependencies)' package.json > package.json.tmp
           mv package.json.tmp package.json
+          # Without it the app defaults to sign-in disabled and never sends the token.
+          cp docker/config-local.json dist/config-local.json
           mkdir -p "$RUNNER_TEMP/npmjs"
           npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP/npmjs"
 
