@@ -172,13 +172,25 @@ test.describe('Concept set editor — inline panel layout', () => {
     const detailBox = await detail.evaluate(el => ({ client: el.clientHeight, scroll: el.scrollHeight }))
     expect(detailBox.scroll).toBeLessThanOrEqual(detailBox.client + 1)
 
-    // The test data gives a short detail, so at the default 720px viewport the
-    // window cannot scroll far enough for the header to reach the nav bar and
-    // the check would measure its resting position instead of the stuck one.
+    // With the mocked concept the detail is short, so on the default 720px
+    // viewport the window cannot scroll far enough for the header to reach the
+    // nav bar and it is measured at its unstuck position. A shorter viewport
+    // guarantees enough scroll room for the header to actually stick.
     await page.setViewportSize({ width: 1280, height: 480 })
-    const headerRestTop = await header.evaluate(el => el.getBoundingClientRect().top + window.scrollY)
+
+    const scrollRoom = await page.evaluate(() => {
+      const navEl = document.querySelector('.nav-bar')!
+      const headerEl = document.querySelector('[data-testid="concept-detail-header"]')!
+      const root = document.documentElement
+      return {
+        maxScroll: root.scrollHeight - window.innerHeight,
+        stickAt: headerEl.getBoundingClientRect().top + window.scrollY - navEl.getBoundingClientRect().bottom,
+      }
+    })
+    // Guard: otherwise the assertion below would measure an unstuck header.
+    expect(scrollRoom.maxScroll).toBeGreaterThan(scrollRoom.stickAt)
+
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
-    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(headerRestTop - 60)
 
     const rects = await page.evaluate(() => {
       const navEl = document.querySelector('.nav-bar')!
