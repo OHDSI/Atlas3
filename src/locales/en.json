@@ -3422,6 +3422,22 @@
       "assignHelp": "Choose a parameter to leave this concept set open for whoever inserts the reusable, or pick a concept set to fix it.",
       "assignConceptSet": "Choose a concept set",
       "parameterNotEditable": "A parameter has no concepts of its own; they are chosen when the reusable is inserted."
+    },
+    "insert": {
+      "button": "From Reusable",
+      "eyebrow": "INSERT",
+      "title": "Insert from a reusable",
+      "helpInitialEvent": "Initial/Censoring Event reusables. Their events are added to this list.",
+      "helpCriteriaGroup": "Criteria Group reusables. Their criteria are added to this group, or as a nested group when this group already has criteria.",
+      "search": "Search reusables",
+      "empty": "No reusables of this type.",
+      "parametersTitle": "Parameters",
+      "parametersHelp": "Choose a concept set for each parameter. A parameter left open matches any concept.",
+      "anyConcept": "Any concept",
+      "chooseConceptSet": "Choose concept set",
+      "clearParameter": "Leave open",
+      "noParameters": "This reusable has no parameters.",
+      "confirm": "Insert"
     }
   }
 }

@@ -8,7 +8,7 @@
       {{ tv('components.endStrategy.censoring.lede') }}
     </p>
 
-    <div class="mt-3">
+    <div class="mt-3 censoring-criteria-editor__toolbar">
       <AtlasMenu location="bottom start">
         <template #activator="{ props: menuProps }">
           <AtlasButton
@@ -30,6 +30,12 @@
           />
         </AtlasList>
       </AtlasMenu>
+      <!-- Atlas 2.x offered Initial/Censoring Event reusables here too. -->
+      <ReusableInsertButton
+        type="INITIAL_EVENT"
+        testid="censoring-insert-reusable"
+        @insert="onInsertReusable"
+      />
     </div>
 
     <div
@@ -78,6 +84,8 @@ import {
 import type { Criteria, CriteriaWrapperKey } from '@/models/circe-types'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from '@/components/circe/criteria/criteria-editor.types'
 import CriteriaRenderer from '@/components/circe/criteria/CriteriaRenderer.vue'
+import ReusableInsertButton from '@/components/reusables/ReusableInsertButton.vue'
+import type { ReusableInstance } from '@/components/reusables/reusable-design'
 import { useI18n } from '@/composables/useI18n'
 import { CRITERIA_TYPE_BY_KEY } from '@/components/circe/criteria/criteria-registry'
 
@@ -137,6 +145,10 @@ function addCriteria(type: string) {
   emit('update:modelValue', [...props.modelValue, factory()])
 }
 
+function onInsertReusable(instance: ReusableInstance) {
+  emit('update:modelValue', [...props.modelValue, ...(instance.criteriaList ?? [])])
+}
+
 function removeCriteria(index: number) {
   const updated = [...props.modelValue]
   updated.splice(index, 1)
@@ -145,6 +157,12 @@ function removeCriteria(index: number) {
 </script>
 
 <style scoped>
+.censoring-criteria-editor__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .censoring-criteria-editor__heading {
   display: flex;
   align-items: center;

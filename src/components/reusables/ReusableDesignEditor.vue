@@ -341,6 +341,9 @@ const {
 } = useCirceConceptSetPicker({
   getConceptSets: () => [...props.design.conceptSets, ...props.design.parameters.map(p => p.data)],
   addConceptSet: conceptSet => props.design.conceptSets.push(conceptSet),
+  // A reusable inside a reusable would hide its parameters from whoever
+  // inserts the outer one.
+  allowReusables: false,
 })
 
 const localConceptSets = computed<ConceptSetReference[]>(() =>
