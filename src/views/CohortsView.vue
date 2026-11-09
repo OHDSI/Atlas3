@@ -310,7 +310,7 @@
           style="max-height: 600px; overflow-y: auto"
           class="cohort-info-content"
         >
-          <!-- eslint-disable-next-line vue/no-v-html -- trusted server content -->
+          <!-- eslint-disable-next-line vue/no-v-html -- sanitized with DOMPurify before assignment -->
           <div v-html="cohortInfoHtml" />
         </div>
         <div
@@ -361,6 +361,7 @@ import {
   saveCohortDefinition,
 } from '@/services/cohort-definition.service'
 import { logger } from '@/utils/logger'
+import { sanitizeHtml } from '@/utils/html'
 import { describeImportProblems, validateCohortExpression } from '@/components/cohort-editor/import-validation'
 import { AtlasAlert, AtlasButton, AtlasChip, AtlasDialog, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
@@ -723,7 +724,7 @@ async function handleShowInfo(cohort: CohortDefinitionSummary) {
     if (definitionResult.success) {
       const htmlResult = await getCohortPrintFriendly(definitionResult.data.expression)
       if (requestId !== cohortInfoRequestId) return
-      cohortInfoHtml.value = htmlResult.success ? htmlResult.data : null
+      cohortInfoHtml.value = htmlResult.success ? sanitizeHtml(htmlResult.data) : null
     } else {
       logger.error('CohortsView', 'Failed to fetch cohort definition', definitionResult.error)
     }

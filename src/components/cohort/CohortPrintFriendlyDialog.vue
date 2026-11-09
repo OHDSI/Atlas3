@@ -31,7 +31,7 @@
       class="cohort-print-friendly-dialog__content"
       data-testid="cohort-print-friendly-content"
     >
-      <!-- eslint-disable-next-line vue/no-v-html -- trusted WebAPI-rendered cohort content -->
+      <!-- eslint-disable-next-line vue/no-v-html -- sanitized with DOMPurify in loadPrintFriendly -->
       <div v-html="html" />
     </div>
 
@@ -53,6 +53,7 @@ import { ref, watch } from 'vue'
 import { AtlasAlert, AtlasButton, AtlasDialog, AtlasProgressLinear, AtlasSpacer } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { getCohortPrintFriendly } from '@/services/cohort-definition.service'
+import { sanitizeHtml } from '@/utils/html'
 import type { CohortExpression } from '@/models/circe-types'
 
 interface Props {
@@ -94,7 +95,7 @@ async function loadPrintFriendly() {
     return
   }
 
-  html.value = result.data
+  html.value = sanitizeHtml(result.data)
 }
 </script>
 
