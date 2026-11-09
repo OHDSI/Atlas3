@@ -43,6 +43,7 @@ import { getVersions as getCohortVersions } from '@/services/cohort-definition-v
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
 import { getPathwayVersions } from '@/services/pathway-versions.service'
 import { getIncidenceRateVersions } from '@/services/incidence-rate-versions.service'
+import { getReusableVersions } from '@/services/reusable-versions.service'
 import { logger } from '@/utils/logger'
 import { useI18n } from '@/composables/useI18n'
 
@@ -70,7 +71,9 @@ export function useVersions(config: VersionsConfig) {
         ? getPathwayVersions
         : config.assetType === 'ir'
           ? getIncidenceRateVersions
-          : getConceptSetVersions
+          : config.assetType === 'reusable'
+            ? getReusableVersions
+            : getConceptSetVersions
 
   /**
    * Load versions from API and prepend current version row
