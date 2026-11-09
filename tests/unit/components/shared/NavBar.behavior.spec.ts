@@ -226,12 +226,13 @@ afterEach(() => {
 })
 
 describe('NavBar core navigation', () => {
-  it('renders the four core sections in order with translated titles', async () => {
+  it('renders the five core sections in order with translated titles', async () => {
     wrapper = await mountNav()
     expect(navLinks(wrapper).map(l => l.text())).toEqual([
       tr('navigation.datasources'),
       tr('navigation.conceptsets'),
       tr('navigation.cohortdefinitions'),
+      tr('navigation.reusables'),
       tr('navigation.analysis'),
     ])
   })
@@ -242,14 +243,14 @@ describe('NavBar core navigation', () => {
       await link.trigger('click')
     }
     await flushPromises()
-    expect(h.push.mock.calls.map(c => c[0])).toEqual(['/datasources', '/concepts', '/cohorts', '/analysis'])
+    expect(h.push.mock.calls.map(c => c[0])).toEqual(['/datasources', '/concepts', '/cohorts', '/reusables', '/analysis'])
   })
 
   it('hides core items disabled by configuration', async () => {
     h.config.disabledCore = ['analysis']
     wrapper = await mountNav()
     expect(navLinks(wrapper).map(l => l.text())).not.toContain(tr('navigation.analysis'))
-    expect(navLinks(wrapper)).toHaveLength(3)
+    expect(navLinks(wrapper)).toHaveLength(4)
   })
 
   it('marks the item matching the current route as active', async () => {
@@ -299,7 +300,7 @@ describe('NavBar plugin menu items', () => {
     })
     wrapper = await mountNav()
     expect(logger.error).toHaveBeenCalled()
-    expect(navLinks(wrapper)).toHaveLength(4)
+    expect(navLinks(wrapper)).toHaveLength(5)
   })
 
   it('reloads menu items when a watched plugin finishes loading, not on other states', async () => {
