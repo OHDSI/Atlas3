@@ -71,7 +71,7 @@ describe('ConceptRelatedTable interactions', () => {
     vi.clearAllMocks()
   })
 
-  it('opens the concept-detail drawer when a concept link is clicked', async () => {
+  it('asks its host to navigate (never opens the global drawer) when a concept link is clicked', async () => {
     const wrapper = await mountWith('OHDSI')
     await flushPromises()
     const drawer = useConceptDetailDrawerStore()
@@ -79,10 +79,12 @@ describe('ConceptRelatedTable interactions', () => {
     const link = wrapper.find('a.concept-link')
     expect(link.exists()).toBe(true)
     await link.trigger('click')
-    expect(openSpy).toHaveBeenCalledWith('OHDSI', 73211009)
+    expect(wrapper.emitted('navigate')).toEqual([[73211009]])
+    expect(openSpy).not.toHaveBeenCalled()
+    expect(drawer.isOpen).toBe(false)
   })
 
-  it('opens the drawer using the sourceKey prop when the route has no param (drawer context)', async () => {
+  it('navigates using the sourceKey prop when the route has no param (drawer context)', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [{ path: '/c/:sourceKey?', name: 'c', component: { template: '<div />' } }],
@@ -94,19 +96,15 @@ describe('ConceptRelatedTable interactions', () => {
       global: { plugins: [vuetify, router] },
     })
     await flushPromises()
-    const drawer = useConceptDetailDrawerStore()
-    const openSpy = vi.spyOn(drawer, 'open')
     await wrapper.find('a.concept-link').trigger('click')
-    expect(openSpy).toHaveBeenCalledWith('OHDSI', 73211009)
+    expect(wrapper.emitted('navigate')).toEqual([[73211009]])
   })
 
-  it('does not open the drawer when sourceKey is empty', async () => {
+  it('does not navigate when sourceKey is empty', async () => {
     const wrapper = await mountWith(undefined)
     await flushPromises()
-    const drawer = useConceptDetailDrawerStore()
-    const openSpy = vi.spyOn(drawer, 'open')
     await wrapper.find('a.concept-link').trigger('click')
-    expect(openSpy).not.toHaveBeenCalled()
+    expect(wrapper.emitted('navigate')).toBeUndefined()
   })
 
   it('renders standard-concept chip variants for S / C / null', async () => {

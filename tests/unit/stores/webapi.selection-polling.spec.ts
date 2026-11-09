@@ -85,13 +85,23 @@ describe('WebAPI store source selection and generation polling', () => {
         bare(5, 'BARE'),
       ])
 
-      expect(store.vocabularySources.map(s => s.sourceKey)).toEqual(['BOTH', 'VOCAB'])
+      expect(store.vocabularySources.map(s => s.sourceKey)).toEqual(['BOTH', 'VOCAB', 'CDM'])
       expect(store.resultsSources.map(s => s.sourceKey)).toEqual(['BOTH', 'RES'])
     })
   })
 
   describe('getValidVocabularySource', () => {
     const sources = () => [src(1, 'HIGH', [['Vocabulary', 5]]), src(2, 'LOW', [['Vocabulary', 1]])]
+
+    it('accepts and falls back to a CDM-only source as a vocabulary source', () => {
+      const store = useWebAPIStore()
+      store.setSources([src(1, 'CDMONLY', [['CDM', 0], ['Results', 1]])])
+
+      expect(store.getValidVocabularySource()).toBe('CDMONLY')
+      localStorage.setItem('selectedVocabulary', 'CDMONLY')
+      expect(store.getValidVocabularySource()).toBe('CDMONLY')
+      expect(logger.warn).not.toHaveBeenCalled()
+    })
 
     it('honours a stored vocabulary that is not the priority default', () => {
       const store = useWebAPIStore()

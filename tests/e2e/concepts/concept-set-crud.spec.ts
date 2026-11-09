@@ -145,12 +145,11 @@ test.describe('Concept set editor — inline panel layout', () => {
     expect(paddingTop).toBeGreaterThan(0)
   })
 
-  // #253 — the inline concept detail overlay is a scrolling container with its
-  // own top padding, and ConceptDetailHeader inside it is position: sticky.
-  // A sticky offset is measured from the scroll container's padding edge, so
-  // top padding on the container itself leaves a permanent gap above the
-  // stuck header, exposing the container's background as the user scrolls.
-  test('inline concept detail header sticks flush with no gap above it on scroll', async ({
+  // #253 — ConceptDetailHeader in the inline concept detail is position:
+  // sticky. The detail now flows with the page instead of being its own
+  // bounded scroll box, so the window scrolls and the header must stick flush
+  // below the app nav bar: no gap above it, and not hidden underneath the bar.
+  test('inline concept detail header sticks flush below the nav bar on scroll', async ({
     page
   }) => {
     await createNewConceptSet(page)
@@ -164,18 +163,22 @@ test.describe('Concept set editor — inline panel layout', () => {
     await expect(nameLink).toBeVisible({ timeout: 10000 })
     await nameLink.click()
 
-    const overlay = page.locator('[data-testid="concept-set-editor-inline-detail"]')
-    await expect(overlay).toBeVisible()
+    const detail = page.locator('[data-testid="concept-set-editor-inline-detail"]')
+    await expect(detail).toBeVisible()
     const header = page.getByTestId('concept-detail-header')
     await expect(header).toBeVisible()
 
-    await overlay.evaluate(el => el.scrollTo(0, 300))
+    // The detail is not a nested scroller on the page: its full content is laid out.
+    const detailBox = await detail.evaluate(el => ({ client: el.clientHeight, scroll: el.scrollHeight }))
+    expect(detailBox.scroll).toBeLessThanOrEqual(detailBox.client + 1)
+
+    await page.evaluate(() => window.scrollTo(0, 600))
 
     const rects = await page.evaluate(() => {
-      const overlayEl = document.querySelector('[data-testid="concept-set-editor-inline-detail"]')!
+      const navEl = document.querySelector('.nav-bar')!
       const headerEl = document.querySelector('[data-testid="concept-detail-header"]')!
-      return { overlayTop: overlayEl.getBoundingClientRect().top, headerTop: headerEl.getBoundingClientRect().top }
+      return { navBottom: navEl.getBoundingClientRect().bottom, headerTop: headerEl.getBoundingClientRect().top }
     })
-    expect(rects.headerTop).toBeCloseTo(rects.overlayTop, 0)
+    expect(rects.headerTop).toBeCloseTo(rects.navBottom, 0)
   })
 })

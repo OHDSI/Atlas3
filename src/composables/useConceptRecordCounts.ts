@@ -7,7 +7,6 @@ import { ref, computed, watch } from 'vue'
 import type { Ref } from 'vue'
 import type { Concept } from '@/models/concept-set.types'
 import { getConceptRecordCounts } from '@/services/concept-search.service'
-import { getSourceKey } from '@/config/webapi'
 import { useWebAPIStore } from '@/stores/webapi'
 import { logger } from '@/utils/logger'
 
@@ -16,14 +15,11 @@ type Counts = Awaited<ReturnType<typeof getConceptRecordCounts>>
 export function useConceptRecordCounts(concepts: Ref<Concept[]>) {
   const webapiStore = useWebAPIStore()
 
-  const selectedSourceKey = ref<string | null>(null)
   const counts = ref<Counts>(new Map())
   const loading = ref(false)
 
-  // Until the user picks one, counts come from the vocabulary source, as in concept search.
-  const effectiveSourceKey = computed(
-    () => selectedSourceKey.value ?? (webapiStore.getValidVocabularySource() || getSourceKey() || '')
-  )
+  // Counts follow the session's Results selection, shared with Configuration.
+  const effectiveSourceKey = computed(() => webapiStore.getValidResultsSource() || '')
 
   // Only sources that can report counts; a vocabulary-only source would blank the columns.
   const sources = computed(() => webapiStore.resultsSources ?? [])
@@ -61,8 +57,9 @@ export function useConceptRecordCounts(concepts: Ref<Concept[]>) {
     return concepts.value.map(c => ({ ...c, ...counts.value.get(c.conceptId) }))
   })
 
+  // Picking a source here is the same as choosing the Results radio in Configuration.
   function setSource(sourceKey: string) {
-    selectedSourceKey.value = sourceKey
+    webapiStore.setResultsSource(sourceKey)
   }
 
   return { conceptsWithCounts, loading, sources, effectiveSourceKey, setSource }

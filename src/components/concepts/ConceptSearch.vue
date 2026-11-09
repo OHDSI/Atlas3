@@ -111,7 +111,7 @@
       @update:items-per-page="itemsPerPage => store.updatePagination(1, itemsPerPage)"
       @add-concept="concept => emit('add-concept', concept, addFlags)"
       @remove-concept="concept => emit('remove-concept', concept)"
-      @view-concept="payload => emit('view-concept', payload)"
+      v-on="viewConceptListeners"
     />
 
     <div
@@ -137,13 +137,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, getCurrentInstance, ref, watch } from 'vue'
 import { AtlasAlert, AtlasButton, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { FacetKey, FacetOption } from '@/composables/useConceptFacets'
 import { useConceptTablePreferencesStore } from '@/stores/concept-table-preferences'
 import { useWebAPIStore } from '@/stores/webapi'
-import { getSourceKey } from '@/config/webapi'
 import ConceptAddOptions from './ConceptAddOptions.vue'
 import ConceptColumnChooser from './ConceptColumnChooser.vue'
 import ConceptFacetFilters from './ConceptFacetFilters.vue'
@@ -204,6 +203,17 @@ const emit = defineEmits<{
   'selection-cancelled': []
 }>()
 
+// ConceptTable only intercepts the concept-name click when something listens
+// for `view-concept`. Forward the listener only if our own parent handles it;
+// otherwise (e.g. the Concepts > Search page) the link's real href navigates
+// to the concept detail route. Key must be camelCase so it lands on the vnode
+// as `onViewConcept`, which is what ConceptTable inspects.
+const parentHandlesViewConcept =
+  typeof getCurrentInstance()?.vnode.props?.onViewConcept === 'function'
+const viewConceptListeners = parentHandlesViewConcept
+  ? { viewConcept: (payload: { conceptId: number; sourceKey: string }) => emit('view-concept', payload) }
+  : {}
+
 const { t } = useI18n()
 const preferencesStore = useConceptTablePreferencesStore()
 const webapiStore = useWebAPIStore()
@@ -217,9 +227,7 @@ const addFlags = ref<Required<ConceptAddFlags>>({
 })
 
 const recordCountSources = computed(() => webapiStore.resultsSources ?? [])
-const effectiveRecordCountSource = computed(
-  () => props.store.recordCountSourceKey ?? (webapiStore.getValidVocabularySource() || getSourceKey() || '')
-)
+const effectiveRecordCountSource = computed(() => props.store.recordCountSourceKey ?? '')
 const isSearchValid = computed(() => searchInput.value.trim().length >= 3)
 const visibleColumnKeys = computed(() => preferencesStore.visibleColumnKeys)
 const loading = computed(() => props.store.loading)

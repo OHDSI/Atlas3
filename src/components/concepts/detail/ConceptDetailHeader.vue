@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
-import { AtlasButton, AtlasChip, AtlasIconButton } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasIconButton, AtlasProgressLinear } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'
 
@@ -16,6 +16,10 @@ const props = defineProps<{
    * default behaviour completely — no drawer close, no router.back().
    */
   onBack?: () => void
+  /** Show a progress bar along the header's bottom edge (it stays visible while the header is stuck). */
+  loading?: boolean
+  /** The header still shows the previous concept while another one loads. */
+  stale?: boolean
 }>()
 const emit = defineEmits<{
   'add-to-concept-set': [concept: Concept]
@@ -73,6 +77,7 @@ async function onCopy() {
 <template>
   <div
     class="concept-detail-header"
+    :class="{ 'concept-detail-header--stale': stale }"
     data-testid="concept-detail-header"
   >
     <AtlasIconButton
@@ -129,6 +134,17 @@ async function onCopy() {
         {{ t('components.conceptDetail.copyId').value }}
       </AtlasButton>
     </div>
+
+    <AtlasProgressLinear
+      v-if="loading"
+      class="concept-detail-header__progress"
+      indeterminate
+      absolute
+      location="bottom"
+      color="primary"
+      :height="3"
+      data-testid="concept-detail-header-progress"
+    />
   </div>
 </template>
 
@@ -165,5 +181,17 @@ async function onCopy() {
 .concept-actions {
   display: flex;
   gap: 6px;
+}
+/* Overlays the bottom border, so toggling it never shifts the layout. */
+.concept-detail-header__progress {
+  margin-bottom: -1px;
+}
+/* Dim the previous concept's title and actions, but not the progress bar, and
+ * keep the back button usable so the user can leave while it loads. */
+.concept-detail-header--stale .concept-title-row,
+.concept-detail-header--stale .concept-actions {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 120ms ease;
 }
 </style>

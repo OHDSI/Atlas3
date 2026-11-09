@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { reactive } from 'vue'
 import type { Concept } from '@/models/concept-set.types'
 import { ApiError } from '@/services/api-error'
 
@@ -19,6 +20,7 @@ vi.mock('@/config/webapi', () => ({
 vi.mock('@/stores/webapi', () => ({
   useWebAPIStore: vi.fn(() => ({
     getValidVocabularySource: () => 'SYNPUF1K',
+    getValidResultsSource: () => 'SYNPUF1K',
   })),
 }))
 
@@ -76,6 +78,7 @@ describe('Concept Search Store', () => {
     vi.mocked(conceptSearchService.getConceptRecordCounts).mockResolvedValue(new Map())
     vi.mocked(webapiStoreModule.useWebAPIStore).mockReturnValue({
       getValidVocabularySource: () => 'SYNPUF1K',
+      getValidResultsSource: () => 'SYNPUF1K',
     } as unknown as ReturnType<typeof webapiStoreModule.useWebAPIStore>)
     vi.mocked(webapiConfig.getSourceKey).mockReturnValue('')
   })
@@ -190,6 +193,7 @@ describe('Concept Search Store', () => {
     it('should fall back to getSourceKey() when no valid vocabulary source on store', async () => {
       vi.mocked(webapiStoreModule.useWebAPIStore).mockReturnValue({
         getValidVocabularySource: () => null,
+        getValidResultsSource: () => null,
       } as unknown as ReturnType<typeof webapiStoreModule.useWebAPIStore>)
       vi.mocked(webapiConfig.getSourceKey).mockReturnValue('FALLBACK_SRC')
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
@@ -206,6 +210,7 @@ describe('Concept Search Store', () => {
     it('should set error when no source is available', async () => {
       vi.mocked(webapiStoreModule.useWebAPIStore).mockReturnValue({
         getValidVocabularySource: () => null,
+        getValidResultsSource: () => null,
       } as unknown as ReturnType<typeof webapiStoreModule.useWebAPIStore>)
       vi.mocked(webapiConfig.getSourceKey).mockReturnValue('')
 
@@ -393,6 +398,14 @@ describe('Concept Search Store', () => {
     })
 
     it('keeps the results and surfaces an error when the counts cannot be loaded', async () => {
+      const shared = reactive({ selected: 'SYNPUF1K' })
+      vi.mocked(webapiStoreModule.useWebAPIStore).mockReturnValue({
+        getValidVocabularySource: () => 'SYNPUF1K',
+        getValidResultsSource: () => shared.selected,
+        setResultsSource: (key: string) => {
+          shared.selected = key
+        },
+      } as unknown as ReturnType<typeof webapiStoreModule.useWebAPIStore>)
       vi.mocked(conceptSearchService.searchConcepts).mockResolvedValue({
         success: true,
         data: mockConcepts,

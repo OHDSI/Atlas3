@@ -35,6 +35,7 @@ vi.mock('@/config/webapi', () => ({
 vi.mock('@/stores/webapi', () => ({
   useWebAPIStore: () => ({
     getValidVocabularySource: () => 'SYNPUF1K',
+    getValidResultsSource: () => 'SYNPUF1K',
     sources: [],
     selectedSource: null,
     vocabularySources: [],

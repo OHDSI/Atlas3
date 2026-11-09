@@ -24,11 +24,15 @@ function createConceptSearchStore(id: string) {
   const allConcepts = ref<Concept[]>([]) // All search results
   const loading = ref<boolean>(false)
   const loadingRecordCounts = ref<boolean>(false)
-  // Which source the record/person counts come from. Independent of the
-  // vocabulary source: the vocabulary knows the concepts, a Results source
-  // knows how often they occur in that data (#228). Null means "follow the
-  // vocabulary source", which is what this did before the picker existed.
-  const recordCountSourceKey = ref<string | null>(null)
+  // Which source the record/person counts come from: the session's Results
+  // selection, shared with Configuration and every other concept table. It is
+  // independent of the vocabulary source: the vocabulary knows the concepts, a
+  // Results source knows how often they occur in that data (#228).
+  const webapiStore = useWebAPIStore()
+  const recordCountSourceKey = computed<string | null>(() => webapiStore.getValidResultsSource())
+  // Source the current counts were fetched from, so a change of the shared
+  // selection made elsewhere refreshes them exactly once.
+  let countsLoadedFrom: string | null = null
   const error = ref<string | null>(null)
 
   // Pagination state
@@ -127,7 +131,6 @@ function createConceptSearchStore(id: string) {
     error.value = null
 
     try {
-      const webapiStore = useWebAPIStore()
       const sourceKey = webapiStore.getValidVocabularySource() || getSourceKey()
 
       if (!sourceKey) {
@@ -148,7 +151,8 @@ function createConceptSearchStore(id: string) {
       // A new query changes the available value space — drop stale facets.
       facets.clearFilters()
 
-      await loadRecordCounts(recordCountSourceKey.value ?? sourceKey)
+      const countSourceKey = recordCountSourceKey.value
+      if (countSourceKey) await loadRecordCounts(countSourceKey)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err)
       error.value = errorMessage.includes('403')
@@ -169,6 +173,7 @@ function createConceptSearchStore(id: string) {
     const current = allConcepts.value
     if (current.length === 0) return
 
+    countsLoadedFrom = sourceKey
     loadingRecordCounts.value = true
     try {
       const recordCounts = await getConceptRecordCounts(
@@ -189,11 +194,17 @@ function createConceptSearchStore(id: string) {
   }
 
   /**
-   * Point the counts at a different source and refresh them in place. Failing
-   * to reach one source must not blank the results, which are still valid.
+   * Point the counts at a different source and refresh them in place. This
+   * changes the session's Results selection, exactly like choosing the Results
+   * radio in Configuration. Failing to reach one source must not blank the
+   * results, which are still valid.
    */
   async function setRecordCountSource(sourceKey: string): Promise<void> {
-    recordCountSourceKey.value = sourceKey
+    webapiStore.setResultsSource(sourceKey)
+    await refreshRecordCounts(sourceKey)
+  }
+
+  async function refreshRecordCounts(sourceKey: string): Promise<void> {
     try {
       await loadRecordCounts(sourceKey)
     } catch (err) {
@@ -201,6 +212,14 @@ function createConceptSearchStore(id: string) {
       error.value = tv('search.errors.recordCountsFailed')
     }
   }
+
+  // The Results selection can also change in Configuration or in another
+  // concept table's picker; keep these counts in step with it.
+  watch(recordCountSourceKey, key => {
+    if (key && key !== countsLoadedFrom && allConcepts.value.length > 0) {
+      void refreshRecordCounts(key)
+    }
+  })
 
   /**
    * Debounced search (300ms delay)

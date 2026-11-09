@@ -31,6 +31,7 @@ vi.mock('@/services/concept-detail.service', () => ({
 import ConceptDetailView from '@/views/ConceptDetailView.vue'
 import { useConceptDetailStore } from '@/stores/concept-detail'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 
 const ConceptDetailHeaderStub = defineComponent({
   name: 'ConceptDetailHeader',
@@ -44,6 +45,13 @@ const ConceptHierarchyMiniMapStub = defineComponent({
   inheritAttrs: false,
   emits: ['navigate'],
   template: '<button data-testid="hierarchy-navigate" @click="$emit(\'navigate\', 421326000)">navigate</button>',
+})
+
+const ConceptRelatedTableStub = defineComponent({
+  name: 'ConceptRelatedTable',
+  inheritAttrs: false,
+  emits: ['navigate'],
+  template: '<button data-testid="related-navigate" @click="$emit(\'navigate\', 73211009)">related</button>',
 })
 
 describe('ConceptDetailView', () => {
@@ -64,7 +72,7 @@ describe('ConceptDetailView', () => {
           ConceptStatCards: true,
           ConceptAttributesCard: true,
           ConceptHierarchyMiniMap: ConceptHierarchyMiniMapStub,
-          ConceptRelatedTable: true,
+          ConceptRelatedTable: ConceptRelatedTableStub,
           DrilldownDetails: true,
         },
       },
@@ -127,5 +135,74 @@ describe('ConceptDetailView', () => {
       sourceKey: 'SYNPUF1K',
       conceptId: '421326000',
     })
+  })
+
+  it('swaps the route to a related concept in place, so back still returns to the search results', async () => {
+    const wrapper = mountView()
+    const router = wrapper.vm.$router
+    const push = vi.spyOn(router, 'push')
+    const replace = vi.spyOn(router, 'replace')
+    const drawer = useConceptDetailDrawerStore()
+
+    await new Promise(resolve => setTimeout(resolve, 0))
+    await wrapper.find('[data-testid="related-navigate"]').trigger('click')
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    expect(replace).toHaveBeenCalledTimes(1)
+    expect(push).not.toHaveBeenCalled()
+    expect(router.currentRoute.value.params).toMatchObject({
+      sourceKey: 'SYNPUF1K',
+      conceptId: '73211009',
+    })
+    expect(drawer.isOpen).toBe(false)
+  })
+
+  it('ignores navigation to the concept already shown', async () => {
+    const wrapper = mountView({ sourceKey: 'SYNPUF1K', conceptId: 73211009 })
+    const router = wrapper.vm.$router
+    const replace = vi.spyOn(router, 'replace')
+
+    await new Promise(resolve => setTimeout(resolve, 0))
+    await wrapper.find('[data-testid="related-navigate"]').trigger('click')
+
+    expect(replace).not.toHaveBeenCalled()
+  })
+
+  it('names an untitled open set generically when confirming an add', async () => {
+    const conceptSets = useConceptSetsStore()
+    conceptSets.openCreateEditor()
+    if (conceptSets.currentSet) conceptSets.currentSet.name = ''
+    const wrapper = mountView()
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    await wrapper.findComponent(ConceptDetailHeaderStub).vm.$emit('add-to-concept-set', useConceptDetailStore().concept)
+    await wrapper.vm.$nextTick()
+
+    expect(conceptSets.currentSet?.items).toEqual([expect.objectContaining({ conceptId: 201826 })])
+    expect(wrapper.findComponent({ name: 'AtlasSnackbar' }).props('modelValue')).toBe(true)
+  })
+
+  it('shows the viewport spinner while the next concept loads', async () => {
+    const wrapper = mountView()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    const store = useConceptDetailStore()
+    let finish!: () => void
+    vi.spyOn(store, 'loadConcept').mockImplementation(() => {
+      store.isLoading = true
+      return new Promise<void>(resolve => {
+        finish = () => {
+          store.isLoading = false
+          resolve()
+        }
+      })
+    })
+
+    await wrapper.setProps({ sourceKey: 'SYNPUF1K', conceptId: 73211009 })
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(wrapper.find('[data-testid="concept-detail-loading-spinner"]').exists()).toBe(true)
+
+    finish()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(wrapper.find('[data-testid="concept-detail-loading-spinner"]').exists()).toBe(false)
   })
 })

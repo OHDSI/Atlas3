@@ -805,7 +805,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       const candidates = result.concepts.filter(c => !existingIds.has(c.conceptId))
 
       const ids = candidates.map(c => c.conceptId)
-      const counts = await getConceptRecordCounts(sourceKey, ids)
+      const resultsSourceKey = useWebAPIStore().getValidResultsSource()
+      const counts = resultsSourceKey
+        ? await getConceptRecordCounts(resultsSourceKey, ids)
+        : new Map()
       const enriched = candidates.map(c => {
         const rc = counts.get(c.conceptId)
         if (!rc) return c
