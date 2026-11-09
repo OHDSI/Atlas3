@@ -69,6 +69,16 @@
             {{ t('configuration.roles.tabs.permissions').value }}
           </AtlasTab>
           <AtlasTab
+            v-if="canSeeApiKeys"
+            value="apikeys"
+            data-testid="config-tab-apikeys"
+          >
+            <AtlasIcon start>
+              mdi-key-chain-variant
+            </AtlasIcon>
+            {{ t('apiKeys.admin.title').value }}
+          </AtlasTab>
+          <AtlasTab
             v-for="tab in pluginTabs"
             :key="tab.key"
             :value="tab.key"
@@ -120,6 +130,13 @@
           </div>
 
           <div
+            v-if="activeSection === 'apikeys' && canSeeApiKeys"
+            class="config-section"
+          >
+            <ApiKeysAdminSection />
+          </div>
+
+          <div
             v-for="tab in pluginTabs"
             v-show="activeSection === tab.key"
             :key="tab.key"
@@ -164,6 +181,7 @@ import CacheManagementSection from './CacheManagementSection.vue'
 import DataSourcesSection from './DataSourcesSection.vue'
 import TagManagementSection from './TagManagementSection.vue'
 import PermissionsSection from './PermissionsSection.vue'
+import ApiKeysAdminSection from './ApiKeysAdminSection.vue'
 
 const { t, tv } = useI18n()
 const uiStore = useUIStore()
@@ -184,12 +202,14 @@ const canSeeCache = computed(() => hasPermission('admin:cache'))
 const canSeeSources = computed(() => canReadAnySource())
 const canSeeTags = computed(() => hasPermission('admin:tags'))
 const canSeePermissions = computed(() => hasPermission('admin:security'))
+const canSeeApiKeys = computed(() => hasPermission('admin:apikeys'))
 const hasAnyAdminTab = computed(
   () =>
     canSeeCache.value ||
     canSeeSources.value ||
     canSeeTags.value ||
     canSeePermissions.value ||
+    canSeeApiKeys.value ||
     pluginTabs.value.length > 0
 )
 
@@ -217,6 +237,7 @@ const fallbackSection = computed<ConfigPanelSection>(() => {
   if (canSeeSources.value) return 'sources'
   if (canSeeTags.value) return 'tags'
   if (canSeePermissions.value) return 'permissions'
+  if (canSeeApiKeys.value) return 'apikeys'
   return (pluginTabs.value[0]?.key as ConfigPanelSection | undefined) ?? 'cache'
 })
 

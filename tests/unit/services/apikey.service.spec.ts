@@ -9,7 +9,15 @@ vi.mock('@/utils/logger', () => ({
 }))
 
 import { logger } from '@/utils/logger'
-import { listApiKeys, createApiKey, revokeApiKey, deleteApiKey } from '@/services/apikey.service'
+import {
+  listApiKeys,
+  createApiKey,
+  revokeApiKey,
+  deleteApiKey,
+  listAllApiKeys,
+  adminRevokeApiKey,
+  adminDeleteApiKey,
+} from '@/services/apikey.service'
 
 describe('services/apikey.service', () => {
   let mockFetch: ReturnType<typeof vi.fn>
@@ -140,6 +148,44 @@ describe('services/apikey.service', () => {
       expect(result.success).toBe(true)
       const [url] = mockFetch.mock.calls[0]
       expect(url).toContain('/user/apikeys/abc123?remove=true')
+    })
+  })
+
+  describe('admin endpoints', () => {
+    it('lists every user\'s keys with their owner', async () => {
+      ok([{
+        name: 'ci', description: null, keyIdentifier: 'k1', ownerLogin: 'bob', ownerName: 'Bob',
+        createdAt: 1700000000, expiresAt: null, disabled: false, lastUsedAt: null,
+      }])
+
+      const result = await listAllApiKeys()
+
+      expect(result.success && result.data[0]?.ownerLogin).toBe('bob')
+      const [url, options] = mockFetch.mock.calls[0]
+      expect(url).toContain('/admin/apikeys')
+      expect(options.method).toBe('GET')
+    })
+
+    it('rejects an admin list entry without an owner', async () => {
+      ok([{ name: 'ci', keyIdentifier: 'k1', createdAt: 1700000000, disabled: false }])
+      expect((await listAllApiKeys()).success).toBe(false)
+    })
+
+    it('revokes and deletes any key by identifier', async () => {
+      ok(null)
+      ok(null)
+
+      expect((await adminRevokeApiKey('a/b')).success).toBe(true)
+      expect((await adminDeleteApiKey('a/b')).success).toBe(true)
+
+      expect(mockFetch.mock.calls[0][0]).toMatch(/\/admin\/apikeys\/a%2Fb$/)
+      expect(mockFetch.mock.calls[0][1].method).toBe('DELETE')
+      expect(mockFetch.mock.calls[1][0]).toMatch(/\/admin\/apikeys\/a%2Fb\?remove=true$/)
+    })
+
+    it('surfaces a forbidden revoke as a failure', async () => {
+      fail(403, 'Forbidden')
+      expect((await adminRevokeApiKey('k1')).success).toBe(false)
     })
   })
 })
