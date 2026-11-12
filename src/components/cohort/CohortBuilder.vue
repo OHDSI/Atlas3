@@ -1243,7 +1243,7 @@ function handleConceptSetApplied(set: { id?: number | string; name: string; item
 }
 
 async function handleSave(): Promise<{ id?: number; name?: string; error?: string }> {
-  if (!canSave.value) return { error: 'The cohort cannot be saved yet: it has validation errors or is read-only.' }
+  if (!canSave.value) return { error: saveDisabledReason.value || 'The cohort cannot be saved yet.' }
 
   const { saveCohortDefinition } = await import(
     '@/services/cohort-definition.service'

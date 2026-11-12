@@ -2041,7 +2041,7 @@ describe('CohortBuilder', () => {
     await wrapper.vm.$nextTick()
     const setup = getSetup(wrapper)
     const result = await setup.handleSave()
-    expect(result).toEqual({ error: expect.stringContaining('cannot be saved yet') })
+    expect(result).toEqual({ error: expect.stringMatching(/\S/) })
   })
 
   // ---------------------------------------------------------------------------

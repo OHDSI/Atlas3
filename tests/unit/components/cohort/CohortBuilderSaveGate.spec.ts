@@ -197,7 +197,7 @@ describe('CohortBuilder save gate (issue #262)', () => {
     expect(vm.canSave).toBe(false)
 
     const { saveCohortDefinition } = await import('@/services/cohort-definition.service')
-    await expect(vm.handleSave()).resolves.toEqual({ error: expect.stringContaining('cannot be saved yet') })
+    await expect(vm.handleSave()).resolves.toEqual({ error: expect.stringMatching(/name/i) })
     expect(saveCohortDefinition).not.toHaveBeenCalled()
   })
 
