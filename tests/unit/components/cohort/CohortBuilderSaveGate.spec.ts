@@ -28,6 +28,7 @@ vi.mock('@/composables/useI18n', async () => {
 })
 
 vi.mock('@/services/cohort-definition.service', () => ({
+  availableCohortName: vi.fn(async (name: string) => name),
   getCohortDefinition: vi.fn().mockResolvedValue({ success: false, error: { status: 404 } }),
   saveCohortDefinition: vi
     .fn()
@@ -196,7 +197,7 @@ describe('CohortBuilder save gate (issue #262)', () => {
     expect(vm.canSave).toBe(false)
 
     const { saveCohortDefinition } = await import('@/services/cohort-definition.service')
-    await expect(vm.handleSave()).resolves.toEqual({})
+    await expect(vm.handleSave()).resolves.toEqual({ error: expect.stringContaining('cannot be saved yet') })
     expect(saveCohortDefinition).not.toHaveBeenCalled()
   })
 
