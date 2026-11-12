@@ -172,7 +172,13 @@ test.describe('Concept set editor — inline panel layout', () => {
     const detailBox = await detail.evaluate(el => ({ client: el.clientHeight, scroll: el.scrollHeight }))
     expect(detailBox.scroll).toBeLessThanOrEqual(detailBox.client + 1)
 
-    await page.evaluate(() => window.scrollTo(0, 600))
+    // The test data gives a short detail, so at the default 720px viewport the
+    // window cannot scroll far enough for the header to reach the nav bar and
+    // the check would measure its resting position instead of the stuck one.
+    await page.setViewportSize({ width: 1280, height: 480 })
+    const headerRestTop = await header.evaluate(el => el.getBoundingClientRect().top + window.scrollY)
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(headerRestTop - 60)
 
     const rects = await page.evaluate(() => {
       const navEl = document.querySelector('.nav-bar')!
