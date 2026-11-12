@@ -751,7 +751,11 @@ watch(
     const opts = cohortStore.saveOptions
     if (opts?.name) cohortName.value = opts.name
     if (opts?.description) cohortDescription.value = opts.description
-    let saved: { id?: number; name?: string } = {}
+    if (cohortName.value) {
+      const { availableCohortName } = await import('@/services/cohort-definition.service')
+      cohortName.value = await availableCohortName(cohortName.value, props.id ? Number(props.id) : 0)
+    }
+    let saved: { id?: number; name?: string; error?: string } = {}
     try {
       saved = (await handleSave()) ?? {}
     } finally {
@@ -1238,8 +1242,8 @@ function handleConceptSetApplied(set: { id?: number | string; name: string; item
   resolveSelection(finalId)
 }
 
-async function handleSave(): Promise<{ id?: number; name?: string }> {
-  if (!canSave.value) return {}
+async function handleSave(): Promise<{ id?: number; name?: string; error?: string }> {
+  if (!canSave.value) return { error: 'The cohort cannot be saved yet: it has validation errors or is read-only.' }
 
   const { saveCohortDefinition } = await import(
     '@/services/cohort-definition.service'
@@ -1280,7 +1284,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     if (!savedCohortResult.success) {
       errorMessage.value = tv('components.cohortBuilder.saveToServerError')
       showError.value = true
-      return {}
+      return { error: errorMessage.value }
     }
 
     const savedCohort = savedCohortResult.data
@@ -1289,7 +1293,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     if (savedId === undefined) {
       errorMessage.value = tv('components.cohortBuilder.saveToServerError')
       showError.value = true
-      return {}
+      return { error: errorMessage.value }
     }
 
     // No expression: the store already references the live document, and
@@ -1331,7 +1335,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
         ? error.message
         : tv('components.cohortBuilder.saveError')
     showError.value = true
-    return {}
+    return { error: errorMessage.value }
   }
 }
 

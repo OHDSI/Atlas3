@@ -442,13 +442,38 @@ describe('pythiaBridge coverage', () => {
       expect(store.newCohortSignal).toBe(1)
     })
 
-    it('a save that resolves with nothing is passed through', async () => {
+    it('a save that resolves with nothing is reported as not applied', async () => {
       const store = attachEditor()
       mockSave(store, undefined)
       setRoute({ name: 'cohort-new', params: {} })
 
-      expect(await apply({ kind: 'saveCohort', name: 'N', description: 'D' })).toBeUndefined()
+      expect(await apply({ kind: 'saveCohort', name: 'N', description: 'D' })).toEqual({
+        applied: false,
+        error: 'ATLAS could not save the cohort.',
+      })
       expect(store.requestSave).toHaveBeenCalledWith({ name: 'N', description: 'D' })
+    })
+
+    it('passes the editor\'s save error on to the agent', async () => {
+      const store = attachEditor()
+      mockSave(store, { error: 'Failed to save cohort to server' })
+      setRoute({ name: 'cohort-new', params: {} })
+
+      expect(await apply({ kind: 'saveCohort' })).toEqual({
+        applied: false,
+        error: 'Failed to save cohort to server',
+      })
+    })
+
+    it('tells the agent a timed-out save may still complete', async () => {
+      const store = attachEditor()
+      mockSave(store, { timedOut: true })
+      setRoute({ name: 'cohort-new', params: {} })
+
+      expect(await apply({ kind: 'saveCohort' })).toEqual({
+        applied: false,
+        error: expect.stringContaining('may still complete'),
+      })
     })
 
     it('refuses to save when there is no cohort', async () => {
@@ -540,7 +565,7 @@ describe('pythiaBridge coverage', () => {
       const store = saveable(12)
       vi.mocked(router.push).mockRejectedValue(new Error('nav'))
 
-      await expect(apply({ kind: 'saveCohort' })).resolves.toEqual({})
+      await expect(apply({ kind: 'saveCohort' })).resolves.toMatchObject({ applied: false })
       expect(store.requestSave).toHaveBeenCalledOnce()
     })
   })
