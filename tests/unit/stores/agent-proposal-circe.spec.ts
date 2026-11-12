@@ -78,6 +78,16 @@ describe('translateAgentEvent', () => {
     expect(translated?.conceptSet?.expression?.items?.[0]?.concept?.CONCEPT_ID).toBe(1713671)
   })
 
+  it('writes First when the event asks for the first occurrence in the person history', () => {
+    const event = { ...drugEvent('Lisinopril', 1308216, 4), firstOccurrence: true } as unknown as CohortEvent
+
+    expect(translateAgentEvent(event, [])?.criteria).toEqual({ DrugExposure: { CodesetId: 4, First: true } })
+  })
+
+  it('omits First for an ordinary event', () => {
+    expect(translateAgentEvent(drugEvent('Lisinopril', 1308216, 4), [])?.criteria).toEqual({ DrugExposure: { CodesetId: 4 } })
+  })
+
   it('refuses an event with no domain rather than writing an empty criterion', () => {
     expect(translateAgentEvent({ id: 'e1' } as unknown as CohortEvent, [])).toBeNull()
   })
