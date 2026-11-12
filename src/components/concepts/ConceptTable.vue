@@ -228,7 +228,6 @@
         <AtlasSelect
           :model-value="itemsPerPage"
           :items="itemsPerPageOptions"
-          :menu-props="{ zIndex: 2300 }"
           variant="outlined"
           hide-details
           style="width: 80px"

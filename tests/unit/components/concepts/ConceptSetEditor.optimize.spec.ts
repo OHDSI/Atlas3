@@ -72,8 +72,7 @@ function mountEditor(set: ConceptSet, props: Record<string, unknown> = {}) {
         AtlasMenu: {
           template: '<div><slot name="activator" :props="{}" /><slot /></div>',
         },
-        VNavigationDrawer: { template: '<div class="v-navigation-drawer"><slot /></div>' },
-        Teleport: { template: '<div><slot /></div>' },
+        AtlasSideSheet: { template: '<div class="atlas-side-sheet-stub"><slot /></div>' },
       },
     },
   })

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { defineComponent, nextTick } from 'vue'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
@@ -15,6 +15,7 @@ import type { VersionsConfig } from '@/components/versions/types'
 import type { Version } from '@/services/concept-set-versions.service'
 import * as conceptSearchService from '@/services/concept-search.service'
 import { getVersions } from '@/services/concept-set-versions.service'
+import { getConceptSetById } from '@/services/concept-set.service'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../helpers/i18n-mock')
@@ -29,6 +30,11 @@ vi.mock('@/services/concept-search.service', async importOriginal => {
 vi.mock('@/services/concept-set-versions.service', async importOriginal => {
   const actual = await importOriginal<typeof import('@/services/concept-set-versions.service')>()
   return { ...actual, getVersions: vi.fn().mockResolvedValue([]) }
+})
+
+vi.mock('@/services/concept-set.service', async importOriginal => {
+  const actual = await importOriginal<typeof import('@/services/concept-set.service')>()
+  return { ...actual, getConceptSetById: vi.fn() }
 })
 
 const vuetify = createVuetify({ components, directives })
@@ -69,16 +75,14 @@ const existingSet = (overrides: Partial<ConceptSet> = {}): ConceptSet => ({
   ...overrides,
 })
 
-const DrawerStub = defineComponent({
-  name: 'VNavigationDrawer',
+const SideSheetStub = defineComponent({
+  name: 'AtlasSideSheet',
   props: {
     modelValue: Boolean,
-    location: { type: String, default: undefined },
-    temporary: Boolean,
-    width: { type: Number, default: undefined },
+    ariaLabel: { type: String, default: undefined },
   },
   emits: ['update:modelValue'],
-  template: '<div class="drawer-stub"><slot /></div>',
+  template: '<div class="side-sheet-stub"><slot /></div>',
 })
 
 const DialogStub = defineComponent({
@@ -186,6 +190,13 @@ const ConceptTableStub = defineComponent({
   template: '<div class="concept-table-stub" />',
 })
 
+const RepositoryPickerStub = defineComponent({
+  name: 'ConceptSetSelectionDialog',
+  props: { modelValue: Boolean, repositoryOnly: Boolean },
+  emits: ['update:modelValue', 'concept-set-selected'],
+  template: '<div class="repository-picker-stub" />',
+})
+
 interface MountOptions {
   conceptSet?: ConceptSet | null
   currentSet?: ConceptSet | null
@@ -215,8 +226,7 @@ function mountEditor(options: MountOptions = {}) {
       plugins: [vuetify],
       provide: { sourceKey: { value: options.sourceKey ?? 'SRC1' } },
       stubs: {
-        VNavigationDrawer: DrawerStub,
-        Teleport: { template: '<div><slot /></div>' },
+        AtlasSideSheet: SideSheetStub,
         AtlasMenu: { template: '<div><slot name="activator" :props="{}" /><slot /></div>' },
         AtlasDialog: DialogStub,
         ConceptSetJsonDialog: JsonDialogStub,
@@ -232,6 +242,7 @@ function mountEditor(options: MountOptions = {}) {
         CompareTab: true,
         ConceptFacetFilters: FacetFiltersStub,
         ConceptTable: ConceptTableStub,
+        ConceptSetSelectionDialog: RepositoryPickerStub,
         TagSelectionDialog: true,
         EntityAccessDialog: true,
         EntityAccessLockButton: true,
@@ -303,11 +314,6 @@ describe('ConceptSetEditor behaviors', () => {
     vi.mocked(getVersions).mockResolvedValue([])
     setActivePinia(createPinia())
     setUser()
-    document.body.style.overflow = ''
-  })
-
-  afterEach(() => {
-    document.body.style.overflow = ''
   })
 
   describe('initial state', () => {
@@ -378,70 +384,28 @@ describe('ConceptSetEditor behaviors', () => {
   })
 
   describe('drawer presentation', () => {
-    it('renders a temporary right-hand drawer at 95% of the window, never narrower than 500px', async () => {
-      const original = window.innerWidth
-      try {
-        Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1000 })
-        const w = mountEditor()
-        await nextTick()
-        const drawer = w.getComponent(DrawerStub)
-        expect(drawer.props('location')).toBe('right')
-        expect(drawer.props('temporary')).toBe(true)
-        expect(drawer.props('modelValue')).toBe(true)
-        expect(drawer.props('width')).toBe(950)
-
-        Object.defineProperty(window, 'innerWidth', { configurable: true, value: 400 })
-        window.dispatchEvent(new Event('resize'))
-        await flushPromises()
-        expect(w.getComponent(DrawerStub).props('width')).toBe(500)
-      } finally {
-        Object.defineProperty(window, 'innerWidth', { configurable: true, value: original })
-      }
+    it('renders in an open, labelled side sheet', () => {
+      const sheet = mountEditor().getComponent(SideSheetStub)
+      expect(sheet.props('modelValue')).toBe(true)
+      expect(sheet.props('ariaLabel')).toBeTruthy()
     })
-
-    it('stops tracking window resizes once unmounted', () => {
-      const removeSpy = vi.spyOn(window, 'removeEventListener')
-      const w = mountEditor()
-      w.unmount()
-      expect(removeSpy).toHaveBeenCalledWith('resize', expect.any(Function))
-      removeSpy.mockRestore()
-    })
-
-    it('stacks above the cohort builder when embedded', () => {
-      const w = mountEditor({ embedded: true })
-      expect(w.getComponent(DrawerStub).attributes('style')).toContain('z-index: 2100')
-      expect(mountEditor().getComponent(DrawerStub).attributes('style')).toBeUndefined()
-    })
-
-    it('locks body scroll while open and releases it on close and on unmount', async () => {
-      const w = mountEditor()
-      expect(document.body.style.overflow).toBe('hidden')
-      await w.setProps({ modelValue: false })
-      expect(document.body.style.overflow).toBe('')
-      await w.setProps({ modelValue: true })
-      expect(document.body.style.overflow).toBe('hidden')
-      w.unmount()
-      expect(document.body.style.overflow).toBe('')
-    })
-
     it('forwards the drawer opening itself and treats a drawer dismissal as Close', async () => {
       const w = mountEditor()
-      await w.getComponent(DrawerStub).vm.$emit('update:modelValue', true)
+      await w.getComponent(SideSheetStub).vm.$emit('update:modelValue', true)
       expect(w.emitted('update:modelValue')).toEqual([[true]])
 
       await typeTitle(w, 'Renamed')
-      await w.getComponent(DrawerStub).vm.$emit('update:modelValue', false)
+      await w.getComponent(SideSheetStub).vm.$emit('update:modelValue', false)
       expect(dialog(w, 'Unsaved changes').exists()).toBe(true)
       expect(w.emitted('update:modelValue')).toEqual([[true]])
     })
   })
 
   describe('page presentation', () => {
-    it('renders inline instead of as a drawer and leaves body scroll alone', () => {
+    it('renders inline instead of in a side sheet', () => {
       const w = mountEditor({ presentation: 'page' })
-      expect(w.findComponent(DrawerStub).exists()).toBe(false)
+      expect(w.findComponent(SideSheetStub).exists()).toBe(false)
       expect(w.find('.cs-editor__page').exists()).toBe(true)
-      expect(document.body.style.overflow).toBe('')
     })
 
     it('stays open after saving', async () => {
@@ -1627,6 +1591,102 @@ describe('ConceptSetEditor behaviors', () => {
       w.getComponent(OptimizeDialogStub).vm.$emit('create', { name: 'Optimized', items: [] })
       await flushPromises()
       await expectCloseClosesImmediately(w)
+    })
+  })
+
+  describe('tools menu: import from repository', () => {
+    const CONFIRM = 'Import concept set from repository?'
+    const importItem = 'cs-editor-import-repository'
+    const repoSet = (items: ConceptSetItem[]): ConceptSet => ({ id: 77, name: 'Repo set', items })
+
+    async function pick(w: Editor, fetched: ConceptSet | null) {
+      vi.mocked(getConceptSetById).mockResolvedValue(fetched)
+      await menuItem(w, importItem).trigger('click')
+      const picker = w.getComponent(RepositoryPickerStub)
+      expect(picker.props('repositoryOnly')).toBe(true)
+      picker.vm.$emit('concept-set-selected', { id: 77, name: 'Repo set' })
+      await flushPromises()
+    }
+
+    it('is offered only in embedded editors', () => {
+      expect(mountEditor({ embedded: true }).find(`[data-testid="${importItem}"]`).exists()).toBe(true)
+      expect(mountEditor({ embedded: false }).find(`[data-testid="${importItem}"]`).exists()).toBe(false)
+    })
+
+    it('fetches through the service without replacing the store current set', async () => {
+      const w = await mountReady({ embedded: true })
+      const fetchOne = vi.spyOn(useConceptSetsStore(), 'fetchOne')
+      await pick(w, repoSet([item(1, 'a')]))
+      expect(getConceptSetById).toHaveBeenCalledWith(77)
+      expect(fetchOne).not.toHaveBeenCalled()
+      expect(useConceptSetsStore().currentSet?.id).toBe(123)
+    })
+
+    it('overwrites the items but keeps the id and name', async () => {
+      const w = await mountReady({ embedded: true })
+      await pick(w, repoSet([item(1, 'a'), item(2, 'b')]))
+      expect(dialog(w, CONFIRM).exists()).toBe(true)
+
+      await buttonIn(w, CONFIRM, 'Overwrite').trigger('click')
+      const set = useConceptSetsStore().currentSet!
+      expect(set.items.map(i => i.conceptId)).toEqual([1, 2])
+      expect(set.id).toBe(123)
+      expect(set.name).toBe('Heart failure')
+      expect(dialog(w, CONFIRM).exists()).toBe(false)
+      expect(activeTab(w)).toBe('selected')
+
+      ;(w.vm as unknown as { onApply: () => void }).onApply()
+      expect(w.emitted('apply')?.[0][0]).toMatchObject({ id: 123, name: 'Heart failure', items: set.items })
+    })
+
+    it('appends, skipping only exact concept-and-flag repeats', async () => {
+      const w = await mountReady({ embedded: true })
+      await pick(w, repoSet([
+        item(316139, 'Heart failure', { includeDescendants: true }),
+        item(316139, 'Heart failure', { isExcluded: true }),
+        item(5, 'e'),
+      ]))
+      await buttonIn(w, CONFIRM, 'Append').trigger('click')
+      const items = useConceptSetsStore().currentSet!.items
+      expect(items).toHaveLength(3)
+      expect(items.map(i => [i.conceptId, !!i.isExcluded])).toEqual([
+        [316139, false],
+        [316139, true],
+        [5, false],
+      ])
+    })
+
+    it('cancel leaves the set unchanged and clean', async () => {
+      const w = await mountReady({ embedded: true })
+      await pick(w, repoSet([item(1, 'a')]))
+      await buttonIn(w, CONFIRM, 'Cancel').trigger('click')
+      expect(useConceptSetsStore().currentSet!.items.map(i => i.conceptId)).toEqual([316139])
+      await expectCloseClosesImmediately(w)
+    })
+
+    it('overwrites an empty set without asking', async () => {
+      const w = await mountReady({ embedded: true, conceptSet: existingSet({ items: [] }) })
+      await pick(w, repoSet([item(1, 'a')]))
+      expect(dialog(w, CONFIRM).exists()).toBe(false)
+      expect(useConceptSetsStore().currentSet!.items.map(i => i.conceptId)).toEqual([1])
+      await expectCloseAsksToConfirm(w)
+    })
+
+    it('reports a failed load and changes nothing', async () => {
+      const w = await mountReady({ embedded: true })
+      const danger = vi.spyOn(useNotifications(), 'danger')
+      await pick(w, null)
+      expect(danger).toHaveBeenCalledWith('Could not load concept set "Repo set" from the repository')
+      expect(dialog(w, CONFIRM).exists()).toBe(false)
+      expect(useConceptSetsStore().currentSet!.items.map(i => i.conceptId)).toEqual([316139])
+    })
+
+    it('warns about imported concepts missing from the vocabulary', async () => {
+      const w = await mountReady({ embedded: true })
+      const warning = vi.spyOn(useNotifications(), 'warning')
+      await pick(w, repoSet([item(9, 'x', { missingFromVocabulary: true })]))
+      await buttonIn(w, CONFIRM, 'Overwrite').trigger('click')
+      expect(warning).toHaveBeenCalledTimes(1)
     })
   })
 })

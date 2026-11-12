@@ -1,12 +1,9 @@
 <template>
-  <v-navigation-drawer
+  <AtlasSideSheet
     v-if="draftRule"
     :model-value="modelValue"
     class="ir-stratify-inspector"
-    location="right"
-    temporary
-    :width="drawerWidth"
-    :scrim="!conceptSetsStore.editorOpen"
+    :aria-label="t('ir.editor.stratifyCriteria').value"
     @update:model-value="onDrawerModelValue"
   >
     <div class="ir-stratify-inspector__shell">
@@ -85,15 +82,14 @@
         </AtlasButton>
       </template>
     </AtlasDialog>
-  </v-navigation-drawer>
+  </AtlasSideSheet>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import { AtlasButton, AtlasDialog } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasSideSheet } from '@/components/ui'
 import IncidenceRateStratifyRuleEditor from '@/components/incidence-rate/IncidenceRateStratifyRuleEditor.vue'
-import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { StratifyRule } from '@/models/incidence-rate.types'
 import type { ConceptSet } from '@/models/circe-types'
 
@@ -108,9 +104,7 @@ const emit = defineEmits<{
   'add-concept-set': [cs: ConceptSet]
 }>()
 const { t } = useI18n()
-const conceptSetsStore = useConceptSetsStore()
 
-const drawerWidth = ref<number>(0)
 const originalRule = props.rule ? cloneRule(props.rule) : null
 const draftRule = ref<StratifyRule | null>(originalRule ? cloneRule(originalRule) : null)
 const discardConfirmationOpen = ref(false)
@@ -150,24 +144,9 @@ function onDrawerModelValue(value: boolean) {
   if (!value) requestCancel()
 }
 
-function updateDrawerWidth() {
-  drawerWidth.value = Math.max(500, Math.floor(window.innerWidth * 0.95))
-}
-
-onMounted(() => {
-  updateDrawerWidth()
-  window.addEventListener('resize', updateDrawerWidth)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', updateDrawerWidth)
-})
 </script>
 
 <style scoped>
-.ir-stratify-inspector {
-  z-index: 2200;
-}
 
 .ir-stratify-inspector__shell {
   display: flex;

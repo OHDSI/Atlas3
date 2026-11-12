@@ -262,7 +262,6 @@ function formatCount(count: number | undefined): string {
           variant="outlined"
           hide-details
           :loading="loadingRecordCounts"
-          :menu-props="{ zIndex: 2300 }"
           data-testid="related-record-count-source"
           @update:model-value="(value: unknown) => setRecordCountSource(String(value))"
         />
