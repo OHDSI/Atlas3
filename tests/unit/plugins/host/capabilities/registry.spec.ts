@@ -40,3 +40,11 @@ describe('capability registry', () => {
     expect(viewEnum).not.toContain('login')
   })
 })
+
+describe('set_entry_event schema', () => {
+  it('offers firstOccurrence so the agent can build a new-user entry', () => {
+    const cap = CAPABILITIES.find(c => c.name === 'set_entry_event')
+    const props = (cap?.schema as { properties: Record<string, { type: string }> }).properties
+    expect(props.firstOccurrence?.type).toBe('boolean')
+  })
+})

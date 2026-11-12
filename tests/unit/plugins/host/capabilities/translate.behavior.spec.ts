@@ -145,6 +145,19 @@ describe('criterion events', () => {
   it('set_entry_event replaces the existing entry event', () => {
     expect(t('set_entry_event', { conceptId: 1, conceptName: 'A' })).toMatchObject({ kind: 'addEntryEvent', replace: true })
   })
+
+  // A new-user design needs the person's first exposure ever. Without the flag,
+  // someone who started the drug years ago enters at a later exposure once they
+  // have enough prior observation, and the cohort silently includes prevalent users.
+  it('set_entry_event carries firstOccurrence onto the entry event', () => {
+    const p = t('set_entry_event', { conceptId: 1, conceptName: 'A', domain: 'Drug', firstOccurrence: true })
+    expect(p?.event.firstOccurrence).toBe(true)
+  })
+
+  it('set_entry_event leaves firstOccurrence unset when the agent does not ask for it', () => {
+    const p = t('set_entry_event', { conceptId: 1, conceptName: 'A', domain: 'Drug' })
+    expect(p?.event.firstOccurrence).toBeUndefined()
+  })
 })
 
 describe('add_criteria', () => {

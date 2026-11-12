@@ -76,6 +76,9 @@ export function translateAgentEvent(
   if (conceptSet?.id !== undefined) {
     inner.CodesetId = conceptSet.id
   }
+  if (event.firstOccurrence) {
+    inner.First = true
+  }
 
   return {
     criteria: { [criteriaType]: inner } as Criteria,
