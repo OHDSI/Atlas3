@@ -140,7 +140,7 @@
                 @click="emit('back-to-current')"
               />
 
-              <AtlasMenu>
+              <AtlasMenu :z-index="2300">
                 <template #activator="{ props: menuProps }">
                   <AtlasIconButton
                     v-bind="{ ...menuProps, ariaLabel: t('common.export').value }"
