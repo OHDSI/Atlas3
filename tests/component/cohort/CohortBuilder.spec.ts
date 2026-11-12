@@ -44,6 +44,7 @@ const {
 // Webapi mocks: most calls are unused in these tests, but a few flows
 // (load existing cohort, save) need predictable return values.
 vi.mock('@/services/cohort-definition.service', () => ({
+  availableCohortName: vi.fn(async (name: string) => name),
   fetchCDMSources: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getCohortDefinition: vi.fn().mockResolvedValue({
@@ -2035,12 +2036,12 @@ describe('CohortBuilder', () => {
     expect(setup.cohortName).toBe('')
   })
 
-  it('handleSave returns an empty object when canSave is false (so the bridge resolves)', async () => {
+  it('handleSave explains why when canSave is false (so the bridge resolves)', async () => {
     const wrapper = createWrapper()
     await wrapper.vm.$nextTick()
     const setup = getSetup(wrapper)
     const result = await setup.handleSave()
-    expect(result).toEqual({})
+    expect(result).toEqual({ error: expect.stringMatching(/\S/) })
   })
 
   // ---------------------------------------------------------------------------
@@ -2061,7 +2062,7 @@ describe('CohortBuilder', () => {
     })
 
     const result = await setup.handleSave()
-    expect(result).toEqual({})
+    expect(result).toEqual({ error: setup.errorMessage })
     expect(setup.errorMessage).toBe('Failed to save cohort to server')
     expect(setup.showError).toBe(true)
   })
@@ -2081,7 +2082,7 @@ describe('CohortBuilder', () => {
 
     const result = await setup.handleSave()
 
-    expect(result).toEqual({})
+    expect(result).toEqual({ error: setup.errorMessage })
     // Raw transport text must not leak into the banner.
     expect(setup.errorMessage).toBe('Failed to save cohort to server')
     expect(setup.errorMessage).not.toContain('HTTP 500')
@@ -2099,7 +2100,7 @@ describe('CohortBuilder', () => {
     vi.mocked(webapi.saveCohortDefinition).mockRejectedValueOnce(new Error('server boom'))
 
     const result = await setup.handleSave()
-    expect(result).toEqual({})
+    expect(result).toEqual({ error: setup.errorMessage })
     expect(setup.errorMessage).toBe('server boom')
     expect(setup.showError).toBe(true)
   })
@@ -2115,7 +2116,7 @@ describe('CohortBuilder', () => {
     vi.mocked(webapi.saveCohortDefinition).mockRejectedValueOnce('plain string failure')
 
     const result = await setup.handleSave()
-    expect(result).toEqual({})
+    expect(result).toEqual({ error: setup.errorMessage })
     expect(setup.errorMessage).toBe('Failed to save cohort')
     expect(setup.showError).toBe(true)
   })

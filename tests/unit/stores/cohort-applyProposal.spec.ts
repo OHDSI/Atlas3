@@ -162,6 +162,34 @@ describe('useCohortStore.applyProposal', () => {
     })
   })
 
+  it('setCohortExit CONTINUOUS_DRUG without a drug ends on the entry drug', () => {
+    const store = openCohort({
+      ConceptSets: [{ id: 3, name: 'lisinopril', expression: { items: [] } }],
+      PrimaryCriteria: { CriteriaList: [{ DrugExposure: { CodesetId: 3 } }] },
+    })
+
+    store.applyProposal({
+      kind: 'setCohortExit',
+      exitCriteria: { strategy: 'CONTINUOUS_DRUG', persistenceWindow: 30 } as never,
+    })
+
+    expect(store.currentCohort!.expression?.EndStrategy).toEqual({
+      CustomEra: { DrugCodesetId: 3, GapDays: 30, Offset: 0 },
+    })
+  })
+
+  it('setCohortExit CONTINUOUS_DRUG refuses when there is no drug to follow', () => {
+    const store = openCohort({ PrimaryCriteria: { CriteriaList: [{ ConditionOccurrence: { CodesetId: 1 } }] } })
+
+    expect(
+      store.applyProposal({
+        kind: 'setCohortExit',
+        exitCriteria: { strategy: 'CONTINUOUS_DRUG', persistenceWindow: 30 } as never,
+      })
+    ).toEqual({ applied: false, reason: 'untranslatable-criteria' })
+    expect(store.currentCohort!.expression?.EndStrategy).toBeUndefined()
+  })
+
   it('addCensoringCriterion appends a Death wrapper to expression.CensoringCriteria', () => {
     const store = openCohort({})
 

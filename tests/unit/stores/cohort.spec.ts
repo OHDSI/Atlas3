@@ -14,10 +14,11 @@ vi.mock('@/utils/logger', () => ({
 import { getVersion as mockGetVersion } from '@/services/cohort-definition-versions.service'
 
 let useCohortStore: typeof import('@/stores/cohort').useCohortStore
+let SAVE_REQUEST_TIMEOUT_MS: number
 
 beforeAll(async () => {
   vi.resetModules()
-  ;({ useCohortStore } = await import('@/stores/cohort'))
+  ;({ useCohortStore, SAVE_REQUEST_TIMEOUT_MS } = await import('@/stores/cohort'))
 })
 
 describe('Cohort Store', () => {
@@ -830,12 +831,12 @@ describe('Cohort Store', () => {
       expect(store.saveOptions).toEqual({ name: 'N', description: 'D' })
     })
 
-    it('requestSave falls back to a timedOut result after 8s if nothing answers', async () => {
+    it('requestSave falls back to a timedOut result if nothing answers', async () => {
       vi.useFakeTimers()
       try {
         const store = useCohortStore()
         const p = store.requestSave()
-        vi.advanceTimersByTime(8000)
+        vi.advanceTimersByTime(SAVE_REQUEST_TIMEOUT_MS)
         await expect(p).resolves.toEqual({ timedOut: true })
       } finally {
         vi.useRealTimers()
@@ -864,16 +865,17 @@ describe('Cohort Store', () => {
       vi.useFakeTimers()
       try {
         const store = useCohortStore()
+        const half = SAVE_REQUEST_TIMEOUT_MS / 2
         const pA = store.requestSave()
-        vi.advanceTimersByTime(4000)
+        vi.advanceTimersByTime(half)
         const pB = store.requestSave()
 
-        // A waits 8s from its own start, not B's - a WebMCP tool call awaiting
+        // A times out from its own start, not B's - a WebMCP tool call awaiting
         // it must never hang forever (see pythiaBridge.ts).
-        vi.advanceTimersByTime(4000)
+        vi.advanceTimersByTime(half)
         await expect(pA).resolves.toEqual({ timedOut: true })
 
-        vi.advanceTimersByTime(4000)
+        vi.advanceTimersByTime(half)
         await expect(pB).resolves.toEqual({ timedOut: true })
       } finally {
         vi.useRealTimers()
@@ -918,7 +920,7 @@ describe('Cohort Store', () => {
       store.previewVersion = { version: 3 } as never
 
       const pending = store.savePreviewAsCurrent()
-      await vi.advanceTimersByTimeAsync(8000)
+      await vi.advanceTimersByTimeAsync(SAVE_REQUEST_TIMEOUT_MS)
 
       expect(await pending).toBe(false)
       expect(store.previewVersion).not.toBeNull()
