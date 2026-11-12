@@ -56,9 +56,9 @@ function mountEditor(
           template:
             '<button data-testid="criteria-group-mutate" @click="group.Type = \'MUTATED\'; group.CriteriaList = [{ Type: \'ATOMIC\', ConceptSets: [], Codesets: [], ExitCriteria: null, InclusionRules: [] }]">mutate</button>',
         },
-        VNavigationDrawer: {
-          name: 'VNavigationDrawer',
-          props: ['modelValue', 'location', 'temporary', 'width', 'scrim'],
+        AtlasSideSheet: {
+          name: 'AtlasSideSheet',
+          props: ['modelValue', 'ariaLabel'],
           template: '<div><slot /></div>',
         },
         AtlasDialog: {

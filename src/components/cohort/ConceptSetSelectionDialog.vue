@@ -18,7 +18,11 @@
             <span class="cs-picker__accent-rule" />
           </div>
           <h2 class="cs-picker__title">
-            {{ t('components.conceptSetBuilder.selectConceptSet').value }}
+            {{
+              repositoryOnly
+                ? t('components.conceptSetBuilder.importFromRepository').value
+                : t('components.conceptSetBuilder.selectConceptSet').value
+            }}
           </h2>
         </div>
         <AtlasIconButton
@@ -32,7 +36,10 @@
 
       <div class="cs-picker__body">
         <!-- Create a new empty concept set in this definition (#111). -->
-        <div class="cs-picker__create-row">
+        <div
+          v-if="!repositoryOnly"
+          class="cs-picker__create-row"
+        >
           <AtlasButton
             icon="mdi-plus"
             variant="secondary"
@@ -169,14 +176,14 @@
             }}
           </p>
           <AtlasButton
-            v-if="!searchTerm"
+            v-if="!searchTerm && !repositoryOnly"
             icon="mdi-plus"
             @click="onCreateNew"
           >
             {{ t('components.conceptSetBuilder.newConceptSet').value }}
           </AtlasButton>
           <AtlasButton
-            v-else
+            v-else-if="searchTerm"
             size="sm"
             variant="secondary"
             icon="mdi-close"
@@ -210,10 +217,13 @@ interface Props {
    * reuses it in-place; the repository table below imports a fresh copy instead.
    */
   localConceptSets?: ConceptSetReference[]
+  /** Show only the repository table (no "new" button or in-definition sets). */
+  repositoryOnly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   localConceptSets: () => [],
+  repositoryOnly: false,
 })
 const { t, tv } = useI18n()
 
@@ -277,7 +287,9 @@ watch(
 // not-yet-filled criteria with a placeholder { id: 0|null, name: 'Select…' }
 // concept set; those would otherwise surface here as bogus "Select concept set…"
 // rows that mint an empty set when clicked.
-const selectableLocalSets = computed(() => props.localConceptSets.filter(hasNumericConceptSetId))
+const selectableLocalSets = computed(() =>
+  props.repositoryOnly ? [] : props.localConceptSets.filter(hasNumericConceptSetId)
+)
 
 function onLocalSelect(ref: ConceptSetReference) {
   emit('local-concept-set-selected', ref)

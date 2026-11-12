@@ -45,10 +45,9 @@ describe('ConceptSetEditor tags', () => {
     const wrapper = mount(ConceptSetEditor, {
       global: {
         plugins: [vuetify, createPinia()],
-        // Stub v-navigation-drawer to avoid Vuetify layout injection requirement
+        // Render the side sheet inline instead of in Vuetify's overlay container
         stubs: {
-          Teleport: true,
-          VNavigationDrawer: {
+          AtlasSideSheet: {
             template: '<div><slot /></div>',
           },
         },

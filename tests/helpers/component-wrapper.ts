@@ -20,6 +20,22 @@ export const InlineAtlasMenuStub = {
   template: '<div class="menu-stub"><slot name="activator" :props="{}" /><slot /></div>',
 }
 
+// Shared inline side-sheet stub: renders the panel in place (no overlay
+// teleport) only while open, mirroring AtlasSideSheet's lazy content.
+export const InlineAtlasSideSheetStub = {
+  name: 'AtlasSideSheet',
+  props: {
+    modelValue: { type: Boolean, default: false },
+    width: { type: [Number, String], default: undefined },
+    persistent: { type: Boolean, default: false },
+    scrim: { type: Boolean, default: true },
+    ariaLabel: { type: String, default: undefined },
+    contentClass: { type: String, default: undefined },
+  },
+  emits: ['update:modelValue'],
+  template: '<div v-if="modelValue" class="atlas-side-sheet-stub"><slot /></div>',
+}
+
 /**
  * Options for mounting components in tests
  */

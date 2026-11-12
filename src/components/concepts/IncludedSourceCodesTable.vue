@@ -46,7 +46,6 @@
           variant="outlined"
           hide-details
           :loading="loadingRecordCounts"
-          :menu-props="{ zIndex: 2300 }"
           data-testid="source-codes-record-count-source"
           @update:model-value="(v: unknown) => setRecordCountSource(String(v))"
         />

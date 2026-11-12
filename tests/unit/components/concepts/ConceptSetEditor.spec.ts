@@ -140,14 +140,11 @@ function mountComponent(props = {}) {
         TagSelectionDialog: TagSelectionDialogStub,
         ConceptSearchInline: true,
         ConceptSetTable: true,
-        VNavigationDrawer: {
-          template: '<div class="v-navigation-drawer"><slot /></div>',
+        // AtlasSideSheet teleports into Vuetify's overlay container; render
+        // it inline so find / findComponent reach the editor content.
+        AtlasSideSheet: {
+          template: '<div class="atlas-side-sheet-stub"><slot /></div>',
         },
-        // Editor wraps the drawer in <Teleport to="body"> so the
-        // overlay scrim can cover the viewport. Stub Teleport in
-        // tests so its content stays inside the wrapper for
-        // findComponent / find calls.
-        Teleport: { template: '<div><slot /></div>' },
       },
     },
   })
@@ -204,13 +201,9 @@ describe('ConceptSetEditor', () => {
     expect((wrapper.vm as unknown as { hasUnsavedChanges: boolean }).hasUnsavedChanges).toBe(true)
   })
 
-  it('should render as navigation drawer', () => {
+  it('should render in a side sheet', () => {
     const wrapper = mountComponent()
-    // Drawer is teleported to body for the overlay scrim, but the
-    // test stubs Teleport so the drawer renders inline and we can
-    // assert against the stub's class.
-    const drawer = wrapper.find('.v-navigation-drawer')
-    expect(drawer.exists()).toBe(true)
+    expect(wrapper.find('.atlas-side-sheet-stub').exists()).toBe(true)
   })
 
   it('opens the tag dialog from the drawer action', async () => {

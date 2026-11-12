@@ -1,438 +1,437 @@
 <template>
-  <!-- Teleport to body so the drawer + scrim render outside the
-       page-shell layout. Inline rendering causes the scrim to be
-       constrained to the table region instead of covering the
-       whole viewport. -->
-  <Teleport
-    to="body"
-    :disabled="isPagePresentation"
+  <component
+    :is="isPagePresentation ? 'div' : AtlasSideSheet"
+    v-bind="drawerProps"
+    :class="{ 'cs-editor__page': isPagePresentation }"
+    @update:model-value="onDrawerModelValueChange"
   >
-    <component
-      :is="isPagePresentation ? 'div' : VNavigationDrawer"
-      v-bind="drawerProps"
-      :class="{ 'cs-editor__page': isPagePresentation }"
-      @update:model-value="onDrawerModelValueChange"
-    >
-      <div class="cs-editor__shell">
-        <aside
-          class="cs-editor__rail"
-          aria-hidden="true"
-        >
-          <div class="cs-editor__rail-text">
-            {{ drawerRailLabel }}
-          </div>
-        </aside>
+    <div class="cs-editor__shell">
+      <aside
+        class="cs-editor__rail"
+        aria-hidden="true"
+      >
+        <div class="cs-editor__rail-text">
+          {{ drawerRailLabel }}
+        </div>
+      </aside>
 
-        <div class="cs-editor h-100 d-flex flex-column cs-editor__content">
-          <!-- Modern editor header: eyebrow + accent rule + inline-edit
-             title (replaces the legacy v-card-title with grey border).
-             Actions are pushed to a single action row aligned with the
-             title block. -->
-          <header class="cs-editor__header">
-            <div class="cs-editor__title-block">
-              <div class="cs-editor__eyebrow-row">
-                <span class="text-eyebrow">{{ eyebrowText }}</span>
-                <span class="cs-editor__accent-rule" />
-              </div>
-              <v-form
-                v-model="formValid"
-                @submit.prevent
-              >
-                <input
-                  :value="form.name"
-                  type="text"
-                  class="cs-editor__title-input"
-                  :placeholder="
-                    t('cs.manager.untitledPlaceholder').value
-                  "
-                  :disabled="loading || isPreviewing"
-                  :aria-label="t('columns.name').value"
-                  @input="onTitleInput"
-                >
-                <p
-                  v-if="nameError"
-                  class="cs-editor__title-error"
-                >
-                  {{ nameError }}
-                </p>
-              </v-form>
-              <AssetAuthorship
-                v-if="authorship"
-                v-bind="authorship"
-                class="cs-editor__authorship"
-              />
+      <div class="cs-editor h-100 d-flex flex-column cs-editor__content">
+        <!-- Modern editor header: eyebrow + accent rule + inline-edit
+           title (replaces the legacy v-card-title with grey border).
+           Actions are pushed to a single action row aligned with the
+           title block. -->
+        <header class="cs-editor__header">
+          <div class="cs-editor__title-block">
+            <div class="cs-editor__eyebrow-row">
+              <span class="text-eyebrow">{{ eyebrowText }}</span>
+              <span class="cs-editor__accent-rule" />
             </div>
-
-            <div class="cs-editor__actions">
-              <AtlasTooltip
-                v-if="!embedded"
-                :text="t('common.tags').value"
-                location="bottom"
+            <v-form
+              v-model="formValid"
+              @submit.prevent
+            >
+              <input
+                :value="form.name"
+                type="text"
+                class="cs-editor__title-input"
+                :placeholder="
+                  t('cs.manager.untitledPlaceholder').value
+                "
+                :disabled="loading || isPreviewing"
+                :aria-label="t('columns.name').value"
+                @input="onTitleInput"
               >
-                <template #activator="{ props: tooltipProps }">
-                  <AtlasBadge
-                    v-bind="tooltipProps"
-                    :content="selectedTags.length"
-                    :model-value="selectedTags.length > 0"
-                    color="primary"
-                    offset-x="6"
-                    offset-y="6"
-                  >
-                    <AtlasIconButton
-                      icon="mdi-tag-multiple"
-                      data-testid="cs-editor-tags-btn"
-                      v-bind="{ ariaLabel: t('common.tags').value }"
-                      variant="text"
-                      size="sm"
-                      :disabled="loading || !!store.previewVersion"
-                      @click="showTagsDialog = true"
-                    />
-                  </AtlasBadge>
-                </template>
-              </AtlasTooltip>
-
-              <AtlasTooltip
-                v-if="!embedded && isEditMode && props.conceptSet?.id"
-                :text="t('components.access.configureAccess').value"
-                location="bottom"
+              <p
+                v-if="nameError"
+                class="cs-editor__title-error"
               >
-                <template #activator="{ props: tooltipProps }">
-                  <EntityAccessLockButton
-                    v-bind="{ ...tooltipProps, ariaLabel: t('components.access.configureAccess').value }"
-                    size="sm"
-                    data-testid="cs-editor-access-btn"
-                    @click="showAccessDialog = true"
-                  />
-                </template>
-              </AtlasTooltip>
+                {{ nameError }}
+              </p>
+            </v-form>
+            <AssetAuthorship
+              v-if="authorship"
+              v-bind="authorship"
+              class="cs-editor__authorship"
+            />
+          </div>
 
-              <AtlasTooltip
-                v-if="!embedded && isEditMode && props.conceptSet?.id"
-                :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions').value"
-                location="bottom"
-              >
-                <template #activator="{ props: tooltipProps }">
-                  <AtlasBadge
-                    v-bind="tooltipProps"
-                    :content="versionCount"
-                    :model-value="versionCount > 0"
-                    color="primary"
-                    offset-x="6"
-                    offset-y="6"
-                  >
-                    <AtlasIconButton
-                      icon="mdi-history"
-                      v-bind="{ ariaLabel: 'Version history' }"
-                      variant="text"
-                      size="sm"
-                      @click="showVersionsDialog = true"
-                    />
-                  </AtlasBadge>
-                </template>
-              </AtlasTooltip>
-
-              <AtlasIconButton
-                v-if="isPreviewing"
-                icon="mdi-undo"
-                v-bind="{ ariaLabel: t('common.backToCurrent').value }"
-                variant="text"
-                size="sm"
-                @click="emit('back-to-current')"
-              />
-
-              <AtlasMenu>
-                <template #activator="{ props: menuProps }">
+          <div class="cs-editor__actions">
+            <AtlasTooltip
+              v-if="!embedded"
+              :text="t('common.tags').value"
+              location="bottom"
+            >
+              <template #activator="{ props: tooltipProps }">
+                <AtlasBadge
+                  v-bind="tooltipProps"
+                  :content="selectedTags.length"
+                  :model-value="selectedTags.length > 0"
+                  color="primary"
+                  offset-x="6"
+                  offset-y="6"
+                >
                   <AtlasIconButton
-                    v-bind="{ ...menuProps, ariaLabel: t('common.export').value }"
-                    icon="mdi-tools"
+                    icon="mdi-tag-multiple"
+                    data-testid="cs-editor-tags-btn"
+                    v-bind="{ ariaLabel: t('common.tags').value }"
                     variant="text"
                     size="sm"
-                    data-testid="cs-editor-actions-menu"
+                    :disabled="loading || !!store.previewVersion"
+                    @click="showTagsDialog = true"
+                  />
+                </AtlasBadge>
+              </template>
+            </AtlasTooltip>
+
+            <AtlasTooltip
+              v-if="!embedded && isEditMode && props.conceptSet?.id"
+              :text="t('components.access.configureAccess').value"
+              location="bottom"
+            >
+              <template #activator="{ props: tooltipProps }">
+                <EntityAccessLockButton
+                  v-bind="{ ...tooltipProps, ariaLabel: t('components.access.configureAccess').value }"
+                  size="sm"
+                  data-testid="cs-editor-access-btn"
+                  @click="showAccessDialog = true"
+                />
+              </template>
+            </AtlasTooltip>
+
+            <AtlasTooltip
+              v-if="!embedded && isEditMode && props.conceptSet?.id"
+              :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions').value"
+              location="bottom"
+            >
+              <template #activator="{ props: tooltipProps }">
+                <AtlasBadge
+                  v-bind="tooltipProps"
+                  :content="versionCount"
+                  :model-value="versionCount > 0"
+                  color="primary"
+                  offset-x="6"
+                  offset-y="6"
+                >
+                  <AtlasIconButton
+                    icon="mdi-history"
+                    v-bind="{ ariaLabel: 'Version history' }"
+                    variant="text"
+                    size="sm"
+                    @click="showVersionsDialog = true"
+                  />
+                </AtlasBadge>
+              </template>
+            </AtlasTooltip>
+
+            <AtlasIconButton
+              v-if="isPreviewing"
+              icon="mdi-undo"
+              v-bind="{ ariaLabel: t('common.backToCurrent').value }"
+              variant="text"
+              size="sm"
+              @click="emit('back-to-current')"
+            />
+
+            <AtlasMenu>
+              <template #activator="{ props: menuProps }">
+                <AtlasIconButton
+                  v-bind="{ ...menuProps, ariaLabel: t('common.export').value }"
+                  icon="mdi-tools"
+                  variant="text"
+                  size="sm"
+                  data-testid="cs-editor-actions-menu"
+                />
+              </template>
+              <AtlasList
+                density="compact"
+                min-width="250"
+              >
+                <AtlasListItem
+                  data-testid="cs-editor-download-json"
+                  prepend-icon="mdi-download"
+                  :title="t('cohortDefinitions.cohortDefinitionManager.panels.json').value"
+                  :subtitle="t('common.downloadFile').value"
+                  @click="downloadExpressionJson"
+                />
+                <AtlasListItem
+                  data-testid="cs-editor-copy-json"
+                  prepend-icon="mdi-clipboard-text-outline"
+                  :title="t('common.copyToClipboard').value"
+                  :subtitle="t('cohortDefinitions.cohortDefinitionManager.panels.json').value"
+                  @click="copyExpressionJson"
+                />
+                <AtlasListItem
+                  data-testid="cs-editor-view-json"
+                  prepend-icon="mdi-code-json"
+                  :title="t('components.cohortBuilder.jsonViewEdit').value"
+                  :subtitle="t('cs.manager.importJson').value"
+                  @click="showExpressionJsonDialog = true"
+                />
+                <template v-if="!isPreviewing">
+                  <AtlasListItem
+                    data-testid="cs-editor-paste-ids"
+                    prepend-icon="mdi-clipboard-text-outline"
+                    :title="t('cs.manager.pasteIds').value"
+                    :subtitle="t('cs.manager.pasteIdsMenuSubtitle').value"
+                    @click="showPasteDialog = true"
+                  />
+                  <AtlasListItem
+                    data-testid="cs-editor-import-source-codes"
+                    prepend-icon="mdi-barcode-scan"
+                    :title="t('cs.manager.importSourceCodesButton').value"
+                    :subtitle="t('cs.manager.importSourceCodesMenuSubtitle').value"
+                    @click="showSourceCodeDialog = true"
+                  />
+                  <AtlasListItem
+                    data-testid="cs-editor-import-json"
+                    prepend-icon="mdi-code-json"
+                    :title="t('cs.manager.importJson').value"
+                    :subtitle="t('cs.manager.importJsonMenuSubtitle').value"
+                    @click="showJsonDialog = true"
+                  />
+                  <AtlasListItem
+                    v-if="embedded"
+                    data-testid="cs-editor-import-repository"
+                    prepend-icon="mdi-database-import-outline"
+                    :title="t('cs.manager.importFromRepository').value"
+                    :subtitle="t('cs.manager.importFromRepositoryMenuSubtitle').value"
+                    @click="showRepositoryPicker = true"
+                  />
+                  <AtlasListItem
+                    data-testid="cs-editor-optimize-menu-item"
+                    prepend-icon="mdi-auto-fix"
+                    :title="t('cs.manager.optimize').value"
+                    :disabled="optimizeDisabled"
+                    @click="showOptimizeDialog = true"
                   />
                 </template>
-                <AtlasList
-                  density="compact"
-                  min-width="250"
-                >
-                  <AtlasListItem
-                    data-testid="cs-editor-download-json"
-                    prepend-icon="mdi-download"
-                    :title="t('cohortDefinitions.cohortDefinitionManager.panels.json').value"
-                    :subtitle="t('common.downloadFile').value"
-                    @click="downloadExpressionJson"
-                  />
-                  <AtlasListItem
-                    data-testid="cs-editor-copy-json"
-                    prepend-icon="mdi-clipboard-text-outline"
-                    :title="t('common.copyToClipboard').value"
-                    :subtitle="t('cohortDefinitions.cohortDefinitionManager.panels.json').value"
-                    @click="copyExpressionJson"
-                  />
-                  <AtlasListItem
-                    data-testid="cs-editor-view-json"
-                    prepend-icon="mdi-code-json"
-                    :title="t('components.cohortBuilder.jsonViewEdit').value"
-                    :subtitle="t('cs.manager.importJson').value"
-                    @click="showExpressionJsonDialog = true"
-                  />
-                  <template v-if="!isPreviewing">
-                    <AtlasListItem
-                      data-testid="cs-editor-paste-ids"
-                      prepend-icon="mdi-clipboard-text-outline"
-                      :title="t('cs.manager.pasteIds').value"
-                      :subtitle="t('cs.manager.pasteIdsMenuSubtitle').value"
-                      @click="showPasteDialog = true"
-                    />
-                    <AtlasListItem
-                      data-testid="cs-editor-import-source-codes"
-                      prepend-icon="mdi-barcode-scan"
-                      :title="t('cs.manager.importSourceCodesButton').value"
-                      :subtitle="t('cs.manager.importSourceCodesMenuSubtitle').value"
-                      @click="showSourceCodeDialog = true"
-                    />
-                    <AtlasListItem
-                      data-testid="cs-editor-import-json"
-                      prepend-icon="mdi-code-json"
-                      :title="t('cs.manager.importJson').value"
-                      :subtitle="t('cs.manager.importJsonMenuSubtitle').value"
-                      @click="showJsonDialog = true"
-                    />
-                    <AtlasListItem
-                      data-testid="cs-editor-optimize-menu-item"
-                      prepend-icon="mdi-auto-fix"
-                      :title="t('cs.manager.optimize').value"
-                      :disabled="optimizeDisabled"
-                      @click="showOptimizeDialog = true"
-                    />
-                  </template>
-                </AtlasList>
-              </AtlasMenu>
+              </AtlasList>
+            </AtlasMenu>
 
+            <AtlasButton
+              variant="ghost"
+              data-testid="cs-editor-close-btn"
+              @click="onClose"
+            >
+              {{ t('common.close') }}
+            </AtlasButton>
+
+            <DisabledReasonTooltip :reason="isPreviewing ? '' : saveDisabledReason">
               <AtlasButton
-                variant="ghost"
-                data-testid="cs-editor-close-btn"
-                @click="onClose"
+                :disabled="isPreviewing ? loading : !formValid || loading || !canSubmit"
+                :loading="loading"
+                data-testid="cs-editor-primary-btn"
+                @click="embedded ? onApply() : isPreviewing ? requestSavePreviewAsCurrent() : onSave()"
               >
-                {{ t('common.close') }}
+                {{
+                  embedded
+                    ? t('common.apply')
+                    : isPreviewing
+                      ? t('common.saveAsCurrentVersion')
+                      : isEditMode
+                        ? t('common.save')
+                        : t('common.create')
+                }}
               </AtlasButton>
+            </DisabledReasonTooltip>
+          </div>
+        </header>
 
-              <DisabledReasonTooltip :reason="isPreviewing ? '' : saveDisabledReason">
-                <AtlasButton
-                  :disabled="isPreviewing ? loading : !formValid || loading || !canSubmit"
-                  :loading="loading"
-                  data-testid="cs-editor-primary-btn"
-                  @click="embedded ? onApply() : isPreviewing ? requestSavePreviewAsCurrent() : onSave()"
+        <div class="cs-editor__main">
+          <!-- Tabs rail: same shared treatment as the outer page tabs.
+           Hidden (not unmounted) while a concept detail is open so the
+           active tab's state, e.g. search results, survives going back. -->
+          <nav
+            v-show="!viewingConcept"
+            class="page-tabs-rail cs-editor__tabs-rail"
+          >
+            <AtlasTabs
+              v-model="activeTab"
+              align-tabs="start"
+              density="comfortable"
+              color="primary"
+              slider-color="primary"
+              bg-color="transparent"
+              class="page-tabs"
+            >
+              <AtlasTab value="selected">
+                <AtlasIcon
+                  start
+                  icon="mdi-checkbox-marked-circle-outline"
+                />
+                {{ t('cs.manager.tabs.selected') }}
+                <AtlasChip
+                  size="sm"
+                  tone="primary"
+                  class="cs-editor__tab-count"
+                >
+                  {{ itemCount }}
+                </AtlasChip>
+              </AtlasTab>
+              <AtlasTab value="included">
+                <AtlasIcon
+                  start
+                  icon="mdi-family-tree"
+                />
+                {{ t('cs.manager.tabs.included') }}
+                <AtlasChip
+                  size="sm"
+                  tone="primary"
+                  class="cs-editor__tab-count"
+                >
+                  {{ store.includedLoading ? '…' : store.includedItems.length }}
+                </AtlasChip>
+              </AtlasTab>
+              <AtlasTab value="source-codes">
+                <AtlasIcon
+                  start
+                  icon="mdi-barcode-scan"
+                />
+                {{ t('cs.manager.tabs.sourceCodes') }}
+                <AtlasChip
+                  size="sm"
+                  tone="primary"
+                  class="cs-editor__tab-count"
+                >
+                  {{ store.sourceCodeLoading ? '…' : store.sourceCodeItems.length }}
+                </AtlasChip>
+              </AtlasTab>
+              <AtlasTab value="search">
+                <AtlasIcon
+                  start
+                  icon="mdi-magnify"
+                />
+                {{ t('search.tabs.search') }}
+              </AtlasTab>
+              <AtlasTab value="recommend">
+                <AtlasIcon
+                  start
+                  icon="mdi-lightbulb-on-outline"
+                />
+                {{ t('cs.manager.tabs.recommend') }}
+              </AtlasTab>
+              <AtlasTab value="compare">
+                <AtlasIcon
+                  start
+                  icon="mdi-compare"
+                />
+                {{ t('cs.browser.compare.compare') }}
+              </AtlasTab>
+            </AtlasTabs>
+          </nav>
+
+          <div
+            v-show="!viewingConcept"
+            class="cs-editor__body"
+          >
+            <v-window v-model="activeTab">
+              <!-- Selected Concepts Tab -->
+              <v-window-item value="selected">
+                <AtlasAlert
+                  v-if="missingConceptIds.length > 0"
+                  severity="warning"
+                  :title="t('cs.manager.missingConceptsTitle').value"
+                  class="mb-3"
+                  data-testid="cs-editor-missing-concepts"
                 >
                   {{
-                    embedded
-                      ? t('common.apply')
-                      : isPreviewing
-                        ? t('common.saveAsCurrentVersion')
-                        : isEditMode
-                          ? t('common.save')
-                          : t('common.create')
+                    t('cs.manager.missingConceptsMessage', { sourceKey, count: missingConceptIds.length, ids: missingConceptIds.join(', ') }).value
                   }}
-                </AtlasButton>
-              </DisabledReasonTooltip>
-            </div>
-          </header>
+                </AtlasAlert>
+                <ConceptSetTable
+                  :items="store.currentSet?.items || []"
+                  :loading="false"
+                  :source-key="sourceKey"
+                  @toggle:descendants="onToggleDescendants"
+                  @toggle:mapped="onToggleMapped"
+                  @toggle:exclude="onToggleExclude"
+                  @remove="onRemoveFromSet"
+                  @view-concept="onViewConcept"
+                />
+              </v-window-item>
 
-          <div class="cs-editor__main">
-            <!-- Tabs rail: same shared treatment as the outer page tabs.
-             Hidden (not unmounted) while a concept detail is open so the
-             active tab's state, e.g. search results, survives going back. -->
-            <nav
-              v-show="!viewingConcept"
-              class="page-tabs-rail cs-editor__tabs-rail"
-            >
-              <AtlasTabs
-                v-model="activeTab"
-                align-tabs="start"
-                density="comfortable"
-                color="primary"
-                slider-color="primary"
-                bg-color="transparent"
-                class="page-tabs"
-              >
-                <AtlasTab value="selected">
-                  <AtlasIcon
-                    start
-                    icon="mdi-checkbox-marked-circle-outline"
-                  />
-                  {{ t('cs.manager.tabs.selected') }}
-                  <AtlasChip
-                    size="sm"
-                    tone="primary"
-                    class="cs-editor__tab-count"
-                  >
-                    {{ itemCount }}
-                  </AtlasChip>
-                </AtlasTab>
-                <AtlasTab value="included">
-                  <AtlasIcon
-                    start
-                    icon="mdi-family-tree"
-                  />
-                  {{ t('cs.manager.tabs.included') }}
-                  <AtlasChip
-                    size="sm"
-                    tone="primary"
-                    class="cs-editor__tab-count"
-                  >
-                    {{ store.includedLoading ? '…' : store.includedItems.length }}
-                  </AtlasChip>
-                </AtlasTab>
-                <AtlasTab value="source-codes">
-                  <AtlasIcon
-                    start
-                    icon="mdi-barcode-scan"
-                  />
-                  {{ t('cs.manager.tabs.sourceCodes') }}
-                  <AtlasChip
-                    size="sm"
-                    tone="primary"
-                    class="cs-editor__tab-count"
-                  >
-                    {{ store.sourceCodeLoading ? '…' : store.sourceCodeItems.length }}
-                  </AtlasChip>
-                </AtlasTab>
-                <AtlasTab value="search">
-                  <AtlasIcon
-                    start
-                    icon="mdi-magnify"
-                  />
-                  {{ t('search.tabs.search') }}
-                </AtlasTab>
-                <AtlasTab value="recommend">
-                  <AtlasIcon
-                    start
-                    icon="mdi-lightbulb-on-outline"
-                  />
-                  {{ t('cs.manager.tabs.recommend') }}
-                </AtlasTab>
-                <AtlasTab value="compare">
-                  <AtlasIcon
-                    start
-                    icon="mdi-compare"
-                  />
-                  {{ t('cs.browser.compare.compare') }}
-                </AtlasTab>
-              </AtlasTabs>
-            </nav>
+              <!-- Included Concepts Tab -->
+              <v-window-item value="included">
+                <IncludedConceptsTable
+                  :items="store.includedItems"
+                  :loading="store.includedLoading"
+                  :error="store.includedError"
+                  :manual-count="store.currentSet?.items?.length ?? 0"
+                  :source-key="sourceKey"
+                  @view-concept="onViewConcept"
+                  @add-concepts="onAddFromResolved"
+                  @retry="store.resolveIncluded(sourceKey)"
+                />
+              </v-window-item>
 
-            <div
-              v-show="!viewingConcept"
-              class="cs-editor__body"
-            >
-              <v-window v-model="activeTab">
-                <!-- Selected Concepts Tab -->
-                <v-window-item value="selected">
-                  <AtlasAlert
-                    v-if="missingConceptIds.length > 0"
-                    severity="warning"
-                    :title="t('cs.manager.missingConceptsTitle').value"
-                    class="mb-3"
-                    data-testid="cs-editor-missing-concepts"
-                  >
-                    {{
-                      t('cs.manager.missingConceptsMessage', { sourceKey, count: missingConceptIds.length, ids: missingConceptIds.join(', ') }).value
-                    }}
-                  </AtlasAlert>
-                  <ConceptSetTable
-                    :items="store.currentSet?.items || []"
-                    :loading="false"
-                    :source-key="sourceKey"
-                    @toggle:descendants="onToggleDescendants"
-                    @toggle:mapped="onToggleMapped"
-                    @toggle:exclude="onToggleExclude"
-                    @remove="onRemoveFromSet"
-                    @view-concept="onViewConcept"
-                  />
-                </v-window-item>
+              <!-- Source Codes Tab -->
+              <v-window-item value="source-codes">
+                <IncludedSourceCodesTable
+                  :active="activeTab === 'source-codes'"
+                  :source-key="sourceKey"
+                  @view-concept="onViewConcept"
+                  @add-concepts="onAddFromResolved"
+                />
+              </v-window-item>
 
-                <!-- Included Concepts Tab -->
-                <v-window-item value="included">
-                  <IncludedConceptsTable
-                    :items="store.includedItems"
-                    :loading="store.includedLoading"
-                    :error="store.includedError"
-                    :manual-count="store.currentSet?.items?.length ?? 0"
-                    :source-key="sourceKey"
-                    @view-concept="onViewConcept"
-                    @add-concepts="onAddFromResolved"
-                    @retry="store.resolveIncluded(sourceKey)"
-                  />
-                </v-window-item>
+              <!-- Search Tab -->
+              <v-window-item value="search">
+                <ConceptSearchEmbed
+                  @add-concept="onAddConcept"
+                  @add-concepts="onAddConcepts"
+                  @remove-concept="onRemoveConcept"
+                  @view-concept="onViewConcept"
+                />
+              </v-window-item>
 
-                <!-- Source Codes Tab -->
-                <v-window-item value="source-codes">
-                  <IncludedSourceCodesTable
-                    :active="activeTab === 'source-codes'"
-                    :source-key="sourceKey"
-                    @view-concept="onViewConcept"
-                    @add-concepts="onAddFromResolved"
-                  />
-                </v-window-item>
+              <!-- Recommend Tab -->
+              <v-window-item value="recommend">
+                <RecommendTab
+                  :active="activeTab === 'recommend'"
+                  @concepts-added="onRecommendedConceptsAdded"
+                />
+              </v-window-item>
 
-                <!-- Search Tab -->
-                <v-window-item value="search">
-                  <ConceptSearchEmbed
-                    @add-concept="onAddConcept"
-                    @add-concepts="onAddConcepts"
-                    @remove-concept="onRemoveConcept"
-                    @view-concept="onViewConcept"
-                  />
-                </v-window-item>
+              <v-window-item value="compare">
+                <CompareTab :active="activeTab === 'compare'" />
+              </v-window-item>
+            </v-window>
+          </div>
 
-                <!-- Recommend Tab -->
-                <v-window-item value="recommend">
-                  <RecommendTab
-                    :active="activeTab === 'recommend'"
-                    @concepts-added="onRecommendedConceptsAdded"
-                  />
-                </v-window-item>
-
-                <v-window-item value="compare">
-                  <CompareTab :active="activeTab === 'compare'" />
-                </v-window-item>
-              </v-window>
-            </div>
-
-            <!-- Concept detail replaces the tabs menu + body in normal flow
-             (header stays visible) when a concept is opened from any table.
-             The back arrow inside the detail clears it. -->
-            <div
-              v-if="viewingConcept"
-              class="cs-editor__detail"
-              data-testid="concept-set-editor-inline-detail"
-            >
-              <ConceptDetailContent
-                :source-key="viewingConcept.sourceKey"
-                :concept-id="viewingConcept.conceptId"
-                :on-back="() => (viewingConcept = null)"
-                @navigate="onInlineConceptNavigate"
-              />
-            </div>
+          <!-- Concept detail replaces the tabs menu + body in normal flow
+           (header stays visible) when a concept is opened from any table.
+           The back arrow inside the detail clears it. -->
+          <div
+            v-if="viewingConcept"
+            class="cs-editor__detail"
+            data-testid="concept-set-editor-inline-detail"
+          >
+            <ConceptDetailContent
+              :source-key="viewingConcept.sourceKey"
+              :concept-id="viewingConcept.conceptId"
+              :on-back="() => (viewingConcept = null)"
+              @navigate="onInlineConceptNavigate"
+            />
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Versions Dialog -->
-      <AtlasDialog
-        v-model="showVersionsDialog"
-        :eyebrow="t('common.history').value"
-        :title="t('cohortDefinitions.cohortDefinitionManager.tabs.versions').value"
-        :close-label="t('common.close').value"
-        max-width="1200"
-        @close="showVersionsDialog = false"
-      >
-        <VersionsTabContent
-          v-if="showVersionsDialog && props.conceptSet?.id"
-          :config="versionsConfig"
-        />
-      </AtlasDialog>
-    </component>
-  </Teleport>
+    <!-- Versions Dialog -->
+    <AtlasDialog
+      v-model="showVersionsDialog"
+      :eyebrow="t('common.history').value"
+      :title="t('cohortDefinitions.cohortDefinitionManager.tabs.versions').value"
+      :close-label="t('common.close').value"
+      max-width="1200"
+      @close="showVersionsDialog = false"
+    >
+      <VersionsTabContent
+        v-if="showVersionsDialog && props.conceptSet?.id"
+        :config="versionsConfig"
+      />
+    </AtlasDialog>
+  </component>
 
   <!-- Tag selection dialog. -->
   <TagSelectionDialog
@@ -458,9 +457,8 @@
     @apply="applyExpressionJson"
   />
 
-  <!-- Confirmation dialogs — kept outside the drawer Teleport so they
-       remain in the component's normal render tree but are themselves
-       v-dialogs (which Vuetify already teleports to body). -->
+  <!-- Confirmation dialogs — v-dialogs join the overlay stack, so they
+       render above the side sheet regardless of where they're declared. -->
   <AtlasDialog
     v-model="showCloseConfirm"
     :eyebrow="t('common.confirm').value"
@@ -770,6 +768,57 @@
     </template>
   </AtlasDialog>
 
+  <ConceptSetSelectionDialog
+    v-if="embedded && showRepositoryPicker"
+    v-model="showRepositoryPicker"
+    repository-only
+    @concept-set-selected="onRepositoryConceptSetSelected"
+  />
+
+  <!-- Repository import confirmation: the user chooses append or overwrite. -->
+  <AtlasDialog
+    v-model="showRepositoryImportConfirm"
+    :eyebrow="t('cs.manager.importFromRepository').value"
+    :title="t('cs.manager.importFromRepositoryConfirmTitle').value"
+    max-width="520"
+    data-testid="cs-editor-repository-import-confirm"
+    @close="cancelRepositoryImport"
+  >
+    <p v-if="pendingRepositoryImport">
+      {{
+        tv('cs.manager.importFromRepositoryConfirmMessage', {
+          source: pendingRepositoryImport.name,
+          sourceCount: pendingRepositoryImport.items.length,
+          target: form.name || drawerRailLabel,
+          targetCount: store.currentSet?.items.length ?? 0,
+        })
+      }}
+    </p>
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        data-testid="cs-editor-repository-import-cancel"
+        @click="cancelRepositoryImport"
+      >
+        {{ t('common.cancel').value }}
+      </AtlasButton>
+      <AtlasButton
+        variant="secondary"
+        data-testid="cs-editor-repository-import-append"
+        @click="applyRepositoryImport('append')"
+      >
+        {{ t('cs.manager.importFromRepositoryAppend').value }}
+      </AtlasButton>
+      <AtlasButton
+        variant="danger"
+        data-testid="cs-editor-repository-import-overwrite"
+        @click="applyRepositoryImport('overwrite')"
+      >
+        {{ t('cs.manager.importFromRepositoryOverwrite').value }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
+
   <ConceptSetOptimizeDialog
     v-if="showOptimizeDialog"
     v-model="showOptimizeDialog"
@@ -788,8 +837,7 @@ import { logger } from '@/utils/logger'
 import { assignedTags } from '@/utils/asset-tags'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import AssetAuthorship from '@/components/shared/AssetAuthorship.vue'
-import { ref, computed, inject, watch, toRef, onBeforeUnmount, onMounted } from 'vue'
-import { VNavigationDrawer } from 'vuetify/components'
+import { ref, computed, inject, watch, toRef } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useConceptTablePreferencesStore } from '@/stores/concept-table-preferences'
@@ -798,7 +846,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import DisabledReasonTooltip from '@/components/shared/DisabledReasonTooltip.vue'
 import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
-import { isConceptMissing, type ConceptSet, type Concept, type ConceptSetItem, type ConceptAddFlags } from '@/models/concept-set.types'
+import { isConceptMissing, type ConceptSet, type ConceptSetListItem, type Concept, type ConceptSetItem, type ConceptAddFlags } from '@/models/concept-set.types'
 import type { VersionsConfig, VersionsTableItem, User } from '@/components/versions/types'
 import { EntityAccessDialog, EntityAccessLockButton } from '@/components/access'
 import type { Tag } from '@/models/cohort.types'
@@ -812,7 +860,7 @@ import RecommendTab from './RecommendTab.vue'
 import CompareTab from './CompareTab.vue'
 import ConceptSetOptimizeDialog from './ConceptSetOptimizeDialog.vue'
 import ConceptDetailContent from './detail/ConceptDetailContent.vue'
-import { AtlasAlert, AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSideSheet, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
 import { getConceptsByIds, getConceptsBySourceCodes } from '@/services/concept-search.service'
@@ -826,6 +874,8 @@ import {
 import { conceptSetItemToExpressionItem } from '@/utils/api-mappers'
 import { useConceptFacets, type FacetDefinition } from '@/composables/useConceptFacets'
 import ConceptSetJsonDialog from './ConceptSetJsonDialog.vue'
+import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
+import { getConceptSetById } from '@/services/concept-set.service'
 
 const { t, tv } = useI18n()
 const conceptTablePreferencesStore = useConceptTablePreferencesStore()
@@ -864,10 +914,8 @@ const drawerProps = computed(() =>
     ? {}
     : {
         modelValue: props.modelValue,
-        location: 'right',
-        temporary: true,
-        width: drawerWidth.value,
-        style: props.embedded ? { zIndex: 2100 } : undefined,
+        ariaLabel: drawerRailLabel.value,
+        'data-testid': 'concept-set-editor-sheet',
       }
 )
 
@@ -910,18 +958,12 @@ function onInlineConceptNavigate(conceptId: number) {
 
 // Reset the inline detail view when the editor closes so reopening starts on
 // the tabs again, not on a stale concept page.
-//
-// Also lock body scroll while the drawer is open. The drawer is teleported to
-// <body>, which means Vuetify's built-in overlay scroll-lock isn't engaged for
-// it consistently across browsers — without this manual lock, wheel/touch
-// scroll inside the panel falls through to the cohort builder page behind it.
 watch(
   () => props.modelValue,
   (open) => {
     if (!open) {
       viewingConcept.value = null
       store.resetIncluded()
-      document.body.style.overflow = ''
     } else {
       // New concept sets open on the Search tab so the user can start adding
       // concepts immediately; existing sets, and new ones already seeded with
@@ -932,19 +974,10 @@ watch(
       const isExisting = props.conceptSet?.id !== undefined && props.conceptSet?.id !== null
       const hasItems = (props.conceptSet?.items?.length ?? 0) > 0
       activeTab.value = isExisting || hasItems ? 'selected' : 'search'
-      if (!isPagePresentation.value) {
-        document.body.style.overflow = 'hidden'
-      }
     }
   },
   { immediate: true },
 )
-
-// Failsafe: never leak the body-overflow lock if the editor is unmounted
-// while still open (e.g., route change with the drawer visible).
-onBeforeUnmount(() => {
-  document.body.style.overflow = ''
-})
 
 interface FormData {
   name: string
@@ -1037,6 +1070,11 @@ const sourceKey = computed<string>(
 
 const showOptimizeDialog = ref(false)
 const optimizeSaving = ref(false)
+
+// Import from repository (embedded editors only).
+const showRepositoryPicker = ref(false)
+const showRepositoryImportConfirm = ref(false)
+const pendingRepositoryImport = ref<{ name: string; items: ConceptSetItem[] } | null>(null)
 
 const optimizeDisabledReason = computed<string>(() => {
   if ((store.currentSet?.items.length ?? 0) < 2) {
@@ -1132,21 +1170,6 @@ watch(
   },
   { immediate: true }
 )
-
-const drawerWidth = ref<number>(0)
-
-function updateDrawerWidth() {
-  drawerWidth.value = Math.max(500, Math.floor(window.innerWidth * 0.95))
-}
-
-onMounted(() => {
-  updateDrawerWidth()
-  window.addEventListener('resize', updateDrawerWidth)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', updateDrawerWidth)
-})
 
 // Versions configuration
 const versionsConfig = computed<VersionsConfig>(() => {
@@ -1721,6 +1744,66 @@ function closeJsonDialog() {
   jsonItems.value = []
   jsonError.value = ''
   jsonParsed.value = false
+}
+
+// Loads through the service rather than store.fetchOne: fetchOne replaces
+// store.currentSet, which is the set this editor is editing.
+async function onRepositoryConceptSetSelected(selected: ConceptSetListItem) {
+  showRepositoryPicker.value = false
+  loading.value = true
+  let fetched: ConceptSet | null
+  try {
+    fetched = await getConceptSetById(selected.id)
+  } finally {
+    loading.value = false
+  }
+  if (!fetched) {
+    notify.danger(tv('cs.manager.importFromRepositoryFailed', { name: selected.name }))
+    return
+  }
+
+  pendingRepositoryImport.value = { name: fetched.name || selected.name, items: fetched.items ?? [] }
+  if ((store.currentSet?.items.length ?? 0) === 0) {
+    applyRepositoryImport('overwrite')
+    return
+  }
+  showRepositoryImportConfirm.value = true
+}
+
+function cancelRepositoryImport() {
+  showRepositoryImportConfirm.value = false
+  pendingRepositoryImport.value = null
+}
+
+function applyRepositoryImport(mode: 'append' | 'overwrite') {
+  const pending = pendingRepositoryImport.value
+  if (!pending || !store.currentSet) return cancelRepositoryImport()
+
+  const imported = pending.items.map(item => ({ ...item }))
+  if (mode === 'overwrite') {
+    store.applyProposal({ items: imported })
+  } else {
+    // A concept can legitimately appear in several rows with different flags,
+    // so only exact concept-and-flags repeats are skipped.
+    const sameRow = (a: ConceptSetItem, b: ConceptSetItem) =>
+      a.conceptId === b.conceptId &&
+      !!a.isExcluded === !!b.isExcluded &&
+      !!a.includeDescendants === !!b.includeDescendants &&
+      !!a.includeMapped === !!b.includeMapped
+    const additions = imported.filter(item => !store.currentSet!.items.some(existing => sameRow(existing, item)))
+    store.currentSet.items.push(...additions)
+  }
+
+  const missingIds = imported.filter(isConceptMissing).map(item => item.conceptId)
+  if (missingIds.length > 0) {
+    notify.warning(tv('components.cohortBuilder.conceptSetMissingConcepts', { name: pending.name }), {
+      message: tv('components.cohortBuilder.conceptSetMissingConceptsDetail', { ids: missingIds.join(', ') }),
+    })
+  }
+
+  hasUnsavedChanges.value = true
+  activeTab.value = 'selected'
+  cancelRepositoryImport()
 }
 </script>
 

@@ -45,10 +45,6 @@ describe('ConceptFacetFilters', () => {
     expect(wrapper.text()).toContain(tr('common.filters'))
   })
 
-  it('renders the filter menu above an embedded concept-set editor drawer', () => {
-    const wrapper = mountComponent()
-    expect(wrapper.findComponent({ name: 'VMenu' }).props('zIndex')).toBe(2201)
-  })
 
   it('shows the active-count badge when filters are active', () => {
     const wrapper = mountComponent({ activeFilterCount: 2 })

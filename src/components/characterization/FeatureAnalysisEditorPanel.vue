@@ -1,15 +1,9 @@
 <template>
-  <v-navigation-drawer
+  <AtlasSideSheet
     v-if="target"
     :model-value="true"
     data-testid="cc-fa-panel"
-    location="right"
-    temporary
-    :width="drawerWidth"
-    :scrim="!conceptSetsStore.editorOpen"
-    disable-route-watcher
     @update:model-value="onDrawerModelValue"
-    @keydown.esc="onEscape"
   >
     <div
       class="fa-editor-panel__body"
@@ -26,16 +20,16 @@
         @close="emit('closed')"
       />
     </div>
-  </v-navigation-drawer>
+  </AtlasSideSheet>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import FeatureAnalysisEditor from '@/components/feature-analyses/FeatureAnalysisEditor.vue'
+import { AtlasSideSheet } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { FeatureAnalysis } from '@/models/feature-analysis.types'
-import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { FeatureAnalysisCreateKind } from '@/utils/feature-analysis-create-kind'
 
 type PanelTarget = { featureAnalysisId: number } | { createKind: FeatureAnalysisCreateKind }
@@ -50,29 +44,13 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const conceptSetsStore = useConceptSetsStore()
 
 interface EmbeddedEditor {
   requestClose: () => void
   isDirty: () => boolean
-  isPrompting: () => boolean
 }
 
 const editor = ref<EmbeddedEditor | null>(null)
-const drawerWidth = ref<number>(0)
-
-function updateDrawerWidth() {
-  drawerWidth.value = Math.max(500, Math.floor(window.innerWidth * 0.95))
-}
-
-onMounted(() => {
-  updateDrawerWidth()
-  window.addEventListener('resize', updateDrawerWidth)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', updateDrawerWidth)
-})
 
 const featureAnalysisId = computed<number | null>(() =>
   props.target && 'featureAnalysisId' in props.target ? props.target.featureAnalysisId : null,
@@ -94,13 +72,10 @@ const saveLabel = computed(() =>
   createKind.value ? t('featureAnalyses.editor.saveAndAdd').value : undefined,
 )
 
+// Escape and scrim clicks only reach this sheet when it is the top-most
+// overlay, so a nested concept set editor or confirm prompt handles its own.
 function onDrawerModelValue(value: boolean) {
   if (!value) editor.value?.requestClose()
-}
-
-function onEscape() {
-  if (conceptSetsStore.editorOpen || editor.value?.isPrompting()) return
-  editor.value?.requestClose()
 }
 
 defineExpose({

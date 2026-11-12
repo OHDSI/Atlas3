@@ -283,4 +283,21 @@ describe('ConceptSetSelectionDialog', () => {
       expect(wrapper.emitted('create-new')).toBeTruthy()
     })
   })
+
+  describe('repositoryOnly', () => {
+    it('hides create-new and the in-definition sets', async () => {
+      const wrapper = mountComponent({
+        repositoryOnly: true,
+        localConceptSets: [{ id: 1, name: 'Diabetes drugs' }],
+      })
+      const store = useConceptSetsStore()
+      store.conceptSets = []
+      store.loading = false
+      await nextTick()
+
+      expect(wrapper.find('.cs-picker__create-row').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="local-concept-sets"]').exists()).toBe(false)
+      expect(wrapper.text().toLowerCase()).not.toContain('new concept set')
+    })
+  })
 })

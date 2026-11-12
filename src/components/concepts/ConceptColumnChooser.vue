@@ -3,7 +3,6 @@
     :close-on-content-click="false"
     location="bottom start"
     offset="8"
-    :z-index="2301"
   >
     <template #activator="{ props: activatorProps }">
       <AtlasButton

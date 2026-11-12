@@ -79,7 +79,6 @@
           variant="outlined"
           hide-details
           :loading="store.loadingRecordCounts"
-          :menu-props="{ zIndex: 2300 }"
           data-testid="record-count-source"
           @update:model-value="value => store.setRecordCountSource(String(value))"
         />

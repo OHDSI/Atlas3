@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
-import { AtlasIconButton } from '@/components/ui'
+import { AtlasIconButton, AtlasSideSheet } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import ConceptDetailContent from '@/components/concepts/detail/ConceptDetailContent.vue'
 
@@ -18,72 +18,48 @@ const drawerOpen = computed({
   },
 })
 
-const drawerWidth = ref<number>(0)
-
 function navigate(conceptId: number) {
   if (!sourceKey.value) return
   drawer.open(sourceKey.value, conceptId)
 }
-
-function updateDrawerWidth() {
-  drawerWidth.value = Math.max(500, Math.floor(window.innerWidth * 0.95))
-}
-
-onMounted(() => {
-  updateDrawerWidth()
-  window.addEventListener('resize', updateDrawerWidth)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', updateDrawerWidth)
-})
 </script>
 
 <template>
-  <Teleport to="body">
-    <v-navigation-drawer
-      v-model="drawerOpen"
-      location="right"
-      temporary
-      :width="drawerWidth"
-      class="concept-detail-drawer"
-    >
-      <div class="drawer-shell">
-        <div class="drawer-toolbar">
-          <AtlasIconButton
-            icon="mdi-close"
-            variant="text"
-            size="sm"
-            v-bind="{ ariaLabel: tv('components.conceptDetail.closeDetails') }"
-            data-testid="concept-drawer-close"
-            @click="drawer.close()"
-          />
-        </div>
-
-        <ConceptDetailContent
-          v-if="isOpen && sourceKey && conceptId"
-          :source-key="sourceKey"
-          :concept-id="conceptId"
-          @navigate="navigate"
+  <AtlasSideSheet
+    v-model="drawerOpen"
+    content-class="concept-detail-drawer"
+    :aria-label="tv('components.conceptDetail.conceptDetailsTitle')"
+  >
+    <div class="drawer-shell">
+      <div class="drawer-toolbar">
+        <AtlasIconButton
+          icon="mdi-close"
+          variant="text"
+          size="sm"
+          v-bind="{ ariaLabel: tv('components.conceptDetail.closeDetails') }"
+          data-testid="concept-drawer-close"
+          @click="drawer.close()"
         />
       </div>
-    </v-navigation-drawer>
-  </Teleport>
+
+      <ConceptDetailContent
+        v-if="isOpen && sourceKey && conceptId"
+        :source-key="sourceKey"
+        :concept-id="conceptId"
+        @navigate="navigate"
+      />
+    </div>
+  </AtlasSideSheet>
 </template>
 
 <style>
-.v-navigation-drawer__scrim {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
+/* Unscoped: the panel element is rendered by the teleported overlay. */
+.atlas-side-sheet__panel.concept-detail-drawer {
+  background: rgb(var(--v-theme-background));
 }
 </style>
 
 <style scoped>
-.concept-detail-drawer {
-  background: rgb(var(--v-theme-background));
-}
 .drawer-shell {
   display: flex;
   flex-direction: column;

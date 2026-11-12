@@ -1004,7 +1004,6 @@ function requestClose() {
 defineExpose({
   requestClose,
   isDirty: () => dirty.value,
-  isPrompting: () => showUnsavedDialog.value,
 })
 
 function fillCustomSqlSample() {

@@ -22,9 +22,9 @@ vi.mock('@/components/ui', async (importOriginal) => {
       emits: ['update:modelValue', 'close'],
       template: '<div><slot /><slot v-if="modelValue" name="actions" /><button data-testid="ir-strata-inspector-close" @click="$emit(\'update:modelValue\', false)">x</button></div>',
     },
-    VNavigationDrawer: {
-      name: 'VNavigationDrawer',
-      props: ['modelValue', 'location', 'temporary', 'width', 'scrim'],
+    AtlasSideSheet: {
+      name: 'AtlasSideSheet',
+      props: ['modelValue', 'ariaLabel'],
       template: '<div><slot /></div>',
     },
   }
@@ -40,12 +40,7 @@ describe('IncidenceRateStratifyInspector', () => {
       attachTo: document.body,
       global: {
         plugins: [pristinePinia(), vuetify],
-        stubs: {
-          VNavigationDrawer: {
-            name: 'VNavigationDrawer',
-            template: '<div><slot /></div>',
-          },
-        },
+
       },
       props: { modelValue: true, rule, conceptSets: [] },
     })
@@ -58,12 +53,7 @@ describe('IncidenceRateStratifyInspector', () => {
       attachTo: document.body,
       global: {
         plugins: [pristinePinia(), vuetify],
-        stubs: {
-          VNavigationDrawer: {
-            name: 'VNavigationDrawer',
-            template: '<div><slot /></div>',
-          },
-        },
+
       },
       props: { modelValue: true, rule, conceptSets: [] },
     })
@@ -79,12 +69,7 @@ describe('IncidenceRateStratifyInspector', () => {
       attachTo: document.body,
       global: {
         plugins: [pristinePinia(), vuetify],
-        stubs: {
-          VNavigationDrawer: {
-            name: 'VNavigationDrawer',
-            template: '<div><slot /></div>',
-          },
-        },
+
       },
       props: { modelValue: true, rule, conceptSets: [] },
     })
@@ -105,12 +90,7 @@ describe('IncidenceRateStratifyInspector', () => {
       attachTo: document.body,
       global: {
         plugins: [pristinePinia(), vuetify],
-        stubs: {
-          VNavigationDrawer: {
-            name: 'VNavigationDrawer',
-            template: '<div><slot /></div>',
-          },
-        },
+
       },
       props: { modelValue: true, rule, conceptSets: [] },
     })
