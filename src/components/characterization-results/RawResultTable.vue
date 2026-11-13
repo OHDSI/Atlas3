@@ -24,15 +24,14 @@
         <span class="raw-result-table__accent-rule" />
       </div>
       <h3 class="raw-result-table__title">
-        {{ tv('characterizations.results.table.raw', 'Custom output') }}
+        {{ tv('characterizations.results.table.raw') }}
         <span class="raw-result-table__count">({{ rows.length }})</span>
         <span
           v-if="hasCustomFe"
           class="raw-result-table__badge"
-          :title="tv('characterizations.results.table.customFeHint',
-                     'Produced by a custom-SQL feature analysis')"
+          :title="tv('characterizations.results.table.customFeHint')"
         >
-          {{ tv('characterizations.results.table.customFe', 'Custom SQL') }}
+          {{ tv('characterizations.results.table.customFe') }}
         </span>
       </h3>
     </div>

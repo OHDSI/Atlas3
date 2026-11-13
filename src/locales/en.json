@@ -1404,7 +1404,10 @@
         "distribution": "Distribution",
         "prevalence": "Prevalence",
         "filterPlaceholder": "Filter by covariate or concept ID…",
-        "avgSd": "Avg (SD)"
+        "avgSd": "Avg (SD)",
+        "raw": "Custom output",
+        "customFe": "Custom SQL",
+        "customFeHint": "Produced by a custom-SQL feature analysis"
       },
       "pagination": {
         "rowsPerPage": "Rows per page",
