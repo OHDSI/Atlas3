@@ -1513,7 +1513,10 @@
     "results": {
       "table": {
         "min": "最小值",
-        "prevalence": "患病率"
+        "prevalence": "患病率",
+        "raw": "自定义输出",
+        "customFe": "自定义 SQL",
+        "customFeHint": "由自定义 SQL 特征分析生成"
       }
     }
   },

@@ -1513,7 +1513,10 @@
     "results": {
       "table": {
         "min": "최소값",
-        "prevalence": "유병율"
+        "prevalence": "유병율",
+        "raw": "사용자 정의 출력",
+        "customFe": "사용자 정의 SQL",
+        "customFeHint": "사용자 정의 SQL 특성 분석에서 생성됨"
       }
     }
   },
