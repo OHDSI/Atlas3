@@ -1394,7 +1394,10 @@
         "min": "Min",
         "distribution": "Distribution",
         "prevalence": "Prevalence",
-        "avgSd": "Avg (SD)"
+        "avgSd": "Avg (SD)",
+        "raw": "Custom output",
+        "customFe": "Custom SQL",
+        "customFeHint": "Produced by a custom-SQL feature analysis"
       },
       "pagination": {
         "rowsPerPage": "Rows per page",

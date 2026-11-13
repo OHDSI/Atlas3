@@ -939,7 +939,10 @@
       "table": {
         "stdDiff": "標準化差",
         "min": "最小",
-        "prevalence": "有病率"
+        "prevalence": "有病率",
+        "raw": "カスタム出力",
+        "customFe": "カスタムSQL",
+        "customFeHint": "カスタムSQLの特徴量分析で生成"
       }
     }
   },

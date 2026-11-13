@@ -22,6 +22,7 @@ export function useCharacterizationResults() {
   const prevalence = shallowRef<PrevalenceStat[]>([])
   const distribution = shallowRef<DistributionStat[]>([])
   const strataCounts = shallowRef<StrataCounts>({})
+  const unmapped = shallowRef<Record<string, unknown>[]>([])
   const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
 
@@ -37,6 +38,7 @@ export function useCharacterizationResults() {
     prevalence.value = []
     distribution.value = []
     strataCounts.value = {}
+    unmapped.value = []
     error.value = null
     loading.value = true
     try {
@@ -72,6 +74,7 @@ export function useCharacterizationResults() {
       prevalence.value = mapped.flatMap(report => report.prevalence)
       distribution.value = mapped.flatMap(report => report.distribution)
       strataCounts.value = resultsResult.data.strataCounts ?? {}
+      unmapped.value = mapped.flatMap(report => report.unmapped)
       return true
     } catch (err) {
       if (request !== latestRequest) return false
@@ -93,9 +96,10 @@ export function useCharacterizationResults() {
     prevalence.value = []
     distribution.value = []
     strataCounts.value = {}
+    unmapped.value = []
     error.value = null
     loading.value = false
   }
 
-  return { execution, resultCount, prevalence, distribution, strataCounts, loading, error, load, reset }
+  return { execution, resultCount, prevalence, distribution, unmapped, strataCounts, loading, error, load, reset }
 }
