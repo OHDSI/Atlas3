@@ -81,6 +81,7 @@ import {
 import { getCohorts } from '@/services/cohort-definition.service'
 import CharacterizationBuilderView from '@/views/CharacterizationBuilderView.vue'
 import FeatureAnalysisEditor from '@/components/feature-analyses/FeatureAnalysisEditor.vue'
+import { InlineAtlasSideSheetStub } from '../../helpers/component-wrapper'
 import { success } from '@/types/api'
 
 const vuetify = createVuetify({ components, directives })
@@ -134,6 +135,7 @@ async function mountBuilder(): Promise<{ wrapper: VueWrapper; router: Router }> 
           ConceptSetsListDialog: true,
           ConceptSetEditor: true,
           EntityAccessDialog: true,
+          AtlasSideSheet: InlineAtlasSideSheetStub,
           AtlasDialog: {
             name: 'AtlasDialog',
             props: ['modelValue', 'title', 'eyebrow'],

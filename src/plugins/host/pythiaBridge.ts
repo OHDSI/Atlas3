@@ -49,6 +49,7 @@ export interface ProposalOutcome {
   id?: number | string
   name?: string
   applied?: boolean
+  error?: string
 }
 
 const REFUSAL_MESSAGES: Record<NonNullable<ProposalResult['reason']>, string> = {
@@ -390,7 +391,7 @@ async function handleUseConceptSet(payload: {
 
 async function handleSaveCohort(
   proposal: { name?: string; description?: string } = {}
-): Promise<{ id?: number; name?: string } | void> {
+): Promise<ProposalOutcome | void> {
   const cohortStore = useCohortStore()
   if (!cohortStore.currentCohort) {
     showSnackbar('There is no cohort to save yet', 'error')
@@ -402,8 +403,17 @@ async function handleSaveCohort(
   // cohort, so the editor must start blank — otherwise the next entry event is
   // added on top of this one and the user watches a single editor accumulate
   // three entry criteria while three separate cohorts are saved underneath.
-  if (saved?.id) savedCohortId = Number(saved.id)
-  return saved
+  if (saved?.id) {
+    savedCohortId = Number(saved.id)
+    return saved
+  }
+  if (saved?.timedOut) {
+    return {
+      applied: false,
+      error: 'The save did not finish in time. It may still complete, so check the open cohort before saving again.',
+    }
+  }
+  return { applied: false, error: saved?.error ?? 'ATLAS could not save the cohort.' }
 }
 
 async function handleNavigate(route: NavigateRoute) {

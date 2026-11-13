@@ -180,7 +180,16 @@ export const CAPABILITIES: Capability[] = [
   {
     name: 'set_entry_event',
     description: "Set the cohort's primary qualifying entry event. Replaces any existing entry event.",
-    schema: conceptRefSchema,
+    schema: {
+      ...conceptRefSchema,
+      properties: {
+        ...(conceptRefSchema.properties as Record<string, JsonSchema>),
+        firstOccurrence: {
+          type: 'boolean',
+          description: "Only the first time this event appears in the person's whole history (the editor's 'for the first time in the person's history'). Set it for new-user and first-diagnosis designs: without it, a person who started the drug years ago can enter at a later exposure once they have enough prior observation.",
+        },
+      },
+    },
     requiresApproval: true,
   },
 

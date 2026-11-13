@@ -78,6 +78,16 @@ describe('translateAgentEvent', () => {
     expect(translated?.conceptSet?.expression?.items?.[0]?.concept?.CONCEPT_ID).toBe(1713671)
   })
 
+  it('writes First when the event asks for the first occurrence in the person history', () => {
+    const event = { ...drugEvent('Lisinopril', 1308216, 4), firstOccurrence: true } as unknown as CohortEvent
+
+    expect(translateAgentEvent(event, [])?.criteria).toEqual({ DrugExposure: { CodesetId: 4, First: true } })
+  })
+
+  it('omits First for an ordinary event', () => {
+    expect(translateAgentEvent(drugEvent('Lisinopril', 1308216, 4), [])?.criteria).toEqual({ DrugExposure: { CodesetId: 4 } })
+  })
+
   it('refuses an event with no domain rather than writing an empty criterion', () => {
     expect(translateAgentEvent({ id: 'e1' } as unknown as CohortEvent, [])).toBeNull()
   })
@@ -121,6 +131,57 @@ describe('translateAgentEventToCorelated', () => {
     const translated = translateAgentEventToCorelated(drugEvent('Amoxicillin', 1713671, 4), [])
 
     expect(translated?.criteria.Occurrence).toEqual({ Type: 2, Count: 1, IsDistinct: false })
+  })
+
+  // Same NullPointerException as a missing Occurrence: circe-be reads
+  // StartWindow without a null check.
+  it('defaults the start window to all time before through the index date', () => {
+    const translated = translateAgentEventToCorelated(drugEvent('Amoxicillin', 1713671, 4), [])
+
+    expect(translated?.criteria.StartWindow).toEqual({
+      Start: { Days: null, Coeff: -1 },
+      End: { Days: 0, Coeff: 1 },
+      UseIndexEnd: false,
+      UseEventEnd: false,
+    })
+  })
+
+  it('carries the window the agent asked for into the start window', () => {
+    const event = {
+      ...drugEvent('Metformin', 1503297, 4),
+      temporalWindow: {
+        startWindow: { days: 90, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false },
+        endWindow: { days: 1, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false },
+      },
+    } as unknown as CohortEvent
+
+    const translated = translateAgentEventToCorelated(event, [])
+
+    expect(translated?.criteria.StartWindow).toEqual({
+      Start: { Days: 90, Coeff: -1 },
+      End: { Days: 1, Coeff: -1 },
+      UseIndexEnd: false,
+      UseEventEnd: false,
+    })
+  })
+
+  it('keeps an open-ended bound open rather than collapsing it to the index date', () => {
+    const event = {
+      ...drugEvent('Metformin', 1503297, 4),
+      temporalWindow: {
+        startWindow: { days: 0, beforeAfter: 'AFTER' },
+        endWindow: { days: null, beforeAfter: 'AFTER' },
+      },
+    } as unknown as CohortEvent
+
+    const translated = translateAgentEventToCorelated(event, [])
+
+    expect(translated?.criteria.StartWindow).toEqual({
+      Start: { Days: 0, Coeff: 1 },
+      End: { Days: null, Coeff: 1 },
+      UseIndexEnd: false,
+      UseEventEnd: false,
+    })
   })
 })
 

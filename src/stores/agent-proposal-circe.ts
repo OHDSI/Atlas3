@@ -31,10 +31,33 @@ import type {
   CorelatedCriteria,
   DemographicCriteria,
   NumericRange,
+  Window,
   CriteriaGroup as CirceCriteriaGroup,
 } from '@/models/circe-types'
 import type { CohortEvent, CriteriaGroup as AtlasCriteriaGroup } from '@/models/cohort.types'
-import type { NumericOperator } from '@/models/event.types'
+import type { NumericOperator, TemporalWindow, Window as AtlasWindowBound } from '@/models/event.types'
+
+// The agent tool schema documents an omitted window as all time prior through
+// the index date, so a criterion sent without one means "before index", not
+// ATLAS's unbounded editor default, which would also count events after index.
+const DEFAULT_AGENT_START_WINDOW: Window = {
+  Start: { Days: null, Coeff: -1 },
+  End: { Days: 0, Coeff: 1 },
+  UseIndexEnd: false,
+  UseEventEnd: false,
+}
+
+function circeStartWindow(window: TemporalWindow | undefined): Window {
+  if (!window?.startWindow && !window?.endWindow) return { ...DEFAULT_AGENT_START_WINDOW }
+  const bound = (b: AtlasWindowBound | undefined, fallback: Window['Start']) =>
+    b ? { Days: b.days, Coeff: b.beforeAfter === 'BEFORE' ? -1 : 1 } : fallback
+  return {
+    Start: bound(window.startWindow, DEFAULT_AGENT_START_WINDOW.Start),
+    End: bound(window.endWindow, DEFAULT_AGENT_START_WINDOW.End),
+    UseIndexEnd: window.startWindow?.useIndexEnd ?? false,
+    UseEventEnd: window.startWindow?.useEventEnd ?? false,
+  }
+}
 
 /**
  * What a translated event needs from its caller: the criterion itself, plus the
@@ -76,6 +99,9 @@ export function translateAgentEvent(
   if (conceptSet?.id !== undefined) {
     inner.CodesetId = conceptSet.id
   }
+  if (event.firstOccurrence) {
+    inner.First = true
+  }
 
   return {
     criteria: { [criteriaType]: inner } as Criteria,
@@ -98,7 +124,10 @@ export function translateAgentEventToCorelated(
   const translated = translateAgentEvent(event, existingConceptSets)
   if (!translated) return null
 
-  const criteria: CorelatedCriteria = { Criteria: translated.criteria }
+  const criteria: CorelatedCriteria = {
+    Criteria: translated.criteria,
+    StartWindow: circeStartWindow(event.temporalWindow),
+  }
 
   // Without a cardinality the event still needs an Occurrence: circe-be
   // dereferences it unconditionally, so a criterion saved without one makes

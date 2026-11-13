@@ -130,6 +130,7 @@ export interface CohortEvent {
   ignoreObservationPeriod?: boolean
   dateAdjustment?: DateAdjustment
   typeExclude?: boolean
+  firstOccurrence?: boolean
 }
 
 /** @deprecated Use circe.types.ts InclusionRule */

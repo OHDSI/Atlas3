@@ -762,6 +762,7 @@ export function translateCapability(
       const ref = args as ConceptRefArgs
       const event = buildEventFromCriterion(ref as CriterionArgs)
       if (!event) return null
+      if ((args as { firstOccurrence?: unknown }).firstOccurrence === true) event.firstOccurrence = true
       // The capability's contract is "replaces any existing entry event". Without
       // this the store appended, so changing the entry event left the cohort
       // qualifying on either one — twice the population, no error anywhere.

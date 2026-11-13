@@ -93,14 +93,11 @@
       </div>
     </div>
 
-    <v-navigation-drawer
+    <AtlasSideSheet
       v-if="drawerOpen"
       :model-value="drawerOpen"
       class="strata-editor__drawer"
-      location="right"
-      temporary
-      :width="drawerWidth"
-      :scrim="!conceptSetsStore.editorOpen"
+      :aria-label="t('cc.viewEdit.design.subgroups.title').value"
       @update:model-value="onDrawerModelValue"
     >
       <div class="strata-editor__drawer-shell">
@@ -155,7 +152,7 @@
           </div>
         </div>
       </div>
-    </v-navigation-drawer>
+    </AtlasSideSheet>
 
     <AtlasDialog
       v-model="discardConfirmationOpen"
@@ -209,11 +206,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
 import { useCirceConceptSetPicker } from '@/composables/useCirceConceptSetPicker'
-import { AtlasButton, AtlasChip, AtlasDialog, AtlasIconButton, AtlasSwitch, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasDialog, AtlasIconButton, AtlasSideSheet, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import { useConceptSetEditorSuppressed } from '@/components/characterization/concept-set-editor-suppression'
 import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
@@ -249,20 +246,6 @@ const suppressed = useConceptSetEditorSuppressed()
 
 const drawerOpen = ref(false)
 const editingStratumId = ref<string | null>(null)
-const drawerWidth = ref<number>(0)
-
-function updateDrawerWidth() {
-  drawerWidth.value = Math.max(500, Math.floor(window.innerWidth * 0.95))
-}
-
-onMounted(() => {
-  updateDrawerWidth()
-  window.addEventListener('resize', updateDrawerWidth)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', updateDrawerWidth)
-})
 
 // Scratch object mutated in-place by CriteriaGroup.vue while the dialog is open.
 const editingGroup = ref<CriteriaGroupType>({})

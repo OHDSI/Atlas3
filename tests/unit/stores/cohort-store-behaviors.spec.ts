@@ -285,14 +285,17 @@ describe('cohort store behaviors', () => {
       })
     })
 
-    it('CONTINUOUS_DRUG falls back to the offset for surveillance and works without a drug set', () => {
-      const store = openCohort({})
+    it('CONTINUOUS_DRUG falls back to the offset for surveillance and to the entry drug', () => {
+      const store = openCohort({
+        ConceptSets: [{ id: 2, name: 'drug', expression: { items: [] } }],
+        PrimaryCriteria: { CriteriaList: [{ DrugExposure: { CodesetId: 2 } }] },
+      })
 
       apply(store, { kind: 'setCohortExit', exitCriteria: { strategy: 'CONTINUOUS_DRUG', offset: 5 } })
 
-      expect(expr(store).ConceptSets).toEqual([])
+      expect(expr(store).ConceptSets).toHaveLength(1)
       expect(expr(store).EndStrategy).toEqual({
-        CustomEra: { DrugCodesetId: undefined, GapDays: 0, Offset: 5 },
+        CustomEra: { DrugCodesetId: 2, GapDays: 0, Offset: 5 },
       })
     })
 

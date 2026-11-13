@@ -26,10 +26,9 @@ vi.mock('@/services/concept-set-versions.service', () => ({
 const vuetify = createVuetify({ components, directives })
 
 const globalStubs = {
-  VNavigationDrawer: {
-    template: '<div class="v-navigation-drawer"><slot /></div>',
+  AtlasSideSheet: {
+    template: '<div class="atlas-side-sheet-stub"><slot /></div>',
   },
-  Teleport: { template: '<div><slot /></div>' },
 }
 
 describe('ConceptSetEditor — Included tab', () => {

@@ -22,7 +22,6 @@
         :close-on-content-click="false"
         location="bottom end"
         offset="8"
-        :z-index="2201"
       >
         <template #activator="{ props: activatorProps }">
           <AtlasButton
@@ -76,7 +75,6 @@
               clearable
               variant="outlined"
               hide-details
-              :menu-props="{ zIndex: 2300 }"
               @update:model-value="(v) => onUpdate(facet.key, v as string[])"
             />
           </div>
