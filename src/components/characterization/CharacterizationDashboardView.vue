@@ -151,6 +151,7 @@ import BoxPlotChart from '@/components/ui/charts/AtlasBoxPlotChart.vue'
 import type { BoxPlotData } from '@/models/report.types'
 import type { DistributionStat, LinkedCohort, PrevalenceStat } from '@/models/characterization.types'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
+import { escapeHtml } from '@/utils/html'
 
 const props = defineProps<{
   prevalence: PrevalenceStat[]
@@ -378,7 +379,7 @@ const scatterOption = computed(() => {
     tooltip: {
       trigger: 'item' as const,
       formatter: (p: { data: [number, number, string] }) =>
-        `<strong>${p.data[2]}</strong><br/>${props.cohorts[0]?.name}: ${p.data[0].toFixed(2)}%<br/>${props.cohorts[1]?.name}: ${p.data[1].toFixed(2)}%`,
+        `<strong>${escapeHtml(String(p.data[2] ?? ''))}</strong><br/>${escapeHtml(props.cohorts[0]?.name ?? '')}: ${p.data[0].toFixed(2)}%<br/>${escapeHtml(props.cohorts[1]?.name ?? '')}: ${p.data[1].toFixed(2)}%`,
     },
     legend: { top: 0, type: 'scroll' as const },
     grid: { top: 40, right: 20, bottom: 50, left: 60 },
@@ -451,7 +452,7 @@ const smdOption = computed(() => {
       trigger: 'item' as const,
       formatter: (p: { name: string; data: { value: [number, number] } }) => {
         const pt = reversed[p.data.value[1]]
-        return `<strong>${pt?.name ?? ''}</strong><br/>${tv('columns.domain')}: ${pt?.domain ?? ''}<br/>${tv('components.characterizationDashboard.smdShort')}: ${p.data.value[0].toFixed(4)}`
+        return `<strong>${escapeHtml(pt?.name ?? '')}</strong><br/>${tv('columns.domain')}: ${escapeHtml(pt?.domain ?? '')}<br/>${tv('components.characterizationDashboard.smdShort')}: ${p.data.value[0].toFixed(4)}`
       },
     },
     grid: { top: 20, right: 40, bottom: 40, left: 200 },

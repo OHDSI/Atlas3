@@ -9,6 +9,7 @@ import type { EChartsType } from 'echarts/core'
 import * as Papa from 'papaparse'
 import type { ChartExportOptions, CSVExportData } from '@/models/report.types'
 import { logger } from '@/utils/logger'
+import { CSV_FORMULA_PATTERN } from '@/utils/csv'
 import { useI18n } from '@/composables/useI18n'
 
 /**
@@ -122,6 +123,7 @@ export function useChartExport() {
       const csv = Papa.unparse(csvData, {
         quotes: true,
         delimiter: ',',
+        escapeFormulae: CSV_FORMULA_PATTERN,
         newline: '\n',
       })
 
@@ -162,6 +164,7 @@ export function useChartExport() {
       const tsv = Papa.unparse(csvData, {
         quotes: false,
         delimiter: '\t',
+        escapeFormulae: CSV_FORMULA_PATTERN,
         newline: '\n',
       })
 

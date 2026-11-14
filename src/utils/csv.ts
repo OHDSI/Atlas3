@@ -15,15 +15,33 @@ export interface CsvColumn<T> {
 }
 
 /**
+ * Matches a cell that a spreadsheet would interpret as a formula (CSV / formula
+ * injection, CWE-1236): text starting with `=`, `+`, `-`, `@`, tab or CR.
+ * Plain numbers such as `-1.5` or `+3e2` (and a lone `-` placeholder) are
+ * excluded so numeric columns are left untouched. Also usable as papaparse's
+ * `escapeFormulae` option.
+ */
+export const CSV_FORMULA_PATTERN = /^(?!-$)(?![-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?$)[=+\-@\t\r]/
+
+/**
+ * Prefix a cell value that would be evaluated as a spreadsheet formula with a
+ * single quote, so user-authored text (cohort names, concept set names, rule
+ * names) exported to CSV opens as text in Excel / LibreOffice / Sheets.
+ */
+export function neutralizeCsvFormula(str: string): string {
+  return CSV_FORMULA_PATTERN.test(str) ? `'${str}` : str
+}
+
+/**
  * Escape a single CSV cell value per RFC 4180:
  * wrap in quotes if it contains a quote, comma, or newline; double up
- * embedded quotes.
+ * embedded quotes. Formula-like text is neutralized first.
  */
 function escapeCell(value: unknown): string {
   if (value === null || value === undefined) {
     return ''
   }
-  const str = typeof value === 'string' ? value : String(value)
+  const str = neutralizeCsvFormula(typeof value === 'string' ? value : String(value))
   if (/[",\r\n]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`
   }

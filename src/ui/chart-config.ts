@@ -8,6 +8,7 @@ import { shallowRef } from 'vue'
 import type { EChartsOption } from 'echarts'
 import type { BarChartData, PieChartData, LineChartData, TreemapNode } from '@/models/report.types'
 import { tokens } from './tokens'
+import { escapeHtml } from '@/utils/html'
 
 // Default axis/series/tooltip labels. src/ui ships in @ohdsi/atlas-ui, which
 // must not depend on the host app's i18n (Pinia, en.json), so labels resolve
@@ -320,7 +321,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
         const param = paramsArray[0] as { name: string; seriesName: string; value: number }
         const value = formatSINumber(param.value)
         const unit = data.unit ? ` ${data.unit}` : ''
-        return `${param.name}<br/>${param.seriesName}: <strong>${value}${unit}</strong>`
+        return `${escapeHtml(String(param.name ?? ''))}<br/>${escapeHtml(String(param.seriesName ?? ''))}: <strong>${value}${escapeHtml(unit)}</strong>`
       },
     },
     grid: {
@@ -413,7 +414,7 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
         const p = params as { name: string; value: number; percent: number }
         const value = formatSINumber(p.value)
         const percent = p.percent.toFixed(1)
-        return `${p.name}<br/><strong>${value}</strong> (${percent}%)`
+        return `${escapeHtml(String(p.name ?? ''))}<br/><strong>${value}</strong> (${percent}%)`
       },
     },
     legend: {
@@ -499,7 +500,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
       const paramsArray = Array.isArray(params) ? params : [params]
       const param = paramsArray[0] as { name: string; seriesName: string; value: number }
       const value = formatSINumber(param.value)
-        return `${param.name}<br/>${param.seriesName}: <strong>${value}</strong>`
+        return `${escapeHtml(String(param.name ?? ''))}<br/>${escapeHtml(String(param.seriesName ?? ''))}: <strong>${value}</strong>`
       },
     },
     grid: {
@@ -591,12 +592,12 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
           parts = p.data.conceptPath.split('||').filter(part => part.trim() !== 'NA')
         }
 
-        let displayName = p.name
+        let displayName = escapeHtml(String(p.name ?? ''))
         if (parts.length > 0) {
           displayName = parts
             .map((part, index) => {
               const tabs = '\u00A0\u00A0\u00A0\u00A0'.repeat(index) // 4 non-breaking spaces per level
-              return tabs + part.trim()
+              return tabs + escapeHtml(part.trim())
             })
             .join('<br/>')
         }
@@ -919,7 +920,7 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
         const p = params as { name: string; value: number; percent: number }
         const value = formatSINumber(p.value)
         const percent = p.percent.toFixed(1)
-        return `<strong>${p.name}</strong><br/>${chartLabel('columns.count')}: ${value}<br/>${chartLabel('components.charts.percentage')}: ${percent}%`
+        return `<strong>${escapeHtml(String(p.name ?? ''))}</strong><br/>${chartLabel('columns.count')}: ${value}<br/>${chartLabel('components.charts.percentage')}: ${percent}%`
       },
     },
     legend: {
@@ -1012,7 +1013,7 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
         const [xStart, xEnd, yValue] = point
         const value = formatSINumber(yValue)
         const label = intervalSize === 1 ? fmtBin(xStart) : `${fmtBin(xStart)} - ${fmtBin(xEnd)}`
-        return `<strong>${axisLabel}: ${label}</strong><br/>${data.seriesName || data.unit || chartLabel('columns.count')}: ${value}`
+        return `<strong>${escapeHtml(String(axisLabel))}: ${escapeHtml(label)}</strong><br/>${escapeHtml(data.seriesName || data.unit || chartLabel('columns.count'))}: ${value}`
       },
     },
     grid: {
@@ -1104,7 +1105,7 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
       formatter: (params: unknown) => {
         const arr = Array.isArray(params) ? params : [params]
         const p = arr[0] as { value: [number, number] }
-        return `<strong>${data.xAxisLabel || chartLabel('components.charts.years')}: ${p.value[0]}</strong><br/>${data.yAxisLabel || chartLabel('components.charts.percentage')}: ${(p.value[1] * 100).toFixed(1)}%`
+        return `<strong>${escapeHtml(data.xAxisLabel || chartLabel('components.charts.years'))}: ${escapeHtml(String(p.value[0]))}</strong><br/>${escapeHtml(data.yAxisLabel || chartLabel('components.charts.percentage'))}: ${(p.value[1] * 100).toFixed(1)}%`
       },
     },
     grid: {
@@ -1183,7 +1184,7 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
         const p = arr[0] as { value: [number, number] }
         const d = new Date(p.value[0])
         const label = `${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`
-        return `<strong>${label}</strong><br/>${data.yAxisLabel || chartLabel('components.charts.observations')}: ${formatSINumber(p.value[1])}`
+        return `<strong>${label}</strong><br/>${escapeHtml(data.yAxisLabel || chartLabel('components.charts.observations'))}: ${formatSINumber(p.value[1])}`
       },
     },
     grid: {
@@ -1268,14 +1269,14 @@ export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLin
         if (paramsArray.length === 0) return ''
         const name = paramsArray[0]?.axisValueLabel || paramsArray[0]?.name || ''
         const lines = paramsArray.map(param => {
-          const series = param.seriesName || ''
+          const series = escapeHtml(String(param.seriesName || ''))
           // ECharts hands back the whole data point: for time/value axes that is
           // [x, y], so pull the y (last element) rather than stringifying the pair.
           const y = Array.isArray(param.value) ? param.value[param.value.length - 1] : param.value
-          const val = typeof y === 'number' ? formatValue(y) : String(y)
+          const val = typeof y === 'number' ? formatValue(y) : escapeHtml(String(y))
           return `${series}: <strong>${val}</strong>`
         })
-        return `<strong>${name}</strong><br/>${lines.join('<br/>')}`
+        return `<strong>${escapeHtml(String(name))}</strong><br/>${lines.join('<br/>')}`
       },
     },
     legend: {
@@ -1350,7 +1351,7 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
         const prevalence = p.data?.prevalence
         const metric = p.data?.metric
 
-        let tooltip = `<strong>${name}</strong><br/>`
+        let tooltip = `<strong>${escapeHtml(String(name ?? ''))}</strong><br/>`
         tooltip += `${chartLabel('components.charts.value')}: ${value}<br/>`
         if (prevalence !== undefined) {
           tooltip += `${chartLabel('characterizations.results.table.prevalence')}: ${prevalence.toFixed(2)}%<br/>`
@@ -1734,7 +1735,7 @@ export function boxPlotChartOptions(
           const dataPoint = data[params.dataIndex]
           const p90 = dataPoint?.p90 != null ? formatSINumber(dataPoint.p90) : chartLabel('common.notAvailable')
           const p10 = dataPoint?.p10 != null ? formatSINumber(dataPoint.p10) : chartLabel('common.notAvailable')
-          return `${params.name}<br/>
+          return `${escapeHtml(String(params.name ?? ''))}<br/>
             ${chartLabel('columns.max')}: ${formatSINumber(value[5])}<br/>
             P90: ${p90}<br/>
             ${chartLabel('columns.p75')}: ${formatSINumber(value[4])}<br/>
@@ -1743,7 +1744,7 @@ export function boxPlotChartOptions(
             P10: ${p10}<br/>
             ${chartLabel('characterizations.results.table.min')}: ${formatSINumber(value[1])}`
         }
-        return params.name
+        return escapeHtml(String(params.name ?? ''))
       },
     },
     grid: {
@@ -1790,7 +1791,7 @@ export function boxPlotChartOptions(
         tooltip: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           formatter: (param: any) => {
-            return `${param.name}<br/>
+            return `${escapeHtml(String(param.name ?? ''))}<br/>
               ${chartLabel('columns.max')}: ${formatSINumber(param.value[5])}<br/>
               ${chartLabel('columns.p75')}: ${formatSINumber(param.value[4])}<br/>
               ${chartLabel('columns.median')}: ${formatSINumber(param.value[3])}<br/>

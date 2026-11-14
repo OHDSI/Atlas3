@@ -7,6 +7,7 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { useChartExport } from '@/composables/useChartExport'
+import { CSV_FORMULA_PATTERN } from '@/utils/csv'
 import type { EChartsType } from 'echarts/core'
 import type { CSVExportData } from '@/models/report.types'
 
@@ -373,7 +374,8 @@ describe('useChartExport', () => {
         {
           quotes: true,
           delimiter: ',',
-          newline: '\n'
+          newline: '\n',
+          escapeFormulae: CSV_FORMULA_PATTERN,
         }
       )
     })
@@ -522,7 +524,8 @@ describe('useChartExport', () => {
           {
             quotes: false,
             delimiter: '\t',
-            newline: '\n'
+            newline: '\n',
+            escapeFormulae: CSV_FORMULA_PATTERN,
           }
         )
       })

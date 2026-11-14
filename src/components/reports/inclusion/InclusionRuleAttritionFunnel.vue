@@ -61,6 +61,7 @@ import { computed } from 'vue'
 import AtlasButton from '@/components/ui/AtlasButton.vue'
 import { computeAttritionSteps, type AttritionStep } from '@/utils/inclusion-attrition'
 import { escapeHtml } from '@/utils/html'
+import { neutralizeCsvFormula } from '@/utils/csv'
 import type { InclusionRuleReport } from '@/models/report.types'
 import { useI18n } from '@/composables/useI18n'
 import { trackChartTheme } from '@/ui/chart-config'
@@ -267,7 +268,7 @@ const chartOption = computed(() => {
 function exportCsv() {
   const lines: string[] = ['Step,Rule,Remaining,Excluded,Percent of Initial']
   steps.value.forEach((s, i) => {
-    const escaped = s.label.replace(/"/g, '""')
+    const escaped = neutralizeCsvFormula(s.label).replace(/"/g, '""')
     lines.push(`${i},"${escaped}",${s.remaining},${s.excluded},${s.percentOfInitial.toFixed(1)}`)
   })
   const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' })

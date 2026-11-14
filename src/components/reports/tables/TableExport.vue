@@ -45,6 +45,7 @@ import { AtlasButton, AtlasSnackbar } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import * as Papa from 'papaparse'
 import { logger } from '@/utils/logger'
+import { CSV_FORMULA_PATTERN } from '@/utils/csv'
 import { useI18n } from '@/composables/useI18n'
 
 const { t, tv } = useI18n()
@@ -186,6 +187,7 @@ async function handleExportCSV() {
       quotes: true, // Quote all fields
       header: true, // Include header row
       skipEmptyLines: true,
+      escapeFormulae: CSV_FORMULA_PATTERN,
     })
 
     // Create blob and download
