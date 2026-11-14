@@ -30,6 +30,39 @@
     "label": "Cohort editor"
   },
   {
+    "name": "reusables",
+    "path": "/reusables",
+    "params": [],
+    "agentVisible": true,
+    "label": "Reusables"
+  },
+  {
+    "name": "reusable-new",
+    "path": "/reusables/new",
+    "params": [],
+    "agentVisible": true,
+    "label": "New reusable"
+  },
+  {
+    "name": "reusable-edit",
+    "path": "/reusables/:id(\\\\d+)",
+    "params": [
+      "id"
+    ],
+    "agentVisible": true,
+    "label": "Reusable editor"
+  },
+  {
+    "name": "reusable-version-preview",
+    "path": "/reusables/:id(\\\\d+)/version/:version",
+    "params": [
+      "id",
+      "version"
+    ],
+    "agentVisible": true,
+    "label": "Reusable version preview"
+  },
+  {
     "name": "profiles",
     "path": "/profiles",
     "params": [],

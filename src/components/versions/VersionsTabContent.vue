@@ -71,6 +71,7 @@ import { copyVersion as copyCohortVersion } from '@/services/cohort-definition-v
 import { copyVersion as copyConceptSetVersion } from '@/services/concept-set-versions.service'
 import { copyPathwayVersion } from '@/services/pathway-versions.service'
 import { copyIncidenceRateVersion } from '@/services/incidence-rate-versions.service'
+import { copyReusableVersion } from '@/services/reusable-versions.service'
 import { ASSET_ROUTE_SEGMENT, ASSET_DETAIL_ROUTE_SEGMENT } from './types'
 import type { VersionsConfig, VersionsTableItem, Version } from './types'
 
@@ -107,6 +108,7 @@ const COPY_VERSION_API: Record<
   conceptset: copyConceptSetVersion,
   'pathway-analysis': copyPathwayVersion,
   ir: copyIncidenceRateVersion,
+  reusable: copyReusableVersion,
 }
 const copyVersionAPI = COPY_VERSION_API[props.config.assetType]
 
@@ -260,6 +262,9 @@ async function savePreviewAsCurrent(): Promise<boolean> {
   } else if (props.config.assetType === 'ir') {
     const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
     return useIncidenceRateStore().savePreviewAsCurrent()
+  } else if (props.config.assetType === 'reusable') {
+    const { useReusableStore } = await import('@/stores/reusable')
+    return useReusableStore().savePreviewAsCurrent()
   } else {
     const { useConceptSetsStore } = await import('@/stores/concept-sets')
     const conceptSetStore = useConceptSetsStore()
