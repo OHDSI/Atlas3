@@ -277,7 +277,7 @@ describe('pythiaBridge coverage', () => {
 
       const res = await generate({ analysisType: 'pathway', analysisId: 9 })
 
-      expect(res).toBeUndefined()
+      expect(res).toEqual({ applied: false, error: 'No data source selected' })
       expect(fetchSources).toHaveBeenCalledOnce()
       expect(generatePathway).not.toHaveBeenCalled()
       expect(notes()).toEqual([{ severity: 'danger', title: 'Cannot generate: no data source selected' }])
@@ -346,9 +346,28 @@ describe('pythiaBridge coverage', () => {
       const store = webapiWith(['SYNPUF5'], 'SYNPUF5')
       spy(store, 'generateCohort').mockResolvedValue(null)
 
-      await generate({ analysisType: 'cohort', analysisId: 7 })
+      const res = await generate({ analysisType: 'cohort', analysisId: 7 })
 
+      expect(res).toEqual({ applied: false, error: 'Failed to start generation' })
       expect(notes()).toEqual([{ severity: 'danger', title: 'Failed to start generation' }])
+    })
+
+    it('returns the error when a cohort generation throws', async () => {
+      const store = webapiWith(['SYNPUF5'], 'SYNPUF5')
+      spy(store, 'generateCohort').mockRejectedValue(new Error('boom'))
+
+      const res = await generate({ analysisType: 'cohort', analysisId: 7 })
+
+      expect(res).toEqual({ applied: false, error: 'boom' })
+    })
+
+    it('returns the error when a pathway generation throws', async () => {
+      webapiWith(['FIRST'], 'SEL')
+      vi.mocked(generatePathway).mockRejectedValue(new Error('down'))
+
+      const res = await generate({ analysisType: 'pathway', analysisId: 5 })
+
+      expect(res).toEqual({ applied: false, error: 'down' })
     })
 
     it('starts a pathway generation and tells the workbench to watch it', async () => {
@@ -367,8 +386,9 @@ describe('pythiaBridge coverage', () => {
       const notify = spy(usePathwayStore(), 'notifyAgentGeneration')
       vi.mocked(generatePathway).mockResolvedValue({ success: false, error: 'busy' } as never)
 
-      await generate({ analysisType: 'pathway', analysisId: 5 })
+      const res = await generate({ analysisType: 'pathway', analysisId: 5 })
 
+      expect(res).toEqual({ applied: false, error: 'busy' })
       expect(notify).not.toHaveBeenCalled()
       expect(notes()).toEqual([{ severity: 'danger', title: 'Failed to start generation: busy' }])
     })

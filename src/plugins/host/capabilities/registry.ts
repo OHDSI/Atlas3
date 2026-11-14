@@ -364,7 +364,7 @@ export const CAPABILITIES: Capability[] = [
           enum: ['cohort', 'pathway', 'characterization', 'incidenceRate'],
           description: 'Which kind of analysis to run. REQUIRED.',
         },
-        analysisId: { type: 'number', description: 'Saved analysis id. REQUIRED.' },
+        analysisId: { type: 'number', description: 'Saved analysis or cohort id. REQUIRED.' },
         sourceKey: { type: 'string', description: 'CDM source key, e.g. EUNOMIA. Defaults to the current source.' },
       },
       required: ['analysisType', 'analysisId'],
