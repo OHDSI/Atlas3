@@ -77,6 +77,13 @@ const TARGETS: Record<string, Target> = {
 const HEADER_BOUND_FIELDS = ['CodesetId']
 
 /**
+ * Fields that are not criteria attributes at all. `ReusableRef` records which
+ * reusable a criterion was inserted from; the reference banner above the
+ * criterion shows it, and circe ignores it when building SQL.
+ */
+const NON_ATTRIBUTE_FIELDS = ['ReusableRef']
+
+/**
  * Schema fields no attribute spec surfaces. A value loaded from a 2.x cohort into one
  * of these is invisible and uneditable in the editor while still constraining
  * generation, so every entry is a known gap rather than an accepted design.
@@ -90,6 +97,7 @@ const KNOWN_UNSURFACED: readonly string[] = [
   'LocationRegion.CorrelatedCriteria', // no editor: CRITERIA_EDITORS maps LocationRegion to null
   'LocationRegion.DateAdjustment', // no editor: CRITERIA_EDITORS maps LocationRegion to null
   'LocationRegion.EndDate', // no editor: CRITERIA_EDITORS maps LocationRegion to null
+  'LocationRegion.ReusableRef', // no editor: CRITERIA_EDITORS maps LocationRegion to null
   'LocationRegion.StartDate', // no editor: CRITERIA_EDITORS maps LocationRegion to null
   'Measurement.DateAdjustment', // gap: Measurement.vue has no DateAdjustment control (it does surface VisitType/VisitTypeCS)
 ]
@@ -221,7 +229,7 @@ describe('schema fields no attribute spec surfaces', () => {
     for (const domain of Object.keys(TARGETS)) {
       const surface = SURFACE[domain]
       const surfaced = surface
-        ? new Set([...surface.specKeys, ...surface.writtenKeys, ...HEADER_BOUND_FIELDS])
+        ? new Set([...surface.specKeys, ...surface.writtenKeys, ...HEADER_BOUND_FIELDS, ...NON_ATTRIBUTE_FIELDS])
         : new Set<string>()
 
       for (const field of shapeKeys(domain)) {
