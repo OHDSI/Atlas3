@@ -277,7 +277,7 @@ describe('pythiaBridge coverage', () => {
 
       const res = await generate({ analysisType: 'pathway', analysisId: 9 })
 
-      expect(res).toBeUndefined()
+      expect(res).toEqual({ applied: false, error: 'No data source selected' })
       expect(fetchSources).toHaveBeenCalledOnce()
       expect(generatePathway).not.toHaveBeenCalled()
       expect(notes()).toEqual([{ severity: 'danger', title: 'Cannot generate: no data source selected' }])
@@ -320,6 +320,56 @@ describe('pythiaBridge coverage', () => {
       ])
     })
 
+    it('starts a cohort generation through the webapi store so the Generation tab shows it', async () => {
+      const store = webapiWith(['SYNPUF5'], 'SYNPUF5')
+      const generateCohort = spy(store, 'generateCohort').mockResolvedValue({ id: 1 } as never)
+
+      await generate({ analysisType: 'cohort', analysisId: 7 })
+
+      expect(generateCohort).toHaveBeenCalledWith(7, 'SYNPUF5')
+      expect(generatePathway).not.toHaveBeenCalled()
+      expect(notes()).toEqual([{ severity: 'success', title: 'Generating cohort against SYNPUF5' }])
+    })
+
+    it('does not start a cohort generation without a data source', async () => {
+      const store = webapiWith([], null)
+      spy(store, 'fetchSources').mockResolvedValue(undefined)
+      const generateCohort = spy(store, 'generateCohort')
+
+      await generate({ analysisType: 'cohort', analysisId: 7 })
+
+      expect(generateCohort).not.toHaveBeenCalled()
+      expect(notes()).toEqual([{ severity: 'danger', title: 'Cannot generate: no data source selected' }])
+    })
+
+    it('reports a cohort generation that could not start', async () => {
+      const store = webapiWith(['SYNPUF5'], 'SYNPUF5')
+      spy(store, 'generateCohort').mockResolvedValue(null)
+
+      const res = await generate({ analysisType: 'cohort', analysisId: 7 })
+
+      expect(res).toEqual({ applied: false, error: 'Failed to start generation' })
+      expect(notes()).toEqual([{ severity: 'danger', title: 'Failed to start generation' }])
+    })
+
+    it('returns the error when a cohort generation throws', async () => {
+      const store = webapiWith(['SYNPUF5'], 'SYNPUF5')
+      spy(store, 'generateCohort').mockRejectedValue(new Error('boom'))
+
+      const res = await generate({ analysisType: 'cohort', analysisId: 7 })
+
+      expect(res).toEqual({ applied: false, error: 'boom' })
+    })
+
+    it('returns the error when a pathway generation throws', async () => {
+      webapiWith(['FIRST'], 'SEL')
+      vi.mocked(generatePathway).mockRejectedValue(new Error('down'))
+
+      const res = await generate({ analysisType: 'pathway', analysisId: 5 })
+
+      expect(res).toEqual({ applied: false, error: 'down' })
+    })
+
     it('starts a pathway generation and tells the workbench to watch it', async () => {
       webapiWith(['FIRST'], 'SEL')
       const notify = spy(usePathwayStore(), 'notifyAgentGeneration')
@@ -334,10 +384,11 @@ describe('pythiaBridge coverage', () => {
     it('reports a generation the service refused', async () => {
       webapiWith(['FIRST'], 'SEL')
       const notify = spy(usePathwayStore(), 'notifyAgentGeneration')
-      vi.mocked(generatePathway).mockResolvedValue({ success: false, error: 'busy' } as never)
+      vi.mocked(generatePathway).mockResolvedValue({ success: false, error: { message: 'busy' } } as never)
 
-      await generate({ analysisType: 'pathway', analysisId: 5 })
+      const res = await generate({ analysisType: 'pathway', analysisId: 5 })
 
+      expect(res).toEqual({ applied: false, error: 'busy' })
       expect(notify).not.toHaveBeenCalled()
       expect(notes()).toEqual([{ severity: 'danger', title: 'Failed to start generation: busy' }])
     })

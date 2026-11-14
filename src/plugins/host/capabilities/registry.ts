@@ -355,16 +355,16 @@ export const CAPABILITIES: Capability[] = [
 
   {
     name: 'generate_analysis',
-    description: 'Run a SAVED analysis against a data source, the same as clicking Generate in the editor. Use after the analysis exists (create_pathway / create_characterization / create_incidence_rate returned an id). Results appear in the editor when the job finishes. Omit sourceKey to use the source the user is currently working against.',
+    description: 'Run a SAVED analysis or a SAVED cohort (save_cohort returned an id) against a data source, the same as clicking Generate in the editor. Use after it exists (create_pathway / create_characterization / create_incidence_rate returned an id). Results appear in the editor when the job finishes. Omit sourceKey to use the source the user is currently working against.',
     schema: {
       type: 'object',
       properties: {
         analysisType: {
           type: 'string',
-          enum: ['pathway', 'characterization', 'incidenceRate'],
+          enum: ['cohort', 'pathway', 'characterization', 'incidenceRate'],
           description: 'Which kind of analysis to run. REQUIRED.',
         },
-        analysisId: { type: 'number', description: 'Saved analysis id. REQUIRED.' },
+        analysisId: { type: 'number', description: 'Saved analysis or cohort id. REQUIRED.' },
         sourceKey: { type: 'string', description: 'CDM source key, e.g. EUNOMIA. Defaults to the current source.' },
       },
       required: ['analysisType', 'analysisId'],
