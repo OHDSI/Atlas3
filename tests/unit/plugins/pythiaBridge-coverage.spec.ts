@@ -384,7 +384,7 @@ describe('pythiaBridge coverage', () => {
     it('reports a generation the service refused', async () => {
       webapiWith(['FIRST'], 'SEL')
       const notify = spy(usePathwayStore(), 'notifyAgentGeneration')
-      vi.mocked(generatePathway).mockResolvedValue({ success: false, error: 'busy' } as never)
+      vi.mocked(generatePathway).mockResolvedValue({ success: false, error: { message: 'busy' } } as never)
 
       const res = await generate({ analysisType: 'pathway', analysisId: 5 })
 

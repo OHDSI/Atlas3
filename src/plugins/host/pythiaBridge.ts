@@ -721,8 +721,8 @@ async function handleGenerateAnalysis(payload: {
   try {
     const result = await generatePathway(payload.analysisId, sourceKey)
     if (!result.success) {
-      showSnackbar(`Failed to start generation: ${result.error}`, 'error')
-      return { applied: false, error: result.error }
+      showSnackbar(`Failed to start generation: ${result.error.message}`, 'error')
+      return { applied: false, error: result.error.message }
     }
     showSnackbar(`Generating pathway analysis against ${sourceKey}`, 'success')
     // The workbench only polls runs it started itself, so tell it to watch this
