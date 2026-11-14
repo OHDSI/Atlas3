@@ -684,7 +684,7 @@ async function handleCreatePathway(
 // create an analysis but previously had no way to execute it, so every demo
 // ended with an unrun analysis the user had to kick off by hand.
 async function handleGenerateAnalysis(payload: {
-  analysisType: 'pathway' | 'characterization' | 'incidenceRate'
+  analysisType: 'cohort' | 'pathway' | 'characterization' | 'incidenceRate'
   analysisId: number
   sourceKey?: string
 }): Promise<void> {
@@ -698,6 +698,20 @@ async function handleGenerateAnalysis(payload: {
     ''
   if (!sourceKey) {
     showSnackbar('Cannot generate: no data source selected', 'error')
+    return
+  }
+  if (payload.analysisType === 'cohort') {
+    try {
+      const job = await webapiStore.generateCohort(payload.analysisId, sourceKey)
+      if (!job) {
+        showSnackbar('Failed to start generation', 'error')
+        return
+      }
+      showSnackbar(`Generating cohort against ${sourceKey}`, 'success')
+    } catch (err) {
+      logger.error('pythiaBridge', 'generateAnalysis failed', err)
+      showSnackbar(`Failed to start generation: ${(err as Error).message}`, 'error')
+    }
     return
   }
   if (payload.analysisType !== 'pathway') {
