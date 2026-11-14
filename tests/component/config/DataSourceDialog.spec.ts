@@ -32,11 +32,13 @@ import DataSourceDialog from '@/components/config/DataSourceDialog.vue'
 import { tr } from '../../helpers/i18n-mock'
 
 const vuetify = createVuetify({ components, directives })
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }
+})
 
 // The fields stay real so v-form validation runs for the Save button; only the
 // dialog shell and buttons are stubbed, since AtlasDialog teleports its

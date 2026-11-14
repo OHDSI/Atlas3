@@ -8,9 +8,11 @@ import AtlasCheckbox from '@/components/ui/AtlasCheckbox.vue'
 
 const vuetify = createVuetify({ components, directives })
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
-}))
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
+  }
+})
 
 function mountWith(props: Record<string, unknown> = {}) {
   return mount(AtlasCheckbox, { global: { plugins: [vuetify] }, props })

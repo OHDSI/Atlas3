@@ -23,7 +23,7 @@ vi.mock('@/utils/logger', () => ({
 
 let cohortDefService: typeof import('@/services/cohort-definition.service')
 let useCohortValidation: typeof import('@/composables/useCohortValidation').useCohortValidation
-let CohortValidationOptions: import('@/composables/useCohortValidation').CohortValidationOptions
+type CohortValidationOptions = import('@/composables/useCohortValidation').CohortValidationOptions
 
 beforeAll(async () => {
   vi.resetModules()
@@ -33,7 +33,7 @@ beforeAll(async () => {
 })
 
 describe('useCohortValidation', () => {
-  function createTestOptions(overrides: Partial<typeof CohortValidationOptions> = {}) {
+  function createTestOptions(overrides: Partial<CohortValidationOptions> = {}) {
     return {
       cohortName: ref('Test Cohort'),
       cohortDescription: ref('Test Description'),

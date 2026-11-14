@@ -9,11 +9,13 @@ import type { RunTableExecution } from '@/components/generation/DataSourceRunTab
 
 const vuetify = createVuetify({ components, directives })
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }
+})
 
 function exec(overrides: Partial<RunTableExecution> = {}): RunTableExecution {
   return {

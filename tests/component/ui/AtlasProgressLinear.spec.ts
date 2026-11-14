@@ -7,9 +7,11 @@ import AtlasProgressLinear from '@/components/ui/AtlasProgressLinear.vue'
 
 const vuetify = createVuetify({ components, directives })
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
-}))
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
+  }
+})
 
 describe('AtlasProgressLinear', () => {
   it('renders v-progress-linear', () => {

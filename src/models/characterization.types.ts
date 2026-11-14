@@ -140,7 +140,7 @@ export const CharacterizationDefinitionSchema = z
     cohorts: z.array(LinkedCohortSchema),
     featureAnalyses: z.array(LinkedFeatureAnalysisSchema),
     stratas: z.array(StratumSchema),
-    strataConceptSets: z.array(z.record(z.unknown())).optional(),
+    strataConceptSets: z.array(z.record(z.string(), z.unknown())).optional(),
     stratifiedBy: z.string().optional(),
     strataOnly: z.boolean().optional(),
     parameters: z.array(CharacterizationParameterSchema).optional(),
@@ -318,13 +318,13 @@ export const GenerationResultsSchema = z
     count: z.number().optional(),
     prevalenceThreshold: z.number().optional(),
     showEmptyResults: z.boolean().nullable().optional(),
-    strataCounts: z.record(z.record(z.number())).nullable().optional(),
+    strataCounts: z.record(z.string(), z.record(z.string(), z.number())).nullable().optional(),
   })
   .passthrough()
 
 // Two-level keying [strataId][cohortId] -> value. Strings because the report
 // service serialises numeric ids as JSON object keys.
-const NestedNumberMapSchema = z.record(z.record(z.number()))
+const NestedNumberMapSchema = z.record(z.string(), z.record(z.string(), z.number()))
 
 export interface PrevalenceStat {
   analysisId: number
@@ -356,12 +356,12 @@ export const PrevalenceStatSchema = z
     domainId: z.string().optional(),
     faType: FeatureAnalysisTypeSchema.optional(),
     cohorts: z.array(LinkedCohortSchema),
-    strataNames: z.record(z.string()).default({}),
+    strataNames: z.record(z.string(), z.string()).default({}),
     count: NestedNumberMapSchema,
     pct: NestedNumberMapSchema,
     stdDiff: z.number().optional(),
-    stdDiffByStrata: z.record(z.number()).optional(),
-    temporalByCohort: z.record(z.lazy(() => CohortTemporalDataSchema)).optional(),
+    stdDiffByStrata: z.record(z.string(), z.number()).optional(),
+    temporalByCohort: z.record(z.string(), z.lazy(() => CohortTemporalDataSchema)).optional(),
   })
   .passthrough()
 
@@ -400,7 +400,7 @@ export const DistributionStatSchema = z
     domainId: z.string().optional(),
     faType: FeatureAnalysisTypeSchema.optional(),
     cohorts: z.array(LinkedCohortSchema),
-    strataNames: z.record(z.string()).default({}),
+    strataNames: z.record(z.string(), z.string()).default({}),
     count: NestedNumberMapSchema.optional(),
     avg: NestedNumberMapSchema,
     stdDev: NestedNumberMapSchema,

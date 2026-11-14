@@ -84,10 +84,10 @@ export function describeImportProblems(problems: ImportProblem[]): string[] {
   })
 }
 
-function formatPath(path: (string | number)[]): string {
+function formatPath(path: PropertyKey[]): string {
   return path.reduce<string>(
     (acc, segment) =>
-      typeof segment === 'number' ? `${acc}[${segment}]` : acc ? `${acc}.${segment}` : String(segment),
+      typeof segment === 'number' ? `${acc}[${segment}]` : acc ? `${acc}.${String(segment)}` : String(segment),
     ''
   )
 }
@@ -115,20 +115,21 @@ function collectUnrecognized(
   const type = unwrapType(schema)
 
   if (type instanceof z.ZodLazy) {
-    collectUnrecognized(type.schema, data, path, out, unrecognizedField)
+    collectUnrecognized(type.unwrap() as z.ZodTypeAny, data, path, out, unrecognizedField)
     return
   }
 
   if (type instanceof z.ZodArray) {
     if (!Array.isArray(data)) return
-    data.forEach((item, index) => collectUnrecognized(type.element, item, `${path}[${index}]`, out, unrecognizedField))
+    const element = type.element as z.ZodTypeAny
+    data.forEach((item, index) => collectUnrecognized(element, item, `${path}[${index}]`, out, unrecognizedField))
     return
   }
 
   if (type instanceof z.ZodRecord) {
     if (typeof data !== 'object' || Array.isArray(data)) return
     for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
-      collectUnrecognized(type.valueSchema, value, join(path, key), out, unrecognizedField)
+      collectUnrecognized(type.valueType as z.ZodTypeAny, value, join(path, key), out, unrecognizedField)
     }
     return
   }
@@ -138,24 +139,24 @@ function collectUnrecognized(
     // Jackson-style wrapper union (`{ ConditionOccurrence: {...} }`): the
     // branch is chosen by the wrapper key, so an unknown wrapper key means the
     // criterion type itself is unrecognized rather than one of its fields.
-    const options = type.options as z.ZodTypeAny[]
+    const options = type.options as readonly z.ZodTypeAny[]
     const objectOptions = options.filter(
-      (option): option is z.AnyZodObject => unwrapType(option) instanceof z.ZodObject
+      (option): option is z.ZodObject => unwrapType(option) instanceof z.ZodObject
     )
     for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
-      const match = objectOptions.find((option) => key in (unwrapType(option) as z.AnyZodObject).shape)
+      const match = objectOptions.find((option) => key in (unwrapType(option) as z.ZodObject).shape)
       if (!match) {
         out.push({
           path: join(path, key),
           message: unrecognizedField,
           suggestion: closestKey(
             key,
-            objectOptions.flatMap((option) => Object.keys((unwrapType(option) as z.AnyZodObject).shape))
+            objectOptions.flatMap((option) => Object.keys((unwrapType(option) as z.ZodObject).shape))
           ),
         })
         continue
       }
-      const shape = (unwrapType(match) as z.AnyZodObject).shape as Record<string, z.ZodTypeAny>
+      const shape = (unwrapType(match) as z.ZodObject).shape as Record<string, z.ZodTypeAny>
       const inner = shape[key]
       if (inner) collectUnrecognized(inner, value, join(path, key), out, unrecognizedField)
     }

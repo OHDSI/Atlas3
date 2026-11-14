@@ -27,14 +27,9 @@ export default defineConfig({
     },
     // Performance Optimization: Use threads instead of forks (significantly lower overhead)
     // Threads provide better parallelization for test suites with many files
+    // Test files run in parallel across available CPU cores (Vitest's default
+    // for the threads pool); this is the primary performance optimization.
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        // Allow parallel test execution across available CPU cores
-        // This is the primary performance optimization (reduces total runtime by ~50%)
-        singleThread: false,
-      },
-    },
     testTimeout: 30000,
     hookTimeout: 30000,
     server: {
