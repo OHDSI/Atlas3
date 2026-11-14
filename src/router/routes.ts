@@ -45,6 +45,35 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, titleKey: 'route.cohortBuilder.title', agentVisible: true, agentLabel: 'Cohort editor' },
   },
   {
+    path: '/reusables',
+    name: 'reusables',
+    component: () => import('@/views/ReusablesView.vue'),
+    meta: { requiresAuth: true, titleKey: 'route.reusables.title', agentVisible: true, agentLabel: 'Reusables' },
+  },
+  {
+    path: '/reusables/new',
+    name: 'reusable-new',
+    component: () => import('@/views/ReusableEditorView.vue'),
+    meta: { requiresAuth: true, titleKey: 'route.reusables.title', agentVisible: true, agentLabel: 'New reusable' },
+  },
+  {
+    path: '/reusables/:id(\\d+)',
+    name: 'reusable-edit',
+    component: () => import('@/views/ReusableEditorView.vue'),
+    meta: { requiresAuth: true, titleKey: 'route.reusables.title', agentVisible: true, agentLabel: 'Reusable editor' },
+  },
+  {
+    path: '/reusables/:id(\\d+)/version/:version',
+    name: 'reusable-version-preview',
+    component: () => import('@/views/ReusableEditorView.vue'),
+    meta: { requiresAuth: true, titleKey: 'route.reusables.title', agentVisible: true, agentLabel: 'Reusable version preview' },
+  },
+  // Atlas 2.x URLs: /reusables/:id/design and /reusables/:id/conceptsets.
+  {
+    path: '/reusables/:id(\\d+)/:section(design|conceptsets)',
+    redirect: to => ({ name: 'reusable-edit', params: { id: singleParam(to.params.id) } }),
+  },
+  {
     path: '/profiles',
     name: 'profiles',
     component: () => import('@/views/ProfileView.vue'),

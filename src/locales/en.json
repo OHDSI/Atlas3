@@ -185,7 +185,8 @@
     "jobs": "Jobs",
     "pathways": "Cohort Pathways",
     "docs": "User manual",
-    "analysis": "Analysis"
+    "analysis": "Analysis",
+    "reusables": "Reusables"
   },
   "route": {
     "home": {
@@ -226,6 +227,9 @@
     },
     "roleManagement": {
       "title": "Role Management"
+    },
+    "reusables": {
+      "title": "Reusables"
     }
   },
   "options": {
@@ -3377,6 +3381,63 @@
     "errors": {
       "loadFailed": "Failed to load concept",
       "notFound": "Concept not found"
+    }
+  },
+  "reusables": {
+    "entityName": "reusable",
+    "newName": "New Reusable",
+    "noChanges": "There are no changes to save.",
+    "saved": "Reusable saved",
+    "saveError": "Failed to save the reusable",
+    "copyError": "Failed to copy the reusable",
+    "deleteError": "Failed to delete the reusable",
+    "deleteConfirm": "Delete the reusable '{name}'? Cohorts it was inserted into keep their copy of its logic.",
+    "previewBanner": "You are viewing version {version}. Save it as the current version from the version history, or go back to the current version.",
+    "versionHistory": "Reusable version history",
+    "types": {
+      "CRITERIA_GROUP": "Criteria Group",
+      "INITIAL_EVENT": "Initial/Censoring Event"
+    },
+    "list": {
+      "eyebrow": "COHORT LOGIC",
+      "subtitle": "Saved pieces of cohort logic you can insert into cohorts, strata and feature analyses.",
+      "newButton": "New Reusable",
+      "empty": "No reusables yet."
+    },
+    "design": {
+      "typeTitle": "Reusable type",
+      "typeHelpInitialEvent": "Initial/Censoring Event reusables add events to a cohort's entry events or censoring events.",
+      "typeHelpCriteriaGroup": "Criteria Group reusables add criteria to any group of criteria: inclusion rules, characterization strata, feature analysis criteria and incidence rate strata.",
+      "typeSwitchNote": "Both designs are kept when you switch type, but only the one for the type you save with is offered for insertion.",
+      "parametersTitle": "Parameters",
+      "newParameter": "New parameter",
+      "parametersHelp": "A parameter is a concept set left open: criteria can use it like any concept set, and whoever inserts the reusable chooses the actual concept set.",
+      "noParameters": "No parameters defined.",
+      "conceptSetsTitle": "Concept sets",
+      "conceptCount": "{count} concepts",
+      "expressionTitle": "Design",
+      "addEvent": "Add event",
+      "noEvents": "No events yet. Add one to start.",
+      "assignTitle": "Use a parameter or a concept set?",
+      "assignHelp": "Choose a parameter to leave this concept set open for whoever inserts the reusable, or pick a concept set to fix it.",
+      "assignConceptSet": "Choose a concept set",
+      "parameterNotEditable": "A parameter has no concepts of its own; they are chosen when the reusable is inserted."
+    },
+    "insert": {
+      "button": "From Reusable",
+      "eyebrow": "INSERT",
+      "title": "Insert from a reusable",
+      "helpInitialEvent": "Initial/Censoring Event reusables. Their events are added to this list.",
+      "helpCriteriaGroup": "Criteria Group reusables. Their criteria are added to this group, or as a nested group when this group already has criteria.",
+      "search": "Search reusables",
+      "empty": "No reusables of this type.",
+      "parametersTitle": "Parameters",
+      "parametersHelp": "Choose a concept set for each parameter. A parameter left open matches any concept.",
+      "anyConcept": "Any concept",
+      "chooseConceptSet": "Choose concept set",
+      "clearParameter": "Leave open",
+      "noParameters": "This reusable has no parameters.",
+      "confirm": "Insert"
     }
   }
 }
