@@ -5,6 +5,7 @@ import { useNotifications } from '@/stores/notifications'
 import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'
 import type { ConceptSet } from '@/models/circe-types'
+import { provideReusableInsertHost } from '@/components/reusables/reusable-insert-host'
 import type { ConceptSetItem as AtlasConceptSetItem } from '@/models/concept-set.types'
 import type {
   ConceptSetOption,
@@ -24,17 +25,33 @@ import type {
  *   3. Pass `onSelectConceptSet` to the `@select-concept-set` / `@edit-concept-set` events.
  *   4. Pass `onConceptSetSelected` to the `<ConceptSetSelectionDialog>`.
  *
+ * It also makes the same list the target of "From Reusable" insertions for
+ * every criteria editor below the calling component (see reusable-insert-host).
+ *
  * @param opts.getConceptSets  returns the current expression-level concept-set list
  * @param opts.addConceptSet   called when a selected concept set is new to the list
+ * @param opts.allowReusables  false to offer no "From Reusable" insertion below
+ *                             (the reusable editor itself)
  */
 export function useCirceConceptSetPicker(opts: {
   getConceptSets: () => ConceptSet[]
   addConceptSet: (cs: ConceptSet) => void
   onConceptSetChanged?: () => void
+  allowReusables?: boolean
 }) {
   const conceptSetsStore = useConceptSetsStore()
   const notify = useNotifications()
   const { tv } = useI18n()
+
+  provideReusableInsertHost(
+    opts.allowReusables === false
+      ? null
+      : {
+          getConceptSets: opts.getConceptSets,
+          addConceptSet: opts.addConceptSet,
+          onInserted: opts.onConceptSetChanged,
+        }
+  )
 
   const pickerOpen = ref(false)
   interface SelectionRequest {

@@ -61,12 +61,13 @@ import { updateVersion as updateCohortVersion } from '@/services/cohort-definiti
 import { updateVersion as updateConceptSetVersion } from '@/services/concept-set-versions.service'
 import { updatePathwayVersion } from '@/services/pathway-versions.service'
 import { updateIncidenceRateVersion } from '@/services/incidence-rate-versions.service'
+import { updateReusableVersion } from '@/services/reusable-versions.service'
 
 // Props
 const props = defineProps<{
   modelValue: boolean
   version: Version | null
-  assetType: 'cohortdefinition' | 'conceptset' | 'pathway-analysis' | 'ir'
+  assetType: 'cohortdefinition' | 'conceptset' | 'pathway-analysis' | 'ir' | 'reusable'
   assetId: number
 }>()
 
@@ -133,7 +134,13 @@ const updateVersionAPI =
               comment: payload.comment,
               archived: payload.archived,
             })
-        : updateConceptSetVersion
+        : props.assetType === 'reusable'
+          ? (id: number, version: number, payload: CommentUpdatePayload) =>
+              updateReusableVersion(id, version, {
+                comment: payload.comment,
+                archived: payload.archived,
+              })
+          : updateConceptSetVersion
 
 /**
  * Handle save button click

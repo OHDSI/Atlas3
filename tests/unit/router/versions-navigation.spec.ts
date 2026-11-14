@@ -42,6 +42,7 @@ const expectedVersionPreviewRoute: Record<VersionsConfig['assetType'], string> =
   conceptset: 'conceptset-version-preview',
   'pathway-analysis': 'pathway-version-preview',
   ir: 'incidence-rate-version-preview',
+  reusable: 'reusable-version-preview',
 }
 
 describe('version-preview navigation targets resolve to real routes', () => {
@@ -68,6 +69,7 @@ const expectedDetailRoute: Partial<Record<VersionsConfig['assetType'], string>> 
   conceptset: 'conceptset-edit',
   'pathway-analysis': 'pathway-edit',
   ir: 'incidence-rate-edit',
+  reusable: 'reusable-edit',
 }
 
 describe('post-copy navigation targets resolve to real routes', () => {
