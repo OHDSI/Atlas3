@@ -214,4 +214,30 @@ describe('CohortBuilder save gate (issue #262)', () => {
     expect(vm.hasUnsavedChanges).toBe(true)
     expect(vm.canSave).toBe(true)
   })
+
+  it('saves an agent request without a name under a name derived from the entry concept set', async () => {
+    const { useCohortStore } = await import('@/stores/cohort')
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = (
+      wrapper.vm as unknown as {
+        $: { setupState: { expression: CohortExpression; cohortName: string } }
+      }
+    ).$.setupState
+    setup.expression.ConceptSets = [
+      { id: 0, name: 'lisinopril', expression: { items: [] } },
+    ] as unknown as CohortExpression['ConceptSets']
+    setup.expression.PrimaryCriteria = {
+      CriteriaList: [{ DrugExposure: { CodesetId: 0 } }],
+      ObservationWindow: { PriorDays: 0, PostDays: 0 },
+    } as unknown as CohortExpression['PrimaryCriteria']
+    await wrapper.vm.$nextTick()
+
+    const result = await useCohortStore().requestSave()
+
+    const { saveCohortDefinition } = await import('@/services/cohort-definition.service')
+    expect(saveCohortDefinition).toHaveBeenCalled()
+    expect(setup.cohortName).toBe('lisinopril cohort')
+    expect(result.error).toBeUndefined()
+  })
 })
