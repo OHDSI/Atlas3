@@ -144,6 +144,11 @@ describe('From Reusable insertion', () => {
     setActivePinia(createPinia())
     clearReusableReferenceCache()
     vi.mocked(listReusables).mockResolvedValue(success([groupReusable, eventReusable, plainGroupReusable]))
+    // A reference banner shown after insertion looks its reusable up.
+    vi.mocked(getReusable).mockImplementation(async id => {
+      const found = [groupReusable, eventReusable, plainGroupReusable].find(r => r.id === id)
+      return found ? success(found) : ({ success: false, error: new Error('gone') } as never)
+    })
     // Two saved versions, so the current state is version 3.
     vi.mocked(getReusableVersions).mockResolvedValue([
       { version: 1, assetId: 0, createdDate: 0, archived: false },
