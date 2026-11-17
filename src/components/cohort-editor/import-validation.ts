@@ -16,11 +16,13 @@
  * misspelled keys rather than just the one reported. It is safe to be this
  * strict: every one of the 1104 cohorts in the OHDSI phenotype library
  * fixture, and all 38 atlas-demo exports, parse with zero unrecognized fields,
- * so a real Atlas export has nothing extra for this to trip over.
+ * so a real Atlas export has nothing extra for this to trip over. The one
+ * exception is the concept validity dates ATLAS 2.x adds, tolerated below.
  */
 import { z } from 'zod'
-import { CohortExpressionSchema, type CohortExpression } from '@/models/circe-types'
+import { CohortExpressionSchema, ConceptSchema, type CohortExpression } from '@/models/circe-types'
 import { unwrapType } from './schema-walk'
+import { invalidReasonCaption, standardConceptCaption } from './atlas-concept-set'
 import { useI18n } from '@/composables/useI18n'
 
 /** A single reason an imported expression was refused, as a displayable line. */
@@ -53,12 +55,14 @@ export function validateCohortExpression(data: unknown): ImportValidation {
   // Unrecognized fields first: when a key is misspelled the schema usually also
   // reports the correctly-spelled one as missing, and "unrecognized: title" is
   // the more useful of the two messages.
+  // A private copy, because concepts are normalised in place during the walk.
+  const copy: unknown = structuredClone(data)
   const unrecognized: ImportProblem[] = []
   const unrecognizedField = tv('cohortDefinitions.importValidation.unrecognizedField')
-  collectUnrecognized(CohortExpressionSchema, data, '', unrecognized, unrecognizedField)
+  collectUnrecognized(CohortExpressionSchema, copy, '', unrecognized, unrecognizedField)
   if (unrecognized.length > 0) return { ok: false, problems: unrecognized }
 
-  const result = CohortExpressionSchema.safeParse(data)
+  const result = CohortExpressionSchema.safeParse(copy)
   if (!result.success) {
     return {
       ok: false,
@@ -90,6 +94,33 @@ function formatPath(path: (string | number)[]): string {
       typeof segment === 'number' ? `${acc}[${segment}]` : acc ? `${acc}.${segment}` : String(segment),
     ''
   )
+}
+
+/**
+ * ATLAS 2.x builds every concept it exports, in concept sets and in criteria
+ * concept lists alike, from its own Concept model, which adds the vocabulary
+ * validity dates to circe's fields. circe's Java Concept has no such fields, so
+ * WebAPI would drop them on save anyway; they are tolerated here and stripped
+ * by the parse rather than refused.
+ */
+const ATLAS_CONCEPT_EXTRA_FIELDS = new Set(['VALID_START_DATE', 'VALID_END_DATE'])
+
+/**
+ * The same ATLAS 2.x model leaves a caption out of the exported JSON when it
+ * was never computed, while the schema requires both. circe derives them from
+ * the code columns, so they are filled the same way.
+ */
+function fillMissingCaptions(concept: Record<string, unknown>): void {
+  if (concept.STANDARD_CONCEPT_CAPTION == null) {
+    concept.STANDARD_CONCEPT_CAPTION = standardConceptCaption(stringOrNull(concept.STANDARD_CONCEPT))
+  }
+  if (concept.INVALID_REASON_CAPTION == null) {
+    concept.INVALID_REASON_CAPTION = invalidReasonCaption(stringOrNull(concept.INVALID_REASON))
+  }
+}
+
+function stringOrNull(value: unknown): string | null {
+  return typeof value === 'string' ? value : null
 }
 
 function join(path: string, key: string): string {
@@ -164,10 +195,13 @@ function collectUnrecognized(
 
   if (type instanceof z.ZodObject) {
     if (typeof data !== 'object' || Array.isArray(data)) return
+    const isConcept = type === ConceptSchema
+    if (isConcept) fillMissingCaptions(data as Record<string, unknown>)
     const shape = type.shape as Record<string, z.ZodTypeAny>
     for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
       const declared = shape[key]
       if (!declared) {
+        if (isConcept && ATLAS_CONCEPT_EXTRA_FIELDS.has(key)) continue
         out.push({
           path: join(path, key),
           message: unrecognizedField,
