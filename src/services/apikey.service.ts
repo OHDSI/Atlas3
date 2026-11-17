@@ -7,8 +7,10 @@ import { httpGet, httpPost, httpDelete } from '@/services/http-client'
 import { unwrap, parseOrThrow } from '@/services/api-error'
 import { type ApiResult } from '@/types/api'
 import {
+  AdminApiKeyInfoListSchema,
   ApiKeyInfoListSchema,
   ApiKeyResultSchema,
+  type AdminApiKeyInfo,
   type ApiKeyInfo,
   type ApiKeyResult,
   type CreateApiKeyRequest,
@@ -41,5 +43,25 @@ export async function revokeApiKey(keyIdentifier: string): Promise<ApiResult<voi
 export async function deleteApiKey(keyIdentifier: string): Promise<ApiResult<void>> {
   return unwrap(async () => {
     await httpDelete<void>(`/user/apikeys/${encodeURIComponent(keyIdentifier)}?remove=true`)
+  }, CONTEXT)
+}
+
+/** Every user's keys; requires admin:apikeys. */
+export async function listAllApiKeys(): Promise<ApiResult<AdminApiKeyInfo[]>> {
+  return unwrap(async () => {
+    const data = await httpGet<unknown>('/admin/apikeys')
+    return parseOrThrow(AdminApiKeyInfoListSchema, data, 'Invalid admin API key list response format')
+  }, CONTEXT)
+}
+
+export async function adminRevokeApiKey(keyIdentifier: string): Promise<ApiResult<void>> {
+  return unwrap(async () => {
+    await httpDelete<void>(`/admin/apikeys/${encodeURIComponent(keyIdentifier)}`)
+  }, CONTEXT)
+}
+
+export async function adminDeleteApiKey(keyIdentifier: string): Promise<ApiResult<void>> {
+  return unwrap(async () => {
+    await httpDelete<void>(`/admin/apikeys/${encodeURIComponent(keyIdentifier)}?remove=true`)
   }, CONTEXT)
 }

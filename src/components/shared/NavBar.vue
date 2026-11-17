@@ -341,7 +341,7 @@ const { items: accountMenuItems } = usePluginMounts('account-menu')
 // admin permission.
 const hasAnyAdminAccess = computed(
   () =>
-    hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security']) ||
+    hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security', 'admin:apikeys']) ||
     adminTabMounts.value.length > 0
 )
 

@@ -22,6 +22,15 @@ export type ApiKeyInfo = z.infer<typeof ApiKeyInfoSchema>
 
 export const ApiKeyInfoListSchema = z.array(ApiKeyInfoSchema)
 
+/** A key as administrators see it (GET /admin/apikeys): the owner is included, the secret never is. */
+export const AdminApiKeyInfoSchema = ApiKeyInfoSchema.extend({
+  ownerLogin: z.string(),
+  ownerName: z.string().nullable().optional(),
+})
+export type AdminApiKeyInfo = z.infer<typeof AdminApiKeyInfoSchema>
+
+export const AdminApiKeyInfoListSchema = z.array(AdminApiKeyInfoSchema)
+
 export const ApiKeyResultSchema = z.object({
   name: z.string(),
   keyIdentifier: z.string(),
