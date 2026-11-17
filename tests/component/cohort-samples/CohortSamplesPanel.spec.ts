@@ -5,7 +5,9 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { createPinia, setActivePinia } from 'pinia'
 import { ApiError } from '@/services/api-error'
-import { success, failure } from '@/types/api'
+import { success, failure, type ApiResult } from '@/types/api'
+import { useNotifications } from '@/stores/notifications'
+import type { CohortSample } from '@/models/cohort-sample.types'
 
 vi.mock('@/services/cohort-sample.service', () => ({
   listCohortSamples: vi.fn(),
@@ -25,9 +27,18 @@ import {
 } from '@/services/cohort-sample.service'
 
 const vuetify = createVuetify({ components, directives })
-const globalMountOpts = {
-  plugins: [vuetify, createPinia()],
+let pinia = createPinia()
+let globalMountOpts = {
+  plugins: [vuetify, pinia],
   stubs: { RouterLink: { template: '<a><slot /></a>' } },
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>(r => {
+    resolve = r
+  })
+  return { promise, resolve }
 }
 
 const sample = {
@@ -41,7 +52,9 @@ const sample = {
 describe('CohortSamplesPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    setActivePinia(createPinia())
+    pinia = createPinia()
+    setActivePinia(pinia)
+    globalMountOpts = { ...globalMountOpts, plugins: [vuetify, pinia] }
   })
 
   it('renders the empty state when no samples are returned', async () => {
@@ -126,7 +139,7 @@ describe('CohortSamplesPanel', () => {
     expect(listCohortSamples).toHaveBeenCalledTimes(2)
   })
 
-  it('createCohortSample failure surfaces an error and keeps the list intact', async () => {
+  it('createCohortSample failure surfaces a danger notification and keeps the list intact', async () => {
     vi.mocked(listCohortSamples).mockResolvedValue(
       success({ cohortDefinitionId: 1, sourceId: 1, samples: [] })
     )
@@ -144,7 +157,11 @@ describe('CohortSamplesPanel', () => {
     await (wrapper.findComponent({ name: 'CohortSampleCreateDialog' })).vm.$emit('submit', { name: 'x', size: 1 })
     await flushPromises()
 
-    expect(wrapper.find('[data-testid=cohort-samples-error]').text()).toContain('size must be smaller')
+    const danger = useNotifications().items.find(i => i.severity === 'danger')
+    expect(danger?.title).toBe('Failed to create sample')
+    expect(danger?.message).toBe('size must be smaller')
+    expect(wrapper.find('[data-testid=cohort-samples-error]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid=cohort-samples-list-pending-row]').exists()).toBe(false)
   })
 
   it('createCohortSample success closes the dialog, reloads list and selects the new sample', async () => {
@@ -216,7 +233,87 @@ describe('CohortSamplesPanel', () => {
     await wrapper.findComponent({ name: 'CohortSampleCreateDialog' }).vm.$emit('submit', { name: 'x', size: 1 })
     await flushPromises()
 
-    expect(wrapper.find('[data-testid=cohort-samples-error]').text()).toContain('Failed to create sample')
+    const danger = useNotifications().items.find(i => i.severity === 'danger')
+    expect(danger?.title).toBe('Failed to create sample')
+    expect(danger?.message).toBeUndefined()
+  })
+
+  it('shows a creating row and disables New sample while a create is in flight', async () => {
+    vi.mocked(listCohortSamples).mockResolvedValue(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [] })
+    )
+    vi.mocked(getCohortSample).mockResolvedValue(success({ ...sample, name: 'slow', elements: [] }))
+    const pending = deferred<ApiResult<CohortSample>>()
+    vi.mocked(createCohortSample).mockReturnValueOnce(pending.promise)
+
+    const wrapper = mount(CohortSamplesPanel, {
+      global: globalMountOpts,
+      props: { cohortId: 1, sourceKey: 'EUNOMIA' },
+    })
+    await flushPromises()
+
+    await wrapper.findComponent({ name: 'CohortSampleCreateDialog' }).vm.$emit('submit', { name: 'slow', size: 10 })
+    await flushPromises()
+
+    const row = wrapper.find('[data-testid=cohort-samples-list-pending-row]')
+    expect(row.exists()).toBe(true)
+    expect(row.text()).toContain('slow')
+    expect(row.text()).toContain('Creating sample')
+    expect(wrapper.find('[data-testid=cohort-samples-list-empty]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid=cohort-samples-new]').attributes('disabled')).toBeDefined()
+
+    await wrapper.findComponent({ name: 'CohortSampleCreateDialog' }).vm.$emit('submit', { name: 'dup', size: 10 })
+    await flushPromises()
+    expect(createCohortSample).toHaveBeenCalledTimes(1)
+
+    pending.resolve(success({ ...sample, name: 'slow' }))
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid=cohort-samples-list-pending-row]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid=cohort-samples-new]').attributes('disabled')).toBeUndefined()
+  })
+
+  it('keeps showing the in-flight create after the panel is remounted, then reloads when it finishes', async () => {
+    vi.mocked(listCohortSamples).mockResolvedValue(
+      success({ cohortDefinitionId: 1, sourceId: 1, samples: [] })
+    )
+    vi.mocked(getCohortSample).mockResolvedValue(success({ ...sample, name: 'slow', elements: [] }))
+    const pending = deferred<ApiResult<CohortSample>>()
+    vi.mocked(createCohortSample).mockReturnValueOnce(pending.promise)
+
+    const first = mount(CohortSamplesPanel, {
+      global: globalMountOpts,
+      props: { cohortId: 1, sourceKey: 'EUNOMIA' },
+    })
+    await flushPromises()
+    await first.findComponent({ name: 'CohortSampleCreateDialog' }).vm.$emit('submit', { name: 'slow', size: 10 })
+    await flushPromises()
+    first.unmount()
+
+    const second = mount(CohortSamplesPanel, {
+      global: globalMountOpts,
+      props: { cohortId: 1, sourceKey: 'EUNOMIA' },
+    })
+    await flushPromises()
+    expect(second.find('[data-testid=cohort-samples-list-pending-row]').exists()).toBe(true)
+
+    const other = mount(CohortSamplesPanel, {
+      global: globalMountOpts,
+      props: { cohortId: 1, sourceKey: 'OTHER' },
+    })
+    await flushPromises()
+    expect(other.find('[data-testid=cohort-samples-list-pending-row]').exists()).toBe(false)
+
+    vi.mocked(listCohortSamples).mockClear()
+    pending.resolve(success({ ...sample, name: 'slow' }))
+    await flushPromises()
+
+    expect(second.find('[data-testid=cohort-samples-list-pending-row]').exists()).toBe(false)
+    expect(listCohortSamples).toHaveBeenCalledWith(1, 'EUNOMIA')
+    expect(listCohortSamples).not.toHaveBeenCalledWith(1, 'OTHER')
+    expect(getCohortSample).not.toHaveBeenCalled()
+    const ok = useNotifications().items.find(i => i.severity === 'success')
+    expect(ok?.title).toBe('Sample "slow" created')
   })
 
   it('shows the error banner and clears the selection when the detail fetch fails', async () => {

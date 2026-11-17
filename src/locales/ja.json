@@ -397,7 +397,10 @@
       "newSample": "新規サンプル",
       "failedToLoadSamples": "サンプルの読み込みに失敗しました",
       "failedToLoadSampleDetail": "サンプル詳細の読み込みに失敗しました",
-      "failedToCreateSample": "サンプルの作成に失敗しました"
+      "failedToCreateSample": "サンプルの作成に失敗しました",
+      "creating": "サンプルを作成中…",
+      "sampleCreated": "サンプル「{name}」を作成しました",
+      "creationInProgress": "このソースのサンプルを作成中です。完了してから次を開始してください。"
     },
     "cohortSampleDetail": {
       "personsCreated": "{count}人 · 作成日 {date}",

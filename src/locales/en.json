@@ -597,7 +597,10 @@
       "newSample": "New sample",
       "failedToLoadSamples": "Failed to load samples",
       "failedToLoadSampleDetail": "Failed to load sample detail",
-      "failedToCreateSample": "Failed to create sample"
+      "failedToCreateSample": "Failed to create sample",
+      "creating": "Creating sample…",
+      "sampleCreated": "Sample \"{name}\" created",
+      "creationInProgress": "A sample is already being created for this source. Wait for it to finish before starting another."
     },
     "cohortSampleDetail": {
       "source": "Source: {name}",

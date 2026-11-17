@@ -588,7 +588,10 @@
       "newSample": "Новая выборка",
       "failedToLoadSamples": "Не удалось загрузить выборки",
       "failedToLoadSampleDetail": "Не удалось загрузить сведения о выборке",
-      "failedToCreateSample": "Не удалось создать выборку"
+      "failedToCreateSample": "Не удалось создать выборку",
+      "creating": "Создание выборки…",
+      "sampleCreated": "Выборка «{name}» создана",
+      "creationInProgress": "Для этого источника уже создаётся выборка. Дождитесь завершения, прежде чем начинать новую."
     },
     "cohortSampleDetail": {
       "source": "Источник: {name}",

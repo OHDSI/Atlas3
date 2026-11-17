@@ -18,6 +18,7 @@
         variant="primary"
         icon="mdi-plus"
         :disabled="!cohortId || !sourceKey || creating"
+        :title="creating ? tv('components.cohortSamples.creationInProgress') : undefined"
         data-testid="cohort-samples-new"
         @click="dialogOpen = true"
       >
@@ -43,6 +44,7 @@
     <template v-else>
       <CohortSamplesList
         :samples="samples"
+        :pending="pendingCreations"
         :selected-sample-id="selectedSampleId"
         @select="onSelect"
         @refresh="onRefresh"
@@ -63,7 +65,6 @@
 
     <CohortSampleCreateDialog
       v-model="dialogOpen"
-      :submitting="creating"
       :source-key="sourceKey"
       @submit="onCreate"
     />
@@ -72,16 +73,16 @@
 
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasDivider, AtlasSkeleton } from '@/components/ui'
-import { ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import {
   listCohortSamples,
-  createCohortSample,
   getCohortSample,
   refreshCohortSample,
   deleteCohortSample,
 } from '@/services/cohort-sample.service'
 import { logger } from '@/utils/logger'
+import { useCohortSampleCreationsStore } from '@/stores/cohort-sample-creations'
 import type { CohortSample, SampleParameters } from '@/models/cohort-sample.types'
 import CohortSamplesList from './CohortSamplesList.vue'
 import CohortSampleDetail from './CohortSampleDetail.vue'
@@ -99,12 +100,19 @@ defineEmits<{ 'open-profile': [personId: string] }>()
 const samples = ref<CohortSample[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
-const creating = ref(false)
 const dialogOpen = ref(false)
 
 const selectedSampleId = ref<number | null>(null)
 const selectedSample = ref<CohortSample | null>(null)
 const detailLoading = ref(false)
+
+const creations = useCohortSampleCreationsStore()
+const pendingCreations = computed(() => creations.pendingFor(props.cohortId, props.sourceKey))
+const creating = computed(() => pendingCreations.value.length > 0)
+let mounted = true
+onBeforeUnmount(() => {
+  mounted = false
+})
 
 async function loadList() {
   if (!props.cohortId || !props.sourceKey) return
@@ -148,27 +156,29 @@ async function loadDetail(sampleId: number) {
 
 watch(() => [props.cohortId, props.sourceKey] as const, loadList, { immediate: true })
 
+watch(
+  () => [props.cohortId, props.sourceKey, pendingCreations.value.length] as const,
+  ([cohortId, sourceKey, count], [prevCohortId, prevSourceKey, prevCount]) => {
+    if (cohortId === prevCohortId && sourceKey === prevSourceKey && count < prevCount) {
+      void loadList()
+    }
+  }
+)
+
 async function onSelect(sample: CohortSample) {
   selectedSampleId.value = sample.id
   await loadDetail(sample.id)
 }
 
 async function onCreate(parameters: SampleParameters) {
-  creating.value = true
-  error.value = null
-  const result = await createCohortSample(props.cohortId, props.sourceKey, parameters)
-  if (result.success) {
-    dialogOpen.value = false
-    await loadList()
+  if (creating.value) return
+  dialogOpen.value = false
+  const cohortId = props.cohortId
+  const sourceKey = props.sourceKey
+  const result = await creations.create(cohortId, sourceKey, parameters)
+  if (result.success && mounted && cohortId === props.cohortId && sourceKey === props.sourceKey) {
     await onSelect(result.data)
-  } else {
-    // Previously a malformed response was swallowed silently while a
-    // transport error surfaced — both are a failed create now.
-    error.value =
-      result.error.message ||
-      tv('components.cohortSamples.failedToCreateSample')
   }
-  creating.value = false
 }
 
 async function onRefresh(sample: CohortSample) {
