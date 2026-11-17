@@ -8,8 +8,55 @@
           {{ t('components.profileTimeline.title').value }}
         </h2>
       </div>
+      <div
+        class="section-header__actions time-range"
+        data-test="profile-time-range"
+      >
+        <span
+          id="profile-time-range-label"
+          class="time-range__label"
+        >
+          {{ t('components.profileTimeline.timeRange').value }}
+        </span>
+        <v-btn-toggle
+          :model-value="activePreset"
+          variant="outlined"
+          density="compact"
+          divided
+          aria-labelledby="profile-time-range-label"
+          @update:model-value="applyPreset"
+        >
+          <AtlasButton
+            v-for="preset in presets"
+            :key="preset.key"
+            toggle
+            size="sm"
+            :value="preset.key"
+            :data-test="`profile-time-range-${preset.key}`"
+          >
+            {{ preset.label }}
+          </AtlasButton>
+        </v-btn-toggle>
+        <AtlasButton
+          :variant="selecting ? 'tonal' : 'secondary'"
+          size="sm"
+          icon="mdi-arrow-expand-horizontal"
+          :aria-pressed="selecting"
+          data-test="profile-time-range-select"
+          @click="toggleSelecting"
+        >
+          {{ t('components.profileTimeline.selectOnChart').value }}
+        </AtlasButton>
+      </div>
     </div>
     <div class="section-body">
+      <p
+        v-if="selecting"
+        class="time-range__hint"
+        data-test="profile-time-range-hint"
+      >
+        {{ t('components.profileTimeline.selectOnChartHint').value }}
+      </p>
       <div class="profile-timeline__filters">
         <ProfileFilterChips />
         <AtlasChip
@@ -46,7 +93,7 @@ import { useProfileStore } from '@/stores/profile'
 import { useThemeStore } from '@/stores/theme'
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_HIGHLIGHT_COLOR } from '@/models/profile.types'
-import { AtlasCard, AtlasChip } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasChip } from '@/components/ui'
 import { tokens } from '@/ui/tokens'
 import ProfileFilterChips from '@/components/profile/ProfileFilterChips.vue'
 
@@ -55,6 +102,51 @@ const store = useProfileStore()
 const themeStore = useThemeStore()
 const { chartSeries, axisExtent, axisDomains } = useTimelineFilters()
 const chartRef = ref<{ dispatchAction: (action: Record<string, unknown>) => void } | null>(null)
+const selecting = ref(false)
+
+type PresetKey = 'all' | 'days30' | 'year1'
+
+const PRESET_RANGES: Record<Exclude<PresetKey, 'all'>, [number, number]> = {
+  days30: [-30, 30],
+  year1: [-365, 365],
+}
+
+const presets = computed<Array<{ key: PresetKey; label: string }>>(() => [
+  { key: 'all', label: t('components.profileTimeline.allTime').value },
+  { key: 'days30', label: t('components.profileTimeline.days30').value },
+  { key: 'year1', label: t('components.profileTimeline.year1').value },
+])
+
+const activePreset = computed<PresetKey | null>(() => {
+  const range = store.dateRange
+  if (!range) return 'all'
+  for (const [key, [from, to]] of Object.entries(PRESET_RANGES)) {
+    if (range[0] === from && range[1] === to) return key as PresetKey
+  }
+  return null
+})
+
+function applyPreset(key: PresetKey | null | undefined) {
+  if (!key) return
+  if (key === 'all') {
+    store.setDateRange(null)
+  } else {
+    store.setDateRange([...PRESET_RANGES[key]])
+  }
+}
+
+function setSelecting(on: boolean) {
+  selecting.value = on
+  chartRef.value?.dispatchAction({
+    type: 'takeGlobalCursor',
+    key: 'brush',
+    brushOption: on ? { brushType: 'lineX', brushMode: 'single' } : { brushType: false },
+  })
+}
+
+function toggleSelecting() {
+  setSelecting(!selecting.value)
+}
 
 // Minimum pixel width for point-style records so they remain
 // clickable / visible. Mirrors `minBoxPix` in Atlas's profileChart.js.
@@ -106,7 +198,10 @@ const option = computed(() => {
         return `${escapeHtml(d.name)}<br/>${range}`
       },
     },
-    brush: { toolbox: ['lineX'], xAxisIndex: 0 },
+    // Brushing is started from the labelled "Select on chart" button; the
+    // ECharts toolbox icon it replaces was too small to discover.
+    toolbox: { show: false },
+    brush: { toolbox: [], xAxisIndex: 0 },
     series: chartSeries.value.map((d, i) => ({
       name: d.domain,
       type: 'custom' as const,
@@ -182,6 +277,7 @@ function onBrush(e: { areas?: Array<{ coordRange?: [number, number] }> }) {
   } else {
     store.setDateRange(null)
   }
+  if (selecting.value) setSelecting(false)
 }
 
 defineExpose({ onBrush })
@@ -190,6 +286,7 @@ defineExpose({ onBrush })
 <style scoped>
 .section-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 16px;
   margin-bottom: 12px;
@@ -213,6 +310,21 @@ defineExpose({ onBrush })
 }
 .section-header__actions {
   margin-left: auto;
+}
+.time-range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.time-range__label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.time-range__hint {
+  font-size: 13px;
+  margin: 0 0 8px;
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 
 .profile-timeline__filters {

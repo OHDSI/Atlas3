@@ -568,7 +568,13 @@
       "title": "Event timeline",
       "dayRange": "Day {start} → {end}",
       "axisDay": "Day (0 = cohort entry)",
-      "cohortEntry": "Cohort entry"
+      "cohortEntry": "Cohort entry",
+      "timeRange": "Time range",
+      "allTime": "All time",
+      "days30": "±30 days",
+      "year1": "±1 year",
+      "selectOnChart": "Select on chart",
+      "selectOnChartHint": "Drag across the chart to choose a time range."
     },
     "profileEventsTable": {
       "eyebrow": "EVENTS"
