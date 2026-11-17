@@ -57,12 +57,20 @@ export function arrayToCsv<T>(rows: T[], columns: CsvColumn<T>[]): string {
  * No-op outside the browser (e.g. SSR, tests without a DOM).
  */
 export function downloadCsv(filename: string, csv: string): void {
+  downloadTextFile(filename, csv, 'text/csv;charset=utf-8;')
+}
+
+export function downloadTextFile(
+  filename: string,
+  content: string,
+  mimeType = 'text/plain;charset=utf-8;'
+): void {
   if (typeof document === 'undefined' || typeof URL === 'undefined') {
-    logger.debug('Csv', 'downloadCsv called outside a browser; skipping')
+    logger.debug('Csv', 'downloadTextFile called outside a browser; skipping')
     return
   }
   try {
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const blob = new Blob([content], { type: mimeType })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -73,6 +81,6 @@ export function downloadCsv(filename: string, csv: string): void {
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
   } catch (error) {
-    logger.error('Csv', 'Failed to trigger CSV download', error)
+    logger.error('Csv', `Failed to download ${filename}`, error)
   }
 }
