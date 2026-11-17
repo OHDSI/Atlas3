@@ -92,7 +92,19 @@
       :used-concept-sets="usedConceptSets"
       @view="handleViewConceptSet"
       @delete="handleDeleteConceptSet"
-    />
+    >
+      <template #actions>
+        <AtlasButton
+          variant="secondary"
+          icon="mdi-download"
+          :disabled="expressionConceptSets.length === 0"
+          data-testid="cohort-concept-sets-download-text"
+          @click="handleDownloadConceptSetsText"
+        >
+          {{ t('cohortDefinitions.conceptSetsDialog.downloadText') }}
+        </AtlasButton>
+      </template>
+    </concept-sets-list-dialog>
 
     <validation-messages-dialog
       v-model="showValidationDialog"
@@ -344,6 +356,8 @@ import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { nextConceptSetId } from '@/utils/concept-set-id'
 import { resolveSaveDisabledReason } from '@/utils/save-disabled-reason'
+import { DEFAULT_CONCEPT_SET_TEXT_LABELS, formatConceptSetsAsText } from '@/utils/concept-set-text'
+import { downloadTextFile } from '@/utils/csv'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import CohortJsonDialog from './CohortJsonDialog.vue'
 import CohortSqlDialog from './CohortSqlDialog.vue'
@@ -1422,6 +1436,18 @@ function openSqlDialog() {
 function openPrintFriendlyDialog() {
   printFriendlyExpression.value = normalizeForCirce(toRaw(expression.value))
   showPrintFriendlyDialog.value = true
+}
+
+function handleDownloadConceptSetsText() {
+  const text = formatConceptSetsAsText(expressionConceptSets.value, {
+    ...DEFAULT_CONCEPT_SET_TEXT_LABELS,
+    conceptId: tv('columns.conceptId'),
+    conceptName: tv('columns.conceptName'),
+    domain: tv('columns.domain'),
+    vocabulary: tv('columns.vocabulary'),
+  })
+  const slug = cohortName.value.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'cohort'
+  downloadTextFile(`${slug}_concept_sets.txt`, text)
 }
 
 function handleExportDownload() {

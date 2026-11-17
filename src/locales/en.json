@@ -2279,7 +2279,8 @@
     },
     "conceptSetsDialog": {
       "title": "Concept Sets",
-      "empty": "No concept sets in this cohort"
+      "empty": "No concept sets in this cohort",
+      "downloadText": "Download as Text"
     },
     "importValidation": {
       "notAnObject": "Expression must be a JSON object.",
