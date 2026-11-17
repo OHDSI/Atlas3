@@ -305,7 +305,10 @@
       "newSample": "新建样本",
       "failedToLoadSamples": "加载样本失败",
       "failedToLoadSampleDetail": "加载样本详情失败",
-      "failedToCreateSample": "创建样本失败"
+      "failedToCreateSample": "创建样本失败",
+      "creating": "正在创建样本…",
+      "sampleCreated": "已创建样本“{name}”",
+      "creationInProgress": "此数据源正在创建样本，请等待完成后再创建新的样本。"
     },
     "cohortSampleDetail": {
       "personsCreated": "{count} 人 · 创建于 {date}",

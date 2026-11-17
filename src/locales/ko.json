@@ -305,7 +305,10 @@
       "newSample": "새 샘플",
       "failedToLoadSamples": "샘플을 불러오지 못했습니다",
       "failedToLoadSampleDetail": "샘플 상세 정보를 불러오지 못했습니다",
-      "failedToCreateSample": "샘플을 만들지 못했습니다"
+      "failedToCreateSample": "샘플을 만들지 못했습니다",
+      "creating": "샘플 생성 중…",
+      "sampleCreated": "샘플 \"{name}\"을(를) 만들었습니다",
+      "creationInProgress": "이 소스의 샘플을 이미 만들고 있습니다. 완료된 후 다시 시작하세요."
     },
     "cohortSampleDetail": {
       "personsCreated": "{count}명 · 생성일 {date}",
