@@ -149,7 +149,7 @@ function resolveCodesetId(
  * client's string verbatim). Atlas-side items usually lack them, so derive them
  * here the same way circe does to keep every expression schema-valid.
  */
-function standardConceptCaption(standardConcept: string | null | undefined): string {
+export function standardConceptCaption(standardConcept: string | null | undefined): string {
   switch (standardConcept) {
     case 'N': return 'Non-Standard'
     case 'S': return 'Standard'
@@ -158,7 +158,7 @@ function standardConceptCaption(standardConcept: string | null | undefined): str
   }
 }
 
-function invalidReasonCaption(invalidReason: string | null | undefined): string {
+export function invalidReasonCaption(invalidReason: string | null | undefined): string {
   switch (invalidReason) {
     case 'V': return 'Valid'
     case 'D':
