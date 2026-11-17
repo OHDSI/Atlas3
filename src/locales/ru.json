@@ -559,7 +559,13 @@
       "title": "Временная шкала событий",
       "dayRange": "Дни: {start} → {end}",
       "axisDay": "День (0 = включение в когорту)",
-      "cohortEntry": "Включение в когорту"
+      "cohortEntry": "Включение в когорту",
+      "timeRange": "Период",
+      "allTime": "Всё время",
+      "days30": "±30 дней",
+      "year1": "±1 год",
+      "selectOnChart": "Выбрать на графике",
+      "selectOnChartHint": "Проведите по графику, чтобы выбрать период."
     },
     "profileEventsTable": {
       "eyebrow": "События"

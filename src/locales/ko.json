@@ -276,7 +276,13 @@
       "title": "이벤트 타임라인",
       "dayRange": "{start}일 → {end}일",
       "axisDay": "일 (0 = 코호트 진입)",
-      "cohortEntry": "코호트 진입"
+      "cohortEntry": "코호트 진입",
+      "timeRange": "기간",
+      "allTime": "전체 기간",
+      "days30": "±30일",
+      "year1": "±1년",
+      "selectOnChart": "차트에서 선택",
+      "selectOnChartHint": "차트를 가로로 드래그하여 기간을 선택하세요."
     },
     "profileEventsTable": {
       "eyebrow": "이벤트"

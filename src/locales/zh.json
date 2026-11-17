@@ -276,7 +276,13 @@
       "title": "事件时间轴",
       "dayRange": "第 {start} 天 → 第 {end} 天",
       "axisDay": "天（0 = 队列入组）",
-      "cohortEntry": "队列入组"
+      "cohortEntry": "队列入组",
+      "timeRange": "时间范围",
+      "allTime": "全部时间",
+      "days30": "±30天",
+      "year1": "±1年",
+      "selectOnChart": "在图表上选择",
+      "selectOnChartHint": "在图表上拖动以选择时间范围。"
     },
     "profileEventsTable": {
       "eyebrow": "事件"

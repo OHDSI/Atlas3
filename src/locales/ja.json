@@ -368,7 +368,13 @@
       "title": "イベントのタイムライン",
       "dayRange": "{start}日目 → {end}日目",
       "axisDay": "日（0 = コホート登録）",
-      "cohortEntry": "コホート登録"
+      "cohortEntry": "コホート登録",
+      "timeRange": "期間",
+      "allTime": "全期間",
+      "days30": "±30日",
+      "year1": "±1年",
+      "selectOnChart": "グラフで選択",
+      "selectOnChartHint": "グラフ上をドラッグして期間を選択してください。"
     },
     "profileEventsTable": {
       "eyebrow": "イベント"
