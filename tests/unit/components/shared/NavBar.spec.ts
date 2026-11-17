@@ -130,6 +130,8 @@ vi.mock('@/services/PluginConfigService', () => ({
     showUserMenu: () => true,
     showThemeToggle: vi.fn(() => true),
     getFeedbackUrl: () => 'https://forms.office.com/r/2JzrYy1yDP',
+    showIssueButton: () => true,
+    getIssueUrl: () => 'https://github.com/OHDSI/Atlas3/issues',
     getLogoNavigateTo: () => '/'
   }
 }))

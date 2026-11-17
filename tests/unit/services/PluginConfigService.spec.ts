@@ -775,6 +775,11 @@ describe('PluginConfigService', () => {
       expect(service.showUserMenu()).toBe(true)
     })
 
+    it('shows the report-issue button linking to the Atlas3 GitHub issues by default', () => {
+      expect(service.showIssueButton()).toBe(true)
+      expect(service.getIssueUrl()).toBe('https://github.com/OHDSI/Atlas3/issues')
+    })
+
     it('showFeedbackButton should return true by default', () => {
       expect(service.showFeedbackButton()).toBe(true)
     })
@@ -805,6 +810,8 @@ describe('PluginConfigService', () => {
                 showLanguageSelector: false,
                 showConfigButton: false,
                 feedbackUrl: 'https://example.com/feedback',
+                showIssueButton: false,
+                issueUrl: 'https://example.com/issues',
               },
             },
           }),
@@ -816,6 +823,8 @@ describe('PluginConfigService', () => {
       expect(service.showLanguageSelector()).toBe(false)
       expect(service.showConfigButton()).toBe(false)
       expect(service.getFeedbackUrl()).toBe('https://example.com/feedback')
+      expect(service.showIssueButton()).toBe(false)
+      expect(service.getIssueUrl()).toBe('https://example.com/issues')
     })
 
     it('getHeaderSettings should return empty object before loading', () => {

@@ -67,6 +67,14 @@ async function maskNavIconCluster(page: Page) {
   })
 }
 
+// The Report issue button postdates both baseline sets and widens the right-hand
+// nav cluster past maskNavIconCluster's box. Its own behavior is covered by the
+// NavBar unit tests, so hide it to keep the captured layout identical to the
+// baselines.
+async function hideReportIssueButton(page: Page) {
+  await page.addStyleTag({ content: '[data-testid="nav-report-issue"] { display: none !important; }' })
+}
+
 // Full-page screenshots can composite sticky elements differently from their
 // in-flow counterparts as the browser captures beyond the initial viewport.
 // The sticky behavior itself is covered by navigation-sticky.spec.ts; keep
@@ -128,6 +136,7 @@ for (const mode of ['light', 'dark'] as const) {
         await expect(page.locator('[data-testid="nav-theme-toggle"]')).toBeVisible()
         await expect(page.locator(`.v-application.v-theme--${mode}`)).toHaveCount(1)
         await expectRouteContent(page, route.name)
+        await hideReportIssueButton(page)
 
         // Light baselines come from pre-change code (see task-18-report.md), so any
         // pixel drift here is a real regression — compare strictly, except for the

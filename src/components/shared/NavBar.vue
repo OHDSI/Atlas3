@@ -116,6 +116,22 @@
           {{ t('navigation.feedback').value }}
         </AtlasButton>
 
+        <AtlasButton
+          v-if="showIssueButton"
+          tone="warning"
+          variant="secondary"
+          size="sm"
+          rounded
+          icon="mdi-bug-outline"
+          :href="issueUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mr-4"
+          data-testid="nav-report-issue"
+        >
+          {{ t('navigation.reportIssue').value }}
+        </AtlasButton>
+
         <!-- Language Selector -->
         <LanguageSelector v-if="showLanguageSelector" />
 
@@ -357,6 +373,8 @@ const showConfigButton = ref(true)
 const showUserMenu = ref(true)
 const showThemeToggle = ref(true)
 const feedbackUrl = ref('https://forms.office.com/r/2JzrYy1yDP')
+const showIssueButton = ref(true)
+const issueUrl = ref('https://github.com/OHDSI/Atlas3/issues')
 const logoNavigateTo = ref('/')
 
 const signInLabel = t('components.userBar.signin')
@@ -526,6 +544,8 @@ onMounted(() => {
   showUserMenu.value = pluginConfigService.showUserMenu()
   showThemeToggle.value = pluginConfigService.showThemeToggle()
   feedbackUrl.value = pluginConfigService.getFeedbackUrl()
+  showIssueButton.value = pluginConfigService.showIssueButton()
+  issueUrl.value = pluginConfigService.getIssueUrl()
   logoNavigateTo.value = pluginConfigService.getLogoNavigateTo()
 
   pluginConfigService.onChange(() => {
@@ -536,6 +556,8 @@ onMounted(() => {
     showUserMenu.value = pluginConfigService.showUserMenu()
     showThemeToggle.value = pluginConfigService.showThemeToggle()
     feedbackUrl.value = pluginConfigService.getFeedbackUrl()
+    showIssueButton.value = pluginConfigService.showIssueButton()
+    issueUrl.value = pluginConfigService.getIssueUrl()
     logoNavigateTo.value = pluginConfigService.getLogoNavigateTo()
   })
 
