@@ -2783,6 +2783,8 @@
       "title": "Pathway results",
       "loadFailed": "Failed to load results",
       "distinctEventCohortCounts": "Distinct Event Cohort Counts",
+      "filterColumn": "Filter {column}",
+      "noMatchingRows": "No rows match the filters",
       "loading": "Loading results…"
     },
     "workbench": {
