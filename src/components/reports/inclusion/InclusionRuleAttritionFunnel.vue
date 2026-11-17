@@ -64,6 +64,13 @@ import { escapeHtml } from '@/utils/html'
 import type { InclusionRuleReport } from '@/models/report.types'
 import { useI18n } from '@/composables/useI18n'
 import { trackChartTheme } from '@/ui/chart-config'
+import {
+  buildFunnelSegments,
+  funnelMinSizePct,
+  renderAttritionExportPng,
+  toneForRetention,
+} from '@/utils/attrition-funnel-export'
+import { logger } from '@/utils/logger'
 
 const { t, tv } = useI18n()
 
@@ -97,14 +104,6 @@ function themeColor(token: 'success' | 'warning' | 'error', alpha: number): stri
     return `rgba(${fallback}, ${alpha})`
   }
   return `rgba(${triplet}, ${alpha})`
-}
-
-// Rule-tone thresholds match InclusionRuleRail.toneForIndex:
-// retention >= 80% → success, >= 40% → warning, else danger.
-function toneForRetention(pct: number): 'success' | 'warning' | 'error' {
-  if (pct >= 80) return 'success'
-  if (pct >= 40) return 'warning'
-  return 'error'
 }
 
 function retentionColor(pct: number): string {
@@ -141,66 +140,21 @@ function buildLabel(step: AttritionStep): string {
 }
 
 const chartOption = computed(() => {
-  // Layout target:
-  //   - Step 0 (Initial Population): rectangle, top = bottom = initial.
-  //   - Step i for i ≥ 1: single trapezoid, top = previous step's value,
-  //     bottom = this step's value, labeled with this step's rule name.
-  //   - No tail past the last step.
-  //
-  // ECharts funnel maps each data[i] to segment[i]:
-  //   segment[i].top    = data[i].value
-  //   segment[i].bottom = data[i+1].value  (for i < N-1)
-  //   segment[N-1].bottom = (minSize % of max value)
-  //
-  // To shift labels so segment i is "Rule i" we make data[i] hold the
-  // PREVIOUS step's value as its sizing input but the CURRENT step's
-  // label. The last segment lands on the last step's actual value via
-  // minSize = (lastValue / maxValue) * 100% — no extra tail point needed.
-  type Seg = {
-    name: string
-    value: number
-    _stepIndex: number
-    itemStyle: Record<string, unknown>
-  }
-
-  const segments: Seg[] = steps.value.map((s, i) => {
-    const fill = retentionFill(s.percentOfInitial)
-    const stroke = retentionColor(s.percentOfInitial)
-    // Sizing value is the PREVIOUS step's count for non-initial rows so
-    // segment i's top edge equals the cohort going INTO this rule. For
-    // the initial row we use its own count (no prior step exists).
-    const sizingValue = i === 0 ? s.remaining : steps.value[i - 1]!.remaining
+  // Segment i is labelled with rule i but sized from the count entering it;
+  // see buildFunnelSegments for how that maps onto echarts' funnel geometry.
+  const segments = buildFunnelSegments(steps.value).map((seg) => {
+    const pct = steps.value[seg.stepIndex]?.percentOfInitial ?? 0
     return {
-      name: s.label,
-      value: sizingValue,
-      _stepIndex: i,
-      itemStyle: { color: fill, borderColor: stroke, borderWidth: 0 },
+      name: seg.name,
+      value: seg.value,
+      _stepIndex: seg.stepIndex,
+      itemStyle: seg.placeholder
+        ? { color: 'transparent', borderColor: 'transparent', borderWidth: 0 }
+        : { color: retentionFill(pct), borderColor: retentionColor(pct), borderWidth: 0 },
     }
   })
-
-  // Add an invisible "anchor" entry equal to the initial value AFTER the
-  // initial row so segment 0 has top = bottom = initial → pure rectangle.
-  // ECharts' first segment otherwise drops to data[1].value, which is
-  // step 1's sizing value (initial count) — coincidentally equal here,
-  // but if there are no rules at all we still want a flat rectangle.
-  if (segments.length === 1) {
-    segments.push({
-      name: '',
-      value: segments[0]!.value,
-      _stepIndex: 0,
-      itemStyle: { color: 'transparent', borderColor: 'transparent', borderWidth: 0 },
-    })
-  }
-
   const initialValue = steps.value[0]?.remaining ?? 0
-  const lastValue = steps.value[steps.value.length - 1]?.remaining ?? 0
-  // Land the bottom of the last segment exactly on the last step's
-  // value. If the last step zeroed the cohort, clamp to a tiny minSize
-  // so it still reads as a thin line (echarts' default 0% behaves
-  // unpredictably).
-  const minSizePct = initialValue > 0
-    ? Math.max((lastValue / initialValue) * 100, 0.3)
-    : 0.5
+  const minSizePct = funnelMinSizePct(steps.value)
 
   return {
     tooltip: {
@@ -226,7 +180,12 @@ const chartOption = computed(() => {
       right: 8,
       top: 4,
       feature: {
-        saveAsImage: { name: 'attrition_chart', pixelRatio: 2, title: tv('components.inclusionRuleReport.saveAsPng') },
+        myExportPng: {
+          show: true,
+          title: tv('components.inclusionRuleReport.saveAsPng'),
+          icon: SAVE_ICON,
+          onclick: exportPng,
+        },
       },
     },
     series: [
@@ -264,6 +223,24 @@ const chartOption = computed(() => {
   }
 })
 
+const SAVE_ICON = 'path://M4.7,22.9L29.3,45.5L54.7,23.4M4.6,43.6L4.6,58L53.8,58L53.8,43.6M29.2,45.1L29.2,0'
+
+function exportPng() {
+  try {
+    const url = renderAttritionExportPng(steps.value, {
+      title: tv('components.inclusionRuleReport.attrition'),
+      excludedLabel: tv('components.inclusionRuleReport.tooltipExcludedAtStep'),
+      formatCount,
+    })
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'attrition_chart.png'
+    a.click()
+  } catch (error) {
+    logger.error('InclusionRuleAttritionFunnel', 'PNG export failed', error)
+  }
+}
+
 function exportCsv() {
   const lines: string[] = ['Step,Rule,Remaining,Excluded,Percent of Initial']
   steps.value.forEach((s, i) => {
@@ -279,7 +256,7 @@ function exportCsv() {
   URL.revokeObjectURL(url)
 }
 
-defineExpose({ steps, chartOption, exportCsv, retentionColor })
+defineExpose({ steps, chartOption, exportCsv, exportPng, retentionColor })
 </script>
 
 <style scoped>
