@@ -25,6 +25,7 @@ import {
   getCohorts,
   validateCohortDefinition,
   getCohortPrintFriendly,
+  availableCohortName,
 } from '@/services/cohort-definition.service'
 
 describe('services/cohort-definition.service', () => {
@@ -641,6 +642,37 @@ describe('services/cohort-definition.service', () => {
         expect(result.error.message).toBe('Invalid response format')
         expect(result.error.status).toBe(0)
       }
+    })
+  })
+
+  describe('availableCohortName', () => {
+    function counts(...values: number[]) {
+      for (const v of values) {
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => v,
+          text: async () => String(v),
+        })
+      }
+    }
+
+    it('keeps a name nobody else uses', async () => {
+      counts(0)
+      expect(await availableCohortName('Lisinopril users')).toBe('Lisinopril users')
+      expect(String(mockFetch.mock.calls[0][0])).toContain('/cohortdefinition/0/exists?name=Lisinopril%20users')
+    })
+
+    it('numbers the name until it is free', async () => {
+      counts(1, 1, 0)
+      expect(await availableCohortName('Lisinopril users', 7)).toBe('Lisinopril users (3)')
+      expect(String(mockFetch.mock.calls[2][0])).toContain('/cohortdefinition/7/exists?name=Lisinopril%20users%20(3)')
+    })
+
+    it('keeps the name when the check itself fails', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('offline'))
+      expect(await availableCohortName('Lisinopril users')).toBe('Lisinopril users')
     })
   })
 })

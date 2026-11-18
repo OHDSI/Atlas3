@@ -46,6 +46,24 @@ export async function getCohortDefinition(id: number): Promise<ApiResult<CohortD
   }, CONTEXT)
 }
 
+// Cohort names are unique across all users, so an agent that names its cohort
+// like everyone else in a shared tutorial would otherwise fail to save.
+export async function availableCohortName(name: string, id = 0): Promise<string> {
+  for (let n = 1; n <= 20; n++) {
+    const candidate = n === 1 ? name : `${name} (${n})`
+    try {
+      const count = await httpGet<number>(
+        `/cohortdefinition/${id}/exists?name=${encodeURIComponent(candidate)}`
+      )
+      if (!count) return candidate
+    } catch (error) {
+      logger.warn(CONTEXT, 'Could not check whether the cohort name is taken', error)
+      return candidate
+    }
+  }
+  return `${name} (${Date.now()})`
+}
+
 /**
  * WebAPI save payload format
  */

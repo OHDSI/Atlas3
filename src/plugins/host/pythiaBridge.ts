@@ -49,6 +49,7 @@ export interface ProposalOutcome {
   id?: number | string
   name?: string
   applied?: boolean
+  error?: string
 }
 
 const REFUSAL_MESSAGES: Record<NonNullable<ProposalResult['reason']>, string> = {
@@ -157,7 +158,7 @@ async function applyProposalInner(
     case 'createIncidenceRate':
       return await handleCreateIncidenceRate(proposal.payload)
     case 'generateAnalysis':
-      await handleGenerateAnalysis(proposal.payload); return
+      return await handleGenerateAnalysis(proposal.payload)
     case 'updateConceptSet':
       return await handleUpdateConceptSet(proposal.payload)
     case 'updateFeatureAnalysis':
@@ -389,7 +390,7 @@ async function handleUseConceptSet(payload: {
 
 async function handleSaveCohort(
   proposal: { name?: string; description?: string } = {}
-): Promise<{ id?: number; name?: string } | void> {
+): Promise<ProposalOutcome | void> {
   const cohortStore = useCohortStore()
   if (!cohortStore.currentCohort) {
     showSnackbar('There is no cohort to save yet', 'error')
@@ -401,8 +402,17 @@ async function handleSaveCohort(
   // cohort, so the editor must start blank — otherwise the next entry event is
   // added on top of this one and the user watches a single editor accumulate
   // three entry criteria while three separate cohorts are saved underneath.
-  if (saved?.id) savedCohortId = Number(saved.id)
-  return saved
+  if (saved?.id) {
+    savedCohortId = Number(saved.id)
+    return saved
+  }
+  if (saved?.timedOut) {
+    return {
+      applied: false,
+      error: 'The save did not finish in time. It may still complete, so check the open cohort before saving again.',
+    }
+  }
+  return { applied: false, error: saved?.error ?? 'ATLAS could not save the cohort.' }
 }
 
 async function handleNavigate(route: NavigateRoute) {
@@ -669,14 +679,13 @@ async function handleCreatePathway(
   }
 }
 
-// Run a saved analysis, the same thing the Generate button does. The agent can
-// create an analysis but previously had no way to execute it, so every demo
-// ended with an unrun analysis the user had to kick off by hand.
+// Run a saved cohort or analysis, the same thing the Generate button does, and
+// report a failed start so the agent does not hear success.
 async function handleGenerateAnalysis(payload: {
-  analysisType: 'pathway' | 'characterization' | 'incidenceRate'
+  analysisType: 'cohort' | 'pathway' | 'characterization' | 'incidenceRate'
   analysisId: number
   sourceKey?: string
-}): Promise<void> {
+}): Promise<ProposalOutcome | void> {
   // Fall back to whatever source the user is working against.
   const webapiStore = useWebAPIStore()
   if (!webapiStore.sources.length) await webapiStore.fetchSources().catch(() => {})
@@ -687,6 +696,21 @@ async function handleGenerateAnalysis(payload: {
     ''
   if (!sourceKey) {
     showSnackbar('Cannot generate: no data source selected', 'error')
+    return { applied: false, error: 'No data source selected' }
+  }
+  if (payload.analysisType === 'cohort') {
+    try {
+      const job = await webapiStore.generateCohort(payload.analysisId, sourceKey)
+      if (!job) {
+        showSnackbar('Failed to start generation', 'error')
+        return { applied: false, error: 'Failed to start generation' }
+      }
+      showSnackbar(`Generating cohort against ${sourceKey}`, 'success')
+    } catch (err) {
+      logger.error('pythiaBridge', 'generateAnalysis failed', err)
+      showSnackbar(`Failed to start generation: ${(err as Error).message}`, 'error')
+      return { applied: false, error: (err as Error).message }
+    }
     return
   }
   if (payload.analysisType !== 'pathway') {
@@ -696,8 +720,8 @@ async function handleGenerateAnalysis(payload: {
   try {
     const result = await generatePathway(payload.analysisId, sourceKey)
     if (!result.success) {
-      showSnackbar(`Failed to start generation: ${result.error}`, 'error')
-      return
+      showSnackbar(`Failed to start generation: ${result.error.message}`, 'error')
+      return { applied: false, error: result.error.message }
     }
     showSnackbar(`Generating pathway analysis against ${sourceKey}`, 'success')
     // The workbench only polls runs it started itself, so tell it to watch this
@@ -706,6 +730,7 @@ async function handleGenerateAnalysis(payload: {
   } catch (err) {
     logger.error('pythiaBridge', 'generateAnalysis failed', err)
     showSnackbar(`Failed to start generation: ${(err as Error).message}`, 'error')
+    return { applied: false, error: (err as Error).message }
   }
 }
 

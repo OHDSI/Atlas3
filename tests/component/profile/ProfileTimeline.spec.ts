@@ -195,4 +195,96 @@ describe('ProfileTimeline', () => {
     expect(render(0.5).y).toBe(200 + spread / 2 - 4)
     expect(render(-0.5).y).toBe(200 - spread / 2 - 4)
   })
+  describe('time range control', () => {
+    function mountWithChart(dispatchAction = vi.fn()) {
+      personWithRecords([
+        { conceptId: 1, conceptName: 'A', domain: 'Drug', startDate: 1, endDate: null, startDay: -800, endDay: null },
+        { conceptId: 2, conceptName: 'B', domain: 'Drug', startDate: 1, endDate: null, startDay: 900, endDay: null },
+      ])
+      return mount(ProfileTimeline, {
+        global: {
+          plugins: [vuetify],
+          stubs: { 'v-chart': { template: '<div />', methods: { dispatchAction } } },
+        },
+      })
+    }
+
+    it('shows a labelled time range control with text presets instead of the chart toolbox icon', () => {
+      const w = mountWithChart()
+      const control = w.find('[data-test="profile-time-range"]')
+      expect(control.text()).toContain('Time range')
+      expect(w.find('[data-test="profile-time-range-all"]').text()).toBe('All time')
+      expect(w.find('[data-test="profile-time-range-days30"]').text()).toBe('±30 days')
+      expect(w.find('[data-test="profile-time-range-year1"]').text()).toBe('±1 year')
+      expect(w.find('[data-test="profile-time-range-select"]').text()).toContain('Select on chart')
+      expect(liveOption(w).toolbox).toEqual({ show: false })
+      expect(liveOption(w).brush.toolbox).toEqual([])
+    })
+
+    it('applies presets around cohort entry and returns to all time', async () => {
+      const w = mountWithChart()
+      const store = useProfileStore()
+      expect(w.find('[data-test="profile-time-range-all"]').classes()).toContain('v-btn--active')
+
+      await w.find('[data-test="profile-time-range-year1"]').trigger('click')
+      expect(store.dateRange).toEqual([-365, 365])
+      expect(liveOption(w).xAxis).toMatchObject({ min: -365, max: 365 })
+      expect(w.find('[data-test="profile-time-range-year1"]').classes()).toContain('v-btn--active')
+
+      await w.find('[data-test="profile-time-range-days30"]').trigger('click')
+      expect(store.dateRange).toEqual([-30, 30])
+
+      await w.find('[data-test="profile-time-range-all"]').trigger('click')
+      expect(store.dateRange).toBeNull()
+      expect(liveOption(w).xAxis).toMatchObject({ min: -800, max: 900 })
+    })
+
+    it('highlights no preset for a custom brushed range', async () => {
+      const w = mountWithChart()
+      useProfileStore().setDateRange([-12, 40])
+      await w.vm.$nextTick()
+      for (const key of ['all', 'days30', 'year1']) {
+        expect(w.find(`[data-test="profile-time-range-${key}"]`).classes()).not.toContain('v-btn--active')
+      }
+    })
+
+    it('starts brush selection from the button and stops after a range is chosen', async () => {
+      const dispatchAction = vi.fn()
+      const w = mountWithChart(dispatchAction)
+      expect(w.find('[data-test="profile-time-range-hint"]').exists()).toBe(false)
+
+      await w.find('[data-test="profile-time-range-select"]').trigger('click')
+      expect(dispatchAction).toHaveBeenCalledWith({
+        type: 'takeGlobalCursor',
+        key: 'brush',
+        brushOption: { brushType: 'lineX', brushMode: 'single' },
+      })
+      expect(w.find('[data-test="profile-time-range-select"]').attributes('aria-pressed')).toBe('true')
+      expect(w.find('[data-test="profile-time-range-hint"]').exists()).toBe(true)
+
+      ;(w.vm as { onBrush: (e: unknown) => void }).onBrush({ areas: [{ coordRange: [-5, 20] }] })
+      await w.vm.$nextTick()
+      expect(useProfileStore().dateRange).toEqual([-5, 20])
+      expect(dispatchAction).toHaveBeenLastCalledWith({
+        type: 'takeGlobalCursor',
+        key: 'brush',
+        brushOption: { brushType: false },
+      })
+      expect(w.find('[data-test="profile-time-range-hint"]').exists()).toBe(false)
+    })
+
+    it('cancels brush selection when the button is clicked again', async () => {
+      const dispatchAction = vi.fn()
+      const w = mountWithChart(dispatchAction)
+      const btn = w.find('[data-test="profile-time-range-select"]')
+      await btn.trigger('click')
+      await btn.trigger('click')
+      expect(dispatchAction).toHaveBeenLastCalledWith({
+        type: 'takeGlobalCursor',
+        key: 'brush',
+        brushOption: { brushType: false },
+      })
+      expect(btn.attributes('aria-pressed')).toBe('false')
+    })
+  })
 })

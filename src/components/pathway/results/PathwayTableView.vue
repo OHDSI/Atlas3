@@ -13,46 +13,47 @@
         <h3>{{ s.title }}</h3>
         <button
           class="export-btn"
-          @click="exportCsv(g.group.targetCohortId, s.rows, s.key)"
+          @click="exportCsv(g.group.targetCohortId, filteredRows(s.id, s.rows), s.key)"
         >
           {{ t('common.exportCsv') }}
         </button>
-        <table>
-          <thead>
-            <tr>
-              <th
-                v-for="h in headerOf(s.rows)"
-                :key="h"
-              >
-                {{ h }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(r, i) in s.rows"
-              :key="i"
-            >
-              <td
-                v-for="h in headerOf(s.rows)"
-                :key="h"
-              >
-                {{ r[h] }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div
+          v-if="textColumnsOf(s.rows).length > 0"
+          class="pathway-table-filters"
+        >
+          <AtlasTextField
+            v-for="h in textColumnsOf(s.rows)"
+            :key="h"
+            :model-value="filterOf(s.id)[h] ?? ''"
+            :label="tv('pathway.results.filterColumn', { column: h })"
+            prepend-icon="mdi-filter-variant"
+            hide-details
+            clearable
+            :data-test="`pathway-table-filter-${s.key}-${h}`"
+            @update:model-value="(v: string | number) => setFilter(s.id, h, v)"
+          />
+        </div>
+        <AtlasDataTable
+          v-model:sort-by="sortByOf(s.id).value"
+          :headers="headersOf(s.rows)"
+          :items="filteredRows(s.id, s.rows)"
+          :items-per-page="25"
+          :no-data-text="tv('pathway.results.noMatchingRows')"
+          :data-test="`pathway-table-${s.key}`"
+        />
       </section>
     </PathwayCohortSection>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, reactive, ref, type Ref } from 'vue'
 import type { Pathway, PathwayResults } from '@/models/pathway.types'
 import { useI18n } from '@/composables/useI18n'
 import { resolveCohortName } from '@/components/pathway/pathway-workbench-state'
 import PathwayCohortSection from './PathwayCohortSection.vue'
+import { AtlasDataTable, AtlasTextField } from '@/components/ui'
+import { matchesTerms } from '@/utils/list-filters'
 import {
   toAllPathwaysRows,
   toCountsByRankRows,
@@ -63,6 +64,10 @@ import {
 } from '@/utils/pathway-csv'
 
 type Row = Record<string, string | number>
+interface SortItem {
+  key: string
+  order?: 'asc' | 'desc'
+}
 
 const props = defineProps<{
   design: Pathway
@@ -96,12 +101,58 @@ const groups = computed(() =>
         title: tv('pathway.results.distinctEventCohortCounts'),
         rows: toDistinctEventCountRows(group, props.results.eventCodes) as Row[],
       },
-    ],
+    ].map(section => ({ ...section, id: `${group.targetCohortId}:${section.key}` })),
   }))
 )
 
-function headerOf(rows: ReadonlyArray<Row>): string[] {
+const DEFAULT_SORT: Record<string, SortItem[]> = {
+  all: [{ key: 'Count', order: 'desc' }],
+  'cohort-counts': [{ key: 'Count', order: 'desc' }],
+}
+
+const filters = reactive<Record<string, Record<string, string>>>({})
+const sorts = new Map<string, Ref<SortItem[]>>()
+
+function columnsOf(rows: ReadonlyArray<Row>): string[] {
   return rows[0] ? Object.keys(rows[0]) : []
+}
+
+function textColumnsOf(rows: ReadonlyArray<Row>): string[] {
+  return columnsOf(rows).filter(h => rows.some(r => typeof r[h] === 'string'))
+}
+
+// Column names such as "% with Pathway" are not safe as v-data-table item
+// paths, so each header reads its cell through an explicit accessor.
+function headersOf(rows: ReadonlyArray<Row>) {
+  return columnsOf(rows).map(h => ({
+    key: h,
+    title: h,
+    value: (item: unknown) => (item as Row)[h],
+  }))
+}
+
+function filterOf(sectionId: string): Record<string, string> {
+  return filters[sectionId] ?? {}
+}
+
+function setFilter(sectionId: string, column: string, value: string | number | null): void {
+  filters[sectionId] = { ...filterOf(sectionId), [column]: value == null ? '' : String(value) }
+}
+
+function filteredRows(sectionId: string, rows: Row[]): Row[] {
+  const active = Object.entries(filterOf(sectionId)).filter(([, q]) => q.trim() !== '')
+  if (active.length === 0) return rows
+  return rows.filter(r => active.every(([h, q]) => matchesTerms([String(r[h] ?? '')], q)))
+}
+
+function sortByOf(sectionId: string): Ref<SortItem[]> {
+  let sort = sorts.get(sectionId)
+  if (!sort) {
+    const key = sectionId.slice(sectionId.indexOf(':') + 1)
+    sort = ref<SortItem[]>([...(DEFAULT_SORT[key] ?? [])])
+    sorts.set(sectionId, sort)
+  }
+  return sort
 }
 
 function exportCsv(targetCohortId: number, rows: Row[], name: string): void {
@@ -113,27 +164,15 @@ function exportCsv(targetCohortId: number, rows: Row[], name: string): void {
   margin-bottom: 24px;
   overflow-x: auto;
 }
-.pathway-tables table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 13px;
+.pathway-table-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
 }
-.pathway-tables th,
-.pathway-tables td {
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--atlas-color-outline);
-  text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 200px;
-}
-.pathway-tables th {
-  font-weight: 600;
-  background: var(--atlas-color-surface-variant);
-  position: sticky;
-  top: 0;
+.pathway-table-filters > * {
+  flex: 1 1 160px;
+  max-width: 240px;
 }
 .export-btn {
   margin-bottom: 8px;

@@ -771,7 +771,7 @@ export function translateCapability(
 
     case 'generate_analysis': {
       const a = args as { analysisType?: string; analysisId?: number; sourceKey?: string }
-      const kinds = ['pathway', 'characterization', 'incidenceRate']
+      const kinds = ['cohort', 'pathway', 'characterization', 'incidenceRate']
       if (!a.analysisType || !kinds.includes(a.analysisType)) return null
       if (typeof a.analysisId !== 'number') return null
       return {

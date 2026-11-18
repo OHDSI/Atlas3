@@ -132,6 +132,70 @@ describe('validateCohortExpression', () => {
     expect(result.problems[0].path).toBe('InclusionRules[0].name')
   })
 
+  it('accepts concepts carrying the extra fields ATLAS 2.x exports (#521)', () => {
+    const atlas2Concept = {
+      CONCEPT_ID: 4221865,
+      CONCEPT_NAME: 'Radiation pneumonitis',
+      DOMAIN_ID: 'Condition',
+      VOCABULARY_ID: 'SNOMED',
+      CONCEPT_CLASS_ID: 'Disorder',
+      STANDARD_CONCEPT: 'S',
+      CONCEPT_CODE: '84004001',
+      VALID_START_DATE: '2002-01-31',
+      VALID_END_DATE: '2099-12-31',
+      STANDARD_CONCEPT_CAPTION: 'Standard',
+    }
+    const cohort = {
+      ...validCohort(),
+      ConceptSets: [
+        {
+          id: 0,
+          name: 'Radiation Induced Lung Toxicity',
+          expression: {
+            items: [{ concept: atlas2Concept, isExcluded: false, includeDescendants: true, includeMapped: false }],
+          },
+        },
+      ],
+      InclusionRules: [
+        {
+          name: 'Female',
+          expression: {
+            ...femaleExpression,
+            DemographicCriteriaList: [
+              { Gender: [{ ...femaleGender[0], VALID_START_DATE: '1970-01-01', VALID_END_DATE: '2099-12-31' }] },
+            ],
+          },
+        },
+      ],
+    }
+
+    const result = validateCohortExpression(cohort)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    const concept = result.expression.ConceptSets?.[0]?.expression?.items?.[0]?.concept
+    expect(concept).toMatchObject({ CONCEPT_ID: 4221865, STANDARD_CONCEPT_CAPTION: 'Standard', INVALID_REASON_CAPTION: 'Unknown' })
+    expect(concept).not.toHaveProperty('VALID_START_DATE')
+    expect(concept).not.toHaveProperty('VALID_END_DATE')
+    expect(result.expression.InclusionRules?.[0]?.expression?.DemographicCriteriaList?.[0]?.Gender?.[0]).not.toHaveProperty(
+      'VALID_START_DATE'
+    )
+    expect(atlas2Concept).not.toHaveProperty('INVALID_REASON_CAPTION')
+  })
+
+  it('still rejects an unrecognized field on a concept', () => {
+    const cohort = validCohort()
+    cohort.InclusionRules[0]!.expression.DemographicCriteriaList = [
+      { Gender: [{ ...femaleGender[0]!, CONCEPT_NAEM: 'FEMALE' }] },
+    ] as unknown as typeof femaleExpression.DemographicCriteriaList
+
+    const result = validateCohortExpression(cohort)
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.problems[0]?.path).toBe('InclusionRules[0].expression.DemographicCriteriaList[0].Gender[0].CONCEPT_NAEM')
+  })
+
   it('rejects a non-object payload', () => {
     expect(validateCohortExpression('not an expression').ok).toBe(false)
     expect(validateCohortExpression([]).ok).toBe(false)

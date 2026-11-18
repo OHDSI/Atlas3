@@ -533,6 +533,13 @@ describe('translateCapability: generate_analysis', () => {
     })
   })
 
+  it('translates a cohort run', () => {
+    expect(translateCapability('generate_analysis', { analysisType: 'cohort', analysisId: 7 })).toEqual({
+      kind: 'generateAnalysis',
+      payload: { analysisType: 'cohort', analysisId: 7 },
+    })
+  })
+
   it('omits sourceKey when the agent did not name one', () => {
     const p = translateCapability('generate_analysis', {
       analysisType: 'characterization',
@@ -542,7 +549,7 @@ describe('translateCapability: generate_analysis', () => {
   })
 
   it('accepts every supported analysis type', () => {
-    for (const analysisType of ['pathway', 'characterization', 'incidenceRate']) {
+    for (const analysisType of ['cohort', 'pathway', 'characterization', 'incidenceRate']) {
       const p = translateCapability('generate_analysis', { analysisType, analysisId: 1 })
       expect(p?.kind).toBe('generateAnalysis')
     }
@@ -551,7 +558,7 @@ describe('translateCapability: generate_analysis', () => {
   // A bad reference must not become a proposal: the user would be asked to
   // approve running "something", and the bridge would have nothing to run.
   it('rejects an unknown analysis type', () => {
-    expect(translateCapability('generate_analysis', { analysisType: 'cohort', analysisId: 1 })).toBeNull()
+    expect(translateCapability('generate_analysis', { analysisType: 'report', analysisId: 1 })).toBeNull()
   })
 
   it('rejects a missing or non-numeric analysis id', () => {

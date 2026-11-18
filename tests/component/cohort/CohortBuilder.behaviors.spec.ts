@@ -20,6 +20,7 @@ const access = vi.hoisted(() => ({
 }))
 
 vi.mock('@/services/cohort-definition.service', () => ({
+  availableCohortName: vi.fn(async (name: string) => name),
   fetchCDMSources: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getCohortDefinition: vi.fn(),

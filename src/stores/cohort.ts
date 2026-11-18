@@ -107,6 +107,12 @@ interface RetryState {
   isRetrying: boolean
 }
 
+// A save under load waits on WebAPI's connection pool, so a short timeout
+// reports failure for saves that then succeed and invites a duplicate save. It
+// must stay below HostMessageBus's 30 s request timeout, or the plugin gives up
+// before this answers.
+export const SAVE_REQUEST_TIMEOUT_MS = 25_000
+
 export const useCohortStore = defineStore('cohort', () => {
   const { tv } = useI18n()
   // State
@@ -361,6 +367,18 @@ export const useCohortStore = defineStore('cohort', () => {
             if (drugSet) {
               registerConceptSets(expression.ConceptSets, [drugSet])
             }
+            // A drug-era exit without a named drug means "the drug they entered
+            // on"; CIRCE refuses to generate a CustomEra with no codeset at all.
+            const drugCodesetId =
+              drugSet?.id ??
+              expression.PrimaryCriteria?.CriteriaList?.map(
+                c => (c.DrugExposure as { CodesetId?: number } | undefined)?.CodesetId
+              ).find(
+                id => id != null
+              )
+            if (drugCodesetId == null) {
+              return { applied: false, reason: 'untranslatable-criteria' }
+            }
 
             // Atlas 2.15 binds Persistence to GapDays and Surveillance to
             // Offset (CustomEraStrategyTemplate.html). GapDays was being fed
@@ -368,7 +386,7 @@ export const useCohortStore = defineStore('cohort', () => {
             // read at all, so the era was built with the wrong tolerance.
             expression.EndStrategy = {
               CustomEra: {
-                DrugCodesetId: drugSet?.id,
+                DrugCodesetId: drugCodesetId,
                 GapDays: ec.persistenceWindow ?? 0,
                 Offset: ec.surveillanceWindow ?? ec.offset ?? 0,
               },
@@ -577,7 +595,7 @@ export const useCohortStore = defineStore('cohort', () => {
   // The mounted editor reads this when it answers a save request — a cohort
   // built programmatically otherwise has no name and the editor refuses to save.
   const saveOptions = ref<{ name?: string; description?: string }>({})
-  type SaveRequestResult = { id?: number; name?: string; timedOut?: boolean }
+  type SaveRequestResult = { id?: number; name?: string; timedOut?: boolean; error?: string }
   type PendingSaveRequest = {
     resolve: (r: SaveRequestResult) => void
     timeoutId: ReturnType<typeof setTimeout>
@@ -595,7 +613,7 @@ export const useCohortStore = defineStore('cohort', () => {
           if (index === -1) return
           pendingSaveRequests.splice(index, 1)
           resolve({ timedOut: true })
-        }, 8000),
+        }, SAVE_REQUEST_TIMEOUT_MS),
       }
       pendingSaveRequests.push(pendingRequest)
     })
