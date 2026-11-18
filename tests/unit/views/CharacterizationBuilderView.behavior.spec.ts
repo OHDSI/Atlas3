@@ -630,7 +630,7 @@ describe('CharacterizationBuilderView behavior', () => {
       setupState(mounted.wrapper).handleConceptSetApplied({ name: 'First', items: [] })
       await flushPromises()
 
-      expect(conceptSetsDialog(mounted.wrapper).props('conceptSets')).toEqual([{ id: 0, name: 'First', items: [] }])
+      expect(conceptSetsDialog(mounted.wrapper).props('conceptSets')).toEqual([{ id: 1, name: 'First', items: [] }])
       expect(conceptSetsDialog(mounted.wrapper).props('modelValue')).toBe(true)
     })
 

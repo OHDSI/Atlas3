@@ -36,8 +36,8 @@ describe('concept-set-id helpers', () => {
   })
 
   describe('nextConceptSetId', () => {
-    it('starts at 0 when there are no concept sets (historical behavior: first set in a cohort gets id=0)', () => {
-      expect(nextConceptSetId([])).toBe(0)
+    it('starts at 1 when there are no concept sets', () => {
+      expect(nextConceptSetId([])).toBe(1)
     })
 
     it('returns one past the highest existing numeric id', () => {
@@ -68,8 +68,8 @@ describe('concept-set-id helpers', () => {
       const b = ensureUniqueConceptSetId({ id: undefined, name: 'B', items: [] } as any, used)
       used.push(b)
 
-      expect(a.id).toBe(0) // First placeholder set gets id=0
-      expect(b.id).toBe(1) // Second placeholder set gets id=1
+      expect(a.id).toBe(1) // First placeholder set gets id=1
+      expect(b.id).toBe(2) // Second placeholder set gets id=2
     })
 
     it('reassigns a distinct set that collides on a positive id (both stamped id 1)', () => {

@@ -292,7 +292,7 @@ describe('registerConceptSets', () => {
 })
 
 describe('codeset ids written into criteria', () => {
-  it('points the criterion at the allocated id, not the colliding repository id', () => {
+  it('points the criterion at the cohort id a numeric concept set already carries', () => {
     const existing: ConceptSet[] = [
       { id: 0, name: 'Local A' },
       { id: 1, name: 'Local B' },
@@ -301,7 +301,28 @@ describe('codeset ids written into criteria', () => {
     const translated = translateAgentEvent(
       {
         criteriaType: 'ConditionOccurrence',
-        conceptSet: { id: 1, name: 'Type 2 Diabetes', items: [] },
+        conceptSet: { id: 1, name: 'Local B renamed', items: [] },
+      } as unknown as CohortEvent,
+      existing
+    )
+
+    expect(translated!.conceptSet!.id).toBe(1)
+    expect(
+      (translated!.criteria as { ConditionOccurrence: { CodesetId?: number } }).ConditionOccurrence
+        .CodesetId
+    ).toBe(1)
+  })
+
+  it('allocates the next id for an agent set without a numeric id', () => {
+    const existing: ConceptSet[] = [
+      { id: 0, name: 'Local A' },
+      { id: 1, name: 'Local B' },
+    ]
+
+    const translated = translateAgentEvent(
+      {
+        criteriaType: 'ConditionOccurrence',
+        conceptSet: { id: 'uuid', name: 'Type 2 Diabetes', items: [] },
       } as unknown as CohortEvent,
       existing
     )

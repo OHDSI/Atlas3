@@ -143,7 +143,7 @@ describe('atlas-concept-set', () => {
     })
   })
 
-  it('keeps a numeric id when there is no collision or when the colliding set has the same name', () => {
+  it('keeps a numeric id as an update to that set, even when the name changed', () => {
     const existing: ConceptSet[] = [
       { id: 2, name: 'Same name', expression: { items: [] } },
       { id: 7, name: 'Other', expression: { items: [] } },
@@ -155,10 +155,20 @@ describe('atlas-concept-set', () => {
       expression: { items: [] },
     })
     expect(circeConceptSetFromAtlas({ id: 7, name: 'Renamed', items: [] }, existing)).toEqual({
-      id: 8,
+      id: 7,
       name: 'Renamed',
       expression: { items: [] },
     })
+  })
+
+  it('allocates the next id for a set with no id', () => {
+    const existing: ConceptSet[] = [
+      { id: 2, name: 'A', expression: { items: [] } },
+      { id: 7, name: 'B', expression: { items: [] } },
+    ]
+
+    expect(circeConceptSetFromAtlas({ name: 'New', items: [] }, existing)?.id).toBe(8)
+    expect(circeConceptSetFromAtlas({ id: null, name: 'New', items: [] }, [])?.id).toBe(1)
   })
 
   it('returns the next unused numeric id even when the existing set list contains gaps', () => {

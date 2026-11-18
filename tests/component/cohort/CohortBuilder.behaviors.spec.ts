@@ -419,8 +419,8 @@ describe('CohortBuilder behaviors', () => {
       })
       await flushPromises()
 
-      expect(liveExpression().ConceptSets?.map(cs => cs.id)).toEqual([0, 50])
-      expect(target.targetRef.value).toBe(50)
+      expect(liveExpression().ConceptSets?.map(cs => cs.id)).toEqual([0, 1])
+      expect(target.targetRef.value).toBe(1)
     })
 
     it('editing from a criterion opens the editor on the referenced set', async () => {
@@ -540,7 +540,7 @@ describe('CohortBuilder behaviors', () => {
       await flushPromises()
 
       expect(liveExpression().ConceptSets).toEqual([
-        { id: 0, name: 'First', expression: { items: [] } },
+        { id: 1, name: 'First', expression: { items: [] } },
       ])
     })
   })
@@ -625,6 +625,38 @@ describe('CohortBuilder behaviors', () => {
       await flushPromises()
 
       expect(liveExpression().ConceptSets).toHaveLength(4)
+    })
+  })
+
+  describe('concept sets list dialog', () => {
+    it('offers a new concept set action that closes the list and opens the create editor', async () => {
+      vi.mocked(getCohortDefinition).mockResolvedValue(cohortResult() as never)
+      const ListDialogStub = defineComponent({
+        name: 'ConceptSetsListDialog',
+        props: { modelValue: Boolean },
+        setup(_, { slots }) {
+          return () => h('div', slots.actions?.())
+        },
+      })
+      const wrapper = mount(CohortBuilder, {
+        props: { id: '42' },
+        global: { plugins: [vuetify, router], stubs: { ...stubs, ConceptSetsListDialog: ListDialogStub } },
+        attachTo: document.body,
+      })
+      mounted.push(wrapper)
+      await flushPromises()
+      const conceptSetsStore = useConceptSetsStore()
+      const openCreate = vi.spyOn(conceptSetsStore, 'openCreateEditor')
+
+      child(wrapper, 'CohortToolbarStatus').vm.$emit('show-concept-sets')
+      await flushPromises()
+      expect(propOf(wrapper, 'ConceptSetsListDialog', 'modelValue')).toBe(true)
+
+      await wrapper.get('[data-testid="cohort-builder-conceptset-create"]').trigger('click')
+      await flushPromises()
+
+      expect(openCreate).toHaveBeenCalledTimes(1)
+      expect(propOf(wrapper, 'ConceptSetsListDialog', 'modelValue')).toBe(false)
     })
   })
 
