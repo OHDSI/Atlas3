@@ -302,8 +302,8 @@ let savedCohortId: number | null = null
 
 // Reuse a concept set the user already curated instead of rebuilding it concept
 // by concept. Circe resolves criteria against the sets embedded in the cohort
-// expression, so "reuse" means copying the saved set's concepts in — keeping its
-// name and id so the cohort still reads as that set.
+// expression, so "reuse" means copying the saved set's concepts in as a new set.
+// The repository id is not carried over; the cohort assigns its own codeset id.
 async function handleUseConceptSet(payload: {
   conceptSetId: number
   group?: 'entry' | 'inclusion' | 'exclusion'
@@ -335,7 +335,6 @@ async function handleUseConceptSet(payload: {
   const domain = String(first.domainId ?? nested.DOMAIN_ID ?? '')
   const group = payload.group ?? 'inclusion'
   const conceptSet = {
-    id: set.id,
     name: set.name,
     conceptCount: items.length,
     items,

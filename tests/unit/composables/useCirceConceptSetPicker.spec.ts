@@ -135,16 +135,16 @@ describe('useCirceConceptSetPicker', () => {
     expect(addConceptSet).toHaveBeenCalledTimes(1)
     expect(addConceptSet).toHaveBeenCalledWith(
       expect.objectContaining({
-        id: 7,
+        id: 1,
         name: 'Imported concept set',
         expression: expect.objectContaining({ items: expect.any(Array) }),
       })
     )
-    expect(target.value).toBe(7)
+    expect(target.value).toBe(1)
     expect(picker.pickerOpen.value).toBe(false)
   })
 
-  it('skips adding a duplicate concept set while still resolving the target', async () => {
+  it('adds a re-picked repository set as a new copy under the next local id', async () => {
     const target = ref<number | null | undefined>()
     const addConceptSet = vi.fn()
     const picker = useCirceConceptSetPicker({
@@ -155,8 +155,8 @@ describe('useCirceConceptSetPicker', () => {
     picker.onSelectConceptSet({ targetRef: target })
     await picker.onConceptSetSelected({ id: 7, name: 'Existing', items: [] })
 
-    expect(addConceptSet).not.toHaveBeenCalled()
-    expect(target.value).toBe(7)
+    expect(addConceptSet).toHaveBeenCalledWith(expect.objectContaining({ id: 8, name: 'Existing' }))
+    expect(target.value).toBe(8)
   })
 
   it('closes the dialog when concept selection arrives without an active request', async () => {
@@ -225,11 +225,11 @@ describe('useCirceConceptSetPicker', () => {
 
     expect(addConceptSet).toHaveBeenCalledWith(
       expect.objectContaining({
-        id: 7,
+        id: 1,
         expression: { items: [expect.objectContaining({ conceptId: 437663 }), expect.anything()] },
       })
     )
-    expect(target.value).toBe(7)
+    expect(target.value).toBe(1)
     expect(useNotifications().items).toEqual([
       expect.objectContaining({
         severity: 'warning',
@@ -256,11 +256,11 @@ describe('useCirceConceptSetPicker', () => {
     await picker.onConceptSetSelected({ id: 7, name: 'Empty set' })
 
     expect(addConceptSet).toHaveBeenCalledWith({
-      id: 7,
+      id: 1,
       name: 'Empty set',
       expression: { items: [] },
     })
-    expect(target.value).toBe(7)
+    expect(target.value).toBe(1)
     expect(picker.pickerOpen.value).toBe(false)
   })
 
@@ -276,7 +276,7 @@ describe('useCirceConceptSetPicker', () => {
   })
 })
 
-describe('importing a repository concept set whose id is already taken', () => {
+describe('local codeset ids for imported repository concept sets', () => {
   it('adds the picked set under a free id and binds the criterion to it', async () => {
     const conceptSets: ConceptSet[] = [
       { id: 0, name: 'Local A', expression: { items: [] } },
@@ -301,7 +301,7 @@ describe('importing a repository concept set whose id is already taken', () => {
     expect(conceptSets.find(cs => cs.name === 'Local B')!.id).toBe(1)
   })
 
-  it('keeps the repository id when nothing else is using it', async () => {
+  it('ignores the repository id and uses max + 1 even when the repository id is free', async () => {
     const conceptSets: ConceptSet[] = [{ id: 0, name: 'Local A', expression: { items: [] } }]
     const picker = useCirceConceptSetPicker({
       getConceptSets: () => conceptSets,
@@ -316,11 +316,11 @@ describe('importing a repository concept set whose id is already taken', () => {
       items: [{ concept: { CONCEPT_ID: 316866 } }],
     })
 
-    expect(codesetId.value).toBe(7)
-    expect(conceptSets.map(cs => cs.id)).toEqual([0, 7])
+    expect(codesetId.value).toBe(1)
+    expect(conceptSets.map(cs => cs.id)).toEqual([0, 1])
   })
 
-  it('reuses the existing entry when the same set is picked twice', async () => {
+  it('adds a second copy when the same set is picked twice', async () => {
     const conceptSets: ConceptSet[] = [
       { id: 7, name: 'Hypertension', expression: { items: [] } },
     ]
@@ -333,18 +333,11 @@ describe('importing a repository concept set whose id is already taken', () => {
     picker.onSelectConceptSet({ targetRef: codesetId })
     await picker.onConceptSetSelected({ id: 7, name: 'Hypertension', items: [] })
 
-    expect(codesetId.value).toBe(7)
-    expect(conceptSets).toHaveLength(1)
+    expect(codesetId.value).toBe(8)
+    expect(conceptSets.map(cs => cs.id)).toEqual([7, 8])
   })
 
-  // Known limitation, not a regression to fix here: identity is approximated
-  // by id+name because the repository id and the local codeset id share a
-  // number space (see the comment at the identity check in
-  // useCirceConceptSetPicker.ts). Two distinct repository sets that happen to
-  // collide on both an id AND a display name are indistinguishable from a
-  // re-pick of the same set, so the second one is silently merged into the
-  // first rather than added as its own entry.
-  it('conflates two distinct sets that share both a colliding id and a name, silently discarding the second pick', async () => {
+  it('keeps a distinct set that shares an id and name with an existing entry', async () => {
     const conceptSets: ConceptSet[] = [
       { id: 7, name: 'Hypertension', expression: { items: [] } },
     ]
@@ -355,17 +348,14 @@ describe('importing a repository concept set whose id is already taken', () => {
 
     const codesetId = ref<number | undefined>(undefined)
     picker.onSelectConceptSet({ targetRef: codesetId })
-    // A different repository set that happens to share both id 7 and the
-    // name "Hypertension" — its concepts are never written into the
-    // expression, proving the two sets were treated as one.
     await picker.onConceptSetSelected({
       id: 7,
       name: 'Hypertension',
       items: [{ concept: { CONCEPT_ID: 999999 } }],
     })
 
-    expect(codesetId.value).toBe(7)
-    expect(conceptSets).toHaveLength(1)
-    expect(conceptSets[0]!.expression?.items).toEqual([])
+    expect(codesetId.value).toBe(8)
+    expect(conceptSets).toHaveLength(2)
+    expect(conceptSets[1]!.expression?.items).toEqual([{ concept: { CONCEPT_ID: 999999 } }])
   })
 })

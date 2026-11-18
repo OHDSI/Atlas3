@@ -92,7 +92,18 @@
       :used-concept-sets="usedConceptSets"
       @view="handleViewConceptSet"
       @delete="handleDeleteConceptSet"
-    />
+    >
+      <template #actions>
+        <AtlasButton
+          variant="secondary"
+          icon="mdi-plus"
+          data-testid="cohort-builder-conceptset-create"
+          @click="handleCreateConceptSetFromList"
+        >
+          {{ t('components.conceptSetBuilder.newConceptSet').value }}
+        </AtlasButton>
+      </template>
+    </concept-sets-list-dialog>
 
     <validation-messages-dialog
       v-model="showValidationDialog"
@@ -1098,6 +1109,11 @@ function handleViewConceptSet(conceptSet: {
 }) {
   showConceptSetsDialog.value = false
   handleEditConceptSet(conceptSet)
+}
+
+function handleCreateConceptSetFromList() {
+  showConceptSetsDialog.value = false
+  handleCreateNewConceptSet()
 }
 
 function handleEditConceptSetFromTarget(target: ConceptSetSelectionTarget | undefined) {

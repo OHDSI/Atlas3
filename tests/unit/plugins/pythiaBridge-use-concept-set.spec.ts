@@ -95,6 +95,24 @@ describe('pythiaBridge useConceptSet', () => {
     ])
   })
 
+  it('imports the repository set under the next internal codeset id, not its repository id', async () => {
+    const store = attachEditor()
+    store.currentCohort!.expression!.ConceptSets = [
+      { id: 3, name: 'Local', expression: { items: [] } },
+    ] as never
+
+    await applyProposalDirect(useConceptSetProposal({ conceptSetId: 42, group: 'entry' }))
+
+    const expression = store.currentCohort!.expression!
+    expect(expression.ConceptSets?.map(cs => [cs.id, cs.name])).toEqual([
+      [3, 'Local'],
+      [4, 'Statins'],
+    ])
+    expect(expression.PrimaryCriteria?.CriteriaList?.at(-1)).toEqual({
+      DrugExposure: { CodesetId: 4 },
+    })
+  })
+
   it('no editor open: surfaces the failure instead of a success toast', async () => {
     const res = await applyProposalDirect(useConceptSetProposal({ conceptSetId: 42 }))
 
