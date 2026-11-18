@@ -879,7 +879,8 @@ describe('ConceptSetEditor', () => {
       vm.applySourceCodeConcepts()
       expect(addSpy).toHaveBeenCalledTimes(1)
       expect(addSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ conceptId: drugConcept.conceptId })
+        expect.objectContaining({ conceptId: drugConcept.conceptId }),
+        expect.any(Object)
       )
     })
 
@@ -947,12 +948,11 @@ describe('ConceptSetEditor', () => {
       const wrapper = mountComponent({ conceptSet: { name: 'Set', items: [] } })
       const store = useConceptSetsStore()
       store.currentSet = { name: 'Set', items: [] }
-      const addSpy = vi.spyOn(store, 'addConceptToSet')
 
       const vm = wrapper.vm as unknown as {
         jsonInput: string
         parseJsonImport: () => void
-        applyJsonItems: () => void
+        applyJsonItems: (mode: 'append' | 'overwrite') => void
         jsonItems: unknown[]
         jsonError: string
       }
@@ -980,13 +980,7 @@ describe('ConceptSetEditor', () => {
       expect(vm.jsonError).toBe('')
       expect(vm.jsonItems).toHaveLength(1)
 
-      vm.applyJsonItems()
-      // The imported flags now go in with the add rather than being toggled on
-      // afterwards, so a concept absent from the set lands in one step (#226).
-      expect(addSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ conceptId: 201826 }),
-        expect.objectContaining({ includeDescendants: true })
-      )
+      vm.applyJsonItems('append')
       expect(store.currentSet?.items).toHaveLength(1)
       expect(store.currentSet?.items[0]).toMatchObject({
         conceptId: 201826,
@@ -1008,12 +1002,11 @@ describe('ConceptSetEditor', () => {
       const wrapper = mountComponent({ conceptSet: { name: 'Set', items: [existing] } })
       const store = useConceptSetsStore()
       store.currentSet = { name: 'Set', items: [{ ...existing }] }
-      const toggleSpy = vi.spyOn(store, 'toggleConceptFlag')
 
       const vm = wrapper.vm as unknown as {
         jsonInput: string
         parseJsonImport: () => void
-        applyJsonItems: () => void
+        applyJsonItems: (mode: 'append' | 'overwrite') => void
       }
 
       vm.jsonInput = JSON.stringify({
@@ -1036,10 +1029,9 @@ describe('ConceptSetEditor', () => {
         ],
       })
       vm.parseJsonImport()
-      vm.applyJsonItems()
+      vm.applyJsonItems('append')
 
-      // No toggle for a flag whose desired value already matches.
-      expect(toggleSpy).not.toHaveBeenCalledWith(201826, 'includeDescendants')
+      expect(store.currentSet?.items).toHaveLength(1)
       const item = store.currentSet?.items.find(i => i.conceptId === 201826)
       expect(item?.includeDescendants).toBe(true)
     })

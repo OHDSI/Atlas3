@@ -714,7 +714,7 @@
     v-model="showJsonDialog"
     :eyebrow="t('cs.manager.importJson').value"
     :title="t('cs.manager.importJsonTitle').value"
-    max-width="640"
+    max-width="1200"
     @close="closeJsonDialog"
   >
     <p class="cs-paste__hint">
@@ -745,6 +745,14 @@
           {{ jsonItems.length }}</span>
       </div>
     </div>
+    <ConceptSetTable
+      v-if="jsonParsed && jsonItems.length"
+      :items="jsonItems"
+      :source-key="sourceKey"
+      readonly
+      class="mt-4"
+      data-testid="json-import-items-table"
+    />
     <div
       v-if="jsonError"
       class="cs-paste__summary"
@@ -774,10 +782,19 @@
       </AtlasButton>
       <AtlasButton
         v-else
-        :disabled="!jsonItems.length"
-        @click="applyJsonItems"
+        variant="secondary"
+        data-testid="cs-editor-json-append"
+        @click="applyJsonItems('append')"
       >
-        {{ t('cs.manager.pasteIdsAddBtn').value }} {{ jsonItems.length || '' }}
+        {{ t('cs.manager.importFromRepositoryAppend').value }}
+      </AtlasButton>
+      <AtlasButton
+        v-if="jsonParsed && jsonItems.length"
+        variant="danger"
+        data-testid="cs-editor-json-overwrite"
+        @click="applyJsonItems('overwrite')"
+      >
+        {{ t('cs.manager.importFromRepositoryOverwrite').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -1730,22 +1747,30 @@ function parseJsonImport() {
   }
 }
 
-function applyJsonItems() {
-  // Import stays a merge of one row per concept: align an existing row's flags
-  // to the imported values, and only add when the concept is absent. Adding
-  // unconditionally would now append a second row whenever the imported flags
-  // differ from the ones already stored (#226).
-  for (const item of jsonItems.value) {
-    const current = store.currentSet?.items.find(i => i.conceptId === item.conceptId)
-    if (current) {
-      store.setConceptItemFlags(current, item)
-    } else {
-      store.addConceptToSet(item, item)
-    }
+function applyJsonItems(mode: 'append' | 'overwrite') {
+  if (!store.currentSet) return
+
+  const imported = jsonItems.value.map(item => ({ ...item }))
+  if (mode === 'overwrite') {
+    store.applyProposal({ items: imported })
+  } else {
+    const additions = imported.filter(item =>
+      !store.currentSet!.items.some(existing => sameConceptSetItem(existing, item))
+    )
+    store.currentSet.items.push(...additions)
   }
   hasUnsavedChanges.value = true
   activeTab.value = 'selected'
   closeJsonDialog()
+}
+
+function sameConceptSetItem(a: ConceptSetItem, b: ConceptSetItem) {
+  return (
+    a.conceptId === b.conceptId &&
+    !!a.isExcluded === !!b.isExcluded &&
+    !!a.includeDescendants === !!b.includeDescendants &&
+    !!a.includeMapped === !!b.includeMapped
+  )
 }
 
 function onOptimizeOverwrite(items: ConceptSetItem[]) {
@@ -1823,12 +1848,9 @@ function applyRepositoryImport(mode: 'append' | 'overwrite') {
   } else {
     // A concept can legitimately appear in several rows with different flags,
     // so only exact concept-and-flags repeats are skipped.
-    const sameRow = (a: ConceptSetItem, b: ConceptSetItem) =>
-      a.conceptId === b.conceptId &&
-      !!a.isExcluded === !!b.isExcluded &&
-      !!a.includeDescendants === !!b.includeDescendants &&
-      !!a.includeMapped === !!b.includeMapped
-    const additions = imported.filter(item => !store.currentSet!.items.some(existing => sameRow(existing, item)))
+    const additions = imported.filter(item =>
+      !store.currentSet!.items.some(existing => sameConceptSetItem(existing, item))
+    )
     store.currentSet.items.push(...additions)
   }
 

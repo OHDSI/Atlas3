@@ -146,7 +146,11 @@ const AuthorshipStub = defineComponent({
 
 const SetTableStub = defineComponent({
   name: 'ConceptSetTable',
-  props: { items: { type: Array, default: () => [] }, sourceKey: { type: String, default: '' } },
+  props: {
+    items: { type: Array, default: () => [] },
+    sourceKey: { type: String, default: '' },
+    readonly: Boolean,
+  },
   emits: ['toggle:descendants', 'toggle:mapped', 'toggle:exclude', 'remove', 'view-concept'],
   template: '<div class="set-table-stub" />',
 })
@@ -1471,28 +1475,38 @@ describe('ConceptSetEditor behaviors', () => {
       expect(dialog(w, title).find('.cs-paste__summary').exists()).toBe(false)
     })
 
-    it('parses, merges flags into an existing row, adds new concepts and closes', async () => {
+    it('appends unique concept-and-flag rows and closes', async () => {
       const w = mountEditor()
       await setActiveTab(w, 'compare')
-      const store = useConceptSetsStore()
-      const setFlags = vi.spyOn(store, 'setConceptItemFlags')
-      const add = vi.spyOn(store, 'addConceptToSet')
       await openJson(w)
       await textarea(w).setValue(
         expression([item(316139, 'Heart failure', { isExcluded: true }), item(42, 'New one')])
       )
       await buttonIn(w, title, 'Parse').trigger('click')
       expect(dialog(w, title).get('.cs-paste__summary-row--ok').text()).toBe('Resolved: 2')
-      expect(buttonIn(w, title, 'Add').text()).toBe('Add 2')
+      expect(buttonIn(w, title, 'Append').exists()).toBe(true)
+      const preview = w.findAllComponents(SetTableStub).find(c => c.props('readonly'))
+      expect(preview?.props('items')).toHaveLength(2)
 
-      await buttonIn(w, title, 'Add').trigger('click')
-      expect(setFlags).toHaveBeenCalledTimes(1)
-      expect(setFlags.mock.calls[0][0].conceptId).toBe(316139)
-      expect(add).toHaveBeenCalledTimes(1)
-      expect(add.mock.calls[0][0].conceptId).toBe(42)
+      await buttonIn(w, title, 'Append').trigger('click')
+      expect(useConceptSetsStore().currentSet!.items.map(i => i.conceptId)).toEqual([316139, 316139, 42])
       expect(dialog(w, title).exists()).toBe(false)
       expect(activeTab(w)).toBe('selected')
       await expectCloseAsksToConfirm(w)
+    })
+
+    it('replaces all current items when overwrite is selected', async () => {
+      const w = mountEditor()
+      await setActiveTab(w, 'compare')
+      await openJson(w)
+      await textarea(w).setValue(expression([item(42, 'New one')]))
+      await buttonIn(w, title, 'Parse').trigger('click')
+
+      await buttonIn(w, title, 'Overwrite').trigger('click')
+
+      expect(useConceptSetsStore().currentSet!.items.map(i => i.conceptId)).toEqual([42])
+      expect(dialog(w, title).exists()).toBe(false)
+      expect(activeTab(w)).toBe('selected')
     })
 
     it('shows the parse error and returns to Parse once the text changes', async () => {
@@ -1514,7 +1528,7 @@ describe('ConceptSetEditor behaviors', () => {
       await openJson(w)
       await textarea(w).setValue(expression([item(42, 'New one')]))
       await buttonIn(w, title, 'Parse').trigger('click')
-      expect(buttonIn(w, title, 'Add').text()).toBe('Add 1')
+      expect(buttonIn(w, title, 'Append').exists()).toBe(true)
       await textarea(w).setValue(expression([item(43, 'Other')]))
       expect(dialog(w, title).find('.cs-paste__summary').exists()).toBe(false)
       expect(buttonIn(w, title, 'Parse').exists()).toBe(true)
