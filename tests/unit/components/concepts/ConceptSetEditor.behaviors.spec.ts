@@ -146,7 +146,11 @@ const AuthorshipStub = defineComponent({
 
 const SetTableStub = defineComponent({
   name: 'ConceptSetTable',
-  props: { items: { type: Array, default: () => [] }, sourceKey: { type: String, default: '' } },
+  props: {
+    items: { type: Array, default: () => [] },
+    sourceKey: { type: String, default: '' },
+    readonly: Boolean,
+  },
   emits: ['toggle:descendants', 'toggle:mapped', 'toggle:exclude', 'remove', 'view-concept'],
   template: '<div class="set-table-stub" />',
 })
@@ -185,7 +189,11 @@ const FacetFiltersStub = defineComponent({
 
 const ConceptTableStub = defineComponent({
   name: 'ConceptTable',
-  props: { concepts: { type: Array, default: () => [] }, selected: { type: Array, default: () => [] } },
+  props: {
+    concepts: { type: Array, default: () => [] },
+    selected: { type: Array, default: () => [] },
+    totalItems: { type: Number, default: 0 },
+  },
   emits: ['update:selected'],
   template: '<div class="concept-table-stub" />',
 })
@@ -1230,11 +1238,20 @@ describe('ConceptSetEditor behaviors', () => {
       expect(conceptSearchService.getConceptsByIds).toHaveBeenCalledWith('SRC1', [201826, 999])
       expect(dialog(w, title).get('.cs-paste__summary-row--ok').text()).toBe('Resolved: 1')
       expect(dialog(w, title).get('.cs-paste__summary-row--err').text()).toBe('Not found: 999')
-      expect(buttonIn(w, title, 'Add').text()).toBe('Add 1')
+      expect(dialog(w, title).findComponent(ConceptTableStub).props('concepts')).toEqual([concept(201826)])
+      expect(buttonIn(w, title, 'Add').text()).toContain('Add To Concept Set')
 
+      await dialog(w, title).get('[data-testid="add-option-descendants"] input').setValue(true)
+      await dialog(w, title).get('[data-testid="add-option-mapped"] input').setValue(true)
+      await dialog(w, title).get('[data-testid="add-option-exclude"] input').setValue(true)
       await buttonIn(w, title, 'Add').trigger('click')
       expect(dialog(w, title).exists()).toBe(false)
-      expect(useConceptSetsStore().currentSet!.items.map(i => i.conceptId)).toEqual([316139, 201826])
+      expect(useConceptSetsStore().currentSet!.items).toContainEqual(expect.objectContaining({
+        conceptId: 201826,
+        includeDescendants: true,
+        includeMapped: true,
+        isExcluded: true,
+      }))
       expect(activeTab(w)).toBe('selected')
       await expectCloseAsksToConfirm(w)
     })
@@ -1315,6 +1332,7 @@ describe('ConceptSetEditor behaviors', () => {
       expect((textarea(w).element as HTMLTextAreaElement).value).toBe('')
       expect(buttonIn(w, title, 'Resolve').attributes('disabled')).toBeDefined()
       expect(dialog(w, title).find('.cs-paste__summary').exists()).toBe(false)
+      expect(dialog(w, title).find('[data-testid="source-code-add-options"]').exists()).toBe(false)
       expect(w.findComponent(ConceptTableStub).exists()).toBe(false)
     })
 
@@ -1333,6 +1351,7 @@ describe('ConceptSetEditor behaviors', () => {
       expect(conceptSearchService.getConceptsBySourceCodes).toHaveBeenCalledWith('SRC1', ['e11.9', '250.00', 'ZZZ'])
       expect(dialog(w, title).get('.cs-paste__summary-row--ok').text()).toBe('Resolved: 2')
       expect(dialog(w, title).get('.cs-paste__summary-row--err').text()).toBe('Not found: ZZZ')
+      expect(dialog(w, title).find('[data-testid="source-code-add-options"]').exists()).toBe(true)
       const options = w.getComponent(FacetFiltersStub).props('facetOptions') as Record<string, { value: string }[]>
       expect(options.vocabularyId.map(o => o.value)).toEqual(['', 'ICD10CM'])
       expect(options.domainId.map(o => o.value)).toEqual(['', 'Condition'])
@@ -1340,11 +1359,19 @@ describe('ConceptSetEditor behaviors', () => {
 
       w.getComponent(ConceptTableStub).vm.$emit('update:selected', [2])
       await nextTick()
-      expect(buttonIn(w, title, 'Add').text()).toBe('Add 1')
+      expect(buttonIn(w, title, 'Add').text()).toContain('Add To Concept Set')
+      await dialog(w, title).get('[data-testid="add-option-descendants"] input').setValue(true)
+      await dialog(w, title).get('[data-testid="add-option-mapped"] input').setValue(true)
+      await dialog(w, title).get('[data-testid="add-option-exclude"] input').setValue(true)
       await buttonIn(w, title, 'Add').trigger('click')
 
       expect(dialog(w, title).exists()).toBe(false)
-      expect(useConceptSetsStore().currentSet!.items.map(i => i.conceptId)).toEqual([316139, 2])
+      expect(useConceptSetsStore().currentSet!.items).toContainEqual(expect.objectContaining({
+        conceptId: 2,
+        includeDescendants: true,
+        includeMapped: true,
+        isExcluded: true,
+      }))
       expect(activeTab(w)).toBe('selected')
     })
 
@@ -1448,28 +1475,38 @@ describe('ConceptSetEditor behaviors', () => {
       expect(dialog(w, title).find('.cs-paste__summary').exists()).toBe(false)
     })
 
-    it('parses, merges flags into an existing row, adds new concepts and closes', async () => {
+    it('appends unique concept-and-flag rows and closes', async () => {
       const w = mountEditor()
       await setActiveTab(w, 'compare')
-      const store = useConceptSetsStore()
-      const setFlags = vi.spyOn(store, 'setConceptItemFlags')
-      const add = vi.spyOn(store, 'addConceptToSet')
       await openJson(w)
       await textarea(w).setValue(
         expression([item(316139, 'Heart failure', { isExcluded: true }), item(42, 'New one')])
       )
       await buttonIn(w, title, 'Parse').trigger('click')
       expect(dialog(w, title).get('.cs-paste__summary-row--ok').text()).toBe('Resolved: 2')
-      expect(buttonIn(w, title, 'Add').text()).toBe('Add 2')
+      expect(buttonIn(w, title, 'Append').exists()).toBe(true)
+      const preview = w.findAllComponents(SetTableStub).find(c => c.props('readonly'))
+      expect(preview?.props('items')).toHaveLength(2)
 
-      await buttonIn(w, title, 'Add').trigger('click')
-      expect(setFlags).toHaveBeenCalledTimes(1)
-      expect(setFlags.mock.calls[0][0].conceptId).toBe(316139)
-      expect(add).toHaveBeenCalledTimes(1)
-      expect(add.mock.calls[0][0].conceptId).toBe(42)
+      await buttonIn(w, title, 'Append').trigger('click')
+      expect(useConceptSetsStore().currentSet!.items.map(i => i.conceptId)).toEqual([316139, 316139, 42])
       expect(dialog(w, title).exists()).toBe(false)
       expect(activeTab(w)).toBe('selected')
       await expectCloseAsksToConfirm(w)
+    })
+
+    it('replaces all current items when overwrite is selected', async () => {
+      const w = mountEditor()
+      await setActiveTab(w, 'compare')
+      await openJson(w)
+      await textarea(w).setValue(expression([item(42, 'New one')]))
+      await buttonIn(w, title, 'Parse').trigger('click')
+
+      await buttonIn(w, title, 'Overwrite').trigger('click')
+
+      expect(useConceptSetsStore().currentSet!.items.map(i => i.conceptId)).toEqual([42])
+      expect(dialog(w, title).exists()).toBe(false)
+      expect(activeTab(w)).toBe('selected')
     })
 
     it('shows the parse error and returns to Parse once the text changes', async () => {
@@ -1491,7 +1528,7 @@ describe('ConceptSetEditor behaviors', () => {
       await openJson(w)
       await textarea(w).setValue(expression([item(42, 'New one')]))
       await buttonIn(w, title, 'Parse').trigger('click')
-      expect(buttonIn(w, title, 'Add').text()).toBe('Add 1')
+      expect(buttonIn(w, title, 'Append').exists()).toBe(true)
       await textarea(w).setValue(expression([item(43, 'Other')]))
       expect(dialog(w, title).find('.cs-paste__summary').exists()).toBe(false)
       expect(buttonIn(w, title, 'Parse').exists()).toBe(true)

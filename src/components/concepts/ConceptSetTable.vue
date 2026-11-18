@@ -79,7 +79,7 @@
     >
       <AtlasDataTable
         v-model:sort-by="sortBy"
-        :headers="headers"
+        :headers="visibleHeaders"
         :items="filteredItems"
         :loading="loading"
         :items-per-page="50"
@@ -118,6 +118,7 @@
         <template #item.includeDescendants="{ item }">
           <AtlasCheckbox
             :model-value="item.includeDescendants"
+            :disabled="readonly"
             hide-details
             @update:model-value="onToggleDescendants(item)"
           />
@@ -127,6 +128,7 @@
         <template #item.includeMapped="{ item }">
           <AtlasCheckbox
             :model-value="item.includeMapped"
+            :disabled="readonly"
             hide-details
             @update:model-value="onToggleMapped(item)"
           />
@@ -136,6 +138,7 @@
         <template #item.isExcluded="{ item }">
           <AtlasCheckbox
             :model-value="item.isExcluded"
+            :disabled="readonly"
             hide-details
             color="error"
             @update:model-value="onToggleExclude(item)"
@@ -274,6 +277,8 @@ interface Props {
   items: ConceptSetItem[]
   loading?: boolean
   sourceKey?: string
+  // Display-only: flag checkboxes are disabled and the remove action hidden.
+  readonly?: boolean
 }
 
 const props = defineProps<Props>()
@@ -423,6 +428,10 @@ const headers = [
   },
   { title: '', key: 'actions', sortable: false, width: '56px' },
 ]
+
+const visibleHeaders = computed(() =>
+  props.readonly ? headers.filter(h => h.key !== 'actions') : headers,
+)
 
 // ============================================================================
 // Helpers
