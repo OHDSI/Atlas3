@@ -20,11 +20,7 @@ const isExpanded = ref(false)
 const isLoadingCounts = ref(false)
 const initialVisibleCount = 6
 
-const eligibleSources = computed(() =>
-  dataSources.sources.filter((source) =>
-    source.daimons.some((daimon) => daimon.daimonType === 'Results')
-  )
-)
+const eligibleSources = computed(() => dataSources.resultsSources)
 
 const rankedSources = computed(() =>
   [...eligibleSources.value].sort((left, right) => {

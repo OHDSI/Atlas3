@@ -36,6 +36,17 @@ export const useDataSourcesStore = defineStore('datasources', () => {
   })
 
   // Getters
+  const hasDaimons = (source: DataSource, ...types: string[]) =>
+    types.every(type => source.daimons?.some(d => d.daimonType === type))
+
+  /** Readable sources with a Results daimon: enough to report statistics. */
+  const resultsSources = computed(() => sources.value.filter(s => hasDaimons(s, 'Results')))
+
+  /** Readable sources an analysis can be generated against: CDM and Results daimons. */
+  const generationSources = computed(() =>
+    sources.value.filter(s => hasDaimons(s, 'CDM', 'Results'))
+  )
+
   const selectedSource = computed(() => {
     if (selectedSourceId.value === null) return null
     return sources.value.find(s => s.sourceId === selectedSourceId.value) || null
@@ -79,8 +90,8 @@ export const useDataSourcesStore = defineStore('datasources', () => {
       sourcesLoaded.value = true
 
       // Auto-select first source if none selected
-      if (sources.value.length > 0 && selectedSourceId.value === null) {
-        selectedSourceId.value = sources.value[0]?.sourceId || null
+      if (resultsSources.value.length > 0 && selectedSourceId.value === null) {
+        selectedSourceId.value = resultsSources.value[0]?.sourceId || null
       }
     } catch (err) {
       error.value.sources =
@@ -233,6 +244,8 @@ export const useDataSourcesStore = defineStore('datasources', () => {
   return {
     // State
     sources,
+    resultsSources,
+    generationSources,
     sourcesLoaded,
     selectedSourceId,
     selectedReportType,

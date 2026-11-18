@@ -362,7 +362,7 @@ onMounted(async () => {
 })
 
 const runTableSources = computed<RunTableSource[]>(() =>
-  resolveRunTableSources(ds.sources)
+  resolveRunTableSources(ds.generationSources)
 )
 
 const runTableExecutions = computed<RunTableExecution[]>(() =>

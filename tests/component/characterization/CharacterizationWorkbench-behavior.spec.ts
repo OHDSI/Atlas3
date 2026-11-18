@@ -62,6 +62,9 @@ vi.mock('@/composables/useCharacterizationResults', async () => {
 const sources = vi.hoisted(() => ({
   store: {
     sources: [] as Array<{ sourceId: number; sourceKey: string; sourceName?: string }>,
+    get generationSources() {
+      return this.sources
+    },
     isLoading: false,
     fetchDataSources: vi.fn(),
   },

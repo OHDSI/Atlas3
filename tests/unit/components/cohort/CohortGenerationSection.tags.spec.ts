@@ -42,8 +42,12 @@ function makeRouter() {
   })
 }
 
-const s1 = { sourceId: 1, sourceKey: 'S1', sourceName: 'Source 1', sourceDialect: 'postgresql', daimons: [] }
-const s2 = { sourceId: 2, sourceKey: 'S2', sourceName: 'Source 2', sourceDialect: 'postgresql', daimons: [] }
+const generationDaimons = [
+  { daimonType: 'CDM', tableQualifier: 'cdm', priority: 0 },
+  { daimonType: 'Results', tableQualifier: 'results', priority: 0 },
+]
+const s1 = { sourceId: 1, sourceKey: 'S1', sourceName: 'Source 1', sourceDialect: 'postgresql', daimons: generationDaimons }
+const s2 = { sourceId: 2, sourceKey: 'S2', sourceName: 'Source 2', sourceDialect: 'postgresql', daimons: generationDaimons }
 
 function mountSection(
   jobs: Array<Record<string, unknown>> = [],

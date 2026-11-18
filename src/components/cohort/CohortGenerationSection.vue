@@ -110,7 +110,7 @@ const route = useRoute()
 const router = useRouter()
 const webapiStore = useWebAPIStore()
 
-const sources = computed(() => webapiStore.sourcesList)
+const sources = computed(() => webapiStore.generationSources)
 
 function mapStatus(s: CohortStatus): TableStatus {
   if (s === 'COMPLETE') return 'COMPLETED'

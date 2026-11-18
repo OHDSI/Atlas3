@@ -39,7 +39,7 @@ vi.mock('@/components/incidence-rate/incidence-rate-workbench-state', async impo
 })
 
 vi.mock('@/stores/datasources', () => ({
-  useDataSourcesStore: () => ({ sources: [], isLoading: false, fetchDataSources: vi.fn() }),
+  useDataSourcesStore: () => ({ sources: [], generationSources: [], isLoading: false, fetchDataSources: vi.fn() }),
 }))
 
 vi.mock('@/composables/usePermissions', () => ({
