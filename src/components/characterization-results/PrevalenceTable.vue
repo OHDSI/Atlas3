@@ -41,13 +41,27 @@
         </span>
         <span class="prevalence-table__accent-rule" />
       </button>
-      <h3
+      <div
         v-if="expanded"
-        class="prevalence-table__title"
+        class="prevalence-table__title-row"
       >
-        {{ tv('characterizations.results.table.prevalence') }}
-        <span class="prevalence-table__count">({{ rows.length }})</span>
-      </h3>
+        <h3 class="prevalence-table__title">
+          {{ tv('characterizations.results.table.prevalence') }}
+          <span class="prevalence-table__count">({{ countLabel }})</span>
+        </h3>
+        <AtlasTextField
+          v-model="filter"
+          class="prevalence-table__filter"
+          density="compact"
+          variant="outlined"
+          hide-details
+          clearable
+          prepend-inner-icon="mdi-magnify"
+          :placeholder="tv('characterizations.results.table.filterPlaceholder')"
+          :aria-label="tv('characterizations.results.table.filterPlaceholder')"
+          :data-testid="`char-results-prevalence-filter-${analysisId}`"
+        />
+      </div>
     </div>
 
     <template v-if="expanded">
@@ -116,12 +130,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
 import { computeBinaryStdDiff, DEFAULT_STRATA_KEY, strataCount } from '@/utils/characterization-result-mapper'
 import type { LinkedCohort, PrevalenceStat, StrataCounts } from '@/models/characterization.types'
-import { AtlasCard, AtlasIcon, AtlasIconButton, AtlasTooltip } from '@/components/ui'
+import { AtlasCard, AtlasIcon, AtlasIconButton, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { matchesTerms } from '@/utils/list-filters'
 import { TIME_SERIES_ICONS } from '@/constants/characterization-time-series'
 import ResultsDataTable, { type ResultsHeader, type ResultsSortItem } from './ResultsDataTable.vue'
 import { compareNatural } from '@/utils/natural-sort'
@@ -152,6 +167,9 @@ const { tv } = useI18n()
 const page = ref(1)
 const pageSize = ref(15)
 const sortBy = ref<ResultsSortItem[]>([])
+// Shared by every table in the card, like the paging state.
+const filter = ref('')
+watch(filter, () => { page.value = 1 })
 
 interface Partition { key: string; label: string }
 interface Cell { key: string; format: (row: PrevalenceStat) => string }
@@ -323,9 +341,22 @@ function stdDiffSortKey(partitionKey: string): string {
   return `stdDiffMagnitude.${partitionKey}`
 }
 
+const filteredRows = computed(() => {
+  if (!filter.value?.trim()) return props.rows
+  return props.rows.filter(row =>
+    matchesTerms([row.covariateName], filter.value, { identifiers: [row.conceptId] })
+  )
+})
+
+const countLabel = computed(() =>
+  filteredRows.value.length === props.rows.length
+    ? String(props.rows.length)
+    : `${filteredRows.value.length} / ${props.rows.length}`
+)
+
 const tableRows = computed<PrevalenceTableRow[]>(() => {
-  if (!comparisonMode.value) return props.rows
-  return props.rows.map(row => ({
+  if (!comparisonMode.value) return filteredRows.value
+  return filteredRows.value.map(row => ({
     ...row,
     stdDiffMagnitude: Object.fromEntries(partitions.value.map(partition => {
       const diff = stdDiffValue(row, partition.key)
@@ -373,6 +404,8 @@ const timeSeriesKinds = computed<TimeSeriesKind[]>(() => {
 .prevalence-table__chevron { color: rgba(var(--v-theme-on-surface), 0.62); transition: transform 0.15s ease; }
 .prevalence-table__chevron--collapsed { transform: rotate(-90deg); }
 .prevalence-table__accent-rule { width: 28px; height: 2px; background-color: rgb(var(--v-theme-orange)); }
+.prevalence-table__title-row { align-items: center; display: flex; gap: 16px; justify-content: space-between; }
+.prevalence-table__filter { flex: 0 1 320px; }
 .prevalence-table__title { display: flex; align-items: baseline; gap: 8px; font-size: 18px; font-weight: 500; margin: 0; color: rgb(var(--v-theme-primary)); }
 .prevalence-table__count { font-size: 0.85rem; color: rgba(var(--v-theme-on-surface), 0.6); font-weight: 400; }
 .prevalence-table__wrap { overflow-x: auto; padding: 0 20px 20px; }
