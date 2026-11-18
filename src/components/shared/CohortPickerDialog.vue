@@ -21,6 +21,8 @@
       <div class="cohort-picker-dialog__table-wrapper">
         <AtlasDataTable
           v-model="selectedIds"
+          :sort-by="sortBy"
+          :custom-key-sort="presortedKeys"
           :headers="headers"
           :items="paginatedCohorts"
           :loading="loading || filtering"
@@ -32,6 +34,7 @@
           show-select
           hide-default-footer
           data-testid="cohort-picker-dialog-table"
+          @update:sort-by="setSortBy"
         >
           <template #[`header.data-table-select`] />
         </AtlasDataTable>
@@ -77,6 +80,12 @@ import CohortPagination from '@/components/cohort/CohortPagination.vue'
 import { useCohorts } from '@/composables/useCohorts'
 import { useI18n } from '@/composables/useI18n'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
+import { sortCohorts, type CohortSortKey, type CohortSortOrder } from '@/utils/cohort-sort'
+
+interface SortItem {
+  key: string
+  order?: CohortSortOrder
+}
 
 interface CohortReference {
   id: number
@@ -120,6 +129,10 @@ const selectedIds = ref<number[]>([])
 const page = ref(1)
 const itemsPerPage = ref(10)
 const itemsPerPageOptions = [10, 25, 50]
+const sortBy = ref<SortItem[]>([])
+// Rows arrive already sorted across every page; stop the table re-sorting
+// the visible slice with its own comparator.
+const presortedKeys = { id: () => 0, name: () => 0 }
 
 const title = computed(() => props.title ?? t('components.incidenceRate.selectCohorts').value)
 const confirmLabel = computed(() => props.confirmLabel ?? t('common.addCohort').value)
@@ -130,12 +143,20 @@ const headers = computed(() => [
 
 const selectableCohorts = computed(() => {
   const excluded = new Set(props.excludedIds)
-  return filteredCohorts.value.filter(cohort => !excluded.has(cohort.id))
+  const remaining = filteredCohorts.value.filter(cohort => !excluded.has(cohort.id))
+  const activeSort = sortBy.value[0]
+  if (!activeSort?.order) return remaining
+  return sortCohorts(remaining, activeSort.key as CohortSortKey, activeSort.order)
 })
 const paginatedCohorts = computed(() => {
   const start = (page.value - 1) * itemsPerPage.value
   return selectableCohorts.value.slice(start, start + itemsPerPage.value)
 })
+
+function setSortBy(value: SortItem[]) {
+  sortBy.value = value.filter(item => item.order)
+  page.value = 1
+}
 const rangeDisplay = computed(() => {
   const total = selectableCohorts.value.length
   if (!total) return '0-0 of 0'
@@ -163,6 +184,7 @@ watch(
     if (!open) return
     selectedIds.value = []
     page.value = 1
+    sortBy.value = []
     if (props.availableCohorts === undefined && cohorts.value.length === 0 && !loading.value) {
       await fetchCohorts()
     }
