@@ -1403,6 +1403,7 @@
         "min": "Min",
         "distribution": "Distribution",
         "prevalence": "Prevalence",
+        "filterPlaceholder": "Filter by covariate or concept ID…",
         "avgSd": "Avg (SD)"
       },
       "pagination": {

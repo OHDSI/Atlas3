@@ -45,6 +45,32 @@ describe('PrevalenceTable', () => {
     setActivePinia(createPinia())
   })
 
+  it('filters rows by covariate name or concept id and updates the count', async () => {
+    const rows = [
+      makeRow({ covariateId: 1, covariateName: 'Perifolliculitis capitis', conceptId: 111 }),
+      makeRow({ covariateId: 2, covariateName: 'Age group 5 - 9', conceptId: 222 }),
+    ]
+    const wrapper = mount(PrevalenceTable, {
+      props: { analysisId: 100, analysisName: 'Race', rows, cohorts: rows[0].cohorts },
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+    })
+    const input = wrapper.find('[data-testid="char-results-prevalence-filter-100"] input')
+
+    await input.setValue('PERIFOLL')
+    expect(wrapper.text()).toContain('Perifolliculitis capitis')
+    expect(wrapper.text()).not.toContain('Age group 5 - 9')
+    expect(wrapper.text()).toContain('(1 / 2)')
+
+    await input.setValue('222')
+    expect(wrapper.text()).toContain('Age group 5 - 9')
+    expect(wrapper.text()).not.toContain('Perifolliculitis capitis')
+
+    await input.setValue('')
+    expect(wrapper.text()).toContain('(2)')
+    wrapper.unmount()
+  })
+
   it('renders without a Std Diff column for a single cohort', () => {
     const row = makeRow()
     const wrapper = mount(PrevalenceTable, {
