@@ -19,6 +19,9 @@ const mockResults = vi.mocked(getCharacterizationResults)
 const mockGenerationDesign = vi.mocked(getCharacterizationDesignSnapshot)
 const mockDataSources = {
   sources: [{ sourceId: 12, sourceKey: 'CCAE', sourceName: 'CCAE' }],
+  get generationSources() {
+    return this.sources
+  },
   isLoading: false,
   fetchDataSources: vi.fn().mockResolvedValue(undefined),
 }

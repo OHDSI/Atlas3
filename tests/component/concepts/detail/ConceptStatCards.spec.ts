@@ -12,6 +12,9 @@ const dataSourcesStore = {
     { sourceId: 3, sourceKey: 'OPTUM', sourceName: 'Optum EHR', daimons: [{ daimonType: 'CDM' }] },
   ],
   sourcesLoaded: true,
+  get resultsSources() {
+    return this.sources.filter(s => s.daimons.some(d => d.daimonType === 'Results'))
+  },
   loading: { sources: false },
   error: { sources: null },
   ensureDataSources: vi.fn().mockResolvedValue(undefined),

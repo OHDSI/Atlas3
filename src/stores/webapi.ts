@@ -78,6 +78,16 @@ export const useWebAPIStore = defineStore('webapi', () => {
     )
   })
 
+  /** Sources an analysis can be generated against: readable, with CDM and Results daimons. */
+  const generationSources = computed(() => {
+    return sources.value.filter(
+      s =>
+        isReadable(s) &&
+        s.daimons?.some(d => d.daimonType === 'CDM') &&
+        s.daimons?.some(d => d.daimonType === 'Results')
+    )
+  })
+
   /** Returns validated vocabulary source key, auto-correcting invalid localStorage values */
   function getValidVocabularySource(): string | null {
     const storedVocab = localStorage.getItem('selectedVocabulary')
@@ -510,6 +520,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
     // Getters
     sourcesList,
     resultsSources,
+    generationSources,
     currentSource,
     activeJobs,
     vocabularySources,

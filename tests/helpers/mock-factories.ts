@@ -98,6 +98,11 @@ export function createMockDataSource(overrides: Record<string, unknown> = {}) {
     resultsDatabaseSchema: 'results',
     hasVocabulary: true,
     hasResults: true,
+    daimons: [
+      { daimonType: 'CDM', tableQualifier: 'cdm', priority: 0 },
+      { daimonType: 'Vocabulary', tableQualifier: 'vocab', priority: 0 },
+      { daimonType: 'Results', tableQualifier: 'results', priority: 0 },
+    ],
     ...overrides,
   }
 }
