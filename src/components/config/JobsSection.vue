@@ -109,6 +109,35 @@
 
       <AtlasDivider />
 
+      <div
+        v-if="hasJobs"
+        class="jobs-section__filters"
+      >
+        <AtlasFacetFilterBar
+          :facet-options="facetOptions"
+          :selected="selectedFacets"
+          :active-filter-count="activeFilterCount"
+          :facets="JOB_FACETS"
+          :facet-label="facetLabel"
+          :result-filter="textFilter"
+          text-field-test-id="jobs-search"
+          @update:facet="(payload: { key: string; values: string[] }) => setFacet(payload.key, payload.values)"
+          @update:result-filter="setTextFilter"
+          @clear="clearFilters"
+        >
+          <template
+            v-if="currentUserLogin"
+            #after-filter
+          >
+            <AtlasSwitch
+              v-model="myJobsOnly"
+              :label="tv('configuration.jobs.myJobs')"
+              data-testid="jobs-my-jobs"
+            />
+          </template>
+        </AtlasFacetFilterBar>
+      </div>
+
       <v-card-text class="pa-0">
         <!-- Loading State -->
         <div
@@ -162,7 +191,7 @@
         <AtlasDataTable
           v-else
           :headers="tableHeaders"
-          :items="filteredJobs"
+          :items="visibleJobs"
           :items-per-page="25"
           :loading="isLoading"
           class="jobs-table"
@@ -275,11 +304,19 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasChip, AtlasDataTable, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasDataTable, AtlasDivider, AtlasFacetFilterBar, AtlasIcon, AtlasIconButton, AtlasProgressCircular, AtlasSpacer, AtlasSwitch } from '@/components/ui'
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useJobs } from '@/composables/useJobs'
-import type { JobStatusFilter } from '@/models/jobs.types'
+import { useConceptFacets } from '@/composables/useConceptFacets'
+import {
+  JOB_AUTHOR_FACET,
+  JOB_FACETS,
+  jobSearchIdentifiers,
+  jobSearchText,
+} from '@/composables/useJobFacets'
+import { useAuthStore } from '@/stores/auth'
+import type { Job, JobStatusFilter } from '@/models/jobs.types'
 
 const { t, tv } = useI18n()
 
@@ -312,6 +349,32 @@ const statusFilter = computed({
   set: (value: JobStatusFilter) => setFilter(value),
 })
 
+const authStore = useAuthStore()
+const currentUserLogin = computed(() => authStore.user?.login ?? '')
+
+const {
+  selected: selectedFacets,
+  textFilter,
+  facetOptions,
+  filteredConcepts: visibleJobs,
+  activeFilterCount,
+  setFacet,
+  setTextFilter,
+  clearFilters,
+} = useConceptFacets<Job>(filteredJobs, JOB_FACETS, jobSearchText, jobSearchIdentifiers)
+
+const myJobsOnly = computed({
+  get: () => {
+    const authors = selectedFacets.value[JOB_AUTHOR_FACET] ?? []
+    return authors.length === 1 && authors[0] === currentUserLogin.value
+  },
+  set: (value: boolean) => setFacet(JOB_AUTHOR_FACET, value ? [currentUserLogin.value] : []),
+})
+
+function facetLabel(key: string): string {
+  return key === JOB_AUTHOR_FACET ? tv('columns.author') : tv('columns.type')
+}
+
 // Table headers - using existing notification translation keys where available
 const tableHeaders = computed(() => [
   { title: tv('columns.executionId'), key: 'executionId', sortable: true, width: '100px' },
@@ -337,6 +400,10 @@ onUnmounted(() => {
 <style scoped>
 .jobs-section {
   width: 100%;
+}
+
+.jobs-section__filters {
+  padding: 12px 16px;
 }
 
 .jobs-table {

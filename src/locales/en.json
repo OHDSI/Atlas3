@@ -2086,7 +2086,8 @@
         "title": "No Jobs Found"
       },
       "lastUpdated": "Last updated",
-      "autoRefreshOn": "Auto-refresh on"
+      "autoRefreshOn": "Auto-refresh on",
+      "myJobs": "My jobs"
     },
     "newSource": "New Source",
     "priorityOptions": {

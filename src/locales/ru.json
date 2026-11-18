@@ -2049,7 +2049,8 @@
         "title": "Задания не найдены"
       },
       "lastUpdated": "Последнее обновление",
-      "autoRefreshOn": "Автообновление включено"
+      "autoRefreshOn": "Автообновление включено",
+      "myJobs": "Мои задания"
     },
     "newSource": "Новый источник",
     "priorityOptions": {

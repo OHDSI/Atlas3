@@ -1472,7 +1472,8 @@
         "title": "ジョブが見つかりません"
       },
       "lastUpdated": "最終更新",
-      "autoRefreshOn": "自動更新オン"
+      "autoRefreshOn": "自動更新オン",
+      "myJobs": "自分のジョブ"
     },
     "newSource": "新規ソース",
     "priorityOptions": {
