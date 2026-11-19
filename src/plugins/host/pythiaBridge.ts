@@ -225,7 +225,11 @@ async function waitForCohortDocument(ticks = 3): Promise<void> {
 }
 
 function groupEvents(group: CriteriaGroup): CohortEvent[] {
-  return [...group.events, ...(group.nestedGroups ?? []).flatMap(groupEvents)]
+  return [...group.events.flatMap(eventWithNested), ...(group.nestedGroups ?? []).flatMap(groupEvents)]
+}
+
+function eventWithNested(event: CohortEvent): CohortEvent[] {
+  return [event, ...(event.nestedCriteria ? groupEvents(event.nestedCriteria) : [])]
 }
 
 // A proposal's concept sets arrive with client-side UUID ids, but the Atlas
@@ -239,7 +243,7 @@ function adoptProposalConceptSets(proposal: AgentProposal): void {
   switch (proposal.kind) {
     case 'addEntryEvent':
     case 'addCensoringCriterion':
-      owners.push(proposal.event)
+      owners.push(...eventWithNested(proposal.event))
       break
     case 'addInclusionRule':
       owners.push(...proposal.rule.criteriaGroups.flatMap(groupEvents))

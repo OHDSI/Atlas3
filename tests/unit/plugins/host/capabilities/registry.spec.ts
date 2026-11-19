@@ -48,3 +48,24 @@ describe('set_entry_event schema', () => {
     expect(props.firstOccurrence?.type).toBe('boolean')
   })
 })
+
+describe('related events in criterion schemas', () => {
+  const props = (name: string) => getCapability(name)!.schema.properties as Record<string, any>
+
+  it.each(['add_criterion', 'set_entry_event', 'add_qualifying_criterion'])('%s accepts relatedEvents and relatedLogic', name => {
+    expect(props(name).relatedEvents.type).toBe('array')
+    expect(props(name).relatedEvents.items.required).toEqual(['conceptId', 'conceptName', 'domain'])
+    expect(props(name).relatedEvents.items.properties.occurrence.properties.type.enum).toEqual(['at_least', 'at_most', 'exactly'])
+    expect(props(name).relatedLogic.enum).toEqual(['ALL', 'ANY'])
+  })
+
+  it('offers related events on each item of add_criteria and add_inclusion_rule', () => {
+    expect(props('add_criteria').items.items.properties.relatedEvents.type).toBe('array')
+    expect(props('add_inclusion_rule').events.items.properties.relatedEvents.type).toBe('array')
+  })
+
+  it('keeps concept-set items free of related events', () => {
+    expect(props('update_concept_set').items?.items?.properties?.relatedEvents).toBeUndefined()
+    expect(props('create_standalone_concept_set').items?.items?.properties?.relatedEvents).toBeUndefined()
+  })
+})

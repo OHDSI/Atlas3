@@ -316,9 +316,7 @@ export const useCohortStore = defineStore('cohort', () => {
           expression.ConceptSets = []
         }
 
-        if (translated.conceptSet) {
-          registerConceptSets(expression.ConceptSets, [translated.conceptSet])
-        }
+        registerConceptSets(expression.ConceptSets, translated.conceptSets)
 
         // `replace` is what distinguishes "set the entry event" from "add
         // another one". It was never read, so set_entry_event left the previous
@@ -427,9 +425,7 @@ export const useCohortStore = defineStore('cohort', () => {
           expression.ConceptSets = []
         }
 
-        if (translated.conceptSet) {
-          registerConceptSets(expression.ConceptSets, [translated.conceptSet])
-        }
+        registerConceptSets(expression.ConceptSets, translated.conceptSets)
         expression.CensoringCriteria.push(translated.criteria)
         break
       }
@@ -520,9 +516,7 @@ export const useCohortStore = defineStore('cohort', () => {
           expression.AdditionalCriteria.CriteriaList = []
         }
 
-        if (translated.conceptSet) {
-          registerConceptSets(expression.ConceptSets, [translated.conceptSet])
-        }
+        registerConceptSets(expression.ConceptSets, translated.conceptSets)
         expression.AdditionalCriteria.CriteriaList.push({
           Criteria: translated.criteria,
           StartWindow: defaultQualifyingWindow(),
