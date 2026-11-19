@@ -17,6 +17,13 @@ interface CriterionArgs extends ConceptRefArgs {
   operator?: 'gt' | 'gte' | 'lt' | 'lte' | 'eq' | 'between'
   value?: number
   value2?: number
+  relatedEvents?: RelatedEventArgs[]
+  relatedLogic?: 'ALL' | 'ANY'
+}
+
+interface RelatedEventArgs extends CriterionArgs {
+  temporalWindow?: AgentTemporalWindow
+  occurrence?: { type?: string; count?: number }
 }
 
 interface ObservationWindowArgs {
@@ -258,6 +265,12 @@ function embeddedConceptSet(c: {
   }
 }
 
+const OCCURRENCE_TYPES: Record<string, 'AT_LEAST' | 'AT_MOST' | 'EXACTLY'> = {
+  at_least: 'AT_LEAST',
+  at_most: 'AT_MOST',
+  exactly: 'EXACTLY',
+}
+
 function buildEventFromCriterion(args: CriterionArgs): Record<string, unknown> | null {
   if (!args.conceptId || !args.conceptName) return null
   const event: Record<string, unknown> = {
@@ -269,6 +282,34 @@ function buildEventFromCriterion(args: CriterionArgs): Record<string, unknown> |
     event.measurementOperator = args.operator
     event.measurementValue = args.value
     if (typeof args.value2 === 'number') event.measurementValue2 = args.value2
+  }
+  const related = Array.isArray(args.relatedEvents) ? args.relatedEvents : []
+  if (related.length > 0) {
+    const events = related.map(buildRelatedEvent)
+    // A related event dropped here would widen the criterion without telling
+    // the user, so one bad entry refuses the whole criterion.
+    if (events.some(e => e === null)) return null
+    event.nestedCriteria = {
+      id: uid(),
+      logicType: args.relatedLogic === 'ANY' ? 'ANY' : 'ALL',
+      events,
+    }
+  }
+  return event
+}
+
+// Windows on a related event are measured from the parent event's start, which
+// is how circe evaluates correlated criteria.
+function buildRelatedEvent(args: RelatedEventArgs): Record<string, unknown> | null {
+  const event = buildEventFromCriterion(args)
+  if (!event) return null
+  const window = toEventWindow(args.temporalWindow)
+  if (window) event.temporalWindow = window
+  if (args.occurrence) {
+    const type = OCCURRENCE_TYPES[String(args.occurrence.type ?? '').toLowerCase()]
+    const count = args.occurrence.count
+    if (!type || typeof count !== 'number' || count < 0) return null
+    event.cardinality = { type, count, countingMethod: 'ALL' }
   }
   return event
 }

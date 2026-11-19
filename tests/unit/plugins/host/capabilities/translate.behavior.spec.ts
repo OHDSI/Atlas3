@@ -597,3 +597,75 @@ describe('add_exit_criterion', () => {
     ).toEqual({ kind: 'setCohortExit', exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' } })
   })
 })
+
+describe('related events (nested criteria)', () => {
+  const metformin = { conceptId: 1503297, conceptName: 'Metformin', domain: 'Drug', includeDescendants: true }
+  const t2dm = { conceptId: 201826, conceptName: 'Type 2 diabetes mellitus', domain: 'Condition' }
+
+  it('turns relatedEvents into a nested criteria group on the event', () => {
+    const p = t('add_criterion', {
+      ...metformin,
+      group: 'inclusion',
+      relatedEvents: [{ ...t2dm, temporalWindow: { startDays: -365, endDays: 0 } }],
+    })
+    const event = p!.rule.criteriaGroups[0].events[0]
+
+    expect(event.nestedCriteria).toMatchObject({ logicType: 'ALL' })
+    expect(event.nestedCriteria.events).toHaveLength(1)
+    const related = event.nestedCriteria.events[0]
+    expect(related.criteriaType).toBe('ConditionOccurrence')
+    expect(related.conceptSet).toEqual(conceptSetFor(201826, 'Type 2 diabetes mellitus', { domainId: 'Condition' }))
+    expect(related.temporalWindow.startWindow).toMatchObject({ days: 365, beforeAfter: 'BEFORE' })
+    expect(related.cardinality).toBeUndefined()
+  })
+
+  it('maps occurrence to a cardinality, so exactly 0 means "without"', () => {
+    const p = t('set_entry_event', {
+      ...metformin,
+      relatedEvents: [{ ...t2dm, occurrence: { type: 'exactly', count: 0 } }],
+    })
+
+    expect(p!.event.nestedCriteria.events[0].cardinality).toEqual(ZERO)
+  })
+
+  it('maps at_least and at_most occurrences', () => {
+    const p = t('set_entry_event', {
+      ...metformin,
+      relatedEvents: [
+        { ...t2dm, occurrence: { type: 'at_least', count: 2 } },
+        { ...t2dm, occurrence: { type: 'at_most', count: 1 } },
+      ],
+    })
+
+    expect(p!.event.nestedCriteria.events.map((e: Loose) => e.cardinality)).toEqual([
+      { type: 'AT_LEAST', count: 2, countingMethod: 'ALL' },
+      { type: 'AT_MOST', count: 1, countingMethod: 'ALL' },
+    ])
+  })
+
+  it('combines related events with ANY when relatedLogic asks for it', () => {
+    const p = t('set_entry_event', { ...metformin, relatedLogic: 'ANY', relatedEvents: [t2dm] })
+
+    expect(p!.event.nestedCriteria.logicType).toBe('ANY')
+  })
+
+  it('carries related events through add_inclusion_rule and add_qualifying_criterion', () => {
+    const rule = t('add_inclusion_rule', {
+      name: 'Metformin for diabetes',
+      logicType: 'ALL',
+      events: [{ ...metformin, group: 'inclusion', relatedEvents: [t2dm] }],
+    })
+    const qualifying = t('add_qualifying_criterion', { ...metformin, relatedEvents: [t2dm] })
+
+    expect(rule!.rule.criteriaGroups[0].events[0].nestedCriteria.events).toHaveLength(1)
+    expect(qualifying!.event.nestedCriteria.events).toHaveLength(1)
+  })
+
+  it('refuses the criterion rather than dropping a related event it cannot build', () => {
+    expect(t('set_entry_event', { ...metformin, relatedEvents: [{ conceptName: 'no id' }] })).toBeNull()
+  })
+
+  it('omits nestedCriteria when there are no related events', () => {
+    expect(t('set_entry_event', { ...metformin, relatedEvents: [] })!.event.nestedCriteria).toBeUndefined()
+  })
+})

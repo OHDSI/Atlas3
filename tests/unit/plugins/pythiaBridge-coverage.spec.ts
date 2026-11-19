@@ -687,6 +687,63 @@ describe('pythiaBridge coverage', () => {
       ])
     })
 
+    it('registers the concept sets of an event\'s nested criteria', async () => {
+      const store = attachEditor()
+      const applySpy = recordApply(store)
+      const event = {
+        id: 'e',
+        criteriaType: 'VisitOccurrence',
+        conceptSet: { id: 'uuid-a', name: 'A' },
+        nestedCriteria: {
+          id: 'n',
+          logicType: 'ALL',
+          events: [{ id: 'e2', criteriaType: 'ConditionOccurrence', conceptSet: { id: 'uuid-b', name: 'B' } }],
+        },
+      }
+
+      await apply({ kind: 'addEntryEvent', event })
+
+      expect(registered(applySpy)).toEqual([
+        { kind: 'addConceptSet', conceptSet: { id: 1, name: 'A' } },
+        { kind: 'addConceptSet', conceptSet: { id: 2, name: 'B' } },
+      ])
+      expect(event.nestedCriteria.events[0]!.conceptSet).toEqual({ id: 2, name: 'B' })
+    })
+
+    it('registers nested criteria inside an inclusion rule', async () => {
+      const store = attachEditor()
+      const applySpy = recordApply(store)
+      const rule = {
+        id: 'r',
+        name: 'R',
+        criteriaGroups: [
+          {
+            id: 'g',
+            logicType: 'ALL',
+            events: [
+              {
+                id: 'e',
+                criteriaType: 'DrugExposure',
+                conceptSet: { id: 'uuid-a', name: 'A' },
+                nestedCriteria: {
+                  id: 'n',
+                  logicType: 'ALL',
+                  events: [{ id: 'e2', criteriaType: 'ConditionOccurrence', conceptSet: { id: 'uuid-b', name: 'B' } }],
+                },
+              },
+            ],
+          },
+        ],
+      }
+
+      await apply({ kind: 'addInclusionRule', rule })
+
+      expect(registered(applySpy)).toEqual([
+        { kind: 'addConceptSet', conceptSet: { id: 1, name: 'A' } },
+        { kind: 'addConceptSet', conceptSet: { id: 2, name: 'B' } },
+      ])
+    })
+
     it('an addConceptSet proposal is renumbered but not registered twice', async () => {
       const store = attachEditor()
       const applySpy = recordApply(store)

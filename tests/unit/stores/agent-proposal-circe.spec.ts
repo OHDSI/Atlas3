@@ -357,3 +357,89 @@ describe('codeset ids written into criteria', () => {
     expect(existing).toHaveLength(1)
   })
 })
+
+describe('nested (correlated) criteria', () => {
+  const conditionEvent = (name: string, conceptId: number, extra: Record<string, unknown> = {}) =>
+    ({
+      id: `evt-${conceptId}`,
+      criteriaType: 'ConditionOccurrence',
+      conceptSet: { id: 'client-uuid', name, items: [{ conceptId, conceptName: name, domainId: 'Condition' }] },
+      ...extra,
+    }) as unknown as CohortEvent
+
+  const withNested = (parent: CohortEvent, events: CohortEvent[], logicType: 'ALL' | 'ANY' = 'ALL') =>
+    ({ ...parent, nestedCriteria: { id: 'nested', logicType, events } }) as unknown as CohortEvent
+
+  it('writes the nested group as CorrelatedCriteria on the parent criterion', () => {
+    const event = withNested(drugEvent('Metformin', 1503297), [
+      conditionEvent('Type 2 diabetes', 201826, {
+        temporalWindow: {
+          startWindow: { days: 365, beforeAfter: 'BEFORE', useIndexEnd: false, useEventEnd: false },
+          endWindow: { days: 0, beforeAfter: 'AFTER', useIndexEnd: false, useEventEnd: false },
+        },
+      }),
+    ])
+
+    const translated = translateAgentEvent(event, [])
+    const drug = (translated?.criteria as { DrugExposure: Record<string, any> }).DrugExposure
+
+    expect(drug.CorrelatedCriteria.Type).toBe('ALL')
+    expect(drug.CorrelatedCriteria.CriteriaList).toHaveLength(1)
+    const nested = drug.CorrelatedCriteria.CriteriaList[0]
+    expect(nested.Criteria).toHaveProperty('ConditionOccurrence')
+    expect(nested.StartWindow).toMatchObject({ Start: { Days: 365, Coeff: -1 }, End: { Days: 0, Coeff: 1 } })
+    expect(nested.Occurrence).toMatchObject({ Type: 2, Count: 1 })
+  })
+
+  it('returns every concept set it references, each with its own CodesetId', () => {
+    const event = withNested(drugEvent('Metformin', 1503297), [conditionEvent('Type 2 diabetes', 201826)])
+
+    const translated = translateAgentEvent(event, [{ id: 0, name: 'Existing' }])
+    const drug = (translated?.criteria as { DrugExposure: Record<string, any> }).DrugExposure
+    const nestedCodeset = drug.CorrelatedCriteria.CriteriaList[0].Criteria.ConditionOccurrence.CodesetId
+
+    expect(translated?.conceptSets.map(cs => cs.id)).toEqual([drug.CodesetId, nestedCodeset])
+    expect(new Set([0, drug.CodesetId, nestedCodeset]).size).toBe(3)
+  })
+
+  it('keeps a zero-occurrence nested criterion, so "without X nearby" stays an exclusion', () => {
+    const event = withNested(drugEvent('Metformin', 1503297), [
+      conditionEvent('Type 1 diabetes', 201254, { cardinality: { type: 'EXACTLY', count: 0, countingMethod: 'ALL' } }),
+    ])
+
+    const translated = translateAgentEvent(event, [])
+    const drug = (translated?.criteria as { DrugExposure: Record<string, any> }).DrugExposure
+
+    expect(drug.CorrelatedCriteria.CriteriaList[0].Occurrence).toMatchObject({ Type: 0, Count: 0 })
+  })
+
+  it('carries nested criteria through a criterion inside an inclusion rule', () => {
+    const group = {
+      id: 'g',
+      logicType: 'ALL',
+      events: [withNested(drugEvent('Metformin', 1503297), [conditionEvent('Type 2 diabetes', 201826)], 'ANY')],
+    } as unknown as CriteriaGroup
+
+    const translated = translateAgentCriteriaGroups([group], [])
+    const drug = (translated.group.CriteriaList![0]!.Criteria as { DrugExposure: Record<string, any> }).DrugExposure
+
+    expect(drug.CorrelatedCriteria.Type).toBe('ANY')
+    expect(translated.conceptSets).toHaveLength(2)
+    expect(translated.dropped).toBe(0)
+  })
+
+  it('refuses the parent rather than silently dropping an untranslatable nested criterion', () => {
+    const event = withNested(drugEvent('Metformin', 1503297), [
+      { id: 'bad', criteriaType: undefined } as unknown as CohortEvent,
+    ])
+
+    expect(translateAgentEvent(event, [])).toBeNull()
+  })
+
+  it('leaves CorrelatedCriteria out when the event has no nested criteria', () => {
+    const translated = translateAgentEvent(drugEvent('Metformin', 1503297, 4), [])
+
+    expect(translated?.criteria).toEqual({ DrugExposure: { CodesetId: 4 } })
+    expect(translated?.conceptSets).toHaveLength(1)
+  })
+})

@@ -67,6 +67,8 @@ function circeStartWindow(window: TemporalWindow | undefined): Window {
 export interface TranslatedEvent {
   criteria: Criteria
   conceptSet?: ConceptSet
+  /** The event's own set followed by those of its nested criteria. */
+  conceptSets: ConceptSet[]
 }
 
 /**
@@ -103,9 +105,19 @@ export function translateAgentEvent(
     inner.First = true
   }
 
+  const conceptSets: ConceptSet[] = conceptSet ? [conceptSet] : []
+  const nested = event.nestedCriteria
+  if (nested && ((nested.events?.length ?? 0) > 0 || (nested.nestedGroups?.length ?? 0) > 0)) {
+    const translatedNested = translateAgentCriteriaGroups([nested], [...existingConceptSets, ...conceptSets])
+    if (translatedNested.dropped > 0) return null
+    inner.CorrelatedCriteria = translatedNested.group
+    conceptSets.push(...translatedNested.conceptSets)
+  }
+
   return {
     criteria: { [criteriaType]: inner } as Criteria,
     conceptSet,
+    conceptSets,
   }
 }
 
@@ -120,7 +132,7 @@ export function translateAgentEvent(
 export function translateAgentEventToCorelated(
   event: CohortEvent,
   existingConceptSets: ReadonlyArray<ConceptSet> = []
-): { criteria: CorelatedCriteria; conceptSet?: ConceptSet } | null {
+): { criteria: CorelatedCriteria; conceptSets: ConceptSet[] } | null {
   const translated = translateAgentEvent(event, existingConceptSets)
   if (!translated) return null
 
@@ -142,7 +154,7 @@ export function translateAgentEventToCorelated(
       }
     : { Type: 2, Count: 1, IsDistinct: false }
 
-  return { criteria, conceptSet: translated.conceptSet }
+  return { criteria, conceptSets: translated.conceptSets }
 }
 
 /**
@@ -240,7 +252,7 @@ export function translateAgentCriteriaGroups(
         continue
       }
       criteriaList.push(translated.criteria)
-      if (translated.conceptSet) conceptSets.push(translated.conceptSet)
+      conceptSets.push(...translated.conceptSets)
     }
 
     const circeGroup: CirceCriteriaGroup = {

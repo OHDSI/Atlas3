@@ -79,6 +79,34 @@ describe('useCohortStore.applyProposal', () => {
     expect(store.isDirty).toBe(true)
   })
 
+  it('addEntryEvent with nested criteria writes CorrelatedCriteria and registers every concept set', () => {
+    const store = openCohort({ ConceptSets: [] })
+    const conceptSet = (id: string, name: string, conceptId: number) => ({
+      id, name, items: [{ conceptId, conceptName: name, domainId: 'Condition' }],
+    })
+
+    const result = store.applyProposal({
+      kind: 'addEntryEvent',
+      event: {
+        id: 'e1',
+        criteriaType: 'VisitOccurrence',
+        conceptSet: conceptSet('a', 'Inpatient visit', 9201),
+        nestedCriteria: {
+          id: 'n1',
+          logicType: 'ALL',
+          events: [{ id: 'e2', criteriaType: 'ConditionOccurrence', conceptSet: conceptSet('b', 'Sepsis', 132797) }],
+        },
+      } as never,
+    })
+
+    expect(result).toMatchObject({ applied: true })
+    const expression = store.currentCohort!.expression as CohortExpression
+    const visit = (expression.PrimaryCriteria!.CriteriaList![0] as { VisitOccurrence: Record<string, any> }).VisitOccurrence
+    const nestedCodeset = visit.CorrelatedCriteria.CriteriaList[0].Criteria.ConditionOccurrence.CodesetId
+    expect(expression.ConceptSets!.map(cs => cs.id).sort()).toEqual([visit.CodesetId, nestedCodeset].sort())
+    expect(CohortExpressionSchema.safeParse(expression).success).toBe(true)
+  })
+
   it('addEntryEvent appends multiple events to PrimaryCriteria.CriteriaList', () => {
     const store = openCohort({})
 
