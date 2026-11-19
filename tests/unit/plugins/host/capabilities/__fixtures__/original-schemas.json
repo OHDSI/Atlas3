@@ -391,8 +391,6 @@
           "cohort-edit",
           "profiles",
           "profiles-source",
-          "profile-view",
-          "profile-view-cohort",
           "api-keys",
           "feature-analyses",
           "characterizations",
@@ -429,9 +427,6 @@
         "type": "string"
       },
       "conceptId": {
-        "type": "number"
-      },
-      "personId": {
         "type": "number"
       },
       "executionId": {

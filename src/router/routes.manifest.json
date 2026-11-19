@@ -52,7 +52,7 @@
       "sourceKey",
       "personId"
     ],
-    "agentVisible": true,
+    "agentVisible": false,
     "label": "Patient profile"
   },
   {
@@ -63,7 +63,7 @@
       "personId",
       "cohortId"
     ],
-    "agentVisible": true,
+    "agentVisible": false,
     "label": "Patient profile (cohort)"
   },
   {

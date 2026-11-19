@@ -2,18 +2,18 @@
 
 ATLAS exposes its cohort-builder and artifact-editing capabilities directly to
 the browser's built-in [WebMCP](https://github.com/webmachinelearning/webmcp)
-API (`navigator.modelContext`), currently shipping as an origin-trial /
+API (`document.modelContext`), currently shipping as an origin-trial /
 preview feature behind a flag in Chrome 146+. This lets any WebMCP-aware
 client running in the same browser tab — a browser extension, DevTools
 console, or an in-page agent — call ATLAS tools without going through Pythia.
 
 ## Feature detection, not a hard dependency
 
-`navigator.modelContext` does not exist in most browsers today. ATLAS never
+`document.modelContext` does not exist in most browsers today. ATLAS never
 assumes it is present:
 
 - `getWebMcpHost()` (`src/plugins/host/webmcp/webmcpHost.ts`) checks for
-  `navigator.modelContext.registerTool` and returns `null` if it is missing.
+  `document.modelContext.registerTool` and returns `null` if it is missing.
 - `initWebMcp()` (`src/plugins/host/webmcp/index.ts`) calls `getWebMcpHost()`
   once at boot, from `src/main.ts` immediately after `setupPythiaBridge()`. If
   the host is `null` it logs a debug line and returns a no-op disposer — no
@@ -21,6 +21,10 @@ assumes it is present:
 - When the host **is** present, `initWebMcp()` registers every entry in
   `CAPABILITIES` (`src/plugins/host/capabilities/registry.ts`) via
   `registerWebMcpCapabilities` and returns a single dispose-all function.
+
+ATLAS looks for `document.modelContext`, the entry point of the current WebMCP
+draft, and falls back to `navigator.modelContext` for early browser builds
+that still expose it there.
 
 ## Ungated by design
 
@@ -40,22 +44,31 @@ protocol with no concept of a confirmation UI, and building one into ATLAS
 for this surface would just be a second, redundant approval mechanism.
 Human-in-the-loop is Pythia's responsibility, not WebMCP's. If a review step
 is wanted for WebMCP-driven changes, it belongs in the WebMCP *client*
-(the extension or agent calling into `navigator.modelContext`), not in ATLAS.
+(the extension or agent calling into `document.modelContext`), not in ATLAS.
 
 ## What's exposed
 
-The 19 registered tools are exactly the entries in `CAPABILITIES` — the same
+The 28 registered tools are exactly the entries in `CAPABILITIES` — the same
 artifact-editing operations Pythia can propose: cohort criteria and entry
 events, exit/censor definitions, concept-set create/update, feature analyses,
 characterizations, pathways, incidence-rate analyses, saving the open cohort,
 and `navigate_to` for moving between views. There is no separate WebMCP-only
-tool list and no subset filtering — registering fewer tools than
-`CAPABILITIES.length` (19) is a bug.
+tool list — registering fewer tools than `CAPABILITIES.length` (28) is a bug.
+
+Two restrictions apply to every caller:
+
+- `create_feature_analysis` and `update_feature_analysis` reject custom SQL
+  (`CUSTOM_FE`) over WebMCP, and `CUSTOM_FE` is left out of their advertised
+  `type` enum. That SQL later runs against the CDM database, and nothing on
+  this surface would show it to a person first. Pythia can still propose it
+  on an approval card.
+- `navigate_to` cannot open an individual patient profile (`profile-view`,
+  `profile-view-cohort` are not agent-visible routes).
 
 ## Security note
 
 Because WebMCP execution is ungated, any script or extension with access to
-`navigator.modelContext` in a logged-in ATLAS tab can create, save, or update
+`document.modelContext` in a logged-in ATLAS tab can create, save, or update
 cohorts, concept sets, and analyses under that user's WebAPI session and
 permissions — with no ATLAS-side confirmation step. An auto-approving
 external agent effectively acts with the full authority of the logged-in
@@ -71,7 +84,7 @@ Consequences to design around:
   invoke without review — it only changes the current route and is
   side-effect-light (no server write), so an errant call is cheap to undo.
   Every other capability performs a real WebAPI mutation.
-- This surface only exists when `navigator.modelContext` exists, i.e. an
+- This surface only exists when `document.modelContext` exists, i.e. an
   opted-in preview browser. It does not change behavior in any browser
   without WebMCP support.
 
@@ -79,11 +92,11 @@ Consequences to design around:
 
 1. Use Chrome 146 or newer with the WebMCP preview flag/origin trial enabled.
    Run `docker compose -f docker-compose.dev.yml up --build`, open `https://localhost`, and log in.
-2. Open DevTools console. Confirm `navigator.modelContext` is defined, and
+2. Open DevTools console. Confirm `document.modelContext` is defined, and
    that the console log shows
-   `webmcp: registering 19 capabilities (ungated)`.
+   `webmcp: registering 28 capabilities (ungated)`.
 3. Invoke `set_entry_event` from a WebMCP client (or directly via
-   `navigator.modelContext` in the console) and confirm the cohort store
+   `document.modelContext` in the console) and confirm the cohort store
    updates immediately — no confirmation card appears — and the call
    resolves `{ applied: true, ... }`.
 4. Invoke `navigate_to` and confirm the route changes.

@@ -10,7 +10,11 @@ export interface WebMcpHost {
 }
 
 export function getWebMcpHost(): WebMcpHost | null {
-  const mc = (navigator as unknown as { modelContext?: unknown }).modelContext
+  // The current WebMCP draft moved the entry point to document; early browser
+  // builds still expose it on navigator.
+  const mc =
+    (document as unknown as { modelContext?: unknown }).modelContext ??
+    (navigator as unknown as { modelContext?: unknown }).modelContext
   if (!mc || typeof (mc as { registerTool?: unknown }).registerTool !== 'function') return null
   const api = mc as { registerTool: (d: unknown) => { unregister?: () => void } }
   return {

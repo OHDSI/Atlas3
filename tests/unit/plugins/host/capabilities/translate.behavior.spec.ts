@@ -263,8 +263,13 @@ describe('add_inclusion_rule', () => {
 
 describe('navigate_to params', () => {
   it('drops null and undefined params and non-string reasons', () => {
-    const p = t('navigate_to', { view: 'profile-view', sourceKey: 'SYN', personId: null, reason: 5 })
-    expect(p).toStrictEqual({ kind: 'navigate', route: { name: 'profile-view', params: { sourceKey: 'SYN' } }, reason: undefined })
+    const p = t('navigate_to', { view: 'profiles-source', sourceKey: 'SYN', conceptId: null, reason: 5 })
+    expect(p).toStrictEqual({ kind: 'navigate', route: { name: 'profiles-source', params: { sourceKey: 'SYN' } }, reason: undefined })
+  })
+
+  it('does not let agents open an individual patient profile', () => {
+    expect(t('navigate_to', { view: 'profile-view', sourceKey: 'SYN', personId: 7 })).toBeNull()
+    expect(t('navigate_to', { view: 'profile-view-cohort', sourceKey: 'SYN', personId: 7, cohortId: 1 })).toBeNull()
   })
 
   it('rejects a manifest route that is not agent visible', () => {
