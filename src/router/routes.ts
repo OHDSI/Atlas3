@@ -62,14 +62,14 @@ export const routes: RouteRecordRaw[] = [
     name: 'profile-view',
     component: () => import('@/views/ProfileView.vue'),
     props: true,
-    meta: { requiresAuth: true, titleKey: 'route.profiles.title', agentVisible: true, agentLabel: 'Patient profile' },
+    meta: { requiresAuth: true, titleKey: 'route.profiles.title', agentLabel: 'Patient profile' },
   },
   {
     path: '/profiles/:sourceKey/:personId(\\d+)/:cohortId(\\d+)',
     name: 'profile-view-cohort',
     component: () => import('@/views/ProfileView.vue'),
     props: true,
-    meta: { requiresAuth: true, titleKey: 'route.profiles.title', agentVisible: true, agentLabel: 'Patient profile (cohort)' },
+    meta: { requiresAuth: true, titleKey: 'route.profiles.title', agentLabel: 'Patient profile (cohort)' },
   },
   {
     path: '/profile/api-keys',

@@ -261,7 +261,6 @@ export const CAPABILITIES: Capability[] = [
         id: { type: 'number' },
         sourceKey: { type: 'string' },
         conceptId: { type: 'number' },
-        personId: { type: 'number' },
         executionId: { type: 'number' },
         reason: { type: 'string', description: 'One short sentence; surfaced in the undo toast.' },
       },

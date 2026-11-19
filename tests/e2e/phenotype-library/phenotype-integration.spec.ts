@@ -74,6 +74,19 @@ function sortedStringify(value: unknown): string {
   return JSON.stringify(value)
 }
 
+function isEmptyCriteriaGroup(value: unknown): boolean {
+  if (value === null || value === undefined) return true
+  if (typeof value !== 'object') return false
+  const g = value as Record<string, unknown>
+  const isEmptyList = (l: unknown) => l === undefined || l === null || (Array.isArray(l) && l.length === 0)
+  return (
+    isEmptyList(g.CriteriaList) &&
+    isEmptyList(g.DemographicCriteriaList) &&
+    isEmptyList(g.Groups) &&
+    (g.Count === undefined || g.Count === null)
+  )
+}
+
 /**
  * Deep-compare two expressions in a key-order-insensitive way and return
  * a list of human-readable differences (empty = equivalent).
@@ -87,9 +100,8 @@ function diffExpressions(
   //    cohort expression
   //  - expressionType: serialiser injects "SIMPLE_EXPRESSION" when the source
   //    omits it; semantically equivalent to absent
-  //  - AdditionalCriteria: serialiser injects an empty group object
-  //    ({CriteriaList:[],DemographicCriteriaList:[],Groups:[],Type:"ALL"}) when
-  //    the source omits it; semantically equivalent to absent
+  // AdditionalCriteria is compared, but an empty group (which the editor
+  // injects when the source omits it) counts as absent, as it does in circe-be.
   const SKIP = new Set([
     'id',
     'name',
@@ -99,10 +111,13 @@ function diffExpressions(
     'createdBy',
     'modifiedBy',
     'expressionType',
-    'AdditionalCriteria',
   ])
   const filter = (o: Record<string, unknown>) =>
-    Object.fromEntries(Object.entries(o).filter(([k]) => !SKIP.has(k)))
+    Object.fromEntries(
+      Object.entries(o).filter(
+        ([k, v]) => !SKIP.has(k) && !(k === 'AdditionalCriteria' && isEmptyCriteriaGroup(v)),
+      ),
+    )
 
   const na = filter(a)
   const nb = filter(b)
@@ -255,11 +270,9 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
         await waitForStableElement(saveBtn, settleTimeout)
       }
       await expect(saveBtn).toBeVisible({ timeout: settleTimeout })
-      const isSaveEnabled = await saveBtn.isEnabled().catch(() => false)
-      if (!isSaveEnabled) {
-        test.skip(true, `Cohort "${phenotype.name}" has no entry events; skipping`)
-        return
-      }
+      // Every library definition has an entry event, so a disabled Save is a
+      // failure; checking once and skipping hid slow enables under load.
+      await expect(saveBtn).toBeEnabled({ timeout: settleTimeout })
 
       // ── Step 4: Save immediately → capture BASELINE ──────────────────
       const baselineExpression = await captureNextSaveExpression(page, async () => {

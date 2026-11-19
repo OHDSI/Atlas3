@@ -6,7 +6,7 @@ import { logger } from '@/utils/logger'
 export function initWebMcp(): () => void {
   const host = getWebMcpHost()
   if (!host) {
-    logger.debug('webmcp', 'navigator.modelContext absent — skipping')
+    logger.debug('webmcp', 'modelContext absent — skipping')
     return () => {}
   }
   logger.info('webmcp', `registering ${CAPABILITIES.length} capabilities (ungated)`)
