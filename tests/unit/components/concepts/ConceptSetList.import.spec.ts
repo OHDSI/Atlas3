@@ -29,9 +29,11 @@ import { useConceptSetsStore } from '@/stores/concept-sets'
 
 const vuetify = createVuetify({ components, directives })
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
-}))
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
+  }
+})
 
 function mountList() {
   return mount(ConceptSetList, { global: { plugins: [vuetify, createPinia()] } })

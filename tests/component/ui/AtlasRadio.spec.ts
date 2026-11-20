@@ -9,9 +9,11 @@ import AtlasRadio from '@/components/ui/AtlasRadio.vue'
 
 const vuetify = createVuetify({ components, directives })
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
-}))
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
+  }
+})
 
 function mountInGroup(props: Record<string, unknown> = {}) {
   return mount(VRadioGroup, {

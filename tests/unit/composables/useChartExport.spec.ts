@@ -74,12 +74,14 @@ describe('useChartExport', () => {
     }
 
     // Mock Blob constructor
-    global.Blob = vi.fn().mockImplementation((content, options) => ({
-      content,
-      options,
-      size: 0,
-      type: options?.type || ''
-    })) as unknown as typeof Blob
+    global.Blob = vi.fn().mockImplementation(function (content, options) {
+      return {
+        content,
+        options,
+        size: 0,
+        type: options?.type || ''
+      }
+    }) as unknown as typeof Blob
 
     // Clear all mocks
     vi.clearAllMocks()

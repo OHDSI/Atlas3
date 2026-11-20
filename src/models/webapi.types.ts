@@ -140,7 +140,7 @@ export const CohortGenerationInfoSchema = z
     personCount: z.number().nullable().optional(),
     recordCount: z.number().nullable().optional(),
     createdBy: z
-      .union([z.string(), z.record(z.unknown())])
+      .union([z.string(), z.record(z.string(), z.unknown())])
       .nullable()
       .optional(),
   })

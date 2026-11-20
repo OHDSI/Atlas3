@@ -26,9 +26,11 @@ import { importIncidenceRate } from '@/services/incidence-rate.service'
 
 const vuetify = createVuetify({ components, directives })
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
-}))
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
+  }
+})
 
 type ImportDesign = (j: unknown, m: { fileName: string }) => Promise<{ id?: number }>
 

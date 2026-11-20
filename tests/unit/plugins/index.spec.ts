@@ -18,16 +18,20 @@ vi.mock('@/plugins/core/PluginRegistry', () => {
     getAllPlugins: vi.fn(() => [])
   }
   return {
-    PluginRegistry: vi.fn(() => mockRegistry),
+    PluginRegistry: vi.fn(function () {
+      return mockRegistry
+    }),
     pluginRegistry: mockRegistry
   }
 })
 
 vi.mock('@/plugins/core/PluginLoader', () => ({
-  PluginLoader: vi.fn().mockImplementation(() => ({
-    loadPlugin: vi.fn().mockResolvedValue(undefined),
-    startPluginFramework: vi.fn()
-  }))
+  PluginLoader: vi.fn().mockImplementation(function () {
+    return {
+      loadPlugin: vi.fn().mockResolvedValue(undefined),
+      startPluginFramework: vi.fn()
+    }
+  })
 }))
 
 vi.mock('@/plugins/core/PluginDiagnostics', () => ({
@@ -127,15 +131,14 @@ describe('Plugin Framework Index', () => {
         order.push(`register:${registration.id}`)
         return { registration, state: 'not-loaded' } as any
       })
-      vi.mocked(PluginLoader).mockImplementation(
-        () =>
-          ({
-            loadPlugin: vi.fn(async (instance: any) => {
-              order.push(`load:${instance.registration.id}`)
-            }),
-            startPluginFramework: vi.fn()
-          }) as any
-      )
+      vi.mocked(PluginLoader).mockImplementation(function () {
+        return {
+          loadPlugin: vi.fn(async (instance: any) => {
+            order.push(`load:${instance.registration.id}`)
+          }),
+          startPluginFramework: vi.fn()
+        } as any
+      })
 
       const { initializePluginFramework } = await import('@/plugins/index')
       await initializePluginFramework({ token: 'test' } as any)
@@ -160,13 +163,12 @@ describe('Plugin Framework Index', () => {
         registration => ({ registration, state: 'not-loaded' }) as any
       )
       let finishLoad!: () => void
-      vi.mocked(PluginLoader).mockImplementation(
-        () =>
-          ({
-            loadPlugin: vi.fn(() => new Promise<void>(resolve => (finishLoad = resolve))),
-            startPluginFramework: vi.fn()
-          }) as any
-      )
+      vi.mocked(PluginLoader).mockImplementation(function () {
+        return {
+          loadPlugin: vi.fn(() => new Promise<void>(resolve => (finishLoad = resolve))),
+          startPluginFramework: vi.fn()
+        } as any
+      })
 
       const { initializePluginFramework, whenPluginFrameworkReady } = await import('@/plugins/index')
       const init = initializePluginFramework({ token: 'test' } as any)

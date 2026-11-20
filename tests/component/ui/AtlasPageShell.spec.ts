@@ -8,9 +8,11 @@ import AtlasPageShell from '@/components/ui/AtlasPageShell.vue'
 
 const vuetify = createVuetify({ components, directives })
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
-}))
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
+  }
+})
 
 function mountWith(props: Record<string, unknown> = {}, slots: Record<string, string> = {}) {
   return mount(AtlasPageShell, { global: { plugins: [vuetify] }, props, slots })

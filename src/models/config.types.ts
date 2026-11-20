@@ -179,13 +179,13 @@ export type OccurrenceOperatorConfig = z.infer<typeof OccurrenceOperatorConfigSc
  */
 export const AtlasConfigSchema = z.object({
   /** Map of filter type key to filter configuration */
-  criteriaTypes: z.record(FilterTypeConfigSchema),
+  criteriaTypes: z.record(z.string(), FilterTypeConfigSchema),
 
   /** Section definitions (sections can be object or array - handle both) */
-  sections: z.union([z.array(SectionConfigSchema), z.record(SectionConfigSchema)]),
+  sections: z.union([z.array(SectionConfigSchema), z.record(z.string(), SectionConfigSchema)]),
 
   /** Map of filter type key to array of attribute configurations */
-  attributeMapping: z.record(z.array(AttributeConfigSchema)),
+  attributeMapping: z.record(z.string(), z.array(AttributeConfigSchema)),
 
   /** Temporal window options for temporal relationship attributes */
   temporalWindows: z.array(TemporalWindowConfigSchema).optional(),

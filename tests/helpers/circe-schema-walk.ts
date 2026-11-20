@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 /**
- * `z.lazy(() => …)` calls its getter on every `.schema` access, handing back a fresh
+ * `z.lazy(() => …)` calls its getter on every `.unwrap()` call, handing back a fresh
  * schema instance each time. Callers key visited-sets, labels and recursion depth on
  * schema identity, so the resolved instance has to be memoised or recursive schemas
  * expand forever.
@@ -11,18 +11,26 @@ const lazyCache = new Map<z.ZodTypeAny, z.ZodTypeAny>()
 export function resolveLazy(lazy: z.ZodLazy<z.ZodTypeAny>): z.ZodTypeAny {
   const cached = lazyCache.get(lazy)
   if (cached) return cached
-  const inner = lazy.schema as z.ZodTypeAny
+  const inner = lazy.unwrap() as z.ZodTypeAny
   lazyCache.set(lazy, inner)
   return inner
+}
+
+/**
+ * `.transform()` pipes the structural schema into a transform, while `z.preprocess()`
+ * pipes a transform into the structural schema; either way, return the structural side.
+ */
+function unwrapPipe(pipe: z.ZodPipe): z.ZodTypeAny {
+  return (pipe.in instanceof z.ZodTransform ? pipe.out : pipe.in) as z.ZodTypeAny
 }
 
 export function unwrap(schema: z.ZodTypeAny): z.ZodTypeAny {
   let current = schema
   for (;;) {
-    if (current instanceof z.ZodOptional || current instanceof z.ZodNullable) current = current.unwrap()
-    else if (current instanceof z.ZodDefault) current = current.removeDefault()
-    else if (current instanceof z.ZodEffects) current = current.innerType()
-    else if (current instanceof z.ZodLazy) current = resolveLazy(current)
+    if (current instanceof z.ZodOptional || current instanceof z.ZodNullable) current = current.unwrap() as z.ZodTypeAny
+    else if (current instanceof z.ZodDefault) current = current.removeDefault() as z.ZodTypeAny
+    else if (current instanceof z.ZodPipe) current = unwrapPipe(current)
+    else if (current instanceof z.ZodLazy) current = resolveLazy(current as z.ZodLazy<z.ZodTypeAny>)
     else return current
   }
 }
@@ -73,14 +81,14 @@ export function synthesise(schema: z.ZodTypeAny, options: SynthesisOptions): unk
     const depths = new Map(seen)
     let type = current
     for (;;) {
-      if (type instanceof z.ZodOptional || type instanceof z.ZodNullable) type = type.unwrap()
-      else if (type instanceof z.ZodDefault) type = type.removeDefault()
-      else if (type instanceof z.ZodEffects) type = type.innerType()
+      if (type instanceof z.ZodOptional || type instanceof z.ZodNullable) type = type.unwrap() as z.ZodTypeAny
+      else if (type instanceof z.ZodDefault) type = type.removeDefault() as z.ZodTypeAny
+      else if (type instanceof z.ZodPipe) type = unwrapPipe(type)
       else if (type instanceof z.ZodLazy) {
         const depth = depths.get(type) ?? 0
         if (depth >= MAX_RECURSION) return undefined
         depths.set(type, depth + 1)
-        type = resolveLazy(type)
+        type = resolveLazy(type as z.ZodLazy<z.ZodTypeAny>)
       } else break
     }
 

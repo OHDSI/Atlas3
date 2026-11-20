@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { ref } from 'vue'
 import type { CohortExpression } from '@/models/circe-types'
@@ -58,6 +58,13 @@ describe('pythiaBridge', () => {
     vi.mocked(createPathway).mockReset()
     vi.mocked(createIncidenceRate).mockReset()
     useNotifications().clear()
+  })
+
+  // The host message bus is a per-plugin singleton, and vi.spyOn reuses an
+  // existing spy, so restore spies to keep each test's handleResponse calls
+  // isolated from the previous test's.
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it('routes cohort.applyProposal into the cohort store (setObservationPeriod is a no-op in Circe-native)', () => {

@@ -73,7 +73,7 @@ export type PatientCountResult = z.infer<typeof PatientCountResultSchema>
  */
 export const CountRequestSchema = z.object({
   /** Cohort expression in Atlas format */
-  expression: z.record(z.unknown()),
+  expression: z.record(z.string(), z.unknown()),
 })
 
 export type CountRequest = z.infer<typeof CountRequestSchema>

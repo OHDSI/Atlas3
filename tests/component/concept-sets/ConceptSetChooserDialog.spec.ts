@@ -24,11 +24,13 @@ import { useConceptSetsStore } from '@/stores/concept-sets'
 
 const vuetify = createVuetify({ components, directives })
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }
+})
 
 const sampleSets: ConceptSetListItem[] = [
   { id: 1, name: 'Diabetes Conditions', createdBy: 'alice' },

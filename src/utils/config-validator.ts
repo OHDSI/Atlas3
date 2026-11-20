@@ -83,11 +83,11 @@ export function validateAtlasConfig(config: unknown): ValidationResult {
             result.errors.push({
               filterType,
               attributeId: attr.id,
-              message: `Invalid attribute configuration: ${zodError.errors
+              message: `Invalid attribute configuration: ${zodError.issues
                 .map(e => e.message)
                 .join(', ')}`,
               code: 'INVALID_ATTRIBUTE',
-              details: zodError.errors,
+              details: zodError.issues,
             })
           }
         }
@@ -101,11 +101,11 @@ export function validateAtlasConfig(config: unknown): ValidationResult {
         const zodError = error as ZodError
         result.errors.push({
           filterType,
-          message: `Invalid filter type configuration: ${zodError.errors
+          message: `Invalid filter type configuration: ${zodError.issues
             .map(e => e.message)
             .join(', ')}`,
           code: 'INVALID_FILTER_TYPE',
-          details: zodError.errors,
+          details: zodError.issues,
         })
         result.invalidFilterTypes.push(filterType)
       }
@@ -121,11 +121,11 @@ export function validateAtlasConfig(config: unknown): ValidationResult {
     const zodError = error as ZodError
     result.valid = false
     result.errors.push({
-      message: `Configuration structure is invalid: ${zodError.errors
+      message: `Configuration structure is invalid: ${zodError.issues
         .map(e => `${e.path.join('.')}: ${e.message}`)
         .join(', ')}`,
       code: 'INVALID_SCHEMA',
-      details: zodError.errors,
+      details: zodError.issues,
     })
   }
 
@@ -225,11 +225,11 @@ export function validateFilterType(filterType: string, config: unknown): Validat
     const zodError = error as ZodError
     errors.push({
       filterType,
-      message: `Invalid filter type configuration: ${zodError.errors
+      message: `Invalid filter type configuration: ${zodError.issues
         .map(e => e.message)
         .join(', ')}`,
       code: 'INVALID_FILTER_TYPE',
-      details: zodError.errors,
+      details: zodError.issues,
     })
   }
 
@@ -259,9 +259,9 @@ export function validateAttribute(filterType: string, attribute: unknown): Valid
     errors.push({
       filterType,
       attributeId: (attribute as { id?: string }).id,
-      message: `Invalid attribute configuration: ${zodError.errors.map(e => e.message).join(', ')}`,
+      message: `Invalid attribute configuration: ${zodError.issues.map(e => e.message).join(', ')}`,
       code: 'INVALID_ATTRIBUTE',
-      details: zodError.errors,
+      details: zodError.issues,
     })
   }
 

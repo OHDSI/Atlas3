@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
 vi.mock('@/router', () => ({
@@ -70,6 +70,13 @@ describe('pythiaBridge update-existing handlers', () => {
     // for any update handler, so the auto-navigate branch always runs.
     ;(router as unknown as { currentRoute: { value: { name: string; params: object } } })
       .currentRoute.value = { name: 'home', params: {} }
+  })
+
+  // The host message bus is a per-plugin singleton, and vi.spyOn reuses an
+  // existing spy, so restore spies to keep each test's handleResponse calls
+  // isolated from the previous test's.
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   // -------------------------------------------------------------------------

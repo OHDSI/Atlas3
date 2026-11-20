@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [
     vue(),
     vuetify({ autoImport: true }),
-    dts({ include: ['packages/atlas-ui/index.ts', 'src/ui/**', 'src/components/ui/**'], outDir: 'packages/atlas-ui/dist', rollupTypes: true }),
+    dts({ include: ['packages/atlas-ui/index.ts', 'src/ui/**', 'src/components/ui/**'], outDirs: 'packages/atlas-ui/dist', bundleTypes: true }),
   ],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   build: {

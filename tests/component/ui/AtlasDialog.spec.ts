@@ -8,9 +8,11 @@ import AtlasDialog from '@/components/ui/AtlasDialog.vue'
 
 const vuetify = createVuetify({ components, directives })
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
-}))
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
+  }
+})
 
 beforeEach(() => {
   // Clear body in case a prior test file leaked teleported v-dialog content.
