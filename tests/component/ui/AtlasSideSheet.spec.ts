@@ -9,9 +9,13 @@ import AtlasSideSheet from '@/components/ui/AtlasSideSheet.vue'
 
 const vuetify = createVuetify({ components, directives })
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
-}))
+// Vitest 4 calls mockImplementation without `new`, so an arrow-function
+// mock is not a constructor; Vuetify does `new ResizeObserver(...)`.
+global.ResizeObserver = class {
+  observe = vi.fn()
+  unobserve = vi.fn()
+  disconnect = vi.fn()
+} as unknown as typeof ResizeObserver
 
 const settle = () => new Promise(r => setTimeout(r, 50))
 
