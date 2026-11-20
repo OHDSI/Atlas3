@@ -92,7 +92,18 @@
       :used-concept-sets="usedConceptSets"
       @view="handleViewConceptSet"
       @delete="handleDeleteConceptSet"
-    />
+    >
+      <template #actions>
+        <AtlasButton
+          variant="secondary"
+          icon="mdi-plus"
+          data-testid="cohort-builder-conceptset-create"
+          @click="handleCreateConceptSetFromList"
+        >
+          {{ t('components.conceptSetBuilder.newConceptSet').value }}
+        </AtlasButton>
+      </template>
+    </concept-sets-list-dialog>
 
     <validation-messages-dialog
       v-model="showValidationDialog"
@@ -327,6 +338,7 @@ import ConceptSearchDialog from './ConceptSearchDialog.vue'
 import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
 import CohortExpressionEditor from '@/components/cohort-editor/CohortExpressionEditor.vue'
 import { defaultExpression as blankExpression } from '@/models/circe-types'
+import { defaultAgentCohortName } from '@/utils/agent-cohort-name'
 import type { CohortExpression, ConceptSetItem as CirceConceptSetItem } from '@/models/circe-types'
 import { unassignConceptSetId, walkConceptSetReferences } from '@/components/cohort-editor/concept-set-usage'
 import { normalizeForCirce } from '@/components/cohort-editor/normalize'
@@ -751,6 +763,7 @@ watch(
     const opts = cohortStore.saveOptions
     if (opts?.name) cohortName.value = opts.name
     if (opts?.description) cohortDescription.value = opts.description
+    if (!cohortName.value.trim()) cohortName.value = defaultAgentCohortName(expression.value)
     if (cohortName.value) {
       const { availableCohortName } = await import('@/services/cohort-definition.service')
       cohortName.value = await availableCohortName(cohortName.value, props.id ? Number(props.id) : 0)
@@ -1102,6 +1115,11 @@ function handleViewConceptSet(conceptSet: {
 }) {
   showConceptSetsDialog.value = false
   handleEditConceptSet(conceptSet)
+}
+
+function handleCreateConceptSetFromList() {
+  showConceptSetsDialog.value = false
+  handleCreateNewConceptSet()
 }
 
 function handleEditConceptSetFromTarget(target: ConceptSetSelectionTarget | undefined) {

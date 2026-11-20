@@ -196,7 +196,7 @@ export type AgentProposal =
     }
   | {
       kind: 'generateAnalysis'
-      payload: { analysisType: 'pathway' | 'characterization' | 'incidenceRate'; analysisId: number; sourceKey?: string }
+      payload: { analysisType: 'cohort' | 'pathway' | 'characterization' | 'incidenceRate'; analysisId: number; sourceKey?: string }
     }
   | { kind: 'updateConceptSet'; payload: UpdateConceptSetPayload }
   | { kind: 'updateFeatureAnalysis'; payload: UpdateFeatureAnalysisPayload }

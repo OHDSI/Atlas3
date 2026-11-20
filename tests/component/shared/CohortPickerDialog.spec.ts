@@ -78,4 +78,39 @@ describe('CohortPickerDialog', () => {
     expect(wrapper.emitted('select')?.[0]?.[0]).toEqual([{ id: 2, name: 'Cohort 2' }])
     wrapper.unmount()
   })
+
+  it('sorts every cohort before paginating, not just the visible page', async () => {
+    const wrapper = mountPicker()
+    await flushPromises()
+
+    const idHeader = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-testid="cohort-picker-dialog-table"] thead th')
+    ).find(header => /id/i.test(header.textContent ?? ''))!
+    idHeader.click()
+    await flushPromises()
+    idHeader.click()
+    await flushPromises()
+
+    const firstIds = Array.from(
+      document.querySelectorAll('[data-testid="cohort-picker-dialog-table"] tbody tr')
+    ).map(row => row.querySelectorAll('td')[1]?.textContent?.trim())
+    expect(firstIds.slice(0, 3)).toEqual(['12', '11', '10'])
+    wrapper.unmount()
+  })
+
+  it('searches cohorts beyond the first page', async () => {
+    const wrapper = mountPicker()
+    await flushPromises()
+
+    const input = document.querySelector<HTMLInputElement>('input[type="text"]')!
+    input.value = 'Cohort 12'
+    input.dispatchEvent(new Event('input'))
+    await new Promise(resolve => setTimeout(resolve, 800))
+    await flushPromises()
+
+    const rows = document.querySelectorAll('[data-testid="cohort-picker-dialog-table"] tbody tr')
+    expect(rows).toHaveLength(1)
+    expect(rows[0]!.textContent).toContain('Cohort 12')
+    wrapper.unmount()
+  })
 })

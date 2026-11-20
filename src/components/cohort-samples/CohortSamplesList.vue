@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="samples.length === 0"
+    v-if="samples.length === 0 && pendingRows.length === 0"
     class="text-center py-6 text-grey-darken-1"
     data-testid="cohort-samples-list-empty"
   >
@@ -29,6 +29,29 @@
       </tr>
     </thead>
     <tbody>
+      <tr
+        v-for="row in pendingRows"
+        :key="`pending-${row.id}`"
+        class="cohort-samples-list__row--pending"
+        data-testid="cohort-samples-list-pending-row"
+        aria-busy="true"
+      >
+        <td>{{ row.name }}</td>
+        <td class="text-right">
+          {{ formatCount(row.size) }}
+        </td>
+        <td colspan="4">
+          <span class="cohort-samples-list__pending">
+            <AtlasProgressCircular
+              indeterminate
+              size="16"
+              width="2"
+              color="primary"
+            />
+            {{ tv('components.cohortSamples.creating') }}
+          </span>
+        </td>
+      </tr>
       <tr
         v-for="sample in samples"
         :key="sample.id"
@@ -78,17 +101,22 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIconButton } from '@/components/ui'
+import { AtlasIconButton, AtlasProgressCircular } from '@/components/ui'
 import type { CohortSample } from '@/models/cohort-sample.types'
 import { GENDER_FEMALE_CONCEPT_ID, GENDER_MALE_CONCEPT_ID } from '@/models/cohort-sample.types'
+import type { PendingSampleCreation } from '@/stores/cohort-sample-creations'
 import { useI18n } from '@/composables/useI18n'
+import { computed } from 'vue'
 
 const { tv } = useI18n()
 
-defineProps<{
+const props = defineProps<{
   samples: CohortSample[]
   selectedSampleId?: number | null
+  pending?: PendingSampleCreation[]
 }>()
+
+const pendingRows = computed(() => props.pending ?? [])
 
 defineEmits<{
   select: [sample: CohortSample]
@@ -168,6 +196,12 @@ function summarizeCriteria(sample: CohortSample): string {
 }
 .cohort-samples-list__name:hover {
   text-decoration: underline;
+}
+.cohort-samples-list__pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--atlas-color-on-surface-variant);
 }
 .cohort-samples-list__criteria {
   color: var(--atlas-color-on-surface-variant);

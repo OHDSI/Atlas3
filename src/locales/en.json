@@ -568,7 +568,13 @@
       "title": "Event timeline",
       "dayRange": "Day {start} → {end}",
       "axisDay": "Day (0 = cohort entry)",
-      "cohortEntry": "Cohort entry"
+      "cohortEntry": "Cohort entry",
+      "timeRange": "Time range",
+      "allTime": "All time",
+      "days30": "±30 days",
+      "year1": "±1 year",
+      "selectOnChart": "Select on chart",
+      "selectOnChartHint": "Drag across the chart to choose a time range."
     },
     "profileEventsTable": {
       "eyebrow": "EVENTS"
@@ -597,7 +603,10 @@
       "newSample": "New sample",
       "failedToLoadSamples": "Failed to load samples",
       "failedToLoadSampleDetail": "Failed to load sample detail",
-      "failedToCreateSample": "Failed to create sample"
+      "failedToCreateSample": "Failed to create sample",
+      "creating": "Creating sample…",
+      "sampleCreated": "Sample \"{name}\" created",
+      "creationInProgress": "A sample is already being created for this source. Wait for it to finish before starting another."
     },
     "cohortSampleDetail": {
       "source": "Source: {name}",
@@ -1394,6 +1403,7 @@
         "min": "Min",
         "distribution": "Distribution",
         "prevalence": "Prevalence",
+        "filterPlaceholder": "Filter by covariate or concept ID…",
         "avgSd": "Avg (SD)"
       },
       "pagination": {
@@ -1715,7 +1725,7 @@
       "importSourceCodesTitle": "Import by source code",
       "importSourceCodesHint": "Separate source codes with commas, semicolons, or newlines. We resolve each code against the vocabulary before adding.",
       "importJson": "Import JSON",
-      "importJsonMenuSubtitle": "Overwrite this concept set from JSON",
+      "importJsonMenuSubtitle": "Append/Overwrite from JSON",
       "importFromRepository": "Import from repository",
       "importFromRepositoryMenuSubtitle": "Append or overwrite from a repository concept set",
       "importFromRepositoryConfirmTitle": "Import concept set from repository?",
@@ -1727,7 +1737,7 @@
       "missingConceptsTitle": "Some concepts are not in the selected vocabulary",
       "missingConceptsMessage": "The vocabulary of source {sourceKey} does not contain {count} of the concepts in this concept set: {ids}. They stay in the concept set, but their details cannot be shown. Choose a different vocabulary source in Configuration to see them.",
       "importJsonTitle": "Import concept set JSON",
-      "importJsonHint": "Paste a concept set expression JSON ({ \"items\": [ ... ] }). Each item's concept and its flags will be added to the set.",
+      "importJsonHint": "Paste a concept set expression JSON ({ \"items\": [ ... ] }). Each item's concept and its flags are shown after parsing; you can then append them to the set or overwrite the set with them.",
       "importJsonParseBtn": "Parse",
       "optimize": "Optimize",
       "optimizeNeedsTwoItems": "Add at least two concepts to optimize the concept set.",
@@ -2077,7 +2087,8 @@
         "title": "No Jobs Found"
       },
       "lastUpdated": "Last updated",
-      "autoRefreshOn": "Auto-refresh on"
+      "autoRefreshOn": "Auto-refresh on",
+      "myJobs": "My jobs"
     },
     "newSource": "New Source",
     "priorityOptions": {
@@ -2780,6 +2791,8 @@
       "title": "Pathway results",
       "loadFailed": "Failed to load results",
       "distinctEventCohortCounts": "Distinct Event Cohort Counts",
+      "filterColumn": "Filter {column}",
+      "noMatchingRows": "No rows match the filters",
       "loading": "Loading results…"
     },
     "workbench": {

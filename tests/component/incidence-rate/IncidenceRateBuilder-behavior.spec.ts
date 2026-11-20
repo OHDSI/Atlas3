@@ -307,6 +307,22 @@ describe('IncidenceRateBuilder behavior', () => {
       expect(w.findComponent({ name: 'ConceptSetsListDialog' }).props('modelValue')).toBe(true)
     })
 
+    it('renaming an existing set updates it in place instead of adding a copy', async () => {
+      const store = loadIR()
+      store.currentIR!.expression.ConceptSets = [
+        { id: 1, name: 'First', expression: { items: [] } },
+        { id: 2, name: 'Second', expression: { items: [] } },
+      ] as never
+      const w = await mountBuilder()
+
+      setup(w).handleConceptSetApplied({ id: 1, name: 'First renamed', items: [] })
+
+      expect(store.currentIR!.expression.ConceptSets.map(s => [s.id, s.name])).toEqual([
+        [1, 'First renamed'],
+        [2, 'Second'],
+      ])
+    })
+
     it('appends a new set after the existing ones', async () => {
       const store = loadIR()
       store.currentIR!.expression.ConceptSets = [

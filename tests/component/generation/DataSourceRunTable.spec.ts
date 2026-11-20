@@ -5,6 +5,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { createPinia, setActivePinia } from 'pinia'
 import DataSourceRunTable from '@/components/generation/DataSourceRunTable.vue'
+import AtlasTextField from '@/components/ui/AtlasTextField.vue'
 import type {
   RunTableSource,
   RunTableExecution,
@@ -74,6 +75,32 @@ describe('DataSourceRunTable', () => {
 
   it('renders one row per source', () => {
     const w = mountTable()
+    expect(w.find('[data-testid="run-btn-CCAE"]').exists()).toBe(true)
+    expect(w.find('[data-testid="run-btn-MDCD"]').exists()).toBe(true)
+    expect(w.find('[data-testid="run-btn-OPTUM"]').exists()).toBe(true)
+  })
+
+  it('filters sources by name or key', async () => {
+    const w = mountTable()
+    const filter = w.find('[data-testid="ds-run-table-filter"] input')
+
+    await filter.setValue('medicaid')
+    expect(w.find('[data-testid="run-btn-CCAE"]').exists()).toBe(false)
+    expect(w.find('[data-testid="run-btn-MDCD"]').exists()).toBe(true)
+    expect(w.find('[data-testid="run-btn-OPTUM"]').exists()).toBe(false)
+
+    await filter.setValue('optum')
+    expect(w.find('[data-testid="run-btn-OPTUM"]').exists()).toBe(true)
+    expect(w.find('[data-testid="run-btn-MDCD"]').exists()).toBe(false)
+  })
+
+  it('clears the source filter when the field emits null', async () => {
+    const w = mountTable()
+    const filter = w.find('[data-testid="ds-run-table-filter"] input')
+
+    await filter.setValue('medicaid')
+    await w.findComponent(AtlasTextField).vm.$emit('update:modelValue', null)
+
     expect(w.find('[data-testid="run-btn-CCAE"]').exists()).toBe(true)
     expect(w.find('[data-testid="run-btn-MDCD"]').exists()).toBe(true)
     expect(w.find('[data-testid="run-btn-OPTUM"]').exists()).toBe(true)

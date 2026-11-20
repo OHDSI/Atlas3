@@ -1,113 +1,127 @@
 <template>
-  <AtlasDataTable
-    :headers="headers"
-    :items="rows"
-    :loading="loading"
-    :hide-default-footer="true"
-    :items-per-page="-1"
-    :no-data-text="noSourcesText ?? defaultNoSourcesText"
-    data-testid="ds-run-table"
-  >
-    <template #[`item.source`]="{ item }">
-      <div class="dsrt-source">
-        <div class="dsrt-source__name">
-          {{ (item as Row).sourceName }}
+  <div class="dsrt">
+    <AtlasTextField
+      :model-value="sourceFilter"
+      class="dsrt-filter"
+      :placeholder="t('datatable.language.searchPlaceholder').value"
+      prepend-icon="mdi-magnify"
+      clearable
+      variant="outlined"
+      hide-details
+      :aria-label="t('datatable.language.search').value"
+      data-testid="ds-run-table-filter"
+      @update:model-value="onSourceFilterInput"
+    />
+    <AtlasDataTable
+      :headers="headers"
+      :items="filteredRows"
+      :loading="loading"
+      :hide-default-footer="true"
+      :items-per-page="-1"
+      :no-data-text="noSourcesText ?? defaultNoSourcesText"
+      data-testid="ds-run-table"
+    >
+      <template #[`item.source`]="{ item }">
+        <div class="dsrt-source">
+          <div class="dsrt-source__name">
+            {{ (item as Row).sourceName }}
+          </div>
+          <div
+            v-if="(item as Row).showKey"
+            class="dsrt-source__key"
+          >
+            {{ (item as Row).sourceKey }}
+          </div>
         </div>
-        <div
-          v-if="(item as Row).showKey"
-          class="dsrt-source__key"
-        >
-          {{ (item as Row).sourceKey }}
+      </template>
+
+      <template #[`item.status`]="{ item }">
+        <div class="dsrt-status">
+          <AtlasProgressCircular
+            v-if="(item as Row).statusKind === 'running'"
+            indeterminate
+            size="16"
+            width="2"
+            color="warning"
+          />
+          <AtlasChip
+            v-if="(item as Row).statusKind !== 'none'"
+            :tone="(item as Row).statusTone"
+            size="sm"
+          >
+            {{ (item as Row).statusLabel }}
+          </AtlasChip>
+          <span
+            v-else
+            class="dsrt-muted"
+          >{{ noRunText }}</span>
         </div>
-      </div>
-    </template>
+      </template>
 
-    <template #[`item.status`]="{ item }">
-      <div class="dsrt-status">
-        <AtlasProgressCircular
-          v-if="(item as Row).statusKind === 'running'"
-          indeterminate
-          size="16"
-          width="2"
-          color="warning"
-        />
-        <AtlasChip
-          v-if="(item as Row).statusKind !== 'none'"
-          :tone="(item as Row).statusTone"
-          size="sm"
-        >
-          {{ (item as Row).statusLabel }}
-        </AtlasChip>
-        <span
-          v-else
-          class="dsrt-muted"
-        >{{ noRunText }}</span>
-      </div>
-    </template>
+      <template #[`item.patients`]="{ item }">
+        <span :class="(item as Row).personCount === undefined ? 'dsrt-muted' : 'dsrt-pcount'">
+          {{ (item as Row).personCount !== undefined ? (item as Row).personCount!.toLocaleString() : em }}
+        </span>
+      </template>
 
-    <template #[`item.patients`]="{ item }">
-      <span :class="(item as Row).personCount === undefined ? 'dsrt-muted' : 'dsrt-pcount'">
-        {{ (item as Row).personCount !== undefined ? (item as Row).personCount!.toLocaleString() : em }}
-      </span>
-    </template>
+      <template #[`item.records`]="{ item }">
+        <span :class="(item as Row).recordCount === undefined ? 'dsrt-muted' : 'dsrt-pcount'">
+          {{ (item as Row).recordCount !== undefined ? (item as Row).recordCount!.toLocaleString() : em }}
+        </span>
+      </template>
 
-    <template #[`item.records`]="{ item }">
-      <span :class="(item as Row).recordCount === undefined ? 'dsrt-muted' : 'dsrt-pcount'">
-        {{ (item as Row).recordCount !== undefined ? (item as Row).recordCount!.toLocaleString() : em }}
-      </span>
-    </template>
+      <template #[`item.lastRun`]="{ item }">
+        <span :class="(item as Row).lastRun ? '' : 'dsrt-muted'">
+          {{ (item as Row).lastRun || em }}
+        </span>
+      </template>
 
-    <template #[`item.lastRun`]="{ item }">
-      <span :class="(item as Row).lastRun ? '' : 'dsrt-muted'">
-        {{ (item as Row).lastRun || em }}
-      </span>
-    </template>
+      <template #[`item.duration`]="{ item }">
+        <span :class="(item as Row).duration ? '' : 'dsrt-muted'">
+          {{ (item as Row).duration || em }}
+        </span>
+      </template>
 
-    <template #[`item.duration`]="{ item }">
-      <span :class="(item as Row).duration ? '' : 'dsrt-muted'">
-        {{ (item as Row).duration || em }}
-      </span>
-    </template>
-
-    <template #[`item.actions`]="{ item }">
-      <div class="dsrt-actions-cell">
-        <DataSourceRunRow
-          :source-id="(item as Row).sourceId"
-          :source-key="(item as Row).sourceKey"
-          :latest-status="(item as Row).latestStatus"
-          :latest-execution-id="(item as Row).latestExecutionId"
-          :selected-execution-id="selectedExecutionId"
-          :history-count="(item as Row).count"
-          :run-disabled="runDisabled"
-          :run-disabled-reason="runDisabledReason"
-          :hide-cancel="hideCancel"
-          :hide-history-button="hideHistoryButton"
-          :hide-latest-result-button="hideLatestResultButton"
-          @run="$emit('run', (item as Row).sourceKey)"
-          @cancel="$emit('cancel', (item as Row).sourceKey)"
-          @select-result="$emit('select-result', (item as Row).latestExecutionId)"
-          @show-history="$emit('show-history', (item as Row).sourceKey)"
-        />
-        <AtlasButton
-          v-for="action in extraActions"
-          :key="action.key"
-          size="sm"
-          variant="secondary"
-          :icon="action.icon"
-          :disabled="action.disabledWhen ? action.disabledWhen(item as Row) : false"
-          :data-testid="`row-extra-${action.key}-${(item as Row).sourceKey}`"
-          @click="onExtraClick(action.key, (item as Row).sourceKey)"
-        >
-          {{ action.label }}
-        </AtlasButton>
-      </div>
-    </template>
-  </AtlasDataTable>
+      <template #[`item.actions`]="{ item }">
+        <div class="dsrt-actions-cell">
+          <DataSourceRunRow
+            :source-id="(item as Row).sourceId"
+            :source-key="(item as Row).sourceKey"
+            :latest-status="(item as Row).latestStatus"
+            :latest-execution-id="(item as Row).latestExecutionId"
+            :selected-execution-id="selectedExecutionId"
+            :history-count="(item as Row).count"
+            :run-disabled="runDisabled"
+            :run-disabled-reason="runDisabledReason"
+            :hide-cancel="hideCancel"
+            :hide-history-button="hideHistoryButton"
+            :hide-latest-result-button="hideLatestResultButton"
+            @run="$emit('run', (item as Row).sourceKey)"
+            @cancel="$emit('cancel', (item as Row).sourceKey)"
+            @select-result="$emit('select-result', (item as Row).latestExecutionId)"
+            @show-history="$emit('show-history', (item as Row).sourceKey)"
+          />
+          <AtlasButton
+            v-for="action in extraActions"
+            :key="action.key"
+            size="sm"
+            variant="secondary"
+            :icon="action.icon"
+            :disabled="action.disabledWhen ? action.disabledWhen(item as Row) : false"
+            :data-testid="`row-extra-${action.key}-${(item as Row).sourceKey}`"
+            @click="onExtraClick(action.key, (item as Row).sourceKey)"
+          >
+            {{ action.label }}
+          </AtlasButton>
+        </div>
+      </template>
+    </AtlasDataTable>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { AtlasButton, AtlasDataTable, AtlasChip, AtlasProgressCircular } from '@/components/ui'
+import { computed, ref } from 'vue'
+import { AtlasButton, AtlasDataTable, AtlasChip, AtlasProgressCircular, AtlasTextField } from '@/components/ui'
 import type { AtlasChipTone } from '@/components/ui'
 import DataSourceRunRow from './DataSourceRunRow.vue'
 import { useI18n } from '@/composables/useI18n'
@@ -181,6 +195,11 @@ function onExtraClick(actionKey: string, sourceKey: string) {
 
 const { t, tv } = useI18n()
 const em = '—'
+const sourceFilter = ref('')
+
+function onSourceFilterInput(value: string | number | null) {
+  sourceFilter.value = value == null ? '' : String(value)
+}
 
 interface TableHeader {
   key: string
@@ -345,9 +364,23 @@ const rows = computed<Row[]>(() =>
     }
   })
 )
+
+const filteredRows = computed(() => {
+  const filter = sourceFilter.value.trim().toLocaleLowerCase()
+  if (!filter) return rows.value
+  return rows.value.filter(row =>
+    row.sourceName.toLocaleLowerCase().includes(filter)
+    || row.sourceKey.toLocaleLowerCase().includes(filter)
+  )
+})
 </script>
 
 <style scoped>
+.dsrt-filter {
+  max-width: 360px;
+  margin-bottom: 12px;
+}
+
 .dsrt-source__name {
   font-size: 13px;
   font-weight: 500;

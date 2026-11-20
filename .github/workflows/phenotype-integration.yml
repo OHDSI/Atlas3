@@ -8,6 +8,8 @@ on:
 
 env:
   PHENOTYPE_SAMPLE_SIZE: 0   # 0 = all phenotypes
+  # Pinned so results are reproducible and match the commit cited in the ATLAS paper.
+  PHENOTYPE_LIBRARY_COMMIT: 40106e4e2892d883c208b9df10ad56711da3e21d
 
 jobs:
   # ── Job 1: Clone PhenotypeLibrary and generate the fixture once ───────────
@@ -21,7 +23,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Clone PhenotypeLibrary repo
-        run: git clone --depth 1 https://github.com/OHDSI/PhenotypeLibrary.git /tmp/PhenotypeLibrary
+        run: |
+          git init -q /tmp/PhenotypeLibrary
+          git -C /tmp/PhenotypeLibrary fetch -q --depth 1 https://github.com/OHDSI/PhenotypeLibrary.git "$PHENOTYPE_LIBRARY_COMMIT"
+          git -C /tmp/PhenotypeLibrary checkout -q FETCH_HEAD
 
       - name: Generate phenotype fixtures
         run: |

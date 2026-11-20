@@ -144,12 +144,12 @@ describe('StrataEditor', () => {
     const setupState = (wrapper.vm as any).$.setupState
 
     setupState.handleConceptSetApplied({ name: 'New set', items: [] })
-    setupState.handleConceptSetApplied({ id: 0, name: 'Updated set', items: [] })
+    setupState.handleConceptSetApplied({ id: 1, name: 'Updated set', items: [] })
 
     const emitted = wrapper.emitted('update:strataConceptSets')
     expect(emitted).toHaveLength(2)
-    expect((emitted![0]![0] as any[])[0]).toMatchObject({ id: 0 })
-    expect((emitted![1]![0] as any[])[0]).toMatchObject({ id: 0, name: 'Updated set' })
+    expect((emitted![0]![0] as any[])[0]).toMatchObject({ id: 1 })
+    expect((emitted![1]![0] as any[])[0]).toMatchObject({ id: 1, name: 'Updated set' })
   })
 
   it('validates subgroup names and summarizes criteria counts', () => {

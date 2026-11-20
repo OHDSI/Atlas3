@@ -98,17 +98,11 @@ export function convertCirceItemToAtlas(item: CirceConceptSetItem): AtlasConcept
  * Builds the expression-level concept set entry for a set that arrived in Atlas
  * shape.
  *
- * A `CodesetId` can only reference a numeric id, but sets reaching here often
- * carry a client-minted string uid instead (that is what the agent bridge
- * produces). Passing `existing` lets one be allocated from the expression's own
- * sets, so the caller does not depend on something upstream having done it
- * first. Without `existing`, a non-numeric id yields undefined.
- *
- * Repository ids and the expression's local codeset ids are separate number
- * spaces that overlap, so a numeric id is only kept when no *different* set in
- * the expression already holds it — otherwise the criterion built from this id
- * would resolve to that other set. Identity is approximated by id+name, the
- * same way useCirceConceptSetPicker does it.
+ * A numeric id is the set's own codeset id in the expression, so it is kept:
+ * the caller is updating that set. A set without one (new, or carrying a
+ * client-minted string uid from the agent bridge) gets the next id after the
+ * expression's existing sets. Without `existing`, a non-numeric id yields
+ * undefined.
  */
 export function circeConceptSetFromAtlas(
   set: {
@@ -118,7 +112,7 @@ export function circeConceptSetFromAtlas(
   },
   existing?: ReadonlyArray<ConceptSet>,
 ): ConceptSet | undefined {
-  const id = resolveCodesetId(set.id, set.name ?? '', existing)
+  const id = typeof set.id === 'number' ? set.id : existing && nextConceptSetId(existing)
   if (typeof id !== 'number') return undefined
 
   return {
@@ -128,20 +122,6 @@ export function circeConceptSetFromAtlas(
   }
 }
 
-function resolveCodesetId(
-  id: number | string | null | undefined,
-  name: string,
-  existing?: ReadonlyArray<ConceptSet>,
-): number | undefined {
-  if (typeof id !== 'number') return existing && nextConceptSetId(existing)
-  if (!existing) return id
-
-  const collision = existing.find(cs => cs.id === id)
-  if (!collision || collision.name === name) return id
-
-  return nextConceptSetId(existing)
-}
-
 /**
  * STANDARD_CONCEPT_CAPTION / INVALID_REASON_CAPTION are computed getters on
  * circe's Java Concept, so they only appear when WebAPI re-serializes an
@@ -149,7 +129,7 @@ function resolveCodesetId(
  * client's string verbatim). Atlas-side items usually lack them, so derive them
  * here the same way circe does to keep every expression schema-valid.
  */
-function standardConceptCaption(standardConcept: string | null | undefined): string {
+export function standardConceptCaption(standardConcept: string | null | undefined): string {
   switch (standardConcept) {
     case 'N': return 'Non-Standard'
     case 'S': return 'Standard'
@@ -158,7 +138,7 @@ function standardConceptCaption(standardConcept: string | null | undefined): str
   }
 }
 
-function invalidReasonCaption(invalidReason: string | null | undefined): string {
+export function invalidReasonCaption(invalidReason: string | null | undefined): string {
   switch (invalidReason) {
     case 'V': return 'Valid'
     case 'D':
@@ -206,11 +186,11 @@ function isCirceItem(item: AtlasConceptSetItem | CirceConceptSetItem): item is C
     && (item as CirceConceptSetItem).concept !== null
 }
 
-/** Lowest unused numeric id across the expression's concept sets. */
+/** Highest numeric id across the expression's concept sets plus one, or `1` when there are none. */
 export function nextConceptSetId(existing: ReadonlyArray<Pick<ConceptSet, 'id'>>): number {
   const numericIds = existing
     .map(cs => cs.id)
     .filter((id): id is number => typeof id === 'number' && Number.isFinite(id))
 
-  return numericIds.length ? Math.max(...numericIds) + 1 : 0
+  return numericIds.length ? Math.max(...numericIds) + 1 : 1
 }

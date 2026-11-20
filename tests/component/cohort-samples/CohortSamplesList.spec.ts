@@ -103,4 +103,23 @@ describe('CohortSamplesList', () => {
     })
     expect(wrapper.text()).toContain('—')
   })
+
+  it('renders a creating row with a spinner for in-flight samples instead of the empty state', () => {
+    const wrapper = mount(CohortSamplesList, {
+      global: { plugins: [vuetify, createPinia()] },
+      props: {
+        samples: [],
+        pending: [
+          { id: 7, cohortId: 1, sourceKey: 'EUNOMIA', name: 'pending one', size: 2500, startedAt: 0 },
+        ],
+      },
+    })
+    expect(wrapper.find('[data-testid=cohort-samples-list-empty]').exists()).toBe(false)
+    const row = wrapper.find('[data-testid=cohort-samples-list-pending-row]')
+    expect(row.exists()).toBe(true)
+    expect(row.text()).toContain('pending one')
+    expect(row.text()).toContain('Creating sample')
+    expect(row.find('.v-progress-circular').exists()).toBe(true)
+    expect(row.find('[data-testid=cohort-samples-list-delete]').exists()).toBe(false)
+  })
 })

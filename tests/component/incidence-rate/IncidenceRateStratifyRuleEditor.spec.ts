@@ -67,8 +67,14 @@ describe('IncidenceRateStratifyRuleEditor', () => {
 
     setupState.handleConceptSetApplied({ id: 7, name: 'Updated set', items: [] })
     expect(wrapper.emitted('add-concept-set')?.[0]?.[0]).toMatchObject({
-      id: 8,
+      id: 7,
       name: 'Updated set',
+    })
+
+    setupState.handleConceptSetApplied({ name: 'Brand new', items: [] })
+    expect(wrapper.emitted('add-concept-set')?.[1]?.[0]).toMatchObject({
+      id: 8,
+      name: 'Brand new',
     })
 
     setupState.handleCreateNewConceptSet()

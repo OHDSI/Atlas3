@@ -874,8 +874,8 @@ describe('CohortBuilder', () => {
     await flushPromises()
 
     expect(setup.expression.ConceptSets).toHaveLength(1)
-    expect(setup.expression.ConceptSets?.[0]).toMatchObject({ id: 27, name: 'Repository Set' })
-    expect(targetRef.value).toBe(27)
+    expect(setup.expression.ConceptSets?.[0]).toMatchObject({ id: 1, name: 'Repository Set' })
+    expect(targetRef.value).toBe(1)
     expect(conceptSetSelectionDialog(wrapper).props('modelValue')).toBe(false)
   })
 

@@ -57,6 +57,7 @@ vi.mock('@/composables/usePathwayGeneration', () => ({
 vi.mock('@/stores/datasources', () => ({
   useDataSourcesStore: () => ({
     sources: [{ sourceKey: 's1', sourceName: 'Primary source' }],
+    generationSources: [{ sourceKey: 's1', sourceName: 'Primary source' }],
     isLoading: false,
     fetchDataSources: vi.fn(),
   }),

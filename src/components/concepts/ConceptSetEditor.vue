@@ -516,7 +516,7 @@
     v-model="showPasteDialog"
     :eyebrow="t('cs.manager.pasteIds').value"
     :title="t('cs.manager.pasteIdsTitle').value"
-    max-width="640"
+    max-width="1200"
     @close="closePasteDialog"
   >
     <p class="cs-paste__hint">
@@ -563,14 +563,27 @@
       </div>
     </div>
 
+    <ConceptTable
+      v-if="pasteResolved.length"
+      :concepts="pasteResolved"
+      :loading="pasteResolving"
+      :total-items="pasteResolved.length"
+      :items-per-page="25"
+      :visible-column-keys="conceptTablePreferencesStore.visibleColumnKeys"
+      :source-key="sourceKey"
+      :linkable="false"
+      class="mt-4"
+      data-testid="paste-ids-resolved-table"
+    />
+
     <template #actions>
-      <AtlasButton
-        variant="ghost"
+      <ConceptAddOptions
+        v-model="pasteAddFlags"
+        :selected-count="pasteResolved.length"
         :disabled="pasteResolving"
-        @click="closePasteDialog"
-      >
-        {{ t('common.cancel').value }}
-      </AtlasButton>
+        data-testid="paste-ids-add-options"
+        @add="applyPastedConcepts"
+      />
       <AtlasButton
         v-if="!pasteResolved.length && !pasteUnresolved.length"
         :loading="pasteResolving"
@@ -580,11 +593,11 @@
         {{ t('cs.manager.pasteIdsResolveBtn').value }}
       </AtlasButton>
       <AtlasButton
-        v-else
-        :disabled="!pasteResolved.length"
-        @click="applyPastedConcepts"
+        variant="ghost"
+        :disabled="pasteResolving"
+        @click="closePasteDialog"
       >
-        {{ t('cs.manager.pasteIdsAddBtn').value }} {{ pasteResolved.length || '' }}
+        {{ t('common.cancel').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -669,13 +682,14 @@
     </template>
 
     <template #actions>
-      <AtlasButton
-        variant="ghost"
+      <ConceptAddOptions
+        v-if="sourceCodeResolved.length"
+        v-model="sourceCodeAddFlags"
+        :selected-count="sourceCodeSelectedIds.length"
         :disabled="sourceCodeResolving"
-        @click="closeSourceCodeDialog"
-      >
-        {{ t('common.cancel').value }}
-      </AtlasButton>
+        data-testid="source-code-add-options"
+        @add="applySourceCodeConcepts"
+      />
       <AtlasButton
         v-if="!sourceCodeResolved.length && !sourceCodeUnresolved.length"
         :loading="sourceCodeResolving"
@@ -685,11 +699,11 @@
         {{ t('cs.manager.pasteIdsResolveBtn').value }}
       </AtlasButton>
       <AtlasButton
-        v-else
-        :disabled="!sourceCodeSelectedIds.length"
-        @click="applySourceCodeConcepts"
+        variant="ghost"
+        :disabled="sourceCodeResolving"
+        @click="closeSourceCodeDialog"
       >
-        {{ t('cs.manager.pasteIdsAddBtn').value }} {{ sourceCodeSelectedIds.length || '' }}
+        {{ t('common.cancel').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -700,7 +714,7 @@
     v-model="showJsonDialog"
     :eyebrow="t('cs.manager.importJson').value"
     :title="t('cs.manager.importJsonTitle').value"
-    max-width="640"
+    max-width="1200"
     @close="closeJsonDialog"
   >
     <p class="cs-paste__hint">
@@ -731,6 +745,14 @@
           {{ jsonItems.length }}</span>
       </div>
     </div>
+    <ConceptSetTable
+      v-if="jsonParsed && jsonItems.length"
+      :items="jsonItems"
+      :source-key="sourceKey"
+      readonly
+      class="mt-4"
+      data-testid="json-import-items-table"
+    />
     <div
       v-if="jsonError"
       class="cs-paste__summary"
@@ -760,10 +782,19 @@
       </AtlasButton>
       <AtlasButton
         v-else
-        :disabled="!jsonItems.length"
-        @click="applyJsonItems"
+        variant="secondary"
+        data-testid="cs-editor-json-append"
+        @click="applyJsonItems('append')"
       >
-        {{ t('cs.manager.pasteIdsAddBtn').value }} {{ jsonItems.length || '' }}
+        {{ t('cs.manager.importFromRepositoryAppend').value }}
+      </AtlasButton>
+      <AtlasButton
+        v-if="jsonParsed && jsonItems.length"
+        variant="danger"
+        data-testid="cs-editor-json-overwrite"
+        @click="applyJsonItems('overwrite')"
+      >
+        {{ t('cs.manager.importFromRepositoryOverwrite').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -860,6 +891,7 @@ import RecommendTab from './RecommendTab.vue'
 import CompareTab from './CompareTab.vue'
 import ConceptSetOptimizeDialog from './ConceptSetOptimizeDialog.vue'
 import ConceptDetailContent from './detail/ConceptDetailContent.vue'
+import ConceptAddOptions from './ConceptAddOptions.vue'
 import { AtlasAlert, AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSideSheet, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
@@ -1007,6 +1039,11 @@ const pasteInput = ref('')
 const pasteResolving = ref(false)
 const pasteResolved = ref<Concept[]>([])
 const pasteUnresolved = ref<number[]>([])
+const pasteAddFlags = ref<Required<ConceptAddFlags>>({
+  isExcluded: false,
+  includeDescendants: false,
+  includeMapped: false,
+})
 
 // Import by source code dialog state.
 const showSourceCodeDialog = ref(false)
@@ -1015,6 +1052,11 @@ const sourceCodeResolving = ref(false)
 const sourceCodeResolved = ref<Concept[]>([])
 const sourceCodeUnresolved = ref<string[]>([])
 const sourceCodeSelectedIds = ref<number[]>([])
+const sourceCodeAddFlags = ref<Required<ConceptAddFlags>>({
+  isExcluded: false,
+  includeDescendants: false,
+  includeMapped: false,
+})
 const sourceCodeFilterFacets: FacetDefinition[] = [
   { key: 'vocabularyId', label: 'Vocabulary', display: concept => concept.vocabularyId || '' },
   { key: 'domainId', label: 'Domain', display: concept => concept.domainId || '' },
@@ -1541,9 +1583,9 @@ function applyExpressionJson(items: ConceptSetItem[]) {
 
 // Add resolved Concept[] to the set and surface them on the Selected tab.
 // `addConceptToSet` skips concepts already in the set, so re-pasting is safe.
-function applyConceptsToSet(concepts: Concept[]) {
+function applyConceptsToSet(concepts: Concept[], flags?: ConceptAddFlags) {
   for (const concept of concepts) {
-    store.addConceptToSet(concept)
+    store.addConceptToSet(concept, flags)
   }
   hasUnsavedChanges.value = true
   activeTab.value = 'selected'
@@ -1591,7 +1633,7 @@ async function resolvePastedIds() {
 }
 
 function applyPastedConcepts() {
-  applyConceptsToSet(pasteResolved.value)
+  applyConceptsToSet(pasteResolved.value, pasteAddFlags.value)
   closePasteDialog()
 }
 
@@ -1601,6 +1643,11 @@ function closePasteDialog() {
   pasteResolved.value = []
   pasteUnresolved.value = []
   pasteResolving.value = false
+  pasteAddFlags.value = {
+    isExcluded: false,
+    includeDescendants: false,
+    includeMapped: false,
+  }
 }
 
 // ============================================================================
@@ -1613,6 +1660,11 @@ watch(sourceCodeInput, () => {
     sourceCodeResolved.value = []
     sourceCodeUnresolved.value = []
     sourceCodeSelectedIds.value = []
+    sourceCodeAddFlags.value = {
+      isExcluded: false,
+      includeDescendants: false,
+      includeMapped: false,
+    }
     clearSourceCodeFilters()
   }
 })
@@ -1651,7 +1703,10 @@ async function resolvePastedSourceCodes() {
 
 function applySourceCodeConcepts() {
   const selectedIds = new Set(sourceCodeSelectedIds.value)
-  applyConceptsToSet(sourceCodeResolved.value.filter(concept => selectedIds.has(concept.conceptId)))
+  applyConceptsToSet(
+    sourceCodeResolved.value.filter(concept => selectedIds.has(concept.conceptId)),
+    sourceCodeAddFlags.value
+  )
   closeSourceCodeDialog()
 }
 
@@ -1692,22 +1747,30 @@ function parseJsonImport() {
   }
 }
 
-function applyJsonItems() {
-  // Import stays a merge of one row per concept: align an existing row's flags
-  // to the imported values, and only add when the concept is absent. Adding
-  // unconditionally would now append a second row whenever the imported flags
-  // differ from the ones already stored (#226).
-  for (const item of jsonItems.value) {
-    const current = store.currentSet?.items.find(i => i.conceptId === item.conceptId)
-    if (current) {
-      store.setConceptItemFlags(current, item)
-    } else {
-      store.addConceptToSet(item, item)
-    }
+function applyJsonItems(mode: 'append' | 'overwrite') {
+  if (!store.currentSet) return
+
+  const imported = jsonItems.value.map(item => ({ ...item }))
+  if (mode === 'overwrite') {
+    store.applyProposal({ items: imported })
+  } else {
+    const additions = imported.filter(item =>
+      !store.currentSet!.items.some(existing => sameConceptSetItem(existing, item))
+    )
+    store.currentSet.items.push(...additions)
   }
   hasUnsavedChanges.value = true
   activeTab.value = 'selected'
   closeJsonDialog()
+}
+
+function sameConceptSetItem(a: ConceptSetItem, b: ConceptSetItem) {
+  return (
+    a.conceptId === b.conceptId &&
+    !!a.isExcluded === !!b.isExcluded &&
+    !!a.includeDescendants === !!b.includeDescendants &&
+    !!a.includeMapped === !!b.includeMapped
+  )
 }
 
 function onOptimizeOverwrite(items: ConceptSetItem[]) {
@@ -1785,12 +1848,9 @@ function applyRepositoryImport(mode: 'append' | 'overwrite') {
   } else {
     // A concept can legitimately appear in several rows with different flags,
     // so only exact concept-and-flags repeats are skipped.
-    const sameRow = (a: ConceptSetItem, b: ConceptSetItem) =>
-      a.conceptId === b.conceptId &&
-      !!a.isExcluded === !!b.isExcluded &&
-      !!a.includeDescendants === !!b.includeDescendants &&
-      !!a.includeMapped === !!b.includeMapped
-    const additions = imported.filter(item => !store.currentSet!.items.some(existing => sameRow(existing, item)))
+    const additions = imported.filter(item =>
+      !store.currentSet!.items.some(existing => sameConceptSetItem(existing, item))
+    )
     store.currentSet.items.push(...additions)
   }
 

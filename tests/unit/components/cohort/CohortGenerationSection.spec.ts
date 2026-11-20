@@ -47,8 +47,12 @@ function makeRouter() {
   })
 }
 
-const ccae = { sourceId: 1, sourceKey: 'CCAE', sourceName: 'CCAE', sourceDialect: 'postgresql', daimons: [] }
-const mdcr = { sourceId: 2, sourceKey: 'MDCR', sourceName: 'MDCR', sourceDialect: 'postgresql', daimons: [] }
+const generationDaimons = [
+  { daimonType: 'CDM', tableQualifier: 'cdm', priority: 0 },
+  { daimonType: 'Results', tableQualifier: 'results', priority: 0 },
+]
+const ccae = { sourceId: 1, sourceKey: 'CCAE', sourceName: 'CCAE', sourceDialect: 'postgresql', daimons: generationDaimons }
+const mdcr = { sourceId: 2, sourceKey: 'MDCR', sourceName: 'MDCR', sourceDialect: 'postgresql', daimons: generationDaimons }
 
 function mountSection(
   props: Record<string, unknown>,

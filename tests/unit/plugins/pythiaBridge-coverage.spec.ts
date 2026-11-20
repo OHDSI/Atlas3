@@ -277,7 +277,7 @@ describe('pythiaBridge coverage', () => {
 
       const res = await generate({ analysisType: 'pathway', analysisId: 9 })
 
-      expect(res).toBeUndefined()
+      expect(res).toEqual({ applied: false, error: 'No data source selected' })
       expect(fetchSources).toHaveBeenCalledOnce()
       expect(generatePathway).not.toHaveBeenCalled()
       expect(notes()).toEqual([{ severity: 'danger', title: 'Cannot generate: no data source selected' }])
@@ -320,6 +320,56 @@ describe('pythiaBridge coverage', () => {
       ])
     })
 
+    it('starts a cohort generation through the webapi store so the Generation tab shows it', async () => {
+      const store = webapiWith(['SYNPUF5'], 'SYNPUF5')
+      const generateCohort = spy(store, 'generateCohort').mockResolvedValue({ id: 1 } as never)
+
+      await generate({ analysisType: 'cohort', analysisId: 7 })
+
+      expect(generateCohort).toHaveBeenCalledWith(7, 'SYNPUF5')
+      expect(generatePathway).not.toHaveBeenCalled()
+      expect(notes()).toEqual([{ severity: 'success', title: 'Generating cohort against SYNPUF5' }])
+    })
+
+    it('does not start a cohort generation without a data source', async () => {
+      const store = webapiWith([], null)
+      spy(store, 'fetchSources').mockResolvedValue(undefined)
+      const generateCohort = spy(store, 'generateCohort')
+
+      await generate({ analysisType: 'cohort', analysisId: 7 })
+
+      expect(generateCohort).not.toHaveBeenCalled()
+      expect(notes()).toEqual([{ severity: 'danger', title: 'Cannot generate: no data source selected' }])
+    })
+
+    it('reports a cohort generation that could not start', async () => {
+      const store = webapiWith(['SYNPUF5'], 'SYNPUF5')
+      spy(store, 'generateCohort').mockResolvedValue(null)
+
+      const res = await generate({ analysisType: 'cohort', analysisId: 7 })
+
+      expect(res).toEqual({ applied: false, error: 'Failed to start generation' })
+      expect(notes()).toEqual([{ severity: 'danger', title: 'Failed to start generation' }])
+    })
+
+    it('returns the error when a cohort generation throws', async () => {
+      const store = webapiWith(['SYNPUF5'], 'SYNPUF5')
+      spy(store, 'generateCohort').mockRejectedValue(new Error('boom'))
+
+      const res = await generate({ analysisType: 'cohort', analysisId: 7 })
+
+      expect(res).toEqual({ applied: false, error: 'boom' })
+    })
+
+    it('returns the error when a pathway generation throws', async () => {
+      webapiWith(['FIRST'], 'SEL')
+      vi.mocked(generatePathway).mockRejectedValue(new Error('down'))
+
+      const res = await generate({ analysisType: 'pathway', analysisId: 5 })
+
+      expect(res).toEqual({ applied: false, error: 'down' })
+    })
+
     it('starts a pathway generation and tells the workbench to watch it', async () => {
       webapiWith(['FIRST'], 'SEL')
       const notify = spy(usePathwayStore(), 'notifyAgentGeneration')
@@ -334,10 +384,11 @@ describe('pythiaBridge coverage', () => {
     it('reports a generation the service refused', async () => {
       webapiWith(['FIRST'], 'SEL')
       const notify = spy(usePathwayStore(), 'notifyAgentGeneration')
-      vi.mocked(generatePathway).mockResolvedValue({ success: false, error: 'busy' } as never)
+      vi.mocked(generatePathway).mockResolvedValue({ success: false, error: { message: 'busy' } } as never)
 
-      await generate({ analysisType: 'pathway', analysisId: 5 })
+      const res = await generate({ analysisType: 'pathway', analysisId: 5 })
 
+      expect(res).toEqual({ applied: false, error: 'busy' })
       expect(notify).not.toHaveBeenCalled()
       expect(notes()).toEqual([{ severity: 'danger', title: 'Failed to start generation: busy' }])
     })
@@ -613,11 +664,11 @@ describe('pythiaBridge coverage', () => {
       await apply({ kind: 'addInclusionRule', rule })
 
       expect(registered(applySpy)).toEqual([
-        { kind: 'addConceptSet', conceptSet: { id: 0, name: 'A' } },
-        { kind: 'addConceptSet', conceptSet: { id: 1, name: 'B' } },
+        { kind: 'addConceptSet', conceptSet: { id: 1, name: 'A' } },
+        { kind: 'addConceptSet', conceptSet: { id: 2, name: 'B' } },
       ])
-      expect(rule.criteriaGroups[0]!.events[0]!.conceptSet).toEqual({ id: 0, name: 'A' })
-      expect(rule.criteriaGroups[0]!.nestedGroups[0]!.events[0]!.conceptSet).toEqual({ id: 1, name: 'B' })
+      expect(rule.criteriaGroups[0]!.events[0]!.conceptSet).toEqual({ id: 1, name: 'A' })
+      expect(rule.criteriaGroups[0]!.nestedGroups[0]!.events[0]!.conceptSet).toEqual({ id: 2, name: 'B' })
       expect(applySpy).toHaveBeenLastCalledWith(expect.objectContaining({ kind: 'addInclusionRule' }))
     })
 
@@ -632,7 +683,64 @@ describe('pythiaBridge coverage', () => {
       await apply({ kind, ...body({ id: 'uuid', name: 'Set' }) })
 
       expect(registered(applySpy)).toEqual([
-        { kind: 'addConceptSet', conceptSet: { id: 0, name: 'Set' } },
+        { kind: 'addConceptSet', conceptSet: { id: 1, name: 'Set' } },
+      ])
+    })
+
+    it('registers the concept sets of an event\'s nested criteria', async () => {
+      const store = attachEditor()
+      const applySpy = recordApply(store)
+      const event = {
+        id: 'e',
+        criteriaType: 'VisitOccurrence',
+        conceptSet: { id: 'uuid-a', name: 'A' },
+        nestedCriteria: {
+          id: 'n',
+          logicType: 'ALL',
+          events: [{ id: 'e2', criteriaType: 'ConditionOccurrence', conceptSet: { id: 'uuid-b', name: 'B' } }],
+        },
+      }
+
+      await apply({ kind: 'addEntryEvent', event })
+
+      expect(registered(applySpy)).toEqual([
+        { kind: 'addConceptSet', conceptSet: { id: 1, name: 'A' } },
+        { kind: 'addConceptSet', conceptSet: { id: 2, name: 'B' } },
+      ])
+      expect(event.nestedCriteria.events[0]!.conceptSet).toEqual({ id: 2, name: 'B' })
+    })
+
+    it('registers nested criteria inside an inclusion rule', async () => {
+      const store = attachEditor()
+      const applySpy = recordApply(store)
+      const rule = {
+        id: 'r',
+        name: 'R',
+        criteriaGroups: [
+          {
+            id: 'g',
+            logicType: 'ALL',
+            events: [
+              {
+                id: 'e',
+                criteriaType: 'DrugExposure',
+                conceptSet: { id: 'uuid-a', name: 'A' },
+                nestedCriteria: {
+                  id: 'n',
+                  logicType: 'ALL',
+                  events: [{ id: 'e2', criteriaType: 'ConditionOccurrence', conceptSet: { id: 'uuid-b', name: 'B' } }],
+                },
+              },
+            ],
+          },
+        ],
+      }
+
+      await apply({ kind: 'addInclusionRule', rule })
+
+      expect(registered(applySpy)).toEqual([
+        { kind: 'addConceptSet', conceptSet: { id: 1, name: 'A' } },
+        { kind: 'addConceptSet', conceptSet: { id: 2, name: 'B' } },
       ])
     })
 
@@ -643,7 +751,7 @@ describe('pythiaBridge coverage', () => {
       await apply({ kind: 'addConceptSet', conceptSet: { id: 'uuid', name: 'Set' } })
 
       expect(applySpy.mock.calls.map(c => c[0])).toEqual([
-        { kind: 'addConceptSet', conceptSet: { id: 0, name: 'Set' } },
+        { kind: 'addConceptSet', conceptSet: { id: 1, name: 'Set' } },
       ])
     })
 
@@ -739,7 +847,7 @@ describe('pythiaBridge coverage', () => {
       expect(p.rule?.criteriaGroups[0]).toMatchObject({ id: 'use-group-42', logicType: 'ALL' })
       const event = p.rule!.criteriaGroups[0]!.events[0]!
       expect(event.criteriaType).toBe('DrugExposure')
-      expect(event.conceptSet).toEqual({ id: 42, name: 'Statins', conceptCount: 1, items: SET.items })
+      expect(event.conceptSet).toEqual({ name: 'Statins', conceptCount: 1, items: SET.items })
       expect(event).not.toHaveProperty('cardinality')
     })
 

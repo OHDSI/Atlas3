@@ -125,6 +125,29 @@ describe('WebAPI store source access', () => {
       expect(store.resultsSources).toEqual([])
     })
 
+    it('lists only readable sources with both CDM and Results as generation sources', () => {
+      setUser({ source: { '2': ['READ'], '3': ['READ'], '4': ['READ'] } })
+      const store = useWebAPIStore()
+      const withDaimons = (id: number, ...types: string[]) => ({
+        ...source(id, `S${id}`, 0),
+        daimons: types.map((t, i) => ({
+          sourceDaimonId: id * 10 + i,
+          daimonType: t,
+          tableQualifier: 'x',
+          priority: 0,
+        })),
+      })
+
+      store.setSources([
+        HIGH,
+        withDaimons(2, 'Vocabulary'),
+        withDaimons(3, 'Results'),
+        withDaimons(4, 'CDM', 'Results'),
+      ] as never)
+
+      expect(store.generationSources.map(s => s.sourceKey)).toEqual(['S4'])
+    })
+
     it('replaces a stored vocabulary the user cannot read', () => {
       setUser({ source: { '2': ['READ'] } })
       localStorage.setItem('selectedVocabulary', 'HIGH')

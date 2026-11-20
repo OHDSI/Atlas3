@@ -37,15 +37,14 @@ export function hasNumericConceptSetId(
 
 /**
  * Pick the next free numeric concept-set id given the sets already used by the
- * cohort. Returns `0` when there are no existing sets, otherwise `max(existing) + 1`.
- * This ensures the first concept set in any cohort starts at `0` (valid in both
- * legacy OHDSI/CIRCE and new cohorts), and subsequent sets increment from there.
+ * cohort. Returns `1` when there are no existing sets, otherwise `max(existing) + 1`.
+ * Legacy cohorts may still contain a set with id `0`; the next id follows it.
  */
 export function nextConceptSetId(existing: ReadonlyArray<Pick<ConceptSetReference, 'id'>>): number {
   const numericIds = existing
     .map(cs => cs.id)
     .filter((id): id is number => typeof id === 'number' && Number.isFinite(id))
-  return numericIds.length ? Math.max(...numericIds) + 1 : 0
+  return numericIds.length ? Math.max(...numericIds) + 1 : 1
 }
 
 /**

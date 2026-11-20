@@ -42,18 +42,25 @@ import {
   getDeathReport,
 } from '@/services/datasource.service'
 
+const fullDaimons = [
+  { daimonType: 'CDM', tableQualifier: 'cdm', priority: 0 },
+  { daimonType: 'Results', tableQualifier: 'results', priority: 0 },
+]
+
 const mockDataSources: DataSource[] = [
   {
     sourceId: 1,
     sourceName: 'Test Source 1',
     sourceDialect: 'postgresql',
     sourceKey: 'TEST_CDM_1',
+    daimons: fullDaimons,
   } as DataSource,
   {
     sourceId: 2,
     sourceName: 'Test Source 2',
     sourceDialect: 'postgresql',
     sourceKey: 'TEST_CDM_2',
+    daimons: fullDaimons,
   } as DataSource,
 ]
 
@@ -277,6 +284,29 @@ describe('DataSources Store', () => {
       await store.fetchDataSources()
 
       expect(store.selectedSourceId).toBe(1)
+    })
+
+    it('derives results and generation sources from daimons', async () => {
+      const store = useDataSourcesStore()
+      const make = (sourceId: number, ...types: string[]) =>
+        ({
+          sourceId,
+          sourceKey: `S${sourceId}`,
+          sourceName: `S${sourceId}`,
+          daimons: types.map(daimonType => ({ daimonType, tableQualifier: 'x', priority: 0 })),
+        }) as DataSource
+      vi.mocked(listDataSources).mockResolvedValue([
+        make(1, 'Vocabulary'),
+        make(2, 'CDM'),
+        make(3, 'Results'),
+        make(4, 'CDM', 'Vocabulary', 'Results'),
+      ])
+
+      await store.fetchDataSources()
+
+      expect(store.resultsSources.map(s => s.sourceId)).toEqual([3, 4])
+      expect(store.generationSources.map(s => s.sourceId)).toEqual([4])
+      expect(store.selectedSourceId).toBe(3)
     })
 
     it('should not change selection if already selected', async () => {

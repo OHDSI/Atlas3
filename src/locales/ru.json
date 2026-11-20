@@ -559,7 +559,13 @@
       "title": "Временная шкала событий",
       "dayRange": "Дни: {start} → {end}",
       "axisDay": "День (0 = включение в когорту)",
-      "cohortEntry": "Включение в когорту"
+      "cohortEntry": "Включение в когорту",
+      "timeRange": "Период",
+      "allTime": "Всё время",
+      "days30": "±30 дней",
+      "year1": "±1 год",
+      "selectOnChart": "Выбрать на графике",
+      "selectOnChartHint": "Проведите по графику, чтобы выбрать период."
     },
     "profileEventsTable": {
       "eyebrow": "События"
@@ -588,7 +594,10 @@
       "newSample": "Новая выборка",
       "failedToLoadSamples": "Не удалось загрузить выборки",
       "failedToLoadSampleDetail": "Не удалось загрузить сведения о выборке",
-      "failedToCreateSample": "Не удалось создать выборку"
+      "failedToCreateSample": "Не удалось создать выборку",
+      "creating": "Создание выборки…",
+      "sampleCreated": "Выборка «{name}» создана",
+      "creationInProgress": "Для этого источника уже создаётся выборка. Дождитесь завершения, прежде чем начинать новую."
     },
     "cohortSampleDetail": {
       "source": "Источник: {name}",
@@ -2040,7 +2049,8 @@
         "title": "Задания не найдены"
       },
       "lastUpdated": "Последнее обновление",
-      "autoRefreshOn": "Автообновление включено"
+      "autoRefreshOn": "Автообновление включено",
+      "myJobs": "Мои задания"
     },
     "newSource": "Новый источник",
     "priorityOptions": {

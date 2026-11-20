@@ -368,7 +368,13 @@
       "title": "イベントのタイムライン",
       "dayRange": "{start}日目 → {end}日目",
       "axisDay": "日（0 = コホート登録）",
-      "cohortEntry": "コホート登録"
+      "cohortEntry": "コホート登録",
+      "timeRange": "期間",
+      "allTime": "全期間",
+      "days30": "±30日",
+      "year1": "±1年",
+      "selectOnChart": "グラフで選択",
+      "selectOnChartHint": "グラフ上をドラッグして期間を選択してください。"
     },
     "profileEventsTable": {
       "eyebrow": "イベント"
@@ -397,7 +403,10 @@
       "newSample": "新規サンプル",
       "failedToLoadSamples": "サンプルの読み込みに失敗しました",
       "failedToLoadSampleDetail": "サンプル詳細の読み込みに失敗しました",
-      "failedToCreateSample": "サンプルの作成に失敗しました"
+      "failedToCreateSample": "サンプルの作成に失敗しました",
+      "creating": "サンプルを作成中…",
+      "sampleCreated": "サンプル「{name}」を作成しました",
+      "creationInProgress": "このソースのサンプルを作成中です。完了してから次を開始してください。"
     },
     "cohortSampleDetail": {
       "personsCreated": "{count}人 · 作成日 {date}",
@@ -1463,7 +1472,8 @@
         "title": "ジョブが見つかりません"
       },
       "lastUpdated": "最終更新",
-      "autoRefreshOn": "自動更新オン"
+      "autoRefreshOn": "自動更新オン",
+      "myJobs": "自分のジョブ"
     },
     "newSource": "新規ソース",
     "priorityOptions": {

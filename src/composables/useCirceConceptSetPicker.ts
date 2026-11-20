@@ -127,25 +127,10 @@ export function useCirceConceptSetPicker(opts: {
       )
     }
 
-    const existing = opts.getConceptSets().find(cs => cs.id === numericId)
-
-    // Repository ids and the expression's local codeset ids are separate number
-    // spaces that happen to overlap: circe numbers ConceptSets from 0, and a
-    // WebAPI concept set id can land in the same range. Reusing the repository
-    // id when a different set already holds it would point the criterion at
-    // that other set, so a colliding import gets the next free id instead.
-    //
-    // Name is compared too, as the only available proxy for "is this the set
-    // already in the expression, re-picked" versus "a different set that
-    // happens to collide". It cannot tell apart two distinct repository sets
-    // that share both an id collision and a display name; that case is
-    // treated as a re-pick and silently reuses the existing entry.
-    if (existing && existing.name === conceptSet.name) {
-      resolveSelection(numericId)
-      return
-    }
-
-    const codesetId = existing ? nextConceptSetId(opts.getConceptSets()) : numericId
+    // An imported set is a copy owned by the expression, so it always gets the
+    // next local codeset id. The repository id is never reused: the two id
+    // spaces are unrelated and would otherwise collide with existing sets.
+    const codesetId = nextConceptSetId(opts.getConceptSets())
 
     opts.addConceptSet({
       id: codesetId,

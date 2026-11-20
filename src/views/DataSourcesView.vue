@@ -25,7 +25,7 @@
           <DataSourceSelector
             :model-value="store.selectedSourceId"
             data-testid="datasource-selector"
-            :data-sources="store.sources"
+            :data-sources="store.resultsSources"
             :loading="store.loading.sources"
             class="datasources-view__source-picker"
             @update:model-value="handleSourceChange"
@@ -145,7 +145,7 @@
 
         <!-- Empty State: no sources -->
         <div
-          v-else-if="!store.loading.sources && store.sources.length === 0 && !store.error.sources"
+          v-else-if="!store.loading.sources && store.resultsSources.length === 0 && !store.error.sources"
           class="datasources-view__empty"
         >
           <AtlasIcon
@@ -160,7 +160,7 @@
 
         <!-- Idle hint when sources are loaded but nothing selected -->
         <div
-          v-else-if="!store.loading.sources && store.sources.length > 0 && !store.selectedSource"
+          v-else-if="!store.loading.sources && store.resultsSources.length > 0 && !store.selectedSource"
           class="datasources-view__empty"
         >
           <AtlasIcon
@@ -315,7 +315,7 @@ function handleSourceChange(sourceId: number | null) {
 
   // Don't call store.selectDataSource here since it will be called by initializeFromRoute
   // Just update the URL and let the watcher handle it
-  const source = store.sources.find(s => s.sourceId === sourceId)
+  const source = store.resultsSources.find(s => s.sourceId === sourceId)
   if (source && store.selectedReportType) {
     router.push({
       name: 'datasources',
@@ -355,7 +355,7 @@ async function initializeFromRoute() {
       // re-call this function once they arrive.
       return
     }
-    const source = store.sources.find(s => s.sourceKey === props.sourceKey)
+    const source = store.resultsSources.find(s => s.sourceKey === props.sourceKey)
     if (source && source.sourceId !== store.selectedSourceId) {
       await store.selectDataSource(source.sourceId)
     }

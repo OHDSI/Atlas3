@@ -5,6 +5,45 @@ const DOMAIN_ENUM = ['Condition', 'Drug', 'Procedure', 'Measurement',
   'Observation', 'Visit', 'Device', 'Specimen']
 const OPERATOR_ENUM = ['gt', 'gte', 'lt', 'lte', 'eq', 'between']
 
+const relatedEventsProperties: Record<string, JsonSchema> = {
+  relatedEvents: {
+    type: 'array',
+    description: "Events evaluated relative to THIS event rather than to the cohort entry (the editor's nested criteria), e.g. an inpatient visit WITH a sepsis diagnosis during it, or a drug exposure WITHOUT a prior diagnosis. Use occurrence exactly 0 for 'without'.",
+    items: {
+      type: 'object',
+      properties: {
+        conceptId: { type: 'number', description: 'OMOP concept ID' },
+        conceptName: { type: 'string', description: 'Human-readable concept name' },
+        domain: { type: 'string', enum: DOMAIN_ENUM, description: 'OMOP domain' },
+        includeDescendants: { type: 'boolean' },
+        temporalWindow: {
+          type: 'object',
+          description: 'Window relative to the START of the parent event, not the cohort entry. Omitted: all time before through the parent event date.',
+          properties: {
+            startDays: { type: ['number', 'null'], description: 'Days vs parent event start: negative = before, null = all time prior.' },
+            endDays: { type: ['number', 'null'], description: 'Days vs parent event start: positive = after, null = all time after. Default 0.' },
+          },
+        },
+        occurrence: {
+          type: 'object',
+          description: "How often the related event must occur in the window. Omitted: at least 1. Use exactly 0 for 'without'.",
+          properties: {
+            type: { type: 'string', enum: ['at_least', 'at_most', 'exactly'] },
+            count: { type: 'number' },
+          },
+          required: ['type', 'count'],
+        },
+      },
+      required: ['conceptId', 'conceptName', 'domain'],
+    },
+  },
+  relatedLogic: {
+    type: 'string',
+    enum: ['ALL', 'ANY'],
+    description: 'Whether all related events must hold (default) or any one of them.',
+  },
+}
+
 const criterionSchema: JsonSchema = {
   type: 'object',
   properties: {
@@ -19,6 +58,7 @@ const criterionSchema: JsonSchema = {
     },
     value: { type: 'number', description: 'Threshold value (only for Measurement domain)' },
     value2: { type: 'number', description: 'Upper bound for between operator' },
+    ...relatedEventsProperties,
   },
   required: ['conceptId', 'conceptName', 'domain', 'group', 'includeDescendants'],
 }
@@ -80,7 +120,13 @@ export const CAPABILITIES: Capability[] = [
   {
     name: 'add_qualifying_criterion',
     description: "Restrict the ENTRY EVENT itself rather than the person — the editor's \"Restrict initial events\". Use when the qualifying event must coincide with something, e.g. an inpatient visit, a diagnosis recorded on the same admission. Distinct from add_criterion, which qualifies the person over a window.",
-    schema: conceptRefSchema,
+    schema: {
+      ...conceptRefSchema,
+      properties: {
+        ...(conceptRefSchema.properties as Record<string, JsonSchema>),
+        ...relatedEventsProperties,
+      },
+    },
     requiresApproval: true,
   },
   {
@@ -188,6 +234,7 @@ export const CAPABILITIES: Capability[] = [
           type: 'boolean',
           description: "Only the first time this event appears in the person's whole history (the editor's 'for the first time in the person's history'). Set it for new-user and first-diagnosis designs: without it, a person who started the drug years ago can enter at a later exposure once they have enough prior observation.",
         },
+        ...relatedEventsProperties,
       },
     },
     requiresApproval: true,
@@ -261,7 +308,6 @@ export const CAPABILITIES: Capability[] = [
         id: { type: 'number' },
         sourceKey: { type: 'string' },
         conceptId: { type: 'number' },
-        personId: { type: 'number' },
         executionId: { type: 'number' },
         reason: { type: 'string', description: 'One short sentence; surfaced in the undo toast.' },
       },
@@ -355,16 +401,16 @@ export const CAPABILITIES: Capability[] = [
 
   {
     name: 'generate_analysis',
-    description: 'Run a SAVED analysis against a data source, the same as clicking Generate in the editor. Use after the analysis exists (create_pathway / create_characterization / create_incidence_rate returned an id). Results appear in the editor when the job finishes. Omit sourceKey to use the source the user is currently working against.',
+    description: 'Run a SAVED analysis or a SAVED cohort (save_cohort returned an id) against a data source, the same as clicking Generate in the editor. Use after it exists (create_pathway / create_characterization / create_incidence_rate returned an id). Results appear in the editor when the job finishes. Omit sourceKey to use the source the user is currently working against.',
     schema: {
       type: 'object',
       properties: {
         analysisType: {
           type: 'string',
-          enum: ['pathway', 'characterization', 'incidenceRate'],
+          enum: ['cohort', 'pathway', 'characterization', 'incidenceRate'],
           description: 'Which kind of analysis to run. REQUIRED.',
         },
-        analysisId: { type: 'number', description: 'Saved analysis id. REQUIRED.' },
+        analysisId: { type: 'number', description: 'Saved analysis or cohort id. REQUIRED.' },
         sourceKey: { type: 'string', description: 'CDM source key, e.g. EUNOMIA. Defaults to the current source.' },
       },
       required: ['analysisType', 'analysisId'],

@@ -217,7 +217,7 @@ const activeRunSummary = computed(() => resolveActiveRunSummary(props.selectedEx
 const coverageProps = computed(() => buildCoverageProps(results.value?.pathwayGroups[0] ?? null))
 
 const runTableSources = computed<RunTableSource[]>(() =>
-  dsStore.sources.map(s => ({ sourceId: s.sourceId, sourceKey: s.sourceKey, sourceName: s.sourceName }))
+  dsStore.generationSources.map(s => ({ sourceId: s.sourceId, sourceKey: s.sourceKey, sourceName: s.sourceName }))
 )
 
 const runTableExecutions = computed<RunTableExecution[]>(() => buildRunTableExecutions({

@@ -276,7 +276,13 @@
       "title": "이벤트 타임라인",
       "dayRange": "{start}일 → {end}일",
       "axisDay": "일 (0 = 코호트 진입)",
-      "cohortEntry": "코호트 진입"
+      "cohortEntry": "코호트 진입",
+      "timeRange": "기간",
+      "allTime": "전체 기간",
+      "days30": "±30일",
+      "year1": "±1년",
+      "selectOnChart": "차트에서 선택",
+      "selectOnChartHint": "차트를 가로로 드래그하여 기간을 선택하세요."
     },
     "profileEventsTable": {
       "eyebrow": "이벤트"
@@ -305,7 +311,10 @@
       "newSample": "새 샘플",
       "failedToLoadSamples": "샘플을 불러오지 못했습니다",
       "failedToLoadSampleDetail": "샘플 상세 정보를 불러오지 못했습니다",
-      "failedToCreateSample": "샘플을 만들지 못했습니다"
+      "failedToCreateSample": "샘플을 만들지 못했습니다",
+      "creating": "샘플 생성 중…",
+      "sampleCreated": "샘플 \"{name}\"을(를) 만들었습니다",
+      "creationInProgress": "이 소스의 샘플을 이미 만들고 있습니다. 완료된 후 다시 시작하세요."
     },
     "cohortSampleDetail": {
       "personsCreated": "{count}명 · 생성일 {date}",
