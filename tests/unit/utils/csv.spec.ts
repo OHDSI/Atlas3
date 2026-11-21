@@ -4,7 +4,7 @@
  * browser-download trigger (incl. the no-DOM short-circuit).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { arrayToCsv, downloadCsv } from '@/utils/csv'
+import { arrayToCsv, downloadCsv, neutralizeCsvFormula } from '@/utils/csv'
 
 describe('arrayToCsv', () => {
   it('renders header + body with the given column order', () => {
@@ -97,5 +97,29 @@ describe('downloadCsv', () => {
       throw new Error('blob unavailable')
     })
     expect(() => downloadCsv('x.csv', 'a')).not.toThrow()
+  })
+})
+
+describe('CSV formula injection (CWE-1236)', () => {
+  it.each(['=HYPERLINK("http://x","y")', '+cmd|/C calc', '-2+3', '@SUM(A1)', '\tx', '\rx'])(
+    'prefixes formula-like text %j with a quote',
+    value => {
+      expect(neutralizeCsvFormula(value)).toBe(`'${value}`)
+    }
+  )
+
+  it.each(['-1.5', '+3e2', '-.5', '42', '-', 'abc', '1-2', ''])(
+    'leaves numbers and plain text %j untouched',
+    value => {
+      expect(neutralizeCsvFormula(value)).toBe(value)
+    }
+  )
+
+  it('neutralizes user-authored cells in arrayToCsv output', () => {
+    const csv = arrayToCsv([{ name: '=1+1', n: -3 }], [
+      { key: 'name', label: 'Name' },
+      { key: 'n', label: 'N' },
+    ])
+    expect(csv).toBe("Name,N\r\n'=1+1,-3")
   })
 })

@@ -1,6 +1,16 @@
 {$CADDY_HOSTNAME:localhost} {
 	{$CADDY_TLS_DIRECTIVE:tls internal}
 
+	# Baseline hardening headers. frame-ancestors / X-Frame-Options block
+	# cross-origin framing (clickjacking) of the authenticated UI.
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "SAMEORIGIN"
+		Content-Security-Policy "frame-ancestors 'self'"
+		-Server
+	}
+
 	redir / /atlas/ permanent
 	redir /atlas /atlas/ permanent
 
