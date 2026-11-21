@@ -109,6 +109,12 @@
             {{ addGroupLabel }}
           </AtlasButton>
 
+          <ReusableInsertButton
+            type="CRITERIA_GROUP"
+            testid="criteria-group-insert-reusable"
+            @insert="onInsertReusable"
+          />
+
           <AtlasSpacer />
 
           <AtlasButton
@@ -205,6 +211,8 @@ import { createObjectKeyGenerator } from './criteria-editor-helper'
 import { createDefaultWindow } from './window-utils'
 import CorelatedCriteria from './CorelatedCriteria.vue'
 import DemographicCriteria from './DemographicCriteria.vue'
+import ReusableInsertButton from '@/components/reusables/ReusableInsertButton.vue'
+import { insertCriteriaGroup, type ReusableInstance } from '@/components/reusables/reusable-design'
 
 // Demographics are not a circe criteria type — they live in the group's own
 // DemographicCriteriaList — so the menu offers them alongside the registry's
@@ -370,6 +378,10 @@ function addNestedGroup() {
     CriteriaList: [],
     Groups: [],
   })
+}
+
+function onInsertReusable(instance: ReusableInstance) {
+  if (instance.criteriaGroup) insertCriteriaGroup(props.group, instance.criteriaGroup)
 }
 
 function removeCriteria(index: number) {

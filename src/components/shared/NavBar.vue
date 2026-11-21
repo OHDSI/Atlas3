@@ -393,6 +393,13 @@ const coreNavigationItems: NavigationItem[] = [
     active: true,
   },
   {
+    id: 'reusables',
+    titleKey: 'navigation.reusables',
+    route: '/reusables',
+    visible: true,
+    active: false,
+  },
+  {
     id: 'analysis',
     titleKey: 'navigation.analysis',
     route: '/analysis',
