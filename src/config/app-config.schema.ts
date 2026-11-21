@@ -11,6 +11,21 @@ const authProviderSchema = z.object({
   passwordPlaceholder: z.string().optional(),
 })
 
+const analyticsSchema = z
+  .object({
+    provider: z.enum(['none', 'otlp']),
+    endpoint: z.string(),
+    sampleRatio: z.number().min(0).max(1),
+    traceApiCalls: z.boolean(),
+    traceDocumentLoad: z.boolean(),
+    identifyUsers: z.boolean(),
+    // Typed strictly on purpose: a non-boolean here fails the whole config,
+    // which makes the loader fall back to the scrubbed-by-default value rather
+    // than quietly accepting a truthy string.
+    scrubUrlQueryStrings: z.boolean(),
+  })
+  .partial()
+
 export const appConfigOverridesSchema = z
   .object({
     api: z.object({ url: z.string() }).partial(),
@@ -26,6 +41,7 @@ export const appConfigOverridesSchema = z
     enableTaggingSection: z.boolean(),
     defaultLocale: z.string(),
     pollInterval: z.number(),
+    analytics: analyticsSchema,
   })
   .partial()
 

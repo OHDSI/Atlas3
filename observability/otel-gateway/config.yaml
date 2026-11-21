@@ -1,0 +1,194 @@
+# Telemetry gateway between Atlas and whatever OTLP backend the deployment
+# uses (Grafana LGTM, SigNoz, Jaeger, a vendor...). Two producers, kept on
+# separate receivers because they are trusted differently:
+#
+#   otlp/backend  WebAPI's Java agent. gRPC 4317 / HTTP 4318, reachable only
+#                 on the compose network.
+#   otlp/browser  Atlas's browser SDK, proxied by Caddy. HTTP 4319, and Caddy
+#                 forwards only /v1/traces and /v1/logs to it. Anyone who can
+#                 reach Atlas can post here, so this path has no metrics
+#                 pipeline, a body-size cap, and a forced service.name.
+#
+# Jobs that belong here rather than in WebAPI or the browser:
+#   1. severity filtering for WebAPI logs (the Java agent has no threshold)
+#   2. a scrub pass behind the agent's SQL sanitizer and the browser's own
+#      URL scrub, so an upgrade on either side cannot widen what is stored
+#   3. redacting values that database errors echo into exception messages
+
+receivers:
+  otlp/backend:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+  otlp/browser:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4319
+        # Second line of defence behind Caddy's request_body limit. The browser
+        # SDK exports at most 128 records per request, well under this.
+        max_request_body_size: 1048576
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 75
+    spike_limit_percentage: 20
+
+  # WARN and above only, for WebAPI logs. UNSPECIFIED (0) is kept rather than
+  # dropped: an unlabelled record is more likely a mapping gap than noise.
+  filter/warn_and_above:
+    error_mode: ignore
+    logs:
+      log_record:
+        - severity_number != SEVERITY_NUMBER_UNSPECIFIED and severity_number < SEVERITY_NUMBER_WARN
+
+  # The compose healthcheck hits /WebAPI/info every 10s. Left in, it is the
+  # large majority of spans on an idle dev stack and buries real traffic.
+  filter/drop_health_probes:
+    error_mode: ignore
+    traces:
+      span:
+        - attributes["url.path"] == "/WebAPI/info"
+        - attributes["http.target"] == "/WebAPI/info"
+
+  # Whatever the browser claims, its data is atlas3-frontend. Without this a
+  # sender could post spans or logs as atlas3-webapi and pollute the backend's
+  # service view.
+  transform/browser_identity:
+    error_mode: ignore
+    trace_statements:
+      - context: resource
+        statements:
+          - set(attributes["service.name"], "atlas3-frontend")
+          - set(attributes["service.namespace"], "atlas3")
+    log_statements:
+      - context: resource
+        statements:
+          - set(attributes["service.name"], "atlas3-frontend")
+          - set(attributes["service.namespace"], "atlas3")
+
+  # PHI scrub. Atlas puts concept searches and filter values in query strings,
+  # so query strings never leave this hop, on spans or logs.
+  transform/scrub:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          - delete_key(attributes, "url.query")
+          # http.target is path+query with nothing worth keeping once the
+          # query is gone; browser spans are the ones that set it.
+          - delete_key(attributes, "http.target")
+          - replace_pattern(attributes["url.full"], "\\?.*$", "")
+          - replace_pattern(attributes["http.url"], "\\?.*$", "")
+          # Belt-and-braces: these only exist if someone enables the agent's
+          # capture-query-parameters option, which the overlay pins to false.
+          - delete_matching_keys(attributes, "^db\\.query\\.parameter\\.")
+          - delete_key(attributes, "http.request.header.authorization")
+          - delete_key(attributes, "http.request.header.cookie")
+    log_statements:
+      - context: log
+        statements:
+          - delete_key(attributes, "url.query")
+
+  # Database errors echo row values, and those reach exception messages
+  # without passing the agent's statement sanitizer, e.g. Postgres
+  #   Key (person_id)=(123) already exists
+  #   Failing row contains (123, 2020-01-01, ...)
+  #   invalid input syntax for type integer: "abc"
+  # and any SQL quoted in the message carries its literals. Values are replaced,
+  # the column names and error shape are kept, which is what debugging needs.
+  # Applied to the message, the stack trace (whose first line repeats the
+  # message), span status and log bodies. `$$` is the collector's escape for a
+  # literal `$`, so `$$1` reaches OTTL as the capture group `$1`.
+  transform/redact_exceptions:
+    error_mode: ignore
+    trace_statements:
+      - context: spanevent
+        statements:
+          - replace_pattern(attributes["exception.message"], "\\(([^()]*)\\)=\\([^()]*\\)", "($$1)=(?)")
+          - replace_pattern(attributes["exception.message"], "Failing row contains \\(.*\\)", "Failing row contains (?)")
+          - replace_pattern(attributes["exception.message"], "'(?:[^']|'')*'", "'?'")
+          - 'replace_pattern(attributes["exception.message"], ":\\s*\"[^\"]*\"", ": \"?\"")'
+          - replace_pattern(attributes["exception.stacktrace"], "\\(([^()]*)\\)=\\([^()]*\\)", "($$1)=(?)")
+          - replace_pattern(attributes["exception.stacktrace"], "Failing row contains \\(.*\\)", "Failing row contains (?)")
+          - replace_pattern(attributes["exception.stacktrace"], "'(?:[^']|'')*'", "'?'")
+          - 'replace_pattern(attributes["exception.stacktrace"], ":\\s*\"[^\"]*\"", ": \"?\"")'
+      - context: span
+        statements:
+          - replace_pattern(status.message, "\\(([^()]*)\\)=\\([^()]*\\)", "($$1)=(?)")
+          - replace_pattern(status.message, "Failing row contains \\(.*\\)", "Failing row contains (?)")
+          - replace_pattern(status.message, "'(?:[^']|'')*'", "'?'")
+          - 'replace_pattern(status.message, ":\\s*\"[^\"]*\"", ": \"?\"")'
+    log_statements:
+      - context: log
+        statements:
+          - replace_pattern(attributes["exception.message"], "\\(([^()]*)\\)=\\([^()]*\\)", "($$1)=(?)")
+          - replace_pattern(attributes["exception.message"], "Failing row contains \\(.*\\)", "Failing row contains (?)")
+          - replace_pattern(attributes["exception.message"], "'(?:[^']|'')*'", "'?'")
+          - 'replace_pattern(attributes["exception.message"], ":\\s*\"[^\"]*\"", ": \"?\"")'
+          - replace_pattern(attributes["exception.stacktrace"], "\\(([^()]*)\\)=\\([^()]*\\)", "($$1)=(?)")
+          - replace_pattern(attributes["exception.stacktrace"], "Failing row contains \\(.*\\)", "Failing row contains (?)")
+          - replace_pattern(attributes["exception.stacktrace"], "'(?:[^']|'')*'", "'?'")
+          - 'replace_pattern(attributes["exception.stacktrace"], ":\\s*\"[^\"]*\"", ": \"?\"")'
+          - replace_pattern(body, "\\(([^()]*)\\)=\\([^()]*\\)", "($$1)=(?)") where IsString(body)
+          - replace_pattern(body, "Failing row contains \\(.*\\)", "Failing row contains (?)") where IsString(body)
+          - replace_pattern(body, "'(?:[^']|'')*'", "'?'") where IsString(body)
+          - 'replace_pattern(body, ":\\s*\"[^\"]*\"", ": \"?\"") where IsString(body)'
+
+  batch:
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+    timeout: 5s
+
+exporters:
+  # Any OTLP/gRPC backend. The endpoint is the only required setting; see
+  # observability/README.md for LGTM, SigNoz and others. For a backend that
+  # takes OTLP/HTTP only, swap this for an `otlp_http` exporter.
+  otlp_grpc/backend:
+    endpoint: ${env:OTEL_GATEWAY_EXPORT_ENDPOINT}
+    tls:
+      # Plaintext suits a backend on the same docker network. Set to false and
+      # configure certificates for anything reached over a wider network.
+      insecure: ${env:OTEL_GATEWAY_EXPORT_INSECURE:-true}
+    retry_on_failure:
+      enabled: true
+    sending_queue:
+      enabled: true
+      # Buffers a backend restart instead of dropping telemetry.
+      queue_size: 2000
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions: [health_check]
+  telemetry:
+    logs:
+      level: info
+  pipelines:
+    traces/backend:
+      receivers: [otlp/backend]
+      processors: [memory_limiter, filter/drop_health_probes, transform/scrub, transform/redact_exceptions, batch]
+      exporters: [otlp_grpc/backend]
+    metrics/backend:
+      receivers: [otlp/backend]
+      processors: [memory_limiter, batch]
+      exporters: [otlp_grpc/backend]
+    logs/backend:
+      receivers: [otlp/backend]
+      processors: [memory_limiter, filter/warn_and_above, transform/scrub, transform/redact_exceptions, batch]
+      exporters: [otlp_grpc/backend]
+    # Browser traces are performance traces (fetch, document load, actions).
+    traces/browser:
+      receivers: [otlp/browser]
+      processors: [memory_limiter, transform/browser_identity, transform/scrub, transform/redact_exceptions, batch]
+      exporters: [otlp_grpc/backend]
+    # Browser logs are the usage events (page views, actions, errors). No
+    # severity filter: they are INFO by design, and unsampled.
+    logs/browser:
+      receivers: [otlp/browser]
+      processors: [memory_limiter, transform/browser_identity, transform/scrub, transform/redact_exceptions, batch]
+      exporters: [otlp_grpc/backend]
