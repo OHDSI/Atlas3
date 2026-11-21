@@ -194,9 +194,29 @@ export type EndStrategy = z.infer<typeof EndStrategySchema>
  * Criteria Base Type
  * Contains common properties inherited by all event criteria
  */
+/**
+ * Where a piece of logic came from when it was inserted from a reusable.
+ *
+ * Metadata only: the logic itself is always stored expanded in the ordinary
+ * circe fields next to it, so circe builds the same SQL whether or not it
+ * knows about this field (it ignores unknown properties). Atlas uses it to
+ * show the logic as a reference, offer updates to newer versions of the
+ * reusable, and detach it back into a plain copy.
+ *
+ * `Version` is the reusable's version at insertion time, counted the way
+ * WebAPI numbers them: the saved versions plus one for the current state.
+ */
+export const ReusableRefSchema = z.object({
+  Id: z.number(),
+  Version: z.number().nullish(),
+  Name: z.string().nullish(),
+})
+export type ReusableRef = z.infer<typeof ReusableRefSchema>
+
 const CriteriaBaseSchema = z.object({
   CorrelatedCriteria: z.lazy(() => CriteriaGroupSchema).nullish(),
   DateAdjustment: DateAdjustmentSchema.nullish(),
+  ReusableRef: ReusableRefSchema.nullish(),
 })
 
 /**
@@ -642,6 +662,8 @@ export interface CriteriaGroup {
   CriteriaList?: CorelatedCriteria[]
   DemographicCriteriaList?: DemographicCriteria[]
   Groups?: CriteriaGroup[]
+  /** Set when this group was inserted from a reusable; see ReusableRefSchema. */
+  ReusableRef?: ReusableRef | null
 }
 
 /**
@@ -679,6 +701,7 @@ export const CriteriaGroupSchema: z.ZodType<CriteriaGroup> = z.lazy(() =>
     CriteriaList: z.array(CorelatedCriteriaSchema).nullish(),
     DemographicCriteriaList: z.array(DemographicCriteriaSchema).nullish(),
     Groups: z.array(CriteriaGroupSchema).nullish(),
+    ReusableRef: ReusableRefSchema.nullish(),
   }) as z.ZodType<CriteriaGroup>
 )
 
