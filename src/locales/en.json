@@ -692,7 +692,8 @@
       "ninetyDayFollowUp": "90-day follow-up (0 to 90 days after)",
       "oneYearFollowUp": "1-year follow-up (0 to 365 days after)",
       "allTimeAfterIndex": "All time after index",
-      "eventOverlapsWithIndex": "event overlaps with index"
+      "eventOverlapsCohortEra": "Event overlaps with cohort era",
+      "eventOverlapsIndexDate": "Event overlaps index date"
     },
     "conceptSetPicker": {
       "setCountOne": "1 set",
