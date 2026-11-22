@@ -413,9 +413,7 @@ describe('CorelatedCriteria window menu', () => {
     }
     const wrapper = mountCriteria(criteria)
 
-    // "Event overlaps with index" is the one preset that carries a second
-    // window: the event must start before index ends and end after index starts.
-    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset(tr('components.temporalWindowEditor.eventOverlapsWithIndex')).value)
+    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset(tr('components.temporalWindowEditor.eventOverlapsCohortEra')).value)
     await wrapper.vm.$nextTick()
 
     expect(criteria.EndWindow).toEqual({
@@ -423,6 +421,30 @@ describe('CorelatedCriteria window menu', () => {
       End: { Days: 0, Coeff: 1 },
       UseIndexEnd: true,
       UseEventEnd: false,
+    })
+  })
+
+  it('sets both windows around the index start date for the overlaps index date preset', async () => {
+    const criteria: CorelatedCriteriaModel = {
+      Criteria: { ConditionOccurrence: {} },
+      StartWindow: createDefaultWindow(),
+    }
+    const wrapper = mountCriteria(criteria)
+
+    wrapper.findAllComponents({ name: 'AtlasSelect' })[0]!.vm.$emit('update:modelValue', findPreset(tr('components.temporalWindowEditor.eventOverlapsIndexDate')).value)
+    await wrapper.vm.$nextTick()
+
+    expect(criteria.StartWindow).toEqual({
+      Start: { Days: null, Coeff: -1 },
+      End: { Days: 0, Coeff: -1 },
+      UseIndexEnd: false,
+      UseEventEnd: false,
+    })
+    expect(criteria.EndWindow).toEqual({
+      Start: { Days: 0, Coeff: 1 },
+      End: { Days: null, Coeff: 1 },
+      UseIndexEnd: false,
+      UseEventEnd: true,
     })
   })
 
