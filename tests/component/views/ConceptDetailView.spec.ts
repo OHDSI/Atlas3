@@ -101,8 +101,21 @@ describe('ConceptDetailView', () => {
     await wrapper.vm.$nextTick()
 
     expect(conceptSets.openCreateEditor).toHaveBeenCalled()
-    expect(conceptSets.addConceptToSet).toHaveBeenCalledWith(expect.objectContaining({ conceptId: 201826 }))
+    expect(conceptSets.addConceptToSet).toHaveBeenCalledWith(expect.objectContaining({ conceptId: 201826 }), undefined)
     expect(wrapper.findComponent({ name: 'AtlasSnackbar' }).props('text')).toContain('Type 2 diabetes mellitus')
+  })
+
+  it('forwards the header flags when adding the displayed concept', async () => {
+    const conceptSets = useConceptSetsStore()
+    vi.spyOn(conceptSets, 'openCreateEditor').mockImplementation(() => undefined)
+    vi.spyOn(conceptSets, 'addConceptToSet').mockImplementation(() => undefined)
+    const wrapper = mountView()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    const flags = { includeDescendants: true, includeMapped: true, isExcluded: false }
+
+    await wrapper.findComponent(ConceptDetailHeaderStub).vm.$emit('add-to-concept-set', useConceptDetailStore().concept, flags)
+
+    expect(conceptSets.addConceptToSet).toHaveBeenCalledWith(expect.objectContaining({ conceptId: 201826 }), flags)
   })
 
   it('reloads when its source or concept changes and displays store errors', async () => {

@@ -141,6 +141,25 @@ describe('ConceptDetailContent', () => {
     expect(sets.currentSet?.items).toEqual([expect.objectContaining({ conceptId: 7 })])
   })
 
+  it('adds the shown concept with the flags chosen in the header', async () => {
+    const sets = useConceptSetsStore()
+    sets.openCreateEditor(undefined, 'Diabetes')
+    detail.concept = concept(7)
+    const wrapper = mountContent({ sourceKey: 'OHDSI', conceptId: 7 })
+    await flushPromises()
+
+    wrapper.findComponent(HeaderStub).vm.$emit('add-to-concept-set', concept(7), {
+      includeDescendants: true,
+      includeMapped: false,
+      isExcluded: true,
+    })
+    await flushPromises()
+
+    expect(sets.currentSet?.items).toEqual([
+      expect.objectContaining({ conceptId: 7, includeDescendants: true, includeMapped: false, isExcluded: true }),
+    ])
+  })
+
   it('adds related concepts to the open set and reports how many were added', async () => {
     const sets = useConceptSetsStore()
     sets.openCreateEditor(undefined, 'Diabetes')

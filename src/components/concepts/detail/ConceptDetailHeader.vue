@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import { AtlasButton, AtlasChip, AtlasIconButton, AtlasProgressLinear } from '@/components/ui'
+import ConceptAddOptions from '@/components/concepts/ConceptAddOptions.vue'
 import { useI18n } from '@/composables/useI18n'
-import type { Concept } from '@/models/concept-set.types'
+import type { Concept, ConceptAddFlags } from '@/models/concept-set.types'
 
 const { t, tv } = useI18n()
 
@@ -22,11 +23,12 @@ const props = defineProps<{
   stale?: boolean
 }>()
 const emit = defineEmits<{
-  'add-to-concept-set': [concept: Concept]
+  'add-to-concept-set': [concept: Concept, flags: Required<ConceptAddFlags>]
   'copy-id': [conceptId: number]
 }>()
 
 const router = useRouter()
+const addFlags = ref<Required<ConceptAddFlags>>({ includeDescendants: false, includeMapped: false, isExcluded: false })
 const drawer = useConceptDetailDrawerStore()
 
 function handleBack() {
@@ -63,7 +65,7 @@ const standardTone = computed(() =>
 )
 
 function onAdd() {
-  emit('add-to-concept-set', props.concept)
+  emit('add-to-concept-set', props.concept, { ...addFlags.value })
 }
 
 async function onCopy() {
@@ -115,15 +117,19 @@ async function onCopy() {
     </div>
 
     <div class="concept-actions">
-      <AtlasButton
-        variant="primary"
-        size="sm"
-        icon="mdi-plus"
-        data-testid="add-to-concept-set"
-        @click="onAdd"
-      >
-        {{ t('components.conceptDetail.addToConceptSet').value }}
-      </AtlasButton>
+      <ConceptAddOptions v-model="addFlags">
+        <template #action>
+          <AtlasButton
+            variant="primary"
+            size="sm"
+            icon="mdi-plus"
+            data-testid="add-to-concept-set"
+            @click="onAdd"
+          >
+            {{ t('components.conceptDetail.addToConceptSet').value }}
+          </AtlasButton>
+        </template>
+      </ConceptAddOptions>
       <AtlasButton
         variant="secondary"
         size="sm"
@@ -180,7 +186,9 @@ async function onCopy() {
 }
 .concept-actions {
   display: flex;
+  align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 /* Overlays the bottom border, so toggling it never shifts the layout. */
 .concept-detail-header__progress {

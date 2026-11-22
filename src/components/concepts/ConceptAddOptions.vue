@@ -27,19 +27,21 @@
         @update:model-value="(v: boolean | null) => onToggle('isExcluded', v)"
       />
     </div>
-    <AtlasButton
-      size="sm"
-      icon="mdi-plus"
-      :disabled="selectedCount === 0 || disabled"
-      data-testid="add-selected"
-      @click="emit('add')"
-    >
-      {{ t('cs.conceptAddBox.addToConceptSet') }}
-      <span
-        v-if="selectedCount > 0"
-        class="ml-1"
-      >({{ selectedCount }})</span>
-    </AtlasButton>
+    <slot name="action">
+      <AtlasButton
+        size="sm"
+        icon="mdi-plus"
+        :disabled="selectedCount === 0 || disabled"
+        data-testid="add-selected"
+        @click="emit('add')"
+      >
+        {{ t('cs.conceptAddBox.addToConceptSet') }}
+        <span
+          v-if="selectedCount > 0"
+          class="ml-1"
+        >({{ selectedCount }})</span>
+      </AtlasButton>
+    </slot>
   </div>
 </template>
 
@@ -50,11 +52,11 @@ import type { ConceptAddFlags } from '@/models/concept-set.types'
 
 interface Props {
   modelValue: Required<ConceptAddFlags>
-  selectedCount: number
+  selectedCount?: number
   disabled?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), { disabled: false })
+const props = withDefaults(defineProps<Props>(), { selectedCount: 0, disabled: false })
 
 const emit = defineEmits<{
   'update:modelValue': [flags: Required<ConceptAddFlags>]

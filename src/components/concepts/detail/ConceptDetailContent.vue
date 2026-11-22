@@ -52,9 +52,9 @@ function currentSetName(): string {
   return conceptSetsStore.currentSet?.name || t('components.conceptSetBuilder.newConceptSet').value
 }
 
-function onAddToConceptSet(c: Concept) {
+function onAddToConceptSet(c: Concept, flags?: Required<ConceptAddFlags>) {
   ensureConceptSet()
-  conceptSetsStore.addConceptToSet(c)
+  conceptSetsStore.addConceptToSet(c, flags)
   feedback.value = {
     open: true,
     text: t('search.addedToSet', {

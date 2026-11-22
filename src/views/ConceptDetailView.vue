@@ -6,7 +6,7 @@ import { useConceptDetailStore } from '@/stores/concept-detail'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useI18n } from '@/composables/useI18n'
 import { AtlasAlert, AtlasProgressLinear, AtlasSnackbar } from '@/components/ui'
-import type { Concept } from '@/models/concept-set.types'
+import type { Concept, ConceptAddFlags } from '@/models/concept-set.types'
 import ConceptDetailHeader from '@/components/concepts/detail/ConceptDetailHeader.vue'
 import ConceptDetailLoadingSpinner from '@/components/concepts/detail/ConceptDetailLoadingSpinner.vue'
 import ConceptStatCards from '@/components/concepts/detail/ConceptStatCards.vue'
@@ -34,11 +34,11 @@ const { t } = useI18n()
 const feedback = ref<{ open: boolean; text: string }>({ open: false, text: '' })
 
 // Add the viewed concept to the open set, or start a new untitled set.
-function onAddToConceptSet(c: Concept) {
+function onAddToConceptSet(c: Concept, flags?: Required<ConceptAddFlags>) {
   if (!conceptSetsStore.currentSet) {
     conceptSetsStore.openCreateEditor()
   }
-  conceptSetsStore.addConceptToSet(c)
+  conceptSetsStore.addConceptToSet(c, flags)
   const setName =
     conceptSetsStore.currentSet?.name ||
     t('components.conceptSetBuilder.newConceptSet').value

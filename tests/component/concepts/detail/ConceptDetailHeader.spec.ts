@@ -51,7 +51,26 @@ describe('ConceptDetailHeader', () => {
     })
 
     await wrapper.find('[data-testid="add-to-concept-set"]').trigger('click')
-    expect(wrapper.emitted('add-to-concept-set')).toEqual([[concept]])
+    expect(wrapper.emitted('add-to-concept-set')).toEqual([
+      [concept, { includeDescendants: false, includeMapped: false, isExcluded: false }],
+    ])
+  })
+
+  it('passes the chosen descendants, mapped and exclude flags with the concept', async () => {
+    const vuetify = createVuetify({ components, directives })
+    const wrapper = mount(ConceptDetailHeader, {
+      props: { concept },
+      global: { plugins: [vuetify] },
+    })
+
+    await wrapper.find('[data-testid="add-option-descendants"] input').setValue(true)
+    await wrapper.find('[data-testid="add-option-exclude"] input').setValue(true)
+    await wrapper.find('[data-testid="add-to-concept-set"]').trigger('click')
+
+    expect(wrapper.emitted('add-to-concept-set')).toEqual([
+      [concept, { includeDescendants: true, includeMapped: false, isExcluded: true }],
+    ])
+    expect(wrapper.find('[data-testid="add-selected"]').exists()).toBe(false)
   })
 
   it('shows non-standard chip when standardConcept is null', () => {
