@@ -15,6 +15,7 @@ import InclusionRulesPanel from '@/components/cohort-editor/inclusion-rules/Incl
 import EndStrategyPanel from '@/components/cohort-editor/end-strategy/EndStrategyPanel.vue'
 import CensorWindowEditor from '@/components/cohort-editor/CensorWindowEditor.vue'
 import { AtlasTextField } from '@/components/ui'
+import ReusableInsertButton from '@/components/reusables/ReusableInsertButton.vue'
 import { InlineAtlasMenuStub } from '../../../helpers/component-wrapper'
 import type { CohortExpression } from '@/models/circe-types'
 import fixture from './fixtures/cohort-expression-large.json'
@@ -152,5 +153,18 @@ describe('observation window day inputs', () => {
 
     expect(expression.PrimaryCriteria!.ObservationWindow!.PriorDays).toBe(0)
     expect(expression.PrimaryCriteria!.ObservationWindow!.PostDays).toBe(0)
+  })
+
+  it('appends the events of an inserted reusable to the entry events', () => {
+    const expression = { PrimaryCriteria: { CriteriaList: [{ Death: {} }] } } as CohortExpression
+    const wrapper = mount(CohortExpressionEditor, {
+      props: { expression, conceptSets: [] },
+      global: { plugins: [vuetify] },
+    })
+    const event = { ConditionOccurrence: { CodesetId: 1, ReusableCriteriaRef: { Id: 1 } } }
+    wrapper.findComponent(ReusableInsertButton).vm.$emit('insert', { conceptSets: [], criteriaList: [event] })
+    expect(expression.PrimaryCriteria?.CriteriaList).toEqual([{ Death: {} }, event])
+    wrapper.findComponent(ReusableInsertButton).vm.$emit('insert', { conceptSets: [] })
+    expect(expression.PrimaryCriteria?.CriteriaList).toHaveLength(2)
   })
 })

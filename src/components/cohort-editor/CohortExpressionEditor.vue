@@ -74,6 +74,12 @@
                   </AtlasList>
                 </AtlasMenu>
 
+                <ReusableInsertButton
+                  type="INITIAL_EVENT"
+                  testid="entry-events-insert-reusable"
+                  @insert="onInsertPrimaryReusable"
+                />
+
                 <AtlasSpacer />
 
                 <AtlasMenu
@@ -299,6 +305,8 @@ import {
 import { isClearedInput, toFiniteNumber } from '@/components/circe/input/bindings'
 import CriteriaRenderer from '@/components/circe/criteria/CriteriaRenderer.vue'
 import CriteriaGroup from '@/components/circe/criteria/CriteriaGroup.vue'
+import ReusableInsertButton from '@/components/reusables/ReusableInsertButton.vue'
+import type { ReusableInstance } from '@/components/reusables/reusable-design'
 import InclusionRulesPanel from './inclusion-rules/InclusionRulesPanel.vue'
 import EndStrategyPanel from './end-strategy/EndStrategyPanel.vue'
 import CensorWindowEditor from './CensorWindowEditor.vue'
@@ -453,6 +461,10 @@ function observationDaysInput(value: number | string | null | undefined): number
 
 function addPrimaryCriteria(type: EditableCriteriaKey) {
   ensurePrimaryCriteriaList().push(CRITERIA_TYPE_BY_KEY[type].create())
+}
+
+function onInsertPrimaryReusable(instance: ReusableInstance) {
+  ensurePrimaryCriteriaList().push(...(instance.criteriaList ?? []))
 }
 
 function removePrimaryCriteria(criteriaToRemove: Criteria) {

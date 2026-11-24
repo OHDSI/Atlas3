@@ -363,6 +363,13 @@ import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import { EntityAccessDialog } from '@/components/access'
 import type { Tag } from '@/models/cohort.types'
+import { useNotifications } from '@/stores/notifications'
+import { detachAll } from '@/components/reusables/reusable-catalog'
+import {
+  catalogDroppedOnSave,
+  markReferencesUnsupported,
+  referencesSupported,
+} from '@/components/reusables/reusable-support'
 
 interface Props {
   id?: string
@@ -407,6 +414,7 @@ const cohortStore = useCohortStore()
 const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
 const { t, tv } = useI18n()
+const notify = useNotifications()
 
 // ── Core expression state (Phase 4) ──────────────────────────────────────────
 // Single reactive CohortExpression replaces 10+ individual refs.
@@ -485,6 +493,8 @@ const {
   } = useCirceConceptSetPicker({
     getConceptSets: () => expression.value.ConceptSets ?? [],
     onConceptSetChanged: markUsedConceptSetsDirty,
+    // Without a WebAPI that keeps references, reusables go in as copies.
+    getReusableCatalog: () => (referencesSupported() ? expression.value : undefined),
     addConceptSet: (cs) => {
       if (!expression.value.ConceptSets) expression.value.ConceptSets = []
       expression.value.ConceptSets.push(cs)
@@ -1312,6 +1322,14 @@ async function handleSave(): Promise<{ id?: number; name?: string; error?: strin
       errorMessage.value = tv('components.cohortBuilder.saveToServerError')
       showError.value = true
       return { error: errorMessage.value }
+    }
+
+    // A WebAPI whose circe does not model reusables drops them on save. Make
+    // the editor show what was saved, and insert copies from now on.
+    if (catalogDroppedOnSave(expressionForSave, savedCohort.expression)) {
+      detachAll(expression.value)
+      markReferencesUnsupported()
+      notify.warning(tv('reusables.reference.droppedOnSave'))
     }
 
     // No expression: the store already references the live document, and

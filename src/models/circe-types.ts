@@ -194,9 +194,26 @@ export type EndStrategy = z.infer<typeof EndStrategySchema>
  * Criteria Base Type
  * Contains common properties inherited by all event criteria
  */
+/**
+ * A use of a reusable that was imported into the expression: points at an
+ * entry of the expression's `ReusableCriteria` (on a criterion) or
+ * `ReusableCriteriaGroups` (on a criteria group) by that entry's `Id`.
+ *
+ * The logic it stands for is also kept expanded inline, in the ordinary circe
+ * fields next to it, so circe 1.14 (which ignores unknown fields) builds the
+ * same SQL whether or not it knows about reusables. Atlas keeps every inline
+ * copy equal to its catalog entry, so all uses of one reusable in a cohort
+ * always hold the same logic.
+ */
+export const ReusableUseSchema = z.object({
+  Id: z.number(),
+})
+export type ReusableUse = z.infer<typeof ReusableUseSchema>
+
 const CriteriaBaseSchema = z.object({
   CorrelatedCriteria: z.lazy(() => CriteriaGroupSchema).nullish(),
   DateAdjustment: DateAdjustmentSchema.nullish(),
+  ReusableCriteriaRef: ReusableUseSchema.nullish(),
 })
 
 /**
@@ -642,6 +659,8 @@ export interface CriteriaGroup {
   CriteriaList?: CorelatedCriteria[]
   DemographicCriteriaList?: DemographicCriteria[]
   Groups?: CriteriaGroup[]
+  /** Set when this group is a use of an imported reusable; see ReusableUseSchema. */
+  ReusableCriteriaGroupRef?: ReusableUse | null
 }
 
 /**
@@ -679,6 +698,7 @@ export const CriteriaGroupSchema: z.ZodType<CriteriaGroup> = z.lazy(() =>
     CriteriaList: z.array(CorelatedCriteriaSchema).nullish(),
     DemographicCriteriaList: z.array(DemographicCriteriaSchema).nullish(),
     Groups: z.array(CriteriaGroupSchema).nullish(),
+    ReusableCriteriaGroupRef: ReusableUseSchema.nullish(),
   }) as z.ZodType<CriteriaGroup>
 )
 
@@ -703,6 +723,55 @@ export const PrimaryCriteriaSchema = z.object({
 export type PrimaryCriteria = z.infer<typeof PrimaryCriteriaSchema>
 
 /**
+ * Reusables imported into a cohort expression, the way concept sets are: each
+ * entry is the one copy of a reusable's logic for this cohort, together with
+ * the concept sets it uses, numbered in the reusable's own id space.
+ *
+ * `Id` is unique within the expression and is what a use points at
+ * (ReusableUseSchema). `RefId` is the reusable's id in the repository and
+ * `Version` the version of it this entry holds, counted the way WebAPI numbers
+ * them: the saved versions plus one for the current state.
+ *
+ * The logic is kept as an opaque object rather than walked as circe criteria:
+ * its concept set ids are the reusable's, not the cohort's, so code that walks
+ * the expression for the cohort's concept set references must not see them.
+ * An object with no declared fields that keeps whatever it holds does that.
+ */
+const OpaqueObjectSchema = z.object({}).passthrough()
+
+const ReusableEntryBaseSchema = z.object({
+  Id: z.number(),
+  RefId: z.number(),
+  Version: z.number().nullish(),
+  Name: z.string().nullish(),
+  ConceptSets: z.array(OpaqueObjectSchema).nullish(),
+})
+
+export const ReusableCriteriaEntrySchema = ReusableEntryBaseSchema.extend({
+  Criteria: OpaqueObjectSchema,
+})
+export interface ReusableCriteriaEntry {
+  Id: number
+  RefId: number
+  Version?: number | null
+  Name?: string | null
+  ConceptSets?: ConceptSet[] | null
+  Criteria: Criteria
+}
+
+export const ReusableCriteriaGroupEntrySchema = ReusableEntryBaseSchema.extend({
+  CriteriaGroup: OpaqueObjectSchema,
+})
+export interface ReusableCriteriaGroupEntry {
+  Id: number
+  RefId: number
+  Version?: number | null
+  Name?: string | null
+  ConceptSets?: ConceptSet[] | null
+  CriteriaGroup: CriteriaGroup
+}
+
+/**
  * Cohort Expression Schema - Root Object
  */
 export const CohortExpressionSchema = z.object({
@@ -718,6 +787,11 @@ export const CohortExpressionSchema = z.object({
   CollapseSettings: CollapseSettingsSchema.nullish(),
   CensorWindow: PeriodSchema.nullish(),
   cdmVersionRange: z.string().nullish(),
+  /** Imported reusables; see ReusableCriteriaEntrySchema. */
+  ReusableCriteria: z.array(ReusableCriteriaEntrySchema as z.ZodType<ReusableCriteriaEntry>).nullish(),
+  ReusableCriteriaGroups: z
+    .array(ReusableCriteriaGroupEntrySchema as z.ZodType<ReusableCriteriaGroupEntry>)
+    .nullish(),
   /**
    * Written by Atlas at the top of an exported expression (SIMPLE_EXPRESSION).
    * Carried rather than used: the editor has no other expression type, but the

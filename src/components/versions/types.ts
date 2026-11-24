@@ -65,7 +65,7 @@ export interface VersionsTableItem extends Omit<Version, 'createdBy' | 'createdD
  */
 export interface VersionsConfig {
   /** Asset type: cohort definition, concept set, pathway analysis, or incidence rate */
-  assetType: 'cohortdefinition' | 'conceptset' | 'pathway-analysis' | 'ir'
+  assetType: 'cohortdefinition' | 'conceptset' | 'pathway-analysis' | 'ir' | 'reusable'
   /** Asset ID */
   assetId: number
   /** Getter for current version data */
@@ -94,6 +94,7 @@ export const ASSET_ROUTE_SEGMENT: Record<VersionsConfig['assetType'], string> = 
   conceptset: 'conceptset',
   'pathway-analysis': 'pathway-analysis',
   ir: 'incidence-rates',
+  reusable: 'reusables',
 }
 
 /**
@@ -110,6 +111,7 @@ export const ASSET_DETAIL_ROUTE_SEGMENT: Partial<Record<VersionsConfig['assetTyp
   conceptset: 'conceptset',
   'pathway-analysis': 'pathways',
   ir: 'incidence-rates',
+  reusable: 'reusables',
 }
 
 /**

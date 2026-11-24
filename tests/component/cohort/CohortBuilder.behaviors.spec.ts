@@ -87,6 +87,8 @@ import type { CohortExpression } from '@/models/circe-types'
 import type { VersionsConfig } from '@/components/versions/types'
 import type { Tag } from '@/models/cohort.types'
 import CohortBuilder from '@/components/cohort/CohortBuilder.vue'
+import { useNotifications } from '@/stores/notifications'
+import { referencesSupported, resetReferencesSupport } from '@/components/reusables/reusable-support'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -190,6 +192,7 @@ describe('CohortBuilder behaviors', () => {
     setActivePinia(createPinia())
     sessionStorage.clear()
     vi.clearAllMocks()
+    resetReferencesSupport()
     access.hasPermission.mockImplementation(() => true)
     access.canWrite.value = true
     access.entityAccessArgs.length = 0
@@ -900,6 +903,57 @@ describe('CohortBuilder behaviors', () => {
 
       expect(dialogByEyebrow(wrapper, 'VERSIONS')?.props('modelValue')).toBe(true)
       expect(propOf(wrapper, 'ValidationMessagesDialog', 'modelValue')).toBe(true)
+    })
+  })
+
+  describe('reusables on a WebAPI that does not keep them', () => {
+    /** A cohort that imported one reusable and uses it as its entry event. */
+    const withReusable = () =>
+      blankExpression({
+        ReusableCriteria: [
+          { Id: 1, RefId: 12, Version: 3, Name: 'Prior MI', ConceptSets: [], Criteria: { ConditionOccurrence: {} } },
+        ],
+        PrimaryCriteria: {
+          CriteriaList: [{ ConditionOccurrence: { ReusableCriteriaRef: { Id: 1 } } }],
+          ObservationWindow: { PriorDays: 0, PostDays: 0 },
+          PrimaryCriteriaLimit: { Type: 'First' },
+        },
+      })
+
+    const liveExpression = (wrapper: Wrapper) =>
+      (wrapper.vm as unknown as { expression: CohortExpression }).expression
+
+    it('turns the uses into copies, warns, and inserts copies from then on when a save drops them', async () => {
+      const wrapper = await mountLoaded({ expression: withReusable() })
+      const { ReusableCriteria: _dropped, ...saved } = withReusable()
+      vi.mocked(saveCohortDefinition).mockResolvedValue({
+        success: true,
+        data: { id: 42, expression: { ...saved, PrimaryCriteria: blankExpression().PrimaryCriteria } },
+      } as never)
+      const warning = vi.spyOn(useNotifications(), 'warning')
+
+      await vmOf(wrapper).handleSave()
+      await flushPromises()
+
+      expect(liveExpression(wrapper).ReusableCriteria).toBeUndefined()
+      expect(liveExpression(wrapper).PrimaryCriteria?.CriteriaList).toEqual([{ ConditionOccurrence: {} }])
+      expect(warning).toHaveBeenCalledWith(expect.stringContaining('does not keep references'))
+      expect(referencesSupported()).toBe(false)
+      expect(useCohortStore().isDirty).toBe(false)
+    })
+
+    it('keeps the uses when the save keeps them', async () => {
+      const wrapper = await mountLoaded({ expression: withReusable() })
+      vi.mocked(saveCohortDefinition).mockResolvedValue({
+        success: true,
+        data: { id: 42, expression: withReusable() },
+      } as never)
+
+      await vmOf(wrapper).handleSave()
+      await flushPromises()
+
+      expect(liveExpression(wrapper).ReusableCriteria).toHaveLength(1)
+      expect(referencesSupported()).toBe(true)
     })
   })
 
