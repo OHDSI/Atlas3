@@ -6,23 +6,28 @@
   >
     <IncidenceRateDesignRail
       v-show="railOpen"
+      :id="railId"
       class="ir-workbench__rail"
       data-testid="ir-workbench-rail"
       @strata:add="onStrataAdd"
       @strata:edit="onStrataEdit"
     />
 
-    <main
+    <div
       class="ir-workbench__canvas"
       data-testid="ir-workbench-canvas"
     >
       <div class="ir-workbench__canvas-controls">
         <button
+          type="button"
           class="rail-toggle"
+          :aria-expanded="railOpen"
+          :aria-controls="railId"
           :title="railOpen ? tv('components.workbench.hideDesignPanel') : tv('components.workbench.showDesignPanel')"
           @click="railOpen = !railOpen"
         >
-          {{ railOpen ? `◂ ${tv('components.workbench.hideAnalysisDesign')}` : `▸ ${tv('components.workbench.showAnalysisDesign')}` }}
+          <span aria-hidden="true">{{ railOpen ? '◂' : '▸' }}</span>
+          {{ railOpen ? tv('components.workbench.hideAnalysisDesign') : tv('components.workbench.showAnalysisDesign') }}
         </button>
         <AtlasTooltip
           v-if="validationMessages.length"
@@ -166,7 +171,7 @@
           </AtlasButton>
         </template>
       </AtlasDialog>
-    </main>
+    </div>
 
     <aside
       class="ir-workbench__insights"
@@ -191,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from 'vue'
+import { computed, ref, useId, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { useIncidenceRateReport } from '@/composables/useIncidenceRateReport'
@@ -242,6 +247,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useIncidenceRateStore()
 const railOpen = ref(!route.params.id)
+const railId = useId()
 const ds = useDataSourcesStore()
 
 const mode = ref<ViewMode>('treemap')

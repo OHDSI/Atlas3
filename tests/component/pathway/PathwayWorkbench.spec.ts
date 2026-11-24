@@ -204,7 +204,12 @@ describe('PathwayWorkbench', () => {
     await flushPromises()
 
     expect(w.find('[data-testid="workbench-design-rail"]').exists()).toBe(true)
-    await w.find('.rail-toggle').trigger('click')
+    const toggle = w.get('.rail-toggle')
+    expect(w.get('[data-testid="workbench-design-rail"]').attributes('id')).toBe(toggle.attributes('aria-controls'))
+    expect(toggle.attributes('aria-expanded')).toBe('false')
+    expect(w.find('main').exists()).toBe(false)
+    await toggle.trigger('click')
+    expect(toggle.attributes('aria-expanded')).toBe('true')
 
     await w.findComponent({ name: 'PathwayCanvasToolbar' }).vm.$emit('update:mode', 'tabular')
     await nextTick()

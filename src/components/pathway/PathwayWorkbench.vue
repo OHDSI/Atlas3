@@ -5,18 +5,22 @@
   >
     <aside
       v-show="railOpen"
+      :id="railId"
       class="workbench__design"
       data-testid="workbench-design-rail"
     >
       <PathwayDesignForm />
     </aside>
 
-    <main
+    <div
       class="workbench__canvas"
       data-testid="workbench-canvas"
     >
       <button
+        type="button"
         class="rail-toggle"
+        :aria-expanded="railOpen"
+        :aria-controls="railId"
         :title="
           railOpen
             ? t('components.workbench.hideDesignPanel').value
@@ -24,10 +28,11 @@
         "
         @click="railOpen = !railOpen"
       >
+        <span aria-hidden="true">{{ railOpen ? '◂' : '▸' }}</span>
         {{
           railOpen
-            ? '◂ ' + t('components.workbench.hideAnalysisDesign').value
-            : '▸ ' + t('components.workbench.showAnalysisDesign').value
+            ? t('components.workbench.hideAnalysisDesign').value
+            : t('components.workbench.showAnalysisDesign').value
         }}
       </button>
       <AtlasCollapsibleSection
@@ -116,7 +121,7 @@
           />
         </template>
       </div>
-    </main>
+    </div>
     <PreviousRunsDialog
       v-model="historyOpen"
       :source-name="historySourceName"
@@ -129,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, shallowRef, watch, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, shallowRef, useId, watch, onMounted, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from '@/composables/useI18n'
 import AtlasCollapsibleSection from '@/components/ui/AtlasCollapsibleSection.vue'
@@ -195,6 +200,7 @@ watch(
 )
 
 const railOpen = ref(props.pathwayId === null)
+const railId = useId()
 const mode = ref<'visual' | 'tabular'>('visual')
 const onlyGenerated = ref(false)
 const executions = ref<PathwayExecution[]>([])

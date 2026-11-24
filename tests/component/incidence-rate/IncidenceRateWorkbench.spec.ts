@@ -338,8 +338,14 @@ describe('IncidenceRateWorkbench', () => {
     })
     await flushPromises()
 
-    await w.get('button.rail-toggle').trigger('click')
-    await w.get('button.rail-toggle').trigger('click')
+    const toggle = w.get('button.rail-toggle')
+    const expanded = toggle.attributes('aria-expanded')
+    expect(w.get('[data-testid="ir-workbench-rail"]').attributes('id')).toBe(toggle.attributes('aria-controls'))
+    expect(w.find('main').exists()).toBe(false)
+    await toggle.trigger('click')
+    expect(toggle.attributes('aria-expanded')).toBe(expanded === 'true' ? 'false' : 'true')
+    await toggle.trigger('click')
+    expect(toggle.attributes('aria-expanded')).toBe(expanded)
     await w.findComponent({ name: 'IncidenceRateDesignRail' }).vm.$emit('strata:add')
     await w.findComponent({ name: 'IncidenceRateDesignRail' }).vm.$emit('strata:edit', 0)
 
