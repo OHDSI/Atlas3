@@ -1,7 +1,30 @@
 <template>
+  <!-- A use of a reusable imported into the cohort: read-only until detached. -->
+  <div
+    v-if="reusableUse && editorComponent"
+    class="criteria-renderer__reference"
+    data-testid="criteria-reference"
+  >
+    <ReusableRefBanner
+      :target="props.criteria"
+      :use="reusableUse"
+      kind="criteria"
+      @remove="$emit('remove')"
+    />
+    <div
+      inert
+      class="criteria-renderer__readonly"
+    >
+      <component
+        :is="editorComponent"
+        v-bind="editorProps"
+      />
+    </div>
+  </div>
+
   <component
     :is="editorComponent"
-    v-if="editorComponent"
+    v-else-if="editorComponent"
     v-bind="editorProps"
     @remove="$emit('remove')"
     @select-concept-set="$emit('select-concept-set', $event)"
@@ -62,6 +85,8 @@ import VisitDetail from './VisitDetail.vue'
 import VisitOccurrence from './VisitOccurrence.vue'
 import type { ConceptSetOption, ConceptSetSelectionTarget } from './criteria-editor.types'
 import type { EditableCriteriaKey } from './criteria-registry'
+import ReusableRefBanner from '@/components/reusables/ReusableRefBanner.vue'
+import { getCriteriaUse } from '@/components/reusables/reusable-catalog'
 
 const props = defineProps<{
   criteria: Criteria
@@ -78,6 +103,8 @@ defineEmits<{
 const { tv } = useI18n()
 
 const wrapperKey = computed(() => getCriteriaWrapperKey(props.criteria))
+
+const reusableUse = computed(() => getCriteriaUse(props.criteria))
 
 // The one place components are bound to criteria types. Every key the registry
 // marks `hasEditor` must appear here, and the check below fails the build if one
@@ -116,6 +143,12 @@ const editorProps = computed(() => {
 </script>
 
 <style scoped>
+/* The editor is inert inside a reference; hide its controls rather than
+   show them as if they worked. */
+.criteria-renderer__readonly :deep(.v-btn) {
+  visibility: hidden;
+}
+
 .criteria-renderer__placeholder {
   border: 1px dashed rgba(var(--v-theme-on-surface), 0.24);
 }

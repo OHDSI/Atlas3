@@ -27,11 +27,13 @@ const copyCohort = vi.fn()
 const copyConceptSet = vi.fn()
 const copyPathway = vi.fn()
 const copyIR = vi.fn()
+const copyReusable = vi.fn()
 const getPathwayVersions = vi.fn()
 const saveCohortPreview = vi.fn()
 const saveConceptSetPreview = vi.fn()
 const savePathwayPreview = vi.fn()
 const saveIRPreview = vi.fn()
+const saveReusablePreview = vi.fn()
 
 vi.mock('@/services/cohort-definition-versions.service', () => ({
   getVersions: vi.fn().mockResolvedValue([]),
@@ -54,6 +56,12 @@ vi.mock('@/services/incidence-rate-versions.service', () => ({
   copyIncidenceRateVersion: (...args: unknown[]) => copyIR(...args),
 }))
 
+vi.mock('@/services/reusable-versions.service', () => ({
+  getReusableVersions: vi.fn().mockResolvedValue([]),
+  updateReusableVersion: vi.fn(),
+  copyReusableVersion: (...args: unknown[]) => copyReusable(...args),
+}))
+
 vi.mock('@/stores/cohort', () => ({
   useCohortStore: () => ({ savePreviewAsCurrent: saveCohortPreview }),
 }))
@@ -65,6 +73,9 @@ vi.mock('@/stores/pathway', () => ({
 }))
 vi.mock('@/stores/incidence-rate', () => ({
   useIncidenceRateStore: () => ({ savePreviewAsCurrent: saveIRPreview }),
+}))
+vi.mock('@/stores/reusable', () => ({
+  useReusableStore: () => ({ savePreviewAsCurrent: saveReusablePreview }),
 }))
 
 const VersionsTableStub = defineComponent({
@@ -130,6 +141,7 @@ const copyServices = {
   conceptset: copyConceptSet,
   'pathway-analysis': copyPathway,
   ir: copyIR,
+  reusable: copyReusable,
 } as const
 
 async function flushAsync() {
@@ -145,11 +157,13 @@ describe('VersionsTabContent handleCopy dispatch', () => {
     copyConceptSet.mockResolvedValue({ id: 102 })
     copyPathway.mockResolvedValue({ id: 103 })
     copyIR.mockResolvedValue({ id: 104 })
+    copyReusable.mockResolvedValue({ id: 105 })
     getPathwayVersions.mockResolvedValue([])
     saveCohortPreview.mockResolvedValue(true)
     saveConceptSetPreview.mockResolvedValue(true)
     savePathwayPreview.mockResolvedValue(true)
     saveIRPreview.mockResolvedValue(true)
+    saveReusablePreview.mockResolvedValue(true)
   })
 
   for (const assetType of Object.keys(copyServices) as (keyof typeof copyServices)[]) {
@@ -304,6 +318,7 @@ describe('VersionsTabContent handleCopy dispatch', () => {
       ['conceptset', saveConceptSetPreview, 'success'],
       ['pathway-analysis', savePathwayPreview, 'danger'],
       ['ir', saveIRPreview, 'danger'],
+      ['reusable', saveReusablePreview, 'success'],
     ]
 
     for (const [assetType, save, severity] of cases) {

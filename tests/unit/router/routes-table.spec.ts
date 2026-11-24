@@ -155,7 +155,9 @@ function guardOf(path: string): Guard {
 describe('route table', () => {
   it('declares top-level routes in matching order', () => {
     expect(routes.map((r) => r.path)).toEqual([
-      '/', '/cohorts', '/cohorts/new', '/cohorts/:id', '/profiles', '/profiles/:sourceKey',
+      '/', '/cohorts', '/cohorts/new', '/cohorts/:id',
+      '/reusables', '/reusables/new', '/reusables/:id(\\d+)', '/reusables/:id(\\d+)/version/:version',
+      '/reusables/:id(\\d+)/:section(design|conceptsets)', '/profiles', '/profiles/:sourceKey',
       '/profiles/:sourceKey/:personId(\\d+)', '/profiles/:sourceKey/:personId(\\d+)/:cohortId(\\d+)',
       '/profile/api-keys', '/analysis',
       '/characterizations', '/feature-analyses', '/pathways', '/incidence-rates',

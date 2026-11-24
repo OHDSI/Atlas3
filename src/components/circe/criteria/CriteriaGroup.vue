@@ -4,7 +4,24 @@
     rounded="lg"
     variant="outlined"
   >
-    <v-card-text class="criteria-group-editor__body d-flex">
+    <!-- A use of a reusable imported into the cohort: read-only until detached. -->
+    <div
+      v-if="reference"
+      class="criteria-group-editor__reference"
+    >
+      <ReusableRefBanner
+        :target="props.group"
+        :use="reference"
+        kind="group"
+        @remove="emit('remove')"
+      />
+    </div>
+    <v-card-text
+      class="criteria-group-editor__body d-flex"
+      :class="{ 'criteria-group-editor__body--readonly': reference }"
+      :inert="reference ? true : undefined"
+      :data-testid="reference ? 'criteria-group-readonly' : undefined"
+    >
       <AtlasMenu
         v-model="showMatchTypeMenu"
         :close-on-content-click="false"
@@ -109,6 +126,12 @@
             {{ addGroupLabel }}
           </AtlasButton>
 
+          <ReusableInsertButton
+            type="CRITERIA_GROUP"
+            testid="criteria-group-insert-reusable"
+            @insert="onInsertReusable"
+          />
+
           <AtlasSpacer />
 
           <AtlasButton
@@ -205,6 +228,14 @@ import { createObjectKeyGenerator } from './criteria-editor-helper'
 import { createDefaultWindow } from './window-utils'
 import CorelatedCriteria from './CorelatedCriteria.vue'
 import DemographicCriteria from './DemographicCriteria.vue'
+import ReusableInsertButton from '@/components/reusables/ReusableInsertButton.vue'
+import ReusableRefBanner from '@/components/reusables/ReusableRefBanner.vue'
+import {
+  asGroupCriterion,
+  insertCriteriaGroup,
+  type ReusableInstance,
+} from '@/components/reusables/reusable-design'
+import { getGroupUse } from '@/components/reusables/reusable-catalog'
 
 // Demographics are not a circe criteria type — they live in the group's own
 // DemographicCriteriaList — so the menu offers them alongside the registry's
@@ -372,6 +403,23 @@ function addNestedGroup() {
   })
 }
 
+function onInsertReusable(instance: ReusableInstance) {
+  if (instance.criteriaGroup) {
+    // A use stays its own nested group, so it can be shown, updated and
+    // detached as one unit without touching the criteria around it.
+    if (instance.byReference) ensureNestedGroups().push(instance.criteriaGroup)
+    else insertCriteriaGroup(props.group, instance.criteriaGroup)
+    return
+  }
+  // A single event from an Initial/Censoring Event reusable becomes one
+  // criterion here, with the window and occurrence set at this place.
+  for (const criteria of instance.criteriaList ?? []) {
+    ensureCriteriaList().push(asGroupCriterion(criteria))
+  }
+}
+
+const reference = computed(() => getGroupUse(props.group) ?? null)
+
 function removeCriteria(index: number) {
   ensureCriteriaList().splice(index, 1)
 }
@@ -388,6 +436,21 @@ function removeNestedGroup(index: number) {
 <style scoped>
 .criteria-group-editor {
   margin-bottom: 16px;
+}
+
+.criteria-group-editor__reference {
+  padding: 8px 8px 0;
+}
+
+/* Inside a reference nothing can be edited (the body is inert), so the
+   editing controls are hidden rather than shown as if they worked. */
+.criteria-group-editor__body--readonly :deep(.group-header) {
+  /* !important to win over the header's d-flex utility class. */
+  display: none !important;
+}
+
+.criteria-group-editor__body--readonly :deep(.v-btn) {
+  visibility: hidden;
 }
 
 .criteria-group-editor__body {
