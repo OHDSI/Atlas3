@@ -3,6 +3,7 @@
     <a
       href="#main"
       class="skip-link"
+      @click.prevent="focusMainContent()"
     >
       {{ t('a11y.skipToMain') }}
     </a>
@@ -87,6 +88,7 @@ import { useLicenseAgreement } from '@/composables/useLicenseAgreement'
 import { pluginConfigService } from '@/services/PluginConfigService'
 import { getAppConfig } from '@/config/app-config.loader'
 import { logger } from '@/utils/logger'
+import { focusMainContent } from '@/utils/mainContentFocus'
 
 const authStore = useAuthStore()
 const { t } = useI18n()
