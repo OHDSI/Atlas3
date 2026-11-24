@@ -229,6 +229,19 @@ describe('CharacterizationWorkbench: initial state', () => {
     expect(w.get('.rail-toggle').text()).toBe('◂ ' + tr('components.workbench.hideAnalysisDesign'))
   })
 
+  it('exposes the rail toggle state and leaves the main landmark to the app shell', async () => {
+    setupStore()
+    const { w } = await mountWorkbench('/characterizations/5')
+    const toggle = w.get('.rail-toggle')
+    const railId = toggle.attributes('aria-controls')
+    expect(railId).toBeTruthy()
+    expect(w.get('.char-workbench__rail').attributes('id')).toBe(railId)
+    expect(toggle.attributes('aria-expanded')).toBe('false')
+    await toggle.trigger('click')
+    expect(toggle.attributes('aria-expanded')).toBe('true')
+    expect(w.find('main').exists()).toBe(false)
+  })
+
   it('opens the design rail for a new design', async () => {
     setupStore()
     const { w } = await mountWorkbench('/characterizations/new', { characterizationId: null })

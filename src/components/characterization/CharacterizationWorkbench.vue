@@ -5,6 +5,7 @@
   >
     <div
       v-show="railOpen"
+      :id="railId"
       class="char-workbench__rail"
     >
       <CharacterizationDesignRail
@@ -18,17 +19,21 @@
       />
     </div>
 
-    <main class="char-workbench__canvas">
+    <div class="char-workbench__canvas">
       <button
+        type="button"
         class="rail-toggle"
+        :aria-expanded="railOpen"
+        :aria-controls="railId"
         :title="railOpen
           ? tv('components.workbench.hideDesignPanel')
           : tv('components.workbench.showDesignPanel')"
         @click="railOpen = !railOpen"
       >
+        <span aria-hidden="true">{{ railOpen ? '◂' : '▸' }}</span>
         {{ railOpen
-          ? '◂ ' + tv('components.workbench.hideAnalysisDesign')
-          : '▸ ' + tv('components.workbench.showAnalysisDesign') }}
+          ? tv('components.workbench.hideAnalysisDesign')
+          : tv('components.workbench.showAnalysisDesign') }}
       </button>
       <AtlasCollapsibleSection
         :title="t('cohortDefinitions.generation.section.title').value"
@@ -171,7 +176,7 @@
         v-else
         variant="no-id"
       />
-    </main>
+    </div>
 
     <PreviousRunsDialog
       v-model:model-value="historyOpen"
@@ -185,7 +190,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { AtlasAlert, AtlasProgressCircular } from '@/components/ui'
@@ -268,6 +273,7 @@ const cohortSizes = ref<Record<string, number>>({})
 const { execution, prevalence, distribution, strataCounts, resultCount, error, loading: resultsLoading, load, reset } = useCharacterizationResults()
 
 const railOpen = ref(!route.params.id)
+const railId = useId()
 const viewMode = ref<ViewMode>('perAnalysis')
 const config = ref<Table1Config>({ ...DEFAULT_TABLE1_CONFIG })
 const filters = ref<Table1Filters>({ ...DEFAULT_TABLE1_FILTERS })
