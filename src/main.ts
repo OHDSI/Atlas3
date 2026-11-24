@@ -30,6 +30,7 @@ import '@/assets/styles/vuetify-overrides.css'
 // ECharts imports for tree-shaking
 import ECharts from 'vue-echarts'
 import { use } from 'echarts/core'
+import { installChartA11y } from '@/ui/chart-a11y'
 
 // Import ECharts chart types
 import {
@@ -84,6 +85,7 @@ use([
   CanvasRenderer,
   SVGRenderer,
 ])
+installChartA11y()
 
 // Initialize app creation function (will be called after loading plugin config)
 async function initializeApp() {
