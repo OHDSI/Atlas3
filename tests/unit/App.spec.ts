@@ -80,6 +80,26 @@ describe('App.vue', () => {
     vi.clearAllMocks()
   })
 
+  describe('Skip link', () => {
+    it('focuses the main region without changing the route hash', async () => {
+      window.location.hash = '#/cohorts'
+      wrapper = mount(App, {
+        attachTo: document.body,
+        global: {
+          plugins: [vuetify],
+          stubs: {
+            RouterView: true
+          }
+        }
+      })
+
+      await wrapper.find('a.skip-link').trigger('click')
+
+      expect(document.activeElement?.id).toBe('main')
+      expect(window.location.hash).toBe('#/cohorts')
+    })
+  })
+
   describe('Component Structure', () => {
     it('should render v-app wrapper', () => {
       wrapper = mount(App, {

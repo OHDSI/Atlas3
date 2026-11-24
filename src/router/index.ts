@@ -10,6 +10,8 @@ import { useI18n } from '@/composables/useI18n'
 import { getAuthConfig } from '@/config/auth.config'
 import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
+import { nextTick } from 'vue'
+import { moveFocusAfterNavigation, shouldFocusMainOnNavigation } from '@/utils/mainContentFocus'
 import { foldSearchIntoHash } from './legacy-url'
 import { routes } from './routes'
 
@@ -267,6 +269,15 @@ function applyDocumentTitle(route: RouteLocationNormalized): void {
 
 router.afterEach((to: RouteLocationNormalized) => {
   applyDocumentTitle(to)
+})
+
+// Announce page changes to keyboard and screen reader users by moving focus to
+// the main region once the new view has rendered.
+router.afterEach((to: RouteLocationNormalized, from: RouteLocationNormalized, failure) => {
+  if (failure || !shouldFocusMainOnNavigation(to, from)) return
+  void nextTick(() => {
+    moveFocusAfterNavigation()
+  })
 })
 
 // This module is evaluated before Pinia is installed (main.ts imports the router
