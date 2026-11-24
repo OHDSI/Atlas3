@@ -214,6 +214,10 @@ ATLAS v3.0 supports a plugin architecture based on single-spa and SystemJS. Refe
 - [WebAPI](https://github.com/OHDSI/WebAPI) — Backend API service; ATLAS v3.0 requires WebAPI v3.0 from the `master` branch
 - [trex](https://github.com/OHDSI/trex) — TrexSQL query cache; loaded into WebAPI as a runtime plugin
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how pull requests are reviewed and merged.
+
 ## Support
 
 For issues and questions, please use the GitHub issue tracker.
