@@ -267,4 +267,18 @@ describe('ReusablesView', () => {
     expect(deleteReusable).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('Acute MI')
   })
+
+  it('filters to the signed-in user\'s own designs', async () => {
+    mounted = await mountView()
+    const { wrapper } = mounted
+
+    wrapper.findComponent({ name: 'AtlasFacetFilterBar' }).vm.$emit('update:facet', {
+      key: 'designs',
+      values: ['My designs'],
+    })
+    await flushPromises()
+
+    // "T2DM with drug" was created by the signed-in "tester"; "Acute MI" by someone else.
+    expect(wrapper.findAll('tbody tr').map(tr => tr.text())).toEqual([expect.stringContaining('T2DM with drug')])
+  })
 })

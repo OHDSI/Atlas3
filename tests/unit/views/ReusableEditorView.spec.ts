@@ -331,4 +331,22 @@ describe('ReusableEditorView', () => {
     await settle()
     expect(query('versions-stub')!.dataset.date).toBe('2026-01-01T00:00:00Z')
   })
+
+  it('does not fetch a version again when its preview is already loaded', async () => {
+    vi.mocked(getReusableVersion).mockResolvedValue({
+      versionDTO: { version: 2, assetId: 4, createdDate: 1, archived: false },
+      entityDTO: { name: 'T2DM logic v2', data: serializeReusableDesign(createEmptyDesign()) },
+    })
+    mounted = await mountAt('/reusables/4')
+    const { router, store } = mounted
+    // The version history loads the preview itself before it changes the route.
+    await store.loadVersionPreview(4, 2)
+    vi.mocked(getReusableVersion).mockClear()
+
+    await router.push('/reusables/4/version/2')
+    await settle()
+
+    expect(getReusableVersion).not.toHaveBeenCalled()
+    expect(store.previewVersion?.version).toBe(2)
+  })
 })
