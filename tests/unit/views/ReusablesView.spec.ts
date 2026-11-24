@@ -229,4 +229,42 @@ describe('ReusablesView', () => {
 
     expect(wrapper.text()).toContain('Acute MI')
   })
+
+  it('pages through more than 25 reusables', async () => {
+    const many = Array.from({ length: 30 }, (_, i) => ({
+      ...rows[0],
+      id: i + 1,
+      name: `Reusable ${String(i + 1).padStart(2, '0')}`,
+      modifiedDate: 1737500000000 - i * 1000,
+    }))
+    vi.mocked(listReusables).mockResolvedValue(success(many))
+    mounted = await mountView()
+    const { wrapper } = mounted
+
+    expect(wrapper.text()).toContain('1-25 of 30')
+    const button = (label: string) => wrapper.findAll('button').find(b => b.text() === label)!
+    expect(button('Previous').attributes('disabled')).toBeDefined()
+
+    await button('Next').trigger('click')
+    expect(wrapper.text()).toContain('26-30 of 30')
+    expect(wrapper.findAll('tbody tr')).toHaveLength(5)
+    expect(button('Next').attributes('disabled')).toBeDefined()
+
+    await button('Previous').trigger('click')
+    expect(wrapper.text()).toContain('1-25 of 30')
+  })
+
+  it('deletes nothing when the confirmation is cancelled', async () => {
+    mounted = await mountView()
+    const { wrapper } = mounted
+
+    await rowFor(wrapper, 'Acute MI').get('button[aria-label="Delete"]').trigger('click')
+    await flushPromises()
+    const cancel = [...document.body.querySelectorAll('button')].find(b => b.textContent?.trim() === 'Cancel')!
+    cancel.click()
+    await flushPromises()
+
+    expect(deleteReusable).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('Acute MI')
+  })
 })

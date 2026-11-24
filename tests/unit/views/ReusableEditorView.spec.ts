@@ -89,7 +89,7 @@ async function mountAt(path: string, permissions = ['create:reusable', 'write:re
         ReusableDesignEditor: { props: ['design', 'readonly'], template: '<div data-testid="design-stub" :data-readonly="String(readonly)" />' },
         VersionsTabContent: {
           props: ['config'],
-          template: '<div data-testid="versions-stub" :data-asset="config.assetId" :data-current="config.currentVersion().displayVersion" />',
+          template: '<div data-testid="versions-stub" :data-asset="config.assetId" :data-current="config.currentVersion().displayVersion" :data-date="config.currentVersion().createdDate" />',
         },
         TagSelectionDialog: true,
         EntityAccessDialog: true,
@@ -308,5 +308,27 @@ describe('ReusableEditorView', () => {
     query('reusable-editor-keep-editing')!.click()
     await settle()
     expect(router.currentRoute.value.path).toBe('/reusables/4')
+  })
+
+  it('loads another reusable when the route moves to it', async () => {
+    mounted = await mountAt('/reusables/4')
+    const { router } = mounted
+    vi.mocked(service.getReusable).mockResolvedValue(success({ ...existing, id: 5, name: 'Other' }))
+
+    await router.push('/reusables/5')
+    await settle()
+
+    expect(service.getReusable).toHaveBeenLastCalledWith(5)
+    expect(mounted.store.current?.name).toBe('Other')
+  })
+
+  it('dates the current version from a date WebAPI sent as text', async () => {
+    vi.mocked(service.getReusable).mockResolvedValue(
+      success({ ...existing, createdDate: '2026-01-01T00:00:00Z', modifiedDate: undefined })
+    )
+    mounted = await mountAt('/reusables/4')
+    await mounted.wrapper.get('[data-testid="reusable-editor-versions"]').trigger('click')
+    await settle()
+    expect(query('versions-stub')!.dataset.date).toBe('2026-01-01T00:00:00Z')
   })
 })
