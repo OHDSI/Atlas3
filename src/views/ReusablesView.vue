@@ -170,15 +170,14 @@ const facets = computed<FacetDefinition<ReusableRow>[]>(() => [
     display: r => recencyBucket(timestamp(r.modifiedDate ?? r.createdDate), facetNow.value),
   },
   { key: 'author', label: 'Author', display: r => reusableAuthorLogin(r.createdBy) ?? 'anonymous' },
-  {
-    key: 'designs',
-    label: 'Designs',
-    display: r =>
-      authStore.user?.login && reusableAuthorLogin(r.createdBy) === authStore.user.login
-        ? DESIGNS_MINE
-        : DESIGNS_OTHER,
-  },
+  { key: 'designs', label: 'Designs', display: r => (isOwnDesign(r) ? DESIGNS_MINE : DESIGNS_OTHER) },
 ])
+
+/** Whether the signed-in user created this reusable. */
+function isOwnDesign(row: ReusableRow): boolean {
+  const login = authStore.user?.login
+  return !!login && reusableAuthorLogin(row.createdBy) === login
+}
 
 const {
   selected: selectedFacets,
