@@ -56,6 +56,7 @@
               <a
                 href="#"
                 class="nav-bar__nav-link"
+                :aria-current="item.active ? 'page' : undefined"
                 @click.prevent="handleNavClick(item)"
               >
                 {{ getNavTitle(item.titleKey) }}
@@ -88,6 +89,7 @@
                 <AtlasListItem
                   v-if="item.visible"
                   :active="item.active"
+                  :aria-current="item.active ? 'page' : undefined"
                   @click="handleNavClick(item)"
                 >
                   <v-list-item-title>
@@ -99,10 +101,7 @@
           </AtlasMenu>
         </div>
       </nav>
-      <div
-        class="nav-bar__right"
-        tabindex="0"
-      >
+      <div class="nav-bar__right">
         <!-- Feedback Button -->
         <AtlasButton
           v-if="showFeedbackButton"
