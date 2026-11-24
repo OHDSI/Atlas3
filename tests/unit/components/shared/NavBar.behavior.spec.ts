@@ -258,6 +258,21 @@ describe('NavBar core navigation', () => {
     expect(activeLabels(wrapper)).toEqual([tr('navigation.datasources')])
   })
 
+  it('marks only the current page link with aria-current', async () => {
+    h.currentPath.value = '/concepts/123'
+    wrapper = await mountNav()
+    const current = wrapper
+      .findAll('.nav-bar__nav-list .nav-bar__nav-link')
+      .filter(link => link.attributes('aria-current') === 'page')
+      .map(link => link.text())
+    expect(current).toEqual([tr('navigation.conceptsets')])
+  })
+
+  it('does not add a focus stop on the toolbar container', async () => {
+    wrapper = await mountNav()
+    expect(wrapper.get('.nav-bar__right').attributes('tabindex')).toBeUndefined()
+  })
+
   it('moves the active marker to a clicked item', async () => {
     wrapper = await mountNav()
     await wrapper.findAll('.nav-bar__nav-list .nav-bar__nav-link')[1].trigger('click')
