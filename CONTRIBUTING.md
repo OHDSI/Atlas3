@@ -49,6 +49,7 @@ Other workflows, such as the phenotype integration and mutation tests, also run 
 
 ## Review and merge
 
+- Opening a pull request requests a review from both maintainers automatically ([`.github/CODEOWNERS`](.github/CODEOWNERS)).
 - **A pull request needs an approving review from one of the maintainers before it is merged.** This applies to committers with write access too: don't merge your own PR without that approval. A maintainer's own PR is reviewed by the other maintainer.
 - An approval also tells you the change is wanted, so it is worth keeping the PR up to date until it lands.
 - Reviews are done by volunteers, and there is no fixed response time. If a PR has had no response for two weeks, feel free to ping the maintainers on it.
