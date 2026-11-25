@@ -27,9 +27,10 @@ import type {
 import router from '@/router'
 import { createConceptSet, getConceptSetById } from '@/services/concept-set.service'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
-import { createCharacterization } from '@/services/characterization.service'
+import { createCharacterization, generateCharacterization } from '@/services/characterization.service'
 import { createPathway, generatePathway } from '@/services/pathway.service'
-import { createIncidenceRate } from '@/services/incidence-rate.service'
+import { createIncidenceRate, generateIncidenceRate } from '@/services/incidence-rate.service'
+import { useIncidenceRateGeneration } from '@/composables/useIncidenceRateGeneration'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 import type { CohortEvent, ConceptSetReference, CriteriaGroup } from '@/models/cohort.types'
 import { ensureUniqueConceptSetId } from '@/utils/concept-set-id'
@@ -717,20 +718,55 @@ async function handleGenerateAnalysis(payload: {
     }
     return
   }
-  if (payload.analysisType !== 'pathway') {
-    showSnackbar(`Generating a ${payload.analysisType} is not supported yet`, 'warning')
-    return
-  }
   try {
-    const result = await generatePathway(payload.analysisId, sourceKey)
-    if (!result.success) {
-      showSnackbar(`Failed to start generation: ${result.error.message}`, 'error')
-      return { applied: false, error: result.error.message }
+    if (payload.analysisType === 'pathway') {
+      const result = await generatePathway(payload.analysisId, sourceKey)
+      if (!result.success) {
+        showSnackbar(`Failed to start generation: ${result.error.message}`, 'error')
+        return { applied: false, error: result.error.message }
+      }
+      showSnackbar(`Generating pathway analysis against ${sourceKey}`, 'success')
+      // The workbench only polls runs it started itself, so tell it to watch this
+      // one — otherwise the page sits on "No runs yet" until a manual reload.
+      usePathwayStore().notifyAgentGeneration()
+      return
     }
-    showSnackbar(`Generating pathway analysis against ${sourceKey}`, 'success')
-    // The workbench only polls runs it started itself, so tell it to watch this
-    // one — otherwise the page sits on "No runs yet" until a manual reload.
-    usePathwayStore().notifyAgentGeneration()
+    if (payload.analysisType === 'characterization') {
+      const result = await generateCharacterization(payload.analysisId, sourceKey)
+      if (!result.success) {
+        showSnackbar(`Failed to start generation: ${result.error.message}`, 'error')
+        return { applied: false, error: result.error.message }
+      }
+      showSnackbar(`Generating characterization against ${sourceKey}`, 'success')
+      // Register the run with the store the workbench reads, so an open
+      // characterization page shows it and its progress without a reload.
+      const store = useCharacterizationStore()
+      const characterizationId = payload.analysisId
+      await store.loadExecutions(characterizationId)
+      if (result.data?.id != null) {
+        store.pollExecution(result.data.id, () => {
+          void store.loadExecutions(characterizationId)
+        })
+      }
+      return
+    }
+    if (payload.analysisType === 'incidenceRate') {
+      const result = await generateIncidenceRate(payload.analysisId, sourceKey)
+      if (!result.success) {
+        showSnackbar(`Failed to start generation: ${result.error.message}`, 'error')
+        return { applied: false, error: result.error.message }
+      }
+      showSnackbar(`Generating incidence rate analysis against ${sourceKey}`, 'success')
+      // Same poller the workbench's own Generate button uses (tracked per id).
+      const generation = useIncidenceRateGeneration(payload.analysisId)
+      await generation.pollOnce()
+      generation.startPolling()
+      return
+    }
+    // Anything else must be reported as not applied: returning nothing reads
+    // as success, and the assistant then told the user a run had started.
+    showSnackbar(`Generating a ${payload.analysisType} is not supported`, 'warning')
+    return { applied: false, error: `Generating a ${payload.analysisType} is not supported` }
   } catch (err) {
     logger.error('pythiaBridge', 'generateAnalysis failed', err)
     showSnackbar(`Failed to start generation: ${(err as Error).message}`, 'error')
@@ -1143,7 +1179,10 @@ function handleGetContext(callbackId?: string) {
 
   bus.handleResponse(callbackId, {
     route: { name: routeName, params: routeParams },
-    sourceKey: sources.selectedSource?.sourceKey ?? null,
+    // The Data Sources page's selection stays empty until that page has loaded;
+    // fall back to the source ATLAS itself works against, so the assistant does
+    // not run without one.
+    sourceKey: sources.selectedSource?.sourceKey ?? useWebAPIStore().selectedSource ?? null,
     routeContext: {
       routeName,
       routeParams,
