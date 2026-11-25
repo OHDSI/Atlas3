@@ -25,6 +25,7 @@ vi.mock('@/services/feature-analysis.service', () => ({
 }))
 vi.mock('@/services/characterization.service', () => ({
   createCharacterization: vi.fn(),
+  generateCharacterization: vi.fn(),
 }))
 vi.mock('@/services/pathway.service', () => ({
   createPathway: vi.fn(),
@@ -32,6 +33,11 @@ vi.mock('@/services/pathway.service', () => ({
 }))
 vi.mock('@/services/incidence-rate.service', () => ({
   createIncidenceRate: vi.fn(),
+  generateIncidenceRate: vi.fn(),
+}))
+const irGeneration = { pollOnce: vi.fn(), startPolling: vi.fn() }
+vi.mock('@/composables/useIncidenceRateGeneration', () => ({
+  useIncidenceRateGeneration: vi.fn(() => irGeneration),
 }))
 vi.mock('@/plugins/messaging/HostMessageBus', () => ({
   getHostMessageBus: vi.fn(),
@@ -43,9 +49,10 @@ vi.mock('@/plugins/host/capabilities/apply', () => ({
 import router from '@/router'
 import { createConceptSet, getConceptSetById } from '@/services/concept-set.service'
 import { createFeatureAnalysis } from '@/services/feature-analysis.service'
-import { createCharacterization } from '@/services/characterization.service'
+import { createCharacterization, generateCharacterization } from '@/services/characterization.service'
 import { createPathway, generatePathway } from '@/services/pathway.service'
-import { createIncidenceRate } from '@/services/incidence-rate.service'
+import { createIncidenceRate, generateIncidenceRate } from '@/services/incidence-rate.service'
+import { useIncidenceRateGeneration } from '@/composables/useIncidenceRateGeneration'
 import { getHostMessageBus } from '@/plugins/messaging/HostMessageBus'
 import { applyCapability } from '@/plugins/host/capabilities/apply'
 import { setupPythiaBridge, applyProposalDirect } from '@/plugins/host/pythiaBridge'
@@ -151,6 +158,11 @@ describe('pythiaBridge coverage', () => {
     vi.mocked(createPathway).mockReset()
     vi.mocked(generatePathway).mockReset()
     vi.mocked(createIncidenceRate).mockReset()
+    vi.mocked(generateCharacterization).mockReset()
+    vi.mocked(generateIncidenceRate).mockReset()
+    vi.mocked(useIncidenceRateGeneration).mockClear()
+    irGeneration.pollOnce.mockReset().mockResolvedValue(undefined)
+    irGeneration.startPolling.mockReset()
     setRoute({ name: 'home', params: {} })
   })
 
@@ -309,15 +321,53 @@ describe('pythiaBridge coverage', () => {
       ])
     })
 
-    it('warns that non-pathway analyses cannot be generated yet', async () => {
+    it('starts a characterization and registers the run with the characterization store', async () => {
+      webapiWith(['FIRST'], 'SEL')
+      vi.mocked(generateCharacterization).mockResolvedValue({ success: true, data: { id: 77 } } as never)
+      const store = useCharacterizationStore()
+      const loadExecutions = spy(store, 'loadExecutions').mockResolvedValue(undefined)
+      const pollExecution = spy(store, 'pollExecution').mockImplementation(() => {})
+
+      const res = await generate({ analysisType: 'characterization', analysisId: 4 })
+
+      expect(res).toBeUndefined()
+      expect(vi.mocked(generateCharacterization).mock.calls).toEqual([[4, 'SEL']])
+      expect(loadExecutions).toHaveBeenCalledWith(4)
+      expect(pollExecution.mock.calls[0][0]).toBe(77)
+      expect(notes()).toEqual([{ severity: 'success', title: 'Generating characterization against SEL' }])
+    })
+
+    it('starts an incidence rate and polls it like the workbench does', async () => {
+      webapiWith(['FIRST'], 'SEL')
+      vi.mocked(generateIncidenceRate).mockResolvedValue({ success: true, data: null } as never)
+
+      const res = await generate({ analysisType: 'incidenceRate', analysisId: 5 })
+
+      expect(res).toBeUndefined()
+      expect(vi.mocked(generateIncidenceRate).mock.calls).toEqual([[5, 'SEL']])
+      expect(useIncidenceRateGeneration).toHaveBeenCalledWith(5)
+      expect(irGeneration.pollOnce).toHaveBeenCalledOnce()
+      expect(irGeneration.startPolling).toHaveBeenCalledOnce()
+      expect(notes()).toEqual([{ severity: 'success', title: 'Generating incidence rate analysis against SEL' }])
+    })
+
+    it('reports a failed start to the agent', async () => {
+      webapiWith(['FIRST'], 'SEL')
+      vi.mocked(generateCharacterization).mockResolvedValue({ success: false, error: new Error('boom') } as never)
+
+      const res = await generate({ analysisType: 'characterization', analysisId: 4 })
+
+      expect(res).toEqual({ applied: false, error: 'boom' })
+    })
+
+    it('reports an unsupported analysis type as not applied, not as success', async () => {
       webapiWith(['FIRST'], 'SEL')
 
-      await generate({ analysisType: 'characterization', analysisId: 4 })
+      const res = await generate({ analysisType: 'estimation', analysisId: 4 })
 
+      expect(res).toEqual({ applied: false, error: 'Generating a estimation is not supported' })
       expect(generatePathway).not.toHaveBeenCalled()
-      expect(notes()).toEqual([
-        { severity: 'warning', title: 'Generating a characterization is not supported yet' },
-      ])
+      expect(notes()).toEqual([{ severity: 'warning', title: 'Generating a estimation is not supported' }])
     })
 
     it('starts a cohort generation through the webapi store so the Generation tab shows it', async () => {
@@ -1370,6 +1420,12 @@ describe('pythiaBridge coverage', () => {
 
     it('reports a null source when none is selected', () => {
       expect(contextResponse().sourceKey).toBeNull()
+    })
+
+    it('falls back to the source ATLAS works against when the Data Sources page has not set one', () => {
+      setState(useWebAPIStore(), 'selectedSource', 'SYNPUF5')
+
+      expect(contextResponse().sourceKey).toBe('SYNPUF5')
     })
 
     it.each([
